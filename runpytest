@@ -1,0 +1,1 @@
+tcsh -c 'setenv OCS  `pwd`/configs/spivfx/config.ocs && mkdir -p build && cd build && cmake ../ && make PyOpenColorSpaceTest'
