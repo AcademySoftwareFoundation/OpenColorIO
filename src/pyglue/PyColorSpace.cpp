@@ -213,7 +213,7 @@ OCS_NAMESPACE_ENTER
             {"setTransform", PyOCS_ColorSpace_setTransform, METH_VARARGS, "" },
             {"isTransformSpecified", PyOCS_ColorSpace_isTransformSpecified, METH_VARARGS, "" },
             
-            {NULL}
+            {NULL, NULL, 0, NULL}
         };
     }
     
@@ -261,6 +261,14 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_alloc 
         PyType_GenericNew,                          //tp_new 
         0,                                          //tp_free
+        0,                                          //tp_is_gc
+        0,                                          //tp_bases
+        0,                                          //tp_mro
+        0,                                          //tp_cache
+        0,                                          //tp_subclasses
+        0,                                          //tp_weaklist
+        0,                                          //tp_del
+        0,                                          //tp_version_tag
     };
     
     ///////////////////////////////////////////////////////////////////////////
