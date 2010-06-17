@@ -95,7 +95,7 @@ OCS_NAMESPACE_ENTER
             return ft;
         }
         
-        TiXmlElement * GetElement(const ConstFileTransformRcPtr t)
+        TiXmlElement * GetElement(const ConstFileTransformRcPtr & t)
         {
             TiXmlElement * element = new TiXmlElement( "file" );
             element->SetAttribute("src", t->getSrc());
