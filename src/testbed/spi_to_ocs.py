@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os
+import sys, os, subprocess, shutil
 import SpImport
 
 XmlIO = SpImport.SpComp2("PyXmlIO", 1)
@@ -13,7 +13,7 @@ if len(sys.argv) < 3:
     
     Convert a proprietary SPI color configuration format (v7 xml) to an OCS config.
     
-    env PYTHONPATH=/net/homedirs/jeremys/git/Color/build/ ./src/testbed/spi_to_ocs.py /shots/grn/home/lib/lut/colorspaces.xml /mcp/config
+    env PYTHONPATH=/net/homedirs/jeremys/git/OpenColorSpace/build/ ./src/testbed/spi_to_ocs.py /shots/grn/home/lib/lut/colorspaces.xml /mcp/config
     
     """
     sys.exit(1)
@@ -22,10 +22,19 @@ print ""
 print "PyOCS:", OCS.__file__
 print ""
 
+def GetFileMD5(fname):
+    if not os.path.exists(fname):
+        raise TypeError("File %s does not exist.", fname)
+    process = subprocess.Popen(['md5sum',fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    returncode = process.wait()
+    if returncode:
+        raise TypeError("Could not get cksum on file %s" % fname)
+    return process.stdout.read().split()[0]
+
 
 ################################################################################
 
-def BuildConfigFromXMLElement(element):
+def BuildConfigFromXMLElement(element, lutDir):
     assert(element.getElementType() == 'color_config')
     
     config = OCS.Config()
@@ -43,14 +52,14 @@ def BuildConfigFromXMLElement(element):
     for i in xrange(element.getNumberOfChildren()):
         child = element.getChild(i)
         if child.getElementType() == 'colorspace':
-            colorspace = BuildColorspaceFromXMLElement(child)
+            colorspace = BuildColorspaceFromXMLElement(child, lutDir)
             config.addColorSpace(colorspace)
         else:
             print 'TODO: handle config child',child.getElementType()
     
     return config
 
-def BuildColorTransform(elementArray):
+def BuildColorTransform(elementArray, lutDir):
     group = OCS.GroupTransform()
     
     for element in elementArray:
@@ -63,37 +72,42 @@ def BuildColorTransform(elementArray):
             transform = OCS.FileTransform()
             
             fname = attrDict.pop('file')
+            if not os.path.exists(fname):
+                raise Exception("File %s does not exist." % (fname))
             
             # TODO: COPY AND RENAME FILE!
-            newname = os.path.basename(fname)
-            base, extension = newname.rsplit('.',1)
+            base, extension = os.path.basename(fname).rsplit('.',1)
             if extension == 'lut':
                 extension = 'spi1d'
             elif extension == 'lut3d':
                 extension = 'spi3d'
             elif extension == 'dat':
                 extension = 'spimtx'
-            newname = base + '.' + extension
             
-            transform.setSrc(newname)
+            newname = os.path.join(lutDir, '%s.%s' % (base, extension))
+            if os.path.exists( newname ):
+                cksum1 = GetFileMD5(newname) 
+                cksum2 = GetFileMD5(fname) 
+                if cksum1 != cksum2:
+                    raise Exception("Duplicate files with different contents %s %s." % (newname, fname))
+                print '    matched %s %s' % (cksum1, fname)
+            else:
+                shutil.copy(fname, newname)
+                print '    copied %s -> %s' % (fname,newname)
+            
+            transform.setSrc('%s.%s' % (base, extension))
             
             direction = attrDict.pop('direction')
-            if direction == 'forward':
-                transform.setDirection(OCS.TRANSFORM_DIR_FORWARD)
-            elif direction == 'inverse':
+            if direction == 'inverse':
                 transform.setDirection(OCS.TRANSFORM_DIR_INVERSE)
             else:
-                transform.setDirection(OCS.TRANSFORM_DIR_UNKNOWN)
+                transform.setDirection(OCS.TRANSFORM_DIR_FORWARD)
             
             interp = attrDict.pop('interpolation', None)
-            if interp is None:
-                pass
-            elif interp == 'linear':
+            if interp == 'linear':
                 transform.setInterpolation(OCS.INTERP_LINEAR)
-            elif interp == 'nearest':
-                transform.setInterpolation(OCS.INTERP_NEAREST)
             else:
-                transform.setInterpolation(OCS.INTERP_UNKNOWN)
+                transform.setInterpolation(OCS.INTERP_NEAREST)
             
             if attrDict:
                 print 'TODO: Handle attrs',attrDict, element.getElementType()
@@ -105,7 +119,7 @@ def BuildColorTransform(elementArray):
     
     return group
 
-def BuildColorspaceFromXMLElement(element):
+def BuildColorspaceFromXMLElement(element, lutDir):
     attrDict = element.getAttrDict()
     
     cs = OCS.ColorSpace()
@@ -127,7 +141,8 @@ def BuildColorspaceFromXMLElement(element):
     elif bitdepth == '0':
         cs.setBitDepth(OCS.BIT_DEPTH_F32)
     else:
-        cs.setBitDepth(OCS.BIT_DEPTH_UNKNOWN)
+        #cs.setBitDepth(OCS.BIT_DEPTH_UNKNOWN)
+        raise RuntimeError("Unknown bit depth")
     
     gpuallocation = attrDict.pop('gpuallocation', None)
     if gpuallocation is None:
@@ -137,7 +152,8 @@ def BuildColorspaceFromXMLElement(element):
     elif gpuallocation == 'uniform':
         cs.setHWAllocation(OCS.HW_ALLOCATION_UNIFORM)
     else:
-        cs.setHWAllocation(OCS.HW_ALLOCATION_UNKNOWN)
+        #cs.setHWAllocation(OCS.HW_ALLOCATION_UNKNOWN)
+        raise RuntimeError("Unknown bit allocation")
     
     gpumin = attrDict.pop('gpumin', None)
     if gpumin is not None:
@@ -170,10 +186,10 @@ def BuildColorspaceFromXMLElement(element):
     
     # This assumes transforms, if both directions are defined, are perfect inverses of each other.
     if len(toref) >= len(fromref):
-        transform = BuildColorTransform(toref)
+        transform = BuildColorTransform(toref, lutDir)
         cs.setTransform(transform, OCS.COLORSPACE_DIR_TO_REFERENCE)
     else:
-        transform = BuildColorTransform(fromref)
+        transform = BuildColorTransform(fromref, lutDir)
         cs.setTransform(transform, OCS.COLORSPACE_DIR_FROM_REFERENCE)
     
     return cs
@@ -185,16 +201,20 @@ def BuildColorspaceFromXMLElement(element):
 
 INPUT_CONFIG = sys.argv[1]
 OUTPUT_DIR = sys.argv[2]
-
-p = XmlIO.Parser()
-element = p.parse(INPUT_CONFIG)
-config = BuildConfigFromXMLElement( element )
-
+LUT_DIR = os.path.join(sys.argv[2] + '/luts')
 
 try: os.makedirs(OUTPUT_DIR)
 except: pass
+try: os.makedirs(LUT_DIR)
+except: pass
+
+p = XmlIO.Parser()
+element = p.parse(INPUT_CONFIG)
+config = BuildConfigFromXMLElement( element, LUT_DIR)
+config.setResourcePath('luts')
 
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'config.ocs')
+print ''
 print 'Writing',OUTPUT_FILE
 
 f = file(OUTPUT_FILE,'w')
