@@ -319,12 +319,24 @@ OCS_NAMESPACE_ENTER
                             m_interpolation(interpolation),
                             m_direction(direction)
         {
-            // TODO: assert luts is not 0 sized
             // Optionally, move this to a separate safety-check pass
             // to allow for optimizations to potentially remove
             // this pass.  For example, an inverse 3d lut may
             // not be allowed, but 2 in a row (forward + inverse)
             // may be allowed!
+            
+            if(m_direction == TRANSFORM_DIR_UNKNOWN)
+            {
+                throw OCSException("Cannot apply lut1d op, unspecified transform direction.");
+            }
+            if(m_interpolation == INTERP_UNKNOWN)
+            {
+                throw OCSException("Cannot apply lut1d op, unspecified interpolation.");
+            }
+            if(m_lut->luts[0].empty() || m_lut->luts[1].empty() || m_lut->luts[2].empty())
+            {
+                throw OCSException("Cannot apply lut1d op, no lut data provided.");
+            }
         }
         
         Lut1DOp::~Lut1DOp()
