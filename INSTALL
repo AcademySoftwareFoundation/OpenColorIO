@@ -15,11 +15,11 @@ You will now see the built .so files
 > ls
 
 Set the environment variable pointing at which configuration to use
-> setenv OCS /net/homedirs/jeremys/git/Color/configs/spivfx/config.ocs
+> setenv OCS /net/homedirs/jeremys/git/OpenColorSpace/configs/spivfx/config.ocs
 
 Launch nuke, then load the plugin (this can also go in init.py)
 
-> nuke.load('/net/homedirs/jeremys/git/Color//build/libNukeColorSpaceConversion.so')
+> nuke.load('/net/homedirs/jeremys/git/OpenColorSpace/build/libNukeColorSpaceConversion.so')
 > nuke.menu('Nodes').addMenu('Color').addCommand('OCSColorSpaceConversion', 'nuke.createNode("OCSColorSpaceConversion")')
 
 Connect an image to the OCSColorSpaceConversion node.
