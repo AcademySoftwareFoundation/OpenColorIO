@@ -40,6 +40,7 @@ OCS_NAMESPACE_ENTER
     
     bool AddColorSpaceObjectToModule( PyObject* m )
     {
+        PyOCS_ColorSpaceType.tp_new = PyType_GenericNew;
         if ( PyType_Ready(&PyOCS_ColorSpaceType) < 0 ) return false;
         
         Py_INCREF( &PyOCS_ColorSpaceType );
@@ -259,7 +260,7 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_dictoffset 
         (initproc) PyOCS_ColorSpace_init,           //tp_init 
         0,                                          //tp_alloc 
-        PyType_GenericNew,                          //tp_new 
+        0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
         0,                                          //tp_bases

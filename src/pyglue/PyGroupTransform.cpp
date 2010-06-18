@@ -39,6 +39,7 @@ OCS_NAMESPACE_ENTER
     
     bool AddGroupTransformObjectToModule( PyObject* m )
     {
+        PyOCS_GroupTransformType.tp_new = PyType_GenericNew;
         if ( PyType_Ready(&PyOCS_GroupTransformType) < 0 ) return false;
         
         Py_INCREF( &PyOCS_GroupTransformType );
@@ -200,10 +201,10 @@ OCS_NAMESPACE_ENTER
     PyTypeObject PyOCS_GroupTransformType = {
         PyObject_HEAD_INIT(NULL)
         0,                                          //ob_size
-        "OCS.GroupTransform",                           //tp_name
-        sizeof(PyOCS_GroupTransform),                   //tp_basicsize
+        "OCS.GroupTransform",                       //tp_name
+        sizeof(PyOCS_GroupTransform),               //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor)PyOCS_GroupTransform_delete,        //tp_dealloc
+        (destructor)PyOCS_GroupTransform_delete,    //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -219,14 +220,14 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "GroupTransform",                               //tp_doc 
+        "GroupTransform",                           //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
         0,                                          //tp_weaklistoffset 
         0,                                          //tp_iter 
         0,                                          //tp_iternext 
-        PyOCS_GroupTransform_methods,                   //tp_methods 
+        PyOCS_GroupTransform_methods,               //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
         0,                                          //tp_base 
@@ -234,9 +235,9 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
         0,                                          //tp_dictoffset 
-        (initproc) PyOCS_GroupTransform_init,           //tp_init 
+        (initproc) PyOCS_GroupTransform_init,       //tp_init 
         0,                                          //tp_alloc 
-        PyType_GenericNew,                          //tp_new 
+        0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
         0,                                          //tp_bases

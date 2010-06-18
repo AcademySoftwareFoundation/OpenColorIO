@@ -42,6 +42,7 @@ OCS_NAMESPACE_ENTER
     
     bool AddConfigObjectToModule( PyObject* m )
     {
+        PyOCS_ConfigType.tp_new = PyType_GenericNew;
         if ( PyType_Ready(&PyOCS_ConfigType) < 0 ) return false;
         
         Py_INCREF( &PyOCS_ConfigType );
@@ -250,7 +251,7 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_dictoffset 
         (initproc) PyOCS_Config_init,               //tp_init 
         0,                                          //tp_alloc 
-        PyType_GenericNew,                          //tp_new 
+        0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
         0,                                          //tp_bases

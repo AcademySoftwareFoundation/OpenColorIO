@@ -39,6 +39,7 @@ OCS_NAMESPACE_ENTER
     
     bool AddFileTransformObjectToModule( PyObject* m )
     {
+        PyOCS_FileTransformType.tp_new = PyType_GenericNew;
         if ( PyType_Ready(&PyOCS_FileTransformType) < 0 ) return false;
         
         Py_INCREF( &PyOCS_FileTransformType );
@@ -194,10 +195,10 @@ OCS_NAMESPACE_ENTER
     PyTypeObject PyOCS_FileTransformType = {
         PyObject_HEAD_INIT(NULL)
         0,                                          //ob_size
-        "OCS.FileTransform",                           //tp_name
-        sizeof(PyOCS_FileTransform),                   //tp_basicsize
+        "OCS.FileTransform",                        //tp_name
+        sizeof(PyOCS_FileTransform),                //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor)PyOCS_FileTransform_delete,        //tp_dealloc
+        (destructor)PyOCS_FileTransform_delete,     //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -213,14 +214,14 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "FileTransform",                               //tp_doc 
+        "FileTransform",                            //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
         0,                                          //tp_weaklistoffset 
         0,                                          //tp_iter 
         0,                                          //tp_iternext 
-        PyOCS_FileTransform_methods,                   //tp_methods 
+        PyOCS_FileTransform_methods,                //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
         0,                                          //tp_base 
@@ -228,9 +229,9 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
         0,                                          //tp_dictoffset 
-        (initproc) PyOCS_FileTransform_init,           //tp_init 
+        (initproc) PyOCS_FileTransform_init,        //tp_init 
         0,                                          //tp_alloc 
-        PyType_GenericNew,                          //tp_new 
+        0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
         0,                                          //tp_bases
