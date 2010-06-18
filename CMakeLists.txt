@@ -132,6 +132,10 @@ if(EXISTS "${PYTHON}/Python.h")
     )
     target_link_libraries(PyOpenColorSpace OpenColorSpace)
 
+    if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
+    endif()
+
     add_custom_target(PyOpenColorSpaceTest
         COMMAND env PYTHONPATH=${OpenColorSpace_LIBRARY_OUTPUT_DIRECTORY} python ${OpenColorSpace_SOURCE_DIR}/src/testbed/main.py
         DEPENDS PyOpenColorSpace
