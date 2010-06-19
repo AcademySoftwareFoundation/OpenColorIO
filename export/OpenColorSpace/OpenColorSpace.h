@@ -36,32 +36,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // OCS
 // OpenColorSpace
 // Version 0.5.7
-// Last edited 6/14/10
 //
 
-// TODO: add matrix ops
-// TODO: add gamma ops
-// TODO: add analytical log ops
-// TODO: test 1d atomic ops
-// TODO: test full colorspace conversions
+// TODO: add .3dl support
+// TODO: update string parsing code to provide better convenience fcns.
 
 // TODO: get simple display transform working. can it be expressed as an op?
 // TODO: can you also generate hw transform for ops as well?
 
 // TODO: add op optimizations.  op collapsing.  cache op tree.
+// TODO: add gamma ops
+// TODO: add analytical log ops
+// TODO: test 1d atomic ops
+// TODO: test full colorspace conversions
 
 // TODO: Figure out for each transform class what is required, move into constructor
-// TODO: update string parsing code to provide better convenience fcns.
 // TODO: Add enums to namespace / submodule (both in C++ / python)
 // TODO: provide way to tag colorspace operations as explicitly not allowed? what about hdbty<->qt?
 // TODO: provide xml defaults mechanism for cleaner xml code
 // TODO: such as int vectors, double from str, float vectors, etc.
 // TODO: add ocs package (.gz?) file, and ability to convert between representations.
-// TODO: add nuke plugins
+// TODO: add all nuke plugins, also get official Foundry code review
 // TODO: add additional lut formats
 // TODO: add internal namespace for all implementation objects Ops, etc.
 // TODO: Opt build as default?
 // TODO: Add prettier xml output (newlines between colorspaces?)
+
 // TODO: Cross-platform
 
 /*
