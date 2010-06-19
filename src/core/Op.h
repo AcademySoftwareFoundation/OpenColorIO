@@ -42,7 +42,20 @@ OCS_NAMESPACE_ENTER
     {
         public:
             virtual ~Op();
-            virtual void process(float* rgbaBuffer, long numPixels) const = 0;
+            
+            // This is called a single time after construction.
+            // All pre-processing and safety checks should happen here,
+            // rather than in the constructor.
+            
+            virtual void preRender() = 0;
+            
+            // Render the specified pixels.
+            //
+            // This must be safe to call in a multi-threaded context.
+            // Ops that have mutable data internally, or rely on external
+            // caching, must thus be appropriately mutexed.
+            
+            virtual void render(float* rgbaBuffer, long numPixels) const = 0;
         private:
             Op& operator= (const Op &);
     };

@@ -301,7 +301,9 @@ OCS_NAMESPACE_ENTER
                     Interpolation interpolation,
                     TransformDirection direction);
             virtual ~Lut1DOp();
-            virtual void process(float* rgbaBuffer, long numPixels) const;
+            
+            virtual void preRender();
+            virtual void render(float* rgbaBuffer, long numPixels) const;
         
         private:
             Lut1DRcPtr m_lut;
@@ -319,12 +321,13 @@ OCS_NAMESPACE_ENTER
                             m_interpolation(interpolation),
                             m_direction(direction)
         {
-            // Optionally, move this to a separate safety-check pass
-            // to allow for optimizations to potentially remove
-            // this pass.  For example, an inverse 3d lut may
-            // not be allowed, but 2 in a row (forward + inverse)
-            // may be allowed!
-            
+        }
+        
+        Lut1DOp::~Lut1DOp()
+        { }
+        
+        void Lut1DOp::preRender()
+        {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
                 throw OCSException("Cannot apply lut1d op, unspecified transform direction.");
@@ -339,10 +342,7 @@ OCS_NAMESPACE_ENTER
             }
         }
         
-        Lut1DOp::~Lut1DOp()
-        { }
-        
-        void Lut1DOp::process(float* rgbaBuffer, long numPixels) const
+        void Lut1DOp::render(float* rgbaBuffer, long numPixels) const
         {
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {

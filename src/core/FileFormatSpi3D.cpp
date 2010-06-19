@@ -123,7 +123,7 @@ OCS_NAMESPACE_ENTER
                     {
                         index = GetGLLut3DArrayOffset(rIndex, gIndex, bIndex,
                                                       rSize, gSize, bSize);
-                        if(index < 0 || index >= lut3d->lut.size())
+                        if(index < 0 || index >= (int) lut3d->lut.size())
                         {
                             std::ostringstream os;
                             os << "Cannot load .spi3d lut, data is invalid. ";

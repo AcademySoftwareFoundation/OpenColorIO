@@ -80,9 +80,10 @@ OCS_NAMESPACE_ENTER
             MatrixOffsetOp(const float * m44,
                            const float * offset4,
                            TransformDirection direction);
-            
             virtual ~MatrixOffsetOp();
-            virtual void process(float* rgbaBuffer, long numPixels) const;
+            
+            virtual void preRender();
+            virtual void render(float* rgbaBuffer, long numPixels) const;
         
         private:
             float m_m44[16];
@@ -113,7 +114,11 @@ OCS_NAMESPACE_ENTER
         MatrixOffsetOp::~MatrixOffsetOp()
         { }
         
-        void MatrixOffsetOp::process(float* rgbaBuffer, long numPixels) const
+        void MatrixOffsetOp::preRender()
+        {
+        
+        }
+        void MatrixOffsetOp::render(float* rgbaBuffer, long numPixels) const
         {
             if(!rgbaBuffer) return;
             

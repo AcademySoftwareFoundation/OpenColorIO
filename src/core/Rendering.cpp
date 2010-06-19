@@ -46,9 +46,13 @@ OCS_NAMESPACE_ENTER
         OpRcPtrVec opVec;
         BuildOps(&opVec, config, transform, direction);
         
-        // TODO: Optimize opVec
-        // TODO: polish / errorCheck opVec
-        // TODO: Add timing helpers
+        // TODO: Perform smart optimizations / collapsing on the OpVec
+        
+        // After construction, finalize the setup with preRender
+        for(unsigned int i=0; i<opVec.size(); ++i)
+        {
+            opVec[i]->preRender();
+        }
         
         ScanlineHelper scanlineHelper(imageDesc);
         float * rgbaBuffer = 0;
@@ -63,7 +67,7 @@ OCS_NAMESPACE_ENTER
             
             for(unsigned int opIndex=0; opIndex<opVec.size(); ++opIndex)
             {
-                opVec[opIndex]->process(rgbaBuffer, numPixels);
+                opVec[opIndex]->render(rgbaBuffer, numPixels);
             }
             
             scanlineHelper.finishRGBAScanline();

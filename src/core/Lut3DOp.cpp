@@ -211,7 +211,9 @@ OCS_NAMESPACE_ENTER
                     Interpolation interpolation,
                     TransformDirection direction);
             virtual ~Lut3DOp();
-            virtual void process(float* rgbaBuffer, long numPixels) const;
+            
+            virtual void preRender();
+            virtual void render(float* rgbaBuffer, long numPixels) const;
         
         private:
             Lut3DRcPtr m_lut;
@@ -229,12 +231,13 @@ OCS_NAMESPACE_ENTER
                             m_interpolation(interpolation),
                             m_direction(direction)
         {
-            // Optionally, move this to a separate safety-check pass
-            // to allow for optimizations to potentially remove
-            // this pass.  For example, an inverse 3d lut may
-            // not be allowed, but 2 in a row (forward + inverse)
-            // may be allowed!
-            
+        }
+        
+        Lut3DOp::~Lut3DOp()
+        { }
+        
+        void Lut3DOp::preRender()
+        {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
                 throw OCSException("Cannot apply Lut3DOp, unspecified transform direction.");
@@ -257,12 +260,13 @@ OCS_NAMESPACE_ENTER
             {
                 throw OCSException("Cannot apply Lut3DOp, specified size does not match data.");
             }
+            
+            if(m_direction == TRANSFORM_DIR_INVERSE)
+            {
+                throw OCSException("3D Luts cannot be applied in the inverse direction.");
+            }
         }
-        
-        Lut3DOp::~Lut3DOp()
-        { }
-        
-        void Lut3DOp::process(float* rgbaBuffer, long numPixels) const
+        void Lut3DOp::render(float* rgbaBuffer, long numPixels) const
         {
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
@@ -277,6 +281,7 @@ OCS_NAMESPACE_ENTER
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
+                // TODO: This should never happen. Add assert?
                 throw OCSException("3D Luts cannot be applied in the inverse.");
             }
         }
