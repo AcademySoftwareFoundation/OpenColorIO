@@ -38,8 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.7
 //
 
-// TODO: update string parsing code to provide better convenience fcns.
-
 // TODO: get simple display transform working. can it be expressed as an op?
 // TODO: can you also generate hw transform for ops as well?
 
