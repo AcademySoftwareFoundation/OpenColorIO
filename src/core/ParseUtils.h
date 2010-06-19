@@ -27,47 +27,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_MATRIXOFFSETOP_H
-#define INCLUDED_OCS_MATRIXOFFSETOP_H
+#ifndef INCLUDED_OCS_PARSEUTILS_H
+#define INCLUDED_OCS_PARSEUTILS_H
 
 #include <OpenColorSpace/OpenColorSpace.h>
+#include <string>
 #include <vector>
-
-#include "Op.h"
 
 OCS_NAMESPACE_ENTER
 {
-    // Use whichever is most convenient; they are equally efficient
-    //
-    // NOTE: These currently do not affect alpha
-    
-    void CreateScaleOp(OpRcPtrVec * opVec,
-                       const float * scale4,
-                       TransformDirection direction);
-    
-    void CreateMatrixOp(OpRcPtrVec * opVec,
-                        const float * m44,
-                        TransformDirection direction);
-    
-    void CreateOffsetOp(OpRcPtrVec * opVec,
-                        const float * offset4,
-                        TransformDirection direction);
-    
-    void CreateMatrixOffsetOp(OpRcPtrVec * opVec,
-                              const float * m44, const float * offset4,
-                              TransformDirection direction);
-    
-    void CreateScaleOffsetOp(OpRcPtrVec * opVec,
-                             const float * scale4, const float * offset4,
-                             TransformDirection direction);
-    
-    void CreateSaturationOp(OpRcPtrVec * opVec,
-                            float sat,
-                            const float * lumaCoef3,
-                            TransformDirection direction);
-    
-    // TODO: hue rotate Matrix Op
-    // TODO: Fit matrix op
+    bool StringVecToFloatVec(std::vector<float> &floatArray,
+                             const std::vector<std::string> &lineParts);
+
 }
 OCS_NAMESPACE_EXIT
 

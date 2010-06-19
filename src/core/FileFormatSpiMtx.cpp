@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "FileTransform.h"
 #include "MatrixOps.h"
+#include "ParseUtils.h"
 #include "pystring/pystring.h"
 
 #include <cstdio>
@@ -42,27 +43,6 @@ OCS_NAMESPACE_ENTER
     
     namespace
     {
-        // TODO: move to parseutils
-        // return true if success
-        bool stringVecToFloatVec(std::vector<float> &floatArray,
-                                 const std::vector<std::string> &lineParts)
-        {
-            floatArray.resize(lineParts.size());
-            
-            for(unsigned int i=0; i<lineParts.size(); i++)
-            {
-                std::istringstream inputStringstream(lineParts[i]);
-                float x;
-                if(!(inputStringstream >> x))
-                {
-                    return false;
-                }
-                floatArray[i] = x;
-            }
-            
-            return true;
-        }
-        
         class LocalCachedFile : public CachedFile
         {
         public:
@@ -122,7 +102,7 @@ OCS_NAMESPACE_ENTER
                 
                 // Turn the parts into floats
                 std::vector<float> floatArray;
-                if(!stringVecToFloatVec(floatArray, lineParts))
+                if(!StringVecToFloatVec(floatArray, lineParts))
                 {
                     std::ostringstream os;
                     os << "Error parsing .spimtx file. ";

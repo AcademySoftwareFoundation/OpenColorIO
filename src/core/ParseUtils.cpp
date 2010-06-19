@@ -165,6 +165,29 @@ OCS_NAMESPACE_ENTER
     const char * ROLE_SCENE_LINEAR = "scene_linear";
     const char * ROLE_COMPOSITING_LOG = "compositing_log";
     const char * ROLE_COLOR_TIMING = "color_timing";
+    
+    
+    //////////////////////////////////////////////////////////////////////////
+    
+    bool StringVecToFloatVec(std::vector<float> &floatArray,
+                             const std::vector<std::string> &lineParts)
+    {
+        floatArray.resize(lineParts.size());
+        
+        for(unsigned int i=0; i<lineParts.size(); i++)
+        {
+            std::istringstream inputStringstream(lineParts[i]);
+            float x;
+            if(!(inputStringstream >> x))
+            {
+                return false;
+            }
+            floatArray[i] = x;
+        }
+        
+        return true;
+    }
+        
 
 }
 OCS_NAMESPACE_EXIT
