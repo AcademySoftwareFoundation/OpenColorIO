@@ -24,6 +24,8 @@ add_library(OpenColorSpace SHARED
     src/core/ImagePacking.cpp
     src/core/Lut1DOp.cpp
     src/core/Lut3DOp.cpp
+    src/core/MathUtils.cpp
+    src/core/MatrixOps.cpp
     src/core/Op.cpp
     src/core/ParseUtils.cpp
     src/core/PathUtils.cpp

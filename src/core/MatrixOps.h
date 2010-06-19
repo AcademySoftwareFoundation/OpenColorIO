@@ -27,8 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_LUT3DOP_H
-#define INCLUDED_OCS_LUT3DOP_H
+#ifndef INCLUDED_OCS_MATRIXOFFSETOP_H
+#define INCLUDED_OCS_MATRIXOFFSETOP_H
 
 #include <OpenColorSpace/OpenColorSpace.h>
 #include <vector>
@@ -37,45 +37,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCS_NAMESPACE_ENTER
 {
-    // TODO: Do not allow for a naked Lut1D object, always have it be an rc ptr to a lut1d.
-    // Expose static factory fcn, make constructor private?
-    // TODO: turn into a class instead of a struct?
+    // NOTE: These currently do not effect alpha...
     
-    struct Lut3D
-    {
-        float from_min[3];
-        float from_max[3];
-        int size[3];
-        
-        typedef std::vector<float> fv_t;
-        fv_t lut;
-        
-        Lut3D()
-        {
-            for(int i=0; i<3; ++i)
-            {
-                from_min[i] = 0.0f;
-                from_max[i] = 1.0f;
-                size[i] = 0;
-            }
-        };
-    };
-    
-    typedef SharedPtr<Lut3D> Lut3DRcPtr;
-    
-    // This memory arrangement order corresponds to the standard
-    // OpenGL memory layout
-    
-    inline int Lut3DArrayOffset(int indexR, int indexG, int indexB,
-                                int sizeR,  int sizeG,  int /*sizeB*/)
-    {
-        return 3 * (indexR + sizeR * (indexG + sizeG * indexB));
-    }
-    
-    void CreateLut3DOp(OpRcPtrVec * opVec,
-                       Lut3DRcPtr lut,
-                       Interpolation interpolation,
+    void CreateScaleOp(OpRcPtrVec * opVec,
+                       const float * scale4,
                        TransformDirection direction);
+    
+    void CreateMatrixOp(OpRcPtrVec * opVec,
+                        const float * m44,
+                        TransformDirection direction);
+    
+    void CreateOffsetOp(OpRcPtrVec * opVec,
+                        const float * offset4,
+                        TransformDirection direction);
+    
+    void CreateMatrixOffsetOp(OpRcPtrVec * opVec,
+                              const float * m44, const float * offset4,
+                              TransformDirection direction);
+    
+    void CreateScaleOffsetOp(OpRcPtrVec * opVec,
+                             const float * scale4, const float * offset4,
+                             TransformDirection direction);
+    
+    void CreateSaturationOp(OpRcPtrVec * opVec,
+                            float sat,
+                            const float * lumaCoef3,
+                            TransformDirection direction);
+    
+    // TODO: Create hue rotate Op
 }
 OCS_NAMESPACE_EXIT
 

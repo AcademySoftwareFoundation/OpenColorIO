@@ -159,11 +159,10 @@ OCS_NAMESPACE_ENTER
                 TransformDirection newDir = CombineTransformDirections(dir,
                     fileTransform.getDirection());
                 
-                OpRcPtr op = CreateLut3DOp(cachedFile->lut,
-                                           fileTransform.getInterpolation(),
-                                           newDir);
-                
-                opVec->push_back(op);
+                CreateLut3DOp(opVec,
+                              cachedFile->lut,
+                              fileTransform.getInterpolation(),
+                              newDir);
             }
         };
         

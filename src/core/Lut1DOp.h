@@ -63,9 +63,10 @@ OCS_NAMESPACE_ENTER
     
     typedef SharedPtr<Lut1D> Lut1DRcPtr;
     
-    OpRcPtr CreateLut1DOp(Lut1DRcPtr lut,
-                          Interpolation interpolation,
-                          TransformDirection direction);
+    void CreateLut1DOp(OpRcPtrVec * opVec,
+                       Lut1DRcPtr lut,
+                       Interpolation interpolation,
+                       TransformDirection direction);
 }
 OCS_NAMESPACE_EXIT
 

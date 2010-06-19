@@ -304,35 +304,30 @@ OCS_NAMESPACE_ENTER
                     
                     if(cachedFile->useLut1D)
                     {
-                        OpRcPtr op1d = CreateLut1DOp(cachedFile->lut1d,
-                                                   INTERP_LINEAR,
-                                                   TRANSFORM_DIR_FORWARD);
-                        
-                        opVec->push_back(op1d);
+                        CreateLut1DOp(opVec,
+                                      cachedFile->lut1d,
+                                      INTERP_LINEAR,
+                                      TRANSFORM_DIR_FORWARD);
                     }
                     
-                    OpRcPtr op3d = CreateLut3DOp(cachedFile->lut3d,
-                                                fileTransform.getInterpolation(),
-                                                TRANSFORM_DIR_FORWARD);
-                    
-                    opVec->push_back(op3d);
-                    
+                    CreateLut3DOp(opVec,
+                                  cachedFile->lut3d,
+                                  fileTransform.getInterpolation(),
+                                  TRANSFORM_DIR_FORWARD);
                 }
                 else if(newDir == TRANSFORM_DIR_INVERSE)
                 {
-                    OpRcPtr op3d = CreateLut3DOp(cachedFile->lut3d,
-                                                fileTransform.getInterpolation(),
-                                                TRANSFORM_DIR_INVERSE);
-                    
-                    opVec->push_back(op3d);
+                    CreateLut3DOp(opVec,
+                                  cachedFile->lut3d,
+                                  fileTransform.getInterpolation(),
+                                  TRANSFORM_DIR_INVERSE);
                     
                     if(cachedFile->useLut1D)
                     {
-                        OpRcPtr op1d = CreateLut1DOp(cachedFile->lut1d,
-                                                   INTERP_LINEAR,
-                                                   TRANSFORM_DIR_INVERSE);
-                        
-                        opVec->push_back(op1d);
+                        CreateLut1DOp(opVec,
+                                      cachedFile->lut1d,
+                                      INTERP_LINEAR,
+                                      TRANSFORM_DIR_INVERSE);
                     }
                 }
             }

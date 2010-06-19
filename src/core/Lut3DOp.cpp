@@ -254,11 +254,12 @@ OCS_NAMESPACE_ENTER
         }
     }
     
-    OpRcPtr CreateLut3DOp(Lut3DRcPtr lut,
-                          Interpolation interpolation,
-                          TransformDirection direction)
+    void CreateLut3DOp(OpRcPtrVec * opVec,
+                       Lut3DRcPtr lut,
+                       Interpolation interpolation,
+                       TransformDirection direction)
     {
-        return Lut3DOpRcPtr(new Lut3DOp(lut, interpolation, direction));
+        opVec->push_back( Lut3DOpRcPtr(new Lut3DOp(lut, interpolation, direction)) );
     }
 
 }
