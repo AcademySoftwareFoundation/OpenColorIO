@@ -261,28 +261,21 @@ OCS_NAMESPACE_ENTER
                 throw OCSException("Cannot apply Lut3DOp, specified size does not match data.");
             }
             
-            if(m_direction == TRANSFORM_DIR_INVERSE)
+            if(m_direction != TRANSFORM_DIR_FORWARD)
             {
-                throw OCSException("3D Luts cannot be applied in the inverse direction.");
+                throw OCSException("3D Luts can only be applied in the forward direction.");
             }
         }
+        
         void Lut3DOp::render(float* rgbaBuffer, long numPixels) const
         {
-            if(m_direction == TRANSFORM_DIR_FORWARD)
+            if(m_interpolation == INTERP_NEAREST)
             {
-                if(m_interpolation == INTERP_NEAREST)
-                {
-                    Lut3D_Nearest(rgbaBuffer, numPixels, *m_lut);
-                }
-                else if(m_interpolation == INTERP_LINEAR)
-                {
-                    Lut3D_Linear(rgbaBuffer, numPixels, *m_lut);
-                }
+                Lut3D_Nearest(rgbaBuffer, numPixels, *m_lut);
             }
-            else if(m_direction == TRANSFORM_DIR_INVERSE)
+            else if(m_interpolation == INTERP_LINEAR)
             {
-                // TODO: This should never happen. Add assert?
-                throw OCSException("3D Luts cannot be applied in the inverse.");
+                Lut3D_Linear(rgbaBuffer, numPixels, *m_lut);
             }
         }
     }
