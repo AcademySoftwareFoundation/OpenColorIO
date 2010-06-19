@@ -19,7 +19,7 @@ int main(int argc, const char* argv[])
 {
     (void)argc;
     (void)argv;
-    std::cerr << std::endl;
+    std::cout << std::endl;
     
     try
     {
@@ -30,23 +30,33 @@ int main(int argc, const char* argv[])
     }
     catch(std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        std::cout << "Exception: " << e.what() << std::endl;
     }
     
-    std::cerr << "Done." << std::endl;
+    std::cout << "Done." << std::endl;
     return 0;
+}
+
+namespace
+{
+    void PrintColor(std::ostream & os,
+                    const float * c,
+                    const std::string & name)
+    {
+        os << name << " : " << c[0] << " " << c[1] << " " << c[2];
+    }
 }
 
 void loadConfigFromEnv()
 {
     OCS::ConstConfigRcPtr config = OCS::GetCurrentConfig();
-    std::cout << *config << std::endl;
+    // std::cout << *config << std::endl;
     
     
     std::vector<float> imageVec;
     
-    int width = 2048;
-    int height = 1556;
+    int width = 123;
+    int height = 456;
     int numChannels = 4;
     
     imageVec.resize(width*height*numChannels);
@@ -60,23 +70,30 @@ void loadConfigFromEnv()
     }
     
     OCS::PackedImageDesc img(&imageVec[0], width, height, numChannels);
-    std::cerr << "img " << img << std::endl;
+    std::cout << "img " << img << std::endl;
     
-    // Convert from lg->lin
     OCS::ConstColorSpaceRcPtr srcColorSpace = config->getColorSpaceForRole(OCS::ROLE_COMPOSITING_LOG);
     OCS::ConstColorSpaceRcPtr dstColorSpace = config->getColorSpaceForRole(OCS::ROLE_SCENE_LINEAR);
     
-    std::cerr << srcColorSpace->getName() << std::endl;
-    std::cerr << dstColorSpace->getName() << std::endl;
+    /*
+    OCS::ConstColorSpaceRcPtr srcColorSpace = config->getColorSpaceByName("lnf");
+    OCS::ConstColorSpaceRcPtr dstColorSpace = config->getColorSpaceByName("qt8");
+    */
     
     imageVec[0] = 445.0f/1023.0f;
-    std::cerr << "imageVec[i] " << imageVec[0] << std::endl;
+    std::cout << srcColorSpace->getName() << " ";
+    PrintColor(std::cout, &imageVec[0], "input");
+    std::cout << std::endl;
     
+    std::cout << dstColorSpace->getName() << " ";
     config->applyTransform(img, srcColorSpace, dstColorSpace);
-    std::cerr << "imageVec[i] " << imageVec[0] << std::endl;
+    PrintColor(std::cout, &imageVec[0], "transformed");
+    std::cout << std::endl;
     
+    std::cout << srcColorSpace->getName() << " ";
     config->applyTransform(img, dstColorSpace, srcColorSpace);
-    std::cerr << "imageVec[i] " << imageVec[0] << std::endl;
+    PrintColor(std::cout, &imageVec[0], "round trip");
+    std::cout << std::endl;
 }
 
 
@@ -148,7 +165,7 @@ void createConfig()
 
 void testCoordinateTransform()
 {
-    std::cerr << "Test 1" << std::endl;
+    std::cout << "Test 1" << std::endl;
     std::vector<float> imageVec1, imageVec2;
     int width = 2048;
     int height = 1556;
@@ -165,7 +182,7 @@ void testCoordinateTransform()
     }
     
     OCS::PackedImageDesc img1(&imageVec1[0], width, height, numChannels);
-    std::cerr << "img1 " << img1 << std::endl;
+    std::cout << "img1 " << img1 << std::endl;
     
     timeval t;
     gettimeofday(&t, 0);
@@ -180,7 +197,7 @@ void testCoordinateTransform()
     
     double timeS = bbb-aaa;
     
-    std::cerr << std::endl;
+    std::cout << std::endl;
     
     printf("time %0.1f ms  - %0.1f fps\n", timeS*1000.0, 1.0/timeS);
 }
