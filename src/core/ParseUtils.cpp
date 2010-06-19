@@ -187,7 +187,26 @@ OCS_NAMESPACE_ENTER
         
         return true;
     }
+    
+    
+    bool StringVecToIntVec(std::vector<int> &intArray,
+                           const std::vector<std::string> &lineParts)
+    {
+        intArray.resize(lineParts.size());
         
+        for(unsigned int i=0; i<lineParts.size(); i++)
+        {
+            std::istringstream inputStringstream(lineParts[i]);
+            int x;
+            if(!(inputStringstream >> x))
+            {
+                return false;
+            }
+            intArray[i] = x;
+        }
+        
+        return true;
+    }
 
 }
 OCS_NAMESPACE_EXIT

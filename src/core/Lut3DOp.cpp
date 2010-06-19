@@ -37,20 +37,26 @@ OCS_NAMESPACE_ENTER
 {
     namespace
     {
+        // Linear
         inline float lerp(float a, float b, float z)
             { return (b - a) * z + a; }
         
+        // Bilinear
         inline float lerp(float a, float b, float c, float d, float y, float z)
             { return lerp(lerp(a, b, z), lerp(c, d, z), y); }
         
-        inline float lerp(float a, float b, float c, float d, float e, float f, float g, float h, float x, float y, float z)
+        // Trilinear
+        inline float lerp(float a, float b, float c, float d,
+                          float e, float f, float g, float h,
+                          float x, float y, float z)
             { return lerp(lerp(a,b,c,d,y,z), lerp(e,f,g,h,y,z), x); }
         
         inline float lookupNearest_3D(int rIndex, int gIndex, int bIndex,
                                       int size_red, int size_green, int size_blue,
                                       const float* simple_rgb_lut, int channelIndex)
         {
-            return simple_rgb_lut[ Lut3DArrayOffset(rIndex, gIndex, bIndex, size_red, size_green, size_blue) + channelIndex];
+            return simple_rgb_lut[ GetGLLut3DArrayOffset(rIndex, gIndex, bIndex,
+                size_red, size_green, size_blue) + channelIndex];
         }
         
         // Note: This function assumes that minVal is less than maxVal
@@ -223,12 +229,34 @@ OCS_NAMESPACE_ENTER
                             m_interpolation(interpolation),
                             m_direction(direction)
         {
-            // TODO: assert luts is not 0 sized
             // Optionally, move this to a separate safety-check pass
             // to allow for optimizations to potentially remove
             // this pass.  For example, an inverse 3d lut may
             // not be allowed, but 2 in a row (forward + inverse)
             // may be allowed!
+            
+            if(m_direction == TRANSFORM_DIR_UNKNOWN)
+            {
+                throw OCSException("Cannot apply Lut3DOp, unspecified transform direction.");
+            }
+            if(m_interpolation == INTERP_UNKNOWN)
+            {
+                throw OCSException("Cannot apply Lut3DOp, unspecified interpolation.");
+            }
+            
+            for(int i=0; i<3; ++i)
+            {
+                if(m_lut->size[i] == 0)
+                {
+                    throw OCSException("Cannot apply Lut3DOp, lut object is empty.");
+                }
+                // TODO if from_min[i] == from_max[i]
+            }
+            
+            if(m_lut->size[0]*m_lut->size[1]*m_lut->size[2] * 3 != (int)m_lut->lut.size())
+            {
+                throw OCSException("Cannot apply Lut3DOp, specified size does not match data.");
+            }
         }
         
         Lut3DOp::~Lut3DOp()

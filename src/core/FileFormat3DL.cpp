@@ -31,11 +31,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FileTransform.h"
 #include "Lut1DOp.h"
 #include "Lut3DOp.h"
+#include "ParseUtils.h"
 #include "pystring/pystring.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <sstream>
+
+#include <iostream>
 
 /*
 
@@ -93,22 +97,42 @@ OCS_NAMESPACE_ENTER
             return -1;
         }
         
+        int GetMaxValueFromIntegerBitDepth(int bitDepth)
+        {
+            return static_cast<int>( pow(2.0, bitDepth) ) - 1;
+        }
         
-        
+        int Get3DLutEdgeSizeFromNumEntries(int numEntries)
+        {
+            float fdim = powf(numEntries / 3.0f, 1.0f/3.0f);
+            int dim = static_cast<int>(roundf(fdim));
+            
+            if(dim*dim*dim*3 != numEntries)
+            {
+                std::ostringstream os;
+                os << "Cannot infer 3D Lut size. ";
+                os << numEntries << " element(s) does not correspond to a ";
+                os << "unform cube edge length. (nearest edge length is ";
+                os << dim << ").";
+                throw OCSException(os.str().c_str());
+            }
+            
+            return dim;
+        }
         
         class LocalCachedFile : public CachedFile
         {
         public:
             LocalCachedFile()
             {
-                useLut1D = false;
-                lut1d = SharedPtr<Lut1D>(new Lut1D());
+                //useLut1D = false;
+                //lut1d = SharedPtr<Lut1D>(new Lut1D());
                 lut3d = SharedPtr<Lut3D>(new Lut3D());
             };
             ~LocalCachedFile() {};
             
-            bool useLut1D;
-            SharedPtr<Lut1D> lut1d;
+            //bool useLut1D;
+            //SharedPtr<Lut1D> lut1d;
             SharedPtr<Lut3D> lut3d;
         };
         
@@ -126,30 +150,33 @@ OCS_NAMESPACE_ENTER
 
             virtual CachedFileRcPtr Load(std::istream & istream) const
             {
-                /*
                 std::vector<int> rawLutData;
-                int maxLutValue=0;
+                int maxLutValue = 0;
                 
-                // Parse the file format
+                // Parse the file 3d lut data to an int array
                 {
-                    int lineSize = 4096;
-                    char lineBuffer[lineSize];
-                    std::string cleanLine;
+                    const int MAX_LINE_SIZE = 4096;
+                    char lineBuffer[MAX_LINE_SIZE];
+                    
                     std::vector<std::string> lineParts;
                     std::vector<int> tmpData;
                     
-                    while(infile.good())
+                    while(istream.good())
                     {
-                        infile.getline(lineBuffer, lineSize);
+                        istream.getline(lineBuffer, MAX_LINE_SIZE);
                         
                         // Strip and split the line
-                        cleanLine = pystring::strip(lineBuffer);
-                        pystring::split(cleanLine, lineParts);
+                        pystring::split(pystring::strip(lineBuffer), lineParts);
                         
                         if(lineParts.empty()) continue;
                         if((lineParts.size() > 0) && pystring::startswith(lineParts[0],"#")) continue;
                         
-                        if(!stringVecToIntVec(tmpData, lineParts)) continue;
+                        // Ignore all data that isnt 3 ints on a line.
+                        // This means we are incorrectly ignoring the header data
+                        // and the shaper lut
+                        // TODO: Load the .3dl shaper lut
+                        
+                        if(!StringVecToIntVec(tmpData, lineParts)) continue;
                         if(tmpData.empty()) continue;
                         if(tmpData.size() != 3) continue;
                         
@@ -163,118 +190,74 @@ OCS_NAMESPACE_ENTER
                     }
                 }
                 
+                // Interpret the int array as a 3dlut
+                
                 if(rawLutData.empty())
                 {
-                    throw ColorException("Error parsing .3dl lut contents. Lut is empty: " + fileName);
+                    std::ostringstream os;
+                    os << "Error parsing .3dl file. ";
+                    os << "The contents do not contain any lut entries.";
+                    throw OCSException(os.str().c_str());
                 }
                 
-                // Transcode the lut data
-                
-                unsigned int lutDimensionSize = static_cast<unsigned int>(powf((rawLutData.size() / 3.0), (1/3.0)) + 0.5);
-                unsigned int lutTotalSize = lutDimensionSize*lutDimensionSize*lutDimensionSize*3;
-                if(lutDimensionSize < 2)
-                {
-                    throw ColorException("Error parsing .3dl lut contents. Lut is empty: " + fileName);
-                }
-                
-                
-                std::auto_ptr<LookupTable> result(new LookupTable);
-                
-                result->type = LUT_3D;
-                result->size_red = lutDimensionSize;
-                result->size_green = lutDimensionSize;
-                result->size_blue = lutDimensionSize;
-                result->size_alpha = 0;
-                result->cube_lut.resize(lutTotalSize);
+                int lutEdgeSize = Get3DLutEdgeSizeFromNumEntries(rawLutData.size());
                 
                 // We use the maximum value found in the lut to infer
                 // the bit depth.  While this is ugly. We dont believe there is
                 // a better way, looking at the file, to determine this.
                 
                 int likelyBitDepth = GetLikelyLutBitDepth(maxLutValue);
-                int lutMaxVal = static_cast<int>(pow(2.0,likelyBitDepth))-1;
-                float scale = 1.0 / static_cast<float>(lutMaxVal);
-                
-                for(unsigned int rIndex=0;rIndex<result->size_red; rIndex++)
+                if(likelyBitDepth < 0)
                 {
-                    for(unsigned int gIndex=0;gIndex<result->size_green; gIndex++)
+                    std::ostringstream os;
+                    os << "Error parsing .3dl file.";
+                    os << "The maximum lut value, " << maxLutValue;
+                    os << ", does not correspond to any likely bit depth. ";
+                    os << "Please confirm source file is valid.";
+                    throw OCSException(os.str().c_str());
+                }
+                
+                int bitDepthMaxVal = GetMaxValueFromIntegerBitDepth(likelyBitDepth);
+                float scale = 1.0f / static_cast<float>(bitDepthMaxVal);
+                
+                Lut3DRcPtr lut3d(new Lut3D());
+                
+                lut3d->size[0] = lutEdgeSize;
+                lut3d->size[1] = lutEdgeSize;
+                lut3d->size[2] = lutEdgeSize;
+                lut3d->lut.resize(lutEdgeSize * lutEdgeSize * lutEdgeSize * 3);
+                
+                for(int rIndex=0; rIndex<lut3d->size[0]; ++rIndex)
+                {
+                    for(int gIndex=0; gIndex<lut3d->size[1]; ++gIndex)
                     {
-                        for(unsigned int bIndex=0;bIndex<result->size_blue; bIndex++)
+                        for(int bIndex=0; bIndex<lut3d->size[2]; ++bIndex)
                         {
-                            int lustreIndex = 3 * (bIndex + result->size_blue * (gIndex + result->size_green * rIndex));
+                            int autoDeskLutIndex = GetAutodeskLut3DArrayOffset(rIndex, gIndex, bIndex,
+                                                                   lut3d->size[0], lut3d->size[1], lut3d->size[2]);
+                            int glLutIndex = GetGLLut3DArrayOffset(rIndex, gIndex, bIndex,
+                                                                   lut3d->size[0], lut3d->size[1], lut3d->size[2]);
                             
+                            if(autoDeskLutIndex < 0 || autoDeskLutIndex >= (int)lut3d->lut.size() ||
+                               glLutIndex < 0 || glLutIndex >= (int)lut3d->lut.size())
+                            {
+                                std::ostringstream os;
+                                os << "Error parsing .3dl file.";
+                                os << "A lut entry is specified (";
+                                os << rIndex << " " << gIndex << " " << bIndex;
+                                os << " that falls outside of the cube.";
+                                throw OCSException(os.str().c_str());
+                            }
                             
-                            int spiIndex = lut3DArrayOffset(rIndex, gIndex, bIndex,
-                                                            result->size_red,
-                                                            result->size_green,
-                                                            result->size_blue);
-                            result->cube_lut[spiIndex+0] = rawLutData[lustreIndex+0]*scale;
-                            result->cube_lut[spiIndex+1] = rawLutData[lustreIndex+1]*scale;
-                            result->cube_lut[spiIndex+2] = rawLutData[lustreIndex+2]*scale;
-                            
+                            lut3d->lut[glLutIndex+0] = rawLutData[autoDeskLutIndex+0] * scale;
+                            lut3d->lut[glLutIndex+1] = rawLutData[autoDeskLutIndex+1] * scale;
+                            lut3d->lut[glLutIndex+2] = rawLutData[autoDeskLutIndex+2] * scale;
                         }
                     }
                 }
                 
-                */
-                /*
-                const int MAX_LINE_SIZE = 4096;
-                char lineBuffer[MAX_LINE_SIZE];
-                
-                Lut3DRcPtr lut3d(new Lut3D());
-                
-                // Read header information
-                
-                // TODO: Assert 1st line is SPILUT 1.0
-                istream.getline(lineBuffer, MAX_LINE_SIZE);
-                // TODO: Assert 2nd line is 3 3
-                istream.getline(lineBuffer, MAX_LINE_SIZE);
-                
-                // Get LUT Size
-                // TODO: Error handling
-                int rSize, gSize, bSize;
-                istream.getline(lineBuffer, MAX_LINE_SIZE);
-                sscanf(lineBuffer, "%d %d %d", &rSize, &gSize, &bSize);
-                
-                lut3d->size[0] = rSize;
-                lut3d->size[1] = gSize;
-                lut3d->size[2] = bSize;
-                lut3d->lut.resize(rSize * gSize * bSize * 3);
-                
-                // Parse table
-                int index = 0;
-                int rIndex, gIndex, bIndex;
-                float redValue, greenValue, blueValue;
-                
-                int entriesRemaining = rSize * gSize * bSize;
-                
-                while (istream.good() && entriesRemaining > 0)
-                {
-                    istream.getline(lineBuffer, MAX_LINE_SIZE);
-                    
-                    if (sscanf(lineBuffer, "%d %d %d %f %f %f",
-                        &rIndex, &gIndex, &bIndex,
-                        &redValue, &greenValue, &blueValue) == 6)
-                    {
-                        index = Lut3DArrayOffset(rIndex, gIndex, bIndex,
-                                                 rSize, gSize, bSize);
-                        
-                        // TODO: confirm index is within bounds
-                        lut3d->lut[index+0] = redValue;
-                        lut3d->lut[index+1] = greenValue;
-                        lut3d->lut[index+2] = blueValue;
-                        
-                        entriesRemaining--;
-                    }
-                }
-                
-                // Have we fully populated the table?
-                if (entriesRemaining>0) 
-                    throw OCSException("Not enough entries found.");
-                */
-                
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-                //cachedFile->lut = lut3d;
+                cachedFile->lut3d = lut3d;
                 return cachedFile;
             }
 
@@ -295,13 +278,13 @@ OCS_NAMESPACE_ENTER
                 TransformDirection newDir = CombineTransformDirections(dir,
                     fileTransform.getDirection());
                 
-                if(newDir == TRANSFORM_DIR_INVERSE)
+                if(newDir == TRANSFORM_DIR_FORWARD)
                 {
                     // The 1D Shaper lut, if it exists is super low
                     // resolution. use the best interpolation we can.
                     // (right now, it's linear). If cubic is added, consider
                     // using it
-                    
+                    /*
                     if(cachedFile->useLut1D)
                     {
                         CreateLut1DOp(opVec,
@@ -309,7 +292,7 @@ OCS_NAMESPACE_ENTER
                                       INTERP_LINEAR,
                                       TRANSFORM_DIR_FORWARD);
                     }
-                    
+                    */
                     CreateLut3DOp(opVec,
                                   cachedFile->lut3d,
                                   fileTransform.getInterpolation(),
@@ -321,7 +304,7 @@ OCS_NAMESPACE_ENTER
                                   cachedFile->lut3d,
                                   fileTransform.getInterpolation(),
                                   TRANSFORM_DIR_INVERSE);
-                    
+                    /*
                     if(cachedFile->useLut1D)
                     {
                         CreateLut1DOp(opVec,
@@ -329,6 +312,7 @@ OCS_NAMESPACE_ENTER
                                       INTERP_LINEAR,
                                       TRANSFORM_DIR_INVERSE);
                     }
+                    */
                 }
             }
         };

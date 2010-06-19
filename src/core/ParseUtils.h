@@ -36,9 +36,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCS_NAMESPACE_ENTER
 {
-    bool StringVecToFloatVec(std::vector<float> &floatArray,
-                             const std::vector<std::string> &lineParts);
-
+    bool StringVecToFloatVec(std::vector<float> & floatArray,
+                             const std::vector<std::string> & lineParts);
+    
+    bool StringVecToIntVec(std::vector<int> & intArray,
+                           const std::vector<std::string> & lineParts);
 }
 OCS_NAMESPACE_EXIT
 

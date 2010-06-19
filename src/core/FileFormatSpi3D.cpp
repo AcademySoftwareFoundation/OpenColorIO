@@ -121,10 +121,18 @@ OCS_NAMESPACE_ENTER
                         &rIndex, &gIndex, &bIndex,
                         &redValue, &greenValue, &blueValue) == 6)
                     {
-                        index = Lut3DArrayOffset(rIndex, gIndex, bIndex,
-                                                 rSize, gSize, bSize);
+                        index = GetGLLut3DArrayOffset(rIndex, gIndex, bIndex,
+                                                      rSize, gSize, bSize);
+                        if(index < 0 || index >= lut3d->lut.size())
+                        {
+                            std::ostringstream os;
+                            os << "Cannot load .spi3d lut, data is invalid. ";
+                            os << "A lut entry is specified (";
+                            os << rIndex << " " << gIndex << " " << bIndex;
+                            os << " that falls outside of the cube.";
+                            throw OCSException(os.str().c_str());
+                        }
                         
-                        // TODO: confirm index is within bounds
                         lut3d->lut[index+0] = redValue;
                         lut3d->lut[index+1] = greenValue;
                         lut3d->lut[index+2] = blueValue;

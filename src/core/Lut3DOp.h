@@ -64,12 +64,18 @@ OCS_NAMESPACE_ENTER
     typedef SharedPtr<Lut3D> Lut3DRcPtr;
     
     // This memory arrangement order corresponds to the standard
-    // OpenGL memory layout
+    // OpenGL memory layout, as well as the SPI Lut
     
-    inline int Lut3DArrayOffset(int indexR, int indexG, int indexB,
-                                int sizeR,  int sizeG,  int /*sizeB*/)
+    inline int GetGLLut3DArrayOffset(int indexR, int indexG, int indexB,
+                                     int sizeR,  int sizeG,  int /*sizeB*/)
     {
         return 3 * (indexR + sizeR * (indexG + sizeG * indexB));
+    }
+    
+    inline int GetAutodeskLut3DArrayOffset(int indexR, int indexG, int indexB,
+                                           int /*sizeR*/,  int sizeG,  int sizeB)
+    {
+        return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
     }
     
     void CreateLut3DOp(OpRcPtrVec * opVec,

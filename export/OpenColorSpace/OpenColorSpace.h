@@ -38,7 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.7
 //
 
-// TODO: add .3dl support
 // TODO: update string parsing code to provide better convenience fcns.
 
 // TODO: get simple display transform working. can it be expressed as an op?
