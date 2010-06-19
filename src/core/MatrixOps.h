@@ -37,7 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCS_NAMESPACE_ENTER
 {
-    // NOTE: These currently do not effect alpha...
+    // These are all equally efficient, use whichever is most convenient
+    //
+    // NOTE: These currently do not affect alpha
     
     void CreateScaleOp(OpRcPtrVec * opVec,
                        const float * scale4,
@@ -64,7 +66,7 @@ OCS_NAMESPACE_ENTER
                             const float * lumaCoef3,
                             TransformDirection direction);
     
-    // TODO: Create hue rotate Op
+    // TODO: hue rotate Matrix Op
 }
 OCS_NAMESPACE_EXIT
 
