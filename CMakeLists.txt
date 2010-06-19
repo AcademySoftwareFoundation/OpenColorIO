@@ -18,6 +18,7 @@ add_library(OpenColorSpace SHARED
     src/core/FileFormat3DL.cpp
     src/core/FileFormatSpi1D.cpp
     src/core/FileFormatSpi3D.cpp
+    src/core/FileFormatSpiMtx.cpp
     src/core/FileTransform.cpp
     src/core/GroupTransform.cpp
     src/core/ImageDesc.cpp
