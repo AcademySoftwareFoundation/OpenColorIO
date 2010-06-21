@@ -290,7 +290,7 @@ OCS_NAMESPACE_ENTER
         std::string srcFamily = srcColorSpace->getFamily();
         std::string dstFamily = dstColorSpace->getFamily();
         
-        if(srcFamily != dstFamily)
+        if(srcFamily == dstFamily)
         {
             // TODO: return NoOpProcessor?
             return ConstProcessorRcPtr(new OCSProcessor(opVec)); // TODO: Deleter?
