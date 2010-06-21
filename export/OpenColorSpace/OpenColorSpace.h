@@ -76,11 +76,13 @@ try
     OCS::ConstColorSpaceRcPtr csDst = \
         config->getColorSpaceForRole(OCS::ROLE_SCENE_LINEAR);
     
+    ConstProcessorRcPtr processor = config->getProcessor(csSrc, csDst);
+    
     // Wrap the image in a light-weight ImageDescription,
     // and convert it in place
     
-    OCS::PackedImageDesc imgDesc(imageData, w, h, 4);
-    config->applyTransform(imgDesc, csSrc, csDst);
+    OCS::PackedImageDesc img(imageData, w, h, 4);
+    processor->render(img);
 }
 catch(OCS::OCSException& exception)
 {
@@ -160,6 +162,9 @@ OCS_NAMESPACE_ENTER
     class OCSException;
     
     
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
     
     enum ColorSpaceDirection
     {
@@ -209,6 +214,9 @@ OCS_NAMESPACE_ENTER
         HW_LANGUAGE_CG,  ///< Nvidia Cg shader
         HW_LANGUAGE_GLSL     ///< OpenGL Shading Language
     };
+    
+    
+    
     
     /*!
     ///////////////////////////////////////////////////////////////////////////
@@ -474,7 +482,6 @@ OCS_NAMESPACE_ENTER
     //
     
     
-    
     class Processor
     {
     public:
@@ -482,10 +489,10 @@ OCS_NAMESPACE_ENTER
         
         virtual bool isNoOp() const = 0;
         
-        // SW CPU PATH
+        // SW (CPU) PATH
         virtual void render(ImageDesc& img) const = 0;
         
-        // HW GPU PATH
+        // HW (GPU) PATH
         //! Get the 3d lut + cg shader for the specified DisplayTransform
         //
         // cg signature will be:
@@ -493,7 +500,6 @@ OCS_NAMESPACE_ENTER
         //                      const uniform sampler3D   lut3d)
         
         // lut3d should be size: 3*lut3DEdgeSize*lut3DEdgeSize*lut3DEdgeSize
-        
         
         // return 0 if unknown
         virtual const char * getHWShaderText(const HwProfileDesc & hwDesc) const = 0;
@@ -605,6 +611,7 @@ OCS_NAMESPACE_ENTER
     };
     
     
+    ///////////////////////////////////////////////////////////////////////////
     
     class HwProfileDesc
     {
@@ -613,14 +620,17 @@ OCS_NAMESPACE_ENTER
         
         virtual ~HwProfileDesc();
         
-        /*
+        void setLut3DEdgeSize(int size);
         int getLut3DEdgeSize() const;
-        const char * getShaderFcnName() const;
-        HwLanguage getHWLanguage() const;
-        */
         
-        // static int GetMaxHWCacheSizeMB();
-        // static void SetMaxHWCacheSizeMB(int maxCacheEntries);
+        void setShaderFunctionName(const char * name);
+        const char * getShaderFunctionName() const;
+        
+        void setHwLanguage(HwLanguage lang);
+        HwLanguage getHwLanguage() const;
+        
+        // static int GetMaxHwCacheSizeMB();
+        // static void SetMaxHwCacheSizeMB(int maxCacheEntries);
         
     private:
         class Impl;
@@ -656,6 +666,9 @@ OCS_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const Transform&);
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
     
     
     class GroupTransform : public Transform
@@ -694,6 +707,7 @@ OCS_NAMESPACE_ENTER
     std::ostream& operator<< (std::ostream&, const GroupTransform&);
     
     
+    ///////////////////////////////////////////////////////////////////////////
     
     
     class FileTransform : public Transform
@@ -731,7 +745,10 @@ OCS_NAMESPACE_ENTER
     
     
     
-    /////////////////////////////////////////////////////////
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
     //
     // Utils
     
@@ -752,6 +769,9 @@ OCS_NAMESPACE_ENTER
         std::string msg_;
     };
     
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
     
     
     const char * BoolToString(bool val);
@@ -775,6 +795,11 @@ OCS_NAMESPACE_ENTER
     
     const char * InterpolationToString(Interpolation interp);
     Interpolation InterpolationFromString(const char * s);
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
     
     /*!
     ColorSpace Roles are used so that plugins, in addition to this API can have

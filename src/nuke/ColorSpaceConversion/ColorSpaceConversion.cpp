@@ -120,9 +120,9 @@ void ColorSpaceConversion::_validate(bool for_real)
         const char * outputName = outputColorSpaceCstrNames[outputColorSpaceIndex];
         
         OCS::ConstConfigRcPtr config = OCS::GetCurrentConfig();
-        OCS::ConstColorSpaceRcPtr inputColorSpace = config->getColorSpaceByName( inputName );
-        OCS::ConstColorSpaceRcPtr outputColorSpace = config->getColorSpaceByName( outputName );
-        processor = config->getProcessor(inputColorSpace, outputColorSpace);
+        OCS::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName( inputName );
+        OCS::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName( outputName );
+        processor = config->getProcessor(csSrc, csDst);
     }
     catch(OCS::OCSException &e)
     {
