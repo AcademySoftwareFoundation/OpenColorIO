@@ -150,8 +150,23 @@ OCS_NAMESPACE_ENTER
     typedef SharedPtr<const FileTransform> ConstFileTransformRcPtr;
     typedef SharedPtr<FileTransform> FileTransformRcPtr;
     
+    class Processor;
+    typedef SharedPtr<const Processor> ConstProcessorRcPtr;
+    typedef SharedPtr<Processor> ProcessorRcPtr;
+    
     class ImageDesc;
+    class HwProfileDesc;
+    
     class OCSException;
+    
+    
+    
+    enum ColorSpaceDirection
+    {
+        COLORSPACE_DIR_UNKNOWN = 0,
+        COLORSPACE_DIR_TO_REFERENCE,
+        COLORSPACE_DIR_FROM_REFERENCE
+    };
     
     enum TransformDirection
     {
@@ -160,12 +175,11 @@ OCS_NAMESPACE_ENTER
         TRANSFORM_DIR_INVERSE
     };
     
-    
-    enum ColorSpaceDirection
+    enum Interpolation
     {
-        COLORSPACE_DIR_UNKNOWN = 0,
-        COLORSPACE_DIR_TO_REFERENCE,
-        COLORSPACE_DIR_FROM_REFERENCE
+        INTERP_UNKNOWN = 0,
+        INTERP_NEAREST, //! nearest neighbor in all dimensions
+        INTERP_LINEAR   //! linear interpolation in all dimensions
     };
     
     enum BitDepth {
@@ -186,11 +200,14 @@ OCS_NAMESPACE_ENTER
         HW_ALLOCATION_LG2
     };
     
-    enum Interpolation
+    //! Used when there is a choice of hardware shader language.
+    // TODO: Specify language spec in each enum?
+    
+    enum HwLanguage
     {
-        INTERP_UNKNOWN = 0,
-        INTERP_NEAREST, //! nearest neighbor in all dimensions
-        INTERP_LINEAR   //! linear interpolation in all dimensions
+        HW_LANGUAGE_UNKNOWN = 0,
+        HW_LANGUAGE_CG,  ///< Nvidia Cg shader
+        HW_LANGUAGE_GLSL     ///< OpenGL Shading Language
     };
     
     /*!
@@ -351,27 +368,15 @@ OCS_NAMESPACE_ENTER
         //  arbitrary numbers of additional channels can be supported (ignored)
         //  using the pixelStrideBytes arg.
         
-        bool isTransformNoOp(const ConstColorSpaceRcPtr & srcColorSpace,
-                             const ConstColorSpaceRcPtr & dstColorSpace) const;
-        
-        void applyTransform(ImageDesc& img,
-                            const ConstColorSpaceRcPtr & srcColorSpace,
-                            const ConstColorSpaceRcPtr & dstColorSpace) const;
-        
-        
-        
-        
-        
+        ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
+                                         const ConstColorSpaceRcPtr & dstColorSpace) const;
         
         // Individual lut application functions
         // Can be used to apply a .lut, .dat, .lut3d, or .3dl file.
         // Not generally needed, but useful in testing.
         
-        bool isTransformNoOp(const Transform& transform) const;
-        
-        void applyTransform(ImageDesc& imageDesc,
-                            const ConstTransformRcPtr& transform,
-                            TransformDirection direction = TRANSFORM_DIR_FORWARD) const;
+        ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
+                                         TransformDirection direction = TRANSFORM_DIR_FORWARD) const;
         
     private:
         Config();
@@ -459,6 +464,49 @@ OCS_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const ColorSpace&);
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Processor
+    //
+    //
+    
+    
+    
+    class Processor
+    {
+    public:
+        virtual ~Processor();
+        
+        virtual bool isNoOp() const = 0;
+        
+        // SW CPU PATH
+        virtual void render(ImageDesc& img) const = 0;
+        
+        // HW GPU PATH
+        //! Get the 3d lut + cg shader for the specified DisplayTransform
+        //
+        // cg signature will be:
+        //        shaderFcnName(in half4 inPixel,
+        //                      const uniform sampler3D   lut3d)
+        
+        // lut3d should be size: 3*lut3DEdgeSize*lut3DEdgeSize*lut3DEdgeSize
+        
+        
+        // return 0 if unknown
+        virtual const char * getHWShaderText(const HwProfileDesc & hwDesc) const = 0;
+        virtual int getHWLut3DEdgeSize() const = 0;
+        virtual const char * getHWLut3DCacheID(const HwProfileDesc & hwDesc) const = 0;
+        virtual void getHWLut3D(float* lut3d, const HwProfileDesc & hwDesc) const = 0;
+    
+    private:
+        Processor& operator= (const Processor &);
+    };
+    
+    
+    
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -555,6 +603,36 @@ OCS_NAMESPACE_ENTER
         PlanarImageDesc(const PlanarImageDesc &);
         PlanarImageDesc& operator= (const PlanarImageDesc &);
     };
+    
+    
+    
+    class HwProfileDesc
+    {
+    public:
+        HwProfileDesc();
+        
+        virtual ~HwProfileDesc();
+        
+        /*
+        int getLut3DEdgeSize() const;
+        const char * getShaderFcnName() const;
+        HwLanguage getHWLanguage() const;
+        */
+        
+        // static int GetMaxHWCacheSizeMB();
+        // static void SetMaxHWCacheSizeMB(int maxCacheEntries);
+        
+    private:
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+        
+        HwProfileDesc(const HwProfileDesc &);
+        HwProfileDesc& operator= (const HwProfileDesc &);
+    };
+    
+    
+    
     
     
     ///////////////////////////////////////////////////////////////////////////

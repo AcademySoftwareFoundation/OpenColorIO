@@ -10,22 +10,6 @@
     };
     */
     
-    //! Used when there is a choice of hardware shader language.
-    // TODO: Specify language spec in each enum?
-    /*
-    enum HWLanguage
-    {
-        HW_LANGUAGE_UNKNOWN = 0,
-        HW_LANGUAGE_CG,  ///< Nvidia Cg shader
-        HW_LANGUAGE_GLSL     ///< OpenGL Shading Language
-    };
-    */
-    
-    
-    
-    
-    
-    
     
     
     Config ...
@@ -150,9 +134,6 @@
         // As recomputing the cg displayTransform shader / 3dlut may be
         // potentially expensive, this library will cache the most recently
         // queried entries. You can specify the max entries of luts to cache.
-        
-        int GetHWDisplayTransformMaxCacheEntries();
-        void SetHWDisplayTransformMaxCacheEntries(int maxCacheEntries);
         
         //! Get the size of the recommended 3d lut.
         //  This is the size of one of the edges (such as '32')
@@ -482,35 +463,6 @@
     
     std::ostream& operator<< (std::ostream&, const DisplayTransform&);
     */
-    
-    
-    
-    
-    //! Get the 3d lut + cg shader for the specified DisplayTransform
-    //
-    // cg signature will be:
-    //        shaderFcnName(in half4 inPixel,
-    //                      const uniform sampler3D   lut3d)
-    /*
-    class HWDisplayTransformImpl;
-    
-    class HWDisplayTransform
-    {
-    public:
-        HWDisplayTransform();
-        ~HWDisplayTransform();
-        
-        const char * getLut3dCacheID() const;
-        const char * getShaderText() const;
-        
-        // lut3d should be size: 3*lut3DSize*lut3DSize*lut3DSize
-        void fillLut3d(float* lut3d) const;
-    private:
-        friend class HWDisplayTransformImpl;
-        std::auto_ptr<HWDisplayTransformImpl> m_impl;
-    };
-    */
-    
     
     
     /////////////////////////////////////////////////////////

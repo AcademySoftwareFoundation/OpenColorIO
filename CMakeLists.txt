@@ -30,7 +30,7 @@ add_library(OpenColorSpace SHARED
     src/core/Op.cpp
     src/core/ParseUtils.cpp
     src/core/PathUtils.cpp
-    src/core/Rendering.cpp
+    src/core/Processor.cpp
     src/core/ScanlineHelper.cpp
     src/core/Transform.cpp
     src/core/XmlIO.cpp

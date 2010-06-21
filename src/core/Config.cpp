@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pystring/pystring.h"
 #include "Mutex.h"
 #include "PathUtils.h"
-#include "Rendering.h"
+#include "Processor.h"
 
 #include <cstdlib>
 #include <sstream>
@@ -238,6 +238,7 @@ OCS_NAMESPACE_ENTER
         return m_impl->getRole(index);
     }
     
+    /*
     bool Config::isTransformNoOp(const ConstColorSpaceRcPtr & srcColorSpace,
                                  const ConstColorSpaceRcPtr & dstColorSpace) const
     {
@@ -254,7 +255,8 @@ OCS_NAMESPACE_ENTER
         // TODO: be more clever.  create the OpVector, optimize it, see if it's empty.
         return false;
     }
-    
+    */
+    /*
     void Config::applyTransform(ImageDesc& img,
                                 const ConstColorSpaceRcPtr & srcColorSpace,
                                 const ConstColorSpaceRcPtr & dstColorSpace) const
@@ -273,20 +275,62 @@ OCS_NAMESPACE_ENTER
         
         RenderTransform(img, *this, combinedTransform, TRANSFORM_DIR_FORWARD);
     }
+    */
     
     
-    bool Config::isTransformNoOp(const Transform& /*transform*/) const
+    
+    
+    
+    ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
+                                             const ConstColorSpaceRcPtr & dstColorSpace) const
     {
-        // TODO: be more clever.  create the OpVector, optimize it, see if it's empty.
-        return false;
+        OpRcPtrVec opVec;
+        
+        // All colorspace conversions within the same family are no-ops
+        std::string srcFamily = srcColorSpace->getFamily();
+        std::string dstFamily = dstColorSpace->getFamily();
+        
+        if(srcFamily != dstFamily)
+        {
+            // TODO: return NoOpProcessor?
+            return ConstProcessorRcPtr(new OCSProcessor(opVec)); // TODO: Deleter?
+        }
+        
+        // Create a combined transform group
+        GroupTransformRcPtr combinedTransform = GroupTransform::Create();
+        
+        combinedTransform->setDirection(TRANSFORM_DIR_FORWARD);
+        combinedTransform->push_back( srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE) );
+        combinedTransform->push_back( dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE) );
+        
+        return getProcessor( combinedTransform );
     }
     
-    void Config::applyTransform(ImageDesc& img,
-                                const ConstTransformRcPtr& transform,
-                                TransformDirection direction) const
+    // Individual lut application functions
+    // Can be used to apply a .lut, .dat, .lut3d, or .3dl file.
+    // Not generally needed, but useful in testing.
+    
+    ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform,
+                                             TransformDirection direction) const
     {
-        RenderTransform(img, *this, transform, direction);
+        // TODO: thread safety during build ops?
+        OpRcPtrVec opVec;
+        BuildOps(&opVec, *this, transform, direction);
+        
+        // TODO: Perform smart optimizations / collapsing on the OpVec
+        
+        // After construction, finalize the setup with preRender
+        for(unsigned int i=0; i<opVec.size(); ++i)
+        {
+            opVec[i]->preRender();
+        }
+        
+        
+        return ConstProcessorRcPtr(new OCSProcessor(opVec)); // TODO: Deleter?
     }
+
+
+    
     
     
     
