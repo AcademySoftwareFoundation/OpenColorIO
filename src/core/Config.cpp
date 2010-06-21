@@ -280,26 +280,23 @@ OCS_NAMESPACE_ENTER
     
     
     
+    // TODO: Add GPU Allocation hints into opstream. Possible to autocompute?
     
     ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
                                              const ConstColorSpaceRcPtr & dstColorSpace) const
     {
-        OpRcPtrVec opVec;
-        
         // All colorspace conversions within the same family are no-ops
         std::string srcFamily = srcColorSpace->getFamily();
         std::string dstFamily = dstColorSpace->getFamily();
         
         if(srcFamily == dstFamily)
         {
-            // TODO: return NoOpProcessor?
-            return ConstProcessorRcPtr(new OCSProcessor(opVec)); // TODO: Deleter?
+            OpRcPtrVec opVec;
+            return LocalProcessor::Create(opVec);
         }
         
         // Create a combined transform group
         GroupTransformRcPtr combinedTransform = GroupTransform::Create();
-        
-        combinedTransform->setDirection(TRANSFORM_DIR_FORWARD);
         combinedTransform->push_back( srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE) );
         combinedTransform->push_back( dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE) );
         
@@ -325,8 +322,7 @@ OCS_NAMESPACE_ENTER
             opVec[i]->preRender();
         }
         
-        
-        return ConstProcessorRcPtr(new OCSProcessor(opVec)); // TODO: Deleter?
+        return LocalProcessor::Create(opVec);
     }
 
 

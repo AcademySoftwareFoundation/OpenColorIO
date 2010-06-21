@@ -36,16 +36,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCS_NAMESPACE_ENTER
 {
-
-    // TODO: hide constructor, add create function?
-    // TODO: use custom delete?
-    
-    class OCSProcessor : public Processor
+    class LocalProcessor : public Processor
     {
     public:
-        OCSProcessor(const OpRcPtrVec& opVec);
+        static ConstProcessorRcPtr Create(const OpRcPtrVec& opVec);
         
-        virtual ~OCSProcessor();
+        virtual ~LocalProcessor();
         
         virtual bool isNoOp() const;
         
@@ -57,6 +53,14 @@ OCS_NAMESPACE_ENTER
         virtual void getHWLut3D(float* lut3d, const HwProfileDesc & hwDesc) const;
         
     private:
+        LocalProcessor(const OpRcPtrVec& opVec);
+        LocalProcessor(const LocalProcessor &);
+        LocalProcessor& operator= (const LocalProcessor &);
+        
+        static void deleter(LocalProcessor* p);
+        
+        
+        
         OpRcPtrVec m_opVec;
     };
     

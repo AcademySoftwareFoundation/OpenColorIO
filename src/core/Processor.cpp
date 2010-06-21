@@ -35,25 +35,37 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCS_NAMESPACE_ENTER
 {
-    
     Processor::~Processor()
     {
     
     }
     
-    OCSProcessor::OCSProcessor(const OpRcPtrVec& opVec):
+    
+    //////////////////////////////////////////////////////////////////////////
+    
+    ConstProcessorRcPtr LocalProcessor::Create(const OpRcPtrVec& opVec)
+    {
+        return ConstProcessorRcPtr(new LocalProcessor(opVec), &deleter);
+    }
+    
+    void LocalProcessor::deleter(LocalProcessor* p)
+    {
+        delete p;
+    }
+    
+    LocalProcessor::LocalProcessor(const OpRcPtrVec& opVec):
         m_opVec(opVec)
     { }
     
-    OCSProcessor::~OCSProcessor()
+    LocalProcessor::~LocalProcessor()
     { }
     
-    bool OCSProcessor::isNoOp() const
+    bool LocalProcessor::isNoOp() const
     {
         return m_opVec.empty();
     }
     
-    void OCSProcessor::render(ImageDesc& img) const
+    void LocalProcessor::render(ImageDesc& img) const
     {
         if(isNoOp()) return;
         
@@ -78,22 +90,22 @@ OCS_NAMESPACE_ENTER
     }
 
     
-    const char * OCSProcessor::getHWShaderText(const HwProfileDesc & hwDesc) const
+    const char * LocalProcessor::getHWShaderText(const HwProfileDesc & hwDesc) const
     {
         return "";
     }
     
-    int OCSProcessor::getHWLut3DEdgeSize() const
+    int LocalProcessor::getHWLut3DEdgeSize() const
     {
         return 0;
     }
     
-    const char * OCSProcessor::getHWLut3DCacheID(const HwProfileDesc & hwDesc) const
+    const char * LocalProcessor::getHWLut3DCacheID(const HwProfileDesc & hwDesc) const
     {
         return "";
     }
     
-    void OCSProcessor::getHWLut3D(float* lut3d, const HwProfileDesc & hwDesc) const
+    void LocalProcessor::getHWLut3D(float* lut3d, const HwProfileDesc & hwDesc) const
     {
         
     }
