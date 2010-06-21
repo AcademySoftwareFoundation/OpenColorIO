@@ -114,19 +114,30 @@ void ColorSpaceConversion::_validate(bool for_real)
         return;
     }
 
-    // TODO when should these be retrieved?
-    currentConfig = OCS::GetCurrentConfig();
-    inputColorSpace = currentConfig->getColorSpaceByName( inputColorSpaceCstrNames[inputColorSpaceIndex]);
-    outputColorSpace =currentConfig->getColorSpaceByName(outputColorSpaceCstrNames[outputColorSpaceIndex]);
-
-    if(currentConfig->isTransformNoOp(inputColorSpace, outputColorSpace))
+    try
+    {
+        const char * inputName = inputColorSpaceCstrNames[inputColorSpaceIndex];
+        const char * outputName = outputColorSpaceCstrNames[outputColorSpaceIndex];
+        
+        OCS::ConstConfigRcPtr config = OCS::GetCurrentConfig();
+        OCS::ConstColorSpaceRcPtr inputColorSpace = config->getColorSpaceByName( inputName );
+        OCS::ConstColorSpaceRcPtr outputColorSpace = config->getColorSpaceByName( outputName );
+        processor = config->getProcessor(inputColorSpace, outputColorSpace);
+    }
+    catch(OCS::OCSException &e)
+    {
+        error(e.what());
+        return;
+    }
+    
+    if(processor->isNoOp())
     {
         // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
         copy_info();
         return;
     }
-
+    
     set_out_channels(DD::Image::Mask_All);
 
     DD::Image::PixelIop::_validate(for_real);
@@ -205,8 +216,7 @@ void ColorSpaceConversion::pixel_engine(
         try
         {
             OCS::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
-            
-            currentConfig->applyTransform(img, inputColorSpace, outputColorSpace);
+            processor->render(img);
         }
         catch(OCS::OCSException &e)
         {

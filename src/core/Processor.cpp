@@ -36,9 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCS_NAMESPACE_ENTER
 {
     Processor::~Processor()
-    {
-    
-    }
+    { }
     
     
     //////////////////////////////////////////////////////////////////////////

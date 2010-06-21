@@ -27,11 +27,8 @@ class ColorSpaceConversion : public DD::Image::PixelIop {
         std::vector<std::string> colorSpaceNames; //!< list of input colorspace names (memory for const char* s below)
         std::vector<const char*> inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
         std::vector<const char*> outputColorSpaceCstrNames;
-
-        OCS::ConstConfigRcPtr currentConfig;
-        OCS::ConstColorSpaceRcPtr inputColorSpace;
-        OCS::ConstColorSpaceRcPtr outputColorSpace;
-
+        
+        OCS::ConstProcessorRcPtr processor;
     public:
 
         ColorSpaceConversion(Node *node);

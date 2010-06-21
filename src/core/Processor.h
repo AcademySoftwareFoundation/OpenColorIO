@@ -59,8 +59,6 @@ OCS_NAMESPACE_ENTER
         
         static void deleter(LocalProcessor* p);
         
-        
-        
         OpRcPtrVec m_opVec;
     };
     
