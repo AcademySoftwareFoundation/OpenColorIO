@@ -87,13 +87,13 @@ void loadConfigFromEnv()
     
     std::cout << csDst->getName() << " ";
     OCS::ConstProcessorRcPtr p1 = config->getProcessor(csSrc, csDst);
-    p1->render(img);
+    p1->apply(img);
     PrintColor(std::cout, &imageVec[0], "transformed");
     std::cout << std::endl;
     
     std::cout << csSrc->getName() << " ";
     OCS::ConstProcessorRcPtr p2 = config->getProcessor(csDst, csSrc);
-    p2->render(img);
+    p2->apply(img);
     
     PrintColor(std::cout, &imageVec[0], "round trip");
     std::cout << std::endl;

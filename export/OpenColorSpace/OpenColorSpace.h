@@ -82,7 +82,7 @@ try
     // and convert it in place
     
     OCS::PackedImageDesc img(imageData, w, h, 4);
-    processor->render(img);
+    processor->apply(img);
 }
 catch(OCS::OCSException& exception)
 {
@@ -490,7 +490,7 @@ OCS_NAMESPACE_ENTER
         virtual bool isNoOp() const = 0;
         
         // SW (CPU) PATH
-        virtual void render(ImageDesc& img) const = 0;
+        virtual void apply(ImageDesc& img) const = 0;
         
         // HW (GPU) PATH
         virtual const char * getHWShaderText(const HwRenderDesc & hwDesc) const = 0;

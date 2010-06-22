@@ -45,7 +45,7 @@ OCS_NAMESPACE_ENTER
         
         virtual bool isNoOp() const;
         
-        virtual void render(ImageDesc& img) const;
+        virtual void apply(ImageDesc& img) const;
         
         virtual const char * getHWShaderText(const HwRenderDesc & hwDesc) const;
         

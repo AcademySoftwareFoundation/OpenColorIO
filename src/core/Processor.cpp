@@ -63,7 +63,7 @@ OCS_NAMESPACE_ENTER
         return m_opVec.empty();
     }
     
-    void LocalProcessor::render(ImageDesc& img) const
+    void LocalProcessor::apply(ImageDesc& img) const
     {
         if(isNoOp()) return;
         
@@ -76,11 +76,11 @@ OCS_NAMESPACE_ENTER
             scanlineHelper.prepRGBAScanline(&rgbaBuffer, &numPixels);
             if(numPixels == 0) break;
             if(!rgbaBuffer)
-                throw OCSException("Cannot render transform; null image.");
+                throw OCSException("Cannot apply transform; null image.");
             
             for(unsigned int opIndex=0; opIndex<m_opVec.size(); ++opIndex)
             {
-                m_opVec[opIndex]->render(rgbaBuffer, numPixels);
+                m_opVec[opIndex]->apply(rgbaBuffer, numPixels);
             }
             
             scanlineHelper.finishRGBAScanline();

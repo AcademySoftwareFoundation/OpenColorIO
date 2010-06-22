@@ -238,47 +238,6 @@ OCS_NAMESPACE_ENTER
         return m_impl->getRole(index);
     }
     
-    /*
-    bool Config::isTransformNoOp(const ConstColorSpaceRcPtr & srcColorSpace,
-                                 const ConstColorSpaceRcPtr & dstColorSpace) const
-    {
-        // TODO: Validate that both src and dst transform are actually in the current profile
-        
-        // All colorspace conversions within the same family are no-ops
-        std::string srcFamily = srcColorSpace->getFamily();
-        std::string dstFamily = dstColorSpace->getFamily();
-        
-        if(srcFamily == dstFamily) return true;
-        
-        // TODO: if src is data, or dst is data, it's also a no-op?
-        
-        // TODO: be more clever.  create the OpVector, optimize it, see if it's empty.
-        return false;
-    }
-    */
-    /*
-    void Config::applyTransform(ImageDesc& img,
-                                const ConstColorSpaceRcPtr & srcColorSpace,
-                                const ConstColorSpaceRcPtr & dstColorSpace) const
-    {
-        // TODO: Validate that both src and dst transform are actually in the current profile
-        
-        // TODO: implement
-        if(isTransformNoOp(srcColorSpace, dstColorSpace)) return;
-        
-        // Create a combined transform group
-        GroupTransformRcPtr combinedTransform = GroupTransform::Create();
-        
-        combinedTransform->setDirection(TRANSFORM_DIR_FORWARD);
-        combinedTransform->push_back( srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE) );
-        combinedTransform->push_back( dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE) );
-        
-        RenderTransform(img, *this, combinedTransform, TRANSFORM_DIR_FORWARD);
-    }
-    */
-    
-    
-    
     
     // TODO: Add GPU Allocation hints into opstream. Possible to autocompute?
     
@@ -316,10 +275,10 @@ OCS_NAMESPACE_ENTER
         
         // TODO: Perform smart optimizations / collapsing on the OpVec
         
-        // After construction, finalize the setup with preRender
+        // After construction, finalize the setup
         for(unsigned int i=0; i<opVec.size(); ++i)
         {
-            opVec[i]->preRender();
+            opVec[i]->setup();
         }
         
         return LocalProcessor::Create(opVec);

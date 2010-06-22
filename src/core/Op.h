@@ -47,7 +47,7 @@ OCS_NAMESPACE_ENTER
             // All pre-processing and safety checks should happen here,
             // rather than in the constructor.
             
-            virtual void preRender() = 0;
+            virtual void setup() = 0;
             
             // Render the specified pixels.
             //
@@ -55,7 +55,7 @@ OCS_NAMESPACE_ENTER
             // Ops that have mutable data internally, or rely on external
             // caching, must thus be appropriately mutexed.
             
-            virtual void render(float* rgbaBuffer, long numPixels) const = 0;
+            virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
         private:
             Op& operator= (const Op &);
     };

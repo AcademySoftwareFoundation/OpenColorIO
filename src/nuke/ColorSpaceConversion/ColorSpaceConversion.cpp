@@ -216,7 +216,7 @@ void ColorSpaceConversion::pixel_engine(
         try
         {
             OCS::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
-            processor->render(img);
+            processor->apply(img);
         }
         catch(OCS::OCSException &e)
         {

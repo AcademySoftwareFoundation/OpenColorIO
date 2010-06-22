@@ -212,8 +212,8 @@ OCS_NAMESPACE_ENTER
                     TransformDirection direction);
             virtual ~Lut3DOp();
             
-            virtual void preRender();
-            virtual void render(float* rgbaBuffer, long numPixels) const;
+            virtual void setup();
+            virtual void apply(float* rgbaBuffer, long numPixels) const;
         
         private:
             Lut3DRcPtr m_lut;
@@ -236,7 +236,7 @@ OCS_NAMESPACE_ENTER
         Lut3DOp::~Lut3DOp()
         { }
         
-        void Lut3DOp::preRender()
+        void Lut3DOp::setup()
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
@@ -267,7 +267,7 @@ OCS_NAMESPACE_ENTER
             }
         }
         
-        void Lut3DOp::render(float* rgbaBuffer, long numPixels) const
+        void Lut3DOp::apply(float* rgbaBuffer, long numPixels) const
         {
             if(m_interpolation == INTERP_NEAREST)
             {
