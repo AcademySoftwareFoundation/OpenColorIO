@@ -65,7 +65,7 @@ OCS_NAMESPACE_ENTER
     
     void LocalProcessor::apply(ImageDesc& img) const
     {
-        if(isNoOp()) return;
+        if(m_opVec.empty()) return;
         
         ScanlineHelper scanlineHelper(img);
         float * rgbaBuffer = 0;
@@ -86,7 +86,25 @@ OCS_NAMESPACE_ENTER
             scanlineHelper.finishRGBAScanline();
         }
     }
-
+    
+    void LocalProcessor::applyRGB(float * pixel) const
+    {
+        if(m_opVec.empty()) return;
+        
+        // We need to allocate a temp array as the pixel must be 4 floats in size.
+        
+        float rgbaBuffer[4] = { pixel[0], pixel[1], pixel[2], 0.0f };
+        
+        for(unsigned int opIndex=0; opIndex<m_opVec.size(); ++opIndex)
+        {
+            m_opVec[opIndex]->apply(rgbaBuffer, 1);
+        }
+        
+        pixel[0] = rgbaBuffer[0];
+        pixel[1] = rgbaBuffer[1];
+        pixel[2] = rgbaBuffer[2];
+    }
+    
     
     const char * LocalProcessor::getHWShaderText(const HwRenderDesc & hwDesc) const
     {

@@ -47,6 +47,8 @@ OCS_NAMESPACE_ENTER
         
         virtual void apply(ImageDesc& img) const;
         
+        virtual void applyRGB(float * pixel) const;
+        
         virtual const char * getHWShaderText(const HwRenderDesc & hwDesc) const;
         
         /*

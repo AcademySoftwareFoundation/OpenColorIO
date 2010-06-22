@@ -489,8 +489,17 @@ OCS_NAMESPACE_ENTER
         
         virtual bool isNoOp() const = 0;
         
-        // SW (CPU) PATH
+        // Software path
+        
+        // Apply to an image
         virtual void apply(ImageDesc& img) const = 0;
+        
+        // Apply to a single pixel.
+        // This is not as efficicent as applying to an entire image at once.
+        // If you are processing multiple pixels, and have the flexiblity,
+        // use the above function instead.
+        
+        virtual void applyRGB(float * pixel) const = 0;
         
         // HW (GPU) PATH
         virtual const char * getHWShaderText(const HwRenderDesc & hwDesc) const = 0;
