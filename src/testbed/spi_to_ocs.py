@@ -104,10 +104,19 @@ def BuildColorTransform(elementArray, lutDir):
                 transform.setDirection(OCS.TRANSFORM_DIR_FORWARD)
             
             interp = attrDict.pop('interpolation', None)
-            if interp == 'linear':
+            if interp is None:
+                if extension in ('spi3d','3dl'):
+                    transform.setInterpolation(OCS.INTERP_LINEAR)
+                elif extension in ('spi1d'):
+                    transform.setInterpolation(OCS.INTERP_NEAREST)
+                else:
+                    pass
+            elif interp == 'linear':
                 transform.setInterpolation(OCS.INTERP_LINEAR)
-            else:
+            elif interp == 'nearest':
                 transform.setInterpolation(OCS.INTERP_NEAREST)
+            else:
+                print "Unkwnown interpolation",interp
             
             if attrDict:
                 print 'TODO: Handle attrs',attrDict, element.getElementType()
