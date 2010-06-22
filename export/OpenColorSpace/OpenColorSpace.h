@@ -39,7 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
 // TODO: get simple display transform working. can it be expressed as an op?
-// TODO: can you also generate hw transform for ops as well?
 
 // TODO: add op optimizations.  op collapsing.  cache op tree.
 // TODO: add gamma ops
@@ -157,7 +156,7 @@ OCS_NAMESPACE_ENTER
     typedef SharedPtr<Processor> ProcessorRcPtr;
     
     class ImageDesc;
-    class HwRenderDesc;
+    class GpuShaderDesc;
     
     class OCSException;
     
@@ -199,20 +198,20 @@ OCS_NAMESPACE_ENTER
         BIT_DEPTH_F32
     };
     
-    enum HwAllocation {
-        HW_ALLOCATION_UNKNOWN = 0,
-        HW_ALLOCATION_UNIFORM,
-        HW_ALLOCATION_LG2
+    enum GpuAllocation {
+        GPU_ALLOCATION_UNKNOWN = 0,
+        GPU_ALLOCATION_UNIFORM,
+        GPU_ALLOCATION_LG2
     };
     
     //! Used when there is a choice of hardware shader language.
     // TODO: Specify language spec in each enum?
     
-    enum HwLanguage
+    enum GpuLanguage
     {
-        HW_LANGUAGE_UNKNOWN = 0,
-        HW_LANGUAGE_CG,  ///< Nvidia Cg shader
-        HW_LANGUAGE_GLSL     ///< OpenGL Shading Language
+        GPU_LANGUAGE_UNKNOWN = 0,
+        GPU_LANGUAGE_CG,  ///< Nvidia Cg shader
+        GPU_LANGUAGE_GLSL     ///< OpenGL Shading Language
     };
     
     
@@ -438,15 +437,15 @@ OCS_NAMESPACE_ENTER
         bool isData() const;
         void setIsData(bool isData);
         
-        // HW allocation information
-        HwAllocation getHWAllocation() const;
-        void setHWAllocation(HwAllocation allocation);
+        // GPU allocation information
+        GpuAllocation getGPUAllocation() const;
+        void setGPUAllocation(GpuAllocation allocation);
         
-        float getHWMin() const;
-        void setHWMin(float min);
+        float getGPUMin() const;
+        void setGPUMin(float min);
         
-        float getHWMax() const;
-        void setHWMax(float max);
+        float getGPUMax() const;
+        void setGPUMax(float max);
         
         ConstGroupTransformRcPtr getTransform(ColorSpaceDirection dir) const;
         GroupTransformRcPtr getEditableTransform(ColorSpaceDirection dir);
@@ -489,25 +488,30 @@ OCS_NAMESPACE_ENTER
         
         virtual bool isNoOp() const = 0;
         
-        // Software path
+        ///////////////
+        //
+        // CPU Path
         
-        // Apply to an image
+        //! Apply to an image
         virtual void apply(ImageDesc& img) const = 0;
         
-        // Apply to a single pixel.
+        //! Apply to a single pixel.
         // This is not as efficicent as applying to an entire image at once.
         // If you are processing multiple pixels, and have the flexiblity,
         // use the above function instead.
         
         virtual void applyRGB(float * pixel) const = 0;
         
-        // HW (GPU) PATH
-        virtual const char * getHWShaderText(const HwRenderDesc & hwDesc) const = 0;
+        ///////////////
+        //
+        // GPU Path
+        
+        virtual const char * getGPUShaderText(const GpuShaderDesc & shaderDesc) const = 0;
         
         /*
-        virtual int getHWLut3DEdgeSize() const = 0;
-        virtual const char * getHWLut3DCacheID(const HwRenderDesc & hwDesc) const = 0;
-        virtual void getHWLut3D(float* lut3d, const HwRenderDesc & hwDesc) const = 0;
+        virtual int getGPULut3DEdgeSize() const = 0;
+        virtual const char * getGPULut3DCacheID(const GpuShaderDesc & shaderDesc) const = 0;
+        virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const = 0;
         */
         
         //! Get the 3d lut + cg shader for the specified DisplayTransform
@@ -626,31 +630,31 @@ OCS_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    class HwRenderDesc
+    class GpuShaderDesc
     {
     public:
-        HwRenderDesc();
-        ~HwRenderDesc();
+        GpuShaderDesc();
+        ~GpuShaderDesc();
         
         void setLut3DEdgeSize(int size);
         int getLut3DEdgeSize() const;
         
-        void setShaderFunctionName(const char * name);
-        const char * getShaderFunctionName() const;
+        void setFunctionName(const char * name);
+        const char * getFunctionName() const;
         
-        void setHwLanguage(HwLanguage lang);
-        HwLanguage getHwLanguage() const;
+        void setLanguage(GpuLanguage lang);
+        GpuLanguage getLanguage() const;
         
-        // static int GetMaxHwCacheSizeMB();
-        // static void SetMaxHwCacheSizeMB(int maxCacheEntries);
+        // static int GetMaxGpuCacheSizeMB();
+        // static void SetMaxGpuCacheSizeMB(int maxCacheEntries);
         
     private:
         class Impl;
         friend class Impl;
         std::auto_ptr<Impl> m_impl;
         
-        HwRenderDesc(const HwRenderDesc &);
-        HwRenderDesc& operator= (const HwRenderDesc &);
+        GpuShaderDesc(const GpuShaderDesc &);
+        GpuShaderDesc& operator= (const GpuShaderDesc &);
     };
     
     
@@ -802,8 +806,8 @@ OCS_NAMESPACE_ENTER
     const char * BitDepthToString(BitDepth bitDepth);
     BitDepth BitDepthFromString(const char * s);
     
-    const char * HwAllocationToString(HwAllocation allocation);
-    HwAllocation HwAllocationFromString(const char * s);
+    const char * GpuAllocationToString(GpuAllocation allocation);
+    GpuAllocation GpuAllocationFromString(const char * s);
     
     const char * InterpolationToString(Interpolation interp);
     Interpolation InterpolationFromString(const char * s);
@@ -819,7 +823,7 @@ OCS_NAMESPACE_ENTER
     by hardcoded names.
     
     Internal:
-        GetHWDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
+        GetGPUDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
                         (ROLE_COLOR_TIMING (ASCColorCorrection))
     
     External Plugins (currently known):

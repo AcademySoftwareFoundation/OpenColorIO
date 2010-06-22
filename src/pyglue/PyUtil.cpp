@@ -121,9 +121,9 @@ OCS_NAMESPACE_ENTER
         return 1;
     }
     
-    int ConvertPyObjectToHwAllocation(PyObject *object, void *valuePtr)
+    int ConvertPyObjectToGpuAllocation(PyObject *object, void *valuePtr)
     {
-        HwAllocation* hwallocPtr = static_cast<HwAllocation*>(valuePtr);
+        GpuAllocation* gpuallocPtr = static_cast<GpuAllocation*>(valuePtr);
         
         if(!PyString_Check(object))
         {
@@ -131,7 +131,7 @@ OCS_NAMESPACE_ENTER
             return 0;
         }
         
-        *hwallocPtr = OCS::HwAllocationFromString(PyString_AsString( object ));
+        *gpuallocPtr = OCS::GpuAllocationFromString(PyString_AsString( object ));
         
         return 1;
     }

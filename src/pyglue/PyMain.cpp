@@ -136,12 +136,12 @@ initPyOpenColorSpace(void)
     PyModule_AddStringConstant(m, "BIT_DEPTH_F32",
         OCS::BitDepthToString(OCS::BIT_DEPTH_F32));
     
-    PyModule_AddStringConstant(m, "HW_ALLOCATION_UNKNOWN",
-        OCS::HwAllocationToString(OCS::HW_ALLOCATION_UNKNOWN));
-    PyModule_AddStringConstant(m, "HW_ALLOCATION_UNIFORM",
-        OCS::HwAllocationToString(OCS::HW_ALLOCATION_UNIFORM));
-    PyModule_AddStringConstant(m, "HW_ALLOCATION_LG2",
-        OCS::HwAllocationToString(OCS::HW_ALLOCATION_LG2));
+    PyModule_AddStringConstant(m, "GPU_ALLOCATION_UNKNOWN",
+        OCS::GpuAllocationToString(OCS::GPU_ALLOCATION_UNKNOWN));
+    PyModule_AddStringConstant(m, "GPU_ALLOCATION_UNIFORM",
+        OCS::GpuAllocationToString(OCS::GPU_ALLOCATION_UNIFORM));
+    PyModule_AddStringConstant(m, "GPU_ALLOCATION_LG2",
+        OCS::GpuAllocationToString(OCS::GPU_ALLOCATION_LG2));
     
     PyModule_AddStringConstant(m, "INTERP_UNKNOWN",
         OCS::InterpolationToString(OCS::INTERP_UNKNOWN));

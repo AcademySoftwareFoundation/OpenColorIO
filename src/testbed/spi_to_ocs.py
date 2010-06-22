@@ -157,19 +157,19 @@ def BuildColorspaceFromXMLElement(element, lutDir):
     if gpuallocation is None:
         pass
     elif gpuallocation == 'log2':
-        cs.setHWAllocation(OCS.HW_ALLOCATION_LG2)
+        cs.setGPUAllocation(OCS.GPU_ALLOCATION_LG2)
     elif gpuallocation == 'uniform':
-        cs.setHWAllocation(OCS.HW_ALLOCATION_UNIFORM)
+        cs.setGPUAllocation(OCS.GPU_ALLOCATION_UNIFORM)
     else:
-        #cs.setHWAllocation(OCS.HW_ALLOCATION_UNKNOWN)
+        #cs.setGPUAllocation(OCS.GPU_ALLOCATION_UNKNOWN)
         raise RuntimeError("Unknown bit allocation")
     
     gpumin = attrDict.pop('gpumin', None)
     if gpumin is not None:
-        cs.setHWMin(float(gpumin))
+        cs.setGPUMin(float(gpumin))
     gpumax = attrDict.pop('gpumax', None)
     if gpumax is not None:
-        cs.setHWMax(float(gpumax))
+        cs.setGPUMax(float(gpumax))
     
     if attrDict:
         print 'TODO: Handle colorspace attrs',attrDict, cs.getName()

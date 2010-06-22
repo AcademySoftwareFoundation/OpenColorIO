@@ -98,12 +98,12 @@ void loadConfigFromEnv()
     PrintColor(std::cout, &imageVec[0], "round trip");
     std::cout << std::endl;
     
-    OCS::HwRenderDesc hwRenderDesc;
-    hwRenderDesc.setLut3DEdgeSize(32);
-    hwRenderDesc.setShaderFunctionName("ocs_color_convert");
-    hwRenderDesc.setHwLanguage(OCS::HW_LANGUAGE_CG);
+    OCS::GpuShaderDesc shaderDesc;
+    shaderDesc.setLut3DEdgeSize(32);
+    shaderDesc.setFunctionName("ocs_color_convert");
+    shaderDesc.setLanguage(OCS::GPU_LANGUAGE_CG);
     
-    // p2->getHWShaderText(hwRenderDesc);
+    std::cout << p2->getGPUShaderText(shaderDesc) << std::endl;
 }
 
 
@@ -120,9 +120,9 @@ void createConfig()
         cs->setFamily("ln");
         cs->setBitDepth(OCS::BIT_DEPTH_F16);
         cs->setIsData(false);
-        cs->setHWAllocation(OCS::HW_ALLOCATION_LG2);
-        cs->setHWMin(-16.0);
-        cs->setHWMax(6.0);
+        cs->setGPUAllocation(OCS::GPU_ALLOCATION_LG2);
+        cs->setGPUMin(-16.0);
+        cs->setGPUMax(6.0);
         config->addColorSpace(cs);
         
         config->setColorSpaceForRole( OCS::ROLE_SCENE_LINEAR, cs->getName() );
@@ -135,9 +135,9 @@ void createConfig()
         cs->setFamily("lg");
         cs->setBitDepth(OCS::BIT_DEPTH_F16);
         cs->setIsData(false);
-        cs->setHWAllocation(OCS::HW_ALLOCATION_UNIFORM);
-        cs->setHWMin(-0.2f);
-        cs->setHWMax(1.615f);
+        cs->setGPUAllocation(OCS::GPU_ALLOCATION_UNIFORM);
+        cs->setGPUMin(-0.2f);
+        cs->setGPUMax(1.615f);
         
         OCS::FileTransformRcPtr transform = OCS::FileTransform::Create();
         transform->setSrc("lgf.spi1d");

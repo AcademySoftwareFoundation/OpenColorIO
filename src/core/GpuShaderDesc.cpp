@@ -28,99 +28,96 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorSpace/OpenColorSpace.h>
 
-#include "HwRenderDesc.h"
+#include "GpuShaderDesc.h"
 
 OCS_NAMESPACE_ENTER
 {
     
         
-    HwRenderDesc::HwRenderDesc()
-    : m_impl(new HwRenderDesc::Impl)
+    GpuShaderDesc::GpuShaderDesc()
+    : m_impl(new GpuShaderDesc::Impl)
     {
     }
     
-    HwRenderDesc::~HwRenderDesc()
+    GpuShaderDesc::~GpuShaderDesc()
     {
     }
     
     
-    void HwRenderDesc::setLut3DEdgeSize(int size)
+    void GpuShaderDesc::setLut3DEdgeSize(int size)
     {
         m_impl->setLut3DEdgeSize(size);
     }
     
-    int HwRenderDesc::getLut3DEdgeSize() const
+    int GpuShaderDesc::getLut3DEdgeSize() const
     {
         return m_impl->getLut3DEdgeSize();
     }
     
-    void HwRenderDesc::setShaderFunctionName(const char * name)
+    void GpuShaderDesc::setFunctionName(const char * name)
     {
-        m_impl->setShaderFunctionName(name);
+        m_impl->setFunctionName(name);
     }
     
-    const char * HwRenderDesc::getShaderFunctionName() const
+    const char * GpuShaderDesc::getFunctionName() const
     {
-        return m_impl->getShaderFunctionName();
+        return m_impl->getFunctionName();
     }
     
-    void HwRenderDesc::setHwLanguage(HwLanguage lang)
+    void GpuShaderDesc::setLanguage(GpuLanguage lang)
     {
-        m_impl->setHwLanguage(lang);
+        m_impl->setLanguage(lang);
     }
     
-    HwLanguage HwRenderDesc::getHwLanguage() const
+    GpuLanguage GpuShaderDesc::getLanguage() const
     {
-        return m_impl->getHwLanguage();
+        return m_impl->getLanguage();
     }
-    
     
     
     
     ///////////////////////////////////////////////////////////////////////////
     
     
-    HwRenderDesc::Impl::Impl() :
+    GpuShaderDesc::Impl::Impl() :
         m_lut3DEdgeSize(0),
-        m_hwLanguage(HW_LANGUAGE_UNKNOWN)
+        m_language(GPU_LANGUAGE_UNKNOWN)
     {
     }
     
-    HwRenderDesc::Impl::~Impl()
+    GpuShaderDesc::Impl::~Impl()
     {
     
     }
     
-    void HwRenderDesc::Impl::setLut3DEdgeSize(int size)
+    void GpuShaderDesc::Impl::setLut3DEdgeSize(int size)
     {
         m_lut3DEdgeSize = size;
     }
     
-    int HwRenderDesc::Impl::getLut3DEdgeSize() const
+    int GpuShaderDesc::Impl::getLut3DEdgeSize() const
     {
         return m_lut3DEdgeSize;
     }
     
-    void HwRenderDesc::Impl::setShaderFunctionName(const char * name)
+    void GpuShaderDesc::Impl::setFunctionName(const char * name)
     {
-        m_shaderFunctionName = name;
+        m_functionName = name;
     }
     
-    const char * HwRenderDesc::Impl::getShaderFunctionName() const
+    const char * GpuShaderDesc::Impl::getFunctionName() const
     {
-        return m_shaderFunctionName.c_str();
+        return m_functionName.c_str();
     }
     
-    void HwRenderDesc::Impl::setHwLanguage(HwLanguage lang)
+    void GpuShaderDesc::Impl::setLanguage(GpuLanguage lang)
     {
-        m_hwLanguage = lang;
+        m_language = lang;
     }
     
-    HwLanguage HwRenderDesc::Impl::getHwLanguage() const
+    GpuLanguage GpuShaderDesc::Impl::getLanguage() const
     {
-        return m_hwLanguage;
+        return m_language;
     }
-    
-    
 }
 OCS_NAMESPACE_EXIT

@@ -21,7 +21,7 @@ add_library(OpenColorSpace SHARED
     src/core/FileFormatSpiMtx.cpp
     src/core/FileTransform.cpp
     src/core/GroupTransform.cpp
-    src/core/HwRenderDesc.cpp
+    src/core/GpuShaderDesc.cpp
     src/core/ImageDesc.cpp
     src/core/ImagePacking.cpp
     src/core/Lut1DOp.cpp

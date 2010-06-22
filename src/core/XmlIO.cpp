@@ -254,9 +254,9 @@ OCS_NAMESPACE_ENTER
                     else if(attrName == "family") cs->setFamily( pAttrib->Value() );
                     else if(attrName == "bitdepth") cs->setBitDepth( BitDepthFromString(pAttrib->Value()) );
                     else if(attrName == "isdata") cs->setIsData( BoolFromString(pAttrib->Value()) );
-                    else if(attrName == "hwallocation") cs->setHWAllocation( HwAllocationFromString(pAttrib->Value()) );
-                    else if(attrName == "hwmin" && pAttrib->QueryDoubleValue(&dval) == TIXML_SUCCESS ) cs->setHWMin( (float)dval );
-                    else if(attrName == "hwmax" && pAttrib->QueryDoubleValue(&dval) == TIXML_SUCCESS ) cs->setHWMax( (float)dval );
+                    else if(attrName == "gpuallocation") cs->setGPUAllocation( GpuAllocationFromString(pAttrib->Value()) );
+                    else if(attrName == "gpumin" && pAttrib->QueryDoubleValue(&dval) == TIXML_SUCCESS ) cs->setGPUMin( (float)dval );
+                    else if(attrName == "gpumax" && pAttrib->QueryDoubleValue(&dval) == TIXML_SUCCESS ) cs->setGPUMax( (float)dval );
                     else
                     {
                         // TODO: unknown attr
@@ -308,9 +308,9 @@ OCS_NAMESPACE_ENTER
             element->SetAttribute("family", cs->getFamily());
             element->SetAttribute("bitdepth", BitDepthToString(cs->getBitDepth()));
             element->SetAttribute("isdata", BoolToString(cs->isData()));
-            element->SetAttribute("hwallocation", HwAllocationToString(cs->getHWAllocation()));
-            element->SetDoubleAttribute("hwmin", cs->getHWMin());
-            element->SetDoubleAttribute("hwmax", cs->getHWMax());
+            element->SetAttribute("gpuallocation", GpuAllocationToString(cs->getGPUAllocation()));
+            element->SetDoubleAttribute("gpumin", cs->getGPUMin());
+            element->SetDoubleAttribute("gpumax", cs->getGPUMax());
             
             ColorSpaceDirection dirs[2] = { COLORSPACE_DIR_TO_REFERENCE,
                                             COLORSPACE_DIR_FROM_REFERENCE };

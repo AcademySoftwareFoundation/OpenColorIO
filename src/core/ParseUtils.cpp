@@ -127,19 +127,19 @@ OCS_NAMESPACE_ENTER
         return BIT_DEPTH_UNKNOWN;
     }
     
-    const char * HwAllocationToString(HwAllocation alloc)
+    const char * GpuAllocationToString(GpuAllocation alloc)
     {
-        if(alloc == HW_ALLOCATION_UNIFORM) return "uniform";
-        else if(alloc == HW_ALLOCATION_LG2) return "lg2";
+        if(alloc == GPU_ALLOCATION_UNIFORM) return "uniform";
+        else if(alloc == GPU_ALLOCATION_LG2) return "lg2";
         return "unknown";
     }
     
-    HwAllocation HwAllocationFromString(const char * s)
+    GpuAllocation GpuAllocationFromString(const char * s)
     {
         std::string str = pystring::lower(s);
-        if(str == "uniform") return HW_ALLOCATION_UNIFORM;
-        else if(str == "lg2") return HW_ALLOCATION_LG2;
-        return HW_ALLOCATION_UNKNOWN;
+        if(str == "uniform") return GPU_ALLOCATION_UNIFORM;
+        else if(str == "lg2") return GPU_ALLOCATION_LG2;
+        return GPU_ALLOCATION_UNKNOWN;
     }
     
     const char * InterpolationToString(Interpolation interp)

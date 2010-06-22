@@ -49,12 +49,12 @@ OCS_NAMESPACE_ENTER
         
         virtual void applyRGB(float * pixel) const;
         
-        virtual const char * getHWShaderText(const HwRenderDesc & hwDesc) const;
+        virtual const char * getGPUShaderText(const GpuShaderDesc & gpuDesc) const;
         
         /*
-        virtual int getHWLut3DEdgeSize() const;
-        virtual const char * getHWLut3DCacheID(const HwProfileDesc & hwDesc) const;
-        virtual void getHWLut3D(float* lut3d, const HwProfileDesc & hwDesc) const;
+        virtual int getGPULut3DEdgeSize() const;
+        virtual const char * getGPULut3DCacheID(const GpuShaderDesc & gpuDesc) const;
+        virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & gpuDesc) const;
         */
         
     private:
@@ -64,7 +64,13 @@ OCS_NAMESPACE_ENTER
         
         static void deleter(LocalProcessor* p);
         
+        void computeGPU(std::ostringstream * shader,
+                       std::ostringstream * lut3dCacheID, float * lut3d,
+                       const GpuShaderDesc & gpuDesc) const;
+        
         OpRcPtrVec m_opVec;
+        
+        mutable std::string m_shaderText;
     };
     
     

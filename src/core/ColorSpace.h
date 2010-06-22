@@ -60,14 +60,14 @@ OCS_NAMESPACE_ENTER
         bool isData() const;
         void setIsData(bool isData);
         
-        HwAllocation getHWAllocation() const;
-        void setHWAllocation(HwAllocation allocation);
+        GpuAllocation getGPUAllocation() const;
+        void setGPUAllocation(GpuAllocation allocation);
         
-        float getHWMin() const;
-        void setHWMin(float min);
+        float getGPUMin() const;
+        void setGPUMin(float min);
         
-        float getHWMax() const;
-        void setHWMax(float max);
+        float getGPUMax() const;
+        void setGPUMax(float max);
         
         ConstGroupTransformRcPtr getTransform(ColorSpaceDirection dir) const;
         GroupTransformRcPtr getEditableTransform(ColorSpaceDirection dir);
@@ -85,9 +85,9 @@ OCS_NAMESPACE_ENTER
         BitDepth m_bitDepth;
         bool m_isData;
         
-        HwAllocation m_hwAllocation;
-        float m_hwMin;
-        float m_hwMax;
+        GpuAllocation m_gpuAllocation;
+        float m_gpuMin;
+        float m_gpuMax;
         
         GroupTransformRcPtr m_toRefTransform;
         GroupTransformRcPtr m_fromRefTransform;

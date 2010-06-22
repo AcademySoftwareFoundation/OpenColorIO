@@ -27,14 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_HWRENDERDESC_H
-#define INCLUDED_OCS_HWRENDERDESC_H
+#ifndef INCLUDED_OCS_GPUSHADERDESC_H
+#define INCLUDED_OCS_GPUSHADERDESC_H
 
 #include <OpenColorSpace/OpenColorSpace.h>
 
 OCS_NAMESPACE_ENTER
 {
-    class HwRenderDesc::Impl
+    class GpuShaderDesc::Impl
     {
         public:
         Impl();
@@ -43,17 +43,17 @@ OCS_NAMESPACE_ENTER
         void setLut3DEdgeSize(int size);
         int getLut3DEdgeSize() const;
         
-        void setShaderFunctionName(const char * name);
-        const char * getShaderFunctionName() const;
+        void setFunctionName(const char * name);
+        const char * getFunctionName() const;
         
-        void setHwLanguage(HwLanguage lang);
-        HwLanguage getHwLanguage() const;
+        void setLanguage(GpuLanguage lang);
+        GpuLanguage getLanguage() const;
         
         private:
         
         int m_lut3DEdgeSize;
-        std::string m_shaderFunctionName;
-        HwLanguage m_hwLanguage;
+        std::string m_functionName;
+        GpuLanguage m_language;
     };
 }
 OCS_NAMESPACE_EXIT

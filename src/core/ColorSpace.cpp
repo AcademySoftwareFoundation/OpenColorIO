@@ -108,34 +108,34 @@ OCS_NAMESPACE_ENTER
         m_impl->setIsData(val);
     }
     
-    HwAllocation ColorSpace::getHWAllocation() const
+    GpuAllocation ColorSpace::getGPUAllocation() const
     {
-        return m_impl->getHWAllocation();
+        return m_impl->getGPUAllocation();
     }
     
-    void ColorSpace::setHWAllocation(HwAllocation allocation)
+    void ColorSpace::setGPUAllocation(GpuAllocation allocation)
     {
-        m_impl->setHWAllocation(allocation);
+        m_impl->setGPUAllocation(allocation);
     }
     
-    float ColorSpace::getHWMin() const
+    float ColorSpace::getGPUMin() const
     {
-        return m_impl->getHWMin();
+        return m_impl->getGPUMin();
     }
     
-    void ColorSpace::setHWMin(float min)
+    void ColorSpace::setGPUMin(float min)
     {
-        m_impl->setHWMin(min);
+        m_impl->setGPUMin(min);
     }
     
-    float ColorSpace::getHWMax() const
+    float ColorSpace::getGPUMax() const
     {
-        return m_impl->getHWMax();
+        return m_impl->getGPUMax();
     }
     
-    void ColorSpace::setHWMax(float max)
+    void ColorSpace::setGPUMax(float max)
     {
-        m_impl->setHWMax(max);
+        m_impl->setGPUMax(max);
     }
     
     ConstGroupTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
@@ -166,10 +166,10 @@ OCS_NAMESPACE_ENTER
         os << "family=" << cs.getFamily() << ", ";
         os << "bitDepth=" << BitDepthToString(cs.getBitDepth()) << ", ";
         os << "isData=" << BoolToString(cs.isData()) << ", ";
-        os << "HWAllocation=" << HwAllocationToString(cs.getHWAllocation()) << ", ";
+        os << "GPUAllocation=" << GpuAllocationToString(cs.getGPUAllocation()) << ", ";
         // TODO: make this not warn
-        //os << "HWMin=" << cs.getHWMin() << ", ";
-        //os << "HWMax=" << cs.getHWMax() << ", ";
+        //os << "GPUMin=" << cs.getGPUMin() << ", ";
+        //os << "GPUMax=" << cs.getGPUMax() << ", ";
         
         os << ">\n";
         if(cs.isTransformSpecified(COLORSPACE_DIR_TO_REFERENCE))
@@ -195,9 +195,9 @@ OCS_NAMESPACE_ENTER
     ColorSpace::Impl::Impl() :
         m_bitDepth(BIT_DEPTH_UNKNOWN),
         m_isData(false),
-        m_hwAllocation(HW_ALLOCATION_UNIFORM),
-        m_hwMin(0.0),
-        m_hwMax(1.0),
+        m_gpuAllocation(GPU_ALLOCATION_UNIFORM),
+        m_gpuMin(0.0),
+        m_gpuMax(1.0),
         m_toRefTransform(GroupTransform::Create()),
         m_fromRefTransform(GroupTransform::Create()),
         m_toRefSpecified(false),
@@ -216,9 +216,9 @@ OCS_NAMESPACE_ENTER
         m_family = rhs.m_family;
         m_bitDepth = rhs.m_bitDepth;
         m_isData = rhs.m_isData;
-        m_hwAllocation = rhs.m_hwAllocation;
-        m_hwMin = rhs.m_hwMin;
-        m_hwMax = rhs.m_hwMax;
+        m_gpuAllocation = rhs.m_gpuAllocation;
+        m_gpuMin = rhs.m_gpuMin;
+        m_gpuMax = rhs.m_gpuMax;
         m_toRefTransform = DynamicPtrCast<GroupTransform>(rhs.m_toRefTransform->createEditableCopy());
         m_fromRefTransform = DynamicPtrCast<GroupTransform>(rhs.m_fromRefTransform->createEditableCopy());
         m_toRefSpecified = rhs.m_toRefSpecified;
@@ -271,34 +271,34 @@ OCS_NAMESPACE_ENTER
         m_isData = val;
     }
 
-    HwAllocation ColorSpace::Impl::getHWAllocation() const
+    GpuAllocation ColorSpace::Impl::getGPUAllocation() const
     {
-        return m_hwAllocation;
+        return m_gpuAllocation;
     }
     
-    void ColorSpace::Impl::setHWAllocation(HwAllocation allocation)
+    void ColorSpace::Impl::setGPUAllocation(GpuAllocation allocation)
     {
-        m_hwAllocation = allocation;
+        m_gpuAllocation = allocation;
     }
 
-    float ColorSpace::Impl::getHWMin() const
+    float ColorSpace::Impl::getGPUMin() const
     {
-        return m_hwMin;
+        return m_gpuMin;
     }
     
-    void ColorSpace::Impl::setHWMin(float min)
+    void ColorSpace::Impl::setGPUMin(float min)
     {
-        m_hwMin = min;
+        m_gpuMin = min;
     }
 
-    float ColorSpace::Impl::getHWMax() const
+    float ColorSpace::Impl::getGPUMax() const
     {
-        return m_hwMax;
+        return m_gpuMax;
     }
     
-    void ColorSpace::Impl::setHWMax(float max)
+    void ColorSpace::Impl::setGPUMax(float max)
     {
-        m_hwMax = max;
+        m_gpuMax = max;
     }
     
     ConstGroupTransformRcPtr ColorSpace::Impl::getTransform(ColorSpaceDirection dir) const

@@ -1,20 +1,20 @@
 <ocsconfig version="1" resourcepath="luts" role_scene_linear="lnh" role_compositing_log="lgh">
-    <colorspace name="lnh" family="ln" bitdepth="16f" isdata="false" hwallocation="lg2" hwmin="-16" hwmax="6" />
-    <colorspace name="lgh" family="lg" bitdepth="16f" isdata="false" hwallocation="uniform" hwmin="-0.2" hwmax="1.615">
+    <colorspace name="lnh" family="ln" bitdepth="16f" isdata="false" gpuallocation="lg2" gpumin="-16" gpumax="6" />
+    <colorspace name="lgh" family="lg" bitdepth="16f" isdata="false" gpuallocation="uniform" gpumin="-0.2" gpumax="1.615">
         <to_reference>
             <group>
                 <file src="lgf.spi1d" interpolation="linear" />
             </group>
         </to_reference>
     </colorspace>
-    <colorspace name="lg16" family="lg" bitdepth="16ui" isdata="false" hwallocation="uniform" hwmin="0" hwmax="1">
+    <colorspace name="lg16" family="lg" bitdepth="16ui" isdata="false" gpuallocation="uniform" gpumin="0" gpumax="1">
         <to_reference>
             <group>
                 <file src="lg16.spi1d" interpolation="nearest" />
             </group>
         </to_reference>
     </colorspace>
-    <colorspace name="lg10" family="lg" bitdepth="10ui" isdata="false" hwallocation="uniform" hwmin="0" hwmax="1">
+    <colorspace name="lg10" family="lg" bitdepth="10ui" isdata="false" gpuallocation="uniform" gpumin="0" gpumax="1">
         <to_reference>
             <group>
                 <file src="lg10.spi1d" interpolation="nearest" />
