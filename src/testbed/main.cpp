@@ -72,31 +72,38 @@ void loadConfigFromEnv()
     OCS::PackedImageDesc img(&imageVec[0], width, height, numChannels);
     std::cout << "img " << img << std::endl;
     
-    OCS::ConstColorSpaceRcPtr srcColorSpace = config->getColorSpaceForRole(OCS::ROLE_COMPOSITING_LOG);
-    OCS::ConstColorSpaceRcPtr dstColorSpace = config->getColorSpaceForRole(OCS::ROLE_SCENE_LINEAR);
+    OCS::ConstColorSpaceRcPtr csSrc = config->getColorSpaceForRole(OCS::ROLE_COMPOSITING_LOG);
+    OCS::ConstColorSpaceRcPtr csDst = config->getColorSpaceForRole(OCS::ROLE_SCENE_LINEAR);
     
     /*
-    OCS::ConstColorSpaceRcPtr srcColorSpace = config->getColorSpaceByName("lnf");
-    OCS::ConstColorSpaceRcPtr dstColorSpace = config->getColorSpaceByName("qt8");
+    OCS::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName("lnf");
+    OCS::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName("qt8");
     */
     
     imageVec[0] = 445.0f/1023.0f;
-    std::cout << srcColorSpace->getName() << " ";
+    std::cout << csSrc->getName() << " ";
     PrintColor(std::cout, &imageVec[0], "input");
     std::cout << std::endl;
     
-    std::cout << dstColorSpace->getName() << " ";
-    OCS::ConstProcessorRcPtr p1 = config->getProcessor(srcColorSpace, dstColorSpace);
+    std::cout << csDst->getName() << " ";
+    OCS::ConstProcessorRcPtr p1 = config->getProcessor(csSrc, csDst);
     p1->render(img);
     PrintColor(std::cout, &imageVec[0], "transformed");
     std::cout << std::endl;
     
-    std::cout << srcColorSpace->getName() << " ";
-    OCS::ConstProcessorRcPtr p2 = config->getProcessor(dstColorSpace, srcColorSpace);
+    std::cout << csSrc->getName() << " ";
+    OCS::ConstProcessorRcPtr p2 = config->getProcessor(csDst, csSrc);
     p2->render(img);
     
     PrintColor(std::cout, &imageVec[0], "round trip");
     std::cout << std::endl;
+    
+    OCS::HwRenderDesc hwRenderDesc;
+    hwRenderDesc.setLut3DEdgeSize(32);
+    hwRenderDesc.setShaderFunctionName("ocs_color_convert");
+    hwRenderDesc.setHwLanguage(OCS::HW_LANGUAGE_CG);
+    
+    // p2->getHWShaderText(hwRenderDesc);
 }
 
 

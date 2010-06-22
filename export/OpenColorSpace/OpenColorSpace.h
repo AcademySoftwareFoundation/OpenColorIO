@@ -157,7 +157,7 @@ OCS_NAMESPACE_ENTER
     typedef SharedPtr<Processor> ProcessorRcPtr;
     
     class ImageDesc;
-    class HwProfileDesc;
+    class HwRenderDesc;
     
     class OCSException;
     
@@ -493,6 +493,14 @@ OCS_NAMESPACE_ENTER
         virtual void render(ImageDesc& img) const = 0;
         
         // HW (GPU) PATH
+        virtual const char * getHWShaderText(const HwRenderDesc & hwDesc) const = 0;
+        
+        /*
+        virtual int getHWLut3DEdgeSize() const = 0;
+        virtual const char * getHWLut3DCacheID(const HwRenderDesc & hwDesc) const = 0;
+        virtual void getHWLut3D(float* lut3d, const HwRenderDesc & hwDesc) const = 0;
+        */
+        
         //! Get the 3d lut + cg shader for the specified DisplayTransform
         //
         // cg signature will be:
@@ -502,11 +510,7 @@ OCS_NAMESPACE_ENTER
         // lut3d should be size: 3*lut3DEdgeSize*lut3DEdgeSize*lut3DEdgeSize
         
         // return 0 if unknown
-        virtual const char * getHWShaderText(const HwProfileDesc & hwDesc) const = 0;
-        virtual int getHWLut3DEdgeSize() const = 0;
-        virtual const char * getHWLut3DCacheID(const HwProfileDesc & hwDesc) const = 0;
-        virtual void getHWLut3D(float* lut3d, const HwProfileDesc & hwDesc) const = 0;
-    
+        
     private:
         Processor& operator= (const Processor &);
     };
@@ -613,12 +617,11 @@ OCS_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    class HwProfileDesc
+    class HwRenderDesc
     {
     public:
-        HwProfileDesc();
-        
-        virtual ~HwProfileDesc();
+        HwRenderDesc();
+        ~HwRenderDesc();
         
         void setLut3DEdgeSize(int size);
         int getLut3DEdgeSize() const;
@@ -637,8 +640,8 @@ OCS_NAMESPACE_ENTER
         friend class Impl;
         std::auto_ptr<Impl> m_impl;
         
-        HwProfileDesc(const HwProfileDesc &);
-        HwProfileDesc& operator= (const HwProfileDesc &);
+        HwRenderDesc(const HwRenderDesc &);
+        HwRenderDesc& operator= (const HwRenderDesc &);
     };
     
     

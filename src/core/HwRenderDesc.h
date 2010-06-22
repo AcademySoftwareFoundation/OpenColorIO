@@ -27,45 +27,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_PROCESSOR_H
-#define INCLUDED_OCS_PROCESSOR_H
+#ifndef INCLUDED_OCS_HWRENDERDESC_H
+#define INCLUDED_OCS_HWRENDERDESC_H
 
 #include <OpenColorSpace/OpenColorSpace.h>
 
-#include "Op.h"
-
 OCS_NAMESPACE_ENTER
 {
-    class LocalProcessor : public Processor
+    class HwRenderDesc::Impl
     {
-    public:
-        static ConstProcessorRcPtr Create(const OpRcPtrVec& opVec);
+        public:
+        Impl();
+        ~Impl();
         
-        virtual ~LocalProcessor();
+        void setLut3DEdgeSize(int size);
+        int getLut3DEdgeSize() const;
         
-        virtual bool isNoOp() const;
+        void setShaderFunctionName(const char * name);
+        const char * getShaderFunctionName() const;
         
-        virtual void render(ImageDesc& img) const;
+        void setHwLanguage(HwLanguage lang);
+        HwLanguage getHwLanguage() const;
         
-        virtual const char * getHWShaderText(const HwRenderDesc & hwDesc) const;
+        private:
         
-        /*
-        virtual int getHWLut3DEdgeSize() const;
-        virtual const char * getHWLut3DCacheID(const HwProfileDesc & hwDesc) const;
-        virtual void getHWLut3D(float* lut3d, const HwProfileDesc & hwDesc) const;
-        */
-        
-    private:
-        LocalProcessor(const OpRcPtrVec& opVec);
-        LocalProcessor(const LocalProcessor &);
-        LocalProcessor& operator= (const LocalProcessor &);
-        
-        static void deleter(LocalProcessor* p);
-        
-        OpRcPtrVec m_opVec;
+        int m_lut3DEdgeSize;
+        std::string m_shaderFunctionName;
+        HwLanguage m_hwLanguage;
     };
-    
-    
 }
 OCS_NAMESPACE_EXIT
 

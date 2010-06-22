@@ -28,86 +28,99 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorSpace/OpenColorSpace.h>
 
-#include "Processor.h"
-#include "ScanlineHelper.h"
-
-#include <sstream>
+#include "HwRenderDesc.h"
 
 OCS_NAMESPACE_ENTER
 {
-    Processor::~Processor()
-    { }
     
-    
-    //////////////////////////////////////////////////////////////////////////
-    
-    ConstProcessorRcPtr LocalProcessor::Create(const OpRcPtrVec& opVec)
-    {
-        return ConstProcessorRcPtr(new LocalProcessor(opVec), &deleter);
-    }
-    
-    void LocalProcessor::deleter(LocalProcessor* p)
-    {
-        delete p;
-    }
-    
-    LocalProcessor::LocalProcessor(const OpRcPtrVec& opVec):
-        m_opVec(opVec)
-    { }
-    
-    LocalProcessor::~LocalProcessor()
-    { }
-    
-    bool LocalProcessor::isNoOp() const
-    {
-        return m_opVec.empty();
-    }
-    
-    void LocalProcessor::render(ImageDesc& img) const
-    {
-        if(isNoOp()) return;
         
-        ScanlineHelper scanlineHelper(img);
-        float * rgbaBuffer = 0;
-        long numPixels = 0;
-        
-        while(true)
-        {
-            scanlineHelper.prepRGBAScanline(&rgbaBuffer, &numPixels);
-            if(numPixels == 0) break;
-            if(!rgbaBuffer)
-                throw OCSException("Cannot render transform; null image.");
-            
-            for(unsigned int opIndex=0; opIndex<m_opVec.size(); ++opIndex)
-            {
-                m_opVec[opIndex]->render(rgbaBuffer, numPixels);
-            }
-            
-            scanlineHelper.finishRGBAScanline();
-        }
-    }
-
-    
-    const char * LocalProcessor::getHWShaderText(const HwRenderDesc & hwDesc) const
+    HwRenderDesc::HwRenderDesc()
+    : m_impl(new HwRenderDesc::Impl)
     {
-        return "";
     }
     
-    /*
-    int LocalProcessor::getHWLut3DEdgeSize() const
+    HwRenderDesc::~HwRenderDesc()
     {
-        return 0;
     }
     
-    const char * LocalProcessor::getHWLut3DCacheID(const HwProfileDesc & hwDesc) const
+    
+    void HwRenderDesc::setLut3DEdgeSize(int size)
     {
-        return "";
+        m_impl->setLut3DEdgeSize(size);
     }
     
-    void LocalProcessor::getHWLut3D(float* lut3d, const HwProfileDesc & hwDesc) const
+    int HwRenderDesc::getLut3DEdgeSize() const
     {
-        
+        return m_impl->getLut3DEdgeSize();
     }
-    */
+    
+    void HwRenderDesc::setShaderFunctionName(const char * name)
+    {
+        m_impl->setShaderFunctionName(name);
+    }
+    
+    const char * HwRenderDesc::getShaderFunctionName() const
+    {
+        return m_impl->getShaderFunctionName();
+    }
+    
+    void HwRenderDesc::setHwLanguage(HwLanguage lang)
+    {
+        m_impl->setHwLanguage(lang);
+    }
+    
+    HwLanguage HwRenderDesc::getHwLanguage() const
+    {
+        return m_impl->getHwLanguage();
+    }
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    HwRenderDesc::Impl::Impl() :
+        m_lut3DEdgeSize(0),
+        m_hwLanguage(HW_LANGUAGE_UNKNOWN)
+    {
+    }
+    
+    HwRenderDesc::Impl::~Impl()
+    {
+    
+    }
+    
+    void HwRenderDesc::Impl::setLut3DEdgeSize(int size)
+    {
+        m_lut3DEdgeSize = size;
+    }
+    
+    int HwRenderDesc::Impl::getLut3DEdgeSize() const
+    {
+        return m_lut3DEdgeSize;
+    }
+    
+    void HwRenderDesc::Impl::setShaderFunctionName(const char * name)
+    {
+        m_shaderFunctionName = name;
+    }
+    
+    const char * HwRenderDesc::Impl::getShaderFunctionName() const
+    {
+        return m_shaderFunctionName.c_str();
+    }
+    
+    void HwRenderDesc::Impl::setHwLanguage(HwLanguage lang)
+    {
+        m_hwLanguage = lang;
+    }
+    
+    HwLanguage HwRenderDesc::Impl::getHwLanguage() const
+    {
+        return m_hwLanguage;
+    }
+    
+    
 }
 OCS_NAMESPACE_EXIT
