@@ -4,3 +4,5 @@ mkdir -p OpenColorSpace.$COLOR_VERSION
 cp -R CMakeLists.txt configs export INSTALL LICENSE runpytest runtest src ChangeLog OpenColorSpace.$COLOR_VERSION
 tar cvzf OpenColorSpace.$COLOR_VERSION.tgz OpenColorSpace.$COLOR_VERSION
 rm -r OpenColorSpace.$COLOR_VERSION
+
+# git tag -a v0.5.8 -m "Version Tag"
