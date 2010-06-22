@@ -1,3 +1,15 @@
+Version 0.5.8 (June 22 2010):
+    * Support for .3dl
+    * Support for matrix ops
+    * Code refactor (added Processors) to support gpu/cpu model
+    * Much better error checking
+    * Compilation support for python 2.5
+    * Compilation support for OSX
+
+Version 0.5.7 (June 14 2010):
+    * Python API is much more fleshed out
+    * Improved public C++ header
+
 Version 0.5.6 (June 8 2010):
     * PyConfig stub implementation
     * Dropped ImageDesc.init; added PlanarImageDesc / PackedImageDesc
