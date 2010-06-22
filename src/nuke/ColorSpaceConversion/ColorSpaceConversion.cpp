@@ -27,16 +27,16 @@ ColorSpaceConversion::ColorSpaceConversion(Node *n) : DD::Image::PixelIop(n)
     // TODO (when to) re-grab the list of available colorspaces? How to save/load?
     try
     {
-        currentConfig = OCS::GetCurrentConfig();
-
+        OCS::ConstConfigRcPtr config = OCS::GetCurrentConfig();
+        
         OCS::ConstColorSpaceRcPtr defaultColorSpace = \
-            currentConfig->getColorSpaceForRole(OCS::ROLE_SCENE_LINEAR);
+            config->getColorSpaceForRole(OCS::ROLE_SCENE_LINEAR);
 
-        int nColorSpaces = currentConfig->getNumColorSpaces();
+        int nColorSpaces = config->getNumColorSpaces();
 
         for(int i = 0; i < nColorSpaces; i++)
         {
-            OCS::ConstColorSpaceRcPtr colorSpace = currentConfig->getColorSpaceByIndex(i);
+            OCS::ConstColorSpaceRcPtr colorSpace = config->getColorSpaceByIndex(i);
             bool usedAsInput = false;
             bool isDefault = colorSpace->equals(defaultColorSpace);
             //if (colorSpace->isTransformAllowed(OCS::COLORSPACE_DIR_TO_REFERENCE))

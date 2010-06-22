@@ -143,7 +143,7 @@ OCS_NAMESPACE_ENTER
         
         if(equalWithAbsError(0.0, det, FLTMIN)) return false;
         
-        det = 1.0/det;
+        det = 1.0f/det;
         
         float d00_31 = m[0]*m[13] - m[1]*m[12];
         float d00_32 = m[0]*m[14] - m[2]*m[12];

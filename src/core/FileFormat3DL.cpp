@@ -104,7 +104,7 @@ OCS_NAMESPACE_ENTER
         
         int Get3DLutEdgeSizeFromNumEntries(int numEntries)
         {
-            float fdim = powf(numEntries / 3.0f, 1.0f/3.0f);
+            float fdim = powf((float) numEntries / 3.0f, 1.0f/3.0f);
             int dim = static_cast<int>(roundf(fdim));
             
             if(dim*dim*dim*3 != numEntries)
@@ -200,7 +200,7 @@ OCS_NAMESPACE_ENTER
                     throw OCSException(os.str().c_str());
                 }
                 
-                int lutEdgeSize = Get3DLutEdgeSizeFromNumEntries(rawLutData.size());
+                int lutEdgeSize = Get3DLutEdgeSizeFromNumEntries((int)rawLutData.size());
                 
                 // We use the maximum value found in the lut to infer
                 // the bit depth.  While this is ugly. We dont believe there is
@@ -249,9 +249,9 @@ OCS_NAMESPACE_ENTER
                                 throw OCSException(os.str().c_str());
                             }
                             
-                            lut3d->lut[glLutIndex+0] = rawLutData[autoDeskLutIndex+0] * scale;
-                            lut3d->lut[glLutIndex+1] = rawLutData[autoDeskLutIndex+1] * scale;
-                            lut3d->lut[glLutIndex+2] = rawLutData[autoDeskLutIndex+2] * scale;
+                            lut3d->lut[glLutIndex+0] = (float) rawLutData[autoDeskLutIndex+0] * scale;
+                            lut3d->lut[glLutIndex+1] = (float) rawLutData[autoDeskLutIndex+1] * scale;
+                            lut3d->lut[glLutIndex+2] = (float) rawLutData[autoDeskLutIndex+2] * scale;
                         }
                     }
                 }

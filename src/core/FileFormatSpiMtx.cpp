@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pystring/pystring.h"
 
 #include <cstdio>
+#include <cstring>
 #include <sstream>
 
 
@@ -134,9 +135,9 @@ OCS_NAMESPACE_ENTER
                 cachedFile->m44[14] = 0.0f;
                 cachedFile->m44[15] = 1.0f;
                 
-                cachedFile->offset4[0] = floatArray[3] / 65535.0;
-                cachedFile->offset4[1] = floatArray[7] / 65535.0;
-                cachedFile->offset4[2] = floatArray[11] / 65535.0;
+                cachedFile->offset4[0] = floatArray[3] / 65535.0f;
+                cachedFile->offset4[1] = floatArray[7] / 65535.0f;
+                cachedFile->offset4[2] = floatArray[11] / 65535.0f;
                 cachedFile->offset4[3] = 0.0f;
                 
                 return cachedFile;
