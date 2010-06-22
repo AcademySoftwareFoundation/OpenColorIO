@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // OCS
 // OpenColorSpace
-// Version 0.5.7
+// Version 0.5.8
 //
 
 // TODO: get simple display transform working. can it be expressed as an op?

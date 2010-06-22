@@ -1,5 +1,5 @@
 #!/usr/bin/env tcsh
-setenv COLOR_VERSION 0.5.7
+setenv COLOR_VERSION 0.5.8
 mkdir -p OpenColorSpace.$COLOR_VERSION
 cp -R CMakeLists.txt configs export INSTALL LICENSE runpytest runtest src ChangeLog OpenColorSpace.$COLOR_VERSION
 tar cvzf OpenColorSpace.$COLOR_VERSION.tgz OpenColorSpace.$COLOR_VERSION
