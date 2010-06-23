@@ -78,6 +78,9 @@ OCS_NAMESPACE_ENTER
         return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
     }
     
+    // This generates an identity 3d lut in GL layout
+    void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels);
+    
     void CreateLut3DOp(OpRcPtrVec * opVec,
                        Lut3DRcPtr lut,
                        Interpolation interpolation,

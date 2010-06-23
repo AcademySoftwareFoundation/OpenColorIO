@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorSpace/OpenColorSpace.h>
 
+#include "Lut3DOp.h"
 #include "Processor.h"
 #include "ScanlineHelper.h"
 
@@ -141,7 +142,7 @@ OCS_NAMESPACE_ENTER
             {
                 *shader << "half4 " << fcnName << "(in half4 inPixel," << "\n";
             }
-            else if(lang == GPU_LANGUAGE_GLSL)
+            else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
             {
                 *shader << "vec4 " << fcnName << "(in vec4 inPixel," << "\n";
             }
@@ -154,7 +155,7 @@ OCS_NAMESPACE_ENTER
             {
                 *shader << "    half4 " << pixelName << " = inPixel;" << "\n";
             }
-            else if(lang == GPU_LANGUAGE_GLSL)
+            else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
             {
                 *shader << "    vec4 " << pixelName << " = inPixel;" << "\n";
             }
@@ -205,7 +206,6 @@ OCS_NAMESPACE_ENTER
     }
     
     
-    
     void LocalProcessor::getGPUShader(std::ostringstream * shader,
                                       std::ostringstream * lut3dCacheID, float * lut3d,
                                       const GpuShaderDesc & shaderDesc) const
@@ -243,9 +243,8 @@ OCS_NAMESPACE_ENTER
             int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
             int lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
             
-            // TODO: Warn on max size?
             float lut3DRGBABuffer[lut3DNumPixels*4];
-            // TODO: fill rgba buffer with lut3D indentity lut
+            GenerateIdentityLut3D(lut3DRGBABuffer, lut3DEdgeLen, 4);
             
             for(int i=0; i<(int)m_opVec.size(); ++i)
             {

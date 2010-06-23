@@ -202,6 +202,26 @@ OCS_NAMESPACE_ENTER
         }
     }
     
+    
+    void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels)
+    {
+        if(!img) return;
+        if(numChannels < 3)
+        {
+            throw OCSException("Cannot generate idenitity 3d lut with less than 3 channels.");
+        }
+        
+        float c = 1.0f / ((float)edgeLen - 1.0f);
+        
+        for(int i=0; i<edgeLen*edgeLen*edgeLen; i++)
+        {
+            img[numChannels*i+0] = (float)(i%edgeLen) * c;
+            img[numChannels*i+1] = (float)((i/edgeLen)%edgeLen) * c;
+            img[numChannels*i+2] = (float)((i/edgeLen/edgeLen)%edgeLen) * c;
+        }
+    }
+    
+    
     namespace
     {
         class Lut3DOp : public Op
@@ -293,6 +313,8 @@ OCS_NAMESPACE_ENTER
     {
         opVec->push_back( Lut3DOpRcPtr(new Lut3DOp(lut, interpolation, direction)) );
     }
+    
+    
 
 }
 OCS_NAMESPACE_EXIT
