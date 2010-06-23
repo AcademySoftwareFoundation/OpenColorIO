@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "Lut1DOp.h"
@@ -49,7 +49,7 @@ Length 4096
 */
 
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     ////////////////////////////////////////////////////////////////
     
@@ -105,37 +105,37 @@ OCS_NAMESPACE_ENTER
                         if(pystring::startswith(headerLine, "Version"))
                         {
                             if(sscanf(lineBuffer, "Version %d", &version)!=1)
-                                throw OCSException("Invalid 'Version' Tag");
+                                throw OCIOException("Invalid 'Version' Tag");
                         }
                         else if(pystring::startswith(headerLine, "From"))
                         {
                             if(sscanf(lineBuffer, "From %f %f", &from_min, &from_max)!=2)
-                                throw OCSException("Invalid 'From' Tag");
+                                throw OCIOException("Invalid 'From' Tag");
                         }
                         else if(pystring::startswith(headerLine, "Components"))
                         {
                             if(sscanf(lineBuffer, "Components %d", &components)!=1)
-                                throw OCSException("Invalid 'Components' Tag");
+                                throw OCIOException("Invalid 'Components' Tag");
                         }
                         else if(pystring::startswith(headerLine, "Length"))
                         {
                             if(sscanf(lineBuffer, "Length %d", &lut_size)!=1)
-                                throw OCSException("Invalid 'Length' Tag");
+                                throw OCIOException("Invalid 'Length' Tag");
                         }
                     }
                     while (istream.good() && !pystring::startswith(headerLine,"{"));
                 }
                 
                 if(version == -1)
-                    throw OCSException("Could not find 'Version' Tag");
+                    throw OCIOException("Could not find 'Version' Tag");
                 if(version != 1)
-                    throw OCSException("Only format version 1 supported.");
+                    throw OCIOException("Only format version 1 supported.");
                 if (lut_size == -1)
-                    throw OCSException("Could not find 'Length' Tag");
+                    throw OCIOException("Could not find 'Length' Tag");
                 if (components == -1)
-                    throw OCSException("Could not find 'Components' Tag");
+                    throw OCIOException("Could not find 'Components' Tag");
                 if (components<0 || components>3)
-                    throw OCSException("Components must be [1,2,3]");
+                    throw OCIOException("Components must be [1,2,3]");
                 
                 
                 
@@ -186,7 +186,7 @@ OCS_NAMESPACE_ENTER
                     }
                     
                     if(lineCount!=lut_size)
-                        throw OCSException("Not enough entries found.");
+                        throw OCIOException("Not enough entries found.");
                 }
                 
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
@@ -205,7 +205,7 @@ OCS_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Cannot build Spi1D Op. Invalid cache type.";
-                    throw OCSException(os.str().c_str());
+                    throw OCIOException(os.str().c_str());
                 }
                 
                 TransformDirection newDir = CombineTransformDirections(dir,
@@ -225,4 +225,4 @@ OCS_NAMESPACE_ENTER
         static AutoRegister registerIt;
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

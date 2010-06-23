@@ -31,7 +31,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "pystring.h"
 
@@ -40,7 +40,7 @@
 #include <cstring>
 #include <iostream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
 
 namespace pystring
@@ -1061,5 +1061,5 @@ namespace pystring
 
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 

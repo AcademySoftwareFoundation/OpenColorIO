@@ -1,27 +1,27 @@
 """
 Test the Python bindings.
 """
-import PyOpenColorSpace as OCS
+import PyOpenColorIO as OCIO
 
 print ""
-print "PyOCS:", OCS.__file__
-print "OCS:",dir(OCS)
+print "PyOCIO:", OCIO.__file__
+print "OCIO:",dir(OCIO)
 print ""
 
 #import pydoc
-#print pydoc.render_doc(OCS)
+#print pydoc.render_doc(OCIO)
 
-#print dir(OCS.Config)
-#c = OCS.Config.CreateFromEnv()
+#print dir(OCIO.Config)
+#c = OCIO.Config.CreateFromEnv()
 #print 'c',c
 #print 'isEditable', c.isEditable()
 #print "resourcePath: '%s' " % (c.getResourcePath(),)
-#c = OCS.GetCurrentConfig()
+#c = OCIO.GetCurrentConfig()
 #print 'isEditable', c.isEditable()
 #print "resourcePath: '%s' " % (c.getResourcePath(),)
 #
-#OCS.SetCurrentConfig(c)
-#c = OCS.GetCurrentConfig()
+#OCIO.SetCurrentConfig(c)
+#c = OCIO.GetCurrentConfig()
 #print ''
 #print "ColorSpaces"
 #for cs in c.getColorSpaces():
@@ -29,20 +29,20 @@ print ""
 
 
 # Create a new config
-config = OCS.Config()
+config = OCIO.Config()
 
 print 'isEditable', config.isEditable()
 print "resourcePath: '%s' " % (config.getResourcePath(),)
 
 # Add a colorspace
-cs = OCS.ColorSpace()
+cs = OCIO.ColorSpace()
 cs.setName("lnh")
 cs.setFamily("ln")
-cs.setBitDepth(OCS.BIT_DEPTH_F16)
+cs.setBitDepth(OCIO.BIT_DEPTH_F16)
 cs.setIsData(False)
-cs.setGPUAllocation(OCS.GPU_ALLOCATION_LG2)
+cs.setGPUAllocation(OCIO.GPU_ALLOCATION_LG2)
 cs.setGPUMin(-16.0)
 cs.setGPUMax(6.0)
 
 config.addColorSpace(cs)
-config.setColorSpaceForRole(OCS.ROLE_SCENE_LINEAR, cs.getName())
+config.setColorSpaceForRole(OCIO.ROLE_SCENE_LINEAR, cs.getName())

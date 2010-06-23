@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "Lut3DOp.h"
@@ -49,7 +49,7 @@ SPILUT 1.0
 */
 
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     ////////////////////////////////////////////////////////////////
     
@@ -130,7 +130,7 @@ OCS_NAMESPACE_ENTER
                             os << "A lut entry is specified (";
                             os << rIndex << " " << gIndex << " " << bIndex;
                             os << " that falls outside of the cube.";
-                            throw OCSException(os.str().c_str());
+                            throw OCIOException(os.str().c_str());
                         }
                         
                         lut3d->lut[index+0] = redValue;
@@ -143,7 +143,7 @@ OCS_NAMESPACE_ENTER
                 
                 // Have we fully populated the table?
                 if (entriesRemaining>0) 
-                    throw OCSException("Not enough entries found.");
+                    throw OCIOException("Not enough entries found.");
                 
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
                 cachedFile->lut = lut3d;
@@ -161,7 +161,7 @@ OCS_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Cannot build Spi3D Op. Invalid cache type.";
-                    throw OCSException(os.str().c_str());
+                    throw OCIOException(os.str().c_str());
                 }
                 
                 TransformDirection newDir = CombineTransformDirections(dir,
@@ -181,4 +181,4 @@ OCS_NAMESPACE_ENTER
         static AutoRegister registerIt;
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

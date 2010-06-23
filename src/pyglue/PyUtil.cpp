@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "PyFileTransform.h"
 #include "PyGroupTransform.h"
@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform)
     {
@@ -53,7 +53,7 @@ OCS_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Unknown transform type for BuildConstPyTransform.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
     }
     
@@ -73,7 +73,7 @@ OCS_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Unknown transform type for BuildEditablePyTransform.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
     }
     
@@ -95,7 +95,7 @@ OCS_NAMESPACE_ENTER
         }
         else
         {
-            throw OCSException("PyObject must be a known OCS::Transform type.");
+            throw OCIOException("PyObject must be a known OCIO::Transform type.");
         }
     }
 
@@ -131,7 +131,7 @@ OCS_NAMESPACE_ENTER
             return 0;
         }
         
-        *gpuallocPtr = OCS::GpuAllocationFromString(PyString_AsString( object ));
+        *gpuallocPtr = OCIO::GpuAllocationFromString(PyString_AsString( object ));
         
         return 1;
     }
@@ -148,7 +148,7 @@ OCS_NAMESPACE_ENTER
             return 0;
         }
         
-        *interpPtr = OCS::InterpolationFromString(PyString_AsString( object ));
+        *interpPtr = OCIO::InterpolationFromString(PyString_AsString( object ));
         
         return 1;
     }
@@ -163,7 +163,7 @@ OCS_NAMESPACE_ENTER
             return 0;
         }
         
-        *dirPtr = OCS::TransformDirectionFromString(PyString_AsString( object ));
+        *dirPtr = OCIO::TransformDirectionFromString(PyString_AsString( object ));
         
         return 1;
     }
@@ -179,7 +179,7 @@ OCS_NAMESPACE_ENTER
             return 0;
         }
         
-        *dirPtr = OCS::ColorSpaceDirectionFromString(PyString_AsString( object ));
+        *dirPtr = OCIO::ColorSpaceDirectionFromString(PyString_AsString( object ));
         
         return 1;
     }
@@ -207,7 +207,7 @@ OCS_NAMESPACE_ENTER
             // from inside an exception handler catch block!
             throw;
         }
-        catch (OCSException & e)
+        catch (OCIOException & e)
         {
             PyErr_SetString(PyExc_RuntimeError, e.what());
         }
@@ -221,4 +221,4 @@ OCS_NAMESPACE_ENTER
         }
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

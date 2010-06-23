@@ -26,12 +26,12 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 #include "GroupTransform.h"
 
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     GroupTransformRcPtr GroupTransform::Create()
     {
@@ -197,7 +197,7 @@ OCS_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Invalid transform index " << index << ".";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         return m_vec[index];
@@ -209,7 +209,7 @@ OCS_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Invalid transform index " << index << ".";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         return m_vec[index];
@@ -270,4 +270,4 @@ OCS_NAMESPACE_ENTER
     }
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

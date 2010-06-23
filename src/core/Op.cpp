@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "GroupTransform.h"
 #include "FileTransform.h"
@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     Op::~Op()
     { }
@@ -60,7 +60,7 @@ OCS_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Unknown transform type for Op Creation.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
     }
     
@@ -84,4 +84,4 @@ OCS_NAMESPACE_ENTER
     }
     */
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

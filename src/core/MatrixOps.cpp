@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "MatrixOps.h"
 #include "MathUtils.h"
@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     namespace
     {
@@ -105,7 +105,7 @@ OCS_NAMESPACE_ENTER
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw OCSException("Cannot apply MatrixOffsetOp op, unspecified transform direction.");
+                throw OCIOException("Cannot apply MatrixOffsetOp op, unspecified transform direction.");
             }
             
             memcpy(m_m44, m44, 16*sizeof(float));
@@ -157,7 +157,7 @@ OCS_NAMESPACE_ENTER
                         os << "Matrix inverse does not exist for m44 (";
                         for(int i=0; i<16; ++i) os << m_m44[i] << " ";
                         os << ").";
-                        throw OCSException(os.str().c_str());
+                        throw OCIOException(os.str().c_str());
                     }
                     
                     ApplyMatrixNoAlpha(rgbaBuffer, numPixels, invMtx44);
@@ -261,4 +261,4 @@ OCS_NAMESPACE_ENTER
             offset4, direction)) );
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

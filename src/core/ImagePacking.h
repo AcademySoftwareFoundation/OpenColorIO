@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_IMAGEPACKING_H
-#define INCLUDED_OCS_IMAGEPACKING_H
+#ifndef INCLUDED_OCIO_IMAGEPACKING_H
+#define INCLUDED_OCIO_IMAGEPACKING_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     void PackRGBAFromImageDesc(const ImageDesc& srcImg,
                                float* outputBuffer,
@@ -45,6 +45,6 @@ OCS_NAMESPACE_ENTER
                                int numPixelsToUnpack,
                                long imagePixelStartIndex);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

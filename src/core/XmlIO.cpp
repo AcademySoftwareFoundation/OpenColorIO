@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Config.h"
 #include "FileTransform.h"
@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     namespace
     {
@@ -48,7 +48,7 @@ OCS_NAMESPACE_ENTER
         FileTransformRcPtr CreateFileTransform(const TiXmlElement * element)
         {
             if(!element)
-                throw OCSException("CreateFileTransform received null XmlElement.");
+                throw OCIOException("CreateFileTransform received null XmlElement.");
             
             if(std::string(element->Value()) != "file")
             {
@@ -56,7 +56,7 @@ OCS_NAMESPACE_ENTER
                 os << "HandleElement passed incorrect element type '";
                 os << element->Value() << "'. ";
                 os << "Expected 'file'.";
-                throw OCSException(os.str().c_str());
+                throw OCIOException(os.str().c_str());
             }
             
             FileTransformRcPtr t = FileTransform::Create();
@@ -126,7 +126,7 @@ OCS_NAMESPACE_ENTER
         GroupTransformRcPtr CreateGroupTransform(const TiXmlElement * element)
         {
             if(!element)
-                throw OCSException("CreateGroupTransform received null XmlElement.");
+                throw OCIOException("CreateGroupTransform received null XmlElement.");
             
             if(std::string(element->Value()) != "group")
             {
@@ -134,7 +134,7 @@ OCS_NAMESPACE_ENTER
                 os << "HandleElement passed incorrect element type '";
                 os << element->Value() << "'. ";
                 os << "Expected 'group'.";
-                throw OCSException(os.str().c_str());
+                throw OCIOException(os.str().c_str());
             }
             
             GroupTransformRcPtr t = GroupTransform::Create();
@@ -174,7 +174,7 @@ OCS_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "CreateGroupTransform passed unknown element type '";
                     os << elementtype << "'.";
-                    throw OCSException(os.str().c_str());
+                    throw OCIOException(os.str().c_str());
                 }
                 
                 pElem = pElem->NextSiblingElement();
@@ -219,7 +219,7 @@ OCS_NAMESPACE_ENTER
                 }
                 else
                 {
-                    throw OCSException("Cannot serialize Transform type to XML");
+                    throw OCIOException("Cannot serialize Transform type to XML");
                 }
             }
             
@@ -236,7 +236,7 @@ OCS_NAMESPACE_ENTER
         ColorSpaceRcPtr CreateColorSpaceFromElement(const TiXmlElement * element)
         {
             if(std::string(element->Value()) != "colorspace")
-                throw OCSException("HandleElement GroupTransform passed incorrect element type.");
+                throw OCIOException("HandleElement GroupTransform passed incorrect element type.");
             
             ColorSpaceRcPtr cs = ColorSpace::Create();
             
@@ -288,7 +288,7 @@ OCS_NAMESPACE_ENTER
                             std::ostringstream os;
                             os << "CreateColorSpaceFromElement passed incorrect element type '";
                             os << childelementtype << "'. 'group' expected.";
-                            throw OCSException(os.str().c_str());
+                            throw OCIOException(os.str().c_str());
                         }
                         
                         gchildElem=gchildElem->NextSiblingElement();
@@ -357,23 +357,23 @@ OCS_NAMESPACE_ENTER
         if(!loadOkay)
         {
             std::ostringstream os;
-            os << "Error parsing ocs configuration file, '" << filename;
+            os << "Error parsing ocio configuration file, '" << filename;
             os << "'. " << doc.ErrorDesc();
             if(doc.ErrorRow())
             {
                 os << " (line " << doc.ErrorRow();
                 os << ", col " << doc.ErrorCol() << ")";
             }
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         const TiXmlElement* rootElement = doc.RootElement();
-        if(!rootElement || std::string(rootElement->Value()) != "ocsconfig")
+        if(!rootElement || std::string(rootElement->Value()) != "ocioconfig")
         {
             std::ostringstream os;
             os << "Error loading '" << filename;
-            os << "'. Please confirm file is 'ocsconfig' format.";
-            throw OCSException(os.str().c_str());
+            os << "'. Please confirm file is 'ocioconfig' format.";
+            throw OCIOException(os.str().c_str());
         }
         
         int version = -1;
@@ -389,9 +389,9 @@ OCS_NAMESPACE_ENTER
                     if (pAttrib->QueryIntValue(&version)!=TIXML_SUCCESS)
                     {
                         std::ostringstream os;
-                        os << "Error parsing ocs configuration file, '" << filename;
+                        os << "Error parsing ocio configuration file, '" << filename;
                         os << "'. Could not parse integer 'version' tag.";
-                        throw OCSException(os.str().c_str());
+                        throw OCIOException(os.str().c_str());
                     }
                 }
                 else if(attrName == "resourcepath")
@@ -417,15 +417,15 @@ OCS_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Config does not specify a version tag. ";
-            os << "Please confirm ocs file is of the expect format.";
-            throw OCSException(os.str().c_str());
+            os << "Please confirm ocio file is of the expect format.";
+            throw OCIOException(os.str().c_str());
         }
         if(version != 1)
         {
             std::ostringstream os;
             os << "Config is format version '" << version << "',";
             os << " but this library only supports version 1.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         // Traverse children
@@ -454,7 +454,7 @@ OCS_NAMESPACE_ENTER
     {
         TiXmlDocument doc;
         
-        TiXmlElement * element = new TiXmlElement( "ocsconfig" );
+        TiXmlElement * element = new TiXmlElement( "ocioconfig" );
         doc.LinkEndChild( element );
         
         try
@@ -486,8 +486,8 @@ OCS_NAMESPACE_ENTER
             std::ostringstream error;
             error << "Error writing xml. ";
             error << e.what();
-            throw OCSException(error.str().c_str());
+            throw OCIOException(error.str().c_str());
         }
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

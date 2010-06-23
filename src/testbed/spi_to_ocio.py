@@ -5,21 +5,21 @@ import SpImport
 
 XmlIO = SpImport.SpComp2("PyXmlIO", 1)
 
-import PyOpenColorSpace as OCS
+import PyOpenColorIO as OCIO
 
 if len(sys.argv) < 3:
     print """
-    Usage: spi_to_ocs <color_v7_config.xml> <output_dir>
+    Usage: spi_to_ocio <color_v7_config.xml> <output_dir>
     
-    Convert a proprietary SPI color configuration format (v7 xml) to an OCS config.
+    Convert a proprietary SPI color configuration format (v7 xml) to an OCIO config.
     
-    env PYTHONPATH=/net/homedirs/jeremys/git/OpenColorSpace/build/ ./src/testbed/spi_to_ocs.py /shots/grn/home/lib/lut/colorspaces.xml /mcp/config
+    env PYTHONPATH=/net/homedirs/jeremys/git/OpenColorIO/build/ ./src/testbed/spi_to_ocio.py /shots/grn/home/lib/lut/colorspaces.xml /mcp/config
     
     """
     sys.exit(1)
 
 print ""
-print "PyOCS:", OCS.__file__
+print "PyOCIO:", OCIO.__file__
 print ""
 
 def GetFileMD5(fname):
@@ -37,15 +37,15 @@ def GetFileMD5(fname):
 def BuildConfigFromXMLElement(element, lutDir):
     assert(element.getElementType() == 'color_config')
     
-    config = OCS.Config()
+    config = OCIO.Config()
     
     # Convert roles
-    for oldRole, newRole in [ ("linear", OCS.ROLE_SCENE_LINEAR),
-                              ("colortiming", OCS.ROLE_COLOR_TIMING),
+    for oldRole, newRole in [ ("linear", OCIO.ROLE_SCENE_LINEAR),
+                              ("colortiming", OCIO.ROLE_COLOR_TIMING),
                               ("spm", "spi.spm"),
-                              ("picking", OCS.ROLE_COLOR_PICKING),
-                              ("data", OCS.ROLE_DATA),
-                              ("log", OCS.ROLE_COMPOSITING_LOG) ]:
+                              ("picking", OCIO.ROLE_COLOR_PICKING),
+                              ("data", OCIO.ROLE_DATA),
+                              ("log", OCIO.ROLE_COMPOSITING_LOG) ]:
         if element.hasAttr(oldRole):
             config.setColorSpaceForRole(newRole, element.getAttr(oldRole))
     
@@ -60,7 +60,7 @@ def BuildConfigFromXMLElement(element, lutDir):
     return config
 
 def BuildColorTransform(elementArray, lutDir):
-    group = OCS.GroupTransform()
+    group = OCIO.GroupTransform()
     
     for element in elementArray:
         attrDict = element.getAttrDict()
@@ -69,7 +69,7 @@ def BuildColorTransform(elementArray, lutDir):
             continue
         
         elif element.getElementType() in ('lut', 'colormatrix'):
-            transform = OCS.FileTransform()
+            transform = OCIO.FileTransform()
             
             fname = attrDict.pop('file')
             if not os.path.exists(fname):
@@ -99,22 +99,22 @@ def BuildColorTransform(elementArray, lutDir):
             
             direction = attrDict.pop('direction')
             if direction == 'inverse':
-                transform.setDirection(OCS.TRANSFORM_DIR_INVERSE)
+                transform.setDirection(OCIO.TRANSFORM_DIR_INVERSE)
             else:
-                transform.setDirection(OCS.TRANSFORM_DIR_FORWARD)
+                transform.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
             
             interp = attrDict.pop('interpolation', None)
             if interp is None:
                 if extension in ('spi3d','3dl'):
-                    transform.setInterpolation(OCS.INTERP_LINEAR)
+                    transform.setInterpolation(OCIO.INTERP_LINEAR)
                 elif extension in ('spi1d'):
-                    transform.setInterpolation(OCS.INTERP_NEAREST)
+                    transform.setInterpolation(OCIO.INTERP_NEAREST)
                 else:
                     pass
             elif interp == 'linear':
-                transform.setInterpolation(OCS.INTERP_LINEAR)
+                transform.setInterpolation(OCIO.INTERP_LINEAR)
             elif interp == 'nearest':
-                transform.setInterpolation(OCS.INTERP_NEAREST)
+                transform.setInterpolation(OCIO.INTERP_NEAREST)
             else:
                 print "Unkwnown interpolation",interp
             
@@ -131,7 +131,7 @@ def BuildColorTransform(elementArray, lutDir):
 def BuildColorspaceFromXMLElement(element, lutDir):
     attrDict = element.getAttrDict()
     
-    cs = OCS.ColorSpace()
+    cs = OCIO.ColorSpace()
     cs.setName( attrDict.pop('name') )
     cs.setFamily( attrDict.pop('prefix') )
     
@@ -140,28 +140,28 @@ def BuildColorspaceFromXMLElement(element, lutDir):
     
     bitdepth = attrDict.pop('bitdepth')
     if bitdepth == '8':
-        cs.setBitDepth(OCS.BIT_DEPTH_UINT8)
+        cs.setBitDepth(OCIO.BIT_DEPTH_UINT8)
     elif bitdepth == '10':
-        cs.setBitDepth(OCS.BIT_DEPTH_UINT10)
+        cs.setBitDepth(OCIO.BIT_DEPTH_UINT10)
     elif bitdepth == '12':
-        cs.setBitDepth(OCS.BIT_DEPTH_UINT12)
+        cs.setBitDepth(OCIO.BIT_DEPTH_UINT12)
     elif bitdepth == '16':
-        cs.setBitDepth(OCS.BIT_DEPTH_UINT16)
+        cs.setBitDepth(OCIO.BIT_DEPTH_UINT16)
     elif bitdepth == '0':
-        cs.setBitDepth(OCS.BIT_DEPTH_F32)
+        cs.setBitDepth(OCIO.BIT_DEPTH_F32)
     else:
-        #cs.setBitDepth(OCS.BIT_DEPTH_UNKNOWN)
+        #cs.setBitDepth(OCIO.BIT_DEPTH_UNKNOWN)
         raise RuntimeError("Unknown bit depth")
     
     gpuallocation = attrDict.pop('gpuallocation', None)
     if gpuallocation is None:
         pass
     elif gpuallocation == 'log2':
-        cs.setGPUAllocation(OCS.GPU_ALLOCATION_LG2)
+        cs.setGPUAllocation(OCIO.GPU_ALLOCATION_LG2)
     elif gpuallocation == 'uniform':
-        cs.setGPUAllocation(OCS.GPU_ALLOCATION_UNIFORM)
+        cs.setGPUAllocation(OCIO.GPU_ALLOCATION_UNIFORM)
     else:
-        #cs.setGPUAllocation(OCS.GPU_ALLOCATION_UNKNOWN)
+        #cs.setGPUAllocation(OCIO.GPU_ALLOCATION_UNKNOWN)
         raise RuntimeError("Unknown bit allocation")
     
     gpumin = attrDict.pop('gpumin', None)
@@ -196,10 +196,10 @@ def BuildColorspaceFromXMLElement(element, lutDir):
     # This assumes transforms, if both directions are defined, are perfect inverses of each other.
     if len(toref) >= len(fromref):
         transform = BuildColorTransform(toref, lutDir)
-        cs.setTransform(transform, OCS.COLORSPACE_DIR_TO_REFERENCE)
+        cs.setTransform(transform, OCIO.COLORSPACE_DIR_TO_REFERENCE)
     else:
         transform = BuildColorTransform(fromref, lutDir)
-        cs.setTransform(transform, OCS.COLORSPACE_DIR_FROM_REFERENCE)
+        cs.setTransform(transform, OCIO.COLORSPACE_DIR_FROM_REFERENCE)
     
     return cs
 
@@ -222,7 +222,7 @@ element = p.parse(INPUT_CONFIG)
 config = BuildConfigFromXMLElement( element, LUT_DIR)
 config.setResourcePath('luts')
 
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'config.ocs')
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'config.ocio')
 print ''
 print 'Writing',OUTPUT_FILE
 

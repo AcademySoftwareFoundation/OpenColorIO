@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "PyColorSpace.h"
 #include "PyConfig.h"
@@ -35,19 +35,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     bool AddConfigObjectToModule( PyObject* m )
     {
-        PyOCS_ConfigType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCS_ConfigType) < 0 ) return false;
+        PyOCIO_ConfigType.tp_new = PyType_GenericNew;
+        if ( PyType_Ready(&PyOCIO_ConfigType) < 0 ) return false;
         
-        Py_INCREF( &PyOCS_ConfigType );
+        Py_INCREF( &PyOCIO_ConfigType );
         PyModule_AddObject(m, "Config",
-                (PyObject *)&PyOCS_ConfigType);
+                (PyObject *)&PyOCIO_ConfigType);
         
         return true;
     }
@@ -61,13 +61,13 @@ OCS_NAMESPACE_ENTER
             return NULL;
         }
         
-        PyOCS_Config * pyconfig = PyObject_New(
-                PyOCS_Config, (PyTypeObject * ) &PyOCS_ConfigType);
+        PyOCIO_Config * pyconfig = PyObject_New(
+                PyOCIO_Config, (PyTypeObject * ) &PyOCIO_ConfigType);
         
-        pyconfig->constcppobj = new OCS::ConstConfigRcPtr();
+        pyconfig->constcppobj = new OCIO::ConstConfigRcPtr();
         *pyconfig->constcppobj = config;
         
-        pyconfig->cppobj = new OCS::ConfigRcPtr();
+        pyconfig->cppobj = new OCIO::ConfigRcPtr();
         pyconfig->isconst = true;
         
         return ( PyObject * ) pyconfig;
@@ -81,11 +81,11 @@ OCS_NAMESPACE_ENTER
             return NULL;
         }
         
-        PyOCS_Config * pyconfig = PyObject_New(
-                PyOCS_Config, (PyTypeObject * ) &PyOCS_ConfigType);
+        PyOCIO_Config * pyconfig = PyObject_New(
+                PyOCIO_Config, (PyTypeObject * ) &PyOCIO_ConfigType);
         
-        pyconfig->constcppobj = new OCS::ConstConfigRcPtr();
-        pyconfig->cppobj = new OCS::ConfigRcPtr();
+        pyconfig->constcppobj = new OCIO::ConstConfigRcPtr();
+        pyconfig->cppobj = new OCIO::ConfigRcPtr();
         *pyconfig->cppobj = config;
         
         pyconfig->isconst = false;
@@ -97,17 +97,17 @@ OCS_NAMESPACE_ENTER
     bool IsPyConfig(PyObject * pyobject)
     {
         if(!pyobject) return false;
-        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCS_ConfigType));
+        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCIO_ConfigType));
     }
     
     bool IsPyConfigEditable(PyObject * pyobject)
     {
         if(!IsPyConfig(pyobject))
         {
-            throw OCSException("PyObject must be an OCS::Config.");
+            throw OCIOException("PyObject must be an OCIO::Config.");
         }
         
-        PyOCS_Config * pyconfig = reinterpret_cast<PyOCS_Config *> (pyobject);
+        PyOCIO_Config * pyconfig = reinterpret_cast<PyOCIO_Config *> (pyobject);
         return (!pyconfig->isconst);
     }
     
@@ -115,10 +115,10 @@ OCS_NAMESPACE_ENTER
     {
         if(!IsPyConfig(pyobject))
         {
-            throw OCSException("PyObject must be an OCS::Config.");
+            throw OCIOException("PyObject must be an OCIO::Config.");
         }
         
-        PyOCS_Config * pyconfig = reinterpret_cast<PyOCS_Config *> (pyobject);
+        PyOCIO_Config * pyconfig = reinterpret_cast<PyOCIO_Config *> (pyobject);
         if(pyconfig->isconst && pyconfig->constcppobj)
         {
             return *pyconfig->constcppobj;
@@ -129,23 +129,23 @@ OCS_NAMESPACE_ENTER
             return *pyconfig->cppobj;
         }
         
-        throw OCSException("PyObject must be a valid OCS::Config.");
+        throw OCIOException("PyObject must be a valid OCIO::Config.");
     }
     
     ConfigRcPtr GetEditableConfig(PyObject * pyobject)
     {
         if(!IsPyConfig(pyobject))
         {
-            throw OCSException("PyObject must be an OCS::Config.");
+            throw OCIOException("PyObject must be an OCIO::Config.");
         }
         
-        PyOCS_Config * pyconfig = reinterpret_cast<PyOCS_Config *> (pyobject);
+        PyOCIO_Config * pyconfig = reinterpret_cast<PyOCIO_Config *> (pyobject);
         if(!pyconfig->isconst && pyconfig->cppobj)
         {
             return *pyconfig->cppobj;
         }
         
-        throw OCSException("PyObject must be an editable OCS::Config.");
+        throw OCIOException("PyObject must be an editable OCIO::Config.");
     }
     
     ///////////////////////////////////////////////////////////////////////////
@@ -162,63 +162,63 @@ OCS_NAMESPACE_ENTER
     
     namespace
     {
-        PyObject * PyOCS_Config_CreateFromEnv( PyObject * cls );
-        PyObject * PyOCS_Config_CreateFromFile( PyObject * cls, PyObject * args );
-        int PyOCS_Config_init( PyOCS_Config * self, PyObject * args, PyObject * kwds );
-        void PyOCS_Config_delete( PyOCS_Config * self, PyObject * args );
-        PyObject * PyOCS_Config_isEditable( PyObject * self );
-        PyObject * PyOCS_Config_createEditableCopy( PyObject * self );
+        PyObject * PyOCIO_Config_CreateFromEnv( PyObject * cls );
+        PyObject * PyOCIO_Config_CreateFromFile( PyObject * cls, PyObject * args );
+        int PyOCIO_Config_init( PyOCIO_Config * self, PyObject * args, PyObject * kwds );
+        void PyOCIO_Config_delete( PyOCIO_Config * self, PyObject * args );
+        PyObject * PyOCIO_Config_isEditable( PyObject * self );
+        PyObject * PyOCIO_Config_createEditableCopy( PyObject * self );
         
-        PyObject * PyOCS_Config_getResourcePath( PyObject * self );
-        PyObject * PyOCS_Config_setResourcePath( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_Config_getResourcePath( PyObject * self );
+        PyObject * PyOCIO_Config_setResourcePath( PyObject * self,  PyObject *args );
         
-        PyObject * PyOCS_Config_getColorSpaces( PyObject * self );
-        PyObject * PyOCS_Config_addColorSpace( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getColorSpaces( PyObject * self );
+        PyObject * PyOCIO_Config_addColorSpace( PyObject * self, PyObject * args );
         
-        PyObject * PyOCS_Config_setColorSpaceForRole( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_setColorSpaceForRole( PyObject * self, PyObject * args );
         
-        PyObject * PyOCS_Config_getXML( PyObject * self );
+        PyObject * PyOCIO_Config_getXML( PyObject * self );
         
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        PyMethodDef PyOCS_Config_methods[] = {
-            {"CreateFromEnv", (PyCFunction) PyOCS_Config_CreateFromEnv, METH_NOARGS | METH_CLASS, "" },
-            {"CreateFromFile", PyOCS_Config_CreateFromFile, METH_VARARGS | METH_CLASS, "" },
-            {"isEditable", (PyCFunction) PyOCS_Config_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCS_Config_createEditableCopy, METH_NOARGS, "" },
+        PyMethodDef PyOCIO_Config_methods[] = {
+            {"CreateFromEnv", (PyCFunction) PyOCIO_Config_CreateFromEnv, METH_NOARGS | METH_CLASS, "" },
+            {"CreateFromFile", PyOCIO_Config_CreateFromFile, METH_VARARGS | METH_CLASS, "" },
+            {"isEditable", (PyCFunction) PyOCIO_Config_isEditable, METH_NOARGS, "" },
+            {"createEditableCopy", (PyCFunction) PyOCIO_Config_createEditableCopy, METH_NOARGS, "" },
             
-            {"getResourcePath", (PyCFunction) PyOCS_Config_getResourcePath, METH_NOARGS, "" },
-            {"setResourcePath", PyOCS_Config_setResourcePath, METH_VARARGS, "" },
+            {"getResourcePath", (PyCFunction) PyOCIO_Config_getResourcePath, METH_NOARGS, "" },
+            {"setResourcePath", PyOCIO_Config_setResourcePath, METH_VARARGS, "" },
             
-            {"getColorSpaces", (PyCFunction) PyOCS_Config_getColorSpaces, METH_NOARGS, "" },
-            {"addColorSpace", PyOCS_Config_addColorSpace, METH_VARARGS, "" },
+            {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
+            {"addColorSpace", PyOCIO_Config_addColorSpace, METH_VARARGS, "" },
             
-            {"setColorSpaceForRole", PyOCS_Config_setColorSpaceForRole, METH_VARARGS, "" },
+            {"setColorSpaceForRole", PyOCIO_Config_setColorSpaceForRole, METH_VARARGS, "" },
             
-            {"getXML", (PyCFunction) PyOCS_Config_getXML, METH_NOARGS, "" },
+            {"getXML", (PyCFunction) PyOCIO_Config_getXML, METH_NOARGS, "" },
             
             {NULL, NULL, 0, NULL}
         };
         
         const char underlyingObjectBadMessage[] =
-                "Underlying OCS::Config object is not valid.";
+                "Underlying OCIO::Config object is not valid.";
         
         const char underlyingObjectConstMessage[] =
-                "Underlying OCS::Config is not editable.";
+                "Underlying OCIO::Config is not editable.";
     }
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    PyTypeObject PyOCS_ConfigType = {
+    PyTypeObject PyOCIO_ConfigType = {
         PyObject_HEAD_INIT(NULL)
         0,                                          //ob_size
-        "OCS.Config",                               //tp_name
-        sizeof(PyOCS_Config),                       //tp_basicsize
+        "OCIO.Config",                               //tp_name
+        sizeof(PyOCIO_Config),                       //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor)PyOCS_Config_delete,            //tp_dealloc
+        (destructor)PyOCIO_Config_delete,            //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -241,7 +241,7 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_weaklistoffset 
         0,                                          //tp_iter 
         0,                                          //tp_iternext 
-        PyOCS_Config_methods,                       //tp_methods 
+        PyOCIO_Config_methods,                       //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
         0,                                          //tp_base 
@@ -249,7 +249,7 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
         0,                                          //tp_dictoffset 
-        (initproc) PyOCS_Config_init,               //tp_init 
+        (initproc) PyOCIO_Config_init,               //tp_init 
         0,                                          //tp_alloc 
         0,                                          //tp_new 
         0,                                          //tp_free
@@ -270,7 +270,7 @@ OCS_NAMESPACE_ENTER
     
     namespace
     {
-        PyObject * PyOCS_Config_CreateFromEnv( PyObject * /*cls*/ )
+        PyObject * PyOCIO_Config_CreateFromEnv( PyObject * /*cls*/ )
         {
             try
             {
@@ -283,7 +283,7 @@ OCS_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCS_Config_CreateFromFile( PyObject * /*cls*/, PyObject * args )
+        PyObject * PyOCIO_Config_CreateFromFile( PyObject * /*cls*/, PyObject * args )
         {
             try
             {
@@ -303,18 +303,18 @@ OCS_NAMESPACE_ENTER
         
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCS_Config_init( PyOCS_Config *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_Config_init( PyOCIO_Config *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
             
-            self->constcppobj = new OCS::ConstConfigRcPtr();
-            self->cppobj = new OCS::ConfigRcPtr();
+            self->constcppobj = new OCIO::ConstConfigRcPtr();
+            self->cppobj = new OCIO::ConfigRcPtr();
             self->isconst = true;
             
             try
             {
-                *self->cppobj = OCS::Config::Create();
+                *self->cppobj = OCIO::Config::Create();
                 self->isconst = false;
                 return 0;
             }
@@ -329,7 +329,7 @@ OCS_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        void PyOCS_Config_delete( PyOCS_Config *self, PyObject * /*args*/ )
+        void PyOCIO_Config_delete( PyOCIO_Config *self, PyObject * /*args*/ )
         {
             delete self->constcppobj;
             delete self->cppobj;
@@ -339,12 +339,12 @@ OCS_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCS_Config_isEditable( PyObject * self )
+        PyObject * PyOCIO_Config_isEditable( PyObject * self )
         {
             return PyBool_FromLong(IsPyConfigEditable(self));
         }
         
-        PyObject * PyOCS_Config_createEditableCopy( PyObject * self )
+        PyObject * PyOCIO_Config_createEditableCopy( PyObject * self )
         {
             try
             {
@@ -361,7 +361,7 @@ OCS_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCS_Config_getResourcePath( PyObject * self )
+        PyObject * PyOCIO_Config_getResourcePath( PyObject * self )
         {
             try
             {
@@ -375,7 +375,7 @@ OCS_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCS_Config_setResourcePath( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_setResourcePath( PyObject * self, PyObject * args )
         {
             try
             {
@@ -396,7 +396,7 @@ OCS_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCS_Config_getColorSpaces( PyObject * self )
+        PyObject * PyOCIO_Config_getColorSpaces( PyObject * self )
         {
             try
             {
@@ -423,7 +423,7 @@ OCS_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCS_Config_addColorSpace( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_addColorSpace( PyObject * self, PyObject * args )
         {
             try
             {
@@ -453,7 +453,7 @@ OCS_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCS_Config_setColorSpaceForRole( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_setColorSpaceForRole( PyObject * self, PyObject * args )
         {
             try
             {
@@ -480,7 +480,7 @@ OCS_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
-        PyObject * PyOCS_Config_getXML( PyObject * self )
+        PyObject * PyOCIO_Config_getXML( PyObject * self )
         {
             try
             {
@@ -505,4 +505,4 @@ OCS_NAMESPACE_ENTER
     }
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

@@ -27,14 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_FILETRANSFORM_H
-#define INCLUDED_OCS_FILETRANSFORM_H
+#ifndef INCLUDED_OCIO_FILETRANSFORM_H
+#define INCLUDED_OCIO_FILETRANSFORM_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     class FileTransform::Impl
     {
@@ -105,6 +105,6 @@ OCS_NAMESPACE_ENTER
     void RegisterFileFormat(FileFormat* format);
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

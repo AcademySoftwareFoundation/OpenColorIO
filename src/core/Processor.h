@@ -27,14 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_PROCESSOR_H
-#define INCLUDED_OCS_PROCESSOR_H
+#ifndef INCLUDED_OCIO_PROCESSOR_H
+#define INCLUDED_OCIO_PROCESSOR_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     class LocalProcessor : public Processor
     {
@@ -76,6 +76,6 @@ OCS_NAMESPACE_ENTER
     
     
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

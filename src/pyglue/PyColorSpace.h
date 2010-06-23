@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCS_PYCOLORSPACE_H
-#define INCLUDED_PYOCS_PYCOLORSPACE_H
+#ifndef INCLUDED_PYOCIO_PYCOLORSPACE_H
+#define INCLUDED_PYOCIO_PYCOLORSPACE_H
 
 #include "Manifest.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     // TODO: Maybe put this in a pyinternal namespace?
     
@@ -41,9 +41,9 @@ OCS_NAMESPACE_ENTER
         ConstColorSpaceRcPtr * constcppobj;
         ColorSpaceRcPtr * cppobj;
         bool isconst;
-    } PyOCS_ColorSpace;
+    } PyOCIO_ColorSpace;
     
-    extern PyTypeObject PyOCS_ColorSpaceType;
+    extern PyTypeObject PyOCIO_ColorSpaceType;
     
     bool AddColorSpaceObjectToModule( PyObject* m );
     
@@ -56,6 +56,6 @@ OCS_NAMESPACE_ENTER
     ConstColorSpaceRcPtr GetConstColorSpace(PyObject * pyobject, bool allowCast);
     ColorSpaceRcPtr GetEditableColorSpace(PyObject * pyobject);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

@@ -27,15 +27,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_MATRIXOFFSETOP_H
-#define INCLUDED_OCS_MATRIXOFFSETOP_H
+#ifndef INCLUDED_OCIO_MATRIXOFFSETOP_H
+#define INCLUDED_OCIO_MATRIXOFFSETOP_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 #include <vector>
 
 #include "Op.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     // Use whichever is most convenient; they are equally efficient
     //
@@ -69,6 +69,6 @@ OCS_NAMESPACE_ENTER
     // TODO: hue rotate Matrix Op
     // TODO: Fit matrix op
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

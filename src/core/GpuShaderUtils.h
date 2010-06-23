@@ -27,14 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_GPUSHADERUTILS_H
-#define INCLUDED_OCS_GPUSHADERUTILS_H
+#ifndef INCLUDED_OCIO_GPUSHADERUTILS_H
+#define INCLUDED_OCIO_GPUSHADERUTILS_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     void Write_half4x4(std::ostringstream * os, const float * m44, GpuLanguage lang);
     void Write_half4(std::ostringstream * os, const float * v4,  GpuLanguage lang);
@@ -45,6 +45,6 @@ OCS_NAMESPACE_ENTER
                                const std::string& lutName, int lut3DEdgeLen,
                                GpuLanguage lang);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
 #include "MathUtils.h"
@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     void Write_half4x4(std::ostringstream * os, const float * m44, GpuLanguage lang)
     {
@@ -62,7 +62,7 @@ OCS_NAMESPACE_ENTER
         }
         else
         {
-            throw OCSException("Unspecified shader language.");
+            throw OCIOException("Unspecified shader language.");
         }
     }
     
@@ -92,7 +92,7 @@ OCS_NAMESPACE_ENTER
         }
         else
         {
-            throw OCSException("Unspecified shader language.");
+            throw OCIOException("Unspecified shader language.");
         }
     }
     
@@ -122,7 +122,7 @@ OCS_NAMESPACE_ENTER
         }
         else
         {
-            throw OCSException("Unspecified shader language.");
+            throw OCIOException("Unspecified shader language.");
         }
     }
     
@@ -161,10 +161,10 @@ OCS_NAMESPACE_ENTER
         */
         else
         {
-            throw OCSException("Unspecified shader language.");
+            throw OCIOException("Unspecified shader language.");
         }
     
     }
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

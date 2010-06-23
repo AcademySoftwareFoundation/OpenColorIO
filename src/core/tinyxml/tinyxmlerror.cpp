@@ -21,12 +21,12 @@ must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source
 distribution.
 */
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 
 #include "tinyxml.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
 
 
@@ -58,4 +58,4 @@ const char* TiXmlBase::errorString[ TIXML_ERROR_STRING_COUNT ] =
 };
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

@@ -27,14 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_PARSEUTILS_H
-#define INCLUDED_OCS_PARSEUTILS_H
+#ifndef INCLUDED_OCIO_PARSEUTILS_H
+#define INCLUDED_OCIO_PARSEUTILS_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 #include <string>
 #include <vector>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     bool StringVecToFloatVec(std::vector<float> & floatArray,
                              const std::vector<std::string> & lineParts);
@@ -42,6 +42,6 @@ OCS_NAMESPACE_ENTER
     bool StringVecToIntVec(std::vector<int> & intArray,
                            const std::vector<std::string> & lineParts);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

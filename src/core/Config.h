@@ -27,15 +27,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_CONFIG_H
-#define INCLUDED_OCS_CONFIG_H
+#ifndef INCLUDED_OCIO_CONFIG_H
+#define INCLUDED_OCIO_CONFIG_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include <utility>
 #include <vector>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     typedef std::vector<ColorSpaceRcPtr> ColorSpacePtrVec;
     typedef std::vector< std::pair<std::string, std::string> > RoleVec;
@@ -113,6 +113,6 @@ OCS_NAMESPACE_ENTER
         RoleVec m_roleVec;
     };
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

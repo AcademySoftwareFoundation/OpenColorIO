@@ -1,7 +1,7 @@
 # TODO: Opt vs. Debug
 
 cmake_minimum_required(VERSION 2.6)
-project(OpenColorSpace)
+project(OpenColorIO)
 
 enable_language(CXX)
 
@@ -10,7 +10,7 @@ enable_language(CXX)
 # CORE
 #
 
-add_library(OpenColorSpace SHARED
+add_library(OpenColorIO SHARED
     src/core/ColorSpace.cpp
     src/core/Config.cpp
     src/core/CoordinateOps.cpp
@@ -46,14 +46,14 @@ add_library(OpenColorSpace SHARED
 )
 
 include_directories(
-    ${OpenColorSpace_SOURCE_DIR}/export/
+    ${OpenColorIO_SOURCE_DIR}/export/
 )
 
-add_executable(OpenColorSpaceTest
+add_executable(OpenColorIOTest
     src/testbed/main.cpp
 )
 
-target_link_libraries(OpenColorSpaceTest OpenColorSpace)
+target_link_libraries(OpenColorIOTest OpenColorIO)
 
 # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Winline -Wconversion -Wcast-qual -Wformat=2")
@@ -90,7 +90,7 @@ if(EXISTS "${NUKE}/${NUKE_HEADER}")
         src/nuke/ColorSpaceConversion/
         ${NUKE}
     )
-    target_link_libraries(NukeColorSpaceConversion OpenColorSpace)
+    target_link_libraries(NukeColorSpaceConversion OpenColorIO)
 
     add_custom_target(Nuke
         DEPENDS NukeColorSpaceConversion
@@ -120,7 +120,7 @@ set(PYTHON_HEADER Python.h)
 if(EXISTS "${PYTHON}/Python.h")
     message(STATUS "Python path okay, time to set up for building the Python bindings")
 
-    add_library(PyOpenColorSpace MODULE
+    add_library(PyOpenColorIO MODULE
         src/pyglue/PyColorSpace.cpp
         src/pyglue/PyConfig.cpp
         src/pyglue/PyFileTransform.cpp
@@ -132,18 +132,18 @@ if(EXISTS "${PYTHON}/Python.h")
         ${PYTHON}
     )
     # Exclude the 'lib' prefix from the name.
-    set_property(TARGET PyOpenColorSpace
+    set_property(TARGET PyOpenColorIO
         PROPERTY PREFIX ""
     )
-    target_link_libraries(PyOpenColorSpace OpenColorSpace)
+    target_link_libraries(PyOpenColorIO OpenColorIO)
 
     if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
     endif()
 
-    add_custom_target(PyOpenColorSpaceTest
-        COMMAND env PYTHONPATH=${OpenColorSpace_LIBRARY_OUTPUT_DIRECTORY} python ${OpenColorSpace_SOURCE_DIR}/src/testbed/main.py
-        DEPENDS PyOpenColorSpace
+    add_custom_target(PyOpenColorIOTest
+        COMMAND env PYTHONPATH=${OpenColorIO_LIBRARY_OUTPUT_DIRECTORY} python ${OpenColorIO_SOURCE_DIR}/src/testbed/main.py
+        DEPENDS PyOpenColorIO
         SOURCES src/testbed/main.py
         VERBATIM
     )

@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Lut1DOp.h"
 #include "SSE.h"
@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     namespace
     {
@@ -331,15 +331,15 @@ OCS_NAMESPACE_ENTER
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw OCSException("Cannot apply lut1d op, unspecified transform direction.");
+                throw OCIOException("Cannot apply lut1d op, unspecified transform direction.");
             }
             if(m_interpolation == INTERP_UNKNOWN)
             {
-                throw OCSException("Cannot apply lut1d op, unspecified interpolation.");
+                throw OCIOException("Cannot apply lut1d op, unspecified interpolation.");
             }
             if(m_lut->luts[0].empty() || m_lut->luts[1].empty() || m_lut->luts[2].empty())
             {
-                throw OCSException("Cannot apply lut1d op, no lut data provided.");
+                throw OCIOException("Cannot apply lut1d op, no lut data provided.");
             }
         }
         
@@ -384,4 +384,4 @@ OCS_NAMESPACE_ENTER
     }
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

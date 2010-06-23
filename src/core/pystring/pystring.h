@@ -31,15 +31,15 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDED_OCS_PYSTRING_H
-#define INCLUDED_OCS_PYSTRING_H
+#ifndef INCLUDED_OCIO_PYSTRING_H
+#define INCLUDED_OCIO_PYSTRING_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include <string>
 #include <vector>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
 
 namespace pystring
@@ -294,6 +294,6 @@ namespace pystring
 }
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

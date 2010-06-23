@@ -27,15 +27,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_MATHUTILS_H
-#define INCLUDED_OCS_MATHUTILS_H
+#ifndef INCLUDED_OCIO_MATHUTILS_H
+#define INCLUDED_OCIO_MATHUTILS_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 #include <vector>
 
 #include "Op.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     // From Imath
     //--------------------------------------------------------------------------
@@ -106,6 +106,6 @@ OCS_NAMESPACE_ENTER
     
     bool IsM44Identity(const float* m44);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

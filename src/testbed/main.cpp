@@ -1,5 +1,5 @@
-#include <OpenColorSpace/OpenColorSpace.h>
-namespace OCS = OCS_NAMESPACE;
+#include <OpenColorIO/OpenColorIO.h>
+namespace OCIO = OCIO_NAMESPACE;
 
 #include <cstdlib>
 #include <cstdio>
@@ -49,7 +49,7 @@ namespace
 
 void loadConfigFromEnv()
 {
-    OCS::ConstConfigRcPtr config = OCS::GetCurrentConfig();
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     // std::cout << *config << std::endl;
     
     
@@ -69,15 +69,15 @@ void loadConfigFromEnv()
         imageVec[i] = (float)drand48();
     }
     
-    OCS::PackedImageDesc img(&imageVec[0], width, height, numChannels);
+    OCIO::PackedImageDesc img(&imageVec[0], width, height, numChannels);
     std::cout << "img " << img << std::endl;
     
-    OCS::ConstColorSpaceRcPtr csSrc = config->getColorSpaceForRole(OCS::ROLE_COMPOSITING_LOG);
-    OCS::ConstColorSpaceRcPtr csDst = config->getColorSpaceForRole(OCS::ROLE_SCENE_LINEAR);
+    OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceForRole(OCIO::ROLE_COMPOSITING_LOG);
+    OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
     
     /*
-    OCS::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName("lnf");
-    OCS::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName("qt8");
+    OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName("lnf");
+    OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName("qt8");
     */
     
     imageVec[0] = 445.0f/1023.0f;
@@ -86,22 +86,22 @@ void loadConfigFromEnv()
     std::cout << std::endl;
     
     std::cout << csDst->getName() << " ";
-    OCS::ConstProcessorRcPtr p1 = config->getProcessor(csSrc, csDst);
+    OCIO::ConstProcessorRcPtr p1 = config->getProcessor(csSrc, csDst);
     p1->apply(img);
     PrintColor(std::cout, &imageVec[0], "transformed");
     std::cout << std::endl;
     
     std::cout << csSrc->getName() << " ";
-    OCS::ConstProcessorRcPtr p2 = config->getProcessor(csDst, csSrc);
+    OCIO::ConstProcessorRcPtr p2 = config->getProcessor(csDst, csSrc);
     p2->apply(img);
     
     PrintColor(std::cout, &imageVec[0], "round trip");
     std::cout << std::endl;
     
-    OCS::GpuShaderDesc shaderDesc;
+    OCIO::GpuShaderDesc shaderDesc;
     shaderDesc.setLut3DEdgeLen(32);
-    shaderDesc.setFunctionName("ocs_color_convert");
-    shaderDesc.setLanguage(OCS::GPU_LANGUAGE_CG);
+    shaderDesc.setFunctionName("ocio_color_convert");
+    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_CG);
     
     std::cout << p2->getGPUShaderText(shaderDesc) << std::endl;
 }
@@ -109,51 +109,51 @@ void loadConfigFromEnv()
 
 void createConfig()
 {
-    OCS::ConfigRcPtr config = OCS::Config::Create();
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
     
     config->setResourcePath("/net/soft_scratch/users/jeremys/git/Color/configs/spivfx/luts");
     
     // Add a colorspace
     {
-        OCS::ColorSpaceRcPtr cs = OCS::ColorSpace::Create();
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("lnh");
         cs->setFamily("ln");
-        cs->setBitDepth(OCS::BIT_DEPTH_F16);
+        cs->setBitDepth(OCIO::BIT_DEPTH_F16);
         cs->setIsData(false);
-        cs->setGPUAllocation(OCS::GPU_ALLOCATION_LG2);
+        cs->setGPUAllocation(OCIO::GPU_ALLOCATION_LG2);
         cs->setGPUMin(-16.0);
         cs->setGPUMax(6.0);
         config->addColorSpace(cs);
         
-        config->setColorSpaceForRole( OCS::ROLE_SCENE_LINEAR, cs->getName() );
+        config->setColorSpaceForRole( OCIO::ROLE_SCENE_LINEAR, cs->getName() );
     }
     
     // Add a colorspace
     {
-        OCS::ColorSpaceRcPtr cs = OCS::ColorSpace::Create();
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("lgh");
         cs->setFamily("lg");
-        cs->setBitDepth(OCS::BIT_DEPTH_F16);
+        cs->setBitDepth(OCIO::BIT_DEPTH_F16);
         cs->setIsData(false);
-        cs->setGPUAllocation(OCS::GPU_ALLOCATION_UNIFORM);
+        cs->setGPUAllocation(OCIO::GPU_ALLOCATION_UNIFORM);
         cs->setGPUMin(-0.2f);
         cs->setGPUMax(1.615f);
         
-        OCS::FileTransformRcPtr transform = OCS::FileTransform::Create();
+        OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
         transform->setSrc("lgf.spi1d");
-        transform->setInterpolation(OCS::INTERP_LINEAR);
+        transform->setInterpolation(OCIO::INTERP_LINEAR);
         
-        OCS::GroupTransformRcPtr groupTransform = OCS::GroupTransform::Create();
+        OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
         groupTransform->push_back(transform);
-        cs->setTransform( groupTransform, OCS::COLORSPACE_DIR_TO_REFERENCE);
+        cs->setTransform( groupTransform, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         
         config->addColorSpace(cs);
         
-        config->setColorSpaceForRole( OCS::ROLE_COMPOSITING_LOG, cs->getName() );
+        config->setColorSpaceForRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
     }
     
     {
-        std::string outputname = "/mcp/test.ocs";
+        std::string outputname = "/mcp/test.ocio";
         std::cout << "Writing " << outputname << std::endl;
         std::ofstream outfile(outputname.c_str());
         config->writeXML(outfile);
@@ -163,7 +163,7 @@ void createConfig()
     }
     /*
     {
-        std::string outputname = "/mcp/test2.ocs";
+        std::string outputname = "/mcp/test2.ocio";
         std::cout << "Writing " << outputname << std::endl;
         std::ofstream outfile(outputname.c_str());
         config.writeXML(outfile);
@@ -191,16 +191,16 @@ void testCoordinateTransform()
         imageVec1[i] = (float)drand48();
     }
     
-    OCS::PackedImageDesc img1(&imageVec1[0], width, height, numChannels);
+    OCIO::PackedImageDesc img1(&imageVec1[0], width, height, numChannels);
     std::cout << "img1 " << img1 << std::endl;
     
     timeval t;
     gettimeofday(&t, 0);
     double aaa = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;
     /*
-    OCS::ApplyTransform(img1,
-                        OCS::COORDINATE_SPACE_RGB,
-                        OCS::COORDINATE_SPACE_HSV);
+    OCIO::ApplyTransform(img1,
+                        OCIO::COORDINATE_SPACE_RGB,
+                        OCIO::COORDINATE_SPACE_HSV);
     */
     gettimeofday(&t, 0);
     double bbb = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;

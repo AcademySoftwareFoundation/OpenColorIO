@@ -26,11 +26,11 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     Transform::~Transform()
     { }
@@ -61,4 +61,4 @@ OCS_NAMESPACE_ENTER
         return os;
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

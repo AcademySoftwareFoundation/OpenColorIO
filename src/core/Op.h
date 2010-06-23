@@ -27,16 +27,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_OP_H
-#define INCLUDED_OCS_OP_H
+#ifndef INCLUDED_OCIO_OP_H
+#define INCLUDED_OCIO_OP_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Config.h"
 
 #include <vector>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     class Op
     {
@@ -77,6 +77,6 @@ OCS_NAMESPACE_ENTER
                   const ConstTransformRcPtr& transform,
                   TransformDirection dir);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

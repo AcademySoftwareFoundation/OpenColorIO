@@ -15,14 +15,14 @@ You will now see the built .so files
 > ls
 
 Set the environment variable pointing at which configuration to use
-> setenv OCS /net/homedirs/jeremys/git/OpenColorSpace/configs/spivfx/config.ocs
+> setenv OCIO /net/homedirs/jeremys/git/OpenColorIO/configs/spivfx/config.ocio
 
 Launch nuke, then load the plugin (this can also go in init.py)
 
-> nuke.load('/net/homedirs/jeremys/git/OpenColorSpace/build/libNukeColorSpaceConversion.so')
-> nuke.menu('Nodes').addMenu('Color').addCommand('OCSColorSpaceConversion', 'nuke.createNode("OCSColorSpaceConversion")')
+> nuke.load('/net/homedirs/jeremys/git/OpenColorIO/build/libNukeColorSpaceConversion.so')
+> nuke.menu('Nodes').addMenu('Color').addCommand('OCIOColorSpaceConversion', 'nuke.createNode("OCIOColorSpaceConversion")')
 
-Connect an image to the OCSColorSpaceConversion node.
+Connect an image to the OCIOColorSpaceConversion node.
 
 
 
@@ -30,13 +30,13 @@ Connect an image to the OCSColorSpaceConversion node.
 ----------------------------------------------------------------------------------------------------------------------
 
 
-OpenColorSpace is set up for CMake ( http://www.cmake.org/cmake/help/cmake-2-8-docs.html ). On Unix, building should look like this:
+OpenColorIO is set up for CMake ( http://www.cmake.org/cmake/help/cmake-2-8-docs.html ). On Unix, building should look like this:
 
 $ mkdir build && cd build
 build $ cmake ../
 build $ make
 and then one might do
-build $ ./OpenColorSpaceTest
+build $ ./OpenColorIOTest
 
 Configuration/build options are available.
 For a console UI to view and set available options, use
@@ -46,5 +46,5 @@ build $ cmake -i ../
 or to specify them on the command line,
 build $ cmake -D NUKE:FILEPATH=/usr/local/nuke6.0.3/include/ -D PYTHON:FILEPATH=/usr/local/include/python2.6/ ../
 All together,
-mkdir build && cd build && cmake ../ && make OpenColorSpaceTest && ./OpenColorSpaceTest
+mkdir build && cd build && cmake ../ && make OpenColorIOTest && ./OpenColorIOTest
 

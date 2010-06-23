@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 #include "ScanlineHelper.h"
 #include "ImagePacking.h"
 
@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     namespace
     {
@@ -80,7 +80,7 @@ OCS_NAMESPACE_ENTER
                 os << "Cannot process scanline request,";
                 os << " img has invalid size: ";
                 os << img.getWidth() << " x " << img.getHeight();
-                throw OCSException(os.str().c_str()); 
+                throw OCIOException(os.str().c_str()); 
             }
             
             if(IsPackedRGBA(img))
@@ -152,4 +152,4 @@ OCS_NAMESPACE_ENTER
         }
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

@@ -16,14 +16,14 @@ Version 0.5.6 (June 8 2010):
     * Dropped tr1::shared_ptr; added boost::shared_ptr
 
 Version 0.5.5 (June 4 2010):
-    * .ocs supports path references
-    * Switch config envvar to $OCS
+    * .ocio supports path references
+    * Switch config envvar to $OCIO
     * Added 3D lut processing ops
 
 Version 0.5.4 (June 1 2010):
     * Initial Release
     * CMake linux support 
-    * XML OCS format parsing / saving 
+    * XML OCIO format parsing / saving 
     * Example colorspace configuration with a few 'trivial' colorspaces 
     * Mutable colorspace configuration API 
     * Support for 1D lut processing 

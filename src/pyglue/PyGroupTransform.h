@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCS_PYGROUPTRANSFORM_H
-#define INCLUDED_PYOCS_PYGROUPTRANSFORM_H
+#ifndef INCLUDED_PYOCIO_PYGROUPTRANSFORM_H
+#define INCLUDED_PYOCIO_PYGROUPTRANSFORM_H
 
 #include "Manifest.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     // TODO: Maybe put this in a pyinternal namespace?
     
@@ -41,9 +41,9 @@ OCS_NAMESPACE_ENTER
         ConstGroupTransformRcPtr * constcppobj;
         GroupTransformRcPtr * cppobj;
         bool isconst;
-    } PyOCS_GroupTransform;
+    } PyOCIO_GroupTransform;
     
-    extern PyTypeObject PyOCS_GroupTransformType;
+    extern PyTypeObject PyOCIO_GroupTransformType;
     
     bool AddGroupTransformObjectToModule( PyObject* m );
     
@@ -56,6 +56,6 @@ OCS_NAMESPACE_ENTER
     ConstGroupTransformRcPtr GetConstGroupTransform(PyObject * pyobject, bool allowCast);
     GroupTransformRcPtr GetEditableGroupTransform(PyObject * pyobject);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

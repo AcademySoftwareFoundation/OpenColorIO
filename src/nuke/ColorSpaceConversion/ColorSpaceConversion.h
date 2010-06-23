@@ -1,5 +1,5 @@
-#ifndef INCLUDED_OCS_NUKE_COLORSPACECONVERSION_H_
-#define INCLUDED_OCS_NUKE_COLORSPACECONVERSION_H_
+#ifndef INCLUDED_OCIO_NUKE_COLORSPACECONVERSION_H_
+#define INCLUDED_OCIO_NUKE_COLORSPACECONVERSION_H_
 
 // Include these early, for Nuke's headers under gcc 4.4.2.
 #include <memory>
@@ -9,12 +9,12 @@
 #include <DDImage/Row.h>
 #include <DDImage/Knob.h>
 
-#include <OpenColorSpace/OpenColorSpace.h>
-namespace OCS = OCS_NAMESPACE;
+#include <OpenColorIO/OpenColorIO.h>
+namespace OCIO = OCIO_NAMESPACE;
 
 
 /*!
- * Iop that uses OpenColorSpace to perform colorspace conversions
+ * Iop that uses OpenColorIO to perform colorspace conversions
  */
 class ColorSpaceConversion : public DD::Image::PixelIop {
 
@@ -28,7 +28,7 @@ class ColorSpaceConversion : public DD::Image::PixelIop {
         std::vector<const char*> inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
         std::vector<const char*> outputColorSpaceCstrNames;
         
-        OCS::ConstProcessorRcPtr processor;
+        OCIO::ConstProcessorRcPtr processor;
     public:
 
         ColorSpaceConversion(Node *node);
@@ -49,7 +49,7 @@ class ColorSpaceConversion : public DD::Image::PixelIop {
          * Nuke currently will remove any trailing digits and underscores from
          * this and add a new number to make a unique name for the new node.
          * 
-         * \return "OCSColorSpaceConversion"
+         * \return "OCIOColorSpaceConversion"
          */
         const char *displayName() const;
 
@@ -94,7 +94,7 @@ class ColorSpaceConversion : public DD::Image::PixelIop {
 
         /*!
          * Check that colorspaces are available, and that the transform
-         * is not a noop. (As OCS whether a given transform is a noop, since it
+         * is not a noop. (As OCIO whether a given transform is a noop, since it
          * can do more analysis than just name matching.)
          */
         void _validate(bool for_real);
@@ -104,4 +104,4 @@ class ColorSpaceConversion : public DD::Image::PixelIop {
 
 static DD::Image::Op* build(Node *node);
 
-#endif // INCLUDED_OCS_NUKE_COLORSPACECONVERSION_H_
+#endif // INCLUDED_OCIO_NUKE_COLORSPACECONVERSION_H_

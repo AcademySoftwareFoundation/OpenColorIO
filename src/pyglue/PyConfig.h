@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCS_PYCONFIG_H
-#define INCLUDED_PYOCS_PYCONFIG_H
+#ifndef INCLUDED_PYOCIO_PYCONFIG_H
+#define INCLUDED_PYOCIO_PYCONFIG_H
 
 #include "Manifest.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     // TODO: Maybe put this in a pyinternal namespace?
     
@@ -41,9 +41,9 @@ OCS_NAMESPACE_ENTER
         ConstConfigRcPtr * constcppobj;
         ConfigRcPtr * cppobj;
         bool isconst;
-    } PyOCS_Config;
+    } PyOCIO_Config;
     
-    extern PyTypeObject PyOCS_ConfigType;
+    extern PyTypeObject PyOCIO_ConfigType;
     
     bool AddConfigObjectToModule( PyObject* m );
     
@@ -56,6 +56,6 @@ OCS_NAMESPACE_ENTER
     ConstConfigRcPtr GetConstConfig(PyObject * config, bool allowCast);
     ConfigRcPtr GetEditableConfig(PyObject * config);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

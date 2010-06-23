@@ -34,8 +34,8 @@ distribution.
  * - added swap(), clear(), size(), capacity(), operator+().
  */
 
-#ifndef INCLUDED_OCS_TINYXML_TINYSTR_H
-#define INCLUDED_OCS_TINYXML_TINYSTR_H
+#ifndef INCLUDED_OCIO_TINYXML_TINYSTR_H
+#define INCLUDED_OCIO_TINYXML_TINYSTR_H
 
 
 #ifndef TIXML_USE_STL
@@ -61,7 +61,7 @@ distribution.
 #endif
 
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
 
 /*
@@ -326,6 +326,6 @@ public :
 #endif	// TIXML_USE_STL
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
-#endif // INCLUDED_OCS_TINYXML_TINYSTR_H
+#endif // INCLUDED_OCIO_TINYXML_TINYSTR_H

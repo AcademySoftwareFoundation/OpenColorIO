@@ -1,10 +1,10 @@
 /**
- * OpenColorSpace conversion Iop.
+ * OpenColorIO conversion Iop.
  */
 
 #include "ColorSpaceConversion.h"
 
-namespace OCS = OCS_NAMESPACE;
+namespace OCIO = OCIO_NAMESPACE;
 
 #include <DDImage/PixelIop.h>
 #include <DDImage/NukeWrapper.h>
@@ -27,19 +27,19 @@ ColorSpaceConversion::ColorSpaceConversion(Node *n) : DD::Image::PixelIop(n)
     // TODO (when to) re-grab the list of available colorspaces? How to save/load?
     try
     {
-        OCS::ConstConfigRcPtr config = OCS::GetCurrentConfig();
+        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
-        OCS::ConstColorSpaceRcPtr defaultColorSpace = \
-            config->getColorSpaceForRole(OCS::ROLE_SCENE_LINEAR);
+        OCIO::ConstColorSpaceRcPtr defaultColorSpace = \
+            config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
 
         int nColorSpaces = config->getNumColorSpaces();
 
         for(int i = 0; i < nColorSpaces; i++)
         {
-            OCS::ConstColorSpaceRcPtr colorSpace = config->getColorSpaceByIndex(i);
+            OCIO::ConstColorSpaceRcPtr colorSpace = config->getColorSpaceByIndex(i);
             bool usedAsInput = false;
             bool isDefault = colorSpace->equals(defaultColorSpace);
-            //if (colorSpace->isTransformAllowed(OCS::COLORSPACE_DIR_TO_REFERENCE))
+            //if (colorSpace->isTransformAllowed(OCIO::COLORSPACE_DIR_TO_REFERENCE))
             {
                 usedAsInput = true;
                 colorSpaceNames.push_back(colorSpace->getName());
@@ -52,7 +52,7 @@ ColorSpaceConversion::ColorSpaceConversion(Node *n) : DD::Image::PixelIop(n)
                 inputColorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
             }
             
-            //if (colorSpace->isTransformAllowed(OCS::COLORSPACE_DIR_FROM_REFERENCE))
+            //if (colorSpace->isTransformAllowed(OCIO::COLORSPACE_DIR_FROM_REFERENCE))
             {
                 if (!usedAsInput)
                 {
@@ -68,7 +68,7 @@ ColorSpaceConversion::ColorSpaceConversion(Node *n) : DD::Image::PixelIop(n)
             }
         }
     }
-    catch (OCS::OCSException& e)
+    catch (OCIO::OCIOException& e)
     {
         error(e.what());
     }
@@ -119,12 +119,12 @@ void ColorSpaceConversion::_validate(bool for_real)
         const char * inputName = inputColorSpaceCstrNames[inputColorSpaceIndex];
         const char * outputName = outputColorSpaceCstrNames[outputColorSpaceIndex];
         
-        OCS::ConstConfigRcPtr config = OCS::GetCurrentConfig();
-        OCS::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName( inputName );
-        OCS::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName( outputName );
+        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName( inputName );
+        OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName( outputName );
         processor = config->getProcessor(csSrc, csDst);
     }
-    catch(OCS::OCSException &e)
+    catch(OCIO::OCIOException &e)
     {
         error(e.what());
         return;
@@ -208,17 +208,17 @@ void ColorSpaceConversion::pixel_engine(
         #endif
 
         #if 1
-        // OCS modifies in-place
+        // OCIO modifies in-place
         memcpy(rOut, rIn, sizeof(float)*rowWidth);
         memcpy(gOut, gIn, sizeof(float)*rowWidth);
         memcpy(bOut, bIn, sizeof(float)*rowWidth);
 
         try
         {
-            OCS::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
+            OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
             processor->apply(img);
         }
-        catch(OCS::OCSException &e)
+        catch(OCIO::OCIOException &e)
         {
             error(e.what());
         }
@@ -226,7 +226,7 @@ void ColorSpaceConversion::pixel_engine(
     }
 }
 
-const DD::Image::Op::Description ColorSpaceConversion::description("OCSColorSpaceConversion", build);
+const DD::Image::Op::Description ColorSpaceConversion::description("OCIOColorSpaceConversion", build);
 
 const char* ColorSpaceConversion::Class() const
 {
@@ -241,7 +241,7 @@ const char* ColorSpaceConversion::displayName() const
 const char* ColorSpaceConversion::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorSpace to convert from one ColorSpace to another.";
+    return "Use OpenColorIO to convert from one ColorSpace to another.";
 }
 
 

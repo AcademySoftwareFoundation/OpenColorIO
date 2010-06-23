@@ -26,38 +26,38 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
   
-    OCSException::OCSException(const char * msg) throw()
+    OCIOException::OCIOException(const char * msg) throw()
     : msg_(msg)
     {}
 
-    OCSException::OCSException(const OCSException& e) throw()
+    OCIOException::OCIOException(const OCIOException& e) throw()
     : std::exception(),
       msg_(e.msg_)
     {}
 
     //*** operator=
-    OCSException& OCSException::operator=(const OCSException& e) throw()
+    OCIOException& OCIOException::operator=(const OCIOException& e) throw()
     {
         msg_ = e.msg_;
         return *this;
     }
 
-    //*** ~OCSException
-    OCSException::~OCSException() throw()
+    //*** ~OCIOException
+    OCIOException::~OCIOException() throw()
     {
     }
 
     //*** what
-    const char* OCSException::what() const throw()
+    const char* OCIOException::what() const throw()
     {
         return msg_.c_str();
     }
 
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

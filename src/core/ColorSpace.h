@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_COLORSPACE_H
-#define INCLUDED_OCS_COLORSPACE_H
+#ifndef INCLUDED_OCIO_COLORSPACE_H
+#define INCLUDED_OCIO_COLORSPACE_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     class ColorSpace::Impl
     {
@@ -96,6 +96,6 @@ OCS_NAMESPACE_ENTER
         bool m_fromRefSpecified;
     };
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

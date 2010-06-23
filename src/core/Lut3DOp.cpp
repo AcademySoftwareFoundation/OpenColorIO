@@ -26,14 +26,14 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Lut3DOp.h"
 
 #include <cmath>
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     namespace
     {
@@ -208,7 +208,7 @@ OCS_NAMESPACE_ENTER
         if(!img) return;
         if(numChannels < 3)
         {
-            throw OCSException("Cannot generate idenitity 3d lut with less than 3 channels.");
+            throw OCIOException("Cannot generate idenitity 3d lut with less than 3 channels.");
         }
         
         float c = 1.0f / ((float)edgeLen - 1.0f);
@@ -261,30 +261,30 @@ OCS_NAMESPACE_ENTER
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw OCSException("Cannot apply Lut3DOp, unspecified transform direction.");
+                throw OCIOException("Cannot apply Lut3DOp, unspecified transform direction.");
             }
             if(m_interpolation == INTERP_UNKNOWN)
             {
-                throw OCSException("Cannot apply Lut3DOp, unspecified interpolation.");
+                throw OCIOException("Cannot apply Lut3DOp, unspecified interpolation.");
             }
             
             for(int i=0; i<3; ++i)
             {
                 if(m_lut->size[i] == 0)
                 {
-                    throw OCSException("Cannot apply Lut3DOp, lut object is empty.");
+                    throw OCIOException("Cannot apply Lut3DOp, lut object is empty.");
                 }
                 // TODO if from_min[i] == from_max[i]
             }
             
             if(m_lut->size[0]*m_lut->size[1]*m_lut->size[2] * 3 != (int)m_lut->lut.size())
             {
-                throw OCSException("Cannot apply Lut3DOp, specified size does not match data.");
+                throw OCIOException("Cannot apply Lut3DOp, specified size does not match data.");
             }
             
             if(m_direction != TRANSFORM_DIR_FORWARD)
             {
-                throw OCSException("3D Luts can only be applied in the forward direction.");
+                throw OCIOException("3D Luts can only be applied in the forward direction.");
             }
         }
         
@@ -317,4 +317,4 @@ OCS_NAMESPACE_ENTER
     
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

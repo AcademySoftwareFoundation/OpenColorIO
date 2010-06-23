@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_PATHUTILS_H
-#define INCLUDED_OCS_PATHUTILS_H
+#ifndef INCLUDED_OCIO_PATHUTILS_H
+#define INCLUDED_OCIO_PATHUTILS_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     namespace path
     {
@@ -40,6 +40,6 @@ OCS_NAMESPACE_ENTER
         std::string dirname(const std::string & path);
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

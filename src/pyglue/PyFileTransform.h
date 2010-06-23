@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCS_PYFILETRANSFORM_H
-#define INCLUDED_PYOCS_PYFILETRANSFORM_H
+#ifndef INCLUDED_PYOCIO_PYFILETRANSFORM_H
+#define INCLUDED_PYOCIO_PYFILETRANSFORM_H
 
 #include "Manifest.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     // TODO: Maybe put this in a pyinternal namespace?
     
@@ -41,9 +41,9 @@ OCS_NAMESPACE_ENTER
         ConstFileTransformRcPtr * constcppobj;
         FileTransformRcPtr * cppobj;
         bool isconst;
-    } PyOCS_FileTransform;
+    } PyOCIO_FileTransform;
     
-    extern PyTypeObject PyOCS_FileTransformType;
+    extern PyTypeObject PyOCIO_FileTransformType;
     
     bool AddFileTransformObjectToModule( PyObject* m );
     
@@ -56,6 +56,6 @@ OCS_NAMESPACE_ENTER
     ConstFileTransformRcPtr GetConstFileTransform(PyObject * pyobject, bool allowCast);
     FileTransformRcPtr GetEditableFileTransform(PyObject * pyobject);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

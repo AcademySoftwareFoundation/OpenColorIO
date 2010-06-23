@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCS_PYUTIL_H
-#define INCLUDED_PYOCS_PYUTIL_H
+#ifndef INCLUDED_PYOCIO_PYUTIL_H
+#define INCLUDED_PYOCIO_PYUTIL_H
 
 #include "Manifest.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
     PyObject * BuildEditablePyTransform(TransformRcPtr transform);
@@ -63,6 +63,6 @@ OCS_NAMESPACE_ENTER
 
     void Python_Handle_Exception();
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

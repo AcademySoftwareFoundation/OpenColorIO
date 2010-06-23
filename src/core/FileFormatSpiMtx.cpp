@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "MatrixOps.h"
@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     ////////////////////////////////////////////////////////////////
     
@@ -98,7 +98,7 @@ OCS_NAMESPACE_ENTER
                     os << "Error parsing .spimtx file. ";
                     os << "File must contain 12 float entries. ";
                     os << lineParts.size() << " found.";
-                    throw OCSException(os.str().c_str());
+                    throw OCIOException(os.str().c_str());
                 }
                 
                 // Turn the parts into floats
@@ -108,7 +108,7 @@ OCS_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Error parsing .spimtx file. ";
                     os << "File must contain all float entries. ";
-                    throw OCSException(os.str().c_str());
+                    throw OCIOException(os.str().c_str());
                 }
                 
                 
@@ -154,7 +154,7 @@ OCS_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Cannot build SpiMtx Ops. Invalid cache type.";
-                    throw OCSException(os.str().c_str());
+                    throw OCIOException(os.str().c_str());
                 }
                 
                 TransformDirection newDir = CombineTransformDirections(dir,
@@ -174,4 +174,4 @@ OCS_NAMESPACE_ENTER
         static AutoRegister registerIt;
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

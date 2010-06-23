@@ -27,16 +27,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_GROUPTRANSFORM_H
-#define INCLUDED_OCS_GROUPTRANSFORM_H
+#ifndef INCLUDED_OCIO_GROUPTRANSFORM_H
+#define INCLUDED_OCIO_GROUPTRANSFORM_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
 
 #include <vector>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     typedef std::vector<TransformRcPtr> TransformRcPtrVec;
     
@@ -79,6 +79,6 @@ OCS_NAMESPACE_ENTER
                        TransformDirection dir);
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

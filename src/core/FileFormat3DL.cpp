@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "Lut1DOp.h"
@@ -62,7 +62,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     ////////////////////////////////////////////////////////////////
     
@@ -114,7 +114,7 @@ OCS_NAMESPACE_ENTER
                 os << numEntries << " element(s) does not correspond to a ";
                 os << "unform cube edge length. (nearest edge length is ";
                 os << dim << ").";
-                throw OCSException(os.str().c_str());
+                throw OCIOException(os.str().c_str());
             }
             
             return dim;
@@ -197,7 +197,7 @@ OCS_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Error parsing .3dl file. ";
                     os << "The contents do not contain any lut entries.";
-                    throw OCSException(os.str().c_str());
+                    throw OCIOException(os.str().c_str());
                 }
                 
                 int lutEdgeLen = Get3DLutEdgeLenFromNumEntries((int)rawLutData.size());
@@ -214,7 +214,7 @@ OCS_NAMESPACE_ENTER
                     os << "The maximum lut value, " << maxLutValue;
                     os << ", does not correspond to any likely bit depth. ";
                     os << "Please confirm source file is valid.";
-                    throw OCSException(os.str().c_str());
+                    throw OCIOException(os.str().c_str());
                 }
                 
                 int bitDepthMaxVal = GetMaxValueFromIntegerBitDepth(likelyBitDepth);
@@ -246,7 +246,7 @@ OCS_NAMESPACE_ENTER
                                 os << "A lut entry is specified (";
                                 os << rIndex << " " << gIndex << " " << bIndex;
                                 os << " that falls outside of the cube.";
-                                throw OCSException(os.str().c_str());
+                                throw OCIOException(os.str().c_str());
                             }
                             
                             lut3d->lut[glLutIndex+0] = (float) rawLutData[autoDeskLutIndex+0] * scale;
@@ -272,7 +272,7 @@ OCS_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Cannot build 3dl Op. Invalid cache type.";
-                    throw OCSException(os.str().c_str());
+                    throw OCIOException(os.str().c_str());
                 }
                 
                 TransformDirection newDir = CombineTransformDirections(dir,
@@ -324,4 +324,4 @@ OCS_NAMESPACE_ENTER
         static AutoRegister registerIt;
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

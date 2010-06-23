@@ -27,14 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_OCS_H
-#define INCLUDED_OCS_OCS_H
+#ifndef INCLUDED_OCIO_OCIO_H
+#define INCLUDED_OCIO_OCIO_H
 
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// OCS
-// OpenColorSpace
+// OCIO
+// OpenColorIO
 // Version 0.5.8
 //
 
@@ -51,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: provide way to tag colorspace operations as explicitly not allowed? what about hdbty<->qt?
 // TODO: provide xml defaults mechanism for cleaner xml code
 // TODO: such as int vectors, double from str, float vectors, etc.
-// TODO: add ocs package (.gz?) file, and ability to convert between representations.
+// TODO: add ocio package (.gz?) file, and ability to convert between representations.
 // TODO: add all nuke plugins, also get official Foundry code review
 // TODO: add additional lut formats
 // TODO: add internal namespace for all implementation objects Ops, etc.
@@ -67,38 +67,38 @@ try
     // Get the global config, which will auto-initialize
     // from the environment on first use.
     
-    OCS::ConstConfigRcPtr config = OCS::GetCurrentConfig();
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
-    OCS::ConstColorSpaceRcPtr csSrc = \
-        config->getColorSpaceForRole(OCS::ROLE_COMPOSITING_LOG);
+    OCIO::ConstColorSpaceRcPtr csSrc = \
+        config->getColorSpaceForRole(OCIO::ROLE_COMPOSITING_LOG);
     
-    OCS::ConstColorSpaceRcPtr csDst = \
-        config->getColorSpaceForRole(OCS::ROLE_SCENE_LINEAR);
+    OCIO::ConstColorSpaceRcPtr csDst = \
+        config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
     
     ConstProcessorRcPtr processor = config->getProcessor(csSrc, csDst);
     
     // Wrap the image in a light-weight ImageDescription,
     // and convert it in place
     
-    OCS::PackedImageDesc img(imageData, w, h, 4);
+    OCIO::PackedImageDesc img(imageData, w, h, 4);
     processor->apply(img);
 }
-catch(OCS::OCSException& exception)
+catch(OCIO::OCIOException& exception)
 {
-    std::cerr << "OpenColorSpace Error: " << exception.what() << std::endl;
+    std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
 }
 */
 
 // Namespace mojo
-#define OCS_VERSION_NS v1
-#define OCS_NAMESPACE_ENTER namespace SPI \
-{ namespace OCS \
-{ namespace OCS_VERSION_NS
-#define OCS_NAMESPACE_EXIT using namespace OCS_VERSION_NS; \
-} /*namespace OCS*/ \
+#define OCIO_VERSION_NS v1
+#define OCIO_NAMESPACE_ENTER namespace SPI \
+{ namespace OCIO \
+{ namespace OCIO_VERSION_NS
+#define OCIO_NAMESPACE_EXIT using namespace OCIO_VERSION_NS; \
+} /*namespace OCIO*/ \
 } /*namespace SPI*/
-#define OCS_NAMESPACE SPI::OCS
-#define OCS_NAMESPACE_USING using namespace SPI::OCS;
+#define OCIO_NAMESPACE SPI::OCIO
+#define OCIO_NAMESPACE_USING using namespace SPI::OCIO;
 
 #include <exception>
 #include <memory>
@@ -114,7 +114,7 @@ catch(OCS::OCSException& exception)
 #include <boost/shared_ptr.hpp>
 #endif
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     // TODO: Clean up the SharedPtr definition
     #ifdef __APPLE__
@@ -158,7 +158,7 @@ OCS_NAMESPACE_ENTER
     class ImageDesc;
     class GpuShaderDesc;
     
-    class OCSException;
+    class OCIOException;
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -247,7 +247,7 @@ OCS_NAMESPACE_ENTER
     
     Roughly speaking, if you're a novice user you will want to select a
     default configuration that most closely approximates your use case
-    (animation, visual effects, etc), and set $OCS_CONFIG to point at the
+    (animation, visual effects, etc), and set $OCIO_CONFIG to point at the
     root of that configuration.
     
     Use cases
@@ -268,7 +268,7 @@ OCS_NAMESPACE_ENTER
     A: CreateConfig, config->loadFromFile, SetCurrentConfig(config)
     
         Get the current config. If it has not been previously set,
-        a new config will be created by reading the $OCS environment
+        a new config will be created by reading the $OCIO environment
         variable.
         
         'Auto' initialization using environment variables is typically
@@ -774,13 +774,13 @@ OCS_NAMESPACE_ENTER
     //  Warning: ALL fcns on the Config class can potentially throw
     //  this exception.
     
-    class OCSException : public std::exception
+    class OCIOException : public std::exception
     {
     public:
-        OCSException(const char *) throw();
-        OCSException(const OCSException&) throw();
-        OCSException& operator=(const OCSException&) throw();
-        virtual ~OCSException() throw();
+        OCIOException(const char *) throw();
+        OCIOException(const OCIOException&) throw();
+        OCIOException& operator=(const OCIOException&) throw();
+        virtual ~OCIOException() throw();
         virtual const char* what() const throw();
         
     private:
@@ -841,6 +841,6 @@ OCS_NAMESPACE_ENTER
     extern const char * ROLE_COMPOSITING_LOG;
     extern const char * ROLE_COLOR_TIMING;
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

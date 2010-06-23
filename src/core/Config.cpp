@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Config.h"
 #include "pystring/pystring.h"
@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     namespace
     {
@@ -340,7 +340,7 @@ OCS_NAMESPACE_ENTER
     
     void Config::Impl::createFromEnv()
     {
-        char * file = std::getenv("OCS");
+        char * file = std::getenv("OCIO");
         if(file)
         {
             createFromFile(file);
@@ -348,9 +348,9 @@ OCS_NAMESPACE_ENTER
         else
         {
             std::ostringstream os;
-            os << "'OCS' environment variable not set. ";
-            os << "Please specify a valid OpenColorSpace (.ocs) configuration file.";
-            throw OCSException(os.str().c_str());
+            os << "'OCIO' environment variable not set. ";
+            os << "Please specify a valid OpenColorIO (.ocio) configuration file.";
+            throw OCIOException(os.str().c_str());
         }
     }
     
@@ -398,7 +398,7 @@ OCS_NAMESPACE_ENTER
     {
         std::string name = cs->getName();
         if(name.empty())
-            throw OCSException("Cannot addColorSpace with an empty name.");
+            throw OCIOException("Cannot addColorSpace with an empty name.");
         
         // Check to see if the colorspace already exists at a known index.
         int index = getIndexForColorSpace( cs->getName() );
@@ -427,7 +427,7 @@ OCS_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Invalid ColorSpace index " << index << ".";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         return m_colorspaces[index];
@@ -439,7 +439,7 @@ OCS_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Invalid ColorSpace index " << index << ".";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         return m_colorspaces[index];
@@ -453,7 +453,7 @@ OCS_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Cannot find ColorSpace named '";
             os << name << "'.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         return m_colorspaces[index];
@@ -467,7 +467,7 @@ OCS_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Cannot find ColorSpace named '";
             os << name << "'.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         return m_colorspaces[index];
@@ -518,7 +518,7 @@ OCS_NAMESPACE_ENTER
         os << "The specified role ";
         os  << role ;
         os << " has not been defined.";
-        throw OCSException(os.str().c_str());
+        throw OCIOException(os.str().c_str());
     }
     
     void Config::Impl::setColorSpaceForRole(const char * role, const char * csname)
@@ -564,10 +564,10 @@ OCS_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Invalid role index " << index << ".";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         return m_roleVec[index].first.c_str();
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

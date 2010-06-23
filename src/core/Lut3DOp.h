@@ -27,15 +27,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCS_LUT3DOP_H
-#define INCLUDED_OCS_LUT3DOP_H
+#ifndef INCLUDED_OCIO_LUT3DOP_H
+#define INCLUDED_OCIO_LUT3DOP_H
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 #include <vector>
 
 #include "Op.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     // TODO: Do not allow for a naked Lut1D object, always have it be an rc ptr to a lut1d.
     // Expose static factory fcn, make constructor private?
@@ -86,6 +86,6 @@ OCS_NAMESPACE_ENTER
                        Interpolation interpolation,
                        TransformDirection direction);
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif

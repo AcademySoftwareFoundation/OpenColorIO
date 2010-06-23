@@ -26,13 +26,13 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "ImageDesc.h"
 
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     
     std::ostream& operator<< (std::ostream& os, const ImageDesc& img)
@@ -130,7 +130,7 @@ OCS_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error: Image dimensions must be positive for both x,y. '";
             os << width << "x" << height << "' is not allowed.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         if(numChannels < 3)
@@ -138,7 +138,7 @@ OCS_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error: Image numChannels must be three (or more) (rgb+). '";
             os << numChannels << "' is not allowed.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         if(m_chanStrideBytes == AutoStride)
@@ -264,14 +264,14 @@ OCS_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error: Image dimensions must be positive for both x,y. '";
             os << width << "x" << height << "' is not allowed.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         if(rData == 0x0 || gData == 0x0 || bData == 0x0)
         {
             std::ostringstream os;
             os << "Error: Valid ptrs must be passed in for all 3 image channels.";
-            throw OCSException(os.str().c_str());
+            throw OCIOException(os.str().c_str());
         }
         
         if(m_yStrideBytes == AutoStride)
@@ -318,4 +318,4 @@ OCS_NAMESPACE_ENTER
         return m_bData;
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

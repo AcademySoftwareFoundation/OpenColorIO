@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 #include "ColorSpace.h"
 
 #include <sstream>
@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     ColorSpaceRcPtr ColorSpace::Create()
     {
@@ -308,7 +308,7 @@ OCS_NAMESPACE_ENTER
         else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
             return m_fromRefTransform;
         
-        throw OCSException("Unspecified ColorSpaceDirection");
+        throw OCIOException("Unspecified ColorSpaceDirection");
     }
     
     GroupTransformRcPtr ColorSpace::Impl::getEditableTransform(ColorSpaceDirection dir)
@@ -318,7 +318,7 @@ OCS_NAMESPACE_ENTER
         else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
             return m_fromRefTransform;
         
-        throw OCSException("Unspecified ColorSpaceDirection");
+        throw OCIOException("Unspecified ColorSpaceDirection");
     }
     
     void ColorSpace::Impl::setTransform(const ConstGroupTransformRcPtr & groupTransform,
@@ -347,7 +347,7 @@ OCS_NAMESPACE_ENTER
         }
         else
         {
-            throw OCSException("Unspecified ColorSpaceDirection");
+            throw OCIOException("Unspecified ColorSpaceDirection");
         }
         
         *majorTransform = DynamicPtrCast<GroupTransform>(groupTransform->createEditableCopy());
@@ -367,7 +367,7 @@ OCS_NAMESPACE_ENTER
         else if(COLORSPACE_DIR_FROM_REFERENCE)
             return m_fromRefSpecified;
         
-        throw OCSException("Unspecified ColorSpaceDirection");
+        throw OCIOException("Unspecified ColorSpaceDirection");
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

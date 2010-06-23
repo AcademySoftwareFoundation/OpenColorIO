@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "Lut1DOp.h"
@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <sstream>
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     FileTransformRcPtr FileTransform::Create()
     {
@@ -282,7 +282,7 @@ OCS_NAMESPACE_ENTER
                 os << filepath <<"' could not be opened. ";
                 os << "Please confirm the file exists with appropriate read";
                 os << "permissions.";
-                throw OCSException(os.str().c_str());
+                throw OCIOException(os.str().c_str());
             }
         
             std::string extension = GetFileExtension(filepath);
@@ -318,7 +318,7 @@ OCS_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "The specified transform file '";
                 os << filepath <<"' is not any known file format.";
-                throw OCSException(os.str().c_str());
+                throw OCIOException(os.str().c_str());
             }
             
             if(!cachedFile)
@@ -327,7 +327,7 @@ OCS_NAMESPACE_ENTER
                 os << "The specified transform file '";
                 os << filepath <<"' was not able to be successfully loaded. ";
                 os << errorText;
-                throw OCSException(os.str().c_str());
+                throw OCIOException(os.str().c_str());
             }
             
             // Add the result to our cache, return it.
@@ -357,4 +357,4 @@ OCS_NAMESPACE_ENTER
                              dir);
     }
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

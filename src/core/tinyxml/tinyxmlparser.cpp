@@ -22,14 +22,14 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include <cctype>
 #include <cstddef>
 
 #include "tinyxml.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
 
 
@@ -1641,4 +1641,4 @@ bool TiXmlText::Blank() const
 
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT

@@ -26,7 +26,7 @@ distribution.
  * THIS FILE WAS ALTERED BY Tyge Løvset, 7. April 2005.
  */
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 
 #ifndef TIXML_USE_STL
@@ -34,7 +34,7 @@ distribution.
 #include "tinystr.h"
 
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
 
 
@@ -120,7 +120,7 @@ TiXmlString operator + (const char* a, const TiXmlString & b)
 }
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
 
 #endif	// TIXML_USE_STL
 

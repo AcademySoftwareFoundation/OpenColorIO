@@ -27,24 +27,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#include <OpenColorSpace/OpenColorSpace.h>
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "PyFileTransform.h"
 #include "PyUtil.h"
 
-OCS_NAMESPACE_ENTER
+OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     bool AddFileTransformObjectToModule( PyObject* m )
     {
-        PyOCS_FileTransformType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCS_FileTransformType) < 0 ) return false;
+        PyOCIO_FileTransformType.tp_new = PyType_GenericNew;
+        if ( PyType_Ready(&PyOCIO_FileTransformType) < 0 ) return false;
         
-        Py_INCREF( &PyOCS_FileTransformType );
+        Py_INCREF( &PyOCIO_FileTransformType );
         PyModule_AddObject(m, "FileTransform",
-                (PyObject *)&PyOCS_FileTransformType);
+                (PyObject *)&PyOCIO_FileTransformType);
         
         return true;
     }
@@ -57,13 +57,13 @@ OCS_NAMESPACE_ENTER
             return NULL;
         }
         
-        PyOCS_FileTransform * pytransform = PyObject_New(
-                PyOCS_FileTransform, (PyTypeObject * ) &PyOCS_FileTransformType);
+        PyOCIO_FileTransform * pytransform = PyObject_New(
+                PyOCIO_FileTransform, (PyTypeObject * ) &PyOCIO_FileTransformType);
         
-        pytransform->constcppobj = new OCS::ConstFileTransformRcPtr();
+        pytransform->constcppobj = new OCIO::ConstFileTransformRcPtr();
         *pytransform->constcppobj = transform;
         
-        pytransform->cppobj = new OCS::FileTransformRcPtr();
+        pytransform->cppobj = new OCIO::FileTransformRcPtr();
         pytransform->isconst = true;
         
         return ( PyObject * ) pytransform;
@@ -77,11 +77,11 @@ OCS_NAMESPACE_ENTER
             return NULL;
         }
         
-        PyOCS_FileTransform * pytransform = PyObject_New(
-                PyOCS_FileTransform, (PyTypeObject * ) &PyOCS_FileTransformType);
+        PyOCIO_FileTransform * pytransform = PyObject_New(
+                PyOCIO_FileTransform, (PyTypeObject * ) &PyOCIO_FileTransformType);
         
-        pytransform->constcppobj = new OCS::ConstFileTransformRcPtr();
-        pytransform->cppobj = new OCS::FileTransformRcPtr();
+        pytransform->constcppobj = new OCIO::ConstFileTransformRcPtr();
+        pytransform->cppobj = new OCIO::FileTransformRcPtr();
         *pytransform->cppobj = transform;
         
         pytransform->isconst = false;
@@ -92,17 +92,17 @@ OCS_NAMESPACE_ENTER
     bool IsPyFileTransform(PyObject * pyobject)
     {
         if(!pyobject) return false;
-        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCS_FileTransformType));
+        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCIO_FileTransformType));
     }
     
     bool IsPyFileTransformEditable(PyObject * pyobject)
     {
         if(!IsPyFileTransform(pyobject))
         {
-            throw OCSException("PyObject must be an OCS::FileTransform.");
+            throw OCIOException("PyObject must be an OCIO::FileTransform.");
         }
         
-        PyOCS_FileTransform * pytransform = reinterpret_cast<PyOCS_FileTransform *> (pyobject);
+        PyOCIO_FileTransform * pytransform = reinterpret_cast<PyOCIO_FileTransform *> (pyobject);
         return (!pytransform->isconst);
     }
     
@@ -110,10 +110,10 @@ OCS_NAMESPACE_ENTER
     {
         if(!IsPyFileTransform(pyobject))
         {
-            throw OCSException("PyObject must be an OCS::FileTransform.");
+            throw OCIOException("PyObject must be an OCIO::FileTransform.");
         }
         
-        PyOCS_FileTransform * pytransform = reinterpret_cast<PyOCS_FileTransform *> (pyobject);
+        PyOCIO_FileTransform * pytransform = reinterpret_cast<PyOCIO_FileTransform *> (pyobject);
         if(pytransform->isconst && pytransform->constcppobj)
         {
             return *pytransform->constcppobj;
@@ -124,23 +124,23 @@ OCS_NAMESPACE_ENTER
             return *pytransform->cppobj;
         }
         
-        throw OCSException("PyObject must be a valid OCS::FileTransform.");
+        throw OCIOException("PyObject must be a valid OCIO::FileTransform.");
     }
     
     FileTransformRcPtr GetEditableFileTransform(PyObject * pyobject)
     {
         if(!IsPyFileTransform(pyobject))
         {
-            throw OCSException("PyObject must be an OCS::FileTransform.");
+            throw OCIOException("PyObject must be an OCIO::FileTransform.");
         }
         
-        PyOCS_FileTransform * pytransform = reinterpret_cast<PyOCS_FileTransform *> (pyobject);
+        PyOCIO_FileTransform * pytransform = reinterpret_cast<PyOCIO_FileTransform *> (pyobject);
         if(!pytransform->isconst && pytransform->cppobj)
         {
             return *pytransform->cppobj;
         }
         
-        throw OCSException("PyObject must be an editable OCS::FileTransform.");
+        throw OCIOException("PyObject must be an editable OCIO::FileTransform.");
     }
     
     
@@ -159,31 +159,31 @@ OCS_NAMESPACE_ENTER
     
     namespace
     {
-        int PyOCS_FileTransform_init( PyOCS_FileTransform * self, PyObject * args, PyObject * kwds );
-        void PyOCS_FileTransform_delete( PyOCS_FileTransform * self, PyObject * args );
-        PyObject * PyOCS_FileTransform_isEditable( PyObject * self );
-        PyObject * PyOCS_FileTransform_createEditableCopy( PyObject * self );
+        int PyOCIO_FileTransform_init( PyOCIO_FileTransform * self, PyObject * args, PyObject * kwds );
+        void PyOCIO_FileTransform_delete( PyOCIO_FileTransform * self, PyObject * args );
+        PyObject * PyOCIO_FileTransform_isEditable( PyObject * self );
+        PyObject * PyOCIO_FileTransform_createEditableCopy( PyObject * self );
         
-        PyObject * PyOCS_FileTransform_getDirection( PyObject * self );
-        PyObject * PyOCS_FileTransform_setDirection( PyObject * self,  PyObject *args );
-        PyObject * PyOCS_FileTransform_getSrc( PyObject * self );
-        PyObject * PyOCS_FileTransform_setSrc( PyObject * self,  PyObject *args );
-        PyObject * PyOCS_FileTransform_getInterpolation( PyObject * self );
-        PyObject * PyOCS_FileTransform_setInterpolation( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_FileTransform_getDirection( PyObject * self );
+        PyObject * PyOCIO_FileTransform_setDirection( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_FileTransform_getSrc( PyObject * self );
+        PyObject * PyOCIO_FileTransform_setSrc( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_FileTransform_getInterpolation( PyObject * self );
+        PyObject * PyOCIO_FileTransform_setInterpolation( PyObject * self,  PyObject *args );
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        PyMethodDef PyOCS_FileTransform_methods[] = {
-            {"isEditable", (PyCFunction) PyOCS_FileTransform_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCS_FileTransform_createEditableCopy, METH_NOARGS, "" },
+        PyMethodDef PyOCIO_FileTransform_methods[] = {
+            {"isEditable", (PyCFunction) PyOCIO_FileTransform_isEditable, METH_NOARGS, "" },
+            {"createEditableCopy", (PyCFunction) PyOCIO_FileTransform_createEditableCopy, METH_NOARGS, "" },
             
-            {"getDirection", (PyCFunction) PyOCS_FileTransform_getDirection, METH_NOARGS, "" },
-            {"setDirection", PyOCS_FileTransform_setDirection, METH_VARARGS, "" },
-            {"getSrc", (PyCFunction) PyOCS_FileTransform_getSrc, METH_NOARGS, "" },
-            {"setSrc", PyOCS_FileTransform_setSrc, METH_VARARGS, "" },
-            {"getInterpolation", (PyCFunction) PyOCS_FileTransform_getInterpolation, METH_NOARGS, "" },
-            {"setInterpolation", PyOCS_FileTransform_setInterpolation, METH_VARARGS, "" },
+            {"getDirection", (PyCFunction) PyOCIO_FileTransform_getDirection, METH_NOARGS, "" },
+            {"setDirection", PyOCIO_FileTransform_setDirection, METH_VARARGS, "" },
+            {"getSrc", (PyCFunction) PyOCIO_FileTransform_getSrc, METH_NOARGS, "" },
+            {"setSrc", PyOCIO_FileTransform_setSrc, METH_VARARGS, "" },
+            {"getInterpolation", (PyCFunction) PyOCIO_FileTransform_getInterpolation, METH_NOARGS, "" },
+            {"setInterpolation", PyOCIO_FileTransform_setInterpolation, METH_VARARGS, "" },
             
             {NULL, NULL, 0, NULL}
         };
@@ -192,13 +192,13 @@ OCS_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    PyTypeObject PyOCS_FileTransformType = {
+    PyTypeObject PyOCIO_FileTransformType = {
         PyObject_HEAD_INIT(NULL)
         0,                                          //ob_size
-        "OCS.FileTransform",                        //tp_name
-        sizeof(PyOCS_FileTransform),                //tp_basicsize
+        "OCIO.FileTransform",                        //tp_name
+        sizeof(PyOCIO_FileTransform),                //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor)PyOCS_FileTransform_delete,     //tp_dealloc
+        (destructor)PyOCIO_FileTransform_delete,     //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -221,7 +221,7 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_weaklistoffset 
         0,                                          //tp_iter 
         0,                                          //tp_iternext 
-        PyOCS_FileTransform_methods,                //tp_methods 
+        PyOCIO_FileTransform_methods,                //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
         0,                                          //tp_base 
@@ -229,7 +229,7 @@ OCS_NAMESPACE_ENTER
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
         0,                                          //tp_dictoffset 
-        (initproc) PyOCS_FileTransform_init,        //tp_init 
+        (initproc) PyOCIO_FileTransform_init,        //tp_init 
         0,                                          //tp_alloc 
         0,                                          //tp_new 
         0,                                          //tp_free
@@ -252,18 +252,18 @@ OCS_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCS_FileTransform_init( PyOCS_FileTransform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_FileTransform_init( PyOCIO_FileTransform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
             
-            self->constcppobj = new OCS::ConstFileTransformRcPtr();
-            self->cppobj = new OCS::FileTransformRcPtr();
+            self->constcppobj = new OCIO::ConstFileTransformRcPtr();
+            self->cppobj = new OCIO::FileTransformRcPtr();
             self->isconst = true;
             
             try
             {
-                *self->cppobj = OCS::FileTransform::Create();
+                *self->cppobj = OCIO::FileTransform::Create();
                 self->isconst = false;
                 return 0;
             }
@@ -278,7 +278,7 @@ OCS_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        void PyOCS_FileTransform_delete( PyOCS_FileTransform *self, PyObject * /*args*/ )
+        void PyOCIO_FileTransform_delete( PyOCIO_FileTransform *self, PyObject * /*args*/ )
         {
             delete self->constcppobj;
             delete self->cppobj;
@@ -288,12 +288,12 @@ OCS_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCS_FileTransform_isEditable( PyObject * self )
+        PyObject * PyOCIO_FileTransform_isEditable( PyObject * self )
         {
             return PyBool_FromLong(IsPyFileTransformEditable(self));
         }
         
-        PyObject * PyOCS_FileTransform_createEditableCopy( PyObject * self )
+        PyObject * PyOCIO_FileTransform_createEditableCopy( PyObject * self )
         {
             try
             {
@@ -311,7 +311,7 @@ OCS_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
-        PyObject * PyOCS_FileTransform_getDirection( PyObject * self )
+        PyObject * PyOCIO_FileTransform_getDirection( PyObject * self )
         {
             try
             {
@@ -326,7 +326,7 @@ OCS_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCS_FileTransform_setDirection( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_FileTransform_setDirection( PyObject * self, PyObject * args )
         {
             try
             {
@@ -351,7 +351,7 @@ OCS_NAMESPACE_ENTER
         
         
         
-        PyObject * PyOCS_FileTransform_getSrc( PyObject * self )
+        PyObject * PyOCIO_FileTransform_getSrc( PyObject * self )
         {
             try
             {
@@ -365,7 +365,7 @@ OCS_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCS_FileTransform_setSrc( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_FileTransform_setSrc( PyObject * self, PyObject * args )
         {
             try
             {
@@ -388,7 +388,7 @@ OCS_NAMESPACE_ENTER
         
         
         
-        PyObject * PyOCS_FileTransform_getInterpolation( PyObject * self )
+        PyObject * PyOCIO_FileTransform_getInterpolation( PyObject * self )
         {
             try
             {
@@ -403,7 +403,7 @@ OCS_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCS_FileTransform_setInterpolation( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_FileTransform_setInterpolation( PyObject * self, PyObject * args )
         {
             try
             {
@@ -427,4 +427,4 @@ OCS_NAMESPACE_ENTER
     }
 
 }
-OCS_NAMESPACE_EXIT
+OCIO_NAMESPACE_EXIT
