@@ -48,6 +48,7 @@ OCS_NAMESPACE_ENTER
         virtual void apply(ImageDesc& img) const;
         
         virtual void applyRGB(float * pixel) const;
+        virtual void applyRGBA(float * pixel) const;
         
         virtual const char * getGPUShaderText(const GpuShaderDesc & gpuDesc) const;
         

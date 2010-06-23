@@ -501,6 +501,7 @@ OCS_NAMESPACE_ENTER
         // use the above function instead.
         
         virtual void applyRGB(float * pixel) const = 0;
+        virtual void applyRGBA(float * pixel) const = 0;
         
         ///////////////
         //

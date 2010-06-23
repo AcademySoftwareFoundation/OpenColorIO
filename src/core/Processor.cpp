@@ -78,7 +78,7 @@ OCS_NAMESPACE_ENTER
             if(!rgbaBuffer)
                 throw OCSException("Cannot apply transform; null image.");
             
-            for(unsigned int i=0; i<m_opVec.size(); ++i)
+            for(OpRcPtrVec::size_type i=0, size = m_opVec.size(); i<size; ++i)
             {
                 m_opVec[i]->apply(rgbaBuffer, numPixels);
             }
@@ -91,11 +91,12 @@ OCS_NAMESPACE_ENTER
     {
         if(m_opVec.empty()) return;
         
-        // We need to allocate a temp array as the pixel must be 4 floats in size.
+        // We need to allocate a temp array as the pixel must be 4 floats in size
+        // (otherwise, sse loads will potentially fail)
         
         float rgbaBuffer[4] = { pixel[0], pixel[1], pixel[2], 0.0f };
         
-        for(unsigned int i=0; i<m_opVec.size(); ++i)
+        for(OpRcPtrVec::size_type i=0, size = m_opVec.size(); i<size; ++i)
         {
             m_opVec[i]->apply(rgbaBuffer, 1);
         }
@@ -104,6 +105,18 @@ OCS_NAMESPACE_ENTER
         pixel[1] = rgbaBuffer[1];
         pixel[2] = rgbaBuffer[2];
     }
+    
+    void LocalProcessor::applyRGBA(float * pixel) const
+    {
+        for(OpRcPtrVec::size_type i=0, size = m_opVec.size(); i<size; ++i)
+        {
+            m_opVec[i]->apply(pixel, 1);
+        }
+    }
+    
+    
+    
+    
     
     
     
