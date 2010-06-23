@@ -99,7 +99,7 @@ void loadConfigFromEnv()
     std::cout << std::endl;
     
     OCS::GpuShaderDesc shaderDesc;
-    shaderDesc.setLut3DEdgeSize(32);
+    shaderDesc.setLut3DEdgeLen(32);
     shaderDesc.setFunctionName("ocs_color_convert");
     shaderDesc.setLanguage(OCS::GPU_LANGUAGE_CG);
     

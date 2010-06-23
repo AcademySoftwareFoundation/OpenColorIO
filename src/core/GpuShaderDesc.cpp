@@ -44,14 +44,14 @@ OCS_NAMESPACE_ENTER
     }
     
     
-    void GpuShaderDesc::setLut3DEdgeSize(int size)
+    void GpuShaderDesc::setLanguage(GpuLanguage lang)
     {
-        m_impl->setLut3DEdgeSize(size);
+        m_impl->setLanguage(lang);
     }
     
-    int GpuShaderDesc::getLut3DEdgeSize() const
+    GpuLanguage GpuShaderDesc::getLanguage() const
     {
-        return m_impl->getLut3DEdgeSize();
+        return m_impl->getLanguage();
     }
     
     void GpuShaderDesc::setFunctionName(const char * name)
@@ -64,24 +64,23 @@ OCS_NAMESPACE_ENTER
         return m_impl->getFunctionName();
     }
     
-    void GpuShaderDesc::setLanguage(GpuLanguage lang)
+    void GpuShaderDesc::setLut3DEdgeLen(int len)
     {
-        m_impl->setLanguage(lang);
+        m_impl->setLut3DEdgeLen(len);
     }
     
-    GpuLanguage GpuShaderDesc::getLanguage() const
+    int GpuShaderDesc::getLut3DEdgeLen() const
     {
-        return m_impl->getLanguage();
+        return m_impl->getLut3DEdgeLen();
     }
-    
     
     
     ///////////////////////////////////////////////////////////////////////////
     
     
     GpuShaderDesc::Impl::Impl() :
-        m_lut3DEdgeSize(0),
-        m_language(GPU_LANGUAGE_UNKNOWN)
+        m_language(GPU_LANGUAGE_UNKNOWN),
+        m_lut3DEdgeLen(0)
     {
     }
     
@@ -90,14 +89,14 @@ OCS_NAMESPACE_ENTER
     
     }
     
-    void GpuShaderDesc::Impl::setLut3DEdgeSize(int size)
+    void GpuShaderDesc::Impl::setLanguage(GpuLanguage lang)
     {
-        m_lut3DEdgeSize = size;
+        m_language = lang;
     }
     
-    int GpuShaderDesc::Impl::getLut3DEdgeSize() const
+    GpuLanguage GpuShaderDesc::Impl::getLanguage() const
     {
-        return m_lut3DEdgeSize;
+        return m_language;
     }
     
     void GpuShaderDesc::Impl::setFunctionName(const char * name)
@@ -110,14 +109,15 @@ OCS_NAMESPACE_ENTER
         return m_functionName.c_str();
     }
     
-    void GpuShaderDesc::Impl::setLanguage(GpuLanguage lang)
+    void GpuShaderDesc::Impl::setLut3DEdgeLen(int len)
     {
-        m_language = lang;
+        m_lut3DEdgeLen = len;
     }
     
-    GpuLanguage GpuShaderDesc::Impl::getLanguage() const
+    int GpuShaderDesc::Impl::getLut3DEdgeLen() const
     {
-        return m_language;
+        return m_lut3DEdgeLen;
     }
+    
 }
 OCS_NAMESPACE_EXIT

@@ -40,20 +40,19 @@ OCS_NAMESPACE_ENTER
         Impl();
         ~Impl();
         
-        void setLut3DEdgeSize(int size);
-        int getLut3DEdgeSize() const;
+        void setLanguage(GpuLanguage lang);
+        GpuLanguage getLanguage() const;
         
         void setFunctionName(const char * name);
         const char * getFunctionName() const;
         
-        void setLanguage(GpuLanguage lang);
-        GpuLanguage getLanguage() const;
+        void setLut3DEdgeLen(int len);
+        int getLut3DEdgeLen() const;
         
         private:
-        
-        int m_lut3DEdgeSize;
-        std::string m_functionName;
         GpuLanguage m_language;
+        std::string m_functionName;
+        int m_lut3DEdgeLen;
     };
 }
 OCS_NAMESPACE_EXIT

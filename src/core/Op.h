@@ -56,6 +56,10 @@ OCS_NAMESPACE_ENTER
             // caching, must thus be appropriately mutexed.
             
             virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
+            
+            //! Does this op support gpu shader text generation
+            virtual bool supportsGPUShader() const = 0;
+            
         private:
             Op& operator= (const Op &);
     };

@@ -214,6 +214,7 @@ OCS_NAMESPACE_ENTER
             
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
+            virtual bool supportsGPUShader() const;
         
         private:
             Lut3DRcPtr m_lut;
@@ -277,6 +278,11 @@ OCS_NAMESPACE_ENTER
             {
                 Lut3D_Linear(rgbaBuffer, numPixels, *m_lut);
             }
+        }
+        
+        bool Lut3DOp::supportsGPUShader() const
+        {
+            return false;
         }
     }
     

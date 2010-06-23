@@ -509,7 +509,7 @@ OCS_NAMESPACE_ENTER
         virtual const char * getGPUShaderText(const GpuShaderDesc & shaderDesc) const = 0;
         
         /*
-        virtual int getGPULut3DEdgeSize() const = 0;
+        virtual int getGPULut3DEdgeLen() const = 0;
         virtual const char * getGPULut3DCacheID(const GpuShaderDesc & shaderDesc) const = 0;
         virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const = 0;
         */
@@ -520,7 +520,7 @@ OCS_NAMESPACE_ENTER
         //        shaderFcnName(in half4 inPixel,
         //                      const uniform sampler3D   lut3d)
         
-        // lut3d should be size: 3*lut3DEdgeSize*lut3DEdgeSize*lut3DEdgeSize
+        // lut3d should be size: 3*edgeLen*edgeLen*edgeLen
         
         // return 0 if unknown
         
@@ -636,14 +636,14 @@ OCS_NAMESPACE_ENTER
         GpuShaderDesc();
         ~GpuShaderDesc();
         
-        void setLut3DEdgeSize(int size);
-        int getLut3DEdgeSize() const;
+        void setLanguage(GpuLanguage lang);
+        GpuLanguage getLanguage() const;
         
         void setFunctionName(const char * name);
         const char * getFunctionName() const;
         
-        void setLanguage(GpuLanguage lang);
-        GpuLanguage getLanguage() const;
+        void setLut3DEdgeLen(int len);
+        int getLut3DEdgeLen() const;
         
         // static int GetMaxGpuCacheSizeMB();
         // static void SetMaxGpuCacheSizeMB(int maxCacheEntries);

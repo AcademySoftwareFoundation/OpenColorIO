@@ -304,6 +304,7 @@ OCS_NAMESPACE_ENTER
             
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
+            virtual bool supportsGPUShader() const;
         
         private:
             Lut1DRcPtr m_lut;
@@ -366,6 +367,11 @@ OCS_NAMESPACE_ENTER
                     Lut1D_LinearInverse(rgbaBuffer, numPixels, *m_lut);
                 }
             }
+        }
+        
+        bool Lut1DOp::supportsGPUShader() const
+        {
+            return false;
         }
     }
     

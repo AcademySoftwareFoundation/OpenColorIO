@@ -52,7 +52,7 @@ OCS_NAMESPACE_ENTER
         virtual const char * getGPUShaderText(const GpuShaderDesc & gpuDesc) const;
         
         /*
-        virtual int getGPULut3DEdgeSize() const;
+        virtual int getGPULut3DEdgeLen() const;
         virtual const char * getGPULut3DCacheID(const GpuShaderDesc & gpuDesc) const;
         virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & gpuDesc) const;
         */
@@ -64,9 +64,9 @@ OCS_NAMESPACE_ENTER
         
         static void deleter(LocalProcessor* p);
         
-        void computeGPU(std::ostringstream * shader,
-                       std::ostringstream * lut3dCacheID, float * lut3d,
-                       const GpuShaderDesc & gpuDesc) const;
+        void getGPUShader(std::ostringstream * shader,
+                          std::ostringstream * lut3dCacheID, float * lut3d,
+                          const GpuShaderDesc & gpuDesc) const;
         
         OpRcPtrVec m_opVec;
         

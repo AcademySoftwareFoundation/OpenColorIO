@@ -102,7 +102,7 @@ OCS_NAMESPACE_ENTER
             return static_cast<int>( pow(2.0, bitDepth) ) - 1;
         }
         
-        int Get3DLutEdgeSizeFromNumEntries(int numEntries)
+        int Get3DLutEdgeLenFromNumEntries(int numEntries)
         {
             float fdim = powf((float) numEntries / 3.0f, 1.0f/3.0f);
             int dim = static_cast<int>(roundf(fdim));
@@ -200,7 +200,7 @@ OCS_NAMESPACE_ENTER
                     throw OCSException(os.str().c_str());
                 }
                 
-                int lutEdgeSize = Get3DLutEdgeSizeFromNumEntries((int)rawLutData.size());
+                int lutEdgeLen = Get3DLutEdgeLenFromNumEntries((int)rawLutData.size());
                 
                 // We use the maximum value found in the lut to infer
                 // the bit depth.  While this is ugly. We dont believe there is
@@ -222,10 +222,10 @@ OCS_NAMESPACE_ENTER
                 
                 Lut3DRcPtr lut3d(new Lut3D());
                 
-                lut3d->size[0] = lutEdgeSize;
-                lut3d->size[1] = lutEdgeSize;
-                lut3d->size[2] = lutEdgeSize;
-                lut3d->lut.resize(lutEdgeSize * lutEdgeSize * lutEdgeSize * 3);
+                lut3d->size[0] = lutEdgeLen;
+                lut3d->size[1] = lutEdgeLen;
+                lut3d->size[2] = lutEdgeLen;
+                lut3d->lut.resize(lutEdgeLen * lutEdgeLen * lutEdgeLen * 3);
                 
                 for(int rIndex=0; rIndex<lut3d->size[0]; ++rIndex)
                 {

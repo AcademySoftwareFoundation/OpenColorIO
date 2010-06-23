@@ -84,6 +84,7 @@ OCS_NAMESPACE_ENTER
             
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
+            virtual bool supportsGPUShader() const;
         
         private:
             float m_m44[16];
@@ -165,6 +166,10 @@ OCS_NAMESPACE_ENTER
         
         } // Op::process
         
+        bool MatrixOffsetOp::supportsGPUShader() const
+        {
+            return true;
+        }
         
         
     }  // Anon namespace
