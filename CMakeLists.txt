@@ -108,17 +108,35 @@ endif()
 # PYTHON
 #
 
-set(PYVER 2.6)
-set(PYHELP "path to Python headers against which to compile Python bindings")
-if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-    set(PYTHON "/System/Library/Frameworks/Python.framework/Versions/${PYVER}/include/python${PYVER}/" CACHE FILEPATH ${PYHELP})
+set(PYHELP "path to Python executable (also used to find headers against which to compile Python bindings)")
+set(PYTHON_HEADER Python.h)
+set(PYTHON python CACHE FILEPATH ${PYHELP})
+execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_inc()"
+    OUTPUT_VARIABLE PYTHON_INCLUDE
+    RESULT_VARIABLE PYTHON_RETURNVALUE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+set(PYTHON_OK NO)
+
+if(${PYTHON_RETURNVALUE} EQUAL 0)
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_version()"
+        OUTPUT_VARIABLE PYTHON_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(EXISTS "${PYTHON_INCLUDE}/Python.h")
+        set(PYTHON_OK YES)
+    else()
+        set(PYTHON_ERR "${PYTHON_HEADER} not found in ${PYTHON_INCLUDE}.")
+    endif()
+elseif(${PYTHON_RETURNVALUE} GREATER 0)
+    set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine header location.")
 else()
-    set(PYTHON "/usr/include/python${PYVER}/" CACHE FILEPATH ${PYHELP})
+    set(PYTHON_ERR "${PYTHON}: ${PYTHON_RETURNVALUE}.")
 endif()
 
-set(PYTHON_HEADER Python.h)
-if(EXISTS "${PYTHON}/Python.h")
-    message(STATUS "Python path okay, time to set up for building the Python bindings")
+if(PYTHON_OK)
+    message(STATUS "Python ${PYTHON_VERSION} okay, will build the Python bindings against ${PYTHON_INCLUDE}")
 
     add_library(PyOpenColorIO MODULE
         src/pyglue/PyColorSpace.cpp
@@ -129,7 +147,7 @@ if(EXISTS "${PYTHON}/Python.h")
         src/pyglue/PyUtil.cpp
     )
     include_directories(
-        ${PYTHON}
+        ${PYTHON_INCLUDE}
     )
     # Exclude the 'lib' prefix from the name.
     set_property(TARGET PyOpenColorIO
@@ -137,17 +155,17 @@ if(EXISTS "${PYTHON}/Python.h")
     )
     target_link_libraries(PyOpenColorIO OpenColorIO)
 
-    if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    if(APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
     endif()
 
     add_custom_target(PyOpenColorIOTest
-        COMMAND env PYTHONPATH=${OpenColorIO_LIBRARY_OUTPUT_DIRECTORY} python ${OpenColorIO_SOURCE_DIR}/src/testbed/main.py
+        COMMAND env PYTHONPATH=${OpenColorIO_LIBRARY_OUTPUT_DIRECTORY} ${PYTHON} ${OpenColorIO_SOURCE_DIR}/src/testbed/main.py
         DEPENDS PyOpenColorIO
         SOURCES src/testbed/main.py
         VERBATIM
     )
 else()
-    message(STATUS "Python bindings will not be built: ${PYTHON_HEADER} not found in ${PYTHON}")
+    message(STATUS "Python bindings will not be built: ${PYTHON_ERR}")
 endif()
 

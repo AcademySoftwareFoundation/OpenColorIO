@@ -44,7 +44,7 @@ build $ ccmake ../
 or for interactive text prompts,
 build $ cmake -i ../
 or to specify them on the command line,
-build $ cmake -D NUKE:FILEPATH=/usr/local/nuke6.0.3/include/ -D PYTHON:FILEPATH=/usr/local/include/python2.6/ ../
+build $ cmake -D NUKE:FILEPATH=/usr/local/nuke6.0.3/include/ -D PYTHON:FILEPATH=/usr/local64/bin/python2.6 ..
 All together,
 mkdir build && cd build && cmake ../ && make OpenColorIOTest && ./OpenColorIOTest
 
