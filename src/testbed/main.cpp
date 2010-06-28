@@ -111,7 +111,7 @@ void createConfig()
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     
-    config->setResourcePath("/net/soft_scratch/users/jeremys/git/Color/configs/spivfx/luts");
+    config->setResourcePath("luts");
     
     // Add a colorspace
     {

@@ -1,1 +1,1 @@
-tcsh -c 'setenv OCIO  `pwd`/configs/spivfx/config.ocio && mkdir -p build && cd build && cmake ../ && make PyOpenColorIOTest'
+tcsh -c 'setenv OCIO  `pwd`/configs/testing/config.ocio && mkdir -p build && cd build && cmake ../ && make PyOpenColorIOTest'
