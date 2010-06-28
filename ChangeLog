@@ -1,3 +1,9 @@
+Version 0.5.9 (June 28 2010);
+    * Renamed project, classes, namespaces to OpenColorIO (OCIO)
+    * Added single-pixel processor path
+    * Improved python path makefile detection
+    * Continued GPU progress (still under development)
+
 Version 0.5.8 (June 22 2010):
     * Support for .3dl
     * Support for matrix ops

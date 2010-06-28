@@ -1,8 +1,8 @@
 #!/usr/bin/env tcsh
-setenv COLOR_VERSION 0.5.8
+setenv COLOR_VERSION 0.5.9
 mkdir -p OpenColorIO.$COLOR_VERSION
 cp -R CMakeLists.txt configs export INSTALL LICENSE runpytest runtest src ChangeLog OpenColorIO.$COLOR_VERSION
 tar cvzf OpenColorIO.$COLOR_VERSION.tgz OpenColorIO.$COLOR_VERSION
 rm -r OpenColorIO.$COLOR_VERSION
 
-# git tag -a v0.5.8 -m "Version Tag"
+# git tag -a v0.5.9 -m "Version Tag"

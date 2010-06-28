@@ -33,9 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// OCIO
 // OpenColorIO
-// Version 0.5.8
+// Version 0.5.9
 //
 
 // TODO: get simple display transform working. can it be expressed as an op?
