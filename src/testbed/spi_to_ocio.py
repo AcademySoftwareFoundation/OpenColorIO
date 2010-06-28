@@ -13,7 +13,7 @@ if len(sys.argv) < 3:
     
     Convert a proprietary SPI color configuration format (v7 xml) to an OCIO config.
     
-    env PYTHONPATH=/net/homedirs/jeremys/git/OpenColorIO/build/ ./src/testbed/spi_to_ocio.py /shots/grn/home/lib/lut/colorspaces.xml /mcp/config
+    env PYTHONPATH=/net/homedirs/jeremys/git/ocio/build/ ./src/testbed/spi_to_ocio.py /shots/grn/home/lib/lut/colorspaces.xml /mcp/config
     
     """
     sys.exit(1)
@@ -176,6 +176,7 @@ def BuildColorspaceFromXMLElement(element, lutDir):
     
     element_toref = None
     element_fromref = None
+    description = ''
     
     for i in xrange(element.getNumberOfChildren()):
         child = element.getChild(i)
@@ -183,6 +184,8 @@ def BuildColorspaceFromXMLElement(element, lutDir):
             element_toref = child
         elif child.getElementType() == 'from_linear':
             element_fromref = child
+        elif child.getElementType() == 'desc':
+            description = child.getText(0)
         else:
             print 'TODO: handle colorspace child element',child.getElementType()
     
@@ -200,6 +203,8 @@ def BuildColorspaceFromXMLElement(element, lutDir):
     else:
         transform = BuildColorTransform(fromref, lutDir)
         cs.setTransform(transform, OCIO.COLORSPACE_DIR_FROM_REFERENCE)
+    
+    cs.setDescription(description)
     
     return cs
 

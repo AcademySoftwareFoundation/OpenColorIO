@@ -88,6 +88,16 @@ OCIO_NAMESPACE_ENTER
         m_impl->setFamily(family);
     }
     
+    const char * ColorSpace::getDescription() const
+    {
+        return m_impl->getDescription();
+    }
+    
+    void ColorSpace::setDescription(const char * description)
+    {
+        m_impl->setDescription(description);
+    }
+    
     BitDepth ColorSpace::getBitDepth() const
     {
         return m_impl->getBitDepth();
@@ -214,6 +224,7 @@ OCIO_NAMESPACE_ENTER
     {
         m_name = rhs.m_name;
         m_family = rhs.m_family;
+        m_description = rhs.m_description;
         m_bitDepth = rhs.m_bitDepth;
         m_isData = rhs.m_isData;
         m_gpuAllocation = rhs.m_gpuAllocation;
@@ -249,6 +260,16 @@ OCIO_NAMESPACE_ENTER
     void ColorSpace::Impl::setFamily(const char * family)
     {
         m_family = family;
+    }
+    
+    const char * ColorSpace::Impl::getDescription() const
+    {
+        return m_description.c_str();
+    }
+    
+    void ColorSpace::Impl::setDescription(const char * description)
+    {
+        m_description = description;
     }
     
     BitDepth ColorSpace::Impl::getBitDepth() const

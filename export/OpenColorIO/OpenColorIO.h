@@ -423,6 +423,9 @@ OCIO_NAMESPACE_ENTER
         const char * getFamily() const;
         void setFamily(const char * family);
         
+        const char * getDescription() const;
+        void setDescription(const char * description);
+        
         BitDepth getBitDepth() const;
         void setBitDepth(BitDepth bitDepth);
         

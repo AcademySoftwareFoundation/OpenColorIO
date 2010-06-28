@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pystring/pystring.h"
 #include "tinyxml/tinyxml.h"
 
+#include <cstring>
 #include <sstream>
 
 OCIO_NAMESPACE_ENTER
@@ -270,28 +271,35 @@ OCIO_NAMESPACE_ENTER
             while(pElem)
             {
                 std::string elementtype = pElem->Value();
-                ColorSpaceDirection dir = ColorSpaceDirectionFromString(elementtype.c_str());
-                
-                if(dir != COLORSPACE_DIR_UNKNOWN)
+                if(elementtype == "description")
                 {
-                    const TiXmlElement* gchildElem = pElem->FirstChildElement();
-                    while(gchildElem)
+                    cs->setDescription(pElem->GetText());
+                }
+                else
+                {
+                    ColorSpaceDirection dir = ColorSpaceDirectionFromString(elementtype.c_str());
+                    
+                    if(dir != COLORSPACE_DIR_UNKNOWN)
                     {
-                        std::string childelementtype = gchildElem->Value();
-                        if(childelementtype == "group")
+                        const TiXmlElement* gchildElem = pElem->FirstChildElement();
+                        while(gchildElem)
                         {
-                            cs->setTransform(CreateGroupTransform(gchildElem), dir);
-                            break;
+                            std::string childelementtype = gchildElem->Value();
+                            if(childelementtype == "group")
+                            {
+                                cs->setTransform(CreateGroupTransform(gchildElem), dir);
+                                break;
+                            }
+                            else
+                            {
+                                std::ostringstream os;
+                                os << "CreateColorSpaceFromElement passed incorrect element type '";
+                                os << childelementtype << "'. 'group' expected.";
+                                throw OCIOException(os.str().c_str());
+                            }
+                            
+                            gchildElem=gchildElem->NextSiblingElement();
                         }
-                        else
-                        {
-                            std::ostringstream os;
-                            os << "CreateColorSpaceFromElement passed incorrect element type '";
-                            os << childelementtype << "'. 'group' expected.";
-                            throw OCIOException(os.str().c_str());
-                        }
-                        
-                        gchildElem=gchildElem->NextSiblingElement();
                     }
                 }
                 
@@ -311,6 +319,16 @@ OCIO_NAMESPACE_ENTER
             element->SetAttribute("gpuallocation", GpuAllocationToString(cs->getGPUAllocation()));
             element->SetDoubleAttribute("gpumin", cs->getGPUMin());
             element->SetDoubleAttribute("gpumax", cs->getGPUMax());
+            
+            const char * description = cs->getDescription();
+            if(strlen(description) > 0)
+            {
+                TiXmlElement * descElement = new TiXmlElement( "description" );
+                element->LinkEndChild( descElement );
+                
+                TiXmlText * textElement = new TiXmlText( description );
+                descElement->LinkEndChild( textElement );
+            }
             
             ColorSpaceDirection dirs[2] = { COLORSPACE_DIR_TO_REFERENCE,
                                             COLORSPACE_DIR_FROM_REFERENCE };

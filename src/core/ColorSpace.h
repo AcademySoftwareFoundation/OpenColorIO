@@ -54,6 +54,9 @@ OCIO_NAMESPACE_ENTER
         const char * getFamily() const;
         void setFamily(const char * family);
         
+        const char * getDescription() const;
+        void setDescription(const char * description);
+        
         BitDepth getBitDepth() const;
         void setBitDepth(BitDepth bitDepth);
         
@@ -81,6 +84,7 @@ OCIO_NAMESPACE_ENTER
         
         std::string m_name;
         std::string m_family;
+        std::string m_description;
         
         BitDepth m_bitDepth;
         bool m_isData;

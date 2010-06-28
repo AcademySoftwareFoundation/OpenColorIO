@@ -169,6 +169,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_ColorSpace_setName( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_ColorSpace_getFamily( PyObject * self );
         PyObject * PyOCIO_ColorSpace_setFamily( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_ColorSpace_getDescription( PyObject * self );
+        PyObject * PyOCIO_ColorSpace_setDescription( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_ColorSpace_getBitDepth( PyObject * self );
         PyObject * PyOCIO_ColorSpace_setBitDepth( PyObject * self,  PyObject *args );
@@ -197,6 +199,8 @@ OCIO_NAMESPACE_ENTER
             {"setName", PyOCIO_ColorSpace_setName, METH_VARARGS, "" },
             {"getFamily", (PyCFunction) PyOCIO_ColorSpace_getFamily, METH_NOARGS, "" },
             {"setFamily", PyOCIO_ColorSpace_setFamily, METH_VARARGS, "" },
+            {"getDescription", (PyCFunction) PyOCIO_ColorSpace_getDescription, METH_NOARGS, "" },
+            {"setDescription", PyOCIO_ColorSpace_setDescription, METH_VARARGS, "" },
             
             {"getBitDepth", (PyCFunction) PyOCIO_ColorSpace_getBitDepth, METH_NOARGS, "" },
             {"setBitDepth", PyOCIO_ColorSpace_setBitDepth, METH_VARARGS, "" },
@@ -397,6 +401,41 @@ OCIO_NAMESPACE_ENTER
                 
                 ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
                 colorSpace->setFamily( name );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        PyObject * PyOCIO_ColorSpace_getDescription( PyObject * self )
+        {
+            try
+            {
+                ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
+                return PyString_FromString( colorSpace->getDescription() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_ColorSpace_setDescription( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * name = 0;
+                if (!PyArg_ParseTuple(args,"s:setDescription", &name)) return NULL;
+                
+                ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
+                colorSpace->setDescription( name );
                 
                 Py_RETURN_NONE;
             }
