@@ -1,4 +1,4 @@
-Version 0.5.9 (June 28 2010);
+Version 0.5.9 (June 28 2010):
     * Renamed project, classes, namespaces to OpenColorIO (OCIO)
     * Added single-pixel processor path
     * Improved python path makefile detection
