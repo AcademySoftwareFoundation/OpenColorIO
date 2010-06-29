@@ -172,6 +172,9 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getResourcePath( PyObject * self );
         PyObject * PyOCIO_Config_setResourcePath( PyObject * self,  PyObject *args );
         
+        PyObject * PyOCIO_Config_getDescription( PyObject * self );
+        PyObject * PyOCIO_Config_setDescription( PyObject * self,  PyObject *args );
+        
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self );
         PyObject * PyOCIO_Config_addColorSpace( PyObject * self, PyObject * args );
         
@@ -191,6 +194,9 @@ OCIO_NAMESPACE_ENTER
             
             {"getResourcePath", (PyCFunction) PyOCIO_Config_getResourcePath, METH_NOARGS, "" },
             {"setResourcePath", PyOCIO_Config_setResourcePath, METH_VARARGS, "" },
+            
+            {"getDescription", (PyCFunction) PyOCIO_Config_getDescription, METH_NOARGS, "" },
+            {"setDescription", PyOCIO_Config_setDescription, METH_VARARGS, "" },
             
             {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
             {"addColorSpace", PyOCIO_Config_addColorSpace, METH_VARARGS, "" },
@@ -384,6 +390,41 @@ OCIO_NAMESPACE_ENTER
                 
                 ConfigRcPtr config = GetEditableConfig(self);
                 config->setResourcePath( path );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        PyObject * PyOCIO_Config_getDescription( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                return PyString_FromString( config->getDescription() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_setDescription( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * desc = 0;
+                if (!PyArg_ParseTuple(args,"s:setDescription", &desc)) return NULL;
+                
+                ConfigRcPtr config = GetEditableConfig(self);
+                config->setDescription( desc );
                 
                 Py_RETURN_NONE;
             }

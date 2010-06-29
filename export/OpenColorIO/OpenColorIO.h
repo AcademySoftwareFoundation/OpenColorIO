@@ -308,6 +308,9 @@ OCIO_NAMESPACE_ENTER
         // TODO: replace with mechanism that supports bundles
         const char * getResolvedResourcePath() const;
         
+        const char * getDescription() const;
+        void setDescription(const char * description);
+        
         // TODO: allow migration to binary file format
         void writeXML(std::ostream& os) const;
         

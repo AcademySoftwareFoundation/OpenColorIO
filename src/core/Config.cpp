@@ -127,6 +127,16 @@ OCIO_NAMESPACE_ENTER
         return m_impl->getResolvedResourcePath();
     }
     
+    const char * Config::getDescription() const
+    {
+        return m_impl->getDescription();
+    }
+    
+    void Config::setDescription(const char * description)
+    {
+        m_impl->setDescription(description);
+    }
+    
     void Config::writeXML(std::ostream& os) const
     {
         m_impl->writeXML(os);
@@ -320,6 +330,7 @@ OCIO_NAMESPACE_ENTER
         m_resourcePath = rhs.m_resourcePath;
         m_originalFileDir = rhs.m_originalFileDir;
         m_resolvedResourcePath = rhs.m_resolvedResourcePath;
+        m_description = rhs.m_description;
         
         m_colorspaces.clear();
         m_colorspaces.reserve(rhs.m_colorspaces.size());
@@ -370,6 +381,17 @@ OCIO_NAMESPACE_ENTER
     {
         return m_resolvedResourcePath.c_str();
     }
+    
+    const char * Config::Impl::getDescription() const
+    {
+        return m_description.c_str();
+    }
+    
+    void Config::Impl::setDescription(const char * description)
+    {
+        m_description = description;
+    }
+    
     
     int Config::Impl::getNumColorSpaces() const
     {

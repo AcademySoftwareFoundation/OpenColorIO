@@ -52,6 +52,9 @@ OCIO_NAMESPACE_ENTER
         void setResourcePath(const char * path);
         const char * getResolvedResourcePath() const;
         
+        const char * getDescription() const;
+        void setDescription(const char * description);
+        
         void createFromEnv();
         void createFromFile(const char * filename);
         
@@ -108,6 +111,7 @@ OCIO_NAMESPACE_ENTER
         std::string m_resourcePath;
         std::string m_resolvedResourcePath;
         
+        std::string m_description;
         
         ColorSpacePtrVec m_colorspaces;
         RoleVec m_roleVec;

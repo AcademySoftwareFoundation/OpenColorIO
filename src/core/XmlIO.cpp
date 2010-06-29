@@ -456,9 +456,13 @@ OCIO_NAMESPACE_ENTER
                 ColorSpaceRcPtr cs = CreateColorSpaceFromElement( pElem );
                 addColorSpace( cs );
             }
+            else if(elementtype == "description")
+            {
+                setDescription(pElem->GetText());
+            }
             else
             {
-                // TODO: unknown element type
+                std::cerr << "[OCS WARNING]: Unknwon element type " << elementtype << std::endl;
             }
             
             pElem=pElem->NextSiblingElement();
@@ -479,6 +483,17 @@ OCIO_NAMESPACE_ENTER
         {
             element->SetAttribute("version", "1");
             element->SetAttribute("resourcepath", getResourcePath());
+            
+            const char * description = getDescription();
+            if(strlen(description) > 0)
+            {
+                TiXmlElement * descElement = new TiXmlElement( "description" );
+                element->LinkEndChild( descElement );
+                
+                TiXmlText * textElement = new TiXmlText( description );
+                descElement->LinkEndChild( textElement );
+            }
+            
             
             for(int i = 0; i < getNumRoles(); ++i)
             {
