@@ -49,7 +49,7 @@ OCIO_NAMESPACE_ENTER
         FileTransformRcPtr CreateFileTransform(const TiXmlElement * element)
         {
             if(!element)
-                throw OCIOException("CreateFileTransform received null XmlElement.");
+                throw Exception("CreateFileTransform received null XmlElement.");
             
             if(std::string(element->Value()) != "file")
             {
@@ -57,7 +57,7 @@ OCIO_NAMESPACE_ENTER
                 os << "HandleElement passed incorrect element type '";
                 os << element->Value() << "'. ";
                 os << "Expected 'file'.";
-                throw OCIOException(os.str().c_str());
+                throw Exception(os.str().c_str());
             }
             
             FileTransformRcPtr t = FileTransform::Create();
@@ -127,7 +127,7 @@ OCIO_NAMESPACE_ENTER
         GroupTransformRcPtr CreateGroupTransform(const TiXmlElement * element)
         {
             if(!element)
-                throw OCIOException("CreateGroupTransform received null XmlElement.");
+                throw Exception("CreateGroupTransform received null XmlElement.");
             
             if(std::string(element->Value()) != "group")
             {
@@ -135,7 +135,7 @@ OCIO_NAMESPACE_ENTER
                 os << "HandleElement passed incorrect element type '";
                 os << element->Value() << "'. ";
                 os << "Expected 'group'.";
-                throw OCIOException(os.str().c_str());
+                throw Exception(os.str().c_str());
             }
             
             GroupTransformRcPtr t = GroupTransform::Create();
@@ -175,7 +175,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "CreateGroupTransform passed unknown element type '";
                     os << elementtype << "'.";
-                    throw OCIOException(os.str().c_str());
+                    throw Exception(os.str().c_str());
                 }
                 
                 pElem = pElem->NextSiblingElement();
@@ -220,7 +220,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    throw OCIOException("Cannot serialize Transform type to XML");
+                    throw Exception("Cannot serialize Transform type to XML");
                 }
             }
             
@@ -237,7 +237,7 @@ OCIO_NAMESPACE_ENTER
         ColorSpaceRcPtr CreateColorSpaceFromElement(const TiXmlElement * element)
         {
             if(std::string(element->Value()) != "colorspace")
-                throw OCIOException("HandleElement GroupTransform passed incorrect element type.");
+                throw Exception("HandleElement GroupTransform passed incorrect element type.");
             
             ColorSpaceRcPtr cs = ColorSpace::Create();
             
@@ -295,7 +295,7 @@ OCIO_NAMESPACE_ENTER
                                 std::ostringstream os;
                                 os << "CreateColorSpaceFromElement passed incorrect element type '";
                                 os << childelementtype << "'. 'group' expected.";
-                                throw OCIOException(os.str().c_str());
+                                throw Exception(os.str().c_str());
                             }
                             
                             gchildElem=gchildElem->NextSiblingElement();
@@ -382,7 +382,7 @@ OCIO_NAMESPACE_ENTER
                 os << " (line " << doc.ErrorRow();
                 os << ", col " << doc.ErrorCol() << ")";
             }
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         const TiXmlElement* rootElement = doc.RootElement();
@@ -391,7 +391,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error loading '" << filename;
             os << "'. Please confirm file is 'ocioconfig' format.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         int version = -1;
@@ -409,7 +409,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "Error parsing ocio configuration file, '" << filename;
                         os << "'. Could not parse integer 'version' tag.";
-                        throw OCIOException(os.str().c_str());
+                        throw Exception(os.str().c_str());
                     }
                 }
                 else if(attrName == "resourcepath")
@@ -436,14 +436,14 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Config does not specify a version tag. ";
             os << "Please confirm ocio file is of the expect format.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         if(version != 1)
         {
             std::ostringstream os;
             os << "Config is format version '" << version << "',";
             os << " but this library only supports version 1.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         // Traverse children
@@ -519,7 +519,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream error;
             error << "Error writing xml. ";
             error << e.what();
-            throw OCIOException(error.str().c_str());
+            throw Exception(error.str().c_str());
         }
     }
 }

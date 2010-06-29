@@ -60,7 +60,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Unknown transform type for Op Creation.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
     }
     

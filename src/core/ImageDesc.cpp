@@ -130,7 +130,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error: Image dimensions must be positive for both x,y. '";
             os << width << "x" << height << "' is not allowed.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         if(numChannels < 3)
@@ -138,7 +138,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error: Image numChannels must be three (or more) (rgb+). '";
             os << numChannels << "' is not allowed.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         if(m_chanStrideBytes == AutoStride)
@@ -264,14 +264,14 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error: Image dimensions must be positive for both x,y. '";
             os << width << "x" << height << "' is not allowed.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         if(rData == 0x0 || gData == 0x0 || bData == 0x0)
         {
             std::ostringstream os;
             os << "Error: Valid ptrs must be passed in for all 3 image channels.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         if(m_yStrideBytes == AutoStride)

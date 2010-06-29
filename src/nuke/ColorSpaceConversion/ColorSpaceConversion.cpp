@@ -68,7 +68,7 @@ ColorSpaceConversion::ColorSpaceConversion(Node *n) : DD::Image::PixelIop(n)
             }
         }
     }
-    catch (OCIO::OCIOException& e)
+    catch (OCIO::Exception& e)
     {
         error(e.what());
     }
@@ -142,7 +142,7 @@ void ColorSpaceConversion::_validate(bool for_real)
         OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName( outputName );
         processor = config->getProcessor(csSrc, csDst);
     }
-    catch(OCIO::OCIOException &e)
+    catch(OCIO::Exception &e)
     {
         error(e.what());
         return;
@@ -236,7 +236,7 @@ void ColorSpaceConversion::pixel_engine(
             OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
             processor->apply(img);
         }
-        catch(OCIO::OCIOException &e)
+        catch(OCIO::Exception &e)
         {
             error(e.what());
         }

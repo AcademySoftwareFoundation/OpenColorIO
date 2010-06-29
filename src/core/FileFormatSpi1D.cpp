@@ -105,37 +105,37 @@ OCIO_NAMESPACE_ENTER
                         if(pystring::startswith(headerLine, "Version"))
                         {
                             if(sscanf(lineBuffer, "Version %d", &version)!=1)
-                                throw OCIOException("Invalid 'Version' Tag");
+                                throw Exception("Invalid 'Version' Tag");
                         }
                         else if(pystring::startswith(headerLine, "From"))
                         {
                             if(sscanf(lineBuffer, "From %f %f", &from_min, &from_max)!=2)
-                                throw OCIOException("Invalid 'From' Tag");
+                                throw Exception("Invalid 'From' Tag");
                         }
                         else if(pystring::startswith(headerLine, "Components"))
                         {
                             if(sscanf(lineBuffer, "Components %d", &components)!=1)
-                                throw OCIOException("Invalid 'Components' Tag");
+                                throw Exception("Invalid 'Components' Tag");
                         }
                         else if(pystring::startswith(headerLine, "Length"))
                         {
                             if(sscanf(lineBuffer, "Length %d", &lut_size)!=1)
-                                throw OCIOException("Invalid 'Length' Tag");
+                                throw Exception("Invalid 'Length' Tag");
                         }
                     }
                     while (istream.good() && !pystring::startswith(headerLine,"{"));
                 }
                 
                 if(version == -1)
-                    throw OCIOException("Could not find 'Version' Tag");
+                    throw Exception("Could not find 'Version' Tag");
                 if(version != 1)
-                    throw OCIOException("Only format version 1 supported.");
+                    throw Exception("Only format version 1 supported.");
                 if (lut_size == -1)
-                    throw OCIOException("Could not find 'Length' Tag");
+                    throw Exception("Could not find 'Length' Tag");
                 if (components == -1)
-                    throw OCIOException("Could not find 'Components' Tag");
+                    throw Exception("Could not find 'Components' Tag");
                 if (components<0 || components>3)
-                    throw OCIOException("Components must be [1,2,3]");
+                    throw Exception("Components must be [1,2,3]");
                 
                 
                 
@@ -186,7 +186,7 @@ OCIO_NAMESPACE_ENTER
                     }
                     
                     if(lineCount!=lut_size)
-                        throw OCIOException("Not enough entries found.");
+                        throw Exception("Not enough entries found.");
                 }
                 
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
@@ -205,7 +205,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Cannot build Spi1D Op. Invalid cache type.";
-                    throw OCIOException(os.str().c_str());
+                    throw Exception(os.str().c_str());
                 }
                 
                 TransformDirection newDir = CombineTransformDirections(dir,

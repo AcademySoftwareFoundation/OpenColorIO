@@ -98,7 +98,7 @@ OCIO_NAMESPACE_ENTER
                     os << "Error parsing .spimtx file. ";
                     os << "File must contain 12 float entries. ";
                     os << lineParts.size() << " found.";
-                    throw OCIOException(os.str().c_str());
+                    throw Exception(os.str().c_str());
                 }
                 
                 // Turn the parts into floats
@@ -108,7 +108,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Error parsing .spimtx file. ";
                     os << "File must contain all float entries. ";
-                    throw OCIOException(os.str().c_str());
+                    throw Exception(os.str().c_str());
                 }
                 
                 
@@ -154,7 +154,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Cannot build SpiMtx Ops. Invalid cache type.";
-                    throw OCIOException(os.str().c_str());
+                    throw Exception(os.str().c_str());
                 }
                 
                 TransformDirection newDir = CombineTransformDirections(dir,

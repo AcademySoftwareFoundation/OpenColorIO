@@ -100,7 +100,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyColorSpace(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::ColorSpace.");
+            throw Exception("PyObject must be an OCIO::ColorSpace.");
         }
         
         PyOCIO_ColorSpace * pycolorSpace = reinterpret_cast<PyOCIO_ColorSpace *> (pyobject);
@@ -111,7 +111,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyColorSpace(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::ColorSpace.");
+            throw Exception("PyObject must be an OCIO::ColorSpace.");
         }
         
         PyOCIO_ColorSpace * pycolorspace = reinterpret_cast<PyOCIO_ColorSpace *> (pyobject);
@@ -125,14 +125,14 @@ OCIO_NAMESPACE_ENTER
             return *pycolorspace->cppobj;
         }
         
-        throw OCIOException("PyObject must be a valid OCIO::ColorSpace.");
+        throw Exception("PyObject must be a valid OCIO::ColorSpace.");
     }
     
     ColorSpaceRcPtr GetEditableColorSpace(PyObject * pyobject)
     {
         if(!IsPyColorSpace(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::ColorSpace.");
+            throw Exception("PyObject must be an OCIO::ColorSpace.");
         }
         
         PyOCIO_ColorSpace * pycolorspace = reinterpret_cast<PyOCIO_ColorSpace *> (pyobject);
@@ -141,7 +141,7 @@ OCIO_NAMESPACE_ENTER
             return *pycolorspace->cppobj;
         }
         
-        throw OCIOException("PyObject must be an editable OCIO::ColorSpace.");
+        throw Exception("PyObject must be an editable OCIO::ColorSpace.");
     }
     
     

@@ -62,7 +62,7 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            throw OCIOException("Unspecified shader language.");
+            throw Exception("Unspecified shader language.");
         }
     }
     
@@ -92,7 +92,7 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            throw OCIOException("Unspecified shader language.");
+            throw Exception("Unspecified shader language.");
         }
     }
     
@@ -122,7 +122,7 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            throw OCIOException("Unspecified shader language.");
+            throw Exception("Unspecified shader language.");
         }
     }
     
@@ -161,7 +161,7 @@ OCIO_NAMESPACE_ENTER
         */
         else
         {
-            throw OCIOException("Unspecified shader language.");
+            throw Exception("Unspecified shader language.");
         }
     
     }

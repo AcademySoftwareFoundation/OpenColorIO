@@ -82,7 +82,7 @@ try
     OCIO::PackedImageDesc img(imageData, w, h, 4);
     processor->apply(img);
 }
-catch(OCIO::OCIOException& exception)
+catch(OCIO::Exception & exception)
 {
     std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
 }
@@ -157,7 +157,7 @@ OCIO_NAMESPACE_ENTER
     class ImageDesc;
     class GpuShaderDesc;
     
-    class OCIOException;
+    class Exception;
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -779,13 +779,13 @@ OCIO_NAMESPACE_ENTER
     //  Warning: ALL fcns on the Config class can potentially throw
     //  this exception.
     
-    class OCIOException : public std::exception
+    class Exception : public std::exception
     {
     public:
-        OCIOException(const char *) throw();
-        OCIOException(const OCIOException&) throw();
-        OCIOException& operator=(const OCIOException&) throw();
-        virtual ~OCIOException() throw();
+        Exception(const char *) throw();
+        Exception(const Exception&) throw();
+        Exception& operator=(const Exception&) throw();
+        virtual ~Exception() throw();
         virtual const char* what() const throw();
         
     private:

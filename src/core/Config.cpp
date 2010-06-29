@@ -361,7 +361,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "'OCIO' environment variable not set. ";
             os << "Please specify a valid OpenColorIO (.ocio) configuration file.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
     }
     
@@ -420,7 +420,7 @@ OCIO_NAMESPACE_ENTER
     {
         std::string name = cs->getName();
         if(name.empty())
-            throw OCIOException("Cannot addColorSpace with an empty name.");
+            throw Exception("Cannot addColorSpace with an empty name.");
         
         // Check to see if the colorspace already exists at a known index.
         int index = getIndexForColorSpace( cs->getName() );
@@ -449,7 +449,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Invalid ColorSpace index " << index << ".";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         return m_colorspaces[index];
@@ -461,7 +461,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Invalid ColorSpace index " << index << ".";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         return m_colorspaces[index];
@@ -475,7 +475,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Cannot find ColorSpace named '";
             os << name << "'.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         return m_colorspaces[index];
@@ -489,7 +489,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Cannot find ColorSpace named '";
             os << name << "'.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         return m_colorspaces[index];
@@ -540,7 +540,7 @@ OCIO_NAMESPACE_ENTER
         os << "The specified role ";
         os  << role ;
         os << " has not been defined.";
-        throw OCIOException(os.str().c_str());
+        throw Exception(os.str().c_str());
     }
     
     void Config::Impl::setColorSpaceForRole(const char * role, const char * csname)
@@ -586,7 +586,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Invalid role index " << index << ".";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
         
         return m_roleVec[index].first.c_str();

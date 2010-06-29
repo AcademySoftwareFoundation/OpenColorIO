@@ -99,7 +99,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyGroupTransform(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::GroupTransform.");
+            throw Exception("PyObject must be an OCIO::GroupTransform.");
         }
         
         PyOCIO_GroupTransform * pytransform = reinterpret_cast<PyOCIO_GroupTransform *> (pyobject);
@@ -110,7 +110,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyGroupTransform(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::GroupTransform.");
+            throw Exception("PyObject must be an OCIO::GroupTransform.");
         }
         
         PyOCIO_GroupTransform * pytransform = reinterpret_cast<PyOCIO_GroupTransform *> (pyobject);
@@ -124,14 +124,14 @@ OCIO_NAMESPACE_ENTER
             return *pytransform->cppobj;
         }
         
-        throw OCIOException("PyObject must be a valid OCIO::GroupTransform.");
+        throw Exception("PyObject must be a valid OCIO::GroupTransform.");
     }
     
     GroupTransformRcPtr GetEditableGroupTransform(PyObject * pyobject)
     {
         if(!IsPyGroupTransform(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::GroupTransform.");
+            throw Exception("PyObject must be an OCIO::GroupTransform.");
         }
         
         PyOCIO_GroupTransform * pytransform = reinterpret_cast<PyOCIO_GroupTransform *> (pyobject);
@@ -140,7 +140,7 @@ OCIO_NAMESPACE_ENTER
             return *pytransform->cppobj;
         }
         
-        throw OCIOException("PyObject must be an editable OCIO::GroupTransform.");
+        throw Exception("PyObject must be an editable OCIO::GroupTransform.");
     }
     
     
@@ -428,7 +428,7 @@ OCIO_NAMESPACE_ENTER
                 
                 if(!IsPyTransform(pytransform))
                 {
-                    throw OCIOException("GroupTransform.push_back requires a transform as the first arg.");
+                    throw Exception("GroupTransform.push_back requires a transform as the first arg.");
                 }
                 
                 transform->push_back( GetConstTransform(pytransform, true) );

@@ -130,7 +130,7 @@ OCIO_NAMESPACE_ENTER
                             os << "A lut entry is specified (";
                             os << rIndex << " " << gIndex << " " << bIndex;
                             os << " that falls outside of the cube.";
-                            throw OCIOException(os.str().c_str());
+                            throw Exception(os.str().c_str());
                         }
                         
                         lut3d->lut[index+0] = redValue;
@@ -143,7 +143,7 @@ OCIO_NAMESPACE_ENTER
                 
                 // Have we fully populated the table?
                 if (entriesRemaining>0) 
-                    throw OCIOException("Not enough entries found.");
+                    throw Exception("Not enough entries found.");
                 
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
                 cachedFile->lut = lut3d;
@@ -161,7 +161,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Cannot build Spi3D Op. Invalid cache type.";
-                    throw OCIOException(os.str().c_str());
+                    throw Exception(os.str().c_str());
                 }
                 
                 TransformDirection newDir = CombineTransformDirections(dir,

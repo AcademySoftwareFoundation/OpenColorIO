@@ -331,15 +331,15 @@ OCIO_NAMESPACE_ENTER
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw OCIOException("Cannot apply lut1d op, unspecified transform direction.");
+                throw Exception("Cannot apply lut1d op, unspecified transform direction.");
             }
             if(m_interpolation == INTERP_UNKNOWN)
             {
-                throw OCIOException("Cannot apply lut1d op, unspecified interpolation.");
+                throw Exception("Cannot apply lut1d op, unspecified interpolation.");
             }
             if(m_lut->luts[0].empty() || m_lut->luts[1].empty() || m_lut->luts[2].empty())
             {
-                throw OCIOException("Cannot apply lut1d op, no lut data provided.");
+                throw Exception("Cannot apply lut1d op, no lut data provided.");
             }
         }
         

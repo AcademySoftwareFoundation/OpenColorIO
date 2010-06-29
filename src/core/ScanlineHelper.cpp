@@ -80,7 +80,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Cannot process scanline request,";
                 os << " img has invalid size: ";
                 os << img.getWidth() << " x " << img.getHeight();
-                throw OCIOException(os.str().c_str()); 
+                throw Exception(os.str().c_str()); 
             }
             
             if(IsPackedRGBA(img))

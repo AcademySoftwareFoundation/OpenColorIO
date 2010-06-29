@@ -104,7 +104,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyConfig(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::Config.");
+            throw Exception("PyObject must be an OCIO::Config.");
         }
         
         PyOCIO_Config * pyconfig = reinterpret_cast<PyOCIO_Config *> (pyobject);
@@ -115,7 +115,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyConfig(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::Config.");
+            throw Exception("PyObject must be an OCIO::Config.");
         }
         
         PyOCIO_Config * pyconfig = reinterpret_cast<PyOCIO_Config *> (pyobject);
@@ -129,14 +129,14 @@ OCIO_NAMESPACE_ENTER
             return *pyconfig->cppobj;
         }
         
-        throw OCIOException("PyObject must be a valid OCIO::Config.");
+        throw Exception("PyObject must be a valid OCIO::Config.");
     }
     
     ConfigRcPtr GetEditableConfig(PyObject * pyobject)
     {
         if(!IsPyConfig(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::Config.");
+            throw Exception("PyObject must be an OCIO::Config.");
         }
         
         PyOCIO_Config * pyconfig = reinterpret_cast<PyOCIO_Config *> (pyobject);
@@ -145,7 +145,7 @@ OCIO_NAMESPACE_ENTER
             return *pyconfig->cppobj;
         }
         
-        throw OCIOException("PyObject must be an editable OCIO::Config.");
+        throw Exception("PyObject must be an editable OCIO::Config.");
     }
     
     ///////////////////////////////////////////////////////////////////////////

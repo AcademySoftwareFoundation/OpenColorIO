@@ -329,7 +329,7 @@ OCIO_NAMESPACE_ENTER
         else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
             return m_fromRefTransform;
         
-        throw OCIOException("Unspecified ColorSpaceDirection");
+        throw Exception("Unspecified ColorSpaceDirection");
     }
     
     GroupTransformRcPtr ColorSpace::Impl::getEditableTransform(ColorSpaceDirection dir)
@@ -339,7 +339,7 @@ OCIO_NAMESPACE_ENTER
         else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
             return m_fromRefTransform;
         
-        throw OCIOException("Unspecified ColorSpaceDirection");
+        throw Exception("Unspecified ColorSpaceDirection");
     }
     
     void ColorSpace::Impl::setTransform(const ConstGroupTransformRcPtr & groupTransform,
@@ -368,7 +368,7 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            throw OCIOException("Unspecified ColorSpaceDirection");
+            throw Exception("Unspecified ColorSpaceDirection");
         }
         
         *majorTransform = DynamicPtrCast<GroupTransform>(groupTransform->createEditableCopy());
@@ -388,7 +388,7 @@ OCIO_NAMESPACE_ENTER
         else if(COLORSPACE_DIR_FROM_REFERENCE)
             return m_fromRefSpecified;
         
-        throw OCIOException("Unspecified ColorSpaceDirection");
+        throw Exception("Unspecified ColorSpaceDirection");
     }
 }
 OCIO_NAMESPACE_EXIT

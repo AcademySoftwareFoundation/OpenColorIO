@@ -81,7 +81,7 @@ OCIO_NAMESPACE_ENTER
             scanlineHelper.prepRGBAScanline(&rgbaBuffer, &numPixels);
             if(numPixels == 0) break;
             if(!rgbaBuffer)
-                throw OCIOException("Cannot apply transform; null image.");
+                throw Exception("Cannot apply transform; null image.");
             
             for(OpRcPtrVec::size_type i=0, size = m_opVec.size(); i<size; ++i)
             {
@@ -152,7 +152,7 @@ OCIO_NAMESPACE_ENTER
             {
                 *shader << "vec4 " << fcnName << "(in vec4 inPixel, \n";
             }
-            else throw OCIOException("Unspecified shader language.");
+            else throw Exception("Unspecified shader language.");
             
             *shader << "    const uniform sampler3D " << lut3dName << ") \n";
             *shader << "{" << "\n";
@@ -165,7 +165,7 @@ OCIO_NAMESPACE_ENTER
             {
                 *shader << "    vec4 " << pixelName << " = inPixel; \n";
             }
-            else throw OCIOException("Unspecified shader language.");
+            else throw Exception("Unspecified shader language.");
         }
         
         

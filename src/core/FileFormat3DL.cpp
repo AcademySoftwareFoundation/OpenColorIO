@@ -114,7 +114,7 @@ OCIO_NAMESPACE_ENTER
                 os << numEntries << " element(s) does not correspond to a ";
                 os << "unform cube edge length. (nearest edge length is ";
                 os << dim << ").";
-                throw OCIOException(os.str().c_str());
+                throw Exception(os.str().c_str());
             }
             
             return dim;
@@ -197,7 +197,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Error parsing .3dl file. ";
                     os << "The contents do not contain any lut entries.";
-                    throw OCIOException(os.str().c_str());
+                    throw Exception(os.str().c_str());
                 }
                 
                 int lutEdgeLen = Get3DLutEdgeLenFromNumEntries((int)rawLutData.size());
@@ -214,7 +214,7 @@ OCIO_NAMESPACE_ENTER
                     os << "The maximum lut value, " << maxLutValue;
                     os << ", does not correspond to any likely bit depth. ";
                     os << "Please confirm source file is valid.";
-                    throw OCIOException(os.str().c_str());
+                    throw Exception(os.str().c_str());
                 }
                 
                 int bitDepthMaxVal = GetMaxValueFromIntegerBitDepth(likelyBitDepth);
@@ -246,7 +246,7 @@ OCIO_NAMESPACE_ENTER
                                 os << "A lut entry is specified (";
                                 os << rIndex << " " << gIndex << " " << bIndex;
                                 os << " that falls outside of the cube.";
-                                throw OCIOException(os.str().c_str());
+                                throw Exception(os.str().c_str());
                             }
                             
                             lut3d->lut[glLutIndex+0] = (float) rawLutData[autoDeskLutIndex+0] * scale;
@@ -272,7 +272,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Cannot build 3dl Op. Invalid cache type.";
-                    throw OCIOException(os.str().c_str());
+                    throw Exception(os.str().c_str());
                 }
                 
                 TransformDirection newDir = CombineTransformDirections(dir,

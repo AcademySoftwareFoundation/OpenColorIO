@@ -53,7 +53,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Unknown transform type for BuildConstPyTransform.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
     }
     
@@ -73,7 +73,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Unknown transform type for BuildEditablePyTransform.";
-            throw OCIOException(os.str().c_str());
+            throw Exception(os.str().c_str());
         }
     }
     
@@ -95,7 +95,7 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            throw OCIOException("PyObject must be a known OCIO::Transform type.");
+            throw Exception("PyObject must be a known OCIO::Transform type.");
         }
     }
 
@@ -207,7 +207,7 @@ OCIO_NAMESPACE_ENTER
             // from inside an exception handler catch block!
             throw;
         }
-        catch (OCIOException & e)
+        catch (Exception & e)
         {
             PyErr_SetString(PyExc_RuntimeError, e.what());
         }

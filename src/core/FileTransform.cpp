@@ -282,7 +282,7 @@ OCIO_NAMESPACE_ENTER
                 os << filepath <<"' could not be opened. ";
                 os << "Please confirm the file exists with appropriate read";
                 os << "permissions.";
-                throw OCIOException(os.str().c_str());
+                throw Exception(os.str().c_str());
             }
         
             std::string extension = GetFileExtension(filepath);
@@ -318,7 +318,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "The specified transform file '";
                 os << filepath <<"' is not any known file format.";
-                throw OCIOException(os.str().c_str());
+                throw Exception(os.str().c_str());
             }
             
             if(!cachedFile)
@@ -327,7 +327,7 @@ OCIO_NAMESPACE_ENTER
                 os << "The specified transform file '";
                 os << filepath <<"' was not able to be successfully loaded. ";
                 os << errorText;
-                throw OCIOException(os.str().c_str());
+                throw Exception(os.str().c_str());
             }
             
             // Add the result to our cache, return it.

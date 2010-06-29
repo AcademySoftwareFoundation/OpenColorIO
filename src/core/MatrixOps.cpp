@@ -105,7 +105,7 @@ OCIO_NAMESPACE_ENTER
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw OCIOException("Cannot apply MatrixOffsetOp op, unspecified transform direction.");
+                throw Exception("Cannot apply MatrixOffsetOp op, unspecified transform direction.");
             }
             
             memcpy(m_m44, m44, 16*sizeof(float));
@@ -157,7 +157,7 @@ OCIO_NAMESPACE_ENTER
                         os << "Matrix inverse does not exist for m44 (";
                         for(int i=0; i<16; ++i) os << m_m44[i] << " ";
                         os << ").";
-                        throw OCIOException(os.str().c_str());
+                        throw Exception(os.str().c_str());
                     }
                     
                     ApplyMatrixNoAlpha(rgbaBuffer, numPixels, invMtx44);

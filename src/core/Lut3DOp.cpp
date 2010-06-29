@@ -208,7 +208,7 @@ OCIO_NAMESPACE_ENTER
         if(!img) return;
         if(numChannels < 3)
         {
-            throw OCIOException("Cannot generate idenitity 3d lut with less than 3 channels.");
+            throw Exception("Cannot generate idenitity 3d lut with less than 3 channels.");
         }
         
         float c = 1.0f / ((float)edgeLen - 1.0f);
@@ -261,30 +261,30 @@ OCIO_NAMESPACE_ENTER
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw OCIOException("Cannot apply Lut3DOp, unspecified transform direction.");
+                throw Exception("Cannot apply Lut3DOp, unspecified transform direction.");
             }
             if(m_interpolation == INTERP_UNKNOWN)
             {
-                throw OCIOException("Cannot apply Lut3DOp, unspecified interpolation.");
+                throw Exception("Cannot apply Lut3DOp, unspecified interpolation.");
             }
             
             for(int i=0; i<3; ++i)
             {
                 if(m_lut->size[i] == 0)
                 {
-                    throw OCIOException("Cannot apply Lut3DOp, lut object is empty.");
+                    throw Exception("Cannot apply Lut3DOp, lut object is empty.");
                 }
                 // TODO if from_min[i] == from_max[i]
             }
             
             if(m_lut->size[0]*m_lut->size[1]*m_lut->size[2] * 3 != (int)m_lut->lut.size())
             {
-                throw OCIOException("Cannot apply Lut3DOp, specified size does not match data.");
+                throw Exception("Cannot apply Lut3DOp, specified size does not match data.");
             }
             
             if(m_direction != TRANSFORM_DIR_FORWARD)
             {
-                throw OCIOException("3D Luts can only be applied in the forward direction.");
+                throw Exception("3D Luts can only be applied in the forward direction.");
             }
         }
         

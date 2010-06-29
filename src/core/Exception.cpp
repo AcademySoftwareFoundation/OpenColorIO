@@ -31,29 +31,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
   
-    OCIOException::OCIOException(const char * msg) throw()
+    Exception::Exception(const char * msg) throw()
     : msg_(msg)
     {}
 
-    OCIOException::OCIOException(const OCIOException& e) throw()
+    Exception::Exception(const Exception& e) throw()
     : std::exception(),
       msg_(e.msg_)
     {}
 
     //*** operator=
-    OCIOException& OCIOException::operator=(const OCIOException& e) throw()
+    Exception& Exception::operator=(const Exception& e) throw()
     {
         msg_ = e.msg_;
         return *this;
     }
 
-    //*** ~OCIOException
-    OCIOException::~OCIOException() throw()
+    //*** ~Exception
+    Exception::~Exception() throw()
     {
     }
 
     //*** what
-    const char* OCIOException::what() const throw()
+    const char* Exception::what() const throw()
     {
         return msg_.c_str();
     }

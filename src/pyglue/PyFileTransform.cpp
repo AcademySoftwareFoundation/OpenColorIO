@@ -99,7 +99,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyFileTransform(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::FileTransform.");
+            throw Exception("PyObject must be an OCIO::FileTransform.");
         }
         
         PyOCIO_FileTransform * pytransform = reinterpret_cast<PyOCIO_FileTransform *> (pyobject);
@@ -110,7 +110,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyFileTransform(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::FileTransform.");
+            throw Exception("PyObject must be an OCIO::FileTransform.");
         }
         
         PyOCIO_FileTransform * pytransform = reinterpret_cast<PyOCIO_FileTransform *> (pyobject);
@@ -124,14 +124,14 @@ OCIO_NAMESPACE_ENTER
             return *pytransform->cppobj;
         }
         
-        throw OCIOException("PyObject must be a valid OCIO::FileTransform.");
+        throw Exception("PyObject must be a valid OCIO::FileTransform.");
     }
     
     FileTransformRcPtr GetEditableFileTransform(PyObject * pyobject)
     {
         if(!IsPyFileTransform(pyobject))
         {
-            throw OCIOException("PyObject must be an OCIO::FileTransform.");
+            throw Exception("PyObject must be an OCIO::FileTransform.");
         }
         
         PyOCIO_FileTransform * pytransform = reinterpret_cast<PyOCIO_FileTransform *> (pyobject);
@@ -140,7 +140,7 @@ OCIO_NAMESPACE_ENTER
             return *pytransform->cppobj;
         }
         
-        throw OCIOException("PyObject must be an editable OCIO::FileTransform.");
+        throw Exception("PyObject must be an editable OCIO::FileTransform.");
     }
     
     
