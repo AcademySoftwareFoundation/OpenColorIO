@@ -13,7 +13,7 @@ if len(sys.argv) < 3:
     
     Convert a proprietary SPI color configuration format (v7 xml) to an OCIO config.
     
-    env PYTHONPATH=/net/homedirs/jeremys/git/ocio/build/ ./src/testbed/spi_to_ocio.py /shots/grn/home/lib/lut/colorspaces.xml /mcp/config
+    env PYTHONPATH=/net/homedirs/jeremys/git/ocio/build/ ./src/testbed/spi_to_ocio.py /net/soft_scratch/users/color/colorspace/OCS/vfx/v1/vfx.OCS.xml /net/homedirs/jeremys/git/ocio-configs/spi-vfx
     
     """
     sys.exit(1)
@@ -54,6 +54,9 @@ def BuildConfigFromXMLElement(element, lutDir):
         if child.getElementType() == 'colorspace':
             colorspace = BuildColorspaceFromXMLElement(child, lutDir)
             config.addColorSpace(colorspace)
+        elif child.getElementType() == 'desc':
+            description = child.getText(0)
+            config.setDescription(description)
         else:
             print 'TODO: handle config child',child.getElementType()
     
@@ -215,6 +218,8 @@ def BuildColorspaceFromXMLElement(element, lutDir):
 
 INPUT_CONFIG = sys.argv[1]
 OUTPUT_DIR = sys.argv[2]
+
+
 LUT_DIR = os.path.join(sys.argv[2] + '/luts')
 
 try: os.makedirs(OUTPUT_DIR)
@@ -227,10 +232,30 @@ element = p.parse(INPUT_CONFIG)
 config = BuildConfigFromXMLElement( element, LUT_DIR)
 config.setResourcePath('luts')
 
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'config.ocio')
+OUTPUT_OCS_FILE = os.path.join(OUTPUT_DIR, 'config.ocio')
 print ''
-print 'Writing',OUTPUT_FILE
+print 'Writing',OUTPUT_OCS_FILE
 
-f = file(OUTPUT_FILE,'w')
+f = file(OUTPUT_OCS_FILE,'w')
 f.write(config.getXML())
+f.close()
+
+
+
+
+
+BIN_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
+ocio_info_cmd = os.path.join(BIN_DIR,'ocio_info.py')
+
+OUTPUT_README_FILE = os.path.join(OUTPUT_DIR, 'README')
+print ''
+print 'Writing',OUTPUT_README_FILE
+
+process = subprocess.Popen([ocio_info_cmd,OUTPUT_OCS_FILE,], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+returncode = process.wait()
+if returncode:
+    raise TypeError("Could not run %s %s" % (ocio_info_cmd,OUTPUT_OCS_FILE))
+
+f = file(OUTPUT_README_FILE,'w')
+f.write(process.stdout.read())
 f.close()

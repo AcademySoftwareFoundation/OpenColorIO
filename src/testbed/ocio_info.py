@@ -3,7 +3,11 @@
 import sys, os
 import PyOpenColorIO as OCIO
 
-config = OCIO.GetCurrentConfig()
+if len(sys.argv) > 1:
+    fname = sys.argv[1]
+    config = OCIO.Config.CreateFromFile(fname)
+else:
+    config = OCIO.GetCurrentConfig()
 
 colorSpaces = config.getColorSpaces()
 
@@ -34,10 +38,12 @@ def format(text, indent=0, width=70):
         out.append(" "*indent + line)
     return "\n".join(out)
 
+print format(config.getDescription())
+print ''
 
 for colorSpace in colorSpaces:
     name = colorSpace.getName()
-    print name
+    print '    ',name
     
     desc = colorSpace.getDescription()
     if desc:
