@@ -48,3 +48,14 @@ build $ cmake -D NUKE:FILEPATH=/usr/local/nuke6.0.3/include/ -D PYTHON:FILEPATH=
 All together,
 mkdir build && cd build && cmake ../ && make OpenColorIOTest && ./OpenColorIOTest
 
+
+----------------------------------------------------------------------------------------------------------------------
+
+At SPI, an install is:
+mkdir -p build && cd build
+cmake -D CMAKE_BUILD_TYPE=RelWithDebInfo ../ && make
+mkdir -p /net/soft_scratch/users/color/ocio/0.5.9/spinux1/include
+cp ../export/OpenColorIO/OpenColorIO.h /net/soft_scratch/users/color/ocio/0.5.9/spinux/include/
+mkdir -p /net/soft_scratch/users/color/ocio/0.5.9/spinux1/lib
+cp *.so /net/soft_scratch/users/color/ocio/0.5.9/spinux1/lib
+cd ..
