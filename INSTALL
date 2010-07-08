@@ -17,7 +17,7 @@ You will now see the built .so files
 Set the environment variable pointing at which configuration to use
 > setenv OCIO /net/homedirs/jeremys/git/OpenColorIO/configs/spivfx/config.ocio
 
-Launch nuke, then load the plugin (this can also go in init.py)
+Launch nuke, then load the plugin (either interactively, or in init.py and menu.py respectively for the two commands):
 
 > nuke.load('/net/homedirs/jeremys/git/OpenColorIO/build/libNukeColorSpaceConversion.so')
 > nuke.menu('Nodes').addMenu('Color').addCommand('OCIOColorSpaceConversion', 'nuke.createNode("OCIOColorSpaceConversion")')

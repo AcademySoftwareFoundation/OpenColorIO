@@ -5,6 +5,10 @@ project(OpenColorIO)
 
 enable_language(CXX)
 
+if(APPLE)
+    set(CMAKE_OSX_ARCHITECTURES ppc;i386;ppc64;x86_64)
+endif()
+
 ###############################################################################
 #
 # CORE
@@ -91,6 +95,10 @@ if(EXISTS "${NUKE}/${NUKE_HEADER}")
         ${NUKE}
     )
     target_link_libraries(NukeColorSpaceConversion OpenColorIO)
+
+    if(APPLE)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
+    endif()
 
     add_custom_target(Nuke
         DEPENDS NukeColorSpaceConversion
