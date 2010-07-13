@@ -110,7 +110,23 @@ void ColorSpaceConversion::_validate(bool for_real)
 
     if(!hasColorSpaces)
     {
-        error("No ColorSpaces available for input and/or output.");
+        error("No colorspaces available for input and/or output.");
+        return;
+    }
+
+    if(inputColorSpaceIndex < 0 || inputColorSpaceIndex >= inputColorSpaceCstrNames.size() - 1)
+    {
+        std::ostringstream err;
+        err << "Input colorspace index (" << inputColorSpaceIndex << ") out of range.";
+        error(err.str().c_str());
+        return;
+    }
+
+    if(outputColorSpaceIndex < 0 || outputColorSpaceIndex >= outputColorSpaceCstrNames.size() - 1)
+    {
+        std::ostringstream err;
+        err << "Output colorspace index (" << outputColorSpaceIndex << ") out of range.";
+        error(err.str().c_str());
         return;
     }
 
