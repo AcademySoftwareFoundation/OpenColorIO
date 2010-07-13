@@ -114,7 +114,8 @@ void ColorSpaceConversion::_validate(bool for_real)
         return;
     }
 
-    if(inputColorSpaceIndex < 0 || inputColorSpaceIndex >= inputColorSpaceCstrNames.size() - 1)
+    int inputColorSpaceCount = static_cast<int>(inputColorSpaceCstrNames.size()) - 1;
+    if(inputColorSpaceIndex < 0 || inputColorSpaceIndex >= inputColorSpaceCount)
     {
         std::ostringstream err;
         err << "Input colorspace index (" << inputColorSpaceIndex << ") out of range.";
@@ -122,7 +123,8 @@ void ColorSpaceConversion::_validate(bool for_real)
         return;
     }
 
-    if(outputColorSpaceIndex < 0 || outputColorSpaceIndex >= outputColorSpaceCstrNames.size() - 1)
+    int outputColorSpaceCount = static_cast<int>(outputColorSpaceCstrNames.size()) - 1;
+    if(outputColorSpaceIndex < 0 || outputColorSpaceIndex >= outputColorSpaceCount)
     {
         std::ostringstream err;
         err << "Output colorspace index (" << outputColorSpaceIndex << ") out of range.";
