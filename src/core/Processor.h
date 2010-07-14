@@ -51,12 +51,7 @@ OCIO_NAMESPACE_ENTER
         virtual void applyRGBA(float * pixel) const;
         
         virtual const char * getGPUShaderText(const GpuShaderDesc & gpuDesc) const;
-        
-        /*
-        virtual int getGPULut3DEdgeLen() const;
-        virtual const char * getGPULut3DCacheID(const GpuShaderDesc & gpuDesc) const;
-        virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & gpuDesc) const;
-        */
+        virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
         
     private:
         LocalProcessor(const OpRcPtrVec& opVec);

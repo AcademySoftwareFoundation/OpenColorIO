@@ -235,8 +235,10 @@ OCIO_NAMESPACE_ENTER
                                     &lut3DOpEndIndex,
                                     m_opVec);
         
+        /*
         std::cerr << "lut3DOpStartIndex " << lut3DOpStartIndex << std::endl;
         std::cerr << "lut3DOpEndIndex " << lut3DOpEndIndex << std::endl;
+        */
         
         int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
         int lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
@@ -246,18 +248,19 @@ OCIO_NAMESPACE_ENTER
         if(lut3DOpStartIndex == -1 && lut3DOpEndIndex == -1)
         {
             // Lut3D is not needed. Blank it.
-            memset(lut3d, 0, sizeof(float) * 3 * lut3DNumPixels);
+            if(lut3d) memset(lut3d, 0, sizeof(float) * 3 * lut3DNumPixels);
             if(lut3dCacheID) *lut3dCacheID << "<NULL>";
             
             for(unsigned int i=0; i<m_opVec.size(); ++i)
             {
+               throw Exception("TODO: getGPUShader");
+               
                 // m_opVec[i]->getGPUShader(shader, lut3dCacheID, lut3d, shaderDesc);
             }
         }
         else
         {
             // Allocate rgba 3dlut image
-            
             float lut3DRGBABuffer[lut3DNumPixels*4];
             GenerateIdentityLut3D(lut3DRGBABuffer, lut3DEdgeLen, 4);
             
@@ -267,16 +270,24 @@ OCIO_NAMESPACE_ENTER
                 // transfer the image to the lut3D
                 if(i == lut3DOpStartIndex)
                 {
-                    std::cerr << "Transfer to lut3d" << std::endl;
+                    std::cerr << "Transfer to lut3d with better allocation." << std::endl;
                 }
                 
                 // Apply the op in the appropriate manner
                 if(i >= lut3DOpStartIndex && i <= lut3DOpEndIndex)
                 {
-                     m_opVec[i]->apply(lut3DRGBABuffer, lut3DNumPixels);
+                    if(lut3d)
+                    {
+                        m_opVec[i]->apply(lut3DRGBABuffer, lut3DNumPixels);
+                    }
+                    if(lut3dCacheID)
+                    {
+                        std::cerr << " TODO: update cacheID with opCacheID" << std::endl;
+                    }
                 }
                 else
                 {
+                    throw Exception("TODO: getGPUShader");
                     // m_opVec[i]->getGPUShader(shader, lut3dCacheID, lut3d, shaderDesc);
                 }
                 
@@ -315,29 +326,15 @@ OCIO_NAMESPACE_ENTER
         std::ostringstream shader;
         getGPUShader(&shader, 0, 0, shaderDesc);
         
-        // TODO: This is not multi-thread safe. Cache result? or mutex?
+        // TODO: This is not multi-thread safe. Cache result or mutex
         m_shaderText = shader.str();
         return m_shaderText.c_str();
     }
     
-    /*
-    int LocalProcessor::getGPULut3DEdgeLen() const
-    {
-        return 0;
-    }
-    
-    const char * LocalProcessor::getGPULut3DCacheID(const GpuProfileDesc & gpuDesc) const
-    {
-        return "";
-    }
-    */
-    
-    /*
     void LocalProcessor::getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const
     {
         if(!lut3d) return;
-        
+        getGPUShader(0, 0, lut3d, shaderDesc);
     }
-    */
 }
 OCIO_NAMESPACE_EXIT
