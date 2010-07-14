@@ -6,7 +6,8 @@ project(OpenColorIO)
 enable_language(CXX)
 
 if(APPLE)
-    set(CMAKE_OSX_ARCHITECTURES ppc;i386;ppc64;x86_64)
+#    set(CMAKE_OSX_ARCHITECTURES ppc;i386;ppc64;x86_64)
+    set(CMAKE_OSX_ARCHITECTURES i386;x86_64)
 endif()
 
 ###############################################################################
