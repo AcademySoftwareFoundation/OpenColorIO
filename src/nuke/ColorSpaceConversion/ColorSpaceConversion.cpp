@@ -12,6 +12,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <DDImage/Knobs.h>
 
 #include <string>
+#include <sstream>
 
 
 
