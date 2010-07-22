@@ -1,11 +1,12 @@
 Welcome!
 
-OpenColorIO (OCIO) enables color transforms and image display to be handled in a consistent manner across multiple graphics applications. Unlike other color management solutions, OCIO is geared towards motion-picture post production, with an emphasis on visual effects and animation color pipelines.
+OpenColorIO (OCIO) is a new open source project from Sony Imageworks.  Based on development started in 2003, OCIO enables color transforms and image display to be handled in a consistent manner across multiple graphics applications. Unlike other color management solutions, OCIO is geared towards motion-picture post production, with an emphasis on visual effects and animation color pipelines.
 
-All development discussion should be targeted to the google group: http://groups.google.com/group/ocio-dev
+This forum is geared towards those interested in contributing (or just keeping tabs on) the library's development process.
 
-Tagged .tgz releases will be posted to the downloads section on a semi-regular basis.
-http://code.google.com/p/opencolorio/
+Main Page: http://opencolorio.org
+Development Mailing-List: http://groups.google.com/group/ocio-dev
+Code repository: http://github.com/imageworks/OpenColorIO
 
 Note: The current code is undergoing active development - hence the 0.5 version number - so we do not yet recommend using it in active production.
 Our timeline is to get a stable, feature complete alpha version in September 2010, and to have polished library (1.0) ready for January 2011.
