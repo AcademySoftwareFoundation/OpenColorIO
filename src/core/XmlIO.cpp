@@ -396,7 +396,7 @@ OCIO_NAMESPACE_ENTER
         
         int version = -1;
         
-        bool lumaSet = false;
+        int lumaSet = 0;
         float lumacoef[3] = { 0.0f, 0.0f, 0.0f };
         
         // Read attributes
@@ -451,7 +451,7 @@ OCIO_NAMESPACE_ENTER
                     }
                     
                     lumacoef[channelindex] = static_cast<float>(dval);
-                    lumaSet = true;
+                    ++lumaSet;
                 }
                 else
                 {
@@ -502,6 +502,14 @@ OCIO_NAMESPACE_ENTER
         
         m_originalFileDir = path::dirname(filename);
         m_resolvedResourcePath = path::join(m_originalFileDir, m_resourcePath);
+        
+        if(lumaSet != 3)
+        {
+            std::ostringstream os;
+            os << "Error parsing ocio configuration file, '" << filename;
+            os << "'. Could not find required ocioconfig luma_{r,g,b} xml attributes.";
+            throw Exception(os.str().c_str());
+        }
         
         setDefaultLumaCoefs(lumacoef);
     }
