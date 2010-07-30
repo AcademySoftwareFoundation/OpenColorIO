@@ -396,6 +396,9 @@ OCIO_NAMESPACE_ENTER
         
         int version = -1;
         
+        bool lumaSet = false;
+        float lumacoef[3] = { 0.0f, 0.0f, 0.0f };
+        
         // Read attributes
         {
             const TiXmlAttribute* pAttrib=rootElement->FirstAttribute();
@@ -420,6 +423,35 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::string role = pystring::slice(attrName, (int)std::string("role_").size());
                     setColorSpaceForRole(role.c_str(), pAttrib->Value());
+                }
+                else if(pystring::startswith(attrName, "luma_"))
+                {
+                    std::string channel = pystring::slice(attrName, (int)std::string("luma_").size());
+                    
+                    int channelindex = -1;
+                    if(channel == "r") channelindex = 0;
+                    else if(channel == "g") channelindex = 1;
+                    else if(channel == "b") channelindex = 2;
+                    
+                    if(channelindex<0)
+                    {
+                        std::ostringstream os;
+                        os << "Error parsing ocio configuration file, '" << filename;
+                        os << "'. Unknown luma channel '" << channel << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    double dval;
+                    if(pAttrib->QueryDoubleValue(&dval) != TIXML_SUCCESS )
+                    {
+                        std::ostringstream os;
+                        os << "Error parsing ocio configuration file, '" << filename;
+                        os << "'. Bad luma value in channel '" << channelindex << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    lumacoef[channelindex] = static_cast<float>(dval);
+                    lumaSet = true;
                 }
                 else
                 {
@@ -470,6 +502,8 @@ OCIO_NAMESPACE_ENTER
         
         m_originalFileDir = path::dirname(filename);
         m_resolvedResourcePath = path::join(m_originalFileDir, m_resourcePath);
+        
+        setDefaultLumaCoefs(lumacoef);
     }
     
     void Config::Impl::writeXML(std::ostream& os) const
@@ -484,6 +518,16 @@ OCIO_NAMESPACE_ENTER
             element->SetAttribute("version", "1");
             element->SetAttribute("resourcepath", getResourcePath());
             
+            // Luma coefficients
+            {
+                float coef[3] = { 0.0f, 0.0f, 0.0f };
+                getDefaultLumaCoefs(coef);
+                
+                element->SetDoubleAttribute("luma_r", coef[0]);
+                element->SetDoubleAttribute("luma_g", coef[1]);
+                element->SetDoubleAttribute("luma_b", coef[2]);
+            }
+            
             const char * description = getDescription();
             if(strlen(description) > 0)
             {
@@ -493,7 +537,6 @@ OCIO_NAMESPACE_ENTER
                 TiXmlText * textElement = new TiXmlText( description );
                 descElement->LinkEndChild( textElement );
             }
-            
             
             for(int i = 0; i < getNumRoles(); ++i)
             {

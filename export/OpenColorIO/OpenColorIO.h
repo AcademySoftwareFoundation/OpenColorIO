@@ -34,8 +34,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 //
 // OpenColorIO
-// Version 0.5.9
+// Version 0.5.10
 //
+
+// TODO: rgb_to_hsv examples?
+// TODO: Add processor.getCacheID
 
 // TODO: get simple display transform working. can it be expressed as an op?
 
@@ -363,6 +366,22 @@ OCIO_NAMESPACE_ENTER
         const char * getRole(int index) const;
         
         
+        // Get the default coefficients for computing luma.
+        //
+        // There is no "1 size fits all" set of luma coefficients.
+        // (The values are typically different for each colorspace,
+        // and the application of them may be non-sensical depending on
+        // the intenisty coding anyways).  Thus, the 'right' answer is
+        // to make these functions on the ColorSpace class.  However,
+        // it's often useful to have a config-wide default so here it is.
+        // We will add the colorspace specific luma call if/when another
+        // client is interesting in using it.
+        
+        void getDefaultLumaCoefs(float * c3) const;
+        
+        // These should be normalized. (sum to 1.0 exactly)
+        void setDefaultLumaCoefs(const float * c3);
+        
         
         
         //! Convert from inputColorSpace to outputColorSpace
@@ -432,6 +451,8 @@ OCIO_NAMESPACE_ENTER
         BitDepth getBitDepth() const;
         void setBitDepth(BitDepth bitDepth);
         
+        
+        
         // ColorSpaces that are data are treated a bit special. Basically, any
         // colorspace transforms you try to apply to them are ignored.  (Think
         // of applying a gamut mapping transform to an ID pass). Also, the
@@ -452,6 +473,9 @@ OCIO_NAMESPACE_ENTER
         
         float getGPUMax() const;
         void setGPUMax(float max);
+        
+        
+        
         
         ConstGroupTransformRcPtr getTransform(ColorSpaceDirection dir) const;
         GroupTransformRcPtr getEditableTransform(ColorSpaceDirection dir);

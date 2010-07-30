@@ -35,10 +35,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Processor.h"
 
 #include <cstdlib>
+#include <cstring>
 #include <sstream>
 
 OCIO_NAMESPACE_ENTER
 {
+    namespace
+    {
+        // These are the 709 primaries specified by the ASC.
+        const float DEFAULT_LUMA_COEFF_R = 0.2126f;
+        const float DEFAULT_LUMA_COEFF_G = 0.7152f;
+        const float DEFAULT_LUMA_COEFF_B = 0.0722f;
+    }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    
     namespace
     {
         ConstConfigRcPtr g_currentConfig;
@@ -248,6 +262,15 @@ OCIO_NAMESPACE_ENTER
         return m_impl->getRole(index);
     }
     
+    void Config::getDefaultLumaCoefs(float * c3) const
+    {
+        m_impl->getDefaultLumaCoefs(c3);
+    }
+    
+    void Config::setDefaultLumaCoefs(const float * c3)
+    {
+        m_impl->setDefaultLumaCoefs(c3);
+    }
     
     // TODO: Add GPU Allocation hints into opstream. Possible to autocompute?
     
@@ -305,13 +328,6 @@ OCIO_NAMESPACE_ENTER
         return os;
     }
     
-    
-    
-    
-    
-    
-    
-    
     ///////////////////////////////////////////////////////////////////////////
     //
     // Impl
@@ -319,6 +335,9 @@ OCIO_NAMESPACE_ENTER
     
     Config::Impl::Impl()
     {
+        m_defaultLumaCoefs[0] = DEFAULT_LUMA_COEFF_R;
+        m_defaultLumaCoefs[1] = DEFAULT_LUMA_COEFF_G;
+        m_defaultLumaCoefs[2] = DEFAULT_LUMA_COEFF_B;
     }
     
     Config::Impl::~Impl()
@@ -340,10 +359,9 @@ OCIO_NAMESPACE_ENTER
             m_colorspaces.push_back(rhs.m_colorspaces[i]->createEditableCopy());
         }
         
-        // Vector assignment operator will suffice for the
-        // role data types
+        m_roleVec = rhs.m_roleVec; // Vector assignment operator will suffice for this
         
-        m_roleVec = rhs.m_roleVec;
+        memcpy(m_defaultLumaCoefs, rhs.m_defaultLumaCoefs, 3*sizeof(float));
         
         return *this;
     }
@@ -591,5 +609,20 @@ OCIO_NAMESPACE_ENTER
         
         return m_roleVec[index].first.c_str();
     }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    void Config::Impl::getDefaultLumaCoefs(float * c3) const
+    {
+        memcpy(c3, m_defaultLumaCoefs, 3*sizeof(float));
+    }
+    
+    void Config::Impl::setDefaultLumaCoefs(const float * c3)
+    {
+        memcpy(m_defaultLumaCoefs, c3, 3*sizeof(float));
+    }
+    
 }
 OCIO_NAMESPACE_EXIT

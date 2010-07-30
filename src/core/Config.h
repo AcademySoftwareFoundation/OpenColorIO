@@ -104,6 +104,9 @@ OCIO_NAMESPACE_ENTER
         int getNumRoles() const;
         const char * getRole(int index) const;
         
+        void getDefaultLumaCoefs(float * c3) const;
+        void setDefaultLumaCoefs(const float * c3);
+        
     private:
         Impl(const Impl &);
         
@@ -115,6 +118,8 @@ OCIO_NAMESPACE_ENTER
         
         ColorSpacePtrVec m_colorspaces;
         RoleVec m_roleVec;
+        
+        float m_defaultLumaCoefs[3];
     };
 }
 OCIO_NAMESPACE_EXIT

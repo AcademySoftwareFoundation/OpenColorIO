@@ -46,3 +46,10 @@ cs.setGPUMax(6.0)
 
 config.addColorSpace(cs)
 config.setColorSpaceForRole(OCIO.ROLE_SCENE_LINEAR, cs.getName())
+
+print config.getDefaultLumaCoefs()
+config.setDefaultLumaCoefs((1/3.0,1/3.0,1/3.0))
+print config.getDefaultLumaCoefs()
+
+xml = config.getXML()
+

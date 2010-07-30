@@ -182,6 +182,9 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_Config_getXML( PyObject * self );
         
+        PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self );
+        PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args );
+        
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -204,6 +207,9 @@ OCIO_NAMESPACE_ENTER
             {"setColorSpaceForRole", PyOCIO_Config_setColorSpaceForRole, METH_VARARGS, "" },
             
             {"getXML", (PyCFunction) PyOCIO_Config_getXML, METH_NOARGS, "" },
+            
+            {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
+            {"setDefaultLumaCoefs", PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, "" },
             
             {NULL, NULL, 0, NULL}
         };
@@ -541,6 +547,59 @@ OCIO_NAMESPACE_ENTER
         
         }
         
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        
+        PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                std::vector<float> coef(3);
+                config->getDefaultLumaCoefs(&coef[0]);
+                
+                return CreatePyListFromFloatVector(coef);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                
+                PyObject* pyCoef = 0;
+                if (!PyArg_ParseTuple(args, "O", &pyCoef))
+                {
+                    return 0;
+                }
+                
+                std::vector<float> coef;
+                if(!FillFloatVectorFromPySequence(pyCoef, coef) || (coef.size() != 3))
+                {
+                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 3");
+                    return 0;
+                }
+                
+                config->setDefaultLumaCoefs(&coef[0]);
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
         
     }
