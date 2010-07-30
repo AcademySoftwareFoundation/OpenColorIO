@@ -1,7 +1,7 @@
 #!/usr/bin/env tcsh
 setenv COLOR_VERSION 0.5.10
 mkdir -p ocio.$COLOR_VERSION
-cp -R CMakeLists.txt configs export INSTALL LICENSE runpytest runtest src ChangeLog OCIO.$COLOR_VERSION
+cp -R CMakeLists.txt configs export INSTALL LICENSE runpytest runtest src ChangeLog ocio.$COLOR_VERSION
 tar cvzf ocio.$COLOR_VERSION.tgz ocio.$COLOR_VERSION
 rm -r ocio.$COLOR_VERSION
 
