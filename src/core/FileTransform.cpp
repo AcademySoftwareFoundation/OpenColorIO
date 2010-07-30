@@ -281,10 +281,10 @@ OCIO_NAMESPACE_ENTER
                 os << "The specified transform file '";
                 os << filepath <<"' could not be opened. ";
                 os << "Please confirm the file exists with appropriate read";
-                os << "permissions.";
+                os << " permissions.";
                 throw Exception(os.str().c_str());
             }
-        
+            
             std::string extension = GetFileExtension(filepath);
             
             FileFormat* format;
@@ -344,8 +344,16 @@ OCIO_NAMESPACE_ENTER
     {
         if(!opVec) return;
         
+        std::string src = fileTransform.getSrc();
+        if(src.empty())
+        {
+            std::ostringstream os;
+            os << "The transform file has not been specified.";
+            throw Exception(os.str().c_str());
+        }
+        
         std::string resourcepath = config.getResolvedResourcePath();
-        std::string filepath = path::join(resourcepath, fileTransform.getSrc());
+        std::string filepath = path::join(resourcepath, src);
         
         FileCachePair cachePair = GetFile(filepath);
         
