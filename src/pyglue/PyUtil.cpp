@@ -184,7 +184,480 @@ OCIO_NAMESPACE_ENTER
         return 1;
     }
     
-
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    bool GetIntFromPyObject(PyObject* object, int* val)
+    {
+        if(!val || !object) return false;
+        
+        if( PyInt_Check( object ) )
+        {
+            *val = static_cast<int>( PyInt_AS_LONG( object ) );
+            return true;
+        }
+        
+        if( PyFloat_Check( object ) )
+        {
+            *val = static_cast<int>( PyFloat_AS_DOUBLE( object ) );
+            return true;
+        }
+        
+        PyObject* intObject = PyNumber_Int(object);
+        if(intObject)
+        {
+            *val = static_cast<int>( PyInt_AS_LONG( intObject ) );
+            Py_DECREF(intObject);
+            return true;
+        }
+        
+        PyErr_Clear();
+        return false;
+    }
+    
+    bool GetFloatFromPyObject(PyObject* object, float* val)
+    {
+        if(!val || !object) return false;
+        
+        if( PyFloat_Check( object ) )
+        {
+            *val = static_cast<float>( PyFloat_AS_DOUBLE( object ) );
+            return true;
+        }
+        
+        if( PyInt_Check( object ) )
+        {
+            *val = static_cast<float>( PyInt_AS_LONG( object ) );
+            return true;
+        }
+        
+        PyObject* floatObject = PyNumber_Float(object);
+        if(floatObject)
+        {
+            *val = static_cast<float>( PyFloat_AS_DOUBLE( floatObject ) );
+            Py_DECREF(floatObject);
+            return true;
+        }
+        
+        PyErr_Clear();
+        return false;
+    }
+    
+    bool GetDoubleFromPyObject(PyObject* object, double* val)
+    {
+        if(!val || !object) return false;
+        
+        if( PyFloat_Check( object ) )
+        {
+            *val = PyFloat_AS_DOUBLE( object );
+            return true;
+        }
+        
+        if( PyInt_Check( object ) )
+        {
+            *val = static_cast<double>( PyInt_AS_LONG( object ) );
+            return true;
+        }
+        
+        PyObject* floatObject = PyNumber_Float(object);
+        if(floatObject)
+        {
+            *val = PyFloat_AS_DOUBLE( floatObject );
+            Py_DECREF(floatObject);
+            return true;
+        }
+        
+        PyErr_Clear();
+        return false;
+    }
+    
+    bool GetStringFromPyObject(PyObject* object, std::string* val)
+    {
+        if(!val || !object) return false;
+        
+        if( PyString_Check( object ) )
+        {
+            *val = std::string(PyString_AS_STRING(object));
+            return true;
+        }
+        
+        PyObject* strObject = PyObject_Str(object);
+        if(strObject)
+        {
+            *val = std::string(PyString_AS_STRING(strObject));
+            Py_DECREF(strObject);
+            return true;
+        }
+        
+        PyErr_Clear();
+        return false;
+    }
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    PyObject* CreatePyListFromIntVector(const std::vector<int> &data)
+    {
+        PyObject* returnlist = PyList_New( data.size() );
+        if(!returnlist) return 0;
+        
+        for(unsigned int i =0; i<data.size(); ++i)
+        {
+            PyList_SET_ITEM(returnlist, i, PyInt_FromLong(data[i]));
+        }
+        
+        return returnlist;
+    }
+    
+    PyObject* CreatePyListFromFloatVector(const std::vector<float> &data)
+    {
+        PyObject* returnlist = PyList_New( data.size() );
+        if(!returnlist) return 0;
+        
+        for(unsigned int i =0; i<data.size(); ++i)
+        {
+            PyList_SET_ITEM(returnlist, i, PyFloat_FromDouble(data[i]));
+        }
+        
+        return returnlist;
+    }
+    
+    PyObject* CreatePyListFromDoubleVector(const std::vector<double> &data)
+    {
+        PyObject* returnlist = PyList_New( data.size() );
+        if(!returnlist) return 0;
+        
+        for(unsigned int i =0; i<data.size(); ++i)
+        {
+            PyList_SET_ITEM(returnlist, i, PyFloat_FromDouble(data[i]));
+        }
+        
+        return returnlist;
+    }
+    
+    PyObject* CreatePyListFromStringVector(const std::vector<std::string> &data)
+    {
+        PyObject* returnlist = PyList_New( data.size() );
+        if(!returnlist) return 0;
+        
+        for(unsigned int i =0; i<data.size(); ++i)
+        {
+            PyObject *str =  PyString_FromString(data[i].c_str());
+            if (str == NULL)
+            {
+                Py_DECREF(returnlist);
+                return NULL;
+            }
+            PyList_SET_ITEM(returnlist, i, str);
+        }
+        
+        return returnlist;
+    }
+    
+    
+    namespace
+    {
+        // These are safer than PySequence_Fast, as we can
+        // Confirm that no exceptions will be set in the python runtime.
+        
+        inline bool PyListOrTuple_Check(PyObject* pyobj)
+        {
+            return (PyTuple_Check(pyobj) || PyList_Check(pyobj));
+        }
+        
+        inline int PyListOrTuple_GET_SIZE(PyObject* pyobj)
+        {
+            if(PyList_Check(pyobj))
+            {
+                return PyList_GET_SIZE(pyobj);
+            }
+            else if(PyTuple_Check(pyobj))
+            {
+                return PyTuple_GET_SIZE(pyobj);
+            }
+            return -1;
+        }
+        
+        // Return a boworrowed reference
+        inline PyObject* PyListOrTuple_GET_ITEM(PyObject* pyobj, int index)
+        {
+            if(PyList_Check(pyobj))
+            {
+                return PyList_GET_ITEM(pyobj, index);
+            }
+            else if(PyTuple_Check(pyobj))
+            {
+                return PyTuple_GET_ITEM(pyobj, index);
+            }
+            return 0;
+        }
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    /*
+        A note on why PyErr_Clear is needed in multiple locations...
+        
+        Even though it's not immediately apparent, almost every function
+        in the Abstract Objects Layer,
+        http://www.python.org/doc/2.5/api/abstract.html
+        can set a global excpetion under certain circumstances.
+        
+        For example, calling the equivalent of int( obj ) will set
+        an exception if the object cannot be casted (such as None),
+        or if it's a custom type that implements the number protocol
+        but throws an exception during the cast.
+        
+        During iteration, even an object that implements the sequence
+        protocol can raise an exception if the iteration fails.
+        
+        As we want to guarantee that an exception *never* remains on
+        the stack after an internal failure, the simplest way to
+        guarantee this is to always call PyErr_Clear() before
+        returing the failure condition.
+    */
+    
+    bool FillIntVectorFromPySequence(PyObject* datalist, std::vector<int> &data)
+    {
+        data.clear();
+        
+        // First, try list or tuple iteration (for speed).
+        if(PyListOrTuple_Check(datalist))
+        {
+            int sequenceSize = PyListOrTuple_GET_SIZE(datalist);
+            data.reserve(sequenceSize);
+            
+            for(int i=0; i < sequenceSize; i++)
+            {
+                PyObject* item = PyListOrTuple_GET_ITEM(datalist, i);
+                
+                int val;
+                if (!GetIntFromPyObject(item, &val))
+                {
+                    data.clear();
+                    return false;
+                }
+                data.push_back(val);
+            }
+            
+            return true;
+        }
+        // As a fallback, try general iteration.
+        else
+        {
+            PyObject *item;
+            PyObject *iter = PyObject_GetIter(datalist);
+            if (iter == NULL)
+            {
+                PyErr_Clear();
+                return false;
+            }
+            while((item = PyIter_Next(iter)) != NULL)
+            {
+                int val;
+                if (!GetIntFromPyObject(item, &val))
+                {
+                    Py_DECREF(item);
+                    Py_DECREF(iter);
+                    
+                    data.clear();
+                    return false;
+                }
+                data.push_back(val);
+                Py_DECREF(item);
+            }
+            
+            Py_DECREF(iter);
+            if (PyErr_Occurred())
+            {
+                PyErr_Clear();
+                data.clear();
+                return false;
+            }
+            return true;
+        }
+    }
+    
+    bool FillFloatVectorFromPySequence(PyObject* datalist, std::vector<float> &data)
+    {
+        data.clear();
+        
+        if(PyListOrTuple_Check(datalist))
+        {
+            int sequenceSize = PyListOrTuple_GET_SIZE(datalist);
+            data.reserve(sequenceSize);
+            
+            for(int i=0; i < sequenceSize; i++)
+            {
+                PyObject* item = PyListOrTuple_GET_ITEM(datalist, i);
+                
+                float val;
+                if (!GetFloatFromPyObject(item, &val))
+                {
+                    data.clear();
+                    return false;
+                }
+                data.push_back(val);
+            }
+            return true;
+        }
+        else
+        {
+            PyObject *item;
+            PyObject *iter = PyObject_GetIter(datalist);
+            if (iter == NULL)
+            {
+                PyErr_Clear();
+                return false;
+            }
+            while((item = PyIter_Next(iter)) != NULL)
+            {
+                float val;
+                if (!GetFloatFromPyObject(item, &val))
+                {
+                    Py_DECREF(item);
+                    Py_DECREF(iter);
+                    
+                    data.clear();
+                    return false;
+                }
+                data.push_back(val);
+                Py_DECREF(item);
+            }
+            Py_DECREF(iter);
+            if (PyErr_Occurred())
+            {
+                PyErr_Clear();
+                data.clear();
+                return false;
+            }
+            return true;
+        }
+    }
+    
+    bool FillDoubleVectorFromPySequence(PyObject* datalist, std::vector<double> &data)
+    {
+        data.clear();
+        
+        if(PyListOrTuple_Check(datalist))
+        {
+            int sequenceSize = PyListOrTuple_GET_SIZE(datalist);
+            data.reserve(sequenceSize);
+            
+            for(int i=0; i < sequenceSize; i++)
+            {
+                PyObject* item = PyListOrTuple_GET_ITEM(datalist, i);
+                double val;
+                if (!GetDoubleFromPyObject(item, &val))
+                {
+                    data.clear();
+                    return false;
+                }
+                data.push_back( val );
+            }
+            return true;
+        }
+        else
+        {
+            PyObject *item;
+            PyObject *iter = PyObject_GetIter(datalist);
+            if (iter == NULL)
+            {
+                PyErr_Clear();
+                return false;
+            }
+            while((item = PyIter_Next(iter)) != NULL)
+            {
+                double val;
+                if (!GetDoubleFromPyObject(item, &val))
+                {
+                    Py_DECREF(item);
+                    Py_DECREF(iter);
+                    
+                    data.clear();
+                    return false;
+                }
+                data.push_back(val);
+                Py_DECREF(item);
+            }
+            
+            Py_DECREF(iter);
+            if (PyErr_Occurred())
+            {
+                PyErr_Clear();
+                data.clear();
+                return false;
+            }
+            return true;
+        }
+    }
+    
+    
+    bool FillStringVectorFromPySequence(PyObject* datalist, std::vector<std::string> &data)
+    {
+        data.clear();
+        
+        if(PyListOrTuple_Check(datalist))
+        {
+            int sequenceSize = PyListOrTuple_GET_SIZE(datalist);
+            data.reserve(sequenceSize);
+            
+            for(int i=0; i < sequenceSize; i++)
+            {
+                PyObject* item = PyListOrTuple_GET_ITEM(datalist, i);
+                std::string val;
+                if (!GetStringFromPyObject(item, &val))
+                {
+                    data.clear();
+                    return false;
+                }
+                data.push_back( val );
+            }
+            return true;
+        }
+        else
+        {
+            PyObject *item;
+            PyObject *iter = PyObject_GetIter(datalist);
+            if (iter == NULL)
+            {
+                PyErr_Clear();
+                return false;
+            }
+            while((item = PyIter_Next(iter)) != NULL)
+            {
+                std::string val;
+                if (!GetStringFromPyObject(item, &val))
+                {
+                    Py_DECREF(item);
+                    Py_DECREF(iter);
+                    
+                    data.clear();
+                    return false;
+                }
+                data.push_back(val);
+                Py_DECREF(item);
+            }
+            
+            Py_DECREF(iter);
+            if (PyErr_Occurred())
+            {
+                PyErr_Clear();
+                data.clear();
+                return false;
+            }
+            return true;
+        }
+    }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
     
     /* See the header for the justification for this function.
     

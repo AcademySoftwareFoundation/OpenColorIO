@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Manifest.h"
 
+#include <vector>
+
 OCIO_NAMESPACE_ENTER
 {
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
@@ -45,8 +47,8 @@ OCIO_NAMESPACE_ENTER
     bool IsPyTransformEditable(PyObject * pyobject);
     TransformRcPtr GetEditableTransform(PyObject * pyobject);
     */
-
-
+    
+    
     int ConvertPyObjectToBool(PyObject *object, void *valuePtr);
     
     int ConvertPyObjectToGpuAllocation(PyObject *object, void *valuePtr);
@@ -60,7 +62,51 @@ OCIO_NAMESPACE_ENTER
     #define ADD_CLASS_INT_CONSTANT(class_type, attr_name, attr_int_value) \
         PyDict_SetItem(class_type.tp_dict, PyString_FromString(attr_name), PyInt_FromLong((long)attr_int_value))
 */
-
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    // Generics.
+    // None of these allow an interpreter error to leak
+    
+    //! Use a variety of methods to get the value, as the specified type
+    //! from the specified PyObject. (Return true on success, false on failure)
+    //!
+    //! 1. See if object is PyFloat, return value
+    //! 2. See if object is PyInt, return value
+    //! 3. Attempt to cast to PyFloat / PyInt (equivalent to calling float(obj)/int(obj) in python)
+    
+    bool GetIntFromPyObject(PyObject* object, int* val);
+    bool GetFloatFromPyObject(PyObject* object, float* val);
+    bool GetDoubleFromPyObject(PyObject* object, double* val);
+    
+    //! 1. See if object is a PyString, return value
+    //! 2. Attempt to cast to a PyString (equivalent to calling str(obj) in python
+    //! Note: This will basically always succeed, even if the object is not string-like
+    //! (such as passing Py_None as val), so you cannot use this to check str type.
+    
+    bool GetStringFromPyObject(PyObject* object, std::string* val);
+    
+    
+    // Can return a null pointer if PyList_New(size) fails.
+    PyObject* CreatePyListFromIntVector(const std::vector<int> &data);
+    PyObject* CreatePyListFromFloatVector(const std::vector<float> &data);
+    PyObject* CreatePyListFromDoubleVector(const std::vector<double> &data);
+    PyObject* CreatePyListFromStringVector(const std::vector<std::string> &data);
+    
+    //! Fill the specified vector type from the given pyobject
+    //! Return true on success, false on failure.
+    //! The PyObject must be a tuple or list, filled with the appropriate data types
+    //! (either PyInt, PyFloat, or something convertible to one)
+    
+    bool FillIntVectorFromPySequence(PyObject* datalist, std::vector<int> &data);
+    bool FillFloatVectorFromPySequence(PyObject* datalist, std::vector<float> &data);
+    bool FillDoubleVectorFromPySequence(PyObject* datalist, std::vector<double> &data);
+    bool FillStringVectorFromPySequence(PyObject* datalist, std::vector<std::string> &data);
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
     void Python_Handle_Exception();
 }
 OCIO_NAMESPACE_EXIT
