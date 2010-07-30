@@ -1,6 +1,6 @@
 #!/bin/env tcsh
 
-setenv OCIO_VERSION 0.5.9
+setenv OCIO_VERSION 0.5.10
 mkdir -p build && cd build
 cmake -D CMAKE_BUILD_TYPE=RelWithDebInfo ../ && make
 mkdir -p /net/soft_scratch/users/color/ocio/$OCIO_VERSION/$SP_OS/include
