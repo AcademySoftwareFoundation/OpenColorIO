@@ -39,15 +39,22 @@ OCIO_NAMESPACE_ENTER
     namespace path
     {
         // TODO: make these also work on windows
-        // should we exactly match python, including double slash?
-        // see python source as reference
-        // maybe make a pypath module?
+        // This attempts to match python's path.join, including
+        // the relative absolute handling
         
         std::string join(const std::string & path1, const std::string & path2)
         {
-            std::string lpart = pystring::rstrip(path1, "/");
-            std::string rpart = pystring::lstrip(path2, "/");
-            return lpart + "/" + rpart;
+            std::string pathtoken = "/";
+            
+            // Absolute paths should be treated as absolute
+            if(pystring::startswith(path2, pathtoken))
+                return path2;
+            
+            // Relative paths will be appended.
+            if (pystring::endswith(path1, pathtoken))
+                return path1 + path2;
+            
+            return path1 + pathtoken + path2;
         }
         
         // TODO: This doesnt return the same result for python in '/foo' case
