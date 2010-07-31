@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.10
 //
 
-// TODO: Luminance coefficients?
+// TODO: highlight compression coefficients?
 // TODO: rgb_to_hsv examples?
 // TODO: Add processor.getCacheID
 
