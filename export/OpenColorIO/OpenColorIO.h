@@ -37,9 +37,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.10
 //
 
+// TODO: Colorspace limit functions, GetLinearColorspaceMax
+// TODO: Filmlook
+// TODO: Compute statistics on image?
+// TODO: Compute Histogram on image?
+// TODO: ASCColorCorrection example.
 // TODO: highlight compression coefficients?
-// TODO: rgb_to_hsv examples?
+// TODO: ColorspaceFromFilename
+// TODO: Histogram / Statistics FCN
+// TODO: rgb_to_hsv?  Efficient for per-pixel application?
 // TODO: Add processor.getCacheID
+// TODO: per-shot looks?
 
 // TODO: get simple display transform working. can it be expressed as an op?
 
@@ -142,6 +150,14 @@ OCIO_NAMESPACE_ENTER
     typedef SharedPtr<const ColorSpace> ConstColorSpaceRcPtr;
     typedef SharedPtr<ColorSpace> ColorSpaceRcPtr;
     
+    class Processor;
+    typedef SharedPtr<const Processor> ConstProcessorRcPtr;
+    typedef SharedPtr<Processor> ProcessorRcPtr;
+    
+    class ImageDesc;
+    class GpuShaderDesc;
+    class Exception;
+    
     class Transform;
     typedef SharedPtr<const Transform> ConstTransformRcPtr;
     typedef SharedPtr<Transform> TransformRcPtr;
@@ -154,15 +170,9 @@ OCIO_NAMESPACE_ENTER
     typedef SharedPtr<const FileTransform> ConstFileTransformRcPtr;
     typedef SharedPtr<FileTransform> FileTransformRcPtr;
     
-    class Processor;
-    typedef SharedPtr<const Processor> ConstProcessorRcPtr;
-    typedef SharedPtr<Processor> ProcessorRcPtr;
-    
-    class ImageDesc;
-    class GpuShaderDesc;
-    
-    class Exception;
-    
+    class CDLTransform;
+    typedef SharedPtr<const CDLTransform> ConstCDLTransformRcPtr;
+    typedef SharedPtr<CDLTransform> CDLTransformRcPtr;
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -378,10 +388,10 @@ OCIO_NAMESPACE_ENTER
         // We will add the colorspace specific luma call if/when another
         // client is interesting in using it.
         
-        void getDefaultLumaCoefs(float * c3) const;
+        void getDefaultLumaCoefs(float * rgb) const;
         
         // These should be normalized. (sum to 1.0 exactly)
-        void setDefaultLumaCoefs(const float * c3);
+        void setDefaultLumaCoefs(const float * rgb);
         
         
         
@@ -790,6 +800,99 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const FileTransform&);
+    
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    // An implementation of the ASC CDL Transfer Functions and Interchange
+    // Syntax (Based on the version 1.2 document)
+    //
+    // Note: the clamping portion of the CDL is only applied if 
+    // a non-identity power is specified.
+    
+    class CDLTransform : public Transform
+    {
+    public:
+        static CDLTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        const char * getXML() const;
+        void setXML(const char * xml);
+        
+        // Throw an exception if the CDL is in any way invalid
+        void sanityCheck() const;
+        
+        // ASC_SOP
+        // Slope, offset, power
+        // out = clamp( (in * slope) + offset ) ^ power
+        //
+        
+        void setSlope(const float * rgb);
+        void getSlope(float * rgb) const;
+        
+        void setOffset(const float * rgb);
+        void getOffset(float * rgb) const;
+        
+        void setPower(const float * rgb);
+        void getPower(float * rgb) const;
+        
+        void setSOP(const float * vec9);
+        void getSOP(float * vec9) const;
+        
+        // ASC_SAT
+        
+        void setSat(float sat);
+        float getSat() const;
+        
+        // These are hard-coded, by spec, to r709
+        void getSatLumaCoefs(float * rgb) const;
+        
+        // Metadata
+        // These do not affect the image processing, but
+        // are often useful for pipeline purposes and are
+        // included in the serialization.
+        
+        // Unique Identifier for this correction
+        void setID(const char * id);
+        const char * getID() const;
+        
+        // Textual description of color correction
+        // (stored on the SOP)
+        void setDescription(const char * desc);
+        const char * getDescription() const;
+    
+    private:
+        CDLTransform();
+        CDLTransform(const CDLTransform &);
+        virtual ~CDLTransform();
+        
+        CDLTransform& operator= (const CDLTransform &);
+        
+        static void deleter(CDLTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const CDLTransform&);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     

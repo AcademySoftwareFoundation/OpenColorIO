@@ -12,6 +12,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 void loadConfigFromEnv();
 void testCoordinateTransform();
+void testASCTransform();
 void createConfig();
 void loadConfig();
 
@@ -23,10 +24,12 @@ int main(int argc, const char* argv[])
     
     try
     {
-        loadConfigFromEnv();
+        //loadConfigFromEnv();
         
         //testCoordinateTransform();
         //createConfig();
+        testASCTransform();
+        
     }
     catch(std::exception& e)
     {
@@ -46,6 +49,21 @@ namespace
         os << name << " : " << c[0] << " " << c[1] << " " << c[2];
     }
 }
+
+void testASCTransform()
+{
+    float slope[3] = { 1.2f, 0.8f, 0.9f };
+    
+    OCIO::CDLTransformRcPtr cdl = OCIO::CDLTransform::Create();
+    cdl->setSat(2.0);
+    cdl->setSlope(slope);
+    cdl->setID("bs020");
+    cdl->setDescription("taco");
+    
+    std::cerr << "xml " << cdl->getXML() << std::endl;
+    
+}
+
 
 void loadConfigFromEnv()
 {

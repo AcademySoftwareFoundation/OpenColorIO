@@ -31,11 +31,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_PARSEUTILS_H
 
 #include <OpenColorIO/OpenColorIO.h>
+
 #include <string>
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
+    class TiXmlElement;
+    
+    void SetText( TiXmlElement* element, const char * value);
+    
+    std::string FloatToString(float fval);
+    std::string FloatVecToString(const float * fval, unsigned int size);
+    
+    std::string DoubleToString(double value);
+    
+    bool StringToFloat(float * fval, const char * str);
+    
     bool StringVecToFloatVec(std::vector<float> & floatArray,
                              const std::vector<std::string> & lineParts);
     

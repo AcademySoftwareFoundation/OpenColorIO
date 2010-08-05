@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "pystring/pystring.h"
+#include "tinyxml/tinyxml.h"
 
 #include <sstream>
 
@@ -167,7 +168,88 @@ OCIO_NAMESPACE_ENTER
     const char * ROLE_COLOR_TIMING = "color_timing";
     
     
+    
     //////////////////////////////////////////////////////////////////////////
+    
+    
+    // http://ticpp.googlecode.com/svn/docs/ticpp_8h-source.html#l01670
+
+    void SetText( TiXmlElement* element, const char * value)
+    {
+        if ( element->NoChildren() )
+        {
+            element->LinkEndChild( new TiXmlText( value ) );
+        }
+        else
+        {
+            if ( 0 == element->GetText() )
+            {
+                element->InsertBeforeChild( element->FirstChild(), TiXmlText( value ) );
+            }
+            else
+            {
+                // There already is text, so change it
+                element->FirstChild()->SetValue( value );
+            }
+        }
+    }
+    
+    
+    
+    //////////////////////////////////////////////////////////////////////////
+    
+    namespace
+    {
+        const int FLOAT_DECIMALS = 7;
+        const int DOUBLE_DECIMALS = 16;
+    }
+    
+    std::string FloatToString(float value)
+    {
+        std::ostringstream pretty;
+        pretty.precision(FLOAT_DECIMALS);
+        pretty << value;
+        return pretty.str();
+    }
+    
+    std::string FloatVecToString(const float * fval, unsigned int size)
+    {
+        if(size<=0) return "";
+        
+        std::ostringstream pretty;
+        pretty.precision(FLOAT_DECIMALS);
+        for(unsigned int i=0; i<size; ++i)
+        {
+            if(i!=0) pretty << " ";
+            pretty << fval[i];
+        }
+        
+        return pretty.str();
+    }
+    
+    bool StringToFloat(float * fval, const char * str)
+    {
+        if(!str) return false;
+        
+        std::istringstream inputStringstream(str);
+        float x;
+        if(!(inputStringstream >> x))
+        {
+            return false;
+        }
+        
+        if(fval) *fval = x;
+        return true;
+    }
+    
+    std::string DoubleToString(double value)
+    {
+        std::ostringstream pretty;
+        pretty.precision(DOUBLE_DECIMALS);
+        pretty << value;
+        return pretty.str();
+    }
+    
     
     bool StringVecToFloatVec(std::vector<float> &floatArray,
                              const std::vector<std::string> &lineParts)

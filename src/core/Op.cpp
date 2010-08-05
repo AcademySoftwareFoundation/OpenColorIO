@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "CDLTransform.h"
 #include "GroupTransform.h"
 #include "FileTransform.h"
 #include "Op.h"
@@ -46,15 +47,20 @@ OCIO_NAMESPACE_ENTER
                   const ConstTransformRcPtr& transform,
                   TransformDirection dir)
     {
-        if(ConstGroupTransformRcPtr groupTransform = \
-            DynamicPtrCast<const GroupTransform>(transform))
+        if(ConstCDLTransformRcPtr cdlTransform = \
+            DynamicPtrCast<const CDLTransform>(transform))
         {
-            BuildGroupOps(opVec, config, *groupTransform, dir);
+            BuildCDLOps(opVec, config, *cdlTransform, dir);
         }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
             BuildFileOps(opVec, config, *fileTransform, dir);
+        }
+        else if(ConstGroupTransformRcPtr groupTransform = \
+            DynamicPtrCast<const GroupTransform>(transform))
+        {
+            BuildGroupOps(opVec, config, *groupTransform, dir);
         }
         else
         {
@@ -63,25 +69,5 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
     }
-    
-    /*
-    std::ostream& operator<< (std::ostream& os, const Transform& transform)
-    {
-        if(dynamic_cast<const GroupTransform*>(t))
-        {
-            os << *(dynamic_cast<const GroupTransform*>(t));
-        }
-        else if(dynamic_cast<const FileTransform*>(t))
-        {
-            os << *(dynamic_cast<const FileTransform*>(t));
-        }
-        else
-        {
-            os << "Unknown transform type for serialization.";
-        }
-        
-        return os;
-    }
-    */
 }
 OCIO_NAMESPACE_EXIT

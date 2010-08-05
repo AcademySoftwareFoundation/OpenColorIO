@@ -16,6 +16,7 @@ endif()
 #
 
 add_library(OpenColorIO SHARED
+    src/core/CDLTransform.cpp
     src/core/ColorSpace.cpp
     src/core/Config.cpp
     src/core/CoordinateOps.cpp
