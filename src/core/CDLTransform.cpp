@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "CDLTransform.h"
 
+#include "ExponentOps.h"
 #include "MatrixOps.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
@@ -528,6 +529,9 @@ OCIO_NAMESPACE_ENTER
         float offset4[] = { 0.0f, 0.0f, 0.0f, 0.0f };
         cdlTransform.getOffset(offset4);
         
+        float power4[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        cdlTransform.getPower(power4);
+        
         float lumaCoef3[] = { 1.0f, 1.0f, 1.0f };
         cdlTransform.getSatLumaCoefs(lumaCoef3);
         
@@ -537,7 +541,7 @@ OCIO_NAMESPACE_ENTER
                                                   cdlTransform.getDirection());
         
         // TODO: Confirm ASC Sat math is correct.
-        // TODO: ASC Power + Clamp
+        // TODO: Handle Clamping conditions more explicitly
         
         if(combinedDir == TRANSFORM_DIR_FORWARD)
         {
@@ -545,6 +549,7 @@ OCIO_NAMESPACE_ENTER
             CreateScaleOffsetOp(opVec, scale4, offset4, TRANSFORM_DIR_FORWARD);
             
             // 2) Power + Clamp
+            CreateExponentOp(opVec, power4, TRANSFORM_DIR_FORWARD);
             
             // 3) Saturation + Clamp
             CreateSaturationOp(opVec, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
@@ -555,6 +560,7 @@ OCIO_NAMESPACE_ENTER
             CreateSaturationOp(opVec, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
             
             // 2) Power + Clamp
+            CreateExponentOp(opVec, power4, TRANSFORM_DIR_INVERSE);
             
             // 1) Scale + Offset
             CreateScaleOffsetOp(opVec, scale4, offset4, TRANSFORM_DIR_INVERSE);

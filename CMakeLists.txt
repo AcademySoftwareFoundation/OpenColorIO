@@ -21,6 +21,7 @@ add_library(OpenColorIO SHARED
     src/core/Config.cpp
     src/core/CoordinateOps.cpp
     src/core/Exception.cpp
+    src/core/ExponentOps.cpp
     src/core/FileFormat3DL.cpp
     src/core/FileFormatSpi1D.cpp
     src/core/FileFormatSpi3D.cpp

@@ -119,6 +119,9 @@ OCIO_NAMESPACE_ENTER
         {
         
         }
+        
+        // TODO: Move a lot of this calculation to the setup call
+        
         void MatrixOffsetOp::apply(float* rgbaBuffer, long numPixels) const
         {
             if(!rgbaBuffer) return;
