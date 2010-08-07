@@ -1,5 +1,3 @@
-# TODO: Opt vs. Debug
-
 cmake_minimum_required(VERSION 2.6)
 project(OpenColorIO)
 
@@ -20,6 +18,7 @@ add_library(OpenColorIO SHARED
     src/core/ColorSpace.cpp
     src/core/Config.cpp
     src/core/CoordinateOps.cpp
+    src/core/DisplayTransform.cpp
     src/core/Exception.cpp
     src/core/ExponentOps.cpp
     src/core/FileFormat3DL.cpp

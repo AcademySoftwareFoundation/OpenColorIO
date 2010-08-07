@@ -37,6 +37,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.10
 //
 
+
+// TODO: Turn the lutpath into a search path mechanism
+// TODO: Turn all fcns that return colorspace classes to return colorspace name string instead?
+//       This may assist with dynamic color spaces
 // TODO: Colorspace limit functions, GetLinearColorspaceMax
 // TODO: Filmlook
 // TODO: Compute statistics on image?
@@ -169,6 +173,10 @@ OCIO_NAMESPACE_ENTER
     class FileTransform;
     typedef SharedPtr<const FileTransform> ConstFileTransformRcPtr;
     typedef SharedPtr<FileTransform> FileTransformRcPtr;
+    
+    class DisplayTransform;
+    typedef SharedPtr<const DisplayTransform> ConstDisplayTransformRcPtr;
+    typedef SharedPtr<DisplayTransform> DisplayTransformRcPtr;
     
     class CDLTransform;
     typedef SharedPtr<const CDLTransform> ConstCDLTransformRcPtr;
@@ -395,6 +403,14 @@ OCIO_NAMESPACE_ENTER
         
         
         
+        
+        // Display Transform
+        ConstColorSpaceRcPtr GetDisplayColorspace(const char * device, const char * transform);
+        
+        
+        
+        
+        
         //! Convert from inputColorSpace to outputColorSpace
         //
         //  Note: This may provide higher fidelity than anticipated due to
@@ -417,6 +433,8 @@ OCIO_NAMESPACE_ENTER
         
         ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
                                          TransformDirection direction = TRANSFORM_DIR_FORWARD) const;
+        
+        
         
     private:
         Config();
@@ -804,6 +822,81 @@ OCIO_NAMESPACE_ENTER
     
     
     
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    
+    class DisplayTransform : public Transform
+    {
+    public:
+        static DisplayTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        
+        // STAGE I: What is the colorspace for the image coming in?
+        
+        void setInputColorspace(const ConstColorSpaceRcPtr & cs);
+        
+        
+        
+        
+        // STAGE II: Apply the fstop exposure offset, in linear, if desired.
+        void setLinearExposure(const float* v4);
+        
+        // By default, this will convert the incoming image into the ROLE_SCENE_LINEAR
+        // colorspace
+        //void setLinearProcessingColorspace(const ConstColorSpaceRcPtr & cs);
+        
+        // Set a specified color correction (such as a CDLTransform) to occur
+        // in linear
+        //void setLinearColorCorrection(const ConstTransformRcPtr & transform);
+        
+        
+        
+        // STAGE III: Apply an arbitrary color correction, in the color timing colorspace
+        // if needed
+        
+        // If a look is needed...
+        //void setLookColorspace(const ConstColorSpaceRcPtr & cs);
+        //void setLookColorCorrection(const ConstTransformRcPtr & transform);
+        
+        
+        
+        // STAGE IV: Apply the View Matrix, if needed
+        
+        
+        // STAGE V: Specify which Colorspace is appropriate for viewing
+        
+        void setDisplayColorspace(const ConstColorSpaceRcPtr & cs);
+        
+        
+        
+        
+        // STAGE VI: Apply Post-processing
+    
+    private:
+        DisplayTransform();
+        DisplayTransform(const DisplayTransform &);
+        virtual ~DisplayTransform();
+        
+        DisplayTransform& operator= (const DisplayTransform &);
+        
+        static void deleter(DisplayTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const DisplayTransform&);
+    
+    
+    
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -828,6 +921,8 @@ OCIO_NAMESPACE_ENTER
         
         // Throw an exception if the CDL is in any way invalid
         void sanityCheck() const;
+        
+        // TODO: Reset?
         
         // ASC_SOP
         // Slope, offset, power
