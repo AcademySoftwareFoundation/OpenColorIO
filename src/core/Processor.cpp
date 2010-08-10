@@ -74,15 +74,13 @@ OCIO_NAMESPACE_ENTER
     
     void LocalProcessor::finalizeOps()
     {
-        // TODO: Perform smart optimizations / collapsing on the OpVec
+        // TODO: Optimize (collapse?) chunks of the OpVec
         
         // After construction, finalize the setup
         for(unsigned int i=0; i<m_opVec.size(); ++i)
         {
             m_opVec[i]->setup();
         }
-        
-        std::cerr << "Finalizing " << m_opVec.size() << " ops" << std::endl;
     }
     
     

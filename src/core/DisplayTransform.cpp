@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "CDLTransform.h"
 #include "DisplayTransform.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
@@ -85,9 +86,14 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    void DisplayTransform::setInputColorspace(const ConstColorSpaceRcPtr & cs)
+    void DisplayTransform::setInputColorSpace(const ConstColorSpaceRcPtr & cs)
     {
-        m_impl->setInputColorspace(cs);
+        m_impl->setInputColorSpace(cs);
+    }
+    
+    ConstColorSpaceRcPtr DisplayTransform::getInputColorSpace() const
+    {
+        return m_impl->getInputColorSpace();
     }
     
     void DisplayTransform::setLinearExposure(const float* v4)
@@ -95,9 +101,24 @@ OCIO_NAMESPACE_ENTER
         m_impl->setLinearExposure(v4);
     }
     
+    void DisplayTransform::setLinearCC(const ConstCDLTransformRcPtr & cc)
+    {
+        m_impl->setLinearCC(cc);
+    }
+    
+    ConstCDLTransformRcPtr DisplayTransform::getLinearCC() const
+    {
+        return m_impl->getLinearCC();
+    }
+    
     void DisplayTransform::setDisplayColorspace(const ConstColorSpaceRcPtr & cs)
     {
         m_impl->setDisplayColorspace(cs);
+    }
+    
+    ConstColorSpaceRcPtr DisplayTransform::getDisplayColorSpace() const
+    {
+        return m_impl->getDisplayColorSpace();
     }
     
     
@@ -147,10 +168,16 @@ OCIO_NAMESPACE_ENTER
         m_direction = dir;
     }
     
-    void DisplayTransform::Impl::setInputColorspace(const ConstColorSpaceRcPtr & cs)
+    void DisplayTransform::Impl::setInputColorSpace(const ConstColorSpaceRcPtr & cs)
     {
         m_inputColorSpace = cs;
     }
+    
+    ConstColorSpaceRcPtr DisplayTransform::Impl::getInputColorSpace() const
+    {
+        return m_inputColorSpace;
+    }
+    
     
     void DisplayTransform::Impl::setLinearExposure(const float* v4)
     {
@@ -160,9 +187,26 @@ OCIO_NAMESPACE_ENTER
         m_linearCC->setSlope(cc);
     }
     
+    void DisplayTransform::Impl::setLinearCC(const ConstCDLTransformRcPtr & cc)
+    {
+        m_linearCC = DynamicPtrCast<CDLTransform>(cc->createEditableCopy());
+    }
+    
+    ConstCDLTransformRcPtr DisplayTransform::Impl::getLinearCC() const
+    {
+        return m_linearCC;
+    }
+    
+    
+    
     void DisplayTransform::Impl::setDisplayColorspace(const ConstColorSpaceRcPtr & cs)
     {
         m_displayColorSpace = cs;
+    }
+    
+    ConstColorSpaceRcPtr DisplayTransform::Impl::getDisplayColorSpace() const
+    {
+        return m_displayColorSpace;
     }
     
     ///////////////////////////////////////////////////////////////////////////
@@ -182,9 +226,9 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        /*
-        ConstColorSpaceRcPtr currentColorspace = displayTransform.getInputColorspace();
+        ConstColorSpaceRcPtr currentColorspace = displayTransform.getInputColorSpace();
         
+        /*
         ConstCDLTransformRcPtr linearCC = displayTransform.getLinearCC();
         if(!linearCC.isNoOp())
         {
@@ -200,12 +244,11 @@ OCIO_NAMESPACE_ENTER
             
             currentColorspace = linearCC;
         }
-        
+        */
         
         BuildColorSpaceConversionOps(processor, config,
                                      currentColorspace,
                                      displayTransform.getDisplayColorSpace());
-        */
     }
 }
 OCIO_NAMESPACE_EXIT

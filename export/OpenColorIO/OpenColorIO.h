@@ -839,14 +839,12 @@ OCIO_NAMESPACE_ENTER
         
         
         // STAGE I: What is the colorspace for the image coming in?
-        
-        void setInputColorspace(const ConstColorSpaceRcPtr & cs);
-        
-        
+        void setInputColorSpace(const ConstColorSpaceRcPtr & cs);
+        ConstColorSpaceRcPtr getInputColorSpace() const;
         
         
-        // STAGE II: Apply the fstop exposure offset, in linear, if desired.
-        void setLinearExposure(const float* v4);
+        
+        // STAGE II: Apply a Color Correction, in linear, if desired.
         
         // By default, this will convert the incoming image into the ROLE_SCENE_LINEAR
         // colorspace
@@ -854,7 +852,13 @@ OCIO_NAMESPACE_ENTER
         
         // Set a specified color correction (such as a CDLTransform) to occur
         // in linear
-        //void setLinearColorCorrection(const ConstTransformRcPtr & transform);
+        
+        void setLinearCC(const ConstCDLTransformRcPtr & cc);
+        
+        //! As a convenience, set this in stops
+        void setLinearExposure(const float* v4);
+        
+        ConstCDLTransformRcPtr getLinearCC() const;
         
         
         
@@ -873,6 +877,7 @@ OCIO_NAMESPACE_ENTER
         // STAGE V: Specify which Colorspace is appropriate for viewing
         
         void setDisplayColorspace(const ConstColorSpaceRcPtr & cs);
+        ConstColorSpaceRcPtr getDisplayColorSpace() const;
         
         
         
