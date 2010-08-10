@@ -241,13 +241,11 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    void BuildGroupOps(OpRcPtrVec * opVec,
+    void BuildGroupOps(LocalProcessor & processor,
                        const Config& config,
                        const GroupTransform& groupTransform,
                        TransformDirection dir)
     {
-        if(!opVec) return;
-        
         TransformDirection combinedDir = CombineTransformDirections(dir,
                                                   groupTransform.getDirection());
         
@@ -256,7 +254,7 @@ OCIO_NAMESPACE_ENTER
             for(int i=0; i<groupTransform.size(); ++i)
             {
                 ConstTransformRcPtr childTransform = groupTransform.getTransform(i);
-                BuildOps(opVec, config, childTransform, TRANSFORM_DIR_FORWARD);
+                BuildOps(processor, config, childTransform, TRANSFORM_DIR_FORWARD);
             }
         }
         else if(combinedDir == TRANSFORM_DIR_INVERSE)
@@ -264,7 +262,7 @@ OCIO_NAMESPACE_ENTER
             for(int i=groupTransform.size()-1; i>=0; --i)
             {
                 ConstTransformRcPtr childTransform = groupTransform.getTransform(i);
-                BuildOps(opVec, config, childTransform, TRANSFORM_DIR_INVERSE);
+                BuildOps(processor, config, childTransform, TRANSFORM_DIR_INVERSE);
             }
         }
     }

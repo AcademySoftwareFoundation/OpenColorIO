@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
+#include "Processor.h"
 #include "tinyxml/tinyxml.h"
 
 OCIO_NAMESPACE_ENTER
@@ -73,7 +74,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    void BuildDisplayOps(OpRcPtrVec * opVec,
+    void BuildDisplayOps(LocalProcessor & processor,
                          const Config & config,
                          const DisplayTransform & displayTransform,
                          TransformDirection dir);

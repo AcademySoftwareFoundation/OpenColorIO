@@ -181,31 +181,31 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    void CreateScaleOp(OpRcPtrVec * opVec,
+    void CreateScaleOp(LocalProcessor & processor,
                        const float * scale4,
                        TransformDirection direction)
     {
         float offset4[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        CreateScaleOffsetOp(opVec, scale4, offset4, direction);
+        CreateScaleOffsetOp(processor, scale4, offset4, direction);
     }
     
-    void CreateMatrixOp(OpRcPtrVec * opVec,
+    void CreateMatrixOp(LocalProcessor & processor,
                         const float * m44,
                         TransformDirection direction)
     {
         float offset4[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        CreateMatrixOffsetOp(opVec, m44, offset4, direction);
+        CreateMatrixOffsetOp(processor, m44, offset4, direction);
     }
     
-    void CreateOffsetOp(OpRcPtrVec * opVec,
+    void CreateOffsetOp(LocalProcessor & processor,
                         const float * offset4,
                         TransformDirection direction)
     {
         float scale4[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-        CreateScaleOffsetOp(opVec, scale4, offset4, direction);
+        CreateScaleOffsetOp(processor, scale4, offset4, direction);
     }
     
-    void CreateScaleOffsetOp(OpRcPtrVec * opVec,
+    void CreateScaleOffsetOp(LocalProcessor & processor,
                              const float * scale4, const float * offset4,
                              TransformDirection direction)
     {
@@ -217,12 +217,12 @@ OCIO_NAMESPACE_ENTER
         m44[10] = scale4[2];
         m44[15] = scale4[3];
         
-        CreateMatrixOffsetOp(opVec,
+        CreateMatrixOffsetOp(processor,
                              m44, offset4,
                              direction);
     }
     
-    void CreateSaturationOp(OpRcPtrVec * opVec,
+    void CreateSaturationOp(LocalProcessor & processor,
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction)
@@ -249,10 +249,10 @@ OCIO_NAMESPACE_ENTER
         m44[14] = 0.0f;
         m44[15] = 1.0f;
         
-        CreateMatrixOp(opVec, m44, direction);
+        CreateMatrixOp(processor, m44, direction);
     }
     
-    void CreateMatrixOffsetOp(OpRcPtrVec * opVec,
+    void CreateMatrixOffsetOp(LocalProcessor & processor,
                               const float * m44, const float * offset4,
                               TransformDirection direction)
     {
@@ -260,7 +260,7 @@ OCIO_NAMESPACE_ENTER
         bool offsetIsIdentity = IsVecEqualToZero(offset4, 4);
         if(mtxIsIdentity && offsetIsIdentity) return;
         
-        opVec->push_back( MatrixOffsetOpRcPtr(new MatrixOffsetOp(m44,
+        processor.registerOp( MatrixOffsetOpRcPtr(new MatrixOffsetOp(m44,
             offset4, direction)) );
     }
 }

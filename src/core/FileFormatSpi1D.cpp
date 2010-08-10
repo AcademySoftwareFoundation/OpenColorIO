@@ -194,7 +194,7 @@ OCIO_NAMESPACE_ENTER
                 return cachedFile;
             }
 
-            virtual void BuildFileOps(OpRcPtrVec * opVec,
+            virtual void BuildFileOps(LocalProcessor & processor,
                                       CachedFileRcPtr untypedCachedFile,
                                       const FileTransform& fileTransform,
                                       TransformDirection dir) const
@@ -211,7 +211,7 @@ OCIO_NAMESPACE_ENTER
                 TransformDirection newDir = CombineTransformDirections(dir,
                     fileTransform.getDirection());
                 
-                CreateLut1DOp(opVec,
+                CreateLut1DOp(processor,
                               cachedFile->lut,
                               fileTransform.getInterpolation(),
                               newDir);

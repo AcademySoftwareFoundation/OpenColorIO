@@ -337,13 +337,11 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void BuildFileOps(OpRcPtrVec * opVec,
+    void BuildFileOps(LocalProcessor & processor,
                       const Config& config,
                       const FileTransform& fileTransform,
                       TransformDirection dir)
     {
-        if(!opVec) return;
-        
         std::string src = fileTransform.getSrc();
         if(src.empty())
         {
@@ -360,7 +358,7 @@ OCIO_NAMESPACE_ENTER
         FileFormat* format = cachePair.first;
         CachedFileRcPtr cachedFile = cachePair.second;
         
-        format->BuildFileOps(opVec,
+        format->BuildFileOps(processor,
                              cachedFile, fileTransform,
                              dir);
     }

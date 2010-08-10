@@ -272,55 +272,23 @@ OCIO_NAMESPACE_ENTER
         m_impl->setDefaultLumaCoefs(c3);
     }
     
-    // TODO: Add GPU Allocation hints into opstream. Possible to autocompute?
-    
     ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
                                              const ConstColorSpaceRcPtr & dstColorSpace) const
     {
-        // All colorspace conversions within the same family are no-ops
-        std::string srcFamily = srcColorSpace->getFamily();
-        std::string dstFamily = dstColorSpace->getFamily();
-        
-        if(srcFamily == dstFamily)
-        {
-            OpRcPtrVec opVec;
-            return LocalProcessor::Create(opVec);
-        }
-        
-        // Create a combined transform group
-        GroupTransformRcPtr combinedTransform = GroupTransform::Create();
-        combinedTransform->push_back( srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE) );
-        combinedTransform->push_back( dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE) );
-        
-        return getProcessor( combinedTransform );
+        LocalProcessorRcPtr processor = LocalProcessor::Create();
+        BuildColorSpaceConversionOps(*processor, *this, srcColorSpace, dstColorSpace);
+        processor->finalizeOps();
+        return processor;
     }
-    
-    // Individual lut application functions
-    // Can be used to apply a .lut, .dat, .lut3d, or .3dl file.
-    // Not generally needed, but useful in testing.
     
     ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform,
                                              TransformDirection direction) const
     {
-        // TODO: thread safety during build ops?
-        OpRcPtrVec opVec;
-        BuildOps(&opVec, *this, transform, direction);
-        
-        // TODO: Perform smart optimizations / collapsing on the OpVec
-        
-        // After construction, finalize the setup
-        for(unsigned int i=0; i<opVec.size(); ++i)
-        {
-            opVec[i]->setup();
-        }
-        
-        return LocalProcessor::Create(opVec);
+        LocalProcessorRcPtr processor = LocalProcessor::Create();
+        BuildOps(*processor, *this, transform, TRANSFORM_DIR_FORWARD);
+        processor->finalizeOps();
+        return processor;
     }
-
-
-    
-    
-    
     
     std::ostream& operator<< (std::ostream& os, const Config& config)
     {

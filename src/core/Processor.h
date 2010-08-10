@@ -36,10 +36,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    class LocalProcessor;
+    typedef SharedPtr<const LocalProcessor> ConstLocalProcessorRcPtr;
+    typedef SharedPtr<LocalProcessor> LocalProcessorRcPtr;
+    
     class LocalProcessor : public Processor
     {
     public:
-        static ConstProcessorRcPtr Create(const OpRcPtrVec& opVec);
+        static LocalProcessorRcPtr Create();
         
         virtual ~LocalProcessor();
         
@@ -53,8 +57,19 @@ OCIO_NAMESPACE_ENTER
         virtual const char * getGPUShaderText(const GpuShaderDesc & gpuDesc) const;
         virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
         
+        ////////////////////////////////////////////
+        //
+        // Builder functions
+        
+        void registerOp(OpRcPtr op);
+        
+        // The current colorspace is considered this...
+        void annotateColorSpace(const ConstColorSpaceRcPtr & cs);
+        
+        void finalizeOps();
+        
     private:
-        LocalProcessor(const OpRcPtrVec& opVec);
+        LocalProcessor();
         LocalProcessor(const LocalProcessor &);
         LocalProcessor& operator= (const LocalProcessor &);
         
@@ -70,6 +85,27 @@ OCIO_NAMESPACE_ENTER
     };
     
     
+    // TODO: Move these!
+    // TODO: Its not ideal that buildops requires a config to be passed around
+    // but the only alternative is to make build ops a function on it?
+    // and even if it were, what about the build calls it dispatches to...
+    
+    // TODO: all of the build op functions shouldnt take a LocalProcessor class
+    // Instead, they should take an abstract interface class that defines
+    // registerOp(OpRcPtr op), annotateColorSpace, finalizeOps, etc.
+    // of which LocalProcessor happens to be one example.
+    // Then the only location in the codebase that knows of LocalProcessor is
+    // in Config.cpp, which creates one.
+    
+    void BuildOps(LocalProcessor & processor,
+                  const Config & config,
+                  const ConstTransformRcPtr & transform,
+                  TransformDirection dir);
+    
+    void BuildColorSpaceConversionOps(LocalProcessor & processor,
+                                      const Config & config,
+                                      const ConstColorSpaceRcPtr & srcColorSpace,
+                                      const ConstColorSpaceRcPtr & dstColorSpace);
 }
 OCIO_NAMESPACE_EXIT
 

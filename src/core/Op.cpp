@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "GroupTransform.h"
 #include "FileTransform.h"
 #include "Op.h"
+#include "Processor.h"
 
 #include <sstream>
 
@@ -42,25 +43,25 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    void BuildOps(OpRcPtrVec * opVec,
-                  const Config& config,
-                  const ConstTransformRcPtr& transform,
+    void BuildOps(LocalProcessor & processor,
+                  const Config & config,
+                  const ConstTransformRcPtr & transform,
                   TransformDirection dir)
     {
         if(ConstCDLTransformRcPtr cdlTransform = \
             DynamicPtrCast<const CDLTransform>(transform))
         {
-            BuildCDLOps(opVec, config, *cdlTransform, dir);
+            BuildCDLOps(processor, config, *cdlTransform, dir);
         }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
-            BuildFileOps(opVec, config, *fileTransform, dir);
+            BuildFileOps(processor, config, *fileTransform, dir);
         }
         else if(ConstGroupTransformRcPtr groupTransform = \
             DynamicPtrCast<const GroupTransform>(transform))
         {
-            BuildGroupOps(opVec, config, *groupTransform, dir);
+            BuildGroupOps(processor, config, *groupTransform, dir);
         }
         else
         {

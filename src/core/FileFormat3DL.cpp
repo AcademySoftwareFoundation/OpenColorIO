@@ -261,7 +261,7 @@ OCIO_NAMESPACE_ENTER
                 return cachedFile;
             }
 
-            virtual void BuildFileOps(OpRcPtrVec * opVec,
+            virtual void BuildFileOps(LocalProcessor & processor,
                                       CachedFileRcPtr untypedCachedFile,
                                       const FileTransform& fileTransform,
                                       TransformDirection dir) const
@@ -287,27 +287,27 @@ OCIO_NAMESPACE_ENTER
                     /*
                     if(cachedFile->useLut1D)
                     {
-                        CreateLut1DOp(opVec,
+                        CreateLut1DOp(processor,
                                       cachedFile->lut1d,
                                       INTERP_LINEAR,
                                       TRANSFORM_DIR_FORWARD);
                     }
                     */
-                    CreateLut3DOp(opVec,
+                    CreateLut3DOp(processor,
                                   cachedFile->lut3d,
                                   fileTransform.getInterpolation(),
                                   TRANSFORM_DIR_FORWARD);
                 }
                 else if(newDir == TRANSFORM_DIR_INVERSE)
                 {
-                    CreateLut3DOp(opVec,
+                    CreateLut3DOp(processor,
                                   cachedFile->lut3d,
                                   fileTransform.getInterpolation(),
                                   TRANSFORM_DIR_INVERSE);
                     /*
                     if(cachedFile->useLut1D)
                     {
-                        CreateLut1DOp(opVec,
+                        CreateLut1DOp(processor,
                                       cachedFile->lut1d,
                                       INTERP_LINEAR,
                                       TRANSFORM_DIR_INVERSE);

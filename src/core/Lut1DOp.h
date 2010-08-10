@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include "Op.h"
+#include "Processor.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -63,7 +64,7 @@ OCIO_NAMESPACE_ENTER
     
     typedef SharedPtr<Lut1D> Lut1DRcPtr;
     
-    void CreateLut1DOp(OpRcPtrVec * opVec,
+    void CreateLut1DOp(LocalProcessor & processor,
                        Lut1DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);

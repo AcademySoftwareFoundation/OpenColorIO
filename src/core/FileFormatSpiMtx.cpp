@@ -143,7 +143,7 @@ OCIO_NAMESPACE_ENTER
                 return cachedFile;
             }
 
-            virtual void BuildFileOps(OpRcPtrVec * opVec,
+            virtual void BuildFileOps(LocalProcessor & processor,
                                       CachedFileRcPtr untypedCachedFile,
                                       const FileTransform& fileTransform,
                                       TransformDirection dir) const
@@ -160,7 +160,7 @@ OCIO_NAMESPACE_ENTER
                 TransformDirection newDir = CombineTransformDirections(dir,
                     fileTransform.getDirection());
                 
-                CreateMatrixOffsetOp(opVec,
+                CreateMatrixOffsetOp(processor,
                                      cachedFile->m44,
                                      cachedFile->offset4,
                                      newDir);

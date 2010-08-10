@@ -516,13 +516,11 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    void BuildCDLOps(OpRcPtrVec * opVec,
-                     const Config & /*config*/,
+    void BuildCDLOps(LocalProcessor & processor,
+                     const Config & config,
                      const CDLTransform & cdlTransform,
                      TransformDirection dir)
     {
-        if(!opVec) return;
-        
         float scale4[] = { 1.0f, 1.0f, 1.0f, 1.0f };
         cdlTransform.getSlope(scale4);
         
@@ -546,24 +544,24 @@ OCIO_NAMESPACE_ENTER
         if(combinedDir == TRANSFORM_DIR_FORWARD)
         {
             // 1) Scale + Offset
-            CreateScaleOffsetOp(opVec, scale4, offset4, TRANSFORM_DIR_FORWARD);
+            CreateScaleOffsetOp(processor, scale4, offset4, TRANSFORM_DIR_FORWARD);
             
             // 2) Power + Clamp
-            CreateExponentOp(opVec, power4, TRANSFORM_DIR_FORWARD);
+            CreateExponentOp(processor, power4, TRANSFORM_DIR_FORWARD);
             
             // 3) Saturation + Clamp
-            CreateSaturationOp(opVec, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+            CreateSaturationOp(processor, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
         }
         else if(combinedDir == TRANSFORM_DIR_INVERSE)
         {
             // 3) Saturation + Clamp
-            CreateSaturationOp(opVec, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
+            CreateSaturationOp(processor, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
             
             // 2) Power + Clamp
-            CreateExponentOp(opVec, power4, TRANSFORM_DIR_INVERSE);
+            CreateExponentOp(processor, power4, TRANSFORM_DIR_INVERSE);
             
             // 1) Scale + Offset
-            CreateScaleOffsetOp(opVec, scale4, offset4, TRANSFORM_DIR_INVERSE);
+            CreateScaleOffsetOp(processor, scale4, offset4, TRANSFORM_DIR_INVERSE);
         }
     }
 }

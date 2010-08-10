@@ -306,12 +306,12 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void CreateLut3DOp(OpRcPtrVec * opVec,
+    void CreateLut3DOp(LocalProcessor & processor,
                        Lut3DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction)
     {
-        opVec->push_back( Lut3DOpRcPtr(new Lut3DOp(lut, interpolation, direction)) );
+        processor.registerOp( Lut3DOpRcPtr(new Lut3DOp(lut, interpolation, direction)) );
     }
     
     

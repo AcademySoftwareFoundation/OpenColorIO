@@ -65,17 +65,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     typedef SharedPtr<Op> OpRcPtr;
-    
     typedef std::vector<OpRcPtr> OpRcPtrVec;
-    
-    // TODO: Its not ideal that buildops requires a config to be passed around
-    // but the only alternative is to make build ops a function on it?
-    // and even if it were, what about the build calls it dispatches to...
-    
-    void BuildOps(OpRcPtrVec * opVec,
-                  const Config& config,
-                  const ConstTransformRcPtr& transform,
-                  TransformDirection dir);
 }
 OCIO_NAMESPACE_EXIT
 

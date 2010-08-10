@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
+#include "Processor.h"
 
 #include <vector>
 
@@ -73,7 +74,7 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    void BuildGroupOps(OpRcPtrVec * opVec,
+    void BuildGroupOps(LocalProcessor & processor,
                        const Config& config,
                        const GroupTransform& groupTransform,
                        TransformDirection dir);

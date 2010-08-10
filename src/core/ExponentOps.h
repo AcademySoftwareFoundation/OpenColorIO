@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 #include <vector>
 
-#include "Op.h"
+#include "Processor.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -42,7 +42,7 @@ OCIO_NAMESPACE_ENTER
     // If the exponent is 1.0, this will return without clamping
     // Otherwise, will be clamped between [0.0,inf]
     
-    void CreateExponentOp(OpRcPtrVec * opVec,
+    void CreateExponentOp(LocalProcessor & processor,
                           const float * exponent4,
                           TransformDirection direction);
 }

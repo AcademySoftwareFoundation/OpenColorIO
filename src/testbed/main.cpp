@@ -24,11 +24,11 @@ int main(int argc, const char* argv[])
     
     try
     {
-        //loadConfigFromEnv();
+        loadConfigFromEnv();
         
         //testCoordinateTransform();
         //createConfig();
-        testASCTransform();
+        //testASCTransform();
         
     }
     catch(std::exception& e)

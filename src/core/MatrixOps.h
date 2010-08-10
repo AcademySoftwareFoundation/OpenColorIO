@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include "Op.h"
+#include "Processor.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -41,27 +42,27 @@ OCIO_NAMESPACE_ENTER
     //
     // NOTE: These currently do not affect alpha
     
-    void CreateScaleOp(OpRcPtrVec * opVec,
+    void CreateScaleOp(LocalProcessor & processor,
                        const float * scale4,
                        TransformDirection direction);
     
-    void CreateMatrixOp(OpRcPtrVec * opVec,
+    void CreateMatrixOp(LocalProcessor & processor,
                         const float * m44,
                         TransformDirection direction);
     
-    void CreateOffsetOp(OpRcPtrVec * opVec,
+    void CreateOffsetOp(LocalProcessor & processor,
                         const float * offset4,
                         TransformDirection direction);
     
-    void CreateMatrixOffsetOp(OpRcPtrVec * opVec,
+    void CreateMatrixOffsetOp(LocalProcessor & processor,
                               const float * m44, const float * offset4,
                               TransformDirection direction);
     
-    void CreateScaleOffsetOp(OpRcPtrVec * opVec,
+    void CreateScaleOffsetOp(LocalProcessor & processor,
                              const float * scale4, const float * offset4,
                              TransformDirection direction);
     
-    void CreateSaturationOp(OpRcPtrVec * opVec,
+    void CreateSaturationOp(LocalProcessor & processor,
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);

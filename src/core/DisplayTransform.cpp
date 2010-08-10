@@ -167,45 +167,44 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    void BuildDisplayOps(OpRcPtrVec * opVec,
+    void BuildDisplayOps(LocalProcessor & processor,
                          const Config & config,
                          const DisplayTransform & displayTransform,
                          TransformDirection dir)
     {
-        if(!opVec) return;
-        
-        // All colorspace conversions within the same family are no-ops
-        //std::string srcFamily = srcColorSpace->getFamily();
-        //std::string dstFamily = dstColorSpace->getFamily();
-        
-        // Create a combined transform group
-        GroupTransformRcPtr combinedTransform = GroupTransform::Create();
-        
-        
-        
-        
-        
-        
-        //combinedTransform->push_back( srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE) );
-        //combinedTransform->push_back( dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE) );
-        
-        //return getProcessor( combinedTransform );
-        /*
         TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                  DisplayTransform.getDirection());
+                                                  displayTransform.getDirection());
         
-        if(combinedDir == TRANSFORM_DIR_FORWARD)
-        {
-            Const GroupTransformRcPtr toReference getTransform
-            // 
-            
-        }
-        else if(combinedDir == TRANSFORM_DIR_INVERSE)
+        if(combinedDir != TRANSFORM_DIR_FORWARD)
         {
             std::ostringstream os;
-            os << "Cannot apply display transform in inverse direction.";
+            os << "DisplayTransform can only be applied in the forward direction.";
             throw Exception(os.str().c_str());
         }
+        
+        /*
+        ConstColorSpaceRcPtr currentColorspace = displayTransform.getInputColorspace();
+        
+        ConstCDLTransformRcPtr linearCC = displayTransform.getLinearCC();
+        if(!linearCC.isNoOp())
+        {
+            ConstColorSpaceRcPtr linearColorSpace = ;
+            
+            BuildColorSpaceConversionOps(processor, config,
+                                         currentColorspace,
+                                         linearColorSpace);
+            
+            BuildCDLOps(processor, config,
+                        *linearCC,
+                        TRANSFORM_DIR_FORWARD);
+            
+            currentColorspace = linearCC;
+        }
+        
+        
+        BuildColorSpaceConversionOps(processor, config,
+                                     currentColorspace,
+                                     displayTransform.getDisplayColorSpace());
         */
     }
 }

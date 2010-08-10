@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include "Op.h"
+#include "Processor.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -81,7 +82,7 @@ OCIO_NAMESPACE_ENTER
     // This generates an identity 3d lut in GL layout
     void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels);
     
-    void CreateLut3DOp(OpRcPtrVec * opVec,
+    void CreateLut3DOp(LocalProcessor & processor,
                        Lut3DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);

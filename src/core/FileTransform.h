@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
+#include "Processor.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -66,7 +67,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    void BuildFileOps(OpRcPtrVec * opVec,
+    void BuildFileOps(LocalProcessor & processor,
                       const Config& config,
                       const FileTransform& fileTransform,
                       TransformDirection dir);
@@ -93,7 +94,7 @@ OCIO_NAMESPACE_ENTER
         virtual std::string GetExtension() const = 0;
         virtual CachedFileRcPtr Load(std::istream & istream) const = 0;
         
-        virtual void BuildFileOps(OpRcPtrVec * opVec,
+        virtual void BuildFileOps(LocalProcessor & processor,
                                   CachedFileRcPtr cachedFile,
                                   const FileTransform& fileTransform,
                                   TransformDirection dir) const = 0;
