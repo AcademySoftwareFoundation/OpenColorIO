@@ -494,7 +494,8 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                std::cerr << "[OCS WARNING]: Unknwon element type " << elementtype << std::endl;
+                std::cerr << "[OCIO WARNING]: Parse error, ";
+                std::cerr << "unknown element type '" << elementtype << "'." << std::endl;
             }
             
             pElem=pElem->NextSiblingElement();
