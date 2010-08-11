@@ -57,6 +57,8 @@ OCIO_NAMESPACE_ENTER
         // Throw an exception if the CDL is in any way invalid
         void sanityCheck() const;
         
+        bool isNoOp() const;
+        
         void setSlope(const float * rgb);
         void getSlope(float * rgb) const;
         

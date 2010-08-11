@@ -927,6 +927,8 @@ OCIO_NAMESPACE_ENTER
         // Throw an exception if the CDL is in any way invalid
         void sanityCheck() const;
         
+        bool isNoOp() const;
+        
         // TODO: Reset?
         
         // ASC_SOP

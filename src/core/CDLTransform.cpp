@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ExponentOps.h"
 #include "MatrixOps.h"
+#include "MathUtils.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
@@ -98,7 +99,12 @@ OCIO_NAMESPACE_ENTER
     {
         m_impl->sanityCheck();
     }
-
+    
+    bool CDLTransform::isNoOp() const
+    {
+        return m_impl->isNoOp();
+    }
+    
     void CDLTransform::setSlope(const float * rgb)
     {
         m_impl->setSlope(rgb);
@@ -300,6 +306,19 @@ OCIO_NAMESPACE_ENTER
         getDescription();
     }
 
+    bool CDLTransform::Impl::isNoOp() const
+    {
+        float sop[9];
+        getSOP(sop);
+        
+        if(!IsVecEqualToOne(&sop[0], 3)) return false;
+        if(!IsVecEqualToZero(&sop[3], 3)) return false;
+        if(!IsVecEqualToOne(&sop[6], 3)) return false;
+        if(!IsScalarEqualToOne(getSat())) return false;
+        
+        return true;
+    }
+    
     void CDLTransform::Impl::setSOPVec(const float * rgb, const char * name)
     {
         m_xml = "";

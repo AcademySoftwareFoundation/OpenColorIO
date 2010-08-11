@@ -228,11 +228,11 @@ OCIO_NAMESPACE_ENTER
         
         ConstColorSpaceRcPtr currentColorspace = displayTransform.getInputColorSpace();
         
-        /*
         ConstCDLTransformRcPtr linearCC = displayTransform.getLinearCC();
-        if(!linearCC.isNoOp())
+        
+        if(!linearCC->isNoOp())
         {
-            ConstColorSpaceRcPtr linearColorSpace = ;
+            ConstColorSpaceRcPtr linearColorSpace = config.getColorSpaceForRole(ROLE_SCENE_LINEAR);
             
             BuildColorSpaceConversionOps(processor, config,
                                          currentColorspace,
@@ -242,9 +242,8 @@ OCIO_NAMESPACE_ENTER
                         *linearCC,
                         TRANSFORM_DIR_FORWARD);
             
-            currentColorspace = linearCC;
+            currentColorspace = linearColorSpace;
         }
-        */
         
         BuildColorSpaceConversionOps(processor, config,
                                      currentColorspace,
