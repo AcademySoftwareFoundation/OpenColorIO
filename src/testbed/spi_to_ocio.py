@@ -13,7 +13,7 @@ if len(sys.argv) < 3:
     
     Convert a proprietary SPI color configuration format (v7 xml) to an OCIO config.
     
-    env PYTHONPATH=/net/homedirs/jeremys/git/ocio/build/ ./src/testbed/spi_to_ocio.py /net/soft_scratch/users/color/colorspace/OCS/vfx/v1/vfx.OCS.xml /net/homedirs/jeremys/git/ocio-configs/spi-vfx
+    env PYTHONPATH=/net/homedirs/jeremys/git/ocio/build/ ./src/testbed/spi_to_ocio.py /net/soft_scratch/users/color/colorspace/OCIO/vfx/v1/vfx.OCIO.xml /net/homedirs/jeremys/git/ocio-configs/spi-vfx
     
     """
     sys.exit(1)
@@ -232,11 +232,11 @@ element = p.parse(INPUT_CONFIG)
 config = BuildConfigFromXMLElement( element, LUT_DIR)
 config.setResourcePath('luts')
 
-OUTPUT_OCS_FILE = os.path.join(OUTPUT_DIR, 'config.ocio')
+OUTPUT_OCIO_FILE = os.path.join(OUTPUT_DIR, 'config.ocio')
 print ''
-print 'Writing',OUTPUT_OCS_FILE
+print 'Writing',OUTPUT_OCIO_FILE
 
-f = file(OUTPUT_OCS_FILE,'w')
+f = file(OUTPUT_OCIO_FILE,'w')
 f.write(config.getXML())
 f.close()
 
@@ -251,10 +251,10 @@ OUTPUT_README_FILE = os.path.join(OUTPUT_DIR, 'README')
 print ''
 print 'Writing',OUTPUT_README_FILE
 
-process = subprocess.Popen([ocio_info_cmd,OUTPUT_OCS_FILE,], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+process = subprocess.Popen([ocio_info_cmd,OUTPUT_OCIO_FILE,], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 returncode = process.wait()
 if returncode:
-    raise TypeError("Could not run %s %s" % (ocio_info_cmd,OUTPUT_OCS_FILE))
+    raise TypeError("Could not run %s %s" % (ocio_info_cmd,OUTPUT_OCIO_FILE))
 
 f = file(OUTPUT_README_FILE,'w')
 f.write(process.stdout.read())
