@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 //
 // OpenColorIO
-// Version 0.5.10
+// Version 0.5.11
 //
 
 

@@ -1,3 +1,8 @@
+Version 0.5.11 (Aug 11 2010):
+    * Initial DisplayTransform implementation
+    * ASC CDL Support
+    * Config Luma coefficients
+
 Version 0.5.10 (July 22 2010):
     * Updated Nuke Plugin, now works in OSX
     * Fixed misc. build warnings.
