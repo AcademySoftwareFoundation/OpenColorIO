@@ -1,24 +1,43 @@
 <ocioconfig version="1" resourcepath="luts" luma_r="0.2126" luma_g="0.7152" luma_b="0.0722" role_scene_linear="lnh" role_compositing_log="lgh">
-    <colorspace name="lnh" family="ln" bitdepth="16f" isdata="false" gpuallocation="lg2" gpumin="-16" gpumax="6" />
-    <colorspace name="lgh" family="lg" bitdepth="16f" isdata="false" gpuallocation="uniform" gpumin="-0.2" gpumax="1.615">
-        <to_reference>
-            <group>
-                <file src="lgf.spi1d" interpolation="linear" />
-            </group>
-        </to_reference>
+    <display device="sRGB" name="Film1D" colorspace="vd8"/>
+    <display device="sRGB" name="Log" colorspace="lg10"/>
+    
+    <colorspace name="lnh" family="ln" bitdepth="16f" isdata="false" gpuallocation="lg2" gpumin="-15" gpumax="6">
+        <description>The show reference space. This is a sensor referred linear representation of the scene with primaries that correspond to scanned film. 0.18 in this space corresponds to a properly exposed 18% grey card. </description>
     </colorspace>
-    <colorspace name="lg16" family="lg" bitdepth="16ui" isdata="false" gpuallocation="uniform" gpumin="0" gpumax="1">
-        <to_reference>
-            <group>
-                <file src="lg16.spi1d" interpolation="nearest" />
-            </group>
-        </to_reference>
-    </colorspace>
+    
     <colorspace name="lg10" family="lg" bitdepth="10ui" isdata="false" gpuallocation="uniform" gpumin="0" gpumax="1">
+        <description>lg10 converts from scanned film to the show linear reference space. This is a custom conversion based on several Kodak acquisition stocks. All three color channels have the same response and there is no cross talk. This transform has a shoulder and toe compensation. This 10bit uiint version is used for DI deliveries.</description>
         <to_reference>
             <group>
                 <file src="lg10.spi1d" interpolation="nearest" />
             </group>
         </to_reference>
     </colorspace>
+    <colorspace name="lg16" family="lg" bitdepth="16ui" isdata="false" gpuallocation="uniform" gpumin="0" gpumax="1">
+        <description>lg16 converts from scanned film to the show linear reference space. This is a custom conversion based on several Kodak acquisition stocks. All three color channels have the same response and there is no cross talk. This transform has a shoulder and toe compensation. This 16bit uiint version is used for DI deliveries in the rare case where this is requested. </description>
+        <to_reference>
+            <group>
+                <file src="lgf.spi1d" interpolation="nearest" />
+            </group>
+        </to_reference>
+    </colorspace>
+    <colorspace name="lgh" family="lg" bitdepth="16f" isdata="false" gpuallocation="uniform" gpumin="-0.2" gpumax="1.615">
+        <description>Converts from scanned film to the show linear reference space. This is a custom curve based on several Kodak acquisition stocks. All three color channels have the same response and there is no cross talk. This transform has a shoulder and toe compensation. This floating point version of the conversion that includes a large range of over-shoot and under-shoot values. This allows for colortiming offsetsto be applied and reversed out losslessly. For internal use only. </description>
+        <to_reference>
+            <group>
+                <file src="lgf.spi1d" interpolation="linear" />
+            </group>
+        </to_reference>
+    </colorspace>
+    
+    <colorspace name="vd8" family="vd" bitdepth="8ui" isdata="false" gpuallocation="uniform" gpumin="0" gpumax="1">
+        <description>vd8 is an 8 bit sRGB like,2.2 gamma, conversion to and from the reference colorspace. This is a 1-d representation does not include any subtractive color mixing or crosstalk compensation. This is commonly used to interchange files between internal and external vendors. This is used as the interchange space for final images on direct to video or television products. </description>
+        <to_reference>
+            <group>
+                <file src="vd10.spi1d" interpolation="nearest" />
+            </group>
+        </to_reference>
+    </colorspace>
+    
 </ocioconfig>
