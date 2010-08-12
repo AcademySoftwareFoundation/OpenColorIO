@@ -492,6 +492,21 @@ OCIO_NAMESPACE_ENTER
             {
                 setDescription(pElem->GetText());
             }
+            else if(elementtype == "display")
+            {
+                const char * device = pElem->Attribute("device");
+                const char * name = pElem->Attribute("name");
+                const char * colorspace = pElem->Attribute("colorspace");
+                if(!device || !name || !colorspace)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing ocio configuration file, '" << filename;
+                    os << "'. Invalid <display> specification.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                addDisplayDevice(device, name, colorspace);
+            }
             else
             {
                 std::cerr << "[OCIO WARNING]: Parse error, ";
@@ -553,6 +568,27 @@ OCIO_NAMESPACE_ENTER
                 std::string rolekey = std::string("role_") + role;
                 std::string roleValue = getColorSpaceForRole(role.c_str())->getName();
                 element->SetAttribute(rolekey, roleValue);
+            }
+            
+            for(int i=0; i<getNumDisplayDevices(); ++i)
+            {
+                const char * device = getDisplayDevice(i);
+                
+                int numTransforms = getNumDisplayTransformNames(device);
+                for(int j=0; j<numTransforms; ++j)
+                {
+                    const char * displayTransformName = getDisplayTransformName(device, j);
+                    const char * colorSpace = getDisplayColorspace(device, displayTransformName);
+                    
+                    if(device && displayTransformName && colorSpace)
+                    {
+                        TiXmlElement * childElement = new TiXmlElement( "display" );
+                        childElement->SetAttribute("device", device);
+                        childElement->SetAttribute("name", displayTransformName);
+                        childElement->SetAttribute("colorspace", colorSpace);
+                        element->LinkEndChild( childElement );
+                    }
+                }
             }
             
             for(int i = 0; i < getNumColorSpaces(); ++i)

@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdlib>
 #include <cstring>
+#include <set>
 #include <sstream>
 
 OCIO_NAMESPACE_ENTER
@@ -207,35 +208,6 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    /*
-    int Config::getNumColorSpaceFamilies() const
-    {
-        return m_impl->getNumColorSpaceFamilies();
-    }
-    
-    const char * Config::getColorSpaceFamily(int index) const
-    {
-        return m_impl->getColorSpaceFamily(index);
-    }
-
-    int Config::getNumColorSpacesInFamily(const char * family) const
-    {
-        return m_impl->getNumColorSpacesInFamily(family);
-    }
-    
-    const ColorSpace& Config::getColorSpaceInFamily(const char * family, int index) const
-    {
-        return m_impl->getColorSpaceInFamily(family, index);
-    }
-    
-    const ColorSpace& Config::parseColorSpace(const char * userString,
-                                              const char * tokensToSplit) const
-    {
-        return m_impl->parseColorSpace(userString, tokensToSplit);
-    }
-    
-    */
-    
     // Roles
     
     ConstColorSpaceRcPtr Config::getColorSpaceForRole(const char * role) const
@@ -262,6 +234,37 @@ OCIO_NAMESPACE_ENTER
         return m_impl->getRole(index);
     }
     
+    
+    // Display Transforms
+    
+    int Config::getNumDisplayDevices() const
+    {
+        return m_impl->getNumDisplayDevices();
+    }
+    
+    const char * Config::getDisplayDevice(int index) const
+    {
+        return m_impl->getDisplayDevice(index);
+    }
+    
+    int Config::getNumDisplayTransformNames(const char * device) const
+    {
+        return m_impl->getNumDisplayTransformNames(device);
+    }
+    
+    const char * Config::getDisplayTransformName(const char * device, int index) const
+    {
+        return m_impl->getDisplayTransformName(device, index);
+    }
+    
+    const char * Config::getDisplayColorspace(const char * device, const char * displayTransformName) const
+    {
+        return m_impl->getDisplayColorspace(device, displayTransformName);
+    }
+    
+    
+    
+    
     void Config::getDefaultLumaCoefs(float * c3) const
     {
         m_impl->getDefaultLumaCoefs(c3);
@@ -285,7 +288,7 @@ OCIO_NAMESPACE_ENTER
                                              TransformDirection direction) const
     {
         LocalProcessorRcPtr processor = LocalProcessor::Create();
-        BuildOps(*processor, *this, transform, TRANSFORM_DIR_FORWARD);
+        BuildOps(*processor, *this, transform, direction);
         processor->finalizeOps();
         return processor;
     }
@@ -328,6 +331,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         m_roleVec = rhs.m_roleVec; // Vector assignment operator will suffice for this
+        m_displayDevices = rhs.m_displayDevices; // Vector assignment operator will suffice for this
         
         memcpy(m_defaultLumaCoefs, rhs.m_defaultLumaCoefs, 3*sizeof(float));
         
@@ -481,32 +485,11 @@ OCIO_NAMESPACE_ENTER
         return m_colorspaces[index];
     }
     
-    /*
-    int Config::Impl::getNumColorSpaceFamilies() const
-    {
-        return 0;
-    }
     
-    const char * Config::Impl::getColorSpaceFamily(int index) const
-    {
-        return "";
-    }
     
-    int Config::Impl::getNumColorSpacesInFamily(const char * family) const
-    {
-        return 0;
-    }
     
-    const ColorSpace& Config::Impl::getColorSpaceInFamily(const char * family,
-                                                        int index) const
-    {
-    }
+    ///////////////////////////////////////////////////////////////////////////
     
-    const ColorSpace& Config::Impl::parseColorSpace(const char * userString,
-                                                  const char * tokensToSplit) const
-    {
-    }
-    */
     
     
     // Roles
@@ -578,6 +561,130 @@ OCIO_NAMESPACE_ENTER
         return m_roleVec[index].first.c_str();
     }
     
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // TODO: Use maps rather than vectors as storage for display options
+    // These implementations suck in terms of scalability.
+    // (If you had 100s of display devices, this would be criminally inefficient.)
+    // But this can be ignored in the short-term, and doing so makes serialization
+    // much simpler.
+    //
+    // (Alternatively, an ordered map would solve the issue too).
+    //
+    // m_displayDevices = [(device, name, colorspace),...]
+    
+    int Config::Impl::getNumDisplayDevices() const
+    {
+        std::set<std::string> devices;
+        
+        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
+        {
+            if(m_displayDevices[i].size() != 3) continue;
+            devices.insert( m_displayDevices[i][0] );
+        }
+        
+        return static_cast<int>(devices.size());
+    }
+    
+    const char * Config::Impl::getDisplayDevice(int index) const
+    {
+        std::set<std::string> devices;
+        
+        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
+        {
+            if(m_displayDevices[i].size() != 3) continue;
+            devices.insert( m_displayDevices[i][0] );
+            
+            if((int)devices.size()-1 == index)
+            {
+                return m_displayDevices[i][0].c_str();
+            }
+        }
+        
+        std::ostringstream os;
+        os << "Could not find display device with the specified index ";
+        os << index << ".";
+        throw Exception(os.str().c_str());
+    }
+    
+    int Config::Impl::getNumDisplayTransformNames(const char * device) const
+    {
+        std::set<std::string> names;
+        
+        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
+        {
+            if(m_displayDevices[i].size() != 3) continue;
+            if(m_displayDevices[i][0] != device) continue;
+            names.insert( m_displayDevices[i][1] );
+        }
+        
+        return static_cast<int>(names.size());
+    }
+    
+    const char * Config::Impl::getDisplayTransformName(const char * device, int index) const
+    {
+        std::set<std::string> names;
+        
+        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
+        {
+            if(m_displayDevices[i].size() != 3) continue;
+            if(m_displayDevices[i][0] != device) continue;
+            names.insert( m_displayDevices[i][1] );
+            
+            if((int)names.size()-1 == index)
+            {
+                return m_displayDevices[i][1].c_str();
+            }
+        }
+        
+        std::ostringstream os;
+        os << "Could not find display colorspace for device ";
+        os << device << " with the specified index ";
+        os << index << ".";
+        throw Exception(os.str().c_str());
+    }
+    
+    const char * Config::Impl::getDisplayColorspace(const char * device, const char * displayTransformName) const
+    {
+        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
+        {
+            if(m_displayDevices[i].size() != 3) continue;
+            if(m_displayDevices[i][0] != device) continue;
+            if(m_displayDevices[i][1] != displayTransformName) continue;
+            return m_displayDevices[i][2].c_str();
+        }
+        
+        std::ostringstream os;
+        os << "Could not find display colorspace for device ";
+        os << device << " with the specified transform name ";
+        os << displayTransformName << ".";
+        throw Exception(os.str().c_str());
+    }
+    
+    void Config::Impl::addDisplayDevice(const char * device,
+                                        const char * displayTransformName,
+                                        const char * csname)
+    {
+        // Is this device / display already registered?
+        // If so, set it to the potentially new value.
+        
+        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
+        {
+            if(m_displayDevices[i].size() != 3) continue;
+            if(m_displayDevices[i][0] != device) continue;
+            if(m_displayDevices[i][1] != displayTransformName) continue;
+            
+            m_displayDevices[i][2] = csname;
+            return;
+        }
+        
+        // Otherwise, add a new entry!
+        DisplayKey displayKey;
+        displayKey.push_back(std::string(device));
+        displayKey.push_back(std::string(displayTransformName));
+        displayKey.push_back(std::string(csname));
+        m_displayDevices.push_back(displayKey);
+    }
     
     ///////////////////////////////////////////////////////////////////////////
     

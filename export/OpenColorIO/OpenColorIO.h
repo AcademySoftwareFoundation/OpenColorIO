@@ -380,10 +380,22 @@ OCIO_NAMESPACE_ENTER
         ConstColorSpaceRcPtr getColorSpaceForRole(const char * role) const;
         void setColorSpaceForRole(const char * role, const char * csname);
         void unsetRole(const char * role);
-        
         int getNumRoles() const;
         const char * getRole(int index) const;
         
+        
+        
+        // Display Transforms
+        // TODO: add default display device + default display transform
+        int getNumDisplayDevices() const;
+        const char * getDisplayDevice(int index) const;
+        int getNumDisplayTransformNames(const char * device) const;
+        const char * getDisplayTransformName(const char * device, int index) const;
+        const char * getDisplayColorspace(const char * device, const char * displayTransformName) const;
+        
+        void addDisplayDevice(const char * device,
+                              const char * transformName,
+                              const char * colorSpaceName);
         
         // Get the default coefficients for computing luma.
         //
@@ -400,15 +412,6 @@ OCIO_NAMESPACE_ENTER
         
         // These should be normalized. (sum to 1.0 exactly)
         void setDefaultLumaCoefs(const float * rgb);
-        
-        
-        
-        
-        // Display Transform
-        ConstColorSpaceRcPtr GetDisplayColorspace(const char * device, const char * transform);
-        
-        
-        
         
         
         //! Convert from inputColorSpace to outputColorSpace
@@ -848,10 +851,6 @@ OCIO_NAMESPACE_ENTER
         
         // By default, this will convert the incoming image into the ROLE_SCENE_LINEAR
         // colorspace
-        //void setLinearProcessingColorspace(const ConstColorSpaceRcPtr & cs);
-        
-        // Set a specified color correction (such as a CDLTransform) to occur
-        // in linear
         
         void setLinearCC(const ConstCDLTransformRcPtr & cc);
         
@@ -859,6 +858,7 @@ OCIO_NAMESPACE_ENTER
         void setLinearExposure(const float* v4);
         
         ConstCDLTransformRcPtr getLinearCC() const;
+        
         
         
         
@@ -874,13 +874,11 @@ OCIO_NAMESPACE_ENTER
         // STAGE IV: Apply the View Matrix, if needed
         
         
+        
         // STAGE V: Specify which Colorspace is appropriate for viewing
         
         void setDisplayColorspace(const ConstColorSpaceRcPtr & cs);
         ConstColorSpaceRcPtr getDisplayColorSpace() const;
-        
-        
-        
         
         // STAGE VI: Apply Post-processing
     

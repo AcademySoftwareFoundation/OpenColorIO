@@ -13,6 +13,7 @@ namespace OCIO = OCIO_NAMESPACE;
 void loadConfigFromEnv();
 void testCoordinateTransform();
 void testASCTransform();
+void testFilmlooks();
 void createConfig();
 void loadConfig();
 
@@ -24,8 +25,9 @@ int main(int argc, const char* argv[])
     
     try
     {
-        loadConfigFromEnv();
+        testFilmlooks();
         
+        // loadConfigFromEnv();
         //testCoordinateTransform();
         //createConfig();
         //testASCTransform();
@@ -62,6 +64,30 @@ void testASCTransform()
     
     std::cerr << "xml " << cdl->getXML() << std::endl;
     
+}
+
+void testFilmlooks()
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    
+    int numDisplayDevices = config->getNumDisplayDevices();
+    std::cout << "numDisplayDevices " << numDisplayDevices << std::endl;
+    
+    for(int i=0; i<numDisplayDevices; ++i)
+    {
+        const char * device = config->getDisplayDevice(i);
+        std::cout << " Device: " << device << std::endl;
+        
+        int numTransforms = config->getNumDisplayTransformNames(device);
+        for(int j=0; j<numTransforms; ++j)
+        {
+            const char * displayTransformName = config->getDisplayTransformName(device, j);
+            std::cout << "     ";
+            std::cout << displayTransformName << " = ";
+            std::cout << config->getDisplayColorspace(device, displayTransformName);
+            std::cout << "\n";
+        }
+    }
 }
 
 

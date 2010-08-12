@@ -40,6 +40,8 @@ OCIO_NAMESPACE_ENTER
     typedef std::vector<ColorSpaceRcPtr> ColorSpacePtrVec;
     typedef std::vector< std::pair<std::string, std::string> > RoleVec;
     
+    typedef std::vector<std::string> DisplayKey; // (device, name, colorspace)
+    
     class Config::Impl
     {
     public:
@@ -84,17 +86,6 @@ OCIO_NAMESPACE_ENTER
         ConstColorSpaceRcPtr getColorSpaceByName(const char * name) const;
         ColorSpaceRcPtr getEditableColorSpaceByName(const char * name);
         
-        /*
-        int getNumColorSpaceFamilies() const;
-        const char * getColorSpaceFamily(int index) const;
-        
-        int getNumColorSpacesInFamily(const char * family) const;
-        const ColorSpace& getColorSpaceInFamily(const char * family,
-                                                int index) const;
-        
-        const ColorSpace& parseColorSpace(const char * userString,
-                                          const char * tokensToSplit) const;
-        */
         
         // Roles
         ConstColorSpaceRcPtr getColorSpaceForRole(const char * role) const;
@@ -104,6 +95,20 @@ OCIO_NAMESPACE_ENTER
         int getNumRoles() const;
         const char * getRole(int index) const;
         
+        
+        // Display Transforms
+        int getNumDisplayDevices() const;
+        const char * getDisplayDevice(int index) const;
+        int getNumDisplayTransformNames(const char * device) const;
+        const char * getDisplayTransformName(const char * device, int index) const;
+        const char * getDisplayColorspace(const char * device, const char * displayTransformName) const;
+        
+        void addDisplayDevice(const char * device,
+                              const char * displayTransformName,
+                              const char * csname);
+        
+        
+        // Luma
         void getDefaultLumaCoefs(float * c3) const;
         void setDefaultLumaCoefs(const float * c3);
         
@@ -117,7 +122,10 @@ OCIO_NAMESPACE_ENTER
         std::string m_description;
         
         ColorSpacePtrVec m_colorspaces;
+        
         RoleVec m_roleVec;
+        
+        std::vector<DisplayKey> m_displayDevices;
         
         float m_defaultLumaCoefs[3];
     };
