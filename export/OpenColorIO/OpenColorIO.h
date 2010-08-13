@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 // TODO: Turn the lutpath into a search path mechanism
-// TODO: Turn all fcns that return colorspace classes to return colorspace name string instead?
+// TODO: Unify all fcns that return colorspace classes to return colorspace name string instead?
 //       This may assist with dynamic color spaces
 // TODO: Colorspace limit functions, GetLinearColorspaceMax
 // TODO: Filmlook
@@ -877,7 +877,7 @@ OCIO_NAMESPACE_ENTER
         
         // STAGE V: Specify which Colorspace is appropriate for viewing
         
-        void setDisplayColorspace(const ConstColorSpaceRcPtr & cs);
+        void setDisplayColorSpace(const ConstColorSpaceRcPtr & cs);
         ConstColorSpaceRcPtr getDisplayColorSpace() const;
         
         // STAGE VI: Apply Post-processing

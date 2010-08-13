@@ -111,9 +111,9 @@ OCIO_NAMESPACE_ENTER
         return m_impl->getLinearCC();
     }
     
-    void DisplayTransform::setDisplayColorspace(const ConstColorSpaceRcPtr & cs)
+    void DisplayTransform::setDisplayColorSpace(const ConstColorSpaceRcPtr & cs)
     {
-        m_impl->setDisplayColorspace(cs);
+        m_impl->setDisplayColorSpace(cs);
     }
     
     ConstColorSpaceRcPtr DisplayTransform::getDisplayColorSpace() const
@@ -139,8 +139,12 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
+    // TODO: Deal with null ColorSpace in a better manner. Assert during Build?
     
     DisplayTransform::Impl::Impl() :
+        m_inputColorSpace(ColorSpace::Create()),
+        m_linearCC(CDLTransform::Create()),
+        m_displayColorSpace(ColorSpace::Create()),
         m_direction(TRANSFORM_DIR_FORWARD)
     {
     }
@@ -199,7 +203,7 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    void DisplayTransform::Impl::setDisplayColorspace(const ConstColorSpaceRcPtr & cs)
+    void DisplayTransform::Impl::setDisplayColorSpace(const ConstColorSpaceRcPtr & cs)
     {
         m_displayColorSpace = cs;
     }

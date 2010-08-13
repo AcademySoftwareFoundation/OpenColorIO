@@ -61,7 +61,7 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        void setDisplayColorspace(const ConstColorSpaceRcPtr & cs);
+        void setDisplayColorSpace(const ConstColorSpaceRcPtr & cs);
         ConstColorSpaceRcPtr getDisplayColorSpace() const;
         
         private:
