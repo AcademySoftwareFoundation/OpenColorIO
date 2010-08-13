@@ -389,8 +389,12 @@ OCIO_NAMESPACE_ENTER
         // TODO: add default display device + default display transform
         int getNumDisplayDevices() const;
         const char * getDisplayDevice(int index) const;
+        const char * getDefaultDisplayDevice() const;
+        
         int getNumDisplayTransformNames(const char * device) const;
         const char * getDisplayTransformName(const char * device, int index) const;
+        const char * getDefaultDisplayTransformName(const char * device) const;
+        
         const char * getDisplayColorspace(const char * device, const char * displayTransformName) const;
         
         void addDisplayDevice(const char * device,

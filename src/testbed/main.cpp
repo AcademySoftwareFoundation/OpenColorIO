@@ -72,11 +72,14 @@ void testFilmlooks()
     
     int numDisplayDevices = config->getNumDisplayDevices();
     std::cout << "numDisplayDevices " << numDisplayDevices << std::endl;
+    std::cout << "Default device: " << config->getDefaultDisplayDevice() << std::endl;
+    std::cout << std::endl;
     
     for(int i=0; i<numDisplayDevices; ++i)
     {
         const char * device = config->getDisplayDevice(i);
         std::cout << " Device: " << device << std::endl;
+        std::cout << " Default transform " << config->getDefaultDisplayTransformName(device) << std::endl;
         
         int numTransforms = config->getNumDisplayTransformNames(device);
         for(int j=0; j<numTransforms; ++j)
