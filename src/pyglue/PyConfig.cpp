@@ -187,13 +187,11 @@ OCIO_NAMESPACE_ENTER
         // Display Transforms
         PyObject * PyOCIO_Config_getDisplayDevices( PyObject * self );
         PyObject * PyOCIO_Config_getDefaultDisplayDevice( PyObject * self );
+        PyObject * PyOCIO_Config_getDisplayTransforms( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getDefaultDisplayTransformName( PyObject * self, PyObject * args );
         
         /*
-        const char * getDefaultDisplayDevice() const;
-        
-        int getNumDisplayTransformNames(const char * device) const;
-        const char * getDisplayTransformName(const char * device, int index) const;
-        const char * getDefaultDisplayTransformName(const char * device) const;
+        const char * (const char * device) const;
         
         const char * getDisplayColorspace(const char * device, const char * displayTransformName) const;
         
@@ -232,7 +230,10 @@ OCIO_NAMESPACE_ENTER
             
             {"getDisplayDevices", (PyCFunction) PyOCIO_Config_getDisplayDevices, METH_NOARGS, "" },
             {"getDefaultDisplayDevice", (PyCFunction) PyOCIO_Config_getDefaultDisplayDevice, METH_NOARGS, "" },
+            {"getDisplayTransforms", PyOCIO_Config_getDisplayTransforms, METH_VARARGS, "" },
+            {"getDefaultDisplayTransformName", PyOCIO_Config_getDefaultDisplayTransformName, METH_VARARGS, "" },
             
+
             {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
             {"setDefaultLumaCoefs", PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, "" },
             
@@ -618,6 +619,53 @@ OCIO_NAMESPACE_ENTER
         
         }
         
+        
+        
+        
+        PyObject * PyOCIO_Config_getDisplayTransforms( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * device = 0;
+                if (!PyArg_ParseTuple(args,"s:getDisplayTransforms",
+                    &device)) return NULL;
+                
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                std::vector<std::string> data;
+                int numTransforms = config->getNumDisplayTransformNames(device);
+                
+                for(int i=0; i<numTransforms; ++i)
+                {
+                    data.push_back( config->getDisplayTransformName(device, i) );
+                }
+                
+                return CreatePyListFromStringVector(data);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        PyObject * PyOCIO_Config_getDefaultDisplayTransformName( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * device = 0;
+                if (!PyArg_ParseTuple(args,"s:getDisplayTransforms",
+                    &device)) return NULL;
+                
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                return PyString_FromString( config->getDefaultDisplayTransformName(device) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
         
         
