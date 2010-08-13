@@ -29,6 +29,7 @@ print ""
 
 
 # Create a new config
+"""
 config = OCIO.Config()
 
 print 'isEditable', config.isEditable()
@@ -52,4 +53,9 @@ print config.getDefaultLumaCoefs()
 #print config.getDefaultLumaCoefs()
 
 xml = config.getXML()
-print xml
+#print xml
+"""
+
+config = OCIO.Config.CreateFromEnv()
+print 'displayDevices',config.getDisplayDevices()
+print 'default display device',config.getDefaultDisplayDevice()
