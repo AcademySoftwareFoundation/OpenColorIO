@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "CDLTransform.h"
+#include "DisplayTransform.h"
 #include "GroupTransform.h"
 #include "FileTransform.h"
 #include "Op.h"
@@ -52,6 +53,11 @@ OCIO_NAMESPACE_ENTER
             DynamicPtrCast<const CDLTransform>(transform))
         {
             BuildCDLOps(processor, config, *cdlTransform, dir);
+        }
+        else if(ConstDisplayTransformRcPtr displayTransform = \
+            DynamicPtrCast<const DisplayTransform>(transform))
+        {
+            BuildDisplayOps(processor, config, *displayTransform, dir);
         }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
