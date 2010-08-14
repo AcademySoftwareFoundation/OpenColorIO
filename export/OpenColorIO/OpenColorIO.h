@@ -410,6 +410,11 @@ OCIO_NAMESPACE_ENTER
         
         void clearColorSpaces();
         
+        //! Given the specified string, get the longest, right-most,
+        //  ColorSpace substring that appears.  Return an empty string
+        //  if none are found.
+        
+        const char * parseColorSpaceFromString(const char * str);
         
         // Families
         

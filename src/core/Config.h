@@ -86,6 +86,8 @@ OCIO_NAMESPACE_ENTER
         ConstColorSpaceRcPtr getColorSpaceByName(const char * name) const;
         ColorSpaceRcPtr getEditableColorSpaceByName(const char * name);
         
+        const char * parseColorSpaceFromString(const char * str);
+        
         
         // Roles
         ConstColorSpaceRcPtr getColorSpaceForRole(const char * role) const;
