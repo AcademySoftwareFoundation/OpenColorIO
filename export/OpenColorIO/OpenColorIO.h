@@ -76,7 +76,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: Cross-platform
 
 /*
-// Example use case for a compositing plugin, which converts from "log" to "lin"
+// Example: Compositing plugin, which converts from "log" to "lin"
 try
 {
     // Get the global config, which will auto-initialize
@@ -102,7 +102,46 @@ catch(OCIO::Exception & exception)
 {
     std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
 }
+
+
+// Example: Apply the default display transform (to a scene-linear image)
+try
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    
+    const char * device = config->getDefaultDisplayDevice();
+    const char * transformName = config->getDefaultDisplayTransformName(device);
+    const char * displayColorSpace = config->getDisplayColorspace(device, transformName);
+    
+    OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
+    transform->setInputColorSpace( config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR) );
+    transform->setDisplayColorSpace( config->getColorSpaceByName(displayColorSpace) );
+    
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
+    
+    OCIO::PackedImageDesc img(imageData, w, h, 4);
+    processor->apply(img);
+}
+catch(OCIO::Exception & exception)
+{
+    std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+}
+
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Namespace mojo
 #define OCIO_VERSION_NS v1
