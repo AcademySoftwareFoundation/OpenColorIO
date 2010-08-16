@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ColorSpaceTransform.h"
 #include "CDLTransform.h"
 #include "DisplayTransform.h"
 #include "ParseUtils.h"
@@ -238,9 +239,9 @@ OCIO_NAMESPACE_ENTER
         {
             ConstColorSpaceRcPtr linearColorSpace = config.getColorSpaceForRole(ROLE_SCENE_LINEAR);
             
-            BuildColorSpaceConversionOps(processor, config,
-                                         currentColorspace,
-                                         linearColorSpace);
+            BuildColorSpaceOps(processor, config,
+                               currentColorspace,
+                               linearColorSpace);
             
             BuildCDLOps(processor, config,
                         *linearCC,
@@ -249,9 +250,9 @@ OCIO_NAMESPACE_ENTER
             currentColorspace = linearColorSpace;
         }
         
-        BuildColorSpaceConversionOps(processor, config,
-                                     currentColorspace,
-                                     displayTransform.getDisplayColorSpace());
+        BuildColorSpaceOps(processor, config,
+                           currentColorspace,
+                           displayTransform.getDisplayColorSpace());
     }
 }
 OCIO_NAMESPACE_EXIT

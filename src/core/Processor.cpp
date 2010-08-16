@@ -357,44 +357,5 @@ OCIO_NAMESPACE_ENTER
         if(!lut3d) return;
         getGPUShader(0, 0, lut3d, shaderDesc);
     }
-    
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    
-    // TODO: What is the right place for this?
-    // TODO: switch to non-refcounted version?
-    
-    void BuildColorSpaceConversionOps(LocalProcessor & processor,
-                                      const Config & config,
-                                      const ConstColorSpaceRcPtr & srcColorSpace,
-                                      const ConstColorSpaceRcPtr & dstColorSpace)
-    {
-        if(srcColorSpace->getFamily() == dstColorSpace->getFamily())
-        {
-            return;
-        }
-        
-        if(srcColorSpace->isData() || dstColorSpace->isData())
-        {
-            return;
-        }
-        
-        // Consider dt8 -> vd8?
-        // One would have to explode the srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        // result, and walk through it step by step.  If the dstColorspace family were
-        // ever encountered in transit, we'd want to short circuit the result.
-        
-        processor.annotateColorSpace(srcColorSpace);
-        
-        ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        BuildOps(processor, config, toref, TRANSFORM_DIR_FORWARD);
-        
-        // processor.annotateColorSpace(reference);
-        
-        ConstGroupTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        BuildOps(processor, config, fromref, TRANSFORM_DIR_FORWARD);
-        
-        processor.annotateColorSpace(dstColorSpace);
-    }
 }
 OCIO_NAMESPACE_EXIT

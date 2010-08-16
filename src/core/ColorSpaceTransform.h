@@ -26,61 +26,55 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
+#ifndef INCLUDED_OCIO_COLORSPACETRANSFORM_H
+#define INCLUDED_OCIO_COLORSPACETRANSFORM_H
+
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "CDLTransform.h"
-#include "ColorSpaceTransform.h"
-#include "DisplayTransform.h"
-#include "GroupTransform.h"
-#include "FileTransform.h"
 #include "Op.h"
 #include "Processor.h"
-
-#include <sstream>
+#include "tinyxml/tinyxml.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    Op::~Op()
-    { }
-    
-    
-    
-    void BuildOps(LocalProcessor & processor,
-                  const Config & config,
-                  const ConstTransformRcPtr & transform,
-                  TransformDirection dir)
+    class ColorSpaceTransform::Impl
     {
-        if(ConstCDLTransformRcPtr cdlTransform = \
-            DynamicPtrCast<const CDLTransform>(transform))
-        {
-            BuildCDLOps(processor, config, *cdlTransform, dir);
-        }
-        else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
-            DynamicPtrCast<const ColorSpaceTransform>(transform))
-        {
-            BuildColorSpaceOps(processor, config, *colorSpaceTransform, dir);
-        }
-        else if(ConstDisplayTransformRcPtr displayTransform = \
-            DynamicPtrCast<const DisplayTransform>(transform))
-        {
-            BuildDisplayOps(processor, config, *displayTransform, dir);
-        }
-        else if(ConstFileTransformRcPtr fileTransform = \
-            DynamicPtrCast<const FileTransform>(transform))
-        {
-            BuildFileOps(processor, config, *fileTransform, dir);
-        }
-        else if(ConstGroupTransformRcPtr groupTransform = \
-            DynamicPtrCast<const GroupTransform>(transform))
-        {
-            BuildGroupOps(processor, config, *groupTransform, dir);
-        }
-        else
-        {
-            std::ostringstream os;
-            os << "Unknown transform type for Op Creation.";
-            throw Exception(os.str().c_str());
-        }
-    }
+        public:
+        
+        Impl();
+        ~Impl();
+        
+        Impl& operator= (const Impl &);
+        
+        TransformDirection getDirection() const;
+        void setDirection(TransformDirection dir);
+        
+        const char * getSrc() const;
+        void setSrc(const char * src);
+        
+        const char * getDst() const;
+        void setDst(const char * src);
+        
+        private:
+        
+        TransformDirection m_direction;
+        std::string m_src;
+        std::string m_dst;
+    };
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    void BuildColorSpaceOps(LocalProcessor & processor,
+                            const Config& config,
+                            const ColorSpaceTransform& colorSpaceTransform,
+                            TransformDirection dir);
+    
+    void BuildColorSpaceOps(LocalProcessor & processor,
+                            const Config & config,
+                            const ConstColorSpaceRcPtr & srcColorSpace,
+                            const ConstColorSpaceRcPtr & dstColorSpace);
 }
 OCIO_NAMESPACE_EXIT
+
+#endif

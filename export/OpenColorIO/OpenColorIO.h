@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.11
 //
 
-
+// TODO: Add ColorSpaceTransform xml serialization / deserialization
 // TODO: Turn the lutpath into a search path mechanism
 // TODO: Unify all fcns that return colorspace classes to return colorspace name string instead?
 //       This may assist with dynamic color spaces
@@ -212,6 +212,10 @@ OCIO_NAMESPACE_ENTER
     class FileTransform;
     typedef SharedPtr<const FileTransform> ConstFileTransformRcPtr;
     typedef SharedPtr<FileTransform> FileTransformRcPtr;
+    
+    class ColorSpaceTransform;
+    typedef SharedPtr<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
+    typedef SharedPtr<ColorSpaceTransform> ColorSpaceTransformRcPtr;
     
     class DisplayTransform;
     typedef SharedPtr<const DisplayTransform> ConstDisplayTransformRcPtr;
@@ -869,6 +873,44 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const FileTransform&);
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    class ColorSpaceTransform : public Transform
+    {
+    public:
+        static ColorSpaceTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        const char * getSrc() const;
+        void setSrc(const char * src);
+        
+        const char * getDst() const;
+        void setDst(const char * dst);
+    
+    private:
+        ColorSpaceTransform();
+        ColorSpaceTransform(const ColorSpaceTransform &);
+        virtual ~ColorSpaceTransform();
+        
+        ColorSpaceTransform& operator= (const ColorSpaceTransform &);
+        
+        static void deleter(ColorSpaceTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
     
     
     

@@ -28,11 +28,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ColorSpaceTransform.h"
 #include "Config.h"
-#include "pystring/pystring.h"
 #include "Mutex.h"
 #include "PathUtils.h"
 #include "Processor.h"
+#include "pystring/pystring.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -293,7 +294,7 @@ OCIO_NAMESPACE_ENTER
                                              const ConstColorSpaceRcPtr & dstColorSpace) const
     {
         LocalProcessorRcPtr processor = LocalProcessor::Create();
-        BuildColorSpaceConversionOps(*processor, *this, srcColorSpace, dstColorSpace);
+        BuildColorSpaceOps(*processor, *this, srcColorSpace, dstColorSpace);
         processor->finalizeOps();
         return processor;
     }
@@ -524,9 +525,10 @@ OCIO_NAMESPACE_ENTER
             
             // If we have found a match, move the pointer over to the right end of the substring
             // This will allow us to find the longest name that matches the rightmost colorspace
-            colorspacePos += csname.size();
+            colorspacePos += (int)csname.size();
+            
             if ( (colorspacePos > rightMostColorPos) ||
-                 (colorspacePos == rightMostColorPos) && (csname.size() > rightMostColorspace.size())
+                 ((colorspacePos == rightMostColorPos) && (csname.size() > rightMostColorspace.size()))
                 )
             {
                 rightMostColorPos = colorspacePos;

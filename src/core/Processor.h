@@ -101,11 +101,6 @@ OCIO_NAMESPACE_ENTER
                   const Config & config,
                   const ConstTransformRcPtr & transform,
                   TransformDirection dir);
-    
-    void BuildColorSpaceConversionOps(LocalProcessor & processor,
-                                      const Config & config,
-                                      const ConstColorSpaceRcPtr & srcColorSpace,
-                                      const ConstColorSpaceRcPtr & dstColorSpace);
 }
 OCIO_NAMESPACE_EXIT
 
