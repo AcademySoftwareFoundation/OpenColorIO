@@ -16,7 +16,7 @@ namespace OCIO = OCIO_NAMESPACE;
 /*!
  * Iop that uses OpenColorIO to perform colorspace conversions
  */
-class ColorSpaceConversion : public DD::Image::PixelIop {
+class ColorSpace : public DD::Image::PixelIop {
 
     protected:
 
@@ -31,9 +31,9 @@ class ColorSpaceConversion : public DD::Image::PixelIop {
         OCIO::ConstProcessorRcPtr processor;
     public:
 
-        ColorSpaceConversion(Node *node);
+        ColorSpace(Node *node);
 
-        ~ColorSpaceConversion();
+        ~ColorSpace();
 
         static const DD::Image::Op::Description description;
 
@@ -49,7 +49,7 @@ class ColorSpaceConversion : public DD::Image::PixelIop {
          * Nuke currently will remove any trailing digits and underscores from
          * this and add a new number to make a unique name for the new node.
          * 
-         * \return "OCIOColorSpaceConversion"
+         * \return "OCIOColorSpace"
          */
         const char *displayName() const;
 

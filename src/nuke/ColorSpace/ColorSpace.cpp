@@ -2,7 +2,7 @@
  * OpenColorIO conversion Iop.
  */
 
-#include "ColorSpaceConversion.h"
+#include "ColorSpace.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -13,10 +13,11 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <string>
 #include <sstream>
+#include <stdexcept>
 
 
 
-ColorSpaceConversion::ColorSpaceConversion(Node *n) : DD::Image::PixelIop(n)
+ColorSpace::ColorSpace(Node *n) : DD::Image::PixelIop(n)
 {
     hasColorSpaces = false;
 
@@ -29,7 +30,7 @@ ColorSpaceConversion::ColorSpaceConversion(Node *n) : DD::Image::PixelIop(n)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        
+
         OCIO::ConstColorSpaceRcPtr defaultColorSpace = \
             config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
 
@@ -38,40 +39,26 @@ ColorSpaceConversion::ColorSpaceConversion(Node *n) : DD::Image::PixelIop(n)
         for(int i = 0; i < nColorSpaces; i++)
         {
             OCIO::ConstColorSpaceRcPtr colorSpace = config->getColorSpaceByIndex(i);
-            bool usedAsInput = false;
             bool isDefault = colorSpace->equals(defaultColorSpace);
-            //if (colorSpace->isTransformAllowed(OCIO::COLORSPACE_DIR_TO_REFERENCE))
+
+            colorSpaceNames.push_back(colorSpace->getName());
+
+            if (isDefault)
             {
-                usedAsInput = true;
-                colorSpaceNames.push_back(colorSpace->getName());
-
-                if (isDefault)
-                {
-                    inputColorSpaceIndex = static_cast<int>(inputColorSpaceCstrNames.size());
-                }
-
-                inputColorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
+                inputColorSpaceIndex = static_cast<int>(inputColorSpaceCstrNames.size());
+                outputColorSpaceIndex = static_cast<int>(outputColorSpaceCstrNames.size());
             }
-            
-            //if (colorSpace->isTransformAllowed(OCIO::COLORSPACE_DIR_FROM_REFERENCE))
-            {
-                if (!usedAsInput)
-                {
-                    colorSpaceNames.push_back(colorSpace->getName());
-                }
-
-                if (isDefault)
-                {
-                    outputColorSpaceIndex = static_cast<int>(outputColorSpaceCstrNames.size());
-                }
-
-                outputColorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
-            }
+            inputColorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
+            outputColorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
         }
     }
     catch (OCIO::Exception& e)
     {
         error(e.what());
+    }
+    catch (...)
+    {
+        error("Unknown exception during OCIO setup.");
     }
 
     hasColorSpaces = !(inputColorSpaceCstrNames.empty() || outputColorSpaceCstrNames.empty());
@@ -85,12 +72,12 @@ ColorSpaceConversion::ColorSpaceConversion(Node *n) : DD::Image::PixelIop(n)
     }
 }
 
-ColorSpaceConversion::~ColorSpaceConversion()
+ColorSpace::~ColorSpace()
 {
 
 }
 
-void ColorSpaceConversion::knobs(DD::Image::Knob_Callback f)
+void ColorSpace::knobs(DD::Image::Knob_Callback f)
 {
     DD::Image::Enumeration_knob(f, &inputColorSpaceIndex, &inputColorSpaceCstrNames[0], "in_colorspace", "in");
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
@@ -105,7 +92,7 @@ void ColorSpaceConversion::knobs(DD::Image::Knob_Callback f)
     DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
-void ColorSpaceConversion::_validate(bool for_real)
+void ColorSpace::_validate(bool for_real)
 {
     input0().validate(for_real);
 
@@ -162,7 +149,7 @@ void ColorSpaceConversion::_validate(bool for_real)
     DD::Image::PixelIop::_validate(for_real);
 }
 
-void ColorSpaceConversion::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
+void ColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
     foreach(c, mask)
@@ -176,7 +163,7 @@ void ColorSpaceConversion::in_channels(int /* n unused */, DD::Image::ChannelSet
 }
 
 // See Saturation::pixel_engine for a well-commented example.
-void ColorSpaceConversion::pixel_engine(
+void ColorSpace::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
     const DD::Image::ChannelSet& outputChannels,
@@ -217,16 +204,6 @@ void ColorSpaceConversion::pixel_engine(
         float *gOut = out.writable(gChannel) + rowX;
         float *bOut = out.writable(bChannel) + rowX;
 
-        #if 0
-        for(int i = 0; i < rowWidth; i++)
-        {
-            float sum = rIn[i] + gIn[i] + bIn[i];
-            sum /= 3.0f;
-            rOut[i] = gOut[i] = bOut[i] = sum;
-        }
-        #endif
-
-        #if 1
         // OCIO modifies in-place
         memcpy(rOut, rIn, sizeof(float)*rowWidth);
         memcpy(gOut, gIn, sizeof(float)*rowWidth);
@@ -241,23 +218,22 @@ void ColorSpaceConversion::pixel_engine(
         {
             error(e.what());
         }
-        #endif
     }
 }
 
-const DD::Image::Op::Description ColorSpaceConversion::description("OCIOColorSpaceConversion", build);
+const DD::Image::Op::Description ColorSpace::description("OCIOColorSpace", build);
 
-const char* ColorSpaceConversion::Class() const
+const char* ColorSpace::Class() const
 {
     return description.name;
 }
 
-const char* ColorSpaceConversion::displayName() const
+const char* ColorSpace::displayName() const
 {
     return description.name;
 }
 
-const char* ColorSpaceConversion::node_help() const
+const char* ColorSpace::node_help() const
 {
     // TODO more detailed help text
     return "Use OpenColorIO to convert from one ColorSpace to another.";
@@ -266,7 +242,7 @@ const char* ColorSpaceConversion::node_help() const
 
 DD::Image::Op* build(Node *node)
 {
-    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new ColorSpaceConversion(node));
+    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new ColorSpace(node));
     op->noMix();
     op->noMask();
     op->noChannels(); // prefer our own channels control without checkboxes / alpha

@@ -90,21 +90,21 @@ set(NUKE_HEADER DDImage/Op.h)
 if(EXISTS "${NUKE}/${NUKE_HEADER}")
     message(STATUS "Nuke path okay, time to set up for building Nuke plugins")
 
-    add_library(NukeColorSpaceConversion MODULE
-        src/nuke/ColorSpaceConversion/ColorSpaceConversion.cpp
+    add_library(NukeOCIOColorSpace MODULE
+        src/nuke/ColorSpace/ColorSpace.cpp
     )
     include_directories(
-        src/nuke/ColorSpaceConversion/
+        src/nuke/ColorSpace/
         ${NUKE}
     )
-    target_link_libraries(NukeColorSpaceConversion OpenColorIO)
+    target_link_libraries(NukeOCIOColorSpace OpenColorIO)
 
     if(APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
     endif()
 
     add_custom_target(Nuke
-        DEPENDS NukeColorSpaceConversion
+        DEPENDS NukeOCIOColorSpace
     )
 else()
     message(STATUS "Nuke plugins will not be built: ${NUKE_HEADER} not found in ${NUKE}")
