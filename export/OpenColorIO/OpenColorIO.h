@@ -414,7 +414,7 @@ OCIO_NAMESPACE_ENTER
         //  ColorSpace substring that appears.  Return an empty string
         //  if none are found.
         
-        const char * parseColorSpaceFromString(const char * str);
+        const char * parseColorSpaceFromString(const char * str) const;
         
         // Families
         
@@ -1088,6 +1088,8 @@ OCIO_NAMESPACE_ENTER
     
     const char * BitDepthToString(BitDepth bitDepth);
     BitDepth BitDepthFromString(const char * s);
+    bool BitDepthIsFloat(BitDepth bitDepth);
+    int BitDepthToInt(BitDepth bitDepth);
     
     const char * GpuAllocationToString(GpuAllocation allocation);
     GpuAllocation GpuAllocationFromString(const char * s);

@@ -206,7 +206,7 @@ OCIO_NAMESPACE_ENTER
         return m_impl->getEditableColorSpaceByName(name);
     }
     
-    const char * Config::parseColorSpaceFromString(const char * str)
+    const char * Config::parseColorSpaceFromString(const char * str) const
     {
         return m_impl->parseColorSpaceFromString(str);
     }
@@ -500,7 +500,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    const char * Config::Impl::parseColorSpaceFromString(const char * str)
+    const char * Config::Impl::parseColorSpaceFromString(const char * str) const
     {
         // Search the entire filePath, including directory name (if provided)
         // convert the filename to lowercase.

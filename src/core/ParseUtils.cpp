@@ -128,6 +128,25 @@ OCIO_NAMESPACE_ENTER
         return BIT_DEPTH_UNKNOWN;
     }
     
+    bool BitDepthIsFloat(BitDepth bitDepth)
+    {
+        if(bitDepth == BIT_DEPTH_F16) return true;
+        else if(bitDepth == BIT_DEPTH_F32) return true;
+        return false;
+    }
+    
+    int BitDepthToInt(BitDepth bitDepth)
+    {
+        if(bitDepth == BIT_DEPTH_UINT8) return 8;
+        else if(bitDepth == BIT_DEPTH_UINT10) return 10;
+        else if(bitDepth == BIT_DEPTH_UINT12) return 12;
+        else if(bitDepth == BIT_DEPTH_UINT14) return 14;
+        else if(bitDepth == BIT_DEPTH_UINT16) return 16;
+        else if(bitDepth == BIT_DEPTH_UINT32) return 32;
+        
+        return 0;
+    }
+    
     const char * GpuAllocationToString(GpuAllocation alloc)
     {
         if(alloc == GPU_ALLOCATION_UNIFORM) return "uniform";
