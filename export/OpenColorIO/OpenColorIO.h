@@ -42,21 +42,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: Unify all fcns that return colorspace classes to return colorspace name string instead?
 //       This may assist with dynamic color spaces
 // TODO: Colorspace limit functions, GetLinearColorspaceMax
-// TODO: Filmlook
-// TODO: Compute statistics on image?
-// TODO: Compute Histogram on image?
 // TODO: ASCColorCorrection example.
 // TODO: highlight compression coefficients?
-// TODO: ColorspaceFromFilename
 // TODO: Histogram / Statistics FCN
 // TODO: rgb_to_hsv?  Efficient for per-pixel application?
 // TODO: Add processor.getCacheID
 // TODO: per-shot looks?
 
-// TODO: get simple display transform working. can it be expressed as an op?
-
 // TODO: add op optimizations.  op collapsing.  cache op tree.
-// TODO: add gamma ops
 // TODO: add analytical log ops
 // TODO: test 1d atomic ops
 // TODO: test full colorspace conversions
