@@ -28,6 +28,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "CDLTransform.h"
+#include "ColorSpaceTransform.h"
+#include "DisplayTransform.h"
+#include "GroupTransform.h"
+#include "FileTransform.h"
+#include "Processor.h"
+
 #include <sstream>
 
 OCIO_NAMESPACE_ENTER
@@ -36,26 +43,78 @@ OCIO_NAMESPACE_ENTER
     { }
     
     
-    std::ostream& operator<< (std::ostream& os, const Transform& transform)
+    void BuildOps(LocalProcessor & processor,
+                  const Config & config,
+                  const ConstTransformRcPtr & transform,
+                  TransformDirection dir)
     {
-        const Transform* t = &transform;
-        if(dynamic_cast<const GroupTransform*>(t))
+        if(ConstCDLTransformRcPtr cdlTransform = \
+            DynamicPtrCast<const CDLTransform>(transform))
         {
-            os << *(dynamic_cast<const GroupTransform*>(t));
+            BuildCDLOps(processor, config, *cdlTransform, dir);
         }
-        /*
-        else if(dynamic_cast<const FileTransform*>(t))
+        else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
+            DynamicPtrCast<const ColorSpaceTransform>(transform))
         {
-            os << *(dynamic_cast<const FileTransform*>(t));
+            BuildColorSpaceOps(processor, config, *colorSpaceTransform, dir);
         }
-        else if(dynamic_cast<const GammaTransform*>(t))
+        else if(ConstDisplayTransformRcPtr displayTransform = \
+            DynamicPtrCast<const DisplayTransform>(transform))
         {
-            os << *(dynamic_cast<const GammaTransform*>(t));
+            BuildDisplayOps(processor, config, *displayTransform, dir);
         }
-        */
+        else if(ConstFileTransformRcPtr fileTransform = \
+            DynamicPtrCast<const FileTransform>(transform))
+        {
+            BuildFileOps(processor, config, *fileTransform, dir);
+        }
+        else if(ConstGroupTransformRcPtr groupTransform = \
+            DynamicPtrCast<const GroupTransform>(transform))
+        {
+            BuildGroupOps(processor, config, *groupTransform, dir);
+        }
         else
         {
+            std::ostringstream os;
+            os << "Unknown transform type for Op Creation.";
+            throw Exception(os.str().c_str());
+        }
+    }
+    
+    std::ostream& operator<< (std::ostream & os, const Transform & transform)
+    {
+        const Transform* t = &transform;
+        
+        if(const CDLTransform * cdlTransform = \
+            dynamic_cast<const CDLTransform*>(t))
+        {
+            os << *cdlTransform;
+        }
+        else if(const ColorSpaceTransform * colorSpaceTransform = \
+            dynamic_cast<const ColorSpaceTransform*>(t))
+        {
+            os << *colorSpaceTransform;
+        }
+        else if(const DisplayTransform * displayTransform = \
+            dynamic_cast<const DisplayTransform*>(t))
+        {
+            os << *displayTransform;
+        }
+        else if(const FileTransform * fileTransform = \
+            dynamic_cast<const FileTransform*>(t))
+        {
+            os << *fileTransform;
+        }
+        else if(const GroupTransform * groupTransform = \
+            dynamic_cast<const GroupTransform*>(t))
+        {
+            os << *groupTransform;
+        }
+        else
+        {
+            std::ostringstream error;
             os << "Unknown transform type for serialization.";
+            throw Exception(error.str().c_str());
         }
         
         return os;

@@ -28,13 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "CDLTransform.h"
-#include "ColorSpaceTransform.h"
-#include "DisplayTransform.h"
-#include "GroupTransform.h"
-#include "FileTransform.h"
 #include "Op.h"
-#include "Processor.h"
 
 #include <sstream>
 
@@ -43,44 +37,20 @@ OCIO_NAMESPACE_ENTER
     Op::~Op()
     { }
     
-    
-    
-    void BuildOps(LocalProcessor & processor,
-                  const Config & config,
-                  const ConstTransformRcPtr & transform,
-                  TransformDirection dir)
+    std::ostream& operator<< (std::ostream& os, const Op & op)
     {
-        if(ConstCDLTransformRcPtr cdlTransform = \
-            DynamicPtrCast<const CDLTransform>(transform))
-        {
-            BuildCDLOps(processor, config, *cdlTransform, dir);
-        }
-        else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
-            DynamicPtrCast<const ColorSpaceTransform>(transform))
-        {
-            BuildColorSpaceOps(processor, config, *colorSpaceTransform, dir);
-        }
-        else if(ConstDisplayTransformRcPtr displayTransform = \
-            DynamicPtrCast<const DisplayTransform>(transform))
-        {
-            BuildDisplayOps(processor, config, *displayTransform, dir);
-        }
-        else if(ConstFileTransformRcPtr fileTransform = \
-            DynamicPtrCast<const FileTransform>(transform))
-        {
-            BuildFileOps(processor, config, *fileTransform, dir);
-        }
-        else if(ConstGroupTransformRcPtr groupTransform = \
-            DynamicPtrCast<const GroupTransform>(transform))
-        {
-            BuildGroupOps(processor, config, *groupTransform, dir);
-        }
+        const Op * o = &op;
+        /*
         else
         {
-            std::ostringstream os;
-            os << "Unknown transform type for Op Creation.";
-            throw Exception(os.str().c_str());
+            os << "<Op type unknown/>";
         }
+        */
+            std::ostringstream error;
+            os << "Unknown op type for serialization.";
+            throw Exception(error.str().c_str());
+        
+        return os;
     }
 }
 OCIO_NAMESPACE_EXIT

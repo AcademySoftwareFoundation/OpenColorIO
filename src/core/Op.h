@@ -64,6 +64,8 @@ OCIO_NAMESPACE_ENTER
             Op& operator= (const Op &);
     };
     
+    std::ostream& operator<< (std::ostream&, const Op&);
+    
     typedef SharedPtr<Op> OpRcPtr;
     typedef std::vector<OpRcPtr> OpRcPtrVec;
 }
