@@ -51,8 +51,15 @@
   1999-05-03 lpd Original version.
  */
 
+//  This file was altered for OCIO compilation purposes
+
 #include "md5.h"
-#include <string.h>
+#include <cstring>
+
+
+OCIO_NAMESPACE_ENTER
+{
+
 
 #undef BYTE_ORDER	/* 1 = big-endian, -1 = little-endian, 0 = unknown */
 #ifdef ARCH_IS_BIG_ENDIAN
@@ -379,3 +386,6 @@ md5_finish(md5_state_t *pms, md5_byte_t digest[16])
     for (i = 0; i < 16; ++i)
 	digest[i] = (md5_byte_t)(pms->abcd[i >> 2] >> ((i & 3) << 3));
 }
+
+}
+OCIO_NAMESPACE_EXIT

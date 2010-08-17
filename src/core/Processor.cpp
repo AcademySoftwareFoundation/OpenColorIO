@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
+#include "HashUtils.h"
 #include "Lut3DOp.h"
 #include "Processor.h"
 #include "ScanlineHelper.h"
@@ -236,10 +237,48 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
+    std::string LocalProcessor::getInfo() const
+    {
+        std::ostringstream os;
+        os << "Local Processor" << std::endl;
+        os << "Size " << m_opVec.size() << std::endl;
+        
+        // Partition the op vector into the 
+        // interior index range does not support the gpu shader.
+        // This is used to bound our analytical shader text generation
+        // start index and end index are inclusive.
+        
+        int lut3DOpStartIndex = 0;
+        int lut3DOpEndIndex = 0;
+        
+        GetGPUUnsupportedIndexRange(&lut3DOpStartIndex,
+                                    &lut3DOpEndIndex,
+                                    m_opVec);
+        
+        os << "Lut3DOpStartIndex: " << lut3DOpStartIndex << std::endl;
+        os << "Lut3DOpEndIndex: " << lut3DOpEndIndex << std::endl;
+        os << std::endl;
+        
+        for(int i=0; i<(int)m_opVec.size(); ++i)
+        {
+            os << "Index " << i << " -- " << *m_opVec[i] << std::endl;
+            os << "      supportsGPUShader: " << m_opVec[i]->supportsGPUShader() << std::endl;
+            if(i>=lut3DOpStartIndex && i<=lut3DOpEndIndex)
+            {
+                os << "      Will be processed on Lut3D lattice" << std::endl;
+            }
+            else
+            {
+                os << "      Will be processed as shader text" << std::endl;
+            }
+        }
+        
+        return os.str();
+    }
+    
     const char * LocalProcessor::getGPUShaderText(const GpuShaderDesc & shaderDesc) const
     {
-        std::cerr << "LocalProcessor::getGPUShader " << std::endl;
-        std::cerr << "m_opVec size " << m_opVec.size() << std::endl;
+        // std::cout << getInfo() << std::endl;
         
         // Partition the op vector into the 
         // interior index range does not support the gpu shader.
@@ -263,9 +302,6 @@ OCIO_NAMESPACE_ENTER
         std::string lut3dName = "lut3d";
         
         WriteShaderHeader(&shader, pixelName, shaderDesc);
-        
-        std::cerr << "lut3DOpStartIndex " << lut3DOpStartIndex << std::endl;
-        std::cerr << "lut3DOpEndIndex " << lut3DOpEndIndex << std::endl;
         
         // Write the entire shader using only shader text.
         // (3d lut is unused)
@@ -313,15 +349,15 @@ OCIO_NAMESPACE_ENTER
         
         // TODO: This is not multi-thread safe. Cache result or mutex
         m_shaderText = shader.str();
+        std::string shaderHash = CacheIDHash(m_shaderText.c_str(), (int) m_shaderText.size());
+        std::cerr << "shaderHash " << shaderHash << std::endl;
+        
         return m_shaderText.c_str();
     }
     
     void LocalProcessor::getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const
     {
         if(!lut3d) return;
-        
-        std::cerr << "LocalProcessor::getGPULut3D " << std::endl;
-        std::cerr << "m_opVec size " << m_opVec.size() << std::endl;
         
         // Partition the op vector into the 
         // interior index range does not support the gpu shader.
@@ -334,9 +370,6 @@ OCIO_NAMESPACE_ENTER
         GetGPUUnsupportedIndexRange(&lut3DOpStartIndex,
                                     &lut3DOpEndIndex,
                                     m_opVec);
-        
-        std::cerr << "lut3DOpStartIndex " << lut3DOpStartIndex << std::endl;
-        std::cerr << "lut3DOpEndIndex " << lut3DOpEndIndex << std::endl;
         
         ///////////////////////////////
         
@@ -357,14 +390,11 @@ OCIO_NAMESPACE_ENTER
         float lut3DRGBABuffer[lut3DNumPixels*4];
         GenerateIdentityLut3D(lut3DRGBABuffer, lut3DEdgeLen, 4);
         
-        std::cerr << " GenerateIdentityLut3D " << lut3DEdgeLen << std::endl;
-        
         // TODO: Sample lut with proper allocation
         // For now, assume a range of [0,1] has been handled
         
         for(int i=lut3DOpStartIndex; i<=lut3DOpEndIndex; ++i)
         {
-            std::cerr << " apply op " << i << std::endl;
             m_opVec[i]->apply(lut3DRGBABuffer, lut3DNumPixels);
         }
         

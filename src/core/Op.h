@@ -43,6 +43,8 @@ OCIO_NAMESPACE_ENTER
         public:
             virtual ~Op();
             
+            virtual std::string getInfo() const = 0;
+            
             // This is called a single time after construction.
             // All pre-processing and safety checks should happen here,
             // rather than in the constructor.

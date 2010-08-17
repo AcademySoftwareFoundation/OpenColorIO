@@ -53,6 +53,10 @@
 #define INCLUDED_OCIO_md5_INCLUDED
 
 
+#include <OpenColorIO/OpenColorIO.h>
+
+OCIO_NAMESPACE_ENTER
+{
 
 
 /*
@@ -92,5 +96,10 @@ void md5_finish(md5_state_t *pms, md5_byte_t digest[16]);
 #ifdef __cplusplus
 }  /* end extern "C" */
 #endif
+
+
+
+}
+OCIO_NAMESPACE_EXIT
 
 #endif /* md5_INCLUDED */

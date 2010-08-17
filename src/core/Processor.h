@@ -47,6 +47,8 @@ OCIO_NAMESPACE_ENTER
         
         virtual ~LocalProcessor();
         
+        // Public interface
+        
         virtual bool isNoOp() const;
         
         virtual void apply(ImageDesc& img) const;
@@ -56,6 +58,14 @@ OCIO_NAMESPACE_ENTER
         
         virtual const char * getGPUShaderText(const GpuShaderDesc & gpuDesc) const;
         virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
+        
+        
+        ////////////////////////////////////////////
+        //
+        //  Not exposed
+        
+        
+        std::string getInfo() const;
         
         ////////////////////////////////////////////
         //

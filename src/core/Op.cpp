@@ -37,19 +37,9 @@ OCIO_NAMESPACE_ENTER
     Op::~Op()
     { }
     
-    std::ostream& operator<< (std::ostream& os, const Op & op)
+    std::ostream& operator<< (std::ostream & os, const Op & op)
     {
-        const Op * o = &op;
-        /*
-        else
-        {
-            os << "<Op type unknown/>";
-        }
-        */
-            std::ostringstream error;
-            os << "Unknown op type for serialization.";
-            throw Exception(error.str().c_str());
-        
+        os << op.getInfo();
         return os;
     }
 }

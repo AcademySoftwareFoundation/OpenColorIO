@@ -82,6 +82,7 @@ OCIO_NAMESPACE_ENTER
                            TransformDirection direction);
             virtual ~MatrixOffsetOp();
             
+            virtual std::string getInfo() const;
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             virtual bool supportsGPUShader() const;
@@ -114,6 +115,11 @@ OCIO_NAMESPACE_ENTER
         
         MatrixOffsetOp::~MatrixOffsetOp()
         { }
+        
+        std::string MatrixOffsetOp::getInfo() const
+        {
+            return "<MatrixOffsetOp>";
+        }
         
         void MatrixOffsetOp::setup()
         {

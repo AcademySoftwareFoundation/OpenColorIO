@@ -302,6 +302,7 @@ OCIO_NAMESPACE_ENTER
                     TransformDirection direction);
             virtual ~Lut1DOp();
             
+            virtual std::string getInfo() const;
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             virtual bool supportsGPUShader() const;
@@ -326,6 +327,11 @@ OCIO_NAMESPACE_ENTER
         
         Lut1DOp::~Lut1DOp()
         { }
+        
+        std::string Lut1DOp::getInfo() const
+        {
+            return "<Lut1DOp>";
+        }
         
         void Lut1DOp::setup()
         {

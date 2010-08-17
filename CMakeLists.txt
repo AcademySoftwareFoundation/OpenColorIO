@@ -30,6 +30,7 @@ add_library(OpenColorIO SHARED
     src/core/GroupTransform.cpp
     src/core/GpuShaderDesc.cpp
     src/core/GpuShaderUtils.cpp
+    src/core/HashUtils.cpp
     src/core/ImageDesc.cpp
     src/core/ImagePacking.cpp
     src/core/Lut1DOp.cpp
@@ -44,12 +45,14 @@ add_library(OpenColorIO SHARED
     src/core/Transform.cpp
     src/core/XmlIO.cpp
 
+    src/core/md5/md5.cpp
+    
+    src/core/pystring/pystring.cpp
+    
     src/core/tinyxml/tinystr.cpp
     src/core/tinyxml/tinyxml.cpp
     src/core/tinyxml/tinyxmlerror.cpp
     src/core/tinyxml/tinyxmlparser.cpp
-
-    src/core/pystring/pystring.cpp
 )
 
 include_directories(

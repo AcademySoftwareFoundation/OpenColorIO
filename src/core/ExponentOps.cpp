@@ -63,6 +63,7 @@ OCIO_NAMESPACE_ENTER
                        TransformDirection direction);
             virtual ~ExponentOp();
             
+            virtual std::string getInfo() const;
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             virtual bool supportsGPUShader() const;
@@ -84,6 +85,11 @@ OCIO_NAMESPACE_ENTER
         
         ExponentOp::~ExponentOp()
         { }
+        
+        std::string ExponentOp::getInfo() const
+        {
+            return "<ExponentOp>";
+        }
         
         void ExponentOp::setup()
         {
