@@ -117,7 +117,7 @@ OCIO_NAMESPACE_ENTER
         
         bool ExponentOp::supportsGPUShader() const
         {
-            return true;
+            return false;
         }
         
         

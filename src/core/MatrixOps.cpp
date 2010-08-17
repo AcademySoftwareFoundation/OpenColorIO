@@ -171,7 +171,7 @@ OCIO_NAMESPACE_ENTER
         
         bool MatrixOffsetOp::supportsGPUShader() const
         {
-            return true;
+            return false;
         }
         
         

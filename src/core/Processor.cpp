@@ -173,7 +173,7 @@ OCIO_NAMESPACE_ENTER
             {
                 *shader << "vec4 " << fcnName << "(in vec4 inPixel, \n";
             }
-            else throw Exception("Unspecified shader language.");
+            else throw Exception("Unsupported shader language.");
             
             *shader << "    const uniform sampler3D " << lut3dName << ") \n";
             *shader << "{" << "\n";
@@ -186,7 +186,7 @@ OCIO_NAMESPACE_ENTER
             {
                 *shader << "    vec4 " << pixelName << " = inPixel; \n";
             }
-            else throw Exception("Unspecified shader language.");
+            else throw Exception("Unsupported shader language.");
         }
         
         
@@ -236,18 +236,15 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    
-    void LocalProcessor::getGPUShader(std::ostringstream * shader,
-                                      std::ostringstream * lut3dCacheID, float * lut3d,
-                                      const GpuShaderDesc & shaderDesc) const
+    const char * LocalProcessor::getGPUShaderText(const GpuShaderDesc & shaderDesc) const
     {
-        std::string pixelName = "out_pixel";
-        std::string lut3dName = "lut3d";
+        std::cerr << "LocalProcessor::getGPUShader " << std::endl;
+        std::cerr << "m_opVec size " << m_opVec.size() << std::endl;
         
-        WriteShaderHeader(shader, pixelName, shaderDesc);
-        
-        // Get the interior index range does not support the gpu shader.
+        // Partition the op vector into the 
+        // interior index range does not support the gpu shader.
         // This is used to bound our analytical shader text generation
+        // start index and end index are inclusive.
         
         int lut3DOpStartIndex = 0;
         int lut3DOpEndIndex = 0;
@@ -256,96 +253,63 @@ OCIO_NAMESPACE_ENTER
                                     &lut3DOpEndIndex,
                                     m_opVec);
         
-        /*
+        
+        ///////////////////////////////
+        
+        
+        std::ostringstream shader;
+        
+        std::string pixelName = "out_pixel";
+        std::string lut3dName = "lut3d";
+        
+        WriteShaderHeader(&shader, pixelName, shaderDesc);
+        
         std::cerr << "lut3DOpStartIndex " << lut3DOpStartIndex << std::endl;
         std::cerr << "lut3DOpEndIndex " << lut3DOpEndIndex << std::endl;
-        */
         
-        int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
-        int lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
-        
-        // Can we write the entire shader using only shader text
-        // If so, do it here.
+        // Write the entire shader using only shader text.
+        // (3d lut is unused)
         if(lut3DOpStartIndex == -1 && lut3DOpEndIndex == -1)
         {
-            // Lut3D is not needed. Blank it.
-            if(lut3d) memset(lut3d, 0, sizeof(float) * 3 * lut3DNumPixels);
-            if(lut3dCacheID) *lut3dCacheID << "<NULL>";
-            
+            throw Exception("TODO: getGPUShader");
+            /*
             for(unsigned int i=0; i<m_opVec.size(); ++i)
             {
-               throw Exception("TODO: getGPUShader");
-               
                 // m_opVec[i]->getGPUShader(shader, lut3dCacheID, lut3d, shaderDesc);
             }
+            */
         }
+        // Analytical -> 3dlut -> analytical
         else
         {
-            // Allocate rgba 3dlut image
-            float lut3DRGBABuffer[lut3DNumPixels*4];
-            GenerateIdentityLut3D(lut3DRGBABuffer, lut3DEdgeLen, 4);
-            
-            for(int i=0; i<(int)m_opVec.size(); ++i)
+            // Handle analytical shader block before start index.
+            for(int i=0; i<lut3DOpStartIndex; ++i)
             {
-                // We're at the start of the 3D block,
-                // transfer the image to the lut3D
-                if(i == lut3DOpStartIndex)
-                {
-                    std::cerr << "Transfer to lut3d with better allocation." << std::endl;
-                }
-                
-                // Apply the op in the appropriate manner
-                if(i >= lut3DOpStartIndex && i <= lut3DOpEndIndex)
-                {
-                    if(lut3d)
-                    {
-                        m_opVec[i]->apply(lut3DRGBABuffer, lut3DNumPixels);
-                    }
-                    if(lut3dCacheID)
-                    {
-                        std::cerr << " TODO: update cacheID with opCacheID" << std::endl;
-                    }
-                }
-                else
-                {
-                    throw Exception("TODO: getGPUShader");
-                    // m_opVec[i]->getGPUShader(shader, lut3dCacheID, lut3d, shaderDesc);
-                }
-                
-                // We're at the end of the 3D block,
-                // sample the lut3D and return to shader text generation
-                if(i == lut3DOpEndIndex)
-                {
-                    if(shader)
-                    {
-                        *shader << "    " << pixelName << ".rgb = ";
-                        Write_sampleLut3D_rgb(shader, pixelName,
-                                              lut3dName, lut3DEdgeLen,
-                                              shaderDesc.getLanguage());
-                    }
-                }
+                throw Exception("TODO: getGPUShader");
             }
             
-            // Copy the lut3d rgba image to the lut3d
+            // We're at the end of the 3D block,
+            // sample the lut3D, with the proper allocation,
+            // and return to shader text generation
+            // TODO: Sample lut with proper allocation
             
-            if(lut3d)
+            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
+            
+            shader << "    " << pixelName << ".rgb = ";
+            Write_sampleLut3D_rgb(&shader, pixelName,
+                                  lut3dName, lut3DEdgeLen,
+                                  shaderDesc.getLanguage());
+            
+            // Handle analytical shader block before start index.
+            
+            for(int i=lut3DOpEndIndex+1; i<(int)m_opVec.size(); ++i)
             {
-                for(int i=0; i<lut3DNumPixels; ++i)
-                {
-                    lut3d[3*i+0] = lut3DRGBABuffer[4*i+0];
-                    lut3d[3*i+1] = lut3DRGBABuffer[4*i+1];
-                    lut3d[3*i+2] = lut3DRGBABuffer[4*i+2];
-                }
+                throw Exception("TODO: getGPUShader");
             }
         }
         
-        WriteShaderFooter(shader, pixelName, shaderDesc);
-    }
-    
-    const char * LocalProcessor::getGPUShaderText(const GpuShaderDesc & shaderDesc) const
-    {
-        std::ostringstream shader;
-        getGPUShader(&shader, 0, 0, shaderDesc);
+        WriteShaderFooter(&shader, pixelName, shaderDesc);
+        
         
         // TODO: This is not multi-thread safe. Cache result or mutex
         m_shaderText = shader.str();
@@ -355,7 +319,62 @@ OCIO_NAMESPACE_ENTER
     void LocalProcessor::getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const
     {
         if(!lut3d) return;
-        getGPUShader(0, 0, lut3d, shaderDesc);
+        
+        std::cerr << "LocalProcessor::getGPULut3D " << std::endl;
+        std::cerr << "m_opVec size " << m_opVec.size() << std::endl;
+        
+        // Partition the op vector into the 
+        // interior index range does not support the gpu shader.
+        // This is used to bound our analytical shader text generation
+        // start index and end index are inclusive.
+        
+        int lut3DOpStartIndex = 0;
+        int lut3DOpEndIndex = 0;
+        
+        GetGPUUnsupportedIndexRange(&lut3DOpStartIndex,
+                                    &lut3DOpEndIndex,
+                                    m_opVec);
+        
+        std::cerr << "lut3DOpStartIndex " << lut3DOpStartIndex << std::endl;
+        std::cerr << "lut3DOpEndIndex " << lut3DOpEndIndex << std::endl;
+        
+        ///////////////////////////////
+        
+        // Can we write the entire shader using only shader text
+        // Lut3D is not needed. Blank it.
+        
+        int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
+        int lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
+        
+        if(lut3DOpStartIndex == -1 && lut3DOpEndIndex == -1)
+        {
+            memset(lut3d, 0, sizeof(float) * 3 * lut3DNumPixels);
+            return;
+        }
+        
+        
+        // Allocate rgba 3dlut image
+        float lut3DRGBABuffer[lut3DNumPixels*4];
+        GenerateIdentityLut3D(lut3DRGBABuffer, lut3DEdgeLen, 4);
+        
+        std::cerr << " GenerateIdentityLut3D " << lut3DEdgeLen << std::endl;
+        
+        // TODO: Sample lut with proper allocation
+        // For now, assume a range of [0,1] has been handled
+        
+        for(int i=lut3DOpStartIndex; i<=lut3DOpEndIndex; ++i)
+        {
+            std::cerr << " apply op " << i << std::endl;
+            m_opVec[i]->apply(lut3DRGBABuffer, lut3DNumPixels);
+        }
+        
+        // Copy the lut3d rgba image to the lut3d
+        for(int i=0; i<lut3DNumPixels; ++i)
+        {
+            lut3d[3*i+0] = lut3DRGBABuffer[4*i+0];
+            lut3d[3*i+1] = lut3DRGBABuffer[4*i+1];
+            lut3d[3*i+2] = lut3DRGBABuffer[4*i+2];
+        }
     }
 }
 OCIO_NAMESPACE_EXIT

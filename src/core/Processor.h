@@ -75,10 +75,6 @@ OCIO_NAMESPACE_ENTER
         
         static void deleter(LocalProcessor* p);
         
-        void getGPUShader(std::ostringstream * shader,
-                          std::ostringstream * lut3dCacheID, float * lut3d,
-                          const GpuShaderDesc & gpuDesc) const;
-        
         OpRcPtrVec m_opVec;
         
         mutable std::string m_shaderText;

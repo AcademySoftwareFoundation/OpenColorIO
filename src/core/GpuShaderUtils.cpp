@@ -62,7 +62,7 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            throw Exception("Unspecified shader language.");
+            throw Exception("Unsupported shader language.");
         }
     }
     
@@ -92,7 +92,7 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            throw Exception("Unspecified shader language.");
+            throw Exception("Unsupported shader language.");
         }
     }
     
@@ -122,7 +122,7 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            throw Exception("Unspecified shader language.");
+            throw Exception("Unsupported shader language.");
         }
     }
     
@@ -138,30 +138,19 @@ OCIO_NAMESPACE_ENTER
         
         if(lang == GPU_LANGUAGE_CG)
         {
-            *os << "texture3D(";
+            *os << "tex3D(";
             *os << lutName << ", ";
             *os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
         }
         else if(lang == GPU_LANGUAGE_GLSL_1_0)
         {
-        
-        }
-        /*
-        if(hwLang == GLSL_LANGUAGE)
-        {
-            *os << "    " << variableName << ".rgb = texture3D( " << lutName << ", ";
+            *os << "texture3D(";
+            *os << lutName << ", ";
+            *os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
         }
         else
         {
-            *os << "    " << variableName << ".rgb = tex3D( " << lutName << ", ";
-        }
-        *os << m_3dlut << " * " << variableName << ".rgb + " << b_3dlut << ").rgb;" << std::endl;
-        
-        *os << "    // End Lut3d" << std::endl;
-        */
-        else
-        {
-            throw Exception("Unspecified shader language.");
+            throw Exception("Unsupported shader language.");
         }
     
     }
