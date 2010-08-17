@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
-#include "Lut1DOp.h"
 #include "Mutex.h"
 #include "PathUtils.h"
 #include "pystring/pystring.h"
