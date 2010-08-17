@@ -45,6 +45,10 @@ OCIO_NAMESPACE_ENTER
             
             virtual std::string getInfo() const = 0;
             
+            //! This should yield a string of not unreasonable length.
+            //! It can only be called after setup()
+            virtual std::string getCacheID() const = 0;
+            
             // This is called a single time after construction.
             // All pre-processing and safety checks should happen here,
             // rather than in the constructor.

@@ -32,11 +32,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "md5/md5.h"
 #include <string>
 
 OCIO_NAMESPACE_ENTER
 {
     std::string CacheIDHash(const char * array, int size);
+    
+    // TODO: get rid of md5.h include, make this a generic byte array
+    std::string GetPrintableHash(const md5_byte_t * digest);
 }
 OCIO_NAMESPACE_EXIT
 

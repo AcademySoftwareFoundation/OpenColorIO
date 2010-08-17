@@ -51,6 +51,8 @@ OCIO_NAMESPACE_ENTER
                 rgbaBuffer += 4;
             }
         }
+        
+        const int FLOAT_DECIMALS = 7;
     }
     
     
@@ -64,6 +66,8 @@ OCIO_NAMESPACE_ENTER
             virtual ~ExponentOp();
             
             virtual std::string getInfo() const;
+            virtual std::string getCacheID() const;
+            
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             virtual bool supportsGPUShader() const;
@@ -71,6 +75,7 @@ OCIO_NAMESPACE_ENTER
         private:
             float m_exp4[4];
             TransformDirection m_direction;
+            std::string m_cacheID;
         };
         
         typedef SharedPtr<ExponentOp> ExponentOpOpRcPtr;
@@ -89,6 +94,11 @@ OCIO_NAMESPACE_ENTER
         std::string ExponentOp::getInfo() const
         {
             return "<ExponentOp>";
+        }
+        
+        std::string ExponentOp::getCacheID() const
+        {
+            return m_cacheID;
         }
         
         void ExponentOp::setup()
@@ -112,6 +122,17 @@ OCIO_NAMESPACE_ENTER
                     }
                 }
             }
+            
+            // Create the cacheID
+            std::ostringstream cacheIDStream;
+            cacheIDStream << "<ExponentOp ";
+            cacheIDStream.precision(FLOAT_DECIMALS);
+            for(int i=0; i<4; ++i)
+            {
+                cacheIDStream << m_exp4[i] << " ";
+            }
+            cacheIDStream << ">";
+            m_cacheID = cacheIDStream.str();
         }
         
         void ExponentOp::apply(float* rgbaBuffer, long numPixels) const

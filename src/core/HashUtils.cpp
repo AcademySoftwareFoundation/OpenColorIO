@@ -45,7 +45,11 @@ OCIO_NAMESPACE_ENTER
         md5_append(&state, (const md5_byte_t *)array, size);
         md5_finish(&state, digest);
         
-        
+        return GetPrintableHash(digest);
+    }
+    
+    std::string GetPrintableHash(const md5_byte_t * digest)
+    {
         static char charmap[] = "0123456789abcdef";
         
         char printableResult[34];
@@ -60,6 +64,7 @@ OCIO_NAMESPACE_ENTER
             *ptr++ = charmap[(digest[i] >> 4)];
         }
         *ptr++ = 0;
+        
         return std::string(printableResult);
     }
 }

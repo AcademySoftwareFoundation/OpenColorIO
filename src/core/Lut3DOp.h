@@ -31,14 +31,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_LUT3DOP_H
 
 #include <OpenColorIO/OpenColorIO.h>
-#include <vector>
 
 #include "Op.h"
 #include "Processor.h"
 
+#include <vector>
+
 OCIO_NAMESPACE_ENTER
 {
-    // TODO: Do not allow for a naked Lut1D object, always have it be an rc ptr to a lut1d.
+    // TODO: Do not allow for a naked Lut3D object, always have it be an rc ptr to a lut3d.
     // Expose static factory fcn, make constructor private?
     // TODO: turn into a class instead of a struct?
     
@@ -51,6 +52,8 @@ OCIO_NAMESPACE_ENTER
         typedef std::vector<float> fv_t;
         fv_t lut;
         
+        std::string cacheID;
+        
         Lut3D()
         {
             for(int i=0; i<3; ++i)
@@ -60,6 +63,9 @@ OCIO_NAMESPACE_ENTER
                 size[i] = 0;
             }
         };
+        
+        // TODO: This must be explicitly called now. Make it deferred / lazy?
+        void generateCacheID();
     };
     
     typedef SharedPtr<Lut3D> Lut3DRcPtr;

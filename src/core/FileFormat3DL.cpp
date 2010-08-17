@@ -256,6 +256,8 @@ OCIO_NAMESPACE_ENTER
                     }
                 }
                 
+                lut3d->generateCacheID();
+                
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
                 cachedFile->lut3d = lut3d;
                 return cachedFile;

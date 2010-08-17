@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "HashUtils.h"
 #include "Lut1DOp.h"
 #include "SSE.h"
 
@@ -37,6 +38,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    void Lut1D::generateCacheID()
+    {
+        md5_state_t state;
+        md5_byte_t digest[16];
+        
+        md5_init(&state);
+        
+        md5_append(&state, (const md5_byte_t *)from_min, 3*sizeof(float));
+        md5_append(&state, (const md5_byte_t *)from_max, 3*sizeof(float));
+        
+        for(int i=0; i<3; ++i)
+        {
+            md5_append( &state, (const md5_byte_t *)&(luts[i][0]),
+                (int) (luts[i].size()*sizeof(float)) );
+        }
+        
+        md5_finish(&state, digest);
+        
+        cacheID = GetPrintableHash(digest);
+    }
+    
+    
     namespace
     {
         // Note: This function assumes that minVal is less than maxVal
@@ -303,6 +326,8 @@ OCIO_NAMESPACE_ENTER
             virtual ~Lut1DOp();
             
             virtual std::string getInfo() const;
+            virtual std::string getCacheID() const;
+            
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             virtual bool supportsGPUShader() const;
@@ -311,6 +336,8 @@ OCIO_NAMESPACE_ENTER
             Lut1DRcPtr m_lut;
             Interpolation m_interpolation;
             TransformDirection m_direction;
+            
+            std::string m_cacheID;
         };
         
         typedef SharedPtr<Lut1DOp> Lut1DOpRcPtr;
@@ -333,6 +360,11 @@ OCIO_NAMESPACE_ENTER
             return "<Lut1DOp>";
         }
         
+        std::string Lut1DOp::getCacheID() const
+        {
+            return m_cacheID;
+        }
+        
         void Lut1DOp::setup()
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
@@ -347,6 +379,15 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception("Cannot apply lut1d op, no lut data provided.");
             }
+            
+            // Create the cacheID
+            std::ostringstream cacheIDStream;
+            cacheIDStream << "<Lut1DOp ";
+            cacheIDStream << m_lut->cacheID << " ";
+            cacheIDStream << InterpolationToString(m_interpolation) << " ";
+            cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << ">";
+            m_cacheID = cacheIDStream.str();
         }
         
         void Lut1DOp::apply(float* rgbaBuffer, long numPixels) const

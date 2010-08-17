@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "HashUtils.h"
 #include "MatrixOps.h"
 #include "MathUtils.h"
 
@@ -83,6 +84,8 @@ OCIO_NAMESPACE_ENTER
             virtual ~MatrixOffsetOp();
             
             virtual std::string getInfo() const;
+            virtual std::string getCacheID() const;
+            
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             virtual bool supportsGPUShader() const;
@@ -91,6 +94,8 @@ OCIO_NAMESPACE_ENTER
             float m_m44[16];
             float m_offset4[4];
             TransformDirection m_direction;
+            
+            std::string m_cacheID;
         };
         
         typedef SharedPtr<MatrixOffsetOp> MatrixOffsetOpRcPtr;
@@ -121,9 +126,28 @@ OCIO_NAMESPACE_ENTER
             return "<MatrixOffsetOp>";
         }
         
+        std::string MatrixOffsetOp::getCacheID() const
+        {
+            return m_cacheID;
+        }
+        
         void MatrixOffsetOp::setup()
         {
-        
+            // Create the cacheID
+            md5_state_t state;
+            md5_byte_t digest[16];
+            md5_init(&state);
+            md5_append(&state, (const md5_byte_t *)m_m44, 16*sizeof(float));
+            md5_append(&state, (const md5_byte_t *)m_offset4, 4*sizeof(float));
+            md5_finish(&state, digest);
+            
+            std::ostringstream cacheIDStream;
+            cacheIDStream << "<MatrixOffsetOp ";
+            cacheIDStream << GetPrintableHash(digest) << " ";
+            cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << ">";
+            
+            m_cacheID = cacheIDStream.str();
         }
         
         // TODO: Move a lot of this calculation to the setup call

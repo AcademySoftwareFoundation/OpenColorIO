@@ -145,6 +145,8 @@ OCIO_NAMESPACE_ENTER
                 if (entriesRemaining>0) 
                     throw Exception("Not enough entries found.");
                 
+                lut3d->generateCacheID();
+                
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
                 cachedFile->lut = lut3d;
                 return cachedFile;

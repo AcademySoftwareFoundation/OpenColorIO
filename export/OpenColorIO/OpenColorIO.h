@@ -622,11 +622,12 @@ OCIO_NAMESPACE_ENTER
         // GPU Path
         
         virtual const char * getGPUShaderText(const GpuShaderDesc & shaderDesc) const = 0;
+        
         virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const = 0;
+        virtual const char * getGPULut3DCacheID(const GpuShaderDesc & shaderDesc) const = 0;
         
         /*
         virtual int getGPULut3DEdgeLen() const = 0;
-        virtual const char * getGPULut3DCacheID(const GpuShaderDesc & shaderDesc) const = 0;
         */
         
         //! Get the 3d lut + cg shader for the specified DisplayTransform

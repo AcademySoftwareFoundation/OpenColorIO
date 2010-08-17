@@ -29,12 +29,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Lut3DOp.h"
+#include "HashUtils.h"
 
 #include <cmath>
 #include <sstream>
 
 OCIO_NAMESPACE_ENTER
 {
+    void Lut3D::generateCacheID()
+    {
+        md5_state_t state;
+        md5_byte_t digest[16];
+        
+        md5_init(&state);
+        
+        md5_append(&state, (const md5_byte_t *)from_min, 3*sizeof(float));
+        md5_append(&state, (const md5_byte_t *)from_max, 3*sizeof(float));
+        md5_append(&state, (const md5_byte_t *)size, 3*sizeof(int));
+        md5_append(&state, (const md5_byte_t *)&lut[0], (int) (lut.size()*sizeof(float)));
+        
+        md5_finish(&state, digest);
+        
+        cacheID = GetPrintableHash(digest);
+    }
+    
+    
     namespace
     {
         // Linear
@@ -233,6 +252,8 @@ OCIO_NAMESPACE_ENTER
             virtual ~Lut3DOp();
             
             virtual std::string getInfo() const;
+            virtual std::string getCacheID() const;
+            
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             virtual bool supportsGPUShader() const;
@@ -241,6 +262,8 @@ OCIO_NAMESPACE_ENTER
             Lut3DRcPtr m_lut;
             Interpolation m_interpolation;
             TransformDirection m_direction;
+            
+            std::string m_cacheID;
         };
         
         typedef SharedPtr<Lut3DOp> Lut3DOpRcPtr;
@@ -261,6 +284,11 @@ OCIO_NAMESPACE_ENTER
         std::string Lut3DOp::getInfo() const
         {
             return "<Lut3DOp>";
+        }
+        
+        std::string Lut3DOp::getCacheID() const
+        {
+            return m_cacheID;
         }
         
         void Lut3DOp::setup()
@@ -292,6 +320,15 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception("3D Luts can only be applied in the forward direction.");
             }
+            
+            // Create the cacheID
+            std::ostringstream cacheIDStream;
+            cacheIDStream << "<Lut3DOp ";
+            cacheIDStream << m_lut->cacheID << " ";
+            cacheIDStream << InterpolationToString(m_interpolation) << " ";
+            cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << ">";
+            m_cacheID = cacheIDStream.str();
         }
         
         void Lut3DOp::apply(float* rgbaBuffer, long numPixels) const

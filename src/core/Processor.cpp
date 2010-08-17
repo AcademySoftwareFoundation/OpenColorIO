@@ -271,6 +271,7 @@ OCIO_NAMESPACE_ENTER
             {
                 os << "      Will be processed as shader text" << std::endl;
             }
+            os << "      cacheID " << m_opVec[i]->getCacheID() << std::endl;
         }
         
         return os.str();
@@ -278,7 +279,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * LocalProcessor::getGPUShaderText(const GpuShaderDesc & shaderDesc) const
     {
-        // std::cout << getInfo() << std::endl;
+        std::cout << getInfo() << std::endl;
         
         // Partition the op vector into the 
         // interior index range does not support the gpu shader.
@@ -349,10 +350,48 @@ OCIO_NAMESPACE_ENTER
         
         // TODO: This is not multi-thread safe. Cache result or mutex
         m_shaderText = shader.str();
-        std::string shaderHash = CacheIDHash(m_shaderText.c_str(), (int) m_shaderText.size());
-        std::cerr << "shaderHash " << shaderHash << std::endl;
         
         return m_shaderText.c_str();
+    }
+    
+    const char * LocalProcessor::getGPULut3DCacheID(const GpuShaderDesc & shaderDesc) const
+    {
+        int lut3DOpStartIndex = 0;
+        int lut3DOpEndIndex = 0;
+        
+        GetGPUUnsupportedIndexRange(&lut3DOpStartIndex,
+                                    &lut3DOpEndIndex,
+                                    m_opVec);
+        
+        // Can we write the entire shader using only shader text?
+        // Lut3D is not needed. Blank it.
+        
+        if(lut3DOpStartIndex == -1 && lut3DOpEndIndex == -1)
+        {
+            // TODO: This is not multi-thread safe. Cache result or mutex
+            m_lut3DHash = "<NULL>";
+            return m_lut3DHash.c_str();
+        }
+        
+        // For all ops that will contribute to the 3D lut,
+        // add it to the hash
+        
+        std::ostringstream idhash;
+        
+        for(int i=lut3DOpStartIndex; i<=lut3DOpEndIndex; ++i)
+        {
+            idhash << m_opVec[i]->getCacheID() << " ";
+        }
+        
+        // Also, add a hash of the shader description
+        idhash << shaderDesc.getLanguage() << " ";
+        idhash << shaderDesc.getFunctionName() << " ";
+        idhash << shaderDesc.getLut3DEdgeLen() << " ";
+        std::string fullstr = idhash.str();
+        
+        // TODO: This is not multi-thread safe. Cache result or mutex
+        m_lut3DHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        return m_lut3DHash.c_str();
     }
     
     void LocalProcessor::getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const

@@ -189,6 +189,8 @@ OCIO_NAMESPACE_ENTER
                         throw Exception("Not enough entries found.");
                 }
                 
+                lut1d->generateCacheID();
+                
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
                 cachedFile->lut = lut1d;
                 return cachedFile;
