@@ -86,7 +86,7 @@ class ColorSpace : public DD::Image::PixelIop {
         void pixel_engine(
             const DD::Image::Row& in,
             int rowY, int rowX, int rowXBound,
-            const DD::Image::ChannelSet& outputChannels,
+            const DD::Image::ChannelMask outputChannels,
             DD::Image::Row& out);
 
 

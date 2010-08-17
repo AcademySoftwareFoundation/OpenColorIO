@@ -166,7 +166,7 @@ void ColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) co
 void ColorSpace::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
-    const DD::Image::ChannelSet& outputChannels,
+    const DD::Image::ChannelMask outputChannels,
     DD::Image::Row& out)
 {
     int rowWidth = rowXBound - rowX;
