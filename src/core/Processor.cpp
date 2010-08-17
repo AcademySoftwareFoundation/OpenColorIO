@@ -279,8 +279,6 @@ OCIO_NAMESPACE_ENTER
     
     const char * LocalProcessor::getGPUShaderText(const GpuShaderDesc & shaderDesc) const
     {
-        std::cout << getInfo() << std::endl;
-        
         // Partition the op vector into the 
         // interior index range does not support the gpu shader.
         // This is used to bound our analytical shader text generation
