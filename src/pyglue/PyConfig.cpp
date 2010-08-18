@@ -185,15 +185,15 @@ OCIO_NAMESPACE_ENTER
         
         
         // Display Transforms
-        PyObject * PyOCIO_Config_getDisplayDevices( PyObject * self );
-        PyObject * PyOCIO_Config_getDefaultDisplayDevice( PyObject * self );
+        PyObject * PyOCIO_Config_getDisplayDeviceNames( PyObject * self );
+        PyObject * PyOCIO_Config_getDefaultDisplayDeviceName( PyObject * self );
         PyObject * PyOCIO_Config_getDisplayTransforms( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDefaultDisplayTransformName( PyObject * self, PyObject * args );
         
         /*
         const char * (const char * device) const;
         
-        const char * getDisplayColorspace(const char * device, const char * displayTransformName) const;
+        const char * getDisplayColorSpaceName(const char * device, const char * displayTransformName) const;
         
         void addDisplayDevice(const char * device,
                               const char * displayTransformName,
@@ -228,8 +228,8 @@ OCIO_NAMESPACE_ENTER
             
             {"getXML", (PyCFunction) PyOCIO_Config_getXML, METH_NOARGS, "" },
             
-            {"getDisplayDevices", (PyCFunction) PyOCIO_Config_getDisplayDevices, METH_NOARGS, "" },
-            {"getDefaultDisplayDevice", (PyCFunction) PyOCIO_Config_getDefaultDisplayDevice, METH_NOARGS, "" },
+            {"getDisplayDeviceNames", (PyCFunction) PyOCIO_Config_getDisplayDeviceNames, METH_NOARGS, "" },
+            {"getDefaultDisplayDeviceName", (PyCFunction) PyOCIO_Config_getDefaultDisplayDeviceName, METH_NOARGS, "" },
             {"getDisplayTransforms", PyOCIO_Config_getDisplayTransforms, METH_VARARGS, "" },
             {"getDefaultDisplayTransformName", PyOCIO_Config_getDefaultDisplayTransformName, METH_VARARGS, "" },
             
@@ -579,18 +579,18 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
-        PyObject * PyOCIO_Config_getDisplayDevices( PyObject * self )
+        PyObject * PyOCIO_Config_getDisplayDeviceNames( PyObject * self )
         {
             try
             {
                 ConstConfigRcPtr config = GetConstConfig(self, true);
                 
                 std::vector<std::string> data;
-                int numDevices = config->getNumDisplayDevices();
+                int numDevices = config->getNumDisplayDeviceNames();
                 
                 for(int i=0; i<numDevices; ++i)
                 {
-                    data.push_back( config->getDisplayDevice(i) );
+                    data.push_back( config->getDisplayDeviceName(i) );
                 }
                 
                 return CreatePyListFromStringVector(data);
@@ -604,12 +604,12 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        PyObject * PyOCIO_Config_getDefaultDisplayDevice( PyObject * self )
+        PyObject * PyOCIO_Config_getDefaultDisplayDeviceName( PyObject * self )
         {
             try
             {
                 ConstConfigRcPtr config = GetConstConfig(self, true);
-                return PyString_FromString( config->getDefaultDisplayDevice() );
+                return PyString_FromString( config->getDefaultDisplayDeviceName() );
             }
             catch(...)
             {

@@ -423,7 +423,7 @@
         const ShotCC& void getShotCC() const;
         
         void setDisplayDevice(const char * displayDevice);
-        const char * getDisplayDevice() const;
+        const char * getDisplayDeviceName() const;
         
         void setVisualization(const char * visualization);
         const char * getVisualization() const;

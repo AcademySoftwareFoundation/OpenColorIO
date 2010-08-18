@@ -570,15 +570,15 @@ OCIO_NAMESPACE_ENTER
                 element->SetAttribute(rolekey, roleValue);
             }
             
-            for(int i=0; i<getNumDisplayDevices(); ++i)
+            for(int i=0; i<getNumDisplayDeviceNames(); ++i)
             {
-                const char * device = getDisplayDevice(i);
+                const char * device = getDisplayDeviceName(i);
                 
                 int numTransforms = getNumDisplayTransformNames(device);
                 for(int j=0; j<numTransforms; ++j)
                 {
                     const char * displayTransformName = getDisplayTransformName(device, j);
-                    const char * colorSpace = getDisplayColorspace(device, displayTransformName);
+                    const char * colorSpace = getDisplayColorSpaceName(device, displayTransformName);
                     
                     if(device && displayTransformName && colorSpace)
                     {

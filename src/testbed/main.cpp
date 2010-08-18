@@ -70,14 +70,14 @@ void testFilmlooks()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
-    int numDisplayDevices = config->getNumDisplayDevices();
+    int numDisplayDevices = config->getNumDisplayDeviceNames();
     std::cout << "numDisplayDevices " << numDisplayDevices << std::endl;
-    std::cout << "Default device: " << config->getDefaultDisplayDevice() << std::endl;
+    std::cout << "Default device: " << config->getDefaultDisplayDeviceName() << std::endl;
     std::cout << std::endl;
     
     for(int i=0; i<numDisplayDevices; ++i)
     {
-        const char * device = config->getDisplayDevice(i);
+        const char * device = config->getDisplayDeviceName(i);
         std::cout << " Device: " << device << std::endl;
         std::cout << " Default transform " << config->getDefaultDisplayTransformName(device) << std::endl;
         
@@ -87,7 +87,7 @@ void testFilmlooks()
             const char * displayTransformName = config->getDisplayTransformName(device, j);
             std::cout << "     ";
             std::cout << displayTransformName << " = ";
-            std::cout << config->getDisplayColorspace(device, displayTransformName);
+            std::cout << config->getDisplayColorSpaceName(device, displayTransformName);
             std::cout << "\n";
         }
     }

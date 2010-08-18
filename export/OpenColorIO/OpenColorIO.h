@@ -109,9 +109,9 @@ try
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
-    const char * device = config->getDefaultDisplayDevice();
+    const char * device = config->getDefaultDisplayDeviceName();
     const char * transformName = config->getDefaultDisplayTransformName(device);
-    const char * displayColorSpace = config->getDisplayColorspace(device, transformName);
+    const char * displayColorSpace = config->getDisplayColorSpaceName(device, transformName);
     
     OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
     transform->setInputColorSpace( config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR) );
@@ -435,15 +435,15 @@ OCIO_NAMESPACE_ENTER
         
         // Display Transforms
         // TODO: add default display device + default display transform
-        int getNumDisplayDevices() const;
-        const char * getDisplayDevice(int index) const;
-        const char * getDefaultDisplayDevice() const;
+        int getNumDisplayDeviceNames() const;
+        const char * getDisplayDeviceName(int index) const;
+        const char * getDefaultDisplayDeviceName() const;
         
         int getNumDisplayTransformNames(const char * device) const;
         const char * getDisplayTransformName(const char * device, int index) const;
         const char * getDefaultDisplayTransformName(const char * device) const;
         
-        const char * getDisplayColorspace(const char * device, const char * displayTransformName) const;
+        const char * getDisplayColorSpaceName(const char * device, const char * displayTransformName) const;
         
         void addDisplayDevice(const char * device,
                               const char * transformName,

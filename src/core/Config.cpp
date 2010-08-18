@@ -242,19 +242,19 @@ OCIO_NAMESPACE_ENTER
     
     // Display Transforms
     
-    int Config::getNumDisplayDevices() const
+    int Config::getNumDisplayDeviceNames() const
     {
-        return m_impl->getNumDisplayDevices();
+        return m_impl->getNumDisplayDeviceNames();
     }
     
-    const char * Config::getDisplayDevice(int index) const
+    const char * Config::getDisplayDeviceName(int index) const
     {
-        return m_impl->getDisplayDevice(index);
+        return m_impl->getDisplayDeviceName(index);
     }
     
-    const char * Config::getDefaultDisplayDevice() const
+    const char * Config::getDefaultDisplayDeviceName() const
     {
-        return m_impl->getDefaultDisplayDevice();
+        return m_impl->getDefaultDisplayDeviceName();
     }
     
     int Config::getNumDisplayTransformNames(const char * device) const
@@ -272,9 +272,9 @@ OCIO_NAMESPACE_ENTER
         return m_impl->getDefaultDisplayTransformName(device);
     }
     
-    const char * Config::getDisplayColorspace(const char * device, const char * displayTransformName) const
+    const char * Config::getDisplayColorSpaceName(const char * device, const char * displayTransformName) const
     {
-        return m_impl->getDisplayColorspace(device, displayTransformName);
+        return m_impl->getDisplayColorSpaceName(device, displayTransformName);
     }
     
     
@@ -627,7 +627,7 @@ OCIO_NAMESPACE_ENTER
     //
     // m_displayDevices = [(device, name, colorspace),...]
     
-    int Config::Impl::getNumDisplayDevices() const
+    int Config::Impl::getNumDisplayDeviceNames() const
     {
         std::set<std::string> devices;
         
@@ -640,7 +640,7 @@ OCIO_NAMESPACE_ENTER
         return static_cast<int>(devices.size());
     }
     
-    const char * Config::Impl::getDisplayDevice(int index) const
+    const char * Config::Impl::getDisplayDeviceName(int index) const
     {
         std::set<std::string> devices;
         
@@ -661,11 +661,11 @@ OCIO_NAMESPACE_ENTER
         throw Exception(os.str().c_str());
     }
     
-    const char * Config::Impl::getDefaultDisplayDevice() const
+    const char * Config::Impl::getDefaultDisplayDeviceName() const
     {
-        if(getNumDisplayDevices()>=1)
+        if(getNumDisplayDeviceNames()>=1)
         {
-            return getDisplayDevice(0);
+            return getDisplayDeviceName(0);
         }
         
         return "";
@@ -719,7 +719,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    const char * Config::Impl::getDisplayColorspace(const char * device, const char * displayTransformName) const
+    const char * Config::Impl::getDisplayColorSpaceName(const char * device, const char * displayTransformName) const
     {
         for(unsigned int i=0; i<m_displayDevices.size(); ++i)
         {

@@ -99,15 +99,15 @@ OCIO_NAMESPACE_ENTER
         
         
         // Display Transforms
-        int getNumDisplayDevices() const;
-        const char * getDisplayDevice(int index) const;
-        const char * getDefaultDisplayDevice() const;
+        int getNumDisplayDeviceNames() const;
+        const char * getDisplayDeviceName(int index) const;
+        const char * getDefaultDisplayDeviceName() const;
         
         int getNumDisplayTransformNames(const char * device) const;
         const char * getDisplayTransformName(const char * device, int index) const;
         const char * getDefaultDisplayTransformName(const char * device) const;
         
-        const char * getDisplayColorspace(const char * device, const char * displayTransformName) const;
+        const char * getDisplayColorSpaceName(const char * device, const char * displayTransformName) const;
         
         void addDisplayDevice(const char * device,
                               const char * displayTransformName,

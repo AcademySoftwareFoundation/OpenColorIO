@@ -57,8 +57,8 @@ xml = config.getXML()
 """
 
 config = OCIO.Config.CreateFromEnv()
-print 'default display device',config.getDefaultDisplayDevice()
-for device in config.getDisplayDevices():
+print 'default display device',config.getDefaultDisplayDeviceName()
+for device in config.getDisplayDeviceNames():
     print 'device',device
     print '    default',config.getDefaultDisplayTransformName(device)
     
