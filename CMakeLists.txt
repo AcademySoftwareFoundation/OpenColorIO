@@ -102,12 +102,22 @@ if(EXISTS "${NUKE}/${NUKE_HEADER}")
     )
     target_link_libraries(NukeOCIOColorSpace OpenColorIO)
 
+    add_library(NukeOCIODisplay MODULE
+        src/nuke/Display/Display.cpp
+    )
+    include_directories(
+        src/nuke/Display/
+        ${NUKE}
+    )
+    target_link_libraries(NukeOCIODisplay OpenColorIO)
+
     if(APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
     endif()
 
     add_custom_target(Nuke
         DEPENDS NukeOCIOColorSpace
+        DEPENDS NukeOCIODisplay
     )
 else()
     message(STATUS "Nuke plugins will not be built: ${NUKE_HEADER} not found in ${NUKE}")
