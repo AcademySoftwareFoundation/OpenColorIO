@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "CDLTransform.h"
 #include "ColorSpaceTransform.h"
+#include "GpuAllocationOp.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
@@ -213,17 +214,27 @@ OCIO_NAMESPACE_ENTER
         // result, and walk through it step by step.  If the dstColorspace family were
         // ever encountered in transit, we'd want to short circuit the result.
         
-        //processor.annotateColorSpace(srcColorSpace);
+        CreateGpuAllocationOp(processor,
+                              srcColorSpace->getGpuAllocation(),
+                              srcColorSpace->getGpuMin(),
+                              srcColorSpace->getGpuMax());
         
         ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         BuildOps(processor, config, toref, TRANSFORM_DIR_FORWARD);
         
-        // processor.annotateColorSpace(reference);
+        OCIO::ConstColorSpaceRcPtr referenceColorSpace = config.getColorSpaceForRole(ROLE_REFERENCE);
+        CreateGpuAllocationOp(processor,
+                              referenceColorSpace->getGpuAllocation(),
+                              referenceColorSpace->getGpuMin(),
+                              referenceColorSpace->getGpuMax());
         
         ConstGroupTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         BuildOps(processor, config, fromref, TRANSFORM_DIR_FORWARD);
         
-        //processor.annotateColorSpace(dstColorSpace);
+        CreateGpuAllocationOp(processor,
+                              dstColorSpace->getGpuAllocation(),
+                              dstColorSpace->getGpuMin(),
+                              dstColorSpace->getGpuMax());
     }
 }
 OCIO_NAMESPACE_EXIT
