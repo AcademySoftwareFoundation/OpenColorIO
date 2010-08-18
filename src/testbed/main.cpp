@@ -25,9 +25,8 @@ int main(int argc, const char* argv[])
     
     try
     {
-        testFilmlooks();
-        
-        // loadConfigFromEnv();
+        //testFilmlooks();
+        loadConfigFromEnv();
         //testCoordinateTransform();
         //createConfig();
         //testASCTransform();
@@ -119,15 +118,15 @@ void loadConfigFromEnv()
     OCIO::PackedImageDesc img(&imageVec[0], width, height, numChannels);
     std::cout << "img " << img << std::endl;
     
-    OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceForRole(OCIO::ROLE_COMPOSITING_LOG);
-    OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
+    //OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceForRole(OCIO::ROLE_COMPOSITING_LOG);
+    //OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
     
-    /*
-    OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName("lnf");
-    OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName("qt8");
-    */
+    OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName("dt8");
+    OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName("lnh");
     
     imageVec[0] = 445.0f/1023.0f;
+    imageVec[1] = 1023.0/1023.0f;
+    imageVec[2] = 0.0/1023.0f;
     std::cout << csSrc->getName() << " ";
     PrintColor(std::cout, &imageVec[0], "input");
     std::cout << std::endl;
@@ -145,12 +144,21 @@ void loadConfigFromEnv()
     PrintColor(std::cout, &imageVec[0], "round trip");
     std::cout << std::endl;
     
+    /*
     OCIO::GpuShaderDesc shaderDesc;
     shaderDesc.setLut3DEdgeLen(32);
     shaderDesc.setFunctionName("ocio_color_convert");
     shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_CG);
-    
     std::cout << p2->getGPUShaderText(shaderDesc) << std::endl;
+    */
+    
+    {
+        std::string outputname = "/mcp/test.ocio";
+        std::cout << "Writing " << outputname << std::endl;
+        std::ofstream outfile(outputname.c_str());
+        config->writeXML(outfile);
+        outfile.close();
+    }
 }
 
 

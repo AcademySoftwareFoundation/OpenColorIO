@@ -358,6 +358,7 @@ OCIO_NAMESPACE_ENTER
         // confirm all colorspace roles exist
         // confirm there arent duplicate colorspaces
         // confirm all files exist with read permissions?
+        // confirm for all ColorSpaceTransforms the names spaces exist
         
         
         const char * getResourcePath() const;
@@ -950,7 +951,7 @@ OCIO_NAMESPACE_ENTER
         // if needed
         
         // If a look is needed...
-        //void setLookColorspace(const ConstColorSpaceRcPtr & cs);
+        //void setLookColorSpace(const ConstColorSpaceRcPtr & cs);
         //void setLookColorCorrection(const ConstTransformRcPtr & transform);
         
         

@@ -35,7 +35,17 @@
         <description>vd8 is an 8 bit sRGB like,2.2 gamma, conversion to and from the reference colorspace. This is a 1-d representation does not include any subtractive color mixing or crosstalk compensation. This is commonly used to interchange files between internal and external vendors. This is used as the interchange space for final images on direct to video or television products. </description>
         <to_reference>
             <group>
-                <file src="vd10.spi1d" interpolation="nearest" />
+                <file src="vd10.spi1d" interpolation="linear" />
+            </group>
+        </to_reference>
+    </colorspace>
+    
+    <colorspace name="dt8" family="dt" bitdepth="8ui" isdata="false" gpuallocation="uniform" gpumin="0" gpumax="1">
+        <description> </description>
+        <to_reference>
+            <group>
+                <file src="diffusemult.spimtx"/>
+                <colorspacetransform src="vd8" dst="lnh"/>
             </group>
         </to_reference>
     </colorspace>

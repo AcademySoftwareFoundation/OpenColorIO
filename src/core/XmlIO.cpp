@@ -120,6 +120,73 @@ OCIO_NAMESPACE_ENTER
         
         
         
+        
+        
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // ColorSpaceTransform
+        
+        ColorSpaceTransformRcPtr CreateColorSpaceTransform(const TiXmlElement * element)
+        {
+            if(!element)
+                throw Exception("ColorSpaceTransform received null XmlElement.");
+            
+            if(std::string(element->Value()) != "colorspacetransform")
+            {
+                std::ostringstream os;
+                os << "HandleElement passed incorrect element type '";
+                os << element->Value() << "'. ";
+                os << "Expected 'colorspacetransform'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            ColorSpaceTransformRcPtr t = ColorSpaceTransform::Create();
+            
+            const char * src = element->Attribute("src");
+            const char * dst = element->Attribute("dst");
+            
+            if(!src || !dst)
+            {
+                std::ostringstream os;
+                os << "ColorSpaceTransform must specify both src and dst ";
+                os << "ColorSpaces.";
+                throw Exception(os.str().c_str());
+            }
+            
+            t->setSrc(src);
+            t->setDst(dst);
+            
+            const char * direction = element->Attribute("direction");
+            if(direction)
+            {
+                t->setDirection( TransformDirectionFromString(direction) );
+            }
+            
+            return t;
+        }
+        
+        
+        
+        TiXmlElement * GetElement(const ConstColorSpaceTransformRcPtr & t)
+        {
+            TiXmlElement * element = new TiXmlElement( "colorspacetransform" );
+            
+            element->SetAttribute("src", t->getSrc());
+            element->SetAttribute("dst", t->getDst());
+            
+            if(t->getDirection() != TRANSFORM_DIR_FORWARD)
+            {
+                const char * dir = TransformDirectionToString(t->getDirection());
+                element->SetAttribute("direction", dir);
+            }
+            
+            return element;
+        }
+        
+        
+        
+        
+        
         ///////////////////////////////////////////////////////////////////////
         //
         // GroupTransform
@@ -170,6 +237,10 @@ OCIO_NAMESPACE_ENTER
                 {
                     t->push_back( CreateFileTransform(pElem) );
                 }
+                else if(elementtype == "colorspacetransform")
+                {
+                    t->push_back( CreateColorSpaceTransform(pElem) );
+                }
                 else
                 {
                     std::ostringstream os;
@@ -218,6 +289,12 @@ OCIO_NAMESPACE_ENTER
                     TiXmlElement * childElement = GetElement(fileTransform);
                     element->LinkEndChild( childElement );
                 }
+                else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
+                    DynamicPtrCast<const ColorSpaceTransform>(child))
+                {
+                    TiXmlElement * childElement = GetElement(colorSpaceTransform);
+                    element->LinkEndChild( childElement );
+                }
                 else
                 {
                     throw Exception("Cannot serialize Transform type to XML");
@@ -226,7 +303,6 @@ OCIO_NAMESPACE_ENTER
             
             return element;
         }
-        
         
         
         
