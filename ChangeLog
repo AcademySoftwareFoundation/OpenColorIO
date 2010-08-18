@@ -1,3 +1,8 @@
+Version 0.5.12 (Aug 18 2010):
+    * Additional DisplayTransform improvements
+    * Additional GPU Improvements
+    * Added op hashing (processor->getGPULut3DCacheID)
+
 Version 0.5.11 (Aug 11 2010):
     * Initial DisplayTransform implementation
     * ASC CDL Support

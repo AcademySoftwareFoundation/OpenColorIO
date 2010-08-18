@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 //
 // OpenColorIO
-// Version 0.5.11
+// Version 0.5.12
 //
 
 // TODO: Add ColorSpaceTransform xml serialization / deserialization
