@@ -222,11 +222,14 @@ OCIO_NAMESPACE_ENTER
         ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         BuildOps(processor, config, toref, TRANSFORM_DIR_FORWARD);
         
+        /*
+        What if the reference colorSpace is only defined implicitly, and does not have a named space?
         OCIO::ConstColorSpaceRcPtr referenceColorSpace = config.getColorSpaceForRole(ROLE_REFERENCE);
         CreateGpuAllocationOp(processor,
                               referenceColorSpace->getGpuAllocation(),
                               referenceColorSpace->getGpuMin(),
                               referenceColorSpace->getGpuMax());
+        */
         
         ConstGroupTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         BuildOps(processor, config, fromref, TRANSFORM_DIR_FORWARD);
