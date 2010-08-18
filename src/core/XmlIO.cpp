@@ -273,7 +273,8 @@ OCIO_NAMESPACE_ENTER
                 std::string elementtype = pElem->Value();
                 if(elementtype == "description")
                 {
-                    cs->setDescription(pElem->GetText());
+                    const char * text = pElem->GetText();
+                    if(text) cs->setDescription(text);
                 }
                 else
                 {
