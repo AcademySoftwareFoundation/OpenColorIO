@@ -213,7 +213,7 @@ OCIO_NAMESPACE_ENTER
         // result, and walk through it step by step.  If the dstColorspace family were
         // ever encountered in transit, we'd want to short circuit the result.
         
-        processor.annotateColorSpace(srcColorSpace);
+        //processor.annotateColorSpace(srcColorSpace);
         
         ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         BuildOps(processor, config, toref, TRANSFORM_DIR_FORWARD);
@@ -223,7 +223,7 @@ OCIO_NAMESPACE_ENTER
         ConstGroupTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         BuildOps(processor, config, fromref, TRANSFORM_DIR_FORWARD);
         
-        processor.annotateColorSpace(dstColorSpace);
+        //processor.annotateColorSpace(dstColorSpace);
     }
 }
 OCIO_NAMESPACE_EXIT

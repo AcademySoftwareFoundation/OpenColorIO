@@ -176,12 +176,12 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_ColorSpace_setBitDepth( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_ColorSpace_isData( PyObject * self );
         PyObject * PyOCIO_ColorSpace_setIsData( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_ColorSpace_getGPUAllocation( PyObject * self );
-        PyObject * PyOCIO_ColorSpace_setGPUAllocation( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_ColorSpace_getGPUMin( PyObject * self );
-        PyObject * PyOCIO_ColorSpace_setGPUMin( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_ColorSpace_getGPUMax( PyObject * self );
-        PyObject * PyOCIO_ColorSpace_setGPUMax( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_ColorSpace_getGpuAllocation( PyObject * self );
+        PyObject * PyOCIO_ColorSpace_setGpuAllocation( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_ColorSpace_getGpuMin( PyObject * self );
+        PyObject * PyOCIO_ColorSpace_setGpuMin( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_ColorSpace_getGpuMax( PyObject * self );
+        PyObject * PyOCIO_ColorSpace_setGpuMax( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_ColorSpace_getTransform( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_ColorSpace_getEditableTransform( PyObject * self,  PyObject *args );
@@ -206,12 +206,12 @@ OCIO_NAMESPACE_ENTER
             {"setBitDepth", PyOCIO_ColorSpace_setBitDepth, METH_VARARGS, "" },
             {"isData", (PyCFunction) PyOCIO_ColorSpace_isData, METH_NOARGS, "" },
             {"setIsData", PyOCIO_ColorSpace_setIsData, METH_VARARGS, "" },
-            {"getGPUAllocation", (PyCFunction) PyOCIO_ColorSpace_getGPUAllocation, METH_NOARGS, "" },
-            {"setGPUAllocation", PyOCIO_ColorSpace_setGPUAllocation, METH_VARARGS, "" },
-            {"getGPUMin", (PyCFunction) PyOCIO_ColorSpace_getGPUMin, METH_NOARGS, "" },
-            {"setGPUMin", PyOCIO_ColorSpace_setGPUMin, METH_VARARGS, "" },
-            {"getGPUMax", (PyCFunction) PyOCIO_ColorSpace_getGPUMax, METH_NOARGS, "" },
-            {"setGPUMax", PyOCIO_ColorSpace_setGPUMax, METH_VARARGS, "" },
+            {"getGpuAllocation", (PyCFunction) PyOCIO_ColorSpace_getGpuAllocation, METH_NOARGS, "" },
+            {"setGpuAllocation", PyOCIO_ColorSpace_setGpuAllocation, METH_VARARGS, "" },
+            {"getGpuMin", (PyCFunction) PyOCIO_ColorSpace_getGpuMin, METH_NOARGS, "" },
+            {"setGpuMin", PyOCIO_ColorSpace_setGpuMin, METH_VARARGS, "" },
+            {"getGpuMax", (PyCFunction) PyOCIO_ColorSpace_getGpuMax, METH_NOARGS, "" },
+            {"setGpuMax", PyOCIO_ColorSpace_setGpuMax, METH_VARARGS, "" },
             
             {"getTransform", PyOCIO_ColorSpace_getTransform, METH_VARARGS, "" },
             {"getEditableTransform", PyOCIO_ColorSpace_getEditableTransform, METH_VARARGS, "" },
@@ -519,12 +519,12 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_ColorSpace_getGPUAllocation( PyObject * self )
+        PyObject * PyOCIO_ColorSpace_getGpuAllocation( PyObject * self )
         {
             try
             {
                 ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
-                return PyString_FromString( GpuAllocationToString( colorSpace->getGPUAllocation()) );
+                return PyString_FromString( GpuAllocationToString( colorSpace->getGpuAllocation()) );
             }
             catch(...)
             {
@@ -533,16 +533,16 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_ColorSpace_setGPUAllocation( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_ColorSpace_setGpuAllocation( PyObject * self, PyObject * args )
         {
             try
             {
                 GpuAllocation hwalloc;
-                if (!PyArg_ParseTuple(args,"O&:setGPUAllocation",
+                if (!PyArg_ParseTuple(args,"O&:setGpuAllocation",
                     ConvertPyObjectToGpuAllocation, &hwalloc)) return NULL;
                 
                 ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
-                colorSpace->setGPUAllocation( hwalloc );
+                colorSpace->setGpuAllocation( hwalloc );
                 
                 Py_RETURN_NONE;
             }
@@ -555,12 +555,12 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_ColorSpace_getGPUMin( PyObject * self )
+        PyObject * PyOCIO_ColorSpace_getGpuMin( PyObject * self )
         {
             try
             {
                 ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
-                return PyFloat_FromDouble( colorSpace->getGPUMin() );
+                return PyFloat_FromDouble( colorSpace->getGpuMin() );
             }
             catch(...)
             {
@@ -569,15 +569,15 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_ColorSpace_setGPUMin( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_ColorSpace_setGpuMin( PyObject * self, PyObject * args )
         {
             try
             {
                 float val = 0.0;
-                if (!PyArg_ParseTuple(args,"f:setGPUMin", &val)) return NULL;
+                if (!PyArg_ParseTuple(args,"f:setGpuMin", &val)) return NULL;
                 
                 ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
-                colorSpace->setGPUMin( val );
+                colorSpace->setGpuMin( val );
                 
                 Py_RETURN_NONE;
             }
@@ -590,12 +590,12 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_ColorSpace_getGPUMax( PyObject * self )
+        PyObject * PyOCIO_ColorSpace_getGpuMax( PyObject * self )
         {
             try
             {
                 ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
-                return PyFloat_FromDouble( colorSpace->getGPUMax() );
+                return PyFloat_FromDouble( colorSpace->getGpuMax() );
             }
             catch(...)
             {
@@ -604,15 +604,15 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_ColorSpace_setGPUMax( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_ColorSpace_setGpuMax( PyObject * self, PyObject * args )
         {
             try
             {
                 float val = 0.0;
-                if (!PyArg_ParseTuple(args,"f:setGPUMax", &val)) return NULL;
+                if (!PyArg_ParseTuple(args,"f:setGpuMax", &val)) return NULL;
                 
                 ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
-                colorSpace->setGPUMax( val );
+                colorSpace->setGpuMax( val );
                 
                 Py_RETURN_NONE;
             }

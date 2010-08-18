@@ -88,7 +88,7 @@ OCIO_NAMESPACE_ENTER
             
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
-            virtual bool supportsGPUShader() const;
+            virtual bool supportsGpuShader() const;
         
         private:
             float m_m44[16];
@@ -199,7 +199,7 @@ OCIO_NAMESPACE_ENTER
         
         } // Op::process
         
-        bool MatrixOffsetOp::supportsGPUShader() const
+        bool MatrixOffsetOp::supportsGpuShader() const
         {
             return false;
         }

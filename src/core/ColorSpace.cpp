@@ -118,34 +118,34 @@ OCIO_NAMESPACE_ENTER
         m_impl->setIsData(val);
     }
     
-    GpuAllocation ColorSpace::getGPUAllocation() const
+    GpuAllocation ColorSpace::getGpuAllocation() const
     {
-        return m_impl->getGPUAllocation();
+        return m_impl->getGpuAllocation();
     }
     
-    void ColorSpace::setGPUAllocation(GpuAllocation allocation)
+    void ColorSpace::setGpuAllocation(GpuAllocation allocation)
     {
-        m_impl->setGPUAllocation(allocation);
+        m_impl->setGpuAllocation(allocation);
     }
     
-    float ColorSpace::getGPUMin() const
+    float ColorSpace::getGpuMin() const
     {
-        return m_impl->getGPUMin();
+        return m_impl->getGpuMin();
     }
     
-    void ColorSpace::setGPUMin(float min)
+    void ColorSpace::setGpuMin(float min)
     {
-        m_impl->setGPUMin(min);
+        m_impl->setGpuMin(min);
     }
     
-    float ColorSpace::getGPUMax() const
+    float ColorSpace::getGpuMax() const
     {
-        return m_impl->getGPUMax();
+        return m_impl->getGpuMax();
     }
     
-    void ColorSpace::setGPUMax(float max)
+    void ColorSpace::setGpuMax(float max)
     {
-        m_impl->setGPUMax(max);
+        m_impl->setGpuMax(max);
     }
     
     ConstGroupTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
@@ -176,10 +176,10 @@ OCIO_NAMESPACE_ENTER
         os << "family=" << cs.getFamily() << ", ";
         os << "bitDepth=" << BitDepthToString(cs.getBitDepth()) << ", ";
         os << "isData=" << BoolToString(cs.isData()) << ", ";
-        os << "GPUAllocation=" << GpuAllocationToString(cs.getGPUAllocation()) << ", ";
+        os << "GpuAllocation=" << GpuAllocationToString(cs.getGpuAllocation()) << ", ";
         // TODO: make this not warn
-        //os << "GPUMin=" << cs.getGPUMin() << ", ";
-        //os << "GPUMax=" << cs.getGPUMax() << ", ";
+        //os << "GpuMin=" << cs.getGpuMin() << ", ";
+        //os << "GpuMax=" << cs.getGpuMax() << ", ";
         
         os << ">\n";
         if(cs.isTransformSpecified(COLORSPACE_DIR_TO_REFERENCE))
@@ -292,32 +292,32 @@ OCIO_NAMESPACE_ENTER
         m_isData = val;
     }
 
-    GpuAllocation ColorSpace::Impl::getGPUAllocation() const
+    GpuAllocation ColorSpace::Impl::getGpuAllocation() const
     {
         return m_gpuAllocation;
     }
     
-    void ColorSpace::Impl::setGPUAllocation(GpuAllocation allocation)
+    void ColorSpace::Impl::setGpuAllocation(GpuAllocation allocation)
     {
         m_gpuAllocation = allocation;
     }
 
-    float ColorSpace::Impl::getGPUMin() const
+    float ColorSpace::Impl::getGpuMin() const
     {
         return m_gpuMin;
     }
     
-    void ColorSpace::Impl::setGPUMin(float min)
+    void ColorSpace::Impl::setGpuMin(float min)
     {
         m_gpuMin = min;
     }
 
-    float ColorSpace::Impl::getGPUMax() const
+    float ColorSpace::Impl::getGpuMax() const
     {
         return m_gpuMax;
     }
     
-    void ColorSpace::Impl::setGPUMax(float max)
+    void ColorSpace::Impl::setGpuMax(float max)
     {
         m_gpuMax = max;
     }

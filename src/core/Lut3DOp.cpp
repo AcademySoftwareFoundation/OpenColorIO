@@ -256,7 +256,7 @@ OCIO_NAMESPACE_ENTER
             
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
-            virtual bool supportsGPUShader() const;
+            virtual bool supportsGpuShader() const;
         
         private:
             Lut3DRcPtr m_lut;
@@ -343,7 +343,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        bool Lut3DOp::supportsGPUShader() const
+        bool Lut3DOp::supportsGpuShader() const
         {
             return false;
         }

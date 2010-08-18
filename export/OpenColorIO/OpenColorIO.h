@@ -542,15 +542,15 @@ OCIO_NAMESPACE_ENTER
         bool isData() const;
         void setIsData(bool isData);
         
-        // GPU allocation information
-        GpuAllocation getGPUAllocation() const;
-        void setGPUAllocation(GpuAllocation allocation);
+        // Gpu allocation information
+        GpuAllocation getGpuAllocation() const;
+        void setGpuAllocation(GpuAllocation allocation);
         
-        float getGPUMin() const;
-        void setGPUMin(float min);
+        float getGpuMin() const;
+        void setGpuMin(float min);
         
-        float getGPUMax() const;
-        void setGPUMax(float max);
+        float getGpuMax() const;
+        void setGpuMax(float max);
         
         
         
@@ -615,13 +615,13 @@ OCIO_NAMESPACE_ENTER
         //
         // GPU Path
         
-        virtual const char * getGPUShaderText(const GpuShaderDesc & shaderDesc) const = 0;
+        virtual const char * getGpuShaderText(const GpuShaderDesc & shaderDesc) const = 0;
         
-        virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const = 0;
-        virtual const char * getGPULut3DCacheID(const GpuShaderDesc & shaderDesc) const = 0;
+        virtual void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const = 0;
+        virtual const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const = 0;
         
         /*
-        virtual int getGPULut3DEdgeLen() const = 0;
+        virtual int getGpuLut3DEdgeLen() const = 0;
         */
         
         //! Get the 3d lut + cg shader for the specified DisplayTransform

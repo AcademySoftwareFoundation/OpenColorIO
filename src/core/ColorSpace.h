@@ -63,14 +63,14 @@ OCIO_NAMESPACE_ENTER
         bool isData() const;
         void setIsData(bool isData);
         
-        GpuAllocation getGPUAllocation() const;
-        void setGPUAllocation(GpuAllocation allocation);
+        GpuAllocation getGpuAllocation() const;
+        void setGpuAllocation(GpuAllocation allocation);
         
-        float getGPUMin() const;
-        void setGPUMin(float min);
+        float getGpuMin() const;
+        void setGpuMin(float min);
         
-        float getGPUMax() const;
-        void setGPUMax(float max);
+        float getGpuMax() const;
+        void setGpuMax(float max);
         
         ConstGroupTransformRcPtr getTransform(ColorSpaceDirection dir) const;
         GroupTransformRcPtr getEditableTransform(ColorSpaceDirection dir);

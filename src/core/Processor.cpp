@@ -68,11 +68,6 @@ OCIO_NAMESPACE_ENTER
         m_opVec.push_back(op);
     }
     
-    void LocalProcessor::annotateColorSpace(const ConstColorSpaceRcPtr & cs)
-    {
-        // TODO
-    }
-    
     void LocalProcessor::finalizeOps()
     {
         // TODO: Optimize (collapse?) chunks of the OpVec
@@ -209,7 +204,7 @@ OCIO_NAMESPACE_ENTER
         // If the entire opVec supports GPU generation, both the
         // startIndex and endIndex will equal -1
         
-        void GetGPUUnsupportedIndexRange(int * startIndex, int * endIndex,
+        void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
                                          const OpRcPtrVec & opVec)
         {
             int start = -1;
@@ -221,7 +216,7 @@ OCIO_NAMESPACE_ENTER
                 // If it's the first, save it as our start.
                 // Otherwise, update the end.
                 
-                if(!opVec[i]->supportsGPUShader())
+                if(!opVec[i]->supportsGpuShader())
                 {
                     if(start<0)
                     {
@@ -251,7 +246,7 @@ OCIO_NAMESPACE_ENTER
         int lut3DOpStartIndex = 0;
         int lut3DOpEndIndex = 0;
         
-        GetGPUUnsupportedIndexRange(&lut3DOpStartIndex,
+        GetGpuUnsupportedIndexRange(&lut3DOpStartIndex,
                                     &lut3DOpEndIndex,
                                     m_opVec);
         
@@ -262,7 +257,7 @@ OCIO_NAMESPACE_ENTER
         for(int i=0; i<(int)m_opVec.size(); ++i)
         {
             os << "Index " << i << " -- " << *m_opVec[i] << std::endl;
-            os << "      supportsGPUShader: " << m_opVec[i]->supportsGPUShader() << std::endl;
+            os << "      supportsGPUShader: " << m_opVec[i]->supportsGpuShader() << std::endl;
             if(i>=lut3DOpStartIndex && i<=lut3DOpEndIndex)
             {
                 os << "      Will be processed on Lut3D lattice" << std::endl;
@@ -277,7 +272,7 @@ OCIO_NAMESPACE_ENTER
         return os.str();
     }
     
-    const char * LocalProcessor::getGPUShaderText(const GpuShaderDesc & shaderDesc) const
+    const char * LocalProcessor::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
     {
         // Partition the op vector into the 
         // interior index range does not support the gpu shader.
@@ -287,7 +282,7 @@ OCIO_NAMESPACE_ENTER
         int lut3DOpStartIndex = 0;
         int lut3DOpEndIndex = 0;
         
-        GetGPUUnsupportedIndexRange(&lut3DOpStartIndex,
+        GetGpuUnsupportedIndexRange(&lut3DOpStartIndex,
                                     &lut3DOpEndIndex,
                                     m_opVec);
         
@@ -310,7 +305,7 @@ OCIO_NAMESPACE_ENTER
             /*
             for(unsigned int i=0; i<m_opVec.size(); ++i)
             {
-                // m_opVec[i]->getGPUShader(shader, lut3dCacheID, lut3d, shaderDesc);
+                // m_opVec[i]->getGpuShader(shader, lut3dCacheID, lut3d, shaderDesc);
             }
             */
         }
@@ -339,7 +334,7 @@ OCIO_NAMESPACE_ENTER
             
             for(int i=lut3DOpEndIndex+1; i<(int)m_opVec.size(); ++i)
             {
-                throw Exception("TODO: getGPUShader");
+                throw Exception("TODO: getGpuShader");
             }
         }
         
@@ -352,12 +347,12 @@ OCIO_NAMESPACE_ENTER
         return m_shaderText.c_str();
     }
     
-    const char * LocalProcessor::getGPULut3DCacheID(const GpuShaderDesc & shaderDesc) const
+    const char * LocalProcessor::getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const
     {
         int lut3DOpStartIndex = 0;
         int lut3DOpEndIndex = 0;
         
-        GetGPUUnsupportedIndexRange(&lut3DOpStartIndex,
+        GetGpuUnsupportedIndexRange(&lut3DOpStartIndex,
                                     &lut3DOpEndIndex,
                                     m_opVec);
         
@@ -392,19 +387,19 @@ OCIO_NAMESPACE_ENTER
         return m_lut3DHash.c_str();
     }
     
-    void LocalProcessor::getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const
+    void LocalProcessor::getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const
     {
         if(!lut3d) return;
         
         // Partition the op vector into the 
-        // interior index range does not support the gpu shader.
+        // interior index range does not support the Gpu shader.
         // This is used to bound our analytical shader text generation
         // start index and end index are inclusive.
         
         int lut3DOpStartIndex = 0;
         int lut3DOpEndIndex = 0;
         
-        GetGPUUnsupportedIndexRange(&lut3DOpStartIndex,
+        GetGpuUnsupportedIndexRange(&lut3DOpStartIndex,
                                     &lut3DOpEndIndex,
                                     m_opVec);
         

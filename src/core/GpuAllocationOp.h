@@ -27,53 +27,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_OP_H
-#define INCLUDED_OCIO_OP_H
+#ifndef INCLUDED_OCIO_GPUALLOCATIONOP_H
+#define INCLUDED_OCIO_GPUALLOCATIONOP_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Config.h"
-
-#include <vector>
+#include "Op.h"
+#include "Processor.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    class Op
+    class GpuAllocationOp;
+    typedef SharedPtr<GpuAllocationOp> GpuAllocationOpRcPtr;
+    
+    class GpuAllocationOp : public Op
     {
-        public:
-            virtual ~Op();
-            
-            virtual std::string getInfo() const = 0;
-            
-            //! This should yield a string of not unreasonable length.
-            //! It can only be called after setup()
-            virtual std::string getCacheID() const = 0;
-            
-            // This is called a single time after construction.
-            // All pre-processing and safety checks should happen here,
-            // rather than in the constructor.
-            
-            virtual void setup() = 0;
-            
-            // Render the specified pixels.
-            //
-            // This must be safe to call in a multi-threaded context.
-            // Ops that have mutable data internally, or rely on external
-            // caching, must thus be appropriately mutexed.
-            
-            virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
-            
-            //! Does this op support gpu shader text generation
-            virtual bool supportsGpuShader() const = 0;
-            
-        private:
-            Op& operator= (const Op &);
+    public:
+        GpuAllocationOp(GpuAllocation allocation,
+                        float min,
+                        float max);
+        virtual ~GpuAllocationOp();
+        
+        virtual std::string getInfo() const;
+        virtual std::string getCacheID() const;
+        
+        virtual void setup();
+        virtual void apply(float* rgbaBuffer, long numPixels) const;
+        virtual bool supportsGpuShader() const;
+        
+        GpuAllocation getAllocation() const;
+        float getMin() const;
+        float getMax() const;
+    
+    private:
+        GpuAllocation m_allocation;
+        float m_min;
+        float m_max;
+        
+        std::string m_cacheID;
     };
     
-    std::ostream& operator<< (std::ostream&, const Op&);
-    
-    typedef SharedPtr<Op> OpRcPtr;
-    typedef std::vector<OpRcPtr> OpRcPtrVec;
+    void CreateGpuAllocationOp(LocalProcessor & processor,
+                               GpuAllocation allocation,
+                               float min, float max);
 }
 OCIO_NAMESPACE_EXIT
 

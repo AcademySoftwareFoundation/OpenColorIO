@@ -175,9 +175,9 @@ void createConfig()
         cs->setFamily("ln");
         cs->setBitDepth(OCIO::BIT_DEPTH_F16);
         cs->setIsData(false);
-        cs->setGPUAllocation(OCIO::GPU_ALLOCATION_LG2);
-        cs->setGPUMin(-16.0);
-        cs->setGPUMax(6.0);
+        cs->setGpuAllocation(OCIO::GPU_ALLOCATION_LG2);
+        cs->setGpuMin(-16.0);
+        cs->setGpuMax(6.0);
         config->addColorSpace(cs);
         
         config->setColorSpaceForRole( OCIO::ROLE_SCENE_LINEAR, cs->getName() );
@@ -190,9 +190,9 @@ void createConfig()
         cs->setFamily("lg");
         cs->setBitDepth(OCIO::BIT_DEPTH_F16);
         cs->setIsData(false);
-        cs->setGPUAllocation(OCIO::GPU_ALLOCATION_UNIFORM);
-        cs->setGPUMin(-0.2f);
-        cs->setGPUMax(1.615f);
+        cs->setGpuAllocation(OCIO::GPU_ALLOCATION_UNIFORM);
+        cs->setGpuMin(-0.2f);
+        cs->setGpuMax(1.615f);
         
         OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
         transform->setSrc("lgf.spi1d");

@@ -70,7 +70,7 @@ OCIO_NAMESPACE_ENTER
             
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
-            virtual bool supportsGPUShader() const;
+            virtual bool supportsGpuShader() const;
         
         private:
             float m_exp4[4];
@@ -142,7 +142,7 @@ OCIO_NAMESPACE_ENTER
             ApplyClampExponentNoAlpha(rgbaBuffer, numPixels, m_exp4);
         }
         
-        bool ExponentOp::supportsGPUShader() const
+        bool ExponentOp::supportsGpuShader() const
         {
             return false;
         }

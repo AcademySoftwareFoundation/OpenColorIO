@@ -56,10 +56,10 @@ OCIO_NAMESPACE_ENTER
         virtual void applyRGB(float * pixel) const;
         virtual void applyRGBA(float * pixel) const;
         
-        virtual const char * getGPUShaderText(const GpuShaderDesc & gpuDesc) const;
-        virtual const char * getGPULut3DCacheID(const GpuShaderDesc & shaderDesc) const;
+        virtual const char * getGpuShaderText(const GpuShaderDesc & gpuDesc) const;
+        virtual const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const;
         
-        virtual void getGPULut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
+        virtual void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
         
         
         ////////////////////////////////////////////
@@ -74,9 +74,6 @@ OCIO_NAMESPACE_ENTER
         // Builder functions
         
         void registerOp(OpRcPtr op);
-        
-        // The current colorspace is considered this...
-        void annotateColorSpace(const ConstColorSpaceRcPtr & cs);
         
         void finalizeOps();
         
