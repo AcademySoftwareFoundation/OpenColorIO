@@ -69,8 +69,8 @@ OCIO_NAMESPACE_ENTER
         cacheIDStream.precision(FLOAT_DECIMALS);
         cacheIDStream << "<GpuAllocationOp ";;
         cacheIDStream << GpuAllocationToString(m_allocation) << " ";
-        cacheIDStream << "min " << " " << m_min;
-        cacheIDStream << "max " << " " << m_max;
+        cacheIDStream << "min " << " " << m_min << " ";
+        cacheIDStream << "max " << " " << m_max << " ";
         cacheIDStream << ">";
         
         m_cacheID = cacheIDStream.str();
