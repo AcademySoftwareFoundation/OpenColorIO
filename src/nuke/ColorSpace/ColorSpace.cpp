@@ -149,6 +149,7 @@ void ColorSpace::_validate(bool for_real)
     DD::Image::PixelIop::_validate(for_real);
 }
 
+// Note that this is copied by others (OCIODisplay)
 void ColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
@@ -163,6 +164,7 @@ void ColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) co
 }
 
 // See Saturation::pixel_engine for a well-commented example.
+// Note that this is copied by others (OCIODisplay)
 void ColorSpace::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,

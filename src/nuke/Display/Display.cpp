@@ -6,6 +6,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <DDImage/NukeWrapper.h>
 #include <DDImage/Row.h>
 #include <DDImage/Knobs.h>
+#include <DDImage/Enumeration_KnobI.h>
 
 #include <string>
 #include <sstream>
@@ -13,19 +14,13 @@ namespace OCIO = OCIO_NAMESPACE;
 
 
 
-    /*
-    Knobs should be:
-        input colorspace (string)
-        display device (string) - CRT etc
-        transform (string) - film, log, etc
-        exposure (float or float4) - master or master+rgb
-    Object for display transform will be persistent
-    */
 Display::Display(Node *n) : DD::Image::PixelIop(n)
 {
     layersToProcess = DD::Image::Mask_RGB;
     hasLists = false;
     colorSpaceIndex = displayDeviceIndex = displayTransformIndex = 0;
+    displayDeviceKnob = displayTransformKnob = NULL;
+    exposure = 0.0;
 
     try
     {
@@ -34,11 +29,9 @@ Display::Display(Node *n) : DD::Image::PixelIop(n)
         OCIO::ConstColorSpaceRcPtr defaultColorSpace = \
             config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
         std::string defaultDeviceName = config->getDefaultDisplayDeviceName();
-        std::string defaultTransformName = config->getDefaultDisplayTransformName(defaultDeviceName.c_str());
 
         int nColorSpaces = config->getNumColorSpaces();
         int nDeviceNames = config->getNumDisplayDeviceNames();
-        int nTransformNames = config->getNumDisplayTransformNames(defaultDeviceName.c_str()); // TODO update on knob change
 
         for(int i = 0; i < nColorSpaces; i++)
         {
@@ -62,16 +55,7 @@ Display::Display(Node *n) : DD::Image::PixelIop(n)
             }
         }
 
-        for(int i = 0; i < nTransformNames; i++)
-        {
-            std::string transformName = config->getDisplayTransformName(defaultDeviceName.c_str(), i); // TODO
-            displayTransformNames.push_back(transformName);
-            displayTransformCstrNames.push_back(displayTransformNames.back().c_str());
-            if (transformName == defaultTransformName)
-            {
-                displayTransformIndex = i;
-            }
-        }
+        refreshDisplayTransforms();
 
         transformPtr = OCIO::DisplayTransform::Create();
     }
@@ -86,7 +70,6 @@ Display::Display(Node *n) : DD::Image::PixelIop(n)
 
     colorSpaceCstrNames.push_back(NULL);
     displayDeviceCstrNames.push_back(NULL);
-    displayTransformCstrNames.push_back(NULL);
 
     hasLists = !(colorSpaceNames.empty() || displayDeviceNames.empty() || displayTransformNames.empty());
 
@@ -103,14 +86,23 @@ Display::~Display()
 
 void Display::knobs(DD::Image::Knob_Callback f)
 {
-    DD::Image::Enumeration_knob(f, &colorSpaceIndex, &colorSpaceCstrNames[0], "colorspace", "input colorspace");
+    DD::Image::Enumeration_knob(f,
+        &colorSpaceIndex, &colorSpaceCstrNames[0], "colorspace", "input colorspace");
+    DD::Image::SetFlags(f, DD::Image::Knob::SAVE_MENU);
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
 
-    DD::Image::Enumeration_knob(f, &displayDeviceIndex, &displayDeviceCstrNames[0], "device", "display device");
+    displayDeviceKnob = DD::Image::Enumeration_knob(f,
+        &displayDeviceIndex, &displayDeviceCstrNames[0], "device", "display device");
+    DD::Image::SetFlags(f, DD::Image::Knob::SAVE_MENU);
     DD::Image::Tooltip(f, "Display device for output.");
 
-    DD::Image::Enumeration_knob(f, &displayTransformIndex, &displayTransformCstrNames[0], "transform", "display transform");
+    displayTransformKnob = DD::Image::Enumeration_knob(f,
+        &displayTransformIndex, &displayTransformCstrNames[0], "transform", "display transform");
+    DD::Image::SetFlags(f, DD::Image::Knob::SAVE_MENU);
     DD::Image::Tooltip(f, "Display transform for output.");
+
+    DD::Image::Double_knob(f, &exposure, DD::Image::IRange(-4, 4), "exposure", "exposure");
+    DD::Image::Tooltip(f, "Adjust the exposure, in f-stops, of the output image.");
 
     DD::Image::Divider(f);
 
@@ -151,6 +143,10 @@ void Display::_validate(bool for_real)
         transformPtr->setInputColorSpace(config->getColorSpaceByName(csSrcName));
         transformPtr->setDisplayColorSpace(config->getColorSpaceByName(csDstName));
 
+        float e = static_cast<float>(exposure);
+        const float exposure4f[] = {e, e, e, 0.0f}; // r, g, b, a
+        transformPtr->setLinearExposure(exposure4f);
+
         processorPtr = config->getProcessor(transformPtr);
     }
     catch(OCIO::Exception &e)
@@ -172,7 +168,7 @@ void Display::_validate(bool for_real)
     DD::Image::PixelIop::_validate(for_real);
 }
 
-// TODO Same as OCIO ColorSpace::in_channels.
+// Note: Same as OCIO ColorSpace::in_channels.
 void Display::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
@@ -186,7 +182,7 @@ void Display::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
     mask += done;
 }
 
-// TODO Same as OCIO ColorSpace::pixel_engine.
+// Note: Same as OCIO ColorSpace::pixel_engine.
 void Display::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
@@ -242,6 +238,82 @@ void Display::pixel_engine(
         {
             error(e.what());
         }
+    }
+}
+
+void Display::refreshDisplayTransforms()
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+
+    if (displayDeviceIndex < 0 || displayDeviceIndex >= static_cast<int>(displayDeviceNames.size()))
+    {
+        std::ostringstream err;
+        err << "No or invalid display device specified (index " << displayDeviceIndex << ").";
+        error(err.str().c_str());
+        return;
+    }
+
+    const char *deviceName = displayDeviceCstrNames[displayDeviceIndex];
+    int nTransformNames = config->getNumDisplayTransformNames(deviceName);
+    std::string defaultTransformName = config->getDefaultDisplayTransformName(deviceName);
+
+    displayTransformCstrNames.clear();
+    displayTransformNames.clear();
+
+    // Try to maintain an old transform name, or use the default.
+    bool hasOldTransformName = false;
+    std::string oldTransformName = "";
+    if (displayTransformIndex >= 0 && displayTransformIndex < static_cast<int>(displayTransformNames.size()))
+    {
+        hasOldTransformName = true;
+        oldTransformName = displayTransformNames[displayTransformIndex];
+    }
+    int defaultDisplayTransformIndex = 0, newDisplayTransformIndex = -1;
+
+    for(int i = 0; i < nTransformNames; i++)
+    {
+        std::string transformName = config->getDisplayTransformName(deviceName, i);
+        displayTransformNames.push_back(transformName);
+        displayTransformCstrNames.push_back(displayTransformNames.back().c_str());
+        if (hasOldTransformName && transformName == oldTransformName)
+        {
+            newDisplayTransformIndex = i;
+        }
+        if (transformName == defaultTransformName)
+        {
+            defaultDisplayTransformIndex = i;
+        }
+    }
+
+    if (newDisplayTransformIndex == -1)
+    {
+        newDisplayTransformIndex = defaultDisplayTransformIndex;
+    }
+
+    displayTransformCstrNames.push_back(NULL);
+
+    if (displayTransformKnob == NULL)
+    {
+        displayTransformIndex = newDisplayTransformIndex;
+    }
+    else
+    {
+        DD::Image::Enumeration_KnobI *enumKnob = displayTransformKnob->enumerationKnob();
+        enumKnob->menu(displayTransformNames);
+        displayTransformKnob->set_value(newDisplayTransformIndex);
+    }
+}
+
+int Display::knob_changed(DD::Image::Knob *k)
+{
+    if (k == displayDeviceKnob && displayDeviceKnob != NULL)
+    {
+        refreshDisplayTransforms();
+        return 1;
+    }
+    else
+    {
+        return 0;
     }
 }
 

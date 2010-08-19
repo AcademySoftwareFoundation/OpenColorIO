@@ -17,7 +17,6 @@ namespace OCIO = OCIO_NAMESPACE;
  * Use OpenColorIO to convert for display output.
  */
 class Display : public DD::Image::PixelIop {
-
     protected:
 
         bool hasLists; //!< Were colorspaces, display devices, and transform names found? If not, always error.
@@ -28,9 +27,14 @@ class Display : public DD::Image::PixelIop {
         std::vector<std::string> displayDeviceNames, displayTransformNames;
         std::vector<const char*> colorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
         std::vector<const char*> displayDeviceCstrNames, displayTransformCstrNames;
+        double exposure;
         
         OCIO::DisplayTransformRcPtr transformPtr;
         OCIO::ConstProcessorRcPtr processorPtr;
+
+        DD::Image::Knob *displayDeviceKnob, *displayTransformKnob;
+        void refreshDisplayTransforms();
+
     public:
 
         Display(Node *node);
@@ -90,6 +94,12 @@ class Display : public DD::Image::PixelIop {
             int rowY, int rowX, int rowXBound,
             const DD::Image::ChannelMask outputChannels,
             DD::Image::Row& out);
+
+        /*!
+         * When the display device changes,
+         * regenerate the display transform list.
+         */
+        int knob_changed(DD::Image::Knob *k);
 
 
     protected:
