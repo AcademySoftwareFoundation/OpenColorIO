@@ -92,7 +92,7 @@ endif()
 set(NUKE "/net/apps/rhel40m64/foundry/nuke6.0.5/include" CACHE FILEPATH "path to Nuke headers against which to compile Nuke plugins")
 set(NUKE_HEADER DDImage/Op.h)
 if(EXISTS "${NUKE}/${NUKE_HEADER}")
-    message(STATUS "Nuke path okay, time to set up for building Nuke plugins")
+    message(STATUS "Nuke path okay, will build the Nuke plugins against ${NUKE}")
 
     add_library(NukeOCIOColorSpace MODULE
         src/nuke/ColorSpace/ColorSpace.cpp
