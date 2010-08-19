@@ -257,9 +257,6 @@ void Display::refreshDisplayTransforms()
     int nTransformNames = config->getNumDisplayTransformNames(deviceName);
     std::string defaultTransformName = config->getDefaultDisplayTransformName(deviceName);
 
-    displayTransformCstrNames.clear();
-    displayTransformNames.clear();
-
     // Try to maintain an old transform name, or use the default.
     bool hasOldTransformName = false;
     std::string oldTransformName = "";
@@ -269,6 +266,9 @@ void Display::refreshDisplayTransforms()
         oldTransformName = displayTransformNames[displayTransformIndex];
     }
     int defaultDisplayTransformIndex = 0, newDisplayTransformIndex = -1;
+
+    displayTransformCstrNames.clear();
+    displayTransformNames.clear();
 
     for(int i = 0; i < nTransformNames; i++)
     {
