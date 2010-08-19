@@ -13,7 +13,7 @@ if len(sys.argv) < 3:
     
     Convert a proprietary SPI color configuration format (v7 xml) to an OCIO config.
     
-    env PYTHONPATH=/net/homedirs/jeremys/git/ocio/build/ ./src/testbed/spi_to_ocio.py /net/soft_scratch/users/color/colorspace/OCIO/vfx/v1/vfx.OCIO.xml /net/homedirs/jeremys/git/ocio-configs/spi-vfx
+    env PYTHONPATH=/net/homedirs/jeremys/git/OpenColorIO.js/build/ ./src/testbed/spi_to_ocio.py /shots/smf/home/lib/lut/colorspaces.xml /net/homedirs/jeremys/git/OpenColorIO-configs/smf/
     
     """
     sys.exit(1)
@@ -160,19 +160,18 @@ def BuildColorspaceFromXMLElement(element, lutDir):
     if gpuallocation is None:
         pass
     elif gpuallocation == 'log2':
-        cs.setGPUAllocation(OCIO.GPU_ALLOCATION_LG2)
+        cs.setGpuAllocation(OCIO.GPU_ALLOCATION_LG2)
     elif gpuallocation == 'uniform':
-        cs.setGPUAllocation(OCIO.GPU_ALLOCATION_UNIFORM)
+        cs.setGpuAllocation(OCIO.GPU_ALLOCATION_UNIFORM)
     else:
-        #cs.setGPUAllocation(OCIO.GPU_ALLOCATION_UNKNOWN)
         raise RuntimeError("Unknown bit allocation")
     
     gpumin = attrDict.pop('gpumin', None)
     if gpumin is not None:
-        cs.setGPUMin(float(gpumin))
+        cs.setGpuMin(float(gpumin))
     gpumax = attrDict.pop('gpumax', None)
     if gpumax is not None:
-        cs.setGPUMax(float(gpumax))
+        cs.setGpuMax(float(gpumax))
     
     if attrDict:
         print 'TODO: Handle colorspace attrs',attrDict, cs.getName()
