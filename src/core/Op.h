@@ -43,6 +43,8 @@ OCIO_NAMESPACE_ENTER
         public:
             virtual ~Op();
             
+            //! Something short, and printable.
+            //  The type of stuff you'd want to see in debugging.
             virtual std::string getInfo() const = 0;
             
             //! This should yield a string of not unreasonable length.
@@ -63,8 +65,15 @@ OCIO_NAMESPACE_ENTER
             
             virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
             
+            
+            
             //! Does this op support gpu shader text generation
             virtual bool supportsGpuShader() const = 0;
+            
+            // TODO: If temp variables are ever needed, also pass tempvar prefix.
+            virtual void writeGpuShader(std::ostringstream & shader,
+                                        const std::string & pixelName,
+                                        const GpuShaderDesc & shaderDesc) const = 0;
             
         private:
             Op& operator= (const Op &);

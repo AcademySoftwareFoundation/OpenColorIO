@@ -77,6 +77,8 @@ OCIO_NAMESPACE_ENTER
         {
             m_opVec[i]->setup();
         }
+        
+        std::cerr << getInfo() << std::endl;
     }
     
     
@@ -301,13 +303,10 @@ OCIO_NAMESPACE_ENTER
         // (3d lut is unused)
         if(lut3DOpStartIndex == -1 && lut3DOpEndIndex == -1)
         {
-            throw Exception("TODO: getGPUShader");
-            /*
             for(unsigned int i=0; i<m_opVec.size(); ++i)
             {
-                // m_opVec[i]->getGpuShader(shader, lut3dCacheID, lut3d, shaderDesc);
+                m_opVec[i]->writeGpuShader(shader, pixelName, shaderDesc);
             }
-            */
         }
         // Analytical -> 3dlut -> analytical
         else
@@ -315,7 +314,7 @@ OCIO_NAMESPACE_ENTER
             // Handle analytical shader block before start index.
             for(int i=0; i<lut3DOpStartIndex; ++i)
             {
-                throw Exception("TODO: getGPUShader");
+                m_opVec[i]->writeGpuShader(shader, pixelName, shaderDesc);
             }
             
             // We're at the end of the 3D block,
@@ -330,16 +329,15 @@ OCIO_NAMESPACE_ENTER
                                   lut3dName, lut3DEdgeLen,
                                   shaderDesc.getLanguage());
             
-            // Handle analytical shader block before start index.
+            // Handle analytical shader block after end index.
             
             for(int i=lut3DOpEndIndex+1; i<(int)m_opVec.size(); ++i)
             {
-                throw Exception("TODO: getGpuShader");
+                m_opVec[i]->writeGpuShader(shader, pixelName, shaderDesc);
             }
         }
         
         WriteShaderFooter(&shader, pixelName, shaderDesc);
-        
         
         // TODO: This is not multi-thread safe. Cache result or mutex
         m_shaderText = shader.str();

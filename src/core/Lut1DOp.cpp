@@ -330,7 +330,11 @@ OCIO_NAMESPACE_ENTER
             
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
+            
             virtual bool supportsGpuShader() const;
+            virtual void writeGpuShader(std::ostringstream & shader,
+                                        const std::string & pixelName,
+                                        const GpuShaderDesc & shaderDesc) const;
         
         private:
             Lut1DRcPtr m_lut;
@@ -420,6 +424,14 @@ OCIO_NAMESPACE_ENTER
         {
             return false;
         }
+        
+        void Lut1DOp::writeGpuShader(std::ostringstream & shader,
+                                     const std::string & pixelName,
+                                     const GpuShaderDesc & shaderDesc) const
+        {
+            throw Exception("Lut1DOp does not support analytical shader generation.");
+        }
+        
     }
     
     void CreateLut1DOp(LocalProcessor & processor,

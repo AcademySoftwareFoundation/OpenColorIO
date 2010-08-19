@@ -89,6 +89,10 @@ OCIO_NAMESPACE_ENTER
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             virtual bool supportsGpuShader() const;
+            
+            virtual void writeGpuShader(std::ostringstream & shader,
+                                        const std::string & pixelName,
+                                        const GpuShaderDesc & shaderDesc) const;
         
         private:
             float m_m44[16];
@@ -204,6 +208,12 @@ OCIO_NAMESPACE_ENTER
             return false;
         }
         
+        void MatrixOffsetOp::writeGpuShader(std::ostringstream & shader,
+                                            const std::string & pixelName,
+                                            const GpuShaderDesc & shaderDesc) const
+        {
+            throw Exception("MatrixOffsetOp does not support analytical shader generation.");
+        }
         
     }  // Anon namespace
     

@@ -53,7 +53,11 @@ OCIO_NAMESPACE_ENTER
         
         virtual void setup();
         virtual void apply(float* rgbaBuffer, long numPixels) const;
+        
         virtual bool supportsGpuShader() const;
+        virtual void writeGpuShader(std::ostringstream & shader,
+                                    const std::string & pixelName,
+                                    const GpuShaderDesc & shaderDesc) const;
         
         GpuAllocation getAllocation() const;
         float getMin() const;

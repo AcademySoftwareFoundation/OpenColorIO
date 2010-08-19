@@ -81,9 +81,13 @@ OCIO_NAMESPACE_ENTER
     
     bool GpuAllocationOp::supportsGpuShader() const
     {
-        // TODO: throw exception instead?
         return true;
     }
+    
+    void GpuAllocationOp::writeGpuShader(std::ostringstream & shader,
+                                         const std::string & pixelName,
+                                         const GpuShaderDesc & shaderDesc) const
+    { }
 
     GpuAllocation GpuAllocationOp::getAllocation() const
     {

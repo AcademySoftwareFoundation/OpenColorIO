@@ -70,7 +70,11 @@ OCIO_NAMESPACE_ENTER
             
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
+            
             virtual bool supportsGpuShader() const;
+            virtual void writeGpuShader(std::ostringstream & shader,
+                                        const std::string & pixelName,
+                                        const GpuShaderDesc & shaderDesc) const;
         
         private:
             float m_exp4[4];
@@ -145,6 +149,13 @@ OCIO_NAMESPACE_ENTER
         bool ExponentOp::supportsGpuShader() const
         {
             return false;
+        }
+        
+        void ExponentOp::writeGpuShader(std::ostringstream & shader,
+                                        const std::string & pixelName,
+                                        const GpuShaderDesc & shaderDesc) const
+        {
+            throw Exception("ExponentOp does not support analytical shader generation.");
         }
         
         
