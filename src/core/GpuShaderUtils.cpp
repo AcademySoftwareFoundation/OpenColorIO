@@ -127,6 +127,46 @@ OCIO_NAMESPACE_ENTER
     }
     
     
+    
+    
+    std::string GpuTextHalf4x4(const float * m44, GpuLanguage lang)
+    {
+        std::ostringstream os;
+        Write_half4x4(&os, m44, lang);
+        return os.str();
+    }
+    
+    std::string GpuTextHalf4(const float * v4, GpuLanguage lang)
+    {
+        std::ostringstream os;
+        Write_half4(&os, v4, lang);
+        return os.str();
+    }
+    
+    std::string GpuTextHalf3(const float * v3, GpuLanguage lang)
+    {
+        std::ostringstream os;
+        Write_half3(&os, v3, lang);
+        return os.str();
+    }
+    
+    void Write_mtx_x_vec(std::ostringstream * os,
+                         const std::string & mtx, const std::string & vec,
+                         GpuLanguage lang)
+    {
+        if(!os) return;
+        
+        if(lang == GPU_LANGUAGE_CG)
+        {
+            *os << "mul( " << mtx << ", " << vec << ")";
+        }
+        else
+        {
+            *os << mtx << " * " << vec;
+        }
+    }
+    
+    
     void Write_sampleLut3D_rgb(std::ostringstream * os, const std::string& variableName,
                                const std::string& lutName, int lut3DEdgeLen,
                                GpuLanguage lang)

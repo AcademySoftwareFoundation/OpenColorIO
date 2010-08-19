@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "MatrixOps.h"
 #include "MathUtils.h"
@@ -99,6 +100,11 @@ OCIO_NAMESPACE_ENTER
             float m_offset4[4];
             TransformDirection m_direction;
             
+            bool m_m44IsIdentity;
+            bool m_offset4IsIdentity;
+            float m_m44_inv[16];
+            float m_offset4_inv[4];
+            
             std::string m_cacheID;
         };
         
@@ -111,7 +117,9 @@ OCIO_NAMESPACE_ENTER
                                        const float * offset4,
                                        TransformDirection direction):
                                        Op(),
-                                       m_direction(direction)
+                                       m_direction(direction),
+                                       m_m44IsIdentity(false),
+                                       m_offset4IsIdentity(false)
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
@@ -120,6 +128,9 @@ OCIO_NAMESPACE_ENTER
             
             memcpy(m_m44, m44, 16*sizeof(float));
             memcpy(m_offset4, offset4, 4*sizeof(float));
+            
+            memset(m_m44_inv, 0, 16*sizeof(float));
+            memset(m_offset4_inv, 0, 4*sizeof(float));
         }
         
         MatrixOffsetOp::~MatrixOffsetOp()
@@ -137,6 +148,27 @@ OCIO_NAMESPACE_ENTER
         
         void MatrixOffsetOp::setup()
         {
+            m_offset4IsIdentity = IsVecEqualToZero(m_offset4, 4);
+            m_m44IsIdentity = IsM44Identity(m_m44);
+            
+            if(TRANSFORM_DIR_INVERSE)
+            {
+                if(!GetM44Inverse(m_m44_inv, m_m44))
+                {
+                    std::ostringstream os;
+                    os << "Cannot apply MatrixOffsetOp op. ";
+                    os << "Matrix inverse does not exist for m44 (";
+                    for(int i=0; i<16; ++i) os << m_m44[i] << " ";
+                    os << ").";
+                    throw Exception(os.str().c_str());
+                }
+                
+                for(int i=0; i<4; ++i)
+                {
+                    m_offset4_inv[i] = -m_offset4_inv[i];
+                }
+            }
+            
             // Create the cacheID
             md5_state_t state;
             md5_byte_t digest[16];
@@ -154,65 +186,86 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
         
-        // TODO: Move a lot of this calculation to the setup call
+        // TODO: see if mtx is a diagonal mtx, if so use scaling.
         
         void MatrixOffsetOp::apply(float* rgbaBuffer, long numPixels) const
         {
-            if(!rgbaBuffer) return;
-            
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
-                if(!IsM44Identity(m_m44))
+                if(!m_m44IsIdentity)
                 {
                     ApplyMatrixNoAlpha(rgbaBuffer, numPixels, m_m44);
                 }
                 
-                if(!IsVecEqualToZero(m_offset4, 4))
+                if(!m_offset4IsIdentity)
                 {
                     ApplyOffsetNoAlpha(rgbaBuffer, numPixels, m_offset4);
                 }
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                if(!IsVecEqualToZero(m_offset4, 4))
+                if(!m_offset4IsIdentity)
                 {
-                    float invOffset4[4] = { -m_offset4[0],
-                                            -m_offset4[1],
-                                            -m_offset4[2],
-                                            -m_offset4[3] };
-                    ApplyOffsetNoAlpha(rgbaBuffer, numPixels, invOffset4);
+                    ApplyOffsetNoAlpha(rgbaBuffer, numPixels, m_offset4_inv);
                 }
                 
-                if(!IsM44Identity(m_m44))
+                if(!m_m44IsIdentity)
                 {
-                    // TODO : Cache mtx inverses
-                    float invMtx44[16];
-                    if(!GetM44Inverse(invMtx44, m_m44))
-                    {
-                        std::ostringstream os;
-                        os << "Cannot apply MatrixOffsetOp op. ";
-                        os << "Matrix inverse does not exist for m44 (";
-                        for(int i=0; i<16; ++i) os << m_m44[i] << " ";
-                        os << ").";
-                        throw Exception(os.str().c_str());
-                    }
-                    
-                    ApplyMatrixNoAlpha(rgbaBuffer, numPixels, invMtx44);
+                    ApplyMatrixNoAlpha(rgbaBuffer, numPixels, m_m44_inv);
                 }
             }
-        
         } // Op::process
         
         bool MatrixOffsetOp::supportsGpuShader() const
         {
-            return false;
+            return true;
         }
         
         void MatrixOffsetOp::writeGpuShader(std::ostringstream & shader,
                                             const std::string & pixelName,
                                             const GpuShaderDesc & shaderDesc) const
         {
-            throw Exception("MatrixOffsetOp does not support analytical shader generation.");
+            GpuLanguage lang = shaderDesc.getLanguage();
+            
+            // TODO: This should not act upon alpha,
+            // since we dont apply it on the CPU?
+            
+            if(m_direction == TRANSFORM_DIR_FORWARD)
+            {
+                if(!m_m44IsIdentity)
+                {
+                    shader << pixelName << " = ";
+                    Write_mtx_x_vec(&shader,
+                                    GpuTextHalf4x4(m_m44, lang), pixelName,
+                                    lang);
+                    shader << ";\n";
+                }
+                
+                if(!m_offset4IsIdentity)
+                {
+                    shader << pixelName << " = ";
+                    Write_half4(&shader, m_offset4, lang);
+                    shader << " + " << pixelName << ";\n";
+                }
+            }
+            else if(m_direction == TRANSFORM_DIR_INVERSE)
+            {
+                if(!m_offset4IsIdentity)
+                {
+                    shader << pixelName << " = ";
+                    Write_half4(&shader, m_offset4_inv, lang);
+                    shader << " + " << pixelName << ";\n";
+                }
+                
+                if(!m_m44IsIdentity)
+                {
+                    shader << pixelName << " = ";
+                    Write_mtx_x_vec(&shader,
+                                    GpuTextHalf4x4(m_m44_inv, lang), pixelName,
+                                    lang);
+                    shader << ";\n";
+                }
+            }
         }
         
     }  // Anon namespace
