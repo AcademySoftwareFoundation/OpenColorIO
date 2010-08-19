@@ -89,11 +89,14 @@ OCIO_NAMESPACE_ENTER
             
             virtual void setup();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
-            virtual bool supportsGpuShader() const;
             
+            virtual bool supportsGpuShader() const;
             virtual void writeGpuShader(std::ostringstream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
+            
+            virtual bool definesGpuAllocation() const;
+            virtual GpuAllocationData getGpuAllocation() const;
         
         private:
             float m_m44[16];
@@ -266,6 +269,16 @@ OCIO_NAMESPACE_ENTER
                     shader << ";\n";
                 }
             }
+        }
+        
+        bool MatrixOffsetOp::definesGpuAllocation() const
+        {
+            return false;
+        }
+        
+        GpuAllocationData MatrixOffsetOp::getGpuAllocation() const
+        {
+            throw Exception("MatrixOffsetOp does not define a Gpu Allocation.");
         }
         
     }  // Anon namespace

@@ -78,7 +78,7 @@ OCIO_NAMESPACE_ENTER
             m_opVec[i]->setup();
         }
         
-        std::cerr << getInfo() << std::endl;
+        // std::cerr << getInfo() << std::endl;
     }
     
     

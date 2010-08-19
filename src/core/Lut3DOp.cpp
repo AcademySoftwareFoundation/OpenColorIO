@@ -261,7 +261,10 @@ OCIO_NAMESPACE_ENTER
             virtual void writeGpuShader(std::ostringstream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
-        
+            
+            virtual bool definesGpuAllocation() const;
+            virtual GpuAllocationData getGpuAllocation() const;
+            
         private:
             Lut3DRcPtr m_lut;
             Interpolation m_interpolation;
@@ -357,6 +360,16 @@ OCIO_NAMESPACE_ENTER
                                      const GpuShaderDesc & shaderDesc) const
         {
             throw Exception("Lut3DOp does not support analytical shader generation.");
+        }
+        
+        bool Lut3DOp::definesGpuAllocation() const
+        {
+            return false;
+        }
+        
+        GpuAllocationData Lut3DOp::getGpuAllocation() const
+        {
+            throw Exception("Lut3DOp does not define a Gpu Allocation.");
         }
     }
     

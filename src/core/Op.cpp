@@ -42,5 +42,21 @@ OCIO_NAMESPACE_ENTER
         os << op.getInfo();
         return os;
     }
+    
+    namespace
+    {
+        const int FLOAT_DECIMALS = 7;
+    }
+    
+    std::string GpuAllocationData::getCacheID() const
+    {
+        std::ostringstream os;
+        os.precision(FLOAT_DECIMALS);
+        os << GpuAllocationToString(allocation) << " ";
+        os << "min " << " " << min << " ";
+        os << "max " << " " << max << " ";
+        return os.str();
+    }
+    
 }
 OCIO_NAMESPACE_EXIT

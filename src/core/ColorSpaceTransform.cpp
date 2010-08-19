@@ -214,10 +214,12 @@ OCIO_NAMESPACE_ENTER
         // result, and walk through it step by step.  If the dstColorspace family were
         // ever encountered in transit, we'd want to short circuit the result.
         
-        CreateGpuAllocationOp(processor,
-                              srcColorSpace->getGpuAllocation(),
-                              srcColorSpace->getGpuMin(),
-                              srcColorSpace->getGpuMax());
+        GpuAllocationData srcAllocation;
+        srcAllocation.allocation = srcColorSpace->getGpuAllocation();
+        srcAllocation.min = srcColorSpace->getGpuMin();
+        srcAllocation.max = srcColorSpace->getGpuMax();
+        
+        CreateGpuAllocationOp(processor, srcAllocation);
         
         ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         BuildOps(processor, config, toref, TRANSFORM_DIR_FORWARD);
@@ -234,10 +236,13 @@ OCIO_NAMESPACE_ENTER
         ConstGroupTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         BuildOps(processor, config, fromref, TRANSFORM_DIR_FORWARD);
         
-        CreateGpuAllocationOp(processor,
-                              dstColorSpace->getGpuAllocation(),
-                              dstColorSpace->getGpuMin(),
-                              dstColorSpace->getGpuMax());
+        
+        GpuAllocationData dstAllocation;
+        dstAllocation.allocation = dstColorSpace->getGpuAllocation();
+        dstAllocation.min = dstColorSpace->getGpuMin();
+        dstAllocation.max = dstColorSpace->getGpuMax();
+        
+        CreateGpuAllocationOp(processor, dstAllocation);
     }
 }
 OCIO_NAMESPACE_EXIT

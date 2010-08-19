@@ -36,79 +36,102 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        const int FLOAT_DECIMALS = 7;
-    }
-    
-    GpuAllocationOp::GpuAllocationOp(GpuAllocation allocation,
-                    float min,
-                    float max) :
-                    m_allocation(allocation),
-                    m_min(min),
-                    m_max(max)
-    { };
-
-    GpuAllocationOp::~GpuAllocationOp()
-    {
-    
-    }
-    
-    std::string GpuAllocationOp::getInfo() const
-    {
-        return "<GPUAllocationOp>";
-    }
-    
-    std::string GpuAllocationOp::getCacheID() const
-    {
-        return m_cacheID;
-    }
-    
-    void GpuAllocationOp::setup()
-    {
-        // Create the cacheID
-        std::ostringstream cacheIDStream;
-        cacheIDStream.precision(FLOAT_DECIMALS);
-        cacheIDStream << "<GpuAllocationOp ";;
-        cacheIDStream << GpuAllocationToString(m_allocation) << " ";
-        cacheIDStream << "min " << " " << m_min << " ";
-        cacheIDStream << "max " << " " << m_max << " ";
-        cacheIDStream << ">";
+        class GpuAllocationOp;
+        typedef SharedPtr<GpuAllocationOp> GpuAllocationOpRcPtr;
         
-        m_cacheID = cacheIDStream.str();
-    }
-    
-    void GpuAllocationOp::apply(float* rgbaBuffer, long numPixels) const
-    { }
-    
-    bool GpuAllocationOp::supportsGpuShader() const
-    {
-        return true;
-    }
-    
-    void GpuAllocationOp::writeGpuShader(std::ostringstream & shader,
-                                         const std::string & pixelName,
-                                         const GpuShaderDesc & shaderDesc) const
-    { }
+        class GpuAllocationOp : public Op
+        {
+        public:
+            GpuAllocationOp(const GpuAllocationData & allocationData);
+            virtual ~GpuAllocationOp();
+            
+            virtual std::string getInfo() const;
+            virtual std::string getCacheID() const;
+            
+            virtual void setup();
+            virtual void apply(float* rgbaBuffer, long numPixels) const;
+            
+            virtual bool supportsGpuShader() const;
+            virtual void writeGpuShader(std::ostringstream & shader,
+                                        const std::string & pixelName,
+                                        const GpuShaderDesc & shaderDesc) const;
+            
+            virtual bool definesGpuAllocation() const;
+            virtual GpuAllocationData getGpuAllocation() const;
+            
+            GpuAllocation getAllocation() const;
+            float getMin() const;
+            float getMax() const;
+        
+        private:
+            GpuAllocationData m_allocationData;
+            float m_min;
+            float m_max;
+            
+            std::string m_cacheID;
+        };
+        
+        
+        
+        GpuAllocationOp::GpuAllocationOp(const GpuAllocationData & allocationData) :
+                        m_allocationData(allocationData)
+        { };
 
-    GpuAllocation GpuAllocationOp::getAllocation() const
-    {
-        return m_allocation;
+        GpuAllocationOp::~GpuAllocationOp()
+        {
+
+        }
+
+        std::string GpuAllocationOp::getInfo() const
+        {
+            return "<GPUAllocationOp>";
+        }
+
+        std::string GpuAllocationOp::getCacheID() const
+        {
+            return m_cacheID;
+        }
+
+        void GpuAllocationOp::setup()
+        {
+            // Create the cacheID
+            std::ostringstream cacheIDStream;
+            cacheIDStream << "<GpuAllocationOp ";
+            cacheIDStream << m_allocationData.getCacheID();
+            cacheIDStream << ">";
+            m_cacheID = cacheIDStream.str();
+        }
+
+        void GpuAllocationOp::apply(float* /*rgbaBuffer*/, long /*numPixels*/) const
+        { }
+
+        bool GpuAllocationOp::supportsGpuShader() const
+        {
+            return true;
+        }
+
+        void GpuAllocationOp::writeGpuShader(std::ostringstream & /*shader*/,
+                                             const std::string & /*pixelName*/,
+                                             const GpuShaderDesc & /*shaderDesc*/) const
+        { }
+        
+        bool GpuAllocationOp::definesGpuAllocation() const
+        {
+            return true;
+        }
+        
+        GpuAllocationData GpuAllocationOp::getGpuAllocation() const
+        {
+            return m_allocationData;
+        }
+
     }
     
-    float GpuAllocationOp::getMin() const
-    {
-        return m_min;
-    }
-    
-    float GpuAllocationOp::getMax() const
-    {
-        return m_max;
-    }
     
     void CreateGpuAllocationOp(LocalProcessor & processor,
-                              GpuAllocation allocation,
-                              float min, float max)
+                               const GpuAllocationData & allocationData)
     {
-        processor.registerOp( GpuAllocationOpRcPtr(new GpuAllocationOp(allocation, min, max)) );
+        processor.registerOp( GpuAllocationOpRcPtr(new GpuAllocationOp(allocationData)) );
     }
 
 }

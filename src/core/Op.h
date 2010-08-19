@@ -34,10 +34,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Config.h"
 
+#include <sstream>
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
+    struct GpuAllocationData
+    {
+        GpuAllocation allocation;
+        float min;
+        float max;
+        
+        GpuAllocationData():
+            allocation(GPU_ALLOCATION_UNIFORM),
+            min(0.0),
+            max(1.0) {};
+        
+        std::string getCacheID() const;
+    };
+    
     class Op
     {
         public:
@@ -74,6 +89,10 @@ OCIO_NAMESPACE_ENTER
             virtual void writeGpuShader(std::ostringstream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const = 0;
+            
+            
+            virtual bool definesGpuAllocation() const = 0;
+            virtual GpuAllocationData getGpuAllocation() const = 0;
             
         private:
             Op& operator= (const Op &);

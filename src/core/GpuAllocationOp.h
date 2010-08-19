@@ -32,48 +32,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Op.h"
 #include "Processor.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    class GpuAllocationOp;
-    typedef SharedPtr<GpuAllocationOp> GpuAllocationOpRcPtr;
-    
-    class GpuAllocationOp : public Op
-    {
-    public:
-        GpuAllocationOp(GpuAllocation allocation,
-                        float min,
-                        float max);
-        virtual ~GpuAllocationOp();
-        
-        virtual std::string getInfo() const;
-        virtual std::string getCacheID() const;
-        
-        virtual void setup();
-        virtual void apply(float* rgbaBuffer, long numPixels) const;
-        
-        virtual bool supportsGpuShader() const;
-        virtual void writeGpuShader(std::ostringstream & shader,
-                                    const std::string & pixelName,
-                                    const GpuShaderDesc & shaderDesc) const;
-        
-        GpuAllocation getAllocation() const;
-        float getMin() const;
-        float getMax() const;
-    
-    private:
-        GpuAllocation m_allocation;
-        float m_min;
-        float m_max;
-        
-        std::string m_cacheID;
-    };
-    
     void CreateGpuAllocationOp(LocalProcessor & processor,
-                               GpuAllocation allocation,
-                               float min, float max);
+                               const GpuAllocationData & allocationData);
 }
 OCIO_NAMESPACE_EXIT
 

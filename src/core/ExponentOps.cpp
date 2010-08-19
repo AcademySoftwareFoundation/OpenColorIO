@@ -75,6 +75,9 @@ OCIO_NAMESPACE_ENTER
             virtual void writeGpuShader(std::ostringstream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
+            
+            virtual bool definesGpuAllocation() const;
+            virtual GpuAllocationData getGpuAllocation() const;
         
         private:
             float m_exp4[4];
@@ -158,6 +161,15 @@ OCIO_NAMESPACE_ENTER
             throw Exception("ExponentOp does not support analytical shader generation.");
         }
         
+        bool ExponentOp::definesGpuAllocation() const
+        {
+            return false;
+        }
+        
+        GpuAllocationData ExponentOp::getGpuAllocation() const
+        {
+            throw Exception("ExponentOp does not define a Gpu Allocation.");
+        }
         
     }  // Anon namespace
     
