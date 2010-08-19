@@ -40,6 +40,32 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
+        void ApplyScaleNoAlpha(float* rgbaBuffer, long numPixels,
+                               const float* scale4)
+        {
+            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
+            {
+                rgbaBuffer[0] *= scale4[0];
+                rgbaBuffer[1] *= scale4[1];
+                rgbaBuffer[2] *= scale4[2];
+                
+                rgbaBuffer += 4;
+            }
+        }
+        
+        void ApplyOffsetNoAlpha(float* rgbaBuffer, long numPixels,
+                                const float* offset4)
+        {
+            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
+            {
+                rgbaBuffer[0] += offset4[0];
+                rgbaBuffer[1] += offset4[1];
+                rgbaBuffer[2] += offset4[2];
+                
+                rgbaBuffer += 4;
+            }
+        }
+        
         void ApplyMatrixNoAlpha(float* rgbaBuffer, long numPixels,
                                 const float* mat44)
         {
@@ -54,19 +80,6 @@ OCIO_NAMESPACE_ENTER
                 rgbaBuffer[0] = r*mat44[0] + g*mat44[1] + b*mat44[2];
                 rgbaBuffer[1] = r*mat44[4] + g*mat44[5] + b*mat44[6];
                 rgbaBuffer[2] = r*mat44[8] + g*mat44[9] + b*mat44[10];
-                
-                rgbaBuffer += 4;
-            }
-        }
-        
-        void ApplyOffsetNoAlpha(float* rgbaBuffer, long numPixels,
-                                const float* offset4)
-        {
-            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
-            {
-                rgbaBuffer[0] += offset4[0];
-                rgbaBuffer[1] += offset4[1];
-                rgbaBuffer[2] += offset4[2];
                 
                 rgbaBuffer += 4;
             }
@@ -118,6 +131,7 @@ OCIO_NAMESPACE_ENTER
             TransformDirection m_direction;
             
             bool m_m44IsIdentity;
+            bool m_m44IsDiagonal;
             bool m_offset4IsIdentity;
             float m_m44_inv[16];
             float m_offset4_inv[4];
@@ -167,6 +181,7 @@ OCIO_NAMESPACE_ENTER
         {
             m_offset4IsIdentity = IsVecEqualToZero(m_offset4, 4);
             m_m44IsIdentity = IsM44Identity(m_m44);
+            m_m44IsDiagonal = IsM44Diagonal(m_m44);
             
             if(TRANSFORM_DIR_INVERSE)
             {
@@ -211,7 +226,16 @@ OCIO_NAMESPACE_ENTER
             {
                 if(!m_m44IsIdentity)
                 {
-                    ApplyMatrixNoAlpha(rgbaBuffer, numPixels, m_m44);
+                    if(m_m44IsDiagonal)
+                    {
+                        float scale[4];
+                        GetM44Diagonal(scale, m_m44);
+                        ApplyScaleNoAlpha(rgbaBuffer, numPixels, scale);
+                    }
+                    else
+                    {
+                        ApplyMatrixNoAlpha(rgbaBuffer, numPixels, m_m44);
+                    }
                 }
                 
                 if(!m_offset4IsIdentity)
@@ -228,7 +252,16 @@ OCIO_NAMESPACE_ENTER
                 
                 if(!m_m44IsIdentity)
                 {
-                    ApplyMatrixNoAlpha(rgbaBuffer, numPixels, m_m44_inv);
+                    if(m_m44IsDiagonal)
+                    {
+                        float scale[4];
+                        GetM44Diagonal(scale, m_m44_inv);
+                        ApplyScaleNoAlpha(rgbaBuffer, numPixels, scale);
+                    }
+                    else
+                    {
+                        ApplyMatrixNoAlpha(rgbaBuffer, numPixels, m_m44_inv);
+                    }
                 }
             }
         } // Op::process
@@ -251,11 +284,22 @@ OCIO_NAMESPACE_ENTER
             {
                 if(!m_m44IsIdentity)
                 {
-                    shader << pixelName << " = ";
-                    Write_mtx_x_vec(&shader,
-                                    GpuTextHalf4x4(m_m44, lang), pixelName,
-                                    lang);
-                    shader << ";\n";
+                    if(m_m44IsDiagonal)
+                    {
+                        shader << pixelName << " = ";
+                        float scale[4];
+                        GetM44Diagonal(scale, m_m44);
+                        Write_half4(&shader, scale, lang);
+                        shader << " * " << pixelName << ";\n";
+                    }
+                    else
+                    {
+                        shader << pixelName << " = ";
+                        Write_mtx_x_vec(&shader,
+                                        GpuTextHalf4x4(m_m44, lang), pixelName,
+                                        lang);
+                        shader << ";\n";
+                    }
                 }
                 
                 if(!m_offset4IsIdentity)
@@ -276,11 +320,22 @@ OCIO_NAMESPACE_ENTER
                 
                 if(!m_m44IsIdentity)
                 {
-                    shader << pixelName << " = ";
-                    Write_mtx_x_vec(&shader,
-                                    GpuTextHalf4x4(m_m44_inv, lang), pixelName,
-                                    lang);
-                    shader << ";\n";
+                    if(m_m44IsDiagonal)
+                    {
+                        shader << pixelName << " = ";
+                        float scale[4];
+                        GetM44Diagonal(scale, m_m44_inv);
+                        Write_half4(&shader, scale, lang);
+                        shader << " * " << pixelName << ";\n";
+                    }
+                    else
+                    {
+                        shader << pixelName << " = ";
+                        Write_mtx_x_vec(&shader,
+                                        GpuTextHalf4x4(m_m44_inv, lang), pixelName,
+                                        lang);
+                        shader << ";\n";
+                    }
                 }
             }
         }

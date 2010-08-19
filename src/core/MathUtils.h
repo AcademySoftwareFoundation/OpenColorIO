@@ -102,9 +102,12 @@ OCIO_NAMESPACE_ENTER
     
     // This take the 4x4 inverse.
     // Return whether the inverse has succeeded.
-    bool GetM44Inverse(float* out, const float* m44);
+    bool GetM44Inverse(float* out44, const float* m44);
     
     bool IsM44Identity(const float* m44);
+    
+    bool IsM44Diagonal(const float* m44);
+    void GetM44Diagonal(float* out4, const float* m44);
 }
 OCIO_NAMESPACE_EXIT
 

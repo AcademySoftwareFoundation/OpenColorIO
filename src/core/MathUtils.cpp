@@ -125,6 +125,26 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
+    bool IsM44Diagonal(const float* m44)
+    {
+        for(int i=0; i<16; ++i)
+        {
+            if((i%5)==0) continue;
+            if(!equalWithAbsError(0.0, m44[i], FLTMIN)) return false;
+        }
+        
+        return true;
+    }
+    
+    void GetM44Diagonal(float* out4, const float* m44)
+    {
+        for(int i=0; i<4; ++i)
+        {
+            out4[i] = m44[i*5];
+        }
+    }
+    
+    
     bool GetM44Inverse(float* inverse_out, const float* m)
     {
         float d10_21 = m[4]*m[9] - m[5]*m[8];
