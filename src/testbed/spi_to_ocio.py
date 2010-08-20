@@ -40,12 +40,12 @@ def BuildConfigFromXMLElement(element, lutDir):
     config = OCIO.Config()
     
     # Convert roles
-    for oldRole, newRole in [ ("linear", OCIO.ROLE_SCENE_LINEAR),
-                              ("colortiming", OCIO.ROLE_COLOR_TIMING),
+    for oldRole, newRole in [ ("linear", OCIO.Constants.ROLE_SCENE_LINEAR),
+                              ("colortiming", OCIO.Constants.ROLE_COLOR_TIMING),
                               ("spm", "spi.spm"),
-                              ("picking", OCIO.ROLE_COLOR_PICKING),
-                              ("data", OCIO.ROLE_DATA),
-                              ("log", OCIO.ROLE_COMPOSITING_LOG) ]:
+                              ("picking", OCIO.Constants.ROLE_COLOR_PICKING),
+                              ("data", OCIO.Constants.ROLE_DATA),
+                              ("log", OCIO.Constants.ROLE_COMPOSITING_LOG) ]:
         if element.hasAttr(oldRole):
             config.setColorSpaceForRole(newRole, element.getAttr(oldRole))
     
@@ -102,22 +102,22 @@ def BuildColorTransform(elementArray, lutDir):
             
             direction = attrDict.pop('direction')
             if direction == 'inverse':
-                transform.setDirection(OCIO.TRANSFORM_DIR_INVERSE)
+                transform.setDirection(OCIO.Constants.TRANSFORM_DIR_INVERSE)
             else:
-                transform.setDirection(OCIO.TRANSFORM_DIR_FORWARD)
+                transform.setDirection(OCIO.Constants.TRANSFORM_DIR_FORWARD)
             
             interp = attrDict.pop('interpolation', None)
             if interp is None:
                 if extension in ('spi3d','3dl'):
-                    transform.setInterpolation(OCIO.INTERP_LINEAR)
+                    transform.setInterpolation(OCIO.Constants.INTERP_LINEAR)
                 elif extension in ('spi1d'):
-                    transform.setInterpolation(OCIO.INTERP_NEAREST)
+                    transform.setInterpolation(OCIO.Constants.INTERP_NEAREST)
                 else:
                     pass
             elif interp == 'linear':
-                transform.setInterpolation(OCIO.INTERP_LINEAR)
+                transform.setInterpolation(OCIO.Constants.INTERP_LINEAR)
             elif interp == 'nearest':
-                transform.setInterpolation(OCIO.INTERP_NEAREST)
+                transform.setInterpolation(OCIO.Constants.INTERP_NEAREST)
             else:
                 print "Unkwnown interpolation",interp
             
@@ -143,26 +143,25 @@ def BuildColorspaceFromXMLElement(element, lutDir):
     
     bitdepth = attrDict.pop('bitdepth')
     if bitdepth == '8':
-        cs.setBitDepth(OCIO.BIT_DEPTH_UINT8)
+        cs.setBitDepth(OCIO.Constants.BIT_DEPTH_UINT8)
     elif bitdepth == '10':
-        cs.setBitDepth(OCIO.BIT_DEPTH_UINT10)
+        cs.setBitDepth(OCIO.Constants.BIT_DEPTH_UINT10)
     elif bitdepth == '12':
-        cs.setBitDepth(OCIO.BIT_DEPTH_UINT12)
+        cs.setBitDepth(OCIO.Constants.BIT_DEPTH_UINT12)
     elif bitdepth == '16':
-        cs.setBitDepth(OCIO.BIT_DEPTH_UINT16)
+        cs.setBitDepth(OCIO.Constants.BIT_DEPTH_UINT16)
     elif bitdepth == '0':
-        cs.setBitDepth(OCIO.BIT_DEPTH_F32)
+        cs.setBitDepth(OCIO.Constants.BIT_DEPTH_F32)
     else:
-        #cs.setBitDepth(OCIO.BIT_DEPTH_UNKNOWN)
         raise RuntimeError("Unknown bit depth")
     
     gpuallocation = attrDict.pop('gpuallocation', None)
     if gpuallocation is None:
         pass
     elif gpuallocation == 'log2':
-        cs.setGpuAllocation(OCIO.GPU_ALLOCATION_LG2)
+        cs.setGpuAllocation(OCIO.Constants.GPU_ALLOCATION_LG2)
     elif gpuallocation == 'uniform':
-        cs.setGpuAllocation(OCIO.GPU_ALLOCATION_UNIFORM)
+        cs.setGpuAllocation(OCIO.Constants.GPU_ALLOCATION_UNIFORM)
     else:
         raise RuntimeError("Unknown bit allocation")
     
@@ -201,10 +200,10 @@ def BuildColorspaceFromXMLElement(element, lutDir):
     # This assumes transforms, if both directions are defined, are perfect inverses of each other.
     if len(toref) >= len(fromref):
         transform = BuildColorTransform(toref, lutDir)
-        cs.setTransform(transform, OCIO.COLORSPACE_DIR_TO_REFERENCE)
+        cs.setTransform(transform, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)
     else:
         transform = BuildColorTransform(fromref, lutDir)
-        cs.setTransform(transform, OCIO.COLORSPACE_DIR_FROM_REFERENCE)
+        cs.setTransform(transform, OCIO.Constants.COLORSPACE_DIR_FROM_REFERENCE)
     
     cs.setDescription(description)
     
