@@ -229,6 +229,19 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             
+            // Now that we've found a startIndex, walk back until we find
+            // one that defines a GpuAllocation. (we can only upload to
+            // the gpu at a location are tagged with an allocation)
+            /*
+            while(start>0)
+            {
+                if(!opVec[start]->definesGpuAllocation())
+                {
+                    --start;
+                }
+            }
+            */
+            
             if(startIndex) *startIndex = start;
             if(endIndex) *endIndex = end;
         }
