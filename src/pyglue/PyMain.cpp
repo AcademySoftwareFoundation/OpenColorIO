@@ -32,6 +32,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "PyColorSpace.h"
 #include "PyConfig.h"
 #include "PyConstants.h"
+#include "PyDisplayTransform.h"
 #include "PyFileTransform.h"
 #include "PyGroupTransform.h"
 #include "PyUtil.h"
@@ -101,6 +102,7 @@ initPyOpenColorIO(void)
     OCIO::AddColorSpaceObjectToModule( m );
     OCIO::AddConfigObjectToModule( m );
     OCIO::AddFileTransformObjectToModule( m );
+    OCIO::AddDisplayTransformObjectToModule( m );
     OCIO::AddGroupTransformObjectToModule( m );
     OCIO::InitializeConstantsModule( m );
 }

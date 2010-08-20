@@ -167,6 +167,7 @@ if(PYTHON_OK)
         src/pyglue/PyColorSpace.cpp
         src/pyglue/PyConstants.cpp
         src/pyglue/PyConfig.cpp
+        src/pyglue/PyDisplayTransform.cpp
         src/pyglue/PyFileTransform.cpp
         src/pyglue/PyGroupTransform.cpp
         src/pyglue/PyMain.cpp
