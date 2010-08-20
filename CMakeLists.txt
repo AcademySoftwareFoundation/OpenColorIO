@@ -165,6 +165,7 @@ if(PYTHON_OK)
 
     add_library(PyOpenColorIO MODULE
         src/pyglue/PyColorSpace.cpp
+        src/pyglue/PyConstants.cpp
         src/pyglue/PyConfig.cpp
         src/pyglue/PyFileTransform.cpp
         src/pyglue/PyGroupTransform.cpp

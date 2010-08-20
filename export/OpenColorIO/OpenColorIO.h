@@ -55,7 +55,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: test full colorspace conversions
 
 // TODO: Figure out for each transform class what is required, move into constructor
-// TODO: Add enums to namespace / submodule (both in C++ / python)
 // TODO: provide way to tag colorspace operations as explicitly not allowed? what about hdbty<->qt?
 // TODO: provide xml defaults mechanism for cleaner xml code
 // TODO: such as int vectors, double from str, float vectors, etc.
