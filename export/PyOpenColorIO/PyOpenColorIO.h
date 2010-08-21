@@ -27,15 +27,44 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCIO_MANIFEST_H
-#define INCLUDED_PYOCIO_MANIFEST_H
+#ifndef INCLUDED_PYOCIO_PYOCIO_H
+#define INCLUDED_PYOCIO_PYOCIO_H
 
 #include <OpenColorIO/OpenColorIO.h>
-
 #include <Python.h>
 
 OCIO_NAMESPACE_ENTER
 {
+    // Config
+    
+    PyObject * BuildConstPyConfig(ConstConfigRcPtr config);
+    PyObject * BuildEditablePyConfig(ConfigRcPtr config);
+    
+    bool IsPyConfig(PyObject * config);
+    bool IsPyConfigEditable(PyObject * config);
+    
+    ConstConfigRcPtr GetConstConfig(PyObject * config, bool allowCast);
+    ConfigRcPtr GetEditableConfig(PyObject * config);
+    
+    // ColorSpace
+    
+    PyObject * BuildConstPyColorSpace(ConstColorSpaceRcPtr colorSpace);
+    PyObject * BuildEditablePyColorSpace(ColorSpaceRcPtr colorSpace);
+    
+    bool IsPyColorSpace(PyObject * pyobject);
+    bool IsPyColorSpaceEditable(PyObject * pyobject);
+    
+    ConstColorSpaceRcPtr GetConstColorSpace(PyObject * pyobject, bool allowCast);
+    ColorSpaceRcPtr GetEditableColorSpace(PyObject * pyobject);
+    
+    // Transform
+    
+    PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
+    PyObject * BuildEditablePyTransform(TransformRcPtr transform);
+    
+    bool IsPyTransform(PyObject * pyobject);
+    
+    ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast);
 }
 OCIO_NAMESPACE_EXIT
 

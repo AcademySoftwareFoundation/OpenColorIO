@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_PYOCIO_PYCOLORSPACE_H
 #define INCLUDED_PYOCIO_PYCOLORSPACE_H
 
-#include "Manifest.h"
+#include <PyOpenColorIO/PyOpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -46,15 +46,6 @@ OCIO_NAMESPACE_ENTER
     extern PyTypeObject PyOCIO_ColorSpaceType;
     
     bool AddColorSpaceObjectToModule( PyObject* m );
-    
-    PyObject * BuildConstPyColorSpace(ConstColorSpaceRcPtr colorSpace);
-    PyObject * BuildEditablePyColorSpace(ColorSpaceRcPtr colorSpace);
-    
-    bool IsPyColorSpace(PyObject * pyobject);
-    bool IsPyColorSpaceEditable(PyObject * pyobject);
-    
-    ConstColorSpaceRcPtr GetConstColorSpace(PyObject * pyobject, bool allowCast);
-    ColorSpaceRcPtr GetEditableColorSpace(PyObject * pyobject);
 }
 OCIO_NAMESPACE_EXIT
 

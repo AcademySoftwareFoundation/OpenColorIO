@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_PYOCIO_PYCONFIG_H
 #define INCLUDED_PYOCIO_PYCONFIG_H
 
-#include "Manifest.h"
+#include <PyOpenColorIO/PyOpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -46,15 +46,6 @@ OCIO_NAMESPACE_ENTER
     extern PyTypeObject PyOCIO_ConfigType;
     
     bool AddConfigObjectToModule( PyObject* m );
-    
-    PyObject * BuildConstPyConfig(ConstConfigRcPtr config);
-    PyObject * BuildEditablePyConfig(ConfigRcPtr config);
-    
-    bool IsPyConfig(PyObject * config);
-    bool IsPyConfigEditable(PyObject * config);
-    
-    ConstConfigRcPtr GetConstConfig(PyObject * config, bool allowCast);
-    ConfigRcPtr GetEditableConfig(PyObject * config);
 }
 OCIO_NAMESPACE_EXIT
 

@@ -175,6 +175,7 @@ if(PYTHON_OK)
     )
     include_directories(
         ${PYTHON_INCLUDE}
+        ${OpenColorIO_SOURCE_DIR}/export/
     )
     # Exclude the 'lib' prefix from the name.
     set_property(TARGET PyOpenColorIO

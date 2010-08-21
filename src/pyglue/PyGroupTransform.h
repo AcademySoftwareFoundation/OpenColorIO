@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_PYOCIO_PYGROUPTRANSFORM_H
 #define INCLUDED_PYOCIO_PYGROUPTRANSFORM_H
 
-#include "Manifest.h"
+#include <PyOpenColorIO/PyOpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -49,10 +49,10 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildConstPyGroupTransform(ConstGroupTransformRcPtr transform);
     PyObject * BuildEditablePyGroupTransform(GroupTransformRcPtr transform);
-    
+
     bool IsPyGroupTransform(PyObject * pyobject);
     bool IsPyGroupTransformEditable(PyObject * pyobject);
-    
+
     ConstGroupTransformRcPtr GetConstGroupTransform(PyObject * pyobject, bool allowCast);
     GroupTransformRcPtr GetEditableGroupTransform(PyObject * pyobject);
 }

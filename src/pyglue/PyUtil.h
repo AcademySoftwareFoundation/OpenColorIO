@@ -30,24 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_PYOCIO_PYUTIL_H
 #define INCLUDED_PYOCIO_PYUTIL_H
 
-#include "Manifest.h"
+#include <PyOpenColorIO/PyOpenColorIO.h>
 
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-    PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
-    PyObject * BuildEditablePyTransform(TransformRcPtr transform);
-    
-    bool IsPyTransform(PyObject * pyobject);
-    
-    ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast);
-    
-    /*
-    bool IsPyTransformEditable(PyObject * pyobject);
-    TransformRcPtr GetEditableTransform(PyObject * pyobject);
-    */
-    
     
     int ConvertPyObjectToBool(PyObject *object, void *valuePtr);
     
@@ -58,10 +46,6 @@ OCIO_NAMESPACE_ENTER
     int ConvertPyObjectToTransformDirection(PyObject *object, void *valuePtr);
     
     int ConvertPyObjectToColorSpaceDirection(PyObject *object, void *valuePtr);
-/*
-    #define ADD_CLASS_INT_CONSTANT(class_type, attr_name, attr_int_value) \
-        PyDict_SetItem(class_type.tp_dict, PyString_FromString(attr_name), PyInt_FromLong((long)attr_int_value))
-*/
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -102,8 +86,6 @@ OCIO_NAMESPACE_ENTER
     bool FillFloatVectorFromPySequence(PyObject* datalist, std::vector<float> &data);
     bool FillDoubleVectorFromPySequence(PyObject* datalist, std::vector<double> &data);
     bool FillStringVectorFromPySequence(PyObject* datalist, std::vector<std::string> &data);
-    
-    
     
     ///////////////////////////////////////////////////////////////////////////
     

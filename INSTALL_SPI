@@ -5,5 +5,5 @@ mkdir -p build && cd build
 cmake -D CMAKE_BUILD_TYPE=RelWithDebInfo ../ && make
 mkdir -p /net/soft_scratch/users/color/ocio/$OCIO_VERSION/$SP_OS/include
 mkdir -p /net/soft_scratch/users/color/ocio/$OCIO_VERSION/$SP_OS/lib
-cp ../export/OpenColorIO/OpenColorIO.h /net/soft_scratch/users/color/ocio/$OCIO_VERSION/$SP_OS/include/
+cp -R ../export/* /net/soft_scratch/users/color/ocio/$OCIO_VERSION/$SP_OS/include/
 cp *.so /net/soft_scratch/users/color/ocio/$OCIO_VERSION/$SP_OS/lib
