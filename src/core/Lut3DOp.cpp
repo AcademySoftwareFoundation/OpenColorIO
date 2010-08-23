@@ -355,9 +355,9 @@ OCIO_NAMESPACE_ENTER
             return false;
         }
         
-        void Lut3DOp::writeGpuShader(std::ostringstream & shader,
-                                     const std::string & pixelName,
-                                     const GpuShaderDesc & shaderDesc) const
+        void Lut3DOp::writeGpuShader(std::ostringstream & /*shader*/,
+                                     const std::string & /*pixelName*/,
+                                     const GpuShaderDesc & /*shaderDesc*/) const
         {
             throw Exception("Lut3DOp does not support analytical shader generation.");
         }

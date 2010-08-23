@@ -154,10 +154,11 @@ OCIO_NAMESPACE_ENTER
             return false;
         }
         
-        void ExponentOp::writeGpuShader(std::ostringstream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const
+        void ExponentOp::writeGpuShader(std::ostringstream & /*shader*/,
+                                        const std::string & /*pixelName*/,
+                                        const GpuShaderDesc & /*shaderDesc*/) const
         {
+            // TODO: Add Gpu Shader for exponent op
             throw Exception("ExponentOp does not support analytical shader generation.");
         }
         

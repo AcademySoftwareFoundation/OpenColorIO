@@ -428,9 +428,9 @@ OCIO_NAMESPACE_ENTER
             return false;
         }
         
-        void Lut1DOp::writeGpuShader(std::ostringstream & shader,
-                                     const std::string & pixelName,
-                                     const GpuShaderDesc & shaderDesc) const
+        void Lut1DOp::writeGpuShader(std::ostringstream & /*shader*/,
+                                     const std::string & /*pixelName*/,
+                                     const GpuShaderDesc & /*shaderDesc*/) const
         {
             throw Exception("Lut1DOp does not support analytical shader generation.");
         }
