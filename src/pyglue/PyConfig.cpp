@@ -166,6 +166,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_CreateFromFile( PyObject * cls, PyObject * args );
         int PyOCIO_Config_init( PyOCIO_Config * self, PyObject * args, PyObject * kwds );
         void PyOCIO_Config_delete( PyOCIO_Config * self, PyObject * args );
+        
         PyObject * PyOCIO_Config_isEditable( PyObject * self );
         PyObject * PyOCIO_Config_createEditableCopy( PyObject * self );
         
@@ -176,6 +177,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_setDescription( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self );
+        PyObject * PyOCIO_Config_getColorSpaceByName( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getEditableColorSpaceByName( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_addColorSpace( PyObject * self, PyObject * args );
         
         PyObject * PyOCIO_Config_setColorSpaceForRole( PyObject * self, PyObject * args );
@@ -189,16 +192,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getDefaultDisplayDeviceName( PyObject * self );
         PyObject * PyOCIO_Config_getDisplayTransforms( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDefaultDisplayTransformName( PyObject * self, PyObject * args );
-        
-        /*
-        const char * (const char * device) const;
-        
-        const char * getDisplayColorSpaceName(const char * device, const char * displayTransformName) const;
-        
-        void addDisplayDevice(const char * device,
-                              const char * displayTransformName,
-                              const char * csname);
-        */
+        PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args );
         
         
         
@@ -222,6 +216,8 @@ OCIO_NAMESPACE_ENTER
             {"setDescription", PyOCIO_Config_setDescription, METH_VARARGS, "" },
             
             {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
+            {"getColorSpaceByName", PyOCIO_Config_getColorSpaceByName, METH_VARARGS, "" },
+            {"getEditableColorSpaceByName", PyOCIO_Config_getEditableColorSpaceByName, METH_VARARGS, "" },
             {"addColorSpace", PyOCIO_Config_addColorSpace, METH_VARARGS, "" },
             
             {"setColorSpaceForRole", PyOCIO_Config_setColorSpaceForRole, METH_VARARGS, "" },
@@ -232,6 +228,7 @@ OCIO_NAMESPACE_ENTER
             {"getDefaultDisplayDeviceName", (PyCFunction) PyOCIO_Config_getDefaultDisplayDeviceName, METH_NOARGS, "" },
             {"getDisplayTransforms", PyOCIO_Config_getDisplayTransforms, METH_VARARGS, "" },
             {"getDefaultDisplayTransformName", PyOCIO_Config_getDefaultDisplayTransformName, METH_VARARGS, "" },
+            {"getDisplayColorSpaceName", PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, "" },
             
 
             {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
@@ -493,6 +490,45 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        PyObject * PyOCIO_Config_getColorSpaceByName( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                char * csname = 0;
+                
+                if (!PyArg_ParseTuple(args,"s:getColorSpaceByName",
+                    &csname)) return NULL;
+                
+                return BuildConstPyColorSpace(config->getColorSpaceByName(csname));
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_getEditableColorSpaceByName( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                
+                char * csname = 0;
+                
+                if (!PyArg_ParseTuple(args,"s:getColorSpaceByName",
+                    &csname)) return NULL;
+                
+                return BuildEditablePyColorSpace(config->getEditableColorSpaceByName(csname));
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
         ////////////////////////////////////////////////////////////////////////
         
@@ -668,24 +704,17 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        
-        
-        
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        
-        
-        PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self )
+        PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args )
         {
             try
             {
+                char * device = 0;
+                char * displayTransformName = 0;
+                if (!PyArg_ParseTuple(args,"ss:getDisplayTransforms",
+                    &device, &displayTransformName)) return NULL;
+                
                 ConstConfigRcPtr config = GetConstConfig(self, true);
-                
-                std::vector<float> coef(3);
-                config->getDefaultLumaCoefs(&coef[0]);
-                
-                return CreatePyListFromFloatVector(coef);
+                return PyString_FromString( config->getDisplayColorSpaceName(device, displayTransformName) );
             }
             catch(...)
             {
@@ -693,6 +722,7 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
+        
         
         PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args )
         {
@@ -724,6 +754,29 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        
+        PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                std::vector<float> coef(3);
+                config->getDefaultLumaCoefs(&coef[0]);
+                
+                return CreatePyListFromFloatVector(coef);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
     }
 
