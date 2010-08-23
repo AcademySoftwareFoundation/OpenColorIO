@@ -97,11 +97,6 @@ OCIO_NAMESPACE_ENTER
         return m_impl->getInputColorSpace();
     }
     
-    void DisplayTransform::setLinearExposure(const float* v4)
-    {
-        m_impl->setLinearExposure(v4);
-    }
-    
     void DisplayTransform::setLinearCC(const ConstCDLTransformRcPtr & cc)
     {
         m_impl->setLinearCC(cc);
@@ -110,6 +105,16 @@ OCIO_NAMESPACE_ENTER
     ConstCDLTransformRcPtr DisplayTransform::getLinearCC() const
     {
         return m_impl->getLinearCC();
+    }
+    
+    void DisplayTransform::setLinearExposure(const float* v4)
+    {
+        m_impl->setLinearExposure(v4);
+    }
+    
+    void DisplayTransform::getLinearExposure(float* v4) const
+    {
+        m_impl->getLinearExposure(v4);
     }
     
     void DisplayTransform::setDisplayColorSpace(const ConstColorSpaceRcPtr & cs)
@@ -190,6 +195,27 @@ OCIO_NAMESPACE_ENTER
                        powf(2.0, v4[1]),
                        powf(2.0, v4[2]) };
         m_linearCC->setSlope(cc);
+    }
+    
+    
+    namespace
+    {
+        const float LOG2INV = 1.0f / logf(2.0f);
+        const float FLTMIN = std::numeric_limits<float>::min();
+        inline float log2(float f) { return logf(std::max(f, FLTMIN)) * LOG2INV; }
+    }
+    
+    void DisplayTransform::Impl::getLinearExposure(float* v4) const
+    {
+        float cc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        m_linearCC->getSlope(cc);
+        
+        for(int i=0; i<2; i++)
+        {
+            cc[i] = log2(cc[i]);
+        }
+        
+        memcpy(v4, cc, 4*sizeof(float));
     }
     
     void DisplayTransform::Impl::setLinearCC(const ConstCDLTransformRcPtr & cc)

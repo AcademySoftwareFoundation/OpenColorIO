@@ -54,12 +54,11 @@ OCIO_NAMESPACE_ENTER
         void setInputColorSpace(const ConstColorSpaceRcPtr & cs);
         ConstColorSpaceRcPtr getInputColorSpace() const;
         
-        
-        void setLinearExposure(const float* v4);
         void setLinearCC(const ConstCDLTransformRcPtr & cc);
         ConstCDLTransformRcPtr getLinearCC() const;
         
-        
+        void setLinearExposure(const float* v4);
+        void getLinearExposure(float* v4) const;
         
         void setDisplayColorSpace(const ConstColorSpaceRcPtr & cs);
         ConstColorSpaceRcPtr getDisplayColorSpace() const;

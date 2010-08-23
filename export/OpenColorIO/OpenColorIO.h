@@ -936,11 +936,11 @@ OCIO_NAMESPACE_ENTER
         // colorspace
         
         void setLinearCC(const ConstCDLTransformRcPtr & cc);
-        
-        //! As a convenience, set this in stops
-        void setLinearExposure(const float* v4);
-        
         ConstCDLTransformRcPtr getLinearCC() const;
+        
+        //! As a convenience, this in stops
+        void setLinearExposure(const float* v4);
+        void getLinearExposure(float* v4) const;
         
         
         
