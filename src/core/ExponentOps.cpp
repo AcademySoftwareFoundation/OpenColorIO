@@ -81,6 +81,7 @@ OCIO_NAMESPACE_ENTER
         
         private:
             float m_exp4[4];
+            float m_finalExp4[4];
             TransformDirection m_direction;
             std::string m_cacheID;
         };
@@ -93,6 +94,7 @@ OCIO_NAMESPACE_ENTER
                                m_direction(direction)
         {
             memcpy(m_exp4, exp4, 4*sizeof(float));
+            memset(m_finalExp4, 0, 4*sizeof(float));
         }
         
         ExponentOp::~ExponentOp()
@@ -121,13 +123,17 @@ OCIO_NAMESPACE_ENTER
                 {
                     if(!IsScalarEqualToZero(m_exp4[i]))
                     {
-                        m_exp4[i] = 1.0f / m_exp4[i];
+                        m_finalExp4[i] = 1.0f / m_exp4[i];
                     }
                     else
                     {
                         throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
                     }
                 }
+            }
+            else
+            {
+                memcpy(m_finalExp4, m_exp4, 4*sizeof(float));
             }
             
             // Create the cacheID
@@ -136,7 +142,7 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream.precision(FLOAT_DECIMALS);
             for(int i=0; i<4; ++i)
             {
-                cacheIDStream << m_exp4[i] << " ";
+                cacheIDStream << m_finalExp4[i] << " ";
             }
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
@@ -146,7 +152,7 @@ OCIO_NAMESPACE_ENTER
         {
             if(!rgbaBuffer) return;
             
-            ApplyClampExponentNoAlpha(rgbaBuffer, numPixels, m_exp4);
+            ApplyClampExponentNoAlpha(rgbaBuffer, numPixels, m_finalExp4);
         }
         
         bool ExponentOp::supportsGpuShader() const
