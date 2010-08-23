@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "PyDisplayTransform.h"
 #include "PyFileTransform.h"
 #include "PyGroupTransform.h"
 #include "PyUtil.h"
@@ -37,17 +38,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    bool IsPyTransform(PyObject * pyobject)
+    {
+        return ( IsPyDisplayTransform(pyobject) ||
+                 IsPyFileTransform(pyobject) || 
+                 IsPyGroupTransform(pyobject)
+                );
+    }
+    
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform)
     {
-        if(ConstGroupTransformRcPtr groupTransform = \
-            DynamicPtrCast<const GroupTransform>(transform))
+        if(ConstDisplayTransformRcPtr displayTransform = \
+            DynamicPtrCast<const DisplayTransform>(transform))
         {
-            return BuildConstPyGroupTransform(groupTransform);
+            return BuildConstPyDisplayTransform(displayTransform);
         }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
             return BuildConstPyFileTransform(fileTransform);
+        }
+        else if(ConstGroupTransformRcPtr groupTransform = \
+            DynamicPtrCast<const GroupTransform>(transform))
+        {
+            return BuildConstPyGroupTransform(groupTransform);
         }
         else
         {
@@ -59,15 +73,20 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildEditablePyTransform(TransformRcPtr transform)
     {
-        if(GroupTransformRcPtr groupTransform = \
-            DynamicPtrCast<GroupTransform>(transform))
+        if(DisplayTransformRcPtr displayTransform = \
+            DynamicPtrCast<DisplayTransform>(transform))
         {
-            return BuildEditablePyGroupTransform(groupTransform);
+            return BuildEditablePyDisplayTransform(displayTransform);
         }
         else if(FileTransformRcPtr fileTransform = \
             DynamicPtrCast<FileTransform>(transform))
         {
             return BuildEditablePyFileTransform(fileTransform);
+        }
+        else if(GroupTransformRcPtr groupTransform = \
+            DynamicPtrCast<GroupTransform>(transform))
+        {
+            return BuildEditablePyGroupTransform(groupTransform);
         }
         else
         {
@@ -77,27 +96,32 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    bool IsPyTransform(PyObject * pyobject)
-    {
-        return ( IsPyGroupTransform(pyobject) ||
-                 IsPyFileTransform(pyobject) );
-    }
-    
     ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast)
     {
-        if(IsPyGroupTransform(pyobject))
+        if(IsPyDisplayTransform(pyobject))
         {
-            return GetConstGroupTransform(pyobject, allowCast);
+            return GetConstDisplayTransform(pyobject, allowCast);
         }
         else if(IsPyFileTransform(pyobject))
         {
             return GetConstFileTransform(pyobject, allowCast);
+        }
+        else if(IsPyGroupTransform(pyobject))
+        {
+            return GetConstGroupTransform(pyobject, allowCast);
         }
         else
         {
             throw Exception("PyObject must be a known OCIO::Transform type.");
         }
     }
+
+
+
+
+
+
+    ///////////////////////////////////////////////////////////////////////////
 
 
     // http://docs.python.org/c-api/object.html#PyObject_IsTrue
