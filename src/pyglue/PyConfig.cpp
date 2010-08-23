@@ -181,6 +181,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getEditableColorSpaceByName( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_addColorSpace( PyObject * self, PyObject * args );
         
+        PyObject * PyOCIO_Config_getColorSpaceForRole( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_setColorSpaceForRole( PyObject * self, PyObject * args );
         
         PyObject * PyOCIO_Config_getXML( PyObject * self );
@@ -190,7 +191,7 @@ OCIO_NAMESPACE_ENTER
         // Display Transforms
         PyObject * PyOCIO_Config_getDisplayDeviceNames( PyObject * self );
         PyObject * PyOCIO_Config_getDefaultDisplayDeviceName( PyObject * self );
-        PyObject * PyOCIO_Config_getDisplayTransforms( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getDisplayTransformNames( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDefaultDisplayTransformName( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args );
         
@@ -220,13 +221,14 @@ OCIO_NAMESPACE_ENTER
             {"getEditableColorSpaceByName", PyOCIO_Config_getEditableColorSpaceByName, METH_VARARGS, "" },
             {"addColorSpace", PyOCIO_Config_addColorSpace, METH_VARARGS, "" },
             
+            {"getColorSpaceForRole", PyOCIO_Config_getColorSpaceForRole, METH_VARARGS, "" },
             {"setColorSpaceForRole", PyOCIO_Config_setColorSpaceForRole, METH_VARARGS, "" },
             
             {"getXML", (PyCFunction) PyOCIO_Config_getXML, METH_NOARGS, "" },
             
             {"getDisplayDeviceNames", (PyCFunction) PyOCIO_Config_getDisplayDeviceNames, METH_NOARGS, "" },
             {"getDefaultDisplayDeviceName", (PyCFunction) PyOCIO_Config_getDefaultDisplayDeviceName, METH_NOARGS, "" },
-            {"getDisplayTransforms", PyOCIO_Config_getDisplayTransforms, METH_VARARGS, "" },
+            {"getDisplayTransformNames", PyOCIO_Config_getDisplayTransformNames, METH_VARARGS, "" },
             {"getDefaultDisplayTransformName", PyOCIO_Config_getDefaultDisplayTransformName, METH_VARARGS, "" },
             {"getDisplayColorSpaceName", PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, "" },
             
@@ -562,6 +564,28 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
+        PyObject * PyOCIO_Config_getColorSpaceForRole( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                char * role = 0;
+                
+                if (!PyArg_ParseTuple(args,"s:getColorSpaceForRole",
+                    &role)) return NULL;
+                
+                ConstColorSpaceRcPtr colorSpace = config->getColorSpaceForRole(role);
+                return BuildConstPyColorSpace(colorSpace);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
         PyObject * PyOCIO_Config_setColorSpaceForRole( PyObject * self, PyObject * args )
         {
             try
@@ -658,12 +682,12 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        PyObject * PyOCIO_Config_getDisplayTransforms( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_getDisplayTransformNames( PyObject * self, PyObject * args )
         {
             try
             {
                 char * device = 0;
-                if (!PyArg_ParseTuple(args,"s:getDisplayTransforms",
+                if (!PyArg_ParseTuple(args,"s:getDisplayTransformNames",
                     &device)) return NULL;
                 
                 ConstConfigRcPtr config = GetConstConfig(self, true);
