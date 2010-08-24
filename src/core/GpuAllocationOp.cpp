@@ -36,19 +36,18 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        class GpuAllocationOp;
-        typedef SharedPtr<GpuAllocationOp> GpuAllocationOpRcPtr;
-        
         class GpuAllocationOp : public Op
         {
         public:
             GpuAllocationOp(const GpuAllocationData & allocationData);
             virtual ~GpuAllocationOp();
             
+            virtual OpRcPtr clone() const;
+            
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
-            virtual void setup();
+            virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool supportsGpuShader() const;
@@ -65,8 +64,6 @@ OCIO_NAMESPACE_ENTER
         
         private:
             GpuAllocationData m_allocationData;
-            float m_min;
-            float m_max;
             
             std::string m_cacheID;
         };
@@ -77,6 +74,12 @@ OCIO_NAMESPACE_ENTER
                         m_allocationData(allocationData)
         { };
 
+        OpRcPtr GpuAllocationOp::clone() const
+        {
+            OpRcPtr op = OpRcPtr(new GpuAllocationOp(m_allocationData));
+            return op;
+        }
+        
         GpuAllocationOp::~GpuAllocationOp()
         {
 
@@ -92,7 +95,7 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
 
-        void GpuAllocationOp::setup()
+        void GpuAllocationOp::finalize()
         {
             // Create the cacheID
             std::ostringstream cacheIDStream;
@@ -131,7 +134,7 @@ OCIO_NAMESPACE_ENTER
     void CreateGpuAllocationOp(LocalProcessor & processor,
                                const GpuAllocationData & allocationData)
     {
-        processor.registerOp( GpuAllocationOpRcPtr(new GpuAllocationOp(allocationData)) );
+        processor.registerOp( OpRcPtr(new GpuAllocationOp(allocationData)) );
     }
 
 }

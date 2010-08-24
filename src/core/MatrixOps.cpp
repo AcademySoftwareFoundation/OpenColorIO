@@ -111,10 +111,12 @@ OCIO_NAMESPACE_ENTER
                            TransformDirection direction);
             virtual ~MatrixOffsetOp();
             
+            virtual OpRcPtr clone() const;
+            
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
-            virtual void setup();
+            virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool supportsGpuShader() const;
@@ -139,8 +141,6 @@ OCIO_NAMESPACE_ENTER
             std::string m_cacheID;
         };
         
-        typedef SharedPtr<MatrixOffsetOp> MatrixOffsetOpRcPtr;
-        
         // TODO: Optimize the sub-cases. (dispatch to different calls based on
         // matrix analysis
         
@@ -164,6 +164,12 @@ OCIO_NAMESPACE_ENTER
             memset(m_offset4_inv, 0, 4*sizeof(float));
         }
         
+        OpRcPtr MatrixOffsetOp::clone() const
+        {
+            OpRcPtr op = OpRcPtr(new MatrixOffsetOp(m_m44, m_offset4, m_direction));
+            return op;
+        }
+        
         MatrixOffsetOp::~MatrixOffsetOp()
         { }
         
@@ -177,7 +183,7 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
         
-        void MatrixOffsetOp::setup()
+        void MatrixOffsetOp::finalize()
         {
             m_offset4IsIdentity = IsVecEqualToZero(m_offset4, 4);
             m_m44IsIdentity = IsM44Identity(m_m44);
@@ -450,7 +456,7 @@ OCIO_NAMESPACE_ENTER
         bool offsetIsIdentity = IsVecEqualToZero(offset4, 4);
         if(mtxIsIdentity && offsetIsIdentity) return;
         
-        processor.registerOp( MatrixOffsetOpRcPtr(new MatrixOffsetOp(m44,
+        processor.registerOp( OpRcPtr(new MatrixOffsetOp(m44,
             offset4, direction)) );
     }
 }

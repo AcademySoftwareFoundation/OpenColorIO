@@ -65,10 +65,12 @@ OCIO_NAMESPACE_ENTER
                        TransformDirection direction);
             virtual ~ExponentOp();
             
+            virtual OpRcPtr clone() const;
+            
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
-            virtual void setup();
+            virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool supportsGpuShader() const;
@@ -86,8 +88,6 @@ OCIO_NAMESPACE_ENTER
             std::string m_cacheID;
         };
         
-        typedef SharedPtr<ExponentOp> ExponentOpOpRcPtr;
-        
         ExponentOp::ExponentOp(const float * exp4,
                                TransformDirection direction):
                                Op(),
@@ -95,6 +95,12 @@ OCIO_NAMESPACE_ENTER
         {
             memcpy(m_exp4, exp4, 4*sizeof(float));
             memset(m_finalExp4, 0, 4*sizeof(float));
+        }
+        
+        OpRcPtr ExponentOp::clone() const
+        {
+            OpRcPtr op = OpRcPtr(new ExponentOp(m_exp4, m_direction));
+            return op;
         }
         
         ExponentOp::~ExponentOp()
@@ -110,7 +116,7 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
         
-        void ExponentOp::setup()
+        void ExponentOp::finalize()
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
@@ -189,7 +195,7 @@ OCIO_NAMESPACE_ENTER
         bool expIsIdentity = IsVecEqualToOne(exp4, 4);
         if(expIsIdentity) return;
         
-        processor.registerOp( ExponentOpOpRcPtr(new ExponentOp(exp4, direction)) );
+        processor.registerOp( OpRcPtr(new ExponentOp(exp4, direction)) );
     }
 }
 OCIO_NAMESPACE_EXIT

@@ -53,24 +53,30 @@ OCIO_NAMESPACE_ENTER
         std::string getCacheID() const;
     };
     
+    class Op;
+    typedef SharedPtr<Op> OpRcPtr;
+    typedef std::vector<OpRcPtr> OpRcPtrVec;
+    
     class Op
     {
         public:
             virtual ~Op();
+            
+            virtual OpRcPtr clone() const = 0;
             
             //! Something short, and printable.
             //  The type of stuff you'd want to see in debugging.
             virtual std::string getInfo() const = 0;
             
             //! This should yield a string of not unreasonable length.
-            //! It can only be called after setup()
+            //! It can only be called after finalize()
             virtual std::string getCacheID() const = 0;
             
             // This is called a single time after construction.
-            // All pre-processing and safety checks should happen here,
+            // Final pre-processing and safety checks should happen here,
             // rather than in the constructor.
             
-            virtual void setup() = 0;
+            virtual void finalize() = 0;
             
             // Render the specified pixels.
             //
@@ -99,9 +105,6 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const Op&);
-    
-    typedef SharedPtr<Op> OpRcPtr;
-    typedef std::vector<OpRcPtr> OpRcPtrVec;
 }
 OCIO_NAMESPACE_EXIT
 

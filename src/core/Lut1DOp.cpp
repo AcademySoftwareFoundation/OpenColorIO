@@ -325,10 +325,12 @@ OCIO_NAMESPACE_ENTER
                     TransformDirection direction);
             virtual ~Lut1DOp();
             
+            virtual OpRcPtr clone() const;
+            
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
-            virtual void setup();
+            virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool supportsGpuShader() const;
@@ -347,8 +349,6 @@ OCIO_NAMESPACE_ENTER
             std::string m_cacheID;
         };
         
-        typedef SharedPtr<Lut1DOp> Lut1DOpRcPtr;
-        
         Lut1DOp::Lut1DOp(Lut1DRcPtr lut,
                          Interpolation interpolation,
                          TransformDirection direction):
@@ -357,6 +357,12 @@ OCIO_NAMESPACE_ENTER
                             m_interpolation(interpolation),
                             m_direction(direction)
         {
+        }
+        
+        OpRcPtr Lut1DOp::clone() const
+        {
+            OpRcPtr op = OpRcPtr(new Lut1DOp(m_lut, m_interpolation, m_direction));
+            return op;
         }
         
         Lut1DOp::~Lut1DOp()
@@ -372,7 +378,7 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
         
-        void Lut1DOp::setup()
+        void Lut1DOp::finalize()
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
@@ -451,7 +457,7 @@ OCIO_NAMESPACE_ENTER
                        Interpolation interpolation,
                        TransformDirection direction)
     {
-        processor.registerOp( Lut1DOpRcPtr(new Lut1DOp(lut, interpolation, direction)) );
+        processor.registerOp( OpRcPtr(new Lut1DOp(lut, interpolation, direction)) );
     }
 
 }

@@ -66,9 +66,6 @@ OCIO_NAMESPACE_ENTER
         //
         //  Not exposed
         
-        
-        std::string getInfo() const;
-        
         ////////////////////////////////////////////
         //
         // Builder functions
@@ -84,7 +81,16 @@ OCIO_NAMESPACE_ENTER
         
         static void deleter(LocalProcessor* p);
         
-        OpRcPtrVec m_opVec;
+        OpRcPtrVec m_cpuOps;
+        
+        // These 3 op vecs represent the 3 stages in our gpu pipe.
+        // 1) preprocess shader text
+        // 2) 3d lut process lookup
+        // 3) postprocess shader text
+        
+        OpRcPtrVec m_gpuOpsHwPreProcess;
+        OpRcPtrVec m_gpuOpsCpuLatticeProcess;
+        OpRcPtrVec m_gpuOpsHwPostProcess;
         
         mutable std::string m_shaderText;
         mutable std::string m_lut3DHash;
