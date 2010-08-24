@@ -141,9 +141,6 @@ OCIO_NAMESPACE_ENTER
             std::string m_cacheID;
         };
         
-        // TODO: Optimize the sub-cases. (dispatch to different calls based on
-        // matrix analysis
-        
         MatrixOffsetOp::MatrixOffsetOp(const float * m44,
                                        const float * offset4,
                                        TransformDirection direction):
@@ -223,8 +220,6 @@ OCIO_NAMESPACE_ENTER
             
             m_cacheID = cacheIDStream.str();
         }
-        
-        // TODO: see if mtx is a diagonal mtx, if so use scaling.
         
         void MatrixOffsetOp::apply(float* rgbaBuffer, long numPixels) const
         {
