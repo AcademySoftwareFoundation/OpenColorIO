@@ -34,6 +34,7 @@ add_library(OpenColorIO SHARED
     src/core/HashUtils.cpp
     src/core/ImageDesc.cpp
     src/core/ImagePacking.cpp
+    src/core/LogOps.cpp
     src/core/Lut1DOp.cpp
     src/core/Lut3DOp.cpp
     src/core/MathUtils.cpp
