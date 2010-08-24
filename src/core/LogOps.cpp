@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "LogOps.h"
 
@@ -172,6 +173,21 @@ OCIO_NAMESPACE_ENTER
         {
             GpuLanguage lang = shaderDesc.getLanguage();
             
+            float clampMin[3] = { FLTMIN, FLTMIN, FLTMIN };
+            
+            if(m_direction == TRANSFORM_DIR_FORWARD)
+            {
+                shader << pixelName << ".rgb = ";
+                shader << "log2(max(";
+                shader << pixelName << ".rgb,";
+                Write_half3(&shader, clampMin, lang);
+                shader << "));\n";
+            }
+            else if(m_direction == TRANSFORM_DIR_INVERSE)
+            {
+                shader << pixelName << ".rgb = pow(2.0,";
+                shader << pixelName << ".rgb);\n";
+            }
         }
         
         bool Log2Op::definesGpuAllocation() const
