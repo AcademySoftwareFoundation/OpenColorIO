@@ -189,12 +189,16 @@ OCIO_NAMESPACE_ENTER
                 shader << "log2(max(";
                 shader << pixelName << ".rgb,";
                 Write_half3(&shader, clampMin, lang);
-                shader << "));\n";
+                shader << ")).rgb;\n";
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                shader << pixelName << ".rgb = pow(2.0,";
-                shader << pixelName << ".rgb);\n";
+                float base[] = { 2.0f, 2.0f, 2.0f };
+                
+                shader << pixelName << ".rgb = pow(";
+                Write_half3(&shader, base, lang);
+                
+                shader << ", " << pixelName << ".rgb).rgb;\n";
             }
         }
         
