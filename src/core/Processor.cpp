@@ -297,14 +297,10 @@ OCIO_NAMESPACE_ENTER
                 // (low dynamic range color space), and the lattice processing
                 // does the inverse (making the overall operation a no-op
                 // color-wise
-                /*
+                
                 GpuAllocationData allocation = GetAllocation(gpuLut3DOpStartIndex, m_cpuOps);
                 BuildAllocationOps(m_gpuOpsHwPreProcess, allocation, TRANSFORM_DIR_FORWARD);
-                BuildAllocationOps(m_gpuOpsHwPreProcess, allocation, TRANSFORM_DIR_INVERSE);
-                */
-                /*
                 BuildAllocationOps(m_gpuOpsCpuLatticeProcess, allocation, TRANSFORM_DIR_INVERSE);
-                */
                 
                 // Handle cpu lattice processing
                 for(int i=gpuLut3DOpStartIndex; i<=gpuLut3DOpEndIndex; ++i)
@@ -331,6 +327,7 @@ OCIO_NAMESPACE_ENTER
             FinalizeOpVec(m_cpuOps);
         }
         
+        /*
         std::cerr << "     ********* CPU OPS ***************" << std::endl;
         std::cerr << GetOpVecInfo(m_cpuOps) << "\n\n";
         
@@ -342,9 +339,7 @@ OCIO_NAMESPACE_ENTER
         
         std::cerr << "     ********* GPU OPS POST PROCESS ***************" << std::endl;
         std::cerr << GetOpVecInfo(m_gpuOpsHwPostProcess) << "\n\n";
-        
-        
-        // std::cerr << getInfo() << std::endl;
+        */
     }
     
     
