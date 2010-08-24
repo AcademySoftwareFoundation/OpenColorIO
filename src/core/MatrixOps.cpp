@@ -136,7 +136,6 @@ OCIO_NAMESPACE_ENTER
             bool m_m44IsDiagonal;
             bool m_offset4IsIdentity;
             float m_m44_inv[16];
-            float m_offset4_inv[4];
             
             std::string m_cacheID;
         };
@@ -158,7 +157,6 @@ OCIO_NAMESPACE_ENTER
             memcpy(m_offset4, offset4, 4*sizeof(float));
             
             memset(m_m44_inv, 0, 16*sizeof(float));
-            memset(m_offset4_inv, 0, 4*sizeof(float));
         }
         
         OpRcPtr MatrixOffsetOp::clone() const
@@ -183,10 +181,11 @@ OCIO_NAMESPACE_ENTER
         void MatrixOffsetOp::finalize()
         {
             m_offset4IsIdentity = IsVecEqualToZero(m_offset4, 4);
+            
             m_m44IsIdentity = IsM44Identity(m_m44);
             m_m44IsDiagonal = IsM44Diagonal(m_m44);
             
-            if(TRANSFORM_DIR_INVERSE)
+            if(m_direction == TRANSFORM_DIR_INVERSE)
             {
                 if(!GetM44Inverse(m_m44_inv, m_m44))
                 {
@@ -197,20 +196,17 @@ OCIO_NAMESPACE_ENTER
                     os << ").";
                     throw Exception(os.str().c_str());
                 }
-                
-                for(int i=0; i<4; ++i)
-                {
-                    m_offset4_inv[i] = -m_offset4_inv[i];
-                }
             }
             
             // Create the cacheID
+            
             md5_state_t state;
             md5_byte_t digest[16];
             md5_init(&state);
             md5_append(&state, (const md5_byte_t *)m_m44, 16*sizeof(float));
             md5_append(&state, (const md5_byte_t *)m_offset4, 4*sizeof(float));
             md5_finish(&state, digest);
+            
             
             std::ostringstream cacheIDStream;
             cacheIDStream << "<MatrixOffsetOp ";
@@ -248,7 +244,12 @@ OCIO_NAMESPACE_ENTER
             {
                 if(!m_offset4IsIdentity)
                 {
-                    ApplyOffsetNoAlpha(rgbaBuffer, numPixels, m_offset4_inv);
+                    float offset_inv[] = { -m_offset4[0],
+                                           -m_offset4[1],
+                                           -m_offset4[2],
+                                           -m_offset4[3] };
+                    
+                    ApplyOffsetNoAlpha(rgbaBuffer, numPixels, offset_inv);
                 }
                 
                 if(!m_m44IsIdentity)
@@ -314,8 +315,13 @@ OCIO_NAMESPACE_ENTER
             {
                 if(!m_offset4IsIdentity)
                 {
+                    float offset_inv[] = { -m_offset4[0],
+                                           -m_offset4[1],
+                                           -m_offset4[2],
+                                           -m_offset4[3] };
+                    
                     shader << pixelName << " = ";
-                    Write_half4(&shader, m_offset4_inv, lang);
+                    Write_half4(&shader, offset_inv, lang);
                     shader << " + " << pixelName << ";\n";
                 }
                 
