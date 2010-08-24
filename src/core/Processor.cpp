@@ -227,9 +227,14 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 // Get the GPU Allocation at the cross-over point
+                // Create 2 symmetrically canceling allocation ops,
+                // where the shader text moves to a nicely allocated LDR
+                // (low dynamic range color space), and the lattice processing
+                // does the inverse (making the overall operation a no-op
+                // color-wise
+                
                 GpuAllocationData allocation = GetAllocation(gpuLut3DOpStartIndex, m_cpuOps);
                 
-                // TODO: create 2 symmetrically canceling allocation ops,
                 // and insert into m_gpuOpsHwPreProcess, m_gpuOpsCpuLatticeProcess
                 
                 // Handle cpu lattice processing
@@ -422,7 +427,7 @@ OCIO_NAMESPACE_ENTER
         std::ostringstream idhash;
         
         // Apply the lattice ops to the cacheid
-        for(int i=0; i<m_gpuOpsCpuLatticeProcess.size(); ++i)
+        for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
         {
             idhash << m_gpuOpsCpuLatticeProcess[i]->getCacheID() << " ";
         }
@@ -459,7 +464,7 @@ OCIO_NAMESPACE_ENTER
         GenerateIdentityLut3D(lut3DRGBABuffer, lut3DEdgeLen, 4);
         
         // Apply the lattice ops to it
-        for(int i=0; i<m_gpuOpsCpuLatticeProcess.size(); ++i)
+        for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
         {
             m_gpuOpsCpuLatticeProcess[i]->apply(lut3DRGBABuffer, lut3DNumPixels);
         }
