@@ -459,5 +459,46 @@ OCIO_NAMESPACE_ENTER
         processor.registerOp( OpRcPtr(new MatrixOffsetOp(m44,
             offset4, direction)) );
     }
+    
+    /*
+    Fit is canonically formulated as:
+    out = newmin + ((value-oldmin)/(oldmax-oldmin)*(newmax-newmin))
+    I.e., subtract the old offset, descale into the [0,1] range,
+          scale into the new range, and add the new offset
+    
+    We algebraiclly manipulate the terms into y = mx + b form as:
+    m = (newmax-newmin)/(oldmax-oldmin)
+    b = (newmin*oldmax - newmax*oldmin) / (oldmax-oldmin)
+    */
+    
+    void CreateFitOp(LocalProcessor & processor,
+                     const float * oldmin4, const float * oldmax4,
+                     const float * newmin4, const float * newmax4,
+                     TransformDirection direction)
+    {
+        float scale[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        float offset[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        
+        for(int i=0; i<4; ++i)
+        {
+            float denom = oldmax4[i] - oldmin4[i];
+            if(IsScalarEqualToZero(denom))
+            {
+                std::ostringstream os;
+                os << "Cannot create Fit operatir. ";
+                os << "Max value equals min value '";
+                os << oldmax4[i] << "' in channel index ";
+                os << i << ".";
+                throw Exception(os.str().c_str());
+            }
+            
+            scale[i] = (newmax4[i]-newmin4[i]) / denom;
+            offset[i] = (newmin4[i]*oldmax4[i] - newmax4[i]*oldmin4[i]) / denom;
+        }
+        
+        return CreateScaleOffsetOp(processor,
+                                   scale, offset,
+                                   direction);
+    }
 }
 OCIO_NAMESPACE_EXIT

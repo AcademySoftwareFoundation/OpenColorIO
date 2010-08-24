@@ -62,13 +62,17 @@ OCIO_NAMESPACE_ENTER
                              const float * scale4, const float * offset4,
                              TransformDirection direction);
     
+    void CreateFitOp(LocalProcessor & processor,
+                     const float * oldmin4, const float * oldmax4,
+                     const float * newmin4, const float * newmax4,
+                     TransformDirection direction);
+    
     void CreateSaturationOp(LocalProcessor & processor,
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);
     
-    // TODO: hue rotate Matrix Op
-    // TODO: Fit matrix op
+    // TODO: hue rotation Matrix Op
 }
 OCIO_NAMESPACE_EXIT
 
