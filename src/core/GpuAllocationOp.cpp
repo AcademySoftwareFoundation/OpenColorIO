@@ -131,10 +131,10 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void CreateGpuAllocationOp(LocalProcessor & processor,
+    void CreateGpuAllocationOp(OpRcPtrVec & ops,
                                const GpuAllocationData & allocationData)
     {
-        processor.registerOp( OpRcPtr(new GpuAllocationOp(allocationData)) );
+        ops.push_back( OpRcPtr(new GpuAllocationOp(allocationData)) );
     }
 
 }

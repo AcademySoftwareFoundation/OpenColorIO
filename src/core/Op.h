@@ -57,6 +57,8 @@ OCIO_NAMESPACE_ENTER
     typedef SharedPtr<Op> OpRcPtr;
     typedef std::vector<OpRcPtr> OpRcPtrVec;
     
+    std::string GetOpVecInfo(const OpRcPtrVec & ops);
+    
     class Op
     {
         public:

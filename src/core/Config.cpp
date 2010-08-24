@@ -294,8 +294,8 @@ OCIO_NAMESPACE_ENTER
                                              const ConstColorSpaceRcPtr & dstColorSpace) const
     {
         LocalProcessorRcPtr processor = LocalProcessor::Create();
-        BuildColorSpaceOps(*processor, *this, srcColorSpace, dstColorSpace);
-        processor->finalizeOps();
+        processor->addColorSpaceConversion(*this, srcColorSpace, dstColorSpace);
+        processor->finalize();
         return processor;
     }
     
@@ -303,8 +303,8 @@ OCIO_NAMESPACE_ENTER
                                              TransformDirection direction) const
     {
         LocalProcessorRcPtr processor = LocalProcessor::Create();
-        BuildOps(*processor, *this, transform, direction);
-        processor->finalizeOps();
+        processor->addTransform(*this, transform, direction);
+        processor->finalize();
         return processor;
     }
     

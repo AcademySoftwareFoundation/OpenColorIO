@@ -61,18 +61,19 @@ OCIO_NAMESPACE_ENTER
         
         virtual void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
         
-        
         ////////////////////////////////////////////
         //
-        //  Not exposed
+        // Builder functions, Not exposed
         
-        ////////////////////////////////////////////
-        //
-        // Builder functions
+        void addColorSpaceConversion(const Config & config,
+                                     const ConstColorSpaceRcPtr & srcColorSpace,
+                                     const ConstColorSpaceRcPtr & dstColorSpace);
         
-        void registerOp(OpRcPtr op);
+        void addTransform(const Config & config,
+                          const ConstTransformRcPtr& transform,
+                          TransformDirection direction);
         
-        void finalizeOps();
+        void finalize();
         
     private:
         LocalProcessor();
@@ -109,7 +110,7 @@ OCIO_NAMESPACE_ENTER
     // Then the only location in the codebase that knows of LocalProcessor is
     // in Config.cpp, which creates one.
     
-    void BuildOps(LocalProcessor & processor,
+    void BuildOps(OpRcPtrVec & ops,
                   const Config & config,
                   const ConstTransformRcPtr & transform,
                   TransformDirection dir);

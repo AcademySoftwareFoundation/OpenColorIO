@@ -67,7 +67,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    void BuildFileOps(LocalProcessor & processor,
+    void BuildFileOps(OpRcPtrVec & ops,
                       const Config& config,
                       const FileTransform& fileTransform,
                       TransformDirection dir);
@@ -94,7 +94,7 @@ OCIO_NAMESPACE_ENTER
         virtual std::string GetExtension() const = 0;
         virtual CachedFileRcPtr Load(std::istream & istream) const = 0;
         
-        virtual void BuildFileOps(LocalProcessor & processor,
+        virtual void BuildFileOps(OpRcPtrVec & ops,
                                   CachedFileRcPtr cachedFile,
                                   const FileTransform& fileTransform,
                                   TransformDirection dir) const = 0;

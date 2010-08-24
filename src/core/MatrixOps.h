@@ -31,10 +31,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_MATRIXOFFSETOP_H
 
 #include <OpenColorIO/OpenColorIO.h>
-#include <vector>
 
 #include "Op.h"
-#include "Processor.h"
+
+#include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -42,32 +42,32 @@ OCIO_NAMESPACE_ENTER
     //
     // NOTE: These currently do not affect alpha
     
-    void CreateScaleOp(LocalProcessor & processor,
+    void CreateScaleOp(OpRcPtrVec & ops,
                        const float * scale4,
                        TransformDirection direction);
     
-    void CreateMatrixOp(LocalProcessor & processor,
+    void CreateMatrixOp(OpRcPtrVec & ops,
                         const float * m44,
                         TransformDirection direction);
     
-    void CreateOffsetOp(LocalProcessor & processor,
+    void CreateOffsetOp(OpRcPtrVec & ops,
                         const float * offset4,
                         TransformDirection direction);
     
-    void CreateMatrixOffsetOp(LocalProcessor & processor,
+    void CreateMatrixOffsetOp(OpRcPtrVec & ops,
                               const float * m44, const float * offset4,
                               TransformDirection direction);
     
-    void CreateScaleOffsetOp(LocalProcessor & processor,
+    void CreateScaleOffsetOp(OpRcPtrVec & ops,
                              const float * scale4, const float * offset4,
                              TransformDirection direction);
     
-    void CreateFitOp(LocalProcessor & processor,
+    void CreateFitOp(OpRcPtrVec & ops,
                      const float * oldmin4, const float * oldmax4,
                      const float * newmin4, const float * newmax4,
                      TransformDirection direction);
     
-    void CreateSaturationOp(LocalProcessor & processor,
+    void CreateSaturationOp(OpRcPtrVec & ops,
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);

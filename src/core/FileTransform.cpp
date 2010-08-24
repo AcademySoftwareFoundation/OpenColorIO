@@ -336,7 +336,7 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void BuildFileOps(LocalProcessor & processor,
+    void BuildFileOps(OpRcPtrVec & ops,
                       const Config& config,
                       const FileTransform& fileTransform,
                       TransformDirection dir)
@@ -357,7 +357,7 @@ OCIO_NAMESPACE_ENTER
         FileFormat* format = cachePair.first;
         CachedFileRcPtr cachedFile = cachePair.second;
         
-        format->BuildFileOps(processor,
+        format->BuildFileOps(ops,
                              cachedFile, fileTransform,
                              dir);
     }

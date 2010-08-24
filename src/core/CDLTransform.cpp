@@ -535,7 +535,7 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    void BuildCDLOps(LocalProcessor & processor,
+    void BuildCDLOps(OpRcPtrVec & ops,
                      const Config & /*config*/,
                      const CDLTransform & cdlTransform,
                      TransformDirection dir)
@@ -563,24 +563,24 @@ OCIO_NAMESPACE_ENTER
         if(combinedDir == TRANSFORM_DIR_FORWARD)
         {
             // 1) Scale + Offset
-            CreateScaleOffsetOp(processor, scale4, offset4, TRANSFORM_DIR_FORWARD);
+            CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_FORWARD);
             
             // 2) Power + Clamp
-            CreateExponentOp(processor, power4, TRANSFORM_DIR_FORWARD);
+            CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
             
             // 3) Saturation + Clamp
-            CreateSaturationOp(processor, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
         }
         else if(combinedDir == TRANSFORM_DIR_INVERSE)
         {
             // 3) Saturation + Clamp
-            CreateSaturationOp(processor, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
+            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
             
             // 2) Power + Clamp
-            CreateExponentOp(processor, power4, TRANSFORM_DIR_INVERSE);
+            CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
             
             // 1) Scale + Offset
-            CreateScaleOffsetOp(processor, scale4, offset4, TRANSFORM_DIR_INVERSE);
+            CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_INVERSE);
         }
     }
 }

@@ -58,5 +58,22 @@ OCIO_NAMESPACE_ENTER
         return os.str();
     }
     
+    
+    
+    std::string GetOpVecInfo(const OpRcPtrVec & ops)
+    {
+        std::ostringstream os;
+        os << "Size " << ops.size() << std::endl;
+        
+        for(int i=0; i<(int)ops.size(); ++i)
+        {
+            os << "Index " << i << " -- " << *ops[i] << std::endl;
+            os << "      supportsGPUShader: " << ops[i]->supportsGpuShader() << std::endl;
+            os << "      cacheID " << ops[i]->getCacheID() << std::endl;
+        }
+        
+        return os.str();
+    }
+    
 }
 OCIO_NAMESPACE_EXIT

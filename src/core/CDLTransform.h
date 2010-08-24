@@ -96,7 +96,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    void BuildCDLOps(LocalProcessor & processor,
+    void BuildCDLOps(OpRcPtrVec & ops,
                      const Config & config,
                      const CDLTransform & cdlTransform,
                      TransformDirection dir);

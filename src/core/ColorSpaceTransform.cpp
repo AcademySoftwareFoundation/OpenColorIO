@@ -170,7 +170,7 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
     
-    void BuildColorSpaceOps(LocalProcessor & processor,
+    void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config& config,
                             const ColorSpaceTransform & colorSpaceTransform,
                             TransformDirection dir)
@@ -191,10 +191,10 @@ OCIO_NAMESPACE_ENTER
             src = config.getColorSpaceByName( colorSpaceTransform.getDst() );
         }
         
-        BuildColorSpaceOps(processor, config, src, dst);
+        BuildColorSpaceOps(ops, config, src, dst);
     }
     
-    void BuildColorSpaceOps(LocalProcessor & processor,
+    void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config & config,
                             const ConstColorSpaceRcPtr & srcColorSpace,
                             const ConstColorSpaceRcPtr & dstColorSpace)
@@ -219,10 +219,10 @@ OCIO_NAMESPACE_ENTER
         srcAllocation.min = srcColorSpace->getGpuMin();
         srcAllocation.max = srcColorSpace->getGpuMax();
         
-        CreateGpuAllocationOp(processor, srcAllocation);
+        CreateGpuAllocationOp(ops, srcAllocation);
         
         ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        BuildOps(processor, config, toref, TRANSFORM_DIR_FORWARD);
+        BuildOps(ops, config, toref, TRANSFORM_DIR_FORWARD);
         
         /*
         What if the reference colorSpace is only defined implicitly, and does not have a named space?
@@ -234,7 +234,7 @@ OCIO_NAMESPACE_ENTER
         */
         
         ConstGroupTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        BuildOps(processor, config, fromref, TRANSFORM_DIR_FORWARD);
+        BuildOps(ops, config, fromref, TRANSFORM_DIR_FORWARD);
         
         
         GpuAllocationData dstAllocation;
@@ -242,7 +242,7 @@ OCIO_NAMESPACE_ENTER
         dstAllocation.min = dstColorSpace->getGpuMin();
         dstAllocation.max = dstColorSpace->getGpuMax();
         
-        CreateGpuAllocationOp(processor, dstAllocation);
+        CreateGpuAllocationOp(ops, dstAllocation);
     }
 }
 OCIO_NAMESPACE_EXIT

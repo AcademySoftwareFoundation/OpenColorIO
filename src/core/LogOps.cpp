@@ -29,8 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
-#include "HashUtils.h"
 #include "LogOps.h"
+#include "MathUtils.h"
 
 #include <cmath>
 
@@ -175,6 +175,14 @@ OCIO_NAMESPACE_ENTER
             
             float clampMin[3] = { FLTMIN, FLTMIN, FLTMIN };
             
+            // TODO: Switch to f32 for internal processing?
+            if(lang == GPU_LANGUAGE_CG)
+            {
+                clampMin[0] = static_cast<float>(GetHalfNormMin());
+                clampMin[1] = static_cast<float>(GetHalfNormMin());
+                clampMin[2] = static_cast<float>(GetHalfNormMin());
+            }
+            
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
                 shader << pixelName << ".rgb = ";
@@ -214,10 +222,10 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    void CreateLog2Op(LocalProcessor & processor,
+    void CreateLog2Op(OpRcPtrVec & ops,
                       TransformDirection direction)
     {
-        processor.registerOp( OpRcPtr(new Log2Op(direction)) );
+        ops.push_back( OpRcPtr(new Log2Op(direction)) );
     }
 }
 OCIO_NAMESPACE_EXIT

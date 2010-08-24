@@ -77,7 +77,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    void BuildDisplayOps(LocalProcessor & processor,
+    void BuildDisplayOps(OpRcPtrVec & ops,
                          const Config & config,
                          const DisplayTransform & displayTransform,
                          TransformDirection dir);

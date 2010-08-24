@@ -188,14 +188,14 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    void CreateExponentOp(LocalProcessor & processor,
+    void CreateExponentOp(OpRcPtrVec & ops,
                           const float * exp4,
                           TransformDirection direction)
     {
         bool expIsIdentity = IsVecEqualToOne(exp4, 4);
         if(expIsIdentity) return;
         
-        processor.registerOp( OpRcPtr(new ExponentOp(exp4, direction)) );
+        ops.push_back( OpRcPtr(new ExponentOp(exp4, direction)) );
     }
 }
 OCIO_NAMESPACE_EXIT

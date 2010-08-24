@@ -242,7 +242,7 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    void BuildDisplayOps(LocalProcessor & processor,
+    void BuildDisplayOps(OpRcPtrVec & ops,
                          const Config & config,
                          const DisplayTransform & displayTransform,
                          TransformDirection dir)
@@ -265,18 +265,18 @@ OCIO_NAMESPACE_ENTER
         {
             ConstColorSpaceRcPtr linearColorSpace = config.getColorSpaceForRole(ROLE_SCENE_LINEAR);
             
-            BuildColorSpaceOps(processor, config,
+            BuildColorSpaceOps(ops, config,
                                currentColorspace,
                                linearColorSpace);
             
-            BuildCDLOps(processor, config,
+            BuildCDLOps(ops, config,
                         *linearCC,
                         TRANSFORM_DIR_FORWARD);
             
             currentColorspace = linearColorSpace;
         }
         
-        BuildColorSpaceOps(processor, config,
+        BuildColorSpaceOps(ops, config,
                            currentColorspace,
                            displayTransform.getDisplayColorSpace());
     }

@@ -65,12 +65,12 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    void BuildColorSpaceOps(LocalProcessor & processor,
+    void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config& config,
                             const ColorSpaceTransform& colorSpaceTransform,
                             TransformDirection dir);
     
-    void BuildColorSpaceOps(LocalProcessor & processor,
+    void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config & config,
                             const ConstColorSpaceRcPtr & srcColorSpace,
                             const ConstColorSpaceRcPtr & dstColorSpace);

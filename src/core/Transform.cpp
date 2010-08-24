@@ -43,7 +43,7 @@ OCIO_NAMESPACE_ENTER
     { }
     
     
-    void BuildOps(LocalProcessor & processor,
+    void BuildOps(OpRcPtrVec & ops,
                   const Config & config,
                   const ConstTransformRcPtr & transform,
                   TransformDirection dir)
@@ -51,27 +51,27 @@ OCIO_NAMESPACE_ENTER
         if(ConstCDLTransformRcPtr cdlTransform = \
             DynamicPtrCast<const CDLTransform>(transform))
         {
-            BuildCDLOps(processor, config, *cdlTransform, dir);
+            BuildCDLOps(ops, config, *cdlTransform, dir);
         }
         else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
             DynamicPtrCast<const ColorSpaceTransform>(transform))
         {
-            BuildColorSpaceOps(processor, config, *colorSpaceTransform, dir);
+            BuildColorSpaceOps(ops, config, *colorSpaceTransform, dir);
         }
         else if(ConstDisplayTransformRcPtr displayTransform = \
             DynamicPtrCast<const DisplayTransform>(transform))
         {
-            BuildDisplayOps(processor, config, *displayTransform, dir);
+            BuildDisplayOps(ops, config, *displayTransform, dir);
         }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
-            BuildFileOps(processor, config, *fileTransform, dir);
+            BuildFileOps(ops, config, *fileTransform, dir);
         }
         else if(ConstGroupTransformRcPtr groupTransform = \
             DynamicPtrCast<const GroupTransform>(transform))
         {
-            BuildGroupOps(processor, config, *groupTransform, dir);
+            BuildGroupOps(ops, config, *groupTransform, dir);
         }
         else
         {

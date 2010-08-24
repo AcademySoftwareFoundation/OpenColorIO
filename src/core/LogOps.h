@@ -31,17 +31,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_LOGOPS_H
 
 #include <OpenColorIO/OpenColorIO.h>
-#include <vector>
 
 #include "Op.h"
-#include "Processor.h"
+
+#include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
     // NOTE: These currently do not affect alpha
     // These are log, base 2.
     
-    void CreateLog2Op(LocalProcessor & processor,
+    void CreateLog2Op(OpRcPtrVec & ops,
                       TransformDirection direction);
 }
 OCIO_NAMESPACE_EXIT

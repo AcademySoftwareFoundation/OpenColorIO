@@ -103,7 +103,7 @@ OCIO_NAMESPACE_ENTER
         if(lang == GPU_LANGUAGE_CG)
         {
             *os << "half3(";
-            for(int i=0; i<4; i++)
+            for(int i=0; i<3; i++)
             {
                 if(i!=0) *os << ", ";
                 *os << ClampToNormHalf(v3[i]);
@@ -113,7 +113,7 @@ OCIO_NAMESPACE_ENTER
         else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
         {
             *os << "vec3(";
-            for(int i=0; i<4; i++)
+            for(int i=0; i<3; i++)
             {
                 if(i!=0) *os << ", ";
                 *os << v3[i]; // Clamping to half is not necessary

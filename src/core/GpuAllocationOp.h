@@ -32,11 +32,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Processor.h"
+#include "Op.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    void CreateGpuAllocationOp(LocalProcessor & processor,
+    void CreateGpuAllocationOp(OpRcPtrVec & ops,
                                const GpuAllocationData & allocationData);
 }
 OCIO_NAMESPACE_EXIT

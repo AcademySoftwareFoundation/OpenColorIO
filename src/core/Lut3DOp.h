@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "Processor.h"
 
 #include <vector>
 
@@ -88,7 +87,7 @@ OCIO_NAMESPACE_ENTER
     // This generates an identity 3d lut in GL layout
     void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels);
     
-    void CreateLut3DOp(LocalProcessor & processor,
+    void CreateLut3DOp(OpRcPtrVec & ops,
                        Lut3DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);

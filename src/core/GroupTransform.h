@@ -74,7 +74,7 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    void BuildGroupOps(LocalProcessor & processor,
+    void BuildGroupOps(OpRcPtrVec & ops,
                        const Config& config,
                        const GroupTransform& groupTransform,
                        TransformDirection dir);

@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "Processor.h"
 
 #include <vector>
 
@@ -68,7 +67,7 @@ OCIO_NAMESPACE_ENTER
     
     typedef SharedPtr<Lut1D> Lut1DRcPtr;
     
-    void CreateLut1DOp(LocalProcessor & processor,
+    void CreateLut1DOp(OpRcPtrVec & ops,
                        Lut1DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);

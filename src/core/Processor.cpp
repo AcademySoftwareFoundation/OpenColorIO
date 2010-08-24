@@ -28,9 +28,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ColorSpaceTransform.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
+#include "LogOps.h"
 #include "Lut3DOp.h"
+#include "MatrixOps.h"
 #include "Processor.h"
 #include "ScanlineHelper.h"
 
@@ -56,6 +59,58 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
+        void BuildAllocationOps(OpRcPtrVec & ops,
+                                const GpuAllocationData & data,
+                                TransformDirection dir)
+        {
+            if(data.allocation == GPU_ALLOCATION_UNIFORM)
+            {
+                float oldmin[4] = { data.min, data.min, data.min, 0.0f };
+                float oldmax[4] = { data.max, data.max, data.max, 1.0f };
+                float newmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+                float newmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+                
+                CreateFitOp(ops,
+                            oldmin, oldmax,
+                            newmin, newmax,
+                            dir);
+            }
+            else if(data.allocation == GPU_ALLOCATION_LG2)
+            {
+                float oldmin[4] = { data.min, data.min, data.min, 0.0f };
+                float oldmax[4] = { data.max, data.max, data.max, 1.0f };
+                float newmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+                float newmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+                
+                if(dir == TRANSFORM_DIR_FORWARD)
+                {
+                    CreateLog2Op(ops, dir);
+                    
+                    CreateFitOp(ops,
+                                oldmin, oldmax,
+                                newmin, newmax,
+                                dir);
+                }
+                else if(dir == TRANSFORM_DIR_INVERSE)
+                {
+                    CreateFitOp(ops,
+                                oldmin, oldmax,
+                                newmin, newmax,
+                                dir);
+                    
+                    CreateLog2Op(ops, dir);
+                }
+                else
+                {
+                    throw Exception("Cannot BuildAllocationOps, unspecified transform direction.");
+                }
+            }
+            else
+            {
+                throw Exception("Unsupported GPU Allocation.");
+            }
+        }
+        
         void WriteShaderHeader(std::ostringstream & shader, const std::string & pixelName,
                                const GpuShaderDesc & shaderDesc)
         {
@@ -84,11 +139,11 @@ OCIO_NAMESPACE_ENTER
             
             if(lang == GPU_LANGUAGE_CG)
             {
-                shader << "    half4 " << pixelName << " = inPixel; \n";
+                shader << "half4 " << pixelName << " = inPixel; \n";
             }
             else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
             {
-                shader << "    vec4 " << pixelName << " = inPixel; \n";
+                shader << "vec4 " << pixelName << " = inPixel; \n";
             }
             else throw Exception("Unsupported shader language.");
         }
@@ -98,7 +153,7 @@ OCIO_NAMESPACE_ENTER
                                const std::string & pixelName,
                                const GpuShaderDesc & /*shaderDesc*/)
         {
-            shader << "    return " << pixelName << ";\n";
+            shader << "return " << pixelName << ";\n";
             shader << "}" << "\n\n";
         }
         
@@ -187,12 +242,22 @@ OCIO_NAMESPACE_ENTER
     LocalProcessor::~LocalProcessor()
     { }
     
-    void LocalProcessor::registerOp(OpRcPtr op)
+    void LocalProcessor::addColorSpaceConversion(const Config & config,
+                                 const ConstColorSpaceRcPtr & srcColorSpace,
+                                 const ConstColorSpaceRcPtr & dstColorSpace)
     {
-        m_cpuOps.push_back(op);
+        BuildColorSpaceOps(m_cpuOps, config, srcColorSpace, dstColorSpace);
     }
     
-    void LocalProcessor::finalizeOps()
+    
+    void LocalProcessor::addTransform(const Config & config,
+                      const ConstTransformRcPtr& transform,
+                      TransformDirection direction)
+    {
+        BuildOps(m_cpuOps, config, transform, direction);
+    }
+    
+    void LocalProcessor::finalize()
     {
         // GPU Process setup
         {
@@ -232,10 +297,14 @@ OCIO_NAMESPACE_ENTER
                 // (low dynamic range color space), and the lattice processing
                 // does the inverse (making the overall operation a no-op
                 // color-wise
-                
+                /*
                 GpuAllocationData allocation = GetAllocation(gpuLut3DOpStartIndex, m_cpuOps);
-                
-                // and insert into m_gpuOpsHwPreProcess, m_gpuOpsCpuLatticeProcess
+                BuildAllocationOps(m_gpuOpsHwPreProcess, allocation, TRANSFORM_DIR_FORWARD);
+                BuildAllocationOps(m_gpuOpsHwPreProcess, allocation, TRANSFORM_DIR_INVERSE);
+                */
+                /*
+                BuildAllocationOps(m_gpuOpsCpuLatticeProcess, allocation, TRANSFORM_DIR_INVERSE);
+                */
                 
                 // Handle cpu lattice processing
                 for(int i=gpuLut3DOpStartIndex; i<=gpuLut3DOpEndIndex; ++i)
@@ -243,6 +312,7 @@ OCIO_NAMESPACE_ENTER
                     m_gpuOpsCpuLatticeProcess.push_back( m_cpuOps[i]->clone() );
                 }
                 
+                // And then handle the gpu post processing
                 for(int i=gpuLut3DOpEndIndex+1; i<(int)m_cpuOps.size(); ++i)
                 {
                     m_gpuOpsHwPostProcess.push_back( m_cpuOps[i]->clone() );
@@ -260,6 +330,19 @@ OCIO_NAMESPACE_ENTER
             // TODO: Optimize opvec
             FinalizeOpVec(m_cpuOps);
         }
+        
+        std::cerr << "     ********* CPU OPS ***************" << std::endl;
+        std::cerr << GetOpVecInfo(m_cpuOps) << "\n\n";
+        
+        std::cerr << "     ********* GPU OPS PRE PROCESS ***************" << std::endl;
+        std::cerr << GetOpVecInfo(m_gpuOpsHwPreProcess) << "\n\n";
+        
+        std::cerr << "     ********* GPU OPS LATTICE PROCESS ***************" << std::endl;
+        std::cerr << GetOpVecInfo(m_gpuOpsCpuLatticeProcess) << "\n\n";
+        
+        std::cerr << "     ********* GPU OPS POST PROCESS ***************" << std::endl;
+        std::cerr << GetOpVecInfo(m_gpuOpsHwPostProcess) << "\n\n";
+        
         
         // std::cerr << getInfo() << std::endl;
     }
@@ -329,48 +412,6 @@ OCIO_NAMESPACE_ENTER
     
     
     ///////////////////////////////////////////////////////////////////////////
-    /*
-    
-    std::string LocalProcessor::getInfo() const
-    {
-        std::ostringstream os;
-        os << "Local Processor" << std::endl;
-        os << "Size " << m_cpuOps.size() << std::endl;
-        
-        // Partition the op vector into the 
-        // interior index range does not support the gpu shader.
-        // This is used to bound our analytical shader text generation
-        // start index and end index are inclusive.
-        
-        int lut3DOpStartIndex = 0;
-        int lut3DOpEndIndex = 0;
-        
-        GetGpuUnsupportedIndexRange(&lut3DOpStartIndex,
-                                    &lut3DOpEndIndex,
-                                    m_cpuOps);
-        
-        os << "Lut3DOpStartIndex: " << lut3DOpStartIndex << std::endl;
-        os << "Lut3DOpEndIndex: " << lut3DOpEndIndex << std::endl;
-        os << std::endl;
-        
-        for(int i=0; i<(int)m_cpuOps.size(); ++i)
-        {
-            os << "Index " << i << " -- " << *m_cpuOps[i] << std::endl;
-            os << "      supportsGPUShader: " << m_cpuOps[i]->supportsGpuShader() << std::endl;
-            if(i>=lut3DOpStartIndex && i<=lut3DOpEndIndex)
-            {
-                os << "      Will be processed on Lut3D lattice" << std::endl;
-            }
-            else
-            {
-                os << "      Will be processed as shader text" << std::endl;
-            }
-            os << "      cacheID " << m_cpuOps[i]->getCacheID() << std::endl;
-        }
-        
-        return os.str();
-    }
-    */
     
     const char * LocalProcessor::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
     {
@@ -390,7 +431,7 @@ OCIO_NAMESPACE_ENTER
         {
             // Sample the 3D LUT.
             int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
-            shader << "    " << pixelName << ".rgb = ";
+            shader << pixelName << ".rgb = ";
             Write_sampleLut3D_rgb(&shader, pixelName,
                                   lut3dName, lut3DEdgeLen,
                                   shaderDesc.getLanguage());

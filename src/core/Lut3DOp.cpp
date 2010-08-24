@@ -28,8 +28,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Lut3DOp.h"
 #include "HashUtils.h"
+#include "Lut3DOp.h"
 
 #include <cmath>
 #include <sstream>
@@ -380,12 +380,12 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void CreateLut3DOp(LocalProcessor & processor,
+    void CreateLut3DOp(OpRcPtrVec & ops,
                        Lut3DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction)
     {
-        processor.registerOp( OpRcPtr(new Lut3DOp(lut, interpolation, direction)) );
+        ops.push_back( OpRcPtr(new Lut3DOp(lut, interpolation, direction)) );
     }
     
     
