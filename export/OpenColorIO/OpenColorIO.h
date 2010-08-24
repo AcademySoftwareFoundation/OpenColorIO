@@ -37,20 +37,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.12
 //
 
-// TODO: Add ColorSpaceTransform xml serialization / deserialization
 // TODO: Turn the lutpath into a search path mechanism
 // TODO: Unify all fcns that return colorspace classes to return colorspace name string instead?
-//       This may assist with dynamic color spaces
 // TODO: Colorspace limit functions, GetLinearColorspaceMax
 // TODO: ASCColorCorrection example.
 // TODO: highlight compression coefficients?
 // TODO: Histogram / Statistics FCN
 // TODO: rgb_to_hsv?  Efficient for per-pixel application?
-// TODO: Add processor.getCacheID
 // TODO: per-shot looks?
 
 // TODO: add op optimizations.  op collapsing.  cache op tree.
-// TODO: add analytical log ops
 // TODO: test 1d atomic ops
 // TODO: test full colorspace conversions
 
