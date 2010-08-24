@@ -1,3 +1,12 @@
+Version 0.5.13 (Aug 24 2010):
+    * GPU Processing now supports High Dynamic Range color spaces
+    * Added log processing operator
+    * Numerous bug fixes
+    * Numerous enhancements to python glue
+    * Exposed PyOpenColorIO header, for use in apps that require custom python glue
+    * Matrix op is optimized for diagonal-only subcases
+    * Numerous changes to Nuke Plugin (now with an addition node, OCIODisplay)
+
 Version 0.5.12 (Aug 18 2010):
     * Additional DisplayTransform improvements
     * Additional GPU Improvements
