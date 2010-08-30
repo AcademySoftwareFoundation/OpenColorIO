@@ -104,7 +104,6 @@ OCIO_NAMESPACE_ENTER
         m_impl->dir_ = dir;
     }
     
-    
     const char * ColorSpaceTransform::getSrc() const
     {
         return m_impl->src_.c_str();

@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <OpenColorIO/OpenColorIO.h>
-#include "GroupTransform.h"
+#include "OpBuilders.h"
 
 #include <sstream>
 
@@ -43,6 +43,42 @@ OCIO_NAMESPACE_ENTER
         delete t;
     }
     
+    namespace
+    {
+        typedef std::vector<TransformRcPtr> TransformRcPtrVec;
+    }
+    
+    class GroupTransform::Impl
+    {
+    public:
+        TransformDirection dir_;
+        TransformRcPtrVec vec_;
+        
+        Impl() :
+            dir_(TRANSFORM_DIR_FORWARD)
+        { }
+        
+        ~Impl()
+        {
+            vec_.clear();
+        }
+        
+        Impl& operator= (const Impl & rhs)
+        {
+            dir_ = rhs.dir_;
+            
+            vec_.clear();
+            
+            for(unsigned int i=0; i<rhs.vec_.size(); ++i)
+            {
+                vec_.push_back(rhs.vec_[i]->createEditableCopy());
+            }
+            
+            return *this;
+        }
+    };
+    
+    
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -52,16 +88,6 @@ OCIO_NAMESPACE_ENTER
         : m_impl(new GroupTransform::Impl)
     {
     }
-    
-    /*
-    GroupTransform::GroupTransform(const GroupTransform & rhs)
-        : 
-        Transform(),
-        m_impl(new GroupTransform::Impl)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    */
     
     TransformRcPtr GroupTransform::createEditableCopy() const
     {
@@ -82,50 +108,57 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection GroupTransform::getDirection() const
     {
-        return m_impl->getDirection();
+        return m_impl->dir_;
     }
     
     void GroupTransform::setDirection(TransformDirection dir)
     {
-        m_impl->setDirection(dir);
+        m_impl->dir_ = dir;
     }
     
     int GroupTransform::size() const
     {
-        return m_impl->size();
+        return static_cast<int>(m_impl->vec_.size());
     }
     
     ConstTransformRcPtr GroupTransform::getTransform(int index) const
     {
-        return m_impl->getTransform(index);
+        if(index < 0 || index >= (int)m_impl->vec_.size())
+        {
+            std::ostringstream os;
+            os << "Invalid transform index " << index << ".";
+            throw Exception(os.str().c_str());
+        }
+        
+        return m_impl->vec_[index];
     }
     
     TransformRcPtr GroupTransform::getEditableTransform(int index)
     {
-        return m_impl->getEditableTransform(index);
+        if(index < 0 || index >= (int)m_impl->vec_.size())
+        {
+            std::ostringstream os;
+            os << "Invalid transform index " << index << ".";
+            throw Exception(os.str().c_str());
+        }
+        
+        return m_impl->vec_[index];
     }
     
     void GroupTransform::push_back(const ConstTransformRcPtr& transform)
     {
-        m_impl->push_back(transform);
+        m_impl->vec_.push_back(transform->createEditableCopy());
     }
-    /*
-    void GroupTransform::push_back(TransformRcPtr transform)
-    {
-        m_impl->push_back(transform);
-    }
-    */
     
     void GroupTransform::clear()
     {
-        m_impl->clear();
+        m_impl->vec_.clear();
     }
     
     bool GroupTransform::empty() const
     {
-        return m_impl->empty();
+        return m_impl->vec_.empty();
     }
-        
     
     std::ostream& operator<< (std::ostream& os, const GroupTransform& groupTransform)
     {
@@ -137,105 +170,6 @@ OCIO_NAMESPACE_ENTER
         }
         return os;
     }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    GroupTransform::Impl::Impl() :
-        m_direction(TRANSFORM_DIR_FORWARD)
-    { }
-    
-    /*
-    GroupTransform::Impl::Impl(const Impl & rhs) :
-        m_direction(rhs.m_direction)
-    {
-        for(unsigned int i=0; i<rhs.m_vec.size(); ++i)
-        {
-            m_vec.push_back(rhs.m_vec[i]->clone());
-        }
-    }
-    */
-    
-    GroupTransform::Impl::~Impl()
-    {
-        clear();
-    }
-    
-    GroupTransform::Impl& GroupTransform::Impl::operator= (const Impl & rhs)
-    {
-        m_direction = rhs.m_direction;
-        
-        clear();
-        
-        for(unsigned int i=0; i<rhs.m_vec.size(); ++i)
-        {
-            m_vec.push_back(rhs.m_vec[i]->createEditableCopy());
-        }
-        
-        return *this;
-    }
-    
-    TransformDirection GroupTransform::Impl::getDirection() const
-    {
-        return m_direction;
-    }
-    
-    void GroupTransform::Impl::setDirection(TransformDirection dir)
-    {
-        m_direction = dir;
-    }
-    
-    int GroupTransform::Impl::size() const
-    {
-        return static_cast<int>(m_vec.size());
-    }
-
-    ConstTransformRcPtr GroupTransform::Impl::getTransform(int index) const
-    {
-        if(index < 0 || index >= (int)m_vec.size())
-        {
-            std::ostringstream os;
-            os << "Invalid transform index " << index << ".";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_vec[index];
-    }
-    
-    TransformRcPtr GroupTransform::Impl::getEditableTransform(int index)
-    {
-        if(index < 0 || index >= (int)m_vec.size())
-        {
-            std::ostringstream os;
-            os << "Invalid transform index " << index << ".";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_vec[index];
-    }
-
-    void GroupTransform::Impl::push_back(const ConstTransformRcPtr& transform)
-    {
-        m_vec.push_back(transform->createEditableCopy());
-    }
-    /*
-    void GroupTransform::Impl::push_back(TransformRcPtr transform)
-    {
-        m_vec.push_back(transform);
-    }
-    */
-    void GroupTransform::Impl::clear()
-    {
-        m_vec.clear();
-    }
-    
-    bool GroupTransform::Impl::empty() const
-    {
-        return m_vec.empty();
-    }
-    
-    
     
     
     ///////////////////////////////////////////////////////////////////////////

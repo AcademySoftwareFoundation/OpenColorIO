@@ -69,6 +69,11 @@ OCIO_NAMESPACE_ENTER
                             const Config & config,
                             const ConstColorSpaceRcPtr & srcColorSpace,
                             const ConstColorSpaceRcPtr & dstColorSpace);
+    
+    void BuildGroupOps(OpRcPtrVec & ops,
+                       const Config& config,
+                       const GroupTransform& groupTransform,
+                       TransformDirection dir);
 }
 OCIO_NAMESPACE_EXIT
 
