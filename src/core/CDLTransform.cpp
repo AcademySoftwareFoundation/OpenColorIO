@@ -28,16 +28,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "CDLTransform.h"
-
 #include "ExponentOps.h"
 #include "MatrixOps.h"
 #include "MathUtils.h"
+#include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
+#include "tinyxml/tinyxml.h"
+
 OCIO_NAMESPACE_ENTER
 {
+    namespace
+    {
+        const char * DEFAULT_CDL_XML = 
+            "<ColorCorrection id=''>"
+            " <SOPNode>"
+            "  <Description/> "
+            "  <Slope>1 1 1</Slope> "
+            "  <Offset>0 0 0</Offset> "
+            "  <Power>1 1 1</Power> "
+            " </SOPNode> "
+            " <SatNode>"
+            "  <Saturation> 1 </Saturation> "
+            " </SatNode> "
+            " </ColorCorrection>";
+    }
+    
     CDLTransformRcPtr CDLTransform::Create()
     {
         return CDLTransformRcPtr(new CDLTransform(), &deleter);
@@ -47,6 +64,127 @@ OCIO_NAMESPACE_ENTER
     {
         delete t;
     }
+    
+    class CDLTransform::Impl
+    {
+    public:
+        TransformDirection dir_;
+        TiXmlDocument * doc_;
+        mutable std::string xml_;
+        
+        Impl() :
+            dir_(TRANSFORM_DIR_FORWARD),
+            doc_(0x0)
+        {
+            setXML(DEFAULT_CDL_XML);
+        }
+        
+        ~Impl()
+        {
+            delete doc_;
+            doc_ = 0x0;
+        }
+        
+        Impl& operator= (const Impl & rhs)
+        {
+            dir_ = rhs.dir_;
+            xml_ = "";
+            
+            delete doc_;
+            doc_ = 0x0;
+            
+            if(rhs.doc_) doc_ = new TiXmlDocument(*rhs.doc_);
+            return *this;
+        }
+        
+        const char * getXML() const
+        {
+            if(xml_.empty() && doc_)
+            {
+                TiXmlPrinter printer;
+                //printer.SetIndent("    ");
+                printer.SetStreamPrinting();
+                doc_->Accept( &printer );
+                xml_ = printer.Str();
+            }
+            
+            return xml_.c_str();
+        }
+        
+        void setXML(const char * xml)
+        {
+            xml_ = "";
+            delete doc_;
+            doc_ = 0x0;
+            
+            doc_ = new TiXmlDocument();
+            doc_->Parse(xml);
+            
+            const TiXmlElement* rootElement = doc_->RootElement();
+            if(!rootElement)
+            {
+                std::ostringstream os;
+                os << "Error loading CDL xml. ";
+                throw Exception(os.str().c_str());
+            }
+            if(std::string(rootElement->Value()) != "ColorCorrection")
+            {
+                std::ostringstream os;
+                os << "Error loading CDL xml. ";
+                os << "Root element is type '" << rootElement->Value() << "', ";
+                os << "ColorCorrection expected.";
+                throw Exception(os.str().c_str());
+            }
+        }
+        
+        void setSOPVec(const float * rgb, const char * name)
+        {
+            xml_ = "";
+            
+            TiXmlHandle docHandle( doc_ );
+            std::string errorName("ColorCorrection.SOPNode.");
+            errorName += name;
+            
+            TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SOPNode" ).FirstChild(name).ToElement();
+            if(!element)
+            {
+                std::ostringstream os;
+                os << "Invalid CDL element. Could not find " << errorName;
+                throw Exception(os.str().c_str());
+            }
+            
+            std::string s = FloatVecToString(rgb, 3);
+            SetText(element, s.c_str());
+        }
+        
+        void getSOPVec(float * rgb, const char * name) const
+        {
+            TiXmlHandle docHandle( doc_ );
+            std::string errorName("ColorCorrection.SOPNode.");
+            errorName += name;
+            
+            TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SOPNode" ).FirstChild(name).ToElement();
+            if(!element)
+            {
+                std::ostringstream os;
+                os << "Invalid CDL element. Could not find " << errorName;
+                throw Exception(os.str().c_str());
+            }
+            
+            std::vector<std::string> lineParts;
+            pystring::split(pystring::strip(element->GetText()), lineParts);
+            std::vector<float> floatArray;
+            
+            if((lineParts.size() != 3) || (!StringVecToFloatVec(floatArray, lineParts)))
+            {
+                std::ostringstream os;
+                os << "Invalid CDL element. " << errorName << " is not convertible to 3 floats.";
+                throw Exception(os.str().c_str());
+            }
+            
+            if(rgb) memcpy(rgb, &floatArray[0], 3*sizeof(float));
+        }
+    };
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -77,12 +215,12 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection CDLTransform::getDirection() const
     {
-        return m_impl->getDirection();
+        return m_impl->dir_;
     }
     
     void CDLTransform::setDirection(TransformDirection dir)
     {
-        m_impl->setDirection(dir);
+        m_impl->dir_ = dir;
     }
     
     const char * CDLTransform::getXML() const
@@ -97,207 +235,6 @@ OCIO_NAMESPACE_ENTER
 
     void CDLTransform::sanityCheck() const
     {
-        m_impl->sanityCheck();
-    }
-    
-    bool CDLTransform::isNoOp() const
-    {
-        return m_impl->isNoOp();
-    }
-    
-    void CDLTransform::setSlope(const float * rgb)
-    {
-        m_impl->setSlope(rgb);
-    }
-    
-    void CDLTransform::getSlope(float * rgb) const
-    {
-        m_impl->getSlope(rgb);
-    }
-
-    void CDLTransform::setOffset(const float * rgb)
-    {
-        m_impl->setOffset(rgb);
-    }
-    
-    void CDLTransform::getOffset(float * rgb) const
-    {
-        m_impl->getOffset(rgb);
-    }
-
-    void CDLTransform::setPower(const float * rgb)
-    {
-        m_impl->setPower(rgb);
-    }
-    
-    void CDLTransform::getPower(float * rgb) const
-    {
-        m_impl->getPower(rgb);
-    }
-
-    void CDLTransform::setSOP(const float * vec9)
-    {
-        m_impl->setSOP(vec9);
-    }
-    
-    void CDLTransform::getSOP(float * vec9) const
-    {
-        m_impl->getSOP(vec9);
-    }
-
-    void CDLTransform::setSat(float sat)
-    {
-        m_impl->setSat(sat);
-    }
-    
-    float CDLTransform::getSat() const
-    {
-        return m_impl->getSat();
-    }
-
-    void CDLTransform::getSatLumaCoefs(float * rgb) const
-    {
-        m_impl->getSatLumaCoefs(rgb);
-    }
-
-    void CDLTransform::setID(const char * id)
-    {
-        m_impl->setID(id);
-    }
-    
-    const char * CDLTransform::getID() const
-    {
-        return m_impl->getID();
-    }
-
-    void CDLTransform::setDescription(const char * desc)
-    {
-        m_impl->setDescription(desc);
-    }
-    
-    const char * CDLTransform::getDescription() const
-    {
-        return m_impl->getDescription();
-    }
-    
-    std::ostream& operator<< (std::ostream& os, const CDLTransform& t)
-    {
-        os << "<CDLTransform ";
-        os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        
-        // TODO: CDL Ostream
-        /*
-        os << "interpolation=" << InterpolationToString(t.getInterpolation()) << ", ";
-        os << "src='" << t.getSrc() << "'";
-        */
-        os << ">\n";
-        return os;
-    }
-    
-    
-    
-    
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    namespace
-    {
-        const char * DEFAULT_CDL_XML = 
-            "<ColorCorrection id=''>"
-            " <SOPNode>"
-            "  <Description/> "
-            "  <Slope>1 1 1</Slope> "
-            "  <Offset>0 0 0</Offset> "
-            "  <Power>1 1 1</Power> "
-            " </SOPNode> "
-            " <SatNode>"
-            "  <Saturation> 1 </Saturation> "
-            " </SatNode> "
-            " </ColorCorrection>";
-    }
-    
-    
-    
-    CDLTransform::Impl::Impl() :
-        m_direction(TRANSFORM_DIR_FORWARD),
-        m_doc(0x0)
-    {
-        setXML(DEFAULT_CDL_XML);
-    }
-    
-    CDLTransform::Impl::~Impl()
-    {
-        delete m_doc;
-        m_doc = 0x0;
-    }
-    
-    CDLTransform::Impl& CDLTransform::Impl::operator= (const Impl & rhs)
-    {
-        m_direction = rhs.m_direction;
-        m_xml = "";
-        
-        delete m_doc;
-        m_doc = 0x0;
-        
-        if(rhs.m_doc) m_doc = new TiXmlDocument(*rhs.m_doc);
-        
-        return *this;
-    }
-    
-    TransformDirection CDLTransform::Impl::getDirection() const
-    {
-        return m_direction;
-    }
-    
-    void CDLTransform::Impl::setDirection(TransformDirection dir)
-    {
-        m_direction = dir;
-    }
-    
-    const char * CDLTransform::Impl::getXML() const
-    {
-        if(m_xml.empty() && m_doc)
-        {
-            TiXmlPrinter printer;
-            //printer.SetIndent("    ");
-            printer.SetStreamPrinting();
-            m_doc->Accept( &printer );
-            m_xml = printer.Str();
-        }
-        
-        return m_xml.c_str();
-    }
-    
-    void CDLTransform::Impl::setXML(const char * xml)
-    {
-        m_xml = "";
-        delete m_doc;
-        m_doc = 0x0;
-        
-        m_doc = new TiXmlDocument();
-        m_doc->Parse(xml);
-        
-        const TiXmlElement* rootElement = m_doc->RootElement();
-        if(!rootElement)
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            throw Exception(os.str().c_str());
-        }
-        if(std::string(rootElement->Value()) != "ColorCorrection")
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << "Root element is type '" << rootElement->Value() << "', ";
-            os << "ColorCorrection expected.";
-            throw Exception(os.str().c_str());
-        }
-    }
-    
-    void CDLTransform::Impl::sanityCheck() const
-    {
         getSlope(0);
         getOffset(0);
         getPower(0);
@@ -305,8 +242,8 @@ OCIO_NAMESPACE_ENTER
         getID();
         getDescription();
     }
-
-    bool CDLTransform::Impl::isNoOp() const
+    
+    bool CDLTransform::isNoOp() const
     {
         float sop[9];
         getSOP(sop);
@@ -319,104 +256,56 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
-    void CDLTransform::Impl::setSOPVec(const float * rgb, const char * name)
+    
+    void CDLTransform::setSlope(const float * rgb)
     {
-        m_xml = "";
-        
-        TiXmlHandle docHandle( m_doc );
-        std::string errorName("ColorCorrection.SOPNode.");
-        errorName += name;
-        
-        TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SOPNode" ).FirstChild(name).ToElement();
-        if(!element)
-        {
-            std::ostringstream os;
-            os << "Invalid CDL element. Could not find " << errorName;
-            throw Exception(os.str().c_str());
-        }
-        
-        std::string s = FloatVecToString(rgb, 3);
-        SetText(element, s.c_str());
+        m_impl->setSOPVec(rgb, "Slope");
     }
     
-    void CDLTransform::Impl::getSOPVec(float * rgb, const char * name) const
+    void CDLTransform::getSlope(float * rgb) const
     {
-        TiXmlHandle docHandle( m_doc );
-        std::string errorName("ColorCorrection.SOPNode.");
-        errorName += name;
-        
-        TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SOPNode" ).FirstChild(name).ToElement();
-        if(!element)
-        {
-            std::ostringstream os;
-            os << "Invalid CDL element. Could not find " << errorName;
-            throw Exception(os.str().c_str());
-        }
-        
-        std::vector<std::string> lineParts;
-        pystring::split(pystring::strip(element->GetText()), lineParts);
-        std::vector<float> floatArray;
-        
-        if((lineParts.size() != 3) || (!StringVecToFloatVec(floatArray, lineParts)))
-        {
-            std::ostringstream os;
-            os << "Invalid CDL element. " << errorName << " is not convertible to 3 floats.";
-            throw Exception(os.str().c_str());
-        }
-        
-        if(rgb) memcpy(rgb, &floatArray[0], 3*sizeof(float));
+        m_impl->getSOPVec(rgb, "Slope");
+    }
+
+    void CDLTransform::setOffset(const float * rgb)
+    {
+        m_impl->setSOPVec(rgb, "Offset");
     }
     
-        
-    void CDLTransform::Impl::setSlope(const float * rgb)
+    void CDLTransform::getOffset(float * rgb) const
     {
-        setSOPVec(rgb, "Slope");
+        m_impl->getSOPVec(rgb, "Offset");
+    }
+
+    void CDLTransform::setPower(const float * rgb)
+    {
+        m_impl->setSOPVec(rgb, "Power");
     }
     
-    void CDLTransform::Impl::getSlope(float * rgb) const
+    void CDLTransform::getPower(float * rgb) const
     {
-        getSOPVec(rgb, "Slope");
+        m_impl->getSOPVec(rgb, "Power");
     }
-    
-    void CDLTransform::Impl::setOffset(const float * rgb)
-    {
-        setSOPVec(rgb, "Offset");
-    }
-    
-    void CDLTransform::Impl::getOffset(float * rgb) const
-    {
-        getSOPVec(rgb, "Offset");
-    }
-    
-    void CDLTransform::Impl::setPower(const float * rgb)
-    {
-        setSOPVec(rgb, "Power");
-    }
-    
-    void CDLTransform::Impl::getPower(float * rgb) const
-    {
-        getSOPVec(rgb, "Power");
-    }
-    
-    void CDLTransform::Impl::setSOP(const float * vec9)
+
+    void CDLTransform::setSOP(const float * vec9)
     {
         setSlope(&vec9[0]);
         setOffset(&vec9[3]);
         setPower(&vec9[6]);
     }
     
-    void CDLTransform::Impl::getSOP(float * vec9) const
+    void CDLTransform::getSOP(float * vec9) const
     {
         getSlope(&vec9[0]);
         getOffset(&vec9[3]);
         getPower(&vec9[6]);
     }
-    
-    void CDLTransform::Impl::setSat(float sat)
+
+    void CDLTransform::setSat(float sat)
     {
-        m_xml = "";
+        m_impl->xml_ = "";
         
-        TiXmlHandle docHandle( m_doc );
+        TiXmlHandle docHandle( m_impl->doc_ );
         std::string errorName("ColorCorrection.SatNode.Saturation");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SatNode" ).FirstChild( "Saturation" ).ToElement();
@@ -429,12 +318,11 @@ OCIO_NAMESPACE_ENTER
         
         std::string s = FloatToString(sat);
         SetText(element, s.c_str());
-    
     }
     
-    float CDLTransform::Impl::getSat() const
+    float CDLTransform::getSat() const
     {
-        TiXmlHandle docHandle( m_doc );
+        TiXmlHandle docHandle( m_impl->doc_ );
         std::string errorName("ColorCorrection.SatNode.Saturation");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SatNode" ).FirstChild( "Saturation" ).ToElement();
@@ -456,18 +344,19 @@ OCIO_NAMESPACE_ENTER
         return sat;
     }
 
-    void CDLTransform::Impl::getSatLumaCoefs(float * rgb) const
+    void CDLTransform::getSatLumaCoefs(float * rgb) const
     {
         if(!rgb) return;
         rgb[0] = 0.2126f;
         rgb[1] = 0.7152f;
         rgb[2] = 0.0722f;
     }
-    
 
-    void CDLTransform::Impl::setID(const char * id)
+    void CDLTransform::setID(const char * id)
     {
-        TiXmlHandle docHandle( m_doc );
+        m_impl->xml_ = "";
+        
+        TiXmlHandle docHandle( m_impl->doc_ );
         std::string errorName("ColorCorrection");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).ToElement();
@@ -481,9 +370,9 @@ OCIO_NAMESPACE_ENTER
         element->SetAttribute("id", id);
     }
     
-    const char * CDLTransform::Impl::getID() const
+    const char * CDLTransform::getID() const
     {
-        TiXmlHandle docHandle( m_doc );
+        TiXmlHandle docHandle( m_impl->doc_ );
         std::string errorName("ColorCorrection");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).ToElement();
@@ -499,9 +388,11 @@ OCIO_NAMESPACE_ENTER
         return "";
     }
 
-    void CDLTransform::Impl::setDescription(const char * desc)
+    void CDLTransform::setDescription(const char * desc)
     {
-        TiXmlHandle docHandle( m_doc );
+        m_impl->xml_ = "";
+        
+        TiXmlHandle docHandle( m_impl->doc_ );
         std::string errorName("ColorCorrection.SOPNode.Description");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SOPNode" ).FirstChild( "Description" ).ToElement();
@@ -515,9 +406,9 @@ OCIO_NAMESPACE_ENTER
         SetText(element, desc);
     }
     
-    const char * CDLTransform::Impl::getDescription() const
+    const char * CDLTransform::getDescription() const
     {
-        TiXmlHandle docHandle( m_doc );
+        TiXmlHandle docHandle( m_impl->doc_ );
         std::string errorName("ColorCorrection.SOPNode.Description");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SOPNode" ).FirstChild( "Description" ).ToElement();
@@ -532,6 +423,21 @@ OCIO_NAMESPACE_ENTER
         if(text) return text;
         return "";
     }
+    
+    std::ostream& operator<< (std::ostream& os, const CDLTransform& t)
+    {
+        os << "<CDLTransform ";
+        os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
+        
+        // TODO: CDL Ostream
+        /*
+        os << "interpolation=" << InterpolationToString(t.getInterpolation()) << ", ";
+        os << "src='" << t.getSrc() << "'";
+        */
+        os << ">\n";
+        return os;
+    }
+    
     
     ///////////////////////////////////////////////////////////////////////////
     

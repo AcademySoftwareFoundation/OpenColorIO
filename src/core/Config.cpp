@@ -28,9 +28,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ColorSpaceTransform.h"
 #include "Config.h"
 #include "Mutex.h"
+#include "OpBuilders.h"
 #include "PathUtils.h"
 #include "Processor.h"
 #include "pystring/pystring.h"

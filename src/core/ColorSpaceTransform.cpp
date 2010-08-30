@@ -28,13 +28,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "CDLTransform.h"
-#include "ColorSpaceTransform.h"
 #include "GpuAllocationOp.h"
-#include "ParseUtils.h"
-#include "pystring/pystring.h"
+#include "OpBuilders.h"
 
-#include <cmath>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -48,6 +44,29 @@ OCIO_NAMESPACE_ENTER
         delete t;
     }
     
+    
+    class ColorSpaceTransform::Impl
+    {
+    public:
+        TransformDirection dir_;
+        std::string src_;
+        std::string dst_;
+        
+        Impl() :
+            dir_(TRANSFORM_DIR_FORWARD)
+        { }
+        
+        ~Impl()
+        { }
+        
+        Impl& operator= (const Impl & rhs)
+        {
+            dir_ = rhs.dir_;
+            src_ = rhs.src_;
+            dst_ = rhs.dst_;
+            return *this;
+        }
+    };
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -77,33 +96,33 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection ColorSpaceTransform::getDirection() const
     {
-        return m_impl->getDirection();
+        return m_impl->dir_;
     }
     
     void ColorSpaceTransform::setDirection(TransformDirection dir)
     {
-        m_impl->setDirection(dir);
+        m_impl->dir_ = dir;
     }
     
     
     const char * ColorSpaceTransform::getSrc() const
     {
-        return m_impl->getSrc();
+        return m_impl->src_.c_str();
     }
     
     void ColorSpaceTransform::setSrc(const char * src)
     {
-        m_impl->setSrc(src);
+        m_impl->src_ = src;
     }
     
     const char * ColorSpaceTransform::getDst() const
     {
-        return m_impl->getDst();
+        return m_impl->dst_.c_str();
     }
     
     void ColorSpaceTransform::setDst(const char * dst)
     {
-        m_impl->setDst(dst);
+        m_impl->dst_ = dst;
     }
     
     std::ostream& operator<< (std::ostream& os, const ColorSpaceTransform& t)
@@ -112,59 +131,6 @@ OCIO_NAMESPACE_ENTER
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
         os << ">\n";
         return os;
-    }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    // TODO: Deal with null ColorSpace in a better manner. Assert during Build?
-    
-    ColorSpaceTransform::Impl::Impl() :
-        m_direction(TRANSFORM_DIR_FORWARD)
-    {
-    }
-    
-    ColorSpaceTransform::Impl::~Impl()
-    {
-    }
-    
-    ColorSpaceTransform::Impl& ColorSpaceTransform::Impl::operator= (const Impl & rhs)
-    {
-        m_direction = rhs.m_direction;
-        m_src = rhs.m_src;
-        m_dst = rhs.m_dst;
-        return *this;
-    }
-    
-    TransformDirection ColorSpaceTransform::Impl::getDirection() const
-    {
-        return m_direction;
-    }
-    
-    void ColorSpaceTransform::Impl::setDirection(TransformDirection dir)
-    {
-        m_direction = dir;
-    }
-    
-    
-    const char * ColorSpaceTransform::Impl::getSrc() const
-    {
-        return m_src.c_str();
-    }
-    
-    void ColorSpaceTransform::Impl::setSrc(const char * src)
-    {
-        m_src = src;
-    }
-    
-    const char * ColorSpaceTransform::Impl::getDst() const
-    {
-        return m_dst.c_str();
-    }
-    
-    void ColorSpaceTransform::Impl::setDst(const char * dst)
-    {
-        m_dst = dst;
     }
     
     

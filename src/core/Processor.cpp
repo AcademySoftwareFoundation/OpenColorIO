@@ -28,12 +28,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ColorSpaceTransform.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "LogOps.h"
 #include "Lut3DOp.h"
 #include "MatrixOps.h"
+#include "OpBuilders.h"
 #include "Processor.h"
 #include "ScanlineHelper.h"
 

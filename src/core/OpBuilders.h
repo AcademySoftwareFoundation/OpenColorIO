@@ -27,43 +27,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_COLORSPACETRANSFORM_H
-#define INCLUDED_OCIO_COLORSPACETRANSFORM_H
+#ifndef INCLUDED_OCIO_OPBUILDERS_H
+#define INCLUDED_OCIO_OPBUILDERS_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-#include "Processor.h"
-#include "tinyxml/tinyxml.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    class ColorSpaceTransform::Impl
-    {
-        public:
-        
-        Impl();
-        ~Impl();
-        
-        Impl& operator= (const Impl &);
-        
-        TransformDirection getDirection() const;
-        void setDirection(TransformDirection dir);
-        
-        const char * getSrc() const;
-        void setSrc(const char * src);
-        
-        const char * getDst() const;
-        void setDst(const char * src);
-        
-        private:
-        
-        TransformDirection m_direction;
-        std::string m_src;
-        std::string m_dst;
-    };
+    // TODO: Its not ideal that buildops requires a config to be passed around
+    // but the only alternative is to make build ops a function on it?
+    // and even if it were, what about the build calls it dispatches to...
     
-    ///////////////////////////////////////////////////////////////////////////
+    // TODO: all of the build op functions shouldnt take a LocalProcessor class
+    // Instead, they should take an abstract interface class that defines
+    // registerOp(OpRcPtr op), annotateColorSpace, finalizeOps, etc.
+    // of which LocalProcessor happens to be one example.
+    // Then the only location in the codebase that knows of LocalProcessor is
+    // in Config.cpp, which creates one.
+    
+    void BuildOps(OpRcPtrVec & ops,
+                  const Config & config,
+                  const ConstTransformRcPtr & transform,
+                  TransformDirection dir);
+    
+    
+    ////////////////////////////////////////////////////////////////////////
+    
+    void BuildCDLOps(OpRcPtrVec & ops,
+                     const Config & config,
+                     const CDLTransform & cdlTransform,
+                     TransformDirection dir);
     
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config& config,

@@ -28,9 +28,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ColorSpaceTransform.h"
-#include "CDLTransform.h"
 #include "DisplayTransform.h"
+#include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 

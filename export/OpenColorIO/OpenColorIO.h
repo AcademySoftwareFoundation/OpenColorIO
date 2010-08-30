@@ -40,7 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: Turn the lutpath into a search path mechanism
 // TODO: Unify all fcns that return colorspace classes to return colorspace name string instead?
 // TODO: Colorspace limit functions, GetLinearColorspaceMax
-// TODO: ASCColorCorrection example.
 // TODO: highlight compression coefficients?
 // TODO: Histogram / Statistics FCN
 // TODO: rgb_to_hsv?  Efficient for per-pixel application?

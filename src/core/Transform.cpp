@@ -28,11 +28,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "CDLTransform.h"
-#include "ColorSpaceTransform.h"
 #include "DisplayTransform.h"
 #include "GroupTransform.h"
 #include "FileTransform.h"
+#include "OpBuilders.h"
 #include "Processor.h"
 
 #include <sstream>
