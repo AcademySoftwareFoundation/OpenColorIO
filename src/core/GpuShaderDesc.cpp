@@ -28,12 +28,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "GpuShaderDesc.h"
-
 OCIO_NAMESPACE_ENTER
 {
-    
+    class GpuShaderDesc::Impl
+    {
+    public:
+        GpuLanguage language_;
+        std::string functionName_;
+        int lut3DEdgeLen_;
         
+        
+        Impl() :
+            language_(GPU_LANGUAGE_UNKNOWN),
+            lut3DEdgeLen_(0)
+        { }
+        
+        ~Impl()
+        { }
+        
+        Impl& operator= (const Impl & rhs)
+        {
+            language_ = rhs.language_;
+            functionName_ = rhs.functionName_;
+            lut3DEdgeLen_ = rhs.lut3DEdgeLen_;
+            return *this;
+        }
+    };
+    
+    
     GpuShaderDesc::GpuShaderDesc()
     : m_impl(new GpuShaderDesc::Impl)
     {
@@ -46,77 +68,32 @@ OCIO_NAMESPACE_ENTER
     
     void GpuShaderDesc::setLanguage(GpuLanguage lang)
     {
-        m_impl->setLanguage(lang);
+        m_impl->language_ = lang;
     }
     
     GpuLanguage GpuShaderDesc::getLanguage() const
     {
-        return m_impl->getLanguage();
+        return m_impl->language_;
     }
     
     void GpuShaderDesc::setFunctionName(const char * name)
     {
-        m_impl->setFunctionName(name);
+        m_impl->functionName_ = name;
     }
     
     const char * GpuShaderDesc::getFunctionName() const
     {
-        return m_impl->getFunctionName();
+        return m_impl->functionName_.c_str();
     }
     
     void GpuShaderDesc::setLut3DEdgeLen(int len)
     {
-        m_impl->setLut3DEdgeLen(len);
+        m_impl->lut3DEdgeLen_ = len;
     }
     
     int GpuShaderDesc::getLut3DEdgeLen() const
     {
-        return m_impl->getLut3DEdgeLen();
-    }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    GpuShaderDesc::Impl::Impl() :
-        m_language(GPU_LANGUAGE_UNKNOWN),
-        m_lut3DEdgeLen(0)
-    {
-    }
-    
-    GpuShaderDesc::Impl::~Impl()
-    {
-    
-    }
-    
-    void GpuShaderDesc::Impl::setLanguage(GpuLanguage lang)
-    {
-        m_language = lang;
-    }
-    
-    GpuLanguage GpuShaderDesc::Impl::getLanguage() const
-    {
-        return m_language;
-    }
-    
-    void GpuShaderDesc::Impl::setFunctionName(const char * name)
-    {
-        m_functionName = name;
-    }
-    
-    const char * GpuShaderDesc::Impl::getFunctionName() const
-    {
-        return m_functionName.c_str();
-    }
-    
-    void GpuShaderDesc::Impl::setLut3DEdgeLen(int len)
-    {
-        m_lut3DEdgeLen = len;
-    }
-    
-    int GpuShaderDesc::Impl::getLut3DEdgeLen() const
-    {
-        return m_lut3DEdgeLen;
+        return m_impl->lut3DEdgeLen_;
     }
     
 }

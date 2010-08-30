@@ -750,9 +750,6 @@ OCIO_NAMESPACE_ENTER
         void setLut3DEdgeLen(int len);
         int getLut3DEdgeLen() const;
         
-        // static int GetMaxGpuCacheSizeMB();
-        // static void SetMaxGpuCacheSizeMB(int maxCacheEntries);
-        
     private:
         class Impl;
         friend class Impl;
