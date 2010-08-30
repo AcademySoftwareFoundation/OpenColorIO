@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Config.h"
 #include "FileTransform.h"
-#include "GroupTransform.h"
 #include "PathUtils.h"
 #include "pystring/pystring.h"
 #include "tinyxml/tinyxml.h"
