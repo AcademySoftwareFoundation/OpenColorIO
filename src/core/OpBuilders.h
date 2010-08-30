@@ -70,6 +70,11 @@ OCIO_NAMESPACE_ENTER
                             const ConstColorSpaceRcPtr & srcColorSpace,
                             const ConstColorSpaceRcPtr & dstColorSpace);
     
+    void BuildDisplayOps(OpRcPtrVec & ops,
+                         const Config & config,
+                         const DisplayTransform & displayTransform,
+                         TransformDirection dir);
+    
     void BuildGroupOps(OpRcPtrVec & ops,
                        const Config& config,
                        const GroupTransform& groupTransform,

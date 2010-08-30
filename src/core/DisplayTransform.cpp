@@ -28,15 +28,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "DisplayTransform.h"
 #include "OpBuilders.h"
-#include "ParseUtils.h"
-#include "pystring/pystring.h"
 
 #include <cmath>
+#include <cstring>
 
 OCIO_NAMESPACE_ENTER
 {
+    namespace
+    {
+        const float LOG2INV = 1.0f / logf(2.0f);
+        const float FLTMIN = std::numeric_limits<float>::min();
+        inline float log2(float f) { return logf(std::max(f, FLTMIN)) * LOG2INV; }
+    }
+    
+    
     DisplayTransformRcPtr DisplayTransform::Create()
     {
         return DisplayTransformRcPtr(new DisplayTransform(), &deleter);
@@ -46,6 +52,34 @@ OCIO_NAMESPACE_ENTER
     {
         delete t;
     }
+    
+    class DisplayTransform::Impl
+    {
+    public:
+        TransformDirection dir_;
+        ConstColorSpaceRcPtr inputColorSpace_;
+        CDLTransformRcPtr linearCC_;
+        ConstColorSpaceRcPtr displayColorSpace_;
+        
+        Impl() :
+            dir_(TRANSFORM_DIR_FORWARD),
+            inputColorSpace_(ColorSpace::Create()),
+            linearCC_(CDLTransform::Create()),
+            displayColorSpace_(ColorSpace::Create())
+        { }
+        
+        ~Impl()
+        { }
+        
+        Impl& operator= (const Impl & rhs)
+        {
+            dir_ = rhs.dir_;
+            inputColorSpace_ = rhs.inputColorSpace_;
+            linearCC_ = DynamicPtrCast<CDLTransform>(rhs.linearCC_->createEditableCopy());
+            displayColorSpace_ = rhs.displayColorSpace_;
+            return *this;
+        }
+    };
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -76,54 +110,63 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection DisplayTransform::getDirection() const
     {
-        return m_impl->getDirection();
+        return m_impl->dir_;
     }
     
     void DisplayTransform::setDirection(TransformDirection dir)
     {
-        m_impl->setDirection(dir);
+        m_impl->dir_ = dir;
     }
-    
-    
     
     void DisplayTransform::setInputColorSpace(const ConstColorSpaceRcPtr & cs)
     {
-        m_impl->setInputColorSpace(cs);
+        m_impl->inputColorSpace_ = cs;
     }
     
     ConstColorSpaceRcPtr DisplayTransform::getInputColorSpace() const
     {
-        return m_impl->getInputColorSpace();
+        return m_impl->inputColorSpace_;
     }
     
     void DisplayTransform::setLinearCC(const ConstCDLTransformRcPtr & cc)
     {
-        m_impl->setLinearCC(cc);
+        m_impl->linearCC_ = DynamicPtrCast<CDLTransform>(cc->createEditableCopy());
     }
     
     ConstCDLTransformRcPtr DisplayTransform::getLinearCC() const
     {
-        return m_impl->getLinearCC();
+        return m_impl->linearCC_;
     }
     
     void DisplayTransform::setLinearExposure(const float* v4)
     {
-        m_impl->setLinearExposure(v4);
+        float cc[] = { powf(2.0, v4[0]),
+                       powf(2.0, v4[1]),
+                       powf(2.0, v4[2]) };
+        m_impl->linearCC_->setSlope(cc);
     }
     
     void DisplayTransform::getLinearExposure(float* v4) const
     {
-        m_impl->getLinearExposure(v4);
+        float cc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        m_impl->linearCC_->getSlope(cc);
+        
+        for(int i=0; i<2; i++)
+        {
+            cc[i] = log2(cc[i]);
+        }
+        
+        memcpy(v4, cc, 4*sizeof(float));
     }
     
     void DisplayTransform::setDisplayColorSpace(const ConstColorSpaceRcPtr & cs)
     {
-        m_impl->setDisplayColorSpace(cs);
+        m_impl->displayColorSpace_ = cs;
     }
     
     ConstColorSpaceRcPtr DisplayTransform::getDisplayColorSpace() const
     {
-        return m_impl->getDisplayColorSpace();
+        return m_impl->displayColorSpace_;
     }
     
     
@@ -137,109 +180,9 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    
-    
-    
-    
-    
     ///////////////////////////////////////////////////////////////////////////
     
-    // TODO: Deal with null ColorSpace in a better manner. Assert during Build?
     
-    DisplayTransform::Impl::Impl() :
-        m_inputColorSpace(ColorSpace::Create()),
-        m_linearCC(CDLTransform::Create()),
-        m_displayColorSpace(ColorSpace::Create()),
-        m_direction(TRANSFORM_DIR_FORWARD)
-    {
-    }
-    
-    DisplayTransform::Impl::~Impl()
-    {
-    }
-    
-    DisplayTransform::Impl& DisplayTransform::Impl::operator= (const Impl & rhs)
-    {
-        m_direction = rhs.m_direction;
-        m_inputColorSpace = rhs.m_inputColorSpace;
-        m_linearCC = DynamicPtrCast<CDLTransform>(rhs.m_linearCC->createEditableCopy());
-        m_displayColorSpace = rhs.m_displayColorSpace;
-        return *this;
-    }
-    
-    TransformDirection DisplayTransform::Impl::getDirection() const
-    {
-        return m_direction;
-    }
-    
-    void DisplayTransform::Impl::setDirection(TransformDirection dir)
-    {
-        m_direction = dir;
-    }
-    
-    void DisplayTransform::Impl::setInputColorSpace(const ConstColorSpaceRcPtr & cs)
-    {
-        m_inputColorSpace = cs;
-    }
-    
-    ConstColorSpaceRcPtr DisplayTransform::Impl::getInputColorSpace() const
-    {
-        return m_inputColorSpace;
-    }
-    
-    
-    void DisplayTransform::Impl::setLinearExposure(const float* v4)
-    {
-        float cc[] = { powf(2.0, v4[0]),
-                       powf(2.0, v4[1]),
-                       powf(2.0, v4[2]) };
-        m_linearCC->setSlope(cc);
-    }
-    
-    
-    namespace
-    {
-        const float LOG2INV = 1.0f / logf(2.0f);
-        const float FLTMIN = std::numeric_limits<float>::min();
-        inline float log2(float f) { return logf(std::max(f, FLTMIN)) * LOG2INV; }
-    }
-    
-    void DisplayTransform::Impl::getLinearExposure(float* v4) const
-    {
-        float cc[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        m_linearCC->getSlope(cc);
-        
-        for(int i=0; i<2; i++)
-        {
-            cc[i] = log2(cc[i]);
-        }
-        
-        memcpy(v4, cc, 4*sizeof(float));
-    }
-    
-    void DisplayTransform::Impl::setLinearCC(const ConstCDLTransformRcPtr & cc)
-    {
-        m_linearCC = DynamicPtrCast<CDLTransform>(cc->createEditableCopy());
-    }
-    
-    ConstCDLTransformRcPtr DisplayTransform::Impl::getLinearCC() const
-    {
-        return m_linearCC;
-    }
-    
-    
-    
-    void DisplayTransform::Impl::setDisplayColorSpace(const ConstColorSpaceRcPtr & cs)
-    {
-        m_displayColorSpace = cs;
-    }
-    
-    ConstColorSpaceRcPtr DisplayTransform::Impl::getDisplayColorSpace() const
-    {
-        return m_displayColorSpace;
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
     
     void BuildDisplayOps(OpRcPtrVec & ops,
                          const Config & config,
