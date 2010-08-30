@@ -37,8 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
     class LocalProcessor;
-    typedef SharedPtr<const LocalProcessor> ConstLocalProcessorRcPtr;
-    typedef SharedPtr<LocalProcessor> LocalProcessorRcPtr;
+    typedef OCIO_SHARED_PTR<const LocalProcessor> ConstLocalProcessorRcPtr;
+    typedef OCIO_SHARED_PTR<LocalProcessor> LocalProcessorRcPtr;
     
     class LocalProcessor : public Processor
     {

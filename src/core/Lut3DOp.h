@@ -67,7 +67,7 @@ OCIO_NAMESPACE_ENTER
         void generateCacheID();
     };
     
-    typedef SharedPtr<Lut3D> Lut3DRcPtr;
+    typedef OCIO_SHARED_PTR<Lut3D> Lut3DRcPtr;
     
     // This memory arrangement order corresponds to the standard
     // OpenGL memory layout, as well as the SPI Lut

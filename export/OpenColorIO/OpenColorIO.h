@@ -153,21 +153,16 @@ catch(OCIO::Exception & exception)
 
 #ifdef __APPLE__
 #include <tr1/memory>
+#define OCIO_SHARED_PTR std::tr1::shared_ptr
+#define OCIO_DYNAMIC_POINTER_CAST std::tr1::dynamic_pointer_cast
 #else
 #include <boost/shared_ptr.hpp>
+#define OCIO_SHARED_PTR boost::shared_ptr
+#define OCIO_DYNAMIC_POINTER_CAST boost::dynamic_pointer_cast
 #endif
 
 OCIO_NAMESPACE_ENTER
 {
-    // TODO: Clean up the SharedPtr definition
-    #ifdef __APPLE__
-    #define SharedPtr std::tr1::shared_ptr
-    #define DynamicPtrCast std::tr1::dynamic_pointer_cast
-    #else
-    #define SharedPtr boost::shared_ptr
-    #define DynamicPtrCast boost::dynamic_pointer_cast
-    #endif
-    
     ///////////////////////////////////////////////////////////////////////////
     //
     // EXCEPTION / ENUMS / PREDECLARATIONS
@@ -175,44 +170,50 @@ OCIO_NAMESPACE_ENTER
     //
     
     class Config;
-    typedef SharedPtr<const Config> ConstConfigRcPtr;
-    typedef SharedPtr<Config> ConfigRcPtr;
+    typedef OCIO_SHARED_PTR<const Config> ConstConfigRcPtr;
+    typedef OCIO_SHARED_PTR<Config> ConfigRcPtr;
     
     class ColorSpace;
-    typedef SharedPtr<const ColorSpace> ConstColorSpaceRcPtr;
-    typedef SharedPtr<ColorSpace> ColorSpaceRcPtr;
+    typedef OCIO_SHARED_PTR<const ColorSpace> ConstColorSpaceRcPtr;
+    typedef OCIO_SHARED_PTR<ColorSpace> ColorSpaceRcPtr;
     
     class Processor;
-    typedef SharedPtr<const Processor> ConstProcessorRcPtr;
-    typedef SharedPtr<Processor> ProcessorRcPtr;
+    typedef OCIO_SHARED_PTR<const Processor> ConstProcessorRcPtr;
+    typedef OCIO_SHARED_PTR<Processor> ProcessorRcPtr;
     
     class ImageDesc;
     class GpuShaderDesc;
     class Exception;
     
     class Transform;
-    typedef SharedPtr<const Transform> ConstTransformRcPtr;
-    typedef SharedPtr<Transform> TransformRcPtr;
+    typedef OCIO_SHARED_PTR<const Transform> ConstTransformRcPtr;
+    typedef OCIO_SHARED_PTR<Transform> TransformRcPtr;
     
     class GroupTransform;
-    typedef SharedPtr<const GroupTransform> ConstGroupTransformRcPtr;
-    typedef SharedPtr<GroupTransform> GroupTransformRcPtr;
+    typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
+    typedef OCIO_SHARED_PTR<GroupTransform> GroupTransformRcPtr;
     
     class FileTransform;
-    typedef SharedPtr<const FileTransform> ConstFileTransformRcPtr;
-    typedef SharedPtr<FileTransform> FileTransformRcPtr;
+    typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
+    typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
     
     class ColorSpaceTransform;
-    typedef SharedPtr<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
-    typedef SharedPtr<ColorSpaceTransform> ColorSpaceTransformRcPtr;
+    typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
+    typedef OCIO_SHARED_PTR<ColorSpaceTransform> ColorSpaceTransformRcPtr;
     
     class DisplayTransform;
-    typedef SharedPtr<const DisplayTransform> ConstDisplayTransformRcPtr;
-    typedef SharedPtr<DisplayTransform> DisplayTransformRcPtr;
+    typedef OCIO_SHARED_PTR<const DisplayTransform> ConstDisplayTransformRcPtr;
+    typedef OCIO_SHARED_PTR<DisplayTransform> DisplayTransformRcPtr;
     
     class CDLTransform;
-    typedef SharedPtr<const CDLTransform> ConstCDLTransformRcPtr;
-    typedef SharedPtr<CDLTransform> CDLTransformRcPtr;
+    typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
+    typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
+    
+    template <class T, class U>
+    inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
+    {
+        return OCIO_DYNAMIC_POINTER_CAST<T,U>(ptr);
+    }
     
     ///////////////////////////////////////////////////////////////////////////
     

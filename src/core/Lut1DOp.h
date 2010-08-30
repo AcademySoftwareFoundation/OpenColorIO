@@ -65,7 +65,7 @@ OCIO_NAMESPACE_ENTER
         void generateCacheID();
     };
     
-    typedef SharedPtr<Lut1D> Lut1DRcPtr;
+    typedef OCIO_SHARED_PTR<Lut1D> Lut1DRcPtr;
     
     void CreateLut1DOp(OpRcPtrVec & ops,
                        Lut1DRcPtr lut,

@@ -84,7 +84,7 @@ OCIO_NAMESPACE_ENTER
         virtual ~CachedFile() {};
     };
     
-    typedef SharedPtr<CachedFile> CachedFileRcPtr;
+    typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;
     
     class FileFormat
     {

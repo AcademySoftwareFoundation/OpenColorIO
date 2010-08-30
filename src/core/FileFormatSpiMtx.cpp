@@ -58,7 +58,7 @@ OCIO_NAMESPACE_ENTER
             float offset4[4];
         };
         
-        typedef SharedPtr<LocalCachedFile> LocalCachedFileRcPtr;
+        typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
         
         
         

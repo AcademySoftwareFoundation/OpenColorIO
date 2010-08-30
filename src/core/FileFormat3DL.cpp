@@ -126,17 +126,17 @@ OCIO_NAMESPACE_ENTER
             LocalCachedFile()
             {
                 //useLut1D = false;
-                //lut1d = SharedPtr<Lut1D>(new Lut1D());
-                lut3d = SharedPtr<Lut3D>(new Lut3D());
+                //lut1d = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
+                lut3d = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
             };
             ~LocalCachedFile() {};
             
             //bool useLut1D;
-            //SharedPtr<Lut1D> lut1d;
-            SharedPtr<Lut3D> lut3d;
+            //OCIO_SHARED_PTR<Lut1D> lut1d;
+            OCIO_SHARED_PTR<Lut3D> lut3d;
         };
         
-        typedef SharedPtr<LocalCachedFile> LocalCachedFileRcPtr;
+        typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
         
         class LocalFormat : public FileFormat
         {

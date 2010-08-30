@@ -60,14 +60,14 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile()
             {
-                lut = SharedPtr<Lut3D>(new Lut3D());
+                lut = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
             };
             ~LocalCachedFile() {};
             
-            SharedPtr<Lut3D> lut;
+            OCIO_SHARED_PTR<Lut3D> lut;
         };
         
-        typedef SharedPtr<LocalCachedFile> LocalCachedFileRcPtr;
+        typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
         
         
         
