@@ -50,8 +50,31 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    ///////////////////////////////////////////////////////////////////////////
+    class FileTransform::Impl
+    {
+    public:
+        TransformDirection dir_;
+        std::string src_;
+        Interpolation interp_;
+        
+        Impl() :
+            dir_(TRANSFORM_DIR_FORWARD),
+            interp_(INTERP_UNKNOWN)
+        { }
+        
+        ~Impl()
+        { }
+        
+        Impl& operator= (const Impl & rhs)
+        {
+            dir_ = rhs.dir_;
+            src_ = rhs.src_;
+            interp_ = rhs.interp_;
+            return *this;
+        }
+    };
     
+    ///////////////////////////////////////////////////////////////////////////
     
     
     FileTransform::FileTransform()
@@ -59,16 +82,6 @@ OCIO_NAMESPACE_ENTER
     {
     
     }
-    
-    /*
-    FileTransform::FileTransform(const FileTransform & rhs)
-        : 
-        Transform(),
-        m_impl(new FileTransform::Impl)
-    {
-        *m_impl = *rhs.m_impl;
-    }
-    */
     
     TransformRcPtr FileTransform::createEditableCopy() const
     {
@@ -90,33 +103,32 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection FileTransform::getDirection() const
     {
-        return m_impl->getDirection();
+        return m_impl->dir_;
     }
     
     void FileTransform::setDirection(TransformDirection dir)
     {
-        m_impl->setDirection(dir);
+        m_impl->dir_ = dir;
     }
-    
     
     const char * FileTransform::getSrc() const
     {
-        return m_impl->getSrc();
+        return m_impl->src_.c_str();
     }
     
     void FileTransform::setSrc(const char * src)
     {
-        m_impl->setSrc(src);
+        m_impl->src_ = src;
     }
     
     Interpolation FileTransform::getInterpolation() const
     {
-        return m_impl->getInterpolation();
+        return m_impl->interp_;
     }
     
     void FileTransform::setInterpolation(Interpolation interp)
     {
-        m_impl->setInterpolation(interp);
+        m_impl->interp_ = interp;
     }
     
     std::ostream& operator<< (std::ostream& os, const FileTransform& t)
@@ -129,67 +141,6 @@ OCIO_NAMESPACE_ENTER
         
         return os;
     }
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    FileTransform::Impl::Impl() :
-        m_direction(TRANSFORM_DIR_FORWARD),
-        m_interpolation(INTERP_UNKNOWN)
-    { }
-    
-    /*
-    FileTransform::Impl::Impl(const Impl & rhs) :
-        m_direction(rhs.m_direction),
-        m_src(rhs.m_src),
-        m_interpolation(rhs.m_interpolation)
-    { }
-    */
-    
-    FileTransform::Impl::~Impl()
-    { }
-    
-    FileTransform::Impl& FileTransform::Impl::operator= (const Impl & rhs)
-    {
-        m_direction = rhs.m_direction;
-        m_src = rhs.m_src;
-        m_interpolation = rhs.m_interpolation;
-        return *this;
-    }
-    
-    TransformDirection FileTransform::Impl::getDirection() const
-    {
-        return m_direction;
-    }
-    
-    void FileTransform::Impl::setDirection(TransformDirection dir)
-    {
-        m_direction = dir;
-    }
-    
-    const char * FileTransform::Impl::getSrc() const
-    {
-        return m_src.c_str();
-    }
-    
-    void FileTransform::Impl::setSrc(const char * src)
-    {
-        m_src = src;
-    }
-    
-    Interpolation FileTransform::Impl::getInterpolation() const
-    {
-        return m_interpolation;
-    }
-    
-    void FileTransform::Impl::setInterpolation(Interpolation interp)
-    {
-        m_interpolation = interp;
-    }
-    
-    
     
     
     ///////////////////////////////////////////////////////////////////////////

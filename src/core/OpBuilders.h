@@ -75,6 +75,11 @@ OCIO_NAMESPACE_ENTER
                          const DisplayTransform & displayTransform,
                          TransformDirection dir);
     
+    void BuildFileOps(OpRcPtrVec & ops,
+                      const Config& config,
+                      const FileTransform& fileTransform,
+                      TransformDirection dir);
+    
     void BuildGroupOps(OpRcPtrVec & ops,
                        const Config& config,
                        const GroupTransform& groupTransform,

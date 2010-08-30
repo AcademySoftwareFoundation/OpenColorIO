@@ -37,46 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    class FileTransform::Impl
-    {
-        public:
-        
-        Impl();
-        /*Impl(const Impl &);*/
-        
-        ~Impl();
-        
-        Impl& operator= (const Impl &);
-        
-        TransformDirection getDirection() const;
-        void setDirection(TransformDirection dir);
-        
-        const char * getSrc() const;
-        void setSrc(const char * src);
-        
-        Interpolation getInterpolation() const;
-        void setInterpolation(Interpolation interp);
-        
-        private:
-        
-        TransformDirection m_direction;
-        std::string m_src;
-        Interpolation m_interpolation;
-    };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    void BuildFileOps(OpRcPtrVec & ops,
-                      const Config& config,
-                      const FileTransform& fileTransform,
-                      TransformDirection dir);
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
     class CachedFile
     {
     public:
@@ -98,7 +58,6 @@ OCIO_NAMESPACE_ENTER
                                   CachedFileRcPtr cachedFile,
                                   const FileTransform& fileTransform,
                                   TransformDirection dir) const = 0;
-
     private:
         FileFormat& operator= (const FileFormat &);
     };
