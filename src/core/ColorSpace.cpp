@@ -27,12 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <OpenColorIO/OpenColorIO.h>
-#include "ColorSpace.h"
 
 #include <sstream>
-
-
-#include <iostream>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -45,6 +41,63 @@ OCIO_NAMESPACE_ENTER
     {
         delete c;
     }
+    
+    
+    class ColorSpace::Impl
+    {
+    public:
+        std::string name_;
+        std::string family_;
+        std::string description_;
+        
+        BitDepth bitDepth_;
+        bool isData_;
+        
+        GpuAllocation gpuAllocation_;
+        float gpuMin_;
+        float gpuMax_;
+        
+        GroupTransformRcPtr toRefTransform_;
+        GroupTransformRcPtr fromRefTransform_;
+        
+        bool toRefSpecified_;
+        bool fromRefSpecified_;
+        
+        Impl() :
+            bitDepth_(BIT_DEPTH_UNKNOWN),
+            isData_(false),
+            gpuAllocation_(GPU_ALLOCATION_UNIFORM),
+            gpuMin_(0.0),
+            gpuMax_(1.0),
+            toRefTransform_(GroupTransform::Create()),
+            fromRefTransform_(GroupTransform::Create()),
+            toRefSpecified_(false),
+            fromRefSpecified_(false)
+        { }
+        
+        ~Impl()
+        { }
+        
+        Impl& operator= (const Impl & rhs)
+        {
+            name_ = rhs.name_;
+            family_ = rhs.family_;
+            description_ = rhs.description_;
+            bitDepth_ = rhs.bitDepth_;
+            isData_ = rhs.isData_;
+            gpuAllocation_ = rhs.gpuAllocation_;
+            gpuMin_ = rhs.gpuMin_;
+            gpuMax_ = rhs.gpuMax_;
+            toRefTransform_ = DynamicPtrCast<GroupTransform>(rhs.toRefTransform_->createEditableCopy());
+            fromRefTransform_ = DynamicPtrCast<GroupTransform>(rhs.fromRefTransform_->createEditableCopy());
+            toRefSpecified_ = rhs.toRefSpecified_;
+            fromRefSpecified_ = rhs.fromRefSpecified_;
+            return *this;
+        }
+    };
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
     
     
     
@@ -66,107 +119,155 @@ OCIO_NAMESPACE_ENTER
     
     bool ColorSpace::equals(const ConstColorSpaceRcPtr & other) const
     {
-        return m_impl->equals(*(other->m_impl));
+        return (m_impl->name_ == other->m_impl->name_);
     }
     
     const char * ColorSpace::getName() const
     {
-        return m_impl->getName();
+        return m_impl->name_.c_str();
     }
     
     void ColorSpace::setName(const char * name)
     {
-        m_impl->setName(name);
+        m_impl->name_ = name;
     }
     const char * ColorSpace::getFamily() const
     {
-        return m_impl->getFamily();
+        return m_impl->family_.c_str();
     }
     
     void ColorSpace::setFamily(const char * family)
     {
-        m_impl->setFamily(family);
+        m_impl->family_ = family;
     }
     
     const char * ColorSpace::getDescription() const
     {
-        return m_impl->getDescription();
+        return m_impl->description_.c_str();
     }
     
     void ColorSpace::setDescription(const char * description)
     {
-        m_impl->setDescription(description);
+        m_impl->description_ = description;
     }
     
     BitDepth ColorSpace::getBitDepth() const
     {
-        return m_impl->getBitDepth();
+        return m_impl->bitDepth_;
     }
     
     void ColorSpace::setBitDepth(BitDepth bitDepth)
     {
-        m_impl->setBitDepth(bitDepth);
+        m_impl->bitDepth_ = bitDepth;
     }
     
     bool ColorSpace::isData() const
     {
-        return m_impl->isData();
+        return m_impl->isData_;
     }
     
     void ColorSpace::setIsData(bool val)
     {
-        m_impl->setIsData(val);
+        m_impl->isData_ = val;
     }
     
     GpuAllocation ColorSpace::getGpuAllocation() const
     {
-        return m_impl->getGpuAllocation();
+        return m_impl->gpuAllocation_;
     }
     
     void ColorSpace::setGpuAllocation(GpuAllocation allocation)
     {
-        m_impl->setGpuAllocation(allocation);
+        m_impl->gpuAllocation_ = allocation;
     }
     
     float ColorSpace::getGpuMin() const
     {
-        return m_impl->getGpuMin();
+        return m_impl->gpuMin_;
     }
     
     void ColorSpace::setGpuMin(float min)
     {
-        m_impl->setGpuMin(min);
+        m_impl->gpuMin_ = min;
     }
     
     float ColorSpace::getGpuMax() const
     {
-        return m_impl->getGpuMax();
+        return m_impl->gpuMax_;
     }
     
     void ColorSpace::setGpuMax(float max)
     {
-        m_impl->setGpuMax(max);
+        m_impl->gpuMax_ = max;
     }
     
     ConstGroupTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
     {
-        return m_impl->getTransform(dir);
+        if(dir == COLORSPACE_DIR_TO_REFERENCE)
+            return m_impl->toRefTransform_;
+        else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
+            return m_impl->fromRefTransform_;
+        
+        throw Exception("Unspecified ColorSpaceDirection");
     }
     
     GroupTransformRcPtr ColorSpace::getEditableTransform(ColorSpaceDirection dir)
     {
-        return m_impl->getEditableTransform(dir);
+        if(dir == COLORSPACE_DIR_TO_REFERENCE)
+            return m_impl->toRefTransform_;
+        else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
+            return m_impl->fromRefTransform_;
+        
+        throw Exception("Unspecified ColorSpaceDirection");
     }
     
     void ColorSpace::setTransform(const ConstGroupTransformRcPtr & groupTransform,
                                   ColorSpaceDirection dir)
     {
-        m_impl->setTransform(groupTransform, dir);
+        GroupTransformRcPtr * majorTransform;
+        GroupTransformRcPtr * minorTransform;
+        bool * majorIsSpecified = 0;
+        bool * minorIsSpecified = 0;
+        
+        if(dir == COLORSPACE_DIR_TO_REFERENCE)
+        {
+            majorTransform = &(m_impl->toRefTransform_);
+            majorIsSpecified = &(m_impl->toRefSpecified_);
+            
+            minorTransform = &(m_impl->fromRefTransform_);
+            minorIsSpecified = &(m_impl->fromRefSpecified_);
+        }
+        else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
+        {
+            majorTransform = &(m_impl->fromRefTransform_);
+            majorIsSpecified = &(m_impl->fromRefSpecified_);
+            
+            minorTransform = &(m_impl->toRefTransform_);
+            minorIsSpecified = &(m_impl->toRefSpecified_);
+        }
+        else
+        {
+            throw Exception("Unspecified ColorSpaceDirection");
+        }
+        
+        *majorTransform = DynamicPtrCast<GroupTransform>(groupTransform->createEditableCopy());
+        *majorIsSpecified = (!groupTransform->empty());
+        
+        if(!*minorIsSpecified)
+        {
+            *minorTransform = DynamicPtrCast<GroupTransform>(groupTransform->createEditableCopy());
+            (*minorTransform)->setDirection( GetInverseTransformDirection((*majorTransform)->getDirection()) );
+        }
     }
     
     bool ColorSpace::isTransformSpecified(ColorSpaceDirection dir) const
     {
-        return m_impl->isTransformSpecified(dir);
+        if(dir == COLORSPACE_DIR_TO_REFERENCE)
+            return m_impl->toRefSpecified_;
+        else if(COLORSPACE_DIR_FROM_REFERENCE)
+            return m_impl->fromRefSpecified_;
+        
+        throw Exception("Unspecified ColorSpaceDirection");
     }
     
     std::ostream& operator<< (std::ostream& os, const ColorSpace& cs)
@@ -194,201 +295,6 @@ OCIO_NAMESPACE_ENTER
             os << cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         }
         return os;
-    }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    
-    ColorSpace::Impl::Impl() :
-        m_bitDepth(BIT_DEPTH_UNKNOWN),
-        m_isData(false),
-        m_gpuAllocation(GPU_ALLOCATION_UNIFORM),
-        m_gpuMin(0.0),
-        m_gpuMax(1.0),
-        m_toRefTransform(GroupTransform::Create()),
-        m_fromRefTransform(GroupTransform::Create()),
-        m_toRefSpecified(false),
-        m_fromRefSpecified(false)
-    {
-    }
-    
-    ColorSpace::Impl::~Impl()
-    {
-    
-    }
-    
-    ColorSpace::Impl& ColorSpace::Impl::operator= (const ColorSpace::Impl & rhs)
-    {
-        m_name = rhs.m_name;
-        m_family = rhs.m_family;
-        m_description = rhs.m_description;
-        m_bitDepth = rhs.m_bitDepth;
-        m_isData = rhs.m_isData;
-        m_gpuAllocation = rhs.m_gpuAllocation;
-        m_gpuMin = rhs.m_gpuMin;
-        m_gpuMax = rhs.m_gpuMax;
-        m_toRefTransform = DynamicPtrCast<GroupTransform>(rhs.m_toRefTransform->createEditableCopy());
-        m_fromRefTransform = DynamicPtrCast<GroupTransform>(rhs.m_fromRefTransform->createEditableCopy());
-        m_toRefSpecified = rhs.m_toRefSpecified;
-        m_fromRefSpecified = rhs.m_fromRefSpecified;
-        return *this;
-    }
-
-    bool ColorSpace::Impl::equals(const ColorSpace::Impl & other) const
-    {
-        return m_name == other.m_name;
-    }
-    
-    const char * ColorSpace::Impl::getName() const
-    {
-        return m_name.c_str();
-    }
-    
-    void ColorSpace::Impl::setName(const char * name)
-    {
-        m_name = name;
-    }
-
-    const char * ColorSpace::Impl::getFamily() const
-    {
-        return m_family.c_str();
-    }
-    
-    void ColorSpace::Impl::setFamily(const char * family)
-    {
-        m_family = family;
-    }
-    
-    const char * ColorSpace::Impl::getDescription() const
-    {
-        return m_description.c_str();
-    }
-    
-    void ColorSpace::Impl::setDescription(const char * description)
-    {
-        m_description = description;
-    }
-    
-    BitDepth ColorSpace::Impl::getBitDepth() const
-    {
-        return m_bitDepth;
-    }
-    
-    void ColorSpace::Impl::setBitDepth(BitDepth bitDepth)
-    {
-        m_bitDepth = bitDepth;
-    }
-
-    bool ColorSpace::Impl::isData() const
-    {
-        return m_isData;
-    }
-    
-    void ColorSpace::Impl::setIsData(bool val)
-    {
-        m_isData = val;
-    }
-
-    GpuAllocation ColorSpace::Impl::getGpuAllocation() const
-    {
-        return m_gpuAllocation;
-    }
-    
-    void ColorSpace::Impl::setGpuAllocation(GpuAllocation allocation)
-    {
-        m_gpuAllocation = allocation;
-    }
-
-    float ColorSpace::Impl::getGpuMin() const
-    {
-        return m_gpuMin;
-    }
-    
-    void ColorSpace::Impl::setGpuMin(float min)
-    {
-        m_gpuMin = min;
-    }
-
-    float ColorSpace::Impl::getGpuMax() const
-    {
-        return m_gpuMax;
-    }
-    
-    void ColorSpace::Impl::setGpuMax(float max)
-    {
-        m_gpuMax = max;
-    }
-    
-    ConstGroupTransformRcPtr ColorSpace::Impl::getTransform(ColorSpaceDirection dir) const
-    {
-        if(dir == COLORSPACE_DIR_TO_REFERENCE)
-            return m_toRefTransform;
-        else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
-            return m_fromRefTransform;
-        
-        throw Exception("Unspecified ColorSpaceDirection");
-    }
-    
-    GroupTransformRcPtr ColorSpace::Impl::getEditableTransform(ColorSpaceDirection dir)
-    {
-        if(dir == COLORSPACE_DIR_TO_REFERENCE)
-            return m_toRefTransform;
-        else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
-            return m_fromRefTransform;
-        
-        throw Exception("Unspecified ColorSpaceDirection");
-    }
-    
-    void ColorSpace::Impl::setTransform(const ConstGroupTransformRcPtr & groupTransform,
-                          ColorSpaceDirection dir)
-    {
-        GroupTransformRcPtr * majorTransform;
-        GroupTransformRcPtr * minorTransform;
-        bool * majorIsSpecified = 0;
-        bool * minorIsSpecified = 0;
-        
-        if(dir == COLORSPACE_DIR_TO_REFERENCE)
-        {
-            majorTransform = &m_toRefTransform;
-            majorIsSpecified = &m_toRefSpecified;
-            
-            minorTransform = &m_fromRefTransform;
-            minorIsSpecified = &m_fromRefSpecified;
-        }
-        else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
-        {
-            majorTransform = &m_fromRefTransform;
-            majorIsSpecified = &m_fromRefSpecified;
-            
-            minorTransform = &m_toRefTransform;
-            minorIsSpecified = &m_toRefSpecified;
-        }
-        else
-        {
-            throw Exception("Unspecified ColorSpaceDirection");
-        }
-        
-        *majorTransform = DynamicPtrCast<GroupTransform>(groupTransform->createEditableCopy());
-        *majorIsSpecified = (!groupTransform->empty());
-        
-        if(!*minorIsSpecified)
-        {
-            *minorTransform = DynamicPtrCast<GroupTransform>(groupTransform->createEditableCopy());
-            (*minorTransform)->setDirection( GetInverseTransformDirection((*majorTransform)->getDirection()) );
-        }
-    }
-    
-    bool ColorSpace::Impl::isTransformSpecified(ColorSpaceDirection dir) const
-    {
-        if(dir == COLORSPACE_DIR_TO_REFERENCE)
-            return m_toRefSpecified;
-        else if(COLORSPACE_DIR_FROM_REFERENCE)
-            return m_fromRefSpecified;
-        
-        throw Exception("Unspecified ColorSpaceDirection");
     }
 }
 OCIO_NAMESPACE_EXIT
