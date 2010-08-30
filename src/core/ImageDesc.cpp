@@ -28,8 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ImageDesc.h"
-
 #include <sstream>
 
 OCIO_NAMESPACE_ENTER
@@ -56,6 +54,71 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
+    
+    class PackedImageDesc::Impl
+    {
+    public:
+        float * data_;
+        long width_;
+        long height_;
+        ptrdiff_t chanStrideBytes_;
+        ptrdiff_t xStrideBytes_;
+        ptrdiff_t yStrideBytes_;
+        
+        Impl() :
+            data_(0x0),
+            width_(0),
+            height_(0),
+            chanStrideBytes_(0),
+            xStrideBytes_(0),
+            yStrideBytes_(0)
+        {
+        }
+        
+        Impl(float * data,
+             long width, long height,
+             long numChannels,
+             ptrdiff_t chanStrideBytes,
+             ptrdiff_t xStrideBytes,
+             ptrdiff_t yStrideBytes ) :
+            data_(data),
+            width_(width),
+            height_(height),
+            chanStrideBytes_(chanStrideBytes),
+            xStrideBytes_(xStrideBytes),
+            yStrideBytes_(yStrideBytes)
+        {
+            if(width <= 0 || height <= 0)
+            {
+                std::ostringstream os;
+                os << "Error: Image dimensions must be positive for both x,y. '";
+                os << width << "x" << height << "' is not allowed.";
+                throw Exception(os.str().c_str());
+            }
+            
+            if(numChannels < 3)
+            {
+                std::ostringstream os;
+                os << "Error: Image numChannels must be three (or more) (rgb+). '";
+                os << numChannels << "' is not allowed.";
+                throw Exception(os.str().c_str());
+            }
+            
+            if(chanStrideBytes_ == AutoStride)
+                chanStrideBytes_ = sizeof(float);
+            if(xStrideBytes_ == AutoStride)
+                xStrideBytes_ = sizeof(float)*numChannels;
+            if(yStrideBytes_ == AutoStride)
+                yStrideBytes_ = sizeof(float)*width*numChannels;
+        }
+        
+        ~Impl()
+        { }
+    };
+    
+    
+    
+    
     PackedImageDesc::PackedImageDesc(float * data,
                                      long width, long height,
                                      long numChannels,
@@ -73,130 +136,103 @@ OCIO_NAMESPACE_ENTER
     
     long PackedImageDesc::getWidth() const
     {
-        return m_impl->getWidth();
+        return m_impl->width_;
     }
     
     long PackedImageDesc::getHeight() const
     {
-        return m_impl->getHeight();
+        return m_impl->height_;
     }
-
+    
     ptrdiff_t PackedImageDesc::getXStrideBytes() const
     {
-        return m_impl->getXStrideBytes();
+        return m_impl->xStrideBytes_;
     }
     
     ptrdiff_t PackedImageDesc::getYStrideBytes() const
     {
-        return m_impl->getYStrideBytes();
+        return m_impl->yStrideBytes_;
     }
     
     float* PackedImageDesc::getRData() const
     {
-        return m_impl->getRData();
+        return m_impl->data_;
     }
     
     float* PackedImageDesc::getGData() const
     {
-        return m_impl->getGData();
+        return reinterpret_cast<float*>( reinterpret_cast<char*>(m_impl->data_) \
+            + m_impl->chanStrideBytes_ );
     }
     
     float* PackedImageDesc::getBData() const
     {
-        return m_impl->getBData();
+        return reinterpret_cast<float*>( reinterpret_cast<char*>(m_impl->data_) \
+            + 2*m_impl->chanStrideBytes_ );
     }
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
     
     
     ///////////////////////////////////////////////////////////////////////////
     
     
     
-    
-    PackedImageDesc::Impl::Impl(float * data,
-                                long width, long height,
-                                long numChannels,
-                                ptrdiff_t chanStrideBytes,
-                                ptrdiff_t xStrideBytes,
-                                ptrdiff_t yStrideBytes ) :
-        m_data(data),
-        m_width(width),
-        m_height(height),
-        m_chanStrideBytes(chanStrideBytes),
-        m_xStrideBytes(xStrideBytes),
-        m_yStrideBytes(yStrideBytes)
+    class PlanarImageDesc::Impl
     {
-        if(width <= 0 || height <= 0)
+    public:
+        float * rData_;
+        float * gData_;
+        float * bData_;
+        
+        long width_;
+        long height_;
+        ptrdiff_t yStrideBytes_;
+        
+        Impl() :
+            rData_(0x0),
+            gData_(0x0),
+            bData_(0x0),
+            width_(0),
+            height_(0),
+            yStrideBytes_(0)
+        { }
+        
+        Impl(float * rData, float * gData, float * bData,
+             long width, long height,
+             ptrdiff_t yStrideBytes ) :
+            rData_(rData),
+            gData_(gData),
+            bData_(bData),
+            width_(width),
+            height_(height),
+            yStrideBytes_(yStrideBytes)
         {
-            std::ostringstream os;
-            os << "Error: Image dimensions must be positive for both x,y. '";
-            os << width << "x" << height << "' is not allowed.";
-            throw Exception(os.str().c_str());
+            if(width <= 0 || height <= 0)
+            {
+                std::ostringstream os;
+                os << "Error: Image dimensions must be positive for both x,y. '";
+                os << width << "x" << height << "' is not allowed.";
+                throw Exception(os.str().c_str());
+            }
+            
+            if(rData == 0x0 || gData == 0x0 || bData == 0x0)
+            {
+                std::ostringstream os;
+                os << "Error: Valid ptrs must be passed in for all 3 image channels.";
+                throw Exception(os.str().c_str());
+            }
+            
+            if(yStrideBytes_ == AutoStride)
+                yStrideBytes_ = sizeof(float)*width;
         }
         
-        if(numChannels < 3)
-        {
-            std::ostringstream os;
-            os << "Error: Image numChannels must be three (or more) (rgb+). '";
-            os << numChannels << "' is not allowed.";
-            throw Exception(os.str().c_str());
-        }
-        
-        if(m_chanStrideBytes == AutoStride)
-            m_chanStrideBytes = sizeof(float);
-        if(m_xStrideBytes == AutoStride)
-            m_xStrideBytes = sizeof(float)*numChannels;
-        if(m_yStrideBytes == AutoStride)
-            m_yStrideBytes = sizeof(float)*width*numChannels;
-    }
+        ~Impl()
+        { }
+    };
     
-    PackedImageDesc::Impl::~Impl()
-    {
-    
-    }
-    
-    long PackedImageDesc::Impl::getWidth() const
-    {
-        return m_width;
-    }
-    
-    long PackedImageDesc::Impl::getHeight() const
-    {
-        return m_height;
-    }
-
-    ptrdiff_t PackedImageDesc::Impl::getXStrideBytes() const
-    {
-        return m_xStrideBytes;
-    }
-    
-    ptrdiff_t PackedImageDesc::Impl::getYStrideBytes() const
-    {
-        return m_yStrideBytes;
-    }
-    
-    float* PackedImageDesc::Impl::getRData() const
-    {
-        return m_data;
-    }
-    
-    float* PackedImageDesc::Impl::getGData() const
-    {
-        return reinterpret_cast<float*>( reinterpret_cast<char*>(m_data) \
-            + m_chanStrideBytes );
-    }
-    
-    float* PackedImageDesc::Impl::getBData() const
-    {
-        return reinterpret_cast<float*>( reinterpret_cast<char*>(m_data) \
-            + 2*m_chanStrideBytes );
-    }
-    
-    
-    
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
     
     PlanarImageDesc::PlanarImageDesc(float * rData, float * gData, float * bData,
                                      long width, long height,
@@ -211,111 +247,37 @@ OCIO_NAMESPACE_ENTER
     
     long PlanarImageDesc::getWidth() const
     {
-        return m_impl->getWidth();
+        return m_impl->width_;
     }
     
     long PlanarImageDesc::getHeight() const
     {
-        return m_impl->getHeight();
+        return m_impl->height_;
     }
-
+    
     ptrdiff_t PlanarImageDesc::getXStrideBytes() const
-    {
-        return m_impl->getXStrideBytes();
-    }
-    
-    ptrdiff_t PlanarImageDesc::getYStrideBytes() const
-    {
-        return m_impl->getYStrideBytes();
-    }
-    
-    float* PlanarImageDesc::getRData() const
-    {
-        return m_impl->getRData();
-    }
-    
-    float* PlanarImageDesc::getGData() const
-    {
-        return m_impl->getGData();
-    }
-    
-    float* PlanarImageDesc::getBData() const
-    {
-        return m_impl->getBData();
-    }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    PlanarImageDesc::Impl::Impl(float * rData, float * gData, float * bData,
-                                long width, long height,
-                                ptrdiff_t yStrideBytes ) :
-        m_rData(rData),
-        m_gData(gData),
-        m_bData(bData),
-        m_width(width),
-        m_height(height),
-        m_yStrideBytes(yStrideBytes)
-    {
-        if(width <= 0 || height <= 0)
-        {
-            std::ostringstream os;
-            os << "Error: Image dimensions must be positive for both x,y. '";
-            os << width << "x" << height << "' is not allowed.";
-            throw Exception(os.str().c_str());
-        }
-        
-        if(rData == 0x0 || gData == 0x0 || bData == 0x0)
-        {
-            std::ostringstream os;
-            os << "Error: Valid ptrs must be passed in for all 3 image channels.";
-            throw Exception(os.str().c_str());
-        }
-        
-        if(m_yStrideBytes == AutoStride)
-            m_yStrideBytes = sizeof(float)*width;
-    }
-    
-    PlanarImageDesc::Impl::~Impl()
-    {
-    
-    }
-    
-    long PlanarImageDesc::Impl::getWidth() const
-    {
-        return m_width;
-    }
-    
-    long PlanarImageDesc::Impl::getHeight() const
-    {
-        return m_height;
-    }
-    
-    ptrdiff_t PlanarImageDesc::Impl::getXStrideBytes() const
     {
         return sizeof(float);
     }
     
-    ptrdiff_t PlanarImageDesc::Impl::getYStrideBytes() const
+    ptrdiff_t PlanarImageDesc::getYStrideBytes() const
     {
-        return m_yStrideBytes;
+        return m_impl->yStrideBytes_;
     }
     
-    float* PlanarImageDesc::Impl::getRData() const
+    float* PlanarImageDesc::getRData() const
     {
-        return m_rData;
+        return m_impl->rData_;
     }
     
-    float* PlanarImageDesc::Impl::getGData() const
+    float* PlanarImageDesc::getGData() const
     {
-        return m_gData;
+        return m_impl->gData_;
     }
     
-    float* PlanarImageDesc::Impl::getBData() const
+    float* PlanarImageDesc::getBData() const
     {
-        return m_bData;
+        return m_impl->bData_;
     }
 }
 OCIO_NAMESPACE_EXIT
