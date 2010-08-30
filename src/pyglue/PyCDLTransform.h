@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <PyOpenColorIO/PyOpenColorIO.h>
 
+// TODO: Make all these derive off the same PyOCIO Object
+
 OCIO_NAMESPACE_ENTER
 {
     // TODO: Maybe put this in a pyinternal namespace?
