@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "PyCDLTransform.h"
 #include "PyDisplayTransform.h"
 #include "PyFileTransform.h"
 #include "PyGroupTransform.h"
@@ -40,7 +41,8 @@ OCIO_NAMESPACE_ENTER
 {
     bool IsPyTransform(PyObject * pyobject)
     {
-        return ( IsPyDisplayTransform(pyobject) ||
+        return ( IsPyCDLTransform(pyobject) ||
+                 IsPyDisplayTransform(pyobject) ||
                  IsPyFileTransform(pyobject) || 
                  IsPyGroupTransform(pyobject)
                 );
@@ -48,7 +50,12 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform)
     {
-        if(ConstDisplayTransformRcPtr displayTransform = \
+        if(ConstCDLTransformRcPtr cdlTransform = \
+            DynamicPtrCast<const CDLTransform>(transform))
+        {
+            return BuildConstPyCDLTransform(cdlTransform);
+        }
+        else if(ConstDisplayTransformRcPtr displayTransform = \
             DynamicPtrCast<const DisplayTransform>(transform))
         {
             return BuildConstPyDisplayTransform(displayTransform);
@@ -73,7 +80,12 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildEditablePyTransform(TransformRcPtr transform)
     {
-        if(DisplayTransformRcPtr displayTransform = \
+        if(CDLTransformRcPtr cdlTransform = \
+            DynamicPtrCast<CDLTransform>(transform))
+        {
+            return BuildEditablePyCDLTransform(cdlTransform);
+        }
+        else if(DisplayTransformRcPtr displayTransform = \
             DynamicPtrCast<DisplayTransform>(transform))
         {
             return BuildEditablePyDisplayTransform(displayTransform);
@@ -98,7 +110,11 @@ OCIO_NAMESPACE_ENTER
     
     ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast)
     {
-        if(IsPyDisplayTransform(pyobject))
+        if(IsPyCDLTransform(pyobject))
+        {
+            return GetConstCDLTransform(pyobject, allowCast);
+        }
+        else if(IsPyDisplayTransform(pyobject))
         {
             return GetConstDisplayTransform(pyobject, allowCast);
         }

@@ -62,5 +62,5 @@ for device in config.getDisplayDeviceNames():
     print 'device',device
     print '    default',config.getDefaultDisplayTransformName(device)
     
-    for transform in config.getDisplayTransforms(device):
+    for transform in config.getDisplayTransformNames(device):
         print '    transform',transform

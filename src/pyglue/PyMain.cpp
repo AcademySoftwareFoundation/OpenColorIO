@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
+#include "PyCDLTransform.h"
 #include "PyColorSpace.h"
 #include "PyConfig.h"
 #include "PyConstants.h"
@@ -99,10 +100,12 @@ initPyOpenColorIO(void)
     
     m = Py_InitModule3("PyOpenColorIO", PyOCIO_methods, "OpenColorIO API");
     
+    OCIO::AddCDLTransformObjectToModule( m );
     OCIO::AddColorSpaceObjectToModule( m );
     OCIO::AddConfigObjectToModule( m );
     OCIO::AddFileTransformObjectToModule( m );
     OCIO::AddDisplayTransformObjectToModule( m );
     OCIO::AddGroupTransformObjectToModule( m );
+    
     OCIO::InitializeConstantsModule( m );
 }

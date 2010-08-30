@@ -62,7 +62,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: Add prettier xml output (newlines between colorspaces?)
 
 // TODO: Cross-platform
-
+// TODO: add  GetOriginalSourceFile(); setOriginalSourceFile(const std::string &sourceFile)
+        
 /*
 // Example: Compositing plugin, which converts from "log" to "lin"
 try

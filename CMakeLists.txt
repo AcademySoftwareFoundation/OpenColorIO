@@ -165,6 +165,7 @@ if(PYTHON_OK)
     message(STATUS "Python ${PYTHON_VERSION} okay, will build the Python bindings against ${PYTHON_INCLUDE}")
 
     add_library(PyOpenColorIO MODULE
+        src/pyglue/PyCDLTransform.cpp
         src/pyglue/PyColorSpace.cpp
         src/pyglue/PyConstants.cpp
         src/pyglue/PyConfig.cpp
