@@ -28,17 +28,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Config.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
 #include "PathUtils.h"
 #include "Processor.h"
 #include "pystring/pystring.h"
+#include "tinyxml/tinyxml.h"
 
 #include <cstdlib>
 #include <cstring>
 #include <set>
 #include <sstream>
+#include <utility>
+#include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -81,6 +83,64 @@ OCIO_NAMESPACE_ENTER
     }
     
     
+    typedef std::vector<ColorSpaceRcPtr> ColorSpacePtrVec;
+    typedef std::vector< std::pair<std::string, std::string> > RoleVec;
+    typedef std::vector<std::string> DisplayKey; // (device, name, colorspace)
+    
+    class Config::Impl
+    {
+    public:
+        std::string originalFileDir_;
+        std::string resourcePath_;
+        std::string resolvedResourcePath_;
+        
+        std::string description_;
+        
+        ColorSpacePtrVec colorspaces_;
+        
+        RoleVec roleVec_;
+        
+        std::vector<DisplayKey> displayDevices_;
+        
+        float defaultLumaCoefs_[3];
+        
+        Impl()
+        {
+            defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
+            defaultLumaCoefs_[1] = DEFAULT_LUMA_COEFF_G;
+            defaultLumaCoefs_[2] = DEFAULT_LUMA_COEFF_B;
+        }
+        
+        ~Impl()
+        {
+        
+        }
+        
+        Impl& operator= (const Impl & rhs)
+        {
+            resourcePath_ = rhs.resourcePath_;
+            originalFileDir_ = rhs.originalFileDir_;
+            resolvedResourcePath_ = rhs.resolvedResourcePath_;
+            description_ = rhs.description_;
+            
+            colorspaces_.clear();
+            colorspaces_.reserve(rhs.colorspaces_.size());
+            
+            for(unsigned int i=0; i<rhs.colorspaces_.size(); ++i)
+            {
+                colorspaces_.push_back(rhs.colorspaces_[i]->createEditableCopy());
+            }
+            
+            roleVec_ = rhs.roleVec_; // Vector assignment operator will suffice for this
+            displayDevices_ = rhs.displayDevices_; // Vector assignment operator will suffice for this
+            
+            memcpy(defaultLumaCoefs_, rhs.defaultLumaCoefs_, 3*sizeof(float));
+            
+            return *this;
+        }
+    };
+    
+    
     ///////////////////////////////////////////////////////////////////////////
     
     ConfigRcPtr Config::Create()
@@ -95,17 +155,18 @@ OCIO_NAMESPACE_ENTER
     
     ConstConfigRcPtr Config::CreateFromEnv()
     {
-        ConfigRcPtr config = Config::Create();
-        config->m_impl->createFromEnv();
-        return config;
+        char * file = std::getenv("OCIO");
+        if(!file)
+        {
+            std::ostringstream os;
+            os << "'OCIO' environment variable not set. ";
+            os << "Please specify a valid OpenColorIO (.ocio) configuration file.";
+            throw Exception(os.str().c_str());
+        }
+        
+        return CreateFromFile(file);
     }
     
-    ConstConfigRcPtr Config::CreateFromFile(const char * filename)
-    {
-        ConfigRcPtr config = Config::Create();
-        config->m_impl->createFromFile(filename);
-        return config;
-    }
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -130,42 +191,50 @@ OCIO_NAMESPACE_ENTER
     
     const char * Config::getResourcePath() const
     {
-        return m_impl->getResourcePath();
+        return m_impl->resourcePath_.c_str();
     }
     
     void Config::setResourcePath(const char * path)
     {
-        m_impl->setResourcePath(path);
+        m_impl->resourcePath_ = path;
+        m_impl->resolvedResourcePath_ = path::join(m_impl->originalFileDir_, m_impl->resourcePath_);
     }
     
     const char * Config::getResolvedResourcePath() const
     {
-        return m_impl->getResolvedResourcePath();
+        return m_impl->resolvedResourcePath_.c_str();
     }
     
     const char * Config::getDescription() const
     {
-        return m_impl->getDescription();
+        return m_impl->description_.c_str();
     }
     
     void Config::setDescription(const char * description)
     {
-        m_impl->setDescription(description);
-    }
-    
-    void Config::writeXML(std::ostream& os) const
-    {
-        m_impl->writeXML(os);
+        m_impl->description_ = description;
     }
     
     int Config::getNumColorSpaces() const
     {
-        return m_impl->getNumColorSpaces();
+        return static_cast<int>(m_impl->colorspaces_.size());
     }
     
     int Config::getIndexForColorSpace(const char * name) const
     {
-        return m_impl->getIndexForColorSpace(name);
+        std::string strname = name;
+        if(strname.empty()) return -1;
+        
+        // Check to see if the colorspace already exists at a known index.
+        for(unsigned int index = 0; index < m_impl->colorspaces_.size(); ++index)
+        {
+            if(strname != m_impl->colorspaces_[index]->getName())
+                continue;
+            
+            return index;
+        }
+        
+        return -1;
     }
     
     // if another colorspace was already registered with the
@@ -174,42 +243,121 @@ OCIO_NAMESPACE_ENTER
     
     void Config::addColorSpace(ColorSpaceRcPtr cs)
     {
-        m_impl->addColorSpace(cs);
+        std::string name = cs->getName();
+        if(name.empty())
+            throw Exception("Cannot addColorSpace with an empty name.");
+        
+        // Check to see if the colorspace already exists at a known index.
+        int index = getIndexForColorSpace( cs->getName() );
+        if(index != -1)
+        {
+            m_impl->colorspaces_[index] = cs;
+            return;
+        }
+        
+        m_impl->colorspaces_.push_back( cs );
     }
     
     void Config::addColorSpace(const ConstColorSpaceRcPtr & cs)
     {
-        m_impl->addColorSpace(cs);
+        addColorSpace(cs->createEditableCopy());
     }
     
     void Config::clearColorSpaces()
     {
-        m_impl->clearColorSpaces();
+        m_impl->colorspaces_.clear();
     }
     
     ConstColorSpaceRcPtr Config::getColorSpaceByIndex(int index) const
     {
-        return m_impl->getColorSpaceByIndex(index);
+        if(index<0 || index >= (int)m_impl->colorspaces_.size())
+        {
+            std::ostringstream os;
+            os << "Invalid ColorSpace index " << index << ".";
+            throw Exception(os.str().c_str());
+        }
+        
+        return m_impl->colorspaces_[index];
     }
     
     ColorSpaceRcPtr Config::getEditableColorSpaceByIndex(int index)
     {
-        return m_impl->getEditableColorSpaceByIndex(index);
+        if(index<0 || index >= (int)m_impl->colorspaces_.size())
+        {
+            std::ostringstream os;
+            os << "Invalid ColorSpace index " << index << ".";
+            throw Exception(os.str().c_str());
+        }
+        
+        return m_impl->colorspaces_[index];
     }
     
     ConstColorSpaceRcPtr Config::getColorSpaceByName(const char * name) const
     {
-        return m_impl->getColorSpaceByName(name);
+        int index = getIndexForColorSpace( name );
+        if(index == -1)
+        {
+            std::ostringstream os;
+            os << "Cannot find ColorSpace named '";
+            os << name << "'.";
+            throw Exception(os.str().c_str());
+        }
+        
+        return m_impl->colorspaces_[index];
     }
     
     ColorSpaceRcPtr Config::getEditableColorSpaceByName(const char * name)
     {
-        return m_impl->getEditableColorSpaceByName(name);
+        int index = getIndexForColorSpace( name );
+        if(index == -1)
+        {
+            std::ostringstream os;
+            os << "Cannot find ColorSpace named '";
+            os << name << "'.";
+            throw Exception(os.str().c_str());
+        }
+        
+        return m_impl->colorspaces_[index];
     }
     
     const char * Config::parseColorSpaceFromString(const char * str) const
     {
-        return m_impl->parseColorSpaceFromString(str);
+        // Search the entire filePath, including directory name (if provided)
+        // convert the filename to lowercase.
+        std::string fullstr = pystring::lower(std::string(str));
+        
+        // See if it matches a lut name.
+        // This is the position of the RIGHT end of the colorspace substring, not the left
+        int rightMostColorPos=-1;
+        std::string rightMostColorspace = "";
+        int rightMostColorSpaceIndex = -1;
+        
+        // Find the right-most occcurance within the string for each colorspace.
+        for (unsigned int i=0; i<m_impl->colorspaces_.size(); ++i)
+        {
+            std::string csname = pystring::lower(m_impl->colorspaces_[i]->getName());
+            
+            // find right-most extension matched in filename
+            int colorspacePos = pystring::rfind(fullstr, csname);
+            if(colorspacePos < 0)
+                continue;
+            
+            // If we have found a match, move the pointer over to the right end of the substring
+            // This will allow us to find the longest name that matches the rightmost colorspace
+            colorspacePos += (int)csname.size();
+            
+            if ( (colorspacePos > rightMostColorPos) ||
+                 ((colorspacePos == rightMostColorPos) && (csname.size() > rightMostColorspace.size()))
+                )
+            {
+                rightMostColorPos = colorspacePos;
+                rightMostColorspace = csname;
+                rightMostColorSpaceIndex = i;
+            }
+        }
+        
+        if(rightMostColorSpaceIndex<0) return "";
+        return m_impl->colorspaces_[rightMostColorSpaceIndex]->getName();
     }
     
     
@@ -217,77 +365,228 @@ OCIO_NAMESPACE_ENTER
     
     ConstColorSpaceRcPtr Config::getColorSpaceForRole(const char * role) const
     {
-        return m_impl->getColorSpaceForRole(role);
+        std::string rolelower = pystring::lower(role);
+        
+        for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
+        {
+            if(m_impl->roleVec_[i].first == rolelower)
+            {
+                return getColorSpaceByName(m_impl->roleVec_[i].second.c_str());
+            }
+        }
+        
+        std::ostringstream os;
+        os << "The specified role ";
+        os  << role ;
+        os << " has not been defined.";
+        throw Exception(os.str().c_str());
     }
+    
     void Config::setColorSpaceForRole(const char * role, const char * name)
     {
-        m_impl->setColorSpaceForRole(role, name);
+        std::string rolelower = pystring::lower(role);
+        
+        for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
+        {
+            if(m_impl->roleVec_[i].first == rolelower)
+            {
+                m_impl->roleVec_[i].second = name;
+                return;
+            }
+        }
+        
+        m_impl->roleVec_.push_back( std::make_pair(rolelower, std::string(name) ) );
     }
     
     void Config::unsetRole(const char * role)
     {
-        m_impl->unsetRole(role);
+        std::string rolelower = pystring::lower(role);
+        
+        for(RoleVec::iterator iter = m_impl->roleVec_.begin();
+            iter != m_impl->roleVec_.end();
+            ++iter)
+        {
+            if(iter->first == rolelower)
+            {
+                m_impl->roleVec_.erase(iter);
+                return;
+            }
+        }
     }
     
     int Config::getNumRoles() const
     {
-        return m_impl->getNumRoles();
+        return static_cast<int>(m_impl->roleVec_.size());
     }
     
     const char * Config::getRole(int index) const
     {
-        return m_impl->getRole(index);
+        if(index<0 || index >= (int)m_impl->roleVec_.size())
+        {
+            std::ostringstream os;
+            os << "Invalid role index " << index << ".";
+            throw Exception(os.str().c_str());
+        }
+        
+        return m_impl->roleVec_[index].first.c_str();
     }
     
     
     // Display Transforms
     
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // TODO: Use maps rather than vectors as storage for display options
+    // These implementations suck in terms of scalability.
+    // (If you had 100s of display devices, this would be criminally inefficient.)
+    // But this can be ignored in the short-term, and doing so makes serialization
+    // much simpler.
+    //
+    // (Alternatively, an ordered map would solve the issue too).
+    //
+    // m_displayDevices = [(device, name, colorspace),...]
+    
     int Config::getNumDisplayDeviceNames() const
     {
-        return m_impl->getNumDisplayDeviceNames();
+        std::set<std::string> devices;
+        
+        for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
+        {
+            if(m_impl->displayDevices_[i].size() != 3) continue;
+            devices.insert( m_impl->displayDevices_[i][0] );
+        }
+        
+        return static_cast<int>(devices.size());
     }
     
     const char * Config::getDisplayDeviceName(int index) const
     {
-        return m_impl->getDisplayDeviceName(index);
+        std::set<std::string> devices;
+        
+        for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
+        {
+            if(m_impl->displayDevices_[i].size() != 3) continue;
+            devices.insert( m_impl->displayDevices_[i][0] );
+            
+            if((int)devices.size()-1 == index)
+            {
+                return m_impl->displayDevices_[i][0].c_str();
+            }
+        }
+        
+        std::ostringstream os;
+        os << "Could not find display device with the specified index ";
+        os << index << ".";
+        throw Exception(os.str().c_str());
     }
     
     const char * Config::getDefaultDisplayDeviceName() const
     {
-        return m_impl->getDefaultDisplayDeviceName();
+        if(getNumDisplayDeviceNames()>=1)
+        {
+            return getDisplayDeviceName(0);
+        }
+        
+        return "";
     }
     
     int Config::getNumDisplayTransformNames(const char * device) const
     {
-        return m_impl->getNumDisplayTransformNames(device);
+        std::set<std::string> names;
+        
+        for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
+        {
+            if(m_impl->displayDevices_[i].size() != 3) continue;
+            if(m_impl->displayDevices_[i][0] != device) continue;
+            names.insert( m_impl->displayDevices_[i][1] );
+        }
+        
+        return static_cast<int>(names.size());
     }
     
     const char * Config::getDisplayTransformName(const char * device, int index) const
     {
-        return m_impl->getDisplayTransformName(device, index);
+        std::set<std::string> names;
+        
+        for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
+        {
+            if(m_impl->displayDevices_[i].size() != 3) continue;
+            if(m_impl->displayDevices_[i][0] != device) continue;
+            names.insert( m_impl->displayDevices_[i][1] );
+            
+            if((int)names.size()-1 == index)
+            {
+                return m_impl->displayDevices_[i][1].c_str();
+            }
+        }
+        
+        std::ostringstream os;
+        os << "Could not find display colorspace for device ";
+        os << device << " with the specified index ";
+        os << index << ".";
+        throw Exception(os.str().c_str());
     }
     
     const char * Config::getDefaultDisplayTransformName(const char * device) const
     {
-        return m_impl->getDefaultDisplayTransformName(device);
+        if(getNumDisplayTransformNames(device)>=1)
+        {
+            return getDisplayTransformName(device, 0);
+        }
+        
+        return "";
     }
     
     const char * Config::getDisplayColorSpaceName(const char * device, const char * displayTransformName) const
     {
-        return m_impl->getDisplayColorSpaceName(device, displayTransformName);
+        for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
+        {
+            if(m_impl->displayDevices_[i].size() != 3) continue;
+            if(m_impl->displayDevices_[i][0] != device) continue;
+            if(m_impl->displayDevices_[i][1] != displayTransformName) continue;
+            return m_impl->displayDevices_[i][2].c_str();
+        }
+        
+        std::ostringstream os;
+        os << "Could not find display colorspace for device ";
+        os << device << " with the specified transform name ";
+        os << displayTransformName << ".";
+        throw Exception(os.str().c_str());
     }
     
-    
-    
+    void Config::addDisplayDevice(const char * device,
+                                        const char * displayTransformName,
+                                        const char * csname)
+    {
+        // Is this device / display already registered?
+        // If so, set it to the potentially new value.
+        
+        for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
+        {
+            if(m_impl->displayDevices_[i].size() != 3) continue;
+            if(m_impl->displayDevices_[i][0] != device) continue;
+            if(m_impl->displayDevices_[i][1] != displayTransformName) continue;
+            
+            m_impl->displayDevices_[i][2] = csname;
+            return;
+        }
+        
+        // Otherwise, add a new entry!
+        DisplayKey displayKey;
+        displayKey.push_back(std::string(device));
+        displayKey.push_back(std::string(displayTransformName));
+        displayKey.push_back(std::string(csname));
+        m_impl->displayDevices_.push_back(displayKey);
+    }
     
     void Config::getDefaultLumaCoefs(float * c3) const
     {
-        m_impl->getDefaultLumaCoefs(c3);
+        memcpy(c3, m_impl->defaultLumaCoefs_, 3*sizeof(float));
     }
     
     void Config::setDefaultLumaCoefs(const float * c3)
     {
-        m_impl->setDefaultLumaCoefs(c3);
+        memcpy(m_impl->defaultLumaCoefs_, c3, 3*sizeof(float));
     }
     
     ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
@@ -314,465 +613,669 @@ OCIO_NAMESPACE_ENTER
         return os;
     }
     
-    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
-    // Impl
-    
-    
-    Config::Impl::Impl()
-    {
-        m_defaultLumaCoefs[0] = DEFAULT_LUMA_COEFF_R;
-        m_defaultLumaCoefs[1] = DEFAULT_LUMA_COEFF_G;
-        m_defaultLumaCoefs[2] = DEFAULT_LUMA_COEFF_B;
-    }
-    
-    Config::Impl::~Impl()
-    {
-    }
-    
-    Config::Impl& Config::Impl::operator= (const Config::Impl & rhs)
-    {
-        m_resourcePath = rhs.m_resourcePath;
-        m_originalFileDir = rhs.m_originalFileDir;
-        m_resolvedResourcePath = rhs.m_resolvedResourcePath;
-        m_description = rhs.m_description;
-        
-        m_colorspaces.clear();
-        m_colorspaces.reserve(rhs.m_colorspaces.size());
-        
-        for(unsigned int i=0; i< rhs.m_colorspaces.size(); ++i)
-        {
-            m_colorspaces.push_back(rhs.m_colorspaces[i]->createEditableCopy());
-        }
-        
-        m_roleVec = rhs.m_roleVec; // Vector assignment operator will suffice for this
-        m_displayDevices = rhs.m_displayDevices; // Vector assignment operator will suffice for this
-        
-        memcpy(m_defaultLumaCoefs, rhs.m_defaultLumaCoefs, 3*sizeof(float));
-        
-        return *this;
-    }
-    
-    
-    void Config::Impl::createFromEnv()
-    {
-        char * file = std::getenv("OCIO");
-        if(file)
-        {
-            createFromFile(file);
-        }
-        else
-        {
-            std::ostringstream os;
-            os << "'OCIO' environment variable not set. ";
-            os << "Please specify a valid OpenColorIO (.ocio) configuration file.";
-            throw Exception(os.str().c_str());
-        }
-    }
-    
-    
-    const char * Config::Impl::getResourcePath() const
-    {
-        return m_resourcePath.c_str();
-    }
-    
-    void Config::Impl::setResourcePath(const char * path)
-    {
-        m_resourcePath = path;
-        m_resolvedResourcePath = path::join(m_originalFileDir, m_resourcePath);
-    }
-    
-    const char * Config::Impl::getResolvedResourcePath() const
-    {
-        return m_resolvedResourcePath.c_str();
-    }
-    
-    const char * Config::Impl::getDescription() const
-    {
-        return m_description.c_str();
-    }
-    
-    void Config::Impl::setDescription(const char * description)
-    {
-        m_description = description;
-    }
-    
-    
-    int Config::Impl::getNumColorSpaces() const
-    {
-        return static_cast<int>(m_colorspaces.size());
-    }
-    
-    
-    int Config::Impl::getIndexForColorSpace(const char * name) const
-    {
-        std::string strname = name;
-        if(strname.empty()) return -1;
-        
-        // Check to see if the colorspace already exists at a known index.
-        for(unsigned int index = 0; index < m_colorspaces.size(); ++index)
-        {
-            if(strname != m_colorspaces[index]->getName())
-                continue;
-            
-            return index;
-        }
-        
-        return -1;
-    }
-    
-    void Config::Impl::addColorSpace(ColorSpaceRcPtr cs)
-    {
-        std::string name = cs->getName();
-        if(name.empty())
-            throw Exception("Cannot addColorSpace with an empty name.");
-        
-        // Check to see if the colorspace already exists at a known index.
-        int index = getIndexForColorSpace( cs->getName() );
-        if(index != -1)
-        {
-            m_colorspaces[index] = cs;
-            return;
-        }
-        
-        m_colorspaces.push_back( cs );
-    }
-    
-    void Config::Impl::addColorSpace(const ConstColorSpaceRcPtr & cs)
-    {
-        addColorSpace(cs->createEditableCopy());
-    }
-    
-    void Config::Impl::clearColorSpaces()
-    {
-        m_colorspaces.clear();
-    }
-    
-    ConstColorSpaceRcPtr Config::Impl::getColorSpaceByIndex(int index) const
-    {
-        if(index<0 || index >= (int)m_colorspaces.size())
-        {
-            std::ostringstream os;
-            os << "Invalid ColorSpace index " << index << ".";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_colorspaces[index];
-    }
-    
-    ColorSpaceRcPtr Config::Impl::getEditableColorSpaceByIndex(int index)
-    {
-        if(index<0 || index >= (int)m_colorspaces.size())
-        {
-            std::ostringstream os;
-            os << "Invalid ColorSpace index " << index << ".";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_colorspaces[index];
-    }
-    
-    ConstColorSpaceRcPtr Config::Impl::getColorSpaceByName(const char * name) const
-    {
-        int index = getIndexForColorSpace( name );
-        if(index == -1)
-        {
-            std::ostringstream os;
-            os << "Cannot find ColorSpace named '";
-            os << name << "'.";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_colorspaces[index];
-    }
-    
-    ColorSpaceRcPtr Config::Impl::getEditableColorSpaceByName(const char * name)
-    {
-        int index = getIndexForColorSpace( name );
-        if(index == -1)
-        {
-            std::ostringstream os;
-            os << "Cannot find ColorSpace named '";
-            os << name << "'.";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_colorspaces[index];
-    }
-    
-    
-    const char * Config::Impl::parseColorSpaceFromString(const char * str) const
-    {
-        // Search the entire filePath, including directory name (if provided)
-        // convert the filename to lowercase.
-        std::string fullstr = pystring::lower(std::string(str));
-        
-        // See if it matches a lut name.
-        // This is the position of the RIGHT end of the colorspace substring, not the left
-        int rightMostColorPos=-1;
-        std::string rightMostColorspace = "";
-        int rightMostColorSpaceIndex = -1;
-        
-        // Find the right-most occcurance within the string for each colorspace.
-        for (unsigned int i=0; i<m_colorspaces.size(); ++i)
-        {
-            std::string csname = pystring::lower(m_colorspaces[i]->getName());
-            
-            // find right-most extension matched in filename
-            int colorspacePos = pystring::rfind(fullstr, csname);
-            if(colorspacePos < 0)
-                continue;
-            
-            // If we have found a match, move the pointer over to the right end of the substring
-            // This will allow us to find the longest name that matches the rightmost colorspace
-            colorspacePos += (int)csname.size();
-            
-            if ( (colorspacePos > rightMostColorPos) ||
-                 ((colorspacePos == rightMostColorPos) && (csname.size() > rightMostColorspace.size()))
-                )
-            {
-                rightMostColorPos = colorspacePos;
-                rightMostColorspace = csname;
-                rightMostColorSpaceIndex = i;
-            }
-        }
-        
-        if(rightMostColorSpaceIndex<0) return "";
-        return m_colorspaces[rightMostColorSpaceIndex]->getName();
-    }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    // Roles
-    ConstColorSpaceRcPtr Config::Impl::getColorSpaceForRole(const char * role) const
-    {
-        std::string rolelower = pystring::lower(role);
-        
-        for(unsigned int i=0; i<m_roleVec.size(); ++i)
-        {
-            if(m_roleVec[i].first == rolelower)
-            {
-                return getColorSpaceByName(m_roleVec[i].second.c_str());
-            }
-        }
-        
-        std::ostringstream os;
-        os << "The specified role ";
-        os  << role ;
-        os << " has not been defined.";
-        throw Exception(os.str().c_str());
-    }
-    
-    void Config::Impl::setColorSpaceForRole(const char * role, const char * csname)
-    {
-        std::string rolelower = pystring::lower(role);
-        
-        for(unsigned int i=0; i<m_roleVec.size(); ++i)
-        {
-            if(m_roleVec[i].first == rolelower)
-            {
-                m_roleVec[i].second = csname;
-                return;
-            }
-        }
-        
-        m_roleVec.push_back( std::make_pair(rolelower, std::string(csname) ) );
-    }
-    
-    void Config::Impl::unsetRole(const char * role)
-    {
-        std::string rolelower = pystring::lower(role);
-        
-        for(RoleVec::iterator iter = m_roleVec.begin();
-            iter != m_roleVec.end();
-            ++iter)
-        {
-            if(iter->first == rolelower)
-            {
-                m_roleVec.erase(iter);
-                return;
-            }
-        }
-    }
-    
-    int Config::Impl::getNumRoles() const
-    {
-        return static_cast<int>(m_roleVec.size());
-    }
-    
-    const char * Config::Impl::getRole(int index) const
-    {
-        if(index<0 || index >= (int)m_roleVec.size())
-        {
-            std::ostringstream os;
-            os << "Invalid role index " << index << ".";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_roleVec[index].first.c_str();
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
     //
-    // TODO: Use maps rather than vectors as storage for display options
-    // These implementations suck in terms of scalability.
-    // (If you had 100s of display devices, this would be criminally inefficient.)
-    // But this can be ignored in the short-term, and doing so makes serialization
-    // much simpler.
     //
-    // (Alternatively, an ordered map would solve the issue too).
     //
-    // m_displayDevices = [(device, name, colorspace),...]
+    //  Serialization
     
-    int Config::Impl::getNumDisplayDeviceNames() const
+    
+    namespace
     {
-        std::set<std::string> devices;
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // FileTransform
         
-        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
+        FileTransformRcPtr CreateFileTransform(const TiXmlElement * element)
         {
-            if(m_displayDevices[i].size() != 3) continue;
-            devices.insert( m_displayDevices[i][0] );
+            if(!element)
+                throw Exception("CreateFileTransform received null XmlElement.");
+            
+            if(std::string(element->Value()) != "file")
+            {
+                std::ostringstream os;
+                os << "HandleElement passed incorrect element type '";
+                os << element->Value() << "'. ";
+                os << "Expected 'file'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            FileTransformRcPtr t = FileTransform::Create();
+            
+            const TiXmlAttribute* pAttrib = element->FirstAttribute();
+            
+            while(pAttrib)
+            {
+                std::string attrName = pystring::lower(pAttrib->Name());
+                
+                if(attrName == "src")
+                {
+                    t->setSrc( pAttrib->Value() );
+                }
+                else if(attrName == "interpolation")
+                {
+                    t->setInterpolation( InterpolationFromString(pAttrib->Value()) );
+                }
+                else if(attrName == "direction")
+                {
+                    t->setDirection( TransformDirectionFromString(pAttrib->Value()) );
+                }
+                else
+                {
+                    // TODO: unknown attr
+                }
+                pAttrib = pAttrib->Next();
+            }
+            
+            return t;
         }
         
-        return static_cast<int>(devices.size());
+        ConstFileTransformRcPtr GetDefaultFileTransform()
+        {
+            static ConstFileTransformRcPtr ft = FileTransform::Create();
+            return ft;
+        }
+        
+        TiXmlElement * GetElement(const ConstFileTransformRcPtr & t)
+        {
+            TiXmlElement * element = new TiXmlElement( "file" );
+            element->SetAttribute("src", t->getSrc());
+            
+            ConstFileTransformRcPtr def = GetDefaultFileTransform();
+            
+            if(t->getInterpolation() != def->getInterpolation())
+            {
+                const char * interp = InterpolationToString(t->getInterpolation());
+                element->SetAttribute("interpolation", interp);
+            }
+            
+            if(t->getDirection() != def->getDirection())
+            {
+                const char * dir = TransformDirectionToString(t->getDirection());
+                element->SetAttribute("direction", dir);
+            }
+            
+            return element;
+        }
+        
+        
+        
+        
+        
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // ColorSpaceTransform
+        
+        ColorSpaceTransformRcPtr CreateColorSpaceTransform(const TiXmlElement * element)
+        {
+            if(!element)
+                throw Exception("ColorSpaceTransform received null XmlElement.");
+            
+            if(std::string(element->Value()) != "colorspacetransform")
+            {
+                std::ostringstream os;
+                os << "HandleElement passed incorrect element type '";
+                os << element->Value() << "'. ";
+                os << "Expected 'colorspacetransform'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            ColorSpaceTransformRcPtr t = ColorSpaceTransform::Create();
+            
+            const char * src = element->Attribute("src");
+            const char * dst = element->Attribute("dst");
+            
+            if(!src || !dst)
+            {
+                std::ostringstream os;
+                os << "ColorSpaceTransform must specify both src and dst ";
+                os << "ColorSpaces.";
+                throw Exception(os.str().c_str());
+            }
+            
+            t->setSrc(src);
+            t->setDst(dst);
+            
+            const char * direction = element->Attribute("direction");
+            if(direction)
+            {
+                t->setDirection( TransformDirectionFromString(direction) );
+            }
+            
+            return t;
+        }
+        
+        
+        
+        TiXmlElement * GetElement(const ConstColorSpaceTransformRcPtr & t)
+        {
+            TiXmlElement * element = new TiXmlElement( "colorspacetransform" );
+            
+            element->SetAttribute("src", t->getSrc());
+            element->SetAttribute("dst", t->getDst());
+            
+            if(t->getDirection() != TRANSFORM_DIR_FORWARD)
+            {
+                const char * dir = TransformDirectionToString(t->getDirection());
+                element->SetAttribute("direction", dir);
+            }
+            
+            return element;
+        }
+        
+        
+        
+        
+        
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // GroupTransform
+        
+        GroupTransformRcPtr CreateGroupTransform(const TiXmlElement * element)
+        {
+            if(!element)
+                throw Exception("CreateGroupTransform received null XmlElement.");
+            
+            if(std::string(element->Value()) != "group")
+            {
+                std::ostringstream os;
+                os << "HandleElement passed incorrect element type '";
+                os << element->Value() << "'. ";
+                os << "Expected 'group'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            GroupTransformRcPtr t = GroupTransform::Create();
+            
+            // TODO: better error handling; Require Attrs Exist
+            
+            // Read attributes
+            {
+                const TiXmlAttribute* pAttrib = element->FirstAttribute();
+                while(pAttrib)
+                {
+                    std::string attrName = pystring::lower(pAttrib->Name());
+                    if(attrName == "direction") t->setDirection( TransformDirectionFromString(pAttrib->Value()) );
+                    else
+                    {
+                        // TODO: unknown attr
+                    }
+                    pAttrib = pAttrib->Next();
+                }
+            }
+            
+            // Traverse Children
+            const TiXmlElement* pElem = element->FirstChildElement();
+            while(pElem)
+            {
+                std::string elementtype = pElem->Value();
+                if(elementtype == "group")
+                {
+                    t->push_back( CreateGroupTransform(pElem) );
+                }
+                else if(elementtype == "file")
+                {
+                    t->push_back( CreateFileTransform(pElem) );
+                }
+                else if(elementtype == "colorspacetransform")
+                {
+                    t->push_back( CreateColorSpaceTransform(pElem) );
+                }
+                else
+                {
+                    std::ostringstream os;
+                    os << "CreateGroupTransform passed unknown element type '";
+                    os << elementtype << "'.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                pElem = pElem->NextSiblingElement();
+            }
+            
+            return t;
+        }
+        
+        const ConstGroupTransformRcPtr & GetDefaultGroupTransform()
+        {
+            static ConstGroupTransformRcPtr gt = GroupTransform::Create();
+            return gt;
+        }
+        
+        TiXmlElement * GetElement(const ConstGroupTransformRcPtr& t)
+        {
+            TiXmlElement * element = new TiXmlElement( "group" );
+            
+            ConstGroupTransformRcPtr def = GetDefaultGroupTransform();
+            
+            if(t->getDirection() != def->getDirection())
+            {
+                const char * dir = TransformDirectionToString(t->getDirection());
+                element->SetAttribute("direction", dir);
+            }
+            
+            for(int i=0; i<t->size(); ++i)
+            {
+                ConstTransformRcPtr child = t->getTransform(i);
+                
+                if(ConstGroupTransformRcPtr groupTransform = \
+                    DynamicPtrCast<const GroupTransform>(child))
+                {
+                    TiXmlElement * childElement = GetElement(groupTransform);
+                    element->LinkEndChild( childElement );
+                }
+                else if(ConstFileTransformRcPtr fileTransform = \
+                    DynamicPtrCast<const FileTransform>(child))
+                {
+                    TiXmlElement * childElement = GetElement(fileTransform);
+                    element->LinkEndChild( childElement );
+                }
+                else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
+                    DynamicPtrCast<const ColorSpaceTransform>(child))
+                {
+                    TiXmlElement * childElement = GetElement(colorSpaceTransform);
+                    element->LinkEndChild( childElement );
+                }
+                else
+                {
+                    throw Exception("Cannot serialize Transform type to XML");
+                }
+            }
+            
+            return element;
+        }
+        
+        
+        
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // ColorSpace
+        
+        ColorSpaceRcPtr CreateColorSpaceFromElement(const TiXmlElement * element)
+        {
+            if(std::string(element->Value()) != "colorspace")
+                throw Exception("HandleElement GroupTransform passed incorrect element type.");
+            
+            ColorSpaceRcPtr cs = ColorSpace::Create();
+            
+            // TODO: clear colorspace
+            // TODO: better error handling; Require Attrs Exist
+            
+            // Read attributes
+            {
+                const TiXmlAttribute* pAttrib = element->FirstAttribute();
+                double dval = 0.0;
+                while(pAttrib)
+                {
+                    std::string attrName = pystring::lower(pAttrib->Name());
+                    if(attrName == "name") cs->setName( pAttrib->Value() );
+                    else if(attrName == "family") cs->setFamily( pAttrib->Value() );
+                    else if(attrName == "bitdepth") cs->setBitDepth( BitDepthFromString(pAttrib->Value()) );
+                    else if(attrName == "isdata") cs->setIsData( BoolFromString(pAttrib->Value()) );
+                    else if(attrName == "gpuallocation") cs->setGpuAllocation( GpuAllocationFromString(pAttrib->Value()) );
+                    else if(attrName == "gpumin" && pAttrib->QueryDoubleValue(&dval) == TIXML_SUCCESS ) cs->setGpuMin( (float)dval );
+                    else if(attrName == "gpumax" && pAttrib->QueryDoubleValue(&dval) == TIXML_SUCCESS ) cs->setGpuMax( (float)dval );
+                    else
+                    {
+                        // TODO: unknown attr
+                    }
+                    pAttrib = pAttrib->Next();
+                }
+            }
+            
+            // Traverse Children
+            const TiXmlElement* pElem = element->FirstChildElement();
+            while(pElem)
+            {
+                std::string elementtype = pElem->Value();
+                if(elementtype == "description")
+                {
+                    const char * text = pElem->GetText();
+                    if(text) cs->setDescription(text);
+                }
+                else
+                {
+                    ColorSpaceDirection dir = ColorSpaceDirectionFromString(elementtype.c_str());
+                    
+                    if(dir != COLORSPACE_DIR_UNKNOWN)
+                    {
+                        const TiXmlElement* gchildElem = pElem->FirstChildElement();
+                        while(gchildElem)
+                        {
+                            std::string childelementtype = gchildElem->Value();
+                            if(childelementtype == "group")
+                            {
+                                cs->setTransform(CreateGroupTransform(gchildElem), dir);
+                                break;
+                            }
+                            else
+                            {
+                                std::ostringstream os;
+                                os << "CreateColorSpaceFromElement passed incorrect element type '";
+                                os << childelementtype << "'. 'group' expected.";
+                                throw Exception(os.str().c_str());
+                            }
+                            
+                            gchildElem=gchildElem->NextSiblingElement();
+                        }
+                    }
+                }
+                
+                pElem=pElem->NextSiblingElement();
+            }
+            
+            return cs;
+        }
+        
+        
+        
+        TiXmlElement * GetElement(const ConstColorSpaceRcPtr & cs)
+        {
+            TiXmlElement * element = new TiXmlElement( "colorspace" );
+            element->SetAttribute("name", cs->getName());
+            element->SetAttribute("family", cs->getFamily());
+            element->SetAttribute("bitdepth", BitDepthToString(cs->getBitDepth()));
+            element->SetAttribute("isdata", BoolToString(cs->isData()));
+            element->SetAttribute("gpuallocation", GpuAllocationToString(cs->getGpuAllocation()));
+            element->SetDoubleAttribute("gpumin", cs->getGpuMin());
+            element->SetDoubleAttribute("gpumax", cs->getGpuMax());
+            
+            const char * description = cs->getDescription();
+            if(strlen(description) > 0)
+            {
+                TiXmlElement * descElement = new TiXmlElement( "description" );
+                element->LinkEndChild( descElement );
+                
+                TiXmlText * textElement = new TiXmlText( description );
+                descElement->LinkEndChild( textElement );
+            }
+            
+            ColorSpaceDirection dirs[2] = { COLORSPACE_DIR_TO_REFERENCE,
+                                            COLORSPACE_DIR_FROM_REFERENCE };
+            for(int i=0; i<2; ++i)
+            {
+                ConstGroupTransformRcPtr group = cs->getTransform(dirs[i]);
+                
+                if(cs->isTransformSpecified(dirs[i]) && !group->empty())
+                {
+                    std::string childType = ColorSpaceDirectionToString(dirs[i]);
+                    
+                    TiXmlElement * childElement = new TiXmlElement( childType );
+                    
+                    // In the words of Jack Handey...
+                    // "I believe in making the world safe for our children, but
+                    // not our children's children, because I don't think
+                    // children should be having sex."
+                    
+                    TiXmlElement * childsChild = GetElement( group );
+                    childElement->LinkEndChild( childsChild );
+                
+                    element->LinkEndChild( childElement );
+                }
+            }
+            
+            return element;
+        }
     }
     
-    const char * Config::Impl::getDisplayDeviceName(int index) const
+    
+    
+    void Config::writeXML(std::ostream& os) const
     {
-        std::set<std::string> devices;
+        TiXmlDocument doc;
         
-        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
+        TiXmlElement * element = new TiXmlElement( "ocioconfig" );
+        doc.LinkEndChild( element );
+        
+        try
         {
-            if(m_displayDevices[i].size() != 3) continue;
-            devices.insert( m_displayDevices[i][0] );
+            element->SetAttribute("version", "1");
+            element->SetAttribute("resourcepath", getResourcePath());
             
-            if((int)devices.size()-1 == index)
+            // Luma coefficients
             {
-                return m_displayDevices[i][0].c_str();
+                float coef[3] = { 0.0f, 0.0f, 0.0f };
+                getDefaultLumaCoefs(coef);
+                
+                element->SetDoubleAttribute("luma_r", coef[0]);
+                element->SetDoubleAttribute("luma_g", coef[1]);
+                element->SetDoubleAttribute("luma_b", coef[2]);
+            }
+            
+            const char * description = getDescription();
+            if(strlen(description) > 0)
+            {
+                TiXmlElement * descElement = new TiXmlElement( "description" );
+                element->LinkEndChild( descElement );
+                
+                TiXmlText * textElement = new TiXmlText( description );
+                descElement->LinkEndChild( textElement );
+            }
+            
+            for(int i = 0; i < getNumRoles(); ++i)
+            {
+                std::string role = getRole(i);
+                std::string rolekey = std::string("role_") + role;
+                std::string roleValue = getColorSpaceForRole(role.c_str())->getName();
+                element->SetAttribute(rolekey, roleValue);
+            }
+            
+            for(int i=0; i<getNumDisplayDeviceNames(); ++i)
+            {
+                const char * device = getDisplayDeviceName(i);
+                
+                int numTransforms = getNumDisplayTransformNames(device);
+                for(int j=0; j<numTransforms; ++j)
+                {
+                    const char * displayTransformName = getDisplayTransformName(device, j);
+                    const char * colorSpace = getDisplayColorSpaceName(device, displayTransformName);
+                    
+                    if(device && displayTransformName && colorSpace)
+                    {
+                        TiXmlElement * childElement = new TiXmlElement( "display" );
+                        childElement->SetAttribute("device", device);
+                        childElement->SetAttribute("name", displayTransformName);
+                        childElement->SetAttribute("colorspace", colorSpace);
+                        element->LinkEndChild( childElement );
+                    }
+                }
+            }
+            
+            for(int i = 0; i < getNumColorSpaces(); ++i)
+            {
+                TiXmlElement * childElement = GetElement(getColorSpaceByIndex(i));
+                element->LinkEndChild( childElement );
+            }
+            
+            TiXmlPrinter printer;
+            printer.SetIndent("    ");
+            doc.Accept( &printer );
+            os << printer.Str();
+        }
+        catch( const std::exception & e)
+        {
+            std::ostringstream error;
+            error << "Error writing xml. ";
+            error << e.what();
+            throw Exception(error.str().c_str());
+        }
+    }
+    
+    
+    ConstConfigRcPtr Config::CreateFromFile(const char * filename)
+    {
+        ConfigRcPtr config = Config::Create();
+        
+        // Assuming the config is already empty...
+        
+        TiXmlDocument doc(filename);
+        
+        bool loadOkay = doc.LoadFile();
+        if(!loadOkay)
+        {
+            std::ostringstream os;
+            os << "Error parsing ocio configuration file, '" << filename;
+            os << "'. " << doc.ErrorDesc();
+            if(doc.ErrorRow())
+            {
+                os << " (line " << doc.ErrorRow();
+                os << ", col " << doc.ErrorCol() << ")";
+            }
+            throw Exception(os.str().c_str());
+        }
+        
+        const TiXmlElement* rootElement = doc.RootElement();
+        if(!rootElement || std::string(rootElement->Value()) != "ocioconfig")
+        {
+            std::ostringstream os;
+            os << "Error loading '" << filename;
+            os << "'. Please confirm file is 'ocioconfig' format.";
+            throw Exception(os.str().c_str());
+        }
+        
+        int version = -1;
+        
+        int lumaSet = 0;
+        float lumacoef[3] = { 0.0f, 0.0f, 0.0f };
+        
+        // Read attributes
+        {
+            const TiXmlAttribute* pAttrib=rootElement->FirstAttribute();
+            while(pAttrib)
+            {
+                std::string attrName = pystring::lower(pAttrib->Name());
+                if(attrName == "version")
+                {
+                    if (pAttrib->QueryIntValue(&version)!=TIXML_SUCCESS)
+                    {
+                        std::ostringstream os;
+                        os << "Error parsing ocio configuration file, '" << filename;
+                        os << "'. Could not parse integer 'version' tag.";
+                        throw Exception(os.str().c_str());
+                    }
+                }
+                else if(attrName == "resourcepath")
+                {
+                    config->setResourcePath(pAttrib->Value());
+                }
+                else if(pystring::startswith(attrName, "role_"))
+                {
+                    std::string role = pystring::slice(attrName, (int)std::string("role_").size());
+                    config->setColorSpaceForRole(role.c_str(), pAttrib->Value());
+                }
+                else if(pystring::startswith(attrName, "luma_"))
+                {
+                    std::string channel = pystring::slice(attrName, (int)std::string("luma_").size());
+                    
+                    int channelindex = -1;
+                    if(channel == "r") channelindex = 0;
+                    else if(channel == "g") channelindex = 1;
+                    else if(channel == "b") channelindex = 2;
+                    
+                    if(channelindex<0)
+                    {
+                        std::ostringstream os;
+                        os << "Error parsing ocio configuration file, '" << filename;
+                        os << "'. Unknown luma channel '" << channel << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    double dval;
+                    if(pAttrib->QueryDoubleValue(&dval) != TIXML_SUCCESS )
+                    {
+                        std::ostringstream os;
+                        os << "Error parsing ocio configuration file, '" << filename;
+                        os << "'. Bad luma value in channel '" << channelindex << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    lumacoef[channelindex] = static_cast<float>(dval);
+                    ++lumaSet;
+                }
+                else
+                {
+                    // TODO: unknown root attr.
+                }
+                //if (pAttrib->QueryDoubleValue(&dval)==TIXML_SUCCESS) printf( " d=%1.1f", dval);
+                
+                pAttrib=pAttrib->Next();
             }
         }
         
-        std::ostringstream os;
-        os << "Could not find display device with the specified index ";
-        os << index << ".";
-        throw Exception(os.str().c_str());
-    }
-    
-    const char * Config::Impl::getDefaultDisplayDeviceName() const
-    {
-        if(getNumDisplayDeviceNames()>=1)
+        if(version == -1)
         {
-            return getDisplayDeviceName(0);
+            std::ostringstream os;
+            os << "Config does not specify a version tag. ";
+            os << "Please confirm ocio file is of the expect format.";
+            throw Exception(os.str().c_str());
+        }
+        if(version != 1)
+        {
+            std::ostringstream os;
+            os << "Config is format version '" << version << "',";
+            os << " but this library only supports version 1.";
+            throw Exception(os.str().c_str());
         }
         
-        return "";
-    }
-    
-    int Config::Impl::getNumDisplayTransformNames(const char * device) const
-    {
-        std::set<std::string> names;
-        
-        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
+        // Traverse children
+        const TiXmlElement* pElem = rootElement->FirstChildElement();
+        while(pElem)
         {
-            if(m_displayDevices[i].size() != 3) continue;
-            if(m_displayDevices[i][0] != device) continue;
-            names.insert( m_displayDevices[i][1] );
-        }
-        
-        return static_cast<int>(names.size());
-    }
-    
-    const char * Config::Impl::getDisplayTransformName(const char * device, int index) const
-    {
-        std::set<std::string> names;
-        
-        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
-        {
-            if(m_displayDevices[i].size() != 3) continue;
-            if(m_displayDevices[i][0] != device) continue;
-            names.insert( m_displayDevices[i][1] );
-            
-            if((int)names.size()-1 == index)
+            std::string elementtype = pElem->Value();
+            if(elementtype == "colorspace")
             {
-                return m_displayDevices[i][1].c_str();
+                ColorSpaceRcPtr cs = CreateColorSpaceFromElement( pElem );
+                config->addColorSpace( cs );
             }
-        }
-        
-        std::ostringstream os;
-        os << "Could not find display colorspace for device ";
-        os << device << " with the specified index ";
-        os << index << ".";
-        throw Exception(os.str().c_str());
-    }
-    
-    const char * Config::Impl::getDefaultDisplayTransformName(const char * device) const
-    {
-        if(getNumDisplayTransformNames(device)>=1)
-        {
-            return getDisplayTransformName(device, 0);
-        }
-        
-        return "";
-    }
-    
-    
-    const char * Config::Impl::getDisplayColorSpaceName(const char * device, const char * displayTransformName) const
-    {
-        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
-        {
-            if(m_displayDevices[i].size() != 3) continue;
-            if(m_displayDevices[i][0] != device) continue;
-            if(m_displayDevices[i][1] != displayTransformName) continue;
-            return m_displayDevices[i][2].c_str();
-        }
-        
-        std::ostringstream os;
-        os << "Could not find display colorspace for device ";
-        os << device << " with the specified transform name ";
-        os << displayTransformName << ".";
-        throw Exception(os.str().c_str());
-    }
-    
-    void Config::Impl::addDisplayDevice(const char * device,
-                                        const char * displayTransformName,
-                                        const char * csname)
-    {
-        // Is this device / display already registered?
-        // If so, set it to the potentially new value.
-        
-        for(unsigned int i=0; i<m_displayDevices.size(); ++i)
-        {
-            if(m_displayDevices[i].size() != 3) continue;
-            if(m_displayDevices[i][0] != device) continue;
-            if(m_displayDevices[i][1] != displayTransformName) continue;
+            else if(elementtype == "description")
+            {
+                config->setDescription(pElem->GetText());
+            }
+            else if(elementtype == "display")
+            {
+                const char * device = pElem->Attribute("device");
+                const char * name = pElem->Attribute("name");
+                const char * colorspace = pElem->Attribute("colorspace");
+                if(!device || !name || !colorspace)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing ocio configuration file, '" << filename;
+                    os << "'. Invalid <display> specification.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                config->addDisplayDevice(device, name, colorspace);
+            }
+            else
+            {
+                std::cerr << "[OCIO WARNING]: Parse error, ";
+                std::cerr << "unknown element type '" << elementtype << "'." << std::endl;
+            }
             
-            m_displayDevices[i][2] = csname;
-            return;
+            pElem=pElem->NextSiblingElement();
         }
         
-        // Otherwise, add a new entry!
-        DisplayKey displayKey;
-        displayKey.push_back(std::string(device));
-        displayKey.push_back(std::string(displayTransformName));
-        displayKey.push_back(std::string(csname));
-        m_displayDevices.push_back(displayKey);
+        config->m_impl->originalFileDir_ = path::dirname(filename);
+        config->m_impl->resolvedResourcePath_ = path::join(config->m_impl->originalFileDir_, config->m_impl->resourcePath_);
+        
+        if(lumaSet != 3)
+        {
+            std::ostringstream os;
+            os << "Error parsing ocio configuration file, '" << filename;
+            os << "'. Could not find required ocioconfig luma_{r,g,b} xml attributes.";
+            throw Exception(os.str().c_str());
+        }
+        
+        config->setDefaultLumaCoefs(lumacoef);
+        
+        return config;
     }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    void Config::Impl::getDefaultLumaCoefs(float * c3) const
-    {
-        memcpy(c3, m_defaultLumaCoefs, 3*sizeof(float));
-    }
-    
-    void Config::Impl::setDefaultLumaCoefs(const float * c3)
-    {
-        memcpy(m_defaultLumaCoefs, c3, 3*sizeof(float));
-    }
-    
 }
 OCIO_NAMESPACE_EXIT

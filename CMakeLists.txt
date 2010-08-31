@@ -45,7 +45,6 @@ add_library(OpenColorIO SHARED
     src/core/Processor.cpp
     src/core/ScanlineHelper.cpp
     src/core/Transform.cpp
-    src/core/XmlIO.cpp
 
     src/core/md5/md5.cpp
     
