@@ -97,7 +97,6 @@ PyMODINIT_FUNC
 initPyOpenColorIO(void)
 {
     PyObject * m;
-    
     m = Py_InitModule3("PyOpenColorIO", PyOCIO_methods, "OpenColorIO API");
     
     OCIO::AddCDLTransformObjectToModule( m );
