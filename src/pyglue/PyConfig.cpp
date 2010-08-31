@@ -176,6 +176,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getDescription( PyObject * self );
         PyObject * PyOCIO_Config_setDescription( PyObject * self,  PyObject *args );
         
+        PyObject * PyOCIO_Config_getXML( PyObject * self );
+        
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self );
         PyObject * PyOCIO_Config_getColorSpaceByName( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getEditableColorSpaceByName( PyObject * self, PyObject * args );
@@ -183,8 +185,6 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_Config_getColorSpaceForRole( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_setColorSpaceForRole( PyObject * self, PyObject * args );
-        
-        PyObject * PyOCIO_Config_getXML( PyObject * self );
         
         
         
@@ -194,6 +194,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getDisplayTransformNames( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDefaultDisplayTransformName( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_addDisplayDevice( PyObject * self, PyObject * args );
         
         
         
@@ -216,6 +217,8 @@ OCIO_NAMESPACE_ENTER
             {"getDescription", (PyCFunction) PyOCIO_Config_getDescription, METH_NOARGS, "" },
             {"setDescription", PyOCIO_Config_setDescription, METH_VARARGS, "" },
             
+            {"getXML", (PyCFunction) PyOCIO_Config_getXML, METH_NOARGS, "" },
+            
             {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
             {"getColorSpaceByName", PyOCIO_Config_getColorSpaceByName, METH_VARARGS, "" },
             {"getEditableColorSpaceByName", PyOCIO_Config_getEditableColorSpaceByName, METH_VARARGS, "" },
@@ -224,13 +227,12 @@ OCIO_NAMESPACE_ENTER
             {"getColorSpaceForRole", PyOCIO_Config_getColorSpaceForRole, METH_VARARGS, "" },
             {"setColorSpaceForRole", PyOCIO_Config_setColorSpaceForRole, METH_VARARGS, "" },
             
-            {"getXML", (PyCFunction) PyOCIO_Config_getXML, METH_NOARGS, "" },
-            
             {"getDisplayDeviceNames", (PyCFunction) PyOCIO_Config_getDisplayDeviceNames, METH_NOARGS, "" },
             {"getDefaultDisplayDeviceName", (PyCFunction) PyOCIO_Config_getDefaultDisplayDeviceName, METH_NOARGS, "" },
             {"getDisplayTransformNames", PyOCIO_Config_getDisplayTransformNames, METH_VARARGS, "" },
             {"getDefaultDisplayTransformName", PyOCIO_Config_getDefaultDisplayTransformName, METH_VARARGS, "" },
             {"getDisplayColorSpaceName", PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, "" },
+            {"addDisplayDevice", PyOCIO_Config_addDisplayDevice, METH_VARARGS, "" },
             
 
             {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
@@ -466,6 +468,33 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        PyObject * PyOCIO_Config_getXML( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                std::ostringstream os;
+                
+                config->writeXML(os);
+                
+                return PyString_FromString( os.str().c_str() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        
+        }
+        
+        
+        
+        
         ////////////////////////////////////////////////////////////////////////
         
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self )
@@ -610,31 +639,6 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        ////////////////////////////////////////////////////////////////////////
-        
-        
-        PyObject * PyOCIO_Config_getXML( PyObject * self )
-        {
-            try
-            {
-                ConstConfigRcPtr config = GetConstConfig(self, true);
-                
-                std::ostringstream os;
-                
-                config->writeXML(os);
-                
-                return PyString_FromString( os.str().c_str() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        
-        }
-        
-        
-        
         
         ////////////////////////////////////////////////////////////////////////
         
@@ -746,6 +750,37 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
+        
+        
+        PyObject * PyOCIO_Config_addDisplayDevice( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                
+                char * device = 0;
+                char * transformName = 0;
+                char * csname = 0;
+                
+                if (!PyArg_ParseTuple(args,"sss:addDisplayDevice",
+                    &device, &transformName, &csname)) return NULL;
+                
+                config->addDisplayDevice(device, transformName, csname);
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
         
         
         PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args )
