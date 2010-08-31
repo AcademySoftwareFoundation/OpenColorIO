@@ -167,16 +167,32 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_CDLTransform_getDirection( PyObject * self );
         PyObject * PyOCIO_CDLTransform_setDirection( PyObject * self,  PyObject *args );
-        /*
-        PyObject * PyOCIO_CDLTransform_getInputColorSpace( PyObject * self );
-        PyObject * PyOCIO_CDLTransform_setInputColorSpace( PyObject * self,  PyObject *args );
         
-        PyObject * PyOCIO_CDLTransform_getLinearExposure( PyObject * self );
-        PyObject * PyOCIO_CDLTransform_setLinearExposure( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_CDLTransform_getXML( PyObject * self );
+        PyObject * PyOCIO_CDLTransform_setXML( PyObject * self,  PyObject *args );
         
-        PyObject * PyOCIO_CDLTransform_getCDLColorSpace( PyObject * self );
-        PyObject * PyOCIO_CDLTransform_setCDLColorSpace( PyObject * self,  PyObject *args );
-        */
+        PyObject * PyOCIO_CDLTransform_sanityCheck( PyObject * self );
+        PyObject * PyOCIO_CDLTransform_isNoOp( PyObject * self );
+        
+        PyObject * PyOCIO_CDLTransform_getSlope( PyObject * self );
+        PyObject * PyOCIO_CDLTransform_getOffset( PyObject * self );
+        PyObject * PyOCIO_CDLTransform_getPower( PyObject * self );
+        PyObject * PyOCIO_CDLTransform_getSOP( PyObject * self );
+        PyObject * PyOCIO_CDLTransform_getSat( PyObject * self );
+        
+        PyObject * PyOCIO_CDLTransform_setSlope( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_CDLTransform_setOffset( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_CDLTransform_setPower( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_CDLTransform_setSOP( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_CDLTransform_setSat( PyObject * self,  PyObject *args );
+        
+        PyObject * PyOCIO_CDLTransform_getSatLumaCoefs( PyObject * self );
+        
+        PyObject * PyOCIO_CDLTransform_getID( PyObject * self );
+        PyObject * PyOCIO_CDLTransform_setID( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_CDLTransform_getDescription( PyObject * self );
+        PyObject * PyOCIO_CDLTransform_setDescription( PyObject * self,  PyObject *args );
+        
         ///////////////////////////////////////////////////////////////////////
         ///
         
@@ -187,20 +203,31 @@ OCIO_NAMESPACE_ENTER
             {"getDirection", (PyCFunction) PyOCIO_CDLTransform_getDirection, METH_NOARGS, "" },
             {"setDirection", PyOCIO_CDLTransform_setDirection, METH_VARARGS, "" },
             
-            /*
-            {"getInputColorSpace", (PyCFunction) PyOCIO_CDLTransform_getInputColorSpace, METH_NOARGS, "" },
-            {"setInputColorSpace", PyOCIO_CDLTransform_setInputColorSpace, METH_VARARGS, "" },
+            {"getXML", (PyCFunction) PyOCIO_CDLTransform_getXML, METH_NOARGS, "" },
+            {"setXML", PyOCIO_CDLTransform_setXML, METH_VARARGS, "" },
             
-            {"getLinearExposure", (PyCFunction) PyOCIO_CDLTransform_getLinearExposure, METH_NOARGS, "" },
-            {"setLinearExposure", PyOCIO_CDLTransform_setLinearExposure, METH_VARARGS, "" },
+            {"sanityCheck", (PyCFunction) PyOCIO_CDLTransform_sanityCheck, METH_NOARGS, "" },
+            {"isNoOp", (PyCFunction) PyOCIO_CDLTransform_isNoOp, METH_NOARGS, "" },
             
-            {"getCDLColorSpace", (PyCFunction) PyOCIO_CDLTransform_getCDLColorSpace, METH_NOARGS, "" },
-            {"setCDLColorSpace", PyOCIO_CDLTransform_setCDLColorSpace, METH_VARARGS, "" },
-            */
-            /*
-            {"getInterpolation", (PyCFunction) PyOCIO_CDLTransform_getInterpolation, METH_NOARGS, "" },
-            {"setInterpolation", PyOCIO_CDLTransform_setInterpolation, METH_VARARGS, "" },
-            */
+            {"getSlope", (PyCFunction) PyOCIO_CDLTransform_getSlope, METH_NOARGS, "" },
+            {"getOffset", (PyCFunction) PyOCIO_CDLTransform_getOffset, METH_NOARGS, "" },
+            {"getPower", (PyCFunction) PyOCIO_CDLTransform_getPower, METH_NOARGS, "" },
+            {"getSOP", (PyCFunction) PyOCIO_CDLTransform_getSOP, METH_NOARGS, "" },
+            {"getSat", (PyCFunction) PyOCIO_CDLTransform_getSat, METH_NOARGS, "" },
+            
+            {"setSlope", PyOCIO_CDLTransform_setSlope, METH_VARARGS, "" },
+            {"setOffset", PyOCIO_CDLTransform_setOffset, METH_VARARGS, "" },
+            {"setPower", PyOCIO_CDLTransform_setPower, METH_VARARGS, "" },
+            {"setSOP", PyOCIO_CDLTransform_setSOP, METH_VARARGS, "" },
+            {"setSat", PyOCIO_CDLTransform_setSat, METH_VARARGS, "" },
+            
+            {"getSatLumaCoefs", (PyCFunction) PyOCIO_CDLTransform_getSatLumaCoefs, METH_NOARGS, "" },
+            
+            {"getID", (PyCFunction) PyOCIO_CDLTransform_getID, METH_NOARGS, "" },
+            {"setID", PyOCIO_CDLTransform_setID, METH_VARARGS, "" },
+            {"getDescription", (PyCFunction) PyOCIO_CDLTransform_getDescription, METH_NOARGS, "" },
+            {"setDescription", PyOCIO_CDLTransform_setDescription, METH_VARARGS, "" },
+            
             {NULL, NULL, 0, NULL}
         };
     }
@@ -365,15 +392,13 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        /*
-        PyObject * PyOCIO_CDLTransform_getInputColorSpace( PyObject * self )
+        
+        PyObject * PyOCIO_CDLTransform_getXML( PyObject * self )
         {
             try
             {
                 ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
-                ConstColorSpaceRcPtr colorSpace = transform->getInputColorSpace();
-                
-                return BuildConstPyColorSpace(colorSpace);
+                return PyString_FromString( transform->getXML() );
             }
             catch(...)
             {
@@ -382,16 +407,16 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_CDLTransform_setInputColorSpace( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_CDLTransform_setXML( PyObject * self, PyObject * args )
         {
             try
             {
-                PyObject * pyColorSpace = 0;
-                if (!PyArg_ParseTuple(args,"O:setInputColorSpace", &pyColorSpace)) return NULL;
+                const char * str = 0;
+                if (!PyArg_ParseTuple(args,"s:setXML",
+                    &str)) return NULL;
                 
                 CDLTransformRcPtr transform = GetEditableCDLTransform(self);
-                ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(pyColorSpace, true);
-                transform->setInputColorSpace( colorSpace );
+                transform->setXML( str );
                 
                 Py_RETURN_NONE;
             }
@@ -402,18 +427,17 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_CDLTransform_getLinearExposure( PyObject * self )
+        PyObject * PyOCIO_CDLTransform_sanityCheck( PyObject * self )
         {
             try
             {
                 ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                transform->sanityCheck();
                 
-                std::vector<float> coef(4);
-                transform->getLinearExposure(&coef[0]);
-                
-                return CreatePyListFromFloatVector(coef);
+                Py_RETURN_NONE;
             }
             catch(...)
             {
@@ -422,23 +446,221 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_CDLTransform_setLinearExposure( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_CDLTransform_isNoOp( PyObject * self )
         {
             try
             {
-                PyObject * pyVec = 0;
-                if (!PyArg_ParseTuple(args,"O:setLinearExposure", &pyVec)) return NULL;
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                transform->sanityCheck();
                 
+                return PyBool_FromLong(transform->isNoOp());
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        PyObject * PyOCIO_CDLTransform_getSlope( PyObject * self )
+        {
+            try
+            {
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                std::vector<float> data(3);
+                transform->getSlope(&data[0]);
+                return CreatePyListFromFloatVector(data);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_getOffset( PyObject * self )
+        {
+            try
+            {
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                std::vector<float> data(3);
+                transform->getOffset(&data[0]);
+                return CreatePyListFromFloatVector(data);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_getPower( PyObject * self )
+        {
+            try
+            {
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                std::vector<float> data(3);
+                transform->getPower(&data[0]);
+                return CreatePyListFromFloatVector(data);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_getSOP( PyObject * self )
+        {
+            try
+            {
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                std::vector<float> data(9);
+                transform->getSOP(&data[0]);
+                return CreatePyListFromFloatVector(data);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_getSat( PyObject * self )
+        {
+            try
+            {
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                return PyFloat_FromDouble(transform->getSat());
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        PyObject * PyOCIO_CDLTransform_setSlope( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O:setSlope", &pyData)) return NULL;
                 CDLTransformRcPtr transform = GetEditableCDLTransform(self);
                 
-                std::vector<float> vec;
-                if(!FillFloatVectorFromPySequence(pyVec, vec) || (vec.size() != 4))
+                std::vector<float> data;
+                if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 3))
                 {
-                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 4");
+                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 3");
                     return 0;
                 }
                 
-                transform->setLinearExposure(&vec[0]);
+                transform->setSlope( &data[0] );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_setOffset( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O:setOffset", &pyData)) return NULL;
+                CDLTransformRcPtr transform = GetEditableCDLTransform(self);
+                
+                std::vector<float> data;
+                if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 3))
+                {
+                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 3");
+                    return 0;
+                }
+                
+                transform->setOffset( &data[0] );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_setPower( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O:setPower", &pyData)) return NULL;
+                CDLTransformRcPtr transform = GetEditableCDLTransform(self);
+                
+                std::vector<float> data;
+                if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 3))
+                {
+                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 3");
+                    return 0;
+                }
+                
+                transform->setPower( &data[0] );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_setSOP( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O:setSOP", &pyData)) return NULL;
+                CDLTransformRcPtr transform = GetEditableCDLTransform(self);
+                
+                std::vector<float> data;
+                if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 9))
+                {
+                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 9");
+                    return 0;
+                }
+                
+                transform->setSOP( &data[0] );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_setSat( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                float sat;
+                if (!PyArg_ParseTuple(args,"f:setSat", &sat)) return NULL;
+                CDLTransformRcPtr transform = GetEditableCDLTransform(self);
+                
+                transform->setSat( sat );
                 
                 Py_RETURN_NONE;
             }
@@ -452,14 +674,16 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_CDLTransform_getCDLColorSpace( PyObject * self )
+        
+        
+        PyObject * PyOCIO_CDLTransform_getSatLumaCoefs( PyObject * self )
         {
             try
             {
                 ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
-                ConstColorSpaceRcPtr colorSpace = transform->getCDLColorSpace();
-                
-                return BuildConstPyColorSpace(colorSpace);
+                std::vector<float> data(3);
+                transform->getSatLumaCoefs(&data[0]);
+                return CreatePyListFromFloatVector(data);
             }
             catch(...)
             {
@@ -468,16 +692,33 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_CDLTransform_setCDLColorSpace( PyObject * self, PyObject * args )
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        PyObject * PyOCIO_CDLTransform_getID( PyObject * self )
         {
             try
             {
-                PyObject * pyColorSpace = 0;
-                if (!PyArg_ParseTuple(args,"O:setCDLColorSpace", &pyColorSpace)) return NULL;
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                return PyString_FromString( transform->getID() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_setID( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                const char * str = 0;
+                if (!PyArg_ParseTuple(args,"s:setID",
+                    &str)) return NULL;
                 
                 CDLTransformRcPtr transform = GetEditableCDLTransform(self);
-                ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(pyColorSpace, true);
-                transform->setCDLColorSpace( colorSpace );
+                transform->setID( str );
                 
                 Py_RETURN_NONE;
             }
@@ -487,7 +728,42 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-    */
+        
+        PyObject * PyOCIO_CDLTransform_getDescription( PyObject * self )
+        {
+            try
+            {
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                return PyString_FromString( transform->getDescription() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_setDescription( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                const char * str = 0;
+                if (!PyArg_ParseTuple(args,"s:setDescription",
+                    &str)) return NULL;
+                
+                CDLTransformRcPtr transform = GetEditableCDLTransform(self);
+                transform->setDescription( str );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
     }
 
 }
