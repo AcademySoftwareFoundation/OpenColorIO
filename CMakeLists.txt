@@ -18,7 +18,6 @@ add_library(OpenColorIO SHARED
     src/core/ColorSpace.cpp
     src/core/ColorSpaceTransform.cpp
     src/core/Config.cpp
-    src/core/CoordinateOps.cpp
     src/core/DisplayTransform.cpp
     src/core/Exception.cpp
     src/core/ExponentOps.cpp
