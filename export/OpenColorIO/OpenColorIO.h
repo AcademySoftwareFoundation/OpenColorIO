@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 //
 // OpenColorIO
-// Version 0.5.13
+// Version 0.5.14
 //
 
 // TODO: Turn the lutpath into a search path mechanism

@@ -1,3 +1,7 @@
+Version 0.5.14 (Sept 1 2010):
+    * Python binding enhancements
+    * Simplified class implmentations (reduced internal header count)
+
 Version 0.5.13 (Aug 24 2010):
     * GPU Processing now supports High Dynamic Range color spaces
     * Added log processing operator
