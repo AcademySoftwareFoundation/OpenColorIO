@@ -171,6 +171,7 @@ if(PYTHON_OK)
         src/pyglue/PyFileTransform.cpp
         src/pyglue/PyGroupTransform.cpp
         src/pyglue/PyMain.cpp
+        src/pyglue/PyProcessor.cpp
         src/pyglue/PyUtil.cpp
     )
     include_directories(

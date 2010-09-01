@@ -186,9 +186,6 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getColorSpaceForRole( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_setColorSpaceForRole( PyObject * self, PyObject * args );
         
-        
-        
-        // Display Transforms
         PyObject * PyOCIO_Config_getDisplayDeviceNames( PyObject * self );
         PyObject * PyOCIO_Config_getDefaultDisplayDeviceName( PyObject * self );
         PyObject * PyOCIO_Config_getDisplayTransformNames( PyObject * self, PyObject * args );
@@ -196,11 +193,10 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_addDisplayDevice( PyObject * self, PyObject * args );
         
-        
-        
         PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self );
         PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args );
         
+        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args );
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -238,14 +234,10 @@ OCIO_NAMESPACE_ENTER
             {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
             {"setDefaultLumaCoefs", PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, "" },
             
+            {"getProcessor", PyOCIO_Config_getProcessor, METH_VARARGS, "" },
+            
             {NULL, NULL, 0, NULL}
         };
-        
-        const char underlyingObjectBadMessage[] =
-                "Underlying OCIO::Config object is not valid.";
-        
-        const char underlyingObjectConstMessage[] =
-                "Underlying OCIO::Config is not editable.";
     }
     
     ///////////////////////////////////////////////////////////////////////////
@@ -829,6 +821,78 @@ OCIO_NAMESPACE_ENTER
                 config->getDefaultLumaCoefs(&coef[0]);
                 
                 return CreatePyListFromFloatVector(coef);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        
+        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * arg1 = 0;
+                PyObject * arg2 = 0;
+                if (!PyArg_ParseTuple(args,"O|O:getProcessor", &arg1, &arg2)) return NULL;
+                
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                // We want this call to be as flexible as possible,
+                // accept anything we can think of!
+                
+                // A transform + (optional) dir
+                if(IsPyTransform(arg1))
+                {
+                    ConstTransformRcPtr transform = GetConstTransform(arg1, true);
+                    
+                    TransformDirection dir = TRANSFORM_DIR_FORWARD;
+                    if(PyString_Check(arg2))
+                    {
+                        const char * s2 = PyString_AsString(arg2);
+                        dir = TransformDirectionFromString( s2 );
+                    }
+                    
+                    return BuildConstPyProcessor(config->getProcessor(transform, dir));
+                }
+                
+                // Any two (Colorspaces, colorspace name, roles)
+                ConstColorSpaceRcPtr cs1, cs2;
+                
+                /*
+                if(IsPyColorSpace(arg1)) cs1 = GetConstColorSpace(arg1, true);
+                else if(PyString_Check(arg1))
+                {
+                    const char * s2 = PyString_AsString(arg2);
+                    int csIndex = config->getIndexForColorSpace(s2);
+                    if(csIndex>=0)
+                    {
+                    
+                    }
+                }
+                else
+                {
+                    
+                }
+                */
+                
+                /*
+                if(IsPyColorSpace(arg1) && IsPyColorSpace(arg2))
+                {
+                    ConstColorSpaceRcPtr cs1 = GetConstColorSpace(arg1, true);
+                    ConstColorSpaceRcPtr cs2 = GetConstColorSpace(arg2, true);
+                    return BuildConstPyProcessor(config->getProcessor(cs1, cs2));
+                }
+                */
+                
+                
+                PyErr_SetString(PyExc_ValueError, "Error interpreting arguments. Please see docs for getProcessor arg syntax.");
+                return NULL;
             }
             catch(...)
             {
