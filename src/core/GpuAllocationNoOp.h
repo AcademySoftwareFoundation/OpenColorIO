@@ -27,8 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_GPUALLOCATIONOP_H
-#define INCLUDED_OCIO_GPUALLOCATIONOP_H
+#ifndef INCLUDED_OCIO_GPUALLOCATIONNOOP_H
+#define INCLUDED_OCIO_GPUALLOCATIONNOOP_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -36,8 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    void CreateGpuAllocationOp(OpRcPtrVec & ops,
-                               const GpuAllocationData & allocationData);
+    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
+                                 const GpuAllocationData & allocationData);
 }
 OCIO_NAMESPACE_EXIT
 

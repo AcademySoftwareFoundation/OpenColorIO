@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "GpuAllocationOp.h"
+#include "GpuAllocationNoOp.h"
 #include "OpBuilders.h"
 
 
@@ -184,7 +184,7 @@ OCIO_NAMESPACE_ENTER
         srcAllocation.min = srcColorSpace->getGpuMin();
         srcAllocation.max = srcColorSpace->getGpuMax();
         
-        CreateGpuAllocationOp(ops, srcAllocation);
+        CreateGpuAllocationNoOp(ops, srcAllocation);
         
         ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         BuildOps(ops, config, toref, TRANSFORM_DIR_FORWARD);
@@ -207,7 +207,7 @@ OCIO_NAMESPACE_ENTER
         dstAllocation.min = dstColorSpace->getGpuMin();
         dstAllocation.max = dstColorSpace->getGpuMax();
         
-        CreateGpuAllocationOp(ops, dstAllocation);
+        CreateGpuAllocationNoOp(ops, dstAllocation);
     }
 }
 OCIO_NAMESPACE_EXIT
