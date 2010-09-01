@@ -54,10 +54,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor)
     {
-        if (processor.get() == 0x0)
+        if (!processor)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyProcessor from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_Processor * pyProcessor = PyObject_New(
@@ -189,7 +188,8 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_Processor_init( PyOCIO_Processor *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_Processor_init( PyOCIO_Processor */*self*/,
+            PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             PyErr_SetString( PyExc_RuntimeError, initMessage);
             return -1;

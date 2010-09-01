@@ -51,10 +51,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildConstPyFileTransform(ConstFileTransformRcPtr transform)
     {
-        if (transform.get() == 0x0)
+        if (!transform)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyFileTransform from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_FileTransform * pytransform = PyObject_New(
@@ -71,10 +70,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildEditablePyFileTransform(FileTransformRcPtr transform)
     {
-        if (transform.get() == 0x0)
+        if (!transform)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyFileTransform from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_FileTransform * pytransform = PyObject_New(

@@ -52,10 +52,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildConstPyCDLTransform(ConstCDLTransformRcPtr transform)
     {
-        if (transform.get() == 0x0)
+        if (!transform)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyCDLTransform from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_CDLTransform * pytransform = PyObject_New(
@@ -72,10 +71,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildEditablePyCDLTransform(CDLTransformRcPtr transform)
     {
-        if (transform.get() == 0x0)
+        if (!transform)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyCDLTransform from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_CDLTransform * pytransform = PyObject_New(

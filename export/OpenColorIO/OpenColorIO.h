@@ -37,6 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.14
 //
 
+// TODO: Gracefully handle null strings + null rcptrs across API
+//       (i.e, make the external api bullet-proof) :)
+
 // TODO: Turn the lutpath into a search path mechanism
 // TODO: Unify all fcns that return colorspace classes to return colorspace name string instead?
 // TODO: Colorspace limit functions, GetLinearColorspaceMax
@@ -355,6 +358,7 @@ OCIO_NAMESPACE_ENTER
         // confirm there arent duplicate colorspaces
         // confirm all files exist with read permissions?
         // confirm for all ColorSpaceTransforms the names spaces exist
+        // confirm no name conflicts between colorspaces and roles
         
         
         const char * getResourcePath() const;
@@ -387,21 +391,27 @@ OCIO_NAMESPACE_ENTER
         mappings (at different precisions) are referred to as a 'family'.
         */
         
-        // TODO: Make this API clean and simple
         int getNumColorSpaces() const;
-        ConstColorSpaceRcPtr getColorSpaceByIndex(int index) const;
-        ColorSpaceRcPtr getEditableColorSpaceByIndex(int index);
         
-        ConstColorSpaceRcPtr getColorSpaceByName(const char * name) const;
-        ColorSpaceRcPtr getEditableColorSpaceByName(const char * name);
+        // This will null if an invalid index is specified
+        const char * getColorSpaceNameByIndex(int index) const;
+        
+        
+        //! These fcns all accept either a colorspace OR role name.
+        
+        // (Colorspace names take precedence over roles)
+        // This will return null if the specified name is not found.
+        
+        ConstColorSpaceRcPtr getColorSpace(const char * name) const;
+        ColorSpaceRcPtr getEditableColorSpace(const char * name);
         int getIndexForColorSpace(const char * name) const;
         
-        // if another colorspace was already registered with the
-        // same name, this will overwrite it.
-        // Stores the live reference to this colorspace
-        void addColorSpace(ColorSpaceRcPtr cs);
-        void addColorSpace(const ConstColorSpaceRcPtr & cs);
         
+        //! If another colorspace was already registered with the
+        // same name, this will overwrite it. This stores a
+        // copy of the specified color space
+        
+        void addColorSpace(const ConstColorSpaceRcPtr & cs);
         void clearColorSpaces();
         
         //! Given the specified string, get the longest, right-most,
@@ -410,33 +420,31 @@ OCIO_NAMESPACE_ENTER
         
         const char * parseColorSpaceFromString(const char * str) const;
         
-        // Families
+        // Roles (like an alias for a color space)
+        // You query the colorSpace corresponding to a role
+        // using the normal getColorSpace fcn.
         
+        //! Setting the csname name to a null string unsets it
+        void setRole(const char * role, const char * colorSpaceName);
         
-        
-        // Roles
-        ConstColorSpaceRcPtr getColorSpaceForRole(const char * role) const;
-        void setColorSpaceForRole(const char * role, const char * csname);
-        void unsetRole(const char * role);
         int getNumRoles() const;
-        const char * getRole(int index) const;
-        
-        
+        const char * getRoleNameByIndex(int index) const;
         
         // Display Transforms
         int getNumDisplayDeviceNames() const;
         const char * getDisplayDeviceName(int index) const;
         const char * getDefaultDisplayDeviceName() const;
-        
         int getNumDisplayTransformNames(const char * device) const;
         const char * getDisplayTransformName(const char * device, int index) const;
         const char * getDefaultDisplayTransformName(const char * device) const;
-        
         const char * getDisplayColorSpaceName(const char * device, const char * displayTransformName) const;
         
         void addDisplayDevice(const char * device,
                               const char * transformName,
                               const char * colorSpaceName);
+        
+        
+        
         
         // Get the default coefficients for computing luma.
         //
@@ -455,6 +463,9 @@ OCIO_NAMESPACE_ENTER
         void setDefaultLumaCoefs(const float * rgb);
         
         
+        
+        
+        
         //! Convert from inputColorSpace to outputColorSpace
         //
         //  Note: This may provide higher fidelity than anticipated due to
@@ -471,14 +482,16 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
                                          const ConstColorSpaceRcPtr & dstColorSpace) const;
         
-        // Individual lut application functions
-        // Can be used to apply a .lut, .dat, .lut3d, or .3dl file.
-        // Not generally needed, but useful in testing.
+        //! Names can be colorspace name or role name
+        ConstProcessorRcPtr getProcessor(const char * srcName,
+                                         const char * dstName) const;
+        
+        // Individual transform application functions
+        // Not generally needed in pipelines, but allows for re-use of
+        // atomic OCIO functionality.
         
         ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
                                          TransformDirection direction = TRANSFORM_DIR_FORWARD) const;
-        
-        
         
     private:
         Config();
@@ -508,9 +521,6 @@ OCIO_NAMESPACE_ENTER
         static ColorSpaceRcPtr Create();
         
         ColorSpaceRcPtr createEditableCopy() const;
-        
-        // ColorSpaces are equal if their names are equal. That is all.
-        bool equals(const ConstColorSpaceRcPtr &) const;
         
         const char * getName() const;
         void setName(const char * name);

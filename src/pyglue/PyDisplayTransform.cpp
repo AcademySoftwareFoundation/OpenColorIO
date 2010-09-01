@@ -52,10 +52,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildConstPyDisplayTransform(ConstDisplayTransformRcPtr transform)
     {
-        if (transform.get() == 0x0)
+        if (!transform)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyDisplayTransform from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_DisplayTransform * pytransform = PyObject_New(
@@ -72,10 +71,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildEditablePyDisplayTransform(DisplayTransformRcPtr transform)
     {
-        if (transform.get() == 0x0)
+        if (!transform)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyDisplayTransform from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_DisplayTransform * pytransform = PyObject_New(

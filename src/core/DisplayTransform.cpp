@@ -120,6 +120,11 @@ OCIO_NAMESPACE_ENTER
     
     void DisplayTransform::setInputColorSpace(const ConstColorSpaceRcPtr & cs)
     {
+        if(!cs)
+        {
+            throw Exception("DisplayTransform::SetInputColorSpace failed. Colorspace is null.");
+        }
+        
         m_impl->inputColorSpace_ = cs;
     }
     
@@ -161,6 +166,11 @@ OCIO_NAMESPACE_ENTER
     
     void DisplayTransform::setDisplayColorSpace(const ConstColorSpaceRcPtr & cs)
     {
+        if(!cs)
+        {
+            throw Exception("DisplayTransform::SetDisplayColorSpace failed. Colorspace is null.");
+        }
+        
         m_impl->displayColorSpace_ = cs;
     }
     
@@ -205,7 +215,7 @@ OCIO_NAMESPACE_ENTER
         
         if(!linearCC->isNoOp())
         {
-            ConstColorSpaceRcPtr linearColorSpace = config.getColorSpaceForRole(ROLE_SCENE_LINEAR);
+            ConstColorSpaceRcPtr linearColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
             
             BuildColorSpaceOps(ops, config,
                                currentColorspace,

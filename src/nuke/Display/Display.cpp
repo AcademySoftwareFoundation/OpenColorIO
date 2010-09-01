@@ -25,25 +25,25 @@ Display::Display(Node *n) : DD::Image::PixelIop(n)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-
-        OCIO::ConstColorSpaceRcPtr defaultColorSpace = \
-            config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
+        std::string defaultColorSpaceName = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR)->getName();
         std::string defaultDeviceName = config->getDefaultDisplayDeviceName();
-
+        
         int nColorSpaces = config->getNumColorSpaces();
         int nDeviceNames = config->getNumDisplayDeviceNames();
 
         for(int i = 0; i < nColorSpaces; i++)
         {
-            OCIO::ConstColorSpaceRcPtr colorSpace = config->getColorSpaceByIndex(i);
-            colorSpaceNames.push_back(colorSpace->getName());
+            std::string csname = config->getColorSpaceNameByIndex(i);
+            colorSpaceNames.push_back(csname);
+            
             colorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
-            if (colorSpace->equals(defaultColorSpace))
+            
+            if (defaultColorSpaceName == csname)
             {
                 colorSpaceIndex = i;
             }
         }
-
+        
         for(int i = 0; i < nDeviceNames; i++)
         {
             std::string deviceName = config->getDisplayDeviceName(i);
@@ -54,9 +54,9 @@ Display::Display(Node *n) : DD::Image::PixelIop(n)
                 displayDeviceIndex = i;
             }
         }
-
+        
         refreshDisplayTransforms();
-
+        
         transformPtr = OCIO::DisplayTransform::Create();
     }
     catch (OCIO::Exception& e)
@@ -140,8 +140,8 @@ void Display::_validate(bool for_real)
         const char *transformName = displayTransformCstrNames[displayTransformIndex];
         const char *csDstName = config->getDisplayColorSpaceName(deviceName, transformName);
 
-        transformPtr->setInputColorSpace(config->getColorSpaceByName(csSrcName));
-        transformPtr->setDisplayColorSpace(config->getColorSpaceByName(csDstName));
+        transformPtr->setInputColorSpace(config->getColorSpace(csSrcName));
+        transformPtr->setDisplayColorSpace(config->getColorSpace(csDstName));
 
         float e = static_cast<float>(exposure);
         const float exposure4f[] = {e, e, e, 0.0f}; // r, g, b, a

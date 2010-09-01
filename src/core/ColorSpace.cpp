@@ -117,11 +117,6 @@ OCIO_NAMESPACE_ENTER
         return cs;
     }
     
-    bool ColorSpace::equals(const ConstColorSpaceRcPtr & other) const
-    {
-        return (m_impl->name_ == other->m_impl->name_);
-    }
-    
     const char * ColorSpace::getName() const
     {
         return m_impl->name_.c_str();

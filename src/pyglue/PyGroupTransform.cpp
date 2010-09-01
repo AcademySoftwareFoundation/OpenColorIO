@@ -51,10 +51,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildConstPyGroupTransform(ConstGroupTransformRcPtr transform)
     {
-        if (transform.get() == 0x0)
+        if (!transform)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyGroupTransform from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_GroupTransform * pytransform = PyObject_New(
@@ -71,10 +70,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildEditablePyGroupTransform(GroupTransformRcPtr transform)
     {
-        if (transform.get() == 0x0)
+        if (!transform)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyGroupTransform from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_GroupTransform * pytransform = PyObject_New(
