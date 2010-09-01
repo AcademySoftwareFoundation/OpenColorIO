@@ -37,35 +37,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.14
 //
 
+// TODO: Unify all fcns that get/set colorspace classes to return colorspace name string instead?
+//       Example, DisplayTransform
 // TODO: Gracefully handle null strings + null rcptrs across API
 //       (i.e, make the external api bullet-proof) :)
 
+// TODO: add  GetOriginalSourceFile(); setOriginalSourceFile(const std::string &sourceFile)
 // TODO: Turn the lutpath into a search path mechanism
-// TODO: Unify all fcns that return colorspace classes to return colorspace name string instead?
-// TODO: Colorspace limit functions, GetLinearColorspaceMax
-// TODO: highlight compression coefficients?
-// TODO: Histogram / Statistics FCN
-// TODO: rgb_to_hsv?  Efficient for per-pixel application?
-// TODO: per-shot looks?
-
 // TODO: add op optimizations.  op collapsing.  cache op tree.
 // TODO: test 1d atomic ops
 // TODO: test full colorspace conversions
-
 // TODO: Figure out for each transform class what is required, move into constructor
-// TODO: provide way to tag colorspace operations as explicitly not allowed? what about hdbty<->qt?
+// TODO: consider way to tag colorspace operations as explicitly not allowed?
+//       Ex: hdbty<->qt?
 // TODO: provide xml defaults mechanism for cleaner xml code
 // TODO: such as int vectors, double from str, float vectors, etc.
 // TODO: add ocio package (.gz?) file, and ability to convert between representations.
 // TODO: add all nuke plugins, also get official Foundry code review
 // TODO: add additional lut formats
 // TODO: add internal namespace for all implementation objects Ops, etc.
-// TODO: Opt build as default?
 // TODO: Add prettier xml output (newlines between colorspaces?)
-
 // TODO: Cross-platform
-// TODO: add  GetOriginalSourceFile(); setOriginalSourceFile(const std::string &sourceFile)
-        
+
+// DEFERRED: per-shot looks
 /*
 // Example: Compositing plugin, which converts from "log" to "lin"
 try
