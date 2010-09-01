@@ -813,7 +813,7 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        
+        // TODO: Make the argument parsing way more explicit!
         
         PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args )
         {
@@ -846,34 +846,26 @@ OCIO_NAMESPACE_ENTER
                 // Any two (Colorspaces, colorspace name, roles)
                 ConstColorSpaceRcPtr cs1, cs2;
                 
-                /*
                 if(IsPyColorSpace(arg1)) cs1 = GetConstColorSpace(arg1, true);
                 else if(PyString_Check(arg1))
                 {
-                    const char * s2 = PyString_AsString(arg2);
-                    int csIndex = config->getIndexForColorSpace(s2);
-                    if(csIndex>=0)
-                    {
-                    
-                    }
+                    cs1 = config->getColorSpace(PyString_AsString(arg1));
                 }
-                else
-                {
-                    
-                }
-                */
                 
-                /*
-                if(IsPyColorSpace(arg1) && IsPyColorSpace(arg2))
+                if(IsPyColorSpace(arg2)) cs2 = GetConstColorSpace(arg2, true);
+                else if(PyString_Check(arg2))
                 {
-                    ConstColorSpaceRcPtr cs1 = GetConstColorSpace(arg1, true);
-                    ConstColorSpaceRcPtr cs2 = GetConstColorSpace(arg2, true);
+                    cs2 = config->getColorSpace(PyString_AsString(arg2));
+                }
+                
+                if(cs1 && cs2)
+                {
                     return BuildConstPyProcessor(config->getProcessor(cs1, cs2));
                 }
-                */
                 
-                
-                PyErr_SetString(PyExc_ValueError, "Error interpreting arguments. Please see docs for getProcessor arg syntax.");
+                const char * text = "Error interpreting arguments. "
+                "Allowed types include Transform, ColorSpace, ColorSpace name, Role";
+                PyErr_SetString(PyExc_ValueError, text);
                 return NULL;
             }
             catch(...)

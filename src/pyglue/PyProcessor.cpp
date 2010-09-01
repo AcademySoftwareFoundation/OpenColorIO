@@ -108,14 +108,18 @@ OCIO_NAMESPACE_ENTER
         int PyOCIO_Processor_init( PyOCIO_Processor * self, PyObject * args, PyObject * kwds );
         void PyOCIO_Processor_delete( PyOCIO_Processor * self, PyObject * args );
         
+        PyObject * PyOCIO_Processor_isNoOp( PyObject * self );
         PyObject * PyOCIO_Processor_applyRGB( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Processor_applyRGBA( PyObject * self, PyObject * args );
         
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_Processor_methods[] = {
+            {"isNoOp", (PyCFunction) PyOCIO_Processor_isNoOp, METH_NOARGS, "" },
             {"applyRGB", PyOCIO_Processor_applyRGB, METH_VARARGS, "" },
+            {"applyRGBA", PyOCIO_Processor_applyRGBA, METH_VARARGS, "" },
             
             {NULL, NULL, 0, NULL}
         };
@@ -205,16 +209,69 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
+        PyObject * PyOCIO_Processor_isNoOp( PyObject * self )
+        {
+            try
+            {
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                return PyBool_FromLong( processor->isNoOp() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
         PyObject * PyOCIO_Processor_applyRGB( PyObject * self, PyObject * args )
         {
             try
             {
-                /*
-                char * path = 0;
-                if (!PyArg_ParseTuple(args,"s:setResourcePath", &path)) return NULL;
-                */
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O:applyRGB", &pyData)) return NULL;
                 
-                Py_RETURN_NONE;
+                std::vector<float> data;
+                if(!FillFloatVectorFromPySequence(pyData, data) || ((data.size()%3) != 0))
+                {
+                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size multiple of 3");
+                    return 0;
+                }
+                
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                
+                PackedImageDesc img(&data[0], data.size()/3, 1, 3);
+                processor->apply(img);
+                
+                return CreatePyListFromFloatVector(data);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Processor_applyRGBA( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O:applyRGBA", &pyData)) return NULL;
+                
+                std::vector<float> data;
+                if(!FillFloatVectorFromPySequence(pyData, data) || ((data.size()%4) != 0))
+                {
+                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size multiple of 4");
+                    return 0;
+                }
+                
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                
+                PackedImageDesc img(&data[0], data.size()/4, 1, 4);
+                processor->apply(img);
+                
+                return CreatePyListFromFloatVector(data);
             }
             catch(...)
             {
