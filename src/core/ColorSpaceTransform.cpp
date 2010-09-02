@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "GpuAllocationOp.h"
+#include "GpuAllocationNoOp.h"
 #include "OpBuilders.h"
 
 
@@ -147,13 +147,13 @@ OCIO_NAMESPACE_ENTER
         
         if(combinedDir == TRANSFORM_DIR_FORWARD)
         {
-            src = config.getColorSpaceByName( colorSpaceTransform.getSrc() );
-            dst = config.getColorSpaceByName( colorSpaceTransform.getDst() );
+            src = config.getColorSpace( colorSpaceTransform.getSrc() );
+            dst = config.getColorSpace( colorSpaceTransform.getDst() );
         }
         else if(combinedDir == TRANSFORM_DIR_INVERSE)
         {
-            dst = config.getColorSpaceByName( colorSpaceTransform.getSrc() );
-            src = config.getColorSpaceByName( colorSpaceTransform.getDst() );
+            dst = config.getColorSpace( colorSpaceTransform.getSrc() );
+            src = config.getColorSpace( colorSpaceTransform.getDst() );
         }
         
         BuildColorSpaceOps(ops, config, src, dst);
@@ -184,7 +184,7 @@ OCIO_NAMESPACE_ENTER
         srcAllocation.min = srcColorSpace->getGpuMin();
         srcAllocation.max = srcColorSpace->getGpuMax();
         
-        CreateGpuAllocationOp(ops, srcAllocation);
+        CreateGpuAllocationNoOp(ops, srcAllocation);
         
         ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         BuildOps(ops, config, toref, TRANSFORM_DIR_FORWARD);
@@ -207,7 +207,7 @@ OCIO_NAMESPACE_ENTER
         dstAllocation.min = dstColorSpace->getGpuMin();
         dstAllocation.max = dstColorSpace->getGpuMax();
         
-        CreateGpuAllocationOp(ops, dstAllocation);
+        CreateGpuAllocationNoOp(ops, dstAllocation);
     }
 }
 OCIO_NAMESPACE_EXIT

@@ -55,10 +55,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildConstPyConfig(ConstConfigRcPtr config)
     {
-        if (config.get() == 0x0)
+        if (!config.get())
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyConfig from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_Config * pyconfig = PyObject_New(
@@ -75,10 +74,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildEditablePyConfig(ConfigRcPtr config)
     {
-        if (config.get() == 0x0)
+        if (!config)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyConfig from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_Config * pyconfig = PyObject_New(
@@ -172,23 +170,17 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_Config_getResourcePath( PyObject * self );
         PyObject * PyOCIO_Config_setResourcePath( PyObject * self,  PyObject *args );
-        
         PyObject * PyOCIO_Config_getDescription( PyObject * self );
         PyObject * PyOCIO_Config_setDescription( PyObject * self,  PyObject *args );
-        
         PyObject * PyOCIO_Config_getXML( PyObject * self );
         
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self );
-        PyObject * PyOCIO_Config_getColorSpaceByName( PyObject * self, PyObject * args );
-        PyObject * PyOCIO_Config_getEditableColorSpaceByName( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getColorSpace( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getEditableColorSpace( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_addColorSpace( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_clearColorSpaces( PyObject * self );
+        PyObject * PyOCIO_Config_setRole( PyObject * self, PyObject * args );
         
-        PyObject * PyOCIO_Config_getColorSpaceForRole( PyObject * self, PyObject * args );
-        PyObject * PyOCIO_Config_setColorSpaceForRole( PyObject * self, PyObject * args );
-        
-        
-        
-        // Display Transforms
         PyObject * PyOCIO_Config_getDisplayDeviceNames( PyObject * self );
         PyObject * PyOCIO_Config_getDefaultDisplayDeviceName( PyObject * self );
         PyObject * PyOCIO_Config_getDisplayTransformNames( PyObject * self, PyObject * args );
@@ -196,11 +188,10 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_addDisplayDevice( PyObject * self, PyObject * args );
         
-        
-        
         PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self );
         PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args );
         
+        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args );
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -213,19 +204,16 @@ OCIO_NAMESPACE_ENTER
             
             {"getResourcePath", (PyCFunction) PyOCIO_Config_getResourcePath, METH_NOARGS, "" },
             {"setResourcePath", PyOCIO_Config_setResourcePath, METH_VARARGS, "" },
-            
             {"getDescription", (PyCFunction) PyOCIO_Config_getDescription, METH_NOARGS, "" },
             {"setDescription", PyOCIO_Config_setDescription, METH_VARARGS, "" },
-            
             {"getXML", (PyCFunction) PyOCIO_Config_getXML, METH_NOARGS, "" },
             
             {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
-            {"getColorSpaceByName", PyOCIO_Config_getColorSpaceByName, METH_VARARGS, "" },
-            {"getEditableColorSpaceByName", PyOCIO_Config_getEditableColorSpaceByName, METH_VARARGS, "" },
+            {"getColorSpace", PyOCIO_Config_getColorSpace, METH_VARARGS, "" },
+            {"getEditableColorSpace", PyOCIO_Config_getEditableColorSpace, METH_VARARGS, "" },
             {"addColorSpace", PyOCIO_Config_addColorSpace, METH_VARARGS, "" },
-            
-            {"getColorSpaceForRole", PyOCIO_Config_getColorSpaceForRole, METH_VARARGS, "" },
-            {"setColorSpaceForRole", PyOCIO_Config_setColorSpaceForRole, METH_VARARGS, "" },
+            {"clearColorSpaces", (PyCFunction) PyOCIO_Config_clearColorSpaces, METH_NOARGS, "" },
+            {"setRole", PyOCIO_Config_setRole, METH_VARARGS, "" },
             
             {"getDisplayDeviceNames", (PyCFunction) PyOCIO_Config_getDisplayDeviceNames, METH_NOARGS, "" },
             {"getDefaultDisplayDeviceName", (PyCFunction) PyOCIO_Config_getDefaultDisplayDeviceName, METH_NOARGS, "" },
@@ -234,18 +222,13 @@ OCIO_NAMESPACE_ENTER
             {"getDisplayColorSpaceName", PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, "" },
             {"addDisplayDevice", PyOCIO_Config_addDisplayDevice, METH_VARARGS, "" },
             
-
             {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
             {"setDefaultLumaCoefs", PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, "" },
             
+            {"getProcessor", PyOCIO_Config_getProcessor, METH_VARARGS, "" },
+            
             {NULL, NULL, 0, NULL}
         };
-        
-        const char underlyingObjectBadMessage[] =
-                "Underlying OCIO::Config object is not valid.";
-        
-        const char underlyingObjectConstMessage[] =
-                "Underlying OCIO::Config is not editable.";
     }
     
     ///////////////////////////////////////////////////////////////////////////
@@ -507,7 +490,8 @@ OCIO_NAMESPACE_ENTER
                 PyObject* tuple = PyTuple_New( numColorSpaces );
                 for(int i = 0; i<numColorSpaces; ++i)
                 {
-                    ConstColorSpaceRcPtr cs = config->getColorSpaceByIndex(i);
+                    const char * name = config->getColorSpaceNameByIndex(i);
+                    ConstColorSpaceRcPtr cs = config->getColorSpace(name);
                     PyObject * pycs = BuildConstPyColorSpace(cs);
                     PyTuple_SetItem(tuple, i, pycs);
                 }
@@ -521,18 +505,16 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_Config_getColorSpaceByName( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_getColorSpace( PyObject * self, PyObject * args )
         {
             try
             {
                 ConstConfigRcPtr config = GetConstConfig(self, true);
                 
-                char * csname = 0;
+                char * name = 0;
+                if (!PyArg_ParseTuple(args,"s:getColorSpace", &name)) return NULL;
                 
-                if (!PyArg_ParseTuple(args,"s:getColorSpaceByName",
-                    &csname)) return NULL;
-                
-                return BuildConstPyColorSpace(config->getColorSpaceByName(csname));
+                return BuildConstPyColorSpace(config->getColorSpace(name));
             }
             catch(...)
             {
@@ -541,18 +523,16 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_Config_getEditableColorSpaceByName( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_getEditableColorSpace( PyObject * self, PyObject * args )
         {
             try
             {
                 ConfigRcPtr config = GetEditableConfig(self);
                 
-                char * csname = 0;
+                char * name = 0;
+                if (!PyArg_ParseTuple(args,"s:getEditableColorSpace", &name)) return NULL;
                 
-                if (!PyArg_ParseTuple(args,"s:getColorSpaceByName",
-                    &csname)) return NULL;
-                
-                return BuildEditablePyColorSpace(config->getEditableColorSpaceByName(csname));
+                return BuildEditablePyColorSpace(config->getEditableColorSpace(name));
             }
             catch(...)
             {
@@ -572,14 +552,16 @@ OCIO_NAMESPACE_ENTER
                 PyObject * pyColorSpace = 0;
                 if (!PyArg_ParseTuple(args,"O:addColorSpace", &pyColorSpace)) return NULL;
                 
+                /*
                 if(IsPyColorSpaceEditable(pyColorSpace))
                 {
                     config->addColorSpace( GetEditableColorSpace(pyColorSpace) );
                 }
                 else
                 {
-                    config->addColorSpace( GetConstColorSpace(pyColorSpace, true) );
-                }
+                */
+                config->addColorSpace( GetConstColorSpace(pyColorSpace, true) );
+                //}
                 
                 Py_RETURN_NONE;
             }
@@ -591,21 +573,14 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        ////////////////////////////////////////////////////////////////////////
-        
-        PyObject * PyOCIO_Config_getColorSpaceForRole( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_clearColorSpaces( PyObject * self )
         {
             try
             {
-                ConstConfigRcPtr config = GetConstConfig(self, true);
+                ConfigRcPtr config = GetEditableConfig(self);
+                config->clearColorSpaces();
                 
-                char * role = 0;
-                
-                if (!PyArg_ParseTuple(args,"s:getColorSpaceForRole",
-                    &role)) return NULL;
-                
-                ConstColorSpaceRcPtr colorSpace = config->getColorSpaceForRole(role);
-                return BuildConstPyColorSpace(colorSpace);
+                Py_RETURN_NONE;
             }
             catch(...)
             {
@@ -614,8 +589,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        PyObject * PyOCIO_Config_setColorSpaceForRole( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_setRole( PyObject * self, PyObject * args )
         {
             try
             {
@@ -627,7 +601,7 @@ OCIO_NAMESPACE_ENTER
                 if (!PyArg_ParseTuple(args,"ss:setColorSpaceForRole",
                     &role, &csname)) return NULL;
                 
-                config->setColorSpaceForRole(role, csname);
+                config->setRole(role, csname);
                 
                 Py_RETURN_NONE;
             }
@@ -829,6 +803,70 @@ OCIO_NAMESPACE_ENTER
                 config->getDefaultLumaCoefs(&coef[0]);
                 
                 return CreatePyListFromFloatVector(coef);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        // TODO: Make the argument parsing way more explicit!
+        
+        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * arg1 = 0;
+                PyObject * arg2 = 0;
+                if (!PyArg_ParseTuple(args,"O|O:getProcessor", &arg1, &arg2)) return NULL;
+                
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                // We want this call to be as flexible as possible,
+                // accept anything we can think of!
+                
+                // A transform + (optional) dir
+                if(IsPyTransform(arg1))
+                {
+                    ConstTransformRcPtr transform = GetConstTransform(arg1, true);
+                    
+                    TransformDirection dir = TRANSFORM_DIR_FORWARD;
+                    if(PyString_Check(arg2))
+                    {
+                        const char * s2 = PyString_AsString(arg2);
+                        dir = TransformDirectionFromString( s2 );
+                    }
+                    
+                    return BuildConstPyProcessor(config->getProcessor(transform, dir));
+                }
+                
+                // Any two (Colorspaces, colorspace name, roles)
+                ConstColorSpaceRcPtr cs1, cs2;
+                
+                if(IsPyColorSpace(arg1)) cs1 = GetConstColorSpace(arg1, true);
+                else if(PyString_Check(arg1))
+                {
+                    cs1 = config->getColorSpace(PyString_AsString(arg1));
+                }
+                
+                if(IsPyColorSpace(arg2)) cs2 = GetConstColorSpace(arg2, true);
+                else if(PyString_Check(arg2))
+                {
+                    cs2 = config->getColorSpace(PyString_AsString(arg2));
+                }
+                
+                if(cs1 && cs2)
+                {
+                    return BuildConstPyProcessor(config->getProcessor(cs1, cs2));
+                }
+                
+                const char * text = "Error interpreting arguments. "
+                "Allowed types include Transform, ColorSpace, ColorSpace name, Role";
+                PyErr_SetString(PyExc_ValueError, text);
+                return NULL;
             }
             catch(...)
             {

@@ -118,11 +118,11 @@ void loadConfigFromEnv()
     OCIO::PackedImageDesc img(&imageVec[0], width, height, numChannels);
     std::cout << "img " << img << std::endl;
     
-    //OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceForRole(OCIO::ROLE_COMPOSITING_LOG);
-    //OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
+    //OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpace(OCIO::ROLE_COMPOSITING_LOG);
+    //OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
     
-    OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName("dt8");
-    OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName("lnh");
+    OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpace("dt8");
+    OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpace("lnh");
     
     imageVec[0] = 445.0f/1023.0f;
     imageVec[1] = 1023.0/1023.0f;
@@ -180,7 +180,7 @@ void createConfig()
         cs->setGpuMax(6.0);
         config->addColorSpace(cs);
         
-        config->setColorSpaceForRole( OCIO::ROLE_SCENE_LINEAR, cs->getName() );
+        config->setRole( OCIO::ROLE_SCENE_LINEAR, cs->getName() );
     }
     
     // Add a colorspace
@@ -204,7 +204,7 @@ void createConfig()
         
         config->addColorSpace(cs);
         
-        config->setColorSpaceForRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
+        config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
     }
     
     {

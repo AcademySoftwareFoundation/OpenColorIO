@@ -18,7 +18,7 @@ add_library(OpenColorIO SHARED
     FileFormatSpiMtx.cpp
     FileTransform.cpp
     GroupTransform.cpp
-    GpuAllocationOp.cpp
+    GpuAllocationNoOp.cpp
     GpuShaderDesc.cpp
     GpuShaderUtils.cpp
     HashUtils.cpp

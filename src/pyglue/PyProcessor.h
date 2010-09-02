@@ -27,17 +27,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_GPUALLOCATIONOP_H
-#define INCLUDED_OCIO_GPUALLOCATIONOP_H
+#ifndef INCLUDED_PYOCIO_PYPROCESSOR_H
+#define INCLUDED_PYOCIO_PYPROCESSOR_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "Op.h"
+#include <PyOpenColorIO/PyOpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
-    void CreateGpuAllocationOp(OpRcPtrVec & ops,
-                               const GpuAllocationData & allocationData);
+    // TODO: Maybe put this in a pyinternal namespace?
+    
+    typedef struct {
+        PyObject_HEAD
+        ConstProcessorRcPtr * constcppobj;
+    } PyOCIO_Processor;
+    
+    extern PyTypeObject PyOCIO_ProcessorType;
+    
+    bool AddProcessorObjectToModule( PyObject* m );
 }
 OCIO_NAMESPACE_EXIT
 

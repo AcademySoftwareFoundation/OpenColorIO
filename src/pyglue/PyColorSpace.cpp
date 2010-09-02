@@ -52,10 +52,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildConstPyColorSpace(ConstColorSpaceRcPtr colorSpace)
     {
-        if (colorSpace.get() == 0x0)
+        if (!colorSpace)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyColorSpace from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_ColorSpace * pycolorSpace = PyObject_New(
@@ -72,10 +71,9 @@ OCIO_NAMESPACE_ENTER
     
     PyObject * BuildEditablePyColorSpace(ColorSpaceRcPtr colorSpace)
     {
-        if (colorSpace.get() == 0x0)
+        if (!colorSpace)
         {
-            PyErr_SetString(PyExc_ValueError, "Cannot create PyColorSpace from null object.");
-            return NULL;
+            Py_RETURN_NONE;
         }
         
         PyOCIO_ColorSpace * pycolorSpace = PyObject_New(

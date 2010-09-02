@@ -84,7 +84,7 @@ OCIO_NAMESPACE_ENTER
     
     
     typedef std::vector<ColorSpaceRcPtr> ColorSpacePtrVec;
-    typedef std::vector< std::pair<std::string, std::string> > RoleVec;
+    typedef std::vector< std::pair<std::string, std::string> > RoleVec; // (lowercase role name, colorspace)
     typedef std::vector<std::string> DisplayKey; // (device, name, colorspace)
     
     class Config::Impl
@@ -215,52 +215,105 @@ OCIO_NAMESPACE_ENTER
         m_impl->description_ = description;
     }
     
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
     int Config::getNumColorSpaces() const
     {
         return static_cast<int>(m_impl->colorspaces_.size());
     }
     
+    const char * Config::getColorSpaceNameByIndex(int index) const
+    {
+        if(index<0 || index >= (int)m_impl->colorspaces_.size())
+        {
+            return 0x0;
+        }
+        
+        return m_impl->colorspaces_[index]->getName();
+    }
+    
+    ConstColorSpaceRcPtr Config::getColorSpace(const char * name) const
+    {
+        int index = getIndexForColorSpace(name);
+        if(index<0 || index >= (int)m_impl->colorspaces_.size())
+        {
+            return ColorSpaceRcPtr();
+        }
+        
+        return m_impl->colorspaces_[index];
+    }
+    
+    ColorSpaceRcPtr Config::getEditableColorSpace(const char * name)
+    {
+        int index = getIndexForColorSpace(name);
+        if(index<0 || index >= (int)m_impl->colorspaces_.size())
+        {
+            return ColorSpaceRcPtr();
+        }
+        
+        return m_impl->colorspaces_[index];
+    }
+    
     int Config::getIndexForColorSpace(const char * name) const
     {
+        if(!name) return -1;
+        
         std::string strname = name;
         if(strname.empty()) return -1;
         
-        // Check to see if the colorspace already exists at a known index.
+        // Check to see if the name is a color space
         for(unsigned int index = 0; index < m_impl->colorspaces_.size(); ++index)
         {
-            if(strname != m_impl->colorspaces_[index]->getName())
-                continue;
+            if(strname == m_impl->colorspaces_[index]->getName())
+                return index;
+        }
+        
+        // Check to see if the name is a role
+        // The rolevec is all lowercase, so we must edit the name accordingly.
+        
+        std::string namelower = pystring::lower(strname);
+        for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
+        {
+            if(m_impl->roleVec_[i].first != namelower) continue;
             
-            return index;
+            std::string csname = m_impl->roleVec_[i].second;
+            
+            for(unsigned int csi = 0; csi < m_impl->colorspaces_.size(); ++csi)
+            {
+                if(csname == m_impl->colorspaces_[csi]->getName())
+                    return csi;
+            }
+            
+            // TODO: Exception instead?  Specified role is found,
+            // but referenced colorspace does not exist.
+            return -1;
         }
         
         return -1;
     }
     
-    // if another colorspace was already registered with the
-    // same name, this will overwrite it.
-    // Stores the live reference to this colorspace
-    
-    void Config::addColorSpace(ColorSpaceRcPtr cs)
+    void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
     {
+        ColorSpaceRcPtr cs = original->createEditableCopy();
+        
         std::string name = cs->getName();
         if(name.empty())
             throw Exception("Cannot addColorSpace with an empty name.");
         
-        // Check to see if the colorspace already exists at a known index.
-        int index = getIndexForColorSpace( cs->getName() );
-        if(index != -1)
+        // Check to see if the colorspace already exists
+        for(unsigned int index = 0; index < m_impl->colorspaces_.size(); ++index)
         {
-            m_impl->colorspaces_[index] = cs;
-            return;
+            if(name == m_impl->colorspaces_[index]->getName())
+            {
+                m_impl->colorspaces_[index] = cs;
+                return;
+            }
         }
         
+        // Otherwise, add it
         m_impl->colorspaces_.push_back( cs );
-    }
-    
-    void Config::addColorSpace(const ConstColorSpaceRcPtr & cs)
-    {
-        addColorSpace(cs->createEditableCopy());
     }
     
     void Config::clearColorSpaces()
@@ -268,57 +321,10 @@ OCIO_NAMESPACE_ENTER
         m_impl->colorspaces_.clear();
     }
     
-    ConstColorSpaceRcPtr Config::getColorSpaceByIndex(int index) const
-    {
-        if(index<0 || index >= (int)m_impl->colorspaces_.size())
-        {
-            std::ostringstream os;
-            os << "Invalid ColorSpace index " << index << ".";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_impl->colorspaces_[index];
-    }
     
-    ColorSpaceRcPtr Config::getEditableColorSpaceByIndex(int index)
-    {
-        if(index<0 || index >= (int)m_impl->colorspaces_.size())
-        {
-            std::ostringstream os;
-            os << "Invalid ColorSpace index " << index << ".";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_impl->colorspaces_[index];
-    }
     
-    ConstColorSpaceRcPtr Config::getColorSpaceByName(const char * name) const
-    {
-        int index = getIndexForColorSpace( name );
-        if(index == -1)
-        {
-            std::ostringstream os;
-            os << "Cannot find ColorSpace named '";
-            os << name << "'.";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_impl->colorspaces_[index];
-    }
     
-    ColorSpaceRcPtr Config::getEditableColorSpaceByName(const char * name)
-    {
-        int index = getIndexForColorSpace( name );
-        if(index == -1)
-        {
-            std::ostringstream os;
-            os << "Cannot find ColorSpace named '";
-            os << name << "'.";
-            throw Exception(os.str().c_str());
-        }
-        
-        return m_impl->colorspaces_[index];
-    }
+    
     
     const char * Config::parseColorSpaceFromString(const char * str) const
     {
@@ -362,54 +368,35 @@ OCIO_NAMESPACE_ENTER
     
     
     // Roles
-    
-    ConstColorSpaceRcPtr Config::getColorSpaceForRole(const char * role) const
+    void Config::setRole(const char * role, const char * colorSpaceName)
     {
         std::string rolelower = pystring::lower(role);
         
-        for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
+        // Set the role
+        if(colorSpaceName)
         {
-            if(m_impl->roleVec_[i].first == rolelower)
+            for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
             {
-                return getColorSpaceByName(m_impl->roleVec_[i].second.c_str());
+                if(m_impl->roleVec_[i].first == rolelower)
+                {
+                    m_impl->roleVec_[i].second = colorSpaceName;
+                    return;
+                }
             }
+            m_impl->roleVec_.push_back( std::make_pair(rolelower, std::string(colorSpaceName) ) );
         }
-        
-        std::ostringstream os;
-        os << "The specified role ";
-        os  << role ;
-        os << " has not been defined.";
-        throw Exception(os.str().c_str());
-    }
-    
-    void Config::setColorSpaceForRole(const char * role, const char * name)
-    {
-        std::string rolelower = pystring::lower(role);
-        
-        for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
+        // Unset the role
+        else
         {
-            if(m_impl->roleVec_[i].first == rolelower)
+            for(RoleVec::iterator iter = m_impl->roleVec_.begin();
+                iter != m_impl->roleVec_.end();
+                ++iter)
             {
-                m_impl->roleVec_[i].second = name;
-                return;
-            }
-        }
-        
-        m_impl->roleVec_.push_back( std::make_pair(rolelower, std::string(name) ) );
-    }
-    
-    void Config::unsetRole(const char * role)
-    {
-        std::string rolelower = pystring::lower(role);
-        
-        for(RoleVec::iterator iter = m_impl->roleVec_.begin();
-            iter != m_impl->roleVec_.end();
-            ++iter)
-        {
-            if(iter->first == rolelower)
-            {
-                m_impl->roleVec_.erase(iter);
-                return;
+                if(iter->first == rolelower)
+                {
+                    m_impl->roleVec_.erase(iter);
+                    return;
+                }
             }
         }
     }
@@ -419,13 +406,11 @@ OCIO_NAMESPACE_ENTER
         return static_cast<int>(m_impl->roleVec_.size());
     }
     
-    const char * Config::getRole(int index) const
+    const char * Config::getRoleNameByIndex(int index) const
     {
         if(index<0 || index >= (int)m_impl->roleVec_.size())
         {
-            std::ostringstream os;
-            os << "Invalid role index " << index << ".";
-            throw Exception(os.str().c_str());
+            return 0x0;
         }
         
         return m_impl->roleVec_[index].first.c_str();
@@ -589,13 +574,46 @@ OCIO_NAMESPACE_ENTER
         memcpy(m_impl->defaultLumaCoefs_, c3, 3*sizeof(float));
     }
     
-    ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
-                                             const ConstColorSpaceRcPtr & dstColorSpace) const
+    ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
+                                             const ConstColorSpaceRcPtr & dst) const
     {
+        if(!src)
+        {
+            throw Exception("Config::GetProcessor failed. Source colorspace is null.");
+        }
+        if(!dst)
+        {
+            throw Exception("Config::GetProcessor failed. Destination colorspace is null.");
+        }
+        
         LocalProcessorRcPtr processor = LocalProcessor::Create();
-        processor->addColorSpaceConversion(*this, srcColorSpace, dstColorSpace);
+        processor->addColorSpaceConversion(*this, src, dst);
         processor->finalize();
         return processor;
+    }
+    
+    //! Names can be colorspace name or role name
+    ConstProcessorRcPtr Config::getProcessor(const char * srcName,
+                                             const char * dstName) const
+    {
+        // TODO: Confirm !RcPtr works
+        ConstColorSpaceRcPtr src = getColorSpace(srcName);
+        if(!src)
+        {
+            std::ostringstream os;
+            os << "Could not find colorspace '" << srcName << ".";
+            throw Exception(os.str().c_str());
+        }
+        
+        ConstColorSpaceRcPtr dst = getColorSpace(dstName);
+        if(!dst)
+        {
+            std::ostringstream os;
+            os << "Could not find colorspace '" << dstName << ".";
+            throw Exception(os.str().c_str());
+        }
+        
+        return getProcessor(src, dst);
     }
     
     ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform,
@@ -1061,10 +1079,10 @@ OCIO_NAMESPACE_ENTER
             
             for(int i = 0; i < getNumRoles(); ++i)
             {
-                std::string role = getRole(i);
-                std::string rolekey = std::string("role_") + role;
-                std::string roleValue = getColorSpaceForRole(role.c_str())->getName();
-                element->SetAttribute(rolekey, roleValue);
+                std::string roleName = getRoleNameByIndex(i);
+                std::string roleKey = std::string("role_") + roleName;
+                std::string roleValue = getColorSpace(roleName.c_str())->getName();
+                element->SetAttribute(roleKey, roleValue);
             }
             
             for(int i=0; i<getNumDisplayDeviceNames(); ++i)
@@ -1090,7 +1108,8 @@ OCIO_NAMESPACE_ENTER
             
             for(int i = 0; i < getNumColorSpaces(); ++i)
             {
-                TiXmlElement * childElement = GetElement(getColorSpaceByIndex(i));
+                const char * colorSpace = getColorSpaceNameByIndex(i);
+                TiXmlElement * childElement = GetElement(getColorSpace(colorSpace));
                 element->LinkEndChild( childElement );
             }
             
@@ -1168,7 +1187,7 @@ OCIO_NAMESPACE_ENTER
                 else if(pystring::startswith(attrName, "role_"))
                 {
                     std::string role = pystring::slice(attrName, (int)std::string("role_").size());
-                    config->setColorSpaceForRole(role.c_str(), pAttrib->Value());
+                    config->setRole(role.c_str(), pAttrib->Value());
                 }
                 else if(pystring::startswith(attrName, "luma_"))
                 {

@@ -56,6 +56,7 @@ xml = config.getXML()
 #print xml
 """
 
+"""
 config = OCIO.Config.CreateFromEnv()
 print 'default display device',config.getDefaultDisplayDeviceName()
 for device in config.getDisplayDeviceNames():
@@ -64,3 +65,29 @@ for device in config.getDisplayDeviceNames():
     
     for transform in config.getDisplayTransformNames(device):
         print '    transform',transform
+"""
+
+"""
+
+    OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpace("dt8");
+    OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpace("lnh");
+    
+    imageVec[0] = 445.0f/1023.0f;
+    imageVec[1] = 1023.0/1023.0f;
+    imageVec[2] = 0.0/1023.0f;
+    std::cout << csSrc->getName() << " ";
+    PrintColor(std::cout, &imageVec[0], "input");
+    std::cout << std::endl;
+    
+    """
+
+config = OCIO.Config.CreateFromEnv()
+c1 = config.getColorSpace("lnh")
+c2 = config.getColorSpace("dt8")
+print c1.getName(), c2.getName()
+processor = config.getProcessor("dt8","lnh")
+print "processor",processor
+print "processor isNoOp",processor.isNoOp()
+
+c = ( 445/1023.0, 1.0, 0.0 )
+print processor.applyRGB(c)

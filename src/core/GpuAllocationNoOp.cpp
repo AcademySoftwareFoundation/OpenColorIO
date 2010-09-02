@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "GpuAllocationOp.h"
+#include "GpuAllocationNoOp.h"
 
 #include <sstream>
 
@@ -36,11 +36,11 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        class GpuAllocationOp : public Op
+        class GpuAllocationNoOp : public Op
         {
         public:
-            GpuAllocationOp(const GpuAllocationData & allocationData);
-            virtual ~GpuAllocationOp();
+            GpuAllocationNoOp(const GpuAllocationData & allocationData);
+            virtual ~GpuAllocationNoOp();
             
             virtual OpRcPtr clone() const;
             
@@ -70,32 +70,32 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        GpuAllocationOp::GpuAllocationOp(const GpuAllocationData & allocationData) :
+        GpuAllocationNoOp::GpuAllocationNoOp(const GpuAllocationData & allocationData) :
                         m_allocationData(allocationData)
         { };
 
-        OpRcPtr GpuAllocationOp::clone() const
+        OpRcPtr GpuAllocationNoOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new GpuAllocationOp(m_allocationData));
+            OpRcPtr op = OpRcPtr(new GpuAllocationNoOp(m_allocationData));
             return op;
         }
         
-        GpuAllocationOp::~GpuAllocationOp()
+        GpuAllocationNoOp::~GpuAllocationNoOp()
         {
 
         }
 
-        std::string GpuAllocationOp::getInfo() const
+        std::string GpuAllocationNoOp::getInfo() const
         {
-            return "<GPUAllocationOp>";
+            return "<GPUAllocationNoOp>";
         }
 
-        std::string GpuAllocationOp::getCacheID() const
+        std::string GpuAllocationNoOp::getCacheID() const
         {
             return m_cacheID;
         }
 
-        void GpuAllocationOp::finalize()
+        void GpuAllocationNoOp::finalize()
         {
             // Create the cacheID
             std::ostringstream cacheIDStream;
@@ -105,25 +105,25 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
 
-        void GpuAllocationOp::apply(float* /*rgbaBuffer*/, long /*numPixels*/) const
+        void GpuAllocationNoOp::apply(float* /*rgbaBuffer*/, long /*numPixels*/) const
         { }
 
-        bool GpuAllocationOp::supportsGpuShader() const
+        bool GpuAllocationNoOp::supportsGpuShader() const
         {
             return true;
         }
 
-        void GpuAllocationOp::writeGpuShader(std::ostringstream & /*shader*/,
+        void GpuAllocationNoOp::writeGpuShader(std::ostringstream & /*shader*/,
                                              const std::string & /*pixelName*/,
                                              const GpuShaderDesc & /*shaderDesc*/) const
         { }
         
-        bool GpuAllocationOp::definesGpuAllocation() const
+        bool GpuAllocationNoOp::definesGpuAllocation() const
         {
             return true;
         }
         
-        GpuAllocationData GpuAllocationOp::getGpuAllocation() const
+        GpuAllocationData GpuAllocationNoOp::getGpuAllocation() const
         {
             return m_allocationData;
         }
@@ -131,10 +131,10 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void CreateGpuAllocationOp(OpRcPtrVec & ops,
-                               const GpuAllocationData & allocationData)
+    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
+                                 const GpuAllocationData & allocationData)
     {
-        ops.push_back( OpRcPtr(new GpuAllocationOp(allocationData)) );
+        ops.push_back( OpRcPtr(new GpuAllocationNoOp(allocationData)) );
     }
 
 }

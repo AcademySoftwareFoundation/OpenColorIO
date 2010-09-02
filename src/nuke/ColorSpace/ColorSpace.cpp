@@ -30,24 +30,22 @@ ColorSpace::ColorSpace(Node *n) : DD::Image::PixelIop(n)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-
-        OCIO::ConstColorSpaceRcPtr defaultColorSpace = \
-            config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
-
+        
+        std::string defaultColorSpaceName = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR)->getName();
+        
         int nColorSpaces = config->getNumColorSpaces();
-
+        
         for(int i = 0; i < nColorSpaces; i++)
         {
-            OCIO::ConstColorSpaceRcPtr colorSpace = config->getColorSpaceByIndex(i);
-            bool isDefault = colorSpace->equals(defaultColorSpace);
-
-            colorSpaceNames.push_back(colorSpace->getName());
-
-            if (isDefault)
+            std::string csname = config->getColorSpaceNameByIndex(i);
+            colorSpaceNames.push_back(csname);
+            
+            if (defaultColorSpaceName == csname)
             {
                 inputColorSpaceIndex = static_cast<int>(inputColorSpaceCstrNames.size());
                 outputColorSpaceIndex = static_cast<int>(outputColorSpaceCstrNames.size());
             }
+            
             inputColorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
             outputColorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
         }
@@ -126,9 +124,7 @@ void ColorSpace::_validate(bool for_real)
         const char * outputName = outputColorSpaceCstrNames[outputColorSpaceIndex];
         
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        OCIO::ConstColorSpaceRcPtr csSrc = config->getColorSpaceByName( inputName );
-        OCIO::ConstColorSpaceRcPtr csDst = config->getColorSpaceByName( outputName );
-        processor = config->getProcessor(csSrc, csDst);
+        processor = config->getProcessor(inputName, outputName);
     }
     catch(OCIO::Exception &e)
     {

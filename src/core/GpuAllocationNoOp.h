@@ -27,40 +27,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCIO_PYOCIO_H
-#define INCLUDED_PYOCIO_PYOCIO_H
+#ifndef INCLUDED_OCIO_GPUALLOCATIONNOOP_H
+#define INCLUDED_OCIO_GPUALLOCATIONNOOP_H
 
 #include <OpenColorIO/OpenColorIO.h>
-#include <Python.h>
+
+#include "Op.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    // ColorSpace
-    PyObject * BuildConstPyColorSpace(ConstColorSpaceRcPtr colorSpace);
-    PyObject * BuildEditablePyColorSpace(ColorSpaceRcPtr colorSpace);
-    bool IsPyColorSpace(PyObject * pyobject);
-    bool IsPyColorSpaceEditable(PyObject * pyobject);
-    ConstColorSpaceRcPtr GetConstColorSpace(PyObject * pyobject, bool allowCast);
-    ColorSpaceRcPtr GetEditableColorSpace(PyObject * pyobject);
-    
-    // Config
-    PyObject * BuildConstPyConfig(ConstConfigRcPtr config);
-    PyObject * BuildEditablePyConfig(ConfigRcPtr config);
-    bool IsPyConfig(PyObject * config);
-    bool IsPyConfigEditable(PyObject * config);
-    ConstConfigRcPtr GetConstConfig(PyObject * config, bool allowCast);
-    ConfigRcPtr GetEditableConfig(PyObject * config);
-    
-    // Transform
-    PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
-    PyObject * BuildEditablePyTransform(TransformRcPtr transform);
-    bool IsPyTransform(PyObject * pyobject);
-    ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast);
-    
-    // Processor
-    PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor);
-    bool IsPyProcessor(PyObject * pyobject);
-    ConstProcessorRcPtr GetConstProcessor(PyObject * pyobject);
+    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
+                                 const GpuAllocationData & allocationData);
 }
 OCIO_NAMESPACE_EXIT
 
