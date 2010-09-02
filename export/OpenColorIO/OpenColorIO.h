@@ -30,15 +30,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OCIO_H
 #define INCLUDED_OCIO_OCIO_H
 
+#define OCIO_VERSION "0.5.14"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 // OpenColorIO
-// Version 0.5.14
-//
 
 // TODO: Gracefully handle null strings + null rcptrs across API
 //       (i.e, make the external api bullet-proof) :)
+// TODO: Avoid use of config->getDisplayColorSpaceName(device, transformName).
+//       (Allow device : transform as another alias of the output color space)
 // TODO: add  GetOriginalSourceFile(); setOriginalSourceFile(const std::string &sourceFile)
 // TODO: Turn the lutpath into a search path mechanism
 // TODO: add op optimizations.  op collapsing.  cache op tree.
@@ -63,21 +64,16 @@ try
 {
     // Get the global config, which will auto-initialize
     // from the environment on first use.
-    
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
-    OCIO::ConstColorSpaceRcPtr csSrc = \
-        config->getColorSpaceForRole(OCIO::ROLE_COMPOSITING_LOG);
+    // Get the processor corresponding to this transform.
+    ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_COMPOSITING_LOG,
+                                                         OCIO::ROLE_SCENE_LINEAR);
     
-    OCIO::ConstColorSpaceRcPtr csDst = \
-        config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR);
-    
-    ConstProcessorRcPtr processor = config->getProcessor(csSrc, csDst);
-    
-    // Wrap the image in a light-weight ImageDescription,
-    // and convert it in place
-    
+    // Wrap the image in a light-weight ImageDescription
     OCIO::PackedImageDesc img(imageData, w, h, 4);
+    
+    // Apply the color transformation (in place)
     processor->apply(img);
 }
 catch(OCIO::Exception & exception)
@@ -89,6 +85,8 @@ catch(OCIO::Exception & exception)
 // Example: Apply the default display transform (to a scene-linear image)
 try
 {
+    // Get the global config, which will auto-initialize
+    // from the environment on first use.
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
     const char * device = config->getDefaultDisplayDeviceName();
@@ -96,9 +94,10 @@ try
     const char * displayColorSpace = config->getDisplayColorSpaceName(device, transformName);
     
     OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
-    transform->setInputColorSpace( config->getColorSpaceForRole(OCIO::ROLE_SCENE_LINEAR) );
-    transform->setDisplayColorSpace( config->getColorSpaceByName(displayColorSpace) );
+    transform->setInputColorSpaceName( OCIO::ROLE_SCENE_LINEAR );
+    transform->setDisplayColorSpaceName( displayColorSpace );
     
+    // Get the processor corresponding to this transform
     OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
     
     OCIO::PackedImageDesc img(imageData, w, h, 4);
@@ -113,18 +112,6 @@ catch(OCIO::Exception & exception)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 // Namespace mojo
 #define OCIO_VERSION_NS v1
 #define OCIO_NAMESPACE_ENTER namespace SPI \
@@ -135,6 +122,8 @@ catch(OCIO::Exception & exception)
 } /*namespace SPI*/
 #define OCIO_NAMESPACE SPI::OCIO
 #define OCIO_NAMESPACE_USING using namespace SPI::OCIO;
+
+
 
 #include <exception>
 #include <memory>

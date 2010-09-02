@@ -6,6 +6,7 @@ import PyOpenColorIO as OCIO
 print ""
 print "PyOCIO:", OCIO.__file__
 print "OCIO:",dir(OCIO)
+print "version:",OCIO.version
 print ""
 
 #import pydoc

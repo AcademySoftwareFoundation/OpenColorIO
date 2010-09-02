@@ -109,4 +109,6 @@ initPyOpenColorIO(void)
     OCIO::AddProcessorObjectToModule( m );
     
     OCIO::InitializeConstantsModule( m );
+    
+    PyModule_AddStringConstant(m, "version", OCIO_VERSION);
 }
