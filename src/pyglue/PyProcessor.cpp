@@ -239,6 +239,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 ConstProcessorRcPtr processor = GetConstProcessor(self);
+                if(processor->isNoOp()) return pyData;
                 
                 PackedImageDesc img(&data[0], data.size()/3, 1, 3);
                 processor->apply(img);
@@ -267,6 +268,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 ConstProcessorRcPtr processor = GetConstProcessor(self);
+                if(processor->isNoOp()) return pyData;
                 
                 PackedImageDesc img(&data[0], data.size()/4, 1, 4);
                 processor->apply(img);
