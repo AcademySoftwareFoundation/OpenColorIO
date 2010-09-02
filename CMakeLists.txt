@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 2.6)
+
 project(OpenColorIO)
 
 enable_language(CXX)
 
 if(APPLE)
-#    set(CMAKE_OSX_ARCHITECTURES ppc;i386;ppc64;x86_64)
-    set(CMAKE_OSX_ARCHITECTURES i386;x86_64)
+    if(NOT CMAKE_OSX_ARCHITECTURES)
+        set(CMAKE_OSX_ARCHITECTURES i386;x86_64)
+    endif()
+    message(STATUS "Setting OSX Architectures to: ${CMAKE_OSX_ARCHITECTURES}")
+    message(STATUS "    possible options CMAKE_OSX_ARCHITECTURES:STRING=ppc;i386;ppc64;x86_64")
 endif()
 
 ###############################################################################
@@ -79,9 +83,10 @@ else()
     message(STATUS "SSE Runtime: DISABLED")
 endif()
 
-
-
-
+install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS OpenColorIOTest DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(FILES ${OpenColorIO_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenColorIO/)
 
 ###############################################################################
 #
