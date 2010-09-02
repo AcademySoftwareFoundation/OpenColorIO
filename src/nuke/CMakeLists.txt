@@ -5,15 +5,18 @@ if( NUKE_FOUND )
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
     endif()
     
+    include_directories(
+        ${CMAKE_SOURCE_DIR}/export/
+        ColorSpace
+        Display
+        ${Nuke_INCLUDE_DIR}
+    )
+    
     ###############################################################################
     ### NukeOCIOColorSpace ###
     
     add_library(NukeOCIOColorSpace MODULE
         ColorSpace/ColorSpace.cpp
-    )
-    include_directories(
-        ColorSpace
-        ${Nuke_INCLUDE_DIR}
     )
     target_link_libraries(NukeOCIOColorSpace
         OpenColorIO
@@ -30,10 +33,6 @@ if( NUKE_FOUND )
     
     add_library(NukeOCIODisplay MODULE
         Display/Display.cpp
-    )
-    include_directories(
-        Display
-        ${NUKE}
     )
     target_link_libraries(NukeOCIODisplay
         OpenColorIO
