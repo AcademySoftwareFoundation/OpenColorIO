@@ -37,11 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Version 0.5.14
 //
 
-// TODO: Unify all fcns that get/set colorspace classes to return colorspace name string instead?
-//       Example, DisplayTransform
 // TODO: Gracefully handle null strings + null rcptrs across API
 //       (i.e, make the external api bullet-proof) :)
-
 // TODO: add  GetOriginalSourceFile(); setOriginalSourceFile(const std::string &sourceFile)
 // TODO: Turn the lutpath into a search path mechanism
 // TODO: add op optimizations.  op collapsing.  cache op tree.
@@ -923,9 +920,8 @@ OCIO_NAMESPACE_ENTER
         
         
         // STAGE I: What is the colorspace for the image coming in?
-        void setInputColorSpace(const ConstColorSpaceRcPtr & cs);
-        ConstColorSpaceRcPtr getInputColorSpace() const;
-        
+        void setInputColorSpaceName(const char * name);
+        const char * getInputColorSpaceName() const;
         
         
         // STAGE II: Apply a Color Correction, in linear, if desired.
@@ -958,8 +954,8 @@ OCIO_NAMESPACE_ENTER
         
         // STAGE V: Specify which Colorspace is appropriate for viewing
         
-        void setDisplayColorSpace(const ConstColorSpaceRcPtr & cs);
-        ConstColorSpaceRcPtr getDisplayColorSpace() const;
+        void setDisplayColorSpaceName(const char * name);
+        const char * getDisplayColorSpaceName() const;
         
         // STAGE VI: Apply Post-processing
     

@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyColorSpace.h"
 #include "PyDisplayTransform.h"
 #include "PyUtil.h"
 
@@ -166,14 +165,14 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_DisplayTransform_getDirection( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setDirection( PyObject * self,  PyObject *args );
         
-        PyObject * PyOCIO_DisplayTransform_getInputColorSpace( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setInputColorSpace( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName( PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_DisplayTransform_getLinearExposure( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setLinearExposure( PyObject * self,  PyObject *args );
         
-        PyObject * PyOCIO_DisplayTransform_getDisplayColorSpace( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setDisplayColorSpace( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_DisplayTransform_getDisplayColorSpaceName( PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setDisplayColorSpaceName( PyObject * self,  PyObject *args );
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -185,18 +184,15 @@ OCIO_NAMESPACE_ENTER
             {"getDirection", (PyCFunction) PyOCIO_DisplayTransform_getDirection, METH_NOARGS, "" },
             {"setDirection", PyOCIO_DisplayTransform_setDirection, METH_VARARGS, "" },
             
-            {"getInputColorSpace", (PyCFunction) PyOCIO_DisplayTransform_getInputColorSpace, METH_NOARGS, "" },
-            {"setInputColorSpace", PyOCIO_DisplayTransform_setInputColorSpace, METH_VARARGS, "" },
+            {"getInputColorSpaceName", (PyCFunction) PyOCIO_DisplayTransform_getInputColorSpaceName, METH_NOARGS, "" },
+            {"setInputColorSpaceName", PyOCIO_DisplayTransform_setInputColorSpaceName, METH_VARARGS, "" },
             
             {"getLinearExposure", (PyCFunction) PyOCIO_DisplayTransform_getLinearExposure, METH_NOARGS, "" },
             {"setLinearExposure", PyOCIO_DisplayTransform_setLinearExposure, METH_VARARGS, "" },
             
-            {"getDisplayColorSpace", (PyCFunction) PyOCIO_DisplayTransform_getDisplayColorSpace, METH_NOARGS, "" },
-            {"setDisplayColorSpace", PyOCIO_DisplayTransform_setDisplayColorSpace, METH_VARARGS, "" },
-            /*
-            {"getInterpolation", (PyCFunction) PyOCIO_DisplayTransform_getInterpolation, METH_NOARGS, "" },
-            {"setInterpolation", PyOCIO_DisplayTransform_setInterpolation, METH_VARARGS, "" },
-            */
+            {"getDisplayColorSpaceName", (PyCFunction) PyOCIO_DisplayTransform_getDisplayColorSpaceName, METH_NOARGS, "" },
+            {"setDisplayColorSpaceName", PyOCIO_DisplayTransform_setDisplayColorSpaceName, METH_VARARGS, "" },
+            
             {NULL, NULL, 0, NULL}
         };
     }
@@ -361,14 +357,12 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_DisplayTransform_getInputColorSpace( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName( PyObject * self )
         {
             try
             {
                 ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                ConstColorSpaceRcPtr colorSpace = transform->getInputColorSpace();
-                
-                return BuildConstPyColorSpace(colorSpace);
+                return PyString_FromString( transform->getInputColorSpaceName() );
             }
             catch(...)
             {
@@ -377,16 +371,15 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_DisplayTransform_setInputColorSpace( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName( PyObject * self, PyObject * args )
         {
             try
             {
-                PyObject * pyColorSpace = 0;
-                if (!PyArg_ParseTuple(args,"O:setInputColorSpace", &pyColorSpace)) return NULL;
+                char * name = 0;
+                if (!PyArg_ParseTuple(args,"s:setInputColorSpaceName", &name)) return NULL;
                 
                 DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(pyColorSpace, true);
-                transform->setInputColorSpace( colorSpace );
+                transform->setInputColorSpaceName( name );
                 
                 Py_RETURN_NONE;
             }
@@ -447,14 +440,12 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_DisplayTransform_getDisplayColorSpace( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getDisplayColorSpaceName( PyObject * self )
         {
             try
             {
                 ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                ConstColorSpaceRcPtr colorSpace = transform->getDisplayColorSpace();
-                
-                return BuildConstPyColorSpace(colorSpace);
+                return PyString_FromString( transform->getDisplayColorSpaceName() );
             }
             catch(...)
             {
@@ -463,16 +454,15 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_DisplayTransform_setDisplayColorSpace( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setDisplayColorSpaceName( PyObject * self, PyObject * args )
         {
             try
             {
-                PyObject * pyColorSpace = 0;
-                if (!PyArg_ParseTuple(args,"O:setDisplayColorSpace", &pyColorSpace)) return NULL;
+                char * name = 0;
+                if (!PyArg_ParseTuple(args,"s:setDisplayColorSpaceName", &name)) return NULL;
                 
                 DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(pyColorSpace, true);
-                transform->setDisplayColorSpace( colorSpace );
+                transform->setDisplayColorSpaceName( name );
                 
                 Py_RETURN_NONE;
             }

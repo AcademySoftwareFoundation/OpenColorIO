@@ -57,15 +57,13 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         TransformDirection dir_;
-        ConstColorSpaceRcPtr inputColorSpace_;
+        std::string inputColorSpaceName_;
         CDLTransformRcPtr linearCC_;
-        ConstColorSpaceRcPtr displayColorSpace_;
+        std::string displayColorSpaceName_;
         
         Impl() :
             dir_(TRANSFORM_DIR_FORWARD),
-            inputColorSpace_(ColorSpace::Create()),
-            linearCC_(CDLTransform::Create()),
-            displayColorSpace_(ColorSpace::Create())
+            linearCC_(CDLTransform::Create())
         { }
         
         ~Impl()
@@ -74,9 +72,9 @@ OCIO_NAMESPACE_ENTER
         Impl& operator= (const Impl & rhs)
         {
             dir_ = rhs.dir_;
-            inputColorSpace_ = rhs.inputColorSpace_;
+            inputColorSpaceName_ = rhs.inputColorSpaceName_;
             linearCC_ = DynamicPtrCast<CDLTransform>(rhs.linearCC_->createEditableCopy());
-            displayColorSpace_ = rhs.displayColorSpace_;
+            displayColorSpaceName_ = rhs.displayColorSpaceName_;
             return *this;
         }
     };
@@ -118,19 +116,14 @@ OCIO_NAMESPACE_ENTER
         m_impl->dir_ = dir;
     }
     
-    void DisplayTransform::setInputColorSpace(const ConstColorSpaceRcPtr & cs)
+    void DisplayTransform::setInputColorSpaceName(const char * name)
     {
-        if(!cs)
-        {
-            throw Exception("DisplayTransform::SetInputColorSpace failed. Colorspace is null.");
-        }
-        
-        m_impl->inputColorSpace_ = cs;
+        m_impl->inputColorSpaceName_ = name;
     }
     
-    ConstColorSpaceRcPtr DisplayTransform::getInputColorSpace() const
+    const char * DisplayTransform::getInputColorSpaceName() const
     {
-        return m_impl->inputColorSpace_;
+        return m_impl->inputColorSpaceName_.c_str();
     }
     
     void DisplayTransform::setLinearCC(const ConstCDLTransformRcPtr & cc)
@@ -164,19 +157,14 @@ OCIO_NAMESPACE_ENTER
         memcpy(v4, cc, 4*sizeof(float));
     }
     
-    void DisplayTransform::setDisplayColorSpace(const ConstColorSpaceRcPtr & cs)
+    void DisplayTransform::setDisplayColorSpaceName(const char * name)
     {
-        if(!cs)
-        {
-            throw Exception("DisplayTransform::SetDisplayColorSpace failed. Colorspace is null.");
-        }
-        
-        m_impl->displayColorSpace_ = cs;
+        m_impl->displayColorSpaceName_ = name;
     }
     
-    ConstColorSpaceRcPtr DisplayTransform::getDisplayColorSpace() const
+    const char * DisplayTransform::getDisplayColorSpaceName() const
     {
-        return m_impl->displayColorSpace_;
+        return m_impl->displayColorSpaceName_.c_str();
     }
     
     
@@ -209,7 +197,16 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        ConstColorSpaceRcPtr currentColorspace = displayTransform.getInputColorSpace();
+        std::string inputColorSpaceName = displayTransform.getInputColorSpaceName();
+        ConstColorSpaceRcPtr currentColorspace = config.getColorSpace(inputColorSpaceName.c_str());
+        if(!currentColorspace)
+        {
+            std::ostringstream os;
+            os << "DisplayTransform error.";
+            if(inputColorSpaceName.empty()) os << " InputColorSpaceName is unspecified.";
+            else os <<  " Cannot find inputColorSpace, named '" << inputColorSpaceName << "'.";
+            throw Exception(os.str().c_str());
+        }
         
         ConstCDLTransformRcPtr linearCC = displayTransform.getLinearCC();
         
@@ -228,9 +225,20 @@ OCIO_NAMESPACE_ENTER
             currentColorspace = linearColorSpace;
         }
         
+        std::string displayColorSpaceName = displayTransform.getDisplayColorSpaceName();
+        ConstColorSpaceRcPtr displayColorspace = config.getColorSpace(displayColorSpaceName.c_str());
+        if(!displayColorspace)
+        {
+            std::ostringstream os;
+            os << "DisplayTransform error.";
+            if(displayColorSpaceName.empty()) os << " displayColorspace is unspecified.";
+            else os <<  " Cannot find displayColorspace, named '" << displayColorSpaceName << "'.";
+            throw Exception(os.str().c_str());
+        }
+        
         BuildColorSpaceOps(ops, config,
                            currentColorspace,
-                           displayTransform.getDisplayColorSpace());
+                           displayColorspace);
     }
 }
 OCIO_NAMESPACE_EXIT

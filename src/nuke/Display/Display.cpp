@@ -140,8 +140,8 @@ void Display::_validate(bool for_real)
         const char *transformName = displayTransformCstrNames[displayTransformIndex];
         const char *csDstName = config->getDisplayColorSpaceName(deviceName, transformName);
 
-        transformPtr->setInputColorSpace(config->getColorSpace(csSrcName));
-        transformPtr->setDisplayColorSpace(config->getColorSpace(csDstName));
+        transformPtr->setInputColorSpaceName(csSrcName);
+        transformPtr->setDisplayColorSpaceName(csDstName);
 
         float e = static_cast<float>(exposure);
         const float exposure4f[] = {e, e, e, 0.0f}; // r, g, b, a
