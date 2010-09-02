@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
+set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake )
+
+
+
+
 
 project(OpenColorIO)
 
@@ -89,48 +94,20 @@ install(FILES ${OpenColorIO_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenColorIO/)
 
 ###############################################################################
-#
-# NUKE
-#
+### NUKE ###
 
-set(NUKE "/net/apps/rhel40m64/foundry/nuke6.0.5/include" CACHE FILEPATH "path to Nuke headers against which to compile Nuke plugins")
-set(NUKE_HEADER DDImage/Op.h)
-if(EXISTS "${NUKE}/${NUKE_HEADER}")
-    message(STATUS "Nuke path okay, will build the Nuke plugins against ${NUKE}")
-
-    add_library(NukeOCIOColorSpace MODULE
-        src/nuke/ColorSpace/ColorSpace.cpp
-    )
-    include_directories(
-        src/nuke/ColorSpace/
-        ${NUKE}
-    )
-    target_link_libraries(NukeOCIOColorSpace OpenColorIO)
-
-    add_library(NukeOCIODisplay MODULE
-        src/nuke/Display/Display.cpp
-    )
-    include_directories(
-        src/nuke/Display/
-        ${NUKE}
-    )
-    target_link_libraries(NukeOCIODisplay OpenColorIO)
-
-    if(APPLE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
+SET( Nuke_INSTALL_PATH "/net/apps/rhel40m64/foundry/nuke6.0.5/include" )
+find_package( Nuke )
+if( NUKE_FOUND )
+    if(NOT CMAKE_NOT_FIRST_RUN)
+        message(STATUS "    will build the Nuke plugins against ${Nuke_LIBRARY_DIR}")
     endif()
-
-    add_custom_target(Nuke
-        DEPENDS NukeOCIOColorSpace
-        DEPENDS NukeOCIODisplay
-    )
+    add_subdirectory (src/nuke)
 else()
-    message(STATUS "Nuke plugins will not be built: ${NUKE_HEADER} not found in ${NUKE}")
+    if(NOT CMAKE_NOT_FIRST_RUN)
+        message(STATUS "    try setting NDK_PATH environment variable, if you want to build the nuke plugins")
+    endif()
 endif()
-
-
-
-
 
 ###############################################################################
 #
@@ -202,3 +179,5 @@ else()
     message(STATUS "Python bindings will not be built: ${PYTHON_ERR}")
 endif()
 
+# Log CMake First Run
+SET(CMAKE_NOT_FIRST_RUN 1 CACHE INTERNAL "")
