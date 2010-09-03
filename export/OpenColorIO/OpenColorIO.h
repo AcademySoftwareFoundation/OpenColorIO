@@ -443,9 +443,6 @@ OCIO_NAMESPACE_ENTER
         void setDefaultLumaCoefs(const float * rgb);
         
         
-        
-        
-        
         //! Convert from inputColorSpace to outputColorSpace
         //
         //  Note: This may provide higher fidelity than anticipated due to
@@ -462,13 +459,13 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
                                          const ConstColorSpaceRcPtr & dstColorSpace) const;
         
-        //! Names can be colorspace name or role name
+        //! Names can be colorspace name, role name, or a combination of both
         ConstProcessorRcPtr getProcessor(const char * srcName,
                                          const char * dstName) const;
         
-        // Individual transform application functions
-        // Not generally needed in pipelines, but allows for re-use of
-        // atomic OCIO functionality.
+        // Get the processor for the specified transform.
+        // Not often needed, but will allow for the re-use of atomic OCIO functionality
+        // (Such as to apply an individual LUT file)
         
         ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
                                          TransformDirection direction = TRANSFORM_DIR_FORWARD) const;
