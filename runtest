@@ -1,1 +1,1 @@
-tcsh -c 'setenv OCIO  `pwd`/configs/testing/config.ocio && mkdir -p build && cd build && cmake ../ && make OpenColorIOTest && ./OpenColorIOTest'
+tcsh -c 'setenv OCIO  `pwd`/configs/testing/config.ocio && mkdir -p build && cd build && cmake ../ && make OpenColorIOTest && ../build/src/testbed/OpenColorIOTest'
