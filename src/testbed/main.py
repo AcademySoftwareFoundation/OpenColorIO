@@ -82,6 +82,7 @@ for device in config.getDisplayDeviceNames():
     
     """
 
+"""
 config = OCIO.Config.CreateFromEnv()
 c1 = config.getColorSpace("lnh")
 c2 = config.getColorSpace("dt8")
@@ -92,3 +93,6 @@ print "processor isNoOp",processor.isNoOp()
 
 c = ( 445/1023.0, 1.0, 0.0 )
 print processor.applyRGB(c)
+"""
+
+#print OCIO.Constants.CombineTransformDirections(OCIO.Constants.TRANSFORM_DIR_INVERSE, OCIO.Constants.TRANSFORM_DIR_INVERSE)

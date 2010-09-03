@@ -38,10 +38,21 @@ OCIO_NAMESPACE_ENTER
 
     namespace
     {
-    
-    PyMethodDef LocalModuleMethods[] = {
-        {NULL, NULL, 0, NULL}        /* Sentinel */
-    };
+        PyObject * PyOCIO_Constants_GetInverseTransformDirection( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_Constants_CombineTransformDirections( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_Constants_BitDepthIsFloat( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_Constants_BitDepthToInt( PyObject * self,  PyObject *args );
+        
+        ///////////////////////////////////////////////////////////////////////
+        ///
+        
+        PyMethodDef LocalModuleMethods[] = {
+            {"GetInverseTransformDirection", PyOCIO_Constants_GetInverseTransformDirection, METH_VARARGS, "" },
+            {"CombineTransformDirections", PyOCIO_Constants_CombineTransformDirections, METH_VARARGS, "" },
+            {"BitDepthIsFloat", PyOCIO_Constants_BitDepthIsFloat, METH_VARARGS, "" },
+            {"BitDepthToInt", PyOCIO_Constants_BitDepthToInt, METH_VARARGS, "" },
+            {NULL, NULL, 0, NULL}        /* Sentinel */
+        };
     
     }
     
@@ -112,6 +123,83 @@ OCIO_NAMESPACE_ENTER
         
         // Add the module
         PyModule_AddObject(enclosingModule, "Constants", m);
+    }
+    
+    
+    namespace
+    {
+        PyObject * PyOCIO_Constants_GetInverseTransformDirection( PyObject * /*module*/, PyObject * args )
+        {
+            try
+            {
+                char * s = 0;
+                if (!PyArg_ParseTuple(args,"s:GetInverseTransformDirection", &s)) return NULL;
+                
+                TransformDirection dir = TransformDirectionFromString(s);
+                dir = GetInverseTransformDirection(dir);
+                return PyString_FromString( TransformDirectionToString(dir) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Constants_CombineTransformDirections( PyObject * /*module*/, PyObject * args )
+        {
+            try
+            {
+                char * s1 = 0;
+                char * s2 = 0;
+                if (!PyArg_ParseTuple(args,"ss:CombineTransformDirections", &s1, &s2)) return NULL;
+                
+                TransformDirection dir1 = TransformDirectionFromString(s1);
+                TransformDirection dir2 = TransformDirectionFromString(s2);
+                
+                TransformDirection dir = CombineTransformDirections(dir1, dir2);
+                return PyString_FromString( TransformDirectionToString(dir) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Constants_BitDepthIsFloat( PyObject * /*module*/, PyObject * args )
+        {
+            try
+            {
+                char * s = 0;
+                if (!PyArg_ParseTuple(args,"s:BitDepthIsFloat", &s)) return NULL;
+                
+                BitDepth bitdepth = BitDepthFromString(s);
+                return PyBool_FromLong( BitDepthIsFloat(bitdepth) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Constants_BitDepthToInt( PyObject * /*module*/, PyObject * args )
+        {
+            try
+            {
+                char * s = 0;
+                if (!PyArg_ParseTuple(args,"s:BitDepthToInt", &s)) return NULL;
+                
+                BitDepth bitdepth = BitDepthFromString(s);
+                return PyInt_FromLong( BitDepthToInt(bitdepth) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
     }
 
 }
