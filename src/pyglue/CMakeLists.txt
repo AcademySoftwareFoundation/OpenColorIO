@@ -41,6 +41,7 @@ if(PYTHON_OK)
         PyFileTransform.cpp
         PyGroupTransform.cpp
         PyMain.cpp
+        PyProcessor.cpp
         PyUtil.cpp
     )
     include_directories(
