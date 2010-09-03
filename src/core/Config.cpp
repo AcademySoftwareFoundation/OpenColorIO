@@ -362,7 +362,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        if(rightMostColorSpaceIndex<0) return "";
+        if(rightMostColorSpaceIndex<0) return 0x0;
         return m_impl->colorspaces_[rightMostColorSpaceIndex]->getName();
     }
     

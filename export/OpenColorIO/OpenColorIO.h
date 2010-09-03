@@ -395,7 +395,7 @@ OCIO_NAMESPACE_ENTER
         void clearColorSpaces();
         
         //! Given the specified string, get the longest, right-most,
-        //  ColorSpace substring that appears.  Return an empty string
+        //  ColorSpace substring that appears.  Return a null ptr
         //  if none are found.
         
         const char * parseColorSpaceFromString(const char * str) const;

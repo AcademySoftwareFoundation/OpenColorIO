@@ -179,6 +179,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getEditableColorSpace( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_addColorSpace( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_clearColorSpaces( PyObject * self );
+        PyObject * PyOCIO_Config_parseColorSpaceFromString( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_setRole( PyObject * self, PyObject * args );
         
         PyObject * PyOCIO_Config_getDisplayDeviceNames( PyObject * self );
@@ -213,6 +214,7 @@ OCIO_NAMESPACE_ENTER
             {"getEditableColorSpace", PyOCIO_Config_getEditableColorSpace, METH_VARARGS, "" },
             {"addColorSpace", PyOCIO_Config_addColorSpace, METH_VARARGS, "" },
             {"clearColorSpaces", (PyCFunction) PyOCIO_Config_clearColorSpaces, METH_NOARGS, "" },
+            {"parseColorSpaceFromString", PyOCIO_Config_parseColorSpaceFromString, METH_VARARGS, "" },
             {"setRole", PyOCIO_Config_setRole, METH_VARARGS, "" },
             
             {"getDisplayDeviceNames", (PyCFunction) PyOCIO_Config_getDisplayDeviceNames, METH_NOARGS, "" },
@@ -588,6 +590,33 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
+        
+        PyObject * PyOCIO_Config_parseColorSpaceFromString( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                
+                char * str = 0;
+                
+                if (!PyArg_ParseTuple(args,"s:parseColorSpaceFromString",
+                    &str)) return NULL;
+                
+                const char * cs = config->parseColorSpaceFromString(str);
+                if(cs)
+                {
+                    return PyString_FromString( cs );
+                }
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
         
         PyObject * PyOCIO_Config_setRole( PyObject * self, PyObject * args )
         {
