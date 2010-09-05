@@ -36,10 +36,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // OpenColorIO
 
+// TODO: Get DEFAULT_COLOR_ROLE to actually work as advertised.
+// TODO: Add parseColorSpaceRule.   STRICT, CONSERVATIVE to allow for 'always'
+//       succeed parsing. (such as with null profile)
+// TODO: Make runtest work, when OCIO is not set
 // TODO: Gracefully handle null strings + null rcptrs across API
 //       (i.e, make the external api bullet-proof) :)
 // TODO: Avoid use of config->getDisplayColorSpaceName(device, transformName).
-//       (Allow device : transform as another alias of the output color space)
+//       (Allow device : transform as another alias of the output color space?)
 // TODO: add  GetOriginalSourceFile(); setOriginalSourceFile(const std::string &sourceFile)
 // TODO: Turn the lutpath into a search path mechanism
 // TODO: add op optimizations.  op collapsing.  cache op tree.
