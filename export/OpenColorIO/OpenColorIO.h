@@ -56,6 +56,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: add internal namespace for all implementation objects Ops, etc.
 // TODO: Add prettier xml output (newlines between colorspaces?)
 // TODO: Cross-platform
+// TODO: allow migration to binary file format
 
 // DEFERRED: per-shot looks
 /*
@@ -350,7 +351,6 @@ OCIO_NAMESPACE_ENTER
         const char * getDescription() const;
         void setDescription(const char * description);
         
-        // TODO: allow migration to binary file format
         void writeXML(std::ostream& os) const;
         
         
@@ -1132,6 +1132,7 @@ OCIO_NAMESPACE_ENTER
     
     */
     
+    extern const char * ROLE_DEFAULT;
     extern const char * ROLE_REFERENCE;
     extern const char * ROLE_DATA;
     extern const char * ROLE_COLOR_PICKING;

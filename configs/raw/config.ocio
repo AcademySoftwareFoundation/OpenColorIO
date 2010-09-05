@@ -1,0 +1,6 @@
+<ocioconfig version="1" resourcepath="" luma_r="0.2126" luma_g="0.7152" luma_b="0.0722" role_default="raw">
+    <display device="sRGB" name="Raw" colorspace="raw"/>
+    <colorspace name="raw" family="raw" bitdepth="32f" isdata="true">
+        <description>A raw color space. Conversions to and from this space are no-ops.</description>
+    </colorspace>
+</ocioconfig>

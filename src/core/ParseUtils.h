@@ -53,6 +53,10 @@ OCIO_NAMESPACE_ENTER
     
     bool StringVecToIntVec(std::vector<int> & intArray,
                            const std::vector<std::string> & lineParts);
+    
+    //////////////////////////////////////////////////////////////////////////
+    
+    void ReportInfo(const std::string & text);
 }
 OCIO_NAMESPACE_EXIT
 

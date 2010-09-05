@@ -179,6 +179,7 @@ OCIO_NAMESPACE_ENTER
     
     
     
+    const char * ROLE_DEFAULT = "default";
     const char * ROLE_REFERENCE = "reference";
     const char * ROLE_DATA = "data";
     const char * ROLE_COLOR_PICKING = "color_picking";
@@ -308,6 +309,13 @@ OCIO_NAMESPACE_ENTER
         
         return true;
     }
-
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    
+    void ReportInfo(const std::string & text)
+    {
+        std::cerr << "[OpenColorIO INFO]: " << text << "\n";
+    }
 }
 OCIO_NAMESPACE_EXIT

@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Mutex.h"
 #include "OpBuilders.h"
 #include "PathUtils.h"
+#include "ParseUtils.h"
 #include "Processor.h"
 #include "pystring/pystring.h"
 #include "tinyxml/tinyxml.h"
@@ -50,6 +51,17 @@ OCIO_NAMESPACE_ENTER
         const float DEFAULT_LUMA_COEFF_R = 0.2126f;
         const float DEFAULT_LUMA_COEFF_G = 0.7152f;
         const float DEFAULT_LUMA_COEFF_B = 0.0722f;
+        
+        const char * INTERNAL_RAW_PROFILE = 
+            "<ocioconfig version='1' resourcepath=''"
+            "   luma_r='0.2126' luma_g='0.7152' luma_b='0.0722'"
+            "   role_default='raw'>"
+            "  <display device='sRGB' name='Raw' colorspace='raw'/>"
+            "  <colorspace name='raw' family='raw' bitdepth='32f' isdata='true'>"
+            "    <description>A raw color space. Conversions to and from this "
+            "     space are no-ops.</description>"
+            "  </colorspace>"
+            "</ocioconfig>";
     }
     
     
@@ -138,6 +150,9 @@ OCIO_NAMESPACE_ENTER
             
             return *this;
         }
+        
+        void loadXmlElement(const TiXmlElement* rootElement,
+                            const std::string & filename);
     };
     
     
@@ -156,17 +171,53 @@ OCIO_NAMESPACE_ENTER
     ConstConfigRcPtr Config::CreateFromEnv()
     {
         char * file = std::getenv("OCIO");
-        if(!file)
+        if(file)
+        {
+            return CreateFromFile(file);
+        }
+        
+        std::ostringstream os;
+        os << "Color management disabled. ";
+        os << "Specify an .ocio color configuration file ";
+        os << "using the $OCIO environment variable to enable.";
+        ReportInfo(os.str());
+        
+        ConfigRcPtr config = Config::Create();
+        
+        TiXmlDocument doc;
+        doc.Parse(INTERNAL_RAW_PROFILE);
+        const TiXmlElement* rootElement = doc.RootElement();
+        
+        config->m_impl->loadXmlElement(rootElement,
+                                       "INTERNAL_RAW_PROFILE");
+        return config;
+    }
+    
+    
+    ConstConfigRcPtr Config::CreateFromFile(const char * filename)
+    {
+        ConfigRcPtr config = Config::Create();
+        
+        TiXmlDocument doc(filename);
+        
+        bool loadOkay = doc.LoadFile();
+        if(!loadOkay)
         {
             std::ostringstream os;
-            os << "'OCIO' environment variable not set. ";
-            os << "Please specify a valid OpenColorIO (.ocio) configuration file.";
+            os << "Error parsing ocio configuration file, '" << filename;
+            os << "'. " << doc.ErrorDesc();
+            if(doc.ErrorRow())
+            {
+                os << " (line " << doc.ErrorRow();
+                os << ", col " << doc.ErrorCol() << ")";
+            }
             throw Exception(os.str().c_str());
         }
         
-        return CreateFromFile(file);
+        const TiXmlElement* rootElement = doc.RootElement();
+        config->m_impl->loadXmlElement(rootElement, filename);
+        return config;
     }
-    
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -489,7 +540,8 @@ OCIO_NAMESPACE_ENTER
         return static_cast<int>(names.size());
     }
     
-    const char * Config::getDisplayTransformName(const char * device, int index) const
+    const char * Config::getDisplayTransformName(const char * device,
+        int index) const
     {
         std::set<std::string> names;
         
@@ -522,7 +574,8 @@ OCIO_NAMESPACE_ENTER
         return "";
     }
     
-    const char * Config::getDisplayColorSpaceName(const char * device, const char * displayTransformName) const
+    const char * Config::getDisplayColorSpaceName(const char * device,
+        const char * displayTransformName) const
     {
         for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
         {
@@ -638,7 +691,7 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
     //
     //
     //
@@ -1128,29 +1181,15 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    ConstConfigRcPtr Config::CreateFromFile(const char * filename)
+    
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    
+    
+    void Config::Impl::loadXmlElement(const TiXmlElement* rootElement,
+                                      const std::string & filename)
     {
-        ConfigRcPtr config = Config::Create();
-        
-        // Assuming the config is already empty...
-        
-        TiXmlDocument doc(filename);
-        
-        bool loadOkay = doc.LoadFile();
-        if(!loadOkay)
-        {
-            std::ostringstream os;
-            os << "Error parsing ocio configuration file, '" << filename;
-            os << "'. " << doc.ErrorDesc();
-            if(doc.ErrorRow())
-            {
-                os << " (line " << doc.ErrorRow();
-                os << ", col " << doc.ErrorCol() << ")";
-            }
-            throw Exception(os.str().c_str());
-        }
-        
-        const TiXmlElement* rootElement = doc.RootElement();
         if(!rootElement || std::string(rootElement->Value()) != "ocioconfig")
         {
             std::ostringstream os;
@@ -1182,16 +1221,19 @@ OCIO_NAMESPACE_ENTER
                 }
                 else if(attrName == "resourcepath")
                 {
-                    config->setResourcePath(pAttrib->Value());
+                    resourcePath_ = pAttrib->Value();
                 }
                 else if(pystring::startswith(attrName, "role_"))
                 {
-                    std::string role = pystring::slice(attrName, (int)std::string("role_").size());
-                    config->setRole(role.c_str(), pAttrib->Value());
+                    std::string role = pystring::slice(attrName,
+                        (int)std::string("role_").size());
+                    roleVec_.push_back( std::make_pair(role.c_str(),
+                        pAttrib->Value()));
                 }
                 else if(pystring::startswith(attrName, "luma_"))
                 {
-                    std::string channel = pystring::slice(attrName, (int)std::string("luma_").size());
+                    std::string channel = pystring::slice(attrName,
+                        (int)std::string("luma_").size());
                     
                     int channelindex = -1;
                     if(channel == "r") channelindex = 0;
@@ -1251,11 +1293,11 @@ OCIO_NAMESPACE_ENTER
             if(elementtype == "colorspace")
             {
                 ColorSpaceRcPtr cs = CreateColorSpaceFromElement( pElem );
-                config->addColorSpace( cs );
+                colorspaces_.push_back( cs );
             }
             else if(elementtype == "description")
             {
-                config->setDescription(pElem->GetText());
+                description_ = pElem->GetText();
             }
             else if(elementtype == "display")
             {
@@ -1270,7 +1312,11 @@ OCIO_NAMESPACE_ENTER
                     throw Exception(os.str().c_str());
                 }
                 
-                config->addDisplayDevice(device, name, colorspace);
+                DisplayKey displayKey;
+                displayKey.push_back(std::string(device));
+                displayKey.push_back(std::string(name));
+                displayKey.push_back(std::string(colorspace));
+                displayDevices_.push_back(displayKey);
             }
             else
             {
@@ -1281,8 +1327,8 @@ OCIO_NAMESPACE_ENTER
             pElem=pElem->NextSiblingElement();
         }
         
-        config->m_impl->originalFileDir_ = path::dirname(filename);
-        config->m_impl->resolvedResourcePath_ = path::join(config->m_impl->originalFileDir_, config->m_impl->resourcePath_);
+        originalFileDir_ = path::dirname(filename);
+        resolvedResourcePath_ = path::join(originalFileDir_, resourcePath_);
         
         if(lumaSet != 3)
         {
@@ -1291,10 +1337,12 @@ OCIO_NAMESPACE_ENTER
             os << "'. Could not find required ocioconfig luma_{r,g,b} xml attributes.";
             throw Exception(os.str().c_str());
         }
-        
-        config->setDefaultLumaCoefs(lumacoef);
-        
-        return config;
+        else
+        {
+            defaultLumaCoefs_[0] = lumacoef[0];
+            defaultLumaCoefs_[1] = lumacoef[1];
+            defaultLumaCoefs_[2] = lumacoef[2];
+        }
     }
 }
 OCIO_NAMESPACE_EXIT
