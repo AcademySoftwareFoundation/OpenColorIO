@@ -399,10 +399,16 @@ OCIO_NAMESPACE_ENTER
         void clearColorSpaces();
         
         //! Given the specified string, get the longest, right-most,
-        //  ColorSpace substring that appears.  Return a null ptr
-        //  if none are found.
+        //  ColorSpace substring that appears.
+        //  If strict parsing is enabled, and no colorspace are found
+        //  return a null pointer. If strict parsing is disabled,
+        //  return ROLE_DEFAULT (if defined). If the default role is
+        //  not defined, return a null pointer.
         
         const char * parseColorSpaceFromString(const char * str) const;
+        
+        bool isStrictParsingEnabled() const;
+        void setStrictParsingEnabled(bool enabled);
         
         // Roles (like an alias for a color space)
         // You query the colorSpace corresponding to a role

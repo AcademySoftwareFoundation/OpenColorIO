@@ -53,7 +53,7 @@ OCIO_NAMESPACE_ENTER
         const float DEFAULT_LUMA_COEFF_B = 0.0722f;
         
         const char * INTERNAL_RAW_PROFILE = 
-            "<ocioconfig version='1' resourcepath=''"
+            "<ocioconfig version='1' resourcepath='' strictparsing='false'"
             "   luma_r='0.2126' luma_g='0.7152' luma_b='0.0722'"
             "   role_default='raw'>"
             "  <display device='sRGB' name='Raw' colorspace='raw'/>"
@@ -99,6 +99,38 @@ OCIO_NAMESPACE_ENTER
     typedef std::vector< std::pair<std::string, std::string> > RoleVec; // (lowercase role name, colorspace)
     typedef std::vector<std::string> DisplayKey; // (device, name, colorspace)
     
+    std::string LookupRole(const RoleVec & roleVec, const std::string & rolename)
+    {
+        std::string s = pystring::lower(rolename);
+        
+        for(unsigned int i=0; i<roleVec.size(); ++i)
+        {
+            if(s == roleVec[i].first)
+            {
+                return roleVec[i].second;
+            }
+        }
+        
+        return "";
+    }
+    
+    bool FindColorSpaceIndex(int * index,
+                             const ColorSpacePtrVec & colorspaces,
+                             const std::string & csname)
+    {
+        if(csname.empty()) return false;
+        for(unsigned int i = 0; i < colorspaces.size(); ++i)
+        {
+            if(csname == colorspaces[i]->getName())
+            {
+                if(index) *index = i;
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     class Config::Impl
     {
     public:
@@ -115,8 +147,10 @@ OCIO_NAMESPACE_ENTER
         std::vector<DisplayKey> displayDevices_;
         
         float defaultLumaCoefs_[3];
+        bool strictParsing_;
         
-        Impl()
+        Impl() : 
+            strictParsing_(true)
         {
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
             defaultLumaCoefs_[1] = DEFAULT_LUMA_COEFF_G;
@@ -148,6 +182,8 @@ OCIO_NAMESPACE_ENTER
             
             memcpy(defaultLumaCoefs_, rhs.defaultLumaCoefs_, 3*sizeof(float));
             
+            strictParsing_ = rhs.strictParsing_;
+            
             return *this;
         }
         
@@ -178,8 +214,7 @@ OCIO_NAMESPACE_ENTER
         
         std::ostringstream os;
         os << "Color management disabled. ";
-        os << "Specify an .ocio color configuration file ";
-        os << "using the $OCIO environment variable to enable.";
+        os << "(Specify the $OCIO environment variable to enable.)";
         ReportInfo(os.str());
         
         ConfigRcPtr config = Config::Create();
@@ -309,37 +344,26 @@ OCIO_NAMESPACE_ENTER
     
     int Config::getIndexForColorSpace(const char * name) const
     {
-        if(!name) return -1;
-        
-        std::string strname = name;
-        if(strname.empty()) return -1;
+        int csindex = -1;
         
         // Check to see if the name is a color space
-        for(unsigned int index = 0; index < m_impl->colorspaces_.size(); ++index)
+        if( FindColorSpaceIndex(&csindex, m_impl->colorspaces_, name) )
         {
-            if(strname == m_impl->colorspaces_[index]->getName())
-                return index;
+            return csindex;
         }
         
         // Check to see if the name is a role
-        // The rolevec is all lowercase, so we must edit the name accordingly.
-        
-        std::string namelower = pystring::lower(strname);
-        for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
+        std::string csname = LookupRole(m_impl->roleVec_, name);
+        if( FindColorSpaceIndex(&csindex, m_impl->colorspaces_, csname) )
         {
-            if(m_impl->roleVec_[i].first != namelower) continue;
-            
-            std::string csname = m_impl->roleVec_[i].second;
-            
-            for(unsigned int csi = 0; csi < m_impl->colorspaces_.size(); ++csi)
-            {
-                if(csname == m_impl->colorspaces_[csi]->getName())
-                    return csi;
-            }
-            
-            // TODO: Exception instead?  Specified role is found,
-            // but referenced colorspace does not exist.
-            return -1;
+            return csindex;
+        }
+        
+        // Is a default role defined?
+        csname = LookupRole(m_impl->roleVec_, ROLE_DEFAULT);
+        if( FindColorSpaceIndex(&csindex, m_impl->colorspaces_, csname) )
+        {
+            return csindex;
         }
         
         return -1;
@@ -354,17 +378,16 @@ OCIO_NAMESPACE_ENTER
             throw Exception("Cannot addColorSpace with an empty name.");
         
         // Check to see if the colorspace already exists
-        for(unsigned int index = 0; index < m_impl->colorspaces_.size(); ++index)
+        int csindex = -1;
+        if( FindColorSpaceIndex(&csindex, m_impl->colorspaces_, name) )
         {
-            if(name == m_impl->colorspaces_[index]->getName())
-            {
-                m_impl->colorspaces_[index] = cs;
-                return;
-            }
+            m_impl->colorspaces_[csindex] = cs;
         }
-        
-        // Otherwise, add it
-        m_impl->colorspaces_.push_back( cs );
+        else
+        {
+            // Otherwise, add it
+            m_impl->colorspaces_.push_back( cs );
+        }
     }
     
     void Config::clearColorSpaces()
@@ -413,10 +436,39 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        if(rightMostColorSpaceIndex<0) return 0x0;
-        return m_impl->colorspaces_[rightMostColorSpaceIndex]->getName();
+        if(rightMostColorSpaceIndex>=0)
+        {
+            return m_impl->colorspaces_[rightMostColorSpaceIndex]->getName();
+        }
+        
+        if(!m_impl->strictParsing_)
+        {
+            // Is a default role defined?
+            std::string csname = LookupRole(m_impl->roleVec_, ROLE_DEFAULT);
+            if(!csname.empty())
+            {
+                int csindex = -1;
+                if( FindColorSpaceIndex(&csindex, m_impl->colorspaces_, csname) )
+                {
+                    // This is necessary to not return a reference to
+                    // a local variable.
+                    return m_impl->colorspaces_[csindex]->getName();
+                }
+            }
+        }
+        
+        return 0x0;
     }
     
+    bool Config::isStrictParsingEnabled() const
+    {
+        return m_impl->strictParsing_;
+    }
+    
+    void Config::setStrictParsingEnabled(bool enabled)
+    {
+        m_impl->strictParsing_ = enabled;
+    }
     
     // Roles
     void Config::setRole(const char * role, const char * colorSpaceName)
@@ -1108,61 +1160,47 @@ OCIO_NAMESPACE_ENTER
         try
         {
             element->SetAttribute("version", "1");
-            element->SetAttribute("resourcepath", getResourcePath());
+            element->SetAttribute("resourcepath", m_impl->resourcePath_);
+            element->SetAttribute("strictparsing", BoolToString(m_impl->strictParsing_));
             
             // Luma coefficients
-            {
-                float coef[3] = { 0.0f, 0.0f, 0.0f };
-                getDefaultLumaCoefs(coef);
-                
-                element->SetDoubleAttribute("luma_r", coef[0]);
-                element->SetDoubleAttribute("luma_g", coef[1]);
-                element->SetDoubleAttribute("luma_b", coef[2]);
-            }
+            element->SetDoubleAttribute("luma_r", m_impl->defaultLumaCoefs_[0]);
+            element->SetDoubleAttribute("luma_g", m_impl->defaultLumaCoefs_[1]);
+            element->SetDoubleAttribute("luma_b", m_impl->defaultLumaCoefs_[2]);
             
-            const char * description = getDescription();
-            if(strlen(description) > 0)
+            // Description
+            if(!m_impl->description_.empty())
             {
                 TiXmlElement * descElement = new TiXmlElement( "description" );
                 element->LinkEndChild( descElement );
-                
-                TiXmlText * textElement = new TiXmlText( description );
+                TiXmlText * textElement = new TiXmlText( m_impl->description_ );
                 descElement->LinkEndChild( textElement );
             }
             
-            for(int i = 0; i < getNumRoles(); ++i)
+            // Roles
+            for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
             {
-                std::string roleName = getRoleNameByIndex(i);
-                std::string roleKey = std::string("role_") + roleName;
-                std::string roleValue = getColorSpace(roleName.c_str())->getName();
+                std::string roleKey = std::string("role_") + m_impl->roleVec_[i].first;
+                std::string roleValue = m_impl->roleVec_[i].second;
                 element->SetAttribute(roleKey, roleValue);
             }
             
-            for(int i=0; i<getNumDisplayDeviceNames(); ++i)
+            // Display Transforms
+            for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
             {
-                const char * device = getDisplayDeviceName(i);
+                if(m_impl->displayDevices_[i].size() != 3) continue;
                 
-                int numTransforms = getNumDisplayTransformNames(device);
-                for(int j=0; j<numTransforms; ++j)
-                {
-                    const char * displayTransformName = getDisplayTransformName(device, j);
-                    const char * colorSpace = getDisplayColorSpaceName(device, displayTransformName);
-                    
-                    if(device && displayTransformName && colorSpace)
-                    {
-                        TiXmlElement * childElement = new TiXmlElement( "display" );
-                        childElement->SetAttribute("device", device);
-                        childElement->SetAttribute("name", displayTransformName);
-                        childElement->SetAttribute("colorspace", colorSpace);
-                        element->LinkEndChild( childElement );
-                    }
-                }
+                TiXmlElement * childElement = new TiXmlElement( "display" );
+                childElement->SetAttribute("device", m_impl->displayDevices_[i][0]);
+                childElement->SetAttribute("name", m_impl->displayDevices_[i][1]);
+                childElement->SetAttribute("colorspace", m_impl->displayDevices_[i][2]);
+                element->LinkEndChild( childElement );
             }
             
-            for(int i = 0; i < getNumColorSpaces(); ++i)
+            // Colorspaces
+            for(unsigned int i=0; i<m_impl->colorspaces_.size(); ++i)
             {
-                const char * colorSpace = getColorSpaceNameByIndex(i);
-                TiXmlElement * childElement = GetElement(getColorSpace(colorSpace));
+                TiXmlElement * childElement = GetElement(m_impl->colorspaces_[i]);
                 element->LinkEndChild( childElement );
             }
             
@@ -1174,7 +1212,7 @@ OCIO_NAMESPACE_ENTER
         catch( const std::exception & e)
         {
             std::ostringstream error;
-            error << "Error writing xml. ";
+            error << "Error building xml: ";
             error << e.what();
             throw Exception(error.str().c_str());
         }
@@ -1222,6 +1260,10 @@ OCIO_NAMESPACE_ENTER
                 else if(attrName == "resourcepath")
                 {
                     resourcePath_ = pAttrib->Value();
+                }
+                else if(attrName == "strictparsing")
+                {
+                    strictParsing_ = BoolFromString(pAttrib->Value());
                 }
                 else if(pystring::startswith(attrName, "role_"))
                 {
