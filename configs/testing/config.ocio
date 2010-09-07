@@ -1,4 +1,4 @@
-<ocioconfig version="1" resourcepath="luts" luma_r="0.2126" luma_g="0.7152" luma_b="0.0722" role_scene_linear="lnh" role_compositing_log="lgh">
+<ocioconfig version="1" resourcepath="luts" strictparsing="true" luma_r="0.2126" luma_g="0.7152" luma_b="0.0722" role_scene_linear="lnh" role_compositing_log="lgh">
     <display device="sRGB" name="Film1D" colorspace="vd8"/>
     <display device="sRGB" name="Log" colorspace="lg10"/>
     
