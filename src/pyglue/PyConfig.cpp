@@ -595,7 +595,7 @@ OCIO_NAMESPACE_ENTER
         {
             try
             {
-                ConfigRcPtr config = GetEditableConfig(self);
+                ConstConfigRcPtr config = GetConstConfig(self, true);
                 
                 char * str = 0;
                 
