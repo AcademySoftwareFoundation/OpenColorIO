@@ -26,6 +26,17 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Winline -Wconversion -Wcast-qual -W
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Weffc++")
 
 ###############################################################################
+### BOOST ###
+
+set (Boost_ADDITIONAL_VERSIONS "1.43" "1.43.0" "1.42" "1.42.0" 
+                               "1.41" "1.41.0" "1.40" "1.40.0"
+                               "1.39" "1.39.0" "1.38" "1.38.0"
+                               "1.37" "1.37.0" "1.34.1" "1_34_1")
+set (Boost_USE_STATIC_LIBS ON) # TODO: make this a option
+set (Boost_USE_MULTITHREADED ON)
+find_package (Boost 1.34 COMPONENTS unit_test_framework)
+
+###############################################################################
 ### SSE ###
 
 option(USE_SSE "Set to OFF to disable SSE optimizations." ON)

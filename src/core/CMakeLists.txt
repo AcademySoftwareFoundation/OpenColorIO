@@ -1,4 +1,7 @@
 
+###############################################################################
+### OCIO CORE ###
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/export/
 )
@@ -13,6 +16,7 @@ add_library(OpenColorIO SHARED
     Exception.cpp
     ExponentOps.cpp
     FileFormat3DL.cpp
+    FileFormatCSP.cpp
     FileFormatSpi1D.cpp
     FileFormatSpi3D.cpp
     FileFormatSpiMtx.cpp
@@ -49,3 +53,18 @@ add_library(OpenColorIO SHARED
 install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 install(FILES ${OpenColorIO_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenColorIO/)
+
+###############################################################################
+### CORE UNIT TESTS ###
+
+if(Boost_FOUND)
+    file( GLOB core_test_srcs "*_test.cpp" )
+    include_directories( ${Boost_INCLUDE_DIR} )
+    link_directories( ${Boost_LIBRARY_DIRS} )
+    add_executable( ocio_core_tests ${core_test_srcs} )
+    target_link_libraries(ocio_core_tests
+        OpenColorIO
+        ${Boost_LIBRARIES}
+        )
+    install(TARGETS ocio_core_tests DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+endif()
