@@ -22,8 +22,8 @@ if(APPLE)
 endif()
 
 # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Winline -Wconversion -Wcast-qual -Wformat=2")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Weffc++")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Weffc++ -Winline ")
 
 ###############################################################################
 ### BOOST ###
