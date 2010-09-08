@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OCIO_H
 #define INCLUDED_OCIO_OCIO_H
 
-#define OCIO_VERSION "0.5.14"
+#define OCIO_VERSION "0.5.15"
 
 ///////////////////////////////////////////////////////////////////////////////
 //

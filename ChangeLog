@@ -1,3 +1,10 @@
+Version 0.5.15 (Sept 8 2010):
+    * OCIO is well behaved when $OCIO is unset, allowing un-color-managed use.
+    * Color Transforms can be applied in python config->getProcessor
+    * Simplification of API (getColorSpace allows cs name, role names, and cs objects)
+    * Makefile enhancements (courtesy Malcolm Humphreys)
+    * A bunch of bug fixes
+
 Version 0.5.14 (Sept 1 2010):
     * Python binding enhancements
     * Simplified class implmentations (reduced internal header count)
