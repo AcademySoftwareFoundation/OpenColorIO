@@ -562,10 +562,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        std::ostringstream os;
-        os << "Could not find display device with the specified index ";
-        os << index << ".";
-        throw Exception(os.str().c_str());
+        return "";
     }
     
     const char * Config::getDefaultDisplayDeviceName() const
@@ -609,11 +606,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        std::ostringstream os;
-        os << "Could not find display colorspace for device ";
-        os << device << " with the specified index ";
-        os << index << ".";
-        throw Exception(os.str().c_str());
+        return "";
     }
     
     const char * Config::getDefaultDisplayTransformName(const char * device) const
@@ -637,11 +630,7 @@ OCIO_NAMESPACE_ENTER
             return m_impl->displayDevices_[i][2].c_str();
         }
         
-        std::ostringstream os;
-        os << "Could not find display colorspace for device ";
-        os << device << " with the specified transform name ";
-        os << displayTransformName << ".";
-        throw Exception(os.str().c_str());
+        return "";
     }
     
     void Config::addDisplayDevice(const char * device,
