@@ -863,7 +863,7 @@ OCIO_NAMESPACE_ENTER
                     ConstTransformRcPtr transform = GetConstTransform(arg1, true);
                     
                     TransformDirection dir = TRANSFORM_DIR_FORWARD;
-                    if(PyString_Check(arg2))
+                    if(arg2 && PyString_Check(arg2))
                     {
                         const char * s2 = PyString_AsString(arg2);
                         dir = TransformDirectionFromString( s2 );
