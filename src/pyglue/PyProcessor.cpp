@@ -241,7 +241,10 @@ OCIO_NAMESPACE_ENTER
                 std::vector<float> data;
                 if(!FillFloatVectorFromPySequence(pyData, data) || ((data.size()%3) != 0))
                 {
-                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size multiple of 3");
+                    std::ostringstream os;
+                    os << "First argument must be a float array, size multiple of 3. ";
+                    os << "Size: " << data.size() << ".";
+                    PyErr_SetString(PyExc_TypeError, os.str().c_str());
                     return 0;
                 }
                 
@@ -274,7 +277,9 @@ OCIO_NAMESPACE_ENTER
                 std::vector<float> data;
                 if(!FillFloatVectorFromPySequence(pyData, data) || ((data.size()%4) != 0))
                 {
-                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size multiple of 4");
+                    std::ostringstream os;
+                    os << "First argument must be a float array, size multiple of 4. ";
+                    os << "Size: " << data.size() << ".";
                     return 0;
                 }
                 
