@@ -231,15 +231,19 @@ OCIO_NAMESPACE_ENTER
                 PyObject * pyData = 0;
                 if (!PyArg_ParseTuple(args,"O:applyRGB", &pyData)) return NULL;
                 
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                if(processor->isNoOp())
+                {
+                    Py_INCREF(pyData);
+                    return pyData;
+                }
+                
                 std::vector<float> data;
                 if(!FillFloatVectorFromPySequence(pyData, data) || ((data.size()%3) != 0))
                 {
                     PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size multiple of 3");
                     return 0;
                 }
-                
-                ConstProcessorRcPtr processor = GetConstProcessor(self);
-                if(processor->isNoOp()) return pyData;
                 
                 PackedImageDesc img(&data[0], data.size()/3, 1, 3);
                 processor->apply(img);
@@ -260,15 +264,19 @@ OCIO_NAMESPACE_ENTER
                 PyObject * pyData = 0;
                 if (!PyArg_ParseTuple(args,"O:applyRGBA", &pyData)) return NULL;
                 
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                if(processor->isNoOp())
+                {
+                    Py_INCREF(pyData);
+                    return pyData;
+                }
+                
                 std::vector<float> data;
                 if(!FillFloatVectorFromPySequence(pyData, data) || ((data.size()%4) != 0))
                 {
                     PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size multiple of 4");
                     return 0;
                 }
-                
-                ConstProcessorRcPtr processor = GetConstProcessor(self);
-                if(processor->isNoOp()) return pyData;
                 
                 PackedImageDesc img(&data[0], data.size()/4, 1, 4);
                 processor->apply(img);
