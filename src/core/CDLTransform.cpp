@@ -256,8 +256,10 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
-    bool CDLTransform::isEqualTo(const ConstCDLTransformRcPtr & other,
-                                 bool compareMetadata) const
+    // We use this approach, rather than comparing XML to get around the
+    // case where setXML with extra data was provided.
+    
+    bool CDLTransform::equals(const ConstCDLTransformRcPtr & other) const
     {
         if(!other) return false;
         
@@ -286,16 +288,13 @@ OCIO_NAMESPACE_ENTER
             return false;
         }
         
-        if(compareMetadata)
-        {
-            std::string desc1 = getDescription();
-            std::string desc2 = other->getDescription();
-            if(desc1 != desc2) return false;
-            
-            std::string id1 = getID();
-            std::string id2 = other->getID();
-            if(id1 != id2) return false;
-        }
+        std::string desc1 = getDescription();
+        std::string desc2 = other->getDescription();
+        if(desc1 != desc2) return false;
+        
+        std::string id1 = getID();
+        std::string id2 = other->getID();
+        if(id1 != id2) return false;
         
         return true;
     }

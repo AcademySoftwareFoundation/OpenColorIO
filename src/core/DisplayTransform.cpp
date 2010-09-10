@@ -59,6 +59,7 @@ OCIO_NAMESPACE_ENTER
         TransformDirection dir_;
         std::string inputColorSpaceName_;
         CDLTransformRcPtr linearCC_;
+        TransformRcPtr colorTimingCC_;
         std::string displayColorSpaceName_;
         
         Impl() :
@@ -74,6 +75,10 @@ OCIO_NAMESPACE_ENTER
             dir_ = rhs.dir_;
             inputColorSpaceName_ = rhs.inputColorSpaceName_;
             linearCC_ = DynamicPtrCast<CDLTransform>(rhs.linearCC_->createEditableCopy());
+            
+            colorTimingCC_ = colorTimingCC_;
+            if(colorTimingCC_) colorTimingCC_ = colorTimingCC_->createEditableCopy();
+            
             displayColorSpaceName_ = rhs.displayColorSpaceName_;
             return *this;
         }
@@ -157,6 +162,16 @@ OCIO_NAMESPACE_ENTER
         memcpy(v4, cc, 4*sizeof(float));
     }
     
+    void DisplayTransform::setColorTimingCC(const ConstTransformRcPtr & cc)
+    {
+        m_impl->colorTimingCC_ = cc->createEditableCopy();
+    }
+    
+    ConstTransformRcPtr DisplayTransform::getColorTimingCC() const
+    {
+        return m_impl->colorTimingCC_;
+    }
+    
     void DisplayTransform::setDisplayColorSpaceName(const char * name)
     {
         m_impl->displayColorSpaceName_ = name;
@@ -212,18 +227,33 @@ OCIO_NAMESPACE_ENTER
         
         if(!linearCC->isNoOp())
         {
-            ConstColorSpaceRcPtr linearColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
+            ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
             
             BuildColorSpaceOps(ops, config,
                                currentColorspace,
-                               linearColorSpace);
+                               targetColorSpace);
             
-            BuildCDLOps(ops, config,
-                        *linearCC,
-                        TRANSFORM_DIR_FORWARD);
+            BuildCDLOps(ops, config, *linearCC, TRANSFORM_DIR_FORWARD);
             
-            currentColorspace = linearColorSpace;
+            currentColorspace = targetColorSpace;
         }
+        
+        
+        // Step 2: Apply a color correction, in ROLE_COLOR_TIMING
+        ConstTransformRcPtr colorTimingCC = displayTransform.getColorTimingCC();
+        if(colorTimingCC) // TODO: add isNoOp to ALL Transforms
+        {
+            ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_COLOR_TIMING);
+            
+            BuildColorSpaceOps(ops, config,
+                               currentColorspace,
+                               targetColorSpace);
+            
+            BuildOps(ops, config, colorTimingCC, TRANSFORM_DIR_FORWARD);
+            
+            currentColorspace = targetColorSpace;
+        }
+        
         
         std::string displayColorSpaceName = displayTransform.getDisplayColorSpaceName();
         ConstColorSpaceRcPtr displayColorspace = config.getColorSpace(displayColorSpaceName.c_str());

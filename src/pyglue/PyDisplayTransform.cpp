@@ -171,6 +171,9 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_DisplayTransform_getLinearExposure( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setLinearExposure( PyObject * self,  PyObject *args );
         
+        PyObject * PyOCIO_DisplayTransform_getColorTimingCC( PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setColorTimingCC( PyObject * self,  PyObject *args );
+        
         PyObject * PyOCIO_DisplayTransform_getDisplayColorSpaceName( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setDisplayColorSpaceName( PyObject * self,  PyObject *args );
         
@@ -189,6 +192,9 @@ OCIO_NAMESPACE_ENTER
             
             {"getLinearExposure", (PyCFunction) PyOCIO_DisplayTransform_getLinearExposure, METH_NOARGS, "" },
             {"setLinearExposure", PyOCIO_DisplayTransform_setLinearExposure, METH_VARARGS, "" },
+            
+            {"getColorTimingCC", (PyCFunction) PyOCIO_DisplayTransform_getColorTimingCC, METH_NOARGS, "" },
+            {"setColorTimingCC", PyOCIO_DisplayTransform_setColorTimingCC, METH_VARARGS, "" },
             
             {"getDisplayColorSpaceName", (PyCFunction) PyOCIO_DisplayTransform_getDisplayColorSpaceName, METH_NOARGS, "" },
             {"setDisplayColorSpaceName", PyOCIO_DisplayTransform_setDisplayColorSpaceName, METH_VARARGS, "" },
@@ -437,6 +443,43 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        PyObject * PyOCIO_DisplayTransform_getColorTimingCC( PyObject * self )
+        {
+            try
+            {
+                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
+                return BuildConstPyTransform(transform->getColorTimingCC());
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_DisplayTransform_setColorTimingCC( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyCC = 0;
+                if (!PyArg_ParseTuple(args,"O:setColorTimingCC", &pyCC)) return NULL;
+                
+                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+                
+                ConstTransformRcPtr cc = GetConstTransform(pyCC, true);
+                transform->setColorTimingCC(cc);
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
         ////////////////////////////////////////////////////////////////////////
         

@@ -915,45 +915,27 @@ OCIO_NAMESPACE_ENTER
         virtual void setDirection(TransformDirection dir);
         
         
-        // STAGE I: What is the colorspace for the image coming in?
+        // Step 0. Specify the incoming color space
         void setInputColorSpaceName(const char * name);
         const char * getInputColorSpaceName() const;
         
-        
-        // STAGE II: Apply a Color Correction, in linear, if desired.
-        
-        // By default, this will convert the incoming image into the ROLE_SCENE_LINEAR
-        // colorspace
-        
+        // Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR
         void setLinearCC(const ConstCDLTransformRcPtr & cc);
         ConstCDLTransformRcPtr getLinearCC() const;
         
-        //! As a convenience, this in stops
+        //  Convenience fcn to set an exposure (gain) change, in stops
         void setLinearExposure(const float* v4);
         void getLinearExposure(float* v4) const;
         
+        // Step 2: Apply a color correction, in ROLE_COLOR_TIMING
+        void setColorTimingCC(const ConstTransformRcPtr & cc);
+        ConstTransformRcPtr getColorTimingCC() const;
         
+        // Step 3: Apply the View Matrix
         
-        
-        // STAGE III: Apply an arbitrary color correction, in the color timing colorspace
-        // if needed
-        
-        // If a look is needed...
-        //void setLookColorSpace(const ConstColorSpaceRcPtr & cs);
-        //void setLookColorCorrection(const ConstTransformRcPtr & transform);
-        
-        
-        
-        // STAGE IV: Apply the View Matrix, if needed
-        
-        
-        
-        // STAGE V: Specify which Colorspace is appropriate for viewing
-        
+        // Step 4: Apply the output display transform
         void setDisplayColorSpaceName(const char * name);
         const char * getDisplayColorSpaceName() const;
-        
-        // STAGE VI: Apply Post-processing
     
     private:
         DisplayTransform();
@@ -1000,8 +982,7 @@ OCIO_NAMESPACE_ENTER
         
         bool isNoOp() const;
         
-        bool isEqualTo(const ConstCDLTransformRcPtr & other,
-                       bool compareMetadata) const;
+        bool equals(const ConstCDLTransformRcPtr & other) const;
         
         // TODO: Reset?
         
