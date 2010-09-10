@@ -204,7 +204,6 @@ OCIO_NAMESPACE_ENTER
     {
         TransformDirection combinedDir = CombineTransformDirections(dir,
                                                   displayTransform.getDirection());
-        
         if(combinedDir != TRANSFORM_DIR_FORWARD)
         {
             std::ostringstream os;
@@ -213,8 +212,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         std::string inputColorSpaceName = displayTransform.getInputColorSpaceName();
-        ConstColorSpaceRcPtr currentColorspace = config.getColorSpace(inputColorSpaceName.c_str());
-        if(!currentColorspace)
+        ConstColorSpaceRcPtr inputColorSpace = config.getColorSpace(inputColorSpaceName.c_str());
+        if(!inputColorSpace)
         {
             std::ostringstream os;
             os << "DisplayTransform error.";
@@ -222,38 +221,6 @@ OCIO_NAMESPACE_ENTER
             else os <<  " Cannot find inputColorSpace, named '" << inputColorSpaceName << "'.";
             throw Exception(os.str().c_str());
         }
-        
-        ConstCDLTransformRcPtr linearCC = displayTransform.getLinearCC();
-        
-        if(!linearCC->isNoOp())
-        {
-            ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
-            
-            BuildColorSpaceOps(ops, config,
-                               currentColorspace,
-                               targetColorSpace);
-            
-            BuildCDLOps(ops, config, *linearCC, TRANSFORM_DIR_FORWARD);
-            
-            currentColorspace = targetColorSpace;
-        }
-        
-        
-        // Step 2: Apply a color correction, in ROLE_COLOR_TIMING
-        ConstTransformRcPtr colorTimingCC = displayTransform.getColorTimingCC();
-        if(colorTimingCC) // TODO: add isNoOp to ALL Transforms
-        {
-            ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_COLOR_TIMING);
-            
-            BuildColorSpaceOps(ops, config,
-                               currentColorspace,
-                               targetColorSpace);
-            
-            BuildOps(ops, config, colorTimingCC, TRANSFORM_DIR_FORWARD);
-            
-            currentColorspace = targetColorSpace;
-        }
-        
         
         std::string displayColorSpaceName = displayTransform.getDisplayColorSpaceName();
         ConstColorSpaceRcPtr displayColorspace = config.getColorSpace(displayColorSpaceName.c_str());
@@ -266,9 +233,56 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        BuildColorSpaceOps(ops, config,
-                           currentColorspace,
-                           displayColorspace);
+        bool skipColorSpaceConversions = (inputColorSpace->isData() || displayColorspace->isData());
+        
+        
+        
+        
+        
+        ConstColorSpaceRcPtr currentColorspace = inputColorSpace;
+        
+        // Apply a color correction, in ROLE_SCENE_LINEAR
+        ConstCDLTransformRcPtr linearCC = displayTransform.getLinearCC();
+        if(!linearCC->isNoOp())
+        {
+            ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
+            
+            if(!skipColorSpaceConversions)
+            {
+                BuildColorSpaceOps(ops, config,
+                                   currentColorspace,
+                                   targetColorSpace);
+            }
+            
+            BuildCDLOps(ops, config, *linearCC, TRANSFORM_DIR_FORWARD);
+            currentColorspace = targetColorSpace;
+        }
+        
+        
+        // Apply a color correction, in ROLE_COLOR_TIMING
+        ConstTransformRcPtr colorTimingCC = displayTransform.getColorTimingCC();
+        if(colorTimingCC) // TODO: add isNoOp to ALL Transforms
+        {
+            ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_COLOR_TIMING);
+            
+            if(!skipColorSpaceConversions)
+            {
+                BuildColorSpaceOps(ops, config,
+                                   currentColorspace,
+                                   targetColorSpace);
+            }
+            
+            BuildOps(ops, config, colorTimingCC, TRANSFORM_DIR_FORWARD);
+            currentColorspace = targetColorSpace;
+        }
+        
+        // Apply the conversion to the display color space
+        if(!skipColorSpaceConversions)
+        {
+            BuildColorSpaceOps(ops, config,
+                               currentColorspace,
+                               displayColorspace);
+        }
     }
 }
 OCIO_NAMESPACE_EXIT

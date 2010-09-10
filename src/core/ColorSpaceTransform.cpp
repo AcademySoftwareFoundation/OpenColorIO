@@ -165,14 +165,9 @@ OCIO_NAMESPACE_ENTER
                             const ConstColorSpaceRcPtr & dstColorSpace)
     {
         if(srcColorSpace->getFamily() == dstColorSpace->getFamily())
-        {
             return;
-        }
-        
-        if(srcColorSpace->isData() || dstColorSpace->isData())
-        {
+        if(dstColorSpace->isData() || srcColorSpace->isData())
             return;
-        }
         
         // Consider dt8 -> vd8?
         // One would have to explode the srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
@@ -189,18 +184,10 @@ OCIO_NAMESPACE_ENTER
         ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         BuildOps(ops, config, toref, TRANSFORM_DIR_FORWARD);
         
-        /*
-        What if the reference colorSpace is only defined implicitly, and does not have a named space?
-        OCIO::ConstColorSpaceRcPtr referenceColorSpace = config.getColorSpaceForRole(ROLE_REFERENCE);
-        CreateGpuAllocationOp(processor,
-                              referenceColorSpace->getGpuAllocation(),
-                              referenceColorSpace->getGpuMin(),
-                              referenceColorSpace->getGpuMax());
-        */
+        // TODO: If ROLE_REFERENCE is defined, consider adding its GpuAllocation to the OpVec
         
         ConstGroupTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         BuildOps(ops, config, fromref, TRANSFORM_DIR_FORWARD);
-        
         
         GpuAllocationData dstAllocation;
         dstAllocation.allocation = dstColorSpace->getGpuAllocation();
