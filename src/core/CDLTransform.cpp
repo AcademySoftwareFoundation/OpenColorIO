@@ -256,6 +256,49 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
+    bool CDLTransform::isEqualTo(const ConstCDLTransformRcPtr & other,
+                                 bool compareMetadata) const
+    {
+        if(!other) return false;
+        
+        if(m_impl->dir_ != other->m_impl->dir_) return false;
+        
+        float sop1[9];
+        getSOP(sop1);
+        
+        float sop2[9];
+        other->getSOP(sop2);
+        
+        const float abserror = 1e-9f;
+        
+        for(int i=0; i<9; ++i)
+        {
+            if(!equalWithAbsError(sop1[i], sop2[i], abserror))
+            {
+                return false;
+            }
+        }
+        
+        float sat1 = getSat();
+        float sat2 = other->getSat();
+        if(!equalWithAbsError(sat1, sat2, abserror))
+        {
+            return false;
+        }
+        
+        if(compareMetadata)
+        {
+            std::string desc1 = getDescription();
+            std::string desc2 = other->getDescription();
+            if(desc1 != desc2) return false;
+            
+            std::string id1 = getID();
+            std::string id2 = other->getID();
+            if(id1 != id2) return false;
+        }
+        
+        return true;
+    }
     
     void CDLTransform::setSlope(const float * rgb)
     {

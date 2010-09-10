@@ -171,6 +171,7 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_CDLTransform_sanityCheck( PyObject * self );
         PyObject * PyOCIO_CDLTransform_isNoOp( PyObject * self );
+        PyObject * PyOCIO_CDLTransform_isEqualTo( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_CDLTransform_getSlope( PyObject * self );
         PyObject * PyOCIO_CDLTransform_getOffset( PyObject * self );
@@ -206,6 +207,7 @@ OCIO_NAMESPACE_ENTER
             
             {"sanityCheck", (PyCFunction) PyOCIO_CDLTransform_sanityCheck, METH_NOARGS, "" },
             {"isNoOp", (PyCFunction) PyOCIO_CDLTransform_isNoOp, METH_NOARGS, "" },
+            {"isEqualTo", PyOCIO_CDLTransform_isEqualTo, METH_VARARGS, "" },
             
             {"getSlope", (PyCFunction) PyOCIO_CDLTransform_getSlope, METH_NOARGS, "" },
             {"getOffset", (PyCFunction) PyOCIO_CDLTransform_getOffset, METH_NOARGS, "" },
@@ -452,6 +454,35 @@ OCIO_NAMESPACE_ENTER
                 transform->sanityCheck();
                 
                 return PyBool_FromLong(transform->isNoOp());
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CDLTransform_isEqualTo( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyother = 0;
+                long compareMetadata = 0;
+                
+                if (!PyArg_ParseTuple(args,"Ol:isEqualTo",
+                    &pyother, &compareMetadata)) return NULL;
+                
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                if(!IsPyCDLTransform(pyother))
+                {
+                    PyErr_SetString(PyExc_ValueError, "Arg 1 must be a CDLTransform.");
+                    return NULL;
+                }
+                
+                ConstCDLTransformRcPtr other = GetConstCDLTransform(pyother, true);
+                
+                return PyBool_FromLong(transform->isEqualTo(other,
+                    static_cast<bool>(compareMetadata)));
             }
             catch(...)
             {

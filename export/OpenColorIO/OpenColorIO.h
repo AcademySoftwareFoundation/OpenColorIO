@@ -1000,6 +1000,9 @@ OCIO_NAMESPACE_ENTER
         
         bool isNoOp() const;
         
+        bool isEqualTo(const ConstCDLTransformRcPtr & other,
+                       bool compareMetadata) const;
+        
         // TODO: Reset?
         
         // ASC_SOP
