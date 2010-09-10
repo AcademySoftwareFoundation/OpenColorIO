@@ -231,29 +231,14 @@ OCIO_NAMESPACE_ENTER
     void CDLTransform::setXML(const char * xml)
     {
         m_impl->setXML(xml);
-    }
-
-    void CDLTransform::sanityCheck() const
-    {
+        
+        // These will throw an exception if the xml is in any way invalid.
         getSlope(0);
         getOffset(0);
         getPower(0);
         getSat();
         getID();
         getDescription();
-    }
-    
-    bool CDLTransform::isNoOp() const
-    {
-        float sop[9];
-        getSOP(sop);
-        
-        if(!IsVecEqualToOne(&sop[0], 3)) return false;
-        if(!IsVecEqualToZero(&sop[3], 3)) return false;
-        if(!IsVecEqualToOne(&sop[6], 3)) return false;
-        if(!IsScalarEqualToOne(getSat())) return false;
-        
-        return true;
     }
     
     // We use this approach, rather than comparing XML to get around the

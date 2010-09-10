@@ -166,12 +166,10 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_CDLTransform_getDirection( PyObject * self );
         PyObject * PyOCIO_CDLTransform_setDirection( PyObject * self,  PyObject *args );
         
+        PyObject * PyOCIO_CDLTransform_equals( PyObject * self,  PyObject *args );
+        
         PyObject * PyOCIO_CDLTransform_getXML( PyObject * self );
         PyObject * PyOCIO_CDLTransform_setXML( PyObject * self,  PyObject *args );
-        
-        PyObject * PyOCIO_CDLTransform_sanityCheck( PyObject * self );
-        PyObject * PyOCIO_CDLTransform_isNoOp( PyObject * self );
-        PyObject * PyOCIO_CDLTransform_equals( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_CDLTransform_getSlope( PyObject * self );
         PyObject * PyOCIO_CDLTransform_getOffset( PyObject * self );
@@ -202,12 +200,10 @@ OCIO_NAMESPACE_ENTER
             {"getDirection", (PyCFunction) PyOCIO_CDLTransform_getDirection, METH_NOARGS, "" },
             {"setDirection", PyOCIO_CDLTransform_setDirection, METH_VARARGS, "" },
             
+            {"equals", PyOCIO_CDLTransform_equals, METH_VARARGS, "" },
+            
             {"getXML", (PyCFunction) PyOCIO_CDLTransform_getXML, METH_NOARGS, "" },
             {"setXML", PyOCIO_CDLTransform_setXML, METH_VARARGS, "" },
-            
-            {"sanityCheck", (PyCFunction) PyOCIO_CDLTransform_sanityCheck, METH_NOARGS, "" },
-            {"isNoOp", (PyCFunction) PyOCIO_CDLTransform_isNoOp, METH_NOARGS, "" },
-            {"equals", PyOCIO_CDLTransform_equals, METH_VARARGS, "" },
             
             {"getSlope", (PyCFunction) PyOCIO_CDLTransform_getSlope, METH_NOARGS, "" },
             {"getOffset", (PyCFunction) PyOCIO_CDLTransform_getOffset, METH_NOARGS, "" },
@@ -392,6 +388,35 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
+        PyObject * PyOCIO_CDLTransform_equals( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyother = 0;
+                
+                if (!PyArg_ParseTuple(args,"O:equals",
+                    &pyother)) return NULL;
+                
+                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
+                if(!IsPyCDLTransform(pyother))
+                {
+                    return PyBool_FromLong(false);
+                }
+                
+                ConstCDLTransformRcPtr other = GetConstCDLTransform(pyother, true);
+                
+                return PyBool_FromLong(transform->equals(other));
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
         
         PyObject * PyOCIO_CDLTransform_getXML( PyObject * self )
         {
@@ -419,67 +444,6 @@ OCIO_NAMESPACE_ENTER
                 transform->setXML( str );
                 
                 Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        PyObject * PyOCIO_CDLTransform_sanityCheck( PyObject * self )
-        {
-            try
-            {
-                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
-                transform->sanityCheck();
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_CDLTransform_isNoOp( PyObject * self )
-        {
-            try
-            {
-                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
-                transform->sanityCheck();
-                
-                return PyBool_FromLong(transform->isNoOp());
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_CDLTransform_equals( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                PyObject * pyother = 0;
-                
-                if (!PyArg_ParseTuple(args,"O:equals",
-                    &pyother)) return NULL;
-                
-                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
-                if(!IsPyCDLTransform(pyother))
-                {
-                    return PyBool_FromLong(false);
-                }
-                
-                ConstCDLTransformRcPtr other = GetConstCDLTransform(pyother, true);
-                
-                return PyBool_FromLong(transform->equals(other));
             }
             catch(...)
             {

@@ -479,7 +479,6 @@ OCIO_NAMESPACE_ENTER
         
         ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
                                          TransformDirection direction = TRANSFORM_DIR_FORWARD) const;
-        
     private:
         Config();
         ~Config();
@@ -799,7 +798,6 @@ OCIO_NAMESPACE_ENTER
         ConstTransformRcPtr getTransform(int index) const;
         TransformRcPtr getEditableTransform(int index);
         
-        // TODO: these mimic vector, but not our naming. Fix? ex: isEmpty, getSize
         int size() const;
         void push_back(const ConstTransformRcPtr& transform);
         void clear();
@@ -974,17 +972,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         virtual void setDirection(TransformDirection dir);
         
-        const char * getXML() const;
-        void setXML(const char * xml);
-        
-        // Throw an exception if the CDL is in any way invalid
-        void sanityCheck() const;
-        
-        bool isNoOp() const;
-        
         bool equals(const ConstCDLTransformRcPtr & other) const;
         
-        // TODO: Reset?
+        const char * getXML() const;
+        void setXML(const char * xml);
         
         // ASC_SOP
         // Slope, offset, power

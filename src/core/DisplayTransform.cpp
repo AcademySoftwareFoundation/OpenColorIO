@@ -243,7 +243,8 @@ OCIO_NAMESPACE_ENTER
         
         // Apply a color correction, in ROLE_SCENE_LINEAR
         ConstCDLTransformRcPtr linearCC = displayTransform.getLinearCC();
-        if(!linearCC->isNoOp())
+        if(linearCC)
+         // TODO: find way to query if transform is a no-op
         {
             ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
             
@@ -261,7 +262,7 @@ OCIO_NAMESPACE_ENTER
         
         // Apply a color correction, in ROLE_COLOR_TIMING
         ConstTransformRcPtr colorTimingCC = displayTransform.getColorTimingCC();
-        if(colorTimingCC) // TODO: add isNoOp to ALL Transforms
+        if(colorTimingCC) // TODO: find way to query if transform is a no-op
         {
             ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_COLOR_TIMING);
             
