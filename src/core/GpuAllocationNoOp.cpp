@@ -47,6 +47,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
+            virtual bool isNoOp() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
@@ -95,6 +96,11 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
 
+        bool GpuAllocationNoOp::isNoOp() const
+        {
+            return true;
+        }
+        
         void GpuAllocationNoOp::finalize()
         {
             // Create the cacheID

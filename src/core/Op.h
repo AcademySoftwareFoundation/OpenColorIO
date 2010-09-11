@@ -56,6 +56,7 @@ OCIO_NAMESPACE_ENTER
     typedef std::vector<OpRcPtr> OpRcPtrVec;
     
     std::string GetOpVecInfo(const OpRcPtrVec & ops);
+    bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
     class Op
     {
@@ -72,6 +73,10 @@ OCIO_NAMESPACE_ENTER
             //! It can only be called after finalize()
             virtual std::string getCacheID() const = 0;
             
+            //! Is the processing a noop? I.e, does apply do nothing.
+            //! Even no-ops may define GpuAllocation though.
+            virtual bool isNoOp() const = 0;
+            
             // This is called a single time after construction.
             // Final pre-processing and safety checks should happen here,
             // rather than in the constructor.
@@ -85,7 +90,6 @@ OCIO_NAMESPACE_ENTER
             // caching, must thus be appropriately mutexed.
             
             virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
-            
             
             
             //! Does this op support gpu shader text generation

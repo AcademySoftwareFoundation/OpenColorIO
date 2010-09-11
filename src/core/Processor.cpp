@@ -345,7 +345,7 @@ OCIO_NAMESPACE_ENTER
     
     bool LocalProcessor::isNoOp() const
     {
-        return m_cpuOps.empty();
+        return IsOpVecNoOp(m_cpuOps);
     }
     
     void LocalProcessor::apply(ImageDesc& img) const

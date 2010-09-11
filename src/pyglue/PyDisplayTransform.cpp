@@ -168,8 +168,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName( PyObject * self,  PyObject *args );
         
-        PyObject * PyOCIO_DisplayTransform_getLinearExposure( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setLinearExposure( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_DisplayTransform_getLinearCC( PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setLinearCC( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_DisplayTransform_getColorTimingCC( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setColorTimingCC( PyObject * self,  PyObject *args );
@@ -190,8 +190,8 @@ OCIO_NAMESPACE_ENTER
             {"getInputColorSpaceName", (PyCFunction) PyOCIO_DisplayTransform_getInputColorSpaceName, METH_NOARGS, "" },
             {"setInputColorSpaceName", PyOCIO_DisplayTransform_setInputColorSpaceName, METH_VARARGS, "" },
             
-            {"getLinearExposure", (PyCFunction) PyOCIO_DisplayTransform_getLinearExposure, METH_NOARGS, "" },
-            {"setLinearExposure", PyOCIO_DisplayTransform_setLinearExposure, METH_VARARGS, "" },
+            {"getLinearCC", (PyCFunction) PyOCIO_DisplayTransform_getLinearCC, METH_NOARGS, "" },
+            {"setLinearCC", PyOCIO_DisplayTransform_setLinearCC, METH_VARARGS, "" },
             
             {"getColorTimingCC", (PyCFunction) PyOCIO_DisplayTransform_getColorTimingCC, METH_NOARGS, "" },
             {"setColorTimingCC", PyOCIO_DisplayTransform_setColorTimingCC, METH_VARARGS, "" },
@@ -398,16 +398,12 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_DisplayTransform_getLinearExposure( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getLinearCC( PyObject * self )
         {
             try
             {
                 ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                
-                std::vector<float> coef(4);
-                transform->getLinearExposure(&coef[0]);
-                
-                return CreatePyListFromFloatVector(coef);
+                return BuildConstPyTransform(transform->getLinearCC());
             }
             catch(...)
             {
@@ -416,23 +412,17 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_DisplayTransform_setLinearExposure( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setLinearCC( PyObject * self, PyObject * args )
         {
             try
             {
-                PyObject * pyVec = 0;
-                if (!PyArg_ParseTuple(args,"O:setLinearExposure", &pyVec)) return NULL;
+                PyObject * pyCC = 0;
+                if (!PyArg_ParseTuple(args,"O:setLinearCC", &pyCC)) return NULL;
                 
                 DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
                 
-                std::vector<float> vec;
-                if(!FillFloatVectorFromPySequence(pyVec, vec) || (vec.size() != 4))
-                {
-                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 4");
-                    return 0;
-                }
-                
-                transform->setLinearExposure(&vec[0]);
+                ConstTransformRcPtr cc = GetConstTransform(pyCC, true);
+                transform->setLinearCC(cc);
                 
                 Py_RETURN_NONE;
             }
@@ -442,7 +432,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
         
         ////////////////////////////////////////////////////////////////////////
         

@@ -116,6 +116,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
+            virtual bool isNoOp() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
@@ -176,6 +177,12 @@ OCIO_NAMESPACE_ENTER
         std::string MatrixOffsetOp::getCacheID() const
         {
             return m_cacheID;
+        }
+        
+        // TODO: compute real value for isNoOp
+        bool MatrixOffsetOp::isNoOp() const
+        {
+            return false;
         }
         
         void MatrixOffsetOp::finalize()

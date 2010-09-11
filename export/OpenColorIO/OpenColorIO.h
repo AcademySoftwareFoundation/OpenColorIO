@@ -918,12 +918,8 @@ OCIO_NAMESPACE_ENTER
         const char * getInputColorSpaceName() const;
         
         // Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR
-        void setLinearCC(const ConstCDLTransformRcPtr & cc);
-        ConstCDLTransformRcPtr getLinearCC() const;
-        
-        //  Convenience fcn to set an exposure (gain) change, in stops
-        void setLinearExposure(const float* v4);
-        void getLinearExposure(float* v4) const;
+        void setLinearCC(const ConstTransformRcPtr & cc);
+        ConstTransformRcPtr getLinearCC() const;
         
         // Step 2: Apply a color correction, in ROLE_COLOR_TIMING
         void setColorTimingCC(const ConstTransformRcPtr & cc);
