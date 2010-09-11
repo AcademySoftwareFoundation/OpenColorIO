@@ -144,8 +144,13 @@ void Display::_validate(bool for_real)
         transformPtr->setDisplayColorSpaceName(csDstName);
 
         float e = static_cast<float>(exposure);
-        const float exposure4f[] = {e, e, e, 0.0f}; // r, g, b, a
-        transformPtr->setLinearExposure(exposure4f);
+        float gain = powf(2.0f,e);
+        const float slope3f[] = { gain, gain, gain };
+        
+        OCIO::CDLTransformRcPtr cc =  OCIO::CDLTransform::Create();
+        cc->setSlope(slope3f);
+        
+        transformPtr->setLinearCC(cc);
 
         processorPtr = config->getProcessor(transformPtr);
     }
