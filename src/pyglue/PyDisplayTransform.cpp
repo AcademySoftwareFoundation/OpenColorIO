@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyDisplayTransform.h"
+#include "PyTransform.h"
 #include "PyUtil.h"
 
 OCIO_NAMESPACE_ENTER
@@ -49,121 +49,42 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
-    PyObject * BuildConstPyDisplayTransform(ConstDisplayTransformRcPtr transform)
-    {
-        if (!transform)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_DisplayTransform * pytransform = PyObject_New(
-                PyOCIO_DisplayTransform, (PyTypeObject * ) &PyOCIO_DisplayTransformType);
-        
-        pytransform->constcppobj = new OCIO::ConstDisplayTransformRcPtr();
-        *pytransform->constcppobj = transform;
-        
-        pytransform->cppobj = new OCIO::DisplayTransformRcPtr();
-        pytransform->isconst = true;
-        
-        return ( PyObject * ) pytransform;
-    }
-    
-    PyObject * BuildEditablePyDisplayTransform(DisplayTransformRcPtr transform)
-    {
-        if (!transform)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_DisplayTransform * pytransform = PyObject_New(
-                PyOCIO_DisplayTransform, (PyTypeObject * ) &PyOCIO_DisplayTransformType);
-        
-        pytransform->constcppobj = new OCIO::ConstDisplayTransformRcPtr();
-        pytransform->cppobj = new OCIO::DisplayTransformRcPtr();
-        *pytransform->cppobj = transform;
-        
-        pytransform->isconst = false;
-        
-        return ( PyObject * ) pytransform;
-    }
-    
     bool IsPyDisplayTransform(PyObject * pyobject)
     {
         if(!pyobject) return false;
-        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCIO_DisplayTransformType));
-    }
-    
-    bool IsPyDisplayTransformEditable(PyObject * pyobject)
-    {
-        if(!IsPyDisplayTransform(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO::DisplayTransform.");
-        }
-        
-        PyOCIO_DisplayTransform * pytransform = reinterpret_cast<PyOCIO_DisplayTransform *> (pyobject);
-        return (!pytransform->isconst);
+        return PyObject_TypeCheck(pyobject, &PyOCIO_DisplayTransformType);
     }
     
     ConstDisplayTransformRcPtr GetConstDisplayTransform(PyObject * pyobject, bool allowCast)
     {
-        if(!IsPyDisplayTransform(pyobject))
+        ConstDisplayTransformRcPtr transform = \
+            DynamicPtrCast<const DisplayTransform>(GetConstTransform(pyobject, allowCast));
+        if(!transform)
         {
-            throw Exception("PyObject must be an OCIO::DisplayTransform.");
+            throw Exception("PyObject must be a valid OCIO.DisplayTransform.");
         }
-        
-        PyOCIO_DisplayTransform * pytransform = reinterpret_cast<PyOCIO_DisplayTransform *> (pyobject);
-        if(pytransform->isconst && pytransform->constcppobj)
-        {
-            return *pytransform->constcppobj;
-        }
-        
-        if(allowCast && !pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be a valid OCIO::DisplayTransform.");
+        return transform;
     }
     
     DisplayTransformRcPtr GetEditableDisplayTransform(PyObject * pyobject)
     {
-        if(!IsPyDisplayTransform(pyobject))
+        DisplayTransformRcPtr transform = \
+            DynamicPtrCast<DisplayTransform>(GetEditableTransform(pyobject));
+        if(!transform)
         {
-            throw Exception("PyObject must be an OCIO::DisplayTransform.");
+            throw Exception("PyObject must be a valid OCIO.DisplayTransform.");
         }
-        
-        PyOCIO_DisplayTransform * pytransform = reinterpret_cast<PyOCIO_DisplayTransform *> (pyobject);
-        if(!pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be an editable OCIO::DisplayTransform.");
+        return transform;
     }
-    
-    
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     
     
-    
-    
-    
-    
-    
-    
-    
     namespace
     {
-        int PyOCIO_DisplayTransform_init( PyOCIO_DisplayTransform * self, PyObject * args, PyObject * kwds );
-        void PyOCIO_DisplayTransform_delete( PyOCIO_DisplayTransform * self, PyObject * args );
-        PyObject * PyOCIO_DisplayTransform_isEditable( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_createEditableCopy( PyObject * self );
-        
-        PyObject * PyOCIO_DisplayTransform_getDirection( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setDirection( PyObject * self,  PyObject *args );
+        int PyOCIO_DisplayTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
         PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName( PyObject * self,  PyObject *args );
@@ -181,12 +102,6 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_DisplayTransform_methods[] = {
-            {"isEditable", (PyCFunction) PyOCIO_DisplayTransform_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCIO_DisplayTransform_createEditableCopy, METH_NOARGS, "" },
-            
-            {"getDirection", (PyCFunction) PyOCIO_DisplayTransform_getDirection, METH_NOARGS, "" },
-            {"setDirection", PyOCIO_DisplayTransform_setDirection, METH_VARARGS, "" },
-            
             {"getInputColorSpaceName", (PyCFunction) PyOCIO_DisplayTransform_getInputColorSpaceName, METH_NOARGS, "" },
             {"setInputColorSpaceName", PyOCIO_DisplayTransform_setInputColorSpaceName, METH_VARARGS, "" },
             
@@ -210,9 +125,9 @@ OCIO_NAMESPACE_ENTER
         PyObject_HEAD_INIT(NULL)
         0,                                          //ob_size
         "OCIO.DisplayTransform",                    //tp_name
-        sizeof(PyOCIO_DisplayTransform),            //tp_basicsize
+        sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor)PyOCIO_DisplayTransform_delete, //tp_dealloc
+        0,                                          //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -238,7 +153,7 @@ OCIO_NAMESPACE_ENTER
         PyOCIO_DisplayTransform_methods,            //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
-        0,                                          //tp_base 
+        &PyOCIO_TransformType,                      //tp_base 
         0,                                          //tp_dict 
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
@@ -266,13 +181,13 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_DisplayTransform_init( PyOCIO_DisplayTransform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_DisplayTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
             
-            self->constcppobj = new OCIO::ConstDisplayTransformRcPtr();
-            self->cppobj = new OCIO::DisplayTransformRcPtr();
+            self->constcppobj = new OCIO::ConstTransformRcPtr();
+            self->cppobj = new OCIO::TransformRcPtr();
             self->isconst = true;
             
             try
@@ -289,77 +204,6 @@ OCIO_NAMESPACE_ENTER
                 return -1;
             }
         }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        void PyOCIO_DisplayTransform_delete( PyOCIO_DisplayTransform *self, PyObject * /*args*/ )
-        {
-            delete self->constcppobj;
-            delete self->cppobj;
-            
-            self->ob_type->tp_free((PyObject*)self);
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        PyObject * PyOCIO_DisplayTransform_isEditable( PyObject * self )
-        {
-            return PyBool_FromLong(IsPyDisplayTransformEditable(self));
-        }
-        
-        PyObject * PyOCIO_DisplayTransform_createEditableCopy( PyObject * self )
-        {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                DisplayTransformRcPtr copy = DynamicPtrCast<DisplayTransform>(transform->createEditableCopy());
-                return BuildEditablePyDisplayTransform( copy );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        
-        PyObject * PyOCIO_DisplayTransform_getDirection( PyObject * self )
-        {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                TransformDirection dir = transform->getDirection();
-                return PyString_FromString( TransformDirectionToString( dir ) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_DisplayTransform_setDirection( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                TransformDirection dir;
-                if (!PyArg_ParseTuple(args,"O&:setDirection",
-                    ConvertPyObjectToTransformDirection, &dir)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                transform->setDirection( dir );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
         
         ////////////////////////////////////////////////////////////////////////
         

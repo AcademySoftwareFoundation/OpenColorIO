@@ -29,14 +29,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "PyCDLTransform.h"
 #include "PyColorSpace.h"
 #include "PyConfig.h"
 #include "PyConstants.h"
-#include "PyDisplayTransform.h"
-#include "PyFileTransform.h"
-#include "PyGroupTransform.h"
 #include "PyProcessor.h"
+#include "PyTransform.h"
 #include "PyUtil.h"
 
 namespace
@@ -107,6 +104,7 @@ initPyOpenColorIO(void)
     OCIO::AddDisplayTransformObjectToModule( m );
     OCIO::AddGroupTransformObjectToModule( m );
     OCIO::AddProcessorObjectToModule( m );
+    OCIO::AddTransformObjectToModule( m );
     
     OCIO::InitializeConstantsModule( m );
     

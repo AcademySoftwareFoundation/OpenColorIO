@@ -29,112 +29,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyCDLTransform.h"
-#include "PyDisplayTransform.h"
-#include "PyFileTransform.h"
-#include "PyGroupTransform.h"
 #include "PyUtil.h"
 
 #include <sstream>
 
 OCIO_NAMESPACE_ENTER
 {
-    bool IsPyTransform(PyObject * pyobject)
-    {
-        return ( IsPyCDLTransform(pyobject) ||
-                 IsPyDisplayTransform(pyobject) ||
-                 IsPyFileTransform(pyobject) || 
-                 IsPyGroupTransform(pyobject)
-                );
-    }
-    
-    PyObject * BuildConstPyTransform(ConstTransformRcPtr transform)
-    {
-        if(ConstCDLTransformRcPtr cdlTransform = \
-            DynamicPtrCast<const CDLTransform>(transform))
-        {
-            return BuildConstPyCDLTransform(cdlTransform);
-        }
-        else if(ConstDisplayTransformRcPtr displayTransform = \
-            DynamicPtrCast<const DisplayTransform>(transform))
-        {
-            return BuildConstPyDisplayTransform(displayTransform);
-        }
-        else if(ConstFileTransformRcPtr fileTransform = \
-            DynamicPtrCast<const FileTransform>(transform))
-        {
-            return BuildConstPyFileTransform(fileTransform);
-        }
-        else if(ConstGroupTransformRcPtr groupTransform = \
-            DynamicPtrCast<const GroupTransform>(transform))
-        {
-            return BuildConstPyGroupTransform(groupTransform);
-        }
-        else
-        {
-            std::ostringstream os;
-            os << "Unknown transform type for BuildConstPyTransform.";
-            throw Exception(os.str().c_str());
-        }
-    }
-    
-    PyObject * BuildEditablePyTransform(TransformRcPtr transform)
-    {
-        if(CDLTransformRcPtr cdlTransform = \
-            DynamicPtrCast<CDLTransform>(transform))
-        {
-            return BuildEditablePyCDLTransform(cdlTransform);
-        }
-        else if(DisplayTransformRcPtr displayTransform = \
-            DynamicPtrCast<DisplayTransform>(transform))
-        {
-            return BuildEditablePyDisplayTransform(displayTransform);
-        }
-        else if(FileTransformRcPtr fileTransform = \
-            DynamicPtrCast<FileTransform>(transform))
-        {
-            return BuildEditablePyFileTransform(fileTransform);
-        }
-        else if(GroupTransformRcPtr groupTransform = \
-            DynamicPtrCast<GroupTransform>(transform))
-        {
-            return BuildEditablePyGroupTransform(groupTransform);
-        }
-        else
-        {
-            std::ostringstream os;
-            os << "Unknown transform type for BuildEditablePyTransform.";
-            throw Exception(os.str().c_str());
-        }
-    }
-    
-    ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast)
-    {
-        if(IsPyCDLTransform(pyobject))
-        {
-            return GetConstCDLTransform(pyobject, allowCast);
-        }
-        else if(IsPyDisplayTransform(pyobject))
-        {
-            return GetConstDisplayTransform(pyobject, allowCast);
-        }
-        else if(IsPyFileTransform(pyobject))
-        {
-            return GetConstFileTransform(pyobject, allowCast);
-        }
-        else if(IsPyGroupTransform(pyobject))
-        {
-            return GetConstGroupTransform(pyobject, allowCast);
-        }
-        else
-        {
-            throw Exception("PyObject must be a known OCIO::Transform type.");
-        }
-    }
-
-
-
-
 
 
     ///////////////////////////////////////////////////////////////////////////

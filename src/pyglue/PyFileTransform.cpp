@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyFileTransform.h"
+#include "PyTransform.h"
 #include "PyUtil.h"
 
 OCIO_NAMESPACE_ENTER
@@ -49,123 +49,46 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
-    PyObject * BuildConstPyFileTransform(ConstFileTransformRcPtr transform)
-    {
-        if (!transform)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_FileTransform * pytransform = PyObject_New(
-                PyOCIO_FileTransform, (PyTypeObject * ) &PyOCIO_FileTransformType);
-        
-        pytransform->constcppobj = new OCIO::ConstFileTransformRcPtr();
-        *pytransform->constcppobj = transform;
-        
-        pytransform->cppobj = new OCIO::FileTransformRcPtr();
-        pytransform->isconst = true;
-        
-        return ( PyObject * ) pytransform;
-    }
-    
-    PyObject * BuildEditablePyFileTransform(FileTransformRcPtr transform)
-    {
-        if (!transform)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_FileTransform * pytransform = PyObject_New(
-                PyOCIO_FileTransform, (PyTypeObject * ) &PyOCIO_FileTransformType);
-        
-        pytransform->constcppobj = new OCIO::ConstFileTransformRcPtr();
-        pytransform->cppobj = new OCIO::FileTransformRcPtr();
-        *pytransform->cppobj = transform;
-        
-        pytransform->isconst = false;
-        
-        return ( PyObject * ) pytransform;
-    }
-    
     bool IsPyFileTransform(PyObject * pyobject)
     {
         if(!pyobject) return false;
-        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCIO_FileTransformType));
-    }
-    
-    bool IsPyFileTransformEditable(PyObject * pyobject)
-    {
-        if(!IsPyFileTransform(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO::FileTransform.");
-        }
-        
-        PyOCIO_FileTransform * pytransform = reinterpret_cast<PyOCIO_FileTransform *> (pyobject);
-        return (!pytransform->isconst);
+        return PyObject_TypeCheck(pyobject, &PyOCIO_FileTransformType);
     }
     
     ConstFileTransformRcPtr GetConstFileTransform(PyObject * pyobject, bool allowCast)
     {
-        if(!IsPyFileTransform(pyobject))
+        ConstFileTransformRcPtr transform = \
+            DynamicPtrCast<const FileTransform>(GetConstTransform(pyobject, allowCast));
+        if(!transform)
         {
-            throw Exception("PyObject must be an OCIO::FileTransform.");
+            throw Exception("PyObject must be a valid OCIO.FileTransform.");
         }
-        
-        PyOCIO_FileTransform * pytransform = reinterpret_cast<PyOCIO_FileTransform *> (pyobject);
-        if(pytransform->isconst && pytransform->constcppobj)
-        {
-            return *pytransform->constcppobj;
-        }
-        
-        if(allowCast && !pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be a valid OCIO::FileTransform.");
+        return transform;
     }
     
     FileTransformRcPtr GetEditableFileTransform(PyObject * pyobject)
     {
-        if(!IsPyFileTransform(pyobject))
+        FileTransformRcPtr transform = \
+            DynamicPtrCast<FileTransform>(GetEditableTransform(pyobject));
+        if(!transform)
         {
-            throw Exception("PyObject must be an OCIO::FileTransform.");
+            throw Exception("PyObject must be a valid OCIO.FileTransform.");
         }
-        
-        PyOCIO_FileTransform * pytransform = reinterpret_cast<PyOCIO_FileTransform *> (pyobject);
-        if(!pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be an editable OCIO::FileTransform.");
+        return transform;
     }
-    
-    
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     
     
-    
-    
-    
-    
-    
-    
-    
     namespace
     {
-        int PyOCIO_FileTransform_init( PyOCIO_FileTransform * self, PyObject * args, PyObject * kwds );
-        void PyOCIO_FileTransform_delete( PyOCIO_FileTransform * self, PyObject * args );
-        PyObject * PyOCIO_FileTransform_isEditable( PyObject * self );
-        PyObject * PyOCIO_FileTransform_createEditableCopy( PyObject * self );
+        int PyOCIO_FileTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
-        PyObject * PyOCIO_FileTransform_getDirection( PyObject * self );
-        PyObject * PyOCIO_FileTransform_setDirection( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_FileTransform_getSrc( PyObject * self );
         PyObject * PyOCIO_FileTransform_setSrc( PyObject * self,  PyObject *args );
+        
         PyObject * PyOCIO_FileTransform_getInterpolation( PyObject * self );
         PyObject * PyOCIO_FileTransform_setInterpolation( PyObject * self,  PyObject *args );
         
@@ -173,16 +96,11 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_FileTransform_methods[] = {
-            {"isEditable", (PyCFunction) PyOCIO_FileTransform_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCIO_FileTransform_createEditableCopy, METH_NOARGS, "" },
-            
-            {"getDirection", (PyCFunction) PyOCIO_FileTransform_getDirection, METH_NOARGS, "" },
-            {"setDirection", PyOCIO_FileTransform_setDirection, METH_VARARGS, "" },
             {"getSrc", (PyCFunction) PyOCIO_FileTransform_getSrc, METH_NOARGS, "" },
             {"setSrc", PyOCIO_FileTransform_setSrc, METH_VARARGS, "" },
+            
             {"getInterpolation", (PyCFunction) PyOCIO_FileTransform_getInterpolation, METH_NOARGS, "" },
             {"setInterpolation", PyOCIO_FileTransform_setInterpolation, METH_VARARGS, "" },
-            
             {NULL, NULL, 0, NULL}
         };
     }
@@ -193,10 +111,10 @@ OCIO_NAMESPACE_ENTER
     PyTypeObject PyOCIO_FileTransformType = {
         PyObject_HEAD_INIT(NULL)
         0,                                          //ob_size
-        "OCIO.FileTransform",                        //tp_name
-        sizeof(PyOCIO_FileTransform),                //tp_basicsize
+        "OCIO.FileTransform",                       //tp_name
+        sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor)PyOCIO_FileTransform_delete,     //tp_dealloc
+        0,                                          //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -219,15 +137,15 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_weaklistoffset 
         0,                                          //tp_iter 
         0,                                          //tp_iternext 
-        PyOCIO_FileTransform_methods,                //tp_methods 
+        PyOCIO_FileTransform_methods,               //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
-        0,                                          //tp_base 
+        &PyOCIO_TransformType,                      //tp_base 
         0,                                          //tp_dict 
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
         0,                                          //tp_dictoffset 
-        (initproc) PyOCIO_FileTransform_init,        //tp_init 
+        (initproc) PyOCIO_FileTransform_init,       //tp_init 
         0,                                          //tp_alloc 
         0,                                          //tp_new 
         0,                                          //tp_free
@@ -250,13 +168,13 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_FileTransform_init( PyOCIO_FileTransform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_FileTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
             
-            self->constcppobj = new OCIO::ConstFileTransformRcPtr();
-            self->cppobj = new OCIO::FileTransformRcPtr();
+            self->constcppobj = new OCIO::ConstTransformRcPtr();
+            self->cppobj = new OCIO::TransformRcPtr();
             self->isconst = true;
             
             try
@@ -275,78 +193,6 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
-        void PyOCIO_FileTransform_delete( PyOCIO_FileTransform *self, PyObject * /*args*/ )
-        {
-            delete self->constcppobj;
-            delete self->cppobj;
-            
-            self->ob_type->tp_free((PyObject*)self);
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        PyObject * PyOCIO_FileTransform_isEditable( PyObject * self )
-        {
-            return PyBool_FromLong(IsPyFileTransformEditable(self));
-        }
-        
-        PyObject * PyOCIO_FileTransform_createEditableCopy( PyObject * self )
-        {
-            try
-            {
-                ConstFileTransformRcPtr transform = GetConstFileTransform(self, true);
-                FileTransformRcPtr copy = DynamicPtrCast<FileTransform>(transform->createEditableCopy());
-                return BuildEditablePyFileTransform( copy );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        
-        PyObject * PyOCIO_FileTransform_getDirection( PyObject * self )
-        {
-            try
-            {
-                ConstFileTransformRcPtr transform = GetConstFileTransform(self, true);
-                TransformDirection dir = transform->getDirection();
-                return PyString_FromString( TransformDirectionToString( dir ) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_FileTransform_setDirection( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                TransformDirection dir;
-                if (!PyArg_ParseTuple(args,"O&:setDirection",
-                    ConvertPyObjectToTransformDirection, &dir)) return NULL;
-                
-                FileTransformRcPtr transform = GetEditableFileTransform(self);
-                transform->setDirection( dir );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        
-        ////////////////////////////////////////////////////////////////////////
-        
         
         
         PyObject * PyOCIO_FileTransform_getSrc( PyObject * self )
@@ -420,8 +266,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
     }
 
 }

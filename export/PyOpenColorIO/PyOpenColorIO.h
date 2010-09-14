@@ -55,7 +55,9 @@ OCIO_NAMESPACE_ENTER
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
     PyObject * BuildEditablePyTransform(TransformRcPtr transform);
     bool IsPyTransform(PyObject * pyobject);
+    bool IsPyTransformEditable(PyObject * pyobject);
     ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast);
+    TransformRcPtr GetEditableTransform(PyObject * pyobject);
     
     // Processor
     PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor);

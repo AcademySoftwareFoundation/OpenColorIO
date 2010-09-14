@@ -27,8 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCIO_PYDISPLAYTRANSFORM_H
-#define INCLUDED_PYOCIO_PYDISPLAYTRANSFORM_H
+#ifndef INCLUDED_PYOCIO_PYTRANSFORM_H
+#define INCLUDED_PYOCIO_PYTRANSFORM_H
 
 #include <PyOpenColorIO/PyOpenColorIO.h>
 
@@ -38,23 +38,26 @@ OCIO_NAMESPACE_ENTER
     
     typedef struct {
         PyObject_HEAD
-        ConstDisplayTransformRcPtr * constcppobj;
-        DisplayTransformRcPtr * cppobj;
+        ConstTransformRcPtr * constcppobj;
+        TransformRcPtr * cppobj;
         bool isconst;
-    } PyOCIO_DisplayTransform;
+    } PyOCIO_Transform;
+    
+    extern PyTypeObject PyOCIO_TransformType;
+    bool AddTransformObjectToModule( PyObject* m );
+    
+    extern PyTypeObject PyOCIO_CDLTransformType;
+    bool AddCDLTransformObjectToModule( PyObject* m );
     
     extern PyTypeObject PyOCIO_DisplayTransformType;
-    
     bool AddDisplayTransformObjectToModule( PyObject* m );
     
-    PyObject * BuildConstPyDisplayTransform(ConstDisplayTransformRcPtr transform);
-    PyObject * BuildEditablePyDisplayTransform(DisplayTransformRcPtr transform);
+    extern PyTypeObject PyOCIO_FileTransformType;
+    bool AddFileTransformObjectToModule( PyObject* m );
     
-    bool IsPyDisplayTransform(PyObject * pyobject);
-    bool IsPyDisplayTransformEditable(PyObject * pyobject);
-    
-    ConstDisplayTransformRcPtr GetConstDisplayTransform(PyObject * pyobject, bool allowCast);
-    DisplayTransformRcPtr GetEditableDisplayTransform(PyObject * pyobject);
+    extern PyTypeObject PyOCIO_GroupTransformType;
+    bool AddGroupTransformObjectToModule( PyObject* m );
+    ConstGroupTransformRcPtr GetConstGroupTransform(PyObject * pyobject, bool allowCast);
 }
 OCIO_NAMESPACE_EXIT
 

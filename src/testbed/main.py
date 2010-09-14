@@ -96,3 +96,9 @@ print processor.applyRGB(c)
 """
 
 #print OCIO.Constants.CombineTransformDirections(OCIO.Constants.TRANSFORM_DIR_INVERSE, OCIO.Constants.TRANSFORM_DIR_INVERSE)
+
+
+t = OCIO.DisplayTransform()
+print t
+print dir(t)
+#print isinstance(t,OCIO.DisplayTransform)

@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyGroupTransform.h"
+#include "PyTransform.h"
 #include "PyUtil.h"
 
 OCIO_NAMESPACE_ENTER
@@ -49,121 +49,43 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
-    PyObject * BuildConstPyGroupTransform(ConstGroupTransformRcPtr transform)
-    {
-        if (!transform)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_GroupTransform * pytransform = PyObject_New(
-                PyOCIO_GroupTransform, (PyTypeObject * ) &PyOCIO_GroupTransformType);
-        
-        pytransform->constcppobj = new OCIO::ConstGroupTransformRcPtr();
-        *pytransform->constcppobj = transform;
-        
-        pytransform->cppobj = new OCIO::GroupTransformRcPtr();
-        pytransform->isconst = true;
-        
-        return ( PyObject * ) pytransform;
-    }
-    
-    PyObject * BuildEditablePyGroupTransform(GroupTransformRcPtr transform)
-    {
-        if (!transform)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_GroupTransform * pytransform = PyObject_New(
-                PyOCIO_GroupTransform, (PyTypeObject * ) &PyOCIO_GroupTransformType);
-        
-        pytransform->constcppobj = new OCIO::ConstGroupTransformRcPtr();
-        pytransform->cppobj = new OCIO::GroupTransformRcPtr();
-        *pytransform->cppobj = transform;
-        
-        pytransform->isconst = false;
-        
-        return ( PyObject * ) pytransform;
-    }
-    
     bool IsPyGroupTransform(PyObject * pyobject)
     {
         if(!pyobject) return false;
-        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCIO_GroupTransformType));
-    }
-    
-    bool IsPyGroupTransformEditable(PyObject * pyobject)
-    {
-        if(!IsPyGroupTransform(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO::GroupTransform.");
-        }
-        
-        PyOCIO_GroupTransform * pytransform = reinterpret_cast<PyOCIO_GroupTransform *> (pyobject);
-        return (!pytransform->isconst);
+        return PyObject_TypeCheck(pyobject, &PyOCIO_GroupTransformType);
     }
     
     ConstGroupTransformRcPtr GetConstGroupTransform(PyObject * pyobject, bool allowCast)
     {
-        if(!IsPyGroupTransform(pyobject))
+        ConstGroupTransformRcPtr transform = \
+            DynamicPtrCast<const GroupTransform>(GetConstTransform(pyobject, allowCast));
+        if(!transform)
         {
-            throw Exception("PyObject must be an OCIO::GroupTransform.");
+            throw Exception("PyObject must be a valid OCIO.GroupTransform.");
         }
-        
-        PyOCIO_GroupTransform * pytransform = reinterpret_cast<PyOCIO_GroupTransform *> (pyobject);
-        if(pytransform->isconst && pytransform->constcppobj)
-        {
-            return *pytransform->constcppobj;
-        }
-        
-        if(allowCast && !pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be a valid OCIO::GroupTransform.");
+        return transform;
     }
     
     GroupTransformRcPtr GetEditableGroupTransform(PyObject * pyobject)
     {
-        if(!IsPyGroupTransform(pyobject))
+        GroupTransformRcPtr transform = \
+            DynamicPtrCast<GroupTransform>(GetEditableTransform(pyobject));
+        if(!transform)
         {
-            throw Exception("PyObject must be an OCIO::GroupTransform.");
+            throw Exception("PyObject must be a valid OCIO.GroupTransform.");
         }
-        
-        PyOCIO_GroupTransform * pytransform = reinterpret_cast<PyOCIO_GroupTransform *> (pyobject);
-        if(!pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be an editable OCIO::GroupTransform.");
+        return transform;
     }
-    
-    
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     
     
-    
-    
-    
-    
-    
-    
-    
     namespace
     {
-        int PyOCIO_GroupTransform_init( PyOCIO_GroupTransform * self, PyObject * args, PyObject * kwds );
-        void PyOCIO_GroupTransform_delete( PyOCIO_GroupTransform * self, PyObject * args );
-        PyObject * PyOCIO_GroupTransform_isEditable( PyObject * self );
-        PyObject * PyOCIO_GroupTransform_createEditableCopy( PyObject * self );
+        int PyOCIO_GroupTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
-        PyObject * PyOCIO_GroupTransform_getDirection( PyObject * self );
-        PyObject * PyOCIO_GroupTransform_setDirection( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_GroupTransform_getTransform( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_GroupTransform_getEditableTransform( PyObject * self,  PyObject *args );
         
@@ -176,11 +98,6 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_GroupTransform_methods[] = {
-            {"isEditable", (PyCFunction) PyOCIO_GroupTransform_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCIO_GroupTransform_createEditableCopy, METH_NOARGS, "" },
-            
-            {"getDirection", (PyCFunction) PyOCIO_GroupTransform_getDirection, METH_NOARGS, "" },
-            {"setDirection", PyOCIO_GroupTransform_setDirection, METH_VARARGS, "" },
             {"getTransform", PyOCIO_GroupTransform_getTransform, METH_VARARGS, "" },
             {"getEditableTransform", PyOCIO_GroupTransform_getEditableTransform, METH_VARARGS, "" },
             
@@ -199,10 +116,10 @@ OCIO_NAMESPACE_ENTER
     PyTypeObject PyOCIO_GroupTransformType = {
         PyObject_HEAD_INIT(NULL)
         0,                                          //ob_size
-        "OCIO.GroupTransform",                       //tp_name
-        sizeof(PyOCIO_GroupTransform),               //tp_basicsize
+        "OCIO.GroupTransform",                    //tp_name
+        sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor)PyOCIO_GroupTransform_delete,    //tp_dealloc
+        0,                                          //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -225,15 +142,15 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_weaklistoffset 
         0,                                          //tp_iter 
         0,                                          //tp_iternext 
-        PyOCIO_GroupTransform_methods,               //tp_methods 
+        PyOCIO_GroupTransform_methods,              //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
-        0,                                          //tp_base 
+        &PyOCIO_TransformType,                      //tp_base 
         0,                                          //tp_dict 
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
         0,                                          //tp_dictoffset 
-        (initproc) PyOCIO_GroupTransform_init,       //tp_init 
+        (initproc) PyOCIO_GroupTransform_init,      //tp_init 
         0,                                          //tp_alloc 
         0,                                          //tp_new 
         0,                                          //tp_free
@@ -256,13 +173,13 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_GroupTransform_init( PyOCIO_GroupTransform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_GroupTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
             
-            self->constcppobj = new OCIO::ConstGroupTransformRcPtr();
-            self->cppobj = new OCIO::GroupTransformRcPtr();
+            self->constcppobj = new OCIO::ConstTransformRcPtr();
+            self->cppobj = new OCIO::TransformRcPtr();
             self->isconst = true;
             
             try
@@ -279,77 +196,6 @@ OCIO_NAMESPACE_ENTER
                 return -1;
             }
         }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        void PyOCIO_GroupTransform_delete( PyOCIO_GroupTransform *self, PyObject * /*args*/ )
-        {
-            delete self->constcppobj;
-            delete self->cppobj;
-            
-            self->ob_type->tp_free((PyObject*)self);
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        PyObject * PyOCIO_GroupTransform_isEditable( PyObject * self )
-        {
-            return PyBool_FromLong(IsPyGroupTransformEditable(self));
-        }
-        
-        PyObject * PyOCIO_GroupTransform_createEditableCopy( PyObject * self )
-        {
-            try
-            {
-                ConstGroupTransformRcPtr transform = GetConstGroupTransform(self, true);
-                GroupTransformRcPtr copy = DynamicPtrCast<GroupTransform>(transform->createEditableCopy());
-                return BuildEditablePyGroupTransform( copy );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        
-        PyObject * PyOCIO_GroupTransform_getDirection( PyObject * self )
-        {
-            try
-            {
-                ConstGroupTransformRcPtr transform = GetConstGroupTransform(self, true);
-                TransformDirection dir = transform->getDirection();
-                return PyString_FromString( TransformDirectionToString( dir ) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_GroupTransform_setDirection( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                TransformDirection dir;
-                if (!PyArg_ParseTuple(args,"O&:setDirection",
-                    ConvertPyObjectToTransformDirection, &dir)) return NULL;
-                
-                GroupTransformRcPtr transform = GetEditableGroupTransform(self);
-                transform->setDirection( dir );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
         
         ////////////////////////////////////////////////////////////////////////
         

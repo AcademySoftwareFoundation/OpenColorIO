@@ -29,8 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyColorSpace.h"
-#include "PyCDLTransform.h"
+#include "PyTransform.h"
 #include "PyUtil.h"
 
 OCIO_NAMESPACE_ENTER
@@ -50,121 +49,41 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
-    PyObject * BuildConstPyCDLTransform(ConstCDLTransformRcPtr transform)
-    {
-        if (!transform)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_CDLTransform * pytransform = PyObject_New(
-                PyOCIO_CDLTransform, (PyTypeObject * ) &PyOCIO_CDLTransformType);
-        
-        pytransform->constcppobj = new OCIO::ConstCDLTransformRcPtr();
-        *pytransform->constcppobj = transform;
-        
-        pytransform->cppobj = new OCIO::CDLTransformRcPtr();
-        pytransform->isconst = true;
-        
-        return ( PyObject * ) pytransform;
-    }
-    
-    PyObject * BuildEditablePyCDLTransform(CDLTransformRcPtr transform)
-    {
-        if (!transform)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_CDLTransform * pytransform = PyObject_New(
-                PyOCIO_CDLTransform, (PyTypeObject * ) &PyOCIO_CDLTransformType);
-        
-        pytransform->constcppobj = new OCIO::ConstCDLTransformRcPtr();
-        pytransform->cppobj = new OCIO::CDLTransformRcPtr();
-        *pytransform->cppobj = transform;
-        
-        pytransform->isconst = false;
-        
-        return ( PyObject * ) pytransform;
-    }
-    
     bool IsPyCDLTransform(PyObject * pyobject)
     {
         if(!pyobject) return false;
-        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCIO_CDLTransformType));
-    }
-    
-    bool IsPyCDLTransformEditable(PyObject * pyobject)
-    {
-        if(!IsPyCDLTransform(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO::CDLTransform.");
-        }
-        
-        PyOCIO_CDLTransform * pytransform = reinterpret_cast<PyOCIO_CDLTransform *> (pyobject);
-        return (!pytransform->isconst);
+        return PyObject_TypeCheck(pyobject, &PyOCIO_CDLTransformType);
     }
     
     ConstCDLTransformRcPtr GetConstCDLTransform(PyObject * pyobject, bool allowCast)
     {
-        if(!IsPyCDLTransform(pyobject))
+        ConstCDLTransformRcPtr transform = \
+            DynamicPtrCast<const CDLTransform>(GetConstTransform(pyobject, allowCast));
+        if(!transform)
         {
-            throw Exception("PyObject must be an OCIO::CDLTransform.");
+            throw Exception("PyObject must be a valid OCIO.CDLTransform.");
         }
-        
-        PyOCIO_CDLTransform * pytransform = reinterpret_cast<PyOCIO_CDLTransform *> (pyobject);
-        if(pytransform->isconst && pytransform->constcppobj)
-        {
-            return *pytransform->constcppobj;
-        }
-        
-        if(allowCast && !pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be a valid OCIO::CDLTransform.");
+        return transform;
     }
     
     CDLTransformRcPtr GetEditableCDLTransform(PyObject * pyobject)
     {
-        if(!IsPyCDLTransform(pyobject))
+        CDLTransformRcPtr transform = \
+            DynamicPtrCast<CDLTransform>(GetEditableTransform(pyobject));
+        if(!transform)
         {
-            throw Exception("PyObject must be an OCIO::CDLTransform.");
+            throw Exception("PyObject must be a valid OCIO.CDLTransform.");
         }
-        
-        PyOCIO_CDLTransform * pytransform = reinterpret_cast<PyOCIO_CDLTransform *> (pyobject);
-        if(!pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be an editable OCIO::CDLTransform.");
+        return transform;
     }
     
-    
-    
     ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    
-    
-    
-    
-    
-    
     
     
     
     namespace
     {
-        int PyOCIO_CDLTransform_init( PyOCIO_CDLTransform * self, PyObject * args, PyObject * kwds );
-        void PyOCIO_CDLTransform_delete( PyOCIO_CDLTransform * self, PyObject * args );
-        PyObject * PyOCIO_CDLTransform_isEditable( PyObject * self );
-        PyObject * PyOCIO_CDLTransform_createEditableCopy( PyObject * self );
-        
-        PyObject * PyOCIO_CDLTransform_getDirection( PyObject * self );
-        PyObject * PyOCIO_CDLTransform_setDirection( PyObject * self,  PyObject *args );
+        int PyOCIO_CDLTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
         PyObject * PyOCIO_CDLTransform_equals( PyObject * self,  PyObject *args );
         
@@ -194,12 +113,6 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_CDLTransform_methods[] = {
-            {"isEditable", (PyCFunction) PyOCIO_CDLTransform_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCIO_CDLTransform_createEditableCopy, METH_NOARGS, "" },
-            
-            {"getDirection", (PyCFunction) PyOCIO_CDLTransform_getDirection, METH_NOARGS, "" },
-            {"setDirection", PyOCIO_CDLTransform_setDirection, METH_VARARGS, "" },
-            
             {"equals", PyOCIO_CDLTransform_equals, METH_VARARGS, "" },
             
             {"getXML", (PyCFunction) PyOCIO_CDLTransform_getXML, METH_NOARGS, "" },
@@ -234,10 +147,10 @@ OCIO_NAMESPACE_ENTER
     PyTypeObject PyOCIO_CDLTransformType = {
         PyObject_HEAD_INIT(NULL)
         0,                                          //ob_size
-        "OCIO.CDLTransform",                    //tp_name
-        sizeof(PyOCIO_CDLTransform),            //tp_basicsize
+        "OCIO.CDLTransform",                        //tp_name
+        sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor)PyOCIO_CDLTransform_delete, //tp_dealloc
+        0,                                          //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -253,22 +166,22 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "CDLTransform",                         //tp_doc 
+        "CDLTransform",                             //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
         0,                                          //tp_weaklistoffset 
         0,                                          //tp_iter 
         0,                                          //tp_iternext 
-        PyOCIO_CDLTransform_methods,            //tp_methods 
+        PyOCIO_CDLTransform_methods,                //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
-        0,                                          //tp_base 
+        &PyOCIO_TransformType,                      //tp_base 
         0,                                          //tp_dict 
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
         0,                                          //tp_dictoffset 
-        (initproc) PyOCIO_CDLTransform_init,    //tp_init 
+        (initproc) PyOCIO_CDLTransform_init,        //tp_init 
         0,                                          //tp_alloc 
         0,                                          //tp_new 
         0,                                          //tp_free
@@ -291,13 +204,13 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_CDLTransform_init( PyOCIO_CDLTransform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_CDLTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
             
-            self->constcppobj = new OCIO::ConstCDLTransformRcPtr();
-            self->cppobj = new OCIO::CDLTransformRcPtr();
+            self->constcppobj = new OCIO::ConstTransformRcPtr();
+            self->cppobj = new OCIO::TransformRcPtr();
             self->isconst = true;
             
             try
@@ -312,76 +225,6 @@ OCIO_NAMESPACE_ENTER
                 message += e.what();
                 PyErr_SetString( PyExc_RuntimeError, message.c_str() );
                 return -1;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        void PyOCIO_CDLTransform_delete( PyOCIO_CDLTransform *self, PyObject * /*args*/ )
-        {
-            delete self->constcppobj;
-            delete self->cppobj;
-            
-            self->ob_type->tp_free((PyObject*)self);
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        PyObject * PyOCIO_CDLTransform_isEditable( PyObject * self )
-        {
-            return PyBool_FromLong(IsPyCDLTransformEditable(self));
-        }
-        
-        PyObject * PyOCIO_CDLTransform_createEditableCopy( PyObject * self )
-        {
-            try
-            {
-                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
-                CDLTransformRcPtr copy = DynamicPtrCast<CDLTransform>(transform->createEditableCopy());
-                return BuildEditablePyCDLTransform( copy );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        
-        PyObject * PyOCIO_CDLTransform_getDirection( PyObject * self )
-        {
-            try
-            {
-                ConstCDLTransformRcPtr transform = GetConstCDLTransform(self, true);
-                TransformDirection dir = transform->getDirection();
-                return PyString_FromString( TransformDirectionToString( dir ) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_CDLTransform_setDirection( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                TransformDirection dir;
-                if (!PyArg_ParseTuple(args,"O&:setDirection",
-                    ConvertPyObjectToTransformDirection, &dir)) return NULL;
-                
-                CDLTransformRcPtr transform = GetEditableCDLTransform(self);
-                transform->setDirection( dir );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
             }
         }
         
@@ -752,8 +595,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
     }
 
 }

@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "PyColorSpace.h"
-#include "PyGroupTransform.h"
+#include "PyTransform.h"
 #include "PyUtil.h"
 
 OCIO_NAMESPACE_ENTER
@@ -632,8 +632,8 @@ OCIO_NAMESPACE_ENTER
                     ConvertPyObjectToColorSpaceDirection, &dir)) return NULL;
                 
                 ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
-                ConstGroupTransformRcPtr transform = colorSpace->getTransform(dir);
-                return BuildConstPyGroupTransform(transform);
+                ConstTransformRcPtr transform = colorSpace->getTransform(dir);
+                return BuildConstPyTransform(transform);
             }
             catch(...)
             {
@@ -651,8 +651,8 @@ OCIO_NAMESPACE_ENTER
                     ConvertPyObjectToColorSpaceDirection, &dir)) return NULL;
                 
                 ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
-                GroupTransformRcPtr transform = colorSpace->getEditableTransform(dir);
-                return BuildEditablePyGroupTransform(transform);
+                TransformRcPtr transform = colorSpace->getEditableTransform(dir);
+                return BuildEditablePyTransform(transform);
             }
             catch(...)
             {
