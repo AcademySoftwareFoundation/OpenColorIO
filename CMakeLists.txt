@@ -21,6 +21,23 @@ if(APPLE)
     endif()
 endif()
 
+# Set the default built type
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
+# Set the default namespace
+IF(NOT OCIO_NAMESPACE)
+  SET(OCIO_NAMESPACE OpenColorIO CACHE STRING
+      "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc."
+      FORCE)
+ENDIF(NOT OCIO_NAMESPACE)
+
+add_definitions("-DOCIO_NAMESPACE=${OCIO_NAMESPACE}")
+
+# Enable a bunch of compiler warnings...
 # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Weffc++ -Winline ")
