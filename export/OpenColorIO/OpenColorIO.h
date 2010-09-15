@@ -47,33 +47,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // OpenColorIO
 
-// TODO: Get DEFAULT_COLOR_ROLE to actually work as advertised.
-// TODO: Add parseColorSpaceRule.   STRICT, CONSERVATIVE to allow for 'always'
-//       succeed parsing. (such as with null profile)
-// TODO: Make runtest work, when OCIO is not set
-// TODO: Gracefully handle null strings + null rcptrs across API
-//       (i.e, make the external api bullet-proof) :)
-// TODO: Avoid use of config->getDisplayColorSpaceName(device, transformName).
-//       (Allow device : transform as another alias of the output color space?)
-// TODO: add  GetOriginalSourceFile(); setOriginalSourceFile(const std::string &sourceFile)
-// TODO: Turn the lutpath into a search path mechanism
-// TODO: add op optimizations.  op collapsing.  cache op tree.
-// TODO: test 1d atomic ops
-// TODO: test full colorspace conversions
-// TODO: Figure out for each transform class what is required, move into constructor
-// TODO: consider way to tag colorspace operations as explicitly not allowed?
-//       Ex: hdbty<->qt?
-// TODO: provide xml defaults mechanism for cleaner xml code
-// TODO: such as int vectors, double from str, float vectors, etc.
-// TODO: add ocio package (.gz?) file, and ability to convert between representations.
-// TODO: add all nuke plugins, also get official Foundry code review
-// TODO: add additional lut formats
-// TODO: add internal namespace for all implementation objects Ops, etc.
-// TODO: Add prettier xml output (newlines between colorspaces?)
-// TODO: Cross-platform
-// TODO: allow migration to binary file format
-// DEFERRED: per-shot looks
-
 /*
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
@@ -81,8 +54,8 @@ namespace OCIO = OCIO_NAMESPACE;
 // Example: Compositing plugin, which converts from "log" to "lin"
 try
 {
-    // Get the global config, which will auto-initialize
-    // from the environment on first use.
+    // Get the global OpenColorIO config
+    // This will auto-initialize (using $OCIO) on first use
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
     // Get the processor corresponding to this transform.
@@ -104,8 +77,8 @@ catch(OCIO::Exception & exception)
 // Example: Apply the default display transform (to a scene-linear image)
 try
 {
-    // Get the global config, which will auto-initialize
-    // from the environment on first use.
+    // Get the global OpenColorIO config
+    // This will auto-initialize (using $OCIO) on first use
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
     const char * device = config->getDefaultDisplayDeviceName();
@@ -126,7 +99,6 @@ catch(OCIO::Exception & exception)
 {
     std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
 }
-
 */
 
 #include <cstdlib>
@@ -245,7 +217,6 @@ OCIO_NAMESPACE_ENTER
     };
     
     //! Used when there is a choice of hardware shader language.
-    // TODO: Specify language spec in each enum?
     
     enum GpuLanguage
     {
@@ -336,19 +307,9 @@ OCIO_NAMESPACE_ENTER
         
         ConfigRcPtr createEditableCopy() const;
         
-        
-        // TODO: add sanityCheck circa exr
-        // confirm all colorspace roles exist
-        // confirm there arent duplicate colorspaces
-        // confirm all files exist with read permissions?
-        // confirm for all ColorSpaceTransforms the names spaces exist
-        // confirm no name conflicts between colorspaces and roles
-        
-        
         const char * getResourcePath() const;
         void setResourcePath(const char * path);
         
-        // TODO: replace with mechanism that supports bundles
         const char * getResolvedResourcePath() const;
         
         const char * getDescription() const;
@@ -835,7 +796,6 @@ OCIO_NAMESPACE_ENTER
         const char * getSrc() const;
         void setSrc(const char * src);
         
-        // TODO: how is this used with multiple luts in a single file (1d+3d)
         Interpolation getInterpolation() const;
         void setInterpolation(Interpolation interp);
     
