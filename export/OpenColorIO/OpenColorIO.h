@@ -32,6 +32,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define OCIO_VERSION "0.5.15"
 
+// Namespace mojo
+#ifndef OCIO_NAMESPACE
+#define OCIO_NAMESPACE OpenColorIO
+#endif
+
+#define OCIO_VERSION_NS v0
+#define OCIO_NAMESPACE_ENTER namespace OCIO_NAMESPACE { namespace OCIO_VERSION_NS
+#define OCIO_NAMESPACE_EXIT using namespace OCIO_VERSION_NS; }
+#define OCIO_NAMESPACE_USING using namespace OCIO_NAMESPACE;
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // OpenColorIO
@@ -61,9 +72,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // TODO: Add prettier xml output (newlines between colorspaces?)
 // TODO: Cross-platform
 // TODO: allow migration to binary file format
-
 // DEFERRED: per-shot looks
+
 /*
+#include <OpenColorIO/OpenColorIO.h>
+namespace OCIO = OCIO_NAMESPACE;
+
 // Example: Compositing plugin, which converts from "log" to "lin"
 try
 {
@@ -115,27 +129,12 @@ catch(OCIO::Exception & exception)
 
 */
 
-
-
-// Namespace mojo
-#define OCIO_VERSION_NS v1
-#define OCIO_NAMESPACE_ENTER namespace SPI \
-{ namespace OCIO \
-{ namespace OCIO_VERSION_NS
-#define OCIO_NAMESPACE_EXIT using namespace OCIO_VERSION_NS; \
-} /*namespace OCIO*/ \
-} /*namespace SPI*/
-#define OCIO_NAMESPACE SPI::OCIO
-#define OCIO_NAMESPACE_USING using namespace SPI::OCIO;
-
-
-
-#include <exception>
-#include <memory>
-#include <iosfwd>
-#include <string>
-#include <limits>
 #include <cstdlib>
+#include <exception>
+#include <iosfwd>
+#include <limits>
+#include <memory>
+#include <string>
 
 
 #ifdef __APPLE__

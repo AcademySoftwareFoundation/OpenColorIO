@@ -62,7 +62,7 @@ OCIO_NAMESPACE_ENTER
         PyOCIO_Processor * pyProcessor = PyObject_New(
                 PyOCIO_Processor, (PyTypeObject * ) &PyOCIO_ProcessorType);
         
-        pyProcessor->constcppobj = new OCIO::ConstProcessorRcPtr();
+        pyProcessor->constcppobj = new ConstProcessorRcPtr();
         *pyProcessor->constcppobj = processor;
         
         return ( PyObject * ) pyProcessor;
@@ -78,7 +78,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyProcessor(pyobject))
         {
-            throw Exception("PyObject must be an OCIO::Processor.");
+            throw Exception("PyObject must be an OCIO.Processor.");
         }
         
         PyOCIO_Processor * pyProcessor = reinterpret_cast<PyOCIO_Processor *> (pyobject);
@@ -87,7 +87,7 @@ OCIO_NAMESPACE_ENTER
             return *pyProcessor->constcppobj;
         }
         
-        throw Exception("PyObject must be a valid OCIO::Processor.");
+        throw Exception("PyObject must be a valid OCIO.Processor.");
     }
     
     

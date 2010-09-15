@@ -63,10 +63,10 @@ OCIO_NAMESPACE_ENTER
         PyOCIO_Config * pyconfig = PyObject_New(
                 PyOCIO_Config, (PyTypeObject * ) &PyOCIO_ConfigType);
         
-        pyconfig->constcppobj = new OCIO::ConstConfigRcPtr();
+        pyconfig->constcppobj = new ConstConfigRcPtr();
         *pyconfig->constcppobj = config;
         
-        pyconfig->cppobj = new OCIO::ConfigRcPtr();
+        pyconfig->cppobj = new ConfigRcPtr();
         pyconfig->isconst = true;
         
         return ( PyObject * ) pyconfig;
@@ -82,8 +82,8 @@ OCIO_NAMESPACE_ENTER
         PyOCIO_Config * pyconfig = PyObject_New(
                 PyOCIO_Config, (PyTypeObject * ) &PyOCIO_ConfigType);
         
-        pyconfig->constcppobj = new OCIO::ConstConfigRcPtr();
-        pyconfig->cppobj = new OCIO::ConfigRcPtr();
+        pyconfig->constcppobj = new ConstConfigRcPtr();
+        pyconfig->cppobj = new ConfigRcPtr();
         *pyconfig->cppobj = config;
         
         pyconfig->isconst = false;
@@ -102,7 +102,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyConfig(pyobject))
         {
-            throw Exception("PyObject must be an OCIO::Config.");
+            throw Exception("PyObject must be an OCIO.Config.");
         }
         
         PyOCIO_Config * pyconfig = reinterpret_cast<PyOCIO_Config *> (pyobject);
@@ -113,7 +113,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!IsPyConfig(pyobject))
         {
-            throw Exception("PyObject must be an OCIO::Config.");
+            throw Exception("PyObject must be an OCIO.Config.");
         }
         
         PyOCIO_Config * pyconfig = reinterpret_cast<PyOCIO_Config *> (pyobject);
@@ -127,14 +127,14 @@ OCIO_NAMESPACE_ENTER
             return *pyconfig->cppobj;
         }
         
-        throw Exception("PyObject must be a valid OCIO::Config.");
+        throw Exception("PyObject must be a valid OCIO.Config.");
     }
     
     ConfigRcPtr GetEditableConfig(PyObject * pyobject)
     {
         if(!IsPyConfig(pyobject))
         {
-            throw Exception("PyObject must be an OCIO::Config.");
+            throw Exception("PyObject must be an OCIO.Config.");
         }
         
         PyOCIO_Config * pyconfig = reinterpret_cast<PyOCIO_Config *> (pyobject);
@@ -143,7 +143,7 @@ OCIO_NAMESPACE_ENTER
             return *pyconfig->cppobj;
         }
         
-        throw Exception("PyObject must be an editable OCIO::Config.");
+        throw Exception("PyObject must be an editable OCIO.Config.");
     }
     
     ///////////////////////////////////////////////////////////////////////////
@@ -332,13 +332,13 @@ OCIO_NAMESPACE_ENTER
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
             
-            self->constcppobj = new OCIO::ConstConfigRcPtr();
-            self->cppobj = new OCIO::ConfigRcPtr();
+            self->constcppobj = new ConstConfigRcPtr();
+            self->cppobj = new ConfigRcPtr();
             self->isconst = true;
             
             try
             {
-                *self->cppobj = OCIO::Config::Create();
+                *self->cppobj = Config::Create();
                 self->isconst = false;
                 return 0;
             }

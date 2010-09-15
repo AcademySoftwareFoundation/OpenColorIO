@@ -186,13 +186,13 @@ OCIO_NAMESPACE_ENTER
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
             
-            self->constcppobj = new OCIO::ConstTransformRcPtr();
-            self->cppobj = new OCIO::TransformRcPtr();
+            self->constcppobj = new ConstTransformRcPtr();
+            self->cppobj = new TransformRcPtr();
             self->isconst = true;
             
             try
             {
-                *self->cppobj = OCIO::DisplayTransform::Create();
+                *self->cppobj = DisplayTransform::Create();
                 self->isconst = false;
                 return 0;
             }

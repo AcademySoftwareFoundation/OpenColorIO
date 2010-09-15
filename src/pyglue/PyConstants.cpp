@@ -68,58 +68,58 @@ OCIO_NAMESPACE_ENTER
         
         // Add Module Constants
         PyModule_AddStringConstant(m, "TRANSFORM_DIR_UNKNOWN",
-            OCIO::TransformDirectionToString(OCIO::TRANSFORM_DIR_UNKNOWN));
+            TransformDirectionToString(TRANSFORM_DIR_UNKNOWN));
         PyModule_AddStringConstant(m, "TRANSFORM_DIR_FORWARD",
-            OCIO::TransformDirectionToString(OCIO::TRANSFORM_DIR_FORWARD));
+            TransformDirectionToString(TRANSFORM_DIR_FORWARD));
         PyModule_AddStringConstant(m, "TRANSFORM_DIR_INVERSE",
-            OCIO::TransformDirectionToString(OCIO::TRANSFORM_DIR_INVERSE));
+            TransformDirectionToString(TRANSFORM_DIR_INVERSE));
         
         PyModule_AddStringConstant(m, "COLORSPACE_DIR_UNKNOWN",
-            OCIO::ColorSpaceDirectionToString(OCIO::COLORSPACE_DIR_UNKNOWN));
+            ColorSpaceDirectionToString(COLORSPACE_DIR_UNKNOWN));
         PyModule_AddStringConstant(m, "COLORSPACE_DIR_TO_REFERENCE",
-            OCIO::ColorSpaceDirectionToString(OCIO::COLORSPACE_DIR_TO_REFERENCE));
+            ColorSpaceDirectionToString(COLORSPACE_DIR_TO_REFERENCE));
         PyModule_AddStringConstant(m, "COLORSPACE_DIR_FROM_REFERENCE",
-            OCIO::ColorSpaceDirectionToString(OCIO::COLORSPACE_DIR_FROM_REFERENCE));
+            ColorSpaceDirectionToString(COLORSPACE_DIR_FROM_REFERENCE));
         
         PyModule_AddStringConstant(m, "BIT_DEPTH_UNKNOWN",
-            OCIO::BitDepthToString(OCIO::BIT_DEPTH_UNKNOWN));
+            BitDepthToString(BIT_DEPTH_UNKNOWN));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT8",
-            OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT8));
+            BitDepthToString(BIT_DEPTH_UINT8));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT10",
-            OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT10));
+            BitDepthToString(BIT_DEPTH_UINT10));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT12",
-            OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT12));
+            BitDepthToString(BIT_DEPTH_UINT12));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT14",
-            OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT14));
+            BitDepthToString(BIT_DEPTH_UINT14));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT16",
-            OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT16));
+            BitDepthToString(BIT_DEPTH_UINT16));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT32",
-            OCIO::BitDepthToString(OCIO::BIT_DEPTH_UINT32));
+            BitDepthToString(BIT_DEPTH_UINT32));
         PyModule_AddStringConstant(m, "BIT_DEPTH_F16",
-            OCIO::BitDepthToString(OCIO::BIT_DEPTH_F16));
+            BitDepthToString(BIT_DEPTH_F16));
         PyModule_AddStringConstant(m, "BIT_DEPTH_F32",
-            OCIO::BitDepthToString(OCIO::BIT_DEPTH_F32));
+            BitDepthToString(BIT_DEPTH_F32));
         
         PyModule_AddStringConstant(m, "GPU_ALLOCATION_UNKNOWN",
-            OCIO::GpuAllocationToString(OCIO::GPU_ALLOCATION_UNKNOWN));
+            GpuAllocationToString(GPU_ALLOCATION_UNKNOWN));
         PyModule_AddStringConstant(m, "GPU_ALLOCATION_UNIFORM",
-            OCIO::GpuAllocationToString(OCIO::GPU_ALLOCATION_UNIFORM));
+            GpuAllocationToString(GPU_ALLOCATION_UNIFORM));
         PyModule_AddStringConstant(m, "GPU_ALLOCATION_LG2",
-            OCIO::GpuAllocationToString(OCIO::GPU_ALLOCATION_LG2));
+            GpuAllocationToString(GPU_ALLOCATION_LG2));
         
         PyModule_AddStringConstant(m, "INTERP_UNKNOWN",
-            OCIO::InterpolationToString(OCIO::INTERP_UNKNOWN));
+            InterpolationToString(INTERP_UNKNOWN));
         PyModule_AddStringConstant(m, "INTERP_NEAREST",
-            OCIO::InterpolationToString(OCIO::INTERP_NEAREST));
+            InterpolationToString(INTERP_NEAREST));
         PyModule_AddStringConstant(m, "INTERP_LINEAR",
-            OCIO::InterpolationToString(OCIO::INTERP_LINEAR));
+            InterpolationToString(INTERP_LINEAR));
         
-        PyModule_AddStringConstant(m, "ROLE_REFERENCE", OCIO::ROLE_REFERENCE);
-        PyModule_AddStringConstant(m, "ROLE_DATA", OCIO::ROLE_DATA);
-        PyModule_AddStringConstant(m, "ROLE_COLOR_PICKING", OCIO::ROLE_COLOR_PICKING);
-        PyModule_AddStringConstant(m, "ROLE_SCENE_LINEAR", OCIO::ROLE_SCENE_LINEAR);
-        PyModule_AddStringConstant(m, "ROLE_COMPOSITING_LOG", OCIO::ROLE_COMPOSITING_LOG);
-        PyModule_AddStringConstant(m, "ROLE_COLOR_TIMING", OCIO::ROLE_COLOR_TIMING);
+        PyModule_AddStringConstant(m, "ROLE_REFERENCE", ROLE_REFERENCE);
+        PyModule_AddStringConstant(m, "ROLE_DATA", ROLE_DATA);
+        PyModule_AddStringConstant(m, "ROLE_COLOR_PICKING", ROLE_COLOR_PICKING);
+        PyModule_AddStringConstant(m, "ROLE_SCENE_LINEAR", ROLE_SCENE_LINEAR);
+        PyModule_AddStringConstant(m, "ROLE_COMPOSITING_LOG", ROLE_COMPOSITING_LOG);
+        PyModule_AddStringConstant(m, "ROLE_COLOR_TIMING", ROLE_COLOR_TIMING);
         
         // Add the module
         PyModule_AddObject(enclosingModule, "Constants", m);

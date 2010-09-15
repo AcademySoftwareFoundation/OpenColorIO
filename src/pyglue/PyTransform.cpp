@@ -92,8 +92,8 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        pyobj->constcppobj = new OCIO::ConstTransformRcPtr();
-        pyobj->cppobj = new OCIO::TransformRcPtr();
+        pyobj->constcppobj = new ConstTransformRcPtr();
+        pyobj->cppobj = new TransformRcPtr();
         
         *pyobj->constcppobj = transform;
         pyobj->isconst = true;
@@ -110,8 +110,8 @@ OCIO_NAMESPACE_ENTER
         
         PyOCIO_Transform * pyobj = PyTransform_New(transform);
         
-        pyobj->constcppobj = new OCIO::ConstTransformRcPtr();
-        pyobj->cppobj = new OCIO::TransformRcPtr();
+        pyobj->constcppobj = new ConstTransformRcPtr();
+        pyobj->cppobj = new TransformRcPtr();
         
         *pyobj->cppobj = transform;
         pyobj->isconst = false;
@@ -279,8 +279,8 @@ OCIO_NAMESPACE_ENTER
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
             
-            self->constcppobj = new OCIO::ConstTransformRcPtr();
-            self->cppobj = new OCIO::TransformRcPtr();
+            self->constcppobj = new ConstTransformRcPtr();
+            self->cppobj = new TransformRcPtr();
             self->isconst = true;
             
             std::string message = "Base Transforms class can not be instantiated.";
@@ -313,8 +313,8 @@ OCIO_NAMESPACE_ENTER
                 TransformRcPtr copy = transform->createEditableCopy();
                 
                 PyOCIO_Transform * pycopy = PyTransform_New(copy);
-                pycopy->constcppobj = new OCIO::ConstTransformRcPtr();
-                pycopy->cppobj = new OCIO::TransformRcPtr();
+                pycopy->constcppobj = new ConstTransformRcPtr();
+                pycopy->cppobj = new TransformRcPtr();
                 *pycopy->cppobj = copy;
                 pycopy->isconst = false;
                 

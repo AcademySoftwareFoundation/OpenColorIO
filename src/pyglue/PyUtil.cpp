@@ -71,7 +71,7 @@ OCIO_NAMESPACE_ENTER
             return 0;
         }
         
-        *gpuallocPtr = OCIO::GpuAllocationFromString(PyString_AsString( object ));
+        *gpuallocPtr = GpuAllocationFromString(PyString_AsString( object ));
         
         return 1;
     }
@@ -88,7 +88,7 @@ OCIO_NAMESPACE_ENTER
             return 0;
         }
         
-        *interpPtr = OCIO::InterpolationFromString(PyString_AsString( object ));
+        *interpPtr = InterpolationFromString(PyString_AsString( object ));
         
         return 1;
     }
@@ -103,7 +103,7 @@ OCIO_NAMESPACE_ENTER
             return 0;
         }
         
-        *dirPtr = OCIO::TransformDirectionFromString(PyString_AsString( object ));
+        *dirPtr = TransformDirectionFromString(PyString_AsString( object ));
         
         return 1;
     }
@@ -119,7 +119,7 @@ OCIO_NAMESPACE_ENTER
             return 0;
         }
         
-        *dirPtr = OCIO::ColorSpaceDirectionFromString(PyString_AsString( object ));
+        *dirPtr = ColorSpaceDirectionFromString(PyString_AsString( object ));
         
         return 1;
     }
