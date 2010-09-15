@@ -1088,7 +1088,7 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        TiXmlElement * GetElement(const ConstColorSpaceRcPtr & cs)
+        TiXmlElement * GetColorSpaceElement(const ConstColorSpaceRcPtr & cs)
         {
             TiXmlElement * element = new TiXmlElement( "colorspace" );
             element->SetAttribute("name", cs->getName());
@@ -1189,7 +1189,7 @@ OCIO_NAMESPACE_ENTER
             // Colorspaces
             for(unsigned int i=0; i<m_impl->colorspaces_.size(); ++i)
             {
-                TiXmlElement * childElement = GetElement(m_impl->colorspaces_[i]);
+                TiXmlElement * childElement = GetColorSpaceElement(m_impl->colorspaces_[i]);
                 element->LinkEndChild( childElement );
             }
             
