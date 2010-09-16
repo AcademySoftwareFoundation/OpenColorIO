@@ -1,3 +1,10 @@
+Version 0.5.16 (Sept 16 2010):
+    * PyTransforms now use native python class inheritance
+    * OCIO namespace can now be configured at build time (for distribution in commercial apps)
+    * Updated make install behavior
+    * DisplayTransform accepts generic cc operators (instead of CDL only)
+    * A few bug fixes / compile warning fixes
+
 Version 0.5.15 (Sept 8 2010):
     * OCIO is well behaved when $OCIO is unset, allowing un-color-managed use.
     * Color Transforms can be applied in python config->getProcessor
