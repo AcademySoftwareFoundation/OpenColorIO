@@ -67,6 +67,8 @@ if(PYTHON_OK)
     )
     
     install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/python)
+    install(FILES ${OpenColorIO_SOURCE_DIR}/export/PyOpenColorIO/PyOpenColorIO.h
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/PyOpenColorIO/)
     
 else()
     message(STATUS "Python bindings will not be built: ${PYTHON_ERR}")
