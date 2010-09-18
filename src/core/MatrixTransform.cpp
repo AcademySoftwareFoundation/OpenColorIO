@@ -267,7 +267,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     void MatrixTransform::View(float * m44, float * offset4,
-                               bool * channelHot4,
+                               int * channelHot4,
                                const float * lumaCoef3)
     {
         if(!channelHot4 || !lumaCoef3) return;
