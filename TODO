@@ -32,3 +32,4 @@
          confirm no name conflicts between colorspaces and roles
 // TODO: replace config::getResolvedResourcePath with mechanism that supports bundles
 // TODO: claify how FileTransform::getInterpolation is used with multiple luts in a single file (1d+3d)
+// TODO: Add generic equality operator (or 'equals') to all transforms. Also expose in python

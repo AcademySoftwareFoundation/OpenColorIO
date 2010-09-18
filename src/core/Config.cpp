@@ -26,8 +26,16 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <cstdlib>
+#include <cstring>
+#include <set>
+#include <sstream>
+#include <utility>
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
 #include "PathUtils.h"
@@ -35,13 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Processor.h"
 #include "pystring/pystring.h"
 #include "tinyxml/tinyxml.h"
-
-#include <cstdlib>
-#include <cstring>
-#include <set>
-#include <sstream>
-#include <utility>
-#include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -792,8 +793,8 @@ OCIO_NAMESPACE_ENTER
         
         ConstFileTransformRcPtr GetDefaultFileTransform()
         {
-            static ConstFileTransformRcPtr ft = FileTransform::Create();
-            return ft;
+            static ConstFileTransformRcPtr filetransform_ = FileTransform::Create();
+            return filetransform_;
         }
         
         TiXmlElement * GetElement(const ConstFileTransformRcPtr & t)
@@ -813,6 +814,139 @@ OCIO_NAMESPACE_ENTER
             {
                 const char * dir = TransformDirectionToString(t->getDirection());
                 element->SetAttribute("direction", dir);
+            }
+            
+            return element;
+        }
+        
+        
+        
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // MatrixTransform
+        
+        MatrixTransformRcPtr CreateMatrixTransform(const TiXmlElement * element)
+        {
+            if(!element)
+                throw Exception("CreateMatrixTransform received null XmlElement.");
+            
+            if(std::string(element->Value()) != "matrix")
+            {
+                std::ostringstream os;
+                os << "HandleElement passed incorrect element type '";
+                os << element->Value() << "'. ";
+                os << "Expected 'matrix'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            MatrixTransformRcPtr t = MatrixTransform::Create();
+            float matrix[16];
+            float offset[4];
+            t->getValue(matrix, offset);
+            
+            const TiXmlAttribute* pAttrib = element->FirstAttribute();
+            
+            
+            while(pAttrib)
+            {
+                std::string attrName = pystring::lower(pAttrib->Name());
+                
+                if(pystring::startswith(attrName, "m_"))
+                {
+                    std::string strval = pystring::slice(attrName,
+                        (int)std::string("m_").size());
+                    int mindex = 0;
+                    if(!StringToInt(&mindex, strval.c_str()) || mindex > 15 || mindex < 0)
+                    {
+                        std::ostringstream os;
+                        os << "Matrix has invalid index specified, '";
+                        os << attrName << "'. ";
+                        os << "Expected m_{0-15}.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    float value = 0.0;
+                    if(!StringToFloat(&value, pAttrib->Value()))
+                    {
+                        std::ostringstream os;
+                        os << "Matrix has invalid value specified, '";
+                        os << pAttrib->Value() << "'. ";
+                        os << "Expected float.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    matrix[mindex] = value;
+                }
+                
+                if(pystring::startswith(attrName, "b_"))
+                {
+                    std::string strval = pystring::slice(attrName,
+                        (int)std::string("b_").size());
+                    int bindex = 0;
+                    if(!StringToInt(&bindex, strval.c_str()) || bindex > 3 || bindex < 0)
+                    {
+                        std::ostringstream os;
+                        os << "Matrix offset has invalid index specified, '";
+                        os << attrName << "'. ";
+                        os << "Expected b_{0-3}.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    float value = 0.0;
+                    if(!StringToFloat(&value, pAttrib->Value()))
+                    {
+                        std::ostringstream os;
+                        os << "Matrix has invalid value specified, '";
+                        os << pAttrib->Value() << "'. ";
+                        os << "Expected float.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    offset[bindex] = value;
+                }
+                
+                pAttrib = pAttrib->Next();
+            }
+            
+            t->setValue(matrix, offset);
+            
+            return t;
+        }
+        
+        TiXmlElement * GetElement(const ConstMatrixTransformRcPtr & t)
+        {
+            TiXmlElement * element = new TiXmlElement( "matrix" );
+            
+            float matrix[16];
+            float offset[4];
+            t->getValue(matrix, offset);
+            
+            // Get the defaults
+            MatrixTransformRcPtr dMtx = MatrixTransform::Create();
+            float dmatrix[16];
+            float doffset[4];
+            dMtx->getValue(dmatrix, doffset);
+            
+            const float abserror = 1e-9f;
+            
+            for(unsigned int i=0; i<16; ++i)
+            {
+                if(equalWithAbsError(matrix[i], dmatrix[i], abserror))
+                    continue;
+                
+                std::ostringstream attrname;
+                attrname << "m_" << i;
+                element->SetDoubleAttribute(attrname.str(), matrix[i]);
+            }
+            
+            for(unsigned int i=0; i<4; ++i)
+            {
+                if(equalWithAbsError(offset[i], doffset[i], abserror))
+                    continue;
+                
+                std::ostringstream attrname;
+                attrname << "b_" << i;
+                element->SetDoubleAttribute(attrname.str(), offset[i]);
             }
             
             return element;
@@ -941,6 +1075,10 @@ OCIO_NAMESPACE_ENTER
                 {
                     t->push_back( CreateColorSpaceTransform(pElem) );
                 }
+                else if(elementtype == "matrix")
+                {
+                    t->push_back( CreateMatrixTransform(pElem) );
+                }
                 else
                 {
                     std::ostringstream os;
@@ -993,6 +1131,12 @@ OCIO_NAMESPACE_ENTER
                     DynamicPtrCast<const ColorSpaceTransform>(child))
                 {
                     TiXmlElement * childElement = GetElement(colorSpaceTransform);
+                    element->LinkEndChild( childElement );
+                }
+                else if(ConstMatrixTransformRcPtr matrixTransform = \
+                    DynamicPtrCast<const MatrixTransform>(child))
+                {
+                    TiXmlElement * childElement = GetElement(matrixTransform);
                     element->LinkEndChild( childElement );
                 }
                 else

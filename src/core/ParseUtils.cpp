@@ -262,6 +262,22 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
+    bool StringToInt(int * ival, const char * str)
+    {
+        if(!str) return false;
+        
+        std::istringstream inputStringstream(str);
+        int x;
+        if(!(inputStringstream >> x))
+        {
+            return false;
+        }
+        
+        if(ival) *ival = x;
+        return true;
+    }
+    
+    
     std::string DoubleToString(double value)
     {
         std::ostringstream pretty;

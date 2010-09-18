@@ -33,6 +33,7 @@ add_library(OpenColorIO SHARED
     Lut3DOp.cpp
     MathUtils.cpp
     MatrixOps.cpp
+    MatrixTransform.cpp
     Op.cpp
     ParseUtils.cpp
     PathUtils.cpp

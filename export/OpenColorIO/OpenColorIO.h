@@ -167,6 +167,10 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
     typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
     
+    class MatrixTransform;
+    typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
+    typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
+    
     template <class T, class U>
     inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
     {
@@ -986,6 +990,62 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const CDLTransform&);
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Represents an MX+B Matrix transform
+    
+    class MatrixTransform : public Transform
+    {
+    public:
+        static MatrixTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        bool equals(const MatrixTransform & other) const;
+        
+        void setValue(const float * m44, const float * offset4);
+        void getValue(float * m44, float * offset4) const;
+        
+        
+        // Convenience functions to get the mtx and offset
+        // corresponding to higher-level concepts
+        
+        static void Identity(float * m44, float * offset4);
+        
+        static void Scale(float * m44, float * offset4,
+                          const float * scale4);
+        
+        // This can throw an exception if for any component
+        // oldmin == oldmax. (divide by 0)
+        
+        static void Fit(float * m44, float * offset4,
+                        const float * oldmin4, const float * oldmax4,
+                        const float * newmin4, const float * newmax4);
+        
+        static void Sat(float * m44, float * offset4,
+                        float sat, const float * lumaCoef3);
+    
+    private:
+        MatrixTransform();
+        MatrixTransform(const MatrixTransform &);
+        virtual ~MatrixTransform();
+        
+        MatrixTransform& operator= (const MatrixTransform &);
+        
+        static void deleter(MatrixTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const MatrixTransform&);
     
     
     

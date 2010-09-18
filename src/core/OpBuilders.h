@@ -57,12 +57,12 @@ OCIO_NAMESPACE_ENTER
     
     void BuildCDLOps(OpRcPtrVec & ops,
                      const Config & config,
-                     const CDLTransform & cdlTransform,
+                     const CDLTransform & transform,
                      TransformDirection dir);
     
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config& config,
-                            const ColorSpaceTransform& colorSpaceTransform,
+                            const ColorSpaceTransform & transform,
                             TransformDirection dir);
     
     void BuildColorSpaceOps(OpRcPtrVec & ops,
@@ -72,18 +72,23 @@ OCIO_NAMESPACE_ENTER
     
     void BuildDisplayOps(OpRcPtrVec & ops,
                          const Config & config,
-                         const DisplayTransform & displayTransform,
+                         const DisplayTransform & transform,
                          TransformDirection dir);
     
     void BuildFileOps(OpRcPtrVec & ops,
                       const Config& config,
-                      const FileTransform& fileTransform,
+                      const FileTransform & transform,
                       TransformDirection dir);
     
     void BuildGroupOps(OpRcPtrVec & ops,
                        const Config& config,
-                       const GroupTransform& groupTransform,
+                       const GroupTransform & transform,
                        TransformDirection dir);
+    
+    void BuildMatrixOps(OpRcPtrVec & ops,
+                        const Config& config,
+                        const MatrixTransform & transform,
+                        TransformDirection dir);
 }
 OCIO_NAMESPACE_EXIT
 
