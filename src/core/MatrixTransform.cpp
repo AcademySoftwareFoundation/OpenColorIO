@@ -284,13 +284,14 @@ OCIO_NAMESPACE_ENTER
         {
             memset(m44, 0, 16*sizeof(float));
             
-            // If no channels are hot, return identity
-            if(!(channelHot4[0] || channelHot4[1] ||
-                      channelHot4[2] || channelHot4[3]))
+            // All channels are hot, return identity
+            if(channelHot4[0] && channelHot4[1] &&
+               channelHot4[2] && channelHot4[3])
             {
                 Identity(m44, 0x0);
             }
-            // Viewing alpha, just show it.
+            // If not all the channels are hot, but alpha is,
+            // just show it.
             else if(channelHot4[3])
             {
                 for(int i=0; i<4; ++i)
@@ -318,7 +319,6 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 // Copy into rgb rows
-                
                 for(int row=0; row<3; ++row)
                 {
                     for(int i=0; i<4; i++)
