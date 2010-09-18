@@ -146,49 +146,6 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void MatrixTransform::Identity(float * m44, float * offset4)
-    {
-        if(m44)
-        {
-            memset(m44, 0, 16*sizeof(float));
-            m44[0] = 1.0f;
-            m44[5] = 1.0f;
-            m44[10] = 1.0f;
-            m44[15] = 1.0f;
-        }
-        
-        if(offset4)
-        {
-            offset4[0] = 0.0f;
-            offset4[1] = 0.0f;
-            offset4[2] = 0.0f;
-            offset4[3] = 0.0f;
-        }
-    }
-    
-    void MatrixTransform::Scale(float * m44, float * offset4,
-                                const float * scale4)
-    {
-        if(!scale4) return;
-        
-        if(m44)
-        {
-            memset(m44, 0, 16*sizeof(float));
-            m44[0] = scale4[0];
-            m44[5] = scale4[1];
-            m44[10] = scale4[2];
-            m44[15] = scale4[3];
-        }
-        
-        if(offset4)
-        {
-            offset4[0] = 0.0f;
-            offset4[1] = 0.0f;
-            offset4[2] = 0.0f;
-            offset4[3] = 0.0f;
-        }
-    }
-    
     /*
     Fit is canonically formulated as:
     out = newmin + ((value-oldmin)/(oldmax-oldmin)*(newmax-newmin))
@@ -228,8 +185,29 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
+    
+    void MatrixTransform::Identity(float * m44, float * offset4)
+    {
+        if(m44)
+        {
+            memset(m44, 0, 16*sizeof(float));
+            m44[0] = 1.0f;
+            m44[5] = 1.0f;
+            m44[10] = 1.0f;
+            m44[15] = 1.0f;
+        }
+        
+        if(offset4)
+        {
+            offset4[0] = 0.0f;
+            offset4[1] = 0.0f;
+            offset4[2] = 0.0f;
+            offset4[3] = 0.0f;
+        }
+    }
+    
     void MatrixTransform::Sat(float * m44, float * offset4,
-                                  float sat, const float * lumaCoef3)
+                              float sat, const float * lumaCoef3)
     {
         if(!lumaCoef3) return;
         
@@ -264,7 +242,97 @@ OCIO_NAMESPACE_ENTER
             offset4[3] = 0.0f;
         }
     }
-
+    
+    void MatrixTransform::Scale(float * m44, float * offset4,
+                                const float * scale4)
+    {
+        if(!scale4) return;
+        
+        if(m44)
+        {
+            memset(m44, 0, 16*sizeof(float));
+            m44[0] = scale4[0];
+            m44[5] = scale4[1];
+            m44[10] = scale4[2];
+            m44[15] = scale4[3];
+        }
+        
+        if(offset4)
+        {
+            offset4[0] = 0.0f;
+            offset4[1] = 0.0f;
+            offset4[2] = 0.0f;
+            offset4[3] = 0.0f;
+        }
+    }
+    
+    void MatrixTransform::View(float * m44, float * offset4,
+                               bool * channelHot4,
+                               const float * lumaCoef3)
+    {
+        if(!channelHot4 || !lumaCoef3) return;
+        
+        if(offset4)
+        {
+            offset4[0] = 0.0f;
+            offset4[1] = 0.0f;
+            offset4[2] = 0.0f;
+            offset4[3] = 0.0f;
+        }
+        
+        if(m44)
+        {
+            memset(m44, 0, 16*sizeof(float));
+            
+            // If no channels are hot, return identity
+            if(!(channelHot4[0] || channelHot4[1] ||
+                      channelHot4[2] || channelHot4[3]))
+            {
+                Identity(m44, 0x0);
+            }
+            // Viewing alpha, just show it.
+            else if(channelHot4[3])
+            {
+                for(int i=0; i<4; ++i)
+                {
+                     m44[4*i+3] = 1.0f;
+                }
+            }
+            // Blend rgb as specified, place it in all 3 output
+            // channels (to make a grayscale final image)
+            else
+            {
+                float values[3] = { 0.0f, 0.0f, 0.0f };
+                
+                for(int i = 0; i < 3; ++i)
+                {
+                    values[i] += lumaCoef3[i] * (channelHot4[i] ? 1.0f : 0.0f);
+                }
+                
+                float sum = values[0] + values[1] + values[2];
+                if(!IsScalarEqualToZero(sum))
+                {
+                    values[0] /= sum;
+                    values[1] /= sum;
+                    values[2] /= sum;
+                }
+                
+                // Copy into rgb rows
+                
+                for(int row=0; row<3; ++row)
+                {
+                    for(int i=0; i<4; i++)
+                    {
+                        m44[4*row+i] = values[i];
+                    }
+                }
+                
+                // Preserve alpha
+                m44[15] = 1.0f;
+            }
+        }
+    }
+    
     std::ostream& operator<< (std::ostream& os, const MatrixTransform& t)
     {
         os << "<MatrixTransform ";

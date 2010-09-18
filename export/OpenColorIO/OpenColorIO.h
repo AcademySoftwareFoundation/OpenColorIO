@@ -1016,11 +1016,6 @@ OCIO_NAMESPACE_ENTER
         // Convenience functions to get the mtx and offset
         // corresponding to higher-level concepts
         
-        static void Identity(float * m44, float * offset4);
-        
-        static void Scale(float * m44, float * offset4,
-                          const float * scale4);
-        
         // This can throw an exception if for any component
         // oldmin == oldmax. (divide by 0)
         
@@ -1028,8 +1023,17 @@ OCIO_NAMESPACE_ENTER
                         const float * oldmin4, const float * oldmax4,
                         const float * newmin4, const float * newmax4);
         
+        static void Identity(float * m44, float * offset4);
+        
         static void Sat(float * m44, float * offset4,
                         float sat, const float * lumaCoef3);
+        
+        static void Scale(float * m44, float * offset4,
+                          const float * scale4);
+        
+        static void View(float * m44, float * offset4,
+                         bool * channelHot4,
+                         const float * lumaCoef3);
     
     private:
         MatrixTransform();
