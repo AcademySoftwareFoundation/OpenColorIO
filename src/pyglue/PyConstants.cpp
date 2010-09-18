@@ -56,7 +56,7 @@ OCIO_NAMESPACE_ENTER
     
     }
     
-    void InitializeConstantsModule(PyObject *enclosingModule)
+    void AddConstantsModule(PyObject *enclosingModule)
     {
         // Add sub-module
         std::string moduleName = PyModule_GetName(enclosingModule);

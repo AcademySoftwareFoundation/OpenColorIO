@@ -97,16 +97,19 @@ initPyOpenColorIO(void)
     PyObject * m;
     m = Py_InitModule3("PyOpenColorIO", PyOCIO_methods, "OpenColorIO API");
     
-    OCIO::AddCDLTransformObjectToModule( m );
     OCIO::AddColorSpaceObjectToModule( m );
     OCIO::AddConfigObjectToModule( m );
-    OCIO::AddFileTransformObjectToModule( m );
-    OCIO::AddDisplayTransformObjectToModule( m );
-    OCIO::AddGroupTransformObjectToModule( m );
-    OCIO::AddProcessorObjectToModule( m );
-    OCIO::AddTransformObjectToModule( m );
+    OCIO::AddConstantsModule( m );
     
-    OCIO::InitializeConstantsModule( m );
+    OCIO::AddTransformObjectToModule( m );
+    {
+        OCIO::AddCDLTransformObjectToModule( m );
+        OCIO::AddFileTransformObjectToModule( m );
+        OCIO::AddDisplayTransformObjectToModule( m );
+        OCIO::AddGroupTransformObjectToModule( m );
+        OCIO::AddMatrixTransformObjectToModule( m );
+    }
+    OCIO::AddProcessorObjectToModule( m );
     
     PyModule_AddStringConstant(m, "version", OCIO_VERSION);
 }

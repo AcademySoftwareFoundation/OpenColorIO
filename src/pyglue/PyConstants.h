@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    void InitializeConstantsModule(PyObject *enclosingModule);
+    void AddConstantsModule(PyObject *enclosingModule);
 }
 OCIO_NAMESPACE_EXIT
 
