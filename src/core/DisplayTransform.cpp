@@ -53,6 +53,7 @@ OCIO_NAMESPACE_ENTER
         std::string inputColorSpaceName_;
         TransformRcPtr linearCC_;
         TransformRcPtr colorTimingCC_;
+        TransformRcPtr channelView_;
         std::string displayColorSpaceName_;
         
         Impl() :
@@ -72,6 +73,9 @@ OCIO_NAMESPACE_ENTER
             
             colorTimingCC_ = rhs.colorTimingCC_;
             if(colorTimingCC_) colorTimingCC_ = colorTimingCC_->createEditableCopy();
+            
+            channelView_ = rhs.channelView_;
+            if(channelView_) channelView_ = channelView_->createEditableCopy();
             
             displayColorSpaceName_ = rhs.displayColorSpaceName_;
             return *this;
@@ -143,6 +147,16 @@ OCIO_NAMESPACE_ENTER
     ConstTransformRcPtr DisplayTransform::getColorTimingCC() const
     {
         return m_impl->colorTimingCC_;
+    }
+    
+    void DisplayTransform::setChannelView(const ConstTransformRcPtr & transform)
+    {
+        m_impl->channelView_ = transform->createEditableCopy();
+    }
+    
+    ConstTransformRcPtr DisplayTransform::getChannelView() const
+    {
+        return m_impl->channelView_;
     }
     
     void DisplayTransform::setDisplayColorSpaceName(const char * name)
@@ -263,6 +277,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        
+        
+        // Apply a channel view
+        ConstTransformRcPtr channelView = displayTransform.getChannelView();
+        if(channelView)
+        {
+            BuildOps(ops, config, channelView, TRANSFORM_DIR_FORWARD);
+        }
         
         
         // Apply the conversion to the display color space

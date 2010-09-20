@@ -888,7 +888,9 @@ OCIO_NAMESPACE_ENTER
         void setColorTimingCC(const ConstTransformRcPtr & cc);
         ConstTransformRcPtr getColorTimingCC() const;
         
-        // Step 3: Apply the View Matrix
+        // Step 3: Apply the Channel Viewing Swizzle (mtx)
+        void setChannelView(const ConstTransformRcPtr & transform);
+        ConstTransformRcPtr getChannelView() const;
         
         // Step 4: Apply the output display transform
         void setDisplayColorSpaceName(const char * name);
