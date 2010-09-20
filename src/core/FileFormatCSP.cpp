@@ -99,7 +99,7 @@ FileFormatCSP::Load(std::istream & istream) const
     
     // read meta data block
     std::string metadata;
-    int curr_pos = istream.tellg ();
+    std::streampos curr_pos = istream.tellg ();
     nextline (istream, line);
     if (line == "BEGIN METADATA")
     {
@@ -125,7 +125,7 @@ FileFormatCSP::Load(std::istream & istream) const
         int cpoints = atoi (line.c_str());
         
         // read in / out channel points
-        double point;
+        float point;
         std::vector<float> pts[2];
         pts[0].reserve (cpoints);
         pts[1].reserve (cpoints);
@@ -152,14 +152,17 @@ FileFormatCSP::Load(std::istream & istream) const
         nextline (istream, line);
         int points1D = atoi (line.c_str());
         
-        // reset each channel data store
-        // TODO: this casues a crash atm
-        //for( int c = 0; c < points1D; ++c ) {
-        //    lut1d_ptr->luts[c].clear();
-        //    lut1d_ptr->luts[c].reserve(points1D);
-        //}
+        //
+        float from_min = 0.0;
+        float from_max = 1.0;
+        for(int i=0; i<3; ++i)
+        {
+            lut1d_ptr->from_min[i] = from_min;
+            lut1d_ptr->from_max[i] = from_max;
+            lut1d_ptr->luts[i].clear();
+            lut1d_ptr->luts[i].reserve(points1D);
+        }
         
-        // loop over 1D lut points
         for(int i = 0; i < points1D; ++i)
         {
             
@@ -169,21 +172,6 @@ FileFormatCSP::Load(std::istream & istream) const
             if (sscanf (line.c_str(), "%f %f %f",
                 &lp[0], &lp[1], &lp[2]) != 3) {
                 throw Exception ("malformed 1D csp lut");
-            }
-            
-            // store the first and last as min and max
-            // TODO: put this outside of this loop
-            if(i == 0)
-            {
-                lut1d_ptr->from_min[0] = lp[0];
-                lut1d_ptr->from_min[1] = lp[1];
-                lut1d_ptr->from_min[1] = lp[1];
-            }
-            else if ( i == (points1D - 1) )
-            {
-                lut1d_ptr->from_max[0] = lp[0];
-                lut1d_ptr->from_max[1] = lp[1];
-                lut1d_ptr->from_max[1] = lp[1];
             }
             
             // store each channel
