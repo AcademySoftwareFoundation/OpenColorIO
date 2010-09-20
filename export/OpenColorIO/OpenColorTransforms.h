@@ -43,7 +43,8 @@ OCIO_NAMESPACE_ENTER
     //
     // Transforms
     //
-    // Typically only needed when creating and/or manipulating configurations
+    // (Typically only needed when creating and/or manipulating configurations)
+    
     
     class Transform
     {
@@ -62,171 +63,8 @@ OCIO_NAMESPACE_ENTER
     std::ostream& operator<< (std::ostream&, const Transform&);
     
     
-    ///////////////////////////////////////////////////////////////////////////
     
     
-    class GroupTransform : public Transform
-    {
-    public:
-        static GroupTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        ConstTransformRcPtr getTransform(int index) const;
-        TransformRcPtr getEditableTransform(int index);
-        
-        int size() const;
-        void push_back(const ConstTransformRcPtr& transform);
-        void clear();
-        bool empty() const;
-    
-    private:
-        GroupTransform();
-        GroupTransform(const GroupTransform &);
-        virtual ~GroupTransform();
-        
-        GroupTransform& operator= (const GroupTransform &);
-        
-        static void deleter(GroupTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const GroupTransform&);
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    class FileTransform : public Transform
-    {
-    public:
-        static FileTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        const char * getSrc() const;
-        void setSrc(const char * src);
-        
-        Interpolation getInterpolation() const;
-        void setInterpolation(Interpolation interp);
-    
-    private:
-        FileTransform();
-        FileTransform(const FileTransform &);
-        virtual ~FileTransform();
-        
-        FileTransform& operator= (const FileTransform &);
-        
-        static void deleter(FileTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const FileTransform&);
-    
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    class ColorSpaceTransform : public Transform
-    {
-    public:
-        static ColorSpaceTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        const char * getSrc() const;
-        void setSrc(const char * src);
-        
-        const char * getDst() const;
-        void setDst(const char * dst);
-    
-    private:
-        ColorSpaceTransform();
-        ColorSpaceTransform(const ColorSpaceTransform &);
-        virtual ~ColorSpaceTransform();
-        
-        ColorSpaceTransform& operator= (const ColorSpaceTransform &);
-        
-        static void deleter(ColorSpaceTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
-    
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    
-    class DisplayTransform : public Transform
-    {
-    public:
-        static DisplayTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        
-        // Step 0. Specify the incoming color space
-        void setInputColorSpaceName(const char * name);
-        const char * getInputColorSpaceName() const;
-        
-        // Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR
-        void setLinearCC(const ConstTransformRcPtr & cc);
-        ConstTransformRcPtr getLinearCC() const;
-        
-        // Step 2: Apply a color correction, in ROLE_COLOR_TIMING
-        void setColorTimingCC(const ConstTransformRcPtr & cc);
-        ConstTransformRcPtr getColorTimingCC() const;
-        
-        // Step 3: Apply the Channel Viewing Swizzle (mtx)
-        void setChannelView(const ConstTransformRcPtr & transform);
-        ConstTransformRcPtr getChannelView() const;
-        
-        // Step 4: Apply the output display transform
-        void setDisplayColorSpaceName(const char * name);
-        const char * getDisplayColorSpaceName() const;
-    
-    private:
-        DisplayTransform();
-        DisplayTransform(const DisplayTransform &);
-        virtual ~DisplayTransform();
-        
-        DisplayTransform& operator= (const DisplayTransform &);
-        
-        static void deleter(DisplayTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const DisplayTransform&);
     
     
     
@@ -308,6 +146,177 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const CDLTransform&);
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    class ColorSpaceTransform : public Transform
+    {
+    public:
+        static ColorSpaceTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        const char * getSrc() const;
+        void setSrc(const char * src);
+        
+        const char * getDst() const;
+        void setDst(const char * dst);
+    
+    private:
+        ColorSpaceTransform();
+        ColorSpaceTransform(const ColorSpaceTransform &);
+        virtual ~ColorSpaceTransform();
+        
+        ColorSpaceTransform& operator= (const ColorSpaceTransform &);
+        
+        static void deleter(ColorSpaceTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
+    
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    
+    class DisplayTransform : public Transform
+    {
+    public:
+        static DisplayTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        
+        // Step 0. Specify the incoming color space
+        void setInputColorSpaceName(const char * name);
+        const char * getInputColorSpaceName() const;
+        
+        // Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR
+        void setLinearCC(const ConstTransformRcPtr & cc);
+        ConstTransformRcPtr getLinearCC() const;
+        
+        // Step 2: Apply a color correction, in ROLE_COLOR_TIMING
+        void setColorTimingCC(const ConstTransformRcPtr & cc);
+        ConstTransformRcPtr getColorTimingCC() const;
+        
+        // Step 3: Apply the Channel Viewing Swizzle (mtx)
+        void setChannelView(const ConstTransformRcPtr & transform);
+        ConstTransformRcPtr getChannelView() const;
+        
+        // Step 4: Apply the output display transform
+        void setDisplayColorSpaceName(const char * name);
+        const char * getDisplayColorSpaceName() const;
+    
+    private:
+        DisplayTransform();
+        DisplayTransform(const DisplayTransform &);
+        virtual ~DisplayTransform();
+        
+        DisplayTransform& operator= (const DisplayTransform &);
+        
+        static void deleter(DisplayTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const DisplayTransform&);
+    
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    class FileTransform : public Transform
+    {
+    public:
+        static FileTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        const char * getSrc() const;
+        void setSrc(const char * src);
+        
+        Interpolation getInterpolation() const;
+        void setInterpolation(Interpolation interp);
+    
+    private:
+        FileTransform();
+        FileTransform(const FileTransform &);
+        virtual ~FileTransform();
+        
+        FileTransform& operator= (const FileTransform &);
+        
+        static void deleter(FileTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const FileTransform&);
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    class GroupTransform : public Transform
+    {
+    public:
+        static GroupTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        ConstTransformRcPtr getTransform(int index) const;
+        TransformRcPtr getEditableTransform(int index);
+        
+        int size() const;
+        void push_back(const ConstTransformRcPtr& transform);
+        void clear();
+        bool empty() const;
+    
+    private:
+        GroupTransform();
+        GroupTransform(const GroupTransform &);
+        virtual ~GroupTransform();
+        
+        GroupTransform& operator= (const GroupTransform &);
+        
+        static void deleter(GroupTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const GroupTransform&);
     
     
     
