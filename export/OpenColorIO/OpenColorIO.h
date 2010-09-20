@@ -27,8 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_OCIO_H
-#define INCLUDED_OCIO_OCIO_H
+#ifndef INCLUDED_OCIO_OPENCOLORIO_H
+#define INCLUDED_OCIO_OPENCOLORIO_H
 
 #define OCIO_VERSION "0.5.16"
 
@@ -36,18 +36,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OCIO_NAMESPACE
 #define OCIO_NAMESPACE OpenColorIO
 #endif
-
 #define OCIO_VERSION_NS v0
 #define OCIO_NAMESPACE_ENTER namespace OCIO_NAMESPACE { namespace OCIO_VERSION_NS
 #define OCIO_NAMESPACE_EXIT using namespace OCIO_VERSION_NS; }
 #define OCIO_NAMESPACE_USING using namespace OCIO_NAMESPACE;
 
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// OpenColorIO
+#include <exception>
+#include <iosfwd>
+#include <string>
+
+#include "OpenColorTypes.h"
+#include "OpenColorTransforms.h"
 
 /*
+// OCIO Usage Examples
+
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -101,135 +105,28 @@ catch(OCIO::Exception & exception)
 }
 */
 
-#include <cstdlib>
-#include <exception>
-#include <iosfwd>
-#include <limits>
-#include <memory>
-#include <string>
-
-
-#ifdef __APPLE__
-#include <tr1/memory>
-#define OCIO_SHARED_PTR std::tr1::shared_ptr
-#define OCIO_DYNAMIC_POINTER_CAST std::tr1::dynamic_pointer_cast
-#else
-#include <boost/shared_ptr.hpp>
-#define OCIO_SHARED_PTR boost::shared_ptr
-#define OCIO_DYNAMIC_POINTER_CAST boost::dynamic_pointer_cast
-#endif
+///////////////////////////////////////////////////////////////////////////////
+//
+// OpenColorIO
 
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // EXCEPTION / ENUMS / PREDECLARATIONS
-    //
-    //
+    //! An exception class to throw for an errors detected at runtime
+    //  Warning: ALL fcns on the Config class can potentially throw
+    //  this exception.
     
-    class Config;
-    typedef OCIO_SHARED_PTR<const Config> ConstConfigRcPtr;
-    typedef OCIO_SHARED_PTR<Config> ConfigRcPtr;
-    
-    class ColorSpace;
-    typedef OCIO_SHARED_PTR<const ColorSpace> ConstColorSpaceRcPtr;
-    typedef OCIO_SHARED_PTR<ColorSpace> ColorSpaceRcPtr;
-    
-    class Processor;
-    typedef OCIO_SHARED_PTR<const Processor> ConstProcessorRcPtr;
-    typedef OCIO_SHARED_PTR<Processor> ProcessorRcPtr;
-    
-    class ImageDesc;
-    class GpuShaderDesc;
-    class Exception;
-    
-    class Transform;
-    typedef OCIO_SHARED_PTR<const Transform> ConstTransformRcPtr;
-    typedef OCIO_SHARED_PTR<Transform> TransformRcPtr;
-    
-    class GroupTransform;
-    typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
-    typedef OCIO_SHARED_PTR<GroupTransform> GroupTransformRcPtr;
-    
-    class FileTransform;
-    typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
-    typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
-    
-    class ColorSpaceTransform;
-    typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
-    typedef OCIO_SHARED_PTR<ColorSpaceTransform> ColorSpaceTransformRcPtr;
-    
-    class DisplayTransform;
-    typedef OCIO_SHARED_PTR<const DisplayTransform> ConstDisplayTransformRcPtr;
-    typedef OCIO_SHARED_PTR<DisplayTransform> DisplayTransformRcPtr;
-    
-    class CDLTransform;
-    typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
-    typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
-    
-    class MatrixTransform;
-    typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
-    typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
-    
-    template <class T, class U>
-    inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
+    class Exception : public std::exception
     {
-        return OCIO_DYNAMIC_POINTER_CAST<T,U>(ptr);
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    enum ColorSpaceDirection
-    {
-        COLORSPACE_DIR_UNKNOWN = 0,
-        COLORSPACE_DIR_TO_REFERENCE,
-        COLORSPACE_DIR_FROM_REFERENCE
+    public:
+        Exception(const char *) throw();
+        Exception(const Exception&) throw();
+        Exception& operator=(const Exception&) throw();
+        virtual ~Exception() throw();
+        virtual const char* what() const throw();
+        
+    private:
+        std::string msg_;
     };
-    
-    enum TransformDirection
-    {
-        TRANSFORM_DIR_UNKNOWN = 0,
-        TRANSFORM_DIR_FORWARD,
-        TRANSFORM_DIR_INVERSE
-    };
-    
-    enum Interpolation
-    {
-        INTERP_UNKNOWN = 0,
-        INTERP_NEAREST, //! nearest neighbor in all dimensions
-        INTERP_LINEAR   //! linear interpolation in all dimensions
-    };
-    
-    enum BitDepth {
-        BIT_DEPTH_UNKNOWN = 0,
-        BIT_DEPTH_UINT8,
-        BIT_DEPTH_UINT10,
-        BIT_DEPTH_UINT12,
-        BIT_DEPTH_UINT14,
-        BIT_DEPTH_UINT16,
-        BIT_DEPTH_UINT32,
-        BIT_DEPTH_F16,
-        BIT_DEPTH_F32
-    };
-    
-    enum GpuAllocation {
-        GPU_ALLOCATION_UNKNOWN = 0,
-        GPU_ALLOCATION_UNIFORM,
-        GPU_ALLOCATION_LG2
-    };
-    
-    //! Used when there is a choice of hardware shader language.
-    
-    enum GpuLanguage
-    {
-        GPU_LANGUAGE_UNKNOWN = 0,
-        GPU_LANGUAGE_CG,  ///< Nvidia Cg shader
-        GPU_LANGUAGE_GLSL_1_0,     ///< OpenGL Shading Language
-        GPU_LANGUAGE_GLSL_1_3,     ///< OpenGL Shading Language
-    };
-    
     
     
     
@@ -721,430 +618,6 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // Transforms
-    //
-    // Typically only needed when creating and/or manipulating configurations
-    
-    class Transform
-    {
-    public:
-        virtual ~Transform();
-        virtual TransformRcPtr createEditableCopy() const = 0;
-        
-        virtual TransformDirection getDirection() const = 0;
-        virtual void setDirection(TransformDirection dir) = 0;
-        
-    
-    private:
-        Transform& operator= (const Transform &);
-    };
-    
-    std::ostream& operator<< (std::ostream&, const Transform&);
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    class GroupTransform : public Transform
-    {
-    public:
-        static GroupTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        ConstTransformRcPtr getTransform(int index) const;
-        TransformRcPtr getEditableTransform(int index);
-        
-        int size() const;
-        void push_back(const ConstTransformRcPtr& transform);
-        void clear();
-        bool empty() const;
-    
-    private:
-        GroupTransform();
-        GroupTransform(const GroupTransform &);
-        virtual ~GroupTransform();
-        
-        GroupTransform& operator= (const GroupTransform &);
-        
-        static void deleter(GroupTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const GroupTransform&);
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    class FileTransform : public Transform
-    {
-    public:
-        static FileTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        const char * getSrc() const;
-        void setSrc(const char * src);
-        
-        Interpolation getInterpolation() const;
-        void setInterpolation(Interpolation interp);
-    
-    private:
-        FileTransform();
-        FileTransform(const FileTransform &);
-        virtual ~FileTransform();
-        
-        FileTransform& operator= (const FileTransform &);
-        
-        static void deleter(FileTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const FileTransform&);
-    
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    class ColorSpaceTransform : public Transform
-    {
-    public:
-        static ColorSpaceTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        const char * getSrc() const;
-        void setSrc(const char * src);
-        
-        const char * getDst() const;
-        void setDst(const char * dst);
-    
-    private:
-        ColorSpaceTransform();
-        ColorSpaceTransform(const ColorSpaceTransform &);
-        virtual ~ColorSpaceTransform();
-        
-        ColorSpaceTransform& operator= (const ColorSpaceTransform &);
-        
-        static void deleter(ColorSpaceTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
-    
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    
-    class DisplayTransform : public Transform
-    {
-    public:
-        static DisplayTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        
-        // Step 0. Specify the incoming color space
-        void setInputColorSpaceName(const char * name);
-        const char * getInputColorSpaceName() const;
-        
-        // Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR
-        void setLinearCC(const ConstTransformRcPtr & cc);
-        ConstTransformRcPtr getLinearCC() const;
-        
-        // Step 2: Apply a color correction, in ROLE_COLOR_TIMING
-        void setColorTimingCC(const ConstTransformRcPtr & cc);
-        ConstTransformRcPtr getColorTimingCC() const;
-        
-        // Step 3: Apply the Channel Viewing Swizzle (mtx)
-        void setChannelView(const ConstTransformRcPtr & transform);
-        ConstTransformRcPtr getChannelView() const;
-        
-        // Step 4: Apply the output display transform
-        void setDisplayColorSpaceName(const char * name);
-        const char * getDisplayColorSpaceName() const;
-    
-    private:
-        DisplayTransform();
-        DisplayTransform(const DisplayTransform &);
-        virtual ~DisplayTransform();
-        
-        DisplayTransform& operator= (const DisplayTransform &);
-        
-        static void deleter(DisplayTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const DisplayTransform&);
-    
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    // An implementation of the ASC CDL Transfer Functions and Interchange
-    // Syntax (Based on the version 1.2 document)
-    //
-    // Note: the clamping portion of the CDL is only applied if 
-    // a non-identity power is specified.
-    
-    class CDLTransform : public Transform
-    {
-    public:
-        static CDLTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        bool equals(const ConstCDLTransformRcPtr & other) const;
-        
-        const char * getXML() const;
-        void setXML(const char * xml);
-        
-        // ASC_SOP
-        // Slope, offset, power
-        // out = clamp( (in * slope) + offset ) ^ power
-        //
-        
-        void setSlope(const float * rgb);
-        void getSlope(float * rgb) const;
-        
-        void setOffset(const float * rgb);
-        void getOffset(float * rgb) const;
-        
-        void setPower(const float * rgb);
-        void getPower(float * rgb) const;
-        
-        void setSOP(const float * vec9);
-        void getSOP(float * vec9) const;
-        
-        // ASC_SAT
-        
-        void setSat(float sat);
-        float getSat() const;
-        
-        // These are hard-coded, by spec, to r709
-        void getSatLumaCoefs(float * rgb) const;
-        
-        // Metadata
-        // These do not affect the image processing, but
-        // are often useful for pipeline purposes and are
-        // included in the serialization.
-        
-        // Unique Identifier for this correction
-        void setID(const char * id);
-        const char * getID() const;
-        
-        // Textual description of color correction
-        // (stored on the SOP)
-        void setDescription(const char * desc);
-        const char * getDescription() const;
-    
-    private:
-        CDLTransform();
-        CDLTransform(const CDLTransform &);
-        virtual ~CDLTransform();
-        
-        CDLTransform& operator= (const CDLTransform &);
-        
-        static void deleter(CDLTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const CDLTransform&);
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // Represents an MX+B Matrix transform
-    
-    class MatrixTransform : public Transform
-    {
-    public:
-        static MatrixTransformRcPtr Create();
-        
-        virtual TransformRcPtr createEditableCopy() const;
-        
-        virtual TransformDirection getDirection() const;
-        virtual void setDirection(TransformDirection dir);
-        
-        bool equals(const MatrixTransform & other) const;
-        
-        void setValue(const float * m44, const float * offset4);
-        void getValue(float * m44, float * offset4) const;
-        
-        
-        // Convenience functions to get the mtx and offset
-        // corresponding to higher-level concepts
-        
-        // This can throw an exception if for any component
-        // oldmin == oldmax. (divide by 0)
-        
-        static void Fit(float * m44, float * offset4,
-                        const float * oldmin4, const float * oldmax4,
-                        const float * newmin4, const float * newmax4);
-        
-        static void Identity(float * m44, float * offset4);
-        
-        static void Sat(float * m44, float * offset4,
-                        float sat, const float * lumaCoef3);
-        
-        static void Scale(float * m44, float * offset4,
-                          const float * scale4);
-        
-        static void View(float * m44, float * offset4,
-                         bool * channelHot4,
-                         const float * lumaCoef3);
-    
-    private:
-        MatrixTransform();
-        MatrixTransform(const MatrixTransform &);
-        virtual ~MatrixTransform();
-        
-        MatrixTransform& operator= (const MatrixTransform &);
-        
-        static void deleter(MatrixTransform* t);
-        
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-    };
-    
-    std::ostream& operator<< (std::ostream&, const MatrixTransform&);
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // Utils
-    
-    //! An exception class to throw for an errors detected at runtime
-    //  Warning: ALL fcns on the Config class can potentially throw
-    //  this exception.
-    
-    class Exception : public std::exception
-    {
-    public:
-        Exception(const char *) throw();
-        Exception(const Exception&) throw();
-        Exception& operator=(const Exception&) throw();
-        virtual ~Exception() throw();
-        virtual const char* what() const throw();
-        
-    private:
-        std::string msg_;
-    };
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    const char * BoolToString(bool val);
-    bool BoolFromString(const char * s);
-    
-    const char * TransformDirectionToString(TransformDirection dir);
-    TransformDirection TransformDirectionFromString(const char * s);
-    
-    TransformDirection GetInverseTransformDirection(TransformDirection dir);
-    TransformDirection CombineTransformDirections(TransformDirection d1,
-                                                  TransformDirection d2);
-    
-    const char * ColorSpaceDirectionToString(ColorSpaceDirection dir);
-    ColorSpaceDirection ColorSpaceDirectionFromString(const char * s);
-    
-    const char * BitDepthToString(BitDepth bitDepth);
-    BitDepth BitDepthFromString(const char * s);
-    bool BitDepthIsFloat(BitDepth bitDepth);
-    int BitDepthToInt(BitDepth bitDepth);
-    
-    const char * GpuAllocationToString(GpuAllocation allocation);
-    GpuAllocation GpuAllocationFromString(const char * s);
-    
-    const char * InterpolationToString(Interpolation interp);
-    Interpolation InterpolationFromString(const char * s);
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    /*!
-    ColorSpace Roles are used so that plugins, in addition to this API can have
-    abstract ways of asking for common colorspaces, without referring to them
-    by hardcoded names.
-    
-    Internal:
-        GetGPUDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
-                        (ROLE_COLOR_TIMING (ASCColorCorrection))
-    
-    External Plugins (currently known):
-        Colorpicker UIs - (ROLE_COLOR_PICKING)
-        Compositor LogConvert (ROLE_SCENE_LINEAR, ROLE_COMPOSITING_LOG)
-    
-    */
-    
-    extern const char * ROLE_DEFAULT;
-    extern const char * ROLE_REFERENCE;
-    extern const char * ROLE_DATA;
-    extern const char * ROLE_COLOR_PICKING;
-    extern const char * ROLE_SCENE_LINEAR;
-    extern const char * ROLE_COMPOSITING_LOG;
-    extern const char * ROLE_COLOR_TIMING;
 }
 OCIO_NAMESPACE_EXIT
 

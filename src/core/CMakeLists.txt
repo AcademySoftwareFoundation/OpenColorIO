@@ -53,6 +53,8 @@ add_library(OpenColorIO SHARED
 
 install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 install(FILES ${OpenColorIO_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h
+              ${OpenColorIO_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h
+              ${OpenColorIO_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenColorIO/)
 
 ###############################################################################
