@@ -616,8 +616,6 @@ OCIO_NAMESPACE_ENTER
         GpuShaderDesc& operator= (const GpuShaderDesc &);
     };
     
-    
-    
 }
 OCIO_NAMESPACE_EXIT
 
