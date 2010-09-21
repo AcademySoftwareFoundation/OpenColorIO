@@ -9,11 +9,11 @@ if(Boost_FOUND)
     ${Boost_INCLUDE_DIR}
     )
     
-    file( GLOB_RECURSE core_test_srcs "${CMAKE_SOURCE_DIR}/src/core/*.cpp" )
+    file( GLOB_RECURSE core_test_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp" )
     
     link_directories( ${Boost_LIBRARY_DIRS} )
     
-    add_executable( ocio_core_tests ${core_test_srcs} )
+    add_executable( ocio_core_tests ${core_test_src_files} )
     
     target_link_libraries(ocio_core_tests
     

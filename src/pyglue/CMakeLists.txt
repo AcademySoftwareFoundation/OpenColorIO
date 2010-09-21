@@ -32,20 +32,9 @@ if(PYTHON_OK)
         message(STATUS "Python ${PYTHON_VERSION} okay, will build the Python bindings against ${PYTHON_INCLUDE}")
     endif()
     
-    add_library(PyOpenColorIO MODULE
-        PyCDLTransform.cpp
-        PyColorSpace.cpp
-        PyConstants.cpp
-        PyConfig.cpp
-        PyDisplayTransform.cpp
-        PyFileTransform.cpp
-        PyGroupTransform.cpp
-        PyMain.cpp
-        PyMatrixTransform.cpp
-        PyTransform.cpp
-        PyProcessor.cpp
-        PyUtil.cpp
-    )
+    file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
+    
+    add_library(PyOpenColorIO MODULE ${pyglue_src_files} )
     include_directories(
         ${PYTHON_INCLUDE}
         ${OpenColorIO_SOURCE_DIR}/export/
