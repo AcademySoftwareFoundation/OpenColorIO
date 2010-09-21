@@ -32,6 +32,9 @@ if(PYTHON_OK)
         message(STATUS "Python ${PYTHON_VERSION} okay, will build the Python bindings against ${PYTHON_INCLUDE}")
     endif()
     
+    # Python breaks strict-aliasing rules. Disable the warning here.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing")
+    
     file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
     
     add_library(PyOpenColorIO MODULE ${pyglue_src_files} )
