@@ -222,6 +222,23 @@ OCIO_NAMESPACE_ENTER
         
         bool skipColorSpaceConversions = (inputColorSpace->isData() || displayColorspace->isData());
         
+        // If we're viewing alpha, also skip all color space conversions.
+        // TODO: Should we enforce the use of a MatrixTransform at the API level?
+        ConstMatrixTransformRcPtr typedChannelView = DynamicPtrCast<const MatrixTransform>(
+            displayTransform.getChannelView());
+        if(typedChannelView)
+        {
+            float matrix44[16];
+            typedChannelView->getValue(matrix44, 0x0);
+            
+            if((matrix44[3]>0.0f) || (matrix44[7]>0.0f) || (matrix44[11]>0.0f))
+            {
+                skipColorSpaceConversions = true;
+            }
+        }
+        
+        
+        
         ConstColorSpaceRcPtr currentColorspace = inputColorSpace;
         
         
@@ -276,8 +293,6 @@ OCIO_NAMESPACE_ENTER
                 std::copy(ccOps.begin(), ccOps.end(), std::back_inserter(ops));
             }
         }
-        
-        
         
         // Apply a channel view
         ConstTransformRcPtr channelView = displayTransform.getChannelView();
