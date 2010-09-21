@@ -359,7 +359,7 @@ OCIO_NAMESPACE_ENTER
                           const float * scale4);
         
         static void View(float * m44, float * offset4,
-                         bool * channelHot4,
+                         int * channelHot4,
                          const float * lumaCoef3);
     
     private:
