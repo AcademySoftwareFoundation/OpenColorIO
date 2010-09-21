@@ -71,6 +71,7 @@ endif()
 ### CORE ###
 
 add_subdirectory (src/core)
+add_subdirectory (src/core_tests)
 
 ###############################################################################
 ### TEST BED ###

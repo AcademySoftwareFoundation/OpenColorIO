@@ -56,18 +56,3 @@ install(FILES ${OpenColorIO_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h
               ${OpenColorIO_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h
               ${OpenColorIO_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenColorIO/)
-
-###############################################################################
-### CORE UNIT TESTS ###
-
-if(Boost_FOUND)
-    file( GLOB core_test_srcs "*_test.cpp" )
-    include_directories( ${Boost_INCLUDE_DIR} )
-    link_directories( ${Boost_LIBRARY_DIRS} )
-    add_executable( ocio_core_tests ${core_test_srcs} )
-    target_link_libraries(ocio_core_tests
-        OpenColorIO
-        ${Boost_LIBRARIES}
-        )
-    install(TARGETS ocio_core_tests DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-endif()
