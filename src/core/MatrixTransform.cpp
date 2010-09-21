@@ -318,10 +318,10 @@ OCIO_NAMESPACE_ENTER
                     values[2] /= sum;
                 }
                 
-                // Copy into rgb rows
+                // Copy rgb into rgb rows
                 for(int row=0; row<3; ++row)
                 {
-                    for(int i=0; i<4; i++)
+                    for(int i=0; i<3; i++)
                     {
                         m44[4*row+i] = values[i];
                     }
