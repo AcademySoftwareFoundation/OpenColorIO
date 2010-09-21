@@ -82,19 +82,25 @@ OCIO_NAMESPACE_ENTER
         // 10-bit    1023            [512, 2047]
         // 12-bit    4095            [2048, 8191]
         // 14-bit    16383           [8192, 32767]
-        // 16-bit    65535           [32768, 131071]
+        // 16-bit    65535           [32768, 131071+]
         
         int GetLikelyLutBitDepth(int testval)
         {
+            const int MIN_BIT_DEPTH = 8;
+            const int MAX_BIT_DEPTH = 16;
+            
+            if(testval < 0) return -1;
+            
             // Only test even bit depths
-            for(int bitDepth = 8; bitDepth<=16; bitDepth+=2)
+            for(int bitDepth = MIN_BIT_DEPTH;
+                bitDepth <= MAX_BIT_DEPTH; bitDepth+=2)
             {
                 int maxcode = static_cast<int>(pow(2.0,bitDepth));
                 int adjustedMax = maxcode * 2 - 1;
                 if(testval<=adjustedMax) return bitDepth;
             }
             
-            return -1;
+            return MAX_BIT_DEPTH;
         }
         
         int GetMaxValueFromIntegerBitDepth(int bitDepth)
@@ -327,3 +333,46 @@ OCIO_NAMESPACE_ENTER
     }
 }
 OCIO_NAMESPACE_EXIT
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include <boost/test/unit_test.hpp>
+
+// FILE      EXPECTED MAX    CORRECTLY DECODED IF MAX IN THIS RANGE 
+// 8-bit     255             [0, 511]      
+// 10-bit    1023            [512, 2047]
+// 12-bit    4095            [2048, 8191]
+// 14-bit    16383           [8192, 32767]
+// 16-bit    65535           [32768, 131071]
+
+BOOST_AUTO_TEST_CASE ( test_GetLikelyLutBitDepth )
+{
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(-1), -1);
+    
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(0), 8);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(1), 8);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(255), 8);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(256), 8);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(511), 8);
+    
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(512), 10);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(1023), 10);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(1024), 10);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(2047), 10);
+    
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(2048), 12);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(4095), 12);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(4096), 12);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(8191), 12);
+    
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(16383), 14);
+    
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(65535), 16);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(65536), 16);
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(131071), 16);
+    
+    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(131072), 16);
+}
+
+#endif // OCIO_BUILD_TESTS

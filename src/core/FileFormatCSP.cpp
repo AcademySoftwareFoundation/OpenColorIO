@@ -360,7 +360,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#define BOOST_TEST_MODULE lutreader_csp
+#define BOOST_TEST_MODULE ocio_core
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_CASE ( test_simple1D )
