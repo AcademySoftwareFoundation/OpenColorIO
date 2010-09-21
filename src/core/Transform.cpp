@@ -70,6 +70,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildGroupOps(ops, config, *groupTransform, dir);
         }
+        else if(ConstMatrixTransformRcPtr matrixTransform = \
+            DynamicPtrCast<const MatrixTransform>(transform))
+        {
+            BuildMatrixOps(ops, config, *matrixTransform, dir);
+        }
         else
         {
             std::ostringstream os;
@@ -106,6 +111,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const GroupTransform*>(t))
         {
             os << *groupTransform;
+        }
+        else if(const MatrixTransform * matrixTransform = \
+            dynamic_cast<const MatrixTransform*>(t))
+        {
+            os << *matrixTransform;
         }
         else
         {
