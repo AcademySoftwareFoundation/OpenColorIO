@@ -95,6 +95,9 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_DisplayTransform_getColorTimingCC( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setColorTimingCC( PyObject * self,  PyObject *args );
         
+        PyObject * PyOCIO_DisplayTransform_getChannelView( PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setChannelView( PyObject * self,  PyObject *args );
+        
         PyObject * PyOCIO_DisplayTransform_getDisplayColorSpaceName( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setDisplayColorSpaceName( PyObject * self,  PyObject *args );
         
@@ -110,6 +113,9 @@ OCIO_NAMESPACE_ENTER
             
             {"getColorTimingCC", (PyCFunction) PyOCIO_DisplayTransform_getColorTimingCC, METH_NOARGS, "" },
             {"setColorTimingCC", PyOCIO_DisplayTransform_setColorTimingCC, METH_VARARGS, "" },
+            
+            {"getChannelView", (PyCFunction) PyOCIO_DisplayTransform_getChannelView, METH_NOARGS, "" },
+            {"setChannelView", PyOCIO_DisplayTransform_setChannelView, METH_VARARGS, "" },
             
             {"getDisplayColorSpaceName", (PyCFunction) PyOCIO_DisplayTransform_getDisplayColorSpaceName, METH_NOARGS, "" },
             {"setDisplayColorSpaceName", PyOCIO_DisplayTransform_setDisplayColorSpaceName, METH_VARARGS, "" },
@@ -304,6 +310,43 @@ OCIO_NAMESPACE_ENTER
                 
                 ConstTransformRcPtr cc = GetConstTransform(pyCC, true);
                 transform->setColorTimingCC(cc);
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        PyObject * PyOCIO_DisplayTransform_getChannelView( PyObject * self )
+        {
+            try
+            {
+                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
+                return BuildConstPyTransform(transform->getChannelView());
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_DisplayTransform_setChannelView( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyCC = 0;
+                if (!PyArg_ParseTuple(args,"O:setChannelView", &pyCC)) return NULL;
+                
+                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+                
+                ConstTransformRcPtr t = GetConstTransform(pyCC, true);
+                transform->setChannelView(t);
                 
                 Py_RETURN_NONE;
             }
