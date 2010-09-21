@@ -1,3 +1,17 @@
+Version 0.6.0 (Sept 21 2010):
+    * Start of 0.6, "stable" branch
+      
+      All 0.6.x builds will be ABI compatible (forward only).
+      New features (even experimental ones) will be added to the 0.6 branch,
+      as long as binary and source compatibility is maintained.
+      Once this no longer is possible, a 0.7 "dev" branch will be forked.
+    
+    * Split public header into 3 parts for improved readability
+      (you still only import <OpenColorIO/OpenColorIO.h> though)
+    * Added MatrixTransform
+    * Refactored internal unit testing
+    * Fixed many compile warnings
+
 Version 0.5.16 (Sept 16 2010):
     * PyTransforms now use native python class inheritance
     * OCIO namespace can now be configured at build time (for distribution in commercial apps)
