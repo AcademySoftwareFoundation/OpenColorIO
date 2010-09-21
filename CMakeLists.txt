@@ -13,27 +13,31 @@ enable_language(CXX)
 
 if(APPLE)
     if(NOT CMAKE_OSX_ARCHITECTURES)
-        set(CMAKE_OSX_ARCHITECTURES i386;x86_64)
+        set(CMAKE_OSX_ARCHITECTURES x86_64 CACHE STRING
+            "Setting OSX Architectures, options are: ppc;i386;ppc64;x86_64"
+            FORCE)
     endif()
     if(CMAKE_FIRST_RUN)
         message(STATUS "Setting OSX Architectures to: ${CMAKE_OSX_ARCHITECTURES}")
-        message(STATUS "    possible options CMAKE_OSX_ARCHITECTURES:STRING=ppc;i386;ppc64;x86_64")
     endif()
 endif()
 
 # Set the default built type
-IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
       "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
       FORCE)
-ENDIF(NOT CMAKE_BUILD_TYPE)
-
+endif(NOT CMAKE_BUILD_TYPE)
+if(CMAKE_FIRST_RUN)
+    message(STATUS "Setting Build Type to: ${CMAKE_BUILD_TYPE}")
+endif()
+   
 # Set the default namespace
-IF(NOT OCIO_NAMESPACE)
-  SET(OCIO_NAMESPACE OpenColorIO CACHE STRING
+if(NOT OCIO_NAMESPACE)
+  set(OCIO_NAMESPACE OpenColorIO CACHE STRING
       "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc."
       FORCE)
-ENDIF(NOT OCIO_NAMESPACE)
+endif(NOT OCIO_NAMESPACE)
 
 add_definitions("-DOCIO_NAMESPACE=${OCIO_NAMESPACE}")
 
