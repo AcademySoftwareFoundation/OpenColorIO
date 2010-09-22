@@ -33,3 +33,6 @@
 // TODO: replace config::getResolvedResourcePath with mechanism that supports bundles
 // TODO: claify how FileTransform::getInterpolation is used with multiple luts in a single file (1d+3d)
 // TODO: Add generic equality operator (or 'equals') to all transforms. Also expose in python
+// TODO: Add display mask envvar (ex: DLP setups)
+// TODO: better default filmlook + default display device specification
+// TODO: ColorSpace family queries.  GetHighestColorSpaceInFamily? Allow family name in getColorSpace?
