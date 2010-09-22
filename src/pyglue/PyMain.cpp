@@ -104,6 +104,7 @@ initPyOpenColorIO(void)
     OCIO::AddTransformObjectToModule( m );
     {
         OCIO::AddCDLTransformObjectToModule( m );
+        OCIO::AddColorSpaceTransformObjectToModule( m );
         OCIO::AddFileTransformObjectToModule( m );
         OCIO::AddDisplayTransformObjectToModule( m );
         OCIO::AddGroupTransformObjectToModule( m );

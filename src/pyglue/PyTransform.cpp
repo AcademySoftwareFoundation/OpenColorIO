@@ -53,6 +53,12 @@ OCIO_NAMESPACE_ENTER
                 pyobj = PyObject_New(PyOCIO_Transform,
                     (PyTypeObject * ) &PyOCIO_CDLTransformType);
             }
+            else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
+                DynamicPtrCast<const ColorSpaceTransform>(transform))
+            {
+                pyobj = PyObject_New(PyOCIO_Transform,
+                    (PyTypeObject * ) &PyOCIO_ColorSpaceTransformType);
+            }
             else if(ConstDisplayTransformRcPtr displayTransform = \
                 DynamicPtrCast<const DisplayTransform>(transform))
             {
@@ -70,6 +76,12 @@ OCIO_NAMESPACE_ENTER
             {
                 pyobj = PyObject_New(PyOCIO_Transform,
                     (PyTypeObject * ) &PyOCIO_GroupTransformType);
+            }
+            else if(ConstMatrixTransformRcPtr matrixTransform = \
+                DynamicPtrCast<const MatrixTransform>(transform))
+            {
+                pyobj = PyObject_New(PyOCIO_Transform,
+                    (PyTypeObject * ) &PyOCIO_MatrixTransformType);
             }
             
             return pyobj;
