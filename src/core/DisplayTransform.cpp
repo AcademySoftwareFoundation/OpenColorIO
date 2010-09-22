@@ -55,6 +55,7 @@ OCIO_NAMESPACE_ENTER
         TransformRcPtr colorTimingCC_;
         TransformRcPtr channelView_;
         std::string displayColorSpaceName_;
+        TransformRcPtr displayCC_;
         
         Impl() :
             dir_(TRANSFORM_DIR_FORWARD)
@@ -76,6 +77,9 @@ OCIO_NAMESPACE_ENTER
             
             channelView_ = rhs.channelView_;
             if(channelView_) channelView_ = channelView_->createEditableCopy();
+            
+            displayCC_ = rhs.displayCC_;
+            if(displayCC_) displayCC_ = displayCC_->createEditableCopy();
             
             displayColorSpaceName_ = rhs.displayColorSpaceName_;
             return *this;
@@ -170,6 +174,16 @@ OCIO_NAMESPACE_ENTER
     }
     
     
+    void DisplayTransform::setDisplayCC(const ConstTransformRcPtr & cc)
+    {
+        m_impl->displayCC_ = cc->createEditableCopy();
+    }
+    
+    ConstTransformRcPtr DisplayTransform::getDisplayCC() const
+    {
+        return m_impl->displayCC_;
+    }
+    
     
     std::ostream& operator<< (std::ostream& os, const DisplayTransform& t)
     {
@@ -249,10 +263,10 @@ OCIO_NAMESPACE_ENTER
         {
             // Put the new ops into a temp array, to see if it's a no-op
             // If it is a no-op, dont bother doing the colorspace conversion.
-            OpRcPtrVec ccOps;
-            BuildOps(ccOps, config, linearCC, TRANSFORM_DIR_FORWARD);
+            OpRcPtrVec tmpOps;
+            BuildOps(tmpOps, config, linearCC, TRANSFORM_DIR_FORWARD);
             
-            if(!IsOpVecNoOp(ccOps))
+            if(!IsOpVecNoOp(tmpOps))
             {
                 ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
                 
@@ -264,7 +278,7 @@ OCIO_NAMESPACE_ENTER
                     currentColorspace = targetColorSpace;
                 }
                 
-                std::copy(ccOps.begin(), ccOps.end(), std::back_inserter(ops));
+                std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
             }
         }
         
@@ -275,10 +289,10 @@ OCIO_NAMESPACE_ENTER
         {
             // Put the new ops into a temp array, to see if it's a no-op
             // If it is a no-op, dont bother doing the colorspace conversion.
-            OpRcPtrVec ccOps;
-            BuildOps(ccOps, config, colorTimingCC, TRANSFORM_DIR_FORWARD);
+            OpRcPtrVec tmpOps;
+            BuildOps(tmpOps, config, colorTimingCC, TRANSFORM_DIR_FORWARD);
             
-            if(!IsOpVecNoOp(ccOps))
+            if(!IsOpVecNoOp(tmpOps))
             {
                 ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_COLOR_TIMING);
                 
@@ -290,7 +304,7 @@ OCIO_NAMESPACE_ENTER
                     currentColorspace = targetColorSpace;
                 }
                 
-                std::copy(ccOps.begin(), ccOps.end(), std::back_inserter(ops));
+                std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
             }
         }
         
@@ -310,6 +324,15 @@ OCIO_NAMESPACE_ENTER
                                displayColorspace);
             currentColorspace = displayColorspace;
         }
+        
+        
+        // Apply a display cc
+        ConstTransformRcPtr displayCC = displayTransform.getDisplayCC();
+        if(displayCC)
+        {
+            BuildOps(ops, config, displayCC, TRANSFORM_DIR_FORWARD);
+        }
+        
     }
 }
 OCIO_NAMESPACE_EXIT

@@ -223,7 +223,11 @@ OCIO_NAMESPACE_ENTER
         // Step 4: Apply the output display transform
         void setDisplayColorSpaceName(const char * name);
         const char * getDisplayColorSpaceName() const;
-    
+        
+        // Step 5: Apply a post display transform color correction
+        void setDisplayCC(const ConstTransformRcPtr & cc);
+        ConstTransformRcPtr getDisplayCC() const;
+        
     private:
         DisplayTransform();
         DisplayTransform(const DisplayTransform &);
