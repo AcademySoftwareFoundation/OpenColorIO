@@ -49,7 +49,7 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        void DecorateBaseTransformXML(TiXmlElement * element, const ConstTransformRcPtr & t)
+        void WriteBaseTransformXML(TiXmlElement * element, const ConstTransformRcPtr & t)
         {
             if(!element) return;
             
@@ -60,7 +60,20 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
+        void ReadBaseTransformXML(TransformRcPtr t, const TiXmlElement * element)
+        {
+            if(!element) return;
+            
+            const char * direction = element->Attribute("direction");
+            if(direction)
+            {
+                t->setDirection( TransformDirectionFromString(direction) );
+            }
+            else
+            {
+                t->setDirection( TRANSFORM_DIR_FORWARD );
+            }
+        }
         
         
         
@@ -84,6 +97,7 @@ OCIO_NAMESPACE_ENTER
             }
             
             FileTransformRcPtr t = FileTransform::Create();
+            ReadBaseTransformXML(t, element);
             
             const TiXmlAttribute* pAttrib = element->FirstAttribute();
             
@@ -98,10 +112,6 @@ OCIO_NAMESPACE_ENTER
                 else if(attrName == "interpolation")
                 {
                     t->setInterpolation( InterpolationFromString(pAttrib->Value()) );
-                }
-                else if(attrName == "direction")
-                {
-                    t->setDirection( TransformDirectionFromString(pAttrib->Value()) );
                 }
                 else
                 {
@@ -122,7 +132,7 @@ OCIO_NAMESPACE_ENTER
         TiXmlElement * CreateFileTransformXML(const ConstFileTransformRcPtr & t)
         {
             TiXmlElement * element = new TiXmlElement( "file" );
-            DecorateBaseTransformXML(element, t);
+            WriteBaseTransformXML(element, t);
             
             element->SetAttribute("src", t->getSrc());
             
@@ -158,6 +168,8 @@ OCIO_NAMESPACE_ENTER
             }
             
             MatrixTransformRcPtr t = MatrixTransform::Create();
+            ReadBaseTransformXML(t, element);
+            
             float matrix[16];
             float offset[4];
             t->getValue(matrix, offset);
@@ -234,7 +246,7 @@ OCIO_NAMESPACE_ENTER
         TiXmlElement * CreateMatrixTransformXML(const ConstMatrixTransformRcPtr & t)
         {
             TiXmlElement * element = new TiXmlElement( "matrix" );
-            DecorateBaseTransformXML(element, t);
+            WriteBaseTransformXML(element, t);
             
             float matrix[16];
             float offset[4];
@@ -294,6 +306,7 @@ OCIO_NAMESPACE_ENTER
             }
             
             ColorSpaceTransformRcPtr t = ColorSpaceTransform::Create();
+            ReadBaseTransformXML(t, element);
             
             const char * src = element->Attribute("src");
             const char * dst = element->Attribute("dst");
@@ -309,12 +322,6 @@ OCIO_NAMESPACE_ENTER
             t->setSrc(src);
             t->setDst(dst);
             
-            const char * direction = element->Attribute("direction");
-            if(direction)
-            {
-                t->setDirection( TransformDirectionFromString(direction) );
-            }
-            
             return t;
         }
         
@@ -323,7 +330,7 @@ OCIO_NAMESPACE_ENTER
         TiXmlElement * CreateColorSpaceTransformXML(const ConstColorSpaceTransformRcPtr & t)
         {
             TiXmlElement * element = new TiXmlElement( "colorspacetransform" );
-            DecorateBaseTransformXML(element, t);
+            WriteBaseTransformXML(element, t);
             
             element->SetAttribute("src", t->getSrc());
             element->SetAttribute("dst", t->getDst());
@@ -354,23 +361,7 @@ OCIO_NAMESPACE_ENTER
             }
             
             GroupTransformRcPtr t = GroupTransform::Create();
-            
-            // TODO: better error handling; Require Attrs Exist
-            
-            // Read attributes
-            {
-                const TiXmlAttribute* pAttrib = element->FirstAttribute();
-                while(pAttrib)
-                {
-                    std::string attrName = pystring::lower(pAttrib->Name());
-                    if(attrName == "direction") t->setDirection( TransformDirectionFromString(pAttrib->Value()) );
-                    else
-                    {
-                        // TODO: unknown attr
-                    }
-                    pAttrib = pAttrib->Next();
-                }
-            }
+            ReadBaseTransformXML(t, element);
             
             // Traverse Children
             const TiXmlElement* pElem = element->FirstChildElement();
@@ -392,7 +383,7 @@ OCIO_NAMESPACE_ENTER
         TiXmlElement * CreateGroupTransformXML(const ConstGroupTransformRcPtr& t)
         {
             TiXmlElement * element = new TiXmlElement( "group" );
-            DecorateBaseTransformXML(element, t);
+            WriteBaseTransformXML(element, t);
             
             ConstGroupTransformRcPtr def = GetDefaultGroupTransform();
             
