@@ -26,14 +26,15 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "MatrixOps.h"
-#include "MathUtils.h"
-
 #include <cmath>
 #include <cstring>
 #include <sstream>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "GpuShaderUtils.h"
+#include "MatrixOps.h"
+#include "MathUtils.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -171,15 +172,19 @@ OCIO_NAMESPACE_ENTER
         
         bool ExponentOp::supportsGpuShader() const
         {
-            return false;
+            return true;
         }
         
-        void ExponentOp::writeGpuShader(std::ostringstream & /*shader*/,
-                                        const std::string & /*pixelName*/,
-                                        const GpuShaderDesc & /*shaderDesc*/) const
+        void ExponentOp::writeGpuShader(std::ostringstream & shader,
+                                        const std::string & pixelName,
+                                        const GpuShaderDesc & shaderDesc) const
         {
-            // TODO: Add Gpu Shader for exponent op
-            throw Exception("ExponentOp does not support analytical shader generation.");
+            GpuLanguage lang = shaderDesc.getLanguage();
+            float zerovec[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            
+            shader << pixelName << " = pow(";
+            shader << "max(" << pixelName << ", " << GpuTextHalf4(zerovec, lang) << ")";
+            shader << ", " << GpuTextHalf4(m_finalExp4, lang) << ");\n";
         }
         
         bool ExponentOp::definesGpuAllocation() const
