@@ -89,6 +89,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_GroupTransform_getTransform( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_GroupTransform_getEditableTransform( PyObject * self,  PyObject *args );
         
+        // TODO: make these appear more like a pysequence. .append, len(), etc
+        
         PyObject * PyOCIO_GroupTransform_size( PyObject * self );
         PyObject * PyOCIO_GroupTransform_push_back( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_GroupTransform_clear( PyObject * self );
