@@ -75,6 +75,11 @@ OCIO_NAMESPACE_ENTER
                          const DisplayTransform & transform,
                          TransformDirection dir);
     
+    void BuildExponentOps(OpRcPtrVec & ops,
+                          const Config& config,
+                          const ExponentTransform & transform,
+                          TransformDirection dir);
+    
     void BuildFileOps(OpRcPtrVec & ops,
                       const Config& config,
                       const FileTransform & transform,

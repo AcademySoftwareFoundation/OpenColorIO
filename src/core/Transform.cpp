@@ -60,6 +60,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildDisplayOps(ops, config, *displayTransform, dir);
         }
+        else if(ConstExponentTransformRcPtr exponentTransform = \
+            DynamicPtrCast<const ExponentTransform>(transform))
+        {
+            BuildExponentOps(ops, config, *exponentTransform, dir);
+        }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
@@ -101,6 +106,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const DisplayTransform*>(t))
         {
             os << *displayTransform;
+        }
+        else if(const ExponentTransform * exponentTransform = \
+            dynamic_cast<const ExponentTransform*>(t))
+        {
+            os << *exponentTransform;
         }
         else if(const FileTransform * fileTransform = \
             dynamic_cast<const FileTransform*>(t))

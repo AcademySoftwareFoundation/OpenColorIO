@@ -55,6 +55,9 @@ OCIO_NAMESPACE_ENTER
     extern PyTypeObject PyOCIO_DisplayTransformType;
     bool AddDisplayTransformObjectToModule( PyObject* m );
     
+    extern PyTypeObject PyOCIO_ExponentTransformType;
+    bool AddExponentTransformObjectToModule( PyObject* m );
+    
     extern PyTypeObject PyOCIO_FileTransformType;
     bool AddFileTransformObjectToModule( PyObject* m );
     

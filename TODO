@@ -36,3 +36,4 @@
 // TODO: Add display mask envvar (ex: DLP setups)
 // TODO: better default filmlook + default display device specification
 // TODO: ColorSpace family queries.  GetHighestColorSpaceInFamily? Allow family name in getColorSpace?
+// TODO: ExponentTransform serialization

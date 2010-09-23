@@ -49,11 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // EXCEPTION / ENUMS / PREDECLARATIONS
-    //
-    //
+    // Predeclare all class ptr definitions
     
     class Config;
     typedef OCIO_SHARED_PTR<const Config> ConstConfigRcPtr;
@@ -71,17 +67,16 @@ OCIO_NAMESPACE_ENTER
     class GpuShaderDesc;
     class Exception;
     
+    
+    
+    
     class Transform;
     typedef OCIO_SHARED_PTR<const Transform> ConstTransformRcPtr;
     typedef OCIO_SHARED_PTR<Transform> TransformRcPtr;
     
-    class GroupTransform;
-    typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
-    typedef OCIO_SHARED_PTR<GroupTransform> GroupTransformRcPtr;
-    
-    class FileTransform;
-    typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
-    typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
+    class CDLTransform;
+    typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
+    typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
     
     class ColorSpaceTransform;
     typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
@@ -91,13 +86,24 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const DisplayTransform> ConstDisplayTransformRcPtr;
     typedef OCIO_SHARED_PTR<DisplayTransform> DisplayTransformRcPtr;
     
-    class CDLTransform;
-    typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
-    typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
+    class ExponentTransform;
+    typedef OCIO_SHARED_PTR<const ExponentTransform> ConstExponentTransformRcPtr;
+    typedef OCIO_SHARED_PTR<ExponentTransform> ExponentTransformRcPtr;
+    
+    class FileTransform;
+    typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
+    typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
+    
+    class GroupTransform;
+    typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
+    typedef OCIO_SHARED_PTR<GroupTransform> GroupTransformRcPtr;
     
     class MatrixTransform;
     typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
     typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
+    
+    
+    
     
     template <class T, class U>
     inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)

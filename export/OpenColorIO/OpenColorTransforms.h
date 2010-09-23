@@ -247,6 +247,44 @@ OCIO_NAMESPACE_ENTER
     
     
     
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Represents exponent transform: pow( clamp(color), value)
+    // 
+    // If the exponent is 1.0, this will not clamp
+    // Otherwise, the input color will be clamped between [0.0, inf]
+    
+    class ExponentTransform : public Transform
+    {
+    public:
+        static ExponentTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        void setValue(const float * vec4);
+        void getValue(float * vec4) const;
+    
+    private:
+        ExponentTransform();
+        ExponentTransform(const ExponentTransform &);
+        virtual ~ExponentTransform();
+        
+        ExponentTransform& operator= (const ExponentTransform &);
+        
+        static void deleter(ExponentTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const ExponentTransform&);
+    
+    
+    
     
     ///////////////////////////////////////////////////////////////////////////
     

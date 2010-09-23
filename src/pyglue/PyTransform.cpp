@@ -65,6 +65,12 @@ OCIO_NAMESPACE_ENTER
                 pyobj = PyObject_New(PyOCIO_Transform,
                     (PyTypeObject * ) &PyOCIO_DisplayTransformType);
             }
+            else if(ConstExponentTransformRcPtr exponentTransform = \
+                DynamicPtrCast<const ExponentTransform>(transform))
+            {
+                pyobj = PyObject_New(PyOCIO_Transform,
+                    (PyTypeObject * ) &PyOCIO_ExponentTransformType);
+            }
             else if(ConstFileTransformRcPtr fileTransform = \
                 DynamicPtrCast<const FileTransform>(transform))
             {
