@@ -38,6 +38,33 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
+        TiXmlElement * CreateTransformXML(const ConstTransformRcPtr& transform);
+        
+        TransformRcPtr CreateTransform(const TiXmlElement * element);
+        
+        
+        
+        
+        
+        
+        
+        
+        void DecorateBaseTransformXML(TiXmlElement * element, const ConstTransformRcPtr & t)
+        {
+            if(!element) return;
+            
+            if(t->getDirection() != TRANSFORM_DIR_FORWARD)
+            {
+                const char * dir = TransformDirectionToString(t->getDirection());
+                element->SetAttribute("direction", dir);
+            }
+        }
+        
+        
+        
+        
+        
+        
         ///////////////////////////////////////////////////////////////////////
         //
         // FileTransform
@@ -92,9 +119,11 @@ OCIO_NAMESPACE_ENTER
             return filetransform_;
         }
         
-        TiXmlElement * GetElement(const ConstFileTransformRcPtr & t)
+        TiXmlElement * CreateFileTransformXML(const ConstFileTransformRcPtr & t)
         {
             TiXmlElement * element = new TiXmlElement( "file" );
+            DecorateBaseTransformXML(element, t);
+            
             element->SetAttribute("src", t->getSrc());
             
             ConstFileTransformRcPtr def = GetDefaultFileTransform();
@@ -103,12 +132,6 @@ OCIO_NAMESPACE_ENTER
             {
                 const char * interp = InterpolationToString(t->getInterpolation());
                 element->SetAttribute("interpolation", interp);
-            }
-            
-            if(t->getDirection() != def->getDirection())
-            {
-                const char * dir = TransformDirectionToString(t->getDirection());
-                element->SetAttribute("direction", dir);
             }
             
             return element;
@@ -208,9 +231,10 @@ OCIO_NAMESPACE_ENTER
             return t;
         }
         
-        TiXmlElement * GetElement(const ConstMatrixTransformRcPtr & t)
+        TiXmlElement * CreateMatrixTransformXML(const ConstMatrixTransformRcPtr & t)
         {
             TiXmlElement * element = new TiXmlElement( "matrix" );
+            DecorateBaseTransformXML(element, t);
             
             float matrix[16];
             float offset[4];
@@ -296,18 +320,13 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        TiXmlElement * GetElement(const ConstColorSpaceTransformRcPtr & t)
+        TiXmlElement * CreateColorSpaceTransformXML(const ConstColorSpaceTransformRcPtr & t)
         {
             TiXmlElement * element = new TiXmlElement( "colorspacetransform" );
+            DecorateBaseTransformXML(element, t);
             
             element->SetAttribute("src", t->getSrc());
             element->SetAttribute("dst", t->getDst());
-            
-            if(t->getDirection() != TRANSFORM_DIR_FORWARD)
-            {
-                const char * dir = TransformDirectionToString(t->getDirection());
-                element->SetAttribute("direction", dir);
-            }
             
             return element;
         }
@@ -357,31 +376,7 @@ OCIO_NAMESPACE_ENTER
             const TiXmlElement* pElem = element->FirstChildElement();
             while(pElem)
             {
-                std::string elementtype = pElem->Value();
-                if(elementtype == "group")
-                {
-                    t->push_back( CreateGroupTransform(pElem) );
-                }
-                else if(elementtype == "file")
-                {
-                    t->push_back( CreateFileTransform(pElem) );
-                }
-                else if(elementtype == "colorspacetransform")
-                {
-                    t->push_back( CreateColorSpaceTransform(pElem) );
-                }
-                else if(elementtype == "matrix")
-                {
-                    t->push_back( CreateMatrixTransform(pElem) );
-                }
-                else
-                {
-                    std::ostringstream os;
-                    os << "CreateGroupTransform passed unknown element type '";
-                    os << elementtype << "'.";
-                    throw Exception(os.str().c_str());
-                }
-                
+                t->push_back( CreateTransform(pElem) );
                 pElem = pElem->NextSiblingElement();
             }
             
@@ -394,53 +389,111 @@ OCIO_NAMESPACE_ENTER
             return gt;
         }
         
-        TiXmlElement * GetElement(const ConstGroupTransformRcPtr& t)
+        TiXmlElement * CreateGroupTransformXML(const ConstGroupTransformRcPtr& t)
         {
             TiXmlElement * element = new TiXmlElement( "group" );
+            DecorateBaseTransformXML(element, t);
             
             ConstGroupTransformRcPtr def = GetDefaultGroupTransform();
-            
-            if(t->getDirection() != def->getDirection())
-            {
-                const char * dir = TransformDirectionToString(t->getDirection());
-                element->SetAttribute("direction", dir);
-            }
             
             for(int i=0; i<t->size(); ++i)
             {
                 ConstTransformRcPtr child = t->getTransform(i);
-                
-                if(ConstGroupTransformRcPtr groupTransform = \
-                    DynamicPtrCast<const GroupTransform>(child))
-                {
-                    TiXmlElement * childElement = GetElement(groupTransform);
-                    element->LinkEndChild( childElement );
-                }
-                else if(ConstFileTransformRcPtr fileTransform = \
-                    DynamicPtrCast<const FileTransform>(child))
-                {
-                    TiXmlElement * childElement = GetElement(fileTransform);
-                    element->LinkEndChild( childElement );
-                }
-                else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
-                    DynamicPtrCast<const ColorSpaceTransform>(child))
-                {
-                    TiXmlElement * childElement = GetElement(colorSpaceTransform);
-                    element->LinkEndChild( childElement );
-                }
-                else if(ConstMatrixTransformRcPtr matrixTransform = \
-                    DynamicPtrCast<const MatrixTransform>(child))
-                {
-                    TiXmlElement * childElement = GetElement(matrixTransform);
-                    element->LinkEndChild( childElement );
-                }
-                else
-                {
-                    throw Exception("Cannot serialize Transform type to XML");
-                }
+                TiXmlElement * childElement = CreateTransformXML(child);
+                element->LinkEndChild( childElement );
             }
             
             return element;
+        }
+    }
+    
+    namespace
+    {
+        TiXmlElement * CreateTransformXML(const ConstTransformRcPtr& transform)
+        {
+            /*
+            if(ConstCDLTransformRcPtr cdlTransform = \
+                DynamicPtrCast<const CDLTransform>(transform))
+            {
+                //return CreateCDLTransformXML(cdlTransform);
+            }
+            */
+            if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
+                DynamicPtrCast<const ColorSpaceTransform>(transform))
+            {
+                return CreateColorSpaceTransformXML(colorSpaceTransform);
+            }
+            
+            /*
+            else if(ConstDisplayTransformRcPtr displayTransform = \
+                DynamicPtrCast<const DisplayTransform>(transform))
+            {
+                //return CreateDisplayTransformXML(displayTransform);
+            }
+            */
+            /*
+            else if(ConstExponentTransformRcPtr exponentTransform = \
+                DynamicPtrCast<const ExponentTransform>(transform))
+            {
+                //return CreateExponentTransformXML(exponentTransform);
+            }
+            */
+            
+            else if(ConstFileTransformRcPtr fileTransform = \
+                DynamicPtrCast<const FileTransform>(transform))
+            {
+                return CreateFileTransformXML(fileTransform);
+            }
+            else if(ConstGroupTransformRcPtr groupTransform = \
+                DynamicPtrCast<const GroupTransform>(transform))
+            {
+                return CreateGroupTransformXML(groupTransform);
+            }
+            else if(ConstMatrixTransformRcPtr matrixTransform = \
+                DynamicPtrCast<const MatrixTransform>(transform))
+            {
+                return CreateMatrixTransformXML(matrixTransform);
+            }
+            
+            std::ostringstream os;
+            os << "Unsupported transform type for xml serialization.";
+            throw Exception(os.str().c_str());
+        }
+        
+        
+        TransformRcPtr CreateTransform(const TiXmlElement * element)
+        {
+            if(!element)
+                throw Exception("CreateTransform received null XmlElement.");
+            
+            std::string type = element->Value();
+            
+            // cdltransform
+            
+            if(type == "colorspacetransform")
+            {
+                return CreateColorSpaceTransform(element);
+            }
+            // exponentTransform
+            // displaytransform
+            else if(type == "file")
+            {
+                return CreateFileTransform(element);
+            }
+            else if(type == "group")
+            {
+                return CreateGroupTransform(element);
+            }
+            else if(type == "matrix")
+            {
+                return CreateMatrixTransform(element);
+            }
+            
+            
+            std::ostringstream os;
+            os << "Unsupported transform type for xml parsing, '";
+            os << type << "'.";
+            throw Exception(os.str().c_str());
         }
     }
     
@@ -489,7 +542,7 @@ OCIO_NAMESPACE_ENTER
                 // not our children's children, because I don't think
                 // children should be having sex."
                 
-                TiXmlElement * childsChild = GetElement( group );
+                TiXmlElement * childsChild = CreateTransformXML( group );
                 childElement->LinkEndChild( childsChild );
                 
                 element->LinkEndChild( childElement );
