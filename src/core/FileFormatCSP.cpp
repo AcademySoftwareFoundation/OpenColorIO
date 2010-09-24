@@ -355,13 +355,12 @@ OCIO_NAMESPACE_EXIT
 
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-
-#define BOOST_TEST_MODULE ocio_core
 #include <boost/test/unit_test.hpp>
+
+BOOST_AUTO_TEST_SUITE( FileFormatCSP_Unit_Tests )
 
 BOOST_AUTO_TEST_CASE ( test_simple1D )
 {
@@ -477,5 +476,7 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     }
     
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_BUILD_TESTS

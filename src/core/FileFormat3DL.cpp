@@ -339,6 +339,8 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include <boost/test/unit_test.hpp>
 
+BOOST_AUTO_TEST_SUITE( FileFormat3DL_Unit_Tests )
+
 // FILE      EXPECTED MAX    CORRECTLY DECODED IF MAX IN THIS RANGE 
 // 8-bit     255             [0, 511]      
 // 10-bit    1023            [512, 2047]
@@ -374,5 +376,7 @@ BOOST_AUTO_TEST_CASE ( test_GetLikelyLutBitDepth )
     
     BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(131072), 16);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_BUILD_TESTS

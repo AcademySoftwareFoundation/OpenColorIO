@@ -102,8 +102,9 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
     typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
     
-    
-    
+    class JPLogTransform;
+    typedef OCIO_SHARED_PTR<const JPLogTransform> ConstJPLogTransformRcPtr;
+    typedef OCIO_SHARED_PTR<JPLogTransform> JPLogTransformRcPtr;
     
     template <class T, class U>
     inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)

@@ -80,6 +80,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildMatrixOps(ops, config, *matrixTransform, dir);
         }
+        else if(ConstJPLogTransformRcPtr jpLogTransform = \
+            DynamicPtrCast<const JPLogTransform>(transform))
+        {
+            BuildJPLogOps(ops, config, *jpLogTransform, dir);
+        }
         else
         {
             std::ostringstream os;
@@ -126,6 +131,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const MatrixTransform*>(t))
         {
             os << *matrixTransform;
+        }
+        else if(const JPLogTransform * jpLogTransform = \
+            dynamic_cast<const JPLogTransform*>(t))
+        {
+            os << *jpLogTransform;
         }
         else
         {

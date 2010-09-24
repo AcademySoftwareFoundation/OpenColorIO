@@ -420,6 +420,45 @@ OCIO_NAMESPACE_ENTER
     
     std::ostream& operator<< (std::ostream&, const MatrixTransform&);
     
+    ///////////////////////////////////////////////////////////////////////////
+    
+    // Joshua Pines LogLin Transform
+    // 
+    // Converts cineon 10bit log to scene referred linear
+    // http://lists.nongnu.org/archive/html/openexr-devel/2005-03/msg00006.html
+    
+    class JPLogTransform : public Transform
+    {
+        
+    public:
+        
+        static JPLogTransformRcPtr
+        Create();
+        
+        virtual TransformRcPtr
+        createEditableCopy() const;
+        
+        virtual TransformDirection
+        getDirection() const;
+        
+        virtual void
+        setDirection(TransformDirection dir);
+        
+    private:
+        
+        JPLogTransform();
+        JPLogTransform(const JPLogTransform &);
+        virtual ~JPLogTransform();
+        JPLogTransform& operator= (const JPLogTransform &);
+        static void deleter(JPLogTransform* t);
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+        
+    };
+    
+    std::ostream& operator<< (std::ostream&, const JPLogTransform&);
+    
 }
 OCIO_NAMESPACE_EXIT
 

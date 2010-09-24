@@ -94,6 +94,12 @@ OCIO_NAMESPACE_ENTER
                         const Config& config,
                         const MatrixTransform & transform,
                         TransformDirection dir);
+    
+    void BuildJPLogOps(OpRcPtrVec & ops,
+                       const Config& config,
+                       const JPLogTransform & transform,
+                       TransformDirection dir);
+    
 }
 OCIO_NAMESPACE_EXIT
 

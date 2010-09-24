@@ -41,7 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OCIO_NAMESPACE_EXIT using namespace OCIO_VERSION_NS; }
 #define OCIO_NAMESPACE_USING using namespace OCIO_NAMESPACE;
 
-
 #include <exception>
 #include <iosfwd>
 #include <string>
@@ -205,6 +204,7 @@ OCIO_NAMESPACE_ENTER
         static ConfigRcPtr Create();
         static ConstConfigRcPtr CreateFromEnv();
         static ConstConfigRcPtr CreateFromFile(const char * filename);
+        static ConstConfigRcPtr CreateFromStream(std::istream & istream);
         
         ConfigRcPtr createEditableCopy() const;
         

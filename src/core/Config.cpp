@@ -255,6 +255,22 @@ OCIO_NAMESPACE_ENTER
         return config;
     }
     
+    ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
+    {
+        ConfigRcPtr config = Config::Create();
+        
+        std::ostringstream oss;
+        oss << istream.rdbuf();
+        
+        TiXmlDocument doc;
+        doc.Parse(oss.str().c_str());
+        const TiXmlElement* rootElement = doc.RootElement();
+        config->m_impl->loadXmlElement(rootElement, "ISTREAM_PROFILE");
+        
+        return config;
+    }
+    
+    
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -954,6 +970,54 @@ OCIO_NAMESPACE_ENTER
         
         
         
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // JPLogTransform
+        
+        JPLogTransformRcPtr CreateJPLogTransform(const TiXmlElement * element)
+        {
+            if(!element)
+                throw Exception("CreateJPLogTransform received null XmlElement.");
+            
+            if(std::string(element->Value()) != "JPLog")
+            {
+                std::ostringstream os;
+                os << "HandleElement passed incorrect element type '";
+                os << element->Value() << "'. ";
+                os << "Expected 'JPlog'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            JPLogTransformRcPtr t = JPLogTransform::Create();
+            
+            // TODO: do we need this yet?
+            /*
+            const TiXmlAttribute* pAttrib = element->FirstAttribute();
+            while(pAttrib)
+            {
+                std::string attrName = pystring::lower(pAttrib->Name());
+                if(attrName == "direction")
+                {
+                    t->setDirection( TransformDirectionFromString(pAttrib->Value()) );
+                }
+                else
+                {
+                    // TODO: unknown attr
+                }
+                pAttrib = pAttrib->Next();
+            }
+            */
+            
+            return t;
+        }
+        
+        TiXmlElement * GetElement(const ConstJPLogTransformRcPtr & /* t */)
+        {
+            TiXmlElement * element = new TiXmlElement( "JPLog" );
+            // TODO: add user param support
+            return element;
+        }
+        
         
         
         ///////////////////////////////////////////////////////////////////////
@@ -1078,6 +1142,10 @@ OCIO_NAMESPACE_ENTER
                 else if(elementtype == "matrix")
                 {
                     t->push_back( CreateMatrixTransform(pElem) );
+                }
+                else if(elementtype == "JPLog")
+                {
+                    t->push_back( CreateJPLogTransform(pElem) );
                 }
                 else
                 {
