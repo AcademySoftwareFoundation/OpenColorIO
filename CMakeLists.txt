@@ -11,6 +11,8 @@ endif()
 
 enable_language(CXX)
 
+ENABLE_TESTING()
+
 if(APPLE)
     if(NOT CMAKE_OSX_ARCHITECTURES)
         set(CMAKE_OSX_ARCHITECTURES x86_64 CACHE STRING
@@ -106,6 +108,13 @@ endif()
 
 add_subdirectory (src/pyglue)
 
+###############################################################################
+### CTEST ###
+
+add_custom_target(test_verbose
+                  COMMAND ctest -VV
+                  DEPENDS ocio_core_tests
+                  COMMENT "Running ctest with verbose output")
 
 # Log CMake first run done
 SET(CMAKE_FIRST_RUN 0 CACHE INTERNAL "")
