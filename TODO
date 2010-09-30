@@ -1,3 +1,6 @@
+// TODO: Determine best public interface for JPLogTransform
+// TODO: Add all dispatch fcns / serialization / python for JPLog
+// TODO: remove jplog op
 // TODO: Get DEFAULT_COLOR_ROLE to actually work as advertised.
 // TODO: Add parseColorSpaceRule.   STRICT, CONSERVATIVE to allow for 'always'
 //       succeed parsing. (such as with null profile)
