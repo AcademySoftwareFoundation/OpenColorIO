@@ -506,4 +506,4 @@ BOOST_AUTO_TEST_CASE ( test_LogOps_LogToLin_Base10 )
 
 BOOST_AUTO_TEST_SUITE_END()
 
-#endif // OCIO_BUILD_TESTS
+#endif // OCIO_UNIT_TEST

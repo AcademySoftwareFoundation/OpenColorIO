@@ -309,4 +309,4 @@ BOOST_AUTO_TEST_CASE ( test_CineonLogToLinTransform_Inverse )
 
 BOOST_AUTO_TEST_SUITE_END()
 
-#endif // OCIO_BUILD_TESTS
+#endif // OCIO_UNIT_TEST
