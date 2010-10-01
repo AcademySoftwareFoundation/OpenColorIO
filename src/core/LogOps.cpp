@@ -84,19 +84,19 @@ OCIO_NAMESPACE_ENTER
                            const float * base,
                            const float * kb)
         {
-            float k_inv[3] = { 1.0f / k[0],
+            float kinv[3] = { 1.0f / k[0],
                                1.0f / k[1],
                                1.0f / k[2] };
             
-            float m_inv[3] = { 1.0f / m[0],
+            float minv[3] = { 1.0f / m[0],
                                1.0f / m[1],
                                1.0f / m[2] };
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                rgbaBuffer[0] = m_inv[0] * (powf(base[0], k_inv[0]*(rgbaBuffer[0]-kb[0])) - b[0]);
-                rgbaBuffer[1] = m_inv[1] * (powf(base[1], k_inv[1]*(rgbaBuffer[1]-kb[1])) - b[1]);
-                rgbaBuffer[2] = m_inv[2] * (powf(base[2], k_inv[2]*(rgbaBuffer[2]-kb[2])) - b[2]);
+                rgbaBuffer[0] = minv[0] * (powf(base[0], kinv[0]*(rgbaBuffer[0]-kb[0])) - b[0]);
+                rgbaBuffer[1] = minv[1] * (powf(base[1], kinv[1]*(rgbaBuffer[1]-kb[1])) - b[1]);
+                rgbaBuffer[2] = minv[2] * (powf(base[2], kinv[2]*(rgbaBuffer[2]-kb[2])) - b[2]);
                 
                 rgbaBuffer += 4;
             }
@@ -253,41 +253,77 @@ OCIO_NAMESPACE_ENTER
         {
             GpuLanguage lang = shaderDesc.getLanguage();
             
-            float clampMin[3] = { FLTMIN, FLTMIN, FLTMIN };
-            
-            
-            // TODO: Switch to f32 for internal Cg processing?
-            if(lang == GPU_LANGUAGE_CG)
-            {
-                clampMin[0] = static_cast<float>(GetHalfNormMin());
-                clampMin[1] = static_cast<float>(GetHalfNormMin());
-                clampMin[2] = static_cast<float>(GetHalfNormMin());
-            }
-            
-            // TODO: write gpu ops
-            /*
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
+                // Lin To Log
+                // k * log(mx+b, base) + kb
+                
+                // We account for the change of base by rolling the multiplier
+                // in with 'k'
+                
+                float knew[3] = { m_k[0] / logf(m_base[0]),
+                                  m_k[1] / logf(m_base[1]),
+                                  m_k[2] / logf(m_base[0]) };
+                
+                float clampMin[3] = { FLTMIN, FLTMIN, FLTMIN };
+                
+                // TODO: Switch to f32 for internal Cg processing?
+                if(lang == GPU_LANGUAGE_CG)
+                {
+                    clampMin[0] = static_cast<float>(GetHalfNormMin());
+                    clampMin[1] = static_cast<float>(GetHalfNormMin());
+                    clampMin[2] = static_cast<float>(GetHalfNormMin());
+                }
+                
+                // Decompose into 2 steps
+                // 1) clamp(mx+b)
+                // 2) knew * log(x) + kb
+                
                 shader << pixelName << ".rgb = ";
-                shader << "log2(max(";
-                shader << pixelName << ".rgb,";
-                Write_half3(&shader, clampMin, lang);
-                shader << ")).rgb;\n";
+                shader << "max(" << GpuTextHalf3(clampMin,lang) << ", ";
+                shader << GpuTextHalf3(m_m,lang) << " * ";
+                shader << pixelName << ".rgb + ";
+                shader << GpuTextHalf3(m_b,lang) << ");\n";
+                
+                shader << pixelName << ".rgb = ";
+                shader << GpuTextHalf3(knew,lang) << " * ";
+                shader << "log(" << pixelName << ".rgb) + ";
+                shader << GpuTextHalf3(m_kb,lang) << ";\n";
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                float base[] = { 2.0f, 2.0f, 2.0f };
+                float kinv[3] = { 1.0f / m_k[0],
+                                  1.0f / m_k[1],
+                                  1.0f / m_k[2] };
+                
+                float minv[3] = { 1.0f / m_m[0],
+                                  1.0f / m_m[1],
+                                  1.0f / m_m[2] };
+                
+                // Decompose into 3 steps
+                // 1) kinv * ( x - kb)
+                // 2) pow(base, x)
+                // 3) minv * (x - b)
+                
+                shader << pixelName << ".rgb = ";
+                shader << GpuTextHalf3(kinv,lang) << " * (";
+                shader << pixelName << ".rgb - ";
+                shader << GpuTextHalf3(m_kb,lang) << ");\n";
                 
                 shader << pixelName << ".rgb = pow(";
-                Write_half3(&shader, base, lang);
+                shader << GpuTextHalf3(m_base,lang) << ", ";
+                shader << pixelName << ".rgb);\n";
                 
-                shader << ", " << pixelName << ".rgb).rgb;\n";
-            }*/
+                shader << pixelName << ".rgb = ";
+                shader << GpuTextHalf3(minv,lang) << " * (";
+                shader << pixelName << ".rgb - ";
+                shader << GpuTextHalf3(m_b,lang) << ");\n";
+            }
         }
         
         bool LogOp::definesGpuAllocation() const
         {
-            return false;
+            return true;
         }
         
         GpuAllocationData LogOp::getGpuAllocation() const

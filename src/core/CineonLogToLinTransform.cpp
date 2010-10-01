@@ -267,6 +267,14 @@ BOOST_AUTO_TEST_CASE ( test_CineonLogToLinTransform_Forward )
     {
         BOOST_REQUIRE_CLOSE( data[i], result[i], 1.0e-3 );
     }
+    
+    /*
+    OCIO::GpuShaderDesc desc;
+    desc.setLanguage(OCIO::GPU_LANGUAGE_CG);
+    desc.setFunctionName("test");
+    desc.setLut3DEdgeLen(32);
+    std::cerr << processor->getGpuShaderText(desc) << std::endl;
+    */
 }
 
 BOOST_AUTO_TEST_CASE ( test_CineonLogToLinTransform_Inverse )
@@ -275,7 +283,7 @@ BOOST_AUTO_TEST_CASE ( test_CineonLogToLinTransform_Inverse )
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_INVERSE);
     
-    float data[3] = { 0.0063979253982160934,
+    float data[3] = { 0.0063979253982160934f,
                       0.18f,
                       15.203345734511421f };
     
@@ -289,6 +297,14 @@ BOOST_AUTO_TEST_CASE ( test_CineonLogToLinTransform_Inverse )
     {
         BOOST_REQUIRE_CLOSE( data[i], result[i], 1.0e-3 );
     }
+    
+    /*
+    OCIO::GpuShaderDesc desc;
+    desc.setLanguage(OCIO::GPU_LANGUAGE_CG);
+    desc.setFunctionName("test");
+    desc.setLut3DEdgeLen(32);
+    std::cerr << processor->getGpuShaderText(desc) << std::endl;
+    */
 }
 
 BOOST_AUTO_TEST_SUITE_END()
