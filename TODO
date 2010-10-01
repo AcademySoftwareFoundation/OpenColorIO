@@ -1,6 +1,3 @@
-// TODO: Determine best public interface for JPLogTransform
-// TODO: Add all dispatch fcns / serialization / python for JPLog
-// TODO: remove jplog op
 // TODO: Get DEFAULT_COLOR_ROLE to actually work as advertised.
 // TODO: Add parseColorSpaceRule.   STRICT, CONSERVATIVE to allow for 'always'
 //       succeed parsing. (such as with null profile)
@@ -40,3 +37,11 @@
 // TODO: better default filmlook + default display device specification
 // TODO: ColorSpace family queries.  GetHighestColorSpaceInFamily? Allow family name in getColorSpace?
 // TODO: ExponentTransform serialization
+
+
+// For 0.7
+Config::CreateFromStream. Why not CreateFromString(const char *) ?
+Config::writeXML -> WriteToStream ?
+ColorSpace:: gpuallocation, min, max into a single string. gpuallocation.  Add optional offset in log
+Unify xml writing with lots of coefficients. Space separate vectors?
+

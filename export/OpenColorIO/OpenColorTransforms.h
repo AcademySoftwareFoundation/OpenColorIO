@@ -187,7 +187,8 @@ OCIO_NAMESPACE_ENTER
         // This is the maxiumum density recorded by
         // the neg scanner. Default is 2.046 in all channels
         // For those interested in modeling r,g,b separately ...
-        // ARRI "carlos" aims: 1.890, 2.046, 2.046
+        // Arri "carlos" aims: 1.890, 2.046, 2.046
+        // Kodak aims: 1.99, 2.16, 2.17
         
         void getMaxAimDensity(float * v3) const;
         void setMaxAimDensity(const float * v3);
@@ -199,6 +200,23 @@ OCIO_NAMESPACE_ENTER
         
         void getNegGamma(float * v3) const;
         void setNegGamma(const float * v3);
+        
+        // It is often more expedient to
+        // measure the negative gamma in terms of
+        // how many code values in log space correspond
+        // to an exposure change of one stop of scene linear light
+        //
+        // This does a conversion to negative gamma,
+        // based on the aimDensity.
+        //
+        // For example, if one did a exposure test
+        // of a negative stock, scanned it, and determined
+        // that one stop corresponded to 90 code values
+        // in a 10-bit dpx file, you would call
+        // setNegGammaAsLogOffset( 90/1023.0, ...)
+        
+        void getNegGammaAsLogOffset(float * v3) const;
+        void setNegGammaAsLogOffset(const float * v3);
         
         // Gray reference in negative space
         // Default is 445 / 1023 (LAD Gray) in all channels

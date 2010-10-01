@@ -472,10 +472,6 @@ OCIO_NAMESPACE_ENTER
         virtual void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const = 0;
         virtual const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const = 0;
         
-        /*
-        virtual int getGpuLut3DEdgeLen() const = 0;
-        */
-        
         //! Get the 3d lut + cg shader for the specified DisplayTransform
         //
         // cg signature will be:

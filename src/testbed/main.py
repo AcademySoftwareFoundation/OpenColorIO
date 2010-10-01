@@ -122,6 +122,9 @@ t.setMaxAimDensity((1.890, 2.046, 2.046))
 t.setNegGamma((0.49, 0.57, 0.60))
 g.push_back(t)
 cs.setTransform(g, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)
+logOffset = [v * 1023.0 for v in t.getNegGammaAsLogOffset()]
+print 'logOffset',logOffset
+
 
 config.addColorSpace(cs)
 config.setRole(OCIO.Constants.ROLE_COMPOSITING_LOG, cs.getName())

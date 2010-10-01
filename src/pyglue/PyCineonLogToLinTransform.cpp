@@ -87,11 +87,13 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_CineonLogToLinTransform_getMaxAimDensity( PyObject * self );
         PyObject * PyOCIO_CineonLogToLinTransform_getNegGamma( PyObject * self );
+        PyObject * PyOCIO_CineonLogToLinTransform_getNegGammaAsLogOffset( PyObject * self );
         PyObject * PyOCIO_CineonLogToLinTransform_getNegGrayReference( PyObject * self );
         PyObject * PyOCIO_CineonLogToLinTransform_getLinearGrayReference( PyObject * self );
         
         PyObject * PyOCIO_CineonLogToLinTransform_setMaxAimDensity( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_CineonLogToLinTransform_setNegGamma( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_CineonLogToLinTransform_setNegGammaAsLogOffset( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_CineonLogToLinTransform_setNegGrayReference( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_CineonLogToLinTransform_setLinearGrayReference( PyObject * self,  PyObject *args );
         
@@ -101,11 +103,13 @@ OCIO_NAMESPACE_ENTER
         PyMethodDef PyOCIO_CineonLogToLinTransform_methods[] = {
             {"getMaxAimDensity", (PyCFunction) PyOCIO_CineonLogToLinTransform_getMaxAimDensity, METH_NOARGS, "" },
             {"getNegGamma", (PyCFunction) PyOCIO_CineonLogToLinTransform_getNegGamma, METH_NOARGS, "" },
+            {"getNegGammaAsLogOffset", (PyCFunction) PyOCIO_CineonLogToLinTransform_getNegGammaAsLogOffset, METH_NOARGS, "" },
             {"getNegGrayReference", (PyCFunction) PyOCIO_CineonLogToLinTransform_getNegGrayReference, METH_NOARGS, "" },
             {"getLinearGrayReference", (PyCFunction) PyOCIO_CineonLogToLinTransform_getLinearGrayReference, METH_NOARGS, "" },
             
             {"setMaxAimDensity", PyOCIO_CineonLogToLinTransform_setMaxAimDensity, METH_VARARGS, "" },
             {"setNegGamma", PyOCIO_CineonLogToLinTransform_setNegGamma, METH_VARARGS, "" },
+            {"setNegGammaAsLogOffset", PyOCIO_CineonLogToLinTransform_setNegGammaAsLogOffset, METH_VARARGS, "" },
             {"setNegGrayReference", PyOCIO_CineonLogToLinTransform_setNegGrayReference, METH_VARARGS, "" },
             {"setLinearGrayReference", PyOCIO_CineonLogToLinTransform_setLinearGrayReference, METH_VARARGS, "" },
             
@@ -238,6 +242,22 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        PyObject * PyOCIO_CineonLogToLinTransform_getNegGammaAsLogOffset( PyObject * self )
+        {
+            try
+            {
+                ConstCineonLogToLinTransformRcPtr transform = GetConstCineonLogToLinTransform(self, true);
+                std::vector<float> data(3);
+                transform->getNegGammaAsLogOffset(&data[0]);
+                return CreatePyListFromFloatVector(data);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
         PyObject * PyOCIO_CineonLogToLinTransform_getNegGrayReference( PyObject * self )
         {
             try
@@ -317,6 +337,32 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 transform->setNegGamma( &data[0] );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_CineonLogToLinTransform_setNegGammaAsLogOffset( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O:setNegGammaAsLogOffset", &pyData)) return NULL;
+                CineonLogToLinTransformRcPtr transform = GetEditableCineonLogToLinTransform(self);
+                
+                std::vector<float> data;
+                if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 3))
+                {
+                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 3");
+                    return 0;
+                }
+                
+                transform->setNegGammaAsLogOffset( &data[0] );
                 
                 Py_RETURN_NONE;
             }

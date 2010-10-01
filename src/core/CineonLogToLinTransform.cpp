@@ -26,6 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <cmath>
 #include <cstring>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -135,6 +136,36 @@ OCIO_NAMESPACE_ENTER
     void CineonLogToLinTransform::setNegGamma(const float * v3)
     {
         memcpy(m_impl->negGamma_, v3, sizeof(float)*3);
+    }
+    
+    
+    
+    void CineonLogToLinTransform::getNegGammaAsLogOffset(float * v3) const
+    {
+        float lg2base10 = logf(2.0f) / logf(10.0f);
+        
+        if(VecContainsZero(m_impl->maxAimDensity_, 3))
+        {
+            std::ostringstream os;
+            os << "CineonLogToLinTransform error, ";
+            os << "maxAimDensity cannot have a 0.0 value.";
+            throw Exception(os.str().c_str());
+        }
+        
+        for(int i=0; i<3; ++i)
+        {
+            v3[i] = lg2base10 * m_impl->negGamma_[i] / m_impl->maxAimDensity_[i];
+        }
+    }
+    
+    void CineonLogToLinTransform::setNegGammaAsLogOffset(const float * v3)
+    {
+        float lg2base10 = logf(2.0f) / logf(10.0f);
+        
+        for(int i=0; i<3; ++i)
+        {
+            m_impl->negGamma_[i] = v3[i] * m_impl->maxAimDensity_[i] / lg2base10;
+        }
     }
     
     
