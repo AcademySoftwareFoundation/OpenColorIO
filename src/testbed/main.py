@@ -47,7 +47,7 @@ cs.setGpuMin(-16.0)
 cs.setGpuMax(6.0)
 
 config.addColorSpace(cs)
-config.setColorSpaceForRole(OCIO.Constants.ROLE_SCENE_LINEAR, cs.getName())
+config.setRole(OCIO.Constants.ROLE_SCENE_LINEAR, cs.getName())
 
 print config.getDefaultLumaCoefs()
 #config.setDefaultLumaCoefs((1/3.0,1/3.0,1/3.0))
@@ -95,8 +95,46 @@ c = ( 445/1023.0, 1.0, 0.0 )
 print processor.applyRGB(c)
 """
 
+"""
 #print OCIO.Constants.CombineTransformDirections(OCIO.Constants.TRANSFORM_DIR_INVERSE, OCIO.Constants.TRANSFORM_DIR_INVERSE)
 
 #print dir(OCIO.MatrixTransform)
 #print OCIO.MatrixTransform.View((False, False, False, True), (1.0, 1.0, 1.0))
 #print OCIO.MatrixTransform.Identity()
+
+"""
+
+config = OCIO.Config()
+
+cs = OCIO.ColorSpace()
+cs.setName("lgf")
+cs.setFamily("lg")
+cs.setBitDepth(OCIO.Constants.BIT_DEPTH_F16)
+cs.setIsData(False)
+cs.setGpuAllocation(OCIO.Constants.GPU_ALLOCATION_LG2)
+cs.setGpuMin(-0.5)
+cs.setGpuMax(1.5)
+
+g = OCIO.GroupTransform()
+
+t = OCIO.CineonLogToLinTransform()
+t.setMaxAimDensity((1.890, 2.046, 2.046))
+t.setNegGamma((0.49, 0.57, 0.60))
+g.push_back(t)
+cs.setTransform(g, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)
+
+config.addColorSpace(cs)
+config.setRole(OCIO.Constants.ROLE_COMPOSITING_LOG, cs.getName())
+
+xml = config.getXML()
+print '\n\n'
+print xml
+
+fname = '/tmp/a.xml'
+f = file(fname,'w')
+f.write(xml)
+f.close()
+
+newconfig = OCIO.Config.CreateFromFile(fname)
+print '\n\n'
+print newconfig.getXML()

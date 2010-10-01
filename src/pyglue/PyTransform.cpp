@@ -53,6 +53,12 @@ OCIO_NAMESPACE_ENTER
                 pyobj = PyObject_New(PyOCIO_Transform,
                     (PyTypeObject * ) &PyOCIO_CDLTransformType);
             }
+            else if(ConstCineonLogToLinTransformRcPtr cineonTransform = \
+                DynamicPtrCast<const CineonLogToLinTransform>(transform))
+            {
+                pyobj = PyObject_New(PyOCIO_Transform,
+                    (PyTypeObject * ) &PyOCIO_CineonLogToLinTransformType);
+            }
             else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
                 DynamicPtrCast<const ColorSpaceTransform>(transform))
             {

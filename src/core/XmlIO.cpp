@@ -78,6 +78,171 @@ OCIO_NAMESPACE_ENTER
         
         
         
+        
+        
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // CineonLogToLinTransform
+        
+        CineonLogToLinTransformRcPtr CreateCineonLogToLinTransform(const TiXmlElement * element)
+        {
+            if(!element)
+                throw Exception("CreateCineonLogToLin received null XmlElement.");
+            
+            if(std::string(element->Value()) != "cineonlogtolin")
+            {
+                std::ostringstream os;
+                os << "HandleElement passed incorrect element type '";
+                os << element->Value() << "'. ";
+                os << "Expected 'cineonlogtolin'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            CineonLogToLinTransformRcPtr t = CineonLogToLinTransform::Create();
+            ReadBaseTransformXML(t, element);
+            
+            const char * cstr = 0;
+            
+            cstr = element->Attribute("max_aim_density");
+            if(cstr)
+            {
+                std::vector<std::string> parts;
+                std::vector<float> value;
+                pystring::split(pystring::strip(cstr), parts);
+                
+                if(!StringVecToFloatVec(value, parts) || value.size() != 3)
+                {
+                    std::ostringstream os;
+                    os << "cineonlogtolin parse error. ";
+                    os << "max_aim_density attribute must be 3 floats.";
+                    os << "Found, '" << cstr << "'. ";
+                    throw Exception(os.str().c_str());
+                }
+                
+                t->setMaxAimDensity(&value[0]);
+            }
+            
+            cstr = element->Attribute("neg_gamma");
+            if(cstr)
+            {
+                std::vector<std::string> parts;
+                std::vector<float> value;
+                pystring::split(pystring::strip(cstr), parts);
+                
+                if(!StringVecToFloatVec(value, parts) || value.size() != 3)
+                {
+                    std::ostringstream os;
+                    os << "cineonlogtolin parse error. ";
+                    os << "neg_gamma attribute must be 3 floats.";
+                    os << "Found, '" << cstr << "'. ";
+                    throw Exception(os.str().c_str());
+                }
+                
+                t->setNegGamma(&value[0]);
+            }
+            
+            cstr = element->Attribute("neg_gray_reference");
+            if(cstr)
+            {
+                std::vector<std::string> parts;
+                std::vector<float> value;
+                pystring::split(pystring::strip(cstr), parts);
+                
+                if(!StringVecToFloatVec(value, parts) || value.size() != 3)
+                {
+                    std::ostringstream os;
+                    os << "cineonlogtolin parse error. ";
+                    os << "neg_gray_reference attribute must be 3 floats.";
+                    os << "Found, '" << cstr << "'. ";
+                    throw Exception(os.str().c_str());
+                }
+                
+                t->setNegGrayReference(&value[0]);
+            }
+            
+            cstr = element->Attribute("linear_gray_reference");
+            if(cstr)
+            {
+                std::vector<std::string> parts;
+                std::vector<float> value;
+                pystring::split(pystring::strip(cstr), parts);
+                
+                if(!StringVecToFloatVec(value, parts) || value.size() != 3)
+                {
+                    std::ostringstream os;
+                    os << "cineonlogtolin parse error. ";
+                    os << "linear_gray_reference attribute must be 3 floats.";
+                    os << "Found, '" << cstr << "'. ";
+                    throw Exception(os.str().c_str());
+                }
+                
+                t->setLinearGrayReference(&value[0]);
+            }
+            
+            return t;
+        }
+        
+        ConstCineonLogToLinTransformRcPtr GetDefaultCineonLogToLinTransform()
+        {
+            static ConstCineonLogToLinTransformRcPtr cineonlogtolintransform_ = \
+                CineonLogToLinTransform::Create();
+            return cineonlogtolintransform_;
+        }
+        
+        TiXmlElement * CreateCineonLogToLinTransformXML(const ConstCineonLogToLinTransformRcPtr & t)
+        {
+            ConstCineonLogToLinTransformRcPtr t_default = GetDefaultCineonLogToLinTransform();
+            
+            TiXmlElement * element = new TiXmlElement( "cineonlogtolin" );
+            WriteBaseTransformXML(element, t);
+            
+            float value[3] = { 0.0f, 0.0f, 0.0f };
+            float value_default[3] = { 0.0f, 0.0f, 0.0f };
+            
+            {
+                t->getMaxAimDensity(value);
+                t_default->getMaxAimDensity(value_default);
+                
+                std::string value_str = FloatVecToString(value, 3);
+                if(value_str != FloatVecToString(value_default, 3))
+                    element->SetAttribute("max_aim_density",value_str);
+            }
+            
+            {
+                t->getNegGamma(value);
+                t_default->getNegGamma(value_default);
+                
+                std::string value_str = FloatVecToString(value, 3);
+                if(value_str != FloatVecToString(value_default, 3))
+                    element->SetAttribute("neg_gamma",value_str);
+            }
+            
+            {
+                t->getNegGrayReference(value);
+                t_default->getNegGrayReference(value_default);
+                
+                std::string value_str = FloatVecToString(value, 3);
+                if(value_str != FloatVecToString(value_default, 3))
+                    element->SetAttribute("neg_gray_reference",value_str);
+            }
+            
+            {
+                t->getLinearGrayReference(value);
+                t_default->getLinearGrayReference(value_default);
+                
+                std::string value_str = FloatVecToString(value, 3);
+                if(value_str != FloatVecToString(value_default, 3))
+                    element->SetAttribute("linear_gray_reference",value_str);
+            }
+            
+            return element;
+        }
+        
+        
+        
+        
+        
+        
         ///////////////////////////////////////////////////////////////////////
         //
         // FileTransform
@@ -409,12 +574,16 @@ OCIO_NAMESPACE_ENTER
                 //return CreateCDLTransformXML(cdlTransform);
             }
             */
-            if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
+            if(ConstCineonLogToLinTransformRcPtr cineonTransform = \
+                DynamicPtrCast<const CineonLogToLinTransform>(transform))
+            {
+                return CreateCineonLogToLinTransformXML(cineonTransform);
+            }
+            else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
                 DynamicPtrCast<const ColorSpaceTransform>(transform))
             {
                 return CreateColorSpaceTransformXML(colorSpaceTransform);
             }
-            
             /*
             else if(ConstDisplayTransformRcPtr displayTransform = \
                 DynamicPtrCast<const DisplayTransform>(transform))
@@ -460,8 +629,11 @@ OCIO_NAMESPACE_ENTER
             std::string type = element->Value();
             
             // cdltransform
-            
-            if(type == "colorspacetransform")
+            if(type == "cineonlogtolin")
+            {
+                return CreateCineonLogToLinTransform(element);
+            }
+            else if(type == "colorspacetransform")
             {
                 return CreateColorSpaceTransform(element);
             }
@@ -620,3 +792,7 @@ OCIO_NAMESPACE_ENTER
     
 }
 OCIO_NAMESPACE_EXIT
+
+
+
+
