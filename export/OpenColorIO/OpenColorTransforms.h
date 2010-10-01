@@ -149,6 +149,83 @@ OCIO_NAMESPACE_ENTER
     
     
     
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // A simplistic cineon (log negative density) to scene linear transform
+    //
+    // This approach is often advocated by those in the VFX industry,
+    // including Joshua Pines et al.
+    // http://lists.nongnu.org/archive/html/openexr-devel/2005-03/msg00006.html
+    //
+    // This tranform only attempts to linearize the central, linear portion
+    // of the negative stock, and does not aim to account for
+    // non-linearities of the shoulder or toe portions.
+    //
+    // One of the advantages of this approach is that as a mathematically
+    // pure log conversion, an additive offset in log space is exactly
+    // equal to a scaling multipler in linear.  This often makes the handoff of
+    // color correction between visual effects and DI facilities simpler.
+    //
+    // This transform processes each channel independently, and does not
+    // account for crosstalk or the differences in saturation
+    // between film and scene linear primaries.
+    //
+    // out = lingray * pow(10.0, (in-neggray) * maxDensity / negGamma)
+    
+    class CineonLogToLinTransform : public Transform
+    {
+    public:
+        
+        static CineonLogToLinTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        // This is the maxiumum density recorded by
+        // the neg scanner. Default is 2.046 in all channels
+        // For those interested in modeling r,g,b separately ...
+        // ARRI "carlos" aims: 1.890, 2.046, 2.046
+        
+        void getMaxAimDensity(float * v3) const;
+        void setMaxAimDensity(const float * v3);
+        
+        // Gray reference in negative space
+        // Default is 0.6 in all channels
+        // For those interested in modeling r,g,b separately ...
+        // Kodak 5201: 0.49, 0.57, 0.60
+        
+        void getNegGamma(float * v3) const;
+        void setNegGamma(const float * v3);
+        
+        // Gray reference in negative space
+        // Default is 445 / 1023 (LAD Gray) in all channels
+        void getNegGrayReference(float * v3) const;
+        void setNegGrayReference(const float * v3);
+        
+        // Gray reference in linear space
+        // Default is 0.18 (18% gray) in all channels
+        void getLinearGrayReference(float * v3) const;
+        void setLinearGrayReference(const float * v3);
+    private:
+        
+        CineonLogToLinTransform();
+        CineonLogToLinTransform(const CineonLogToLinTransform &);
+        virtual ~CineonLogToLinTransform();
+        CineonLogToLinTransform& operator= (const CineonLogToLinTransform &);
+        static void deleter(CineonLogToLinTransform* t);
+        class Impl;
+        friend class Impl;
+        std::auto_ptr<Impl> m_impl;
+    };
+    
+    std::ostream& operator<< (std::ostream&, const CineonLogToLinTransform&);
+    
+    
+    
+    
     ///////////////////////////////////////////////////////////////////////////
     
     
@@ -419,45 +496,6 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const MatrixTransform&);
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    // Joshua Pines LogLin Transform
-    // 
-    // Converts cineon 10bit log to scene referred linear
-    // http://lists.nongnu.org/archive/html/openexr-devel/2005-03/msg00006.html
-    
-    class JPLogTransform : public Transform
-    {
-        
-    public:
-        
-        static JPLogTransformRcPtr
-        Create();
-        
-        virtual TransformRcPtr
-        createEditableCopy() const;
-        
-        virtual TransformDirection
-        getDirection() const;
-        
-        virtual void
-        setDirection(TransformDirection dir);
-        
-    private:
-        
-        JPLogTransform();
-        JPLogTransform(const JPLogTransform &);
-        virtual ~JPLogTransform();
-        JPLogTransform& operator= (const JPLogTransform &);
-        static void deleter(JPLogTransform* t);
-        class Impl;
-        friend class Impl;
-        std::auto_ptr<Impl> m_impl;
-        
-    };
-    
-    std::ostream& operator<< (std::ostream&, const JPLogTransform&);
     
 }
 OCIO_NAMESPACE_EXIT

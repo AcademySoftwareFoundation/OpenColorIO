@@ -78,6 +78,10 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
     typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
     
+    class CineonLogToLinTransform;
+    typedef OCIO_SHARED_PTR<const CineonLogToLinTransform> ConstCineonLogToLinTransformRcPtr;
+    typedef OCIO_SHARED_PTR<CineonLogToLinTransform> CineonLogToLinTransformRcPtr;
+    
     class ColorSpaceTransform;
     typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
     typedef OCIO_SHARED_PTR<ColorSpaceTransform> ColorSpaceTransformRcPtr;
@@ -101,10 +105,6 @@ OCIO_NAMESPACE_ENTER
     class MatrixTransform;
     typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
     typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
-    
-    class JPLogTransform;
-    typedef OCIO_SHARED_PTR<const JPLogTransform> ConstJPLogTransformRcPtr;
-    typedef OCIO_SHARED_PTR<JPLogTransform> JPLogTransformRcPtr;
     
     template <class T, class U>
     inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)

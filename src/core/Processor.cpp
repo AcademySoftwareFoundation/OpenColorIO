@@ -212,14 +212,6 @@ OCIO_NAMESPACE_ENTER
             
             return GpuAllocationData();
         }
-        
-        void FinalizeOpVec(OpRcPtrVec & opVec)
-        {
-            for(unsigned int i=0; i<opVec.size(); ++i)
-            {
-                opVec[i]->finalize();
-            }
-        }
     }
     
     

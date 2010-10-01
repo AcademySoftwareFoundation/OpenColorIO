@@ -58,6 +58,8 @@ OCIO_NAMESPACE_ENTER
     std::string GetOpVecInfo(const OpRcPtrVec & ops);
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
+    void FinalizeOpVec(OpRcPtrVec & opVec);
+    
     class Op
     {
         public:

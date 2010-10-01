@@ -76,6 +76,7 @@ OCIO_NAMESPACE_ENTER
     
     // Is at least one of the specified components equal to 0?
     bool VecContainsZero(const float* v, int size);
+    bool VecContainsOne(const float* v, int size);
     
     inline double GetHalfMax()
     {

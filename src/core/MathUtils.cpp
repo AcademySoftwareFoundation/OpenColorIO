@@ -81,6 +81,15 @@ OCIO_NAMESPACE_ENTER
         return false;
     }
     
+    bool VecContainsOne(const float* v, int size)
+    {
+        for(int i=0; i<size; ++i)
+        {
+            if(IsScalarEqualToOne(v[i])) return true;
+        }
+        return false;
+    }
+    
     double ClampToNormHalf(double val)
     {
         if(val < -GetHalfMax())

@@ -60,6 +60,11 @@ OCIO_NAMESPACE_ENTER
                      const CDLTransform & transform,
                      TransformDirection dir);
     
+    void BuildCineonLogToLinOps(OpRcPtrVec & ops,
+                                const Config& config,
+                                const CineonLogToLinTransform & transform,
+                                TransformDirection dir);
+    
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config& config,
                             const ColorSpaceTransform & transform,
@@ -94,11 +99,6 @@ OCIO_NAMESPACE_ENTER
                         const Config& config,
                         const MatrixTransform & transform,
                         TransformDirection dir);
-    
-    void BuildJPLogOps(OpRcPtrVec & ops,
-                       const Config& config,
-                       const JPLogTransform & transform,
-                       TransformDirection dir);
     
 }
 OCIO_NAMESPACE_EXIT

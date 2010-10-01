@@ -65,7 +65,7 @@ OCIO_NAMESPACE_ENTER
         std::ostringstream os;
         os << "Size " << ops.size() << std::endl;
         
-        for(unsigned int i=0; i<ops.size(); ++i)
+        for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
         {
             os << "Index " << i << " -- " << *ops[i] << std::endl;
             os << "      supportsGPUShader: " << ops[i]->supportsGpuShader() << std::endl;
@@ -78,7 +78,7 @@ OCIO_NAMESPACE_ENTER
     
     bool IsOpVecNoOp(const OpRcPtrVec & ops)
     {
-        for(unsigned int i=0; i<ops.size(); ++i)
+        for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
         {
             if(!ops[i]->isNoOp()) return false;
         }
@@ -86,5 +86,12 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
+    void FinalizeOpVec(OpRcPtrVec & ops)
+    {
+        for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
+        {
+            ops[i]->finalize();
+        }
+    }
 }
 OCIO_NAMESPACE_EXIT
