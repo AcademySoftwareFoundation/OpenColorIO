@@ -1,3 +1,13 @@
+Version 0.6.1 (Oct 5 2010):
+    * Exposed ExponentTransform
+    * Added CineonLogToLinTransform - a simple 'straight-line' negative
+      linearization. Not strictly needed (could be done previously
+      with LUTs) but often convenient to have.
+    * Added DisplayTransform.displayCC for post display lut CC.
+    * Many python improvements
+    * A few bug fixes
+    * A few Makefile enhancements
+
 Version 0.6.0 (Sept 21 2010):
     * Start of 0.6, "stable" branch
       
@@ -11,6 +21,12 @@ Version 0.6.0 (Sept 21 2010):
     * Added MatrixTransform
     * Refactored internal unit testing
     * Fixed many compile warnings
+
+
+-------------------------------------------------------------------------------
+
+
+
 
 Version 0.5.16 (Sept 16 2010):
     * PyTransforms now use native python class inheritance
