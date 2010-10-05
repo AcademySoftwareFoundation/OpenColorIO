@@ -282,7 +282,7 @@ OCIO_NAMESPACE_ENTER
                     lut1d_ptr->from_min[i] = from_min;
                     lut1d_ptr->from_max[i] = from_max;
                     lut1d_ptr->luts[i].clear();
-                    lut1d_ptr->luts[i].reserve(length_prelut);
+                    lut1d_ptr->luts[i].reserve(length_1d);
                 }
                 
                 // Read single change into all rgb channels
