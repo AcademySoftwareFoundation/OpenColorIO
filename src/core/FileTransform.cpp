@@ -192,6 +192,7 @@ OCIO_NAMESPACE_ENTER
     
     void RegisterFileFormat(FileFormat* format)
     {
+        //std::cerr << "DEBUG: RegisterFileFormat called()\n";
         FormatRegistry & formats = GetFormatRegistry();
         formats.push_back(format);
     }

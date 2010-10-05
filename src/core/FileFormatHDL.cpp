@@ -434,16 +434,16 @@ OCIO_NAMESPACE_ENTER
                                   fileTransform.getInterpolation(), newDir);
                 }
             }
-            
             return;
-        }
+        };
+        
+        struct AutoRegister
+        {
+            AutoRegister() { RegisterFileFormat(new FileFormatHDL()); }
+        };
+        static AutoRegister registerIt;
     }
     
-    struct AutoRegister
-    {
-        AutoRegister() { RegisterFileFormat(new FileFormatHDL); }
-    };
-    static AutoRegister registerIt;
 }
 OCIO_NAMESPACE_EXIT
 
