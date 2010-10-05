@@ -126,12 +126,15 @@ OCIO_NAMESPACE_ENTER
         }
 
         std::string
-        FileFormatHDL::GetExtension() const { return "lut"; }
+        FileFormatHDL::GetExtension() const
+        {
+            return "lut";
+        }
 
         CachedFileRcPtr
         FileFormatHDL::Load(std::istream & istream) const
         {
-
+            
             // this shouldn't happen
             if (!istream)
                 throw Exception ("file stream empty when trying to read Houdini lut");
@@ -321,9 +324,9 @@ OCIO_NAMESPACE_ENTER
                 
                 // load the cube
                 int entries_remaining = lut3d_ptr->size[0] * lut3d_ptr->size[1] * lut3d_ptr->size[2];
-                for (int r = 0; r < lut3d_ptr->size[0]; ++r) {
+                for (int b = 0; b < lut3d_ptr->size[0]; ++b) {
                     for (int g = 0; g < lut3d_ptr->size[1]; ++g) {
-                        for (int b = 0; b < lut3d_ptr->size[2]; ++b) {
+                        for (int r = 0; r < lut3d_ptr->size[2]; ++r) {
                             
                             // store each row
                             int i = GetGLLut3DArrayOffset (r, g, b,
@@ -363,27 +366,26 @@ OCIO_NAMESPACE_ENTER
             }
             
             //
-            if(cachedFile->hdltype == "3D")
-            {
-                lut3d_ptr->generateCacheID ();
-                cachedFile->lut3D = lut3d_ptr;
-            }
-            else if(cachedFile->hdltype == "C")
+            if(cachedFile->hdltype == "C" ||
+               cachedFile->hdltype == "3D+1D")
             {
                 lut1d_ptr->generateCacheID ();
                 cachedFile->lut1D = lut1d_ptr;
             }
-            else if(cachedFile->hdltype == "3D+1D")
+            if(cachedFile->hdltype == "3D" ||
+               cachedFile->hdltype == "3D+1D")
             {
-                lut1d_ptr->generateCacheID ();
-                cachedFile->lut1D = lut1d_ptr;
                 lut3d_ptr->generateCacheID ();
                 cachedFile->lut3D = lut3d_ptr;
             }
-            else
+            
+            if(cachedFile->hdltype != "C" &&
+               cachedFile->hdltype != "3D" &&
+               cachedFile->hdltype != "3D+1D")
             {
                 throw Exception("Unsupported Houdini lut type");
             }
+            
             return cachedFile;
         }
         
@@ -400,16 +402,12 @@ OCIO_NAMESPACE_ENTER
             if(!cachedFile)
             {
                 std::ostringstream os;
-                os << "Cannot build CSP Op. Invalid cache type.";
+                os << "Cannot build Houdini Op. Invalid cache type.";
                 throw Exception(os.str().c_str());
             }
             
             TransformDirection newDir = CombineTransformDirections(dir,
                 fileTransform.getDirection());
-            
-            //
-            if(cachedFile->hdltype != "3D+1D")
-                throw Exception("Unsupported Houdini lut type");
             
             if(newDir == TRANSFORM_DIR_FORWARD) {
                 if(cachedFile->hdltype == "C")
@@ -432,18 +430,6 @@ OCIO_NAMESPACE_ENTER
             } else if(newDir == TRANSFORM_DIR_INVERSE) {
                 if(cachedFile->hdltype == "C")
                 {
-                    CreateLut1DOp(ops, cachedFile->lut1D,
-                                  fileTransform.getInterpolation(), newDir);
-                }
-                else if(cachedFile->hdltype == "3D")
-                {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
-                }
-                else if(cachedFile->hdltype == "3D+1D")
-                {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
                     CreateLut1DOp(ops, cachedFile->lut1D,
                                   fileTransform.getInterpolation(), newDir);
                 }
@@ -501,7 +487,7 @@ BOOST_AUTO_TEST_CASE ( test_simple1D )
     float to_max = 1;
     float black = 0;
     float white = 0.99;
-    float lut1d[10] = {0, 0.000977517, 0.00195503, 0.00293255,
+    float lut1d[10] = { 0, 0.000977517, 0.00195503, 0.00293255,
         0.00391007, 0.00488759, 0.0058651, 0.999022, 1.67 };
     
     std::istringstream simple3D1D;
@@ -518,7 +504,7 @@ BOOST_AUTO_TEST_CASE ( test_simple1D )
     BOOST_CHECK_EQUAL (black, lut->hdlblack);
     BOOST_CHECK_EQUAL (white, lut->hdlwhite);
     
-    // check prelut data (each channel has the same data)
+    // check 1D data (each channel has the same data)
     for(int c = 0; c < 3; ++c) {
         BOOST_CHECK_EQUAL (from_min, lut->lut1D->from_min[c]);
         BOOST_CHECK_EQUAL (from_max, lut->lut1D->from_max[c]);
@@ -568,10 +554,15 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     float to_max = 0.999;
     float black = 0.002;
     float white = 0.98;
-    // TODO: check how we read from houdini into gl memory layout
-    float cube[2 * 2 * 2 * 3 ] = { 0, 0, 0, 0, 0, 0, 0, 0.390735,
-        2.68116e-28, 0, 0.601016, 0, 0, 0, 0, 0, 0, 0.599397, 0,
-        0.390735, 0, 0, 0.601016, 0.917034 };
+    float cube[2 * 2 * 2 * 3 ] = {
+        0, 0, 0,
+        0, 0, 0,
+        0, 0.390735, 2.68116e-28,
+        0, 0.390735, 0,
+        0, 0, 0,
+        0, 0, 0.599397,
+        0, 0.601016, 0,
+        0, 0.601016, 0.917034 };
     
     //
     BOOST_CHECK_EQUAL (to_min, lut->to_min);
@@ -581,7 +572,6 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     
     // check cube data
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
-        //std::cerr << "" << lut->lut3D->lut[i] << "\n";
         BOOST_CHECK_EQUAL (cube[i], lut->lut3D->lut[i]);
     }
     
@@ -631,12 +621,15 @@ BOOST_AUTO_TEST_CASE ( test_simple3D1D )
     float white = 1;
     float prelut[10] = { 0.994922, 0.995052, 0.995181, 0.995310, 0.995439,
         0.995568, 0.995697, 0.995826, 0.995954, 0.996082 };
-    // TODO: check how we read from houdini into gl memory layout
-    float cube[2 * 2 * 2 * 3 ] = { 0.093776, 0.093776, 0.093776, 0.148626,
-        0.093776, 0.093776, 0.118058, 0.093776, 0.093776, 0.187109,
-        0.093776, 0.093776, 0.105219, 0.093776, 0.093776, 0.166761,
-        0.093776, 0.093776, 0.132463, 0.093776, 0.093776, 0.209939,
-        0.093776, 0.093776 };
+    float cube[2 * 2 * 2 * 3 ] = {
+        0.093776, 0.093776, 0.093776,
+        0.105219, 0.093776, 0.093776,
+        0.118058, 0.093776, 0.093776,
+        0.132463, 0.093776, 0.093776,
+        0.148626, 0.093776, 0.093776,
+        0.166761, 0.093776, 0.093776,
+        0.187109, 0.093776, 0.093776,
+        0.209939, 0.093776, 0.093776 };
     
     std::istringstream simple3D1D;
     simple3D1D.str(strebuf.str());
@@ -663,7 +656,6 @@ BOOST_AUTO_TEST_CASE ( test_simple3D1D )
     
     // check cube data
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
-        //std::cerr << "" << lut->lut3D->lut[i] << "\n";
         BOOST_CHECK_EQUAL (cube[i], lut->lut3D->lut[i]);
     }
     
