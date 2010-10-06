@@ -481,14 +481,14 @@ BOOST_AUTO_TEST_CASE ( test_simple1D )
     strebuf << "	1.67 }" << "\n";
     
     //
-    float from_min = 0.1;
-    float from_max = 3.2;
-    float to_min = 0;
-    float to_max = 1;
-    float black = 0;
-    float white = 0.99;
-    float lut1d[10] = { 0, 0.000977517, 0.00195503, 0.00293255,
-        0.00391007, 0.00488759, 0.0058651, 0.999022, 1.67 };
+    float from_min = 0.1f;
+    float from_max = 3.2f;
+    float to_min = 0.0f;
+    float to_max = 1.0f;
+    float black = 0.0f;
+    float white = 0.99f;
+    float lut1d[10] = { 0.0f, 0.000977517f, 0.00195503f, 0.00293255f,
+        0.00391007f, 0.00488759f, 0.0058651f, 0.999022f, 1.67f };
     
     std::istringstream simple3D1D;
     simple3D1D.str(strebuf.str());
@@ -550,19 +550,19 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     //
     //float from_min = 0.2;
     //float from_max = 0.9;
-    float to_min = 0.001;
-    float to_max = 0.999;
-    float black = 0.002;
-    float white = 0.98;
+    float to_min = 0.001f;
+    float to_max = 0.999f;
+    float black = 0.002f;
+    float white = 0.98f;
     float cube[2 * 2 * 2 * 3 ] = {
-        0, 0, 0,
-        0, 0, 0,
-        0, 0.390735, 2.68116e-28,
-        0, 0.390735, 0,
-        0, 0, 0,
-        0, 0, 0.599397,
-        0, 0.601016, 0,
-        0, 0.601016, 0.917034 };
+        0.f, 0.f, 0.f,
+        0.f, 0.f, 0.f,
+        0.f, 0.390735f, 2.68116e-28f,
+        0.f, 0.390735f, 0.f,
+        0.f, 0.f, 0.f,
+        0.f, 0.f, 0.599397f,
+        0.f, 0.601016f, 0.f,
+        0.f, 0.601016f, 0.917034f };
     
     //
     BOOST_CHECK_EQUAL (to_min, lut->to_min);
@@ -613,23 +613,23 @@ BOOST_AUTO_TEST_CASE ( test_simple3D1D )
     strebuf << "}" << "\n";
     
     //
-    float from_min = 0.005478;
-    float from_max = 14.080103;
-    float to_min = 0;
-    float to_max = 1;
-    float black = 0;
-    float white = 1;
-    float prelut[10] = { 0.994922, 0.995052, 0.995181, 0.995310, 0.995439,
-        0.995568, 0.995697, 0.995826, 0.995954, 0.996082 };
+    float from_min = 0.005478f;
+    float from_max = 14.080103f;
+    float to_min = 0.0f;
+    float to_max = 1.0f;
+    float black = 0.0f;
+    float white = 1.0f;
+    float prelut[10] = { 0.994922f, 0.995052f, 0.995181f, 0.995310f, 0.995439f,
+        0.995568f, 0.995697f, 0.995826f, 0.995954f, 0.996082f };
     float cube[2 * 2 * 2 * 3 ] = {
-        0.093776, 0.093776, 0.093776,
-        0.105219, 0.093776, 0.093776,
-        0.118058, 0.093776, 0.093776,
-        0.132463, 0.093776, 0.093776,
-        0.148626, 0.093776, 0.093776,
-        0.166761, 0.093776, 0.093776,
-        0.187109, 0.093776, 0.093776,
-        0.209939, 0.093776, 0.093776 };
+        0.093776f, 0.093776f, 0.093776f,
+        0.105219f, 0.093776f, 0.093776f,
+        0.118058f, 0.093776f, 0.093776f,
+        0.132463f, 0.093776f, 0.093776f,
+        0.148626f, 0.093776f, 0.093776f,
+        0.166761f, 0.093776f, 0.093776f,
+        0.187109f, 0.093776f, 0.093776f,
+        0.209939f, 0.093776f, 0.093776f };
     
     std::istringstream simple3D1D;
     simple3D1D.str(strebuf.str());
