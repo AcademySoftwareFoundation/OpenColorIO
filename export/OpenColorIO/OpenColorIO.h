@@ -30,8 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OPENCOLORIO_H
 #define INCLUDED_OCIO_OPENCOLORIO_H
 
-#define OCIO_VERSION "0.6.1"
-
 // Namespace mojo
 #ifndef OCIO_NAMESPACE
 #define OCIO_NAMESPACE OpenColorIO
@@ -45,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iosfwd>
 #include <string>
 
+#include "OpenColorVersion.h"
 #include "OpenColorTypes.h"
 #include "OpenColorTransforms.h"
 

@@ -7,6 +7,7 @@ if( NUKE_FOUND )
     
     include_directories(
         ${CMAKE_SOURCE_DIR}/export/
+        ${CMAKE_BINARY_DIR}/export/
         ColorSpace
         Display
         ${Nuke_INCLUDE_DIR}

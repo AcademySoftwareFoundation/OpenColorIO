@@ -40,7 +40,8 @@ if(PYTHON_OK)
     add_library(PyOpenColorIO MODULE ${pyglue_src_files} )
     include_directories(
         ${PYTHON_INCLUDE}
-        ${OpenColorIO_SOURCE_DIR}/export/
+        ${CMAKE_SOURCE_DIR}/export/
+        ${CMAKE_BINARY_DIR}/export/
     )
     # Exclude the 'lib' prefix from the name.
     set_property(TARGET PyOpenColorIO
@@ -53,14 +54,14 @@ if(PYTHON_OK)
     endif()
 
     add_custom_target(PyOpenColorIOTest
-        COMMAND env PYTHONPATH=${OpenColorIO_LIBRARY_OUTPUT_DIRECTORY} ${PYTHON} ${OpenColorIO_SOURCE_DIR}/src/testbed/main.py
+        COMMAND env PYTHONPATH=${OpenColorIO_LIBRARY_OUTPUT_DIRECTORY} ${PYTHON} ${CMAKE_SOURCE_DIR}/src/testbed/main.py
         DEPENDS PyOpenColorIO
-        SOURCES ${OpenColorIO_SOURCE_DIR}/src/testbed/main.py
+        SOURCES ${CMAKE_SOURCE_DIR}/src/testbed/main.py
         VERBATIM
     )
     
     install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/python)
-    install(FILES ${OpenColorIO_SOURCE_DIR}/export/PyOpenColorIO/PyOpenColorIO.h
+    install(FILES ${CMAKE_SOURCE_DIR}/export/PyOpenColorIO/PyOpenColorIO.h
         DESTINATION ${CMAKE_INSTALL_PREFIX}/include/PyOpenColorIO/)
     
 else()
