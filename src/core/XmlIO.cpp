@@ -243,6 +243,86 @@ OCIO_NAMESPACE_ENTER
         
         
         
+        
+        
+        
+        ///////////////////////////////////////////////////////////////////////
+        //
+        // Exponent Transform
+        
+        ExponentTransformRcPtr CreateExponentTransform(const TiXmlElement * element)
+        {
+            if(!element)
+                throw Exception("CreateExponentTransform received null XmlElement.");
+            
+            if(std::string(element->Value()) != "exponent")
+            {
+                std::ostringstream os;
+                os << "HandleElement passed incorrect element type '";
+                os << element->Value() << "'. ";
+                os << "Expected 'exponent'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            ExponentTransformRcPtr t = ExponentTransform::Create();
+            ReadBaseTransformXML(t, element);
+            
+            const char * cstr = 0;
+            
+            cstr = element->Attribute("value");
+            if(cstr)
+            {
+                std::vector<std::string> parts;
+                std::vector<float> value;
+                pystring::split(pystring::strip(cstr), parts);
+                
+                if(!StringVecToFloatVec(value, parts) || value.size() != 4)
+                {
+                    std::ostringstream os;
+                    os << "exponent parse error. ";
+                    os << "value attribute must be 4 floats.";
+                    os << "Found, '" << cstr << "'. ";
+                    throw Exception(os.str().c_str());
+                }
+                
+                t->setValue(&value[0]);
+            }
+            
+            return t;
+        }
+        
+        ConstExponentTransformRcPtr GetDefaultExponentTransform()
+        {
+            static ConstExponentTransformRcPtr exponenttransform_ = \
+                ExponentTransform::Create();
+            return exponenttransform_;
+        }
+        
+        TiXmlElement * CreateExponentTransformXML(const ConstExponentTransformRcPtr & t)
+        {
+            ConstExponentTransformRcPtr t_default = GetDefaultExponentTransform();
+            
+            TiXmlElement * element = new TiXmlElement( "exponent" );
+            WriteBaseTransformXML(element, t);
+            
+            float value[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            float value_default[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            
+            {
+                t->getValue(value);
+                t_default->getValue(value_default);
+                
+                std::string value_str = FloatVecToString(value, 4);
+                if(value_str != FloatVecToString(value_default, 4))
+                    element->SetAttribute("value", value_str);
+            }
+            
+            return element;
+        }
+        
+        
+        
+        
         ///////////////////////////////////////////////////////////////////////
         //
         // FileTransform
@@ -591,14 +671,12 @@ OCIO_NAMESPACE_ENTER
                 //return CreateDisplayTransformXML(displayTransform);
             }
             */
-            /*
+            
             else if(ConstExponentTransformRcPtr exponentTransform = \
                 DynamicPtrCast<const ExponentTransform>(transform))
             {
-                //return CreateExponentTransformXML(exponentTransform);
+                return CreateExponentTransformXML(exponentTransform);
             }
-            */
-            
             else if(ConstFileTransformRcPtr fileTransform = \
                 DynamicPtrCast<const FileTransform>(transform))
             {
@@ -637,8 +715,11 @@ OCIO_NAMESPACE_ENTER
             {
                 return CreateColorSpaceTransform(element);
             }
-            // exponentTransform
             // displaytransform
+            else if(type == "exponent")
+            {
+                return CreateExponentTransform(element);
+            }
             else if(type == "file")
             {
                 return CreateFileTransform(element);
