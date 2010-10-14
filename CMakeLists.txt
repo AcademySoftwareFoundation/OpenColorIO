@@ -1,6 +1,9 @@
 
 project(OpenColorIO)
-set(OCIO_VERSION "0.6.1")
+set(OCIO_VERSION_MAJOR 0)
+set(OCIO_VERSION_MINOR 6)
+set(OCIO_VERSION_PATCH 1)
+set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PATCH}")
 
 cmake_minimum_required(VERSION 2.6)
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake )
@@ -109,6 +112,17 @@ endif()
 ### PYGLUE ###
 
 add_subdirectory (src/pyglue)
+
+###############################################################################
+### CPACK ###
+
+set(CPACK_PACKAGE_VERSION_MAJOR ${OCIO_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${OCIO_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${OCIO_VERSION_PATCH})
+set(CPACK_GENERATOR None)
+set(CPACK_SOURCE_GENERATOR TGZ)
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "ocio.${OCIO_VERSION}")
+include(CPack)
 
 ###############################################################################
 ### CTEST ###
