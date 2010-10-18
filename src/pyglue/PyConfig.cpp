@@ -465,7 +465,7 @@ OCIO_NAMESPACE_ENTER
                 
                 std::ostringstream os;
                 
-                config->writeXML(os);
+                config->writeToStream(os);
                 
                 return PyString_FromString( os.str().c_str() );
             }

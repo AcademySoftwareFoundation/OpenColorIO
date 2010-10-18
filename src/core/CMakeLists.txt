@@ -5,6 +5,7 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
+    ${YAML_CPP_INCLUDE_DIRS}
 )
 
 file(GLOB_RECURSE core_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp")
@@ -15,8 +16,17 @@ configure_file(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorVersion.h.in
     ${CMAKE_BINARY_DIR}/export/OpenColorVersion.h @ONLY)
 list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorVersion.h)
 
-add_library(OpenColorIO SHARED ${core_src_files})
-install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+add_library(OpenColorIO SHARED
+    ${core_src_files})
+
+add_dependencies(OpenColorIO
+    YAML_CPP_LOCAL)
+
+target_link_libraries(OpenColorIO
+    ${YAML_CPP_STATIC_LIBRARIES})
+
+install(TARGETS OpenColorIO DESTINATION
+    ${CMAKE_INSTALL_PREFIX}/lib)
 
 # TODO: RegisterFileFormat() mechanism doesn't seem to work when static linked?
 #add_library(OpenColorIOStatic STATIC ${core_src_files})

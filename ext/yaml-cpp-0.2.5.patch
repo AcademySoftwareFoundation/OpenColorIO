@@ -1,0 +1,12 @@
+diff -Naur YAML_CPP_LOCAL.orig/CMakeLists.txt YAML_CPP_LOCAL/CMakeLists.txt
+--- YAML_CPP_LOCAL.orig/CMakeLists.txt	2010-10-18 10:11:19.000000000 +1100
++++ YAML_CPP_LOCAL/CMakeLists.txt	2010-10-18 10:11:46.000000000 +1100
+@@ -2,7 +2,7 @@
+ 
+ project (YAML_CPP)
+ 
+-set(LIB_TYPE SHARED)
++set(LIB_TYPE STATIC)
+ 
+ if(IPHONE)
+   set(CMAKE_OSX_SYSROOT iphoneos2.2.1)

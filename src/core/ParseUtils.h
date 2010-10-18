@@ -37,9 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    class TiXmlElement;
-    
-    void SetText( TiXmlElement* element, const char * value);
     
     std::string FloatToString(float fval);
     std::string FloatVecToString(const float * fval, unsigned int size);

@@ -53,6 +53,29 @@ OCIO_NAMESPACE_ENTER
             "  <Saturation> 1 </Saturation> "
             " </SatNode> "
             " </ColorCorrection>";
+        
+        // http://ticpp.googlecode.com/svn/docs/ticpp_8h-source.html#l01670
+        
+        void SetText( TiXmlElement* element, const char * value)
+        {
+            if ( element->NoChildren() )
+            {
+                element->LinkEndChild( new TiXmlText( value ) );
+            }
+            else
+            {
+                if ( 0 == element->GetText() )
+                {
+                    element->InsertBeforeChild( element->FirstChild(), TiXmlText( value ) );
+                }
+                else
+                {
+                    // There already is text, so change it
+                    element->FirstChild()->SetValue( value );
+                }
+            }
+        }
+        
     }
     
     CDLTransformRcPtr CDLTransform::Create()

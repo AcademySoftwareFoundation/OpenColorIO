@@ -275,7 +275,6 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <iostream>
 #include <cmath>
-#include "tinyxml/tinyxml.h"
 
 BOOST_AUTO_TEST_SUITE( CineonLogToLinTransform_Unit_Tests )
 

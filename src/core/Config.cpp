@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <set>
 #include <sstream>
+#include <fstream>
 #include <utility>
 #include <vector>
 
@@ -42,8 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ParseUtils.h"
 #include "Processor.h"
 #include "pystring/pystring.h"
-#include "tinyxml/tinyxml.h"
-#include "XmlIO.h"
+#include "OCIOYaml.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -55,15 +55,25 @@ OCIO_NAMESPACE_ENTER
         const float DEFAULT_LUMA_COEFF_B = 0.0722f;
         
         const char * INTERNAL_RAW_PROFILE = 
-            "<ocioconfig version='1' resourcepath='' strictparsing='false'"
-            "   luma_r='0.2126' luma_g='0.7152' luma_b='0.0722'"
-            "   role_default='raw'>"
-            "  <display device='sRGB' name='Raw' colorspace='raw'/>"
-            "  <colorspace name='raw' family='raw' bitdepth='32f' isdata='true'>"
-            "    <description>A raw color space. Conversions to and from this "
-            "     space are no-ops.</description>"
-            "  </colorspace>"
-            "</ocioconfig>";
+        "ocs_profile_version: 1\n"
+        "resource_path:\n"
+        "strictparsing: false\n"
+        "luma: [ 0.2126, 0.7152, 0.0722 ]\n"
+        "roles:\n"
+        "  default: !<Role> {colorspace: raw}\n"
+        "displays:\n"
+        "  - !<Display> {device: sRGB, name: Raw, colorspace: raw}\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "      name: raw\n"
+        "      family: raw\n"
+        "      bitdepth: 32f\n"
+        "      isdata: true\n"
+        "      gpuallocation: uniform\n"
+        "      gpumin: 0\n"
+        "      gpumax: 1\n"
+        "      description: 'A raw color space. Conversions to and from this space are no-ops.'\n";
+        
     }
     
     
@@ -100,6 +110,33 @@ OCIO_NAMESPACE_ENTER
     typedef std::vector<ColorSpaceRcPtr> ColorSpacePtrVec;
     typedef std::vector< std::pair<std::string, std::string> > RoleVec; // (lowercase role name, colorspace)
     typedef std::vector<std::string> DisplayKey; // (device, name, colorspace)
+    
+    void operator >> (const YAML::Node& node, DisplayKey& k)
+    {
+        if(node.GetTag() != "Display")
+            return; // not a !<Display> tag
+        if(node.FindValue("device")     != NULL &&
+           node.FindValue("name")       != NULL &&
+           node.FindValue("colorspace") != NULL)
+        {
+            k.push_back(node["device"].Read<std::string>());
+            k.push_back(node["name"].Read<std::string>());
+            k.push_back(node["colorspace"].Read<std::string>());
+        }
+        // else ignore node
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, DisplayKey disp) {
+        if(disp.size() != 3) return out; // invalid DisplayKey
+        out << YAML::VerbatimTag("Display");
+        out << YAML::Flow; // on one line
+        out << YAML::BeginMap;
+        out << YAML::Key << "device" << YAML::Value << disp[0];
+        out << YAML::Key << "name" << YAML::Value << disp[1];
+        out << YAML::Key << "colorspace" << YAML::Value << disp[2];
+        out << YAML::EndMap;
+        return out;
+    }
     
     std::string LookupRole(const RoleVec & roleVec, const std::string & rolename)
     {
@@ -189,8 +226,7 @@ OCIO_NAMESPACE_ENTER
             return *this;
         }
         
-        void loadXmlElement(const TiXmlElement* rootElement,
-                            const std::string & filename);
+        void load(std::istream & istream);
     };
     
     
@@ -208,70 +244,37 @@ OCIO_NAMESPACE_ENTER
     
     ConstConfigRcPtr Config::CreateFromEnv()
     {
-        char * file = std::getenv("OCIO");
-        if(file)
-        {
-            return CreateFromFile(file);
-        }
+        char* file = std::getenv("OCIO");
+        if(file) return CreateFromFile(file);
         
         std::ostringstream os;
         os << "Color management disabled. ";
         os << "(Specify the $OCIO environment variable to enable.)";
         ReportInfo(os.str());
         
-        ConfigRcPtr config = Config::Create();
-        
-        TiXmlDocument doc;
-        doc.Parse(INTERNAL_RAW_PROFILE);
-        const TiXmlElement* rootElement = doc.RootElement();
-        
-        config->m_impl->loadXmlElement(rootElement,
-                                       "INTERNAL_RAW_PROFILE");
-        return config;
+        std::istringstream is;
+        is.str(INTERNAL_RAW_PROFILE);
+        return CreateFromStream(is);
     }
-    
     
     ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     {
-        ConfigRcPtr config = Config::Create();
-        
-        TiXmlDocument doc(filename);
-        
-        bool loadOkay = doc.LoadFile();
-        if(!loadOkay)
-        {
+        std::ifstream file(filename);
+        if(file.fail()) {
             std::ostringstream os;
-            os << "Error parsing ocio configuration file, '" << filename;
-            os << "'. " << doc.ErrorDesc();
-            if(doc.ErrorRow())
-            {
-                os << " (line " << doc.ErrorRow();
-                os << ", col " << doc.ErrorCol() << ")";
-            }
-            throw Exception(os.str().c_str());
+            os << "Error could not read '" << filename;
+            os << "' OCIO profile.";
+            throw Exception (os.str().c_str());
         }
-        
-        const TiXmlElement* rootElement = doc.RootElement();
-        config->m_impl->loadXmlElement(rootElement, filename);
-        return config;
+        return CreateFromStream(file);
     }
     
     ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
     {
         ConfigRcPtr config = Config::Create();
-        
-        std::ostringstream oss;
-        oss << istream.rdbuf();
-        
-        TiXmlDocument doc;
-        doc.Parse(oss.str().c_str());
-        const TiXmlElement* rootElement = doc.RootElement();
-        config->m_impl->loadXmlElement(rootElement, "ISTREAM_PROFILE");
-        
+        config->m_impl->load(istream);
         return config;
     }
-    
-    
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -739,260 +742,339 @@ OCIO_NAMESPACE_ENTER
     
     std::ostream& operator<< (std::ostream& os, const Config& config)
     {
-        config.writeXML(os);
+        config.writeToStream(os);
         return os;
     }
     
-    
-    
-    
-    
-    
-    
-    
-    ////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    //
-    //
+    ///////////////////////////////////////////////////////////////////////////
     //  Serialization
     
-    
-    void Config::writeXML(std::ostream& os) const
+    void Config::writeToStream(std::ostream& os) const
     {
-        TiXmlDocument doc;
-        
-        TiXmlElement * element = new TiXmlElement( "ocioconfig" );
-        doc.LinkEndChild( element );
-        
         try
         {
-            element->SetAttribute("version", "1");
-            element->SetAttribute("resourcepath", m_impl->resourcePath_);
-            element->SetAttribute("strictparsing", BoolToString(m_impl->strictParsing_));
-            
-            // Luma coefficients
-            element->SetDoubleAttribute("luma_r", m_impl->defaultLumaCoefs_[0]);
-            element->SetDoubleAttribute("luma_g", m_impl->defaultLumaCoefs_[1]);
-            element->SetDoubleAttribute("luma_b", m_impl->defaultLumaCoefs_[2]);
-            
-            // Description
-            if(!m_impl->description_.empty())
+            // serialize the config
+            YAML::Emitter out;
+            out << YAML::Block;
+            out << YAML::BeginMap;
+            out << YAML::Key << "ocs_profile_version" << YAML::Value << 1;
+            if(m_impl->resourcePath_.empty())
+                out << YAML::Key << "resource_path" << YAML::Value << m_impl->resourcePath_;
+            out << YAML::Key << "strictparsing" << YAML::Value << m_impl->strictParsing_;
+            // TODO: should we make defaultLumaCoefs_ a std::vector<float> to make it easier
+            //       to serialize?
+            out << YAML::Key << "luma" << YAML::Value;
             {
-                TiXmlElement * descElement = new TiXmlElement( "description" );
-                element->LinkEndChild( descElement );
-                TiXmlText * textElement = new TiXmlText( m_impl->description_ );
-                descElement->LinkEndChild( textElement );
+                out << YAML::Flow;
+                out << YAML::BeginSeq;
+                for(unsigned int i = 0; i < 3; ++i)
+                    out << m_impl->defaultLumaCoefs_[i];
+                out << YAML::EndSeq;
             }
+            if(m_impl->description_.empty())
+                out << YAML::Key << "description" << YAML::Value << m_impl->description_;
             
             // Roles
-            for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
+            if(m_impl->roleVec_.size() > 0)
             {
-                std::string roleKey = std::string("role_") + m_impl->roleVec_[i].first;
-                std::string roleValue = m_impl->roleVec_[i].second;
-                element->SetAttribute(roleKey, roleValue);
+                out << YAML::Key << "roles" << YAML::Value;
+                out << YAML::BeginMap;
+                for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
+                {
+                    out << YAML::Key   << m_impl->roleVec_[i].first;
+                    out << YAML::Value << m_impl->roleVec_[i].second;
+                }
+                out << YAML::EndMap;
             }
             
-            // Display Transforms
-            for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
+            // Displays
+            if(m_impl->displayDevices_.size() > 0)
             {
-                if(m_impl->displayDevices_[i].size() != 3) continue;
-                
-                TiXmlElement * childElement = new TiXmlElement( "display" );
-                childElement->SetAttribute("device", m_impl->displayDevices_[i][0]);
-                childElement->SetAttribute("name", m_impl->displayDevices_[i][1]);
-                childElement->SetAttribute("colorspace", m_impl->displayDevices_[i][2]);
-                element->LinkEndChild( childElement );
+                out << YAML::Key << "displays" << YAML::Value;
+                out << YAML::BeginSeq;
+                for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
+                    out << m_impl->displayDevices_[i];
+                out << YAML::EndSeq;
             }
             
-            // Colorspaces
-            for(unsigned int i=0; i<m_impl->colorspaces_.size(); ++i)
+            // ColorSpaces
+            if(m_impl->colorspaces_.size() > 0)
             {
-                TiXmlElement * childElement = GetColorSpaceElement(m_impl->colorspaces_[i]);
-                element->LinkEndChild( childElement );
+                out << YAML::Key << "colorspaces";
+                out << YAML::Value << m_impl->colorspaces_; // std::vector -> Seq
             }
             
-            TiXmlPrinter printer;
-            printer.SetIndent("    ");
-            doc.Accept( &printer );
-            os << printer.Str();
+            out << YAML::EndMap;
+            os << out.c_str();
+        
         }
         catch( const std::exception & e)
         {
             std::ostringstream error;
-            error << "Error building xml: ";
-            error << e.what();
+            error << "Error building YAML: " << e.what();
             throw Exception(error.str().c_str());
         }
     }
     
-    
-    
-    
-    
-    ////////////////////////////////////////////////////////////////////////////
-    
-    
-    void Config::Impl::loadXmlElement(const TiXmlElement* rootElement,
-                                      const std::string & filename)
+    void Config::Impl::load(std::istream & istream)
     {
-        if(!rootElement || std::string(rootElement->Value()) != "ocioconfig")
+        try
         {
-            std::ostringstream os;
-            os << "Error loading '" << filename;
-            os << "'. Please confirm file is 'ocioconfig' format.";
-            throw Exception(os.str().c_str());
-        }
-        
-        int version = -1;
-        
-        int lumaSet = 0;
-        float lumacoef[3] = { 0.0f, 0.0f, 0.0f };
-        
-        // Read attributes
-        {
-            const TiXmlAttribute* pAttrib=rootElement->FirstAttribute();
-            while(pAttrib)
+            YAML::Parser parser(istream);
+            YAML::Node node;
+            parser.GetNextDocument(node);
+            
+            // check profile version
+            int profile_version;
+            if(node.FindValue("ocs_profile_version") == NULL)
             {
-                std::string attrName = pystring::lower(pAttrib->Name());
-                if(attrName == "version")
-                {
-                    if (pAttrib->QueryIntValue(&version)!=TIXML_SUCCESS)
-                    {
-                        std::ostringstream os;
-                        os << "Error parsing ocio configuration file, '" << filename;
-                        os << "'. Could not parse integer 'version' tag.";
-                        throw Exception(os.str().c_str());
-                    }
-                }
-                else if(attrName == "resourcepath")
-                {
-                    resourcePath_ = pAttrib->Value();
-                }
-                else if(attrName == "strictparsing")
-                {
-                    strictParsing_ = BoolFromString(pAttrib->Value());
-                }
-                else if(pystring::startswith(attrName, "role_"))
-                {
-                    std::string role = pystring::slice(attrName,
-                        (int)std::string("role_").size());
-                    roleVec_.push_back( std::make_pair(role.c_str(),
-                        pAttrib->Value()));
-                }
-                else if(pystring::startswith(attrName, "luma_"))
-                {
-                    std::string channel = pystring::slice(attrName,
-                        (int)std::string("luma_").size());
-                    
-                    int channelindex = -1;
-                    if(channel == "r") channelindex = 0;
-                    else if(channel == "g") channelindex = 1;
-                    else if(channel == "b") channelindex = 2;
-                    
-                    if(channelindex<0)
-                    {
-                        std::ostringstream os;
-                        os << "Error parsing ocio configuration file, '" << filename;
-                        os << "'. Unknown luma channel '" << channel << "'.";
-                        throw Exception(os.str().c_str());
-                    }
-                    
-                    double dval;
-                    if(pAttrib->QueryDoubleValue(&dval) != TIXML_SUCCESS )
-                    {
-                        std::ostringstream os;
-                        os << "Error parsing ocio configuration file, '" << filename;
-                        os << "'. Bad luma value in channel '" << channelindex << "'.";
-                        throw Exception(os.str().c_str());
-                    }
-                    
-                    lumacoef[channelindex] = static_cast<float>(dval);
-                    ++lumaSet;
-                }
-                else
-                {
-                    // TODO: unknown root attr.
-                }
-                //if (pAttrib->QueryDoubleValue(&dval)==TIXML_SUCCESS) printf( " d=%1.1f", dval);
-                
-                pAttrib=pAttrib->Next();
+                std::ostringstream os;
+                os << "Error profile doesn't contain a ocs_profile_version field.";
+                throw Exception (os.str().c_str());
             }
-        }
-        
-        if(version == -1)
-        {
-            std::ostringstream os;
-            os << "Config does not specify a version tag. ";
-            os << "Please confirm ocio file is of the expect format.";
-            throw Exception(os.str().c_str());
-        }
-        if(version != 1)
-        {
-            std::ostringstream os;
-            os << "Config is format version '" << version << "',";
-            os << " but this library only supports version 1.";
-            throw Exception(os.str().c_str());
-        }
-        
-        // Traverse children
-        const TiXmlElement* pElem = rootElement->FirstChildElement();
-        while(pElem)
-        {
-            std::string elementtype = pElem->Value();
-            if(elementtype == "colorspace")
+            node["ocs_profile_version"] >> profile_version;
+            if(profile_version != 1)
             {
-                ColorSpaceRcPtr cs = CreateColorSpaceFromElement( pElem );
-                colorspaces_.push_back( cs );
+                std::ostringstream os;
+                os << "Error profile version " << profile_version << " is not ";
+                os << "supported by OCIO v" << OCIO_VERSION ".";
+                throw Exception (os.str().c_str());
             }
-            else if(elementtype == "description")
+            
+            // cast YAML nodes to Impl members
+            if(node.FindValue("resource_path") != NULL)
+                node["resource_path"] >> resourcePath_;
+            if(node.FindValue("strictparsing") != NULL)
+                node["strictparsing"] >> strictParsing_;
+            if(node.FindValue("description") != NULL)
+                node["description"] >> description_;
+            
+            // Luma
+            if(node.FindValue("luma") != NULL)
             {
-                description_ = pElem->GetText();
-            }
-            else if(elementtype == "display")
-            {
-                const char * device = pElem->Attribute("device");
-                const char * name = pElem->Attribute("name");
-                const char * colorspace = pElem->Attribute("colorspace");
-                if(!device || !name || !colorspace)
+                if(node["luma"].GetType() != YAML::CT_SEQUENCE)
                 {
                     std::ostringstream os;
-                    os << "Error parsing ocio configuration file, '" << filename;
-                    os << "'. Invalid <display> specification.";
+                    os << "Error parsing ocio profile, ";
+                    os << "'luma' field needs to be a (luma: [0, 0, 0]) list.";
                     throw Exception(os.str().c_str());
                 }
-                
-                DisplayKey displayKey;
-                displayKey.push_back(std::string(device));
-                displayKey.push_back(std::string(name));
-                displayKey.push_back(std::string(colorspace));
-                displayDevices_.push_back(displayKey);
+                std::vector<float> value;
+                node["luma"] >> value;
+                if(value.size() != 3)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing ocio profile, 'luma' field must be 3 ";
+                    os << "floats. Found '" << value.size() << "'.";
+                    throw Exception(os.str().c_str());
+                }
+                defaultLumaCoefs_[0] = value[0];
+                defaultLumaCoefs_[1] = value[1];
+                defaultLumaCoefs_[2] = value[2];
+            }
+            else throw Exception("Error parsing ocio profile, could not find required luma field.");
+            
+            // Roles
+            if(node.FindValue("roles") != NULL) {
+                if(node["roles"].GetType() != YAML::CT_MAP)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing ocio profile, ";
+                    os << "'roles' field needs to be a (name: key) map.";
+                    throw Exception(os.str().c_str());
+                }
+                for (YAML::Iterator it  = node["roles"].begin();
+                                    it != node["roles"].end(); ++it)
+                {
+                        const std::string key = it.first();
+                        const YAML::Node& value = it.second();
+                        if(value.GetTag() == "Role" &&
+                           value.FindValue("colorspace") != NULL)
+                        {
+                            roleVec_.push_back(std::make_pair(key,
+                                value["colorspace"].Read<std::string>()));
+                        }
+                        // ignore other tags
+                    }
+            
+            } else {
+                // TODO: does it matter if there are no roles defined?
+            }
+            
+            // Displays
+            if(node.FindValue("displays") != NULL) {
+                if(node["displays"].GetType() != YAML::CT_SEQUENCE)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing ocio profile, ";
+                    os << "'displays' field needs to be a (- !<Display>) list.";
+                    throw Exception(os.str().c_str());
+                }
+                for(unsigned i = 0; i < node["displays"].size(); ++i)
+                {
+                    if(node["displays"][i].GetTag() == "Display")
+                    {
+                        DisplayKey tmp;
+                        node["displays"][i] >> tmp;
+                        displayDevices_.push_back(tmp);
+                    }
+                    // ignore other tags
+                    // TODO: print something or set some defaults in this case
+                }
             }
             else
             {
-                std::cerr << "[OCIO WARNING]: Parse error, ";
-                std::cerr << "unknown element type '" << elementtype << "'." << std::endl;
+                // TODO: does it matter if there are no displays defined?
             }
             
-            pElem=pElem->NextSiblingElement();
+            // ColorSpaces
+            if(node.FindValue("colorspaces") != NULL) {
+                if(node["colorspaces"].GetType() != YAML::CT_SEQUENCE)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing ocio profile, ";
+                    os << "'colorspaces' field needs to be a (- !<ColorSpace>) list.";
+                    throw Exception(os.str().c_str());
+                }
+                for(unsigned i = 0; i < node["colorspaces"].size(); ++i)
+                {
+                    if(node["colorspaces"][i].GetTag() == "ColorSpace")
+                    {
+                        ColorSpaceRcPtr cs = ColorSpace::Create();
+                        node["colorspaces"][i] >> cs;
+                        colorspaces_.push_back( cs );
+                    }
+                    // ignore other tags
+                    // TODO: print something in this case
+                }
+            }
+            else
+            {
+                // TODO: does it matter if there are no colorspaces defined?
+            }
+            
+            // TODO: what are these used for?
+            //originalFileDir_ = path::dirname(filename);
+            //resolvedResourcePath_ = path::join(originalFileDir_, resourcePath_);
+            
+        }
+        catch( const std::exception & e)
+        {
+            std::ostringstream error;
+            error << "Error parsing YAML: " << e.what();
+            throw Exception(error.str().c_str());
         }
         
-        originalFileDir_ = path::dirname(filename);
-        resolvedResourcePath_ = path::join(originalFileDir_, resourcePath_);
-        
-        if(lumaSet != 3)
-        {
-            std::ostringstream os;
-            os << "Error parsing ocio configuration file, '" << filename;
-            os << "'. Could not find required ocioconfig luma_{r,g,b} xml attributes.";
-            throw Exception(os.str().c_str());
-        }
-        else
-        {
-            defaultLumaCoefs_[0] = lumacoef[0];
-            defaultLumaCoefs_[1] = lumacoef[1];
-            defaultLumaCoefs_[2] = lumacoef[2];
-        }
+        return;
     }
 }
 OCIO_NAMESPACE_EXIT
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include <boost/test/unit_test.hpp>
+
+BOOST_AUTO_TEST_SUITE( Config_Unit_Tests )
+
+BOOST_AUTO_TEST_CASE ( test_INTERNAL_RAW_PROFILE )
+{
+    std::istringstream is;
+    is.str(OCIO::INTERNAL_RAW_PROFILE);
+    BOOST_CHECK_NO_THROW(OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is));
+}
+
+BOOST_AUTO_TEST_CASE ( test_simpleConfig )
+{
+    
+    std::string SIMPLE_PROFILE =
+    "ocs_profile_version: 1\n"
+    "strictparsing: false\n"
+    "luma: [0.2126, 0.7152, 0.0722]\n"
+    "roles:\n"
+    "  compositing_log: lgh\n"
+    "  default: raw\n"
+    "  scene_linear: lnh\n"
+    "displays:\n"
+    "  - !<Display> {device: sRGB, name: Film1D, colorspace: vd8}\n"
+    "  - !<Display> {device: sRGB, name: Log, colorspace: lg10}\n"
+    "  - !<Display> {device: sRGB, name: Raw, colorspace: raw}\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "      family: raw\n"
+    "      bitdepth: 32f\n"
+    "      description: |\n"
+    "        A raw color space. Conversions to and from this space are no-ops.\n"
+    "      isdata: true\n"
+    "      gpuallocation: uniform\n"
+    "      gpumin: 0\n"
+    "      gpumax: 1\n"
+    "  - !<ColorSpace>\n"
+    "      name: lnh\n"
+    "      family: ln\n"
+    "      bitdepth: 16f\n"
+    "      description: |\n"
+    "        The show reference space. This is a sensor referred linear\n"
+    "        representation of the scene with primaries that correspond to\n"
+    "        scanned film. 0.18 in this space corresponds to a properly\n"
+    "        exposed 18% grey card.\n"
+    "      isdata: false\n"
+    "      gpuallocation: lg2\n"
+    "      gpumin: -15\n"
+    "      gpumax: 6\n"
+    "  - !<ColorSpace>\n"
+    "      name: loads_of_transforms\n"
+    "      family: vd8\n"
+    "      bitdepth: 8ui\n"
+    "      description: 'how many transforms can we use?'\n"
+    "      isdata: false\n"
+    "      gpuallocation: uniform\n"
+    "      gpumin: 0\n"
+    "      gpumax: 1\n"
+    "      to_reference:\n"
+    "        - !<FileTransform>\n"
+    "            src: diffusemult.spimtx\n"
+    "            interpolation: unknown\n"
+    "        - !<ColorSpaceTransform>\n"
+    "            src: vd8\n"
+    "            dst: lnh\n"
+    "        - !<ExponentTransform>\n"
+    "            value: [2.2, 2.2, 2.2, 1]\n"
+    "        - !<CineonLogToLinTransform>\n"
+    "            max_aim_density: [2.046, 2.046, 2.046]\n"
+    "            neg_gamma: [0.6, 0.6, 0.6]\n"
+    "            neg_gray_reference: [0.435, 0.435, 0.435]\n"
+    "            linear_gray_reference: [0.18, 0.18, 0.18]\n"
+    "        - !<MatrixTransform>\n"
+    "            matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]\n"
+    "            offset: [0, 0, 0, 0]\n"
+    "        - !<CDLTransform>\n"
+    "            slope: [1, 1, 1]\n"
+    "            offset: [0, 0, 0]\n"
+    "            power: [1, 1, 1]\n"
+    "            saturation: 1\n"
+    "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    BOOST_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    //config = OCIO::Config::CreateFromStream(is);
+    
+    //OCIO::ConstColorSpaceRcPtr lnh = config->getColorSpace("lnh");
+    //std::cerr << "getDescription: [" << lnh->getDescription() << "]\n";
+    //OCIO::ConstGroupTransformRcPtr toref = lnh->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
+    //std::cerr << "foo.to_ref.size: [" << toref->size() << "]\n";
+    
+    //std::ostringstream os;
+    //config->writeToStream(os);
+    //std::cerr << os.str() << std::endl;;
+    
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+#endif // OCIO_UNIT_TEST

@@ -29,9 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "pystring/pystring.h"
-#include "tinyxml/tinyxml.h"
 
 #include <sstream>
+#include <iostream>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -186,37 +186,6 @@ OCIO_NAMESPACE_ENTER
     const char * ROLE_SCENE_LINEAR = "scene_linear";
     const char * ROLE_COMPOSITING_LOG = "compositing_log";
     const char * ROLE_COLOR_TIMING = "color_timing";
-    
-    
-    
-    //////////////////////////////////////////////////////////////////////////
-    
-    
-    // http://ticpp.googlecode.com/svn/docs/ticpp_8h-source.html#l01670
-
-    void SetText( TiXmlElement* element, const char * value)
-    {
-        if ( element->NoChildren() )
-        {
-            element->LinkEndChild( new TiXmlText( value ) );
-        }
-        else
-        {
-            if ( 0 == element->GetText() )
-            {
-                element->InsertBeforeChild( element->FirstChild(), TiXmlText( value ) );
-            }
-            else
-            {
-                // There already is text, so change it
-                element->FirstChild()->SetValue( value );
-            }
-        }
-    }
-    
-    
-    
-    //////////////////////////////////////////////////////////////////////////
     
     namespace
     {
