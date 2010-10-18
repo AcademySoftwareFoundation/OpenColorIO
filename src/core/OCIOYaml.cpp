@@ -512,85 +512,53 @@ OCIO_NAMESPACE_ENTER
     //  Enums
     
     YAML::Emitter& operator << (YAML::Emitter& out, BitDepth depth) {
-             if(depth == BIT_DEPTH_UINT8)  out << "8ui";
-        else if(depth == BIT_DEPTH_UINT10) out << "10ui";
-        else if(depth == BIT_DEPTH_UINT12) out << "12ui";
-        else if(depth == BIT_DEPTH_UINT14) out << "14ui";
-        else if(depth == BIT_DEPTH_UINT16) out << "16ui";
-        else if(depth == BIT_DEPTH_UINT32) out << "32ui";
-        else if(depth == BIT_DEPTH_F16)    out << "16f";
-        else if(depth == BIT_DEPTH_F32)    out << "32f";
-        else                               out << "unknown";
+        out << BitDepthToString(depth);
         return out;
     }
     
     void operator >> (const YAML::Node& node, BitDepth& depth) {
         std::string str = node.Read<std::string>();
-             if(str == "8ui")  depth = BIT_DEPTH_UINT8;
-        else if(str == "10ui") depth = BIT_DEPTH_UINT10;
-        else if(str == "12ui") depth = BIT_DEPTH_UINT12;
-        else if(str == "14ui") depth = BIT_DEPTH_UINT14;
-        else if(str == "16ui") depth = BIT_DEPTH_UINT16;
-        else if(str == "32ui") depth = BIT_DEPTH_UINT32;
-        else if(str == "16f")  depth = BIT_DEPTH_F16;
-        else if(str == "32f")  depth = BIT_DEPTH_F32;
-        else                   depth = BIT_DEPTH_UNKNOWN;
+        depth = BitDepthFromString(str.c_str());
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, GpuAllocation alloc) {
-             if(alloc == GPU_ALLOCATION_UNIFORM) out << "uniform";
-        else if(alloc == GPU_ALLOCATION_LG2)     out << "lg2";
-        else                                     out << "unknown";
+        out << GpuAllocationToString(alloc);
         return out;
     }
     
     void operator >> (const YAML::Node& node, GpuAllocation& alloc) {
         std::string str = node.Read<std::string>();
-             if(str == "uniform") alloc = GPU_ALLOCATION_UNIFORM;
-        else if(str == "lg2")     alloc = GPU_ALLOCATION_LG2;
-        else                      alloc = GPU_ALLOCATION_UNKNOWN;
+        alloc = GpuAllocationFromString(str.c_str());
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceDirection dir) {
-             if(dir == COLORSPACE_DIR_TO_REFERENCE)   out << "to_reference";
-        else if(dir == COLORSPACE_DIR_FROM_REFERENCE) out << "from_reference";
-        else                                          out << "unknown";
+        out << ColorSpaceDirectionToString(dir);
         return out;
     }
     
     void operator >> (const YAML::Node& node, ColorSpaceDirection& dir) {
         std::string str = node.Read<std::string>();
-             if(str == "to_reference")   dir = COLORSPACE_DIR_TO_REFERENCE;
-        else if(str == "from_reference") dir = COLORSPACE_DIR_FROM_REFERENCE;
-        else                             dir = COLORSPACE_DIR_UNKNOWN;
+        dir = ColorSpaceDirectionFromString(str.c_str());
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, TransformDirection dir) {
-             if(dir == TRANSFORM_DIR_FORWARD) out << "forward";
-        else if(dir == TRANSFORM_DIR_INVERSE) out << "inverse";
-        else                                  out << "unknown";
+        out << TransformDirectionToString(dir);
         return out;
     }
     
     void operator >> (const YAML::Node& node, TransformDirection& dir) {
         std::string str = node.Read<std::string>();
-             if(str == "forward") dir = TRANSFORM_DIR_FORWARD;
-        else if(str == "inverse") dir = TRANSFORM_DIR_INVERSE;
-        else                      dir = TRANSFORM_DIR_UNKNOWN;
+        dir = TransformDirectionFromString(str.c_str());
     }
     
-    YAML::Emitter& operator << (YAML::Emitter& out, Interpolation iterp) {
-             if(iterp == INTERP_NEAREST) out << "nearest";
-        else if(iterp == INTERP_LINEAR)  out << "linear";
-        else                             out << "unknown";
+    YAML::Emitter& operator << (YAML::Emitter& out, Interpolation interp) {
+        out << InterpolationToString(interp);
         return out;
     }
     
-    void operator >> (const YAML::Node& node, Interpolation& iterp) {
+    void operator >> (const YAML::Node& node, Interpolation& interp) {
         std::string str = node.Read<std::string>();
-             if(str == "nearest") iterp = INTERP_NEAREST;
-        else if(str == "linear")  iterp = INTERP_LINEAR;
-        else                      iterp = INTERP_UNKNOWN;
+        interp = InterpolationFromString(str.c_str());
     }
     
 }
