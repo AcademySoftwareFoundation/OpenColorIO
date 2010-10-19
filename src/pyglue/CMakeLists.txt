@@ -42,6 +42,7 @@ if(PYTHON_OK)
         ${PYTHON_INCLUDE}
         ${CMAKE_SOURCE_DIR}/export/
         ${CMAKE_BINARY_DIR}/export/
+        ${Boost_INCLUDE_DIR}
     )
     # Exclude the 'lib' prefix from the name.
     set_property(TARGET PyOpenColorIO
