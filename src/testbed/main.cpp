@@ -156,7 +156,7 @@ void loadConfigFromEnv()
         std::string outputname = "/mcp/test.ocio";
         std::cout << "Writing " << outputname << std::endl;
         std::ofstream outfile(outputname.c_str());
-        config->writeToStream(outfile);
+        config->serialize(outfile);
         outfile.close();
     }
 }
@@ -211,7 +211,7 @@ void createConfig()
         std::string outputname = "/mcp/test.ocio";
         std::cout << "Writing " << outputname << std::endl;
         std::ofstream outfile(outputname.c_str());
-        config->writeToStream(outfile);
+        config->serialize(outfile);
         outfile.close();
         
         //config.loadFromFile(outputname.c_str());
@@ -221,7 +221,7 @@ void createConfig()
         std::string outputname = "/mcp/test2.ocio";
         std::cout << "Writing " << outputname << std::endl;
         std::ofstream outfile(outputname.c_str());
-        config.writeToStream(outfile);
+        config.serialize(outfile);
         outfile.close();
     }
     */

@@ -748,14 +748,14 @@ OCIO_NAMESPACE_ENTER
     
     std::ostream& operator<< (std::ostream& os, const Config& config)
     {
-        config.writeToStream(os);
+        config.serialize(os);
         return os;
     }
     
     ///////////////////////////////////////////////////////////////////////////
     //  Serialization
     
-    void Config::writeToStream(std::ostream& os) const
+    void Config::serialize(std::ostream& os) const
     {
         try
         {
@@ -1076,11 +1076,6 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     //std::cerr << "getDescription: [" << lnh->getDescription() << "]\n";
     //OCIO::ConstGroupTransformRcPtr toref = lnh->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
     //std::cerr << "foo.to_ref.size: [" << toref->size() << "]\n";
-    
-    //std::ostringstream os;
-    //config->writeToStream(os);
-    //std::cerr << os.str() << std::endl;;
-    
 }
 
 BOOST_AUTO_TEST_SUITE_END()

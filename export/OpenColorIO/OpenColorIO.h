@@ -215,7 +215,7 @@ OCIO_NAMESPACE_ENTER
         const char * getDescription() const;
         void setDescription(const char * description);
         
-        void writeToStream(std::ostream& os) const;
+        void serialize(std::ostream & os) const;
         
         // COLORSPACES ////////////////////////////////////////////////////////
         

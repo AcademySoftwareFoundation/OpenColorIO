@@ -53,8 +53,8 @@ print config.getDefaultLumaCoefs()
 #config.setDefaultLumaCoefs((1/3.0,1/3.0,1/3.0))
 #print config.getDefaultLumaCoefs()
 
-xml = config.getXML()
-#print xml
+text = config.serialize()
+#print text
 """
 
 """
@@ -129,15 +129,15 @@ print 'logOffset',logOffset
 config.addColorSpace(cs)
 config.setRole(OCIO.Constants.ROLE_COMPOSITING_LOG, cs.getName())
 
-xml = config.getXML()
+text = config.serialize()
 print '\n\n'
-print xml
+print text
 
-fname = '/tmp/a.xml'
+fname = '/tmp/a.ocio'
 f = file(fname,'w')
-f.write(xml)
+f.write(text)
 f.close()
 
 newconfig = OCIO.Config.CreateFromFile(fname)
 print '\n\n'
-print newconfig.getXML()
+print newconfig.serialize()

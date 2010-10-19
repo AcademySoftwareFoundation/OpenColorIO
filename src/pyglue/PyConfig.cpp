@@ -162,6 +162,8 @@ OCIO_NAMESPACE_ENTER
     {
         PyObject * PyOCIO_Config_CreateFromEnv( PyObject * cls );
         PyObject * PyOCIO_Config_CreateFromFile( PyObject * cls, PyObject * args );
+        PyObject * PyOCIO_Config_CreateFromText( PyObject * cls, PyObject * args );
+        
         int PyOCIO_Config_init( PyOCIO_Config * self, PyObject * args, PyObject * kwds );
         void PyOCIO_Config_delete( PyOCIO_Config * self, PyObject * args );
         
@@ -172,7 +174,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_setResourcePath( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_Config_getDescription( PyObject * self );
         PyObject * PyOCIO_Config_setDescription( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_Config_getXML( PyObject * self );
+        PyObject * PyOCIO_Config_serialize( PyObject * self );
         
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self );
         PyObject * PyOCIO_Config_getColorSpace( PyObject * self, PyObject * args );
@@ -207,7 +209,7 @@ OCIO_NAMESPACE_ENTER
             {"setResourcePath", PyOCIO_Config_setResourcePath, METH_VARARGS, "" },
             {"getDescription", (PyCFunction) PyOCIO_Config_getDescription, METH_NOARGS, "" },
             {"setDescription", PyOCIO_Config_setDescription, METH_VARARGS, "" },
-            {"getXML", (PyCFunction) PyOCIO_Config_getXML, METH_NOARGS, "" },
+            {"serialize", (PyCFunction) PyOCIO_Config_serialize, METH_NOARGS, "" },
             
             {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
             {"getColorSpace", PyOCIO_Config_getColorSpace, METH_VARARGS, "" },
@@ -457,7 +459,7 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
-        PyObject * PyOCIO_Config_getXML( PyObject * self )
+        PyObject * PyOCIO_Config_serialize( PyObject * self )
         {
             try
             {
@@ -465,7 +467,7 @@ OCIO_NAMESPACE_ENTER
                 
                 std::ostringstream os;
                 
-                config->writeToStream(os);
+                config->serialize(os);
                 
                 return PyString_FromString( os.str().c_str() );
             }
