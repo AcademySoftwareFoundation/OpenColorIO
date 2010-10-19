@@ -68,58 +68,58 @@ OCIO_NAMESPACE_ENTER
         
         // Add Module Constants
         PyModule_AddStringConstant(m, "TRANSFORM_DIR_UNKNOWN",
-            TransformDirectionToString(TRANSFORM_DIR_UNKNOWN));
+            const_cast<char*>(TransformDirectionToString(TRANSFORM_DIR_UNKNOWN)));
         PyModule_AddStringConstant(m, "TRANSFORM_DIR_FORWARD",
-            TransformDirectionToString(TRANSFORM_DIR_FORWARD));
+            const_cast<char*>(TransformDirectionToString(TRANSFORM_DIR_FORWARD)));
         PyModule_AddStringConstant(m, "TRANSFORM_DIR_INVERSE",
-            TransformDirectionToString(TRANSFORM_DIR_INVERSE));
+            const_cast<char*>(TransformDirectionToString(TRANSFORM_DIR_INVERSE)));
         
         PyModule_AddStringConstant(m, "COLORSPACE_DIR_UNKNOWN",
-            ColorSpaceDirectionToString(COLORSPACE_DIR_UNKNOWN));
+            const_cast<char*>(ColorSpaceDirectionToString(COLORSPACE_DIR_UNKNOWN)));
         PyModule_AddStringConstant(m, "COLORSPACE_DIR_TO_REFERENCE",
-            ColorSpaceDirectionToString(COLORSPACE_DIR_TO_REFERENCE));
+            const_cast<char*>(ColorSpaceDirectionToString(COLORSPACE_DIR_TO_REFERENCE)));
         PyModule_AddStringConstant(m, "COLORSPACE_DIR_FROM_REFERENCE",
-            ColorSpaceDirectionToString(COLORSPACE_DIR_FROM_REFERENCE));
+            const_cast<char*>(ColorSpaceDirectionToString(COLORSPACE_DIR_FROM_REFERENCE)));
         
         PyModule_AddStringConstant(m, "BIT_DEPTH_UNKNOWN",
-            BitDepthToString(BIT_DEPTH_UNKNOWN));
+            const_cast<char*>(BitDepthToString(BIT_DEPTH_UNKNOWN)));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT8",
-            BitDepthToString(BIT_DEPTH_UINT8));
+            const_cast<char*>(BitDepthToString(BIT_DEPTH_UINT8)));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT10",
-            BitDepthToString(BIT_DEPTH_UINT10));
+            const_cast<char*>(BitDepthToString(BIT_DEPTH_UINT10)));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT12",
-            BitDepthToString(BIT_DEPTH_UINT12));
+            const_cast<char*>(BitDepthToString(BIT_DEPTH_UINT12)));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT14",
-            BitDepthToString(BIT_DEPTH_UINT14));
+            const_cast<char*>(BitDepthToString(BIT_DEPTH_UINT14)));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT16",
-            BitDepthToString(BIT_DEPTH_UINT16));
+            const_cast<char*>(BitDepthToString(BIT_DEPTH_UINT16)));
         PyModule_AddStringConstant(m, "BIT_DEPTH_UINT32",
-            BitDepthToString(BIT_DEPTH_UINT32));
+            const_cast<char*>(BitDepthToString(BIT_DEPTH_UINT32)));
         PyModule_AddStringConstant(m, "BIT_DEPTH_F16",
-            BitDepthToString(BIT_DEPTH_F16));
+            const_cast<char*>(BitDepthToString(BIT_DEPTH_F16)));
         PyModule_AddStringConstant(m, "BIT_DEPTH_F32",
-            BitDepthToString(BIT_DEPTH_F32));
+            const_cast<char*>(BitDepthToString(BIT_DEPTH_F32)));
         
         PyModule_AddStringConstant(m, "GPU_ALLOCATION_UNKNOWN",
-            GpuAllocationToString(GPU_ALLOCATION_UNKNOWN));
+            const_cast<char*>(GpuAllocationToString(GPU_ALLOCATION_UNKNOWN)));
         PyModule_AddStringConstant(m, "GPU_ALLOCATION_UNIFORM",
-            GpuAllocationToString(GPU_ALLOCATION_UNIFORM));
+            const_cast<char*>(GpuAllocationToString(GPU_ALLOCATION_UNIFORM)));
         PyModule_AddStringConstant(m, "GPU_ALLOCATION_LG2",
-            GpuAllocationToString(GPU_ALLOCATION_LG2));
+            const_cast<char*>(GpuAllocationToString(GPU_ALLOCATION_LG2)));
         
         PyModule_AddStringConstant(m, "INTERP_UNKNOWN",
-            InterpolationToString(INTERP_UNKNOWN));
+            const_cast<char*>(InterpolationToString(INTERP_UNKNOWN)));
         PyModule_AddStringConstant(m, "INTERP_NEAREST",
-            InterpolationToString(INTERP_NEAREST));
+            const_cast<char*>(InterpolationToString(INTERP_NEAREST)));
         PyModule_AddStringConstant(m, "INTERP_LINEAR",
-            InterpolationToString(INTERP_LINEAR));
+            const_cast<char*>(InterpolationToString(INTERP_LINEAR)));
         
-        PyModule_AddStringConstant(m, "ROLE_REFERENCE", ROLE_REFERENCE);
-        PyModule_AddStringConstant(m, "ROLE_DATA", ROLE_DATA);
-        PyModule_AddStringConstant(m, "ROLE_COLOR_PICKING", ROLE_COLOR_PICKING);
-        PyModule_AddStringConstant(m, "ROLE_SCENE_LINEAR", ROLE_SCENE_LINEAR);
-        PyModule_AddStringConstant(m, "ROLE_COMPOSITING_LOG", ROLE_COMPOSITING_LOG);
-        PyModule_AddStringConstant(m, "ROLE_COLOR_TIMING", ROLE_COLOR_TIMING);
+        PyModule_AddStringConstant(m, "ROLE_REFERENCE", const_cast<char*>(ROLE_REFERENCE));
+        PyModule_AddStringConstant(m, "ROLE_DATA", const_cast<char*>(ROLE_DATA));
+        PyModule_AddStringConstant(m, "ROLE_COLOR_PICKING", const_cast<char*>(ROLE_COLOR_PICKING));
+        PyModule_AddStringConstant(m, "ROLE_SCENE_LINEAR", const_cast<char*>(ROLE_SCENE_LINEAR));
+        PyModule_AddStringConstant(m, "ROLE_COMPOSITING_LOG", const_cast<char*>(ROLE_COMPOSITING_LOG));
+        PyModule_AddStringConstant(m, "ROLE_COLOR_TIMING", const_cast<char*>(ROLE_COLOR_TIMING));
         
         // Add the module
         PyModule_AddObject(enclosingModule, "Constants", m);
