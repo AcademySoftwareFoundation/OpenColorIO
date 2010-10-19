@@ -6,6 +6,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
     ${YAML_CPP_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIR}
 )
 
 file(GLOB_RECURSE core_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp")
