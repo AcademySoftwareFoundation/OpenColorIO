@@ -1,6 +1,6 @@
-diff -Naur YAML_CPP_LOCAL.orig/CMakeLists.txt YAML_CPP_LOCAL/CMakeLists.txt
---- YAML_CPP_LOCAL.orig/CMakeLists.txt	2010-10-18 10:11:19.000000000 +1100
-+++ YAML_CPP_LOCAL/CMakeLists.txt	2010-10-18 10:11:46.000000000 +1100
+diff -Naur yaml-cpp-0.2.5/CMakeLists.txt YAML_CPP_LOCAL/CMakeLists.txt
+--- yaml-cpp-0.2.5/CMakeLists.txt	2010-03-16 06:25:02.000000000 +1100
++++ YAML_CPP_LOCAL/CMakeLists.txt	2010-10-19 17:00:32.488681000 +1100
 @@ -2,7 +2,7 @@
  
  project (YAML_CPP)
@@ -10,3 +10,11 @@ diff -Naur YAML_CPP_LOCAL.orig/CMakeLists.txt YAML_CPP_LOCAL/CMakeLists.txt
  
  if(IPHONE)
    set(CMAKE_OSX_SYSROOT iphoneos2.2.1)
+@@ -57,6 +57,7 @@
+ set_target_properties(yaml-cpp PROPERTIES
+ 	VERSION "${YAML_CPP_VERSION}"
+ 	SOVERSION "${YAML_CPP_VERSION_MAJOR}.${YAML_CPP_VERSION_MINOR}"
++    COMPILE_FLAGS "-fPIC"
+ )
+ 
+ install(TARGETS yaml-cpp ${_INSTALL_DESTINATIONS})
