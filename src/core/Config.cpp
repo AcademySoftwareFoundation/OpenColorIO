@@ -55,7 +55,7 @@ OCIO_NAMESPACE_ENTER
         const float DEFAULT_LUMA_COEFF_B = 0.0722f;
         
         const char * INTERNAL_RAW_PROFILE = 
-        "ocs_profile_version: 1\n"
+        "ocio_profile_version: 1\n"
         "resource_path:\n"
         "strictparsing: false\n"
         "luma: [ 0.2126, 0.7152, 0.0722 ]\n"
@@ -226,7 +226,7 @@ OCIO_NAMESPACE_ENTER
             return *this;
         }
         
-        void load(std::istream & istream);
+        void load(std::istream & istream, const char * name);
     };
     
     
@@ -252,27 +252,33 @@ OCIO_NAMESPACE_ENTER
         os << "(Specify the $OCIO environment variable to enable.)";
         ReportInfo(os.str());
         
-        std::istringstream is;
-        is.str(INTERNAL_RAW_PROFILE);
-        return CreateFromStream(is);
+        std::istringstream istream;
+        istream.str(INTERNAL_RAW_PROFILE);
+        
+        ConfigRcPtr config = Config::Create();
+        config->m_impl->load(istream, "INTERNAL_RAW_PROFILE");
+        return config;
     }
     
     ConstConfigRcPtr Config::CreateFromFile(const char * filename)
     {
-        std::ifstream file(filename);
-        if(file.fail()) {
+        std::ifstream istream(filename);
+        if(istream.fail()) {
             std::ostringstream os;
             os << "Error could not read '" << filename;
             os << "' OCIO profile.";
             throw Exception (os.str().c_str());
         }
-        return CreateFromStream(file);
+        
+        ConfigRcPtr config = Config::Create();
+        config->m_impl->load(istream, filename);
+        return config;
     }
     
     ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
     {
         ConfigRcPtr config = Config::Create();
-        config->m_impl->load(istream);
+        config->m_impl->load(istream, "");
         return config;
     }
     
@@ -757,7 +763,7 @@ OCIO_NAMESPACE_ENTER
             YAML::Emitter out;
             out << YAML::Block;
             out << YAML::BeginMap;
-            out << YAML::Key << "ocs_profile_version" << YAML::Value << 1;
+            out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
             if(m_impl->resourcePath_.empty())
                 out << YAML::Key << "resource_path" << YAML::Value << m_impl->resourcePath_;
             out << YAML::Key << "strictparsing" << YAML::Value << m_impl->strictParsing_;
@@ -816,7 +822,7 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void Config::Impl::load(std::istream & istream)
+    void Config::Impl::load(std::istream & istream, const char * name)
     {
         try
         {
@@ -826,17 +832,19 @@ OCIO_NAMESPACE_ENTER
             
             // check profile version
             int profile_version;
-            if(node.FindValue("ocs_profile_version") == NULL)
+            if(node.FindValue("ocio_profile_version") == NULL)
             {
                 std::ostringstream os;
-                os << "Error profile doesn't contain a ocs_profile_version field.";
+                os << "The specified file ";
+                os << "does not appear to be an OCIO configuration.";
                 throw Exception (os.str().c_str());
             }
-            node["ocs_profile_version"] >> profile_version;
+            
+            node["ocio_profile_version"] >> profile_version;
             if(profile_version != 1)
             {
                 std::ostringstream os;
-                os << "Error profile version " << profile_version << " is not ";
+                os << "version " << profile_version << " is not ";
                 os << "supported by OCIO v" << OCIO_VERSION ".";
                 throw Exception (os.str().c_str());
             }
@@ -855,7 +863,6 @@ OCIO_NAMESPACE_ENTER
                 if(node["luma"].GetType() != YAML::CT_SEQUENCE)
                 {
                     std::ostringstream os;
-                    os << "Error parsing ocio profile, ";
                     os << "'luma' field needs to be a (luma: [0, 0, 0]) list.";
                     throw Exception(os.str().c_str());
                 }
@@ -864,7 +871,7 @@ OCIO_NAMESPACE_ENTER
                 if(value.size() != 3)
                 {
                     std::ostringstream os;
-                    os << "Error parsing ocio profile, 'luma' field must be 3 ";
+                    os << "'luma' field must be 3 ";
                     os << "floats. Found '" << value.size() << "'.";
                     throw Exception(os.str().c_str());
                 }
@@ -872,14 +879,18 @@ OCIO_NAMESPACE_ENTER
                 defaultLumaCoefs_[1] = value[1];
                 defaultLumaCoefs_[2] = value[2];
             }
-            else throw Exception("Error parsing ocio profile, could not find required luma field.");
+            else
+            {
+                std::ostringstream os;
+                os << "could not find required luma field.";
+                throw Exception(os.str().c_str());
+            }
             
             // Roles
             if(node.FindValue("roles") != NULL) {
                 if(node["roles"].GetType() != YAML::CT_MAP)
                 {
                     std::ostringstream os;
-                    os << "Error parsing ocio profile, ";
                     os << "'roles' field needs to be a (name: key) map.";
                     throw Exception(os.str().c_str());
                 }
@@ -906,7 +917,6 @@ OCIO_NAMESPACE_ENTER
                 if(node["displays"].GetType() != YAML::CT_SEQUENCE)
                 {
                     std::ostringstream os;
-                    os << "Error parsing ocio profile, ";
                     os << "'displays' field needs to be a (- !<Display>) list.";
                     throw Exception(os.str().c_str());
                 }
@@ -932,7 +942,6 @@ OCIO_NAMESPACE_ENTER
                 if(node["colorspaces"].GetType() != YAML::CT_SEQUENCE)
                 {
                     std::ostringstream os;
-                    os << "Error parsing ocio profile, ";
                     os << "'colorspaces' field needs to be a (- !<ColorSpace>) list.";
                     throw Exception(os.str().c_str());
                 }
@@ -960,12 +969,11 @@ OCIO_NAMESPACE_ENTER
         }
         catch( const std::exception & e)
         {
-            std::ostringstream error;
-            error << "Error parsing YAML: " << e.what();
-            throw Exception(error.str().c_str());
+            std::ostringstream os;
+            os << "Error: OCIO profile, '" << name << "', ";
+            os << "load failed: " << e.what();
+            throw Exception(os.str().c_str());
         }
-        
-        return;
     }
 }
 OCIO_NAMESPACE_EXIT
@@ -990,7 +998,7 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
 {
     
     std::string SIMPLE_PROFILE =
-    "ocs_profile_version: 1\n"
+    "ocio_profile_version: 1\n"
     "strictparsing: false\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
     "roles:\n"
