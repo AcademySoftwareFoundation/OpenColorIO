@@ -887,6 +887,12 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Roles
+            // TODO: We should really output roles in a dictionary
+            // (alphabetical) order, or a roundtrip yaml file wont
+            // agree with the original, in role ordering. (Is it
+            //  precious or not?). Alternative is to store roles
+            // in a map, rather than a vec.
+            
             if(node.FindValue("roles") != NULL) {
                 if(node["roles"].GetType() != YAML::CT_MAP)
                 {
@@ -897,16 +903,10 @@ OCIO_NAMESPACE_ENTER
                 for (YAML::Iterator it  = node["roles"].begin();
                                     it != node["roles"].end(); ++it)
                 {
-                        const std::string key = it.first();
-                        const YAML::Node& value = it.second();
-                        if(value.GetTag() == "Role" &&
-                           value.FindValue("colorspace") != NULL)
-                        {
-                            roleVec_.push_back(std::make_pair(key,
-                                value["colorspace"].Read<std::string>()));
-                        }
-                        // ignore other tags
-                    }
+                    const std::string key = it.first();
+                    const std::string value = it.second();
+                    roleVec_.push_back(std::make_pair(key, value));
+                }
             
             } else {
                 // TODO: does it matter if there are no roles defined?
