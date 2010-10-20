@@ -56,11 +56,9 @@ OCIO_NAMESPACE_ENTER
         
         const char * INTERNAL_RAW_PROFILE = 
         "ocio_profile_version: 1\n"
-        "resource_path:\n"
         "strictparsing: false\n"
-        "luma: [ 0.2126, 0.7152, 0.0722 ]\n"
         "roles:\n"
-        "  default: !<Role> {colorspace: raw}\n"
+        "  default: raw\n"
         "displays:\n"
         "  - !<Display> {device: sRGB, name: Raw, colorspace: raw}\n"
         "colorspaces:\n"
@@ -879,12 +877,6 @@ OCIO_NAMESPACE_ENTER
                 defaultLumaCoefs_[1] = value[1];
                 defaultLumaCoefs_[2] = value[2];
             }
-            else
-            {
-                std::ostringstream os;
-                os << "could not find required luma field.";
-                throw Exception(os.str().c_str());
-            }
             
             // Roles
             // TODO: We should really output roles in a dictionary
@@ -991,6 +983,7 @@ BOOST_AUTO_TEST_CASE ( test_INTERNAL_RAW_PROFILE )
 {
     std::istringstream is;
     is.str(OCIO::INTERNAL_RAW_PROFILE);
+    
     BOOST_CHECK_NO_THROW(OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is));
 }
 
@@ -1042,24 +1035,26 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     "      gpuallocation: uniform\n"
     "      gpumin: 0\n"
     "      gpumax: 1\n"
-    "      to_reference:\n"
-    "        - !<FileTransform>\n"
+    "      to_reference: !<GroupTransform>\n"
+    "        direction: forward\n"
+    "        children:\n"
+    "          - !<FileTransform>\n"
     "            src: diffusemult.spimtx\n"
     "            interpolation: unknown\n"
-    "        - !<ColorSpaceTransform>\n"
+    "          - !<ColorSpaceTransform>\n"
     "            src: vd8\n"
     "            dst: lnh\n"
-    "        - !<ExponentTransform>\n"
+    "          - !<ExponentTransform>\n"
     "            value: [2.2, 2.2, 2.2, 1]\n"
-    "        - !<CineonLogToLinTransform>\n"
+    "          - !<CineonLogToLinTransform>\n"
     "            max_aim_density: [2.046, 2.046, 2.046]\n"
     "            neg_gamma: [0.6, 0.6, 0.6]\n"
     "            neg_gray_reference: [0.435, 0.435, 0.435]\n"
     "            linear_gray_reference: [0.18, 0.18, 0.18]\n"
-    "        - !<MatrixTransform>\n"
+    "          - !<MatrixTransform>\n"
     "            matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]\n"
     "            offset: [0, 0, 0, 0]\n"
-    "        - !<CDLTransform>\n"
+    "          - !<CDLTransform>\n"
     "            slope: [1, 1, 1]\n"
     "            offset: [0, 0, 0]\n"
     "            power: [1, 1, 1]\n"
@@ -1070,12 +1065,6 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
     BOOST_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-    //config = OCIO::Config::CreateFromStream(is);
-    
-    //OCIO::ConstColorSpaceRcPtr lnh = config->getColorSpace("lnh");
-    //std::cerr << "getDescription: [" << lnh->getDescription() << "]\n";
-    //OCIO::ConstGroupTransformRcPtr toref = lnh->getTransform(OCIO::COLORSPACE_DIR_TO_REFERENCE);
-    //std::cerr << "foo.to_ref.size: [" << toref->size() << "]\n";
 }
 
 BOOST_AUTO_TEST_SUITE_END()
