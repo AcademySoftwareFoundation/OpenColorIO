@@ -93,6 +93,9 @@ OCIO_NAMESPACE_ENTER
         if(fromref && cs->isTransformSpecified(COLORSPACE_DIR_FROM_REFERENCE))
             out << YAML::Key << "from_reference" << YAML::Value << fromref;
         
+        //out << YAML::Literal << "\n\n";
+        //out << YAML::Null;
+        
         out << YAML::EndMap;
         
         return out;
@@ -243,7 +246,7 @@ OCIO_NAMESPACE_ENTER
     YAML::Emitter& operator << (YAML::Emitter& out, ConstFileTransformRcPtr t)
     {
         out << YAML::VerbatimTag("FileTransform");
-        out << YAML::BeginMap;
+        out << YAML::Flow << YAML::BeginMap;
         AddBaseTransformPropertiesToYAMLMap(out, t);
         
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
@@ -265,7 +268,7 @@ OCIO_NAMESPACE_ENTER
     YAML::Emitter& operator << (YAML::Emitter& out, ConstColorSpaceTransformRcPtr t)
     {
         out << YAML::VerbatimTag("ColorSpaceTransform");
-        out << YAML::BeginMap;
+        out << YAML::Flow << YAML::BeginMap;
         AddBaseTransformPropertiesToYAMLMap(out, t);
         
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
@@ -296,7 +299,7 @@ OCIO_NAMESPACE_ENTER
     YAML::Emitter& operator << (YAML::Emitter& out, ConstExponentTransformRcPtr t)
     {
         out << YAML::VerbatimTag("ExponentTransform");
-        out << YAML::BeginMap;
+        out << YAML::Flow << YAML::BeginMap;
         AddBaseTransformPropertiesToYAMLMap(out, t);
         
         std::vector<float> value(4, 0.0);
@@ -379,7 +382,7 @@ OCIO_NAMESPACE_ENTER
     YAML::Emitter& operator << (YAML::Emitter& out, ConstCineonLogToLinTransformRcPtr t)
     {
         out << YAML::VerbatimTag("CineonLogToLinTransform");
-        out << YAML::BeginMap;
+        out << YAML::Flow << YAML::BeginMap;
         AddBaseTransformPropertiesToYAMLMap(out, t);
         
         std::vector<float> max_aim_density(3, 0.0);
@@ -452,7 +455,7 @@ OCIO_NAMESPACE_ENTER
         t->getValue(&matrix[0], &offset[0]);
         
         out << YAML::VerbatimTag("MatrixTransform");
-        out << YAML::BeginMap;
+        out << YAML::Flow << YAML::BeginMap;
         AddBaseTransformPropertiesToYAMLMap(out, t);
         
         out << YAML::Key << "matrix";
@@ -529,7 +532,7 @@ OCIO_NAMESPACE_ENTER
         t->getPower(&power[0]);
         
         out << YAML::VerbatimTag("CDLTransform");
-        out << YAML::BeginMap;
+        out << YAML::Flow << YAML::BeginMap;
         AddBaseTransformPropertiesToYAMLMap(out, t);
         
         out << YAML::Key << "slope";
