@@ -93,9 +93,6 @@ OCIO_NAMESPACE_ENTER
         if(fromref && cs->isTransformSpecified(COLORSPACE_DIR_FROM_REFERENCE))
             out << YAML::Key << "from_reference" << YAML::Value << fromref;
         
-        //out << YAML::Literal << "\n\n";
-        //out << YAML::Null;
-        
         out << YAML::EndMap;
         
         return out;
@@ -382,7 +379,7 @@ OCIO_NAMESPACE_ENTER
     YAML::Emitter& operator << (YAML::Emitter& out, ConstCineonLogToLinTransformRcPtr t)
     {
         out << YAML::VerbatimTag("CineonLogToLinTransform");
-        out << YAML::Flow << YAML::BeginMap;
+        out << YAML::Block << YAML::BeginMap;
         AddBaseTransformPropertiesToYAMLMap(out, t);
         
         std::vector<float> max_aim_density(3, 0.0);
