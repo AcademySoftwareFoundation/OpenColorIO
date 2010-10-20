@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    
     ///////////////////////////////////////////////////////////////////////////
     //  Core
     
@@ -59,16 +58,15 @@ OCIO_NAMESPACE_ENTER
         if(node.FindValue("gpumax") != NULL)
             cs->setGpuMax(node["gpumax"].Read<float>());
         if(node.FindValue("to_reference") != NULL)
-            cs->setTransform(node["to_reference"].Read<GroupTransformRcPtr>(),
+            cs->setTransform(node["to_reference"].Read<TransformRcPtr>(),
                 COLORSPACE_DIR_TO_REFERENCE);
         if(node.FindValue("from_reference") != NULL)
-            cs->setTransform(node["from_reference"].Read<GroupTransformRcPtr>(),
+            cs->setTransform(node["from_reference"].Read<TransformRcPtr>(),
                 COLORSPACE_DIR_TO_REFERENCE);
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceRcPtr cs)
     {
-        
         out << YAML::VerbatimTag("ColorSpace");
         out << YAML::BeginMap;
         
@@ -85,64 +83,66 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Key << "gpumin" << YAML::Value << cs->getGpuMin();
         out << YAML::Key << "gpumax" << YAML::Value << cs->getGpuMax();
         
-        ConstGroupTransformRcPtr toref = \
+        ConstTransformRcPtr toref = \
             cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        if(cs->isTransformSpecified(COLORSPACE_DIR_TO_REFERENCE)
-            && !toref->empty())
-            out << YAML::Key << "to_reference" << YAML::Value << YAML::Indent(4) << toref;
+        if(toref && cs->isTransformSpecified(COLORSPACE_DIR_TO_REFERENCE))
+            out << YAML::Key << "to_reference" << YAML::Value << toref;
         
-        ConstGroupTransformRcPtr fromref = \
+        ConstTransformRcPtr fromref = \
             cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if(cs->isTransformSpecified(COLORSPACE_DIR_FROM_REFERENCE)
-            && !fromref->empty())
-            out << YAML::Key << "from_reference" << YAML::Value << YAML::Indent(4) << fromref;
+        if(fromref && cs->isTransformSpecified(COLORSPACE_DIR_FROM_REFERENCE))
+            out << YAML::Key << "from_reference" << YAML::Value << fromref;
         
         out << YAML::EndMap;
         
         return out;
     }
     
-    void operator >> (const YAML::Node& node, GroupTransformRcPtr& t)
-    {
-        t = GroupTransform::Create();
-        for(unsigned i = 0; i < node.size(); ++i)
-            t->push_back(node[i].Read<TransformRcPtr>());
-    }
     
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstGroupTransformRcPtr t)
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    namespace
     {
-        out << YAML::BeginSeq;
-        for(int i = 0; i < t->size(); ++i)
-            out << t->getTransform(i);
-        out << YAML::EndSeq;
-        return out;
+        void AddBaseTransformPropertiesToYAMLMap(YAML::Emitter & out,
+                                                 const ConstTransformRcPtr & t)
+        {
+            out << YAML::Key << "direction";
+            out << YAML::Value << YAML::Flow << t->getDirection();
+        }
+        
+        void ReadBaseTransformPropertiesFromYAMLMap(TransformRcPtr & t,
+                                                    const YAML::Node & node)
+        {
+            if(node.FindValue("direction") != NULL)
+                t->setDirection(node["direction"].Read<TransformDirection>());
+            else
+                t->setDirection(TRANSFORM_DIR_FORWARD);
+        }
     }
     
     void operator >> (const YAML::Node& node, TransformRcPtr& t)
     {
         // TODO: when a Transform() types are registered, add logic here so that
         // it calls the correct Transform()::Create() for the !<tag> type
+        
         std::string type = node.GetTag();
         
-        // TODO: GroupTransform seems to be a mixed concept, maybe this could
-        // be made a little clearer so that it's diffrent than other Transform()s
-        // I would go from some like TransformChain() or TransformList()
-        //if(type == "GroupTransform")
-        //    t = node.Read<GroupTransformRcPtr>();
-        
-        // TODO: add DisplayTransform
-        if(type == "FileTransform")
-            t = node.Read<FileTransformRcPtr>();
-        else if(type == "MatrixTransform")
-            t = node.Read<MatrixTransformRcPtr>();
-        else if(type == "ExponentTransform")
-            t = node.Read<ExponentTransformRcPtr>();
-        else if(type == "ColorSpaceTransform")
-            t = node.Read<ColorSpaceTransformRcPtr>();
+        if(type == "CDLTransform")
+            t = node.Read<CDLTransformRcPtr>();
         else if(type == "CineonLogToLinTransform")
             t = node.Read<CineonLogToLinTransformRcPtr>();
-        else if(type == "CDLTransform")
-            t = node.Read<CDLTransformRcPtr>();
+        else if(type == "ColorSpaceTransform")
+            t = node.Read<ColorSpaceTransformRcPtr>();
+        // TODO: add DisplayTransform
+        else if(type == "ExponentTransform")
+            t = node.Read<ExponentTransformRcPtr>();
+        else if(type == "FileTransform")
+            t = node.Read<FileTransformRcPtr>();
+        else if(type == "GroupTransform")
+            t = node.Read<GroupTransformRcPtr>();
+        else if(type == "MatrixTransform")
+            t = node.Read<MatrixTransformRcPtr>();
         else
         {
             // TODO: add a new empty (better name?) aka passthru Transform()
@@ -156,55 +156,80 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        //
-        if(node.FindValue("direction") != NULL)
-            t->setDirection(node["direction"].Read<TransformDirection>());
-        else
-            t->setDirection(TRANSFORM_DIR_FORWARD);
-        
+        ReadBaseTransformPropertiesFromYAMLMap(t, node);
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstTransformRcPtr t)
     {
-        
-        // TODO: GroupTransform seems to be a mixed concept see comment above.
-        /*
-        if(ConstGroupTransformRcPtr Group_tran = \
-            DynamicPtrCast<const GroupTransform>(t))
-            out << Group_tran;
-        */
-        
-        /*
-        else if(ConstDisplayTransformRcPtr tran = \
-            DynamicPtrCast<const DisplayTransform>(t))
-            out << Display_tran;
-        else
-        */
-        if(ConstCineonLogToLinTransformRcPtr CineonLogToLin_tran = \
+        if(ConstCDLTransformRcPtr CDL_tran = \
+            DynamicPtrCast<const CDLTransform>(t))
+            out << CDL_tran;
+        else if(ConstCineonLogToLinTransformRcPtr CineonLogToLin_tran = \
             DynamicPtrCast<const CineonLogToLinTransform>(t))
             out << CineonLogToLin_tran;
         else if(ConstColorSpaceTransformRcPtr ColorSpace_tran = \
             DynamicPtrCast<const ColorSpaceTransform>(t))
             out << ColorSpace_tran;
+        // ConstExponentTransformRcPtr
         else if(ConstExponentTransformRcPtr Exponent_tran = \
             DynamicPtrCast<const ExponentTransform>(t))
             out << Exponent_tran;
         else if(ConstFileTransformRcPtr File_tran = \
             DynamicPtrCast<const FileTransform>(t))
             out << File_tran;
+        else if(ConstGroupTransformRcPtr Group_tran = \
+            DynamicPtrCast<const GroupTransform>(t))
+            out << Group_tran;
         else if(ConstMatrixTransformRcPtr tran = \
             DynamicPtrCast<const MatrixTransform>(t))
             out << tran;
-        else if(ConstCDLTransformRcPtr CDL_tran = \
-            DynamicPtrCast<const CDLTransform>(t))
-            out << CDL_tran;
         else
             throw Exception("Unsupported Transform() type for serialization.");
+        
         return out;
     }
     
+    
+    
+    
     ///////////////////////////////////////////////////////////////////////////
     //  Transforms
+    
+    void operator >> (const YAML::Node& node, GroupTransformRcPtr& t)
+    {
+        t = GroupTransform::Create();
+        
+        if(const YAML::Node * children = node.FindValue("children"))
+        {
+            for(unsigned i = 0; i <children->size(); ++i)
+            {
+                t->push_back((*children)[i].Read<TransformRcPtr>());
+            }
+        }
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, ConstGroupTransformRcPtr t)
+    {
+        out << YAML::VerbatimTag("GroupTransform");
+        out << YAML::BeginMap;
+        AddBaseTransformPropertiesToYAMLMap(out, t);
+        
+        out << YAML::Key << "children";
+        out << YAML::Value;
+        
+        out << YAML::BeginSeq;
+        for(int i = 0; i < t->size(); ++i)
+        {
+            out << t->getTransform(i);
+        }
+        out << YAML::EndSeq;
+        
+        out << YAML::EndMap;
+        
+        return out;
+    }
+    
+    
     
     void operator >> (const YAML::Node& node, FileTransformRcPtr& t)
     {
@@ -219,6 +244,8 @@ OCIO_NAMESPACE_ENTER
     {
         out << YAML::VerbatimTag("FileTransform");
         out << YAML::BeginMap;
+        AddBaseTransformPropertiesToYAMLMap(out, t);
+        
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
         out << YAML::Key << "interpolation";
         out << YAML::Value << t->getInterpolation();
@@ -239,6 +266,8 @@ OCIO_NAMESPACE_ENTER
     {
         out << YAML::VerbatimTag("ColorSpaceTransform");
         out << YAML::BeginMap;
+        AddBaseTransformPropertiesToYAMLMap(out, t);
+        
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
         out << YAML::Key << "dst" << YAML::Value << t->getDst();
         out << YAML::EndMap;
@@ -268,6 +297,8 @@ OCIO_NAMESPACE_ENTER
     {
         out << YAML::VerbatimTag("ExponentTransform");
         out << YAML::BeginMap;
+        AddBaseTransformPropertiesToYAMLMap(out, t);
+        
         std::vector<float> value(4, 0.0);
         t->getValue(&value[0]);
         out << YAML::Key << "value";
@@ -347,9 +378,9 @@ OCIO_NAMESPACE_ENTER
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstCineonLogToLinTransformRcPtr t)
     {
-        
         out << YAML::VerbatimTag("CineonLogToLinTransform");
         out << YAML::BeginMap;
+        AddBaseTransformPropertiesToYAMLMap(out, t);
         
         std::vector<float> max_aim_density(3, 0.0);
         t->getMaxAimDensity(&max_aim_density[0]);
@@ -422,6 +453,8 @@ OCIO_NAMESPACE_ENTER
         
         out << YAML::VerbatimTag("MatrixTransform");
         out << YAML::BeginMap;
+        AddBaseTransformPropertiesToYAMLMap(out, t);
+        
         out << YAML::Key << "matrix";
         out << YAML::Value << YAML::Flow << matrix;
         out << YAML::Key << "offset";
@@ -497,6 +530,8 @@ OCIO_NAMESPACE_ENTER
         
         out << YAML::VerbatimTag("CDLTransform");
         out << YAML::BeginMap;
+        AddBaseTransformPropertiesToYAMLMap(out, t);
+        
         out << YAML::Key << "slope";
         out << YAML::Value << YAML::Flow << slope;
         out << YAML::Key << "offset";

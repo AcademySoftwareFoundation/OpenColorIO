@@ -405,13 +405,13 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        ConstGroupTransformRcPtr getTransform(ColorSpaceDirection dir) const;
-        GroupTransformRcPtr getEditableTransform(ColorSpaceDirection dir);
+        ConstTransformRcPtr getTransform(ColorSpaceDirection dir) const;
+        TransformRcPtr getEditableTransform(ColorSpaceDirection dir);
         
-        void setTransform(const ConstGroupTransformRcPtr & groupTransform,
+        void setTransform(const ConstTransformRcPtr & transform,
                           ColorSpaceDirection dir);
         
-        // Setting a transform to a non-empty group makes it specified
+        // Setting a transform to a non-null call makes it specified
         bool isTransformSpecified(ColorSpaceDirection dir) const;
     
     private:

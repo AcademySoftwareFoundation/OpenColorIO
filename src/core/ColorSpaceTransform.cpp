@@ -181,12 +181,12 @@ OCIO_NAMESPACE_ENTER
         
         CreateGpuAllocationNoOp(ops, srcAllocation);
         
-        ConstGroupTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+        ConstTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         BuildOps(ops, config, toref, TRANSFORM_DIR_FORWARD);
         
         // TODO: If ROLE_REFERENCE is defined, consider adding its GpuAllocation to the OpVec
         
-        ConstGroupTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+        ConstTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         BuildOps(ops, config, fromref, TRANSFORM_DIR_FORWARD);
         
         GpuAllocationData dstAllocation;

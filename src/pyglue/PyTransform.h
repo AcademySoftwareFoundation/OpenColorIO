@@ -66,7 +66,6 @@ OCIO_NAMESPACE_ENTER
     
     extern PyTypeObject PyOCIO_GroupTransformType;
     bool AddGroupTransformObjectToModule( PyObject* m );
-    ConstGroupTransformRcPtr GetConstGroupTransform(PyObject * pyobject, bool allowCast);
     
     extern PyTypeObject PyOCIO_MatrixTransformType;
     bool AddMatrixTransformObjectToModule( PyObject* m );

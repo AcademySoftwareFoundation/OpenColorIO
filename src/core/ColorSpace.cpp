@@ -57,8 +57,8 @@ OCIO_NAMESPACE_ENTER
         float gpuMin_;
         float gpuMax_;
         
-        GroupTransformRcPtr toRefTransform_;
-        GroupTransformRcPtr fromRefTransform_;
+        TransformRcPtr toRefTransform_;
+        TransformRcPtr fromRefTransform_;
         
         bool toRefSpecified_;
         bool fromRefSpecified_;
@@ -69,8 +69,6 @@ OCIO_NAMESPACE_ENTER
             gpuAllocation_(GPU_ALLOCATION_UNIFORM),
             gpuMin_(0.0),
             gpuMax_(1.0),
-            toRefTransform_(GroupTransform::Create()),
-            fromRefTransform_(GroupTransform::Create()),
             toRefSpecified_(false),
             fromRefSpecified_(false)
         { }
@@ -88,8 +86,13 @@ OCIO_NAMESPACE_ENTER
             gpuAllocation_ = rhs.gpuAllocation_;
             gpuMin_ = rhs.gpuMin_;
             gpuMax_ = rhs.gpuMax_;
-            toRefTransform_ = DynamicPtrCast<GroupTransform>(rhs.toRefTransform_->createEditableCopy());
-            fromRefTransform_ = DynamicPtrCast<GroupTransform>(rhs.fromRefTransform_->createEditableCopy());
+            
+            toRefTransform_ = rhs.toRefTransform_;
+            if(toRefTransform_) toRefTransform_ = toRefTransform_->createEditableCopy();
+            
+            fromRefTransform_ = rhs.fromRefTransform_;
+            if(fromRefTransform_) fromRefTransform_ = fromRefTransform_->createEditableCopy();
+            
             toRefSpecified_ = rhs.toRefSpecified_;
             fromRefSpecified_ = rhs.fromRefSpecified_;
             return *this;
@@ -196,7 +199,7 @@ OCIO_NAMESPACE_ENTER
         m_impl->gpuMax_ = max;
     }
     
-    ConstGroupTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
+    ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
     {
         if(dir == COLORSPACE_DIR_TO_REFERENCE)
             return m_impl->toRefTransform_;
@@ -206,7 +209,7 @@ OCIO_NAMESPACE_ENTER
         throw Exception("Unspecified ColorSpaceDirection");
     }
     
-    GroupTransformRcPtr ColorSpace::getEditableTransform(ColorSpaceDirection dir)
+    TransformRcPtr ColorSpace::getEditableTransform(ColorSpaceDirection dir)
     {
         if(dir == COLORSPACE_DIR_TO_REFERENCE)
             return m_impl->toRefTransform_;
@@ -216,11 +219,11 @@ OCIO_NAMESPACE_ENTER
         throw Exception("Unspecified ColorSpaceDirection");
     }
     
-    void ColorSpace::setTransform(const ConstGroupTransformRcPtr & groupTransform,
+    void ColorSpace::setTransform(const ConstTransformRcPtr & transform,
                                   ColorSpaceDirection dir)
     {
-        GroupTransformRcPtr * majorTransform;
-        GroupTransformRcPtr * minorTransform;
+        TransformRcPtr * majorTransform;
+        TransformRcPtr * minorTransform;
         bool * majorIsSpecified = 0;
         bool * minorIsSpecified = 0;
         
@@ -245,13 +248,22 @@ OCIO_NAMESPACE_ENTER
             throw Exception("Unspecified ColorSpaceDirection");
         }
         
-        *majorTransform = DynamicPtrCast<GroupTransform>(groupTransform->createEditableCopy());
-        *majorIsSpecified = (!groupTransform->empty());
-        
-        if(!*minorIsSpecified)
+        if(!transform)
         {
-            *minorTransform = DynamicPtrCast<GroupTransform>(groupTransform->createEditableCopy());
-            (*minorTransform)->setDirection( GetInverseTransformDirection((*majorTransform)->getDirection()) );
+            *majorTransform = TransformRcPtr();
+            *majorIsSpecified = false;
+            if(!*minorIsSpecified) *minorTransform = TransformRcPtr();
+        }
+        else
+        {
+            *majorTransform = transform->createEditableCopy();
+            *majorIsSpecified = true;
+            
+            if(!*minorIsSpecified)
+            {
+                *minorTransform = transform->createEditableCopy();
+                (*minorTransform)->setDirection( GetInverseTransformDirection((*majorTransform)->getDirection()) );
+            }
         }
     }
     

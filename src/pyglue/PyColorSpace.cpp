@@ -673,7 +673,7 @@ OCIO_NAMESPACE_ENTER
                 if (!PyArg_ParseTuple(args,"OO&:setTransform", &pytransform,
                     ConvertPyObjectToColorSpaceDirection, &dir)) return NULL;
                 
-                ConstGroupTransformRcPtr transform = GetConstGroupTransform(pytransform, true);
+                ConstTransformRcPtr transform = GetConstTransform(pytransform, true);
                 ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
                 colorSpace->setTransform(transform, dir);
                 
