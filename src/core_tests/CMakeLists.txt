@@ -30,6 +30,7 @@ if(Boost_FOUND)
     
     install(TARGETS ocio_core_tests DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
     
-    ADD_TEST(ocio_core_tests COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests --log_level=test_suite)
+    add_test(NAME ocio_core_tests
+      COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests --log_level=test_suite)
     
 endif()
