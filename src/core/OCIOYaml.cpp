@@ -104,8 +104,8 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        void AddBaseTransformPropertiesToYAMLMap(YAML::Emitter & out,
-                                                 const ConstTransformRcPtr & t)
+        void EmitBaseTransformKeyValues(YAML::Emitter & out,
+                                        const ConstTransformRcPtr & t)
         {
             // Default direction is always forward.
             if(t->getDirection() == TRANSFORM_DIR_FORWARD) return;
@@ -114,8 +114,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Value << YAML::Flow << t->getDirection();
         }
         
-        void ReadBaseTransformPropertiesFromYAMLMap(TransformRcPtr & t,
-                                                    const YAML::Node & node)
+        void ReadBaseTransformKeyValues(const YAML::Node & node, TransformRcPtr & t)
         {
             if(node.FindValue("direction") != NULL)
                 t->setDirection(node["direction"].Read<TransformDirection>());
@@ -159,7 +158,7 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        ReadBaseTransformPropertiesFromYAMLMap(t, node);
+        ReadBaseTransformKeyValues(node, t);
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstTransformRcPtr t)
@@ -221,7 +220,7 @@ OCIO_NAMESPACE_ENTER
     {
         out << YAML::VerbatimTag("GroupTransform");
         out << YAML::BeginMap;
-        AddBaseTransformPropertiesToYAMLMap(out, t);
+        EmitBaseTransformKeyValues(out, t);
         
         out << YAML::Key << "children";
         out << YAML::Value;
@@ -257,7 +256,7 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Key << "interpolation";
         out << YAML::Value << t->getInterpolation();
         
-        AddBaseTransformPropertiesToYAMLMap(out, t);
+        EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
         return out;
     }
@@ -277,7 +276,7 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Flow << YAML::BeginMap;
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
         out << YAML::Key << "dst" << YAML::Value << t->getDst();
-        AddBaseTransformPropertiesToYAMLMap(out, t);
+        EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
         return out;
     }
@@ -310,7 +309,7 @@ OCIO_NAMESPACE_ENTER
         t->getValue(&value[0]);
         out << YAML::Key << "value";
         out << YAML::Value << YAML::Flow << value;
-        AddBaseTransformPropertiesToYAMLMap(out, t);
+        EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
         return out;
     }
@@ -409,7 +408,7 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Key << "linear_gray_reference";
         out << YAML::Value << YAML::Flow << linear_gray_reference;
         
-        AddBaseTransformPropertiesToYAMLMap(out, t);
+        EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
         
         return out;
@@ -465,7 +464,7 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Key << "offset";
         out << YAML::Value << YAML::Flow << offset;
         
-        AddBaseTransformPropertiesToYAMLMap(out, t);
+        EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
         return out;
     }
@@ -546,7 +545,7 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Value << YAML::Flow << power;
         out << YAML::Key << "saturation" << YAML::Value << t->getSat();
         
-        AddBaseTransformPropertiesToYAMLMap(out, t);
+        EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
         return out;
     }
