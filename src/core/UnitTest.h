@@ -31,10 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef OCIO_UNIT_TEST
 #pragma GCC visibility push(default)
-#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #include <boost/test/unit_test.hpp>
-#pragma GCC diagnostic pop
 #pragma GCC visibility pop
 #endif // OCIO_UNIT_TEST
 
