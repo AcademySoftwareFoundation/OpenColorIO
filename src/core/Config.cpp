@@ -254,7 +254,7 @@ OCIO_NAMESPACE_ENTER
         istream.str(INTERNAL_RAW_PROFILE);
         
         ConfigRcPtr config = Config::Create();
-        config->m_impl->load(istream, "INTERNAL_RAW_PROFILE");
+        config->m_impl->load(istream, 0x0);
         return config;
     }
     
@@ -276,7 +276,7 @@ OCIO_NAMESPACE_ENTER
     ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
     {
         ConfigRcPtr config = Config::Create();
-        config->m_impl->load(istream, "");
+        config->m_impl->load(istream, 0x0);
         return config;
     }
     
@@ -822,7 +822,7 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void Config::Impl::load(std::istream & istream, const char * name)
+    void Config::Impl::load(std::istream & istream, const char * filename)
     {
         try
         {
@@ -956,15 +956,24 @@ OCIO_NAMESPACE_ENTER
                 // TODO: does it matter if there are no colorspaces defined?
             }
             
-            // TODO: what are these used for?
-            //originalFileDir_ = path::dirname(filename);
-            //resolvedResourcePath_ = path::join(originalFileDir_, resourcePath_);
-            
+            // These are defined to allow for relative resource paths
+            // in FileTransforms.
+            if(filename)
+            {
+                originalFileDir_ = path::dirname(filename);
+                resolvedResourcePath_ = path::join(originalFileDir_, resourcePath_);
+            }
+            else
+            {
+                originalFileDir_ = "";
+                resolvedResourcePath_ = "";
+            }
         }
         catch( const std::exception & e)
         {
             std::ostringstream os;
-            os << "Error: OCIO profile, '" << name << "', ";
+            os << "Error: OCIO profile '";
+            if(filename) os << ", " << filename << "', ";
             os << "load failed: " << e.what();
             throw Exception(os.str().c_str());
         }
