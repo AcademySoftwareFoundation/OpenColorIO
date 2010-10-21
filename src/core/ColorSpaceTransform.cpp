@@ -164,6 +164,11 @@ OCIO_NAMESPACE_ENTER
                             const ConstColorSpaceRcPtr & srcColorSpace,
                             const ConstColorSpaceRcPtr & dstColorSpace)
     {
+        if(!srcColorSpace)
+            throw Exception("BuildColorSpaceOps failed, null srcColorSpace.");
+        if(!dstColorSpace)
+            throw Exception("BuildColorSpaceOps failed, null dstColorSpace.");
+        
         if(srcColorSpace->getFamily() == dstColorSpace->getFamily())
             return;
         if(dstColorSpace->isData() || srcColorSpace->isData())

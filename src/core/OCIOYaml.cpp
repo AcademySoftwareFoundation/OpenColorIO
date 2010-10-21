@@ -206,7 +206,13 @@ OCIO_NAMESPACE_ENTER
         {
             for(unsigned i = 0; i <children->size(); ++i)
             {
-                t->push_back((*children)[i].Read<TransformRcPtr>());
+                TransformRcPtr childTransform = (*children)[i].Read<TransformRcPtr>();
+                if(!childTransform)
+                {
+                    throw Exception("Child transform could not be parsed.");
+                }
+                
+                t->push_back(childTransform);
             }
         }
     }

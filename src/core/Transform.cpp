@@ -45,6 +45,10 @@ OCIO_NAMESPACE_ENTER
                   const ConstTransformRcPtr & transform,
                   TransformDirection dir)
     {
+        // A null transform is valid, and corresponds to a no-op.
+        if(!transform)
+            return;
+        
         if(ConstCDLTransformRcPtr cdlTransform = \
             DynamicPtrCast<const CDLTransform>(transform))
         {
