@@ -1,6 +1,12 @@
 Version 0.7.0 (Oct 21 2010):
     * Switched file format from XML to Yaml
 
+
+-------------------------------------------------------------------------------
+
+
+
+
 Version 0.6.1 (Oct 5 2010):
     * Exposed ExponentTransform
     * Added CineonLogToLinTransform - a simple 'straight-line' negative
