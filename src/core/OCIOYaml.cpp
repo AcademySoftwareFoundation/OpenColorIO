@@ -62,7 +62,7 @@ OCIO_NAMESPACE_ENTER
                 COLORSPACE_DIR_TO_REFERENCE);
         if(node.FindValue("from_reference") != NULL)
             cs->setTransform(node["from_reference"].Read<TransformRcPtr>(),
-                COLORSPACE_DIR_TO_REFERENCE);
+                COLORSPACE_DIR_FROM_REFERENCE);
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceRcPtr cs)
