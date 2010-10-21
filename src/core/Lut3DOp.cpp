@@ -314,10 +314,15 @@ OCIO_NAMESPACE_ENTER
         
         void Lut3DOp::finalize()
         {
-            if(m_direction == TRANSFORM_DIR_UNKNOWN)
+            if(m_direction != TRANSFORM_DIR_FORWARD)
             {
-                throw Exception("Cannot apply Lut3DOp, unspecified transform direction.");
+                std::ostringstream os;
+                os << "3D Luts can only be applied in the forward direction. ";
+                os << "(" << TransformDirectionToString(m_direction) << ")";
+                os << " specified.";
+                throw Exception(os.str().c_str());
             }
+            
             if(m_interpolation == INTERP_UNKNOWN)
             {
                 throw Exception("Cannot apply Lut3DOp, unspecified interpolation.");
@@ -335,11 +340,6 @@ OCIO_NAMESPACE_ENTER
             if(m_lut->size[0]*m_lut->size[1]*m_lut->size[2] * 3 != (int)m_lut->lut.size())
             {
                 throw Exception("Cannot apply Lut3DOp, specified size does not match data.");
-            }
-            
-            if(m_direction != TRANSFORM_DIR_FORWARD)
-            {
-                throw Exception("3D Luts can only be applied in the forward direction.");
             }
             
             // Create the cacheID
