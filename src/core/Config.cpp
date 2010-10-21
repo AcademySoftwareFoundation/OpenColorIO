@@ -762,8 +762,10 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Block;
             out << YAML::BeginMap;
             out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
-            if(m_impl->resourcePath_.empty())
+            if(!m_impl->resourcePath_.empty())
+            {
                 out << YAML::Key << "resource_path" << YAML::Value << m_impl->resourcePath_;
+            }
             out << YAML::Key << "strictparsing" << YAML::Value << m_impl->strictParsing_;
             // TODO: should we make defaultLumaCoefs_ a std::vector<float> to make it easier
             //       to serialize?
@@ -992,6 +994,7 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     
     std::string SIMPLE_PROFILE =
     "ocio_profile_version: 1\n"
+    "resource_path: luts\n"
     "strictparsing: false\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
     "roles:\n"
