@@ -107,6 +107,9 @@ OCIO_NAMESPACE_ENTER
         void AddBaseTransformPropertiesToYAMLMap(YAML::Emitter & out,
                                                  const ConstTransformRcPtr & t)
         {
+            // Default direction is always forward.
+            if(t->getDirection() == TRANSFORM_DIR_FORWARD) return;
+            
             out << YAML::Key << "direction";
             out << YAML::Value << YAML::Flow << t->getDirection();
         }
@@ -244,11 +247,11 @@ OCIO_NAMESPACE_ENTER
     {
         out << YAML::VerbatimTag("FileTransform");
         out << YAML::Flow << YAML::BeginMap;
-        AddBaseTransformPropertiesToYAMLMap(out, t);
-        
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
         out << YAML::Key << "interpolation";
         out << YAML::Value << t->getInterpolation();
+        
+        AddBaseTransformPropertiesToYAMLMap(out, t);
         out << YAML::EndMap;
         return out;
     }
@@ -266,10 +269,9 @@ OCIO_NAMESPACE_ENTER
     {
         out << YAML::VerbatimTag("ColorSpaceTransform");
         out << YAML::Flow << YAML::BeginMap;
-        AddBaseTransformPropertiesToYAMLMap(out, t);
-        
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
         out << YAML::Key << "dst" << YAML::Value << t->getDst();
+        AddBaseTransformPropertiesToYAMLMap(out, t);
         out << YAML::EndMap;
         return out;
     }
@@ -297,12 +299,12 @@ OCIO_NAMESPACE_ENTER
     {
         out << YAML::VerbatimTag("ExponentTransform");
         out << YAML::Flow << YAML::BeginMap;
-        AddBaseTransformPropertiesToYAMLMap(out, t);
         
         std::vector<float> value(4, 0.0);
         t->getValue(&value[0]);
         out << YAML::Key << "value";
         out << YAML::Value << YAML::Flow << value;
+        AddBaseTransformPropertiesToYAMLMap(out, t);
         out << YAML::EndMap;
         return out;
     }
@@ -380,7 +382,6 @@ OCIO_NAMESPACE_ENTER
     {
         out << YAML::VerbatimTag("CineonLogToLinTransform");
         out << YAML::Block << YAML::BeginMap;
-        AddBaseTransformPropertiesToYAMLMap(out, t);
         
         std::vector<float> max_aim_density(3, 0.0);
         t->getMaxAimDensity(&max_aim_density[0]);
@@ -402,6 +403,7 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Key << "linear_gray_reference";
         out << YAML::Value << YAML::Flow << linear_gray_reference;
         
+        AddBaseTransformPropertiesToYAMLMap(out, t);
         out << YAML::EndMap;
         
         return out;
@@ -426,7 +428,6 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
         }
-        else throw Exception("MatrixTransform doesn't have a 'matrix:' specified.");
         
         // offset
         if(node.FindValue("offset") != NULL)
@@ -440,7 +441,6 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
         }
-        else throw Exception("MatrixTransform doesn't have a 'offset:' specified.");
         
         t->setValue(&matrix[0], &offset[0]);
     }
@@ -453,12 +453,13 @@ OCIO_NAMESPACE_ENTER
         
         out << YAML::VerbatimTag("MatrixTransform");
         out << YAML::Flow << YAML::BeginMap;
-        AddBaseTransformPropertiesToYAMLMap(out, t);
         
         out << YAML::Key << "matrix";
         out << YAML::Value << YAML::Flow << matrix;
         out << YAML::Key << "offset";
         out << YAML::Value << YAML::Flow << offset;
+        
+        AddBaseTransformPropertiesToYAMLMap(out, t);
         out << YAML::EndMap;
         return out;
     }
@@ -530,7 +531,6 @@ OCIO_NAMESPACE_ENTER
         
         out << YAML::VerbatimTag("CDLTransform");
         out << YAML::Flow << YAML::BeginMap;
-        AddBaseTransformPropertiesToYAMLMap(out, t);
         
         out << YAML::Key << "slope";
         out << YAML::Value << YAML::Flow << slope;
@@ -539,6 +539,8 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Key << "power";
         out << YAML::Value << YAML::Flow << power;
         out << YAML::Key << "saturation" << YAML::Value << t->getSat();
+        
+        AddBaseTransformPropertiesToYAMLMap(out, t);
         out << YAML::EndMap;
         return out;
     }
