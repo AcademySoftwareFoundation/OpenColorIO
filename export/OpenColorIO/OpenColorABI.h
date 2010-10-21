@@ -26,14 +26,20 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef INCLUDED_OCIO_UNITTEST_H
-#define INCLUDED_OCIO_UNITTEST_H
+#ifndef INCLUDED_OCIO_OPENCOLORABI_H
+#define INCLUDED_OCIO_OPENCOLORABI_H
 
-#ifdef OCIO_UNIT_TEST
-#pragma GCC visibility push(default)
-#define BOOST_TEST_MODULE ocio_core
-#include <boost/test/unit_test.hpp>
-#pragma GCC visibility pop
-#endif // OCIO_UNIT_TEST
+#if defined __linux__ || __APPLE__
+    #if __GNUC__ >= 4
+        #define OCIOEXPORT __attribute__ ((visibility("default")))
+        #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
+    #else
+        #define OCIOEXPORT
+        #define OCIOHIDDEN
+    #endif
+#else // _WIN32 and others not supported atm
+    #define OCIOEXPORT
+    #define OCIOHIDDEN
+#endif
 
-#endif // INCLUDED_OCIO_UNITTEST_H
+#endif // INCLUDED_OCIO_OPENCOLORABI_H

@@ -14,7 +14,7 @@ diff -Naur yaml-cpp-0.2.5/CMakeLists.txt YAML_CPP_LOCAL/CMakeLists.txt
  set_target_properties(yaml-cpp PROPERTIES
  	VERSION "${YAML_CPP_VERSION}"
  	SOVERSION "${YAML_CPP_VERSION_MAJOR}.${YAML_CPP_VERSION_MINOR}"
-+    COMPILE_FLAGS "-fPIC"
++    COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden"
  )
  
  install(TARGETS yaml-cpp ${_INSTALL_DESTINATIONS})

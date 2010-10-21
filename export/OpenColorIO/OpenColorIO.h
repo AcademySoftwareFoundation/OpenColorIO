@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 #include "OpenColorVersion.h"
+#include "OpenColorABI.h"
 #include "OpenColorTypes.h"
 #include "OpenColorTransforms.h"
 
@@ -113,7 +114,7 @@ OCIO_NAMESPACE_ENTER
     //  Warning: ALL fcns on the Config class can potentially throw
     //  this exception.
     
-    class Exception : public std::exception
+    class OCIOEXPORT Exception : public std::exception
     {
     public:
         Exception(const char *) throw();
@@ -186,15 +187,15 @@ OCIO_NAMESPACE_ENTER
         to be consistently configured.
     */
     
-    ConstConfigRcPtr GetCurrentConfig();
+    extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
     
     //! Set the current configuration;
     //  this will store a copy of the specified config
     
-    void SetCurrentConfig(const ConstConfigRcPtr & config);
+    extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
     
     
-    class Config
+    class OCIOEXPORT Config
     {
     public:
         
@@ -352,7 +353,7 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const Config&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -360,7 +361,7 @@ OCIO_NAMESPACE_ENTER
     // ColorSpace
     //
     
-    class ColorSpace
+    class OCIOEXPORT ColorSpace
     {
     public:
         static ColorSpaceRcPtr Create();
@@ -428,7 +429,7 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const ColorSpace&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpace&);
     
     
     
@@ -439,7 +440,7 @@ OCIO_NAMESPACE_ENTER
     //
     
     
-    class Processor
+    class OCIOEXPORT Processor
     {
     public:
         virtual ~Processor();
@@ -501,7 +502,7 @@ OCIO_NAMESPACE_ENTER
     // of the pixels, or do any internal allocations or copying of
     // image data
     
-    class ImageDesc
+    class OCIOEXPORT ImageDesc
     {
     public:
         virtual ~ImageDesc();
@@ -520,10 +521,10 @@ OCIO_NAMESPACE_ENTER
         ImageDesc& operator= (const ImageDesc &);
     };
     
-    std::ostream& operator<< (std::ostream&, const ImageDesc&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ImageDesc&);
     
     
-    class PackedImageDesc : public ImageDesc
+    class OCIOEXPORT PackedImageDesc : public ImageDesc
     {
     public:
         PackedImageDesc(float * data,
@@ -555,7 +556,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     
-    class PlanarImageDesc : public ImageDesc
+    class OCIOEXPORT PlanarImageDesc : public ImageDesc
     {
     public:
         PlanarImageDesc(float * rData, float * gData, float * bData,
@@ -586,7 +587,7 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    class GpuShaderDesc
+    class OCIOEXPORT GpuShaderDesc
     {
     public:
         GpuShaderDesc();

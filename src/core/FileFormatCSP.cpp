@@ -358,7 +358,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include <boost/test/unit_test.hpp>
+#include "UnitTest.h"
 
 BOOST_AUTO_TEST_SUITE( FileFormatCSP_Unit_Tests )
 

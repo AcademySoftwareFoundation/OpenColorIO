@@ -46,7 +46,7 @@ OCIO_NAMESPACE_ENTER
     // (Typically only needed when creating and/or manipulating configurations)
     
     
-    class Transform
+    class OCIOEXPORT Transform
     {
     public:
         virtual ~Transform();
@@ -60,7 +60,7 @@ OCIO_NAMESPACE_ENTER
         Transform& operator= (const Transform &);
     };
     
-    std::ostream& operator<< (std::ostream&, const Transform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Transform&);
     
     
     
@@ -77,7 +77,7 @@ OCIO_NAMESPACE_ENTER
     // Note: the clamping portion of the CDL is only applied if 
     // a non-identity power is specified.
     
-    class CDLTransform : public Transform
+    class OCIOEXPORT CDLTransform : public Transform
     {
     public:
         static CDLTransformRcPtr Create();
@@ -145,7 +145,7 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const CDLTransform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const CDLTransform&);
     
     
     
@@ -173,7 +173,7 @@ OCIO_NAMESPACE_ENTER
     //
     // out = lingray * pow(10.0, (in-neggray) * maxDensity / negGamma)
     
-    class CineonLogToLinTransform : public Transform
+    class OCIOEXPORT CineonLogToLinTransform : public Transform
     {
     public:
         
@@ -239,7 +239,7 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const CineonLogToLinTransform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const CineonLogToLinTransform&);
     
     
     
@@ -247,7 +247,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    class ColorSpaceTransform : public Transform
+    class OCIOEXPORT ColorSpaceTransform : public Transform
     {
     public:
         static ColorSpaceTransformRcPtr Create();
@@ -277,7 +277,7 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
     
     
     
@@ -288,7 +288,7 @@ OCIO_NAMESPACE_ENTER
     
     
     
-    class DisplayTransform : public Transform
+    class OCIOEXPORT DisplayTransform : public Transform
     {
     public:
         static DisplayTransformRcPtr Create();
@@ -337,7 +337,7 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const DisplayTransform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const DisplayTransform&);
     
     
     
@@ -349,7 +349,7 @@ OCIO_NAMESPACE_ENTER
     // If the exponent is 1.0, this will not clamp
     // Otherwise, the input color will be clamped between [0.0, inf]
     
-    class ExponentTransform : public Transform
+    class OCIOEXPORT ExponentTransform : public Transform
     {
     public:
         static ExponentTransformRcPtr Create();
@@ -376,7 +376,7 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const ExponentTransform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentTransform&);
     
     
     
@@ -384,7 +384,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    class FileTransform : public Transform
+    class OCIOEXPORT FileTransform : public Transform
     {
     public:
         static FileTransformRcPtr Create();
@@ -414,14 +414,14 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const FileTransform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FileTransform&);
     
     
     
     ///////////////////////////////////////////////////////////////////////////
     
     
-    class GroupTransform : public Transform
+    class OCIOEXPORT GroupTransform : public Transform
     {
     public:
         static GroupTransformRcPtr Create();
@@ -453,7 +453,7 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const GroupTransform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const GroupTransform&);
     
     
     
@@ -461,7 +461,7 @@ OCIO_NAMESPACE_ENTER
     //
     // Represents an MX+B Matrix transform
     
-    class MatrixTransform : public Transform
+    class OCIOEXPORT MatrixTransform : public Transform
     {
     public:
         static MatrixTransformRcPtr Create();
@@ -513,7 +513,7 @@ OCIO_NAMESPACE_ENTER
         std::auto_ptr<Impl> m_impl;
     };
     
-    std::ostream& operator<< (std::ostream&, const MatrixTransform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const MatrixTransform&);
     
 }
 OCIO_NAMESPACE_EXIT

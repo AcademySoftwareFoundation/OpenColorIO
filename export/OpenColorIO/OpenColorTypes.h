@@ -51,58 +51,58 @@ OCIO_NAMESPACE_ENTER
 {
     // Predeclare all class ptr definitions
     
-    class Config;
+    class OCIOEXPORT Config;
     typedef OCIO_SHARED_PTR<const Config> ConstConfigRcPtr;
     typedef OCIO_SHARED_PTR<Config> ConfigRcPtr;
     
-    class ColorSpace;
+    class OCIOEXPORT ColorSpace;
     typedef OCIO_SHARED_PTR<const ColorSpace> ConstColorSpaceRcPtr;
     typedef OCIO_SHARED_PTR<ColorSpace> ColorSpaceRcPtr;
     
-    class Processor;
+    class OCIOEXPORT Processor;
     typedef OCIO_SHARED_PTR<const Processor> ConstProcessorRcPtr;
     typedef OCIO_SHARED_PTR<Processor> ProcessorRcPtr;
     
-    class ImageDesc;
-    class GpuShaderDesc;
-    class Exception;
+    class OCIOEXPORT ImageDesc;
+    class OCIOEXPORT GpuShaderDesc;
+    class OCIOEXPORT Exception;
     
     
     
     
-    class Transform;
+    class OCIOEXPORT Transform;
     typedef OCIO_SHARED_PTR<const Transform> ConstTransformRcPtr;
     typedef OCIO_SHARED_PTR<Transform> TransformRcPtr;
     
-    class CDLTransform;
+    class OCIOEXPORT CDLTransform;
     typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
     typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
     
-    class CineonLogToLinTransform;
+    class OCIOEXPORT CineonLogToLinTransform;
     typedef OCIO_SHARED_PTR<const CineonLogToLinTransform> ConstCineonLogToLinTransformRcPtr;
     typedef OCIO_SHARED_PTR<CineonLogToLinTransform> CineonLogToLinTransformRcPtr;
     
-    class ColorSpaceTransform;
+    class OCIOEXPORT ColorSpaceTransform;
     typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
     typedef OCIO_SHARED_PTR<ColorSpaceTransform> ColorSpaceTransformRcPtr;
     
-    class DisplayTransform;
+    class OCIOEXPORT DisplayTransform;
     typedef OCIO_SHARED_PTR<const DisplayTransform> ConstDisplayTransformRcPtr;
     typedef OCIO_SHARED_PTR<DisplayTransform> DisplayTransformRcPtr;
     
-    class ExponentTransform;
+    class OCIOEXPORT ExponentTransform;
     typedef OCIO_SHARED_PTR<const ExponentTransform> ConstExponentTransformRcPtr;
     typedef OCIO_SHARED_PTR<ExponentTransform> ExponentTransformRcPtr;
     
-    class FileTransform;
+    class OCIOEXPORT FileTransform;
     typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
     typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
     
-    class GroupTransform;
+    class OCIOEXPORT GroupTransform;
     typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
     typedef OCIO_SHARED_PTR<GroupTransform> GroupTransformRcPtr;
     
-    class MatrixTransform;
+    class OCIOEXPORT MatrixTransform;
     typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
     typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
     
@@ -170,29 +170,29 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    const char * BoolToString(bool val);
-    bool BoolFromString(const char * s);
+    extern OCIOEXPORT const char * BoolToString(bool val);
+    extern OCIOEXPORT bool BoolFromString(const char * s);
     
-    const char * TransformDirectionToString(TransformDirection dir);
-    TransformDirection TransformDirectionFromString(const char * s);
+    extern OCIOEXPORT const char * TransformDirectionToString(TransformDirection dir);
+    extern OCIOEXPORT TransformDirection TransformDirectionFromString(const char * s);
     
-    TransformDirection GetInverseTransformDirection(TransformDirection dir);
-    TransformDirection CombineTransformDirections(TransformDirection d1,
-                                                  TransformDirection d2);
+    extern OCIOEXPORT TransformDirection GetInverseTransformDirection(TransformDirection dir);
+    extern OCIOEXPORT TransformDirection CombineTransformDirections(TransformDirection d1,
+                                                                         TransformDirection d2);
     
-    const char * ColorSpaceDirectionToString(ColorSpaceDirection dir);
-    ColorSpaceDirection ColorSpaceDirectionFromString(const char * s);
+    extern OCIOEXPORT const char * ColorSpaceDirectionToString(ColorSpaceDirection dir);
+    extern OCIOEXPORT ColorSpaceDirection ColorSpaceDirectionFromString(const char * s);
     
-    const char * BitDepthToString(BitDepth bitDepth);
-    BitDepth BitDepthFromString(const char * s);
-    bool BitDepthIsFloat(BitDepth bitDepth);
-    int BitDepthToInt(BitDepth bitDepth);
+    extern OCIOEXPORT const char * BitDepthToString(BitDepth bitDepth);
+    extern OCIOEXPORT BitDepth BitDepthFromString(const char * s);
+    extern OCIOEXPORT bool BitDepthIsFloat(BitDepth bitDepth);
+    extern OCIOEXPORT int BitDepthToInt(BitDepth bitDepth);
     
-    const char * GpuAllocationToString(GpuAllocation allocation);
-    GpuAllocation GpuAllocationFromString(const char * s);
+    extern OCIOEXPORT const char * GpuAllocationToString(GpuAllocation allocation);
+    extern OCIOEXPORT GpuAllocation GpuAllocationFromString(const char * s);
     
-    const char * InterpolationToString(Interpolation interp);
-    Interpolation InterpolationFromString(const char * s);
+    extern OCIOEXPORT const char * InterpolationToString(Interpolation interp);
+    extern OCIOEXPORT Interpolation InterpolationFromString(const char * s);
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -212,13 +212,13 @@ OCIO_NAMESPACE_ENTER
     
     */
     
-    extern const char * ROLE_DEFAULT;
-    extern const char * ROLE_REFERENCE;
-    extern const char * ROLE_DATA;
-    extern const char * ROLE_COLOR_PICKING;
-    extern const char * ROLE_SCENE_LINEAR;
-    extern const char * ROLE_COMPOSITING_LOG;
-    extern const char * ROLE_COLOR_TIMING;
+    extern OCIOEXPORT const char * ROLE_DEFAULT;
+    extern OCIOEXPORT const char * ROLE_REFERENCE;
+    extern OCIOEXPORT const char * ROLE_DATA;
+    extern OCIOEXPORT const char * ROLE_COLOR_PICKING;
+    extern OCIOEXPORT const char * ROLE_SCENE_LINEAR;
+    extern OCIOEXPORT const char * ROLE_COMPOSITING_LOG;
+    extern OCIOEXPORT const char * ROLE_COLOR_TIMING;
 }
 OCIO_NAMESPACE_EXIT
 

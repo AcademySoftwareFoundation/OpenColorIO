@@ -268,10 +268,14 @@ OCIO_NAMESPACE_EXIT
 
 ///////////////////////////////////////////////////////////////////////////////
 
+//#pragma GCC visibility push(default)
+//#include <boost/test/unit_test.hpp>
+//#pragma GCC visibility pop
+
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include <boost/test/unit_test.hpp>
+#include "UnitTest.h"
 
 #include <iostream>
 #include <cmath>

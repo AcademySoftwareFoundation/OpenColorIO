@@ -26,6 +26,9 @@ add_dependencies(OpenColorIO
 target_link_libraries(OpenColorIO
     ${YAML_CPP_STATIC_LIBRARIES})
 
+set_target_properties(OpenColorIO PROPERTIES
+    COMPILE_FLAGS "-fvisibility-inlines-hidden -fvisibility=hidden")
+
 install(TARGETS OpenColorIO DESTINATION
     ${CMAKE_INSTALL_PREFIX}/lib)
 

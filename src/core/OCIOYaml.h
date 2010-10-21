@@ -28,8 +28,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-// TODO: Add the OCIO_NAMESPACE to yaml-cpp
+#pragma GCC visibility push(hidden)
 #include <yaml.h>
+#pragma GCC visibility pop
 
 #ifndef INCLUDED_OCIO_YAML_H
 #define INCLUDED_OCIO_YAML_H
