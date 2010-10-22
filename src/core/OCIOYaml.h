@@ -28,9 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#pragma GCC visibility push(hidden)
 #include <yaml.h>
-#pragma GCC visibility pop
 
 #ifndef INCLUDED_OCIO_YAML_H
 #define INCLUDED_OCIO_YAML_H
@@ -39,38 +37,38 @@ OCIO_NAMESPACE_ENTER
 {
     
     // Core
-    void operator >> (const YAML::Node& node, ColorSpaceRcPtr& cs);
-    YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceRcPtr cs);
-    void operator >> (const YAML::Node& node, GroupTransformRcPtr& t);
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstGroupTransformRcPtr t);
-    void operator >> (const YAML::Node& node, TransformRcPtr& t);
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, ColorSpaceRcPtr& cs);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceRcPtr cs);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, GroupTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstGroupTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, TransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstTransformRcPtr t);
     
     // Transforms
-    void operator >> (const YAML::Node& node, FileTransformRcPtr& t);
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstFileTransformRcPtr t);
-    void operator >> (const YAML::Node& node, ColorSpaceTransformRcPtr& t);
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstColorSpaceTransformRcPtr t);
-    void operator >> (const YAML::Node& node, ExponentTransformRcPtr& t);
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstExponentTransformRcPtr t);
-    void operator >> (const YAML::Node& node, CineonLogToLinTransformRcPtr& t);
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstCineonLogToLinTransformRcPtr t);
-    void operator >> (const YAML::Node& node, MatrixTransformRcPtr& t);
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstMatrixTransformRcPtr t);
-    void operator >> (const YAML::Node& node, CDLTransformRcPtr& t);
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstCDLTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, FileTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstFileTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, ColorSpaceTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstColorSpaceTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, ExponentTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstExponentTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, CineonLogToLinTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstCineonLogToLinTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, MatrixTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstMatrixTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, CDLTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstCDLTransformRcPtr t);
     
     // Enums
-    YAML::Emitter& operator << (YAML::Emitter& out, BitDepth depth);
-    void operator >> (const YAML::Node& node, BitDepth& depth);
-    YAML::Emitter& operator << (YAML::Emitter& out, GpuAllocation alloc);
-    void operator >> (const YAML::Node& node, GpuAllocation& alloc);
-    YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceDirection dir);
-    void operator >> (const YAML::Node& node, ColorSpaceDirection& dir);
-    YAML::Emitter& operator << (YAML::Emitter& out, TransformDirection dir);
-    void operator >> (const YAML::Node& node, TransformDirection& dir);
-    YAML::Emitter& operator << (YAML::Emitter& out, Interpolation iterp);
-    void operator >> (const YAML::Node& node, Interpolation& iterp);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, BitDepth depth);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, BitDepth& depth);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, GpuAllocation alloc);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, GpuAllocation& alloc);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceDirection dir);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, ColorSpaceDirection& dir);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, TransformDirection dir);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, TransformDirection& dir);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, Interpolation iterp);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, Interpolation& iterp);
     
 }
 OCIO_NAMESPACE_EXIT
