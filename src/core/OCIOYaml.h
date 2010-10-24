@@ -28,6 +28,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+// fwd declare yaml-cpp visibility
+#pragma GCC visibility push(hidden)
+namespace YAML {
+    class Exception;
+    class BadDereference;
+    class RepresentationException;
+    class EmitterException;
+    class ParserException;
+    class InvalidScalar;
+    class KeyNotFound;
+    template <typename T> class TypedKeyNotFound;
+    class TypedKeyNotFound<OCIO_NAMESPACE::Config>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpace>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::Processor>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::ImageDesc>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::GpuShaderDesc>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::Exception>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::Transform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::CDLTransform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::CineonLogToLinTransform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpaceTransform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::DisplayTransform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::MatrixTransform>;
+}
+#pragma GCC visibility pop
 #include <yaml.h>
 
 #ifndef INCLUDED_OCIO_YAML_H
