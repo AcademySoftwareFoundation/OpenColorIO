@@ -107,8 +107,6 @@ OCIO_NAMESPACE_ENTER
         return map;
     }
     
-    #define OCIO_ENVEXPAND_MAX 30
-    
     void EnvExpand(std::string *str, EnvMap *map)
     {
         std::string orig = *str;
@@ -118,16 +116,11 @@ OCIO_NAMESPACE_ENTER
         {
             i++;
             *str = pystring::replace(*str,
-                ("${"+iter->first+"}"), iter->second,
-                OCIO_ENVEXPAND_MAX);
+                ("${"+iter->first+"}"), iter->second);
             *str = pystring::replace(*str,
-                ("$"+iter->first), iter->second,
-                OCIO_ENVEXPAND_MAX);
+                ("$"+iter->first), iter->second);
             *str = pystring::replace(*str,
-                ("%"+iter->first+"%"), iter->second,
-                OCIO_ENVEXPAND_MAX);
-            if(i >=  OCIO_ENVEXPAND_MAX)
-                return;
+                ("%"+iter->first+"%"), iter->second);
         }
         // recursively call till string doesn't expand anymore
         if(*str != orig)
