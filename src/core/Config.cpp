@@ -346,6 +346,15 @@ OCIO_NAMESPACE_ENTER
     // many files inside these directories.
     const char * Config::findFile(const char * filename) const
     {
+        // just check abs filenames
+        if(pystring::startswith(filename, "/"))
+        {
+            if(FileExists(filename))
+                return filename;
+            else
+                return "";
+        }
+        
         // expanded the searchpath string
         EnvMap env = GetEnvMap();
         std::string searchpath = m_impl->searchPath_;
@@ -360,16 +369,21 @@ OCIO_NAMESPACE_ENTER
         // loop over each path and try to find the file
         for (unsigned int i = 0; i < searchpaths.size(); ++i) {
             
-            if(searchpaths[i].size() == 0) continue;
-            
-            if(pystring::startswith(searchpaths[i], "..")) // resolve '..'
+            // resolve '::' empty entry
+            if(searchpaths[i].size() == 0)
+            {
+                searchpaths[i] = profilecwd;
+            }
+            // resolve '..'
+            else if(pystring::startswith(searchpaths[i], ".."))
             {
                 std::vector<std::string> result;
                 pystring::rsplit(profilecwd, result, "/", 1);
                 if(result.size() == 2)
                     searchpaths[i] = result[0];
             }
-            else if(pystring::startswith(searchpaths[i], ".")) // resolve '.'
+            // resolve '.'
+            else if(pystring::startswith(searchpaths[i], "."))
             {
                 searchpaths[i] = pystring::strip(searchpaths[i], ".");
                 if(pystring::endswith(profilecwd, "/"))
@@ -377,7 +391,8 @@ OCIO_NAMESPACE_ENTER
                 else
                     searchpaths[i] = profilecwd + "/" + searchpaths[i];
             }
-            else // join paths
+            // resolve relative
+            else if(!pystring::startswith(searchpaths[i], "/"))
             {
                 searchpaths[i] = path::join(profilecwd, searchpaths[i]);
             }
