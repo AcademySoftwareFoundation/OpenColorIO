@@ -1,0 +1,8 @@
+#!/bin/sh
+OCIO_TEST_AREA=@OCIO_TEST_AREA@ \
+OCIO_DATA_ROOT=@OCIO_TEST_AREA@/test_search \
+OCIO_TEST1=foobar \
+OCIO_JOB=meatballs \
+OCIO_SEQ=cheesecake \
+OCIO_SHOT=mb-cc-001 \
+@CMAKE_CURRENT_BINARY_DIR@/ocio_core_tests --log_level=test_suite;

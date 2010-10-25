@@ -7,7 +7,7 @@
 // TODO: Avoid use of config->getDisplayColorSpaceName(device, transformName).
 //       (Allow device : transform as another alias of the output color space?)
 // TODO: add  GetOriginalSourceFile(); setOriginalSourceFile(const std::string &sourceFile)
-// TODO: Turn the lutpath into a search path mechanism
+// TODO: Turn the lutpath into a search path mechanism (partial impl)
 // TODO: add op optimizations.  op collapsing.  cache op tree.
 // TODO: test 1d atomic ops
 // TODO: test full colorspace conversions

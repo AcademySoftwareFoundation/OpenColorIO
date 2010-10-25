@@ -33,9 +33,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 #include <iostream>
+#include <fstream>
+
+#ifdef __APPLE__
+#include <crt_externs.h> // _NSGetEnviron()
+#else
+#include <unistd.h>
+extern char **environ;
+#endif
 
 OCIO_NAMESPACE_ENTER
 {
+    
+    namespace
+    {
+        inline char** GetEnviron()
+        {
+#ifdef __APPLE__
+            return (*_NSGetEnviron());
+#else
+            return environ;
+#endif
+        }
+    }
+    
     namespace path
     {
         // TODO: make these also work on windows
@@ -68,6 +89,91 @@ OCIO_NAMESPACE_ENTER
             }
             return "";
         }
+    } // path namespace
+    
+    EnvMap GetEnvMap()
+    {
+        EnvMap map;
+        for (char **env = GetEnviron(); *env != NULL; ++env)
+        {
+            // split environment up into std::map[name] = value
+            std::string env_str = (char*)*env;
+            int pos = env_str.find_first_of('=');
+            map.insert(
+                EnvMap::value_type(env_str.substr(0, pos),
+                env_str.substr(pos+1, env_str.length()))
+            );
+        }
+        return map;
     }
+    
+    #define OCIO_ENVEXPAND_MAX 30
+    
+    void EnvExpand(std::string *str, EnvMap *map)
+    {
+        std::string orig = *str;
+        int i = 0;
+        for (EnvMap::const_iterator iter = map->begin();
+             iter != map->end(); ++iter)
+        {
+            i++;
+            *str = pystring::replace(*str,
+                ("${"+iter->first+"}"), iter->second,
+                OCIO_ENVEXPAND_MAX);
+            *str = pystring::replace(*str,
+                ("$"+iter->first), iter->second,
+                OCIO_ENVEXPAND_MAX);
+            *str = pystring::replace(*str,
+                ("%"+iter->first+"%"), iter->second,
+                OCIO_ENVEXPAND_MAX);
+            if(i >=  OCIO_ENVEXPAND_MAX)
+                return;
+        }
+        // recursively call till string doesn't expand anymore
+        if(*str != orig)
+            EnvExpand(str, map);
+        return;
+    }
+    
+    bool FileExists (std::string filename) {
+        std::ifstream fin;
+        fin.open (filename.c_str());
+        if (fin.fail())
+            return false;
+        fin.close();
+        return true;
+    }
+    
 }
 OCIO_NAMESPACE_EXIT
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+BOOST_AUTO_TEST_SUITE( PathUtils_Unit_Tests )
+
+BOOST_AUTO_TEST_CASE ( test_envexpand )
+{
+    // build env by hand for unit test
+    OCIO::EnvMap env_map; // = OCIO::GetEnvMap();
+   
+    // add some fake env vars so the test runs
+    env_map.insert(OCIO::EnvMap::value_type("TEST1", "foo.bar"));
+    env_map.insert(OCIO::EnvMap::value_type("TEST1NG", "bar.foo"));
+    env_map.insert(OCIO::EnvMap::value_type("FOO_foo.bar", "cheese"));
+   
+    //
+    std::string foo = "/a/b/${TEST1}/${TEST1NG}/$TEST1/$TEST1NG/${FOO_${TEST1}}/";
+    std::string foo_result = "/a/b/foo.bar/bar.foo/foo.bar/bar.foo/cheese/";
+    OCIO::EnvExpand(&foo, &env_map);
+    BOOST_CHECK( foo == foo_result );
+    
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+#endif // OCIO_BUILD_TESTS

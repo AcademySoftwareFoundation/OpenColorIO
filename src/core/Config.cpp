@@ -50,6 +50,9 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
+        
+        const char* DEFAULT_SEARCH_DIR = "$OCIO_DATA_ROOT";
+        
         // These are the 709 primaries specified by the ASC.
         const float DEFAULT_LUMA_COEFF_R = 0.2126f;
         const float DEFAULT_LUMA_COEFF_G = 0.7152f;
@@ -175,6 +178,7 @@ OCIO_NAMESPACE_ENTER
         std::string originalFileDir_;
         std::string resourcePath_;
         std::string resolvedResourcePath_;
+        std::string searchPath_;
         
         std::string description_;
         
@@ -190,6 +194,7 @@ OCIO_NAMESPACE_ENTER
         Impl() : 
             strictParsing_(true)
         {
+            originalFileDir_ = DEFAULT_SEARCH_DIR;
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
             defaultLumaCoefs_[1] = DEFAULT_LUMA_COEFF_G;
             defaultLumaCoefs_[2] = DEFAULT_LUMA_COEFF_B;
@@ -316,6 +321,76 @@ OCIO_NAMESPACE_ENTER
     {
         return m_impl->resolvedResourcePath_.c_str();
     }
+    
+    ///////////////////////////////////////////////////////////////////////////
+    // Search Path
+    
+    void Config::setSearchPath(const char * path)
+    {
+        m_impl->searchPath_ = path;
+    }
+    
+    const char * Config::getSearchPath(bool expand) const
+    {
+        if(!expand)
+            return m_impl->searchPath_.c_str();
+        // expand the env vars in the search path
+        EnvMap env = GetEnvMap();
+        std::string searchPathExpand = m_impl->searchPath_;
+        EnvExpand(&searchPathExpand, &env);
+        return searchPathExpand.c_str();
+    }
+    
+    // TODO: look at caching this look up so that it is faster, for now
+    // this lookup could be slow when you have many searchpath entires and
+    // many files inside these directories.
+    const char * Config::findFile(const char * filename) const
+    {
+        // expanded the searchpath string
+        EnvMap env = GetEnvMap();
+        std::string searchpath = m_impl->searchPath_;
+        std::string profilecwd = m_impl->originalFileDir_;
+        EnvExpand(&searchpath, &env);
+        EnvExpand(&profilecwd, &env);
+        
+        // split the searchpath
+        std::vector<std::string> searchpaths;
+        pystring::split(searchpath, searchpaths, ":");
+        
+        // loop over each path and try to find the file
+        for (unsigned int i = 0; i < searchpaths.size(); ++i) {
+            
+            if(searchpaths[i].size() == 0) continue;
+            
+            if(pystring::startswith(searchpaths[i], "..")) // resolve '..'
+            {
+                std::vector<std::string> result;
+                pystring::rsplit(profilecwd, result, "/", 1);
+                if(result.size() == 2)
+                    searchpaths[i] = result[0];
+            }
+            else if(pystring::startswith(searchpaths[i], ".")) // resolve '.'
+            {
+                searchpaths[i] = pystring::strip(searchpaths[i], ".");
+                if(pystring::endswith(profilecwd, "/"))
+                    searchpaths[i] = profilecwd + searchpaths[i];
+                else
+                    searchpaths[i] = profilecwd + "/" + searchpaths[i];
+            }
+            else // join paths
+            {
+                searchpaths[i] = path::join(profilecwd, searchpaths[i]);
+            }
+            
+            // find the file?
+            std::string findfile = path::join(searchpaths[i], filename);
+            if(FileExists(findfile))
+                return findfile.c_str();
+        }
+        return ""; // didn't find a file
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////
     
     const char * Config::getDescription() const
     {
@@ -989,7 +1064,71 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
+#include <sys/stat.h>
+
 BOOST_AUTO_TEST_SUITE( Config_Unit_Tests )
+
+BOOST_AUTO_TEST_CASE ( test_searchpath_filesystem )
+{
+    
+    OCIO::EnvMap env = OCIO::GetEnvMap();
+    std::string OCIO_TEST_AREA("$OCIO_TEST_AREA");
+    EnvExpand(&OCIO_TEST_AREA, &env);
+    
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    
+    // basic get/set/expand
+    config->setSearchPath("."
+                          ":$OCIO_TEST1"
+                          ":/$OCIO_JOB/${OCIO_SEQ}/$OCIO_SHOT/ocio");
+    
+    BOOST_CHECK_EQUAL(config->getSearchPath(),
+        ".:$OCIO_TEST1:/$OCIO_JOB/${OCIO_SEQ}/$OCIO_SHOT/ocio");
+    BOOST_CHECK_EQUAL(config->getSearchPath(true),
+        ".:foobar:/meatballs/cheesecake/mb-cc-001/ocio");
+    
+    // find some files
+    config->setSearchPath(".."
+                          ":$OCIO_TEST1"
+                          ":${OCIO_TEST_AREA}/test_search/one"
+                          ":$OCIO_TEST_AREA/test_search/two");
+    
+    // setup for search test
+    std::string base_dir("$OCIO_TEST_AREA/test_search/");
+    EnvExpand(&base_dir, &env);
+    mkdir(base_dir.c_str(), 0777);
+    
+    std::string one_dir("$OCIO_TEST_AREA/test_search/one/");
+    EnvExpand(&one_dir, &env);
+    mkdir(one_dir.c_str(), 0777);
+    
+    std::string two_dir("$OCIO_TEST_AREA/test_search/two/");
+    EnvExpand(&two_dir, &env);
+    mkdir(two_dir.c_str(), 0777);
+    
+    std::string lut1(one_dir+"somelut1.lut");
+    std::ofstream somelut1(lut1.c_str());
+    somelut1.close();
+    
+    std::string lut2(two_dir+"somelut2.lut");
+    std::ofstream somelut2(lut2.c_str());
+    somelut2.close();
+    
+    std::string lut3(two_dir+"somelut3.lut");
+    std::ofstream somelut3(lut3.c_str());
+    somelut3.close();
+    
+    std::string lutdotdot(OCIO_TEST_AREA+"/lutdotdot.lut");
+    std::ofstream somelutdotdot(lutdotdot.c_str());
+    somelutdotdot.close();
+    
+    // basic search test
+    BOOST_CHECK_EQUAL(config->findFile("somelut1.lut"), lut1.c_str());
+    BOOST_CHECK_EQUAL(config->findFile("somelut2.lut"), lut2.c_str());
+    BOOST_CHECK_EQUAL(config->findFile("somelut3.lut"), lut3.c_str());
+    BOOST_CHECK_EQUAL(config->findFile("lutdotdot.lut"), lutdotdot.c_str());
+    
+}
 
 BOOST_AUTO_TEST_CASE ( test_INTERNAL_RAW_PROFILE )
 {

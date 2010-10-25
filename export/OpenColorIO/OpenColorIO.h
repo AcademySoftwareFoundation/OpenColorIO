@@ -210,8 +210,11 @@ OCIO_NAMESPACE_ENTER
         
         const char * getResourcePath() const;
         void setResourcePath(const char * path);
-        
         const char * getResolvedResourcePath() const;
+        
+        void setSearchPath(const char * path);
+        const char * getSearchPath(bool expand = false) const;
+        const char * findFile(const char * filename) const;
         
         const char * getDescription() const;
         void setDescription(const char * description);
