@@ -56,7 +56,7 @@ namespace YAML {
     class TypedKeyNotFound<OCIO_NAMESPACE::MatrixTransform>;
 }
 #pragma GCC visibility pop
-#include <yaml.h>
+#include <yaml-cpp/yaml.h>
 
 #ifndef INCLUDED_OCIO_YAML_H
 #define INCLUDED_OCIO_YAML_H

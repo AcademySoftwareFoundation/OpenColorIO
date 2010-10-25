@@ -94,6 +94,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Key << "from_reference" << YAML::Value << fromref;
         
         out << YAML::EndMap;
+        out << YAML::Newline;
         
         return out;
     }

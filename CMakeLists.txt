@@ -60,14 +60,15 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2"
 ### YAML ###
 
 include(ExternalProject)
+set(YAML_CPP_VERSION r423)
 ExternalProject_Add(YAML_CPP_LOCAL
-    URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-0.2.5.tar.gz
+    URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
     BINARY_DIR ext/build/yaml-cpp
-    PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-0.2.5.patch
-    INSTALL_DIR ext/distx
+    PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
+    INSTALL_DIR ext/dist
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE
 )
-set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include/yaml-cpp)
+set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
 set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
 set(YAML_CPP_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
 

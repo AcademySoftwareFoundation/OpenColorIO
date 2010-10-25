@@ -853,6 +853,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Block;
             out << YAML::BeginMap;
             out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
+            out << YAML::Newline;
             if(!m_impl->resourcePath_.empty())
             {
                 out << YAML::Key << "resource_path" << YAML::Value << m_impl->resourcePath_;
@@ -868,12 +869,16 @@ OCIO_NAMESPACE_ENTER
                     out << m_impl->defaultLumaCoefs_[i];
                 out << YAML::EndSeq;
             }
-            if(m_impl->description_.empty())
+            if(m_impl->description_ != "")
+            {
+                out << YAML::Newline;
                 out << YAML::Key << "description" << YAML::Value << m_impl->description_;
+            }
             
             // Roles
             if(m_impl->roleVec_.size() > 0)
             {
+                out << YAML::Newline;
                 out << YAML::Key << "roles" << YAML::Value;
                 out << YAML::BeginMap;
                 for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
@@ -887,6 +892,7 @@ OCIO_NAMESPACE_ENTER
             // Displays
             if(m_impl->displayDevices_.size() > 0)
             {
+                out << YAML::Newline;
                 out << YAML::Key << "displays" << YAML::Value;
                 out << YAML::BeginSeq;
                 for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
@@ -897,6 +903,7 @@ OCIO_NAMESPACE_ENTER
             // ColorSpaces
             if(m_impl->colorspaces_.size() > 0)
             {
+                out << YAML::Newline;
                 out << YAML::Key << "colorspaces";
                 out << YAML::Value << m_impl->colorspaces_; // std::vector -> Seq
             }
@@ -1080,6 +1087,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
 #include <sys/stat.h>
+#include "pystring/pystring.h"
 
 BOOST_AUTO_TEST_SUITE( Config_Unit_Tests )
 
@@ -1232,6 +1240,96 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
     BOOST_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+}
+
+BOOST_AUTO_TEST_CASE ( test_ser )
+{
+    
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("testing");
+        cs->setFamily("test");
+        OCIO::FileTransformRcPtr transform1 = \
+            OCIO::FileTransform::Create();
+        OCIO::CineonLogToLinTransformRcPtr transform2 = \
+            OCIO::CineonLogToLinTransform::Create();
+        OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
+        groupTransform->push_back(transform1);
+        groupTransform->push_back(transform2);
+        cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+        config->addColorSpace(cs);
+        config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("testing2");
+        cs->setFamily("test");
+        OCIO::ExponentTransformRcPtr transform1 = \
+            OCIO::ExponentTransform::Create();
+        OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
+        groupTransform->push_back(transform1);
+        cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+        config->addColorSpace(cs);
+        config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
+    }
+    
+    // for testing
+    //std::ofstream outfile("/tmp/test.ocio");
+    //config->serialize(outfile);
+    //outfile.close();
+    
+    std::ostringstream os;
+    config->serialize(os);
+    
+    std::string PROFILE_OUT =
+    "---\n"
+    "ocio_profile_version: 1\n"
+    "\n"
+    "strictparsing: true\n"
+    "luma: [0.2126, 0.7152, 0.0722]\n"
+    "\n"
+    "roles:\n"
+    "  compositing_log: testing2\n"
+    "\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "    name: testing\n"
+    "    family: test\n"
+    "    bitdepth: unknown\n"
+    "    isdata: false\n"
+    "    gpuallocation: uniform\n"
+    "    gpumin: 0\n"
+    "    gpumax: 1\n"
+    "    to_reference: !<GroupTransform>\n"
+    "      children:\n"
+    "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
+    "        - !<CineonLogToLinTransform>\n"
+    "          max_aim_density: [2.046, 2.046, 2.046]\n"
+    "          neg_gamma: [0.6, 0.6, 0.6]\n"
+    "          neg_gray_reference: [0.434995, 0.434995, 0.434995]\n"
+    "          linear_gray_reference: [0.18, 0.18, 0.18]\n"
+    "\n"
+    "  - !<ColorSpace>\n"
+    "    name: testing2\n"
+    "    family: test\n"
+    "    bitdepth: unknown\n"
+    "    isdata: false\n"
+    "    gpuallocation: uniform\n"
+    "    gpumin: 0\n"
+    "    gpumax: 1\n"
+    "    to_reference: !<GroupTransform>\n"
+    "      children:\n"
+    "        - !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
+    
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(os.str(), osvec);
+    std::vector<std::string> PROFILE_OUTvec;
+    OCIO::pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
+    
+    BOOST_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
+    for(unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
+        BOOST_CHECK_EQUAL(osvec[i], PROFILE_OUTvec[i]);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
