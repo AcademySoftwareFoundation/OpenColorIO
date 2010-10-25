@@ -17,3 +17,13 @@ install(FILES
     main.py
     ocio_info.py
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/scripts)
+
+###############################################################################
+### CTEST ###
+
+message(STATUS "Create OpenColorIOTest.sh.in from OpenColorIOTest.sh")
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/OpenColorIOTest.sh.in
+    ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIOTest.sh @ONLY)
+
+add_test(NAME OpenColorIOTest
+    COMMAND /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIOTest.sh)

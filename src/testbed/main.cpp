@@ -153,7 +153,7 @@ void loadConfigFromEnv()
     */
     
     {
-        std::string outputname = "/mcp/test.ocio";
+        std::string outputname = "/tmp/test1.ocio";
         std::cout << "Writing " << outputname << std::endl;
         std::ofstream outfile(outputname.c_str());
         config->serialize(outfile);
@@ -208,7 +208,7 @@ void createConfig()
     }
     
     {
-        std::string outputname = "/mcp/test.ocio";
+        std::string outputname = "/tmp/test2.ocio";
         std::cout << "Writing " << outputname << std::endl;
         std::ofstream outfile(outputname.c_str());
         config->serialize(outfile);

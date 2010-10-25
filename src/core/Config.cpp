@@ -854,7 +854,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::BeginMap;
             out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
             out << YAML::Newline;
-            if(!m_impl->resourcePath_.empty())
+            if(m_impl->resourcePath_ != "")
             {
                 out << YAML::Key << "resource_path" << YAML::Value << m_impl->resourcePath_;
             }
@@ -1063,8 +1063,8 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                originalFileDir_ = "";
-                resolvedResourcePath_ = "";
+                originalFileDir_ = DEFAULT_SEARCH_DIR;
+                resolvedResourcePath_ = DEFAULT_SEARCH_DIR;
             }
         }
         catch( const std::exception & e)
