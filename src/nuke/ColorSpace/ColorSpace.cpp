@@ -52,11 +52,11 @@ ColorSpace::ColorSpace(Node *n) : DD::Image::PixelIop(n)
     }
     catch (OCIO::Exception& e)
     {
-        error(e.what());
+        std::cerr << e.what() << std::endl;
     }
     catch (...)
     {
-        error("Unknown exception during OCIO setup.");
+        std::cerr << "Unknown exception during OCIO setup." << std::endl;
     }
 
     hasColorSpaces = !(inputColorSpaceCstrNames.empty() || outputColorSpaceCstrNames.empty());
@@ -66,7 +66,7 @@ ColorSpace::ColorSpace(Node *n) : DD::Image::PixelIop(n)
 
     if(!hasColorSpaces)
     {
-        error("No ColorSpaces available for input and/or output.");
+        std::cerr << "No ColorSpaces available for input and/or output." << std::endl;
     }
 }
 

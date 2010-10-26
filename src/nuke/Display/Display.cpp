@@ -61,11 +61,11 @@ Display::Display(Node *n) : DD::Image::PixelIop(n)
     }
     catch (OCIO::Exception& e)
     {
-        error(e.what());
+        std::cerr << e.what() << std::endl;
     }
     catch (...)
     {
-        error("Unknown exception during OCIO setup.");
+        std::cerr << "Unknown exception during OCIO setup." << std::endl;
     }
 
     colorSpaceCstrNames.push_back(NULL);
@@ -75,7 +75,7 @@ Display::Display(Node *n) : DD::Image::PixelIop(n)
 
     if(!hasLists)
     {
-        error("Missing one or more of colorspaces, display devices, or display transforms.");
+        std::cerr << "Missing one or more of colorspaces, display devices, or display transforms." << std::endl;
     }
 }
 
