@@ -98,7 +98,7 @@ OCIO_NAMESPACE_ENTER
         {
             // split environment up into std::map[name] = value
             std::string env_str = (char*)*env;
-            int pos = env_str.find_first_of('=');
+            int pos = static_cast<int>(env_str.find_first_of('='));
             map.insert(
                 EnvMap::value_type(env_str.substr(0, pos),
                 env_str.substr(pos+1, env_str.length()))
