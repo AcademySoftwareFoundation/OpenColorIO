@@ -30,15 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OPENCOLORIO_H
 #define INCLUDED_OCIO_OPENCOLORIO_H
 
-// Namespace mojo
-#ifndef OCIO_NAMESPACE
-#define OCIO_NAMESPACE OpenColorIO
-#endif
-#define OCIO_VERSION_NS v0
-#define OCIO_NAMESPACE_ENTER namespace OCIO_NAMESPACE { namespace OCIO_VERSION_NS
-#define OCIO_NAMESPACE_EXIT using namespace OCIO_VERSION_NS; }
-#define OCIO_NAMESPACE_USING using namespace OCIO_NAMESPACE;
-
 #include <exception>
 #include <iosfwd>
 #include <string>
