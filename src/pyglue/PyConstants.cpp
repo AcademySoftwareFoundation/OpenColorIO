@@ -120,6 +120,7 @@ OCIO_NAMESPACE_ENTER
         PyModule_AddStringConstant(m, "ROLE_SCENE_LINEAR", const_cast<char*>(ROLE_SCENE_LINEAR));
         PyModule_AddStringConstant(m, "ROLE_COMPOSITING_LOG", const_cast<char*>(ROLE_COMPOSITING_LOG));
         PyModule_AddStringConstant(m, "ROLE_COLOR_TIMING", const_cast<char*>(ROLE_COLOR_TIMING));
+        PyModule_AddStringConstant(m, "ROLE_DEFAULT", const_cast<char*>(ROLE_DEFAULT));
         
         // Add the module
         PyModule_AddObject(enclosingModule, "Constants", m);
