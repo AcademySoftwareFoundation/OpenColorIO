@@ -86,6 +86,8 @@ OCIO_NAMESPACE_ENTER
     
     ColorSpaceTransform::~ColorSpaceTransform()
     {
+        delete m_impl;
+        m_impl = NULL;
     }
     
     ColorSpaceTransform& ColorSpaceTransform::operator= (const ColorSpaceTransform & rhs)

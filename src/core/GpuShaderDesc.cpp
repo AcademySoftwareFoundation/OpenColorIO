@@ -63,6 +63,8 @@ OCIO_NAMESPACE_ENTER
     
     GpuShaderDesc::~GpuShaderDesc()
     {
+        delete m_impl;
+        m_impl = NULL;
     }
     
     

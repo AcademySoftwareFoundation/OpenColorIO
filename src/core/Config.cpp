@@ -297,6 +297,8 @@ OCIO_NAMESPACE_ENTER
     
     Config::~Config()
     {
+        delete m_impl;
+        m_impl = NULL;
     }
     
     ConfigRcPtr Config::createEditableCopy() const

@@ -91,6 +91,8 @@ OCIO_NAMESPACE_ENTER
     
     ExponentTransform::~ExponentTransform()
     {
+        delete m_impl;
+        m_impl = NULL;
     }
     
     ExponentTransform& ExponentTransform::operator= (const ExponentTransform & rhs)

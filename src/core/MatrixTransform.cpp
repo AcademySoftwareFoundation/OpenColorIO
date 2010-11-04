@@ -90,6 +90,8 @@ OCIO_NAMESPACE_ENTER
     
     MatrixTransform::~MatrixTransform()
     {
+        delete m_impl;
+        m_impl = NULL;
     }
     
     MatrixTransform& MatrixTransform::operator= (const MatrixTransform & rhs)

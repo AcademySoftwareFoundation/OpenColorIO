@@ -132,7 +132,10 @@ OCIO_NAMESPACE_ENTER
     { }
     
     PackedImageDesc::~PackedImageDesc()
-    { }
+    {
+        delete m_impl;
+        m_impl = NULL;
+    }
     
     long PackedImageDesc::getWidth() const
     {
@@ -243,7 +246,10 @@ OCIO_NAMESPACE_ENTER
     { }
     
     PlanarImageDesc::~PlanarImageDesc()
-    { }
+    {
+        delete m_impl;
+        m_impl = NULL;
+    }
     
     long PlanarImageDesc::getWidth() const
     {

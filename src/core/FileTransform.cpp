@@ -80,7 +80,6 @@ OCIO_NAMESPACE_ENTER
     FileTransform::FileTransform()
         : m_impl(new FileTransform::Impl)
     {
-    
     }
     
     TransformRcPtr FileTransform::createEditableCopy() const
@@ -92,7 +91,8 @@ OCIO_NAMESPACE_ENTER
     
     FileTransform::~FileTransform()
     {
-    
+        delete m_impl;
+        m_impl = NULL;
     }
     
     FileTransform& FileTransform::operator= (const FileTransform & rhs)

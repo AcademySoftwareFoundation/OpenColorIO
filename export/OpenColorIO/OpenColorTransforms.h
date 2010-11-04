@@ -142,7 +142,7 @@ OCIO_NAMESPACE_ENTER
         
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const CDLTransform&);
@@ -236,7 +236,7 @@ OCIO_NAMESPACE_ENTER
         static void deleter(CineonLogToLinTransform* t);
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const CineonLogToLinTransform&);
@@ -274,7 +274,7 @@ OCIO_NAMESPACE_ENTER
         
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
@@ -334,7 +334,7 @@ OCIO_NAMESPACE_ENTER
         
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const DisplayTransform&);
@@ -373,7 +373,7 @@ OCIO_NAMESPACE_ENTER
         
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentTransform&);
@@ -411,7 +411,7 @@ OCIO_NAMESPACE_ENTER
         
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FileTransform&);
@@ -450,7 +450,7 @@ OCIO_NAMESPACE_ENTER
         
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const GroupTransform&);
@@ -510,7 +510,7 @@ OCIO_NAMESPACE_ENTER
         
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const MatrixTransform&);

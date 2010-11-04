@@ -111,6 +111,8 @@ OCIO_NAMESPACE_ENTER
     
     ColorSpace::~ColorSpace()
     {
+        delete m_impl;
+        m_impl = NULL;
     }
     
     ColorSpaceRcPtr ColorSpace::createEditableCopy() const

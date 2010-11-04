@@ -228,6 +228,8 @@ OCIO_NAMESPACE_ENTER
     
     CDLTransform::~CDLTransform()
     {
+        delete m_impl;
+        m_impl = NULL;
     }
     
     CDLTransform& CDLTransform::operator= (const CDLTransform & rhs)

@@ -105,6 +105,8 @@ OCIO_NAMESPACE_ENTER
     
     DisplayTransform::~DisplayTransform()
     {
+        delete m_impl;
+        m_impl = NULL;
     }
     
     DisplayTransform& DisplayTransform::operator= (const DisplayTransform & rhs)

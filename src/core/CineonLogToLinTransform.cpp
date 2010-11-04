@@ -97,7 +97,10 @@ OCIO_NAMESPACE_ENTER
     }
     
     CineonLogToLinTransform::~CineonLogToLinTransform()
-    { }
+    {
+        delete m_impl;
+        m_impl = NULL;
+    }
     
     CineonLogToLinTransform& CineonLogToLinTransform::operator= (const CineonLogToLinTransform& rhs)
     {

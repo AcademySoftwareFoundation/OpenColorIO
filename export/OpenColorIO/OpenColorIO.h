@@ -344,7 +344,7 @@ OCIO_NAMESPACE_ENTER
         
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
@@ -420,7 +420,7 @@ OCIO_NAMESPACE_ENTER
         
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpace&);
@@ -543,7 +543,7 @@ OCIO_NAMESPACE_ENTER
     private:
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
         
         PackedImageDesc(const PackedImageDesc &);
         PackedImageDesc& operator= (const PackedImageDesc &);
@@ -572,7 +572,7 @@ OCIO_NAMESPACE_ENTER
     private:
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
         
         PlanarImageDesc(const PlanarImageDesc &);
         PlanarImageDesc& operator= (const PlanarImageDesc &);
@@ -599,7 +599,7 @@ OCIO_NAMESPACE_ENTER
     private:
         class Impl;
         friend class Impl;
-        std::auto_ptr<Impl> m_impl;
+        Impl * m_impl;
         
         GpuShaderDesc(const GpuShaderDesc &);
         GpuShaderDesc& operator= (const GpuShaderDesc &);

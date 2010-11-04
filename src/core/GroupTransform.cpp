@@ -98,6 +98,8 @@ OCIO_NAMESPACE_ENTER
     
     GroupTransform::~GroupTransform()
     {
+        delete m_impl;
+        m_impl = NULL;
     }
     
     GroupTransform& GroupTransform::operator= (const GroupTransform & rhs)
