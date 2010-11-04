@@ -1091,6 +1091,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 BOOST_AUTO_TEST_SUITE( Config_Unit_Tests )
 
+#if 0
 BOOST_AUTO_TEST_CASE ( test_searchpath_filesystem )
 {
     
@@ -1152,6 +1153,7 @@ BOOST_AUTO_TEST_CASE ( test_searchpath_filesystem )
     BOOST_CHECK_EQUAL(config->findFile("lutdotdot.lut"), lutdotdot.c_str());
     
 }
+#endif
 
 BOOST_AUTO_TEST_CASE ( test_INTERNAL_RAW_PROFILE )
 {
