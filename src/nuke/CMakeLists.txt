@@ -10,6 +10,7 @@ if( NUKE_FOUND )
         ${CMAKE_BINARY_DIR}/export/
         ColorSpace
         Display
+        LogConvert
         ${Nuke_INCLUDE_DIR}
     )
     
@@ -46,13 +47,31 @@ if( NUKE_FOUND )
     )
     
     ###############################################################################
+    ### NukeOCIOLogConvert ###
+    
+    add_library(NukeOCIOLogConvert MODULE
+        LogConvert/LogConvert.cpp
+    )
+    target_link_libraries(NukeOCIOLogConvert
+        OpenColorIO
+        #${Nuke_LIBRARIES}
+    )
+    set_target_properties(NukeOCIOLogConvert
+        PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "OCIOLogConvert"
+    )
+    
+    ###############################################################################
     ### Nuke Targets ###
     
     add_custom_target(Nuke
         DEPENDS NukeOCIOColorSpace
         DEPENDS NukeOCIODisplay
+        DEPENDS NukeOCIOLogConvert
     )
     install(TARGETS NukeOCIOColorSpace DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
     install(TARGETS NukeOCIODisplay DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
+    install(TARGETS NukeOCIOLogConvert DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
     
 endif()
