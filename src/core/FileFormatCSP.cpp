@@ -253,7 +253,7 @@ OCIO_NAMESPACE_ENTER
                         for (int b = 0; b < lut3d_ptr->size[2]; ++b) {
 
                             // store each row
-                            int i = GetGLLut3DArrayOffset (r, g, b,
+                            int i = GetAutodeskLut3DArrayOffset (r, g, b,
                                                            lut3d_ptr->size[0],
                                                            lut3d_ptr->size[1],
                                                            lut3d_ptr->size[2]);
@@ -450,12 +450,11 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     strebuf << "1.0 1.0 0.0"                                 << "\n";
     
     // TODO: add the prelut data here
-    // TODO: check how we read from csp into gl memory layout
     float cube[1 * 2 * 3 * 3] = { 0.0, 0.0, 0.0,
-                                  1.0, 0.5, 0.0,
                                   1.0, 0.0, 0.0,
-                                  0.0, 1.0, 0.0,
                                   0.0, 0.5, 0.0,
+                                  1.0, 0.5, 0.0,
+                                  0.0, 1.0, 0.0,
                                   1.0, 1.0, 0.0 };
     
     std::istringstream simple3D;
