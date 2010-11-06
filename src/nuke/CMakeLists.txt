@@ -10,6 +10,7 @@ if( NUKE_FOUND )
         ${CMAKE_BINARY_DIR}/export/
         ColorSpace
         Display
+        FileTransform
         LogConvert
         ${Nuke_INCLUDE_DIR}
     )
@@ -47,6 +48,22 @@ if( NUKE_FOUND )
     )
     
     ###############################################################################
+    ### NukeOCIOFileTransform ###
+    
+    add_library(NukeOCIOFileTransform MODULE
+        FileTransform/FileTransform.cpp
+    )
+    target_link_libraries(NukeOCIOFileTransform
+        OpenColorIO
+        #${Nuke_LIBRARIES}
+    )
+    set_target_properties(NukeOCIOFileTransform
+        PROPERTIES
+        PREFIX ""
+        OUTPUT_NAME "OCIOFileTransform"
+    )
+    
+    ###############################################################################
     ### NukeOCIOLogConvert ###
     
     add_library(NukeOCIOLogConvert MODULE
@@ -68,10 +85,12 @@ if( NUKE_FOUND )
     add_custom_target(Nuke
         DEPENDS NukeOCIOColorSpace
         DEPENDS NukeOCIODisplay
+        DEPENDS NukeOCIOFileTransform
         DEPENDS NukeOCIOLogConvert
     )
     install(TARGETS NukeOCIOColorSpace DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
     install(TARGETS NukeOCIODisplay DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
     install(TARGETS NukeOCIOLogConvert DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
+    install(TARGETS NukeOCIOFileTransform DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
     
 endif()
