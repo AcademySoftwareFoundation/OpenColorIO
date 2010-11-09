@@ -110,7 +110,7 @@ OCIO_NAMESPACE_ENTER
     
     
     typedef std::vector<ColorSpaceRcPtr> ColorSpacePtrVec;
-    typedef std::vector< std::pair<std::string, std::string> > RoleVec; // (lowercase role name, colorspace)
+    typedef std::map<std::string, std::string> RoleMap; // (lower case role name: colorspace name)
     typedef std::vector<std::string> DisplayKey; // (device, name, colorspace)
     
     void operator >> (const YAML::Node& node, DisplayKey& k)
@@ -140,19 +140,11 @@ OCIO_NAMESPACE_ENTER
         return out;
     }
     
-    std::string LookupRole(const RoleVec & roleVec, const std::string & rolename)
+    std::string LookupRole(const RoleMap & roles, const std::string & rolename)
     {
-        std::string s = pystring::lower(rolename);
-        
-        for(unsigned int i=0; i<roleVec.size(); ++i)
-        {
-            if(s == roleVec[i].first)
-            {
-                return roleVec[i].second;
-            }
-        }
-        
-        return "";
+        RoleMap::const_iterator iter = roles.find(pystring::lower(rolename));
+        if(iter == roles.end()) return "";
+        return iter->second;
     }
     
     bool FindColorSpaceIndex(int * index,
@@ -184,7 +176,7 @@ OCIO_NAMESPACE_ENTER
         
         ColorSpacePtrVec colorspaces_;
         
-        RoleVec roleVec_;
+        RoleMap roles_;
         
         std::vector<DisplayKey> displayDevices_;
         
@@ -220,7 +212,7 @@ OCIO_NAMESPACE_ENTER
                 colorspaces_.push_back(rhs.colorspaces_[i]->createEditableCopy());
             }
             
-            roleVec_ = rhs.roleVec_; // Vector assignment operator will suffice for this
+            roles_ = rhs.roles_; // Map assignment operator will suffice for this
             displayDevices_ = rhs.displayDevices_; // Vector assignment operator will suffice for this
             
             memcpy(defaultLumaCoefs_, rhs.defaultLumaCoefs_, 3*sizeof(float));
@@ -471,14 +463,14 @@ OCIO_NAMESPACE_ENTER
         }
         
         // Check to see if the name is a role
-        std::string csname = LookupRole(m_impl->roleVec_, name);
+        std::string csname = LookupRole(m_impl->roles_, name);
         if( FindColorSpaceIndex(&csindex, m_impl->colorspaces_, csname) )
         {
             return csindex;
         }
         
         // Is a default role defined?
-        csname = LookupRole(m_impl->roleVec_, ROLE_DEFAULT);
+        csname = LookupRole(m_impl->roles_, ROLE_DEFAULT);
         if( FindColorSpaceIndex(&csindex, m_impl->colorspaces_, csname) )
         {
             return csindex;
@@ -562,7 +554,7 @@ OCIO_NAMESPACE_ENTER
         if(!m_impl->strictParsing_)
         {
             // Is a default role defined?
-            std::string csname = LookupRole(m_impl->roleVec_, ROLE_DEFAULT);
+            std::string csname = LookupRole(m_impl->roles_, ROLE_DEFAULT);
             if(!csname.empty())
             {
                 int csindex = -1;
@@ -591,50 +583,41 @@ OCIO_NAMESPACE_ENTER
     // Roles
     void Config::setRole(const char * role, const char * colorSpaceName)
     {
-        std::string rolelower = pystring::lower(role);
-        
         // Set the role
         if(colorSpaceName)
         {
-            for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
-            {
-                if(m_impl->roleVec_[i].first == rolelower)
-                {
-                    m_impl->roleVec_[i].second = colorSpaceName;
-                    return;
-                }
-            }
-            m_impl->roleVec_.push_back( std::make_pair(rolelower, std::string(colorSpaceName) ) );
+            m_impl->roles_[pystring::lower(role)] = std::string(colorSpaceName);
         }
         // Unset the role
         else
         {
-            for(RoleVec::iterator iter = m_impl->roleVec_.begin();
-                iter != m_impl->roleVec_.end();
-                ++iter)
+            RoleMap::iterator iter = m_impl->roles_.find(pystring::lower(role));
+            if(iter != m_impl->roles_.end())
             {
-                if(iter->first == rolelower)
-                {
-                    m_impl->roleVec_.erase(iter);
-                    return;
-                }
+                m_impl->roles_.erase(iter);
             }
         }
     }
     
     int Config::getNumRoles() const
     {
-        return static_cast<int>(m_impl->roleVec_.size());
+        return static_cast<int>(m_impl->roles_.size());
     }
     
     const char * Config::getRoleNameByIndex(int index) const
     {
-        if(index<0 || index >= (int)m_impl->roleVec_.size())
+        if(index<0 || index >= (int)m_impl->roles_.size())
         {
             return 0x0;
         }
         
-        return m_impl->roleVec_[index].first.c_str();
+        RoleMap::const_iterator iter = m_impl->roles_.begin();
+        for(int i=0; i<index; ++i)
+        {
+            ++iter;
+        }
+        
+        return iter->second.c_str();
     }
     
     
@@ -878,16 +861,20 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Roles
-            if(m_impl->roleVec_.size() > 0)
+            if(m_impl->roles_.size() > 0)
             {
                 out << YAML::Newline;
                 out << YAML::Key << "roles" << YAML::Value;
                 out << YAML::BeginMap;
-                for(unsigned int i=0; i<m_impl->roleVec_.size(); ++i)
+                
+                RoleMap::const_iterator iter = m_impl->roles_.begin();
+                RoleMap::const_iterator end = m_impl->roles_.end();
+                for(;iter != end; ++iter)
                 {
-                    out << YAML::Key   << m_impl->roleVec_[i].first;
-                    out << YAML::Value << m_impl->roleVec_[i].second;
+                    out << YAML::Key   << iter->first;
+                    out << YAML::Value << iter->second;
                 }
+                
                 out << YAML::EndMap;
             }
             
@@ -999,7 +986,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     const std::string key = it.first();
                     const std::string value = it.second();
-                    roleVec_.push_back(std::make_pair(key, value));
+                    roles_[pystring::lower(key)] = value;
                 }
             
             } else {
