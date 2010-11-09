@@ -109,6 +109,10 @@ OCIO_NAMESPACE_ENTER
     
     void EnvExpand(std::string *str, EnvMap *map)
     {
+        // Early exit if no magic characters are found.
+        if(pystring::find(*str, "$") == -1 && 
+           pystring::find(*str, "%") == -1) return;
+        
         std::string orig = *str;
         int i = 0;
         for (EnvMap::const_iterator iter = map->begin();
