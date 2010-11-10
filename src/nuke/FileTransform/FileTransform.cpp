@@ -15,19 +15,13 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <sstream>
 #include <stdexcept>
 
-
-/*
-const char* FileTransform::intepolation[] = {
-    "unknown", "nearest", "linear", 0
-};
-*/
-
 FileTransform::FileTransform(Node *n) : DD::Image::PixelIop(n)
 {
     src = NULL;
+    dirindex = 0;
+    interpindex = 1;
     
     layersToProcess = DD::Image::Mask_RGB;
-
 }
 
 FileTransform::~FileTransform()
@@ -35,11 +29,23 @@ FileTransform::~FileTransform()
 
 }
 
+const char* FileTransform::dirs[] = { "forward", "inverse", 0 };
+
+const char* FileTransform::interp[] = { "nearest", "linear", 0 };
+
 void FileTransform::knobs(DD::Image::Knob_Callback f)
 {
 
     File_knob(f, &src, "src", "src");
-    DD::Image::Tooltip(f, "Specify the src file, on disk, to use for this transform.");
+    const char * srchelp = "Specify the src file, on disk, to use for this transform. "
+    "This can be any file format that OpenColorIO supports.";
+    DD::Image::Tooltip(f, srchelp);
+    
+    Enumeration_knob(f, &dirindex, dirs, "direction", "direction");
+    DD::Image::Tooltip(f, "Specify the transform direction.");
+    
+    Enumeration_knob(f, &interpindex, interp, "interpolation", "interpolation");
+    DD::Image::Tooltip(f, "Specify the interpolation method. For files that are not LUTs (mtx, etc) this is ignored.");
     
     DD::Image::Divider(f);
     
@@ -64,7 +70,12 @@ void FileTransform::_validate(bool for_real)
         
         OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
         transform->setSrc(src);
-        transform->setInterpolation(OCIO::INTERP_LINEAR);
+        
+        if(dirindex == 0) transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+        else transform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+        
+        if(interpindex == 0) transform->setInterpolation(OCIO::INTERP_NEAREST);
+        else transform->setInterpolation(OCIO::INTERP_LINEAR);
         
         processor = config->getProcessor(transform);
     }

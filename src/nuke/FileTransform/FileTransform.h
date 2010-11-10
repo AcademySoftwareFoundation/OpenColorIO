@@ -20,8 +20,9 @@ class FileTransform : public DD::Image::PixelIop {
 
     protected:
         DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
-        //int modeindex;
         const char* src;
+        int dirindex;
+        int interpindex;
         
         /*
         int inputColorSpaceIndex; //!< index of input colorspace selection from the pulldown list knob
@@ -33,7 +34,8 @@ class FileTransform : public DD::Image::PixelIop {
         
         OCIO::ConstProcessorRcPtr processor;
     public:
-        // static const char* modes[];
+        static const char* dirs[];
+        static const char* interp[];
 
         FileTransform(Node *node);
 
