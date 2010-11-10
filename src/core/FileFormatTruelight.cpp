@@ -45,13 +45,15 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile ()
+            LocalCachedFile () : 
+                has1D(false)
             {
                 lut1D = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
                 lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
             };
             ~LocalCachedFile() {};
             
+            bool has1D;
             OCIO_SHARED_PTR<Lut1D> lut1D;
             OCIO_SHARED_PTR<Lut3D> lut3D;
         };
@@ -205,14 +207,6 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            if(size1d == 0)
-            {
-                std::ostringstream os;
-                os << "Parse error in truelight cube lut. ";
-                os << "No 1D Lut entries found.";
-                throw Exception(os.str().c_str());
-            }
-            
             if(size3d[0]*size3d[1]*size3d[2] != static_cast<int>(raw3d.size()/3))
             {
                 std::ostringstream os;
@@ -231,20 +225,24 @@ OCIO_NAMESPACE_ENTER
             }
             
             
-            
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
             // Reformat 1D data
-            for(int channel=0; channel<3; ++channel)
+            if(size1d>0)
             {
-                float descale = 1.0f / static_cast<float>(size3d[channel]);
-                cachedFile->lut1D->luts[channel].resize(size1d);
-                for(int i=0; i<size1d; ++i)
+                cachedFile->has1D = true;
+                
+                for(int channel=0; channel<3; ++channel)
                 {
-                    cachedFile->lut1D->luts[channel][i] = raw1d[3*i+channel] * descale;
+                    float descale = 1.0f / static_cast<float>(size3d[channel]);
+                    cachedFile->lut1D->luts[channel].resize(size1d);
+                    for(int i=0; i<size1d; ++i)
+                    {
+                        cachedFile->lut1D->luts[channel][i] = raw1d[3*i+channel] * descale;
+                    }
                 }
+                cachedFile->lut1D->generateCacheID();
             }
-            cachedFile->lut1D->generateCacheID();
             
             // Reformat 3D data
             cachedFile->lut3D->size[0] = size3d[0];
@@ -289,25 +287,21 @@ OCIO_NAMESPACE_ENTER
             
             if(newDir == TRANSFORM_DIR_FORWARD)
             {
-                if(cachedFile->lut1D)
+                if(cachedFile->has1D)
                 {
                     CreateLut1DOp(ops, cachedFile->lut1D,
                                   INTERP_LINEAR, newDir);
                 }
-                if(cachedFile->lut3D)
-                {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
-                }
+                
+                CreateLut3DOp(ops, cachedFile->lut3D,
+                              fileTransform.getInterpolation(), newDir);
             }
             else if(newDir == TRANSFORM_DIR_INVERSE)
             {
-                if(cachedFile->lut3D)
-                {
-                    CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
-                }
-                if(cachedFile->lut1D)
+                CreateLut3DOp(ops, cachedFile->lut3D,
+                              fileTransform.getInterpolation(), newDir);
+                
+                if(cachedFile->has1D)
                 {
                     CreateLut1DOp(ops, cachedFile->lut1D,
                                   INTERP_LINEAR, newDir);
