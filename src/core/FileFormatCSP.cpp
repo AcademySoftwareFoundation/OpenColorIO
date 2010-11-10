@@ -292,7 +292,7 @@ OCIO_NAMESPACE_ENTER
             cachedFile->csptype = csptype;
             cachedFile->metadata = metadata;
             if(csptype == "1D") {
-                lut1d_ptr->generateCacheID ();
+                lut1d_ptr->finalize(0.0);
                 cachedFile->lut1D = lut1d_ptr;
             } else if (csptype == "3D") {
                 lut3d_ptr->generateCacheID ();

@@ -189,7 +189,18 @@ OCIO_NAMESPACE_ENTER
                         throw Exception("Not enough entries found.");
                 }
                 
-                lut1d->generateCacheID();
+                // 1e-5 rel error is a good threshold when float numbers near 0
+                // are written out with 6 decimal places of precision.  This is
+                // a bit aggressive, I.e., changes in the 6th decimal place will
+                // be considered roundoff error, but changes in the 5th decimal
+                // will be considered lut 'intent'.
+                // 1.0
+                // 1.000005 equal to 1.0
+                // 1.000007 equal to 1.0
+                // 1.000010 not equal
+                // 0.0
+                // 0.000001 not equal
+                lut1d->finalize(1e-5f);
                 
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
                 cachedFile->lut = lut1d;

@@ -369,7 +369,7 @@ OCIO_NAMESPACE_ENTER
             if(cachedFile->hdltype == "C" ||
                cachedFile->hdltype == "3D+1D")
             {
-                lut1d_ptr->generateCacheID ();
+                lut1d_ptr->finalize(0.0);
                 cachedFile->lut1D = lut1d_ptr;
             }
             if(cachedFile->hdltype == "3D" ||

@@ -44,15 +44,9 @@ OCIO_NAMESPACE_ENTER
     
     struct Lut1D
     {
-        float from_min[3];
-        float from_max[3];
-        
-        typedef std::vector<float> fv_t;
-        fv_t luts[3];
-        
-        std::string cacheID;
-        
-        Lut1D()
+        Lut1D() :
+            isFinal(false),
+            isNoOp(false)
         {
             for(int i=0; i<3; ++i)
             {
@@ -61,14 +55,34 @@ OCIO_NAMESPACE_ENTER
             }
         };
         
-        // TODO: This must be explicitly called now. Make it deferred / lazy?
-        void generateCacheID();
+        // This will compute the cacheid, and also
+        // determine if the lut is a no-op.
+        // If this lut is being read in from float ASCII text
+        // a value of 1e-5 is preferable.
+        // If this lut is being read in from integer ASCII
+        // representation, the value will depend on the LSB
+        // at the specified integer precision.
+        // Example: reading 10-bit ints? Use 2/1023.0
+        // If you dont want to do the noop computation,
+        // specify a 0.0 tolerance.
+        
+        void finalize(float relativeIdentityTolerance);
+        
+        float from_min[3];
+        float from_max[3];
+        
+        typedef std::vector<float> fv_t;
+        fv_t luts[3];
+        
+        std::string cacheID;
+        bool isFinal;
+        bool isNoOp;
     };
     
     typedef OCIO_SHARED_PTR<Lut1D> Lut1DRcPtr;
     
     void CreateLut1DOp(OpRcPtrVec & ops,
-                       Lut1DRcPtr lut,
+                       const Lut1DRcPtr & lut,
                        Interpolation interpolation,
                        TransformDirection direction);
 }

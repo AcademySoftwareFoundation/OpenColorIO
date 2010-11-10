@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HashUtils.h"
 #include "Lut1DOp.h"
+#include "MathUtils.h"
 #include "SSE.h"
 
 #include <algorithm>
@@ -38,25 +39,71 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    void Lut1D::generateCacheID()
+    namespace
     {
-        md5_state_t state;
-        md5_byte_t digest[16];
-        
-        md5_init(&state);
-        
-        md5_append(&state, (const md5_byte_t *)from_min, 3*sizeof(float));
-        md5_append(&state, (const md5_byte_t *)from_max, 3*sizeof(float));
-        
-        for(int i=0; i<3; ++i)
+        bool IsLut1DNoOp(const Lut1D & lut,
+                         float relativeIdentityTolerance)
         {
-            md5_append( &state, (const md5_byte_t *)&(luts[i][0]),
-                (int) (luts[i].size()*sizeof(float)) );
+            // If tolerance is 0.0, or negative, skip check
+            if(!(relativeIdentityTolerance > 0.0)) return false;
+            
+            for(int channel = 0; channel<3; ++channel)
+            {
+                if(lut.luts[channel].size() == 0) continue;
+                
+                float inorm = 1.0f / (static_cast<float>(lut.luts[channel].size()) - 1.0f);
+                
+                float m = lut.from_max[channel] - lut.from_min[channel];
+                float b = lut.from_min[channel];
+                
+                for(unsigned int i=0; i<lut.luts[channel].size(); ++i)
+                {
+                    float x = static_cast<float>(i) * inorm;
+                    float identval = m*x+b;
+                    float lutval = lut.luts[channel][i];
+                    
+                    if(!equalWithRelError(identval, lutval, relativeIdentityTolerance))
+                    {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
         }
+    }
+    
+    
+    void Lut1D::finalize(float relativeIdentityTolerance)
+    {
+        if(isFinal) return;
         
-        md5_finish(&state, digest);
+        isFinal = true;
+        isNoOp = IsLut1DNoOp(*this, relativeIdentityTolerance);
         
-        cacheID = GetPrintableHash(digest);
+        if(isNoOp)
+        {
+            cacheID = "<NULL 1D>";
+        }
+        else
+        {
+            md5_state_t state;
+            md5_byte_t digest[16];
+            
+            md5_init(&state);
+            md5_append(&state, (const md5_byte_t *)from_min, 3*sizeof(float));
+            md5_append(&state, (const md5_byte_t *)from_max, 3*sizeof(float));
+            
+            for(int i=0; i<3; ++i)
+            {
+                md5_append( &state, (const md5_byte_t *)&(luts[i][0]),
+                    (int) (luts[i].size()*sizeof(float)) );
+            }
+            
+            md5_finish(&state, digest);
+            
+            cacheID = GetPrintableHash(digest);
+        }
     }
     
     
@@ -320,7 +367,7 @@ OCIO_NAMESPACE_ENTER
         class Lut1DOp : public Op
         {
         public:
-            Lut1DOp(Lut1DRcPtr lut,
+            Lut1DOp(const Lut1DRcPtr & lut,
                     Interpolation interpolation,
                     TransformDirection direction);
             virtual ~Lut1DOp();
@@ -343,14 +390,14 @@ OCIO_NAMESPACE_ENTER
             virtual GpuAllocationData getGpuAllocation() const;
             
         private:
-            Lut1DRcPtr m_lut;
+            const Lut1DRcPtr m_lut;
             Interpolation m_interpolation;
             TransformDirection m_direction;
             
             std::string m_cacheID;
         };
         
-        Lut1DOp::Lut1DOp(Lut1DRcPtr lut,
+        Lut1DOp::Lut1DOp(const Lut1DRcPtr & lut,
                          Interpolation interpolation,
                          TransformDirection direction):
                             Op(),
@@ -460,10 +507,20 @@ OCIO_NAMESPACE_ENTER
     }
     
     void CreateLut1DOp(OpRcPtrVec & ops,
-                       Lut1DRcPtr lut,
+                       const Lut1DRcPtr & lut,
                        Interpolation interpolation,
                        TransformDirection direction)
     {
+        if(!lut->isFinal)
+        {
+            throw Exception("The specified Lut1D has not been finalized.");
+        }
+        
+        if(lut->isNoOp) return;
+        
+        // TODO: Detect if lut1d can be exactly approximated as y = mx + b
+        // If so, return a mtx instead.
+        
         ops.push_back( OpRcPtr(new Lut1DOp(lut, interpolation, direction)) );
     }
 
