@@ -231,7 +231,7 @@ OCIO_NAMESPACE_ENTER
                 lut3d->size[0] = lutEdgeLen;
                 lut3d->size[1] = lutEdgeLen;
                 lut3d->size[2] = lutEdgeLen;
-                lut3d->lut.resize(lutEdgeLen * lutEdgeLen * lutEdgeLen * 3);
+                lut3d->lut.reserve(lutEdgeLen * lutEdgeLen * lutEdgeLen * 3);
                 
                 for(int rIndex=0; rIndex<lut3d->size[0]; ++rIndex)
                 {
@@ -239,25 +239,12 @@ OCIO_NAMESPACE_ENTER
                     {
                         for(int bIndex=0; bIndex<lut3d->size[2]; ++bIndex)
                         {
-                            int autoDeskLutIndex = GetLut3DIndex_R(rIndex, gIndex, bIndex,
-                                                                   lut3d->size[0], lut3d->size[1], lut3d->size[2]);
-                            int glLutIndex = GetLut3DIndex_B(rIndex, gIndex, bIndex,
-                                                             lut3d->size[0], lut3d->size[1], lut3d->size[2]);
+                            int i = GetLut3DIndex_B(rIndex, gIndex, bIndex,
+                                                    lut3d->size[0], lut3d->size[1], lut3d->size[2]);
                             
-                            if(autoDeskLutIndex < 0 || autoDeskLutIndex >= (int)lut3d->lut.size() ||
-                               glLutIndex < 0 || glLutIndex >= (int)lut3d->lut.size())
-                            {
-                                std::ostringstream os;
-                                os << "Error parsing .3dl file.";
-                                os << "A lut entry is specified (";
-                                os << rIndex << " " << gIndex << " " << bIndex;
-                                os << " that falls outside of the cube.";
-                                throw Exception(os.str().c_str());
-                            }
-                            
-                            lut3d->lut[glLutIndex+0] = (float) rawLutData[autoDeskLutIndex+0] * scale;
-                            lut3d->lut[glLutIndex+1] = (float) rawLutData[autoDeskLutIndex+1] * scale;
-                            lut3d->lut[glLutIndex+2] = (float) rawLutData[autoDeskLutIndex+2] * scale;
+                            lut3d->lut.push_back(static_cast<float>(rawLutData[i+0]) * scale);
+                            lut3d->lut.push_back(static_cast<float>(rawLutData[i+1]) * scale);
+                            lut3d->lut.push_back(static_cast<float>(rawLutData[i+2]) * scale);
                         }
                     }
                 }
