@@ -121,8 +121,8 @@ OCIO_NAMESPACE_ENTER
                         &rIndex, &gIndex, &bIndex,
                         &redValue, &greenValue, &blueValue) == 6)
                     {
-                        index = GetGLLut3DArrayOffset(rIndex, gIndex, bIndex,
-                                                      rSize, gSize, bSize);
+                        index = GetLut3DIndex_B(rIndex, gIndex, bIndex,
+                                                rSize, gSize, bSize);
                         if(index < 0 || index >= (int) lut3d->lut.size())
                         {
                             std::ostringstream os;

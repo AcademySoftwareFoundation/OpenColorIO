@@ -74,7 +74,7 @@ OCIO_NAMESPACE_ENTER
                                       int size_red, int size_green, int size_blue,
                                       const float* simple_rgb_lut, int channelIndex)
         {
-            return simple_rgb_lut[ GetGLLut3DArrayOffset(rIndex, gIndex, bIndex,
+            return simple_rgb_lut[ GetLut3DIndex_B(rIndex, gIndex, bIndex,
                 size_red, size_green, size_blue) + channelIndex];
         }
         

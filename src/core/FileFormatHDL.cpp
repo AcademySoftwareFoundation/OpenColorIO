@@ -329,10 +329,10 @@ OCIO_NAMESPACE_ENTER
                         for (int r = 0; r < lut3d_ptr->size[2]; ++r) {
                             
                             // store each row
-                            int i = GetGLLut3DArrayOffset (r, g, b,
-                                                           lut3d_ptr->size[0],
-                                                           lut3d_ptr->size[1],
-                                                           lut3d_ptr->size[2]);
+                            int i = GetLut3DIndex_B(r, g, b,
+                                                    lut3d_ptr->size[0],
+                                                    lut3d_ptr->size[1],
+                                                    lut3d_ptr->size[2]);
                             
                             if(i < 0 || i >= (int) lut3d_ptr->lut.size ()) {
                                 std::ostringstream os;

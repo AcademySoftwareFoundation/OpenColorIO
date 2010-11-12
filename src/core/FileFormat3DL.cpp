@@ -239,10 +239,10 @@ OCIO_NAMESPACE_ENTER
                     {
                         for(int bIndex=0; bIndex<lut3d->size[2]; ++bIndex)
                         {
-                            int autoDeskLutIndex = GetAutodeskLut3DArrayOffset(rIndex, gIndex, bIndex,
+                            int autoDeskLutIndex = GetLut3DIndex_R(rIndex, gIndex, bIndex,
                                                                    lut3d->size[0], lut3d->size[1], lut3d->size[2]);
-                            int glLutIndex = GetGLLut3DArrayOffset(rIndex, gIndex, bIndex,
-                                                                   lut3d->size[0], lut3d->size[1], lut3d->size[2]);
+                            int glLutIndex = GetLut3DIndex_B(rIndex, gIndex, bIndex,
+                                                             lut3d->size[0], lut3d->size[1], lut3d->size[2]);
                             
                             if(autoDeskLutIndex < 0 || autoDeskLutIndex >= (int)lut3d->lut.size() ||
                                glLutIndex < 0 || glLutIndex >= (int)lut3d->lut.size())

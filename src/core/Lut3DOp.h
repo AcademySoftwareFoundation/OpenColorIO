@@ -69,17 +69,23 @@ OCIO_NAMESPACE_ENTER
     
     typedef OCIO_SHARED_PTR<Lut3D> Lut3DRcPtr;
     
-    // This memory arrangement order corresponds to the standard
-    // OpenGL memory layout, as well as the SPI Lut
+    // RGB channel ordering.
+    // Pixels ordered in such a way that the blue coordinate changes fastest,
+    // then the green coordinate, and finally, the red coordinate changes slowest
     
-    inline int GetGLLut3DArrayOffset(int indexR, int indexG, int indexB,
-                                     int sizeR,  int sizeG,  int /*sizeB*/)
+    inline int GetLut3DIndex_B(int indexR, int indexG, int indexB,
+                               int sizeR,  int sizeG,  int /*sizeB*/)
     {
         return 3 * (indexR + sizeR * (indexG + sizeG * indexB));
     }
     
-    inline int GetAutodeskLut3DArrayOffset(int indexR, int indexG, int indexB,
-                                           int /*sizeR*/,  int sizeG,  int sizeB)
+    
+    // RGB channel ordering.
+    // Pixels ordered in such a way that the red coordinate changes fastest,
+    // then the green coordinate, and finally, the blue coordinate changes slowest
+    
+    inline int GetLut3DIndex_R(int indexR, int indexG, int indexB,
+                               int /*sizeR*/,  int sizeG,  int sizeB)
     {
         return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
     }
