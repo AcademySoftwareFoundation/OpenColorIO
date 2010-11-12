@@ -39,19 +39,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 #include <sstream>
 
-#include <iostream>
-
 /*
-
 // Discreet's Flame Lut Format
 // Use a loose interpretation of the format to allow other 3d luts that look
 // similar, but dont strictly adhere to the real definition.
 
 // If line starts with text or # skip it
 // If line is a bunch of ints (more than 3) , it's the 1d shaper lut
-// All remaining lines of size 3 int are data
-// cube size is determined from num entrie
 
+// All remaining lines of size 3 int are data
+// cube size is determined from num entries
+// The bit depth of the shaper lut and the 3d lut need not be the same.
+
+Example 1:
 # Comment here
 0 64 128 192 256 320 384 448 512 576 640 704 768 832 896 960 1023
 
@@ -59,6 +59,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 0 0 100
 0 0 200
 
+
+Example 2:
+#Tokens required by applications - do not edit
+
+3DMESH
+Mesh 4 12
+0 64 128 192 256 320 384 448 512 576 640 704 768 832 896 960 1023
+
+0 17 17
+0 0 88
+0 0 157
+9 101 197
+0 118 308
+...
+
+4092 4094 4094
+
+#Tokens required by applications - do not edit
+
+LUT8
+gamma 1.0
 */
 
 
@@ -68,6 +89,49 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
+        class LocalCachedFile : public CachedFile
+        {
+        public:
+            LocalCachedFile () : 
+                has1D(false),
+                has3D(false)
+            {
+                lut1D = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
+                lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+            };
+            ~LocalCachedFile() {};
+            
+            bool has1D;
+            bool has3D;
+            OCIO_SHARED_PTR<Lut1D> lut1D;
+            OCIO_SHARED_PTR<Lut3D> lut3D;
+        };
+        
+        typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
+        
+        
+        
+        class LocalFileFormat : public FileFormat
+        {
+        public:
+            
+            ~LocalFileFormat() {};
+            
+            virtual std::string GetExtension () const;
+            
+            virtual CachedFileRcPtr Load (std::istream & istream) const;
+            
+            virtual void BuildFileOps(OpRcPtrVec & ops,
+                         CachedFileRcPtr untypedCachedFile,
+                         const FileTransform& fileTransform,
+                         TransformDirection dir) const;
+        };
+        
+        
+        
+        
+        
+        
         // We use the maximum value found in the lut to infer
         // the bit depth.  While this is fugly. We dont believe
         // there is a better way, looking at the file, to
@@ -126,195 +190,239 @@ OCIO_NAMESPACE_ENTER
             return dim;
         }
         
-        class LocalCachedFile : public CachedFile
-        {
-        public:
-            LocalCachedFile()
-            {
-                //useLut1D = false;
-                //lut1d = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
-                lut3d = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
-            };
-            ~LocalCachedFile() {};
-            
-            //bool useLut1D;
-            //OCIO_SHARED_PTR<Lut1D> lut1d;
-            OCIO_SHARED_PTR<Lut3D> lut3d;
-        };
         
-        typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        
-        class LocalFormat : public FileFormat
+        std::string LocalFileFormat::GetExtension() const
         {
-            virtual std::string GetExtension() const
-            {
-                return "3dl";
-            }
+            return "3dl";
+        }
             
             // Try and load the format
             // Raise an exception if it can't be loaded.
-
-            virtual CachedFileRcPtr Load(std::istream & istream) const
+        
+        CachedFileRcPtr LocalFileFormat::Load(std::istream & istream) const
+        {
+            std::vector<int> rawshaper;
+            std::vector<int> raw3d;
+            
+            // Parse the file 3d lut data to an int array
             {
-                std::vector<int> rawLutData;
-                int maxLutValue = 0;
+                const int MAX_LINE_SIZE = 4096;
+                char lineBuffer[MAX_LINE_SIZE];
                 
-                // Parse the file 3d lut data to an int array
+                std::vector<std::string> lineParts;
+                std::vector<int> tmpData;
+                
+                while(istream.good())
                 {
-                    const int MAX_LINE_SIZE = 4096;
-                    char lineBuffer[MAX_LINE_SIZE];
+                    istream.getline(lineBuffer, MAX_LINE_SIZE);
                     
-                    std::vector<std::string> lineParts;
-                    std::vector<int> tmpData;
+                    // Strip and split the line
+                    pystring::split(pystring::strip(lineBuffer), lineParts);
                     
-                    while(istream.good())
+                    if(lineParts.empty()) continue;
+                    if((lineParts.size() > 0) && pystring::startswith(lineParts[0],"#")) continue;
+                    
+                    // If we havent found a list of ints, continue
+                    if(!StringVecToIntVec(tmpData, lineParts)) continue;
+                    
+                    // If we've found more than 3 ints, and dont have
+                    // a shaper lut yet, we've got it!
+                    if(tmpData.size()>3 && rawshaper.empty())
                     {
-                        istream.getline(lineBuffer, MAX_LINE_SIZE);
-                        
-                        // Strip and split the line
-                        pystring::split(pystring::strip(lineBuffer), lineParts);
-                        
-                        if(lineParts.empty()) continue;
-                        if((lineParts.size() > 0) && pystring::startswith(lineParts[0],"#")) continue;
-                        
-                        // Ignore all data that isnt 3 ints on a line.
-                        // This means we are incorrectly ignoring the header data
-                        // and the shaper lut
-                        // TODO: Load the .3dl shaper lut
-                        
-                        if(!StringVecToIntVec(tmpData, lineParts)) continue;
-                        if(tmpData.empty()) continue;
-                        if(tmpData.size() != 3) continue;
-                        
-                        rawLutData.push_back(tmpData[0]);
-                        rawLutData.push_back(tmpData[1]);
-                        rawLutData.push_back(tmpData[2]);
-                        
-                        maxLutValue = std::max(maxLutValue, tmpData[0]);
-                        maxLutValue = std::max(maxLutValue, tmpData[1]);
-                        maxLutValue = std::max(maxLutValue, tmpData[2]);
+                        for(unsigned int i=0; i<tmpData.size(); ++i)
+                        {
+                            rawshaper.push_back(tmpData[i]);
+                        }
+                    }
+                    
+                    // If we've found 3 ints, add it to our 3dlut.
+                    if(tmpData.size() == 3)
+                    {
+                        raw3d.push_back(tmpData[0]);
+                        raw3d.push_back(tmpData[1]);
+                        raw3d.push_back(tmpData[2]);
                     }
                 }
+            }
+            
+            
+            
+            LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
+
+
+
+            // Interpret the shaper lut
+            if(!rawshaper.empty())
+            {
+                cachedFile->has1D = true;
                 
-                // Interpret the int array as a 3dlut
-                
-                if(rawLutData.empty())
+                // Find the maximum shaper lut value to infer bit-depth
+                int shapermax = 0;
+                for(unsigned int i=0; i<rawshaper.size(); ++i)
                 {
-                    std::ostringstream os;
-                    os << "Error parsing .3dl file. ";
-                    os << "The contents do not contain any lut entries.";
-                    throw Exception(os.str().c_str());
+                    shapermax = std::max(shapermax, rawshaper[i]);
                 }
                 
-                int lutEdgeLen = Get3DLutEdgeLenFromNumEntries((int)rawLutData.size());
-                
-                // We use the maximum value found in the lut to infer
-                // the bit depth.  While this is ugly. We dont believe there is
-                // a better way, looking at the file, to determine this.
-                
-                int likelyBitDepth = GetLikelyLutBitDepth(maxLutValue);
-                if(likelyBitDepth < 0)
+                int shaperbitdepth = GetLikelyLutBitDepth(shapermax);
+                if(shaperbitdepth<0)
                 {
                     std::ostringstream os;
                     os << "Error parsing .3dl file.";
-                    os << "The maximum lut value, " << maxLutValue;
+                    os << "The maximum shaper lut value, " << shapermax;
                     os << ", does not correspond to any likely bit depth. ";
                     os << "Please confirm source file is valid.";
                     throw Exception(os.str().c_str());
                 }
                 
-                int bitDepthMaxVal = GetMaxValueFromIntegerBitDepth(likelyBitDepth);
-                float scale = 1.0f / static_cast<float>(bitDepthMaxVal);
+                int bitdepthmax = GetMaxValueFromIntegerBitDepth(shaperbitdepth);
+                float scale = 1.0f / static_cast<float>(bitdepthmax);
                 
-                Lut3DRcPtr lut3d(new Lut3D());
-                
-                lut3d->size[0] = lutEdgeLen;
-                lut3d->size[1] = lutEdgeLen;
-                lut3d->size[2] = lutEdgeLen;
-                lut3d->lut.reserve(lutEdgeLen * lutEdgeLen * lutEdgeLen * 3);
-                
-                for(int rIndex=0; rIndex<lut3d->size[0]; ++rIndex)
+                for(int channel=0; channel<3; ++channel)
                 {
-                    for(int gIndex=0; gIndex<lut3d->size[1]; ++gIndex)
+                    cachedFile->lut1D->luts[channel].resize(rawshaper.size());
+                    
+                    for(unsigned int i=0; i<rawshaper.size(); ++i)
                     {
-                        for(int bIndex=0; bIndex<lut3d->size[2]; ++bIndex)
+                        cachedFile->lut1D->luts[channel][i] = static_cast<float>(rawshaper[i])*scale;
+                    }
+                }
+                
+                // The error threshold will be 2 code values. This will allow
+                // shaper luts which use different int conversions (round vs. floor)
+                // to both be optimized.
+                // Required: Abs Tolerance
+                
+                const int FORMAT3DL_SHAPER_CODEVALUE_TOLERANCE = 2;
+                float error = FORMAT3DL_SHAPER_CODEVALUE_TOLERANCE*scale;
+                
+                cachedFile->lut1D->finalize(error, ERROR_ABSOLUTE);
+            }
+            
+            
+            
+            // Interpret the parsed data.
+            if(!raw3d.empty())
+            {
+                cachedFile->has3D = true;
+                
+                // Find the maximum shaper lut value to infer bit-depth
+                int lut3dmax = 0;
+                for(unsigned int i=0; i<raw3d.size(); ++i)
+                {
+                    lut3dmax = std::max(lut3dmax, raw3d[i]);
+                }
+                
+                int lut3dbitdepth = GetLikelyLutBitDepth(lut3dmax);
+                if(lut3dbitdepth<0)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing .3dl file.";
+                    os << "The maximum 3d lut value, " << lut3dmax;
+                    os << ", does not correspond to any likely bit depth. ";
+                    os << "Please confirm source file is valid.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                int bitdepthmax = GetMaxValueFromIntegerBitDepth(lut3dbitdepth);
+                float scale = 1.0f / static_cast<float>(bitdepthmax);
+                
+                // Interpret the int array as a 3dlut
+                int lutEdgeLen = Get3DLutEdgeLenFromNumEntries((int)raw3d.size());
+                
+                
+                // Reformat 3D data
+                cachedFile->lut3D->size[0] = lutEdgeLen;
+                cachedFile->lut3D->size[1] = lutEdgeLen;
+                cachedFile->lut3D->size[2] = lutEdgeLen;
+                
+                cachedFile->lut3D->lut.reserve(lutEdgeLen * lutEdgeLen * lutEdgeLen * 3);
+                
+                for(int rIndex=0; rIndex<lutEdgeLen; ++rIndex)
+                {
+                    for(int gIndex=0; gIndex<lutEdgeLen; ++gIndex)
+                    {
+                        for(int bIndex=0; bIndex<lutEdgeLen; ++bIndex)
                         {
                             int i = GetLut3DIndex_B(rIndex, gIndex, bIndex,
-                                                    lut3d->size[0], lut3d->size[1], lut3d->size[2]);
+                                                    lutEdgeLen, lutEdgeLen, lutEdgeLen);
                             
-                            lut3d->lut.push_back(static_cast<float>(rawLutData[i+0]) * scale);
-                            lut3d->lut.push_back(static_cast<float>(rawLutData[i+1]) * scale);
-                            lut3d->lut.push_back(static_cast<float>(rawLutData[i+2]) * scale);
+                            cachedFile->lut3D->lut.push_back(static_cast<float>(raw3d[i+0]) * scale);
+                            cachedFile->lut3D->lut.push_back(static_cast<float>(raw3d[i+1]) * scale);
+                            cachedFile->lut3D->lut.push_back(static_cast<float>(raw3d[i+2]) * scale);
                         }
                     }
                 }
                 
-                lut3d->generateCacheID();
-                
-                LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-                cachedFile->lut3d = lut3d;
-                return cachedFile;
+                cachedFile->lut3D->generateCacheID();
             }
-
-            virtual void BuildFileOps(OpRcPtrVec & ops,
+            
+            return cachedFile;
+        }
+        
+        
+        void
+        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
                                       CachedFileRcPtr untypedCachedFile,
                                       const FileTransform& fileTransform,
                                       TransformDirection dir) const
+        {
+            LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
+            
+            // This should never happen.
+            if(!cachedFile)
             {
-                LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-                
-                if(!cachedFile) // This should never happen.
+                std::ostringstream os;
+                os << "Cannot build .3dl Op. Invalid cache type.";
+                throw Exception(os.str().c_str());
+            }
+            
+            TransformDirection newDir = CombineTransformDirections(dir,
+                fileTransform.getDirection());
+            if(newDir == TRANSFORM_DIR_UNKNOWN)
+            {
+                std::ostringstream os;
+                os << "Cannot build file format transform,";
+                os << " unspecified transform direction.";
+                throw Exception(os.str().c_str());
+            }
+            
+            // TODO: INTERP_LINEAR should not be hard-coded.
+            // Instead query 'highest' interpolation?
+            // (right now, it's linear). If cubic is added, consider
+            // using it
+            
+            if(newDir == TRANSFORM_DIR_FORWARD)
+            {
+                if(cachedFile->has1D)
                 {
-                    std::ostringstream os;
-                    os << "Cannot build 3dl Op. Invalid cache type.";
-                    throw Exception(os.str().c_str());
+                    CreateLut1DOp(ops, cachedFile->lut1D,
+                                  INTERP_LINEAR, newDir);
                 }
-                
-                TransformDirection newDir = CombineTransformDirections(dir,
-                    fileTransform.getDirection());
-                
-                if(newDir == TRANSFORM_DIR_FORWARD)
+                if(cachedFile->has3D)
                 {
-                    // The 1D Shaper lut, if it exists is super low
-                    // resolution. use the best interpolation we can.
-                    // (right now, it's linear). If cubic is added, consider
-                    // using it
-                    /*
-                    if(cachedFile->useLut1D)
-                    {
-                        CreateLut1DOp(ops,
-                                      cachedFile->lut1d,
-                                      INTERP_LINEAR,
-                                      TRANSFORM_DIR_FORWARD);
-                    }
-                    */
-                    CreateLut3DOp(ops,
-                                  cachedFile->lut3d,
-                                  fileTransform.getInterpolation(),
-                                  TRANSFORM_DIR_FORWARD);
-                }
-                else if(newDir == TRANSFORM_DIR_INVERSE)
-                {
-                    CreateLut3DOp(ops,
-                                  cachedFile->lut3d,
-                                  fileTransform.getInterpolation(),
-                                  TRANSFORM_DIR_INVERSE);
-                    /*
-                    if(cachedFile->useLut1D)
-                    {
-                        CreateLut1DOp(ops,
-                                      cachedFile->lut1d,
-                                      INTERP_LINEAR,
-                                      TRANSFORM_DIR_INVERSE);
-                    }
-                    */
+                    CreateLut3DOp(ops, cachedFile->lut3D,
+                                  fileTransform.getInterpolation(), newDir);
                 }
             }
-        };
+            else if(newDir == TRANSFORM_DIR_INVERSE)
+            {
+                if(cachedFile->has3D)
+                {
+                    CreateLut3DOp(ops, cachedFile->lut3D,
+                                  fileTransform.getInterpolation(), newDir);
+                }
+                if(cachedFile->has1D)
+                {
+                    CreateLut1DOp(ops, cachedFile->lut1D,
+                                  INTERP_LINEAR, newDir);
+                }
+            }
+        }
+        
         
         struct AutoRegister
         {
-            AutoRegister() { RegisterFileFormat(new LocalFormat); }
+            AutoRegister() { RegisterFileFormat(new LocalFileFormat); }
         };
         static AutoRegister registerIt;
     }

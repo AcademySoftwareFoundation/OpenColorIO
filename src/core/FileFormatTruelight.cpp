@@ -254,7 +254,7 @@ OCIO_NAMESPACE_ENTER
                 // 0.0
                 // 0.000001 not equal
                 
-                cachedFile->lut1D->finalize(1e-5f);
+                cachedFile->lut1D->finalize(1e-5f, ERROR_RELATIVE);
             }
             
             // Reformat 3D data

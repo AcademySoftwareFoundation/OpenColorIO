@@ -200,7 +200,7 @@ OCIO_NAMESPACE_ENTER
                 // 1.000010 not equal
                 // 0.0
                 // 0.000001 not equal
-                lut1d->finalize(1e-5f);
+                lut1d->finalize(1e-5f, ERROR_RELATIVE);
                 
                 LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
                 cachedFile->lut = lut1d;

@@ -42,6 +42,12 @@ OCIO_NAMESPACE_ENTER
     // Expose static factory fcn, make constructor private?
     // TODO: turn into a class instead of a struct?
     
+    enum ErrorType
+    {
+        ERROR_ABSOLUTE = 1,
+        ERROR_RELATIVE
+    };
+    
     struct Lut1D
     {
         Lut1D() :
@@ -66,7 +72,8 @@ OCIO_NAMESPACE_ENTER
         // If you dont want to do the noop computation,
         // specify a 0.0 tolerance.
         
-        void finalize(float relativeIdentityTolerance);
+        void finalize(float maxerror,
+                      ErrorType errortype);
         
         float from_min[3];
         float from_max[3];

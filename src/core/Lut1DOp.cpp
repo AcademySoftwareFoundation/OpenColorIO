@@ -42,10 +42,11 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
         bool IsLut1DNoOp(const Lut1D & lut,
-                         float relativeIdentityTolerance)
+                         float maxerror,
+                         ErrorType errortype)
         {
-            // If tolerance is 0.0, or negative, skip check
-            if(!(relativeIdentityTolerance > 0.0)) return false;
+            // If tolerance not positive, skip the check.
+            if(!(maxerror > 0.0)) return false;
             
             for(int channel = 0; channel<3; ++channel)
             {
@@ -62,9 +63,23 @@ OCIO_NAMESPACE_ENTER
                     float identval = m*x+b;
                     float lutval = lut.luts[channel][i];
                     
-                    if(!equalWithRelError(identval, lutval, relativeIdentityTolerance))
+                    if(errortype == ERROR_ABSOLUTE)
                     {
-                        return false;
+                        if(!equalWithAbsError(identval, lutval, maxerror))
+                        {
+                            return false;
+                        }
+                    }
+                    else if(errortype == ERROR_RELATIVE)
+                    {
+                        if(!equalWithRelError(identval, lutval, maxerror))
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        throw Exception("Unknown error type.");
                     }
                 }
             }
@@ -74,12 +89,13 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void Lut1D::finalize(float relativeIdentityTolerance)
+    void Lut1D::finalize(float maxerror,
+                         ErrorType errortype)
     {
         if(isFinal) return;
         
         isFinal = true;
-        isNoOp = IsLut1DNoOp(*this, relativeIdentityTolerance);
+        isNoOp = IsLut1DNoOp(*this, maxerror, errortype);
         
         if(isNoOp)
         {
