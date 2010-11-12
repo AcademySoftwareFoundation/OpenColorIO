@@ -107,7 +107,7 @@ OCIO_NAMESPACE_ENTER
             // this shouldn't happen
             if(!istream)
             {
-                throw Exception ("File stream empty when trying to read cub lut");
+                throw Exception ("File stream empty when trying to read Truelight .cub lut");
             }
             
             // Validate the file type
@@ -115,7 +115,7 @@ OCIO_NAMESPACE_ENTER
             if(!nextline(istream, line) || 
                !pystring::startswith(pystring::lower(line), "# truelight cube"))
             {
-                throw Exception("Lut doesn't seem to be a truelight cube lut.");
+                throw Exception("Lut doesn't seem to be a Truelight .cub lut.");
             }
             
             // Parse the file
@@ -148,7 +148,7 @@ OCIO_NAMESPACE_ENTER
                                !StringToInt( &size3d[1], parts[3].c_str()) ||
                                !StringToInt( &size3d[2], parts[4].c_str()))
                             {
-                                throw Exception("Malformed width tag in truelight cube lut.");
+                                throw Exception("Malformed width tag in Truelight .cub lut.");
                             }
                             
                             raw3d.reserve(3*size3d[0]*size3d[1]*size3d[2]);
@@ -158,7 +158,7 @@ OCIO_NAMESPACE_ENTER
                             if(parts.size() != 3 || 
                                !StringToInt( &size1d, parts[2].c_str()))
                             {
-                                throw Exception("Malformed lutlength tag in truelight cube lut.");
+                                throw Exception("Malformed lutlength tag in Truelight .cub lut.");
                             }
                             raw1d.reserve(3*size1d);
                         }
@@ -190,7 +190,7 @@ OCIO_NAMESPACE_ENTER
                         }
                         else
                         {
-                            throw Exception("Parse error in truelight cube lut. Numbers outside of lut block.");
+                            throw Exception("Parse error in Truelight .cub lut. Numbers outside of lut block.");
                         }
                     }
                 }
@@ -201,7 +201,7 @@ OCIO_NAMESPACE_ENTER
             if(size1d != static_cast<int>(raw1d.size()/3))
             {
                 std::ostringstream os;
-                os << "Parse error in truelight cube lut. ";
+                os << "Parse error in Truelight .cub lut. ";
                 os << "Incorrect number of lut1d entries. ";
                 os << "Found " << raw1d.size()/3 << ", expected " << size1d << ".";
                 throw Exception(os.str().c_str());
@@ -210,7 +210,7 @@ OCIO_NAMESPACE_ENTER
             if(size3d[0]*size3d[1]*size3d[2] != static_cast<int>(raw3d.size()/3))
             {
                 std::ostringstream os;
-                os << "Parse error in truelight cube lut. ";
+                os << "Parse error in Truelight .cub lut. ";
                 os << "Incorrect number of lut3d entries. ";
                 os << "Found " << raw3d.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
                 throw Exception(os.str().c_str());
@@ -219,7 +219,7 @@ OCIO_NAMESPACE_ENTER
             if(size3d[0]*size3d[1]*size3d[2] == 0)
             {
                 std::ostringstream os;
-                os << "Parse error in truelight cube lut. ";
+                os << "Parse error in Truelight .cub lut. ";
                 os << "No 3D Lut entries found.";
                 throw Exception(os.str().c_str());
             }
@@ -279,7 +279,7 @@ OCIO_NAMESPACE_ENTER
             if(!cachedFile)
             {
                 std::ostringstream os;
-                os << "Cannot build CSP Op. Invalid cache type.";
+                os << "Cannot build Truelight .cub Op. Invalid cache type.";
                 throw Exception(os.str().c_str());
             }
             
