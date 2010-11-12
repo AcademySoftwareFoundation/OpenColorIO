@@ -231,7 +231,6 @@ OCIO_NAMESPACE_ENTER
             }
             else if (csptype == "3D")
             {
-
                 // read the cube size
                 nextline (istream, line);
                 if (sscanf (line.c_str(), "%d %d %d",
@@ -240,54 +239,30 @@ OCIO_NAMESPACE_ENTER
                     &lut3d_ptr->size[2]) != 3 ) {
                     throw Exception("malformed 3D csp lut, couldn't read cube size");
                 }
-
+                
+                
                 // resize cube
-                lut3d_ptr->lut.resize (lut3d_ptr->size[0]
-                                     * lut3d_ptr->size[1]
-                                     * lut3d_ptr->size[2] * 3);
-
-                // load the cube
-                int entries_remaining = lut3d_ptr->size[0] * lut3d_ptr->size[1] * lut3d_ptr->size[2];
-                for (int r = 0; r < lut3d_ptr->size[0]; ++r) {
-                    for (int g = 0; g < lut3d_ptr->size[1]; ++g) {
-                        for (int b = 0; b < lut3d_ptr->size[2]; ++b) {
-
-                            // store each row
-                            int i = GetAutodeskLut3DArrayOffset (r, g, b,
-                                                           lut3d_ptr->size[0],
-                                                           lut3d_ptr->size[1],
-                                                           lut3d_ptr->size[2]);
-
-                            if(i < 0 || i >= (int) lut3d_ptr->lut.size ()) {
-                                std::ostringstream os;
-                                os << "Cannot load .csp lut, data is invalid. ";
-                                os << "A lut entry is specified (";
-                                os << r << " " << g << " " << b;
-                                os << " that falls outside of the cube.";
-                                throw Exception(os.str ().c_str ());
-                            }
-
-                            nextline (istream, line);
-                            if(sscanf (line.c_str(), "%f %f %f",
-                               &lut3d_ptr->lut[i],
-                               &lut3d_ptr->lut[i+1],
-                               &lut3d_ptr->lut[i+2]) != 3 ) {
-                                throw Exception("malformed 3D csp lut, couldn't read cube row");
-                            }
-
-                            // reverse count
-                            entries_remaining--;
-                        }
+                int num3dentries = lut3d_ptr->size[0] * lut3d_ptr->size[1] * lut3d_ptr->size[2];
+                lut3d_ptr->lut.resize(num3dentries * 3);
+                
+                for(int i=0; i<num3dentries; ++i)
+                {
+                    // load the cube
+                    nextline (istream, line);
+                    
+                    if(sscanf (line.c_str(), "%f %f %f",
+                       &lut3d_ptr->lut[3*i+0],
+                       &lut3d_ptr->lut[3*i+1],
+                       &lut3d_ptr->lut[3*i+2]) != 3 )
+                    {
+                        std::ostringstream os;
+                        os << "Malformed 3D csp lut, couldn't read cube row (";
+                        os << i << "): " << line << " .";
+                        throw Exception(os.str().c_str());
                     }
                 }
-
-                // Have we fully populated the table?
-                if (entries_remaining != 0) 
-                    throw Exception("malformed 3D csp lut, no cube points don't match cube size");
-
             }
-
-            //
+            
             CachedFileCSPRcPtr cachedFile = CachedFileCSPRcPtr (new CachedFileCSP ());
             cachedFile->csptype = csptype;
             cachedFile->metadata = metadata;
