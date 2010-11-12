@@ -865,17 +865,7 @@ OCIO_NAMESPACE_ENTER
             {
                 out << YAML::Newline;
                 out << YAML::Key << "roles" << YAML::Value;
-                out << YAML::BeginMap;
-                
-                RoleMap::const_iterator iter = m_impl->roles_.begin();
-                RoleMap::const_iterator end = m_impl->roles_.end();
-                for(;iter != end; ++iter)
-                {
-                    out << YAML::Key   << iter->first;
-                    out << YAML::Value << iter->second;
-                }
-                
-                out << YAML::EndMap;
+                out << m_impl->roles_;
             }
             
             // Displays
