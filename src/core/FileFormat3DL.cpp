@@ -245,12 +245,25 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             
-            
+            if(raw3d.empty() && rawshaper.empty())
+            {
+                std::ostringstream os;
+                os << "Error parsing .3dl file.";
+                os << "Does not appear to contain a valid shaper lut or a 3D lut.";
+                throw Exception(os.str().c_str());
+            }
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-
-
-
+            
+            // If all we're doing to parse the format is to read in sets of 3 numbers,
+            // it's possible that other formats will accidentally be able to be read
+            // mistakenly as .3dl files.  We can exclude a huge segement of these mis-reads
+            // by screening for files that use float represenations.  I.e., if the MAX
+            // value of the lut is a small number (such as <128.0) it's likely not an integer
+            // format, and thus not a likely 3DL file.
+            
+            const int FORMAT3DL_CODEVALUE_LOWEST_PLAUSIBLE_MAXINT = 128;
+            
             // Interpret the shaper lut
             if(!rawshaper.empty())
             {
@@ -261,6 +274,18 @@ OCIO_NAMESPACE_ENTER
                 for(unsigned int i=0; i<rawshaper.size(); ++i)
                 {
                     shapermax = std::max(shapermax, rawshaper[i]);
+                }
+                
+                if(shapermax<FORMAT3DL_CODEVALUE_LOWEST_PLAUSIBLE_MAXINT)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing .3dl file.";
+                    os << "The maximum shaper lut value, " << shapermax;
+                    os << ", is unreasonably low. This lut is probably not a .3dl ";
+                    os << "file, but instead a related format that shares a similar ";
+                    os << "structure.";
+                    
+                    throw Exception(os.str().c_str());
                 }
                 
                 int shaperbitdepth = GetLikelyLutBitDepth(shapermax);
@@ -310,6 +335,18 @@ OCIO_NAMESPACE_ENTER
                 for(unsigned int i=0; i<raw3d.size(); ++i)
                 {
                     lut3dmax = std::max(lut3dmax, raw3d[i]);
+                }
+                
+                if(lut3dmax<FORMAT3DL_CODEVALUE_LOWEST_PLAUSIBLE_MAXINT)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing .3dl file.";
+                    os << "The maximum 3d lut value, " << lut3dmax;
+                    os << ", is unreasonably low. This lut is probably not a .3dl ";
+                    os << "file, but instead a related format that shares a similar ";
+                    os << "structure.";
+                    
+                    throw Exception(os.str().c_str());
                 }
                 
                 int lut3dbitdepth = GetLikelyLutBitDepth(lut3dmax);
