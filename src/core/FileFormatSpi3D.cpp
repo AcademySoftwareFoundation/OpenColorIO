@@ -89,9 +89,12 @@ OCIO_NAMESPACE_ENTER
                 Lut3DRcPtr lut3d(new Lut3D());
                 
                 // Read header information
-                
-                // TODO: Assert 1st line is SPILUT 1.0
                 istream.getline(lineBuffer, MAX_LINE_SIZE);
+                if(!pystring::startswith(pystring::lower(lineBuffer), "spilut"))
+                {
+                    throw Exception("Lut does not appear to be valid SPILUT format.");
+                }
+                
                 // TODO: Assert 2nd line is 3 3
                 istream.getline(lineBuffer, MAX_LINE_SIZE);
                 
