@@ -66,8 +66,11 @@ OCIO_NAMESPACE_ENTER
     void EnvExpand(std::string *str, EnvMap *map);
     
     // Check if a file exists
-    bool FileExists(std::string filename);
+    bool FileExists(const std::string & filename);
     
+    // Get the file extension for the specified string.
+    // return "" if '.' is not in string.
+    std::string GetExtension(const std::string & str);
 }
 OCIO_NAMESPACE_EXIT
 

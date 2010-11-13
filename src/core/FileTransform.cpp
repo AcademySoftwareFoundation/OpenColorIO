@@ -167,32 +167,25 @@ OCIO_NAMESPACE_ENTER
             if(str.empty()) return 0x0;
             
             std::string extension = pystring::lower(str);
-            std::string testExtension;
             
             FormatRegistry & formats = GetFormatRegistry();
             
-            for(unsigned int i=0; i<formats.size(); ++i)
+            for(unsigned int findex=0; findex<formats.size(); ++findex)
             {
-                FileFormat* format = formats[i];
-                testExtension = pystring::lower(format->GetExtension());
-                if(extension == testExtension) return format;
+                FileFormat* format = formats[findex];
+                std::string testExtension = pystring::lower(format->GetExtension());
+                if(extension == testExtension)
+                {
+                    return format;
+                }
             }
             
             return 0x0;
-        }
-        
-        std::string GetFileExtension(const std::string & str)
-        {
-            std::vector<std::string> parts;
-            pystring::rsplit(str, parts, ".", 1);
-            if(parts.size() == 2) return parts[1];
-            return "";
         }
     }
     
     void RegisterFileFormat(FileFormat* format)
     {
-        //std::cerr << "DEBUG: RegisterFileFormat called()\n";
         FormatRegistry & formats = GetFormatRegistry();
         formats.push_back(format);
     }
@@ -229,62 +222,78 @@ OCIO_NAMESPACE_ENTER
             if (!filestream.good())
             {
                 std::ostringstream os;
-                os << "The specified transform file '";
-                os << filepath <<"' could not be opened. ";
+                os << "The specified FileTransform srcfile, '";
+                os << filepath <<"', could not be opened. ";
                 os << "Please confirm the file exists with appropriate read";
                 os << " permissions.";
                 throw Exception(os.str().c_str());
             }
             
-            std::string extension = GetFileExtension(filepath);
-            
-            FileFormat* format;
-            CachedFileRcPtr cachedFile;
-            std::string errorText;
             
             // Try the initial format.
-            // TODO: actually, if this fails try all that match the specified format
-            // (i.e, the million .lut formats)
-            format = GetFileFormatForExtension(extension);
+            std::string primaryErrorText;
+            std::string extension = GetExtension(filepath);
+            FileFormat * primaryFormat = GetFileFormatForExtension(extension);
             
-            if(format)
+            if(primaryFormat)
             {
                 try
                 {
-                    cachedFile = format->Load(filestream);
+                    CachedFileRcPtr cachedFile = primaryFormat->Load(filestream);
+                    
+                    // Add the result to our cache, return it.
+                    FileCachePair pair = std::make_pair(primaryFormat, cachedFile);
+                    g_fileCache[filepath] = pair;
+                    
+                    return pair;
                 }
                 catch(std::exception & e)
                 {
-                    if(errorText.empty()) errorText = e.what();
-                    format = 0x0;
+                    primaryErrorText = e.what();
                     filestream.seekg( std::ifstream::beg );
                 }
             }
             
-            // TODO: If that fails, try all formats
+            // If this fails, try all other formats
+            FormatRegistry & formats = GetFormatRegistry();
             
-            // Assert file and cached format exist
-            if(!format)
+            for(unsigned int findex = 0; findex<formats.size(); ++findex)
+            {
+                // Dont bother trying the primaryFormat twice.
+                if(formats[findex] == primaryFormat) continue;
+                
+                try
+                {
+                    CachedFileRcPtr cachedFile = formats[findex]->Load(filestream);
+                    
+                    // Add the result to our cache, return it.
+                    FileCachePair pair = std::make_pair(formats[findex], cachedFile);
+                    g_fileCache[filepath] = pair;
+                    return pair;
+                }
+                catch(std::exception & e)
+                {
+                    filestream.seekg( std::ifstream::beg );
+                }
+            }
+            
+            // No formats succeeded. Error out with a sensible message.
+            if(primaryFormat)
             {
                 std::ostringstream os;
                 os << "The specified transform file '";
-                os << filepath <<"' is not any known file format.";
+                os << filepath <<"' could not be loaded. ";
+                os << primaryErrorText;
+                
                 throw Exception(os.str().c_str());
             }
-            
-            if(!cachedFile)
+            else
             {
                 std::ostringstream os;
                 os << "The specified transform file '";
-                os << filepath <<"' was not able to be successfully loaded. ";
-                os << errorText;
+                os << filepath <<"' does not appear to be a valid, known LUT file format.";
                 throw Exception(os.str().c_str());
             }
-            
-            // Add the result to our cache, return it.
-            FileCachePair pair = std::make_pair(format, cachedFile);
-            g_fileCache[filepath] = pair;
-            return pair;
         }
     }
     

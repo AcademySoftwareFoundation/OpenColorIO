@@ -132,7 +132,8 @@ OCIO_NAMESPACE_ENTER
         return;
     }
     
-    bool FileExists (std::string filename) {
+    bool FileExists(const std::string & filename)
+    {
         std::ifstream fin;
         fin.open (filename.c_str());
         if (fin.fail())
@@ -141,6 +142,13 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
+    std::string GetExtension(const std::string & str)
+    {
+        std::vector<std::string> parts;
+        pystring::rsplit(str, parts, ".", 1);
+        if(parts.size() == 2) return parts[1];
+        return "";
+    }
 }
 OCIO_NAMESPACE_EXIT
 
