@@ -89,8 +89,8 @@ OCIO_NAMESPACE_ENTER
     // Enums
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, BitDepth depth);
     OCIOHIDDEN void operator >> (const YAML::Node& node, BitDepth& depth);
-    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, GpuAllocation alloc);
-    OCIOHIDDEN void operator >> (const YAML::Node& node, GpuAllocation& alloc);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, Allocation alloc);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, Allocation& alloc);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceDirection dir);
     OCIOHIDDEN void operator >> (const YAML::Node& node, ColorSpaceDirection& dir);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, TransformDirection dir);

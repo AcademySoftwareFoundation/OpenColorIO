@@ -125,8 +125,8 @@ OCIO_NAMESPACE_ENTER
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
-            virtual bool definesGpuAllocation() const;
-            virtual GpuAllocationData getGpuAllocation() const;
+            virtual bool definesAllocation() const;
+            virtual AllocationData getAllocation() const;
         
         private:
             float m_m44[16];
@@ -354,14 +354,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        bool MatrixOffsetOp::definesGpuAllocation() const
+        bool MatrixOffsetOp::definesAllocation() const
         {
             return false;
         }
         
-        GpuAllocationData MatrixOffsetOp::getGpuAllocation() const
+        AllocationData MatrixOffsetOp::getAllocation() const
         {
-            throw Exception("MatrixOffsetOp does not define a Gpu Allocation.");
+            throw Exception("MatrixOffsetOp does not define an allocation.");
         }
         
     }  // Anon namespace

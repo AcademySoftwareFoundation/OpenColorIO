@@ -387,16 +387,18 @@ OCIO_NAMESPACE_ENTER
         bool isData() const;
         void setIsData(bool isData);
         
-        // Gpu allocation information
-        GpuAllocation getGpuAllocation() const;
-        void setGpuAllocation(GpuAllocation allocation);
         
-        float getGpuMin() const;
-        void setGpuMin(float min);
+        // Allocation
+        // If this color space needs to be transferred to
+        // a limited dynamic range coding space (such as during display
+        // with a GPU path, use this allocation to maximize bit efficiency.
         
-        float getGpuMax() const;
-        void setGpuMax(float max);
+        Allocation getAllocation() const;
+        void setAllocation(Allocation allocation);
         
+        int getAllocationNumVars() const;
+        void getAllocationVars(float * vars) const;
+        void setAllocationVars(int numvars, const float * vars);
         
         
         

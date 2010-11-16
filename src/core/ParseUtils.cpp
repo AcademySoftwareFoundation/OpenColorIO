@@ -147,19 +147,19 @@ OCIO_NAMESPACE_ENTER
         return 0;
     }
     
-    const char * GpuAllocationToString(GpuAllocation alloc)
+    const char * AllocationToString(Allocation alloc)
     {
-        if(alloc == GPU_ALLOCATION_UNIFORM) return "uniform";
-        else if(alloc == GPU_ALLOCATION_LG2) return "lg2";
+        if(alloc == ALLOCATION_UNIFORM) return "uniform";
+        else if(alloc == ALLOCATION_LG2) return "lg2";
         return "unknown";
     }
     
-    GpuAllocation GpuAllocationFromString(const char * s)
+    Allocation AllocationFromString(const char * s)
     {
         std::string str = pystring::lower(s);
-        if(str == "uniform") return GPU_ALLOCATION_UNIFORM;
-        else if(str == "lg2") return GPU_ALLOCATION_LG2;
-        return GPU_ALLOCATION_UNKNOWN;
+        if(str == "uniform") return ALLOCATION_UNIFORM;
+        else if(str == "lg2") return ALLOCATION_LG2;
+        return ALLOCATION_UNKNOWN;
     }
     
     const char * InterpolationToString(Interpolation interp)

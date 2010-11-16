@@ -51,12 +51,25 @@ OCIO_NAMESPACE_ENTER
             cs->setBitDepth(node["bitdepth"].Read<BitDepth>());
         if(node.FindValue("isdata") != NULL)
             cs->setIsData(node["isdata"].Read<bool>());
-        if(node.FindValue("gpuallocation") != NULL)
-            cs->setGpuAllocation(node["gpuallocation"].Read<GpuAllocation>());
-        if(node.FindValue("gpumin") != NULL)
-            cs->setGpuMin(node["gpumin"].Read<float>());
-        if(node.FindValue("gpumax") != NULL)
-            cs->setGpuMax(node["gpumax"].Read<float>());
+        if(node.FindValue("allocation") != NULL)
+            cs->setAllocation(node["allocation"].Read<Allocation>());
+        
+        if(node.FindValue("allocationvars") != NULL)
+        {
+            std::vector<float> value;
+            node["allocationvars"] >> value;
+            cs->setAllocationVars(static_cast<int>(value.size()), &value[0]);
+        }
+        else if( (node.FindValue("gpumin") != NULL) &&
+                 (node.FindValue("gpumax") != NULL) )
+        {
+            // Backwards compatibility
+            std::vector<float> value(2);
+            value[0] = node["gpumin"].Read<float>();
+            value[1] = node["gpumax"].Read<float>();
+            cs->setAllocationVars(static_cast<int>(value.size()), &value[0]);
+        }
+        
         if(node.FindValue("to_reference") != NULL)
             cs->setTransform(node["to_reference"].Read<TransformRcPtr>(),
                 COLORSPACE_DIR_TO_REFERENCE);
@@ -79,9 +92,15 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Value << YAML::Literal << cs->getDescription();
         }
         out << YAML::Key << "isdata" << YAML::Value << cs->isData();
-        out << YAML::Key << "gpuallocation" << YAML::Value << cs->getGpuAllocation();
-        out << YAML::Key << "gpumin" << YAML::Value << cs->getGpuMin();
-        out << YAML::Key << "gpumax" << YAML::Value << cs->getGpuMax();
+        
+        out << YAML::Key << "allocation" << YAML::Value << cs->getAllocation();
+        if(cs->getAllocationNumVars() > 0)
+        {
+            std::vector<float> allocationvars(cs->getAllocationNumVars());
+            cs->getAllocationVars(&allocationvars[0]);
+            out << YAML::Key << "allocationvars";
+            out << YAML::Flow << YAML::Value << allocationvars;
+        }
         
         ConstTransformRcPtr toref = \
             cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
@@ -564,14 +583,14 @@ OCIO_NAMESPACE_ENTER
         depth = BitDepthFromString(str.c_str());
     }
     
-    YAML::Emitter& operator << (YAML::Emitter& out, GpuAllocation alloc) {
-        out << GpuAllocationToString(alloc);
+    YAML::Emitter& operator << (YAML::Emitter& out, Allocation alloc) {
+        out << AllocationToString(alloc);
         return out;
     }
     
-    void operator >> (const YAML::Node& node, GpuAllocation& alloc) {
+    void operator >> (const YAML::Node& node, Allocation& alloc) {
         std::string str = node.Read<std::string>();
-        alloc = GpuAllocationFromString(str.c_str());
+        alloc = AllocationFromString(str.c_str());
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceDirection dir) {

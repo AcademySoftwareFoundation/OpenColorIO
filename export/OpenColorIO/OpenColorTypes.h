@@ -149,10 +149,10 @@ OCIO_NAMESPACE_ENTER
         BIT_DEPTH_F32
     };
     
-    enum GpuAllocation {
-        GPU_ALLOCATION_UNKNOWN = 0,
-        GPU_ALLOCATION_UNIFORM,
-        GPU_ALLOCATION_LG2
+    enum Allocation {
+        ALLOCATION_UNKNOWN = 0,
+        ALLOCATION_UNIFORM,
+        ALLOCATION_LG2
     };
     
     //! Used when there is a choice of hardware shader language.
@@ -188,8 +188,8 @@ OCIO_NAMESPACE_ENTER
     extern OCIOEXPORT bool BitDepthIsFloat(BitDepth bitDepth);
     extern OCIOEXPORT int BitDepthToInt(BitDepth bitDepth);
     
-    extern OCIOEXPORT const char * GpuAllocationToString(GpuAllocation allocation);
-    extern OCIOEXPORT GpuAllocation GpuAllocationFromString(const char * s);
+    extern OCIOEXPORT const char * AllocationToString(Allocation allocation);
+    extern OCIOEXPORT Allocation AllocationFromString(const char * s);
     
     extern OCIOEXPORT const char * InterpolationToString(Interpolation interp);
     extern OCIOEXPORT Interpolation InterpolationFromString(const char * s);

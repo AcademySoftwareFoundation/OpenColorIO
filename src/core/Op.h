@@ -37,16 +37,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    struct GpuAllocationData
+    struct AllocationData
     {
-        GpuAllocation allocation;
-        float min;
-        float max;
+        Allocation allocation;
+        std::vector<float> vars;
         
-        GpuAllocationData():
-            allocation(GPU_ALLOCATION_UNIFORM),
-            min(0.0),
-            max(1.0) {};
+        AllocationData():
+            allocation(ALLOCATION_UNIFORM)
+            {};
         
         std::string getCacheID() const;
     };
@@ -76,7 +74,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const = 0;
             
             //! Is the processing a noop? I.e, does apply do nothing.
-            //! Even no-ops may define GpuAllocation though.
+            //! (Even no-ops may define Allocation though.)
+            
             virtual bool isNoOp() const = 0;
             
             // This is called a single time after construction.
@@ -103,8 +102,8 @@ OCIO_NAMESPACE_ENTER
                                         const GpuShaderDesc & shaderDesc) const = 0;
             
             
-            virtual bool definesGpuAllocation() const = 0;
-            virtual GpuAllocationData getGpuAllocation() const = 0;
+            virtual bool definesAllocation() const = 0;
+            virtual AllocationData getAllocation() const = 0;
             
         private:
             Op& operator= (const Op &);

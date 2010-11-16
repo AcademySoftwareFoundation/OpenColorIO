@@ -26,9 +26,9 @@ int main(int argc, const char* argv[])
     try
     {
         //testFilmlooks();
-        loadConfigFromEnv();
+        //loadConfigFromEnv();
         //testCoordinateTransform();
-        //createConfig();
+        createConfig();
         //testASCTransform();
         
     }
@@ -175,9 +175,10 @@ void createConfig()
         cs->setFamily("ln");
         cs->setBitDepth(OCIO::BIT_DEPTH_F16);
         cs->setIsData(false);
-        cs->setGpuAllocation(OCIO::GPU_ALLOCATION_LG2);
-        cs->setGpuMin(-16.0);
-        cs->setGpuMax(6.0);
+        cs->setAllocation(OCIO::ALLOCATION_LG2);
+        float vars[] = {-16.0f, 6.0f};
+        cs->setAllocationVars(2, vars);
+        
         config->addColorSpace(cs);
         
         config->setRole( OCIO::ROLE_SCENE_LINEAR, cs->getName() );
@@ -190,9 +191,9 @@ void createConfig()
         cs->setFamily("lg");
         cs->setBitDepth(OCIO::BIT_DEPTH_F16);
         cs->setIsData(false);
-        cs->setGpuAllocation(OCIO::GPU_ALLOCATION_UNIFORM);
-        cs->setGpuMin(-0.2f);
-        cs->setGpuMax(1.615f);
+        cs->setAllocation(OCIO::ALLOCATION_UNIFORM);
+        float vars[] = {-0.2f, 1.6f};
+        cs->setAllocationVars(2, vars);
         
         OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
         transform->setSrc("lgf.spi1d");

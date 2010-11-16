@@ -72,8 +72,6 @@ OCIO_NAMESPACE_ENTER
         "      bitdepth: 32f\n"
         "      isdata: true\n"
         "      gpuallocation: uniform\n"
-        "      gpumin: 0\n"
-        "      gpumax: 1\n"
         "      description: 'A raw color space. Conversions to and from this space are no-ops.'\n";
         
     }
@@ -1167,8 +1165,6 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     "        A raw color space. Conversions to and from this space are no-ops.\n"
     "      isdata: true\n"
     "      gpuallocation: uniform\n"
-    "      gpumin: 0\n"
-    "      gpumax: 1\n"
     "  - !<ColorSpace>\n"
     "      name: lnh\n"
     "      family: ln\n"
@@ -1180,8 +1176,6 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     "        exposed 18% grey card.\n"
     "      isdata: false\n"
     "      gpuallocation: lg2\n"
-    "      gpumin: -15\n"
-    "      gpumax: 6\n"
     "  - !<ColorSpace>\n"
     "      name: loads_of_transforms\n"
     "      family: vd8\n"
@@ -1189,8 +1183,6 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     "      description: 'how many transforms can we use?'\n"
     "      isdata: false\n"
     "      gpuallocation: uniform\n"
-    "      gpumin: 0\n"
-    "      gpumax: 1\n"
     "      to_reference: !<GroupTransform>\n"
     "        direction: forward\n"
     "        children:\n"
@@ -1280,8 +1272,6 @@ BOOST_AUTO_TEST_CASE ( test_ser )
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    gpuallocation: uniform\n"
-    "    gpumin: 0\n"
-    "    gpumax: 1\n"
     "    to_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
@@ -1297,8 +1287,6 @@ BOOST_AUTO_TEST_CASE ( test_ser )
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    gpuallocation: uniform\n"
-    "    gpumin: 0\n"
-    "    gpumax: 1\n"
     "    to_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<ExponentTransform> {value: [1, 1, 1, 1]}\n";

@@ -60,27 +60,45 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
         void BuildAllocationOps(OpRcPtrVec & ops,
-                                const GpuAllocationData & data,
+                                const AllocationData & data,
                                 TransformDirection dir)
         {
-            if(data.allocation == GPU_ALLOCATION_UNIFORM)
+            if(data.allocation == ALLOCATION_UNIFORM)
             {
-                float oldmin[4] = { data.min, data.min, data.min, 0.0f };
-                float oldmax[4] = { data.max, data.max, data.max, 1.0f };
+                float oldmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+                float oldmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
                 float newmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
                 float newmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+                
+                if(data.vars.size() >= 2)
+                {
+                    for(int i=0; i<3; ++i)
+                    {
+                        oldmin[i] = data.vars[0];
+                        oldmax[i] = data.vars[1];
+                    }
+                }
                 
                 CreateFitOp(ops,
                             oldmin, oldmax,
                             newmin, newmax,
                             dir);
             }
-            else if(data.allocation == GPU_ALLOCATION_LG2)
+            else if(data.allocation == ALLOCATION_LG2)
             {
-                float oldmin[4] = { data.min, data.min, data.min, 0.0f };
-                float oldmax[4] = { data.max, data.max, data.max, 1.0f };
+                float oldmin[4] = { -10.0f, -10.0f, -10.0f, 0.0f };
+                float oldmax[4] = { 6.0f, 6.0f, 6.0f, 1.0f };
                 float newmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
                 float newmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+                
+                if(data.vars.size() >= 2)
+                {
+                    for(int i=0; i<3; ++i)
+                    {
+                        oldmin[i] = data.vars[0];
+                        oldmax[i] = data.vars[1];
+                    }
+                }
                 
                 if(dir == TRANSFORM_DIR_FORWARD)
                 {
@@ -107,7 +125,7 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                throw Exception("Unsupported GPU Allocation.");
+                throw Exception("Unsupported Allocation Type.");
             }
         }
         
@@ -195,7 +213,7 @@ OCIO_NAMESPACE_ENTER
             
             while(start>0)
             {
-                if(opVec[start]->definesGpuAllocation()) break;
+                if(opVec[start]->definesAllocation()) break;
                  --start;
             }
             
@@ -203,14 +221,14 @@ OCIO_NAMESPACE_ENTER
             if(endIndex) *endIndex = end;
         }
         
-        GpuAllocationData GetAllocation(int index, const OpRcPtrVec & opVec)
+        AllocationData GetAllocation(int index, const OpRcPtrVec & opVec)
         {
-            if(index >=0 && opVec[index]->definesGpuAllocation())
+            if(index >=0 && opVec[index]->definesAllocation())
             {
-                return opVec[index]->getGpuAllocation();
+                return opVec[index]->getAllocation();
             }
             
-            return GpuAllocationData();
+            return AllocationData();
         }
     }
     
@@ -290,7 +308,7 @@ OCIO_NAMESPACE_ENTER
                 // does the inverse (making the overall operation a no-op
                 // color-wise
                 
-                GpuAllocationData allocation = GetAllocation(gpuLut3DOpStartIndex, m_cpuOps);
+                AllocationData allocation = GetAllocation(gpuLut3DOpStartIndex, m_cpuOps);
                 BuildAllocationOps(m_gpuOpsHwPreProcess, allocation, TRANSFORM_DIR_FORWARD);
                 BuildAllocationOps(m_gpuOpsCpuLatticeProcess, allocation, TRANSFORM_DIR_INVERSE);
                 

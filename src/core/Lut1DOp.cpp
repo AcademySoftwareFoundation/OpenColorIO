@@ -402,8 +402,8 @@ OCIO_NAMESPACE_ENTER
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
-            virtual bool definesGpuAllocation() const;
-            virtual GpuAllocationData getGpuAllocation() const;
+            virtual bool definesAllocation() const;
+            virtual AllocationData getAllocation() const;
             
         private:
             const Lut1DRcPtr m_lut;
@@ -511,14 +511,14 @@ OCIO_NAMESPACE_ENTER
             throw Exception("Lut1DOp does not support analytical shader generation.");
         }
         
-        bool Lut1DOp::definesGpuAllocation() const
+        bool Lut1DOp::definesAllocation() const
         {
             return false;
         }
         
-        GpuAllocationData Lut1DOp::getGpuAllocation() const
+        AllocationData Lut1DOp::getAllocation() const
         {
-            throw Exception("Lut1DOp does not define a Gpu Allocation.");
+            throw Exception("Lut1DOp does not define an allocation.");
         }
     }
     

@@ -100,6 +100,12 @@ OCIO_NAMESPACE_ENTER
                         const MatrixTransform & transform,
                         TransformDirection dir);
     
+    
+    ////////////////////////////////////////////////////////////////////////
+    
+    
+    void CreateAllocationNoOp(OpRcPtrVec & ops,
+                              const AllocationData & allocationData);
 }
 OCIO_NAMESPACE_EXIT
 

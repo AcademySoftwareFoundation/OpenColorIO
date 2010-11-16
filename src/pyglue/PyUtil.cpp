@@ -61,9 +61,9 @@ OCIO_NAMESPACE_ENTER
         return 1;
     }
     
-    int ConvertPyObjectToGpuAllocation(PyObject *object, void *valuePtr)
+    int ConvertPyObjectToAllocation(PyObject *object, void *valuePtr)
     {
-        GpuAllocation* gpuallocPtr = static_cast<GpuAllocation*>(valuePtr);
+        Allocation* allocPtr = static_cast<Allocation*>(valuePtr);
         
         if(!PyString_Check(object))
         {
@@ -71,7 +71,7 @@ OCIO_NAMESPACE_ENTER
             return 0;
         }
         
-        *gpuallocPtr = GpuAllocationFromString(PyString_AsString( object ));
+        *allocPtr = AllocationFromString(PyString_AsString( object ));
         
         return 1;
     }

@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "GpuAllocationNoOp.h"
 #include "OpBuilders.h"
 
 
@@ -181,27 +180,26 @@ OCIO_NAMESPACE_ENTER
         // result, and walk through it step by step.  If the dstColorspace family were
         // ever encountered in transit, we'd want to short circuit the result.
         
-        GpuAllocationData srcAllocation;
-        srcAllocation.allocation = srcColorSpace->getGpuAllocation();
-        srcAllocation.min = srcColorSpace->getGpuMin();
-        srcAllocation.max = srcColorSpace->getGpuMax();
+        AllocationData srcAllocation;
+        srcAllocation.allocation = srcColorSpace->getAllocation();
+        srcAllocation.vars.resize( srcColorSpace->getAllocationNumVars());
+        srcColorSpace->getAllocationVars(&srcAllocation.vars[0]);
         
-        CreateGpuAllocationNoOp(ops, srcAllocation);
+        CreateAllocationNoOp(ops, srcAllocation);
         
         ConstTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
         BuildOps(ops, config, toref, TRANSFORM_DIR_FORWARD);
         
-        // TODO: If ROLE_REFERENCE is defined, consider adding its GpuAllocation to the OpVec
         
         ConstTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         BuildOps(ops, config, fromref, TRANSFORM_DIR_FORWARD);
         
-        GpuAllocationData dstAllocation;
-        dstAllocation.allocation = dstColorSpace->getGpuAllocation();
-        dstAllocation.min = dstColorSpace->getGpuMin();
-        dstAllocation.max = dstColorSpace->getGpuMax();
+        AllocationData dstAllocation;
+        dstAllocation.allocation = dstColorSpace->getAllocation();
+        dstAllocation.vars.resize( dstColorSpace->getAllocationNumVars());
+        dstColorSpace->getAllocationVars(&dstAllocation.vars[0]);
         
-        CreateGpuAllocationNoOp(ops, dstAllocation);
+        CreateAllocationNoOp(ops, dstAllocation);
     }
 }
 OCIO_NAMESPACE_EXIT

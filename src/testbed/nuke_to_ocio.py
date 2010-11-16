@@ -44,9 +44,8 @@ if True:
     cs.setName('linear')
     cs.setFamily('linear')
     cs.setIsData(False)
-    cs.setGpuMin(-8.0)
-    cs.setGpuMax(8.0)
-    cs.setGpuAllocation(OCIO.Constants.GPU_ALLOCATION_LG2)
+    cs.setAllocationMode(OCIO.Constants.ALLOCATION_LG2)
+    cs.setAllocationVars((-8.0,8.0))
     config.addColorSpace(cs)
 
 def Create1DSampledColorSpace(name, lutmin, lutmax, lutentries):
@@ -55,9 +54,8 @@ def Create1DSampledColorSpace(name, lutmin, lutmax, lutentries):
     cs.setName(name)
     cs.setFamily(name)
     cs.setIsData(False)
-    cs.setGpuMin(0.0)
-    cs.setGpuMax(1.0)
-    cs.setGpuAllocation(OCIO.Constants.GPU_ALLOCATION_UNIFORM)
+    cs.setAllocationMode(OCIO.Constants.ALLOCATION_UNIFORM)
+    cs.setAllocationVars((0.0,1.0))
     
     lutfilename = name.lower() + '.spi1d'
     xmin = lutmin
@@ -91,9 +89,8 @@ if True:
     cs.setName('data')
     cs.setFamily('data')
     cs.setIsData(True)
-    cs.setGpuMin(0.0)
-    cs.setGpuMax(1.0)
-    cs.setGpuAllocation(OCIO.Constants.GPU_ALLOCATION_UNIFORM)
+    cs.setAllocationMode(OCIO.Constants.ALLOCATION_UNIFORM)
+    cs.setAllocationVars((0.0,1.0))
     
     config.addColorSpace(cs)
 

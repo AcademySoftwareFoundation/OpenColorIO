@@ -100,12 +100,12 @@ OCIO_NAMESPACE_ENTER
         PyModule_AddStringConstant(m, "BIT_DEPTH_F32",
             const_cast<char*>(BitDepthToString(BIT_DEPTH_F32)));
         
-        PyModule_AddStringConstant(m, "GPU_ALLOCATION_UNKNOWN",
-            const_cast<char*>(GpuAllocationToString(GPU_ALLOCATION_UNKNOWN)));
-        PyModule_AddStringConstant(m, "GPU_ALLOCATION_UNIFORM",
-            const_cast<char*>(GpuAllocationToString(GPU_ALLOCATION_UNIFORM)));
-        PyModule_AddStringConstant(m, "GPU_ALLOCATION_LG2",
-            const_cast<char*>(GpuAllocationToString(GPU_ALLOCATION_LG2)));
+        PyModule_AddStringConstant(m, "ALLOCATION_UNKNOWN",
+            const_cast<char*>(AllocationToString(ALLOCATION_UNKNOWN)));
+        PyModule_AddStringConstant(m, "ALLOCATION_UNIFORM",
+            const_cast<char*>(AllocationToString(ALLOCATION_UNIFORM)));
+        PyModule_AddStringConstant(m, "ALLOCATION_LG2",
+            const_cast<char*>(AllocationToString(ALLOCATION_LG2)));
         
         PyModule_AddStringConstant(m, "INTERP_UNKNOWN",
             const_cast<char*>(InterpolationToString(INTERP_UNKNOWN)));

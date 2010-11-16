@@ -26,21 +26,22 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <sstream>
+
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "GpuAllocationNoOp.h"
-
-#include <sstream>
+#include "OpBuilders.h"
+#include "Op.h"
 
 OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        class GpuAllocationNoOp : public Op
+        class AllocationNoOp : public Op
         {
         public:
-            GpuAllocationNoOp(const GpuAllocationData & allocationData);
-            virtual ~GpuAllocationNoOp();
+            AllocationNoOp(const AllocationData & allocationData);
+            virtual ~AllocationNoOp();
             
             virtual OpRcPtr clone() const;
             
@@ -56,80 +57,79 @@ OCIO_NAMESPACE_ENTER
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
-            virtual bool definesGpuAllocation() const;
-            virtual GpuAllocationData getGpuAllocation() const;
+            virtual bool definesAllocation() const;
+            virtual AllocationData getAllocation() const;
             
-            GpuAllocation getAllocation() const;
             float getMin() const;
             float getMax() const;
         
         private:
-            GpuAllocationData m_allocationData;
+            AllocationData m_allocationData;
             
             std::string m_cacheID;
         };
         
         
         
-        GpuAllocationNoOp::GpuAllocationNoOp(const GpuAllocationData & allocationData) :
+        AllocationNoOp::AllocationNoOp(const AllocationData & allocationData) :
                         m_allocationData(allocationData)
         { };
 
-        OpRcPtr GpuAllocationNoOp::clone() const
+        OpRcPtr AllocationNoOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new GpuAllocationNoOp(m_allocationData));
+            OpRcPtr op = OpRcPtr(new AllocationNoOp(m_allocationData));
             return op;
         }
         
-        GpuAllocationNoOp::~GpuAllocationNoOp()
+        AllocationNoOp::~AllocationNoOp()
         {
 
         }
 
-        std::string GpuAllocationNoOp::getInfo() const
+        std::string AllocationNoOp::getInfo() const
         {
-            return "<GPUAllocationNoOp>";
+            return "<AllocationNoOp>";
         }
 
-        std::string GpuAllocationNoOp::getCacheID() const
+        std::string AllocationNoOp::getCacheID() const
         {
             return m_cacheID;
         }
 
-        bool GpuAllocationNoOp::isNoOp() const
+        bool AllocationNoOp::isNoOp() const
         {
             return true;
         }
         
-        void GpuAllocationNoOp::finalize()
+        void AllocationNoOp::finalize()
         {
             // Create the cacheID
             std::ostringstream cacheIDStream;
-            cacheIDStream << "<GpuAllocationOp ";
+            cacheIDStream << "<AllocationOp ";
             cacheIDStream << m_allocationData.getCacheID();
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
         }
 
-        void GpuAllocationNoOp::apply(float* /*rgbaBuffer*/, long /*numPixels*/) const
+        void AllocationNoOp::apply(float* /*rgbaBuffer*/, long /*numPixels*/) const
         { }
 
-        bool GpuAllocationNoOp::supportsGpuShader() const
+        bool AllocationNoOp::supportsGpuShader() const
         {
             return true;
         }
 
-        void GpuAllocationNoOp::writeGpuShader(std::ostringstream & /*shader*/,
+        void AllocationNoOp::writeGpuShader(std::ostringstream & /*shader*/,
                                              const std::string & /*pixelName*/,
                                              const GpuShaderDesc & /*shaderDesc*/) const
         { }
         
-        bool GpuAllocationNoOp::definesGpuAllocation() const
+        bool AllocationNoOp::definesAllocation() const
         {
             return true;
         }
         
-        GpuAllocationData GpuAllocationNoOp::getGpuAllocation() const
+        AllocationData AllocationNoOp::getAllocation() const
         {
             return m_allocationData;
         }
@@ -137,10 +137,10 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
-                                 const GpuAllocationData & allocationData)
+    void CreateAllocationNoOp(OpRcPtrVec & ops,
+                              const AllocationData & allocationData)
     {
-        ops.push_back( OpRcPtr(new GpuAllocationNoOp(allocationData)) );
+        ops.push_back( OpRcPtr(new AllocationNoOp(allocationData)) );
     }
 
 }

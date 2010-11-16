@@ -26,9 +26,11 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
-
+#include <cstring>
 #include <sstream>
+#include <vector>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -53,9 +55,8 @@ OCIO_NAMESPACE_ENTER
         BitDepth bitDepth_;
         bool isData_;
         
-        GpuAllocation gpuAllocation_;
-        float gpuMin_;
-        float gpuMax_;
+        Allocation allocation_;
+        std::vector<float> allocationVars_;
         
         TransformRcPtr toRefTransform_;
         TransformRcPtr fromRefTransform_;
@@ -66,9 +67,7 @@ OCIO_NAMESPACE_ENTER
         Impl() :
             bitDepth_(BIT_DEPTH_UNKNOWN),
             isData_(false),
-            gpuAllocation_(GPU_ALLOCATION_UNIFORM),
-            gpuMin_(0.0),
-            gpuMax_(1.0),
+            allocation_(ALLOCATION_UNIFORM),
             toRefSpecified_(false),
             fromRefSpecified_(false)
         { }
@@ -83,9 +82,8 @@ OCIO_NAMESPACE_ENTER
             description_ = rhs.description_;
             bitDepth_ = rhs.bitDepth_;
             isData_ = rhs.isData_;
-            gpuAllocation_ = rhs.gpuAllocation_;
-            gpuMin_ = rhs.gpuMin_;
-            gpuMax_ = rhs.gpuMax_;
+            allocation_ = rhs.allocation_;
+            allocationVars_ = rhs.allocationVars_;
             
             toRefTransform_ = rhs.toRefTransform_;
             if(toRefTransform_) toRefTransform_ = toRefTransform_->createEditableCopy();
@@ -171,34 +169,35 @@ OCIO_NAMESPACE_ENTER
         m_impl->isData_ = val;
     }
     
-    GpuAllocation ColorSpace::getGpuAllocation() const
+    Allocation ColorSpace::getAllocation() const
     {
-        return m_impl->gpuAllocation_;
+        return m_impl->allocation_;
     }
     
-    void ColorSpace::setGpuAllocation(GpuAllocation allocation)
+    void ColorSpace::setAllocation(Allocation allocation)
     {
-        m_impl->gpuAllocation_ = allocation;
+        m_impl->allocation_ = allocation;
     }
     
-    float ColorSpace::getGpuMin() const
+    int ColorSpace::getAllocationNumVars() const
     {
-        return m_impl->gpuMin_;
+        return static_cast<int>(m_impl->allocationVars_.size());
     }
     
-    void ColorSpace::setGpuMin(float min)
+    void ColorSpace::getAllocationVars(float * vars) const
     {
-        m_impl->gpuMin_ = min;
+        memcpy(vars,
+            &m_impl->allocationVars_[0],
+            m_impl->allocationVars_.size()*sizeof(float));
     }
     
-    float ColorSpace::getGpuMax() const
+    void ColorSpace::setAllocationVars(int numvars, const float * vars)
     {
-        return m_impl->gpuMax_;
-    }
-    
-    void ColorSpace::setGpuMax(float max)
-    {
-        m_impl->gpuMax_ = max;
+        m_impl->allocationVars_.resize(numvars);
+        
+        memcpy(&m_impl->allocationVars_[0],
+            vars,
+            numvars*sizeof(float));
     }
     
     ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
@@ -286,12 +285,9 @@ OCIO_NAMESPACE_ENTER
         os << "family=" << cs.getFamily() << ", ";
         os << "bitDepth=" << BitDepthToString(cs.getBitDepth()) << ", ";
         os << "isData=" << BoolToString(cs.isData()) << ", ";
-        os << "GpuAllocation=" << GpuAllocationToString(cs.getGpuAllocation()) << ", ";
-        // TODO: make this not warn
-        //os << "GpuMin=" << cs.getGpuMin() << ", ";
-        //os << "GpuMax=" << cs.getGpuMax() << ", ";
-        
+        os << "allocation=" << AllocationToString(cs.getAllocation()) << ", ";
         os << ">\n";
+        
         if(cs.isTransformSpecified(COLORSPACE_DIR_TO_REFERENCE))
         {
             os << "\t" << cs.getName() << " --> Reference\n";

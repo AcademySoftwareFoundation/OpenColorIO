@@ -81,8 +81,8 @@ OCIO_NAMESPACE_ENTER
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
-            virtual bool definesGpuAllocation() const;
-            virtual GpuAllocationData getGpuAllocation() const;
+            virtual bool definesAllocation() const;
+            virtual AllocationData getAllocation() const;
         
         private:
             float m_exp4[4];
@@ -187,14 +187,14 @@ OCIO_NAMESPACE_ENTER
             shader << ", " << GpuTextHalf4(m_finalExp4, lang) << ");\n";
         }
         
-        bool ExponentOp::definesGpuAllocation() const
+        bool ExponentOp::definesAllocation() const
         {
             return false;
         }
         
-        GpuAllocationData ExponentOp::getGpuAllocation() const
+        AllocationData ExponentOp::getAllocation() const
         {
-            throw Exception("ExponentOp does not define a Gpu Allocation.");
+            throw Exception("ExponentOp does not define an allocation.");
         }
         
     }  // Anon namespace

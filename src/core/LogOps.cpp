@@ -136,8 +136,8 @@ OCIO_NAMESPACE_ENTER
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
-            virtual bool definesGpuAllocation() const;
-            virtual GpuAllocationData getGpuAllocation() const;
+            virtual bool definesAllocation() const;
+            virtual AllocationData getAllocation() const;
         
         private:
             float m_k[3];
@@ -321,14 +321,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        bool LogOp::definesGpuAllocation() const
+        bool LogOp::definesAllocation() const
         {
-            return true;
+            return false;
         }
         
-        GpuAllocationData LogOp::getGpuAllocation() const
+        AllocationData LogOp::getAllocation() const
         {
-            throw Exception("LogOp does not define a Gpu Allocation.");
+            throw Exception("LogOp does not define an allocation.");
         }
         
     }  // Anon namespace

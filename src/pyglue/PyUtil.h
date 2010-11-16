@@ -39,7 +39,7 @@ OCIO_NAMESPACE_ENTER
     
     int ConvertPyObjectToBool(PyObject *object, void *valuePtr);
     
-    int ConvertPyObjectToGpuAllocation(PyObject *object, void *valuePtr);
+    int ConvertPyObjectToAllocation(PyObject *object, void *valuePtr);
     
     int ConvertPyObjectToInterpolation(PyObject *object, void *valuePtr);
     
