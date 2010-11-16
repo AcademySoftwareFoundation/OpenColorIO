@@ -100,9 +100,27 @@ OCIO_NAMESPACE_ENTER
                     }
                 }
                 
+                
+                // Log Settings
+                // output = k * log(mx+b, base) + kb
+                
+                float k[3] = { 1.0f, 1.0f, 1.0f };
+                float m[3] = { 1.0f, 1.0f, 1.0f };
+                float b[3] = { 0.0f, 0.0f, 0.0f };
+                float base[3] = { 2.0f, 2.0f, 2.0f };
+                float kb[3] = { 0.0f, 0.0f, 0.0f };
+                
+                if(data.vars.size() >= 3)
+                {
+                    for(int i=0; i<3; ++i)
+                    {
+                        b[i] = data.vars[2];
+                    }
+                }
+                
                 if(dir == TRANSFORM_DIR_FORWARD)
                 {
-                    CreateLog2Op(ops, dir);
+                    CreateLogOp(ops, k, m, b, base, kb, dir);
                     
                     CreateFitOp(ops,
                                 oldmin, oldmax,
@@ -116,7 +134,7 @@ OCIO_NAMESPACE_ENTER
                                 newmin, newmax,
                                 dir);
                     
-                    CreateLog2Op(ops, dir);
+                    CreateLogOp(ops, k, m, b, base, kb, dir);
                 }
                 else
                 {

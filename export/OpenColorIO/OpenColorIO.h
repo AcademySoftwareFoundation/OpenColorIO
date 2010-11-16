@@ -405,6 +405,7 @@ OCIO_NAMESPACE_ENTER
         //
         // ALLOCATION_LG2
         // 2 vars: [lg2min, lg2max]
+        // 3 vars: [lg2min, lg2max, linear_offset]
         
         int getAllocationNumVars() const;
         void getAllocationVars(float * vars) const;
