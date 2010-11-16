@@ -396,6 +396,16 @@ OCIO_NAMESPACE_ENTER
         Allocation getAllocation() const;
         void setAllocation(Allocation allocation);
         
+        // Specify the optional variable values to configure
+        // the allocation.  If no variables are specified,
+        // the defaults are used.
+        //
+        // ALLOCATION_UNIFORM
+        // 2 vars: [min, max]
+        //
+        // ALLOCATION_LG2
+        // 2 vars: [lg2min, lg2max]
+        
         int getAllocationNumVars() const;
         void getAllocationVars(float * vars) const;
         void setAllocationVars(int numvars, const float * vars);

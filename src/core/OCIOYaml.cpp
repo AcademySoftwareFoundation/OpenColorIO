@@ -51,8 +51,12 @@ OCIO_NAMESPACE_ENTER
             cs->setBitDepth(node["bitdepth"].Read<BitDepth>());
         if(node.FindValue("isdata") != NULL)
             cs->setIsData(node["isdata"].Read<bool>());
+        
         if(node.FindValue("allocation") != NULL)
             cs->setAllocation(node["allocation"].Read<Allocation>());
+        // Backwards compatibility
+        else if(node.FindValue("gpuallocation") != NULL)
+            cs->setAllocation(node["gpuallocation"].Read<Allocation>());
         
         if(node.FindValue("allocationvars") != NULL)
         {
