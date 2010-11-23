@@ -1,28 +1,45 @@
-How to Test the nuke plugin,
+----------------------------------------------------------------------------------------------------------------------
+Nuke On Linux, using a 'local' ocio installation.
+(Substitute your Nuke installation location for NDK_PATH, and your python2.5 installation).
+Python2.5 must be specified if you want to use the python bindings
 
-Make a build directory, cd
+> cd <YOUR_OCIO_DIR>
+> mkdir -p build && cd build
+> mkdir -p install
+> env NDK_PATH=/net/apps/spinux1/foundry/nuke6.1v2/ cmake -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX=install -D OCIO_NAMESPACE=OpenColorIO_Nuke -D PYTHON=/usr/bin/python2.5 ../
+> make -j8 && make install
 
-> mkdir -p build
-> cd build
+In Nuke's init.py (and menu.py):
 
-Configure cmake, pointing at your nuke include dir
-> cmake -D NUKE:FILEPATH=/usr/local/nuke6.0.3/include/ -D CMAKE_BUILD_TYPE=Release ../
+try:
+    print 'Setting up Local OpenColorIO'
+    ocioroot = <YOUR_OCIO_DIR>
+    sys.path.append(os.path.join(ocioroot, "build/install/lib/python'))
+    import PyOpenColorIO as OCIO
+    
+    nuke.load(os.path.join(ocioroot, 'build/install/lib/nuke/OCIOColorSpace.so')
+    nuke.load(os.path.join(ocioroot, 'build/install/lib/nuke/OCIODisplay.so')
+    nuke.load(os.path.join(ocioroot, 'build/install/lib/nuke/OCIOFileTransform.so')
+    nuke.load(os.path.join(ocioroot, 'build/install/lib/nuke/OCIOLogConvert.so')
+    
+    nuke.menu('Nodes').addMenu('Color').addCommand('OCIOColorSpace', 'nuke.createNode("OCIOColorSpace")')
+    nuke.menu('Nodes').addMenu('Color').addCommand('OCIODisplay', 'nuke.createNode("OCIODisplay")')
+    nuke.menu('Nodes').addMenu('Color').addCommand('OCIOFileTransform', 'nuke.createNode("OCIOFileTransform")')
+    nuke.menu('Nodes').addMenu('Color').addCommand('OCIOLogConvert', 'nuke.createNode("OCIOLogConvert")')
 
-Build all targets...
-> make
+except Exception,e:
+    print 'Error loading user OpenColorIO'
 
-You will now see the built .so files
-> ls
-
-Set the environment variable pointing at which configuration to use
+Set the ocio profile to use:
 > setenv OCIO /net/homedirs/jeremys/git/OpenColorIO/configs/spivfx/config.ocio
+
+Launch Nuke:
+> setenv OCIO <PATH_TO_OCIO_PROFILE>/config.ocio
+> env LD_LIBRARY_PATH=<YOUR_OCIO_DIR>/build/install/lib/ nuke
 
 Launch nuke, then load the plugin (either interactively, or in init.py and menu.py respectively for the two commands):
 
-> nuke.load('/net/homedirs/jeremys/git/OpenColorIO/build/libNukeColorSpaceConversion.so')
-> nuke.menu('Nodes').addMenu('Color').addCommand('OCIOColorSpaceConversion', 'nuke.createNode("OCIOColorSpaceConversion")')
-
-Connect an image to the OCIOColorSpaceConversion node.
+Connect an image to the OCIOColorSpace node to test.
 
 
 
