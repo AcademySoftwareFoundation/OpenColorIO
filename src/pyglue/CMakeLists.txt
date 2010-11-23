@@ -1,7 +1,13 @@
+# Set the default python runtime
+if(NOT PYTHON)
+    set(PYHELP "path to Python executable (also used to find headers against which to compile Python bindings)")
+    set(PYTHON_HEADER Python.h)
+    set(PYTHON python CACHE FILEPATH ${PYHELP} FORCE)
+endif(NOT PYTHON)
+if(CMAKE_FIRST_RUN)
+    message(STATUS "Setting python bin to: ${PYTHON}")
+endif()
 
-set(PYHELP "path to Python executable (also used to find headers against which to compile Python bindings)")
-set(PYTHON_HEADER Python.h)
-set(PYTHON python CACHE FILEPATH ${PYHELP})
 execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_inc()"
     OUTPUT_VARIABLE PYTHON_INCLUDE
     RESULT_VARIABLE PYTHON_RETURNVALUE
