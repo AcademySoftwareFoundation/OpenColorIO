@@ -48,7 +48,7 @@ OCIO_NAMESPACE_ENTER
             PyOCIO_Transform * pyobj = 0x0;
             
             if(ConstAllocationTransformRcPtr allocationTransform = \
-                DynamicPtrCast<const AllocationTransform>(allocationTransform))
+                DynamicPtrCast<const AllocationTransform>(transform))
             {
                 pyobj = PyObject_New(PyOCIO_Transform,
                     (PyTypeObject * ) &PyOCIO_AllocationTransformType);
