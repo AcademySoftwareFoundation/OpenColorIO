@@ -53,16 +53,21 @@ void LogConvert::_validate(bool for_real)
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
+        const char * src = 0;
+        const char * dst = 0;
+        
         if(modeindex == 0)
         {
-            processor = config->getProcessor(OCIO::ROLE_SCENE_LINEAR,
-                                             OCIO::ROLE_COMPOSITING_LOG);
+            src = OCIO::ROLE_COMPOSITING_LOG;
+            dst = OCIO::ROLE_SCENE_LINEAR;
         }
         else
         {
-            processor = config->getProcessor(OCIO::ROLE_COMPOSITING_LOG,
-                                             OCIO::ROLE_SCENE_LINEAR);
+            src = OCIO::ROLE_SCENE_LINEAR;
+            dst = OCIO::ROLE_COMPOSITING_LOG;
         }
+        
+        processor = config->getProcessor(src, dst);
     }
     catch(OCIO::Exception &e)
     {
