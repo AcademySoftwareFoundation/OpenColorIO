@@ -161,8 +161,6 @@ OCIO_NAMESPACE_ENTER
             t = node.Read<AllocationTransformRcPtr>();
         else if(type == "CDLTransform")
             t = node.Read<CDLTransformRcPtr>();
-        else if(type == "CineonLogToLinTransform")
-            t = node.Read<CineonLogToLinTransformRcPtr>();
         else if(type == "ColorSpaceTransform")
             t = node.Read<ColorSpaceTransformRcPtr>();
         // TODO: add DisplayTransform
@@ -198,9 +196,6 @@ OCIO_NAMESPACE_ENTER
         else if(ConstCDLTransformRcPtr CDL_tran = \
             DynamicPtrCast<const CDLTransform>(t))
             out << CDL_tran;
-        else if(ConstCineonLogToLinTransformRcPtr CineonLogToLin_tran = \
-            DynamicPtrCast<const CineonLogToLinTransform>(t))
-            out << CineonLogToLin_tran;
         else if(ConstColorSpaceTransformRcPtr ColorSpace_tran = \
             DynamicPtrCast<const ColorSpaceTransform>(t))
             out << ColorSpace_tran;
@@ -343,106 +338,6 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Value << YAML::Flow << value;
         EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
-        return out;
-    }
-    
-    void operator >> (const YAML::Node& node, CineonLogToLinTransformRcPtr& t)
-    {
-        t = CineonLogToLinTransform::Create();
-        
-        // max_aim_density
-        if(node.FindValue("max_aim_density") != NULL)
-        {
-            std::vector<float> value;
-            node["max_aim_density"] >> value;
-            if(value.size() != 3)
-            {
-                std::ostringstream os;
-                os << "CineonLogToLinTransform parse error, 'max_aim_density' ";
-                os << "field must be 3 floats. Found '" << value.size() << "'.";
-                throw Exception(os.str().c_str());
-            }
-            t->setMaxAimDensity(&value[0]);
-        }
-        else throw Exception("CineonLogToLinTransform doesn't have a 'max_aim_density:' specified.");
-        
-        // neg_gamma
-        if(node.FindValue("neg_gamma") != NULL)
-        {
-            std::vector<float> value;
-            node["neg_gamma"] >> value;
-            if(value.size() != 3)
-            {
-                std::ostringstream os;
-                os << "CineonLogToLinTransform parse error, 'neg_gamma' ";
-                os << "field must be 3 floats. Found '" << value.size() << "'.";
-                throw Exception(os.str().c_str());
-            }
-            t->setNegGamma(&value[0]);
-        }
-        else throw Exception("CineonLogToLinTransform doesn't have a 'neg_gamma:' specified.");
-        
-        // neg_gray_reference
-        if(node.FindValue("neg_gray_reference") != NULL)
-        {
-            std::vector<float> value;
-            node["neg_gray_reference"] >> value;
-            if(value.size() != 3)
-            {
-                std::ostringstream os;
-                os << "CineonLogToLinTransform parse error, 'neg_gray_reference' ";
-                os << "field must be 3 floats. Found '" << value.size() << "'.";
-                throw Exception(os.str().c_str());
-            }
-            t->setNegGrayReference(&value[0]);
-        }
-        else throw Exception("CineonLogToLinTransform doesn't have a 'neg_gray_reference:' specified.");
-        
-        // linear_gray_reference
-        if(node.FindValue("linear_gray_reference") != NULL)
-        {
-            std::vector<float> value;
-            node["linear_gray_reference"] >> value;
-            if(value.size() != 3)
-            {
-                std::ostringstream os;
-                os << "CineonLogToLinTransform parse error, 'linear_gray_reference' ";
-                os << "field must be 3 floats. Found '" << value.size() << "'.";
-                throw Exception(os.str().c_str());
-            }
-            t->setLinearGrayReference(&value[0]);
-        }
-        else throw Exception("CineonLogToLinTransform doesn't have a 'linear_gray_reference:' specified.");
-    }
-    
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstCineonLogToLinTransformRcPtr t)
-    {
-        out << YAML::VerbatimTag("CineonLogToLinTransform");
-        out << YAML::Block << YAML::BeginMap;
-        
-        std::vector<float> max_aim_density(3, 0.0);
-        t->getMaxAimDensity(&max_aim_density[0]);
-        out << YAML::Key << "max_aim_density";
-        out << YAML::Value << YAML::Flow << max_aim_density;
-        
-        std::vector<float> neg_gamma(3, 0.0);
-        t->getNegGamma(&neg_gamma[0]);
-        out << YAML::Key << "neg_gamma";
-        out << YAML::Value << YAML::Flow << neg_gamma;
-        
-        std::vector<float> neg_gray_reference(3, 0.0);
-        t->getNegGrayReference(&neg_gray_reference[0]);
-        out << YAML::Key << "neg_gray_reference";
-        out << YAML::Value << YAML::Flow << neg_gray_reference;
-        
-        std::vector<float> linear_gray_reference(3, 0.0);
-        t->getLinearGrayReference(&linear_gray_reference[0]);
-        out << YAML::Key << "linear_gray_reference";
-        out << YAML::Value << YAML::Flow << linear_gray_reference;
-        
-        EmitBaseTransformKeyValues(out, t);
-        out << YAML::EndMap;
-        
         return out;
     }
     

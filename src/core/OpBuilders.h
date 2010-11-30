@@ -65,11 +65,6 @@ OCIO_NAMESPACE_ENTER
                      const CDLTransform & transform,
                      TransformDirection dir);
     
-    void BuildCineonLogToLinOps(OpRcPtrVec & ops,
-                                const Config& config,
-                                const CineonLogToLinTransform & transform,
-                                TransformDirection dir);
-    
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config& config,
                             const ColorSpaceTransform & transform,

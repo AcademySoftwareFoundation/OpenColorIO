@@ -82,10 +82,6 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
     typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
     
-    class OCIOEXPORT CineonLogToLinTransform;
-    typedef OCIO_SHARED_PTR<const CineonLogToLinTransform> ConstCineonLogToLinTransformRcPtr;
-    typedef OCIO_SHARED_PTR<CineonLogToLinTransform> CineonLogToLinTransformRcPtr;
-    
     class OCIOEXPORT ColorSpaceTransform;
     typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
     typedef OCIO_SHARED_PTR<ColorSpaceTransform> ColorSpaceTransformRcPtr;

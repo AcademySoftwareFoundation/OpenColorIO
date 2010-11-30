@@ -52,9 +52,6 @@ OCIO_NAMESPACE_ENTER
     extern PyTypeObject PyOCIO_CDLTransformType;
     bool AddCDLTransformObjectToModule( PyObject* m );
     
-    extern PyTypeObject PyOCIO_CineonLogToLinTransformType;
-    bool AddCineonLogToLinTransformObjectToModule( PyObject* m );
-    
     extern PyTypeObject PyOCIO_ColorSpaceTransformType;
     bool AddColorSpaceTransformObjectToModule( PyObject* m );
     

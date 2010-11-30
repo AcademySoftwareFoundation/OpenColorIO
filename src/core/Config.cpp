@@ -1194,11 +1194,6 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     "            dst: lnh\n"
     "          - !<ExponentTransform>\n"
     "            value: [2.2, 2.2, 2.2, 1]\n"
-    "          - !<CineonLogToLinTransform>\n"
-    "            max_aim_density: [2.046, 2.046, 2.046]\n"
-    "            neg_gamma: [0.6, 0.6, 0.6]\n"
-    "            neg_gray_reference: [0.435, 0.435, 0.435]\n"
-    "            linear_gray_reference: [0.18, 0.18, 0.18]\n"
     "          - !<MatrixTransform>\n"
     "            matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]\n"
     "            offset: [0, 0, 0, 0]\n"
@@ -1225,11 +1220,8 @@ BOOST_AUTO_TEST_CASE ( test_ser )
         cs->setFamily("test");
         OCIO::FileTransformRcPtr transform1 = \
             OCIO::FileTransform::Create();
-        OCIO::CineonLogToLinTransformRcPtr transform2 = \
-            OCIO::CineonLogToLinTransform::Create();
         OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
         groupTransform->push_back(transform1);
-        groupTransform->push_back(transform2);
         cs->setTransform(groupTransform, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
         config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
@@ -1275,11 +1267,6 @@ BOOST_AUTO_TEST_CASE ( test_ser )
     "    to_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
-    "        - !<CineonLogToLinTransform>\n"
-    "          max_aim_density: [2.046, 2.046, 2.046]\n"
-    "          neg_gamma: [0.6, 0.6, 0.6]\n"
-    "          neg_gray_reference: [0.434995, 0.434995, 0.434995]\n"
-    "          linear_gray_reference: [0.18, 0.18, 0.18]\n"
     "\n"
     "  - !<ColorSpace>\n"
     "    name: testing2\n"
