@@ -119,9 +119,15 @@ t = OCIO.CineonLogToLinTransform()
 t.setMaxAimDensity((1.890, 2.046, 2.046))
 t.setNegGamma((0.49, 0.57, 0.60))
 g.push_back(t)
+
+t = OCIO.AllocationTransform()
+t.setAllocation(OCIO.Constants.ALLOCATION_LG2)
+t.setVars((-8.0, 8.0))
+g.push_back(t)
+
 cs.setTransform(g, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)
-logOffset = [v * 1023.0 for v in t.getNegGammaAsLogOffset()]
-print 'logOffset',logOffset
+#logOffset = [v * 1023.0 for v in t.getNegGammaAsLogOffset()]
+#print 'logOffset',logOffset
 
 
 config.addColorSpace(cs)

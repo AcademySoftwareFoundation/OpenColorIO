@@ -28,11 +28,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "AllocationOp.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
-#include "LogOps.h"
 #include "Lut3DOp.h"
-#include "MatrixOps.h"
 #include "OpBuilders.h"
 #include "Processor.h"
 #include "ScanlineHelper.h"
@@ -59,94 +58,6 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        void BuildAllocationOps(OpRcPtrVec & ops,
-                                const AllocationData & data,
-                                TransformDirection dir)
-        {
-            if(data.allocation == ALLOCATION_UNIFORM)
-            {
-                float oldmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-                float oldmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-                float newmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-                float newmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-                
-                if(data.vars.size() >= 2)
-                {
-                    for(int i=0; i<3; ++i)
-                    {
-                        oldmin[i] = data.vars[0];
-                        oldmax[i] = data.vars[1];
-                    }
-                }
-                
-                CreateFitOp(ops,
-                            oldmin, oldmax,
-                            newmin, newmax,
-                            dir);
-            }
-            else if(data.allocation == ALLOCATION_LG2)
-            {
-                float oldmin[4] = { -10.0f, -10.0f, -10.0f, 0.0f };
-                float oldmax[4] = { 6.0f, 6.0f, 6.0f, 1.0f };
-                float newmin[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-                float newmax[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-                
-                if(data.vars.size() >= 2)
-                {
-                    for(int i=0; i<3; ++i)
-                    {
-                        oldmin[i] = data.vars[0];
-                        oldmax[i] = data.vars[1];
-                    }
-                }
-                
-                
-                // Log Settings
-                // output = k * log(mx+b, base) + kb
-                
-                float k[3] = { 1.0f, 1.0f, 1.0f };
-                float m[3] = { 1.0f, 1.0f, 1.0f };
-                float b[3] = { 0.0f, 0.0f, 0.0f };
-                float base[3] = { 2.0f, 2.0f, 2.0f };
-                float kb[3] = { 0.0f, 0.0f, 0.0f };
-                
-                if(data.vars.size() >= 3)
-                {
-                    for(int i=0; i<3; ++i)
-                    {
-                        b[i] = data.vars[2];
-                    }
-                }
-                
-                if(dir == TRANSFORM_DIR_FORWARD)
-                {
-                    CreateLogOp(ops, k, m, b, base, kb, dir);
-                    
-                    CreateFitOp(ops,
-                                oldmin, oldmax,
-                                newmin, newmax,
-                                dir);
-                }
-                else if(dir == TRANSFORM_DIR_INVERSE)
-                {
-                    CreateFitOp(ops,
-                                oldmin, oldmax,
-                                newmin, newmax,
-                                dir);
-                    
-                    CreateLogOp(ops, k, m, b, base, kb, dir);
-                }
-                else
-                {
-                    throw Exception("Cannot BuildAllocationOps, unspecified transform direction.");
-                }
-            }
-            else
-            {
-                throw Exception("Unsupported Allocation Type.");
-            }
-        }
-        
         void WriteShaderHeader(std::ostringstream & shader, const std::string & pixelName,
                                const GpuShaderDesc & shaderDesc)
         {
@@ -327,8 +238,8 @@ OCIO_NAMESPACE_ENTER
                 // color-wise
                 
                 AllocationData allocation = GetAllocation(gpuLut3DOpStartIndex, m_cpuOps);
-                BuildAllocationOps(m_gpuOpsHwPreProcess, allocation, TRANSFORM_DIR_FORWARD);
-                BuildAllocationOps(m_gpuOpsCpuLatticeProcess, allocation, TRANSFORM_DIR_INVERSE);
+                CreateAllocationOps(m_gpuOpsHwPreProcess, allocation, TRANSFORM_DIR_FORWARD);
+                CreateAllocationOps(m_gpuOpsCpuLatticeProcess, allocation, TRANSFORM_DIR_INVERSE);
                 
                 // Handle cpu lattice processing
                 for(int i=gpuLut3DOpStartIndex; i<=gpuLut3DOpEndIndex; ++i)

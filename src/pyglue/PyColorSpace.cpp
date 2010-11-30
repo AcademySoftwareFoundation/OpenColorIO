@@ -556,7 +556,10 @@ OCIO_NAMESPACE_ENTER
                 ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
                 
                 std::vector<float> allocationvars(colorSpace->getAllocationNumVars());
-                colorSpace->getAllocationVars(&allocationvars[0]);
+                if(!allocationvars.empty())
+                {
+                    colorSpace->getAllocationVars(&allocationvars[0]);
+                }
                 
                 return CreatePyListFromFloatVector(allocationvars);
             }
@@ -582,7 +585,10 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
-                colorSpace->setAllocationVars(static_cast<int>(vars.size()), &vars[0]);
+                if(!vars.empty())
+                {
+                    colorSpace->setAllocationVars(static_cast<int>(vars.size()), &vars[0]);
+                }
                 
                 Py_RETURN_NONE;
             }

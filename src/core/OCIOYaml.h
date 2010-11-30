@@ -46,6 +46,7 @@ namespace YAML {
     class TypedKeyNotFound<OCIO_NAMESPACE::GpuShaderDesc>;
     class TypedKeyNotFound<OCIO_NAMESPACE::Exception>;
     class TypedKeyNotFound<OCIO_NAMESPACE::Transform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::AllocationTransform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::CDLTransform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::CineonLogToLinTransform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpaceTransform>;
@@ -85,6 +86,8 @@ OCIO_NAMESPACE_ENTER
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstMatrixTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, CDLTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstCDLTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, AllocationTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstAllocationTransformRcPtr t);
     
     // Enums
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, BitDepth depth);

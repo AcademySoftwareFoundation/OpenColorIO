@@ -74,6 +74,10 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const Transform> ConstTransformRcPtr;
     typedef OCIO_SHARED_PTR<Transform> TransformRcPtr;
     
+    class OCIOEXPORT AllocationTransform;
+    typedef OCIO_SHARED_PTR<const AllocationTransform> ConstAllocationTransformRcPtr;
+    typedef OCIO_SHARED_PTR<AllocationTransform> AllocationTransformRcPtr;
+    
     class OCIOEXPORT CDLTransform;
     typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
     typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;

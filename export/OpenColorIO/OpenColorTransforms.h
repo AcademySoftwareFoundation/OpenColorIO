@@ -64,9 +64,43 @@ OCIO_NAMESPACE_ENTER
     
     
     
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Forward direction wraps the 'expanded' range into the specified,
+    // often compressed, range.
     
+    class OCIOEXPORT AllocationTransform : public Transform
+    {
+    public:
+        static AllocationTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        Allocation getAllocation() const;
+        void setAllocation(Allocation allocation);
+        
+        int getNumVars() const;
+        void getVars(float * vars) const;
+        void setVars(int numvars, const float * vars);
     
+    private:
+        AllocationTransform();
+        AllocationTransform(const AllocationTransform &);
+        virtual ~AllocationTransform();
+        
+        AllocationTransform& operator= (const AllocationTransform &);
+        
+        static void deleter(AllocationTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+    };
     
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const AllocationTransform&);
     
     
     ///////////////////////////////////////////////////////////////////////////

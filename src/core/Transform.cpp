@@ -49,7 +49,12 @@ OCIO_NAMESPACE_ENTER
         if(!transform)
             return;
         
-        if(ConstCDLTransformRcPtr cdlTransform = \
+        if(ConstAllocationTransformRcPtr allocationTransform = \
+            DynamicPtrCast<const AllocationTransform>(transform))
+        {
+            BuildAllocationOps(ops, config, *allocationTransform, dir);
+        }
+        else if(ConstCDLTransformRcPtr cdlTransform = \
             DynamicPtrCast<const CDLTransform>(transform))
         {
             BuildCDLOps(ops, config, *cdlTransform, dir);
@@ -101,7 +106,12 @@ OCIO_NAMESPACE_ENTER
     {
         const Transform* t = &transform;
         
-        if(const CDLTransform * cdlTransform = \
+        if(const AllocationTransform * allocationTransform = \
+            dynamic_cast<const AllocationTransform*>(t))
+        {
+            os << *allocationTransform;
+        }
+        else if(const CDLTransform * cdlTransform = \
             dynamic_cast<const CDLTransform*>(t))
         {
             os << *cdlTransform;

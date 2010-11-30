@@ -103,6 +103,7 @@ initPyOpenColorIO(void)
     
     OCIO::AddTransformObjectToModule( m );
     {
+        OCIO::AddAllocationTransformObjectToModule( m );
         OCIO::AddCDLTransformObjectToModule( m );
         OCIO::AddCineonLogToLinTransformObjectToModule( m );
         OCIO::AddColorSpaceTransformObjectToModule( m );

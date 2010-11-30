@@ -62,7 +62,10 @@ OCIO_NAMESPACE_ENTER
         {
             std::vector<float> value;
             node["allocationvars"] >> value;
-            cs->setAllocationVars(static_cast<int>(value.size()), &value[0]);
+            if(!value.empty())
+            {
+                cs->setAllocationVars(static_cast<int>(value.size()), &value[0]);
+            }
         }
         else if( (node.FindValue("gpumin") != NULL) &&
                  (node.FindValue("gpumax") != NULL) )
@@ -154,7 +157,9 @@ OCIO_NAMESPACE_ENTER
         
         std::string type = node.GetTag();
         
-        if(type == "CDLTransform")
+        if(type == "AllocationTransform")
+            t = node.Read<AllocationTransformRcPtr>();
+        else if(type == "CDLTransform")
             t = node.Read<CDLTransformRcPtr>();
         else if(type == "CineonLogToLinTransform")
             t = node.Read<CineonLogToLinTransformRcPtr>();
@@ -187,7 +192,10 @@ OCIO_NAMESPACE_ENTER
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstTransformRcPtr t)
     {
-        if(ConstCDLTransformRcPtr CDL_tran = \
+        if(ConstAllocationTransformRcPtr Allocation_tran = \
+            DynamicPtrCast<const AllocationTransform>(t))
+            out << Allocation_tran;
+        else if(ConstCDLTransformRcPtr CDL_tran = \
             DynamicPtrCast<const CDLTransform>(t))
             out << CDL_tran;
         else if(ConstCineonLogToLinTransformRcPtr CineonLogToLin_tran = \
@@ -546,7 +554,6 @@ OCIO_NAMESPACE_ENTER
             t->setSat(node["saturation"].Read<float>());
         else
             throw Exception("CDLTransform doesn't have a 'saturation:' specified.");
-        
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstCDLTransformRcPtr t)
@@ -568,6 +575,45 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Key << "power";
         out << YAML::Value << YAML::Flow << power;
         out << YAML::Key << "saturation" << YAML::Value << t->getSat();
+        
+        EmitBaseTransformKeyValues(out, t);
+        out << YAML::EndMap;
+        return out;
+    }
+    
+    void operator >> (const YAML::Node& node, AllocationTransformRcPtr& t)
+    {
+        t = AllocationTransform::Create();
+        
+        if(node.FindValue("allocation") != NULL)
+            t->setAllocation(node["allocation"].Read<Allocation>());
+        
+        if(node.FindValue("vars") != NULL)
+        {
+            std::vector<float> value;
+            node["vars"] >> value;
+            if(!value.empty())
+            {
+                t->setVars(static_cast<int>(value.size()), &value[0]);
+            }
+        }
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, ConstAllocationTransformRcPtr t)
+    {
+        out << YAML::VerbatimTag("AllocationTransform");
+        out << YAML::Flow << YAML::BeginMap;
+        
+        out << YAML::Key << "allocation";
+        out << YAML::Value << YAML::Flow << t->getAllocation();
+        
+        if(t->getNumVars() > 0)
+        {
+            std::vector<float> vars(t->getNumVars());
+            t->getVars(&vars[0]);
+            out << YAML::Key << "vars";
+            out << YAML::Flow << YAML::Value << vars;
+        }
         
         EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;

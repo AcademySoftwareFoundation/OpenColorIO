@@ -186,18 +186,24 @@ OCIO_NAMESPACE_ENTER
     
     void ColorSpace::getAllocationVars(float * vars) const
     {
-        memcpy(vars,
-            &m_impl->allocationVars_[0],
-            m_impl->allocationVars_.size()*sizeof(float));
+        if(!m_impl->allocationVars_.empty())
+        {
+            memcpy(vars,
+                &m_impl->allocationVars_[0],
+                m_impl->allocationVars_.size()*sizeof(float));
+        }
     }
     
     void ColorSpace::setAllocationVars(int numvars, const float * vars)
     {
         m_impl->allocationVars_.resize(numvars);
         
-        memcpy(&m_impl->allocationVars_[0],
-            vars,
-            numvars*sizeof(float));
+        if(!m_impl->allocationVars_.empty())
+        {
+            memcpy(&m_impl->allocationVars_[0],
+                vars,
+                numvars*sizeof(float));
+        }
     }
     
     ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const

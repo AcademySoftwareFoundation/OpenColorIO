@@ -55,6 +55,11 @@ OCIO_NAMESPACE_ENTER
     
     ////////////////////////////////////////////////////////////////////////
     
+    void BuildAllocationOps(OpRcPtrVec & ops,
+                            const Config & config,
+                            const AllocationTransform & transform,
+                            TransformDirection dir);
+    
     void BuildCDLOps(OpRcPtrVec & ops,
                      const Config & config,
                      const CDLTransform & transform,
