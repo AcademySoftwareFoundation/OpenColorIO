@@ -45,6 +45,7 @@ namespace YAML {
     class TypedKeyNotFound<OCIO_NAMESPACE::ImageDesc>;
     class TypedKeyNotFound<OCIO_NAMESPACE::GpuShaderDesc>;
     class TypedKeyNotFound<OCIO_NAMESPACE::Exception>;
+    
     class TypedKeyNotFound<OCIO_NAMESPACE::Transform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::AllocationTransform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::CDLTransform>;
@@ -53,6 +54,7 @@ namespace YAML {
     class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::MatrixTransform>;
 }
 #pragma GCC visibility pop
@@ -79,6 +81,8 @@ OCIO_NAMESPACE_ENTER
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstColorSpaceTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, ExponentTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstExponentTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, LogTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstLogTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, MatrixTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstMatrixTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, CDLTransformRcPtr& t);

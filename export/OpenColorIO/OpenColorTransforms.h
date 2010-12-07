@@ -397,6 +397,45 @@ OCIO_NAMESPACE_ENTER
     
     
     
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // Represents log transform: log(color, base)
+    // The input will be clamped for negative numbers.
+    // Default base is 2.0
+    // Only the rgb channels are affected
+    
+    class OCIOEXPORT LogTransform : public Transform
+    {
+    public:
+        static LogTransformRcPtr Create();
+        
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        virtual TransformDirection getDirection() const;
+        virtual void setDirection(TransformDirection dir);
+        
+        void setBase(float val);
+        float getBase() const;
+    
+    private:
+        LogTransform();
+        LogTransform(const LogTransform &);
+        virtual ~LogTransform();
+        
+        LogTransform& operator= (const LogTransform &);
+        
+        static void deleter(LogTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+    };
+    
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LogTransform&);
+    
+    
+    
     ///////////////////////////////////////////////////////////////////////////
     //
     // Represents an MX+B Matrix transform

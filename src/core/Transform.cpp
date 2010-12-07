@@ -84,6 +84,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildGroupOps(ops, config, *groupTransform, dir);
         }
+        else if(ConstLogTransformRcPtr logTransform = \
+            DynamicPtrCast<const LogTransform>(transform))
+        {
+            BuildLogOps(ops, config, *logTransform, dir);
+        }
         else if(ConstMatrixTransformRcPtr matrixTransform = \
             DynamicPtrCast<const MatrixTransform>(transform))
         {

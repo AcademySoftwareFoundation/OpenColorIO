@@ -110,6 +110,7 @@ initPyOpenColorIO(void)
         OCIO::AddExponentTransformObjectToModule( m );
         OCIO::AddFileTransformObjectToModule( m );
         OCIO::AddGroupTransformObjectToModule( m );
+        OCIO::AddLogTransformObjectToModule( m );
         OCIO::AddMatrixTransformObjectToModule( m );
     }
     OCIO::AddProcessorObjectToModule( m );

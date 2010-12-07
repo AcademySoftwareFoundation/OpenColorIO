@@ -170,6 +170,8 @@ OCIO_NAMESPACE_ENTER
             t = node.Read<FileTransformRcPtr>();
         else if(type == "GroupTransform")
             t = node.Read<GroupTransformRcPtr>();
+        else if(type == "LogTransform")
+            t = node.Read<LogTransformRcPtr>();
         else if(type == "MatrixTransform")
             t = node.Read<MatrixTransformRcPtr>();
         else
@@ -209,9 +211,12 @@ OCIO_NAMESPACE_ENTER
         else if(ConstGroupTransformRcPtr Group_tran = \
             DynamicPtrCast<const GroupTransform>(t))
             out << Group_tran;
-        else if(ConstMatrixTransformRcPtr tran = \
+        else if(ConstLogTransformRcPtr Log_tran = \
+            DynamicPtrCast<const LogTransform>(t))
+            out << Log_tran;
+        else if(ConstMatrixTransformRcPtr Matrix_tran = \
             DynamicPtrCast<const MatrixTransform>(t))
-            out << tran;
+            out << Matrix_tran;
         else
             throw Exception("Unsupported Transform() type for serialization.");
         
@@ -336,6 +341,23 @@ OCIO_NAMESPACE_ENTER
         t->getValue(&value[0]);
         out << YAML::Key << "value";
         out << YAML::Value << YAML::Flow << value;
+        EmitBaseTransformKeyValues(out, t);
+        out << YAML::EndMap;
+        return out;
+    }
+    
+    void operator >> (const YAML::Node& node, LogTransformRcPtr& t)
+    {
+        t = LogTransform::Create();
+        if(node.FindValue("base") != NULL)
+            t->setBase(node["base"].Read<float>());
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, ConstLogTransformRcPtr t)
+    {
+        out << YAML::VerbatimTag("LogTransform");
+        out << YAML::Flow << YAML::BeginMap;
+        out << YAML::Key << "base" << YAML::Value << t->getBase();
         EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
         return out;

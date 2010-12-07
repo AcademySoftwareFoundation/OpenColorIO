@@ -115,9 +115,13 @@ cs.setAllocationVars((-0.5,1.5))
 
 g = OCIO.GroupTransform()
 
-t = OCIO.AllocationTransform()
-t.setAllocation(OCIO.Constants.ALLOCATION_LG2)
-t.setVars((-8.0, 8.0))
+#t = OCIO.AllocationTransform()
+#t.setAllocation(OCIO.Constants.ALLOCATION_LG2)
+#t.setVars((-8.0, 8.0))
+#g.push_back(t)
+
+t = OCIO.LogTransform()
+t.setBase(10.0)
 g.push_back(t)
 
 cs.setTransform(g, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)

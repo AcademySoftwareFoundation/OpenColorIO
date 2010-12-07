@@ -67,6 +67,9 @@ OCIO_NAMESPACE_ENTER
     extern PyTypeObject PyOCIO_GroupTransformType;
     bool AddGroupTransformObjectToModule( PyObject* m );
     
+    extern PyTypeObject PyOCIO_LogTransformType;
+    bool AddLogTransformObjectToModule( PyObject* m );
+    
     extern PyTypeObject PyOCIO_MatrixTransformType;
     bool AddMatrixTransformObjectToModule( PyObject* m );
 }

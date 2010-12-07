@@ -89,6 +89,12 @@ OCIO_NAMESPACE_ENTER
                 pyobj = PyObject_New(PyOCIO_Transform,
                     (PyTypeObject * ) &PyOCIO_GroupTransformType);
             }
+            else if(ConstLogTransformRcPtr logTransform = \
+                DynamicPtrCast<const LogTransform>(transform))
+            {
+                pyobj = PyObject_New(PyOCIO_Transform,
+                    (PyTypeObject * ) &PyOCIO_LogTransformType);
+            }
             else if(ConstMatrixTransformRcPtr matrixTransform = \
                 DynamicPtrCast<const MatrixTransform>(transform))
             {

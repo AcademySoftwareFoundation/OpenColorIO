@@ -95,6 +95,11 @@ OCIO_NAMESPACE_ENTER
                        const GroupTransform & transform,
                        TransformDirection dir);
     
+    void BuildLogOps(OpRcPtrVec & ops,
+                     const Config& config,
+                     const LogTransform& transform,
+                     TransformDirection dir);
+    
     void BuildMatrixOps(OpRcPtrVec & ops,
                         const Config& config,
                         const MatrixTransform & transform,

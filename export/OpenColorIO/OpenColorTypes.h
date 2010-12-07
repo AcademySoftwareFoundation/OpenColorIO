@@ -102,6 +102,10 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
     typedef OCIO_SHARED_PTR<GroupTransform> GroupTransformRcPtr;
     
+    class OCIOEXPORT LogTransform;
+    typedef OCIO_SHARED_PTR<const LogTransform> ConstLogTransformRcPtr;
+    typedef OCIO_SHARED_PTR<LogTransform> LogTransformRcPtr;
+    
     class OCIOEXPORT MatrixTransform;
     typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
     typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
