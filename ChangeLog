@@ -1,3 +1,10 @@
+Version 0.7.2 (Dec 9 2010):
+    * GPUAllocation refactor (API tweak)
+    * Added AllocationTransform
+    * Added LogTransform
+    * Removed CineonLogToLinTransform
+    * A few bug fixes
+
 Version 0.7.1 (Nov 15 2010):
     * Additional 3d lut formats: Truelight .cub + Iridas .cube
     * FileTransform supports envvars and search paths
