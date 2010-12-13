@@ -89,9 +89,21 @@ if( NUKE_FOUND )
         DEPENDS NukeOCIOFileTransform
         DEPENDS NukeOCIOLogConvert
     )
-    install(TARGETS NukeOCIOColorSpace DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
-    install(TARGETS NukeOCIODisplay DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
-    install(TARGETS NukeOCIOLogConvert DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
-    install(TARGETS NukeOCIOFileTransform DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke)
+    
+    install(TARGETS NukeOCIOColorSpace
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+    
+    install(TARGETS NukeOCIODisplay
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+    
+    install(TARGETS NukeOCIOLogConvert
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+    
+    install(TARGETS NukeOCIOFileTransform
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+    
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/share/nuke
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/
+            PATTERN .svn EXCLUDE)
     
 endif()
