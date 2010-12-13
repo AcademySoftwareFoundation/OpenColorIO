@@ -13,6 +13,7 @@ if( NUKE_FOUND )
         FileTransform
         LogConvert
         ${Nuke_INCLUDE_DIR}
+        ${Boost_INCLUDE_DIR}
     )
     
     ###############################################################################
