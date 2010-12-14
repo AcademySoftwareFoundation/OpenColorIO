@@ -150,6 +150,7 @@ OCIO_NAMESPACE_ENTER
         return os.str();
     }
     
+    // Note that Cg and GLSL have opposite ordering for vec/mtx multiplication
     void Write_mtx_x_vec(std::ostringstream * os,
                          const std::string & mtx, const std::string & vec,
                          GpuLanguage lang)
@@ -162,7 +163,7 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            *os << mtx << " * " << vec;
+            *os << vec << " * " << mtx;
         }
     }
     
