@@ -487,7 +487,20 @@ void UpdateDrawState()
     glUniform1i(glGetUniformLocation(g_program, "tex2"), 2);
 }
 
-
+const char * USAGE_TEXT = "\n"
+"Keys:\n"
+"\tCtrl+Up:   Exposure +1/4 stop (in scene linear)\n"
+"\tCtrl+Down: Exposure -1/4 stop (in scene linear)\n"
+"\tCtrl+Home: Reset Exposure\n"
+"\n"
+"\tC:   View Color\n"
+"\tR:   View Red  \n"
+"\tG:   View Green\n"
+"\tB:   View Blue\n"
+"\tA:   View Alpha\n"
+"\tL:   View Luma\n"
+"\n"
+"\tEsc: Quit\n";
 
 int main(int argc, char **argv)
 {
@@ -517,6 +530,8 @@ int main(int argc, char **argv)
     
     const char * filename = 0;
     if(argc>1) filename = argv[1];
+    
+    std::cerr << USAGE_TEXT << std::endl;
     
     AllocateLut3D();
     
