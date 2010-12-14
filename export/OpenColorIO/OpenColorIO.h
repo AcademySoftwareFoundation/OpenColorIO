@@ -40,12 +40,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OpenColorTransforms.h"
 
 /*
-// OCIO Usage Examples
+// Usage Example:
+// (Compositing plugin, which converts from "log" to "lin")
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-// Example: Compositing plugin, which converts from "log" to "lin"
 try
 {
     // Get the global OpenColorIO config
@@ -60,33 +60,6 @@ try
     OCIO::PackedImageDesc img(imageData, w, h, 4);
     
     // Apply the color transformation (in place)
-    processor->apply(img);
-}
-catch(OCIO::Exception & exception)
-{
-    std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
-}
-
-
-// Example: Apply the default display transform (to a scene-linear image)
-try
-{
-    // Get the global OpenColorIO config
-    // This will auto-initialize (using $OCIO) on first use
-    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    
-    const char * device = config->getDefaultDisplayDeviceName();
-    const char * transformName = config->getDefaultDisplayTransformName(device);
-    const char * displayColorSpace = config->getDisplayColorSpaceName(device, transformName);
-    
-    OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
-    transform->setInputColorSpaceName( OCIO::ROLE_SCENE_LINEAR );
-    transform->setDisplayColorSpaceName( displayColorSpace );
-    
-    // Get the processor corresponding to this transform
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
-    
-    OCIO::PackedImageDesc img(imageData, w, h, 4);
     processor->apply(img);
 }
 catch(OCIO::Exception & exception)
