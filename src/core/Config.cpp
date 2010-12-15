@@ -510,6 +510,8 @@ OCIO_NAMESPACE_ENTER
     
     const char * Config::parseColorSpaceFromString(const char * str) const
     {
+        if(!str) return str;
+        
         // Search the entire filePath, including directory name (if provided)
         // convert the filename to lowercase.
         std::string fullstr = pystring::lower(std::string(str));
