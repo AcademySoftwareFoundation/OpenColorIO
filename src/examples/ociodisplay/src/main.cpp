@@ -51,10 +51,14 @@ namespace OIIO = OpenImageIO;
 
 
 GLint g_win = 0;
+int g_winWidth = 0;
+int g_winHeight = 0;
+
 GLuint g_fragShader = 0;
 GLuint g_program = 0;
 
 GLuint g_imageTexID;
+float g_imageAspect;
 
 GLuint g_lut3dTexID;
 const int LUT3D_EDGE_SIZE = 32;
@@ -69,15 +73,14 @@ float g_exposure_fstop = 0.0f;
 int g_channelHot[4] = { 1, 1, 1, 1 };  // show rgb
 
 
-void UpdateDrawState();
+void UpdateOCIOGLState();
 
-static void
-InitImageTexture(const char * filename)
+static void InitImageTexture(const char * filename)
 {
     glGenTextures(1, &g_imageTexID);
     
     std::vector<float> img;
-    int texWidth = 1024;
+    int texWidth = 512;
     int texHeight = 512;
     int components = 4;
     
@@ -150,6 +153,12 @@ InitImageTexture(const char * filename)
         exit(1);
     }
     
+    g_imageAspect = 1.0;
+    if(texHeight!=0)
+    {
+        g_imageAspect = (float) texWidth / (float) texHeight;
+    }
+    
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, g_imageTexID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0,
@@ -166,16 +175,15 @@ void InitOCIO(const char * filename)
     g_device = config->getDefaultDisplayDeviceName();
     g_transformName = config->getDefaultDisplayTransformName(g_device.c_str());
     
-    const char * cs = config->parseColorSpaceFromString(filename);
-    if(!cs) cs = OCIO::ROLE_SCENE_LINEAR;
-    g_inputColorSpace = std::string(cs);
-    
-    std::cerr << "inputColorSpace " << g_inputColorSpace << std::endl;
+    g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
+    if(filename)
+    {
+        const char * cs = config->parseColorSpaceFromString(filename);
+        if(cs) g_inputColorSpace = cs;
+    }
 }
 
-
-static void
-AllocateLut3D()
+static void AllocateLut3D()
 {
     glGenTextures(1, &g_lut3dTexID);
     
@@ -196,8 +204,6 @@ AllocateLut3D()
                  0, GL_RGB,GL_FLOAT, &g_lut3d[0]);
 }
 
-
-
 /*
 static void
 Idle(void)
@@ -207,51 +213,75 @@ Idle(void)
 }
 */
 
-static void
-Redisplay(void)
+static void Redisplay(void)
 {
+    float windowAspect = 1.0;
+    if(g_winHeight != 0)
+    {
+        windowAspect = (float)g_winWidth/g_winHeight;
+    }
+    
+    float pts[4] = { 0.0f, 0.0f, 0.0f, 0.0f }; // x0,y0,x1,y1
+    if(windowAspect>g_imageAspect)
+    {
+        float imgWidthScreenSpace = g_imageAspect * g_winHeight;
+        pts[0] = g_winWidth * 0.5 - imgWidthScreenSpace * 0.5;
+        pts[2] = g_winWidth * 0.5 + imgWidthScreenSpace * 0.5;
+        pts[1] = 0.0f;
+        pts[3] = g_winHeight;
+    }
+    else
+    {
+        float imgHeightScreenSpace = g_winWidth / g_imageAspect;
+        pts[0] = 0.0f;
+        pts[2] = g_winWidth;
+        pts[1] = g_winHeight * 0.5 - imgHeightScreenSpace * 0.5;
+        pts[3] = g_winHeight * 0.5 + imgHeightScreenSpace * 0.5;
+    }
+    
+    glEnable(GL_TEXTURE_2D);
     glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
     glColor3f(1, 1, 1);
     
     glPushMatrix();
-
     glBegin(GL_QUADS);
     glTexCoord2f(0.0f, 1.0f);
-    glVertex2f(0.0f, 0.0f);
-
+    glVertex2f(pts[0], pts[1]);
+    
     glTexCoord2f(0.0f, 0.0f);
-    glVertex2f(0.0f, 1.0f);
-
+    glVertex2f(pts[0], pts[3]);
+    
     glTexCoord2f(1.0f, 0.0f);
-    glVertex2f(1.0f, 1.0f);
-
+    glVertex2f(pts[2], pts[3]);
+    
     glTexCoord2f(1.0f, 1.0f);
-    glVertex2f(1.0f, 0.0f);
-
+    glVertex2f(pts[2], pts[1]);
+    
     glEnd();
-
     glPopMatrix();
+    
+    glDisable(GL_TEXTURE_2D);
     
     glutSwapBuffers();
 }
 
 
-static void
-Reshape(int width, int height)
+static void Reshape(int width, int height)
 {
+    g_winWidth = width;
+    g_winHeight = height;
+    
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, 1.0, 0.0, 1.0, -100.0, 100.0);
+    glOrtho(0.0, g_winWidth, 0.0, g_winHeight, -100.0, 100.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
 
 
-static void
-CleanUp(void)
+static void CleanUp(void)
 {
     glDeleteShader(g_fragShader);
     glDeleteProgram(g_program);
@@ -259,8 +289,7 @@ CleanUp(void)
 }
 
 
-static void
-Key(unsigned char key, int x, int y)
+static void Key(unsigned char key, int x, int y)
 {
     if(key == 'c' || key == 'C')
     {
@@ -310,14 +339,12 @@ Key(unsigned char key, int x, int y)
         exit(0);
     }
     
-    UpdateDrawState();
-    
+    UpdateOCIOGLState();
     glutPostRedisplay();
 }
 
 
-static void
-SpecialKey(int key, int x, int y)
+static void SpecialKey(int key, int x, int y)
 {
     (void) x;
     (void) y;
@@ -337,7 +364,7 @@ SpecialKey(int key, int x, int y)
         g_exposure_fstop = 0.0;
     }
     
-    UpdateDrawState();
+    UpdateOCIOGLState();
     
     glutPostRedisplay();
 }
@@ -369,14 +396,14 @@ GLuint
 LinkShaders(GLuint fragShader)
 {
     if (!fragShader) return 0;
-
+    
     GLuint program = glCreateProgram();
-
+    
     if (fragShader)
         glAttachShader(program, fragShader);
-
+    
     glLinkProgram(program);
-
+    
     /* check link */
     {
         GLint stat;
@@ -389,7 +416,7 @@ LinkShaders(GLuint fragShader)
             return 0;
         }
     }
-
+    
     return program;
 }
 
@@ -407,7 +434,7 @@ const char * g_fragShaderText = ""
 "}\n";
 
 
-void UpdateDrawState()
+void UpdateOCIOGLState()
 {
     std::string ocioShaderText = "";
     
@@ -471,20 +498,101 @@ void UpdateDrawState()
     os << processor->getGpuShaderText(shaderDesc) << "\n";
     os << g_fragShaderText;
     
-    /*
     // Print the shader text
-    std::cerr << std::endl;
-    std::cerr << os.str() << std::endl;
-    */
+    //std::cerr << std::endl;
+    //std::cerr << os.str() << std::endl;
     
-    // TODO: Cleanup shader text?
+    if(g_fragShader) glDeleteShader(g_fragShader);
     g_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
+    if(g_program) glDeleteProgram(g_program);
     g_program = LinkShaders(g_fragShader);
     
     glUseProgram(g_program);
     
     glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
     glUniform1i(glGetUniformLocation(g_program, "tex2"), 2);
+}
+
+void menuCallback (int id)
+{
+    std::cerr << "menuCallback " << id << std::endl;
+    
+    glutPostRedisplay();
+}
+
+void imageColorSpace_CB(int id)
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    const char * name = config->getColorSpaceNameByIndex(id);
+    if(!name) return;
+    
+    g_inputColorSpace = name;
+    
+    UpdateOCIOGLState();
+    glutPostRedisplay();
+}
+
+void displayDevice_CB(int id)
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    const char * device = config->getDisplayDeviceName(id);
+    if(!device) return;
+    
+    g_device = device;
+    
+    const char * csname = config->getDisplayColorSpaceName(g_device.c_str(), g_transformName.c_str());
+    if(!csname)
+    {
+        g_transformName = config->getDefaultDisplayTransformName(g_device.c_str());
+    }
+    
+    UpdateOCIOGLState();
+    glutPostRedisplay();
+}
+
+void transform_CB(int id)
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    
+    const char * transform = config->getDisplayTransformName(g_device.c_str(), id);
+    if(!transform) return;
+    
+    g_transformName = transform;
+    
+    UpdateOCIOGLState();
+    glutPostRedisplay();
+}
+
+static void PopulateOCIOMenus()
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    
+    
+    int csMenuID = glutCreateMenu(imageColorSpace_CB);
+    for(int i=0; i<config->getNumColorSpaces(); ++i)
+    {
+        glutAddMenuEntry(config->getColorSpaceNameByIndex(i), i);
+    }
+    
+    int deviceMenuID = glutCreateMenu(displayDevice_CB);
+    for(int i=0; i<config->getNumDisplayDeviceNames(); ++i)
+    {
+        glutAddMenuEntry(config->getDisplayDeviceName(i), i);
+    }
+    
+    int transformMenuID = glutCreateMenu(transform_CB);
+    const char * defaultDevice = config->getDefaultDisplayDeviceName();
+    for(int i=0; i<config->getNumDisplayTransformNames(defaultDevice); ++i)
+    {
+        glutAddMenuEntry(config->getDisplayTransformName(defaultDevice, i), i);
+    }
+    
+    glutCreateMenu(menuCallback);
+    glutAddSubMenu("Image ColorSpace", csMenuID);
+    glutAddSubMenu("Transform", transformMenuID);
+    glutAddSubMenu("Device", deviceMenuID);
+    
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
 const char * USAGE_TEXT = "\n"
@@ -500,13 +608,15 @@ const char * USAGE_TEXT = "\n"
 "\tA:   View Alpha\n"
 "\tL:   View Luma\n"
 "\n"
+"\tRight-Mouse Button:   Configure Display / Transform / ColorSpace\n"
+"\n"
 "\tEsc: Quit\n";
 
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
     
-    glutInitWindowSize(1024, 512);
+    glutInitWindowSize(512, 512);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     g_win = glutCreateWindow(argv[0]);
     
@@ -514,12 +624,6 @@ int main(int argc, char **argv)
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
         printf("OpenGL 2.0 not supported\n");
-        exit(1);
-    }
-    
-    if (!GLEW_ARB_texture_rectangle)
-    {
-        printf("No ARB_texture_rectangle\n");
         exit(1);
     }
     
@@ -538,9 +642,12 @@ int main(int argc, char **argv)
     InitImageTexture(filename);
     InitOCIO(filename);
     
+    PopulateOCIOMenus();
+    
     Reshape(1024, 512);
     
-    UpdateDrawState();
+    UpdateOCIOGLState();
+    
     Redisplay();
     
     /*
@@ -551,6 +658,6 @@ int main(int argc, char **argv)
     */
     
     glutMainLoop();
-
+    
     return 0;
 }
