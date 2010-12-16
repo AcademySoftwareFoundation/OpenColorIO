@@ -1,3 +1,9 @@
+Version 0.7.3 (Dec 16 2010):
+    * Added example applications: ociodisplay, ocioconvert
+    * Makefile: Add boost header dependency
+    * Makefile: Nuke plugins are now version specific
+    * Fixed bug in GLSL MatrixOp
+
 Version 0.7.2 (Dec 9 2010):
     * GPUAllocation refactor (API tweak)
     * Added AllocationTransform
