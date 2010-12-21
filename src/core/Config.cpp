@@ -796,7 +796,7 @@ OCIO_NAMESPACE_ENTER
         if(!src)
         {
             std::ostringstream os;
-            os << "Could not find colorspace '" << srcName << ".";
+            os << "Could not find colorspace '" << srcName << "'.";
             throw Exception(os.str().c_str());
         }
         
@@ -804,7 +804,7 @@ OCIO_NAMESPACE_ENTER
         if(!dst)
         {
             std::ostringstream os;
-            os << "Could not find colorspace '" << dstName << ".";
+            os << "Could not find colorspace '" << dstName << "'.";
             throw Exception(os.str().c_str());
         }
         
