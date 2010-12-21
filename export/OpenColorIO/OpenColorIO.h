@@ -214,7 +214,6 @@ OCIO_NAMESPACE_ENTER
         // This will return null if the specified name is not found.
         
         ConstColorSpaceRcPtr getColorSpace(const char * name) const;
-        ColorSpaceRcPtr getEditableColorSpace(const char * name);
         int getIndexForColorSpace(const char * name) const;
         
         

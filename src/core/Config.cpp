@@ -439,17 +439,6 @@ OCIO_NAMESPACE_ENTER
         return m_impl->colorspaces_[index];
     }
     
-    ColorSpaceRcPtr Config::getEditableColorSpace(const char * name)
-    {
-        int index = getIndexForColorSpace(name);
-        if(index<0 || index >= (int)m_impl->colorspaces_.size())
-        {
-            return ColorSpaceRcPtr();
-        }
-        
-        return m_impl->colorspaces_[index];
-    }
-    
     int Config::getIndexForColorSpace(const char * name) const
     {
         int csindex = -1;

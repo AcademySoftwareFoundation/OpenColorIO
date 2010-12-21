@@ -178,7 +178,6 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self );
         PyObject * PyOCIO_Config_getColorSpace( PyObject * self, PyObject * args );
-        PyObject * PyOCIO_Config_getEditableColorSpace( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_addColorSpace( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_clearColorSpaces( PyObject * self );
         PyObject * PyOCIO_Config_parseColorSpaceFromString( PyObject * self, PyObject * args );
@@ -213,7 +212,6 @@ OCIO_NAMESPACE_ENTER
             
             {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
             {"getColorSpace", PyOCIO_Config_getColorSpace, METH_VARARGS, "" },
-            {"getEditableColorSpace", PyOCIO_Config_getEditableColorSpace, METH_VARARGS, "" },
             {"addColorSpace", PyOCIO_Config_addColorSpace, METH_VARARGS, "" },
             {"clearColorSpaces", (PyCFunction) PyOCIO_Config_clearColorSpaces, METH_NOARGS, "" },
             {"parseColorSpaceFromString", PyOCIO_Config_parseColorSpaceFromString, METH_VARARGS, "" },
@@ -527,23 +525,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_Config_getEditableColorSpace( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                ConfigRcPtr config = GetEditableConfig(self);
-                
-                char * name = 0;
-                if (!PyArg_ParseTuple(args,"s:getEditableColorSpace", &name)) return NULL;
-                
-                return BuildEditablePyColorSpace(config->getEditableColorSpace(name));
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
         
         ////////////////////////////////////////////////////////////////////////
         
@@ -556,16 +537,7 @@ OCIO_NAMESPACE_ENTER
                 PyObject * pyColorSpace = 0;
                 if (!PyArg_ParseTuple(args,"O:addColorSpace", &pyColorSpace)) return NULL;
                 
-                /*
-                if(IsPyColorSpaceEditable(pyColorSpace))
-                {
-                    config->addColorSpace( GetEditableColorSpace(pyColorSpace) );
-                }
-                else
-                {
-                */
                 config->addColorSpace( GetConstColorSpace(pyColorSpace, true) );
-                //}
                 
                 Py_RETURN_NONE;
             }
