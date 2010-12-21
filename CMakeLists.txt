@@ -46,10 +46,11 @@ if(NOT OCIO_NAMESPACE)
       FORCE)
 endif(NOT OCIO_NAMESPACE)
 
-add_definitions("-DOCIO_NAMESPACE=${OCIO_NAMESPACE}")
 if(CMAKE_FIRST_RUN)
     message(STATUS "Setting Namespace to: ${OCIO_NAMESPACE}")
 endif()
+
+
 
 # Enable a bunch of compiler warnings...
 # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
