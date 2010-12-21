@@ -124,6 +124,8 @@ void ColorSpace::_validate(bool for_real)
         const char * outputName = outputColorSpaceCstrNames[outputColorSpaceIndex];
         
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        config->sanityCheck();
+        
         processor = config->getProcessor(inputName, outputName);
     }
     catch(OCIO::Exception &e)

@@ -172,6 +172,12 @@ OCIO_NAMESPACE_ENTER
         
         ConfigRcPtr createEditableCopy() const;
         
+        // This will throw an exception if the config is malformed./
+        // The most common error situation are references to colorspaces
+        // that do not exist.
+        
+        void sanityCheck() const;
+        
         const char * getResourcePath() const;
         void setResourcePath(const char * path);
         const char * getResolvedResourcePath() const;

@@ -50,6 +50,12 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
+        enum Sanity
+        {
+            SANITY_UNKNOWN = 0,
+            SANITY_SANE,
+            SANITY_INSANE
+        };
         
         const char* DEFAULT_SEARCH_DIR = "$OCIO_DATA_ROOT";
         
@@ -150,9 +156,12 @@ OCIO_NAMESPACE_ENTER
                              const std::string & csname)
     {
         if(csname.empty()) return false;
+        
+        std::string csnamelower = pystring::lower(csname);
+        
         for(unsigned int i = 0; i < colorspaces.size(); ++i)
         {
-            if(csname == colorspaces[i]->getName())
+            if(csnamelower == pystring::lower(colorspaces[i]->getName()))
             {
                 if(index) *index = i;
                 return true;
@@ -181,8 +190,12 @@ OCIO_NAMESPACE_ENTER
         float defaultLumaCoefs_[3];
         bool strictParsing_;
         
+        mutable Sanity sanity_;
+        mutable std::string sanitytext_;
+        
         Impl() : 
-            strictParsing_(true)
+            strictParsing_(true),
+            sanity_(SANITY_UNKNOWN)
         {
             originalFileDir_ = DEFAULT_SEARCH_DIR;
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
@@ -216,6 +229,9 @@ OCIO_NAMESPACE_ENTER
             memcpy(defaultLumaCoefs_, rhs.defaultLumaCoefs_, 3*sizeof(float));
             
             strictParsing_ = rhs.strictParsing_;
+            
+            sanity_ = rhs.sanity_;
+            sanitytext_ = rhs.sanitytext_;
             
             return *this;
         }
@@ -298,6 +314,109 @@ OCIO_NAMESPACE_ENTER
         return config;
     }
     
+    void Config::sanityCheck() const
+    {
+        if(m_impl->sanity_ == SANITY_SANE) return;
+        if(m_impl->sanity_ == SANITY_INSANE)
+        {
+            throw Exception(m_impl->sanitytext_.c_str());
+        }
+        
+        m_impl->sanity_ = SANITY_INSANE;
+        m_impl->sanitytext_ = "";
+        
+        // Confirm all ColorSpaces are valid
+        // TODO: Confirm there arent duplicate colorspaces
+        for(unsigned int i=0; i<m_impl->colorspaces_.size(); ++i)
+        {
+            if(!m_impl->colorspaces_[i])
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. ";
+                os << "The colorspace at index " << i << " is null.";
+                m_impl->sanitytext_ = os.str();
+                throw Exception(m_impl->sanitytext_.c_str());
+            }
+            
+            const char * name = m_impl->colorspaces_[i]->getName();
+            if(!name || strlen(name) == 0)
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. ";
+                os << "The colorspace at index " << i << " is not named.";
+                m_impl->sanitytext_ = os.str();
+                throw Exception(m_impl->sanitytext_.c_str());
+            }
+            
+            const char * family = m_impl->colorspaces_[i]->getFamily();
+            if(!family || strlen(family) == 0)
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. ";
+                os << "The colorspace named '" << name << "' ";
+                os << "does not specify a family.";
+                m_impl->sanitytext_ = os.str();
+                throw Exception(m_impl->sanitytext_.c_str());
+            }
+        }
+        
+        // Confirm all roles are valid
+        {
+            for(RoleMap::const_iterator iter = m_impl->roles_.begin(),
+                end = m_impl->roles_.end(); iter!=end; ++iter)
+            {
+                int csindex = -1;
+                if(!FindColorSpaceIndex(&csindex, m_impl->colorspaces_, iter->second))
+                {
+                    std::ostringstream os;
+                    os << "Config failed sanitycheck. ";
+                    os << "The role '" << iter->first << "' ";
+                    os << "refers to a colorspace, '" << iter->second << "', ";
+                    os << "which is not defined.";
+                    m_impl->sanitytext_ = os.str();
+                    throw Exception(m_impl->sanitytext_.c_str());
+                }
+                
+                // Confirm no name conflicts between colorspaces and roles
+                if(FindColorSpaceIndex(&csindex, m_impl->colorspaces_, iter->first))
+                {
+                    std::ostringstream os;
+                    os << "Config failed sanitycheck. ";
+                    os << "The role '" << iter->first << "' ";
+                    os << " is in conflict with a colorspace of the same name.";
+                    m_impl->sanitytext_ = os.str();
+                    throw Exception(m_impl->sanitytext_.c_str());
+                }
+            }
+        }
+        
+        // Confirm all Displays transforms refer to colorspaces that exit
+        for(unsigned int i=0; i<m_impl->displayDevices_.size(); ++i)
+        {
+            int csindex = -1;
+            if(!FindColorSpaceIndex(&csindex,
+                m_impl->colorspaces_, m_impl->displayDevices_[i][2]))
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. ";
+                os << "The display device at index " << i << " (";
+                os << m_impl->displayDevices_[i][0] << " / ";
+                os << m_impl->displayDevices_[i][1] << ") ";
+                os << "refers to a colorspace '";
+                os << m_impl->displayDevices_[i][2] << " ' which is not defined.";
+                m_impl->sanitytext_ = os.str();
+                throw Exception(m_impl->sanitytext_.c_str());
+            }
+        }
+        
+        // Confirm for all ColorSpaceTransforms the names spaces exist
+        
+        // Potential enhancement: Confirm all files exist with read permissions
+        
+        // Everything is groovy.
+        m_impl->sanity_ = SANITY_SANE;
+    }
+    
     const char * Config::getResourcePath() const
     {
         return m_impl->resourcePath_.c_str();
@@ -305,6 +424,9 @@ OCIO_NAMESPACE_ENTER
     
     void Config::setResourcePath(const char * path)
     {
+        m_impl->sanity_ = SANITY_UNKNOWN;
+        m_impl->sanitytext_ = "";
+        
         m_impl->resourcePath_ = path;
         m_impl->resolvedResourcePath_ = path::join(m_impl->originalFileDir_, m_impl->resourcePath_);
     }
@@ -319,6 +441,9 @@ OCIO_NAMESPACE_ENTER
     
     void Config::setSearchPath(const char * path)
     {
+        m_impl->sanity_ = SANITY_UNKNOWN;
+        m_impl->sanitytext_ = "";
+        
         m_impl->searchPath_ = path;
     }
     
@@ -406,6 +531,9 @@ OCIO_NAMESPACE_ENTER
     
     void Config::setDescription(const char * description)
     {
+        m_impl->sanity_ = SANITY_UNKNOWN;
+        m_impl->sanitytext_ = "";
+        
         m_impl->description_ = description;
     }
     
@@ -457,10 +585,14 @@ OCIO_NAMESPACE_ENTER
         }
         
         // Is a default role defined?
-        csname = LookupRole(m_impl->roles_, ROLE_DEFAULT);
-        if( FindColorSpaceIndex(&csindex, m_impl->colorspaces_, csname) )
+        // (And, are we allowed to use it)
+        if(!m_impl->strictParsing_)
         {
-            return csindex;
+            csname = LookupRole(m_impl->roles_, ROLE_DEFAULT);
+            if( FindColorSpaceIndex(&csindex, m_impl->colorspaces_, csname) )
+            {
+                return csindex;
+            }
         }
         
         return -1;
@@ -468,6 +600,9 @@ OCIO_NAMESPACE_ENTER
     
     void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
     {
+        m_impl->sanity_ = SANITY_UNKNOWN;
+        m_impl->sanitytext_ = "";
+        
         ColorSpaceRcPtr cs = original->createEditableCopy();
         
         std::string name = cs->getName();
@@ -572,6 +707,9 @@ OCIO_NAMESPACE_ENTER
     // Roles
     void Config::setRole(const char * role, const char * colorSpaceName)
     {
+        m_impl->sanity_ = SANITY_UNKNOWN;
+        m_impl->sanitytext_ = "";
+        
         // Set the role
         if(colorSpaceName)
         {
@@ -727,6 +865,9 @@ OCIO_NAMESPACE_ENTER
                                         const char * displayTransformName,
                                         const char * csname)
     {
+        m_impl->sanity_ = SANITY_UNKNOWN;
+        m_impl->sanitytext_ = "";
+        
         // Is this device / display already registered?
         // If so, set it to the potentially new value.
         
@@ -755,6 +896,9 @@ OCIO_NAMESPACE_ENTER
     
     void Config::setDefaultLumaCoefs(const float * c3)
     {
+        m_impl->sanity_ = SANITY_UNKNOWN;
+        m_impl->sanitytext_ = "";
+        
         memcpy(m_impl->defaultLumaCoefs_, c3, 3*sizeof(float));
     }
     

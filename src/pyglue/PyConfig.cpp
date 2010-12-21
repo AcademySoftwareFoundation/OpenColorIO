@@ -170,6 +170,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_isEditable( PyObject * self );
         PyObject * PyOCIO_Config_createEditableCopy( PyObject * self );
         
+        PyObject * PyOCIO_Config_sanityCheck( PyObject * self );
+        
         PyObject * PyOCIO_Config_getResourcePath( PyObject * self );
         PyObject * PyOCIO_Config_setResourcePath( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_Config_getDescription( PyObject * self );
@@ -203,6 +205,8 @@ OCIO_NAMESPACE_ENTER
             {"CreateFromFile", PyOCIO_Config_CreateFromFile, METH_VARARGS | METH_CLASS, "" },
             {"isEditable", (PyCFunction) PyOCIO_Config_isEditable, METH_NOARGS, "" },
             {"createEditableCopy", (PyCFunction) PyOCIO_Config_createEditableCopy, METH_NOARGS, "" },
+            
+            {"sanityCheck", (PyCFunction) PyOCIO_Config_sanityCheck, METH_NOARGS, "" },
             
             {"getResourcePath", (PyCFunction) PyOCIO_Config_getResourcePath, METH_NOARGS, "" },
             {"setResourcePath", PyOCIO_Config_setResourcePath, METH_VARARGS, "" },
@@ -375,6 +379,21 @@ OCIO_NAMESPACE_ENTER
                 ConstConfigRcPtr config = GetConstConfig(self, true);
                 ConfigRcPtr copy = config->createEditableCopy();
                 return BuildEditablePyConfig( copy );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_sanityCheck( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                config->sanityCheck();
+                Py_RETURN_NONE;
             }
             catch(...)
             {

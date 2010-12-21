@@ -67,6 +67,7 @@ void FileTransform::_validate(bool for_real)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        config->sanityCheck();
         
         OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
         transform->setSrc(src);

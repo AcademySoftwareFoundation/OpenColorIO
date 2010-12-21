@@ -133,6 +133,7 @@ void Display::_validate(bool for_real)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        config->sanityCheck();
 
         const char *csSrcName = colorSpaceCstrNames[colorSpaceIndex];
 
