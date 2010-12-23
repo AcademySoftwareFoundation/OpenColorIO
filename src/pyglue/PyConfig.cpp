@@ -172,11 +172,16 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_Config_sanityCheck( PyObject * self );
         
-        PyObject * PyOCIO_Config_getResourcePath( PyObject * self );
-        PyObject * PyOCIO_Config_setResourcePath( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_Config_getDescription( PyObject * self );
         PyObject * PyOCIO_Config_setDescription( PyObject * self,  PyObject *args );
+        
         PyObject * PyOCIO_Config_serialize( PyObject * self );
+        
+        PyObject * PyOCIO_Config_getDefaultSearchPath( PyObject * self );
+        PyObject * PyOCIO_Config_setDefaultSearchPath( PyObject * self,  PyObject *args );
+        
+        PyObject * PyOCIO_Config_getConfigRootDir( PyObject * self );
+        PyObject * PyOCIO_Config_setConfigRootDir( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self );
         PyObject * PyOCIO_Config_getColorSpace( PyObject * self, PyObject * args );
@@ -208,11 +213,14 @@ OCIO_NAMESPACE_ENTER
             
             {"sanityCheck", (PyCFunction) PyOCIO_Config_sanityCheck, METH_NOARGS, "" },
             
-            {"getResourcePath", (PyCFunction) PyOCIO_Config_getResourcePath, METH_NOARGS, "" },
-            {"setResourcePath", PyOCIO_Config_setResourcePath, METH_VARARGS, "" },
             {"getDescription", (PyCFunction) PyOCIO_Config_getDescription, METH_NOARGS, "" },
             {"setDescription", PyOCIO_Config_setDescription, METH_VARARGS, "" },
             {"serialize", (PyCFunction) PyOCIO_Config_serialize, METH_NOARGS, "" },
+            
+            {"getDefaultSearchPath", (PyCFunction) PyOCIO_Config_getDefaultSearchPath, METH_NOARGS, "" },
+            {"setDefaultSearchPath", PyOCIO_Config_setDefaultSearchPath, METH_VARARGS, "" },
+            {"getConfigRootDir", (PyCFunction) PyOCIO_Config_getConfigRootDir, METH_NOARGS, "" },
+            {"setConfigRootDir", PyOCIO_Config_setConfigRootDir, METH_VARARGS, "" },
             
             {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
             {"getColorSpace", PyOCIO_Config_getColorSpace, METH_VARARGS, "" },
@@ -404,41 +412,6 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_Config_getResourcePath( PyObject * self )
-        {
-            try
-            {
-                ConstConfigRcPtr config = GetConstConfig(self, true);
-                return PyString_FromString( config->getResourcePath() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_Config_setResourcePath( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                char * path = 0;
-                if (!PyArg_ParseTuple(args,"s:setResourcePath", &path)) return NULL;
-                
-                ConfigRcPtr config = GetEditableConfig(self);
-                config->setResourcePath( path );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
         PyObject * PyOCIO_Config_getDescription( PyObject * self )
         {
             try
@@ -473,9 +446,6 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        ////////////////////////////////////////////////////////////////////////
-        
-        
         PyObject * PyOCIO_Config_serialize( PyObject * self )
         {
             try
@@ -497,6 +467,75 @@ OCIO_NAMESPACE_ENTER
         }
         
         
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        PyObject * PyOCIO_Config_getDefaultSearchPath( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                return PyString_FromString( config->getDefaultSearchPath() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_setDefaultSearchPath( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * path = 0;
+                if (!PyArg_ParseTuple(args,"s:setDefaultSearchPath", &path)) return NULL;
+                
+                ConfigRcPtr config = GetEditableConfig(self);
+                config->setDefaultSearchPath( path );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_getConfigRootDir( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                return PyString_FromString( config->getConfigRootDir() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_setConfigRootDir( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * path = 0;
+                if (!PyArg_ParseTuple(args,"s:setConfigRootDir", &path)) return NULL;
+                
+                ConfigRcPtr config = GetEditableConfig(self);
+                config->setConfigRootDir( path );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
         
         ////////////////////////////////////////////////////////////////////////

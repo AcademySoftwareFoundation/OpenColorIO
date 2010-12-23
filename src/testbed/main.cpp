@@ -26,9 +26,9 @@ int main(int argc, const char* argv[])
     try
     {
         //testFilmlooks();
-        //loadConfigFromEnv();
+        loadConfigFromEnv();
         //testCoordinateTransform();
-        createConfig();
+        //createConfig();
         //testASCTransform();
         
     }
@@ -165,8 +165,7 @@ void loadConfigFromEnv()
 void createConfig()
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    
-    config->setResourcePath("luts");
+    config->setDefaultSearchPath("luts");
     
     // Add a colorspace
     {

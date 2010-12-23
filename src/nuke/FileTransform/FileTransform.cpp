@@ -78,7 +78,7 @@ void FileTransform::_validate(bool for_real)
         if(interpindex == 0) transform->setInterpolation(OCIO::INTERP_NEAREST);
         else transform->setInterpolation(OCIO::INTERP_LINEAR);
         
-        processor = config->getProcessor(transform);
+        processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_FORWARD);
     }
     catch(OCIO::Exception &e)
     {

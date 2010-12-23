@@ -49,6 +49,7 @@ OCIO_NAMESPACE_ENTER
     
     void BuildOps(OpRcPtrVec & ops,
                   const Config & config,
+                  const ConstContextRcPtr & context,
                   const ConstTransformRcPtr & transform,
                   TransformDirection dir);
     
@@ -67,16 +68,19 @@ OCIO_NAMESPACE_ENTER
     
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config& config,
+                            const ConstContextRcPtr & context,
                             const ColorSpaceTransform & transform,
                             TransformDirection dir);
     
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config & config,
+                            const ConstContextRcPtr & context,
                             const ConstColorSpaceRcPtr & srcColorSpace,
                             const ConstColorSpaceRcPtr & dstColorSpace);
     
     void BuildDisplayOps(OpRcPtrVec & ops,
                          const Config & config,
+                         const ConstContextRcPtr & context,
                          const DisplayTransform & transform,
                          TransformDirection dir);
     
@@ -87,11 +91,13 @@ OCIO_NAMESPACE_ENTER
     
     void BuildFileOps(OpRcPtrVec & ops,
                       const Config& config,
+                      const ConstContextRcPtr & context,
                       const FileTransform & transform,
                       TransformDirection dir);
     
     void BuildGroupOps(OpRcPtrVec & ops,
                        const Config& config,
+                       const ConstContextRcPtr & context,
                        const GroupTransform & transform,
                        TransformDirection dir);
     

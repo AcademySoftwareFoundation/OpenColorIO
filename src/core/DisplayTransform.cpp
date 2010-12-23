@@ -202,6 +202,7 @@ OCIO_NAMESPACE_ENTER
     
     void BuildDisplayOps(OpRcPtrVec & ops,
                          const Config & config,
+                         const ConstContextRcPtr & context,
                          const DisplayTransform & displayTransform,
                          TransformDirection dir)
     {
@@ -266,7 +267,7 @@ OCIO_NAMESPACE_ENTER
             // Put the new ops into a temp array, to see if it's a no-op
             // If it is a no-op, dont bother doing the colorspace conversion.
             OpRcPtrVec tmpOps;
-            BuildOps(tmpOps, config, linearCC, TRANSFORM_DIR_FORWARD);
+            BuildOps(tmpOps, config, context, linearCC, TRANSFORM_DIR_FORWARD);
             
             if(!IsOpVecNoOp(tmpOps))
             {
@@ -274,7 +275,7 @@ OCIO_NAMESPACE_ENTER
                 
                 if(!skipColorSpaceConversions)
                 {
-                    BuildColorSpaceOps(ops, config,
+                    BuildColorSpaceOps(ops, config, context,
                                        currentColorspace,
                                        targetColorSpace);
                     currentColorspace = targetColorSpace;
@@ -292,7 +293,7 @@ OCIO_NAMESPACE_ENTER
             // Put the new ops into a temp array, to see if it's a no-op
             // If it is a no-op, dont bother doing the colorspace conversion.
             OpRcPtrVec tmpOps;
-            BuildOps(tmpOps, config, colorTimingCC, TRANSFORM_DIR_FORWARD);
+            BuildOps(tmpOps, config, context, colorTimingCC, TRANSFORM_DIR_FORWARD);
             
             if(!IsOpVecNoOp(tmpOps))
             {
@@ -300,7 +301,7 @@ OCIO_NAMESPACE_ENTER
                 
                 if(!skipColorSpaceConversions)
                 {
-                    BuildColorSpaceOps(ops, config,
+                    BuildColorSpaceOps(ops, config, context,
                                        currentColorspace,
                                        targetColorSpace);
                     currentColorspace = targetColorSpace;
@@ -314,14 +315,14 @@ OCIO_NAMESPACE_ENTER
         ConstTransformRcPtr channelView = displayTransform.getChannelView();
         if(channelView)
         {
-            BuildOps(ops, config, channelView, TRANSFORM_DIR_FORWARD);
+            BuildOps(ops, config, context, channelView, TRANSFORM_DIR_FORWARD);
         }
         
         
         // Apply the conversion to the display color space
         if(!skipColorSpaceConversions)
         {
-            BuildColorSpaceOps(ops, config,
+            BuildColorSpaceOps(ops, config, context,
                                currentColorspace,
                                displayColorspace);
             currentColorspace = displayColorspace;
@@ -332,7 +333,7 @@ OCIO_NAMESPACE_ENTER
         ConstTransformRcPtr displayCC = displayTransform.getDisplayCC();
         if(displayCC)
         {
-            BuildOps(ops, config, displayCC, TRANSFORM_DIR_FORWARD);
+            BuildOps(ops, config, context, displayCC, TRANSFORM_DIR_FORWARD);
         }
         
     }

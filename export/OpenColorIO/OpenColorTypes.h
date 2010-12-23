@@ -59,6 +59,10 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const ColorSpace> ConstColorSpaceRcPtr;
     typedef OCIO_SHARED_PTR<ColorSpace> ColorSpaceRcPtr;
     
+    class OCIOEXPORT Context;
+    typedef OCIO_SHARED_PTR<const Context> ConstContextRcPtr;
+    typedef OCIO_SHARED_PTR<Context> ContextRcPtr;
+    
     class OCIOEXPORT Processor;
     typedef OCIO_SHARED_PTR<const Processor> ConstProcessorRcPtr;
     typedef OCIO_SHARED_PTR<Processor> ProcessorRcPtr;

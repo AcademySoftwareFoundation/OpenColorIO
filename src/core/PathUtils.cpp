@@ -26,14 +26,15 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Mutex.h"
 #include "PathUtils.h"
 #include "pystring/pystring.h"
-
-#include <sstream>
-#include <iostream>
-#include <fstream>
 
 #ifdef __APPLE__
 #include <crt_externs.h> // _NSGetEnviron()
@@ -44,7 +45,6 @@ extern char **environ;
 
 OCIO_NAMESPACE_ENTER
 {
-    
     namespace
     {
         inline char** GetEnviron()
@@ -91,9 +91,9 @@ OCIO_NAMESPACE_ENTER
         }
     } // path namespace
     
-    EnvMap GetEnvMap()
+    
+    void LoadEnvironmentVariables(EnvMap & map)
     {
-        EnvMap map;
         for (char **env = GetEnviron(); *env != NULL; ++env)
         {
             // split environment up into std::map[name] = value
@@ -104,42 +104,70 @@ OCIO_NAMESPACE_ENTER
                 env_str.substr(pos+1, env_str.length()))
             );
         }
-        return map;
     }
     
-    void EnvExpand(std::string *str, EnvMap *map)
+    std::string EnvExpand(const std::string & str, const EnvMap & map)
     {
         // Early exit if no magic characters are found.
-        if(pystring::find(*str, "$") == -1 && 
-           pystring::find(*str, "%") == -1) return;
+        if(pystring::find(str, "$") == -1 && 
+           pystring::find(str, "%") == -1) return str;
         
-        std::string orig = *str;
-        int i = 0;
-        for (EnvMap::const_iterator iter = map->begin();
-             iter != map->end(); ++iter)
+        std::string orig = str;
+        std::string newstr = str;
+        
+        // This walks through the envmap in key order,
+        // from longest to shortest to handle envvars which are
+        // substrings.
+        // ie. '$TEST_$TESTING_$TE' will expand in this order '2 1 3'
+        
+        for (EnvMap::const_iterator iter = map.begin();
+             iter != map.end(); ++iter)
         {
-            i++;
-            *str = pystring::replace(*str,
+            newstr = pystring::replace(newstr,
                 ("${"+iter->first+"}"), iter->second);
-            *str = pystring::replace(*str,
+            newstr = pystring::replace(newstr,
                 ("$"+iter->first), iter->second);
-            *str = pystring::replace(*str,
+            newstr = pystring::replace(newstr,
                 ("%"+iter->first+"%"), iter->second);
         }
+        
         // recursively call till string doesn't expand anymore
-        if(*str != orig)
-            EnvExpand(str, map);
-        return;
+        if(newstr != orig)
+        {
+            return EnvExpand(newstr, map);
+        }
+        
+        return orig;
+    }
+    
+    namespace
+    {
+        typedef std::map<std::string, bool> FileExistsMap;
+        
+        FileExistsMap g_fileExistsCache;
+        Mutex g_fileExistsCache_mutex;
     }
     
     bool FileExists(const std::string & filename)
     {
-        std::ifstream fin;
-        fin.open (filename.c_str());
-        if (fin.fail())
-            return false;
-        fin.close();
-        return true;
+        AutoMutex lock(g_fileExistsCache_mutex);
+        
+        FileExistsMap::iterator iter = g_fileExistsCache.find(filename);
+        if(iter != g_fileExistsCache.end())
+        {
+            return iter->second;
+        }
+        
+        bool exists = true;
+        {
+            std::ifstream fin;
+            fin.open (filename.c_str());
+            if (fin.fail()) exists = false;
+            else fin.close();
+        }
+        
+        g_fileExistsCache[filename] = exists;
+        return exists;
     }
     
     std::string GetExtension(const std::string & str)
@@ -174,8 +202,8 @@ BOOST_AUTO_TEST_CASE ( test_envexpand )
     //
     std::string foo = "/a/b/${TEST1}/${TEST1NG}/$TEST1/$TEST1NG/${FOO_${TEST1}}/";
     std::string foo_result = "/a/b/foo.bar/bar.foo/foo.bar/bar.foo/cheese/";
-    OCIO::EnvExpand(&foo, &env_map);
-    BOOST_CHECK( foo == foo_result );
+    std::string testresult = OCIO::EnvExpand(foo, env_map);
+    BOOST_CHECK( testresult == foo_result );
     
 }
 

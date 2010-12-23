@@ -66,10 +66,12 @@ OCIO_NAMESPACE_ENTER
         // Builder functions, Not exposed
         
         void addColorSpaceConversion(const Config & config,
+                                     const ConstContextRcPtr & context,
                                      const ConstColorSpaceRcPtr & srcColorSpace,
                                      const ConstColorSpaceRcPtr & dstColorSpace);
         
         void addTransform(const Config & config,
+                          const ConstContextRcPtr & context,
                           const ConstTransformRcPtr& transform,
                           TransformDirection direction);
         

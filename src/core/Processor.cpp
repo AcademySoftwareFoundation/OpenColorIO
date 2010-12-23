@@ -182,18 +182,20 @@ OCIO_NAMESPACE_ENTER
     { }
     
     void LocalProcessor::addColorSpaceConversion(const Config & config,
+                                 const ConstContextRcPtr & context,
                                  const ConstColorSpaceRcPtr & srcColorSpace,
                                  const ConstColorSpaceRcPtr & dstColorSpace)
     {
-        BuildColorSpaceOps(m_cpuOps, config, srcColorSpace, dstColorSpace);
+        BuildColorSpaceOps(m_cpuOps, config, context, srcColorSpace, dstColorSpace);
     }
     
     
     void LocalProcessor::addTransform(const Config & config,
+                      const ConstContextRcPtr & context,
                       const ConstTransformRcPtr& transform,
                       TransformDirection direction)
     {
-        BuildOps(m_cpuOps, config, transform, direction);
+        BuildOps(m_cpuOps, config, context, transform, direction);
     }
     
     void LocalProcessor::finalize()

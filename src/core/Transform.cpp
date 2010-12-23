@@ -42,6 +42,7 @@ OCIO_NAMESPACE_ENTER
     
     void BuildOps(OpRcPtrVec & ops,
                   const Config & config,
+                  const ConstContextRcPtr & context,
                   const ConstTransformRcPtr & transform,
                   TransformDirection dir)
     {
@@ -62,12 +63,12 @@ OCIO_NAMESPACE_ENTER
         else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
             DynamicPtrCast<const ColorSpaceTransform>(transform))
         {
-            BuildColorSpaceOps(ops, config, *colorSpaceTransform, dir);
+            BuildColorSpaceOps(ops, config, context, *colorSpaceTransform, dir);
         }
         else if(ConstDisplayTransformRcPtr displayTransform = \
             DynamicPtrCast<const DisplayTransform>(transform))
         {
-            BuildDisplayOps(ops, config, *displayTransform, dir);
+            BuildDisplayOps(ops, config, context, *displayTransform, dir);
         }
         else if(ConstExponentTransformRcPtr exponentTransform = \
             DynamicPtrCast<const ExponentTransform>(transform))
@@ -77,12 +78,12 @@ OCIO_NAMESPACE_ENTER
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
-            BuildFileOps(ops, config, *fileTransform, dir);
+            BuildFileOps(ops, config, context, *fileTransform, dir);
         }
         else if(ConstGroupTransformRcPtr groupTransform = \
             DynamicPtrCast<const GroupTransform>(transform))
         {
-            BuildGroupOps(ops, config, *groupTransform, dir);
+            BuildGroupOps(ops, config, context, *groupTransform, dir);
         }
         else if(ConstLogTransformRcPtr logTransform = \
             DynamicPtrCast<const LogTransform>(transform))

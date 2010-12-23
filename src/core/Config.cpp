@@ -57,8 +57,6 @@ OCIO_NAMESPACE_ENTER
             SANITY_INSANE
         };
         
-        const char* DEFAULT_SEARCH_DIR = "$OCIO_DATA_ROOT";
-        
         // These are the 709 primaries specified by the ASC.
         const float DEFAULT_LUMA_COEFF_R = 0.2126f;
         const float DEFAULT_LUMA_COEFF_G = 0.7152f;
@@ -174,10 +172,7 @@ OCIO_NAMESPACE_ENTER
     class Config::Impl
     {
     public:
-        std::string originalFileDir_;
-        std::string resourcePath_;
-        std::string resolvedResourcePath_;
-        std::string searchPath_;
+        ContextRcPtr context_;
         
         std::string description_;
         
@@ -186,18 +181,20 @@ OCIO_NAMESPACE_ENTER
         RoleMap roles_;
         
         std::vector<DisplayKey> displayDevices_;
-        
-        float defaultLumaCoefs_[3];
+        std::vector<float> defaultLumaCoefs_;
         bool strictParsing_;
         
         mutable Sanity sanity_;
         mutable std::string sanitytext_;
         
         Impl() : 
+            context_(Context::Create()),
             strictParsing_(true),
             sanity_(SANITY_UNKNOWN)
         {
-            originalFileDir_ = DEFAULT_SEARCH_DIR;
+            context_->loadEnvironmentVariables();
+            
+            defaultLumaCoefs_.resize(3);
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
             defaultLumaCoefs_[1] = DEFAULT_LUMA_COEFF_G;
             defaultLumaCoefs_[2] = DEFAULT_LUMA_COEFF_B;
@@ -210,9 +207,7 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            resourcePath_ = rhs.resourcePath_;
-            originalFileDir_ = rhs.originalFileDir_;
-            resolvedResourcePath_ = rhs.resolvedResourcePath_;
+            context_ = rhs.context_->createEditableCopy();
             description_ = rhs.description_;
             
             colorspaces_.clear();
@@ -225,8 +220,7 @@ OCIO_NAMESPACE_ENTER
             
             roles_ = rhs.roles_; // Map assignment operator will suffice for this
             displayDevices_ = rhs.displayDevices_; // Vector assignment operator will suffice for this
-            
-            memcpy(defaultLumaCoefs_, rhs.defaultLumaCoefs_, 3*sizeof(float));
+            defaultLumaCoefs_ = rhs.defaultLumaCoefs_; // Vector assignment operator will suffice for this
             
             strictParsing_ = rhs.strictParsing_;
             
@@ -266,7 +260,7 @@ OCIO_NAMESPACE_ENTER
         istream.str(INTERNAL_RAW_PROFILE);
         
         ConfigRcPtr config = Config::Create();
-        config->m_impl->load(istream, 0x0);
+        config->m_impl->load(istream, "");
         return config;
     }
     
@@ -288,7 +282,7 @@ OCIO_NAMESPACE_ENTER
     ConstConfigRcPtr Config::CreateFromStream(std::istream & istream)
     {
         ConfigRcPtr config = Config::Create();
-        config->m_impl->load(istream, 0x0);
+        config->m_impl->load(istream, "");
         return config;
     }
     
@@ -409,117 +403,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        // TODO: Confirm at least one display entry exists.
+        
         // Confirm for all ColorSpaceTransforms the names spaces exist
         
         // Potential enhancement: Confirm all files exist with read permissions
         
         // Everything is groovy.
         m_impl->sanity_ = SANITY_SANE;
-    }
-    
-    const char * Config::getResourcePath() const
-    {
-        return m_impl->resourcePath_.c_str();
-    }
-    
-    void Config::setResourcePath(const char * path)
-    {
-        m_impl->sanity_ = SANITY_UNKNOWN;
-        m_impl->sanitytext_ = "";
-        
-        m_impl->resourcePath_ = path;
-        m_impl->resolvedResourcePath_ = path::join(m_impl->originalFileDir_, m_impl->resourcePath_);
-    }
-    
-    const char * Config::getResolvedResourcePath() const
-    {
-        return m_impl->resolvedResourcePath_.c_str();
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    // Search Path
-    
-    void Config::setSearchPath(const char * path)
-    {
-        m_impl->sanity_ = SANITY_UNKNOWN;
-        m_impl->sanitytext_ = "";
-        
-        m_impl->searchPath_ = path;
-    }
-    
-    const char * Config::getSearchPath(bool expand) const
-    {
-        if(!expand)
-            return m_impl->searchPath_.c_str();
-        // expand the env vars in the search path
-        EnvMap env = GetEnvMap();
-        std::string searchPathExpand = m_impl->searchPath_;
-        EnvExpand(&searchPathExpand, &env);
-        return searchPathExpand.c_str();
-    }
-    
-    // TODO: look at caching this look up so that it is faster, for now
-    // this lookup could be slow when you have many searchpath entires and
-    // many files inside these directories.
-    const char * Config::findFile(const char * filename) const
-    {
-        // just check abs filenames
-        if(pystring::startswith(filename, "/"))
-        {
-            if(FileExists(filename))
-                return filename;
-            else
-                return "";
-        }
-        
-        // expanded the searchpath string
-        EnvMap env = GetEnvMap();
-        std::string searchpath = m_impl->searchPath_;
-        std::string profilecwd = m_impl->originalFileDir_;
-        EnvExpand(&searchpath, &env);
-        EnvExpand(&profilecwd, &env);
-        
-        // split the searchpath
-        std::vector<std::string> searchpaths;
-        pystring::split(searchpath, searchpaths, ":");
-        
-        // loop over each path and try to find the file
-        for (unsigned int i = 0; i < searchpaths.size(); ++i) {
-            
-            // resolve '::' empty entry
-            if(searchpaths[i].size() == 0)
-            {
-                searchpaths[i] = profilecwd;
-            }
-            // resolve '..'
-            else if(pystring::startswith(searchpaths[i], ".."))
-            {
-                std::vector<std::string> result;
-                pystring::rsplit(profilecwd, result, "/", 1);
-                if(result.size() == 2)
-                    searchpaths[i] = result[0];
-            }
-            // resolve '.'
-            else if(pystring::startswith(searchpaths[i], "."))
-            {
-                searchpaths[i] = pystring::strip(searchpaths[i], ".");
-                if(pystring::endswith(profilecwd, "/"))
-                    searchpaths[i] = profilecwd + searchpaths[i];
-                else
-                    searchpaths[i] = profilecwd + "/" + searchpaths[i];
-            }
-            // resolve relative
-            else if(!pystring::startswith(searchpaths[i], "/"))
-            {
-                searchpaths[i] = path::join(profilecwd, searchpaths[i]);
-            }
-            
-            // find the file?
-            std::string findfile = path::join(searchpaths[i], filename);
-            if(FileExists(findfile))
-                return findfile.c_str();
-        }
-        return ""; // didn't find a file
     }
     
     ///////////////////////////////////////////////////////////////////////////
@@ -538,6 +429,33 @@ OCIO_NAMESPACE_ENTER
     }
     
     
+    // RESOURCES //////////////////////////////////////////////////////////////
+    
+    ConstContextRcPtr Config::getDefaultContext() const
+    {
+        return m_impl->context_;
+    }
+    
+    const char * Config::getDefaultSearchPath() const
+    {
+        return m_impl->context_->getDefaultSearchPath();
+    }
+    
+    void Config::setDefaultSearchPath(const char * path)
+    {
+        m_impl->context_->setDefaultSearchPath(path);
+    }
+    
+    const char * Config::getConfigRootDir() const
+    {
+        return m_impl->context_->getConfigRootDir();
+    }
+    
+    void Config::setConfigRootDir(const char * dirname)
+    {
+        m_impl->context_->setConfigRootDir(dirname);
+    }
+    
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -550,7 +468,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(index<0 || index >= (int)m_impl->colorspaces_.size())
         {
-            return 0x0;
+            return "";
         }
         
         return m_impl->colorspaces_[index]->getName();
@@ -691,7 +609,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        return 0x0;
+        return "";
     }
     
     bool Config::isStrictParsingEnabled() const
@@ -735,7 +653,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(index<0 || index >= (int)m_impl->roles_.size())
         {
-            return 0x0;
+            return "";
         }
         
         RoleMap::const_iterator iter = m_impl->roles_.begin();
@@ -891,7 +809,7 @@ OCIO_NAMESPACE_ENTER
     
     void Config::getDefaultLumaCoefs(float * c3) const
     {
-        memcpy(c3, m_impl->defaultLumaCoefs_, 3*sizeof(float));
+        memcpy(c3, &m_impl->defaultLumaCoefs_[0], 3*sizeof(float));
     }
     
     void Config::setDefaultLumaCoefs(const float * c3)
@@ -899,11 +817,19 @@ OCIO_NAMESPACE_ENTER
         m_impl->sanity_ = SANITY_UNKNOWN;
         m_impl->sanitytext_ = "";
         
-        memcpy(m_impl->defaultLumaCoefs_, c3, 3*sizeof(float));
+        memcpy(&m_impl->defaultLumaCoefs_[0], c3, 3*sizeof(float));
     }
     
     ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
                                              const ConstColorSpaceRcPtr & dst) const
+    {
+        ConstContextRcPtr context = getDefaultContext();
+        return getProcessor(src, dst, context);
+    }
+    
+    ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
+                                             const ConstColorSpaceRcPtr & dst,
+                                             const ConstContextRcPtr & context) const
     {
         if(!src)
         {
@@ -915,16 +841,23 @@ OCIO_NAMESPACE_ENTER
         }
         
         LocalProcessorRcPtr processor = LocalProcessor::Create();
-        processor->addColorSpaceConversion(*this, src, dst);
+        processor->addColorSpaceConversion(*this, context, src, dst);
         processor->finalize();
         return processor;
     }
     
-    //! Names can be colorspace name or role name
     ConstProcessorRcPtr Config::getProcessor(const char * srcName,
                                              const char * dstName) const
     {
-        // TODO: Confirm !RcPtr works
+        ConstContextRcPtr context = getDefaultContext();
+        return getProcessor(srcName, dstName, context);
+    }
+    
+    //! Names can be colorspace name or role name
+    ConstProcessorRcPtr Config::getProcessor(const char * srcName,
+                                             const char * dstName,
+                                             const ConstContextRcPtr & context) const
+    {
         ConstColorSpaceRcPtr src = getColorSpace(srcName);
         if(!src)
         {
@@ -941,14 +874,29 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        return getProcessor(src, dst);
+        return getProcessor(src, dst, context);
     }
+    
+    
+    ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform) const
+    {
+        return getProcessor(transform, TRANSFORM_DIR_FORWARD);
+    }
+    
     
     ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform,
                                              TransformDirection direction) const
     {
+        ConstContextRcPtr context = getDefaultContext();
+        return getProcessor(transform, direction, context);
+    }
+    
+    ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform,
+                                             TransformDirection direction,
+                                             const ConstContextRcPtr & context) const
+    {
         LocalProcessorRcPtr processor = LocalProcessor::Create();
-        processor->addTransform(*this, transform, direction);
+        processor->addTransform(*this, context, transform, direction);
         processor->finalize();
         return processor;
     }
@@ -972,21 +920,17 @@ OCIO_NAMESPACE_ENTER
             out << YAML::BeginMap;
             out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
             out << YAML::Newline;
-            if(m_impl->resourcePath_ != "")
+            
+            std::string search_path = getDefaultSearchPath();
+            if(search_path != "")
             {
-                out << YAML::Key << "resource_path" << YAML::Value << m_impl->resourcePath_;
+                out << YAML::Key << "search_path" << YAML::Value << search_path;
             }
+            
             out << YAML::Key << "strictparsing" << YAML::Value << m_impl->strictParsing_;
-            // TODO: should we make defaultLumaCoefs_ a std::vector<float> to make it easier
-            //       to serialize?
-            out << YAML::Key << "luma" << YAML::Value;
-            {
-                out << YAML::Flow;
-                out << YAML::BeginSeq;
-                for(unsigned int i = 0; i < 3; ++i)
-                    out << m_impl->defaultLumaCoefs_[i];
-                out << YAML::EndSeq;
-            }
+            
+            out << YAML::Key << "luma" << YAML::Value << YAML::Flow << m_impl->defaultLumaCoefs_;
+            
             if(m_impl->description_ != "")
             {
                 out << YAML::Newline;
@@ -1060,8 +1004,21 @@ OCIO_NAMESPACE_ENTER
             }
             
             // cast YAML nodes to Impl members
-            if(node.FindValue("resource_path") != NULL)
-                node["resource_path"] >> resourcePath_;
+            
+            // Query resource_path for compatibility
+            if(node.FindValue("search_path") != NULL)
+            {
+                std::string path;
+                node["search_path"] >> path;
+                context_->setDefaultSearchPath(path.c_str());
+            }
+            else if(node.FindValue("resource_path") != NULL)
+            {
+                std::string path;
+                node["resource_path"] >> path;
+                context_->setDefaultSearchPath(path.c_str());
+            }
+            
             if(node.FindValue("strictparsing") != NULL)
                 node["strictparsing"] >> strictParsing_;
             if(node.FindValue("description") != NULL)
@@ -1085,9 +1042,8 @@ OCIO_NAMESPACE_ENTER
                     os << "floats. Found '" << value.size() << "'.";
                     throw Exception(os.str().c_str());
                 }
-                defaultLumaCoefs_[0] = value[0];
-                defaultLumaCoefs_[1] = value[1];
-                defaultLumaCoefs_[2] = value[2];
+                
+                defaultLumaCoefs_ = value;
             }
             
             // Roles
@@ -1161,22 +1117,11 @@ OCIO_NAMESPACE_ENTER
                     // TODO: print something in this case
                 }
             }
-            else
-            {
-                // TODO: does it matter if there are no colorspaces defined?
-            }
             
-            // These are defined to allow for relative resource paths
-            // in FileTransforms.
             if(filename)
             {
-                originalFileDir_ = path::dirname(filename);
-                resolvedResourcePath_ = path::join(originalFileDir_, resourcePath_);
-            }
-            else
-            {
-                originalFileDir_ = DEFAULT_SEARCH_DIR;
-                resolvedResourcePath_ = DEFAULT_SEARCH_DIR;
+                std::string configrootdir = path::dirname(filename);
+                context_->setConfigRootDir(configrootdir.c_str());
             }
         }
         catch( const std::exception & e)

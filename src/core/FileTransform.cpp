@@ -298,7 +298,8 @@ OCIO_NAMESPACE_ENTER
     }
     
     void BuildFileOps(OpRcPtrVec & ops,
-                      const Config& config,
+                      const Config& /*config*/,
+                      const ConstContextRcPtr & context,
                       const FileTransform& fileTransform,
                       TransformDirection dir)
     {
@@ -310,11 +311,9 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        std::string resourcepath = config.getResolvedResourcePath();
-        std::string filepath = path::join(resourcepath, src);
+        std::string filepath = context->findFile(src.c_str());
         
         FileCachePair cachePair = GetFile(filepath);
-        
         FileFormat* format = cachePair.first;
         CachedFileRcPtr cachedFile = cachePair.second;
         

@@ -57,13 +57,12 @@ OCIO_NAMESPACE_ENTER
     };
     typedef std::multimap< std::string, std::string, EnvMapKey< std::string > > EnvMap;
     
-    // Get map of current env key = value, EnvMap's are ordered by number of
-    // chars in the key.
-    EnvMap GetEnvMap();
+    // Get map of current env key = value,
+    void LoadEnvironmentVariables(EnvMap & map);
     
     // Expand a string with $VAR, ${VAR} or %VAR% with the keys passed
     // in the EnvMap.
-    void EnvExpand(std::string *str, EnvMap *map);
+    std::string EnvExpand(const std::string & str, const EnvMap & map);
     
     // Check if a file exists
     bool FileExists(const std::string & filename);

@@ -138,6 +138,7 @@ OCIO_NAMESPACE_ENTER
     
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config& config,
+                            const ConstContextRcPtr & context,
                             const ColorSpaceTransform & colorSpaceTransform,
                             TransformDirection dir)
     {
@@ -157,11 +158,12 @@ OCIO_NAMESPACE_ENTER
             src = config.getColorSpace( colorSpaceTransform.getDst() );
         }
         
-        BuildColorSpaceOps(ops, config, src, dst);
+        BuildColorSpaceOps(ops, config, context, src, dst);
     }
     
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config & config,
+                            const ConstContextRcPtr & context,
                             const ConstColorSpaceRcPtr & srcColorSpace,
                             const ConstColorSpaceRcPtr & dstColorSpace)
     {
@@ -188,11 +190,11 @@ OCIO_NAMESPACE_ENTER
         CreateAllocationNoOp(ops, srcAllocation);
         
         ConstTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        BuildOps(ops, config, toref, TRANSFORM_DIR_FORWARD);
+        BuildOps(ops, config, context, toref, TRANSFORM_DIR_FORWARD);
         
         
         ConstTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        BuildOps(ops, config, fromref, TRANSFORM_DIR_FORWARD);
+        BuildOps(ops, config, context, fromref, TRANSFORM_DIR_FORWARD);
         
         AllocationData dstAllocation;
         dstAllocation.allocation = dstColorSpace->getAllocation();

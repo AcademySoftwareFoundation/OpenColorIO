@@ -153,7 +153,7 @@ void Display::_validate(bool for_real)
         
         transformPtr->setLinearCC(cc);
 
-        processorPtr = config->getProcessor(transformPtr);
+        processorPtr = config->getProcessor(transformPtr, OCIO::TRANSFORM_DIR_FORWARD);
     }
     catch(OCIO::Exception &e)
     {

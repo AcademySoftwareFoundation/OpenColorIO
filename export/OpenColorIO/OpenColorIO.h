@@ -92,7 +92,6 @@ OCIO_NAMESPACE_ENTER
     };
     
     
-    
     /*!
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -178,18 +177,24 @@ OCIO_NAMESPACE_ENTER
         
         void sanityCheck() const;
         
-        const char * getResourcePath() const;
-        void setResourcePath(const char * path);
-        const char * getResolvedResourcePath() const;
-        
-        void setSearchPath(const char * path);
-        const char * getSearchPath(bool expand = false) const;
-        const char * findFile(const char * filename) const;
-        
         const char * getDescription() const;
         void setDescription(const char * description);
         
         void serialize(std::ostream & os) const;
+        
+        
+        // RESOURCES //////////////////////////////////////////////////////////
+        //
+        // Given a lut src name, where should we find it?
+        
+        ConstContextRcPtr getDefaultContext() const;
+        
+        const char * getDefaultSearchPath() const;
+        void setDefaultSearchPath(const char * path);
+        
+        const char * getConfigRootDir() const;
+        void setConfigRootDir(const char * dirname);
+        
         
         // COLORSPACES ////////////////////////////////////////////////////////
         
@@ -301,16 +306,32 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
                                          const ConstColorSpaceRcPtr & dstColorSpace) const;
         
+        ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
+                                         const ConstColorSpaceRcPtr & dstColorSpace,
+                                         const ConstContextRcPtr & context) const;
+        
+        
+        
         //! Names can be colorspace name, role name, or a combination of both
         ConstProcessorRcPtr getProcessor(const char * srcName,
                                          const char * dstName) const;
+        
+        ConstProcessorRcPtr getProcessor(const char * srcName,
+                                         const char * dstName,
+                                         const ConstContextRcPtr & context) const;
         
         // Get the processor for the specified transform.
         // Not often needed, but will allow for the re-use of atomic OCIO functionality
         // (Such as to apply an individual LUT file)
         
+        ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform) const;
+        
         ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
-                                         TransformDirection direction = TRANSFORM_DIR_FORWARD) const;
+                                         TransformDirection direction) const;
+        
+        ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
+                                         TransformDirection direction,
+                                         const ConstContextRcPtr & context) const;
     private:
         Config();
         ~Config();
@@ -596,6 +617,49 @@ OCIO_NAMESPACE_ENTER
         GpuShaderDesc& operator= (const GpuShaderDesc &);
     };
     
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    class OCIOEXPORT Context
+    {
+    public:
+        static ContextRcPtr Create();
+        
+        ContextRcPtr createEditableCopy() const;
+        
+        void setDefaultSearchPath(const char * path);
+        const char * getDefaultSearchPath() const;
+        
+        void setConfigRootDir(const char * dirname);
+        const char * getConfigRootDir() const;
+        
+        void loadEnvironmentVariables();
+        
+        void setStringVar(const char * name, const char * value);
+        const char * getStringVar(const char * name) const;
+        
+        //! Do a file lookup.
+        // Evaluate all variables, and walk the full search path (as needed).
+        // If the filename cannot be found, an exception will be thrown.
+        
+        const char * findFile(const char * filename) const;
+        
+    private:
+        Context();
+        ~Context();
+        
+        Context(const Context &);
+        Context& operator= (const Context &);
+        
+        static void deleter(Context* c);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
 }
 OCIO_NAMESPACE_EXIT
 
