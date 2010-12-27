@@ -103,22 +103,22 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection ExponentTransform::getDirection() const
     {
-        return m_impl->dir_;
+        return getImpl()->dir_;
     }
     
     void ExponentTransform::setDirection(TransformDirection dir)
     {
-        m_impl->dir_ = dir;
+        getImpl()->dir_ = dir;
     }
     
     void ExponentTransform::setValue(const float * vec4)
     {
-        if(vec4) memcpy(m_impl->value_, vec4, 4*sizeof(float));
+        if(vec4) memcpy(getImpl()->value_, vec4, 4*sizeof(float));
     }
     
     void ExponentTransform::getValue(float * vec4) const
     {
-        if(vec4) memcpy(vec4, m_impl->value_, 4*sizeof(float));
+        if(vec4) memcpy(vec4, getImpl()->value_, 4*sizeof(float));
     }
     
     std::ostream& operator<< (std::ostream& os, const ExponentTransform& t)

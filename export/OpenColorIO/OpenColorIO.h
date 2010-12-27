@@ -344,6 +344,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
@@ -433,6 +435,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpace&);
@@ -556,6 +560,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
         
         PackedImageDesc(const PackedImageDesc &);
         PackedImageDesc& operator= (const PackedImageDesc &);
@@ -585,6 +591,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
         
         PlanarImageDesc(const PlanarImageDesc &);
         PlanarImageDesc& operator= (const PlanarImageDesc &);
@@ -609,12 +617,15 @@ OCIO_NAMESPACE_ENTER
         int getLut3DEdgeLen() const;
         
     private:
-        class Impl;
-        friend class Impl;
-        Impl * m_impl;
         
         GpuShaderDesc(const GpuShaderDesc &);
         GpuShaderDesc& operator= (const GpuShaderDesc &);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     
@@ -656,7 +667,6 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
-        
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };

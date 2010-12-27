@@ -101,47 +101,47 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection AllocationTransform::getDirection() const
     {
-        return m_impl->dir_;
+        return getImpl()->dir_;
     }
     
     void AllocationTransform::setDirection(TransformDirection dir)
     {
-        m_impl->dir_ = dir;
+        getImpl()->dir_ = dir;
     }
     
     
     Allocation AllocationTransform::getAllocation() const
     {
-        return m_impl->allocation_;
+        return getImpl()->allocation_;
     }
     
     void AllocationTransform::setAllocation(Allocation allocation)
     {
-        m_impl->allocation_ = allocation;
+        getImpl()->allocation_ = allocation;
     }
     
     int AllocationTransform::getNumVars() const
     {
-        return static_cast<int>(m_impl->vars_.size());
+        return static_cast<int>(getImpl()->vars_.size());
     }
     
     void AllocationTransform::getVars(float * vars) const
     {
-        if(!m_impl->vars_.empty())
+        if(!getImpl()->vars_.empty())
         {
             memcpy(vars,
-                &m_impl->vars_[0],
-                m_impl->vars_.size()*sizeof(float));
+                &getImpl()->vars_[0],
+                getImpl()->vars_.size()*sizeof(float));
         }
     }
     
     void AllocationTransform::setVars(int numvars, const float * vars)
     {
-        m_impl->vars_.resize(numvars);
+        getImpl()->vars_.resize(numvars);
         
-        if(!m_impl->vars_.empty())
+        if(!getImpl()->vars_.empty())
         {
-            memcpy(&m_impl->vars_[0],
+            memcpy(&getImpl()->vars_[0],
                 vars,
                 numvars*sizeof(float));
         }

@@ -97,32 +97,32 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection ColorSpaceTransform::getDirection() const
     {
-        return m_impl->dir_;
+        return getImpl()->dir_;
     }
     
     void ColorSpaceTransform::setDirection(TransformDirection dir)
     {
-        m_impl->dir_ = dir;
+        getImpl()->dir_ = dir;
     }
     
     const char * ColorSpaceTransform::getSrc() const
     {
-        return m_impl->src_.c_str();
+        return getImpl()->src_.c_str();
     }
     
     void ColorSpaceTransform::setSrc(const char * src)
     {
-        m_impl->src_ = src;
+        getImpl()->src_ = src;
     }
     
     const char * ColorSpaceTransform::getDst() const
     {
-        return m_impl->dst_.c_str();
+        return getImpl()->dst_.c_str();
     }
     
     void ColorSpaceTransform::setDst(const char * dst)
     {
-        m_impl->dst_ = dst;
+        getImpl()->dst_ = dst;
     }
     
     std::ostream& operator<< (std::ostream& os, const ColorSpaceTransform& t)

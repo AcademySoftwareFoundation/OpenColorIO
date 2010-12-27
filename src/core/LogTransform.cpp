@@ -99,23 +99,23 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection LogTransform::getDirection() const
     {
-        return m_impl->dir_;
+        return getImpl()->dir_;
     }
     
     void LogTransform::setDirection(TransformDirection dir)
     {
-        m_impl->dir_ = dir;
+        getImpl()->dir_ = dir;
     }
     
     
     float LogTransform::getBase() const
     {
-        return m_impl->base_;
+        return getImpl()->base_;
     }
     
     void LogTransform::setBase(float val)
     {
-        m_impl->base_ = val;
+        getImpl()->base_ = val;
     }
     
     std::ostream& operator<< (std::ostream& os, const LogTransform& t)

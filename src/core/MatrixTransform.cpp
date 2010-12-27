@@ -102,12 +102,12 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection MatrixTransform::getDirection() const
     {
-        return m_impl->dir_;
+        return getImpl()->dir_;
     }
     
     void MatrixTransform::setDirection(TransformDirection dir)
     {
-        m_impl->dir_ = dir;
+        getImpl()->dir_ = dir;
     }
     
     bool MatrixTransform::equals(const MatrixTransform & other) const
@@ -116,8 +116,8 @@ OCIO_NAMESPACE_ENTER
         
         for(int i=0; i<16; ++i)
         {
-            if(!equalWithAbsError(m_impl->matrix_[i],
-                other.m_impl->matrix_[i], abserror))
+            if(!equalWithAbsError(getImpl()->matrix_[i],
+                other.getImpl()->matrix_[i], abserror))
             {
                 return false;
             }
@@ -125,8 +125,8 @@ OCIO_NAMESPACE_ENTER
         
         for(int i=0; i<4; ++i)
         {
-            if(!equalWithAbsError(m_impl->offset_[i],
-                other.m_impl->offset_[i], abserror))
+            if(!equalWithAbsError(getImpl()->offset_[i],
+                other.getImpl()->offset_[i], abserror))
             {
                 return false;
             }
@@ -137,14 +137,14 @@ OCIO_NAMESPACE_ENTER
     
     void MatrixTransform::getValue(float * m44, float * offset4) const
     {
-        if(m44) memcpy(m44, m_impl->matrix_, 16*sizeof(float));
-        if(offset4) memcpy(offset4, m_impl->offset_, 4*sizeof(float));
+        if(m44) memcpy(m44, getImpl()->matrix_, 16*sizeof(float));
+        if(offset4) memcpy(offset4, getImpl()->offset_, 4*sizeof(float));
     }
     
     void MatrixTransform::setValue(const float * m44, const float * offset4)
     {
-        if(m44) memcpy(m_impl->matrix_, m44, 16*sizeof(float));
-        if(offset4) memcpy(m_impl->offset_, offset4, 4*sizeof(float));
+        if(m44) memcpy(getImpl()->matrix_, m44, 16*sizeof(float));
+        if(offset4) memcpy(getImpl()->offset_, offset4, 4*sizeof(float));
     }
     
     

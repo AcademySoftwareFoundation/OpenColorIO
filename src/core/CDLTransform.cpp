@@ -240,22 +240,22 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection CDLTransform::getDirection() const
     {
-        return m_impl->dir_;
+        return getImpl()->dir_;
     }
     
     void CDLTransform::setDirection(TransformDirection dir)
     {
-        m_impl->dir_ = dir;
+        getImpl()->dir_ = dir;
     }
     
     const char * CDLTransform::getXML() const
     {
-        return m_impl->getXML();
+        return getImpl()->getXML();
     }
     
     void CDLTransform::setXML(const char * xml)
     {
-        m_impl->setXML(xml);
+        getImpl()->setXML(xml);
         
         // These will throw an exception if the xml is in any way invalid.
         getSlope(0);
@@ -273,7 +273,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(!other) return false;
         
-        if(m_impl->dir_ != other->m_impl->dir_) return false;
+        if(getImpl()->dir_ != other->getImpl()->dir_) return false;
         
         float sop1[9];
         getSOP(sop1);
@@ -311,32 +311,32 @@ OCIO_NAMESPACE_ENTER
     
     void CDLTransform::setSlope(const float * rgb)
     {
-        m_impl->setSOPVec(rgb, "Slope");
+        getImpl()->setSOPVec(rgb, "Slope");
     }
     
     void CDLTransform::getSlope(float * rgb) const
     {
-        m_impl->getSOPVec(rgb, "Slope");
+        getImpl()->getSOPVec(rgb, "Slope");
     }
 
     void CDLTransform::setOffset(const float * rgb)
     {
-        m_impl->setSOPVec(rgb, "Offset");
+        getImpl()->setSOPVec(rgb, "Offset");
     }
     
     void CDLTransform::getOffset(float * rgb) const
     {
-        m_impl->getSOPVec(rgb, "Offset");
+        getImpl()->getSOPVec(rgb, "Offset");
     }
 
     void CDLTransform::setPower(const float * rgb)
     {
-        m_impl->setSOPVec(rgb, "Power");
+        getImpl()->setSOPVec(rgb, "Power");
     }
     
     void CDLTransform::getPower(float * rgb) const
     {
-        m_impl->getSOPVec(rgb, "Power");
+        getImpl()->getSOPVec(rgb, "Power");
     }
 
     void CDLTransform::setSOP(const float * vec9)
@@ -355,9 +355,9 @@ OCIO_NAMESPACE_ENTER
 
     void CDLTransform::setSat(float sat)
     {
-        m_impl->xml_ = "";
+        getImpl()->xml_ = "";
         
-        TiXmlHandle docHandle( m_impl->doc_ );
+        TiXmlHandle docHandle( getImpl()->doc_ );
         std::string errorName("ColorCorrection.SatNode.Saturation");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SatNode" ).FirstChild( "Saturation" ).ToElement();
@@ -374,7 +374,7 @@ OCIO_NAMESPACE_ENTER
     
     float CDLTransform::getSat() const
     {
-        TiXmlHandle docHandle( m_impl->doc_ );
+        TiXmlHandle docHandle( getImpl()->doc_ );
         std::string errorName("ColorCorrection.SatNode.Saturation");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SatNode" ).FirstChild( "Saturation" ).ToElement();
@@ -406,9 +406,9 @@ OCIO_NAMESPACE_ENTER
 
     void CDLTransform::setID(const char * id)
     {
-        m_impl->xml_ = "";
+        getImpl()->xml_ = "";
         
-        TiXmlHandle docHandle( m_impl->doc_ );
+        TiXmlHandle docHandle( getImpl()->doc_ );
         std::string errorName("ColorCorrection");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).ToElement();
@@ -424,7 +424,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * CDLTransform::getID() const
     {
-        TiXmlHandle docHandle( m_impl->doc_ );
+        TiXmlHandle docHandle( getImpl()->doc_ );
         std::string errorName("ColorCorrection");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).ToElement();
@@ -442,9 +442,9 @@ OCIO_NAMESPACE_ENTER
 
     void CDLTransform::setDescription(const char * desc)
     {
-        m_impl->xml_ = "";
+        getImpl()->xml_ = "";
         
-        TiXmlHandle docHandle( m_impl->doc_ );
+        TiXmlHandle docHandle( getImpl()->doc_ );
         std::string errorName("ColorCorrection.SOPNode.Description");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SOPNode" ).FirstChild( "Description" ).ToElement();
@@ -460,7 +460,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * CDLTransform::getDescription() const
     {
-        TiXmlHandle docHandle( m_impl->doc_ );
+        TiXmlHandle docHandle( getImpl()->doc_ );
         std::string errorName("ColorCorrection.SOPNode.Description");
         
         TiXmlElement* element = docHandle.FirstChild( "ColorCorrection" ).FirstChild( "SOPNode" ).FirstChild( "Description" ).ToElement();

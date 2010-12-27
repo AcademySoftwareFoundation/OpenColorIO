@@ -98,6 +98,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const AllocationTransform&);
@@ -177,6 +179,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const CDLTransform&);
@@ -215,6 +219,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
@@ -275,6 +281,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const DisplayTransform&);
@@ -314,6 +322,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentTransform&);
@@ -352,6 +362,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FileTransform&);
@@ -391,6 +403,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const GroupTransform&);
@@ -430,6 +444,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LogTransform&);
@@ -490,6 +506,8 @@ OCIO_NAMESPACE_ENTER
         class Impl;
         friend class Impl;
         Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const MatrixTransform&);

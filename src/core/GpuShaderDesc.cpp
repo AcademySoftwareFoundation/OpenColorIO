@@ -70,32 +70,32 @@ OCIO_NAMESPACE_ENTER
     
     void GpuShaderDesc::setLanguage(GpuLanguage lang)
     {
-        m_impl->language_ = lang;
+        getImpl()->language_ = lang;
     }
     
     GpuLanguage GpuShaderDesc::getLanguage() const
     {
-        return m_impl->language_;
+        return getImpl()->language_;
     }
     
     void GpuShaderDesc::setFunctionName(const char * name)
     {
-        m_impl->functionName_ = name;
+        getImpl()->functionName_ = name;
     }
     
     const char * GpuShaderDesc::getFunctionName() const
     {
-        return m_impl->functionName_.c_str();
+        return getImpl()->functionName_.c_str();
     }
     
     void GpuShaderDesc::setLut3DEdgeLen(int len)
     {
-        m_impl->lut3DEdgeLen_ = len;
+        getImpl()->lut3DEdgeLen_ = len;
     }
     
     int GpuShaderDesc::getLut3DEdgeLen() const
     {
-        return m_impl->lut3DEdgeLen_;
+        return getImpl()->lut3DEdgeLen_;
     }
     
 }

@@ -117,73 +117,73 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection DisplayTransform::getDirection() const
     {
-        return m_impl->dir_;
+        return getImpl()->dir_;
     }
     
     void DisplayTransform::setDirection(TransformDirection dir)
     {
-        m_impl->dir_ = dir;
+        getImpl()->dir_ = dir;
     }
     
     void DisplayTransform::setInputColorSpaceName(const char * name)
     {
-        m_impl->inputColorSpaceName_ = name;
+        getImpl()->inputColorSpaceName_ = name;
     }
     
     const char * DisplayTransform::getInputColorSpaceName() const
     {
-        return m_impl->inputColorSpaceName_.c_str();
+        return getImpl()->inputColorSpaceName_.c_str();
     }
     
     void DisplayTransform::setLinearCC(const ConstTransformRcPtr & cc)
     {
-        m_impl->linearCC_ = cc->createEditableCopy();
+        getImpl()->linearCC_ = cc->createEditableCopy();
     }
     
     ConstTransformRcPtr DisplayTransform::getLinearCC() const
     {
-        return m_impl->linearCC_;
+        return getImpl()->linearCC_;
     }
     
     void DisplayTransform::setColorTimingCC(const ConstTransformRcPtr & cc)
     {
-        m_impl->colorTimingCC_ = cc->createEditableCopy();
+        getImpl()->colorTimingCC_ = cc->createEditableCopy();
     }
     
     ConstTransformRcPtr DisplayTransform::getColorTimingCC() const
     {
-        return m_impl->colorTimingCC_;
+        return getImpl()->colorTimingCC_;
     }
     
     void DisplayTransform::setChannelView(const ConstTransformRcPtr & transform)
     {
-        m_impl->channelView_ = transform->createEditableCopy();
+        getImpl()->channelView_ = transform->createEditableCopy();
     }
     
     ConstTransformRcPtr DisplayTransform::getChannelView() const
     {
-        return m_impl->channelView_;
+        return getImpl()->channelView_;
     }
     
     void DisplayTransform::setDisplayColorSpaceName(const char * name)
     {
-        m_impl->displayColorSpaceName_ = name;
+        getImpl()->displayColorSpaceName_ = name;
     }
     
     const char * DisplayTransform::getDisplayColorSpaceName() const
     {
-        return m_impl->displayColorSpaceName_.c_str();
+        return getImpl()->displayColorSpaceName_.c_str();
     }
     
     
     void DisplayTransform::setDisplayCC(const ConstTransformRcPtr & cc)
     {
-        m_impl->displayCC_ = cc->createEditableCopy();
+        getImpl()->displayCC_ = cc->createEditableCopy();
     }
     
     ConstTransformRcPtr DisplayTransform::getDisplayCC() const
     {
-        return m_impl->displayCC_;
+        return getImpl()->displayCC_;
     }
     
     

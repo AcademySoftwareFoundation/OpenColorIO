@@ -139,39 +139,39 @@ OCIO_NAMESPACE_ENTER
     
     long PackedImageDesc::getWidth() const
     {
-        return m_impl->width_;
+        return getImpl()->width_;
     }
     
     long PackedImageDesc::getHeight() const
     {
-        return m_impl->height_;
+        return getImpl()->height_;
     }
     
     ptrdiff_t PackedImageDesc::getXStrideBytes() const
     {
-        return m_impl->xStrideBytes_;
+        return getImpl()->xStrideBytes_;
     }
     
     ptrdiff_t PackedImageDesc::getYStrideBytes() const
     {
-        return m_impl->yStrideBytes_;
+        return getImpl()->yStrideBytes_;
     }
     
     float* PackedImageDesc::getRData() const
     {
-        return m_impl->data_;
+        return getImpl()->data_;
     }
     
     float* PackedImageDesc::getGData() const
     {
-        return reinterpret_cast<float*>( reinterpret_cast<char*>(m_impl->data_) \
-            + m_impl->chanStrideBytes_ );
+        return reinterpret_cast<float*>( reinterpret_cast<char*>(getImpl()->data_) \
+            + getImpl()->chanStrideBytes_ );
     }
     
     float* PackedImageDesc::getBData() const
     {
-        return reinterpret_cast<float*>( reinterpret_cast<char*>(m_impl->data_) \
-            + 2*m_impl->chanStrideBytes_ );
+        return reinterpret_cast<float*>( reinterpret_cast<char*>(getImpl()->data_) \
+            + 2*getImpl()->chanStrideBytes_ );
     }
     
     
@@ -253,12 +253,12 @@ OCIO_NAMESPACE_ENTER
     
     long PlanarImageDesc::getWidth() const
     {
-        return m_impl->width_;
+        return getImpl()->width_;
     }
     
     long PlanarImageDesc::getHeight() const
     {
-        return m_impl->height_;
+        return getImpl()->height_;
     }
     
     ptrdiff_t PlanarImageDesc::getXStrideBytes() const
@@ -268,22 +268,22 @@ OCIO_NAMESPACE_ENTER
     
     ptrdiff_t PlanarImageDesc::getYStrideBytes() const
     {
-        return m_impl->yStrideBytes_;
+        return getImpl()->yStrideBytes_;
     }
     
     float* PlanarImageDesc::getRData() const
     {
-        return m_impl->rData_;
+        return getImpl()->rData_;
     }
     
     float* PlanarImageDesc::getGData() const
     {
-        return m_impl->gData_;
+        return getImpl()->gData_;
     }
     
     float* PlanarImageDesc::getBData() const
     {
-        return m_impl->bData_;
+        return getImpl()->bData_;
     }
 }
 OCIO_NAMESPACE_EXIT

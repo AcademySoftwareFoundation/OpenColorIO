@@ -103,32 +103,32 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection FileTransform::getDirection() const
     {
-        return m_impl->dir_;
+        return getImpl()->dir_;
     }
     
     void FileTransform::setDirection(TransformDirection dir)
     {
-        m_impl->dir_ = dir;
+        getImpl()->dir_ = dir;
     }
     
     const char * FileTransform::getSrc() const
     {
-        return m_impl->src_.c_str();
+        return getImpl()->src_.c_str();
     }
     
     void FileTransform::setSrc(const char * src)
     {
-        m_impl->src_ = src;
+        getImpl()->src_ = src;
     }
     
     Interpolation FileTransform::getInterpolation() const
     {
-        return m_impl->interp_;
+        return getImpl()->interp_;
     }
     
     void FileTransform::setInterpolation(Interpolation interp)
     {
-        m_impl->interp_ = interp;
+        getImpl()->interp_ = interp;
     }
     
     std::ostream& operator<< (std::ostream& os, const FileTransform& t)

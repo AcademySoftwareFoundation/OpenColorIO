@@ -122,85 +122,85 @@ OCIO_NAMESPACE_ENTER
     
     const char * ColorSpace::getName() const
     {
-        return m_impl->name_.c_str();
+        return getImpl()->name_.c_str();
     }
     
     void ColorSpace::setName(const char * name)
     {
-        m_impl->name_ = name;
+        getImpl()->name_ = name;
     }
     const char * ColorSpace::getFamily() const
     {
-        return m_impl->family_.c_str();
+        return getImpl()->family_.c_str();
     }
     
     void ColorSpace::setFamily(const char * family)
     {
-        m_impl->family_ = family;
+        getImpl()->family_ = family;
     }
     
     const char * ColorSpace::getDescription() const
     {
-        return m_impl->description_.c_str();
+        return getImpl()->description_.c_str();
     }
     
     void ColorSpace::setDescription(const char * description)
     {
-        m_impl->description_ = description;
+        getImpl()->description_ = description;
     }
     
     BitDepth ColorSpace::getBitDepth() const
     {
-        return m_impl->bitDepth_;
+        return getImpl()->bitDepth_;
     }
     
     void ColorSpace::setBitDepth(BitDepth bitDepth)
     {
-        m_impl->bitDepth_ = bitDepth;
+        getImpl()->bitDepth_ = bitDepth;
     }
     
     bool ColorSpace::isData() const
     {
-        return m_impl->isData_;
+        return getImpl()->isData_;
     }
     
     void ColorSpace::setIsData(bool val)
     {
-        m_impl->isData_ = val;
+        getImpl()->isData_ = val;
     }
     
     Allocation ColorSpace::getAllocation() const
     {
-        return m_impl->allocation_;
+        return getImpl()->allocation_;
     }
     
     void ColorSpace::setAllocation(Allocation allocation)
     {
-        m_impl->allocation_ = allocation;
+        getImpl()->allocation_ = allocation;
     }
     
     int ColorSpace::getAllocationNumVars() const
     {
-        return static_cast<int>(m_impl->allocationVars_.size());
+        return static_cast<int>(getImpl()->allocationVars_.size());
     }
     
     void ColorSpace::getAllocationVars(float * vars) const
     {
-        if(!m_impl->allocationVars_.empty())
+        if(!getImpl()->allocationVars_.empty())
         {
             memcpy(vars,
-                &m_impl->allocationVars_[0],
-                m_impl->allocationVars_.size()*sizeof(float));
+                &getImpl()->allocationVars_[0],
+                getImpl()->allocationVars_.size()*sizeof(float));
         }
     }
     
     void ColorSpace::setAllocationVars(int numvars, const float * vars)
     {
-        m_impl->allocationVars_.resize(numvars);
+        getImpl()->allocationVars_.resize(numvars);
         
-        if(!m_impl->allocationVars_.empty())
+        if(!getImpl()->allocationVars_.empty())
         {
-            memcpy(&m_impl->allocationVars_[0],
+            memcpy(&getImpl()->allocationVars_[0],
                 vars,
                 numvars*sizeof(float));
         }
@@ -209,9 +209,9 @@ OCIO_NAMESPACE_ENTER
     ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
     {
         if(dir == COLORSPACE_DIR_TO_REFERENCE)
-            return m_impl->toRefTransform_;
+            return getImpl()->toRefTransform_;
         else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
-            return m_impl->fromRefTransform_;
+            return getImpl()->fromRefTransform_;
         
         throw Exception("Unspecified ColorSpaceDirection");
     }
@@ -219,9 +219,9 @@ OCIO_NAMESPACE_ENTER
     TransformRcPtr ColorSpace::getEditableTransform(ColorSpaceDirection dir)
     {
         if(dir == COLORSPACE_DIR_TO_REFERENCE)
-            return m_impl->toRefTransform_;
+            return getImpl()->toRefTransform_;
         else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
-            return m_impl->fromRefTransform_;
+            return getImpl()->fromRefTransform_;
         
         throw Exception("Unspecified ColorSpaceDirection");
     }
@@ -236,19 +236,19 @@ OCIO_NAMESPACE_ENTER
         
         if(dir == COLORSPACE_DIR_TO_REFERENCE)
         {
-            majorTransform = &(m_impl->toRefTransform_);
-            majorIsSpecified = &(m_impl->toRefSpecified_);
+            majorTransform = &(getImpl()->toRefTransform_);
+            majorIsSpecified = &(getImpl()->toRefSpecified_);
             
-            minorTransform = &(m_impl->fromRefTransform_);
-            minorIsSpecified = &(m_impl->fromRefSpecified_);
+            minorTransform = &(getImpl()->fromRefTransform_);
+            minorIsSpecified = &(getImpl()->fromRefSpecified_);
         }
         else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
         {
-            majorTransform = &(m_impl->fromRefTransform_);
-            majorIsSpecified = &(m_impl->fromRefSpecified_);
+            majorTransform = &(getImpl()->fromRefTransform_);
+            majorIsSpecified = &(getImpl()->fromRefSpecified_);
             
-            minorTransform = &(m_impl->toRefTransform_);
-            minorIsSpecified = &(m_impl->toRefSpecified_);
+            minorTransform = &(getImpl()->toRefTransform_);
+            minorIsSpecified = &(getImpl()->toRefSpecified_);
         }
         else
         {
@@ -277,9 +277,9 @@ OCIO_NAMESPACE_ENTER
     bool ColorSpace::isTransformSpecified(ColorSpaceDirection dir) const
     {
         if(dir == COLORSPACE_DIR_TO_REFERENCE)
-            return m_impl->toRefSpecified_;
+            return getImpl()->toRefSpecified_;
         else if(COLORSPACE_DIR_FROM_REFERENCE)
-            return m_impl->fromRefSpecified_;
+            return getImpl()->fromRefSpecified_;
         
         throw Exception("Unspecified ColorSpaceDirection");
     }
