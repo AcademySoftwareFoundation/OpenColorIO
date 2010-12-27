@@ -187,13 +187,13 @@ OCIO_NAMESPACE_ENTER
         //
         // Given a lut src name, where should we find it?
         
-        ConstContextRcPtr getDefaultContext() const;
+        ConstContextRcPtr getCurrentContext() const;
         
-        const char * getDefaultSearchPath() const;
-        void setDefaultSearchPath(const char * path);
+        const char * getSearchPath() const;
+        void setSearchPath(const char * path);
         
-        const char * getConfigRootDir() const;
-        void setConfigRootDir(const char * dirname);
+        const char * getWorkingDir() const;
+        void setWorkingDir(const char * dirname);
         
         
         // COLORSPACES ////////////////////////////////////////////////////////
@@ -303,12 +303,12 @@ OCIO_NAMESPACE_ENTER
         //  arbitrary numbers of additional channels can be supported (ignored)
         //  using the pixelStrideBytes arg.
         
-        ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
+        ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                         const ConstColorSpaceRcPtr & srcColorSpace,
                                          const ConstColorSpaceRcPtr & dstColorSpace) const;
         
         ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
-                                         const ConstColorSpaceRcPtr & dstColorSpace,
-                                         const ConstContextRcPtr & context) const;
+                                         const ConstColorSpaceRcPtr & dstColorSpace) const;
         
         
         
@@ -316,9 +316,9 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const char * srcName,
                                          const char * dstName) const;
         
-        ConstProcessorRcPtr getProcessor(const char * srcName,
-                                         const char * dstName,
-                                         const ConstContextRcPtr & context) const;
+        ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                         const char * srcName,
+                                         const char * dstName) const;
         
         // Get the processor for the specified transform.
         // Not often needed, but will allow for the re-use of atomic OCIO functionality
@@ -329,9 +329,9 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
                                          TransformDirection direction) const;
         
-        ConstProcessorRcPtr getProcessor(const ConstTransformRcPtr& transform,
-                                         TransformDirection direction,
-                                         const ConstContextRcPtr & context) const;
+        ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
+                                         const ConstTransformRcPtr& transform,
+                                         TransformDirection direction) const;
     private:
         Config();
         ~Config();
@@ -627,11 +627,11 @@ OCIO_NAMESPACE_ENTER
         
         ContextRcPtr createEditableCopy() const;
         
-        void setDefaultSearchPath(const char * path);
-        const char * getDefaultSearchPath() const;
+        void setSearchPath(const char * path);
+        const char * getSearchPath() const;
         
-        void setConfigRootDir(const char * dirname);
-        const char * getConfigRootDir() const;
+        void setWorkingDir(const char * dirname);
+        const char * getWorkingDir() const;
         
         void loadEnvironmentVariables();
         

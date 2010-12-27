@@ -44,16 +44,16 @@ namespace
 {
     typedef std::map< std::string, std::string> StringMap;
     
-    void GetPreppedSearchPath(std::vector<std::string> & searchpaths,
-                              const std::string & pathString,
-                              const std::string & configRootDir);
+    void GetAbsoluteSearchPaths(std::vector<std::string> & searchpaths,
+                                const std::string & pathString,
+                                const std::string & configRootDir);
 }
     
     class Context::Impl
     {
     public:
-        std::string defaultSearchPath_;
-        std::string configRootDir_;
+        std::string searchPath_;
+        std::string workingDir_;
         EnvMap envMap_;
         
         mutable StringMap resultsCache_;
@@ -73,8 +73,8 @@ namespace
             AutoMutex lock1(resultsCacheMutex_);
             AutoMutex lock2(rhs.resultsCacheMutex_);
             
-            defaultSearchPath_ = rhs.defaultSearchPath_;
-            configRootDir_ = rhs.configRootDir_;
+            searchPath_ = rhs.searchPath_;
+            workingDir_ = rhs.workingDir_;
             envMap_ = rhs.envMap_;
             
             resultsCache_ = rhs.resultsCache_;
@@ -119,30 +119,30 @@ namespace
     }
     
     
-    void Context::setDefaultSearchPath(const char * path)
+    void Context::setSearchPath(const char * path)
     {
         AutoMutex lock(getImpl()->resultsCacheMutex_);
         
-        getImpl()->defaultSearchPath_ = path;
+        getImpl()->searchPath_ = path;
         getImpl()->resultsCache_.clear();
     }
     
-    const char * Context::getDefaultSearchPath() const
+    const char * Context::getSearchPath() const
     {
-        return getImpl()->defaultSearchPath_.c_str();
+        return getImpl()->searchPath_.c_str();
     }
     
-    void Context::setConfigRootDir(const char * dirname)
+    void Context::setWorkingDir(const char * dirname)
     {
         AutoMutex lock(getImpl()->resultsCacheMutex_);
         
-        getImpl()->configRootDir_ = dirname;
+        getImpl()->workingDir_ = dirname;
         getImpl()->resultsCache_.clear();
     }
     
-    const char * Context::getConfigRootDir() const
+    const char * Context::getWorkingDir() const
     {
-        return getImpl()->configRootDir_.c_str();
+        return getImpl()->workingDir_.c_str();
     }
     
     void Context::loadEnvironmentVariables()
@@ -216,9 +216,9 @@ namespace
         
         // TODO: Cache this prepped vector?
         std::vector<std::string> searchpaths;
-        GetPreppedSearchPath(searchpaths,
-                             getImpl()->defaultSearchPath_,
-                             getImpl()->configRootDir_);
+        GetAbsoluteSearchPaths(searchpaths,
+                               getImpl()->searchPath_,
+                               getImpl()->workingDir_);
         
         if(searchpaths.empty())
         {
@@ -255,9 +255,9 @@ namespace
 
 namespace
 {
-    void GetPreppedSearchPath(std::vector<std::string> & searchpaths,
-                              const std::string & pathString,
-                              const std::string & configRootDir)
+    void GetAbsoluteSearchPaths(std::vector<std::string> & searchpaths,
+                                const std::string & pathString,
+                                const std::string & workingDir)
     {
         if(pathString == "")
         {
@@ -273,7 +273,7 @@ namespace
             // resolve '::' empty entry
             if(searchpaths[i].size() == 0)
             {
-                searchpaths[i] = configRootDir;
+                searchpaths[i] = workingDir;
             }
             // TODO: resolve '..'
             else if(pystring::startswith(searchpaths[i], ".."))
@@ -309,7 +309,7 @@ namespace
             // resolve relative
             else if(!pystring::startswith(searchpaths[i], "/"))
             {
-                searchpaths[i] = path::join(configRootDir, searchpaths[i]);
+                searchpaths[i] = path::join(workingDir, searchpaths[i]);
             }
             
             // Remove trailing "/"

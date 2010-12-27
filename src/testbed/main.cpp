@@ -165,7 +165,7 @@ void loadConfigFromEnv()
 void createConfig()
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
-    config->setDefaultSearchPath("luts");
+    config->setSearchPath("luts");
     
     // Add a colorspace
     {

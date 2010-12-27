@@ -431,29 +431,29 @@ OCIO_NAMESPACE_ENTER
     
     // RESOURCES //////////////////////////////////////////////////////////////
     
-    ConstContextRcPtr Config::getDefaultContext() const
+    ConstContextRcPtr Config::getCurrentContext() const
     {
         return m_impl->context_;
     }
     
-    const char * Config::getDefaultSearchPath() const
+    const char * Config::getSearchPath() const
     {
-        return m_impl->context_->getDefaultSearchPath();
+        return m_impl->context_->getSearchPath();
     }
     
-    void Config::setDefaultSearchPath(const char * path)
+    void Config::setSearchPath(const char * path)
     {
-        m_impl->context_->setDefaultSearchPath(path);
+        m_impl->context_->setSearchPath(path);
     }
     
-    const char * Config::getConfigRootDir() const
+    const char * Config::getWorkingDir() const
     {
-        return m_impl->context_->getConfigRootDir();
+        return m_impl->context_->getWorkingDir();
     }
     
-    void Config::setConfigRootDir(const char * dirname)
+    void Config::setWorkingDir(const char * dirname)
     {
-        m_impl->context_->setConfigRootDir(dirname);
+        m_impl->context_->setWorkingDir(dirname);
     }
     
     
@@ -823,13 +823,13 @@ OCIO_NAMESPACE_ENTER
     ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
                                              const ConstColorSpaceRcPtr & dst) const
     {
-        ConstContextRcPtr context = getDefaultContext();
-        return getProcessor(src, dst, context);
+        ConstContextRcPtr context = getCurrentContext();
+        return getProcessor(context, src, dst);
     }
     
-    ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
-                                             const ConstColorSpaceRcPtr & dst,
-                                             const ConstContextRcPtr & context) const
+    ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
+                                             const ConstColorSpaceRcPtr & src,
+                                             const ConstColorSpaceRcPtr & dst) const
     {
         if(!src)
         {
@@ -849,14 +849,14 @@ OCIO_NAMESPACE_ENTER
     ConstProcessorRcPtr Config::getProcessor(const char * srcName,
                                              const char * dstName) const
     {
-        ConstContextRcPtr context = getDefaultContext();
-        return getProcessor(srcName, dstName, context);
+        ConstContextRcPtr context = getCurrentContext();
+        return getProcessor(context, srcName, dstName);
     }
     
     //! Names can be colorspace name or role name
-    ConstProcessorRcPtr Config::getProcessor(const char * srcName,
-                                             const char * dstName,
-                                             const ConstContextRcPtr & context) const
+    ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
+                                             const char * srcName,
+                                             const char * dstName) const
     {
         ConstColorSpaceRcPtr src = getColorSpace(srcName);
         if(!src)
@@ -874,7 +874,7 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        return getProcessor(src, dst, context);
+        return getProcessor(context, src, dst);
     }
     
     
@@ -887,13 +887,13 @@ OCIO_NAMESPACE_ENTER
     ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform,
                                              TransformDirection direction) const
     {
-        ConstContextRcPtr context = getDefaultContext();
-        return getProcessor(transform, direction, context);
+        ConstContextRcPtr context = getCurrentContext();
+        return getProcessor(context, transform, direction);
     }
     
-    ConstProcessorRcPtr Config::getProcessor(const ConstTransformRcPtr& transform,
-                                             TransformDirection direction,
-                                             const ConstContextRcPtr & context) const
+    ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
+                                             const ConstTransformRcPtr& transform,
+                                             TransformDirection direction) const
     {
         LocalProcessorRcPtr processor = LocalProcessor::Create();
         processor->addTransform(*this, context, transform, direction);
@@ -921,7 +921,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
             out << YAML::Newline;
             
-            std::string search_path = getDefaultSearchPath();
+            std::string search_path = getSearchPath();
             if(search_path != "")
             {
                 out << YAML::Key << "search_path" << YAML::Value << search_path;
@@ -1010,13 +1010,13 @@ OCIO_NAMESPACE_ENTER
             {
                 std::string path;
                 node["search_path"] >> path;
-                context_->setDefaultSearchPath(path.c_str());
+                context_->setSearchPath(path.c_str());
             }
             else if(node.FindValue("resource_path") != NULL)
             {
                 std::string path;
                 node["resource_path"] >> path;
-                context_->setDefaultSearchPath(path.c_str());
+                context_->setSearchPath(path.c_str());
             }
             
             if(node.FindValue("strictparsing") != NULL)
@@ -1121,7 +1121,7 @@ OCIO_NAMESPACE_ENTER
             if(filename)
             {
                 std::string configrootdir = path::dirname(filename);
-                context_->setConfigRootDir(configrootdir.c_str());
+                context_->setWorkingDir(configrootdir.c_str());
             }
         }
         catch( const std::exception & e)

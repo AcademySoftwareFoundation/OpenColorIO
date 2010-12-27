@@ -177,11 +177,11 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_Config_serialize( PyObject * self );
         
-        PyObject * PyOCIO_Config_getDefaultSearchPath( PyObject * self );
-        PyObject * PyOCIO_Config_setDefaultSearchPath( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_Config_getSearchPath( PyObject * self );
+        PyObject * PyOCIO_Config_setSearchPath( PyObject * self,  PyObject *args );
         
-        PyObject * PyOCIO_Config_getConfigRootDir( PyObject * self );
-        PyObject * PyOCIO_Config_setConfigRootDir( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_Config_getWorkingDir( PyObject * self );
+        PyObject * PyOCIO_Config_setWorkingDir( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self );
         PyObject * PyOCIO_Config_getColorSpace( PyObject * self, PyObject * args );
@@ -217,10 +217,10 @@ OCIO_NAMESPACE_ENTER
             {"setDescription", PyOCIO_Config_setDescription, METH_VARARGS, "" },
             {"serialize", (PyCFunction) PyOCIO_Config_serialize, METH_NOARGS, "" },
             
-            {"getDefaultSearchPath", (PyCFunction) PyOCIO_Config_getDefaultSearchPath, METH_NOARGS, "" },
-            {"setDefaultSearchPath", PyOCIO_Config_setDefaultSearchPath, METH_VARARGS, "" },
-            {"getConfigRootDir", (PyCFunction) PyOCIO_Config_getConfigRootDir, METH_NOARGS, "" },
-            {"setConfigRootDir", PyOCIO_Config_setConfigRootDir, METH_VARARGS, "" },
+            {"getSearchPath", (PyCFunction) PyOCIO_Config_getSearchPath, METH_NOARGS, "" },
+            {"setSearchPath", PyOCIO_Config_setSearchPath, METH_VARARGS, "" },
+            {"getWorkingDir", (PyCFunction) PyOCIO_Config_getWorkingDir, METH_NOARGS, "" },
+            {"setWorkingDir", PyOCIO_Config_setWorkingDir, METH_VARARGS, "" },
             
             {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
             {"getColorSpace", PyOCIO_Config_getColorSpace, METH_VARARGS, "" },
@@ -471,12 +471,12 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        PyObject * PyOCIO_Config_getDefaultSearchPath( PyObject * self )
+        PyObject * PyOCIO_Config_getSearchPath( PyObject * self )
         {
             try
             {
                 ConstConfigRcPtr config = GetConstConfig(self, true);
-                return PyString_FromString( config->getDefaultSearchPath() );
+                return PyString_FromString( config->getSearchPath() );
             }
             catch(...)
             {
@@ -485,15 +485,15 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_Config_setDefaultSearchPath( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_setSearchPath( PyObject * self, PyObject * args )
         {
             try
             {
                 char * path = 0;
-                if (!PyArg_ParseTuple(args,"s:setDefaultSearchPath", &path)) return NULL;
+                if (!PyArg_ParseTuple(args,"s:setSearchPath", &path)) return NULL;
                 
                 ConfigRcPtr config = GetEditableConfig(self);
-                config->setDefaultSearchPath( path );
+                config->setSearchPath( path );
                 
                 Py_RETURN_NONE;
             }
@@ -504,12 +504,12 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_Config_getConfigRootDir( PyObject * self )
+        PyObject * PyOCIO_Config_getWorkingDir( PyObject * self )
         {
             try
             {
                 ConstConfigRcPtr config = GetConstConfig(self, true);
-                return PyString_FromString( config->getConfigRootDir() );
+                return PyString_FromString( config->getWorkingDir() );
             }
             catch(...)
             {
@@ -518,15 +518,15 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_Config_setConfigRootDir( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_setWorkingDir( PyObject * self, PyObject * args )
         {
             try
             {
                 char * path = 0;
-                if (!PyArg_ParseTuple(args,"s:setConfigRootDir", &path)) return NULL;
+                if (!PyArg_ParseTuple(args,"s:setWorkingDir", &path)) return NULL;
                 
                 ConfigRcPtr config = GetEditableConfig(self);
-                config->setConfigRootDir( path );
+                config->setWorkingDir( path );
                 
                 Py_RETURN_NONE;
             }
