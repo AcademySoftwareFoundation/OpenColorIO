@@ -1343,7 +1343,7 @@ BOOST_AUTO_TEST_CASE ( test_ser )
     "    family: test\n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
-    "    gpuallocation: uniform\n"
+    "    allocation: uniform\n"
     "    to_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
@@ -1353,7 +1353,7 @@ BOOST_AUTO_TEST_CASE ( test_ser )
     "    family: test\n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
-    "    gpuallocation: uniform\n"
+    "    allocation: uniform\n"
     "    to_reference: !<GroupTransform>\n"
     "      children:\n"
     "        - !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
