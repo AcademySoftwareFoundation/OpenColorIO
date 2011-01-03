@@ -192,7 +192,7 @@ OCIO_NAMESPACE_ENTER
             strictParsing_(true),
             sanity_(SANITY_UNKNOWN)
         {
-            context_->loadEnvironmentVariables();
+            context_->loadEnvironment();
             
             defaultLumaCoefs_.resize(3);
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;

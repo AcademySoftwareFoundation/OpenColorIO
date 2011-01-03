@@ -92,7 +92,7 @@ OCIO_NAMESPACE_ENTER
     } // path namespace
     
     
-    void LoadEnvironmentVariables(EnvMap & map)
+    void LoadEnvironment(EnvMap & map)
     {
         for (char **env = GetEnviron(); *env != NULL; ++env)
         {

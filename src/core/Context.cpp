@@ -145,9 +145,9 @@ namespace
         return getImpl()->workingDir_.c_str();
     }
     
-    void Context::loadEnvironmentVariables()
+    void Context::loadEnvironment()
     {
-        LoadEnvironmentVariables(getImpl()->envMap_);
+        LoadEnvironment(getImpl()->envMap_);
     }
     
     void Context::setStringVar(const char * name, const char * value)

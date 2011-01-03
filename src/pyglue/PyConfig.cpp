@@ -200,7 +200,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self );
         PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args );
         
-        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args, PyObject * kwargs );
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -239,7 +239,7 @@ OCIO_NAMESPACE_ENTER
             {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
             {"setDefaultLumaCoefs", PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, "" },
             
-            {"getProcessor", PyOCIO_Config_getProcessor, METH_VARARGS, "" },
+            {"getProcessor", (PyCFunction) PyOCIO_Config_getProcessor, METH_KEYWORDS, "" },
             
             {NULL, NULL, 0, NULL}
         };
@@ -874,60 +874,78 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        // TODO: Make the argument parsing way more explicit!
-        
-        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args, PyObject * kwargs)
         {
             try
             {
-                PyObject * arg1 = 0;
-                PyObject * arg2 = 0;
-                if (!PyArg_ParseTuple(args,"O|O:getProcessor", &arg1, &arg2)) return NULL;
+                // We want this call to be as flexible as possible.
+                // arg1 will either be a PyTransform
+                // or arg1, arg2 will be {str, ColorSpace}
+                
+                PyObject * arg1 = Py_None;
+                PyObject * arg2 = Py_None;
+                
+                const char * direction = 0;
+                PyObject * pycontext = Py_None;
+                
+                const char * kwlist[] = {"arg1", "arg2", "direction", "context",  NULL};
+                
+                if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OsO",
+                    const_cast<char**>(kwlist),
+                    &arg1, &arg2, &direction, &pycontext))
+                    return 0;
                 
                 ConstConfigRcPtr config = GetConstConfig(self, true);
                 
-                // We want this call to be as flexible as possible,
-                // accept anything we can think of!
+                // Parse the direction string
+                TransformDirection dir = TRANSFORM_DIR_FORWARD;
+                if(direction) dir = TransformDirectionFromString( direction );
                 
-                // A transform + (optional) dir
+                // Parse the context
+                ConstContextRcPtr context;
+                if(pycontext != Py_None) context = GetConstContext(pycontext, true);
+                if(!context) context = config->getCurrentContext();
+                
                 if(IsPyTransform(arg1))
                 {
                     ConstTransformRcPtr transform = GetConstTransform(arg1, true);
-                    
-                    TransformDirection dir = TRANSFORM_DIR_FORWARD;
-                    if(arg2 && PyString_Check(arg2))
-                    {
-                        const char * s2 = PyString_AsString(arg2);
-                        dir = TransformDirectionFromString( s2 );
-                    }
-                    
-                    return BuildConstPyProcessor(config->getProcessor(transform, dir));
+                    return BuildConstPyProcessor(config->getProcessor(context, transform, dir));
                 }
                 
                 // Any two (Colorspaces, colorspace name, roles)
                 ConstColorSpaceRcPtr cs1, cs2;
                 
-                if(IsPyColorSpace(arg1)) cs1 = GetConstColorSpace(arg1, true);
+                if(IsPyColorSpace(arg1))
+                {
+                    cs1 = GetConstColorSpace(arg1, true);
+                }
                 else if(PyString_Check(arg1))
                 {
                     cs1 = config->getColorSpace(PyString_AsString(arg1));
                 }
+                if(!cs1)
+                {
+                    PyErr_SetString(PyExc_ValueError,
+                        "Could not parse first arg. Allowed types include ColorSpace, ColorSpace name, Role.");
+                    return NULL;
+                }
                 
-                if(IsPyColorSpace(arg2)) cs2 = GetConstColorSpace(arg2, true);
+                if(IsPyColorSpace(arg2))
+                {
+                    cs2 = GetConstColorSpace(arg2, true);
+                }
                 else if(PyString_Check(arg2))
                 {
                     cs2 = config->getColorSpace(PyString_AsString(arg2));
                 }
-                
-                if(cs1 && cs2)
+                if(!cs2)
                 {
-                    return BuildConstPyProcessor(config->getProcessor(cs1, cs2));
+                    PyErr_SetString(PyExc_ValueError,
+                        "Could not parse second arg. Allowed types include ColorSpace, ColorSpace name, Role.");
+                    return NULL;
                 }
                 
-                const char * text = "Error interpreting arguments. "
-                "Allowed types include Transform, ColorSpace, ColorSpace name, Role";
-                PyErr_SetString(PyExc_ValueError, text);
-                return NULL;
+                return BuildConstPyProcessor(config->getProcessor(context, cs1, cs2));
             }
             catch(...)
             {

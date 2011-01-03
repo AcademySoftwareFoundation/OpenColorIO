@@ -51,6 +51,14 @@ OCIO_NAMESPACE_ENTER
     ConstConfigRcPtr GetConstConfig(PyObject * config, bool allowCast);
     ConfigRcPtr GetEditableConfig(PyObject * config);
     
+    // Context
+    PyObject * BuildConstPyContext(ConstContextRcPtr context);
+    PyObject * BuildEditablePyContext(ContextRcPtr context);
+    bool IsPyContext(PyObject * config);
+    bool IsPyContextEditable(PyObject * config);
+    ConstContextRcPtr GetConstContext(PyObject * context, bool allowCast);
+    ContextRcPtr GetEditableContext(PyObject * context);
+    
     // Transform
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
     PyObject * BuildEditablePyTransform(TransformRcPtr transform);

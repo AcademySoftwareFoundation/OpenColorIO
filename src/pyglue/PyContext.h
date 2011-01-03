@@ -27,49 +27,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_PATHUTILS_H
-#define INCLUDED_OCIO_PATHUTILS_H
+#ifndef INCLUDED_PYOCIO_PYCONTEXT_H
+#define INCLUDED_PYOCIO_PYCONTEXT_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include <map>
+#include <PyOpenColorIO/PyOpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
-    namespace path
-    {
-        std::string join(const std::string & path1, const std::string & path2);
-        std::string dirname(const std::string & path);
-    }
+    // TODO: Maybe put this in a pyinternal namespace?
     
-    // The EnvMap is ordered by the length of the keys (long -> short). This
-    // is so that recursive string expansion will deal with similar prefixed
-    // keys as expected.
-    // ie. '$TEST_$TESTING_$TE' will expand in this order '2 1 3'
-    template <class T>
-    struct EnvMapKey : std::binary_function <T, T, bool>
-    {
-        bool
-        operator() (const T &x, const T &y) const
-        {
-            return (x.length() > y.length());
-        }
-    };
-    typedef std::multimap< std::string, std::string, EnvMapKey< std::string > > EnvMap;
+    typedef struct {
+        PyObject_HEAD
+        ConstContextRcPtr * constcppobj;
+        ContextRcPtr * cppobj;
+        bool isconst;
+    } PyOCIO_Context;
     
-    // Get map of current env key = value,
-    void LoadEnvironment(EnvMap & map);
+    extern PyTypeObject PyOCIO_ContextType;
     
-    // Expand a string with $VAR, ${VAR} or %VAR% with the keys passed
-    // in the EnvMap.
-    std::string EnvExpand(const std::string & str, const EnvMap & map);
-    
-    // Check if a file exists
-    bool FileExists(const std::string & filename);
-    
-    // Get the file extension for the specified string.
-    // return "" if '.' is not in string.
-    std::string GetExtension(const std::string & str);
+    bool AddContextObjectToModule( PyObject* m );
 }
 OCIO_NAMESPACE_EXIT
 

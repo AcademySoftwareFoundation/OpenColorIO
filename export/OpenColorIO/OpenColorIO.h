@@ -644,10 +644,11 @@ OCIO_NAMESPACE_ENTER
         void setWorkingDir(const char * dirname);
         const char * getWorkingDir() const;
         
-        void loadEnvironmentVariables();
-        
         void setStringVar(const char * name, const char * value);
         const char * getStringVar(const char * name) const;
+        
+        // Seed all string vars with the current environment
+        void loadEnvironment();
         
         //! Do a file lookup.
         // Evaluate all variables, and walk the full search path (as needed).
