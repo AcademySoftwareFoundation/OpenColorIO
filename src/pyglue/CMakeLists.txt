@@ -56,6 +56,15 @@ if(PYTHON_OK)
     )
     target_link_libraries(PyOpenColorIO OpenColorIO)
 
+    if (SOVERSION)
+    message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")
+    set_target_properties(PyOpenColorIO PROPERTIES
+        VERSION ${OCIO_VERSION}
+        SOVERSION ${SOVERSION}
+    )
+    endif ()
+
+
     if(APPLE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
     endif()

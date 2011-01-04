@@ -29,6 +29,15 @@ target_link_libraries(OpenColorIO
 set_target_properties(OpenColorIO PROPERTIES
     COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
 
+if (SOVERSION)
+message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
+set_target_properties(OpenColorIO PROPERTIES
+    VERSION ${OCIO_VERSION}
+    SOVERSION ${SOVERSION}
+)
+endif ()
+
+
 install(TARGETS OpenColorIO DESTINATION
     ${CMAKE_INSTALL_PREFIX}/lib)
 

@@ -3,6 +3,15 @@ project(OpenColorIO)
 set(OCIO_VERSION_MAJOR 0)
 set(OCIO_VERSION_MINOR 7)
 set(OCIO_VERSION_PATCH 3)
+
+
+if (NOT SOVERSION)
+    set (SOVERSION ${OCIO_VERSION_MAJOR} CACHE STRING "Set the SO version in the SO name of the output library")
+endif ()
+if (NOT ${SOVERSION} STREQUAL ${OCIO_VERSION_MAJOR})
+    set (OCIO_VERSION_MAJOR ${SOVERSION})
+endif ()
+
 set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PATCH}")
 
 cmake_minimum_required(VERSION 2.8)
