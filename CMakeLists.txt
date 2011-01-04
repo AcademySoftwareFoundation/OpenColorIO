@@ -23,6 +23,9 @@ endif()
 ###############################################################################
 ### GLOBAL ###
 
+include(ParseArguments)
+include(OCIOMacros)
+
 enable_language(CXX)
 
 ENABLE_TESTING()
@@ -47,7 +50,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 if(CMAKE_FIRST_RUN)
     message(STATUS "Setting Build Type to: ${CMAKE_BUILD_TYPE}")
 endif()
-   
+
 # Set the default namespace
 if(NOT OCIO_NAMESPACE)
   set(OCIO_NAMESPACE OpenColorIO CACHE STRING
@@ -55,16 +58,23 @@ if(NOT OCIO_NAMESPACE)
       FORCE)
 endif(NOT OCIO_NAMESPACE)
 
-if(CMAKE_FIRST_RUN)
-    message(STATUS "Setting Namespace to: ${OCIO_NAMESPACE}")
-endif()
-
-
+OCIOFindPython()
 
 # Enable a bunch of compiler warnings...
 # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Weffc++ -Winline ")
+
+set(EXTDIST_ROOT ${CMAKE_BINARY_DIR}/ext/dist)
+set(EXTDIST_BINPATH ${EXTDIST_ROOT}/bin)
+set(EXTDIST_PYTHONPATH ${EXTDIST_ROOT}/lib/python${PYTHON_VERSION}/site-packages)
+set(PYTHONPATH ${EXTDIST_PYTHONPATH}:$ENV{PYTHONPATH})
+
+if(CMAKE_FIRST_RUN)
+    message(STATUS "Setting Namespace to: ${OCIO_NAMESPACE}")
+    message(STATUS "Setting EXTDIST_BINPATH: ${EXTDIST_BINPATH}")
+    message(STATUS "Setting EXTDIST_PYTHONPATH: ${EXTDIST_PYTHONPATH}")
+endif()
 
 ###############################################################################
 ### YAML ###
@@ -81,6 +91,11 @@ ExternalProject_Add(YAML_CPP_LOCAL
 set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
 set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
 set(YAML_CPP_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
+
+###############################################################################
+### Documentation ###
+
+add_subdirectory (docs)
 
 ###############################################################################
 ### BOOST ###

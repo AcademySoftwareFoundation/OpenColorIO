@@ -29,8 +29,6 @@ if(Boost_FOUND)
         ${YAML_CPP_STATIC_LIBRARIES}
         ${Boost_LIBRARIES})
     
-    install(TARGETS ocio_core_tests DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-    
     ###############################################################################
     ### CTEST ###
     

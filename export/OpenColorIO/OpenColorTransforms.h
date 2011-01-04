@@ -36,16 +36,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
 #endif
 
+/*!rst::
+C++ Transforms
+==============
+
+Typically only needed when creating and/or manipulating configurations
+*/
+
 OCIO_NAMESPACE_ENTER
 {
 
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // Transforms
-    //
-    // (Typically only needed when creating and/or manipulating configurations)
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    
+    //!cpp:class:: 
     class OCIOEXPORT Transform
     {
     public:
@@ -60,30 +63,38 @@ OCIO_NAMESPACE_ENTER
         Transform& operator= (const Transform &);
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Transform&);
     
     
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // Forward direction wraps the 'expanded' range into the specified,
-    // often compressed, range.
-    
+    //!cpp:class:: Forward direction wraps the 'expanded' range into the
+    // specified, often compressed, range.
     class OCIOEXPORT AllocationTransform : public Transform
     {
     public:
+        //!cpp:function::
         static AllocationTransformRcPtr Create();
         
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
+        //!cpp:function::
         virtual TransformDirection getDirection() const;
+        //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function::
         Allocation getAllocation() const;
+        //!cpp:function::
         void setAllocation(Allocation allocation);
         
+        //!cpp:function::
         int getNumVars() const;
+        //!cpp:function::
         void getVars(float * vars) const;
+        //!cpp:function::
         void setVars(int numvars, const float * vars);
     
     private:
@@ -102,69 +113,91 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const AllocationTransform&);
     
     
-    ///////////////////////////////////////////////////////////////////////////
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    // An implementation of the ASC CDL Transfer Functions and Interchange
-    // Syntax (Based on the version 1.2 document)
-    //
-    // Note: the clamping portion of the CDL is only applied if 
-    // a non-identity power is specified.
-    
+    //!cpp:class:: An implementation of the ASC CDL Transfer Functions and
+    // Interchange - Syntax (Based on the version 1.2 document)
+    // 
+    // .. note::
+    //    the clamping portion of the CDL is only applied if a non-identity
+    //    power is specified.
     class OCIOEXPORT CDLTransform : public Transform
     {
     public:
+        //!cpp:function::
         static CDLTransformRcPtr Create();
         
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
+        //!cpp:function::
         virtual TransformDirection getDirection() const;
+        //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function::
         bool equals(const ConstCDLTransformRcPtr & other) const;
         
+        //!cpp:function::
         const char * getXML() const;
+        //!cpp:function::
         void setXML(const char * xml);
         
-        // ASC_SOP
-        // Slope, offset, power
-        // out = clamp( (in * slope) + offset ) ^ power
-        //
+        //!rst:: **ASC_SOP**
+        // 
+        // Slope, offset, power::
+        //    
+        //    out = clamp( (in * slope) + offset ) ^ power
         
+        //!cpp:function::
         void setSlope(const float * rgb);
+        //!cpp:function::
         void getSlope(float * rgb) const;
         
+        //!cpp:function::
         void setOffset(const float * rgb);
+        //!cpp:function::
         void getOffset(float * rgb) const;
         
+        //!cpp:function::
         void setPower(const float * rgb);
+        //!cpp:function::
         void getPower(float * rgb) const;
         
+        //!cpp:function::
         void setSOP(const float * vec9);
+        //!cpp:function::
         void getSOP(float * vec9) const;
         
-        // ASC_SAT
+        //!rst:: **ASC_SAT**
         
+        //!cpp:function::
         void setSat(float sat);
+        //!cpp:function::
         float getSat() const;
         
-        // These are hard-coded, by spec, to r709
+        //!cpp:function:: These are hard-coded, by spec, to r709
         void getSatLumaCoefs(float * rgb) const;
         
-        // Metadata
+        //!rst:: **Metadata**
+        // 
         // These do not affect the image processing, but
         // are often useful for pipeline purposes and are
         // included in the serialization.
         
-        // Unique Identifier for this correction
+        //!cpp:function:: Unique Identifier for this correction
         void setID(const char * id);
+        //!cpp:function::
         const char * getID() const;
         
-        // Textual description of color correction
+        //!cpp:function:: Textual description of color correction
         // (stored on the SOP)
         void setDescription(const char * desc);
+        //!cpp:function::
         const char * getDescription() const;
     
     private:
@@ -183,28 +216,35 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const CDLTransform&);
     
     
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
+    //!cpp:class::
     class OCIOEXPORT ColorSpaceTransform : public Transform
     {
     public:
+        //!cpp:function::
         static ColorSpaceTransformRcPtr Create();
         
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
+        //!cpp:function::
         virtual TransformDirection getDirection() const;
+        //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function::
         const char * getSrc() const;
+        //!cpp:function::
         void setSrc(const char * src);
         
+        //!cpp:function::
         const char * getDst() const;
+        //!cpp:function::
         void setDst(const char * dst);
     
     private:
@@ -223,50 +263,55 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
     
     
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
-    
+    //!cpp:class::
     class OCIOEXPORT DisplayTransform : public Transform
     {
     public:
+        //!cpp:function::
         static DisplayTransformRcPtr Create();
         
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
+        //!cpp:function::
         virtual TransformDirection getDirection() const;
+        //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
-        
-        // Step 0. Specify the incoming color space
+        //!cpp:function:: Step 0. Specify the incoming color space
         void setInputColorSpaceName(const char * name);
+        //!cpp:function::
         const char * getInputColorSpaceName() const;
         
-        // Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR
+        //!cpp:function:: Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR
         void setLinearCC(const ConstTransformRcPtr & cc);
+        //!cpp:function::
         ConstTransformRcPtr getLinearCC() const;
         
-        // Step 2: Apply a color correction, in ROLE_COLOR_TIMING
+        //!cpp:function:: Step 2: Apply a color correction, in ROLE_COLOR_TIMING
         void setColorTimingCC(const ConstTransformRcPtr & cc);
+        //!cpp:function::
         ConstTransformRcPtr getColorTimingCC() const;
         
-        // Step 3: Apply the Channel Viewing Swizzle (mtx)
+        //!cpp:function:: Step 3: Apply the Channel Viewing Swizzle (mtx)
         void setChannelView(const ConstTransformRcPtr & transform);
+        //!cpp:function::
         ConstTransformRcPtr getChannelView() const;
         
-        // Step 4: Apply the output display transform
+        //!cpp:function:: Step 4: Apply the output display transform
         void setDisplayColorSpaceName(const char * name);
+        //!cpp:function::
         const char * getDisplayColorSpaceName() const;
         
-        // Step 5: Apply a post display transform color correction
+        //!cpp:function:: Step 5: Apply a post display transform color correction
         void setDisplayCC(const ConstTransformRcPtr & cc);
+        //!cpp:function::
         ConstTransformRcPtr getDisplayCC() const;
         
     private:
@@ -285,29 +330,33 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const DisplayTransform&);
     
     
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // Represents exponent transform: pow( clamp(color), value)
+    //!cpp:class:: Represents exponent transform: pow( clamp(color), value)
     // 
-    // If the exponent is 1.0, this will not clamp
-    // Otherwise, the input color will be clamped between [0.0, inf]
-    
+    // If the exponent is 1.0, this will not clamp. Otherwise, the input color
+    // will be clamped between [0.0, inf]
     class OCIOEXPORT ExponentTransform : public Transform
     {
     public:
+        //!cpp:function::
         static ExponentTransformRcPtr Create();
         
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
+        //!cpp:function::
         virtual TransformDirection getDirection() const;
+        //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function::
         void setValue(const float * vec4);
+        //!cpp:function::
         void getValue(float * vec4) const;
     
     private:
@@ -326,28 +375,35 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentTransform&);
     
     
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
+    //!cpp:class::
     class OCIOEXPORT FileTransform : public Transform
     {
     public:
+        //!cpp:function::
         static FileTransformRcPtr Create();
         
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
+        //!cpp:function::
         virtual TransformDirection getDirection() const;
+        //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function::
         const char * getSrc() const;
+        //!cpp:function::
         void setSrc(const char * src);
         
+        //!cpp:function::
         Interpolation getInterpolation() const;
+        //!cpp:function::
         void setInterpolation(Interpolation interp);
     
     private:
@@ -366,29 +422,39 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const FileTransform&);
     
     
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
+    //!cpp:class::
     class OCIOEXPORT GroupTransform : public Transform
     {
     public:
+        //!cpp:function::
         static GroupTransformRcPtr Create();
         
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
+        //!cpp:function::
         virtual TransformDirection getDirection() const;
+        //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function::
         ConstTransformRcPtr getTransform(int index) const;
+        //!cpp:function::
         TransformRcPtr getEditableTransform(int index);
         
+        //!cpp:function::
         int size() const;
+        //!cpp:function::
         void push_back(const ConstTransformRcPtr& transform);
+        //!cpp:function::
         void clear();
+        //!cpp:function::
         bool empty() const;
     
     private:
@@ -407,29 +473,34 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const GroupTransform&);
     
     
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // Represents log transform: log(color, base)
-    // The input will be clamped for negative numbers.
-    // Default base is 2.0
-    // Only the rgb channels are affected
-    
+    //!cpp:class:: Represents log transform: log(color, base)
+    // 
+    // * The input will be clamped for negative numbers.
+    // * Default base is 2.0
+    // * Only the rgb channels are affected
     class OCIOEXPORT LogTransform : public Transform
     {
     public:
+        //!cpp:function::
         static LogTransformRcPtr Create();
         
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
+        //!cpp:function::
         virtual TransformDirection getDirection() const;
+        //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function::
         void setBase(float val);
+        //!cpp:function::
         float getBase() const;
     
     private:
@@ -448,48 +519,60 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LogTransform&);
     
     
+    //!rst:: //////////////////////////////////////////////////////////////////
     
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // Represents an MX+B Matrix transform
-    
+    //!cpp:class:: Represents an MX+B Matrix transform
     class OCIOEXPORT MatrixTransform : public Transform
     {
     public:
+        //!cpp:function::
         static MatrixTransformRcPtr Create();
         
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
+        //!cpp:function::
         virtual TransformDirection getDirection() const;
+        //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function::
         bool equals(const MatrixTransform & other) const;
         
+        //!cpp:function::
         void setValue(const float * m44, const float * offset4);
+        //!cpp:function::
         void getValue(float * m44, float * offset4) const;
         
+        //!rst:: **Convenience functions**
+        //
+        // to get the mtx and offset corresponding to higher-level concepts
+        // 
+        // .. note::
+        //    These can throw an exception if for any component
+        //    ``oldmin == oldmax. (divide by 0)``
         
-        // Convenience functions to get the mtx and offset
-        // corresponding to higher-level concepts
-        
-        // This can throw an exception if for any component
-        // oldmin == oldmax. (divide by 0)
-        
+        //!cpp:function::
         static void Fit(float * m44, float * offset4,
                         const float * oldmin4, const float * oldmax4,
                         const float * newmin4, const float * newmax4);
         
+        //!cpp:function::
         static void Identity(float * m44, float * offset4);
         
+        //!cpp:function::
         static void Sat(float * m44, float * offset4,
                         float sat, const float * lumaCoef3);
         
+        //!cpp:function::
         static void Scale(float * m44, float * offset4,
                           const float * scale4);
         
+        //!cpp:function::
         static void View(float * m44, float * offset4,
                          int * channelHot4,
                          const float * lumaCoef3);
@@ -510,6 +593,7 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
+    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const MatrixTransform&);
     
 }

@@ -1,23 +1,23 @@
-Version 0.7.4 (Jan 4 2011):
+**Version 0.7.4 (Jan 4 2011):**
     * Added 'Context', allowing for 'per-shot' Transforms
     * Misc API Cleanup: removed old functions + fixed const-ness
     * Added config.sanityCheck() for validation
     * Additional Makefile configuration options, SONAME, etc.
 
-Version 0.7.3 (Dec 16 2010):
+**Version 0.7.3 (Dec 16 2010):**
     * Added example applications: ociodisplay, ocioconvert
     * Makefile: Add boost header dependency
     * Makefile: Nuke plugins are now version specific
     * Fixed bug in GLSL MatrixOp
 
-Version 0.7.2 (Dec 9 2010):
+**Version 0.7.2 (Dec 9 2010):**
     * GPUAllocation refactor (API tweak)
     * Added AllocationTransform
     * Added LogTransform
     * Removed CineonLogToLinTransform
     * A few bug fixes
 
-Version 0.7.1 (Nov 15 2010):
+**Version 0.7.1 (Nov 15 2010):**
     * Additional 3d lut formats: Truelight .cub + Iridas .cube
     * FileTransform supports envvars and search paths
     * Added Nuke plugins: LogConvert + FileTransform
@@ -25,16 +25,12 @@ Version 0.7.1 (Nov 15 2010):
     * GCC visibility used (when available) to hide private symbols
     * A few bug fixes
 
-Version 0.7.0 (Oct 21 2010):
+**Version 0.7.0 (Oct 21 2010):**
     * Switched file format from XML to Yaml
-
 
 -------------------------------------------------------------------------------
 
-
-
-
-Version 0.6.1 (Oct 5 2010):
+**Version 0.6.1 (Oct 5 2010):**
     * Exposed ExponentTransform
     * Added CineonLogToLinTransform - a simple 'straight-line' negative
       linearization. Not strictly needed (could be done previously
@@ -44,7 +40,7 @@ Version 0.6.1 (Oct 5 2010):
     * A few bug fixes
     * A few Makefile enhancements
 
-Version 0.6.0 (Sept 21 2010):
+**Version 0.6.0 (Sept 21 2010):**
     * Start of 0.6, "stable" branch
       
       All 0.6.x builds will be ABI compatible (forward only).
@@ -58,31 +54,27 @@ Version 0.6.0 (Sept 21 2010):
     * Refactored internal unit testing
     * Fixed many compile warnings
 
-
 -------------------------------------------------------------------------------
 
-
-
-
-Version 0.5.16 (Sept 16 2010):
+**Version 0.5.16 (Sept 16 2010):**
     * PyTransforms now use native python class inheritance
     * OCIO namespace can now be configured at build time (for distribution in commercial apps)
     * Updated make install behavior
     * DisplayTransform accepts generic cc operators (instead of CDL only)
     * A few bug fixes / compile warning fixes
 
-Version 0.5.15 (Sept 8 2010):
+**Version 0.5.15 (Sept 8 2010):**
     * OCIO is well behaved when $OCIO is unset, allowing un-color-managed use.
     * Color Transforms can be applied in python config->getProcessor
     * Simplification of API (getColorSpace allows cs name, role names, and cs objects)
     * Makefile enhancements (courtesy Malcolm Humphreys)
     * A bunch of bug fixes
 
-Version 0.5.14 (Sept 1 2010):
+**Version 0.5.14 (Sept 1 2010):**
     * Python binding enhancements
     * Simplified class implmentations (reduced internal header count)
 
-Version 0.5.13 (Aug 24 2010):
+**Version 0.5.13 (Aug 24 2010):**
     * GPU Processing now supports High Dynamic Range color spaces
     * Added log processing operator
     * Numerous bug fixes
@@ -91,28 +83,28 @@ Version 0.5.13 (Aug 24 2010):
     * Matrix op is optimized for diagonal-only subcases
     * Numerous changes to Nuke Plugin (now with an addition node, OCIODisplay)
 
-Version 0.5.12 (Aug 18 2010):
+**Version 0.5.12 (Aug 18 2010):**
     * Additional DisplayTransform improvements
     * Additional GPU Improvements
     * Added op hashing (processor->getGPULut3DCacheID)
 
-Version 0.5.11 (Aug 11 2010):
+**Version 0.5.11 (Aug 11 2010):**
     * Initial DisplayTransform implementation
     * ASC CDL Support
     * Config Luma coefficients
 
-Version 0.5.10 (July 22 2010):
+**Version 0.5.10 (July 22 2010):**
     * Updated Nuke Plugin, now works in OSX
     * Fixed misc. build warnings.
     * Continued GPU progress (still under development)
 
-Version 0.5.9 (June 28 2010):
+**Version 0.5.9 (June 28 2010):**
     * Renamed project, classes, namespaces to OpenColorIO (OCIO)
     * Added single-pixel processor path
     * Improved python path makefile detection
     * Continued GPU progress (still under development)
 
-Version 0.5.8 (June 22 2010):
+**Version 0.5.8 (June 22 2010):**
     * Support for .3dl
     * Support for matrix ops
     * Code refactor (added Processors) to support gpu/cpu model
@@ -120,21 +112,21 @@ Version 0.5.8 (June 22 2010):
     * Compilation support for python 2.5
     * Compilation support for OSX
 
-Version 0.5.7 (June 14 2010):
+**Version 0.5.7 (June 14 2010):**
     * Python API is much more fleshed out
     * Improved public C++ header
 
-Version 0.5.6 (June 8 2010):
+**Version 0.5.6 (June 8 2010):**
     * PyConfig stub implementation
     * Dropped ImageDesc.init; added PlanarImageDesc / PackedImageDesc
     * Dropped tr1::shared_ptr; added boost::shared_ptr
 
-Version 0.5.5 (June 4 2010):
+**Version 0.5.5 (June 4 2010):**
     * .ocio supports path references
     * Switch config envvar to $OCIO
     * Added 3D lut processing ops
 
-Version 0.5.4 (June 1 2010):
+**Version 0.5.4 (June 1 2010):**
     * Initial Release
     * CMake linux support 
     * XML OCIO format parsing / saving 

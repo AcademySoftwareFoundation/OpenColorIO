@@ -1,0 +1,100 @@
+# -*- coding: utf-8 -*-
+
+# See:
+# http://sphinx.pocoo.org/config.html
+
+import sys, os
+
+# -- General configuration -----------------------------------------------------
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.ifconfig']
+templates_path = ['templates']
+source_suffix = '.rst'
+master_doc = 'index'
+project = u'OpenColorIO'
+copyright = u'2010, Sony Pictures Imageworks'
+# The short X.Y version.
+version = '@OCIO_VERSION_MAJOR@.@OCIO_VERSION_MINOR@'
+# The full version, including alpha/beta/rc tags.
+release = '@OCIO_VERSION@'
+exclude_patterns = ['build', '*-prefix']
+#add_function_parentheses = True
+#add_module_names = True
+# The name of the Pygments (syntax highlighting) style to use.
+pygments_style = 'sphinx'
+#modindex_common_prefix = []
+
+rst_prolog = """
+.. |OCIO| replace:: *OCIO*
+.. |OpenColorIO| replace:: **OpenColorIO**
+.. _Sony Imageworks: http://www.imageworks.com/
+.. |Sony Imageworks| replace:: `Sony Imageworks`_
+.. _Jeremy Selan: mailto:jeremy.selan@gmail.com
+.. |Jeremy Selan| replace:: `Jeremy Selan`_
+"""
+
+# -- Options for HTML output ---------------------------------------------------
+html_theme = 'haiku'
+#html_theme_options = {}
+#html_theme_path = []
+#html_title = None
+#html_short_title = None
+#html_logo = None
+#html_favicon = None
+html_static_path = []
+#html_last_updated_fmt = '%b %d, %Y'
+#html_use_smartypants = True
+#html_sidebars = {}
+#html_additional_pages = {}
+#html_domain_indices = True
+#html_use_index = True
+#html_split_index = False
+#html_show_sourcelink = True
+#html_show_sphinx = True
+#html_show_copyright = True
+#html_use_opensearch = ''
+#html_file_suffix = None
+htmlhelp_basename = 'OpenColorIOdoc'
+
+# -- Options for LaTeX output --------------------------------------------------
+#latex_paper_size = 'letter'
+#latex_font_size = '10pt'
+latex_documents = [
+  ('index', 'OpenColorIO.tex', u'OpenColorIO Documentation',
+   u'Sony Pictures Imageworks', 'manual'),
+]
+#latex_logo = None
+#latex_use_parts = False
+#latex_show_pagerefs = False
+#latex_show_urls = False
+#latex_preamble = ''
+#latex_appendices = []
+latex_domain_indices = True
+
+# -- Options for manual page output --------------------------------------------
+man_pages = [
+    ('index', 'opencolorio', u'OpenColorIO Documentation',
+    [u'Sony Pictures Imageworks'], 1)
+]
+
+# -- Options for Texinfo output ------------------------------------------------
+texinfo_documents = [
+  ('index', 'OpenColorIO', u'OpenColorIO Documentation', u'Sony Pictures Imageworks',
+   'OpenColorIO', 'One line description of project.', 'Miscellaneous'),
+]
+texinfo_appendices = []
+
+# -- Options for Epub output ---------------------------------------------------
+epub_title = u'OpenColorIO'
+epub_author = u'Sony Pictures Imageworks'
+epub_publisher = u'Sony Pictures Imageworks'
+epub_copyright = u'2010, Sony Pictures Imageworks'
+#epub_language = ''
+#epub_scheme = ''
+#epub_identifier = ''
+#epub_uid = ''
+#epub_cover = ()
+#epub_pre_files = []
+#epub_post_files = []
+#epub_exclude_files = []
+#epub_tocdepth = 3
+#epub_tocdup = True

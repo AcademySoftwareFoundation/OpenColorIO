@@ -47,24 +47,41 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
 #endif
 
+/*!rst::
+C++ Types
+=========
+*/
+
 OCIO_NAMESPACE_ENTER
 {
     // Predeclare all class ptr definitions
     
+    //!rst::
+    // Core
+    // ****
+    
     class OCIOEXPORT Config;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const Config> ConstConfigRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<Config> ConfigRcPtr;
     
     class OCIOEXPORT ColorSpace;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const ColorSpace> ConstColorSpaceRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<ColorSpace> ColorSpaceRcPtr;
     
     class OCIOEXPORT Context;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const Context> ConstContextRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<Context> ContextRcPtr;
     
     class OCIOEXPORT Processor;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const Processor> ConstProcessorRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<Processor> ProcessorRcPtr;
     
     class OCIOEXPORT ImageDesc;
@@ -72,46 +89,68 @@ OCIO_NAMESPACE_ENTER
     class OCIOEXPORT Exception;
     
     
-    
+    //!rst::
+    // Transforms
+    // **********
     
     class OCIOEXPORT Transform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const Transform> ConstTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<Transform> TransformRcPtr;
     
     class OCIOEXPORT AllocationTransform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const AllocationTransform> ConstAllocationTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<AllocationTransform> AllocationTransformRcPtr;
     
     class OCIOEXPORT CDLTransform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const CDLTransform> ConstCDLTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
     
     class OCIOEXPORT ColorSpaceTransform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<ColorSpaceTransform> ColorSpaceTransformRcPtr;
     
     class OCIOEXPORT DisplayTransform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const DisplayTransform> ConstDisplayTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<DisplayTransform> DisplayTransformRcPtr;
     
     class OCIOEXPORT ExponentTransform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const ExponentTransform> ConstExponentTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<ExponentTransform> ExponentTransformRcPtr;
     
     class OCIOEXPORT FileTransform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
     
     class OCIOEXPORT GroupTransform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<GroupTransform> GroupTransformRcPtr;
     
     class OCIOEXPORT LogTransform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const LogTransform> ConstLogTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<LogTransform> LogTransformRcPtr;
     
     class OCIOEXPORT MatrixTransform;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<const MatrixTransform> ConstMatrixTransformRcPtr;
+    //!cpp:type::
     typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
     
     template <class T, class U>
@@ -120,10 +159,12 @@ OCIO_NAMESPACE_ENTER
         return OCIO_DYNAMIC_POINTER_CAST<T,U>(ptr);
     }
     
-    ///////////////////////////////////////////////////////////////////////////
     
+    //!rst::
+    // Enums
+    // *****
     
-    
+    //!cpp:type::
     enum ColorSpaceDirection
     {
         COLORSPACE_DIR_UNKNOWN = 0,
@@ -131,6 +172,7 @@ OCIO_NAMESPACE_ENTER
         COLORSPACE_DIR_FROM_REFERENCE
     };
     
+    //!cpp:type::
     enum TransformDirection
     {
         TRANSFORM_DIR_UNKNOWN = 0,
@@ -138,6 +180,7 @@ OCIO_NAMESPACE_ENTER
         TRANSFORM_DIR_INVERSE
     };
     
+    //!cpp:type::
     enum Interpolation
     {
         INTERP_UNKNOWN = 0,
@@ -145,6 +188,7 @@ OCIO_NAMESPACE_ENTER
         INTERP_LINEAR   //! linear interpolation in all dimensions
     };
     
+    //!cpp:type::
     enum BitDepth {
         BIT_DEPTH_UNKNOWN = 0,
         BIT_DEPTH_UINT8,
@@ -157,76 +201,124 @@ OCIO_NAMESPACE_ENTER
         BIT_DEPTH_F32
     };
     
+    //!cpp:type::
     enum Allocation {
         ALLOCATION_UNKNOWN = 0,
         ALLOCATION_UNIFORM,
         ALLOCATION_LG2
     };
     
-    //! Used when there is a choice of hardware shader language.
-    
+    //!cpp:type:: Used when there is a choice of hardware shader language.
     enum GpuLanguage
     {
         GPU_LANGUAGE_UNKNOWN = 0,
-        GPU_LANGUAGE_CG,  ///< Nvidia Cg shader
+        GPU_LANGUAGE_CG,           ///< Nvidia Cg shader
         GPU_LANGUAGE_GLSL_1_0,     ///< OpenGL Shading Language
         GPU_LANGUAGE_GLSL_1_3,     ///< OpenGL Shading Language
     };
     
     
+    //!rst::
+    // Conversion
+    // **********
     
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
+    //!cpp:function::
     extern OCIOEXPORT const char * BoolToString(bool val);
+    //!cpp:function::
     extern OCIOEXPORT bool BoolFromString(const char * s);
     
+    //!cpp:function::
     extern OCIOEXPORT const char * TransformDirectionToString(TransformDirection dir);
+    //!cpp:function::
     extern OCIOEXPORT TransformDirection TransformDirectionFromString(const char * s);
     
+    //!cpp:function::
     extern OCIOEXPORT TransformDirection GetInverseTransformDirection(TransformDirection dir);
+    //!cpp:function::
     extern OCIOEXPORT TransformDirection CombineTransformDirections(TransformDirection d1,
-                                                                         TransformDirection d2);
+                                                                    TransformDirection d2);
     
+    //!cpp:function::
     extern OCIOEXPORT const char * ColorSpaceDirectionToString(ColorSpaceDirection dir);
+    //!cpp:function::
     extern OCIOEXPORT ColorSpaceDirection ColorSpaceDirectionFromString(const char * s);
     
+    //!cpp:function::
     extern OCIOEXPORT const char * BitDepthToString(BitDepth bitDepth);
+    //!cpp:function::
     extern OCIOEXPORT BitDepth BitDepthFromString(const char * s);
+    //!cpp:function::
     extern OCIOEXPORT bool BitDepthIsFloat(BitDepth bitDepth);
+    //!cpp:function::
     extern OCIOEXPORT int BitDepthToInt(BitDepth bitDepth);
     
+    //!cpp:function::
     extern OCIOEXPORT const char * AllocationToString(Allocation allocation);
+    //!cpp:function::
     extern OCIOEXPORT Allocation AllocationFromString(const char * s);
     
+    //!cpp:function::
     extern OCIOEXPORT const char * InterpolationToString(Interpolation interp);
+    //!cpp:function::
     extern OCIOEXPORT Interpolation InterpolationFromString(const char * s);
     
     
-    ///////////////////////////////////////////////////////////////////////////
+    /*!rst::
+    Roles
+    *****
     
-    /*!
     ColorSpace Roles are used so that plugins, in addition to this API can have
     abstract ways of asking for common colorspaces, without referring to them
     by hardcoded names.
     
-    Internal:
-        GetGPUDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
-                        (ROLE_COLOR_TIMING (ASCColorCorrection))
+    Internal::
+       
+       GetGPUDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
+                                (ROLE_COLOR_TIMING (ASCColorCorrection))
     
-    External Plugins (currently known):
-        Colorpicker UIs - (ROLE_COLOR_PICKING)
-        Compositor LogConvert (ROLE_SCENE_LINEAR, ROLE_COMPOSITING_LOG)
+    External Plugins (currently known)::
+       
+       Colorpicker UIs       - (ROLE_COLOR_PICKING)
+       Compositor LogConvert - (ROLE_SCENE_LINEAR, ROLE_COMPOSITING_LOG)
     
     */
     
+    //!rst::
+    // .. c:var:: const char* ROLE_DEFAULT
+    //    
+    //    "default"
     extern OCIOEXPORT const char * ROLE_DEFAULT;
+    //!rst::
+    // .. c:var:: const char* ROLE_REFERENCE
+    //    
+    //    "reference"
     extern OCIOEXPORT const char * ROLE_REFERENCE;
+    //!rst::
+    // .. c:var:: const char* ROLE_DATA
+    //    
+    //    "data"
     extern OCIOEXPORT const char * ROLE_DATA;
+    //!rst::
+    // .. c:var:: const char* ROLE_COLOR_PICKING
+    //    
+    //    "color_picking"
     extern OCIOEXPORT const char * ROLE_COLOR_PICKING;
+    //!rst::
+    // .. c:var:: const char* ROLE_SCENE_LINEAR
+    //    
+    //    "scene_linear"
     extern OCIOEXPORT const char * ROLE_SCENE_LINEAR;
+    //!rst::
+    // .. c:var:: const char* ROLE_COMPOSITING_LOG
+    //    
+    //    "compositing_log"
     extern OCIOEXPORT const char * ROLE_COMPOSITING_LOG;
+    //!rst::
+    // .. c:var:: const char* ROLE_COLOR_TIMING
+    //    
+    //    "color_timing"
     extern OCIOEXPORT const char * ROLE_COLOR_TIMING;
+    
 }
 OCIO_NAMESPACE_EXIT
 

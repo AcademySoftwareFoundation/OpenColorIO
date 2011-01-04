@@ -1,6 +1,10 @@
-Welcome!
+|OpenColorIO| (|OCIO|) is a new open source project from |Sony Imageworks|.
 
-OpenColorIO (OCIO) is a new open source project from Sony Imageworks.  Based on development started in 2003, OCIO enables color transforms and image display to be handled in a consistent manner across multiple graphics applications. Unlike other color management solutions, OCIO is geared towards motion-picture post production, with an emphasis on visual effects and animation color pipelines.
+http://opencolorio.org
 
-Main Page: http://opencolorio.org
-Development Mailing-List: http://groups.google.com/group/ocio-dev
+Based on development started in 2003, |OCIO| enables color transforms and image
+display to be handled in a consistent manner across multiple graphics
+applications. Unlike other color management solutions, |OCIO| is geared towards
+motion-picture post production, with an emphasis on visual effects and animation
+color pipelines.
+
