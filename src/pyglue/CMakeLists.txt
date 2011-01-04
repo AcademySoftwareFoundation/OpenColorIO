@@ -15,6 +15,7 @@ execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sys
 )
 set(PYTHON_OK NO)
 
+
 if(${PYTHON_RETURNVALUE} EQUAL 0)
     execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_version()"
         OUTPUT_VARIABLE PYTHON_VERSION
@@ -30,6 +31,17 @@ elseif(${PYTHON_RETURNVALUE} GREATER 0)
     set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine header location.")
 else()
     set(PYTHON_ERR "${PYTHON}: ${PYTHON_RETURNVALUE}.")
+endif()
+
+# Set the default built type
+if(NOT PYTHON_INCLUDE_LIB_PREFIX)
+  set(PYTHON_INCLUDE_LIB_PREFIX NO CACHE BOOL
+      "Specify whether the python library should be prefixed with 'lib'."
+      FORCE)
+endif(NOT PYTHON_INCLUDE_LIB_PREFIX)
+
+if(CMAKE_FIRST_RUN)
+    message(STATUS "Python library to include 'lib' prefix: ${PYTHON_INCLUDE_LIB_PREFIX}")
 endif()
 
 if(PYTHON_OK)
@@ -50,10 +62,14 @@ if(PYTHON_OK)
         ${CMAKE_BINARY_DIR}/export/
         ${Boost_INCLUDE_DIR}
     )
+    
     # Exclude the 'lib' prefix from the name.
-    set_property(TARGET PyOpenColorIO
-        PROPERTY PREFIX ""
-    )
+    if(NOT PYTHON_INCLUDE_LIB_PREFIX)
+        set_property(TARGET PyOpenColorIO
+            PROPERTY PREFIX ""
+        )
+    endif()
+    
     target_link_libraries(PyOpenColorIO OpenColorIO)
 
     if (SOVERSION)
