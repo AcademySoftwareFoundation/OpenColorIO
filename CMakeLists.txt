@@ -95,7 +95,7 @@ set(YAML_CPP_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
 ###############################################################################
 ### Documentation ###
 
-add_subdirectory (docs)
+# add_subdirectory (docs)
 
 ###############################################################################
 ### BOOST ###
