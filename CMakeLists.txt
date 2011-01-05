@@ -4,6 +4,9 @@ set(OCIO_VERSION_MAJOR 0)
 set(OCIO_VERSION_MINOR 7)
 set(OCIO_VERSION_PATCH 4)
 
+# This does not include the SOVERSION override, on purpose, so that the
+# OCIO_VERSION value will be an accurate reflection of the underlying library version.
+set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PATCH}")
 
 if (NOT SOVERSION)
     set (SOVERSION ${OCIO_VERSION_MAJOR} CACHE STRING "Set the SO version in the SO name of the output library")
@@ -12,7 +15,6 @@ if (NOT ${SOVERSION} STREQUAL ${OCIO_VERSION_MAJOR})
     set (OCIO_VERSION_MAJOR ${SOVERSION})
 endif ()
 
-set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PATCH}")
 
 cmake_minimum_required(VERSION 2.8)
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake )
