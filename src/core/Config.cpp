@@ -1127,9 +1127,9 @@ OCIO_NAMESPACE_ENTER
         catch( const std::exception & e)
         {
             std::ostringstream os;
-            os << "Error: OCIO profile '";
-            if(filename) os << ", " << filename << "', ";
-            os << "load failed: " << e.what();
+            os << "Error: Loading the OCIO profile ";
+            if(filename) os << "'" << filename << "' ";
+            os << "failed. " << e.what();
             throw Exception(os.str().c_str());
         }
     }
