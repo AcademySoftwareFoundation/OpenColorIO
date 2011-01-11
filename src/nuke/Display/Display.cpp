@@ -1,6 +1,9 @@
 #include "Display.h"
 
-namespace OCIO = OCIO_NAMESPACE;
+#include <algorithm>
+#include <string>
+#include <sstream>
+#include <stdexcept>
 
 #include <DDImage/PixelIop.h>
 #include <DDImage/NukeWrapper.h>
@@ -8,11 +11,8 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <DDImage/Knobs.h>
 #include <DDImage/Enumeration_KnobI.h>
 
-#include <string>
-#include <sstream>
-#include <stdexcept>
-
-
+#include <OpenColorIO/OpenColorIO.h>
+namespace OCIO = OCIO_NAMESPACE;
 
 Display::Display(Node *n) : DD::Image::PixelIop(n)
 {
@@ -21,7 +21,8 @@ Display::Display(Node *n) : DD::Image::PixelIop(n)
     colorSpaceIndex = displayDeviceIndex = displayTransformIndex = 0;
     displayDeviceKnob = displayTransformKnob = NULL;
     exposure = 0.0;
-
+    display_gamma = 1.0;
+    
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
@@ -102,7 +103,10 @@ void Display::knobs(DD::Image::Knob_Callback f)
     DD::Image::Tooltip(f, "Display transform for output.");
 
     DD::Image::Double_knob(f, &exposure, DD::Image::IRange(-4, 4), "exposure", "exposure");
-    DD::Image::Tooltip(f, "Adjust the exposure, in f-stops, of the output image.");
+    DD::Image::Tooltip(f, "Adjust the exposure, in f-stops, of the image in scene-linear.");
+
+    DD::Image::Double_knob(f, &display_gamma, DD::Image::IRange(0.0, 4.0), "display_gamma", "display gamma");
+    DD::Image::Tooltip(f, "Gamma correction, applied after the display transform.");
 
     DD::Image::Divider(f);
 
@@ -143,16 +147,26 @@ void Display::_validate(bool for_real)
 
         transformPtr->setInputColorSpaceName(csSrcName);
         transformPtr->setDisplayColorSpaceName(csDstName);
-
-        float e = static_cast<float>(exposure);
-        float gain = powf(2.0f,e);
-        const float slope3f[] = { gain, gain, gain };
         
-        OCIO::CDLTransformRcPtr cc =  OCIO::CDLTransform::Create();
-        cc->setSlope(slope3f);
+        // Specify an (optional) linear color correction
+        {
+            float e = static_cast<float>(exposure);
+            float gain = powf(2.0f,e);
+            const float slope3f[] = { gain, gain, gain };
+            OCIO::CDLTransformRcPtr cc =  OCIO::CDLTransform::Create();
+            cc->setSlope(slope3f);
+            transformPtr->setLinearCC(cc);
+        }
         
-        transformPtr->setLinearCC(cc);
-
+        // Specify an (optional) post-display transform.
+        {
+            float exponent = 1.0f/std::max(1e-6f, static_cast<float>(display_gamma));
+            const float exponent4f[] = { exponent, exponent, exponent, exponent };
+            OCIO::ExponentTransformRcPtr cc =  OCIO::ExponentTransform::Create();
+            cc->setValue(exponent4f);
+            transformPtr->setDisplayCC(cc);
+        }
+        
         processorPtr = config->getProcessor(transformPtr, OCIO::TRANSFORM_DIR_FORWARD);
     }
     catch(OCIO::Exception &e)

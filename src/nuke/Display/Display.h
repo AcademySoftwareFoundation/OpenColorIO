@@ -28,6 +28,7 @@ class Display : public DD::Image::PixelIop {
         std::vector<const char*> colorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
         std::vector<const char*> displayDeviceCstrNames, displayTransformCstrNames;
         double exposure;
+        double display_gamma;
         
         OCIO::DisplayTransformRcPtr transformPtr;
         OCIO::ConstProcessorRcPtr processorPtr;
