@@ -11,23 +11,20 @@ MACRO(OCIOFindPython)
         message(STATUS "Setting python bin to: ${PYTHON}")
     endif()
     
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_inc()"
-        OUTPUT_VARIABLE PYTHON_INCLUDE
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print ':'.join(set(sysconfig.get_config_var('INCLDIRSTOMAKE').split()))"
+        OUTPUT_VARIABLE PYTHON_INCLUDE_RAW
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     set(PYTHON_OK NO)
     
     if(${PYTHON_RETURNVALUE} EQUAL 0)
+        file(TO_CMAKE_PATH "${PYTHON_INCLUDE_RAW}" PYTHON_INCLUDE)
         execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_version()"
             OUTPUT_VARIABLE PYTHON_VERSION
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
-        if(EXISTS "${PYTHON_INCLUDE}/Python.h")
-            set(PYTHON_OK YES)
-        else()
-            set(PYTHON_ERR "${PYTHON_HEADER} not found in ${PYTHON_INCLUDE}.")
-        endif()
+        set(PYTHON_OK YES)
     elseif(${PYTHON_RETURNVALUE} GREATER 0)
         set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine header location.")
     else()
