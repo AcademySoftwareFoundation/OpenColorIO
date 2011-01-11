@@ -138,7 +138,6 @@ add_subdirectory (src/testbed)
 ###############################################################################
 ### NUKE ###
 
-SET( Nuke_INSTALL_PATH "/net/apps/rhel40m64/foundry/nuke6.0.5/include" )
 find_package( Nuke )
 if( NUKE_FOUND )
     if(CMAKE_FIRST_RUN)
@@ -147,7 +146,7 @@ if( NUKE_FOUND )
     add_subdirectory (src/nuke)
 else()
     if(CMAKE_FIRST_RUN)
-        message(STATUS "    try setting NDK_PATH environment variable, if you want to build the nuke plugins")
+        message(STATUS "    if you want to build the Nuke plugins, add the flag -D Nuke_INSTALL_PATH=... or set the NDK_PATH environment variable")
     endif()
 endif()
 
