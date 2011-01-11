@@ -1,34 +1,25 @@
-
 import nuke
 
 EBANNER = "OCIO Error: "
 
-try:
-    import PyOpenColorIO as OCIO
-except Exception, e:
-    print '%s%s' % (EBANNER, 'Loading OCIO python module')
-    print e
 
-try:
-    nuke.load('OCIOColorSpace')
-except Exception, e:
-    print '%s%s' % (EBANNER, 'Loading OCIOColorSpace')
-    print e
+def load_ocio_plugins():
+    """Loads the PyOpenColorIO module and the OCIO-prefixed nodes
+    """
 
-try:
-    nuke.load('OCIODisplay')
-except Exception, e:
-    print '%s%s' % (EBANNER, 'Loading OCIODisplay')
-    print e
+    try:
+        import PyOpenColorIO as OCIO
+    except Exception, e:
+        print '%s%s\n%s' % (EBANNER, 'Loading OCIO python module', e)
 
-try:
-    nuke.load('OCIOFileTransform')
-except Exception, e:
-    print '%s%s' % (EBANNER, 'loading OCIOFileTransform')
-    print e
+    allplugs = nuke.plugins(nuke.ALL | nuke.NODIR, "OCIO*.so", "OCIO*.dylib", "OCIO*.dll")
 
-try:
-    nuke.load('OCIOLogConvert')
-except Exception, e:
-    print '%s%s' % (EBANNER, 'loading OCIOLogConvert')
-    print e
+    for p in allplugs:
+        try:
+            nuke.load(p)
+        except Exception, e:
+            print '%sLoading OCIO node %s\n%s' % (EBANNER, p, e)
+
+
+if __name__ == "__main__":
+    load_ocio_plugins()
