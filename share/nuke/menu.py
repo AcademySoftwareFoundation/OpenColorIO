@@ -49,6 +49,8 @@ def ocio_populate_viewer(remove_nuke_default = True):
                 kwargs = {"device": dname, "transform": xform})
 
 
+    # Get the default display and transform, register it as the
+    # default used on Nuke startup
     defaultDisplay = cfg.getDefaultDisplayDeviceName()
     defaultXform = cfg.getDefaultDisplayTransformName(defaultDisplay)
     

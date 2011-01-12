@@ -128,6 +128,24 @@ C++
    OCIO::PackedImageDesc img(imageData, w, h, 4);
    processor->apply(img);
 
+Python
+------
+
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+
+    config = OCIO.GetCurrentConfig()
+
+    device = config.getDefaultDisplayDeviceName()
+    transformName = config.getDefaultDisplayTransformName(device)
+    displayColorSpace = config.getDisplayColorSpaceName(device, transformName)
+
+    processor = config.getProcessor(OCIO.Constants.ROLE_SCENE_LINEAR, displayColorSpace)
+
+    processor.applyRGB(imageData)
+
+
 Displaying an image, using the CPU (Full Display Pipeline)
 **********************************************************
 
@@ -218,6 +236,60 @@ C++
    
    OCIO::PackedImageDesc img(imageData, w, h, 4);
    processor->apply(img);
+
+Python
+------
+
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+
+    # Step 1: Get the config
+    config = OCIO.GetCurrentConfig()
+
+    # Step 2: Lookup the display ColorSpace
+    device = config.getDefaultDisplayDeviceName()
+    transformName = config.getDefaultDisplayTransformName(device)
+    displayColorSpace = config.getDisplayColorSpaceName(device, transformName)
+
+    # Step 3: Create a DisplayTransform, and set the input and display ColorSpaces
+    # (This example assumes the input is scene linear. Adapt as needed.)
+
+    transform = OCIO.DisplayTransform()
+    transform.setInputColorSpaceName(OCIO.Constants.ROLE_SCENE_LINEAR)
+    transform.setDisplayColorSpaceName(displayColorSpace)
+
+    # Step 4: Add custom transforms for a 'canonical' Display Pipeline
+
+    # Add an fstop exposure control (in SCENE_LINEAR)
+    gain = 2**exposure
+    slope3f = (gain, gain, gain)
+
+    cc = OCIO.CDLTransform()
+    cc.setSlope(slope3f)
+
+    transform.setLinearCC(cc)
+
+    # Add a Channel view 'swizzle'
+
+    channelHot = (1, 1, 1, 1) # show rgb
+    # channelHot = (1, 0, 0, 0) # show red
+    # channelHot = (0, 0, 0, 1) # show alpha
+    # channelHot = (1, 1, 1, 0) # show luma
+
+    lumacoef = config.getDefaultLumaCoefs()
+
+    m44, offset = OCIO.MatrixTransform.View(channelHot, lumacoef)
+
+    swizzle = OCIO.MatrixTransform()
+    swizzle.setValue(m44, offset)
+    transform.setChannelView(swizzle)
+
+    # And then process the image normally.
+    processor = config.getProcessor(transform)
+
+    print processor.applyRGB(imageData)
+
 
 Displaying an image, using the GPU
 **********************************

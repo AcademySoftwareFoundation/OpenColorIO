@@ -7,7 +7,7 @@ FAQ
 New BSD.
 
 You are welcome to include the OpenColorIO in commercial, or open source
-applications. See the license for further details.
+applications. See the :doc:`License` for further details.
 
 **What LUT Formats are supported?**
 -------------------------------------------------------------------------------
