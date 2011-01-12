@@ -74,14 +74,20 @@ OCIO_NAMESPACE_ENTER
             if(lang == GPU_LANGUAGE_CG)
             {
                 shader << "half4 " << fcnName << "(in half4 inPixel," << "\n";
+                shader << "    const uniform sampler3D " << lut3dName << ") \n";
             }
-            else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
+            else if(lang == GPU_LANGUAGE_GLSL_1_0)
+            {
+                shader << "vec4 " << fcnName << "(vec4 inPixel, \n";
+                shader << "    sampler3D " << lut3dName << ") \n";
+            }
+            else if(lang == GPU_LANGUAGE_GLSL_1_3)
             {
                 shader << "vec4 " << fcnName << "(in vec4 inPixel, \n";
+                shader << "    const uniform sampler3D " << lut3dName << ") \n";
             }
             else throw Exception("Unsupported shader language.");
             
-            shader << "    const uniform sampler3D " << lut3dName << ") \n";
             shader << "{" << "\n";
             
             if(lang == GPU_LANGUAGE_CG)
@@ -372,7 +378,17 @@ OCIO_NAMESPACE_ENTER
                                   lut3dName, lut3DEdgeLen,
                                   shaderDesc.getLanguage());
         }
-        
+#ifdef __APPLE__
+        else
+        {
+            // Force a no-op sampling of the 3d lut on OSX to work around a segfault.
+            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
+            shader << "// OSX segfault work-around: Force a no-op sampling of the 3d lut.\n";
+            Write_sampleLut3D_rgb(&shader, pixelName,
+                                  lut3dName, lut3DEdgeLen,
+                                  shaderDesc.getLanguage());
+        }
+#endif // __APPLE__
         for(unsigned int i=0; i<m_gpuOpsHwPostProcess.size(); ++i)
         {
             m_gpuOpsHwPostProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
