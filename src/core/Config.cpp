@@ -552,7 +552,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * Config::parseColorSpaceFromString(const char * str) const
     {
-        if(!str) return str;
+        if(!str) return "";
         
         // Search the entire filePath, including directory name (if provided)
         // convert the filename to lowercase.
