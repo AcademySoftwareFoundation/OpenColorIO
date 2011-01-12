@@ -34,7 +34,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
-namespace OIIO = OpenImageIO;
+namespace OIIO = OIIO_NAMESPACE;
 
 const char * USAGE_TEXT = "\n"
 "ocioconvert inputimage inputcolorspace outputimage outputcolorspace\n";
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
         img.resize(imgwidth*imgheight*components);
         memset(&img[0], 0, imgwidth*imgheight*components*sizeof(float));
         
-        f->read_image(TypeDesc::TypeFloat, &img[0]);
+        f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
         delete f;
     
     }
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
         }
         
         f->open(outputimage, spec);
-        f->write_image(TypeDesc::FLOAT, &img[0]);
+        f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
         f->close();
         delete f;
     }

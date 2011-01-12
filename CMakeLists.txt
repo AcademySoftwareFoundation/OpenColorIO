@@ -136,6 +136,110 @@ add_subdirectory (src/core_tests)
 add_subdirectory (src/testbed)
 
 ###############################################################################
+### APPS ###
+
+# Should we include OpenGL?
+if(NOT USE_OPENGL)
+    set(USE_OPENGL NO CACHE BOOL
+      "Specify whether to build everything that requires OpenGL."
+      FORCE)
+endif()
+
+
+if(CMAKE_FIRST_RUN AND NOT USE_OPENGL)
+    message(STATUS "USE_OPENGL not set. OpenGL example applications will not be built.")
+endif()
+
+if(USE_OPENGL)
+    if(APPLE)
+        INCLUDE_DIRECTORIES ( /System/Library/Frameworks )
+    endif()
+    
+    # Find OpenGL
+    find_package(OpenGL)
+    if(OPENGL_FOUND)
+        message(STATUS "Found OpenGL library ${OPENGL_LIBRARY}")
+        message(STATUS "Found OpenGL includes ${OPENGL_INCLUDE_DIR}")
+    else()
+        message (STATUS "OpenGL not found")
+    endif()
+    
+    # Find GLUT
+    find_package(GLUT)
+    if(GLUT_FOUND)
+        message(STATUS "Found GLUT library ${GLUT_LIBRARY}")
+    else()
+        message (STATUS "GLUT not found")
+    endif()
+    
+    # Find GLEW
+    set (GLEW_VERSION 1.5.1)
+    FIND_PATH( GLEW_INCLUDES GL/glew.h
+        /usr/include
+        /usr/local/include
+        /sw/include
+        /opt/local/include
+        DOC "The directory where GL/glew.h resides")
+    FIND_LIBRARY( GLEW_LIBRARIES
+        NAMES GLEW glew
+        PATHS
+        /usr/lib64
+        /usr/lib
+        /usr/local/lib64
+        /usr/local/lib
+        /sw/lib
+        /opt/local/lib
+        DOC "The GLEW library")
+    if (GLEW_INCLUDES AND GLEW_LIBRARIES)
+        set (GLEW_FOUND TRUE)
+        message(STATUS "Found GLEW library ${GLEW_LIBRARIES}")
+        message (STATUS "Found GLEW includes ${GLEW_INCLUDES}")
+    else ()
+        message (STATUS "GLEW not found")
+    endif ()
+endif(USE_OPENGL)
+
+if(CMAKE_FIRST_RUN AND NOT USE_OIIO)
+    message(STATUS "USE_OIIO not set. OpenImageIO example applications will not be built.")
+endif()
+
+if(USE_OIIO)
+    if( OIIO_PATH )
+    message(STATUS "OIIO path excplicitly specified: ${OIIO_PATH}")
+    endif()
+    FIND_PATH( OIIO_INCLUDES OpenImageIO/version.h
+        ${OIIO_PATH}/include/
+        /usr/include
+        /usr/local/include
+        /sw/include
+        /opt/local/include
+        DOC "The directory where OpenImageIO/version.h resides")
+    FIND_LIBRARY( OIIO_LIBRARIES
+        NAMES OIIO OpenImageIO
+        PATHS
+        ${OIIO_PATH}/lib/
+        /usr/lib64
+        /usr/lib
+        /usr/local/lib64
+        /usr/local/lib
+        /sw/lib
+        /opt/local/lib
+        DOC "The OIIO library")
+        
+    if (OIIO_INCLUDES AND OIIO_LIBRARIES)
+        set (OIIO_FOUND TRUE)
+        message(STATUS "Found OIIO library ${OIIO_LIBRARIES}")
+        message (STATUS "Found OIIO includes ${OIIO_INCLUDES}")
+    else ()
+        message (STATUS "OIIO not found")
+    endif ()
+endif(USE_OIIO)
+
+add_subdirectory (src/apps/ociocheck)
+add_subdirectory (src/apps/ocioconvert)
+add_subdirectory (src/apps/ociodisplay)
+
+###############################################################################
 ### NUKE ###
 
 find_package( Nuke )

@@ -237,7 +237,7 @@ and a custom 3D Lookup Table (3DLUT).
 C++
 ---
 
-This example is available as a working app in the OCIO source: src/examples/ociodisplay.
+This example is available as a working app in the OCIO source: src/apps/ociodisplay.
 
 .. code-block:: cpp
    

@@ -36,19 +36,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <vector>
 
+#ifdef __APPLE__
+#include <GL/glew.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#include <GLUT/glut.h>
+#else
 #include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <GL/glut.h>
+#endif
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
-namespace OIIO = OpenImageIO;
-
-
+namespace OIIO = OIIO_NAMESPACE;
 
 GLint g_win = 0;
 int g_winWidth = 0;
@@ -70,6 +75,7 @@ std::string g_device;
 std::string g_transformName;
 
 float g_exposure_fstop = 0.0f;
+float g_display_gamma = 1.0f;
 int g_channelHot[4] = { 1, 1, 1, 1 };  // show rgb
 
 
@@ -86,7 +92,7 @@ static void InitImageTexture(const char * filename)
     
     if(filename)
     {
-        std::cerr << "Loading " << filename << std::endl;
+        std::cout << "loading: " << filename << std::endl;
         try
         {
             OIIO::ImageInput* f = OIIO::ImageInput::create(filename);
@@ -113,7 +119,7 @@ static void InitImageTexture(const char * filename)
             img.resize(texWidth*texHeight*components);
             memset(&img[0], 0, texWidth*texHeight*components*sizeof(float));
             
-            f->read_image(TypeDesc::TypeFloat, &img[0]);
+            f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
             delete f;
         }
         catch(...)
@@ -125,7 +131,7 @@ static void InitImageTexture(const char * filename)
     // If no file is provided, use a default gradient texture
     else
     {
-        std::cerr << "No image specified, loading gradient." << std::endl;
+        std::cout << "No image specified, loading gradient." << std::endl;
         
         img.resize(texWidth*texHeight*components);
         memset(&img[0], 0, texWidth*texHeight*components*sizeof(float));
@@ -134,11 +140,11 @@ static void InitImageTexture(const char * filename)
         {
             for(int x=0; x<texWidth; ++x)
             {
-                float c = x/(texWidth-1.0);
+                float c = (float)x/((float)texWidth-1.0f);
                 img[components*(texWidth*y+x) + 0] = c;
                 img[components*(texWidth*y+x) + 1] = c;
                 img[components*(texWidth*y+x) + 2] = c;
-                img[components*(texWidth*y+x) + 3] = 1.0;
+                img[components*(texWidth*y+x) + 3] = 1.0f;
             }
         }
     }
@@ -161,7 +167,7 @@ static void InitImageTexture(const char * filename)
     
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, g_imageTexID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, texWidth, texHeight, 0,
         format, GL_FLOAT, &img[0]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -178,8 +184,16 @@ void InitOCIO(const char * filename)
     g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
     if(filename)
     {
-        const char * cs = config->parseColorSpaceFromString(filename);
-        if(cs) g_inputColorSpace = cs;
+        std::string cs = config->parseColorSpaceFromString(filename);
+        if(!cs.empty())
+        {
+            g_inputColorSpace = cs;
+            std::cout << "colorspace: " << cs << std::endl;
+        }
+        else
+        {
+            std::cout << "colorspace: " << g_inputColorSpace << " \t(could not determine from filename, using default)" << std::endl;
+        }
     }
 }
 
@@ -199,7 +213,7 @@ static void AllocateLut3D()
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB,
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB,
                  LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
                  0, GL_RGB,GL_FLOAT, &g_lut3d[0]);
 }
@@ -213,30 +227,30 @@ Idle(void)
 }
 */
 
-static void Redisplay(void)
+void Redisplay(void)
 {
     float windowAspect = 1.0;
     if(g_winHeight != 0)
     {
-        windowAspect = (float)g_winWidth/g_winHeight;
+        windowAspect = (float)g_winWidth/(float)g_winHeight;
     }
     
     float pts[4] = { 0.0f, 0.0f, 0.0f, 0.0f }; // x0,y0,x1,y1
     if(windowAspect>g_imageAspect)
     {
-        float imgWidthScreenSpace = g_imageAspect * g_winHeight;
-        pts[0] = g_winWidth * 0.5 - imgWidthScreenSpace * 0.5;
-        pts[2] = g_winWidth * 0.5 + imgWidthScreenSpace * 0.5;
+        float imgWidthScreenSpace = g_imageAspect * (float)g_winHeight;
+        pts[0] = (float)g_winWidth * 0.5f - (float)imgWidthScreenSpace * 0.5f;
+        pts[2] = (float)g_winWidth * 0.5f + (float)imgWidthScreenSpace * 0.5f;
         pts[1] = 0.0f;
-        pts[3] = g_winHeight;
+        pts[3] = (float)g_winHeight;
     }
     else
     {
-        float imgHeightScreenSpace = g_winWidth / g_imageAspect;
+        float imgHeightScreenSpace = (float)g_winWidth / g_imageAspect;
         pts[0] = 0.0f;
-        pts[2] = g_winWidth;
-        pts[1] = g_winHeight * 0.5 - imgHeightScreenSpace * 0.5;
-        pts[3] = g_winHeight * 0.5 + imgHeightScreenSpace * 0.5;
+        pts[2] = (float)g_winWidth;
+        pts[1] = (float)g_winHeight * 0.5f - imgHeightScreenSpace * 0.5f;
+        pts[3] = (float)g_winHeight * 0.5f + imgHeightScreenSpace * 0.5f;
     }
     
     glEnable(GL_TEXTURE_2D);
@@ -289,7 +303,7 @@ static void CleanUp(void)
 }
 
 
-static void Key(unsigned char key, int x, int y)
+static void Key(unsigned char key, int /*x*/, int /*y*/)
 {
     if(key == 'c' || key == 'C')
     {
@@ -353,15 +367,30 @@ static void SpecialKey(int key, int x, int y)
     
     if(key == GLUT_KEY_UP && (mod & GLUT_ACTIVE_CTRL))
     {
-        g_exposure_fstop += 0.25;
+        g_exposure_fstop += 0.25f;
     }
     else if(key == GLUT_KEY_DOWN && (mod & GLUT_ACTIVE_CTRL))
     {
-        g_exposure_fstop -= 0.25;
+        g_exposure_fstop -= 0.25f;
     }
     else if(key == GLUT_KEY_HOME && (mod & GLUT_ACTIVE_CTRL))
     {
-        g_exposure_fstop = 0.0;
+        g_exposure_fstop = 0.0f;
+        g_display_gamma = 1.0f;
+    }
+    
+    else if(key == GLUT_KEY_UP && (mod & GLUT_ACTIVE_ALT))
+    {
+        g_display_gamma *= 1.1f;
+    }
+    else if(key == GLUT_KEY_DOWN && (mod & GLUT_ACTIVE_ALT))
+    {
+        g_display_gamma /= 1.1f;
+    }
+    else if(key == GLUT_KEY_HOME && (mod & GLUT_ACTIVE_ALT))
+    {
+        g_exposure_fstop = 0.0f;
+        g_display_gamma = 1.0f;
     }
     
     UpdateOCIOGLState();
@@ -421,8 +450,6 @@ LinkShaders(GLuint fragShader)
 }
 
 const char * g_fragShaderText = ""
-"#extension GL_EXT_gpu_shader4 : enable\n"
-"#extension GL_ARB_texture_rectangle : enable\n"
 "\n"
 "uniform sampler2D tex1;\n"
 "uniform sampler3D tex2;\n"
@@ -436,10 +463,7 @@ const char * g_fragShaderText = ""
 
 void UpdateOCIOGLState()
 {
-    std::string ocioShaderText = "";
-    
     // Step 0: Get the processor using any of the pipelines mentioned above.
-    
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     const char * displayColorSpace = config->getDisplayColorSpaceName(g_device.c_str(), g_transformName.c_str());
     
@@ -447,7 +471,7 @@ void UpdateOCIOGLState()
     transform->setInputColorSpaceName( g_inputColorSpace.c_str() );
     transform->setDisplayColorSpaceName( displayColorSpace );
     
-    // Add custom (optional) transforms for our 'canonical' display pipeline
+    // Add custom transforms for our canonical display pipeline
     {
         // Add an fstop exposure control (in SCENE_LINEAR)
         float gain = powf(2.0f, g_exposure_fstop);
@@ -459,14 +483,19 @@ void UpdateOCIOGLState()
         // Add Channel swizzling
         float lumacoef[3];
         config->getDefaultLumaCoefs(lumacoef);
-        
         float m44[16];
         float offset[4];
         OCIO::MatrixTransform::View(m44, offset, g_channelHot, lumacoef);
-        
         OCIO::MatrixTransformRcPtr swizzle = OCIO::MatrixTransform::Create();
         swizzle->setValue(m44, offset);
         transform->setChannelView(swizzle);
+        
+        // Specify a post-display gamma transform
+        float exponent = 1.0f/std::max(1e-6f, static_cast<float>(g_display_gamma));
+        const float exponent4f[] = { exponent, exponent, exponent, exponent };
+        OCIO::ExponentTransformRcPtr expTransform =  OCIO::ExponentTransform::Create();
+        expTransform->setValue(exponent4f);
+        transform->setDisplayCC(expTransform);
     }
     
     OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
@@ -478,13 +507,12 @@ void UpdateOCIOGLState()
     shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
     
     // Step 2: Compute the 3D LUT
-    
     std::string lut3dCacheID = processor->getGpuLut3DCacheID(shaderDesc);
     if(lut3dCacheID != g_lut3dcacheid)
     {
-        g_lut3dcacheid = lut3dCacheID;
         //std::cerr << "Computing 3DLut " << g_lut3dcacheid << std::endl;
         
+        g_lut3dcacheid = lut3dCacheID;
         processor->getGpuLut3D(&g_lut3d[0], shaderDesc);
         
         glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
@@ -499,7 +527,7 @@ void UpdateOCIOGLState()
     os << g_fragShaderText;
     
     // Print the shader text
-    //std::cerr << std::endl;
+    //std::cerr << "SHADER**********" << std::endl;
     //std::cerr << os.str() << std::endl;
     
     if(g_fragShader) glDeleteShader(g_fragShader);
@@ -513,10 +541,8 @@ void UpdateOCIOGLState()
     glUniform1i(glGetUniformLocation(g_program, "tex2"), 2);
 }
 
-void menuCallback (int id)
+void menuCallback(int /*id*/)
 {
-    std::cerr << "menuCallback " << id << std::endl;
-    
     glutPostRedisplay();
 }
 
@@ -599,7 +625,11 @@ const char * USAGE_TEXT = "\n"
 "Keys:\n"
 "\tCtrl+Up:   Exposure +1/4 stop (in scene linear)\n"
 "\tCtrl+Down: Exposure -1/4 stop (in scene linear)\n"
-"\tCtrl+Home: Reset Exposure\n"
+"\tCtrl+Home: Reset Exposure + Gamma\n"
+"\n"
+"\tAlt+Up:    Gamma up (post display transform)\n"
+"\tAlt+Down:  Gamma down (post display transform)\n"
+"\tAlt+Home:  Reset Exposure + Gamma\n"
 "\n"
 "\tC:   View Color\n"
 "\tR:   View Red  \n"
@@ -616,8 +646,10 @@ int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
     
-    glutInitWindowSize(512, 512);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+    glutInitWindowSize(512, 512);
+    glutInitWindowPosition (100, 100);
+    
     g_win = glutCreateWindow(argv[0]);
     
     glewInit();
@@ -635,12 +667,22 @@ int main(int argc, char **argv)
     const char * filename = 0;
     if(argc>1) filename = argv[1];
     
-    std::cerr << USAGE_TEXT << std::endl;
+    std::cout << USAGE_TEXT << std::endl;
     
+    // TODO: switch profiles based on shading language
+    // std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     AllocateLut3D();
     
     InitImageTexture(filename);
-    InitOCIO(filename);
+    try
+    {
+        InitOCIO(filename);
+    }
+    catch(OCIO::Exception & e)
+    {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
     
     PopulateOCIOMenus();
     
