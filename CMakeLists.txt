@@ -146,7 +146,7 @@ if( NUKE_FOUND )
     add_subdirectory (src/nuke)
 else()
     if(CMAKE_FIRST_RUN)
-        message(STATUS "    if you want to build the Nuke plugins, add the flag -D Nuke_INSTALL_PATH=... or set the NDK_PATH environment variable")
+        message(STATUS "    if you want to build the Nuke plugins, add the flag -D NUKE_INSTALL_PATH=... or set the NDK_PATH environment variable")
     endif()
 endif()
 

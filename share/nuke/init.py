@@ -1,12 +1,13 @@
 import nuke
 
 EBANNER = "OCIO Error: "
-
+OCIO = None
 
 def load_ocio_plugins():
     """Loads the PyOpenColorIO module and the OCIO-prefixed nodes
     """
-
+    
+    global OCIO
     try:
         import PyOpenColorIO as OCIO
     except Exception, e:

@@ -47,11 +47,11 @@
 #
 # Note:
 # You can tell the module where Nuke is installed by setting
-# the Nuke_INSTALL_PATH (or setting the NDK_PATH environment
+# the NUKE_INSTALL_PATH (or setting the NDK_PATH environment
 # variable before calling FIND_PACKAGE.
 # 
 # E.g. 
-#   SET( Nuke_INSTALL_PATH "/usr/local/Nuke5.2v3" )
+#   SET( NUKE_INSTALL_PATH "/usr/local/Nuke5.2v3" )
 #   FIND_PACKAGE( Nuke REQUIRED )
 #
 #==========
@@ -59,13 +59,13 @@
 # our includes
 FIND_PATH( Nuke_INCLUDE_DIR DDImage/Op.h
   $ENV{NDK_PATH}/include
-  ${Nuke_INSTALL_PATH}/include
+  ${NUKE_INSTALL_PATH}/include
   )
 
 # our library
 FIND_LIBRARY( Nuke_LIBRARIES DDImage
   $ENV{NDK_PATH}
-  ${Nuke_INSTALL_PATH}
+  ${NUKE_INSTALL_PATH}
   )
 
 SET( Nuke_COMPILE_FLAGS "" )

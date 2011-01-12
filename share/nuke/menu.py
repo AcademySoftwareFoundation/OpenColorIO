@@ -1,7 +1,7 @@
 import os
 import nuke
 
-def ocio_menu():
+def ocio_populate_menu():
     """Adds OCIO nodes to a menu in Color
     """
 
@@ -16,7 +16,7 @@ def ocio_menu():
         m_ocio.addCommand(p, lambda p=p: nuke.createNode(p))
 
 
-def ocio_viewer(remove_nuke_default = True):
+def ocio_populate_viewer(remove_nuke_default = True):
     """Registers the a viewer process for each display/transform, and
     sets the default
 
@@ -58,5 +58,4 @@ def ocio_viewer(remove_nuke_default = True):
 
 
 if __name__ == "__main__":
-    ocio_menu()
-    ocio_viewer()
+    ocio_populate_menu()
