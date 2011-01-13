@@ -1,3 +1,10 @@
+**Version 0.7.5 (Jan 13 2011):**
+    * ociodisplay enhancements
+    * gpu display bugfix (glsl profile 1.0 only)
+    * Makefile enhancements
+    * Nuke installation cleanup
+    * Doc generation using sphinx (html + pdf)
+
 **Version 0.7.4 (Jan 4 2011):**
     * Added 'Context', allowing for 'per-shot' Transforms
     * Misc API Cleanup: removed old functions + fixed const-ness
