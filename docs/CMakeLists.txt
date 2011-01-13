@@ -80,6 +80,7 @@ ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h OpenColorType
 add_custom_target(doc ALL
     COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_BINPATH}/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
     DEPENDS
+        OpenColorIO
         ${CMAKE_BINARY_DIR}/docs/conf.py
         OpenColorIO.rst
         OpenColorTransforms.rst
@@ -101,6 +102,7 @@ if(PDFLATEX_COMPILER)
     add_custom_target(latex
         COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_BINPATH}/sphinx-build -b latex . ${CMAKE_CURRENT_BINARY_DIR}/build-latex
         DEPENDS
+            OpenColorIO
             ${CMAKE_BINARY_DIR}/docs/conf.py
             OpenColorIO.rst
             OpenColorTransforms.rst

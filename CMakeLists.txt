@@ -97,7 +97,19 @@ set(YAML_CPP_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
 ###############################################################################
 ### Documentation ###
 
-# add_subdirectory (docs)
+if(NOT MAKE_DOCS)
+    set(MAKE_DOCS NO CACHE BOOL
+      "Specify whether to build documentation."
+      FORCE)
+endif()
+
+if(CMAKE_FIRST_RUN)
+    message(STATUS "Generate Documentation: ${MAKE_DOCS}")
+endif()
+
+if(MAKE_DOCS)
+    add_subdirectory (docs)
+endif()
 
 ###############################################################################
 ### BOOST ###
