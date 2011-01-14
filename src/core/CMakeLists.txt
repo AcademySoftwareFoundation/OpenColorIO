@@ -6,8 +6,12 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
     ${YAML_CPP_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIR}
 )
+
+if(Boost_FOUND)
+    include_directories(
+        ${Boost_INCLUDE_DIR})
+endif()
 
 file(GLOB_RECURSE core_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp")
 file(GLOB_RECURSE core_export_headers "${CMAKE_SOURCE_DIR}/export/OpenColorIO/*.h")

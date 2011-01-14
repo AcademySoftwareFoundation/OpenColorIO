@@ -2,8 +2,12 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
-    ${Boost_INCLUDE_DIR}
 )
+
+if(Boost_FOUND)
+    include_directories(
+        ${Boost_INCLUDE_DIR})
+endif()
 
 add_executable(OpenColorIOTest
     main.cpp

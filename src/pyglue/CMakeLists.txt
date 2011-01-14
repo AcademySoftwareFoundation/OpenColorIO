@@ -25,8 +25,12 @@ if(PYTHON_OK)
         ${PYTHON_INCLUDE}
         ${CMAKE_SOURCE_DIR}/export/
         ${CMAKE_BINARY_DIR}/export/
-        ${Boost_INCLUDE_DIR}
     )
+
+    if(Boost_FOUND)
+        include_directories(
+            ${Boost_INCLUDE_DIR})
+    endif()
     
     # Exclude the 'lib' prefix from the name.
     if(NOT PYTHON_INCLUDE_LIB_PREFIX)
