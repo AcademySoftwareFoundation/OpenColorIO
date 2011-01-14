@@ -18,7 +18,7 @@ Downloading and building the code
 *********************************
 At present, there is not a separate precompiled or binary-only distribution of
 |OpenColorIO| (though we hope to eventually have one). For now, you'll have to
-check out and build the code yourself. 
+check out and build the code yourself. See :ref:`building-from-source`.
 
 Source code is available on Github at http://github.com/imageworks/OpenColorIO
 Download a .zip or .tar.gz of the current state of the repository.

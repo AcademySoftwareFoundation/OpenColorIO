@@ -1,6 +1,8 @@
 Setup
 =====
 
+.. _building-from-source:
+
 Building from source
 ********************
 
@@ -42,6 +44,8 @@ If nothing went wrong, you should now have an ``include/`` directory
 containing the OpenColorIO headers, and a ``lib/`` directory
 containing the libOpenColorIO library (a .dylib, .so or .dll file)
 
+.. _enabling-optional-components:
+
 Enabling optional components
 ----------------------------
 
@@ -70,7 +74,7 @@ The ``NUKE_INSTALL_PATH`` directory should contain the Nuke executable
 (e.g Nuke6.2v1), and a ``include/`` directory containing ``DDImage/``
 and others.
 
-If set correctly, you will see something similar to:
+If set correctly, you will see something similar to::
 
     -- Found Nuke: /Applications/Nuke6.2v1/Nuke6.2v1.app/Contents/MacOS/include
     -- Nuke_DDImageVersion: --6.2v1--
@@ -82,6 +86,8 @@ Note that if you are using the Nuke plugins, you should compile the
 Python bindings for the same version of Python that Nuke uses
 internally. For Nuke 6.0 and 6.1 this is Python 2.5, and for 6.2 it is
 Python 2.6
+
+.. _environment-setup:
 
 Environment setup
 *****************
@@ -100,13 +106,35 @@ Environment setup
         Referenced from: .../OCIOColorSpace.so
         Reason: image not found
 
-    This also applies to the Python and the ``PyOpenColorIO`` module,
-    where the correct ``lib/python2.x`` path must be included in this
-    search path.
+    This applies to anything that links against OCIO, including the Nuke
+    nodes, and the ``PyOpenColorIO`` Python bindings.
 
 .. envvar:: LD_LIBRARY_PATH
 
-    Equivelant to the ``DYLD_LIBRARY_PATH`` on Linux
+    Equivalent to the ``DYLD_LIBRARY_PATH`` on Linux
+
+.. envvar:: PYTHONPATH
+
+    Python's module search path. If you are using the PyOpenColorIO module,
+    you must add ``lib/python2.x`` to this search path (e.g ``python/2.5``),
+    or importing the module will fail::
+
+        >>> import PyOpenColorIO
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        ImportError: No module named PyOpenColorIO
+
+    Note that :envvar:`DYLD_LIBRARY_PATH` or :envvar:`LD_LIBRARY_PATH` must
+    be set correctly for the module to work.
+
+.. envvar:: NUKE_PATH
+
+    Nuke's customisation search path, where it will look for plugins,
+    gizmos, init.py and menu.py scripts and other customisations.
+
+    For information on setting this for OCIO, see :ref:`nuke-configuration`
+
+.. _nuke-configuration:
 
 Nuke Configuration
 ******************
@@ -135,7 +163,7 @@ The following function is defined in the OCIO-supplied menu.py file,
 so you can simply call ``ocio_populate_viewer()`` in a custom menu.py
 file (e.g in ``~/.nuke/menu``)
 
-Alternativly, if your workflow has different requirements, you can
+Alternatively, if your workflow has different requirements, you can
 copy the code and modify it as required, or use it as reference to
 write your own, better viewer setup function!
 
