@@ -575,6 +575,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual const char * getGpuShaderText(const GpuShaderDesc & shaderDesc) const = 0;
         //!cpp:function::
+        virtual const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const = 0;
+        
+        //!cpp:function::
         virtual void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const = 0;
         //!cpp:function::
         virtual const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const = 0;

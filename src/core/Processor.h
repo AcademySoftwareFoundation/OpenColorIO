@@ -57,9 +57,10 @@ OCIO_NAMESPACE_ENTER
         virtual void applyRGBA(float * pixel) const;
         
         virtual const char * getGpuShaderText(const GpuShaderDesc & gpuDesc) const;
-        virtual const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const;
+        virtual const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const;
         
         virtual void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
+        virtual const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const;
         
         ////////////////////////////////////////////
         //
@@ -97,6 +98,7 @@ OCIO_NAMESPACE_ENTER
         
         mutable std::string m_shaderText;
         mutable std::string m_lut3DHash;
+        mutable std::string m_shaderTextHash;
     };
     
     

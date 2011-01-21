@@ -357,6 +357,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * LocalProcessor::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
     {
+        // TODO: Cache this call so for repeated calls, it doesnt recompute
         std::ostringstream shader;
         std::string pixelName = "out_pixel";
         std::string lut3dName = "lut3d";
@@ -402,8 +403,19 @@ OCIO_NAMESPACE_ENTER
         return m_shaderText.c_str();
     }
     
+    const char * LocalProcessor::getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const
+    {
+        std::string shadertext = getGpuShaderText(shaderDesc);
+        
+        // TODO: This is not multi-thread safe. Cache result or mutex
+        m_shaderTextHash = CacheIDHash(shadertext.c_str(), (int)shadertext.size());
+        return m_shaderTextHash.c_str();
+    }
+    
     const char * LocalProcessor::getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const
     {
+        // TODO: Cache this call so for repeated calls, it doesnt recompute
+        
         // Can we write the entire shader using only shader text?
         // Lut3D is not needed. Blank it.
         
