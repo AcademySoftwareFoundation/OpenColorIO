@@ -38,8 +38,14 @@ void FileTransform::knobs(DD::Image::Knob_Callback f)
 
     File_knob(f, &src, "src", "src");
     const char * srchelp = "Specify the src file, on disk, to use for this transform. "
-    "This can be any file format that OpenColorIO supports.";
+    "This can be any file format that OpenColorIO supports: "
+    ".3dl, .cc, .ccc, .csp, .cub, .cube, .lut (houdini), .spi1d, .spi3d, .spimtx";
     DD::Image::Tooltip(f, srchelp);
+    
+    String_knob(f, &cccid, "cccid");
+    const char * srchelp2 = "If the source file is an ASC CDL CCC (color correction collection), "
+    "this specifys the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
+    DD::Image::Tooltip(f, srchelp2);
     
     Enumeration_knob(f, &dirindex, dirs, "direction", "direction");
     DD::Image::Tooltip(f, "Specify the transform direction.");
@@ -71,6 +77,10 @@ void FileTransform::_validate(bool for_real)
         
         OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
         transform->setSrc(src);
+        
+        // TODO: For some reason, cccid is NOT incorporated in this node's hash.
+        // Until then, cccid is considered broken. Figure out why.
+        transform->setCCCId(cccid.c_str());
         
         if(dirindex == 0) transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
         else transform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);

@@ -110,7 +110,7 @@ OCIO_NAMESPACE_ENTER
         void
         LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
-                                      const ConstContextRcPtr & context,
+                                      const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
                                       const FileTransform& fileTransform,
                                       TransformDirection dir) const
