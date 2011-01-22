@@ -144,6 +144,8 @@ OCIO_NAMESPACE_ENTER
             }
 
             virtual void BuildFileOps(OpRcPtrVec & ops,
+                                      const Config& /*config*/,
+                                      const ConstContextRcPtr & /*context*/,
                                       CachedFileRcPtr untypedCachedFile,
                                       const FileTransform& fileTransform,
                                       TransformDirection dir) const

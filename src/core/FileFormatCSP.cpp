@@ -76,9 +76,11 @@ OCIO_NAMESPACE_ENTER
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
-                         CachedFileRcPtr untypedCachedFile,
-                         const FileTransform& fileTransform,
-                         TransformDirection dir) const;
+                                      const Config& config,
+                                      const ConstContextRcPtr & context,
+                                      CachedFileRcPtr untypedCachedFile,
+                                      const FileTransform& fileTransform,
+                                      TransformDirection dir) const;
         };
 
 
@@ -278,6 +280,8 @@ OCIO_NAMESPACE_ENTER
 
         void
         FileFormatCSP::BuildFileOps(OpRcPtrVec & ops,
+                                    const Config& /*config*/,
+                                    const ConstContextRcPtr & /*context*/,
                                     CachedFileRcPtr untypedCachedFile,
                                     const FileTransform& fileTransform,
                                     TransformDirection dir) const

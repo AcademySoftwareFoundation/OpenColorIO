@@ -55,6 +55,7 @@ OCIO_NAMESPACE_ENTER
     public:
         TransformDirection dir_;
         std::string src_;
+        std::string cccid_;
         Interpolation interp_;
         
         Impl() :
@@ -69,6 +70,7 @@ OCIO_NAMESPACE_ENTER
         {
             dir_ = rhs.dir_;
             src_ = rhs.src_;
+            cccid_ = rhs.cccid_;
             interp_ = rhs.interp_;
             return *this;
         }
@@ -121,6 +123,16 @@ OCIO_NAMESPACE_ENTER
         getImpl()->src_ = src;
     }
     
+    const char * FileTransform::getCCCId() const
+    {
+        return getImpl()->cccid_.c_str();
+    }
+    
+    void FileTransform::setCCCId(const char * cccid)
+    {
+        getImpl()->cccid_ = cccid;
+    }
+    
     Interpolation FileTransform::getInterpolation() const
     {
         return getImpl()->interp_;
@@ -137,6 +149,7 @@ OCIO_NAMESPACE_ENTER
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
         os << "interpolation=" << InterpolationToString(t.getInterpolation()) << ", ";
         os << "src='" << t.getSrc() << "'";
+        os << "cccid='" << t.getCCCId() << "'";
         os << ">\n";
         
         return os;
@@ -298,7 +311,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     void BuildFileOps(OpRcPtrVec & ops,
-                      const Config& /*config*/,
+                      const Config& config,
                       const ConstContextRcPtr & context,
                       const FileTransform& fileTransform,
                       TransformDirection dir)
@@ -311,13 +324,14 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        std::string filepath = context->findFile(src.c_str());
+        std::string filepath = context->resolveFileLocation(src.c_str());
         
         FileCachePair cachePair = GetFile(filepath);
         FileFormat* format = cachePair.first;
         CachedFileRcPtr cachedFile = cachePair.second;
         
         format->BuildFileOps(ops,
+                             config, context,
                              cachedFile, fileTransform,
                              dir);
     }

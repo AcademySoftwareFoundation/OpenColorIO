@@ -172,7 +172,8 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_Context_loadEnvironment( PyObject * self );
         
-        PyObject * PyOCIO_Context_findFile( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_Context_resolveStringVar( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_Context_resolveFileLocation( PyObject * self,  PyObject *args );
         
         
         ///////////////////////////////////////////////////////////////////////
@@ -190,7 +191,9 @@ OCIO_NAMESPACE_ENTER
             {"setStringVar", PyOCIO_Context_setStringVar, METH_VARARGS, "" },
             
             {"loadEnvironment", (PyCFunction) PyOCIO_Context_loadEnvironment, METH_NOARGS, "" },
-            {"findFile", PyOCIO_Context_findFile, METH_VARARGS, "" },
+            
+            {"resolveStringVar", PyOCIO_Context_resolveStringVar, METH_VARARGS, "" },
+            {"resolveFileLocation", PyOCIO_Context_resolveFileLocation, METH_VARARGS, "" },
             
             {NULL, NULL, 0, NULL}
         };
@@ -439,15 +442,32 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        PyObject * PyOCIO_Context_findFile( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Context_resolveStringVar( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * str = 0;
+                if (!PyArg_ParseTuple(args,"s:resolveStringVar", &str)) return NULL;
+                
+                ConstContextRcPtr context = GetConstContext(self, true);
+                return PyString_FromString( context->resolveStringVar(str) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Context_resolveFileLocation( PyObject * self, PyObject * args )
         {
             try
             {
                 char * filename = 0;
-                if (!PyArg_ParseTuple(args,"s:findFile", &filename)) return NULL;
+                if (!PyArg_ParseTuple(args,"s:resolveFileLocation", &filename)) return NULL;
                 
                 ConstContextRcPtr context = GetConstContext(self, true);
-                return PyString_FromString( context->findFile(filename) );
+                return PyString_FromString( context->resolveFileLocation(filename) );
             }
             catch(...)
             {

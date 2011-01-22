@@ -27,45 +27,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_FILETRANSFORM_H
-#define INCLUDED_OCIO_FILETRANSFORM_H
+#ifndef INCLUDED_OCIO_CDLTRANSFORM_H
+#define INCLUDED_OCIO_CDLTRANSFORM_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Op.h"
-#include "Processor.h"
+#include "tinyxml/tinyxml.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    class CachedFile
-    {
-    public:
-        CachedFile() {};
-        virtual ~CachedFile() {};
-    };
-    
-    typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;
-    
-    class FileFormat
-    {
-    public:
-        virtual ~FileFormat();
-        
-        virtual std::string GetExtension() const = 0;
-        virtual CachedFileRcPtr Load(std::istream & istream) const = 0;
-        
-        virtual void BuildFileOps(OpRcPtrVec & ops,
-                                  const Config& config,
-                                  const ConstContextRcPtr & context,
-                                  CachedFileRcPtr cachedFile,
-                                  const FileTransform& fileTransform,
-                                  TransformDirection dir) const = 0;
-    private:
-        FileFormat& operator= (const FileFormat &);
-    };
-    
-    void RegisterFileFormat(FileFormat* format);
-
+    void LoadCDL(CDLTransform * cdl, const char * xml);
+    void LoadCDL(CDLTransform * cdl, TiXmlElement * root);
 }
 OCIO_NAMESPACE_EXIT
 

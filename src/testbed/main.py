@@ -103,6 +103,7 @@ print processor.applyRGB(c)
 
 """
 
+"""
 config = OCIO.Config()
 
 cs = OCIO.ColorSpace()
@@ -130,6 +131,13 @@ cs.setTransform(g, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)
 config.addColorSpace(cs)
 config.setRole(OCIO.Constants.ROLE_COMPOSITING_LOG, cs.getName())
 
+"""
+
+# config = OCIO.Config.CreateFromEnv()
+
+config = OCIO.Config()
+"""
+
 text = config.serialize()
 print '\n\n'
 print text
@@ -140,5 +148,34 @@ f.write(text)
 f.close()
 
 newconfig = OCIO.Config.CreateFromFile(fname)
+
 print '\n\n'
 print newconfig.serialize()
+
+#print '\n\n'
+#print newconfig.serialize()
+
+
+print newconfig.getDefaultDisplayDevice()
+print newconfig.getDisplayDevices()
+"""
+
+
+t = OCIO.CDLTransform()
+t.setSOP((1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0))
+t.setSat(-0.123454)
+t.setID("Taco")
+t.setDescription("SDA SKJD ASK")
+
+#print t.getXML()
+#
+#print dir(t)
+
+
+t = OCIO.FileTransform()
+#t.setSrc("/shots/grn/cc/data/vnp_folders/looks/dc0150_asc/v1/look_dc0150_asc_v1.cc")
+t.setSrc("/net/homedirs/jeremys/cdl/./ASC-CDL_dist_v1.2/asc-cdl_test_images/SOP/sop_test_corrections.ccc")
+t.setCCCId("$CCID")
+
+p = config.getProcessor(t)
+#print dir(p)

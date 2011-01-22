@@ -276,6 +276,8 @@ OCIO_NAMESPACE_ENTER
         t = FileTransform::Create();
         if(node.FindValue("src") != NULL)
             t->setSrc(node["src"].Read<std::string>().c_str());
+        if(node.FindValue("cccid") != NULL)
+            t->setCCCId(node["cccid"].Read<std::string>().c_str());
         if(node.FindValue("interpolation") != NULL)
             t->setInterpolation(node["interpolation"].Read<Interpolation>());
     }
@@ -285,6 +287,7 @@ OCIO_NAMESPACE_ENTER
         out << YAML::VerbatimTag("FileTransform");
         out << YAML::Flow << YAML::BeginMap;
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
+        out << YAML::Key << "cccid" << YAML::Value << t->getCCCId();
         out << YAML::Key << "interpolation";
         out << YAML::Value << t->getInterpolation();
         

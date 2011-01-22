@@ -173,7 +173,7 @@ namespace
     
     const char * Context::getStringVar(const char * name) const
     {
-        if(!name) return 0x0;
+        if(!name) return "";
         
         StringMap::const_iterator iter = getImpl()->envMap_.find(name);
         if(iter != getImpl()->envMap_.end())
@@ -181,10 +181,35 @@ namespace
             return iter->second.c_str();
         }
         
-        return 0x0;
+        return "";
     }
     
-    const char * Context::findFile(const char * filename) const
+    
+    const char * Context::resolveStringVar(const char * val) const
+    {
+        AutoMutex lock(getImpl()->resultsCacheMutex_);
+        
+        if(!val || !*val)
+        {
+            return "";
+        }
+        
+        StringMap::const_iterator iter = getImpl()->resultsCache_.find(val);
+        if(iter != getImpl()->resultsCache_.end())
+        {
+            return iter->second.c_str();
+        }
+        
+        
+        std::string resolvedval = EnvExpand(val, getImpl()->envMap_);
+        
+        getImpl()->resultsCache_[val] = resolvedval;
+        return getImpl()->resultsCache_[val].c_str();
+    }
+    
+    
+    
+    const char * Context::resolveFileLocation(const char * filename) const
     {
         AutoMutex lock(getImpl()->resultsCacheMutex_);
         

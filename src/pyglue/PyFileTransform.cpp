@@ -89,6 +89,9 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_FileTransform_getSrc( PyObject * self );
         PyObject * PyOCIO_FileTransform_setSrc( PyObject * self,  PyObject *args );
         
+        PyObject * PyOCIO_FileTransform_getCCCId( PyObject * self );
+        PyObject * PyOCIO_FileTransform_setCCCId( PyObject * self,  PyObject *args );
+        
         PyObject * PyOCIO_FileTransform_getInterpolation( PyObject * self );
         PyObject * PyOCIO_FileTransform_setInterpolation( PyObject * self,  PyObject *args );
         
@@ -98,6 +101,8 @@ OCIO_NAMESPACE_ENTER
         PyMethodDef PyOCIO_FileTransform_methods[] = {
             {"getSrc", (PyCFunction) PyOCIO_FileTransform_getSrc, METH_NOARGS, "" },
             {"setSrc", PyOCIO_FileTransform_setSrc, METH_VARARGS, "" },
+            {"getCCCId", (PyCFunction) PyOCIO_FileTransform_getCCCId, METH_NOARGS, "" },
+            {"setCCCId", PyOCIO_FileTransform_setCCCId, METH_VARARGS, "" },
             
             {"getInterpolation", (PyCFunction) PyOCIO_FileTransform_getInterpolation, METH_NOARGS, "" },
             {"setInterpolation", PyOCIO_FileTransform_setInterpolation, METH_VARARGS, "" },
@@ -218,6 +223,42 @@ OCIO_NAMESPACE_ENTER
                 
                 FileTransformRcPtr transform = GetEditableFileTransform(self);
                 transform->setSrc( src );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        PyObject * PyOCIO_FileTransform_getCCCId( PyObject * self )
+        {
+            try
+            {
+                ConstFileTransformRcPtr transform = GetConstFileTransform(self, true);
+                return PyString_FromString( transform->getCCCId() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_FileTransform_setCCCId( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * id = 0;
+                if (!PyArg_ParseTuple(args,"s:setCCCId", &id)) return NULL;
+                
+                FileTransformRcPtr transform = GetEditableFileTransform(self);
+                transform->setCCCId( id );
                 
                 Py_RETURN_NONE;
             }

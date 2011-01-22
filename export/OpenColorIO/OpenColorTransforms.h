@@ -402,6 +402,11 @@ OCIO_NAMESPACE_ENTER
         void setSrc(const char * src);
         
         //!cpp:function::
+        const char * getCCCId() const;
+        //!cpp:function::
+        void setCCCId(const char * id);
+        
+        //!cpp:function::
         Interpolation getInterpolation() const;
         //!cpp:function::
         void setInterpolation(Interpolation interp);

@@ -800,13 +800,20 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Seed all string vars with the current environment
         void loadEnvironment();
         
+        //! Do a string lookup.
+        //!cpp:function:: Do a file lookup.
+        // 
+        // Evaluate the specified variable (as needed). Will not throw exceptions.
+        const char * resolveStringVar(const char * val) const;
+        
         //! Do a file lookup.
         //!cpp:function:: Do a file lookup.
         // 
-        // Evaluate all variables, and walk the full search path (as needed).
+        // Evaluate all variables (as needed).
+        // Also, walk the full search path until the file is found.
         // If the filename cannot be found, an exception will be thrown.
-        const char * findFile(const char * filename) const;
-        
+        const char * resolveFileLocation(const char * filename) const;
+    
     private:
         Context();
         ~Context();
