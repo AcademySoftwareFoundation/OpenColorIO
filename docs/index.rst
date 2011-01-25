@@ -4,19 +4,21 @@ OpenColorIO
 .. include:: README
 
 .. toctree::
-   :maxdepth: 3
+    :maxdepth: 2
    
-   Overview
-   Setup
-   UsageExamples
+    Overview
+    Setup
+
+    UsageExamples
+    Contexts
    
-   OpenColorIO
-   OpenColorTransforms
-   OpenColorTypes
-   
-   FAQ
-   
-   ChangeLog
-   License
+    OpenColorIO
+    OpenColorTransforms
+    OpenColorTypes
+
+    FAQ
+
+    ChangeLog
+    License
 
 * :ref:`genindex`
