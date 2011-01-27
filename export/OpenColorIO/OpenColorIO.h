@@ -265,8 +265,12 @@ OCIO_NAMESPACE_ENTER
         void setRole(const char * role, const char * colorSpaceName);
         //!cpp:function::
         int getNumRoles() const;
-        //!cpp:function::
-        const char * getRoleNameByIndex(int index) const;
+        //!cpp:function:: returns true if the role has been defined
+        bool hasRole(const char * role) const;
+        //!cpp:function:: get the role name at index, this will return values
+        // like 'scene_linear', 'compositing_log'.
+        // Returns NULL if index is out of range
+        const char * getRoleName(int index) const;
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst:: .. _cfgdisplaytransforms_section:

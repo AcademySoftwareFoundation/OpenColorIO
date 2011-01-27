@@ -649,22 +649,18 @@ OCIO_NAMESPACE_ENTER
         return static_cast<int>(getImpl()->roles_.size());
     }
     
-    const char * Config::getRoleNameByIndex(int index) const
+    bool Config::hasRole(const char * role) const
     {
-        if(index<0 || index >= (int)getImpl()->roles_.size())
-        {
-            return "";
-        }
-        
-        RoleMap::const_iterator iter = getImpl()->roles_.begin();
-        for(int i=0; i<index; ++i)
-        {
-            ++iter;
-        }
-        
-        return iter->second.c_str();
+        return LookupRole(getImpl()->roles_, role) == "" ? false : true;
     }
     
+    const char * Config::getRoleName(int index) const
+    {
+        if(index < 0 || index >= (int)getImpl()->roles_.size()) return "";
+        RoleMap::const_iterator iter = getImpl()->roles_.begin();
+        for(int i = 0; i < index; ++i) ++iter;
+        return iter->first.c_str();
+    }
     
     // Display Transforms
     
@@ -1288,6 +1284,44 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
     BOOST_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+}
+
+BOOST_AUTO_TEST_CASE ( test_roleAccess )
+{
+    
+    std::string SIMPLE_PROFILE =
+    "ocio_profile_version: 1\n"
+    "strictparsing: false\n"
+    "roles:\n"
+    "  compositing_log: lgh\n"
+    "  default: raw\n"
+    "  scene_linear: lnh\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "  - !<ColorSpace>\n"
+    "      name: lnh\n"
+    "  - !<ColorSpace>\n"
+    "      name: lgh\n"
+    "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    BOOST_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    
+    BOOST_CHECK_EQUAL(config->getNumRoles(), 3);
+    
+    BOOST_CHECK(config->hasRole("compositing_log") == true);
+    BOOST_CHECK(config->hasRole("cheese") == false);
+    BOOST_CHECK(config->hasRole("") == false);
+    
+    BOOST_CHECK_EQUAL(config->getRoleName(2), "scene_linear");
+    BOOST_CHECK_EQUAL(config->getRoleName(0), "compositing_log");
+    BOOST_CHECK_EQUAL(config->getRoleName(1), "default");
+    BOOST_CHECK_EQUAL(config->getRoleName(10), "");
+    BOOST_CHECK_EQUAL(config->getRoleName(-4), "");
+    
 }
 
 BOOST_AUTO_TEST_CASE ( test_ser )
