@@ -27,6 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+#include <Python.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "PyProcessor.h"

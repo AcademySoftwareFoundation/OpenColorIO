@@ -30,8 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_PYOCIO_PYOCIO_H
 #define INCLUDED_PYOCIO_PYOCIO_H
 
-#include <OpenColorIO/OpenColorIO.h>
 #include <Python.h>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
