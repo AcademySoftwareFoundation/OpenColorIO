@@ -120,7 +120,7 @@ set (Boost_ADDITIONAL_VERSIONS "1.43" "1.43.0" "1.42" "1.42.0"
                                "1.37" "1.37.0" "1.34.1" "1_34_1")
 set (Boost_USE_STATIC_LIBS ON) # TODO: make this a option
 set (Boost_USE_MULTITHREADED ON)
-find_package (Boost 1.34 COMPONENTS unit_test_framework)
+find_package (Boost 1.34 COMPONENTS program_options unit_test_framework)
 
 ###############################################################################
 ### SSE ###
@@ -250,6 +250,9 @@ endif(USE_OIIO)
 add_subdirectory (src/apps/ociocheck)
 add_subdirectory (src/apps/ocioconvert)
 add_subdirectory (src/apps/ociodisplay)
+if(Boost_FOUND)
+  add_subdirectory (src/apps/ociobuildicc)
+endif()
 
 ###############################################################################
 ### NUKE ###
