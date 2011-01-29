@@ -251,7 +251,7 @@ add_subdirectory (src/apps/ociocheck)
 add_subdirectory (src/apps/ocioconvert)
 add_subdirectory (src/apps/ociodisplay)
 if(Boost_FOUND)
-  add_subdirectory (src/apps/ociobuildicc)
+  add_subdirectory (src/apps/ocio2icc)
 endif()
 
 ###############################################################################

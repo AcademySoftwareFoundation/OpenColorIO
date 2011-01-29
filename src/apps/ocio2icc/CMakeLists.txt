@@ -20,13 +20,13 @@ include_directories(
   ${Boost_INCLUDE_DIR}
 )
 
-add_executable(ociobuildicc main.cpp)
+add_executable(ocio2icc main.cpp)
 
-add_dependencies(ociobuildicc LCMS)
+add_dependencies(ocio2icc LCMS)
 
-target_link_libraries(ociobuildicc
+target_link_libraries(ocio2icc
                       ${Boost_LIBRARIES}
                       ${LCMS_STATIC_LIBRARIES}
                       OpenColorIO)
 
-install(TARGETS ociobuildicc DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS ocio2icc DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)

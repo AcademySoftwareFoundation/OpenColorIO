@@ -116,7 +116,7 @@ static cmsInt32Number PCS2Display_Sampler16(const cmsUInt16Number in[], cmsUInt1
 void
 print_help(boost::program_options::options_description desc) {
     std::cout << "\n";
-    std::cout << "ociobuildicc <options> outputprofile.icc\n";
+    std::cout << "ocio2icc <options> outputprofile.icc\n";
     std::cout << "\n";
     std::cout << desc << "\n";
     return;
