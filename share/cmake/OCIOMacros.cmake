@@ -1,3 +1,91 @@
+MACRO(messageonce MSG)
+    if(CMAKE_FIRST_RUN)
+        message(STATUS ${MSG})
+    endif()
+ENDMACRO()
+
+MACRO(OCIOFindOpenGL)
+    if(APPLE)
+        INCLUDE_DIRECTORIES(/System/Library/Frameworks)
+    endif()
+
+    # Find OpenGL
+    find_package(OpenGL)
+    if(OPENGL_FOUND)
+        message(STATUS "Found OpenGL library ${OPENGL_LIBRARY}")
+        message(STATUS "Found OpenGL includes ${OPENGL_INCLUDE_DIR}")
+    else()
+        message(STATUS "OpenGL not found")
+    endif()
+
+    # Find GLUT
+    find_package(GLUT)
+    if(GLUT_FOUND)
+        message(STATUS "Found GLUT library ${GLUT_LIBRARY}")
+    else()
+        message(STATUS "GLUT not found")
+    endif()
+
+    # Find GLEW
+    set(GLEW_VERSION 1.5.1)
+    FIND_PATH(GLEW_INCLUDES GL/glew.h
+        /usr/include
+        /usr/local/include
+        /sw/include
+        /opt/local/include
+        DOC "The directory where GL/glew.h resides")
+    FIND_LIBRARY(GLEW_LIBRARIES
+        NAMES GLEW glew
+        PATHS
+        /usr/lib64
+        /usr/lib
+        /usr/local/lib64
+        /usr/local/lib
+        /sw/lib
+        /opt/local/lib
+        DOC "The GLEW library")
+    if(GLEW_INCLUDES AND GLEW_LIBRARIES)
+        set(GLEW_FOUND TRUE)
+        message(STATUS "Found GLEW library ${GLEW_LIBRARIES}")
+        message(STATUS "Found GLEW includes ${GLEW_INCLUDES}")
+    else()
+        message(STATUS "GLEW not found")
+        set(GLEW_FOUND FALSE)
+    endif()
+ENDMACRO()
+
+MACRO(OCIOFindOpenImageIO)
+    if(OIIO_PATH)
+        message(STATUS "OIIO path explicitly specified: ${OIIO_PATH}")
+    endif()
+    FIND_PATH( OIIO_INCLUDES OpenImageIO/version.h
+        ${OIIO_PATH}/include/
+        /usr/include
+        /usr/local/include
+        /sw/include
+        /opt/local/include
+        DOC "The directory where OpenImageIO/version.h resides")
+    FIND_LIBRARY(OIIO_LIBRARIES
+        NAMES OIIO OpenImageIO
+        PATHS
+        ${OIIO_PATH}/lib/
+        /usr/lib64
+        /usr/lib
+        /usr/local/lib64
+        /usr/local/lib
+        /sw/lib
+        /opt/local/lib
+        DOC "The OIIO library")
+
+    if(OIIO_INCLUDES AND OIIO_LIBRARIES)
+        set(OIIO_FOUND TRUE)
+        message(STATUS "Found OIIO library ${OIIO_LIBRARIES}")
+        message(STATUS "Found OIIO includes ${OIIO_INCLUDES}")
+    else()
+        set(OIIO_FOUND FALSE)
+        message(STATUS "OIIO not found. Specify OIIO_PATH to locate it")
+    endif()
+ENDMACRO()
 
 MACRO(OCIOFindPython)
     # Set the default python runtime
@@ -41,8 +129,8 @@ MACRO(ExtractRst INFILE OUTFILE)
    )
 ENDMACRO()
 
+
 MACRO(CopyFiles TARGET)
-    
     # parse the macro arguments
     PARSE_ARGUMENTS(COPYFILES
         "OUTDIR;"

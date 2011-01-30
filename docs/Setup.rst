@@ -50,8 +50,8 @@ Enabling optional components
 ----------------------------
 
 The OpenColourIO library is probably not all you want - the Python
-libraries bindings and the Nuke nodes are only built if the
-dependencies are found.
+libraries bindings, the Nuke nodes and other included applications are only
+built if their dependencies are found.
 
 In the case of the Python bindings, the dependencies are the Python
 headers for the version you wish to use. These may be picked up by
@@ -86,6 +86,11 @@ Note that if you are using the Nuke plugins, you should compile the
 Python bindings for the same version of Python that Nuke uses
 internally. For Nuke 6.0 and 6.1 this is Python 2.5, and for 6.2 it is
 Python 2.6
+
+The applications included with OCIO have various dependencies - to
+determine these, look at the CMake output when first run::
+
+    -- Not building ocioconvert. Requirement(s) found: OCIO:FALSE
 
 .. _environment-setup:
 
