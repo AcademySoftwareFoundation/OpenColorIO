@@ -169,7 +169,7 @@ add_subdirectory(src/apps/ociocheck)
 if(OIIO_FOUND)
     add_subdirectory(src/apps/ocioconvert)
 else()
-    messageonce("Not building ocioconvert. Requirement(s) found: OCIO:${OIIO_FOUND}")
+    messageonce("Not building ocioconvert. Requirement(s) found: OIIO:${OIIO_FOUND}")
 endif()
 
 # ociodisplay, displays color-transformed images (uses OpenImageIO,

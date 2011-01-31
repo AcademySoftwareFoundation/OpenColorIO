@@ -90,7 +90,7 @@ Python 2.6
 The applications included with OCIO have various dependencies - to
 determine these, look at the CMake output when first run::
 
-    -- Not building ocioconvert. Requirement(s) found: OCIO:FALSE
+    -- Not building ocioconvert. Requirement(s) found: OIIO:FALSE
 
 .. _environment-setup:
 
