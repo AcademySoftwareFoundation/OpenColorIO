@@ -95,7 +95,9 @@ static cmsInt32Number Display2PCS_Sampler16(const cmsUInt16Number in[], cmsUInt1
 {
     //std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
     SamplerData* data = (SamplerData*) userdata;
-    cmsFloat32Number pix[3] = {in[0]/65535.f, in[1]/65535.f, in[2]/65535.f};
+    cmsFloat32Number pix[3] = { static_cast<float>(in[0])/65535.f,
+                                static_cast<float>(in[1])/65535.f,
+                                static_cast<float>(in[2])/65535.f};
     data->processor->applyRGB(pix);
     out[0] = (cmsUInt16Number)std::max(std::min(pix[0] * 65535.f, 65535.f), 0.f);
     out[1] = (cmsUInt16Number)std::max(std::min(pix[1] * 65535.f, 65535.f), 0.f);
