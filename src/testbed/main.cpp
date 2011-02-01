@@ -69,24 +69,24 @@ void testFilmlooks()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
-    int numDisplayDevices = config->getNumDisplayDeviceNames();
-    std::cout << "numDisplayDevices " << numDisplayDevices << std::endl;
-    std::cout << "Default device: " << config->getDefaultDisplayDeviceName() << std::endl;
+    int numdisplays = config->getNumDisplays();
+    std::cout << "numDisplays " << numdisplays << std::endl;
+    std::cout << "Default Display: " << config->getDefaultDisplay() << std::endl;
     std::cout << std::endl;
     
-    for(int i=0; i<numDisplayDevices; ++i)
+    for(int i=0; i<numdisplays; ++i)
     {
-        const char * device = config->getDisplayDeviceName(i);
-        std::cout << " Device: " << device << std::endl;
-        std::cout << " Default transform " << config->getDefaultDisplayTransformName(device) << std::endl;
+        const char * display = config->getDisplay(i);
+        std::cout << " Display: " << display << std::endl;
+        std::cout << " Default View " << config->getDefaultView(display) << std::endl;
         
-        int numTransforms = config->getNumDisplayTransformNames(device);
-        for(int j=0; j<numTransforms; ++j)
+        int numviews = config->getNumViews(display);
+        for(int j=0; j<numviews; ++j)
         {
-            const char * displayTransformName = config->getDisplayTransformName(device, j);
+            const char * view = config->getView(display, j);
             std::cout << "     ";
-            std::cout << displayTransformName << " = ";
-            std::cout << config->getDisplayColorSpaceName(device, displayTransformName);
+            std::cout << view << " = ";
+            std::cout << config->getDisplayColorSpaceName(display, view);
             std::cout << "\n";
         }
     }

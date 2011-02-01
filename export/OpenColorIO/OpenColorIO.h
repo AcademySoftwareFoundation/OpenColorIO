@@ -272,30 +272,56 @@ OCIO_NAMESPACE_ENTER
         // Returns NULL if index is out of range
         const char * getRoleName(int index) const;
         
+        
+        
         ///////////////////////////////////////////////////////////////////////////
-        //!rst:: .. _cfgdisplaytransforms_section:
+        //!rst:: .. _cfgdisplayview_section:
         // 
-        // DisplayTransforms
-        // ^^^^^^^^^^^^^^^^^
+        // Display/View Registration
+        // ^^^^^^^^^^^^^^^^^^^^^^^^^
         
         //!cpp:function::
-        int getNumDisplayDeviceNames() const;
+        const char * getDefaultDisplay() const;
         //!cpp:function::
-        const char * getDisplayDeviceName(int index) const;
+        int getNumDisplays() const;
         //!cpp:function::
-        const char * getDefaultDisplayDeviceName() const;
+        const char * getDisplay(int index) const;
+        
         //!cpp:function::
-        int getNumDisplayTransformNames(const char * device) const;
+        const char * getDefaultView(const char * display) const;
         //!cpp:function::
-        const char * getDisplayTransformName(const char * device, int index) const;
+        int getNumViews(const char * display) const;
         //!cpp:function::
-        const char * getDefaultDisplayTransformName(const char * device) const;
+        const char * getView(const char * display, int index) const;
+        
         //!cpp:function::
-        const char * getDisplayColorSpaceName(const char * device, const char * displayTransformName) const;
+        const char * getDisplayColorSpaceName(const char * display, const char * view) const;
+        
         //!cpp:function::
-        void addDisplayDevice(const char * device,
-                              const char * transformName,
-                              const char * colorSpaceName);
+        void setDisplayColorSpaceName(const char * display, const char * view,
+                                      const char * colorSpaceName);
+        
+        
+        // $OCIO_ACTIVE_DISPLAYS envvar can, at runtime, optionally override the allowed displays
+        // It is a comma or colon delimited list.
+        // Active displays that are not in the specified profile will be ignored, and the
+        // left-most defined display will be the default.
+        
+        //!cpp:function::comma-delimited list of display names
+        void setActiveDisplays(const char * displays);
+        //!cpp:function::
+        const char * getActiveDisplays() const;
+        
+        // $OCIO_ACTIVE_VIEWS envvar can, at runtime, optionally override the allowed views
+        // It is a comma or colon delimited list.
+        // Active views that are not in the specified profile will be ignored, and the
+        // left-most defined view will be the default.
+        
+        //!cpp:function::comma-delimited list of display names
+        void setActiveViews(const char * displays);
+        //!cpp:function::
+        const char * getActiveViews() const;
+        
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst:: .. _cfgluma_section:

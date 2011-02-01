@@ -54,6 +54,26 @@ OCIO_NAMESPACE_ENTER
     
     //////////////////////////////////////////////////////////////////////////
     
+    bool StrEqualsCaseIgnore(const std::string & a, const std::string & b);
+    
+    // Split on ':', ',', then nothing.
+    // Also string whitespace.
+    void SplitStringEnvStyle(std::vector<std::string> & outputvec, const char * str);
+    
+    // Join on ','
+    std::string JoinStringEnvStyle(const std::vector<std::string> & outputvec);
+    
+    // Ordering and capitalization from vec1 is preserved
+    std::vector<std::string> IntersectStringVecsCaseIgnore(const std::vector<std::string> & vec1,
+                                                           const std::vector<std::string> & vec2);
+    
+    // Find the index of the specified string, ignoring case.
+    // return -1 if not found.
+    
+    int FindInStringVecCaseIgnore(const std::vector<std::string> & vec, const std::string & str);
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
     void ReportInfo(const std::string & text);
 }
 OCIO_NAMESPACE_EXIT

@@ -192,12 +192,16 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_parseColorSpaceFromString( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_setRole( PyObject * self, PyObject * args );
         
-        PyObject * PyOCIO_Config_getDisplayDeviceNames( PyObject * self );
-        PyObject * PyOCIO_Config_getDefaultDisplayDeviceName( PyObject * self );
-        PyObject * PyOCIO_Config_getDisplayTransformNames( PyObject * self, PyObject * args );
-        PyObject * PyOCIO_Config_getDefaultDisplayTransformName( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getDefaultDisplay( PyObject * self );
+        PyObject * PyOCIO_Config_getDisplays( PyObject * self );
+        PyObject * PyOCIO_Config_getDefaultView( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getViews( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args );
-        PyObject * PyOCIO_Config_addDisplayDevice( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_setDisplayColorSpaceName( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_setActiveDisplays( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getActiveDisplays( PyObject * self );
+        PyObject * PyOCIO_Config_setActiveViews( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getActiveViews( PyObject * self );
         
         PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self );
         PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args );
@@ -231,12 +235,16 @@ OCIO_NAMESPACE_ENTER
             {"parseColorSpaceFromString", PyOCIO_Config_parseColorSpaceFromString, METH_VARARGS, "" },
             {"setRole", PyOCIO_Config_setRole, METH_VARARGS, "" },
             
-            {"getDisplayDeviceNames", (PyCFunction) PyOCIO_Config_getDisplayDeviceNames, METH_NOARGS, "" },
-            {"getDefaultDisplayDeviceName", (PyCFunction) PyOCIO_Config_getDefaultDisplayDeviceName, METH_NOARGS, "" },
-            {"getDisplayTransformNames", PyOCIO_Config_getDisplayTransformNames, METH_VARARGS, "" },
-            {"getDefaultDisplayTransformName", PyOCIO_Config_getDefaultDisplayTransformName, METH_VARARGS, "" },
+            {"getDefaultDisplay", (PyCFunction) PyOCIO_Config_getDefaultDisplay, METH_NOARGS, "" },
+            {"getDisplays", (PyCFunction) PyOCIO_Config_getDisplays, METH_NOARGS, "" },
+            {"getDefaultView", PyOCIO_Config_getDefaultView, METH_VARARGS, "" },
+            {"getViews", PyOCIO_Config_getViews, METH_VARARGS, "" },
             {"getDisplayColorSpaceName", PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, "" },
-            {"addDisplayDevice", PyOCIO_Config_addDisplayDevice, METH_VARARGS, "" },
+            {"setDisplayColorSpaceName", PyOCIO_Config_setDisplayColorSpaceName, METH_VARARGS, "" },
+            {"setActiveDisplays", PyOCIO_Config_setActiveDisplays, METH_VARARGS, "" },
+            {"getActiveDisplays", (PyCFunction) PyOCIO_Config_getActiveDisplays, METH_NOARGS, "" },
+            {"setActiveViews", PyOCIO_Config_setActiveViews, METH_VARARGS, "" },
+            {"getActiveViews", (PyCFunction) PyOCIO_Config_getActiveViews, METH_NOARGS, "" },
             
             {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
             {"setDefaultLumaCoefs", PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, "" },
@@ -680,18 +688,33 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
-        PyObject * PyOCIO_Config_getDisplayDeviceNames( PyObject * self )
+        PyObject * PyOCIO_Config_getDefaultDisplay( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                return PyString_FromString( config->getDefaultDisplay() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        PyObject * PyOCIO_Config_getDisplays( PyObject * self )
         {
             try
             {
                 ConstConfigRcPtr config = GetConstConfig(self, true);
                 
                 std::vector<std::string> data;
-                int numDevices = config->getNumDisplayDeviceNames();
+                int numDevices = config->getNumDisplays();
                 
                 for(int i=0; i<numDevices; ++i)
                 {
-                    data.push_back( config->getDisplayDeviceName(i) );
+                    data.push_back( config->getDisplay(i) );
                 }
                 
                 return CreatePyListFromStringVector(data);
@@ -701,65 +724,45 @@ OCIO_NAMESPACE_ENTER
                 Python_Handle_Exception();
                 return NULL;
             }
-        
         }
         
         
-        PyObject * PyOCIO_Config_getDefaultDisplayDeviceName( PyObject * self )
+        PyObject * PyOCIO_Config_getDefaultView( PyObject * self, PyObject * args )
         {
             try
             {
+                char * display = 0;
+                if (!PyArg_ParseTuple(args,"s:getDefaultView",
+                    &display)) return NULL;
+                
                 ConstConfigRcPtr config = GetConstConfig(self, true);
-                return PyString_FromString( config->getDefaultDisplayDeviceName() );
+                return PyString_FromString( config->getDefaultView(display) );
             }
             catch(...)
             {
                 Python_Handle_Exception();
                 return NULL;
             }
-        
         }
         
         
-        
-        
-        PyObject * PyOCIO_Config_getDisplayTransformNames( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_getViews( PyObject * self, PyObject * args )
         {
             try
             {
-                char * device = 0;
-                if (!PyArg_ParseTuple(args,"s:getDisplayTransformNames",
-                    &device)) return NULL;
+                char * display = 0;
+                if (!PyArg_ParseTuple(args,"s:getViews",
+                    &display)) return NULL;
                 
                 ConstConfigRcPtr config = GetConstConfig(self, true);
                 std::vector<std::string> data;
-                int numTransforms = config->getNumDisplayTransformNames(device);
-                
-                for(int i=0; i<numTransforms; ++i)
+                int num = config->getNumViews(display);
+                for(int i=0; i<num; ++i)
                 {
-                    data.push_back( config->getDisplayTransformName(device, i) );
+                    data.push_back( config->getView(display, i) );
                 }
                 
                 return CreatePyListFromStringVector(data);
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        
-        PyObject * PyOCIO_Config_getDefaultDisplayTransformName( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                char * device = 0;
-                if (!PyArg_ParseTuple(args,"s:getDisplayTransforms",
-                    &device)) return NULL;
-                
-                ConstConfigRcPtr config = GetConstConfig(self, true);
-                return PyString_FromString( config->getDefaultDisplayTransformName(device) );
             }
             catch(...)
             {
@@ -789,7 +792,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        PyObject * PyOCIO_Config_addDisplayDevice( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_setDisplayColorSpaceName( PyObject * self, PyObject * args )
         {
             try
             {
@@ -799,10 +802,10 @@ OCIO_NAMESPACE_ENTER
                 char * transformName = 0;
                 char * csname = 0;
                 
-                if (!PyArg_ParseTuple(args,"sss:addDisplayDevice",
+                if (!PyArg_ParseTuple(args,"sss:setDisplayColorSpaceName",
                     &device, &transformName, &csname)) return NULL;
                 
-                config->addDisplayDevice(device, transformName, csname);
+                config->setDisplayColorSpaceName(device, transformName, csname);
                 
                 Py_RETURN_NONE;
             }
@@ -812,6 +815,86 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
+        
+        
+        
+        
+        PyObject * PyOCIO_Config_setActiveDisplays( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                
+                char * displays = 0;
+                
+                if (!PyArg_ParseTuple(args,"s:setActiveDisplays",
+                    &displays)) return NULL;
+                
+                config->setActiveDisplays(displays);
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        PyObject * PyOCIO_Config_getActiveDisplays( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                return PyString_FromString( config->getActiveDisplays() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_setActiveViews( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                
+                char * views = 0;
+                
+                if (!PyArg_ParseTuple(args,"s:setActiveViews",
+                    &views)) return NULL;
+                
+                config->setActiveViews(views);
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        PyObject * PyOCIO_Config_getActiveViews( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                return PyString_FromString( config->getActiveViews() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        
         
         
         

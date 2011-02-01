@@ -71,7 +71,7 @@ std::vector<float> g_lut3d;
 std::string g_lut3dcacheid;
 
 std::string g_inputColorSpace;
-std::string g_device;
+std::string g_display;
 std::string g_transformName;
 
 float g_exposure_fstop = 0.0f;
@@ -178,8 +178,8 @@ static void InitImageTexture(const char * filename)
 void InitOCIO(const char * filename)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    g_device = config->getDefaultDisplayDeviceName();
-    g_transformName = config->getDefaultDisplayTransformName(g_device.c_str());
+    g_display = config->getDefaultDisplay();
+    g_transformName = config->getDefaultView(g_display.c_str());
     
     g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
     if(filename)
@@ -465,7 +465,7 @@ void UpdateOCIOGLState()
 {
     // Step 0: Get the processor using any of the pipelines mentioned above.
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    const char * displayColorSpace = config->getDisplayColorSpaceName(g_device.c_str(), g_transformName.c_str());
+    const char * displayColorSpace = config->getDisplayColorSpaceName(g_display.c_str(), g_transformName.c_str());
     
     OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
     transform->setInputColorSpaceName( g_inputColorSpace.c_str() );
@@ -498,7 +498,19 @@ void UpdateOCIOGLState()
         transform->setDisplayCC(expTransform);
     }
     
-    OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
+    OCIO::ConstProcessorRcPtr processor;
+    try
+    {
+        processor = config->getProcessor(transform);
+    }
+    catch(OCIO::Exception & e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
+    catch(...)
+    {
+        return;
+    }
     
     // Step 1: Create a GPU Shader Description
     OCIO::GpuShaderDesc shaderDesc;
@@ -561,15 +573,15 @@ void imageColorSpace_CB(int id)
 void displayDevice_CB(int id)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    const char * device = config->getDisplayDeviceName(id);
-    if(!device) return;
+    const char * display = config->getDisplay(id);
+    if(!display) return;
     
-    g_device = device;
+    g_display = display;
     
-    const char * csname = config->getDisplayColorSpaceName(g_device.c_str(), g_transformName.c_str());
+    const char * csname = config->getDisplayColorSpaceName(g_display.c_str(), g_transformName.c_str());
     if(!csname)
     {
-        g_transformName = config->getDefaultDisplayTransformName(g_device.c_str());
+        g_transformName = config->getDefaultView(g_display.c_str());
     }
     
     UpdateOCIOGLState();
@@ -580,7 +592,7 @@ void transform_CB(int id)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
-    const char * transform = config->getDisplayTransformName(g_device.c_str(), id);
+    const char * transform = config->getView(g_display.c_str(), id);
     if(!transform) return;
     
     g_transformName = transform;
@@ -601,16 +613,16 @@ static void PopulateOCIOMenus()
     }
     
     int deviceMenuID = glutCreateMenu(displayDevice_CB);
-    for(int i=0; i<config->getNumDisplayDeviceNames(); ++i)
+    for(int i=0; i<config->getNumDisplays(); ++i)
     {
-        glutAddMenuEntry(config->getDisplayDeviceName(i), i);
+        glutAddMenuEntry(config->getDisplay(i), i);
     }
     
     int transformMenuID = glutCreateMenu(transform_CB);
-    const char * defaultDevice = config->getDefaultDisplayDeviceName();
-    for(int i=0; i<config->getNumDisplayTransformNames(defaultDevice); ++i)
+    const char * defaultDisplay = config->getDefaultDisplay();
+    for(int i=0; i<config->getNumViews(defaultDisplay); ++i)
     {
-        glutAddMenuEntry(config->getDisplayTransformName(defaultDevice, i), i);
+        glutAddMenuEntry(config->getView(defaultDisplay, i), i);
     }
     
     glutCreateMenu(menuCallback);

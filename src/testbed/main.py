@@ -52,20 +52,27 @@ print config.getDefaultLumaCoefs()
 #config.setDefaultLumaCoefs((1/3.0,1/3.0,1/3.0))
 #print config.getDefaultLumaCoefs()
 
-text = config.serialize()
-#print text
 """
 
-"""
 config = OCIO.Config.CreateFromEnv()
-print 'default display device',config.getDefaultDisplayDeviceName()
-for device in config.getDisplayDeviceNames():
-    print 'device',device
-    print '    default',config.getDefaultDisplayTransformName(device)
+
+text = config.serialize()
+print text
+
+
+print "\n\n\n\n"
+
+print 'Default Display',config.getDefaultDisplay()
+print 'getActiveDisplays',config.getActiveDisplays()
+print 'getActiveViews',config.getActiveViews()
+
+print ""
+for display in config.getDisplays():
+    print 'Display:',display
+    print '    default',config.getDefaultView(display)
     
-    for transform in config.getDisplayTransformNames(device):
-        print '    transform',transform
-"""
+    for views in config.getViews(display):
+        print '    views',views
 
 """
 
@@ -103,79 +110,4 @@ print processor.applyRGB(c)
 
 """
 
-"""
-config = OCIO.Config()
-
-cs = OCIO.ColorSpace()
-cs.setName("lgf")
-cs.setFamily("lg")
-cs.setBitDepth(OCIO.Constants.BIT_DEPTH_F16)
-cs.setIsData(False)
-cs.setAllocation(OCIO.Constants.ALLOCATION_LG2)
-cs.setAllocationVars((-0.5,1.5))
-
-g = OCIO.GroupTransform()
-
-#t = OCIO.AllocationTransform()
-#t.setAllocation(OCIO.Constants.ALLOCATION_LG2)
-#t.setVars((-8.0, 8.0))
-#g.push_back(t)
-
-t = OCIO.LogTransform()
-t.setBase(10.0)
-g.push_back(t)
-
-cs.setTransform(g, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)
-
-
-config.addColorSpace(cs)
-config.setRole(OCIO.Constants.ROLE_COMPOSITING_LOG, cs.getName())
-
-"""
-
-# config = OCIO.Config.CreateFromEnv()
-
-config = OCIO.Config()
-"""
-
-text = config.serialize()
-print '\n\n'
-print text
-
-fname = '/tmp/a.ocio'
-f = file(fname,'w')
-f.write(text)
-f.close()
-
-newconfig = OCIO.Config.CreateFromFile(fname)
-
-print '\n\n'
-print newconfig.serialize()
-
-#print '\n\n'
-#print newconfig.serialize()
-
-
-print newconfig.getDefaultDisplayDevice()
-print newconfig.getDisplayDevices()
-"""
-
-
-t = OCIO.CDLTransform()
-t.setSOP((1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0))
-t.setSat(-0.123454)
-t.setID("Taco")
-t.setDescription("SDA SKJD ASK")
-
-#print t.getXML()
-#
-#print dir(t)
-
-
-t = OCIO.FileTransform()
-#t.setSrc("/shots/grn/cc/data/vnp_folders/looks/dc0150_asc/v1/look_dc0150_asc_v1.cc")
-t.setSrc("/net/homedirs/jeremys/cdl/./ASC-CDL_dist_v1.2/asc-cdl_test_images/SOP/sop_test_corrections.ccc")
-t.setCCCId("$CCID")
-
-p = config.getProcessor(t)
-#print dir(p)
+config.sanityCheck()

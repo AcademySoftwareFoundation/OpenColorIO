@@ -22,18 +22,18 @@ class Display : public DD::Image::PixelIop {
         bool hasLists; //!< Were colorspaces, display devices, and transform names found? If not, always error.
         DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
         int colorSpaceIndex; //!< index of colorspace selection from the pulldown list knob
-        int displayDeviceIndex, displayTransformIndex;
+        int displayIndex, viewIndex;
         std::vector<std::string> colorSpaceNames; //!< list of colorspace names (memory for const char* s below)
-        std::vector<std::string> displayDeviceNames, displayTransformNames;
+        std::vector<std::string> displayNames, viewNames;
         std::vector<const char*> colorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
-        std::vector<const char*> displayDeviceCstrNames, displayTransformCstrNames;
+        std::vector<const char*> displayCstrNames, viewCstrNames;
         double exposure;
         double display_gamma;
         
         OCIO::DisplayTransformRcPtr transformPtr;
         OCIO::ConstProcessorRcPtr processorPtr;
 
-        DD::Image::Knob *displayDeviceKnob, *displayTransformKnob;
+        DD::Image::Knob *displayKnob, *viewKnob;
         void refreshDisplayTransforms();
 
     public:

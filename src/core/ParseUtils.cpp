@@ -26,12 +26,13 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <iostream>
+#include <set>
+#include <sstream>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "pystring/pystring.h"
-
-#include <sstream>
-#include <iostream>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -295,6 +296,80 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
+    ////////////////////////////////////////////////////////////////////////////
+    
+    bool StrEqualsCaseIgnore(const std::string & a, const std::string & b)
+    {
+        return (pystring::lower(a) == pystring::lower(b));
+    }
+    
+    // Split on ':', ',', then nothing
+    void SplitStringEnvStyle(std::vector<std::string> & outputvec, const char * str)
+    {
+        outputvec.clear();
+        if(!str) return;
+        
+        std::string s = pystring::strip(str);
+        if(pystring::find(s, ",") > -1)
+        {
+            pystring::split(s, outputvec, ",");
+        }
+        else if(pystring::find(s, ":") > -1)
+        {
+            pystring::split(s, outputvec, ":");
+        }
+        else
+        {
+            outputvec.push_back(s);
+        }
+        
+        for(unsigned int i=0; i<outputvec.size(); ++i)
+        {
+            outputvec[i] = pystring::strip(outputvec[i]);
+        }
+    }
+    
+    std::string JoinStringEnvStyle(const std::vector<std::string> & outputvec)
+    {
+        return pystring::join(", ", outputvec);
+    }
+    
+    // Ordering and capitalization from vec1 is preserved
+    std::vector<std::string> IntersectStringVecsCaseIgnore(const std::vector<std::string> & vec1,
+                                                           const std::vector<std::string> & vec2)
+    {
+        std::vector<std::string> newvec;
+        std::set<std::string> allvalues;
+        
+        // Seed the set with all values from vec2
+        for(unsigned int i=0; i<vec2.size(); ++i)
+        {
+            allvalues.insert(pystring::lower(vec2[i]));
+        }
+        
+        for(unsigned int i=0; i<vec1.size(); ++i)
+        {
+            std::string key = pystring::lower(vec1[i]);
+            if(allvalues.find(key) != allvalues.end())
+            {
+                newvec.push_back(vec1[i]);
+            }
+        }
+        
+        return newvec;
+    }
+    
+    
+    int FindInStringVecCaseIgnore(const std::vector<std::string> & vec, const std::string & str)
+    {
+        std::string teststr = pystring::lower(str);
+        for(unsigned int i=0; i<vec.size(); ++i)
+        {
+            if(pystring::lower(vec[i]) == teststr) return static_cast<int>(i);
+        }
+        
+        return -1;
+    }
     
     ////////////////////////////////////////////////////////////////////////////
     

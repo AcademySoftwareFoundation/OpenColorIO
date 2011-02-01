@@ -50,6 +50,10 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
+        const char * OCIO_CONFIG_ENVVAR = "OCIO";
+        const char * OCIO_ACTIVE_DISPLAYS_ENVVAR = "OCIO_ACTIVE_DISPLAYS";
+        const char * OCIO_ACTIVE_VIEWS_ENVVAR = "OCIO_ACTIVE_VIEWS";
+        
         enum Sanity
         {
             SANITY_UNKNOWN = 0,
@@ -68,7 +72,8 @@ OCIO_NAMESPACE_ENTER
         "roles:\n"
         "  default: raw\n"
         "displays:\n"
-        "  - !<Display> {device: sRGB, name: Raw, colorspace: raw}\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
         "colorspaces:\n"
         "  - !<ColorSpace>\n"
         "      name: raw\n"
@@ -77,7 +82,6 @@ OCIO_NAMESPACE_ENTER
         "      isdata: true\n"
         "      gpuallocation: uniform\n"
         "      description: 'A raw color space. Conversions to and from this space are no-ops.'\n";
-        
     }
     
     
@@ -110,47 +114,27 @@ OCIO_NAMESPACE_ENTER
         g_currentConfig = config->createEditableCopy();
     }
     
-    
-    typedef std::vector<ColorSpaceRcPtr> ColorSpacePtrVec;
-    typedef std::map<std::string, std::string> RoleMap; // (lower case role name: colorspace name)
-    typedef std::vector<std::string> DisplayKey; // (device, name, colorspace)
-    
-    void operator >> (const YAML::Node& node, DisplayKey& k)
+    namespace
     {
-        if(node.GetTag() != "Display")
-            return; // not a !<Display> tag
-        if(node.FindValue("device")     != NULL &&
-           node.FindValue("name")       != NULL &&
-           node.FindValue("colorspace") != NULL)
-        {
-            k.push_back(node["device"].Read<std::string>());
-            k.push_back(node["name"].Read<std::string>());
-            k.push_back(node["colorspace"].Read<std::string>());
-        }
-        // else ignore node
-    }
     
-    YAML::Emitter& operator << (YAML::Emitter& out, DisplayKey disp) {
-        if(disp.size() != 3) return out; // invalid DisplayKey
-        out << YAML::VerbatimTag("Display");
-        out << YAML::Flow; // on one line
-        out << YAML::BeginMap;
-        out << YAML::Key << "device" << YAML::Value << disp[0];
-        out << YAML::Key << "name" << YAML::Value << disp[1];
-        out << YAML::Key << "colorspace" << YAML::Value << disp[2];
-        out << YAML::EndMap;
-        return out;
-    }
+    typedef std::map<std::string, std::string> StringMap;
+    typedef std::vector<std::string> StringVec;
     
-    std::string LookupRole(const RoleMap & roles, const std::string & rolename)
+    // Roles
+    // (lower case role name: colorspace name)
+    std::string LookupRole(const StringMap & roles, const std::string & rolename)
     {
-        RoleMap::const_iterator iter = roles.find(pystring::lower(rolename));
+        StringMap::const_iterator iter = roles.find(pystring::lower(rolename));
         if(iter == roles.end()) return "";
         return iter->second;
     }
     
+    
+    // Colorspaces
+    typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
+    
     bool FindColorSpaceIndex(int * index,
-                             const ColorSpacePtrVec & colorspaces,
+                             const ColorSpaceVec & colorspaces,
                              const std::string & csname)
     {
         if(csname.empty()) return false;
@@ -169,18 +153,171 @@ OCIO_NAMESPACE_ENTER
         return false;
     }
     
+    
+    // Displays
+    struct View
+    {
+        std::string name;
+        std::string colorspace;
+        
+        View() { }
+        
+        View(const std::string & name_,
+             const std::string & colorspace_) :
+                name(name_),
+                colorspace(colorspace_)
+        { }
+    };
+    
+    typedef std::vector<View> ViewVec;
+    typedef std::map<std::string, ViewVec> DisplayMap;  // (display name : ViewVec)
+    
+    void operator >> (const YAML::Node& node, View& v)
+    {
+        if(node.GetTag() != "View")
+            return; // not a !<Display> tag
+        
+        if(node.FindValue("name") == NULL)
+        {
+            throw Exception("View does not specify 'name'.");
+        }
+        
+        v.name = node["name"].Read<std::string>();
+        
+        if(node.FindValue("colorspace") == NULL)
+        {
+            std::ostringstream os;
+            os << "View '" << v.name << "' ";
+            os << "does not specify colorspace.";
+            throw Exception(os.str().c_str());
+        }
+        
+        v.colorspace = node["colorspace"].Read<std::string>();
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, View view)
+    {
+        out << YAML::VerbatimTag("View");
+        out << YAML::Flow;
+        out << YAML::BeginMap;
+        out << YAML::Key << "name" << YAML::Value << view.name;
+        out << YAML::Key << "colorspace" << YAML::Value << view.colorspace;
+        out << YAML::EndMap;
+        return out;
+    }
+    
+    DisplayMap::iterator find_display(DisplayMap & displays, const std::string & display)
+    {
+        for(DisplayMap::iterator iter = displays.begin();
+            iter != displays.end();
+            ++iter)
+        {
+            if(StrEqualsCaseIgnore(display, iter->first)) return iter;
+        }
+        return displays.end();
+    }
+    
+    DisplayMap::const_iterator find_display_const(const DisplayMap & displays, const std::string & display)
+    {
+        for(DisplayMap::const_iterator iter = displays.begin();
+            iter != displays.end();
+            ++iter)
+        {
+            if(StrEqualsCaseIgnore(display, iter->first)) return iter;
+        }
+        return displays.end();
+    }
+    
+    int find_view(const ViewVec & vec, const std::string & name)
+    {
+        for(unsigned int i=0; i<vec.size(); ++i)
+        {
+            if(StrEqualsCaseIgnore(name, vec[i].name)) return i;
+        }
+        return -1;
+    }
+    
+    void SetDisplay(DisplayMap & displays,
+                    const std::string & display,
+                    const std::string & view,
+                    const std::string & colorspace)
+    {
+        DisplayMap::iterator iter = find_display(displays, display);
+        if(iter == displays.end())
+        {
+            ViewVec views;
+            views.push_back( View(view, colorspace) );
+            displays[display] = views;
+        }
+        else
+        {
+            ViewVec & views = iter->second;
+            int index = find_view(views, view);
+            if(index<0)
+            {
+                views.push_back( View(view, colorspace) );
+            }
+            else
+            {
+                views[index].colorspace = colorspace;
+            }
+        }
+    }
+    
+    void ComputeDisplays(StringVec & displayCache,
+                         const DisplayMap & displays,
+                         const StringVec & activeDisplays,
+                         const StringVec & activeDisplaysEnvOverride)
+    {
+        displayCache.clear();
+        
+        StringVec displayMasterList;
+        for(DisplayMap::const_iterator iter = displays.begin();
+            iter != displays.end();
+            ++iter)
+        {
+            displayMasterList.push_back(iter->first);
+        }
+        
+        // Apply the env override if it's not empty.
+        if(!activeDisplaysEnvOverride.empty())
+        {
+            displayCache = IntersectStringVecsCaseIgnore(displayMasterList, activeDisplaysEnvOverride);
+            if(!displayCache.empty()) return;
+        }
+        // Otherwise, aApply the active displays if it's not empty.
+        else if(!activeDisplays.empty())
+        {
+            displayCache = IntersectStringVecsCaseIgnore(displayMasterList, activeDisplays);
+            if(!displayCache.empty()) return;
+        }
+        
+        displayCache = displayMasterList;
+    }
+    
+    
+    
+    } // namespace
+    
     class Config::Impl
     {
     public:
         ContextRcPtr context_;
-        
         std::string description_;
+        ColorSpaceVec colorspaces_;
+        StringMap roles_;
         
-        ColorSpacePtrVec colorspaces_;
+        DisplayMap displays_;
+        StringVec activeDisplays_;
+        StringVec activeDisplaysEnvOverride_;
+        StringVec activeViews_;
+        StringVec activeViewsEnvOverride_;
         
-        RoleMap roles_;
+        mutable std::string activeDisplaysStr_;
+        mutable std::string activeViewsStr_;
+        mutable StringVec displayCache_;
         
-        std::vector<DisplayKey> displayDevices_;
+        // Misc
         std::vector<float> defaultLumaCoefs_;
         bool strictParsing_;
         
@@ -193,6 +330,18 @@ OCIO_NAMESPACE_ENTER
             sanity_(SANITY_UNKNOWN)
         {
             context_->loadEnvironment();
+            
+            char* activeDisplays = std::getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR);
+            if(activeDisplays)
+            {
+                SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays);
+            }
+            
+            char * activeViews = std::getenv(OCIO_ACTIVE_VIEWS_ENVVAR);
+            if(activeViews)
+            {
+                SplitStringEnvStyle(activeViewsEnvOverride_, activeViews);
+            }
             
             defaultLumaCoefs_.resize(3);
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
@@ -218,10 +367,18 @@ OCIO_NAMESPACE_ENTER
                 colorspaces_.push_back(rhs.colorspaces_[i]->createEditableCopy());
             }
             
-            roles_ = rhs.roles_; // Map assignment operator will suffice for this
-            displayDevices_ = rhs.displayDevices_; // Vector assignment operator will suffice for this
-            defaultLumaCoefs_ = rhs.defaultLumaCoefs_; // Vector assignment operator will suffice for this
+            // Assignment operator will suffice for these
+            roles_ = rhs.roles_;
             
+            displays_ = rhs.displays_;
+            activeDisplays_ = rhs.activeDisplays_;
+            activeViews_ = rhs.activeViews_;
+            activeViewsEnvOverride_ = rhs.activeViewsEnvOverride_;
+            activeDisplaysEnvOverride_ = rhs.activeDisplaysEnvOverride_;
+            activeDisplaysStr_ = rhs.activeDisplaysStr_;
+            displayCache_ = rhs.displayCache_;
+            
+            defaultLumaCoefs_ = rhs.defaultLumaCoefs_;
             strictParsing_ = rhs.strictParsing_;
             
             sanity_ = rhs.sanity_;
@@ -248,7 +405,7 @@ OCIO_NAMESPACE_ENTER
     
     ConstConfigRcPtr Config::CreateFromEnv()
     {
-        char* file = std::getenv("OCIO");
+        char* file = std::getenv(OCIO_CONFIG_ENVVAR);
         if(file) return CreateFromFile(file);
         
         std::ostringstream os;
@@ -356,7 +513,7 @@ OCIO_NAMESPACE_ENTER
         
         // Confirm all roles are valid
         {
-            for(RoleMap::const_iterator iter = getImpl()->roles_.begin(),
+            for(StringMap::const_iterator iter = getImpl()->roles_.begin(),
                 end = getImpl()->roles_.end(); iter!=end; ++iter)
             {
                 int csindex = -1;
@@ -384,30 +541,64 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        int numviews = 0;
+        
         // Confirm all Displays transforms refer to colorspaces that exit
-        for(unsigned int i=0; i<getImpl()->displayDevices_.size(); ++i)
+        for(DisplayMap::const_iterator iter = getImpl()->displays_.begin();
+            iter != getImpl()->displays_.end();
+            ++iter)
         {
-            int csindex = -1;
-            if(!FindColorSpaceIndex(&csindex,
-                getImpl()->colorspaces_, getImpl()->displayDevices_[i][2]))
+            std::string display = iter->first;
+            const ViewVec & views = iter->second;
+            if(views.empty())
             {
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
-                os << "The display device at index " << i << " (";
-                os << getImpl()->displayDevices_[i][0] << " / ";
-                os << getImpl()->displayDevices_[i][1] << ") ";
-                os << "refers to a colorspace '";
-                os << getImpl()->displayDevices_[i][2] << " ' which is not defined.";
+                os << "The display '" << display << "' ";
+                os << "does not define any views.";
                 getImpl()->sanitytext_ = os.str();
                 throw Exception(getImpl()->sanitytext_.c_str());
             }
+            
+            for(unsigned int i=0; i<views.size(); ++i)
+            {
+                if(views[i].name.empty() || views[i].colorspace.empty())
+                {
+                    std::ostringstream os;
+                    os << "Config failed sanitycheck. ";
+                    os << "The display '" << display << "' ";
+                    os << "defines a view with an empty name and/or colorspace.";
+                    getImpl()->sanitytext_ = os.str();
+                    throw Exception(getImpl()->sanitytext_.c_str());
+                }
+                
+                int csindex = -1;
+                if(!FindColorSpaceIndex(&csindex, getImpl()->colorspaces_, views[i].colorspace))
+                {
+                    std::ostringstream os;
+                    os << "Config failed sanitycheck. ";
+                    os << "The display '" << display << "' ";
+                    os << "refers to a colorspace, '" << views[i].colorspace << "', ";
+                    os << "which is not defined.";
+                    getImpl()->sanitytext_ = os.str();
+                    throw Exception(getImpl()->sanitytext_.c_str());
+                }
+                
+                ++numviews;
+            }
         }
         
-        // TODO: Confirm at least one display entry exists.
+        // Confirm at least one display entry exists.
+        if(numviews == 0)
+        {
+            std::ostringstream os;
+            os << "Config failed sanitycheck. ";
+            os << "No displays are specified.";
+            getImpl()->sanitytext_ = os.str();
+            throw Exception(getImpl()->sanitytext_.c_str());
+        }
         
-        // Confirm for all ColorSpaceTransforms the names spaces exist
-        
-        // Potential enhancement: Confirm all files exist with read permissions
+        // TODO: Confirm for all ColorSpaceTransforms the names spaces exist
         
         // Everything is groovy.
         getImpl()->sanity_ = SANITY_SANE;
@@ -636,7 +827,7 @@ OCIO_NAMESPACE_ENTER
         // Unset the role
         else
         {
-            RoleMap::iterator iter = getImpl()->roles_.find(pystring::lower(role));
+            StringMap::iterator iter = getImpl()->roles_.find(pystring::lower(role));
             if(iter != getImpl()->roles_.end())
             {
                 getImpl()->roles_.erase(iter);
@@ -657,151 +848,253 @@ OCIO_NAMESPACE_ENTER
     const char * Config::getRoleName(int index) const
     {
         if(index < 0 || index >= (int)getImpl()->roles_.size()) return "";
-        RoleMap::const_iterator iter = getImpl()->roles_.begin();
+        StringMap::const_iterator iter = getImpl()->roles_.begin();
         for(int i = 0; i < index; ++i) ++iter;
         return iter->first.c_str();
     }
     
-    // Display Transforms
-    
     ///////////////////////////////////////////////////////////////////////////
     //
-    // TODO: Use maps rather than vectors as storage for display options
-    // These implementations suck in terms of scalability.
-    // (If you had 100s of display devices, this would be criminally inefficient.)
-    // But this can be ignored in the short-term, and doing so makes serialization
-    // much simpler.
-    //
-    // (Alternatively, an ordered map would solve the issue too).
-    //
-    // m_displayDevices = [(device, name, colorspace),...]
+    // Display/View Registration
     
-    int Config::getNumDisplayDeviceNames() const
+    
+    const char * Config::getDefaultDisplay() const
     {
-        std::set<std::string> devices;
-        
-        for(unsigned int i=0; i<getImpl()->displayDevices_.size(); ++i)
+        if(getImpl()->displayCache_.empty())
         {
-            if(getImpl()->displayDevices_[i].size() != 3) continue;
-            devices.insert( getImpl()->displayDevices_[i][0] );
+            ComputeDisplays(getImpl()->displayCache_,
+                            getImpl()->displays_,
+                            getImpl()->activeDisplays_,
+                            getImpl()->activeDisplaysEnvOverride_);
         }
         
-        return static_cast<int>(devices.size());
-    }
-    
-    const char * Config::getDisplayDeviceName(int index) const
-    {
-        std::set<std::string> devices;
+        int index = -1;
         
-        for(unsigned int i=0; i<getImpl()->displayDevices_.size(); ++i)
+        if(!getImpl()->activeDisplaysEnvOverride_.empty())
         {
-            if(getImpl()->displayDevices_[i].size() != 3) continue;
-            devices.insert( getImpl()->displayDevices_[i][0] );
-            
-            if((int)devices.size()-1 == index)
+            StringVec orderedDisplays = IntersectStringVecsCaseIgnore(getImpl()->activeDisplaysEnvOverride_,
+                                                           getImpl()->displayCache_);
+            if(!orderedDisplays.empty())
             {
-                return getImpl()->displayDevices_[i][0].c_str();
+                index = FindInStringVecCaseIgnore(getImpl()->displayCache_, orderedDisplays[0]);
+            }
+        }
+        else if(!getImpl()->activeDisplays_.empty())
+        {
+            StringVec orderedDisplays = IntersectStringVecsCaseIgnore(getImpl()->activeDisplays_,
+                                                           getImpl()->displayCache_);
+            if(!orderedDisplays.empty())
+            {
+                index = FindInStringVecCaseIgnore(getImpl()->displayCache_, orderedDisplays[0]);
             }
         }
         
+        if(index >= 0)
+        {
+            return getImpl()->displayCache_[index].c_str();
+        }
+        
+        if(!getImpl()->displayCache_.empty())
+        {
+            return getImpl()->displayCache_[0].c_str();
+        }
+        
         return "";
     }
-    
-    const char * Config::getDefaultDisplayDeviceName() const
+
+
+    int Config::getNumDisplays() const
     {
-        if(getNumDisplayDeviceNames()>=1)
+        if(getImpl()->displayCache_.empty())
         {
-            return getDisplayDeviceName(0);
+            ComputeDisplays(getImpl()->displayCache_,
+                            getImpl()->displays_,
+                            getImpl()->activeDisplays_,
+                            getImpl()->activeDisplaysEnvOverride_);
+        }
+        
+        return static_cast<int>(getImpl()->displayCache_.size());
+    }
+
+    const char * Config::getDisplay(int index) const
+    {
+        if(getImpl()->displayCache_.empty())
+        {
+            ComputeDisplays(getImpl()->displayCache_,
+                            getImpl()->displays_,
+                            getImpl()->activeDisplays_,
+                            getImpl()->activeDisplaysEnvOverride_);
+        }
+        
+        if(index>=0 || index < static_cast<int>(getImpl()->displayCache_.size()))
+        {
+            return getImpl()->displayCache_[index].c_str();
         }
         
         return "";
     }
     
-    int Config::getNumDisplayTransformNames(const char * device) const
+    const char * Config::getDefaultView(const char * display) const
     {
-        std::set<std::string> names;
-        
-        for(unsigned int i=0; i<getImpl()->displayDevices_.size(); ++i)
+        if(getImpl()->displayCache_.empty())
         {
-            if(getImpl()->displayDevices_[i].size() != 3) continue;
-            if(getImpl()->displayDevices_[i][0] != device) continue;
-            names.insert( getImpl()->displayDevices_[i][1] );
+            ComputeDisplays(getImpl()->displayCache_,
+                            getImpl()->displays_,
+                            getImpl()->activeDisplays_,
+                            getImpl()->activeDisplaysEnvOverride_);
         }
         
-        return static_cast<int>(names.size());
-    }
-    
-    const char * Config::getDisplayTransformName(const char * device,
-        int index) const
-    {
-        std::set<std::string> names;
+        if(!display) return 0;
         
-        for(unsigned int i=0; i<getImpl()->displayDevices_.size(); ++i)
+        DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
+        if(iter == getImpl()->displays_.end()) return 0;
+        
+        const ViewVec & views = iter->second;
+        
+        StringVec masterViews;
+        for(unsigned int i=0; i<views.size(); ++i)
         {
-            if(getImpl()->displayDevices_[i].size() != 3) continue;
-            if(getImpl()->displayDevices_[i][0] != device) continue;
-            names.insert( getImpl()->displayDevices_[i][1] );
-            
-            if((int)names.size()-1 == index)
+            masterViews.push_back(views[i].name);
+        }
+        
+        int index = -1;
+        
+        if(!getImpl()->activeViewsEnvOverride_.empty())
+        {
+            StringVec orderedViews = IntersectStringVecsCaseIgnore(getImpl()->activeViewsEnvOverride_,
+                                                           masterViews);
+            if(!orderedViews.empty())
             {
-                return getImpl()->displayDevices_[i][1].c_str();
+                index = FindInStringVecCaseIgnore(masterViews, orderedViews[0]);
+            }
+        }
+        else if(!getImpl()->activeViews_.empty())
+        {
+            StringVec orderedViews = IntersectStringVecsCaseIgnore(getImpl()->activeViews_,
+                                                           masterViews);
+            if(!orderedViews.empty())
+            {
+                index = FindInStringVecCaseIgnore(masterViews, orderedViews[0]);
             }
         }
         
-        return "";
-    }
-    
-    const char * Config::getDefaultDisplayTransformName(const char * device) const
-    {
-        if(getNumDisplayTransformNames(device)>=1)
+        if(index >= 0)
         {
-            return getDisplayTransformName(device, 0);
+            return views[index].name.c_str();
+        }
+        
+        if(!views.empty())
+        {
+            return views[0].name.c_str();
         }
         
         return "";
     }
-    
-    const char * Config::getDisplayColorSpaceName(const char * device,
-        const char * displayTransformName) const
+
+    int Config::getNumViews(const char * display) const
     {
-        for(unsigned int i=0; i<getImpl()->displayDevices_.size(); ++i)
+        if(getImpl()->displayCache_.empty())
         {
-            if(getImpl()->displayDevices_[i].size() != 3) continue;
-            if(getImpl()->displayDevices_[i][0] != device) continue;
-            if(getImpl()->displayDevices_[i][1] != displayTransformName) continue;
-            return getImpl()->displayDevices_[i][2].c_str();
+            ComputeDisplays(getImpl()->displayCache_,
+                            getImpl()->displays_,
+                            getImpl()->activeDisplays_,
+                            getImpl()->activeDisplaysEnvOverride_);
         }
         
-        return "";
+        if(!display) return 0;
+        
+        DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
+        if(iter == getImpl()->displays_.end()) return 0;
+        
+        const ViewVec & views = iter->second;
+        return static_cast<int>(views.size());
     }
-    
-    void Config::addDisplayDevice(const char * device,
-                                        const char * displayTransformName,
-                                        const char * csname)
+
+    const char * Config::getView(const char * display, int index) const
     {
-        getImpl()->sanity_ = SANITY_UNKNOWN;
-        getImpl()->sanitytext_ = "";
-        
-        // Is this device / display already registered?
-        // If so, set it to the potentially new value.
-        
-        for(unsigned int i=0; i<getImpl()->displayDevices_.size(); ++i)
+        if(getImpl()->displayCache_.empty())
         {
-            if(getImpl()->displayDevices_[i].size() != 3) continue;
-            if(getImpl()->displayDevices_[i][0] != device) continue;
-            if(getImpl()->displayDevices_[i][1] != displayTransformName) continue;
-            
-            getImpl()->displayDevices_[i][2] = csname;
-            return;
+            ComputeDisplays(getImpl()->displayCache_,
+                            getImpl()->displays_,
+                            getImpl()->activeDisplays_,
+                            getImpl()->activeDisplaysEnvOverride_);
         }
         
-        // Otherwise, add a new entry!
-        DisplayKey displayKey;
-        displayKey.push_back(std::string(device));
-        displayKey.push_back(std::string(displayTransformName));
-        displayKey.push_back(std::string(csname));
-        getImpl()->displayDevices_.push_back(displayKey);
+        if(!display) return "";
+        
+        DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
+        if(iter == getImpl()->displays_.end()) return 0;
+        
+        const ViewVec & views = iter->second;
+        return views[index].name.c_str();
     }
+
+    const char * Config::getDisplayColorSpaceName(const char * display, const char * view) const
+    {
+        if(!display || !view) return "";
+        
+        DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
+        if(iter == getImpl()->displays_.end()) return "";
+        
+        const ViewVec & views = iter->second;
+        int index = find_view(views, view);
+        if(index<0) return "";
+        
+        return views[index].colorspace.c_str();
+    }
+    
+    void Config::setDisplayColorSpaceName(const char * display, const char * view,
+                                          const char * colorSpaceName)
+    {
+        if(!display || !view || !colorSpaceName) return;
+        
+        SetDisplay(getImpl()->displays_,
+                   display, view, colorSpaceName);
+        getImpl()->displayCache_.clear();
+    }
+
+    void Config::setActiveDisplays(const char * displays)
+    {
+        if(!displays)
+        {
+            getImpl()->activeDisplays_.clear();
+        }
+        else
+        {
+            SplitStringEnvStyle(getImpl()->activeDisplays_, displays);
+        }
+        
+        getImpl()->displayCache_.clear();
+    }
+
+    const char * Config::getActiveDisplays() const
+    {
+        getImpl()->activeDisplaysStr_ = JoinStringEnvStyle(getImpl()->activeDisplays_);
+        return getImpl()->activeDisplaysStr_.c_str();
+    }
+    
+    void Config::setActiveViews(const char * views)
+    {
+        if(!views)
+        {
+            getImpl()->activeViews_.clear();
+        }
+        else
+        {
+            SplitStringEnvStyle(getImpl()->activeViews_, views);
+        }
+        
+        getImpl()->displayCache_.clear();
+    }
+
+    const char * Config::getActiveViews() const
+    {
+        getImpl()->activeViewsStr_ = JoinStringEnvStyle(getImpl()->activeViews_);
+        return getImpl()->activeViewsStr_.c_str();
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
     
     void Config::getDefaultLumaCoefs(float * c3) const
     {
@@ -910,47 +1203,36 @@ OCIO_NAMESPACE_ENTER
     {
         try
         {
-            // serialize the config
             YAML::Emitter out;
             out << YAML::Block;
             out << YAML::BeginMap;
             out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
             out << YAML::Newline;
             
-            std::string search_path = getSearchPath();
-            if(search_path != "")
-            {
-                out << YAML::Key << "search_path" << YAML::Value << search_path;
-            }
-            
+            out << YAML::Key << "search_path" << YAML::Value << getImpl()->context_->getSearchPath();
             out << YAML::Key << "strictparsing" << YAML::Value << getImpl()->strictParsing_;
-            
             out << YAML::Key << "luma" << YAML::Value << YAML::Flow << getImpl()->defaultLumaCoefs_;
             
             if(getImpl()->description_ != "")
             {
                 out << YAML::Newline;
-                out << YAML::Key << "description" << YAML::Value << getImpl()->description_;
+                out << YAML::Key << "description";
+                out << YAML::Value << getImpl()->description_;
             }
             
             // Roles
-            if(getImpl()->roles_.size() > 0)
-            {
-                out << YAML::Newline;
-                out << YAML::Key << "roles" << YAML::Value;
-                out << getImpl()->roles_;
-            }
+            out << YAML::Newline;
+            out << YAML::Key << "roles";
+            out << YAML::Value << getImpl()->roles_;
             
             // Displays
-            if(getImpl()->displayDevices_.size() > 0)
-            {
-                out << YAML::Newline;
-                out << YAML::Key << "displays" << YAML::Value;
-                out << YAML::BeginSeq;
-                for(unsigned int i=0; i<getImpl()->displayDevices_.size(); ++i)
-                    out << getImpl()->displayDevices_[i];
-                out << YAML::EndSeq;
-            }
+            out << YAML::Newline;
+            out << YAML::Key << "displays";
+            out << YAML::Value << getImpl()->displays_;
+            out << YAML::Key << "active_displays";
+            out << YAML::Value << YAML::Flow << getImpl()->activeDisplays_;
+            out << YAML::Key << "active_views";
+            out << YAML::Value << YAML::Flow << getImpl()->activeViews_;
             
             // ColorSpaces
             if(getImpl()->colorspaces_.size() > 0)
@@ -1049,7 +1331,8 @@ OCIO_NAMESPACE_ENTER
             //  precious or not?). Alternative is to store roles
             // in a map, rather than a vec.
             
-            if(node.FindValue("roles") != NULL) {
+            if(node.FindValue("roles") != NULL)
+            {
                 if(node["roles"].GetType() != YAML::CT_MAP)
                 {
                     std::ostringstream os;
@@ -1063,34 +1346,68 @@ OCIO_NAMESPACE_ENTER
                     const std::string value = it.second();
                     roles_[pystring::lower(key)] = value;
                 }
-            
-            } else {
-                // TODO: does it matter if there are no roles defined?
             }
             
             // Displays
-            if(node.FindValue("displays") != NULL) {
-                if(node["displays"].GetType() != YAML::CT_SEQUENCE)
+            if(node.FindValue("displays") != NULL)
+            {
+                // Backwards Compatibility: load the sequence
+                if(node["displays"].GetType() == YAML::CT_SEQUENCE)
                 {
-                    std::ostringstream os;
-                    os << "'displays' field needs to be a (- !<Display>) list.";
-                    throw Exception(os.str().c_str());
-                }
-                for(unsigned i = 0; i < node["displays"].size(); ++i)
-                {
-                    if(node["displays"][i].GetTag() == "Display")
+                    for (unsigned i = 0; i < node["displays"].size(); ++i)
                     {
-                        DisplayKey tmp;
-                        node["displays"][i] >> tmp;
-                        displayDevices_.push_back(tmp);
+                        if(node["displays"][i].GetType() != YAML::CT_MAP)
+                        {
+                            std::ostringstream os;
+                            os << "Display entries must be a map.";
+                            throw Exception(os.str().c_str());
+                        }
+                        
+                        if(node["displays"][i].FindValue("device") == NULL ||
+                           node["displays"][i].FindValue("name") == NULL ||
+                           node["displays"][i].FindValue("colorspace") == NULL)
+                        {
+                            std::ostringstream os;
+                            os << "Display entries must define 'device', 'name', and 'colorspace'.";
+                            throw Exception(os.str().c_str());
+                        }
+                        
+                        std::string display = node["displays"][i]["device"].Read<std::string>();
+                        std::string view = node["displays"][i]["name"].Read<std::string>();
+                        std::string colorspace = node["displays"][i]["colorspace"].Read<std::string>();
+                        
+                        SetDisplay(displays_,
+                                   display, view, colorspace);
                     }
-                    // ignore other tags
-                    // TODO: print something or set some defaults in this case
+                }
+                else if(node["displays"].GetType() == YAML::CT_MAP)
+                {
+                    node["displays"] >> displays_;
                 }
             }
-            else
+            
+            if(node.FindValue("active_displays") != NULL)
             {
-                // TODO: does it matter if there are no displays defined?
+                if(node["active_displays"].GetType() != YAML::CT_SEQUENCE)
+                {
+                    std::ostringstream os;
+                    os << "'active_displays' field needs to be a list.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                node["active_displays"] >> activeDisplays_;
+            }
+            
+            if(node.FindValue("active_views") != NULL)
+            {
+                if(node["active_views"].GetType() != YAML::CT_SEQUENCE)
+                {
+                    std::ostringstream os;
+                    os << "'active_views' field needs to be a list.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                node["active_views"] >> activeViews_;
             }
             
             // ColorSpaces
@@ -1229,9 +1546,10 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     "  default: raw\n"
     "  scene_linear: lnh\n"
     "displays:\n"
-    "  - !<Display> {device: sRGB, name: Film1D, colorspace: vd8}\n"
-    "  - !<Display> {device: sRGB, name: Log, colorspace: lg10}\n"
-    "  - !<Display> {device: sRGB, name: Raw, colorspace: raw}\n"
+    "  sRGB:\n"
+    "  - !<View> {name: Film1D, colorspace: vd8}\n"
+    "  - !<View> {name: Log, colorspace: lg10}\n"
+    "  - !<View> {name: Raw, colorspace: raw}\n"
     "colorspaces:\n"
     "  - !<ColorSpace>\n"
     "      name: raw\n"
