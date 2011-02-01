@@ -1,3 +1,10 @@
+**Version 0.7.6 (Feb 1 2011):**
+    * Updated Config Display API (.ocio config format updated)
+    * Added ocio2icc app (ICC Profile Generation)
+    * Revamp of ASC CDL, added .cc and .ccc support
+    * Documentation Improvements
+    * Makefile enhancements (Boost_INCLUDE_DIR, etc)
+
 **Version 0.7.5 (Jan 13 2011):**
     * ociodisplay enhancements
     * gpu display bugfix (glsl profile 1.0 only)
