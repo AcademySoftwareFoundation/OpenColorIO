@@ -287,7 +287,11 @@ OCIO_NAMESPACE_ENTER
         out << YAML::VerbatimTag("FileTransform");
         out << YAML::Flow << YAML::BeginMap;
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
-        out << YAML::Key << "cccid" << YAML::Value << t->getCCCId();
+        const char * cccid = t->getCCCId();
+        if(cccid && *cccid)
+        {
+            out << YAML::Key << "cccid" << YAML::Value << t->getCCCId();
+        }
         out << YAML::Key << "interpolation";
         out << YAML::Value << t->getInterpolation();
         
