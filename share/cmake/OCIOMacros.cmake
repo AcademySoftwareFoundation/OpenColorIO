@@ -58,7 +58,14 @@ MACRO(OCIOFindOpenImageIO)
     if(OIIO_PATH)
         message(STATUS "OIIO path explicitly specified: ${OIIO_PATH}")
     endif()
+    if(OIIO_INCLUDE_PATH)
+        message(STATUS "OIIO INCLUDE_PATH explicitly specified: ${OIIO_INCLUDE_PATH}")
+    endif()
+    if(OIIO_LIBRARY_PATH)
+        message(STATUS "OIIO LIBRARY_PATH explicitly specified: ${OIIO_LIBRARY_PATH}")
+    endif()
     FIND_PATH( OIIO_INCLUDES OpenImageIO/version.h
+        ${OIIO_INCLUDE_PATH}
         ${OIIO_PATH}/include/
         /usr/include
         /usr/local/include
@@ -68,6 +75,7 @@ MACRO(OCIOFindOpenImageIO)
     FIND_LIBRARY(OIIO_LIBRARIES
         NAMES OIIO OpenImageIO
         PATHS
+        ${OIIO_LIBRARY_PATH}
         ${OIIO_PATH}/lib/
         /usr/lib64
         /usr/lib
