@@ -240,10 +240,10 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Given the specified string, get the longest,
         // right-most, ColorSpace substring that appears.
         //
-        // * If strict parsing is enabled, and no colorspace are found return a
-        //   null pointer.
+        // * If strict parsing is enabled, and no colorspace are found return
+        //   an empty string.
         // * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
-        // * If the default role is not defined, return a null pointer.
+        // * If the default role is not defined, return an empty string.
         const char * parseColorSpaceFromString(const char * str) const;
         
         //!cpp:function::
@@ -269,7 +269,7 @@ OCIO_NAMESPACE_ENTER
         bool hasRole(const char * role) const;
         //!cpp:function:: get the role name at index, this will return values
         // like 'scene_linear', 'compositing_log'.
-        // Returns NULL if index is out of range
+        // Return empty string if index is out of range.
         const char * getRoleName(int index) const;
         
         
