@@ -317,7 +317,7 @@ OCIO_NAMESPACE_ENTER
         // Active views that are not in the specified profile will be ignored, and the
         // left-most defined view will be the default.
         
-        //!cpp:function::comma-delimited list of display names
+        //!cpp:function::comma-delimited list of view names
         void setActiveViews(const char * displays);
         //!cpp:function::
         const char * getActiveViews() const;
