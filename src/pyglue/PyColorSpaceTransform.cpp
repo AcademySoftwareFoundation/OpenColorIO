@@ -169,7 +169,8 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_ColorSpaceTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_ColorSpaceTransform_init( PyOCIO_Transform *self,
+            PyObject * args, PyObject * kwds )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
@@ -178,10 +179,32 @@ OCIO_NAMESPACE_ENTER
             self->cppobj = new TransformRcPtr();
             self->isconst = true;
             
+            // Parse optional kwargs
+            char * src = NULL;
+            char * dst = NULL;
+            char * direction = NULL;
+            
+            static const char *kwlist[] = {
+                "src",
+                "dst",
+                "direction",
+                NULL
+            };
+            
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|sss",
+                const_cast<char **>(kwlist),
+                &src, &dst, &direction )) return -1;
+            
             try
             {
-                *self->cppobj = ColorSpaceTransform::Create();
+                ColorSpaceTransformRcPtr transform = ColorSpaceTransform::Create();
+                *self->cppobj = transform;
                 self->isconst = false;
+                
+                if(src) transform->setSrc(src);
+                if(dst) transform->setDst(dst);
+                if(direction) transform->setDirection(TransformDirectionFromString(direction));
+                
                 return 0;
             }
             catch ( const std::exception & e )

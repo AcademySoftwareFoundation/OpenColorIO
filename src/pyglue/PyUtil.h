@@ -76,6 +76,7 @@ OCIO_NAMESPACE_ENTER
     PyObject* CreatePyListFromFloatVector(const std::vector<float> &data);
     PyObject* CreatePyListFromDoubleVector(const std::vector<double> &data);
     PyObject* CreatePyListFromStringVector(const std::vector<std::string> &data);
+    PyObject* CreatePyListFromTransformVector(const std::vector<ConstTransformRcPtr> &data);
     
     //! Fill the specified vector type from the given pyobject
     //! Return true on success, false on failure.
@@ -86,6 +87,10 @@ OCIO_NAMESPACE_ENTER
     bool FillFloatVectorFromPySequence(PyObject* datalist, std::vector<float> &data);
     bool FillDoubleVectorFromPySequence(PyObject* datalist, std::vector<double> &data);
     bool FillStringVectorFromPySequence(PyObject* datalist, std::vector<std::string> &data);
+    bool FillTransformVectorFromPySequence(PyObject* datalist, std::vector<ConstTransformRcPtr> &data);
+    
+    
+    
     
     ///////////////////////////////////////////////////////////////////////////
     

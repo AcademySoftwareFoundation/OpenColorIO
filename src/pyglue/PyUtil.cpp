@@ -297,6 +297,19 @@ OCIO_NAMESPACE_ENTER
         return returnlist;
     }
     
+    PyObject* CreatePyListFromTransformVector(const std::vector<ConstTransformRcPtr> &data)
+    {
+        PyObject* returnlist = PyList_New( data.size() );
+        if(!returnlist) return 0;
+        
+        for(unsigned int i =0; i<data.size(); ++i)
+        {
+            PyList_SET_ITEM(returnlist, i, BuildConstPyTransform(data[i]));
+        }
+        
+        return returnlist;
+    }
+    
     
     namespace
     {
@@ -593,6 +606,75 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
+    
+    
+    bool FillTransformVectorFromPySequence(PyObject* datalist, std::vector<ConstTransformRcPtr> &data)
+    {
+        data.clear();
+        
+        if(PyListOrTuple_Check(datalist))
+        {
+            int sequenceSize = PyListOrTuple_GET_SIZE(datalist);
+            data.reserve(sequenceSize);
+            
+            for(int i=0; i < sequenceSize; i++)
+            {
+                PyObject* item = PyListOrTuple_GET_ITEM(datalist, i);
+                ConstTransformRcPtr val;
+                try
+                {
+                    val = GetConstTransform(item, true);
+                }
+                catch(...)
+                {
+                    data.clear();
+                    return false;
+                }
+                
+                data.push_back( val );
+            }
+            return true;
+        }
+        else
+        {
+            PyObject *item;
+            PyObject *iter = PyObject_GetIter(datalist);
+            if (iter == NULL)
+            {
+                PyErr_Clear();
+                return false;
+            }
+            while((item = PyIter_Next(iter)) != NULL)
+            {
+                ConstTransformRcPtr val;
+                try
+                {
+                    val = GetConstTransform(item, true);
+                }
+                catch(...)
+                {
+                    Py_DECREF(item);
+                    Py_DECREF(iter);
+                    
+                    data.clear();
+                    return false;
+                }
+                
+                data.push_back(val);
+                Py_DECREF(item);
+            }
+            
+            Py_DECREF(iter);
+            if (PyErr_Occurred())
+            {
+                PyErr_Clear();
+                data.clear();
+                return false;
+            }
+            
+            return true;
+        }
+    }
     
     ///////////////////////////////////////////////////////////////////////////
     

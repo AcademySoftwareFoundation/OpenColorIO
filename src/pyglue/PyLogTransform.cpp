@@ -164,7 +164,8 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_LogTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_LogTransform_init( PyOCIO_Transform *self,
+            PyObject * args, PyObject * kwds )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
@@ -173,10 +174,29 @@ OCIO_NAMESPACE_ENTER
             self->cppobj = new TransformRcPtr();
             self->isconst = true;
             
+            // Parse optional kwargs
+            float base = -1.0f; // -1.0 is an illegal value for log transform base
+            char * direction = NULL;
+            
+            static const char *kwlist[] = {
+                "base",
+                "direction",
+                NULL
+            };
+            
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|fs",
+                const_cast<char **>(kwlist),
+                &base, &direction )) return -1;
+            
             try
             {
-                *self->cppobj = LogTransform::Create();
+                LogTransformRcPtr transform = LogTransform::Create();
+                *self->cppobj = transform;
                 self->isconst = false;
+                
+                if(base != -1.0f) transform->setBase(base);
+                if(direction) transform->setDirection(TransformDirectionFromString(direction));
+                
                 return 0;
             }
             catch ( const std::exception & e )

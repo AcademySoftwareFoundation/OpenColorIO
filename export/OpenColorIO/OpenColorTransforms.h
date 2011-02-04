@@ -450,7 +450,7 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         ConstTransformRcPtr getTransform(int index) const;
-        //!cpp:function::
+        //!cpp:function:This returns the actual internal transform, not a copy.:
         TransformRcPtr getEditableTransform(int index);
         
         //!cpp:function::

@@ -164,7 +164,8 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_ExponentTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_ExponentTransform_init( PyOCIO_Transform *self,
+            PyObject * args, PyObject * kwds )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
@@ -173,10 +174,38 @@ OCIO_NAMESPACE_ENTER
             self->cppobj = new TransformRcPtr();
             self->isconst = true;
             
+            // Parse optional kwargs
+            PyObject * pyvalue = Py_None;
+            char * direction = NULL;
+            
+            static const char *kwlist[] = {
+                "value",
+                "direction",
+                NULL
+            };
+            
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|Os",
+                const_cast<char **>(kwlist),
+                &pyvalue, &direction )) return -1;
+            
             try
             {
-                *self->cppobj = ExponentTransform::Create();
+                ExponentTransformRcPtr transform = ExponentTransform::Create();
+                *self->cppobj = transform;
                 self->isconst = false;
+                
+                if(pyvalue != Py_None)
+                {
+                    std::vector<float> data;
+                    if(!FillFloatVectorFromPySequence(pyvalue, data) || (data.size() != 4))
+                    {
+                        PyErr_SetString(PyExc_TypeError, "Value argument must be a float array, size 4");
+                        return 0;
+                    }
+                    
+                    transform->setValue( &data[0] );
+                }
+                if(direction) transform->setDirection(TransformDirectionFromString(direction));
                 return 0;
             }
             catch ( const std::exception & e )

@@ -175,7 +175,8 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_FileTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_FileTransform_init( PyOCIO_Transform *self,
+            PyObject * args, PyObject * kwds )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
@@ -184,10 +185,35 @@ OCIO_NAMESPACE_ENTER
             self->cppobj = new TransformRcPtr();
             self->isconst = true;
             
+            // Parse optional kwargs
+            char * src = NULL;
+            char * cccid = NULL;
+            char * interpolation = NULL;
+            char * direction = NULL;
+            
+            static const char *kwlist[] = {
+                "src",
+                "cccid",
+                "interpolation",
+                "direction",
+                NULL
+            };
+            
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|ssss",
+                const_cast<char **>(kwlist),
+                &src, &cccid, &interpolation, &direction )) return -1;
+            
             try
             {
-                *self->cppobj = FileTransform::Create();
+                FileTransformRcPtr transform = FileTransform::Create();
+                *self->cppobj = transform;
                 self->isconst = false;
+                
+                if(src) transform->setSrc(src);
+                if(cccid) transform->setCCCId(cccid);
+                if(interpolation) transform->setInterpolation(InterpolationFromString(interpolation));
+                if(direction) transform->setDirection(TransformDirectionFromString(direction));
+                
                 return 0;
             }
             catch ( const std::exception & e )

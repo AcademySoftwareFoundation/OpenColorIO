@@ -54,12 +54,41 @@ print config.getDefaultLumaCoefs()
 
 """
 
-config = OCIO.Config.CreateFromEnv()
+#config = OCIO.Config.CreateFromEnv()
+config = OCIO.Config()
+
+
+cs = OCIO.ColorSpace()
+cs.setName("cheese")
+cs.setFamily("cheese")
+cs.setBitDepth(OCIO.Constants.BIT_DEPTH_F16)
+cs.setIsData(False)
+cs.setAllocation(OCIO.Constants.ALLOCATION_LG2)
+cs.setAllocationVars((-16.0,6.0))
+
+#t = OCIO.FileTransform(src='foo', interpolation='linear', direction='inverse')
+#t = OCIO.ColorSpaceTransform(dst = 'woozle', src = 'foo')
+#t = OCIO.ExponentTransform(value=(2.0,0.5, 1.1,1.2))
+#t = OCIO.LogTransform(base = 10.0, direction='inverse')
+
+t = OCIO.FileTransform(cccid='foo')
+
+#t = OCIO.GroupTransform(transforms = \
+#    [OCIO.LogTransform(base = 10.0, direction='inverse'),
+#     OCIO.LogTransform(base = 10.0, direction='inverse')])
+#t.getTransforms()
+#t.setTransforms([])
+
+cs.setTransform(t, OCIO.Constants.COLORSPACE_DIR_TO_REFERENCE)
+
+config.addColorSpace(cs)
+config.setRole(OCIO.Constants.ROLE_SCENE_LINEAR, cs.getName())
+
 
 text = config.serialize()
 print text
 
-
+"""
 print "\n\n\n\n"
 
 print 'Default Display',config.getDefaultDisplay()
@@ -73,6 +102,7 @@ for display in config.getDisplays():
     
     for views in config.getViews(display):
         print '    views',views
+"""
 
 """
 
@@ -110,4 +140,4 @@ print processor.applyRGB(c)
 
 """
 
-config.sanityCheck()
+#config.sanityCheck()
