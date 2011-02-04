@@ -25,9 +25,10 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -55,6 +56,8 @@ OCIO_NAMESPACE_ENTER
             return environ;
 #endif
         }
+        
+        const int MAX_PATH_LENGTH = 4096;
     }
     
     namespace path
@@ -89,6 +92,21 @@ OCIO_NAMESPACE_ENTER
             }
             return "";
         }
+        
+        
+        
+        std::string realpath(const std::string & path)
+        {
+            char resolved_path[MAX_PATH_LENGTH];
+            char * result = ::realpath(path.c_str(), resolved_path);
+            if(result == NULL)
+            {
+                return "";
+            }
+            
+            return result;
+        }
+        
     } // path namespace
     
     

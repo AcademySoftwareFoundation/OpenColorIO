@@ -40,6 +40,7 @@ OCIO_NAMESPACE_ENTER
     {
         std::string join(const std::string & path1, const std::string & path2);
         std::string dirname(const std::string & path);
+        std::string realpath(const std::string & path);
     }
     
     // The EnvMap is ordered by the length of the keys (long -> short). This

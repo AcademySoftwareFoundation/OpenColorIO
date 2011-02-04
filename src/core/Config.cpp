@@ -1433,7 +1433,8 @@ OCIO_NAMESPACE_ENTER
             
             if(filename)
             {
-                std::string configrootdir = path::dirname(filename);
+                std::string realfilename = path::realpath(filename);
+                std::string configrootdir = path::dirname(realfilename);
                 context_->setWorkingDir(configrootdir.c_str());
             }
         }
