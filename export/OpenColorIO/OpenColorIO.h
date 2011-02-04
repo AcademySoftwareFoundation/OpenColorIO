@@ -57,8 +57,8 @@ C++ API
        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
        
        // Get the processor corresponding to this transform.
-       ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_COMPOSITING_LOG,
-                                                            OCIO::ROLE_SCENE_LINEAR);
+       OCIO::ConstProcessorRcPtr processor = config->getProcessor(OCIO::ROLE_COMPOSITING_LOG,
+                                                                  OCIO::ROLE_SCENE_LINEAR);
     
        // Wrap the image in a light-weight ImageDescription
        OCIO::PackedImageDesc img(imageData, w, h, 4);
