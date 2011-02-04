@@ -161,9 +161,6 @@ add_subdirectory(src/testbed)
 OCIOFindOpenImageIO()
 OCIOFindOpenGL()
 
-# ociocheck: verifies an OCIO config
-add_subdirectory(src/apps/ociocheck)
-
 # ocioconvert: performs file format conversion and colorspace
 # transforms (uses OpenImageIO)
 if(OIIO_FOUND)
@@ -178,6 +175,13 @@ if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND AND OIIO_FOUND)
     add_subdirectory(src/apps/ociodisplay)
 else()
     messageonce("Not building ociodisplay. Requirement(s) found, OpenGL:${OPENGL_FOUND}, GLUT:${GLUT_FOUND}, GLEW:${GLEW_FOUND}, OIIO:${OIIO_FOUND}")
+endif()
+
+# ociocheck: verifies an OCIO config
+if(Boost_FOUND)
+    add_subdirectory(src/apps/ociocheck)
+else()
+    messageonce("Not building ociocheck. Requirement(s) found, Boost:${BOOST_FOUND}")
 endif()
 
 # ocio2icc builds ICC profiles from an OCIO color transform (uses a
