@@ -43,8 +43,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //                          source to PCS illuminant. Required only if the actual
 //                          illumination source is not D50.
 
-#include <iostream>
 #include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <sstream>
 #include <vector>
 
 #include "lcms2.h"
@@ -53,12 +55,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
+#include "argparse.h"
+
 
 void ErrorHandler(cmsContext /*ContextID*/, cmsUInt32Number /*ErrorCode*/, const char *Text)
 {
-    std::cout << "OCIO Error: " << Text << "\n";
+    std::cerr << "OCIO Error: " << Text << "\n";
     return;
 }
 
@@ -115,98 +117,123 @@ static cmsInt32Number PCS2Display_Sampler16(const cmsUInt16Number in[], cmsUInt1
     return 1;
 }
 
-void
-print_help(boost::program_options::options_description desc) {
-    std::cout << "\n";
-    std::cout << "ocio2icc <options> outputprofile.icc\n";
-    std::cout << "\n";
-    std::cout << desc << "\n";
-    return;
+
+static std::string outputfile;
+
+static int
+parse_end_args(int argc, const char *argv[])
+{
+    for (int i = 0;  i < argc;  i++)
+    {
+        outputfile = argv[i];
+    }
+    
+    return 0;
 }
 
-int main (int argc, char* argv[])
+int main (int argc, const char* argv[])
 {
-    
-    int cubesize;
-    int whitepointtemp;
+    bool help = false;
+    std::string inputconfig;
+    int cubesize = 32;
+    int whitepointtemp = 6505;
     std::string displayicc;
     std::string description;
-    std::string copyright;
-    std::string workingspace;
-    std::string viewspace;
-    std::string outputfile;
+    std::string copyright = "OpenColorIO, Sony Imageworks";
+    std::string inputspace;
+    std::string outputspace;
+    
+    ArgParse ap;
+    ap.options("ocio2icc -- generate an icc profile from an OpenColorIO config\n\n"
+               "usage:  ocio2icc [options] output.icc\n\n"
+               "example:  ocio2icc --inputspace lg10 --outputspace srgb8 ~/Library/ColorSync/Profiles/test.icc\n\n",
+               "%*", parse_end_args, "",
+               "--help", &help, "Print help message",
+               "--inputspace %s", &inputspace , "the OCIO ColorSpace or Role, for the input (required)",
+               "--outputspace %s", &outputspace , "the OCIO ColorSpace or Role, for the output (required)",
+               "--cubesize %d", &cubesize, "size of the icc CLUT cube (default: 32)",
+               "--whitepoint %d", &whitepointtemp, "whitepoint for the profile (default: 6505)",
+               "--displayicc %s", &displayicc , "an icc profile which matches the OCIO profiles target display",
+               "--description %s", &description , "a meaningful description, this will show up in UI like photoshop",
+               "--copyright %s", &copyright , "a copyright field (default: OpenColorIO, Sony Imageworks)",
+               "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)",
+               NULL);
+    
+    if (ap.parse(argc, argv) < 0)
+    {
+        std::cout << ap.geterror() << std::endl;
+        ap.usage();
+        return 1;
+    }
+    
+    if (help)
+    {
+        ap.usage();
+        return 1;
+    }
+    
+    if(inputspace.empty())
+    {
+        std::cout << "need to specify a --inputspace of the source that the icc profile will be applied\n";
+        ap.usage();
+        return 1;
+    }
+    
+    if(outputspace.empty())
+    {
+        std::cout << "need to specify a --outputspace of the display for the icc profile\n";
+        ap.usage();
+        return 1;
+    }
+    
+    if(outputfile.empty())
+    {
+        std::cout << "you need to specify a output icc path\n";
+        ap.usage();
+        return 1;
+    }
+    
+    if(description.empty())
+    {
+        std::ostringstream os;
+        os << inputspace << " to " << outputspace;
+        description = os.str();
+    }
+    
+    if(copyright.empty())
+    {
+        std::cout << "need to specify a --copyright to embed in the icc profile\n";
+        ap.usage();
+        return 1;
+    }
     
     try
     {
+        // Create the OCIO processor for the specified transform.
+        OCIO::ConstConfigRcPtr config;
         
-        po::options_description desc("Command Line Options");
-        desc.add_options()
-            ("help,h", "produce this help message")
-            ("cubesize", po::value<int>(&cubesize)->default_value(32),
-                "size of the icc CLUT cube")
-            ("whitepoint", po::value<int>(&whitepointtemp)->default_value(6505),
-                "whitepoint for the profile")
-            ("displayicc", po::value<std::string>(&displayicc)->default_value(""),
-                "an icc profile which matches the OCIO profiles target display")
-            ("description", po::value<std::string>(&description)->default_value(""),
-                "a meaningful description, this will show up in UI like photoshop")
-            ("copyright", po::value<std::string>(&copyright)->default_value("Sony Imageworks"),
-                "a copyright field (this is required to make a vaild profile)")
-            ("workingspace", po::value<std::string>(&workingspace)->default_value(""),
-                "the workingspace of the file being viewed")
-            ("viewspace", po::value<std::string>(&viewspace)->default_value(""),
-                "the viewspace of the profile")
-            ("outputfile", po::value<std::string>(&outputfile), "output icc profile")
-            ;
-        
-        po::positional_options_description posi;
-        posi.add("outputfile", -1);
-        
-        po::variables_map vm;
-        po::store(po::command_line_parser(argc, argv).options(desc).positional(posi).run(), vm);
-        po::notify(vm);
-        
-        // print help
-        if(vm.count("help"))
+        if(!inputconfig.empty())
         {
-            print_help(desc);
+            std::cout << "[OpenColorIO INFO]: Loading " << inputconfig << std::endl;
+            config = OCIO::Config::CreateFromFile(inputconfig.c_str());
+        }
+        else if(getenv("OCIO"))
+        {
+            std::cout << "[OpenColorIO INFO]: Loading $OCIO " << getenv("OCIO") << std::endl;
+            config = OCIO::Config::CreateFromEnv();
+        }
+        else
+        {
+            std::cout << "ERROR: You must specify an input ocio configuration ";
+            std::cout << "(either with --iconfig or $OCIO).\n";
+            ap.usage ();
             return 1;
         }
         
-        if(!vm.count("outputfile"))
-        {
-            std::cout << "you need to specify a output icc path\n";
-            print_help(desc);
-            return 1;
-        }
+        OCIO::ConstProcessorRcPtr processor =
+            config->getProcessor(inputspace.c_str(), outputspace.c_str());
         
-        if(description == "")
-        {
-            std::cout << "need to specify a --description to embed in the icc profile\n";
-            print_help(desc);
-            return 1;
-        }
-        
-        if(copyright == "")
-        {
-            std::cout << "need to specify a --copyright to embed in the icc profile\n";
-            print_help(desc);
-            return 1;
-        }
-        
-        if(workingspace == "")
-        {
-            std::cout << "need to specify a --workingspace of the source that the icc profile will be applied\n";
-            print_help(desc);
-            return 1;
-        }
-        
-        if(viewspace == "")
-        {
-            std::cout << "need to specify a --viewspace of the display for the icc profile\n";
-            print_help(desc);
-            return 1;
-        }
+        // Create the ICC Profile
         
         // Setup the Error Handler
         cmsSetLogErrorHandler(ErrorHandler);
@@ -245,16 +272,13 @@ int main (int argc, char* argv[])
         
         //
         SamplerData data;
+        data.processor = processor;
         
         // 16Bit
         data.to_PCS16 = cmsCreateTransform(DisplayProfile, TYPE_RGB_16, labProfile, TYPE_LabV2_16,
                                            INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
         data.from_PCS16 = cmsCreateTransform(labProfile, TYPE_LabV2_16, DisplayProfile, TYPE_RGB_16,
                                              INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
-        
-        //
-        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        data.processor = config->getProcessor(workingspace.c_str(), viewspace.c_str());
         
         //
         // AToB0Tag - Device to PCS (16-bit) intent of 0 (perceptual)
@@ -323,7 +347,7 @@ int main (int argc, char* argv[])
         //
         // Write
         //
-        std::cout << "[OpenColorIO INFO]: Writing Profile\n";
+        std::cout << "[OpenColorIO INFO]: Writing " << outputfile << std::endl;
         cmsSaveProfileToFile(hProfile, outputfile.c_str());
         cmsCloseProfile(hProfile);
         
@@ -332,15 +356,16 @@ int main (int argc, char* argv[])
     catch(OCIO::Exception & exception)
     {
         std::cerr << "OCIO Error: " << exception.what() << std::endl;
-        exit(1);
-    } catch (std::exception& exception) {
+        return 1;
+    } catch (std::exception& exception)
+    {
         std::cerr << "Error: " << exception.what() << "\n";
         return 1;
     }
     catch(...)
     {
         std::cerr << "Unknown OCIO error encountered." << std::endl;
-        exit(1);
+        return 1;
     }
     
     return 0;

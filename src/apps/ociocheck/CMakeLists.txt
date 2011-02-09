@@ -1,12 +1,16 @@
+file(GLOB_RECURSE share_src_files "${CMAKE_SOURCE_DIR}/src/apps/share/*.cpp")
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
-    ${Boost_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/apps/share/
     )
-add_executable(ociocheck main.cpp)
+
+add_executable(ociocheck
+    main.cpp
+    ${share_src_files})
 
 target_link_libraries(ociocheck
-    ${Boost_LIBRARIES}
     OpenColorIO
     )
 

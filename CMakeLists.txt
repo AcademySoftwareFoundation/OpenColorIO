@@ -178,19 +178,11 @@ else()
 endif()
 
 # ociocheck: verifies an OCIO config
-if(Boost_FOUND)
-    add_subdirectory(src/apps/ociocheck)
-else()
-    messageonce("Not building ociocheck. Requirement(s) found, Boost:${BOOST_FOUND}")
-endif()
+add_subdirectory(src/apps/ociocheck)
 
-# ocio2icc builds ICC profiles from an OCIO color transform (uses a
-# bundled version of LittleCMS, and Boost's program_options)
-if(Boost_FOUND)
-    add_subdirectory(src/apps/ocio2icc)
-else()
-    messageonce("Not building ocio2icc. Requirement(s) found, Boost:${BOOST_FOUND}")
-endif()
+# ocio2icc builds ICC profiles from an OCIO color transform
+# (uses a bundled version of LittleCMS)
+add_subdirectory(src/apps/ocio2icc)
 
 ###############################################################################
 ### NUKE ###

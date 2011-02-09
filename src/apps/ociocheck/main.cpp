@@ -31,53 +31,51 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <vector>
 
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
-
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-void
-print_help(boost::program_options::options_description desc) {
-    std::cout << "\n";
-    std::cout << "ociocheck -i INPUT_CONFIG\n";
-    std::cout << "\n";
-    std::cout << desc << "\n";
-    return;
-}
+#include "argparse.h"
 
 
-const char * USAGE_TEXT = "\n"
-"ociocheck <CONFIG>\n";
+const char * DESC_STRING = "\n\n"
+"ociocheck is useful to validate that the specified .ocio configuration\n"
+"is valid, and that all the color transforms are defined.\n"
+"For example, it is possible that the configuration may reference\n"
+"lookup tables that do not exist. ociocheck will find these cases.\n\n"
+"ociocheck can also be used to clean up formatting on an existing profile\n"
+"that has been manually edited, using the '-o' option.\n";
 
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
+    bool help = false;
+    std::string inputconfig;
+    std::string outputconfig;
+    
+    ArgParse ap;
+    ap.options("ociocheck -- validate an OpenColorIO configuration\n\n"
+               "usage:  ociocheck [options]\n",
+               "--help", &help, "Print help message",
+               "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)",
+               "--oconfig %s", &outputconfig, "Output .ocio file",
+               NULL);
+    
+    if (ap.parse(argc, argv) < 0)
+    {
+        std::cout << ap.geterror() << std::endl;
+        ap.usage();
+        std::cout << DESC_STRING;
+        return 1;
+    }
+    
+    if (help)
+    {
+        ap.usage();
+        std::cout << DESC_STRING;
+        return 1;
+    }
+    
     try
     {
-        std::string inputconfig;
-        std::string outputconfig;
-        
-        po::options_description desc("Allowed options");
-        desc.add_options()
-            ("help,h", "produce this help message")
-            ("inputconfig,i", po::value<std::string>(&inputconfig), "Input .ocio configuration file. If none is specified, the $OCIO env will be used.")
-            ("outputconfig,o", po::value<std::string>(&outputconfig)->default_value(""), "Output .ocio configuration file")
-            ;
-        
-        po::variables_map vm;
-        po::positional_options_description posi;
-        //posi.add("outputfile", -1);
-        
-        po::store(po::command_line_parser(argc, argv).options(desc).positional(posi).run(), vm);
-        po::notify(vm);
-        
-        // print help
-        if(vm.count("help"))
-        {
-            print_help(desc);
-            return 1;
-        }
-        
         OCIO::ConstConfigRcPtr config;
         
         std::cout << std::endl;
@@ -93,8 +91,10 @@ int main(int argc, char **argv)
         }
         else
         {
-            std::cout << "ERROR: You must specify an input ocio configuration (either with -i or $OCIO).\n";
-            print_help(desc);
+            std::cout << "ERROR: You must specify an input ocio configuration ";
+            std::cout << "(either with --iconfig or $OCIO).\n";
+            ap.usage ();
+            std::cout << DESC_STRING;
             return 1;
         }
         
@@ -218,16 +218,16 @@ int main(int argc, char **argv)
     }
     catch(OCIO::Exception & exception)
     {
-        std::cerr << "ERROR: " << exception.what() << std::endl;
-        exit(1);
+        std::cout << "ERROR: " << exception.what() << std::endl;
+        return 1;
     } catch (std::exception& exception) {
-        std::cerr << "ERROR: " << exception.what() << "\n";
+        std::cout << "ERROR: " << exception.what() << "\n";
         return 1;
     }
     catch(...)
     {
-        std::cerr << "Unknown error encountered." << std::endl;
-        exit(1);
+        std::cout << "Unknown error encountered." << std::endl;
+        return 1;
     }
     
     return 0;
