@@ -1208,8 +1208,11 @@ OCIO_NAMESPACE_ENTER
             out << YAML::BeginMap;
             out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
             out << YAML::Newline;
-            
-            out << YAML::Key << "search_path" << YAML::Value << getImpl()->context_->getSearchPath();
+
+            if(strlen(getImpl()->context_->getSearchPath()) > 0)
+            {
+                out << YAML::Key << "search_path" << YAML::Value << getImpl()->context_->getSearchPath();
+            }
             out << YAML::Key << "strictparsing" << YAML::Value << getImpl()->strictParsing_;
             out << YAML::Key << "luma" << YAML::Value << YAML::Flow << getImpl()->defaultLumaCoefs_;
             
@@ -1221,18 +1224,32 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Roles
-            out << YAML::Newline;
-            out << YAML::Key << "roles";
-            out << YAML::Value << getImpl()->roles_;
+            if(getImpl()->roles_.size() > 0)
+            {
+                out << YAML::Newline;
+                out << YAML::Key << "roles";
+                out << YAML::Value << getImpl()->roles_;
+            }
             
             // Displays
-            out << YAML::Newline;
-            out << YAML::Key << "displays";
-            out << YAML::Value << getImpl()->displays_;
-            out << YAML::Key << "active_displays";
-            out << YAML::Value << YAML::Flow << getImpl()->activeDisplays_;
-            out << YAML::Key << "active_views";
-            out << YAML::Value << YAML::Flow << getImpl()->activeViews_;
+            if(getImpl()->displays_.size() > 0)
+            {
+                out << YAML::Newline;
+                out << YAML::Key << "displays";
+                out << YAML::Value << getImpl()->displays_;
+            }
+
+            if(getImpl()->activeDisplays_.size() > 0)
+            {
+                out << YAML::Key << "active_displays";
+                out << YAML::Value << YAML::Flow << getImpl()->activeDisplays_;
+            }
+
+            if(getImpl()->activeViews_.size() > 0)
+            {
+                out << YAML::Key << "active_views";
+                out << YAML::Value << YAML::Flow << getImpl()->activeViews_;
+            }
             
             // ColorSpaces
             if(getImpl()->colorspaces_.size() > 0)
