@@ -462,7 +462,7 @@ OCIO_NAMESPACE_ENTER
 
                 // resample into 1D lut
                 // TODO: Fancy spline analysis to determine required number of samples
-                const int numsample = 4096;
+                const int numsample = 65536; // 2**16 samples
 
                 prelut_ptr->from_min[c] = cprelut_raw->stims[0];
                 prelut_ptr->from_max[c] = cprelut_raw->stims[cpoints-1];
@@ -680,8 +680,8 @@ BOOST_AUTO_TEST_CASE ( test_simple1D )
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check prelut data (note: the spline is resampled into a 1D LUT)
-    for (int i = 0; i < 4096; ++i) {
-		float curvalue = float(i) / (4096-1);
+    for (int i = 0; i < 65536; ++i) {
+		float curvalue = float(i) / (65536-1);
 		BOOST_CHECK_CLOSE (curvalue, csplut->prelut->luts[0][i], 1e-4);
 		BOOST_CHECK_CLOSE (curvalue, csplut->prelut->luts[1][i], 1e-4);
 		BOOST_CHECK_CLOSE (curvalue, csplut->prelut->luts[2][i], 1e-4);
@@ -746,8 +746,8 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check prelut data (note: the spline is resampled into a 1D LUT)
-    for (int i = 0; i < 4096; ++i) {
-		float curvalue = float(i) / (4096-1);
+    for (int i = 0; i < 65536; ++i) {
+		float curvalue = float(i) / (65536-1);
 		BOOST_CHECK_CLOSE (curvalue, csplut->prelut->luts[0][i], 1e-4);
 		BOOST_CHECK_CLOSE (curvalue, csplut->prelut->luts[1][i], 1e-4);
 		BOOST_CHECK_CLOSE (curvalue, csplut->prelut->luts[2][i], 1e-4);
