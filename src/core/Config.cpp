@@ -1224,20 +1224,14 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Roles
-            if(getImpl()->roles_.size() > 0)
-            {
-                out << YAML::Newline;
-                out << YAML::Key << "roles";
-                out << YAML::Value << getImpl()->roles_;
-            }
+            out << YAML::Newline;
+            out << YAML::Key << "roles";
+            out << YAML::Value << getImpl()->roles_;
             
             // Displays
-            if(getImpl()->displays_.size() > 0)
-            {
-                out << YAML::Newline;
-                out << YAML::Key << "displays";
-                out << YAML::Value << getImpl()->displays_;
-            }
+            out << YAML::Newline;
+            out << YAML::Key << "displays";
+            out << YAML::Value << getImpl()->displays_;
 
             if(getImpl()->activeDisplays_.size() > 0)
             {
@@ -1252,12 +1246,9 @@ OCIO_NAMESPACE_ENTER
             }
             
             // ColorSpaces
-            if(getImpl()->colorspaces_.size() > 0)
-            {
-                out << YAML::Newline;
-                out << YAML::Key << "colorspaces";
-                out << YAML::Value << getImpl()->colorspaces_; // std::vector -> Seq
-            }
+            out << YAML::Newline;
+            out << YAML::Key << "colorspaces";
+            out << YAML::Value << getImpl()->colorspaces_; // std::vector -> Seq
             
             out << YAML::EndMap;
             os << out.c_str();
@@ -1706,6 +1697,9 @@ BOOST_AUTO_TEST_CASE ( test_ser )
     "\n"
     "roles:\n"
     "  compositing_log: testing2\n"
+    "\n"
+    "displays:\n"
+    "  {}\n"
     "\n"
     "colorspaces:\n"
     "  - !<ColorSpace>\n"
