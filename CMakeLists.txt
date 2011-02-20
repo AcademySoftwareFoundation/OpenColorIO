@@ -184,6 +184,9 @@ add_subdirectory(src/apps/ociocheck)
 # (uses a bundled version of LittleCMS)
 add_subdirectory(src/apps/ocio2icc)
 
+# ociobakelut writes out luts
+add_subdirectory(src/apps/ociobakelut)
+
 ###############################################################################
 ### NUKE ###
 

@@ -46,13 +46,36 @@ OCIO_NAMESPACE_ENTER
     
     typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;
     
+    struct RGB
+    {
+        float r;
+        float g;
+        float b;
+    };
+    
+    struct TransformData
+    {
+        float minlum[3];
+        float maxlum[3];
+        size_t shaperSize;
+        std::vector<RGB> shaper_encode;
+        std::vector<RGB> shaper_decode;
+        //std::vector<RGB> lookup1D;
+        size_t lookup3DSize;
+        std::vector<RGB> lookup3D;
+    };
+    
     class FileFormat
     {
     public:
         virtual ~FileFormat();
         
+        virtual std::string GetName() const = 0;
         virtual std::string GetExtension() const = 0;
+        
         virtual CachedFileRcPtr Load(std::istream & istream) const = 0;
+        
+        virtual bool Write(TransformData & data, std::ostream & ostream) const = 0;
         
         virtual void BuildFileOps(OpRcPtrVec & ops,
                                   const Config& config,
@@ -64,8 +87,16 @@ OCIO_NAMESPACE_ENTER
         FileFormat& operator= (const FileFormat &);
     };
     
+    typedef std::vector<FileFormat*> FormatRegistry;
+    
+    FormatRegistry & GetFormatRegistry();
+    
+    FileFormat* GetFileFormat(const std::string & name);
+    
+    FileFormat* GetFileFormatForExtension(const std::string & str);
+    
     void RegisterFileFormat(FileFormat* format);
-
+    
 }
 OCIO_NAMESPACE_EXIT
 

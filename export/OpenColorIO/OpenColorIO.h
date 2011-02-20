@@ -619,6 +619,64 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
+    // Baker
+    // ******
+    // 
+    // In certain situations it is nessary to serilize transforms into a
+    // variety of application specific lut formats.
+    // 
+    // The Baker can be used to create lut formats that ocio supports for
+    // writing.
+    
+    class OCIOEXPORT Baker
+    {
+    public:
+        //!cpp:function::
+        static BakerRcPtr Create();
+        
+        //!cpp:function::
+        BakerRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        void setConfig(const ConstConfigRcPtr & config);
+        
+        //!cpp:function::
+        void setFormat(const char * formatName);
+        
+        //!cpp:function::
+        void setInput(const char * inputSpace);
+        //!cpp:function::
+        void setShaper(const char * shaperSpace);
+        //!cpp:function::
+        void setTarget(const char * targetSpace);
+        
+        //!cpp:function::
+        void setShaperSize(int shapersize);
+        //!cpp:function::
+        void setCubeSize(int cubesize);
+        
+        //!cpp:function::
+        void bake(std::ostream & os) const;
+        
+    private:
+        Baker();
+        ~Baker();
+        
+        Baker(const Baker &);
+        Baker& operator= (const Baker &);
+        
+        static void deleter(Baker* o);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst::
     // ImageDesc
     // *********
     

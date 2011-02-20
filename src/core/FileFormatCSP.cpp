@@ -337,9 +337,12 @@ OCIO_NAMESPACE_ENTER
             
             ~FileFormatCSP() {};
             
+            virtual std::string GetName() const;
             virtual std::string GetExtension () const;
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
+            
+            virtual bool Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -377,7 +380,10 @@ OCIO_NAMESPACE_ENTER
             }
             return;
         }
-
+        
+        std::string
+        FileFormatCSP::GetName() const { return "CineSpace"; }
+        
         std::string
         FileFormatCSP::GetExtension() const { return "csp"; }
 
@@ -632,7 +638,13 @@ OCIO_NAMESPACE_ENTER
             
             return cachedFile;
         }
-
+        
+        bool
+        FileFormatCSP::Write(TransformData & /*data*/, std::ostream & /*ostream*/) const
+        {
+            return false;
+        };
+        
         void
         FileFormatCSP::BuildFileOps(OpRcPtrVec & ops,
                                     const Config& /*config*/,

@@ -163,38 +163,48 @@ OCIO_NAMESPACE_ENTER
     
     }
     
-    
-    namespace
+    FormatRegistry & GetFormatRegistry()
     {
-        typedef std::vector<FileFormat*> FormatRegistry;
-        
-        FormatRegistry & GetFormatRegistry()
+        static std::vector<FileFormat*> formats;
+        return formats;
+    }
+    
+    FileFormat* GetFileFormat(const std::string & name)
+    {
+        if(name.empty()) return 0x0;
+        std::string namelower = pystring::lower(name);
+        FormatRegistry & formats = GetFormatRegistry();
+        for(unsigned int findex=0; findex<formats.size(); ++findex)
         {
-            static std::vector<FileFormat*> formats;
-            return formats;
-        }
-        
-        
-        FileFormat* GetFileFormatForExtension(const std::string & str)
-        {
-            if(str.empty()) return 0x0;
-            
-            std::string extension = pystring::lower(str);
-            
-            FormatRegistry & formats = GetFormatRegistry();
-            
-            for(unsigned int findex=0; findex<formats.size(); ++findex)
+            FileFormat* format = formats[findex];
+            std::string name = pystring::lower(format->GetName());
+            if(namelower == name)
             {
-                FileFormat* format = formats[findex];
-                std::string testExtension = pystring::lower(format->GetExtension());
-                if(extension == testExtension)
-                {
-                    return format;
-                }
+                return format;
             }
-            
-            return 0x0;
         }
+        return 0x0;
+    }
+    
+    FileFormat* GetFileFormatForExtension(const std::string & str)
+    {
+        if(str.empty()) return 0x0;
+        
+        std::string extension = pystring::lower(str);
+        
+        FormatRegistry & formats = GetFormatRegistry();
+        
+        for(unsigned int findex=0; findex<formats.size(); ++findex)
+        {
+            FileFormat* format = formats[findex];
+            std::string testExtension = pystring::lower(format->GetExtension());
+            if(extension == testExtension)
+            {
+                return format;
+            }
+        }
+        
+        return 0x0;
     }
     
     void RegisterFileFormat(FileFormat* format)

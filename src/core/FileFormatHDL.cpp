@@ -49,6 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 #include <iostream>
 #include <iterator>
+#include <cmath>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -97,9 +98,12 @@ OCIO_NAMESPACE_ENTER
             
             ~FileFormatHDL() {};
             
+            virtual std::string GetName() const;
             virtual std::string GetExtension () const;
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
+            
+            virtual bool Write(TransformData & data, std::ostream & ostream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -126,7 +130,13 @@ OCIO_NAMESPACE_ENTER
             }
             return;
         }
-
+        
+        std::string
+        FileFormatHDL::GetName() const
+        {
+            return "houdini";
+        }
+        
         std::string
         FileFormatHDL::GetExtension() const
         {
@@ -391,6 +401,76 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
+        bool
+        FileFormatHDL::Write(TransformData & data,
+                             std::ostream & ostream) const
+        {
+            
+            // setup the floating point precision
+            ostream.setf(std::ios::fixed, std::ios::floatfield);
+            ostream.precision(6);
+            
+            std::string tab = "\t";
+            
+            // Output the lut header
+            ostream << "Version\t\t3\n";
+            ostream << "Format\t\tany\n";
+            if(data.shaper_encode.size() != 0)
+            {
+                ostream << "Type\t\t3D+1D\n";
+            }
+            else
+            {
+                ostream << "Type\t\t3D\n";
+                tab = " ";
+            }
+            ostream << "From\t\t" << data.minlum[0] << " " << data.maxlum[0] << "\n";
+            ostream << "To\t\t" << 0.f << " " << 1.f << "\n";
+            ostream << "Black\t\t" << 0.f << "\n";
+            ostream << "White\t\t" << 1.f << "\n";
+            if(data.shaper_encode.size() != 0)
+                ostream << "Length\t\t" << data.lookup3DSize << " " << data.shaper_encode.size() << "\n";
+            else
+                ostream << "Length\t\t" << data.lookup3DSize << "\n";
+            ostream << "LUT:\n";
+            
+            // Output the shaper
+            if(data.shaper_encode.size() != 0)
+            {
+                ostream << "Pre" << " {\n";
+                for (size_t i = 0; i < data.shaper_encode.size(); ++i) {
+                    ostream << "\t" << std::min(1.f, std::max(0.f, data.shaper_encode[i].r)) << "\n";
+                }
+                ostream << "}\n";
+            }
+            
+            // Output the 3D lut
+            if(data.shaper_encode.size() != 0)
+                ostream << "3D {\n";
+            else
+                ostream << " {\n";
+            for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
+                for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {
+                    for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
+                        //const size_t ii = 3 * (ir + data.lookup3DSize
+                        const size_t ii = (ir + data.lookup3DSize
+                                             * ig + data.lookup3DSize
+                                             * data.lookup3DSize * ib);
+                        const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii].r));
+                        const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii].g));
+                        const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii].b));
+                        ostream << tab << rv << " " << gv << " " << bv << "\n";
+                    }
+                }
+            }
+            if(data.shaper_encode.size() != 0)
+                ostream << "}\n";
+            else
+                ostream << " }\n";
+            
+            return true;
+        };
+        
         void
         FileFormatHDL::BuildFileOps(OpRcPtrVec & ops,
                                     const Config& /*config*/,
@@ -579,6 +659,66 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
         BOOST_CHECK_EQUAL (cube[i], lut->lut3D->lut[i]);
     }
     
+    // check baker output
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("lnf");
+        cs->setFamily("lnf");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        float rgb[3] = {0.1, 0.1, 0.1};
+        transform1->setOffset(rgb);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        config->addColorSpace(cs);
+    }
+    
+    std::string bout = 
+    "Version\t\t3\n"
+    "Format\t\tany\n"
+    "Type\t\t3D\n"
+    "From\t\t0.000000 1.000000\n"
+    "To\t\t0.000000 1.000000\n"
+    "Black\t\t0.000000\n"
+    "White\t\t1.000000\n"
+    "Length\t\t2\n"
+    "LUT:\n"
+    " {\n"
+    " 0.100000 0.100000 0.100000\n"
+    " 1.000000 0.100000 0.100000\n"
+    " 0.100000 1.000000 0.100000\n"
+    " 1.000000 1.000000 0.100000\n"
+    " 0.100000 0.100000 1.000000\n"
+    " 1.000000 0.100000 1.000000\n"
+    " 0.100000 1.000000 1.000000\n"
+    " 1.000000 1.000000 1.000000\n"
+    " }\n";
+    
+    //
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setFormat("houdini");
+    baker->setInput("lnf");
+    baker->setTarget("target");
+    baker->setCubeSize(2);
+    std::ostringstream output;
+    baker->bake(output);
+    
+    //
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(output.str(), osvec);
+    std::vector<std::string> resvec;
+    OCIO::pystring::splitlines(bout, resvec);
+    BOOST_CHECK_EQUAL(osvec.size(), resvec.size());
+    for(unsigned int i = 0; i < resvec.size(); ++i)
+        BOOST_CHECK_EQUAL(osvec[i], resvec[i]);
+    
 }
 
 BOOST_AUTO_TEST_CASE ( test_simple3D1D )
@@ -662,6 +802,90 @@ BOOST_AUTO_TEST_CASE ( test_simple3D1D )
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
         BOOST_CHECK_EQUAL (cube[i], lut->lut3D->lut[i]);
     }
+    
+    // check baker output
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("lnf");
+        cs->setFamily("lnf");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("shaper");
+        cs->setFamily("shaper");
+        OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
+        float test[4] = {2.6, 2.6, 2.6, 1.0};
+        transform1->setValue(test);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+        config->addColorSpace(cs);
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        float rgb[3] = {0.1, 0.1, 0.1};
+        transform1->setOffset(rgb);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        config->addColorSpace(cs);
+    }
+    
+    std::string bout = 
+    "Version\t\t3\n"
+    "Format\t\tany\n"
+    "Type\t\t3D+1D\n"
+    "From\t\t0.000000 1.000000\n"
+    "To\t\t0.000000 1.000000\n"
+    "Black\t\t0.000000\n"
+    "White\t\t1.000000\n"
+    "Length\t\t2 10\n"
+    "LUT:\n"
+    "Pre {\n"
+    "\t0.000000\n"
+    "\t0.429520\n"
+    "\t0.560744\n"
+    "\t0.655378\n"
+    "\t0.732058\n"
+    "\t0.797661\n"
+    "\t0.855604\n"
+    "\t0.907865\n"
+    "\t0.955710\n"
+    "\t1.000000\n"
+    "}\n"
+    "3D {\n"
+    "\t0.100000 0.100000 0.100000\n"
+    "\t1.000000 0.100000 0.100000\n"
+    "\t0.100000 1.000000 0.100000\n"
+    "\t1.000000 1.000000 0.100000\n"
+    "\t0.100000 0.100000 1.000000\n"
+    "\t1.000000 0.100000 1.000000\n"
+    "\t0.100000 1.000000 1.000000\n"
+    "\t1.000000 1.000000 1.000000\n"
+    "}\n";
+    
+    //
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setFormat("houdini");
+    baker->setInput("lnf");
+    baker->setShaper("shaper");
+    baker->setTarget("target");
+    baker->setShaperSize(10);
+    baker->setCubeSize(2);
+    std::ostringstream output;
+    baker->bake(output);
+    
+    //
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(output.str(), osvec);
+    std::vector<std::string> resvec;
+    OCIO::pystring::splitlines(bout, resvec);
+    BOOST_CHECK_EQUAL(osvec.size(), resvec.size());
+    for(unsigned int i = 0; i < resvec.size(); ++i)
+        BOOST_CHECK_EQUAL(osvec[i], resvec[i]);
     
 }
 

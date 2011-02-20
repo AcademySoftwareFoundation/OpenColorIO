@@ -73,6 +73,12 @@ OCIO_NAMESPACE_ENTER
         
         class LocalFormat : public FileFormat
         {
+            
+            virtual std::string GetName() const
+            {
+                return "SPI1D";
+            }
+            
             virtual std::string GetExtension() const
             {
                 return "spi1d";
@@ -206,7 +212,12 @@ OCIO_NAMESPACE_ENTER
                 cachedFile->lut = lut1d;
                 return cachedFile;
             }
-
+            
+            virtual bool Write(TransformData & /*data*/, std::ostream & /*ostream*/) const
+            {
+                return false;
+            };
+            
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
                                       const ConstContextRcPtr & /*context*/,

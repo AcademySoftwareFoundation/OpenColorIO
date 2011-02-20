@@ -116,9 +116,12 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
+            virtual std::string GetName() const;
             virtual std::string GetExtension () const;
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
+            
+            virtual bool Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                          const Config& config,
@@ -146,6 +149,12 @@ OCIO_NAMESPACE_ENTER
             }
             
             return false;
+        }
+        
+        std::string
+        LocalFileFormat::GetName() const
+        {
+            return "iridas";
         }
         
         std::string
@@ -333,6 +342,12 @@ OCIO_NAMESPACE_ENTER
             
             return cachedFile;
         }
+        
+        bool
+        LocalFileFormat::Write(TransformData & /*data*/, std::ostream & /*ostream*/) const
+        {
+            return false;
+        };
         
         void
         LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
