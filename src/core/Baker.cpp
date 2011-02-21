@@ -192,31 +192,30 @@ OCIO_NAMESPACE_ENTER
             shaper_dec->applyRGB(data.maxlum);
             
             // build a ramp ident ramp
-            std::vector<float> ramp_ident;
             for (size_t i = 0; i < data.shaperSize; ++i)
             {
                 const float x = (float)(double(i) / double(data.shaperSize - 1));
-                ramp_ident.push_back(x);
+                data.shaper_ident.push_back(x);
             }
             
             // uniform shaper to decoded
-            for (size_t i = 0; i < ramp_ident.size(); ++i)
+            for (size_t i = 0; i < data.shaper_ident.size(); ++i)
             {
                 RGB _tmp;
-                _tmp.r = ramp_ident[i];
-                _tmp.g = ramp_ident[i];
-                _tmp.b = ramp_ident[i];
+                _tmp.r = data.shaper_ident[i];
+                _tmp.g = data.shaper_ident[i];
+                _tmp.b = data.shaper_ident[i];
                 shaper_dec->applyRGB((float *)&_tmp);
                 data.shaper_decode.push_back(_tmp);
             }
             
             // uniform shaper to encoded
-            for (size_t i = 0; i < ramp_ident.size(); ++i)
+            for (size_t i = 0; i < data.shaper_ident.size(); ++i)
             {
                 RGB _tmp;
-                _tmp.r = LERP(data.minlum[0], data.maxlum[0], ramp_ident[i]);
-                _tmp.g = LERP(data.minlum[1], data.maxlum[1], ramp_ident[i]);
-                _tmp.b = LERP(data.minlum[2], data.maxlum[2], ramp_ident[i]);
+                _tmp.r = LERP(data.minlum[0], data.maxlum[0], data.shaper_ident[i]);
+                _tmp.g = LERP(data.minlum[1], data.maxlum[1], data.shaper_ident[i]);
+                _tmp.b = LERP(data.minlum[2], data.maxlum[2], data.shaper_ident[i]);
                 shaper_enc->applyRGB((float *)&_tmp);
                 data.shaper_encode.push_back(_tmp);
             }

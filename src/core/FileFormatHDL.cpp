@@ -452,10 +452,9 @@ OCIO_NAMESPACE_ENTER
             for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
                 for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {
                     for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
-                        //const size_t ii = 3 * (ir + data.lookup3DSize
                         const size_t ii = (ir + data.lookup3DSize
-                                             * ig + data.lookup3DSize
-                                             * data.lookup3DSize * ib);
+                                         * ig + data.lookup3DSize
+                                              * data.lookup3DSize * ib);
                         const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii].r));
                         const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii].g));
                         const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii].b));

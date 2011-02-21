@@ -58,6 +58,7 @@ OCIO_NAMESPACE_ENTER
         float minlum[3];
         float maxlum[3];
         size_t shaperSize;
+        std::vector<float> shaper_ident;
         std::vector<RGB> shaper_encode;
         std::vector<RGB> shaper_decode;
         //std::vector<RGB> lookup1D;

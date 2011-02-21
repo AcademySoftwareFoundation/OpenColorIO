@@ -43,6 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
+#define LERP(a, b, x) ((a) * (1 - (x)) + (b) * (x))
+
 OCIO_NAMESPACE_ENTER
 {
     namespace
@@ -639,10 +641,105 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        bool
-        FileFormatCSP::Write(TransformData & /*data*/, std::ostream & /*ostream*/) const
+        bool FileFormatCSP::Write(TransformData & data, std::ostream & ostream) const
         {
-            return false;
+            
+            // setup the floating point precision
+            ostream.setf(std::ios::fixed, std::ios::floatfield);
+            ostream.precision(6);
+            
+            // Output the 1D LUT
+            ostream << "CSPLUTV100\n";
+            ostream << "3D\n";
+            ostream << "\n";
+            
+            // Output metadata
+            ostream << "BEGIN METADATA" << std::endl;
+            // TODO: add other metadata here
+            char str[20];
+            time_t curTime = time( NULL );
+            struct tm *tm = localtime( &curTime );
+            sprintf(str, "%4d:%02d:%02d %02d:%02d:%02d",
+                    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday,
+                    tm->tm_hour, tm->tm_min, tm->tm_sec);
+            ostream << "date: " << str << std::endl;
+            ostream << "END METADATA" << std::endl << std::endl;
+            
+            // Output the prelut for each channel
+            if(data.shaper_encode.size() != 0 && data.shaper_decode.size() != 0)
+            {
+                ostream << data.shaper_ident.size() << "\n";
+                for (size_t i = 0; i < data.shaper_ident.size(); ++i)
+                {
+                    ostream << LERP(data.minlum[0], data.maxlum[0], data.shaper_ident[i]);
+                    ostream << ((i < data.shaper_ident.size()-1) ? " " : "");
+                }
+                ostream << "\n";
+                for (size_t i = 0; i < data.shaper_encode.size(); ++i)
+                {
+                    ostream << data.shaper_encode[i].r;
+                    ostream << ((i < data.shaper_encode.size()-1) ? " " : "");
+                }
+                ostream << "\n";
+                ostream << data.shaper_ident.size() << "\n";
+                for (size_t i = 0; i < data.shaper_ident.size(); ++i)
+                {
+                    ostream << LERP(data.minlum[1], data.maxlum[1], data.shaper_ident[i]);
+                    ostream << ((i < data.shaper_ident.size()-1) ? " " : "");
+                }
+                ostream << "\n";
+                for (size_t i = 0; i < data.shaper_encode.size(); ++i)
+                {
+                    ostream << data.shaper_encode[i].g;
+                    ostream << ((i < data.shaper_encode.size()-1) ? " " : "");
+                }
+                ostream << "\n";
+                ostream << data.shaper_ident.size() << "\n";
+                for (size_t i = 0; i < data.shaper_ident.size(); ++i)
+                {
+                    ostream << LERP(data.minlum[2], data.maxlum[2], data.shaper_ident[i]);
+                    ostream << ((i < data.shaper_ident.size()-1) ? " " : "");
+                }
+                ostream << "\n";
+                for (size_t i = 0; i < data.shaper_encode.size(); ++i)
+                {
+                    ostream << data.shaper_encode[i].b;
+                    ostream << ((i < data.shaper_encode.size()-1) ? " " : "");
+                }
+                ostream << "\n";
+            }
+            else
+            {
+                ostream << "2\n";
+                ostream << "0.0 1.0\n";
+                ostream << "0.0 1.0\n";
+                ostream << "2\n";
+                ostream << "0.0 1.0\n";
+                ostream << "0.0 1.0\n";
+                ostream << "2\n";
+                ostream << "0.0 1.0\n";
+                ostream << "0.0 1.0\n";
+            }
+            
+            // Cube
+            ostream << "\n";
+            ostream << data.lookup3DSize << " " << data.lookup3DSize << " " << data.lookup3DSize << "\n";
+            for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
+                for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {
+                    for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
+                        const size_t ii = (ir + data.lookup3DSize
+                                             * ig + data.lookup3DSize
+                                             * data.lookup3DSize * ib);
+                        const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii].r));
+                        const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii].g));
+                        const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii].b));
+                        ostream << rv << " " << gv << " " << bv << "\n";
+                    }
+                }
+            }
+            ostream << "\n";
+            
+            return true;
         };
         
         void
@@ -831,9 +928,91 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     BOOST_CHECK(csplut->hasprelut == false);
     
     // check cube data
-    unsigned int i;
-    for(i = 0; i < csplut->lut3D->lut.size(); ++i) {
+    for(unsigned int i = 0; i < csplut->lut3D->lut.size(); ++i) {
         BOOST_CHECK_EQUAL (cube[i], csplut->lut3D->lut[i]);
+    }
+    
+    // check baker output
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("lnf");
+        cs->setFamily("lnf");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("shaper");
+        cs->setFamily("shaper");
+        OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
+        float test[4] = {2.6, 2.6, 2.6, 1.0};
+        transform1->setValue(test);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+        config->addColorSpace(cs);
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        float rgb[3] = {0.1, 0.1, 0.1};
+        transform1->setOffset(rgb);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        config->addColorSpace(cs);
+    }
+    
+    std::string bout =
+    "CSPLUTV100\n"
+    "3D\n"
+    "\n"
+    "BEGIN METADATA\n"
+    "date: 2011:02:21 15:22:55\n"
+    "END METADATA\n"
+    "\n"
+    "10\n"
+    "0.000000 0.111111 0.222222 0.333333 0.444444 0.555556 0.666667 0.777778 0.888889 1.000000\n"
+    "0.000000 0.429520 0.560744 0.655378 0.732058 0.797661 0.855604 0.907865 0.955710 1.000000\n"
+    "10\n"
+    "0.000000 0.111111 0.222222 0.333333 0.444444 0.555556 0.666667 0.777778 0.888889 1.000000\n"
+    "0.000000 0.429520 0.560744 0.655378 0.732058 0.797661 0.855604 0.907865 0.955710 1.000000\n"
+    "10\n"
+    "0.000000 0.111111 0.222222 0.333333 0.444444 0.555556 0.666667 0.777778 0.888889 1.000000\n"
+    "0.000000 0.429520 0.560744 0.655378 0.732058 0.797661 0.855604 0.907865 0.955710 1.000000\n"
+    "\n"
+    "2 2 2\n"
+    "0.100000 0.100000 0.100000\n"
+    "1.000000 0.100000 0.100000\n"
+    "0.100000 1.000000 0.100000\n"
+    "1.000000 1.000000 0.100000\n"
+    "0.100000 0.100000 1.000000\n"
+    "1.000000 0.100000 1.000000\n"
+    "0.100000 1.000000 1.000000\n"
+    "1.000000 1.000000 1.000000\n"
+    "\n";
+    
+    //
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setFormat("cinespace");
+    baker->setInput("lnf");
+    baker->setShaper("shaper");
+    baker->setTarget("target");
+    baker->setShaperSize(10);
+    baker->setCubeSize(2);
+    std::ostringstream output;
+    baker->bake(output);
+    
+    //
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(output.str(), osvec);
+    std::vector<std::string> resvec;
+    OCIO::pystring::splitlines(bout, resvec);
+    BOOST_CHECK_EQUAL(osvec.size(), resvec.size());
+    for(unsigned int i = 0; i < resvec.size(); ++i)
+    {
+        // skip timestamp line
+        if(i != 4) BOOST_CHECK_EQUAL(osvec[i], resvec[i]);
     }
     
 }
