@@ -31,6 +31,7 @@
 
 #include <string>
 #include <cstdarg>
+#include <cstdio>
 #include <vector>
 #include <iostream>
 #include <cmath>
