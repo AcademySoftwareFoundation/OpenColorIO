@@ -26,7 +26,11 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <cassert>
+#include <cmath>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 
@@ -35,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FileTransform.h"
 #include "Lut1DOp.h"
 #include "Lut3DOp.h"
+#include "MathUtils.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
@@ -42,22 +47,283 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
+        const int NUM_PRELUT_SAMPLES = 65536; // 2**16 samples
+        // Always use linear interpolation for preluts to get the
+        // best precision
+        const Interpolation PRELUT_INTERPOLATION = INTERP_LINEAR;
+        
+        typedef struct rsr_Interpolator1D_Raw_
+        {
+            float * stims;
+            float * values;
+            unsigned int length;
+        } rsr_Interpolator1D_Raw;
+
+        rsr_Interpolator1D_Raw * rsr_Interpolator1D_Raw_create( unsigned int prelutLength );
+        void rsr_Interpolator1D_Raw_destroy( rsr_Interpolator1D_Raw * prelut );
+
+
+        /* An opaque handle to the cineSpace 1D Interpolator object */
+        typedef struct rsr_Interpolator1D_ rsr_Interpolator1D;
+
+        rsr_Interpolator1D * rsr_Interpolator1D_createFromRaw( rsr_Interpolator1D_Raw * data );
+        void rsr_Interpolator1D_destroy( rsr_Interpolator1D * rawdata );
+        float rsr_Interpolator1D_interpolate( float x, rsr_Interpolator1D * data );
+
+
+        /*
+         * =========== INTERNAL HELPER FUNCTIONS ============
+         */
+        struct rsr_Interpolator1D_
+        {
+            int nSamplePoints;
+            float * stims;
+
+            /* 5 * (nSamplePoints-1) long, holding a sequence of
+             * 1.0/delta, a, b, c, d
+             * such that the curve in interval i is given by
+             * z = (stims[i] - x)* (1.0/delta)
+             * y = a + b*z + c*z^2 + d*z^3
+             */
+            float * parameters;
+
+            float minValue;   /* = f( stims[0] )              */
+            float maxValue;   /* = f(stims[nSamplePoints-1] ) */
+        };
+
+        static int rsr_internal_I1D_refineSegment( float x, float * data, int low, int high )
+        {
+            int midPoint;
+
+            // TODO: Change assert to an exception?
+            assert( x>= data[low] );
+            assert( x<= data[high] );
+            assert( (high-low) > 0);
+            if( high-low==1 ) return low;
+
+            midPoint = (low+high)/2;
+            if( x<data[midPoint] ) return rsr_internal_I1D_refineSegment(x, data, low, midPoint );
+            return rsr_internal_I1D_refineSegment(x, data, midPoint, high );
+        }
+
+        static int rsr_internal_I1D_findSegmentContaining( float x, float * data, int n )
+        {
+            return rsr_internal_I1D_refineSegment(x, data, 0, n-1);
+        }
+
+        /*
+         * =========== USER FUNCTIONS ============
+         */
+
+
+        void rsr_Interpolator1D_destroy( rsr_Interpolator1D * data )
+        {
+            if(data==NULL) return;
+            free(data->stims);
+            free(data->parameters);
+            free(data);
+        }
+
+
+
+        float rsr_Interpolator1D_interpolate( float x, rsr_Interpolator1D * data )
+        {
+            int segId;
+            float * segdata;
+            float invDelta;
+            float a,b,c,d,z;
+
+            assert(data!=NULL);
+
+            /* Is x in range? */
+            if( isnan(x) ) return x;
+
+            if( x<data->stims[0] ) return data->minValue;
+            if (x>data->stims[ data->nSamplePoints -1] ) return data->maxValue;
+
+            /* Ok so its between the begining and end .. lets find out where... */
+            segId = rsr_internal_I1D_findSegmentContaining( x, data->stims, data->nSamplePoints );
+
+            assert(data->parameters !=NULL );
+
+            segdata = data->parameters + 5 * segId;
+
+            invDelta = segdata[0];
+            a = segdata[1];
+            b = segdata[2];
+            c = segdata[3];
+            d = segdata[4];
+
+            z = ( x - data->stims[segId] ) * invDelta;
+
+            return a + z * ( b + z * ( c  + d * z ) ) ;
+
+        }
+
+        rsr_Interpolator1D * rsr_Interpolator1D_createFromRaw( rsr_Interpolator1D_Raw * data )
+        {
+            rsr_Interpolator1D * retval = NULL;
+            /* Check the sanity of the data */
+            assert(data!=NULL);
+            assert(data->length>=2);
+            assert(data->stims!=NULL);
+            assert(data->values!=NULL);
+
+            /* Create the real data. */
+            retval = (rsr_Interpolator1D*)malloc( sizeof(rsr_Interpolator1D) ); // OCIO change: explicit cast
+            if(retval==NULL)
+            {
+                return NULL;
+            }
+
+            retval->stims = (float*)malloc( sizeof(float) * data->length ); // OCIO change: explicit cast
+            if(retval->stims==NULL)
+            {
+                free(retval);
+                return NULL;
+            }
+            memcpy( retval->stims, data->stims, sizeof(float) * data->length );
+
+            retval->parameters = (float*)malloc( 5*sizeof(float) * ( data->length - 1 ) ); // OCIO change: explicit cast
+            if(retval->parameters==NULL)
+            {
+                free(retval->stims);
+                free(retval);
+                return NULL;
+            }
+            retval->nSamplePoints = data->length;
+            retval->minValue = data->values[0];
+            retval->maxValue = data->values[ data->length -1];
+
+            /* Now the fun part .. filling in the coeficients. */
+            if(data->length==2)
+            {
+                retval->parameters[0] = 1.0f/(data->stims[1]-data->stims[0]);
+                retval->parameters[1] = data->values[0];
+                retval->parameters[2] = ( data->values[1] - data->values[0] );
+                retval->parameters[3] = 0;
+                retval->parameters[4] = 0;
+            }
+            else
+            {
+                unsigned int i;
+                float * params = retval->parameters;
+                for(i=0; i< data->length-1; ++i)
+                {
+                    float f0 = data->values[i+0];
+                    float f1 = data->values[i+1];
+
+                    params[0] = 1.0f/(retval->stims[i+1]-retval->stims[i+0]);
+
+                    if(i==0)
+                    {
+                        float delta = data->stims[i+1] - data->stims[i];
+                        float delta2 = (data->stims[i+2] - data->stims[i+1])/delta;
+                        float f2 = data->values[i+2];
+
+                        float dfdx1 = (f2-f0)/(1+delta2);
+                        params[1] =  1.0f * f0 + 0.0f * f1 + 0.0f * dfdx1;
+                        params[2] = -2.0f * f0 + 2.0f * f1 - 1.0f * dfdx1;
+                        params[3] =  1.0f * f0 - 1.0f * f1 + 1.0f * dfdx1;
+                        params[4] =  0.0;
+                    }
+                    else if (i==data->length-2)
+                    {
+                        float delta = data->stims[i+1] - data->stims[i];
+                        float delta1 = (data->stims[i]-data->stims[i-1])/delta;
+                        float fn1 = data->values[i-1];
+                        float dfdx0 = (f1-fn1)/(1+delta1);
+                        params[1] =  1.0f * f0 + 0.0f * f1 + 0.0f * dfdx0;
+                        params[2] =  0.0f * f0 + 0.0f * f1 + 1.0f * dfdx0;
+                        params[3] = -1.0f * f0 + 1.0f * f1 - 1.0f * dfdx0;
+                        params[4] =  0.0;
+                    }
+                    else
+                    {
+                        float delta = data->stims[i+1] - data->stims[i];
+                        float fn1=data->values[i-1];
+                        float delta1 = (data->stims[i] - data->stims[i-1])/delta;
+
+                        float f2=data->values[i+2];
+                        float delta2 = (data->stims[i+2] - data->stims[i+1])/delta;
+
+                        float dfdx0 = (f1-fn1)/(1.0f+delta1);
+                        float dfdx1 = (f2-f0)/(1.0f+delta2);
+
+                        params[1] = 1.0f * f0 + 0.0f * dfdx0 + 0.0f * f1 + 0.0f * dfdx1;
+                        params[2] = 0.0f * f0 + 1.0f * dfdx0 + 0.0f * f1 + 0.0f * dfdx1;
+                        params[3] =-3.0f * f0 - 2.0f * dfdx0 + 3.0f * f1 - 1.0f * dfdx1;
+                        params[4] = 2.0f * f0 + 1.0f * dfdx0 - 2.0f * f1 + 1.0f * dfdx1;
+                    }
+
+                    params+=5;
+                }
+            }
+            return retval;
+        }
+
+        rsr_Interpolator1D_Raw * rsr_Interpolator1D_Raw_create( unsigned int prelutLength)
+        {
+            unsigned int i;
+            rsr_Interpolator1D_Raw * prelut = (rsr_Interpolator1D_Raw*)malloc( sizeof(rsr_Interpolator1D_Raw) ); // OCIO change: explicit cast
+            if(prelut==NULL) return NULL;
+
+            prelut->stims = (float*)malloc( sizeof(float) * prelutLength ); // OCIO change: explicit cast
+            if(prelut->stims==NULL)
+            {
+                free(prelut);
+                return NULL;
+            }
+
+            prelut->values = (float*)malloc( sizeof(float) * prelutLength ); // OCIO change: explicit cast
+            if(prelut->values == NULL)
+            {
+                free(prelut->stims);
+                free(prelut);
+                return NULL;
+            }
+
+            prelut->length = prelutLength;
+
+            for( i=0; i<prelutLength; ++i )
+            {
+                prelut->stims[i] = 0.0;
+                prelut->values[i] = 0.0;
+            }
+
+            return prelut;
+        }
+
+        void rsr_Interpolator1D_Raw_destroy( rsr_Interpolator1D_Raw * prelut )
+        {
+            if(prelut==NULL) return;
+            free( prelut->stims );
+            free( prelut->values );
+            free( prelut );
+        }
+
+    } // End unnamed namespace for Interpolators.c
+
+    namespace
+    {
         class CachedFileCSP : public CachedFile
         {
         public:
-            CachedFileCSP ()
+            CachedFileCSP () :
+                hasprelut(false),
+                csptype("unknown"),
+                metadata("none")
             {
-                csptype = "unknown";
-                metadata = "none";
-                //prelut = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
+                prelut = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
                 lut1D = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
                 lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
             };
             ~CachedFileCSP() {};
             
+            bool hasprelut;
             std::string csptype;
             std::string metadata;
-            //OCIO_SHARED_PTR<Lut1D> prelut;
+            OCIO_SHARED_PTR<Lut1D> prelut;
             OCIO_SHARED_PTR<Lut1D> lut1D;
             OCIO_SHARED_PTR<Lut3D> lut3D;
         };
@@ -125,8 +391,7 @@ OCIO_NAMESPACE_ENTER
                 throw Exception ("file stream empty when trying to read csp lut");
             }
 
-            // 
-            //Lut1DRcPtr prelut_ptr(new Lut1D()); // TODO: add prelut support
+            Lut1DRcPtr prelut_ptr(new Lut1D());
             Lut1DRcPtr lut1d_ptr(new Lut1D());
             Lut3DRcPtr lut3d_ptr(new Lut3D());
 
@@ -163,35 +428,72 @@ OCIO_NAMESPACE_ENTER
             {
                 istream.seekg (curr_pos);
             }
-
-            // read the prelut block
-            // TODO: preluts are ignored atm till new spline op is built
+            
+            // Make 3 vectors of prelut inputs + output values
+            std::vector<float> prelut_in[3];
+            std::vector<float> prelut_out[3];
+            bool useprelut[3] = { false, false, false };
+            
+            // Parse the prelut block
             for (int c = 0; c < 3; ++c)
             {
-
                 // how many points do we have for this channel
                 nextline (istream, line);
-                int cpoints = atoi (line.c_str());
-
-                // read in / out channel points
-                float point;
-                std::vector<float> pts[2];
-                pts[0].reserve (cpoints);
-                pts[1].reserve (cpoints);
-                for (int i = 0; i < 2; ++i)
+                int cpoints = 0;
+                
+                if(!StringToInt(&cpoints, line.c_str()) || cpoints<0)
                 {
-                    for (int j = 0; j < cpoints; ++j)
-                    {
-                        istream >> point;
-                        pts[i].push_back(point);
-                    }
+                    std::ostringstream os;
+                    os << "Prelut does not specify valid dimension size on channel '";
+                    os << c << ": " << line;
+                    throw Exception(os.str().c_str());
                 }
-
-                // TODO: put the pts vector somewhere useful
-                // DEBUG
-                //for ( int i = 0; i < 2; ++i )
-                //    std::cout << "points: " << pts[i] << "\n";
-
+                
+                if(cpoints>=2)
+                {
+                    std::vector<std::string> inputparts, outputparts;
+                    
+                    nextline (istream, line);
+                    pystring::split(pystring::strip(line), inputparts);
+                    
+                    nextline (istream, line);
+                    pystring::split(pystring::strip(line), outputparts);
+                    
+                    if(static_cast<int>(inputparts.size()) != cpoints ||
+                       static_cast<int>(outputparts.size()) != cpoints)
+                    {
+                        std::ostringstream os;
+                        os << "Prelut does not specify the expected number of data points. ";
+                        os << "Expected: " << cpoints << ".";
+                        os << "Found: " << inputparts.size() << ", " << outputparts.size() << ".";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    if(!StringVecToFloatVec(prelut_in[c], inputparts) ||
+                       !StringVecToFloatVec(prelut_out[c], outputparts))
+                    {
+                        std::ostringstream os;
+                        os << "Prelut data is malformed, cannot to float array.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    
+                    useprelut[c] = (!VecsEqualWithRelError(&(prelut_in[c][0]),  static_cast<int>(prelut_in[c].size()),
+                                                           &(prelut_out[c][0]), static_cast<int>(prelut_out[c].size()),
+                                                           1e-6f));
+                }
+                else
+                {
+                    // Even though it's probably not part of the spec, why not allow for a size 0
+                    // in a channel to be specified?  It should be synonymous with identity,
+                    // and allows the code lower down to assume all 3 channels exist
+                    
+                    prelut_in[c].push_back(0.0f);
+                    prelut_in[c].push_back(1.0f);
+                    prelut_out[c].push_back(0.0f);
+                    prelut_out[c].push_back(1.0f);
+                    useprelut[c] = false;
+                }
             }
 
             if (csptype == "1D")
@@ -268,13 +570,66 @@ OCIO_NAMESPACE_ENTER
             CachedFileCSPRcPtr cachedFile = CachedFileCSPRcPtr (new CachedFileCSP ());
             cachedFile->csptype = csptype;
             cachedFile->metadata = metadata;
-            if(csptype == "1D") {
+            
+            if(useprelut[0] || useprelut[1] || useprelut[2])
+            {
+                cachedFile->hasprelut = true;
+                
+                for (int c = 0; c < 3; ++c)
+                {
+                    size_t prelut_numpts = prelut_in[c].size();
+                    float from_min = prelut_in[c][0];
+                    float from_max = prelut_in[c][prelut_numpts-1];
+                    
+                    // Allocate the interpolator
+                    rsr_Interpolator1D_Raw * cprelut_raw = 
+                        rsr_Interpolator1D_Raw_create(static_cast<unsigned int>(prelut_numpts));
+                    
+                    // Copy our prelut data into the interpolator
+                    for(size_t i=0; i<prelut_numpts; ++i)
+                    {
+                        cprelut_raw->stims[i] = prelut_in[c][i];
+                        cprelut_raw->values[i] = prelut_out[c][i];
+                    }
+                    
+                    // Create interpolater, to resample to simple 1D lut
+                    rsr_Interpolator1D * interpolater =
+                        rsr_Interpolator1D_createFromRaw(cprelut_raw);
+                    
+                    // Resample into 1D lut
+                    // TODO: Fancy spline analysis to determine required number of samples
+                    prelut_ptr->from_min[c] = from_min;
+                    prelut_ptr->from_max[c] = from_max;
+                    prelut_ptr->luts[c].clear();
+                    prelut_ptr->luts[c].reserve(NUM_PRELUT_SAMPLES);
+                    
+                    for (int i = 0; i < NUM_PRELUT_SAMPLES; ++i)
+                    {
+                        float interpo = float(i) / float(NUM_PRELUT_SAMPLES-1);
+                        float srcval = lerpf(from_min, from_max, interpo);
+                        float newval = rsr_Interpolator1D_interpolate(srcval, interpolater);
+                        prelut_ptr->luts[c].push_back(newval);
+                    }
+
+                    rsr_Interpolator1D_Raw_destroy(cprelut_raw);
+                    rsr_Interpolator1D_destroy(interpolater);
+                }
+                
+                prelut_ptr->finalize(1e-6f, ERROR_RELATIVE);
+                cachedFile->prelut = prelut_ptr;
+            }
+            
+            if(csptype == "1D")
+            {
                 lut1d_ptr->finalize(0.0, ERROR_RELATIVE);
                 cachedFile->lut1D = lut1d_ptr;
-            } else if (csptype == "3D") {
+            }
+            else if (csptype == "3D")
+            {
                 lut3d_ptr->generateCacheID ();
                 cachedFile->lut3D = lut3d_ptr;
             }
+            
             return cachedFile;
         }
 
@@ -300,22 +655,33 @@ OCIO_NAMESPACE_ENTER
             TransformDirection newDir = CombineTransformDirections(dir,
                 fileTransform.getDirection());
 
-            if(newDir == TRANSFORM_DIR_FORWARD) {
-                // TODO: add prelut support
+            if(newDir == TRANSFORM_DIR_FORWARD)
+            {
+                if(cachedFile->hasprelut)
+                {
+                    CreateLut1DOp(ops, cachedFile->prelut,
+                                  PRELUT_INTERPOLATION, newDir);
+                }
                 if(cachedFile->csptype == "1D")
                     CreateLut1DOp(ops, cachedFile->lut1D,
                                   fileTransform.getInterpolation(), newDir);
                 else if(cachedFile->csptype == "3D")
                     CreateLut3DOp(ops, cachedFile->lut3D,
                                   fileTransform.getInterpolation(), newDir);
-            } else if(newDir == TRANSFORM_DIR_INVERSE) {
+            }
+            else if(newDir == TRANSFORM_DIR_INVERSE)
+            {
                 if(cachedFile->csptype == "1D")
                     CreateLut1DOp(ops, cachedFile->lut1D,
                                   fileTransform.getInterpolation(), newDir);
                 else if(cachedFile->csptype == "3D")
                     CreateLut3DOp(ops, cachedFile->lut3D,
                                   fileTransform.getInterpolation(), newDir);
-                // TODO: add prelut support
+                if(cachedFile->hasprelut)
+                {
+                    CreateLut1DOp(ops, cachedFile->prelut,
+                                  PRELUT_INTERPOLATION, newDir);
+                }
             }
 
             return;
@@ -353,13 +719,13 @@ BOOST_AUTO_TEST_CASE ( test_simple1D )
     strebuf << ""                        << "\n";
     strebuf << "2"                       << "\n";
     strebuf << "0.0 1.0"                 << "\n";
-    strebuf << "0.0 1.0"                 << "\n";
+    strebuf << "0.0 2.0"                 << "\n";
     strebuf << "6"                       << "\n";
     strebuf << "0.0 0.2 0.4 0.6 0.8 1.0" << "\n";
-    strebuf << "0.0 0.2 0.4 0.6 0.8 1.0" << "\n";
+    strebuf << "0.0 0.4 0.8 1.2 1.6 2.0" << "\n";
     strebuf << "3"                       << "\n";
-    strebuf << "0.0 0.25 1.0"            << "\n";
-    strebuf << "0.0 0.25 1.0"            << "\n";
+    strebuf << "0.0 0.1 1.0"            << "\n";
+    strebuf << "0.0 0.2 2.0"            << "\n";
     strebuf << ""                        << "\n";
     strebuf << "6"                       << "\n";
     strebuf << "0.0 0.0 0.0"             << "\n";
@@ -369,7 +735,6 @@ BOOST_AUTO_TEST_CASE ( test_simple1D )
     strebuf << "0.6 0.8 0.4"             << "\n";
     strebuf << "1.0 0.9 0.5"             << "\n";
     
-    // TODO: add the prelut data here
     float red[6]   = { 0.0f, 0.2f, 0.4f, 0.5f, 0.6f, 1.0f };
     float green[6] = { 0.0f, 0.3f, 0.5f, 0.6f, 0.8f, 0.9f };
     float blue[6]  = { 0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f };
@@ -382,9 +747,16 @@ BOOST_AUTO_TEST_CASE ( test_simple1D )
     OCIO::CachedFileRcPtr cachedFile = tester.Load(simple1D);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
-    // check prelut data
-    // NOT DONE YET
-    
+    // check prelut data (note: the spline is resampled into a 1D LUT)
+    for(int c=0; c<3; ++c)
+    {
+        for (unsigned int i = 0; i < csplut->prelut->luts[c].size(); i += 128)
+        {
+            float input = float(i) / float(csplut->prelut->luts[c].size()-1);
+            float output = csplut->prelut->luts[c][i];
+            BOOST_CHECK_CLOSE (input*2.0f, output, 1e-4);
+        }
+    }
     // check 1D data
     // red
     unsigned int i;
@@ -414,11 +786,11 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
     strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
     strebuf << "6"                                           << "\n";
-    strebuf << "0.0 0.2 0.4 0.6 0.8 1.0"                     << "\n";
-    strebuf << "0.0 0.2 0.4 0.6 0.8 1.0"                     << "\n";
+    strebuf << "0.0 0.2       0.4 0.6 0.8 1.0"               << "\n";
+    strebuf << "0.0 0.2000000 0.4 0.6 0.8 1.0"               << "\n";
     strebuf << "5"                                           << "\n";
-    strebuf << "0.0 0.25 0.5 0.75 1.0"                       << "\n";
-    strebuf << "0.0 0.25 0.5 0.75 1.0"                       << "\n";
+    strebuf << "0.0 0.25       0.5 0.6 0.7"                  << "\n";
+    strebuf << "0.0 0.25000001 0.5 0.6 0.7"                  << "\n";
     strebuf << ""                                            << "\n";
     strebuf << "1 2 3"                                       << "\n";
     strebuf << "0.0 0.0 0.0"                                 << "\n";
@@ -428,7 +800,6 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     strebuf << "0.0 1.0 0.0"                                 << "\n";
     strebuf << "1.0 1.0 0.0"                                 << "\n";
     
-    // TODO: add the prelut data here
     float cube[1 * 2 * 3 * 3] = { 0.0, 0.0, 0.0,
                                   1.0, 0.0, 0.0,
                                   0.0, 0.5, 0.0,
@@ -445,7 +816,7 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check prelut data
-    // NOT DONE YET
+    BOOST_CHECK(csplut->hasprelut == false);
     
     // check cube data
     unsigned int i;
@@ -454,6 +825,8 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     }
     
 }
+
+// TODO: More strenuous tests of prelut resampling (non-noop preluts)
 
 BOOST_AUTO_TEST_SUITE_END()
 

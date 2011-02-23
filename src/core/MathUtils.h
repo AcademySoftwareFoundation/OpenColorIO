@@ -67,6 +67,11 @@ OCIO_NAMESPACE_ENTER
         return ((x1 > x2)? x1 - x2: x2 - x1) <= e * ((x1 > 0)? x1: -x1);
     }
     
+    inline float lerpf(float a, float b, float z)
+    {
+        return (b - a) * z + a;
+    }
+    
     bool IsScalarEqualToZero(float v);
     bool IsScalarEqualToOne(float v);
     
@@ -77,6 +82,11 @@ OCIO_NAMESPACE_ENTER
     // Is at least one of the specified components equal to 0?
     bool VecContainsZero(const float* v, int size);
     bool VecContainsOne(const float* v, int size);
+    
+    // Are two vectors equal? (Same size, same values?)
+    bool VecsEqualWithRelError(const float* v1, int size1,
+                               const float* v2, int size2,
+                               float e);
     
     inline double GetHalfMax()
     {
