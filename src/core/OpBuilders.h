@@ -111,6 +111,10 @@ OCIO_NAMESPACE_ENTER
                         const MatrixTransform & transform,
                         TransformDirection dir);
     
+    void BuildTruelightOps(OpRcPtrVec & ops,
+                           const Config & config,
+                           const TruelightTransform & transform,
+                           TransformDirection dir);
     
     ////////////////////////////////////////////////////////////////////////
     

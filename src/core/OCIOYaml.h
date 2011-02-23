@@ -56,6 +56,7 @@ namespace YAML {
     class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
     class TypedKeyNotFound<OCIO_NAMESPACE::MatrixTransform>;
+    class TypedKeyNotFound<OCIO_NAMESPACE::TruelightTransform>;
 }
 #pragma GCC visibility pop
 #include <yaml-cpp/yaml.h>
@@ -89,6 +90,8 @@ OCIO_NAMESPACE_ENTER
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstCDLTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, AllocationTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstAllocationTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, TruelightTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstTruelightTransformRcPtr t);
     
     // Enums
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, BitDepth depth);

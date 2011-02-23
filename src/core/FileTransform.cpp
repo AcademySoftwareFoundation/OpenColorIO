@@ -177,8 +177,7 @@ OCIO_NAMESPACE_ENTER
         for(unsigned int findex=0; findex<formats.size(); ++findex)
         {
             FileFormat* format = formats[findex];
-            std::string name = pystring::lower(format->GetName());
-            if(namelower == name)
+            if(namelower == pystring::lower(format->GetName()))
             {
                 return format;
             }

@@ -8,10 +8,23 @@ include_directories(
     ${YAML_CPP_INCLUDE_DIRS}
 )
 
+set(EXTERNAL_INCLUDE_DIRS)
+set(EXTERNAL_COMPILE_FLAGS "")
+set(EXTERNAL_LINK_FLAGS "")
+set(EXTERNAL_LIBRARIES)
+
 if(Boost_FOUND)
-    include_directories(
-        ${Boost_INCLUDE_DIR})
+    set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
 endif()
+
+if(TRUELIGHT_FOUND)
+  set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Truelight_INCLUDE_DIR})
+  set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} ${Truelight_COMPILE_FLAGS}")
+  set(EXTERNAL_LINK_FLAGS "${EXTERNAL_LINK_FLAGS} ${Truelight_LINK_FLAGS}")
+  set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${Truelight_LIBRARIES})
+endif()
+
+include_directories(${EXTERNAL_INCLUDE_DIRS})
 
 file(GLOB_RECURSE core_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp")
 file(GLOB_RECURSE core_export_headers "${CMAKE_SOURCE_DIR}/export/OpenColorIO/*.h")
@@ -30,8 +43,12 @@ add_dependencies(OpenColorIO
 target_link_libraries(OpenColorIO
     ${YAML_CPP_STATIC_LIBRARIES})
 
+target_link_libraries(OpenColorIO
+    ${EXTERNAL_LIBRARIES})
+
 set_target_properties(OpenColorIO PROPERTIES
-    COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+    COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden ${EXTERNAL_COMPILE_FLAGS}"
+    LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
 
 if (SOVERSION)
 message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
@@ -40,7 +57,6 @@ set_target_properties(OpenColorIO PROPERTIES
     SOVERSION ${SOVERSION}
 )
 endif ()
-
 
 install(TARGETS OpenColorIO DESTINATION
     ${CMAKE_INSTALL_PREFIX}/lib)

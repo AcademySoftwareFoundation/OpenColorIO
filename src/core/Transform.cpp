@@ -95,6 +95,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildMatrixOps(ops, config, *matrixTransform, dir);
         }
+        else if(ConstTruelightTransformRcPtr truelightTransform = \
+            DynamicPtrCast<const TruelightTransform>(transform))
+        {
+            BuildTruelightOps(ops, config, *truelightTransform, dir);
+        }
         else
         {
             std::ostringstream os;
@@ -146,6 +151,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const MatrixTransform*>(t))
         {
             os << *matrixTransform;
+        }
+        else if(const TruelightTransform * truelightTransform = \
+            dynamic_cast<const TruelightTransform*>(t))
+        {
+            os << *truelightTransform;
         }
         else
         {

@@ -142,6 +142,17 @@ else()
 endif()
 
 ###############################################################################
+### TRUELIGHT ###
+
+find_package(Truelight)
+if(TRUELIGHT_FOUND)
+    messageonce("Will build the truelight transform support against ${Truelight_LIBRARY_DIR}")
+    add_definitions(-DOCIO_TRUELIGHT_SUPPORT)
+else()
+    messageonce("Not building truelight transform support. Add the flag -D TRUELIGHT_INSTALL_PATH=... or set the TRUELIGHT_ROOT environment variable")
+endif()
+
+###############################################################################
 ### CORE ###
 
 add_subdirectory(src/core)

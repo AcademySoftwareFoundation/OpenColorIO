@@ -58,7 +58,6 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const = 0;
         virtual void setDirection(TransformDirection dir) = 0;
         
-    
     private:
         Transform& operator= (const Transform &);
     };
@@ -600,6 +599,92 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const MatrixTransform&);
+    
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class:: Truelight transform using its API
+    class OCIOEXPORT TruelightTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static TruelightTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+        
+        //!cpp:function::
+        void setConfigRoot(const char * configroot);
+        //!cpp:function::
+        const char * getConfigRoot() const;
+        
+        //!cpp:function::
+        void setProfile(const char * profile);
+        //!cpp:function::
+        const char * getProfile() const;
+        
+        //!cpp:function::
+        void setCamera(const char * camera);
+        //!cpp:function::
+        const char * getCamera() const;
+        
+        //!cpp:function::
+        void setInputDisplay(const char * display);
+        //!cpp:function::
+        const char * getInputDisplay() const;
+        
+        //!cpp:function::
+        void setRecorder(const char * recorder);
+        //!cpp:function::
+        const char * getRecorder() const;
+        
+        //!cpp:function::
+        void setPrint(const char * print);
+        //!cpp:function::
+        const char * getPrint() const;
+        
+        //!cpp:function::
+        void setLamp(const char * lamp);
+        //!cpp:function::
+        const char * getLamp() const;
+        
+        //!cpp:function::
+        void setOutputCamera(const char * camera);
+        //!cpp:function::
+        const char * getOutputCamera() const;
+        
+        //!cpp:function::
+        void setDisplay(const char * display);
+        //!cpp:function::
+        const char * getDisplay() const;
+        
+        //!cpp:function::
+        void setCubeInput(const char * type);
+        //!cpp:function::
+        const char * getCubeInput() const;
+        
+    private:
+        TruelightTransform();
+        TruelightTransform(const TruelightTransform &);
+        virtual ~TruelightTransform();
+        
+        TruelightTransform& operator= (const TruelightTransform &);
+        
+        static void deleter(TruelightTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const TruelightTransform &);
     
 }
 OCIO_NAMESPACE_EXIT

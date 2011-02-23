@@ -174,6 +174,8 @@ OCIO_NAMESPACE_ENTER
             t = node.Read<LogTransformRcPtr>();
         else if(type == "MatrixTransform")
             t = node.Read<MatrixTransformRcPtr>();
+        else if(type == "TruelightTransform")
+            t = node.Read<TruelightTransformRcPtr>();
         else
         {
             // TODO: add a new empty (better name?) aka passthru Transform()
@@ -217,6 +219,9 @@ OCIO_NAMESPACE_ENTER
         else if(ConstMatrixTransformRcPtr Matrix_tran = \
             DynamicPtrCast<const MatrixTransform>(t))
             out << Matrix_tran;
+        else if(ConstTruelightTransformRcPtr Truelight_tran = \
+            DynamicPtrCast<const TruelightTransform>(t))
+            out << Truelight_tran;
         else
             throw Exception("Unsupported Transform() type for serialization.");
         
@@ -540,6 +545,93 @@ OCIO_NAMESPACE_ENTER
         }
         
         EmitBaseTransformKeyValues(out, t);
+        out << YAML::EndMap;
+        return out;
+    }
+    
+    void operator >> (const YAML::Node& node, TruelightTransformRcPtr& t)
+    {
+        t = TruelightTransform::Create();
+        if(node.FindValue("config_root") != NULL)
+            t->setConfigRoot(node["config_root"].Read<std::string>().c_str());
+        if(node.FindValue("profile") != NULL)
+            t->setProfile(node["profile"].Read<std::string>().c_str());
+        if(node.FindValue("camera") != NULL)
+            t->setCamera(node["camera"].Read<std::string>().c_str());
+        if(node.FindValue("input_display") != NULL)
+            t->setInputDisplay(node["input_display"].Read<std::string>().c_str());
+        if(node.FindValue("recorder") != NULL)
+            t->setRecorder(node["recorder"].Read<std::string>().c_str());
+        if(node.FindValue("print") != NULL)
+            t->setPrint(node["print"].Read<std::string>().c_str());
+        if(node.FindValue("lamp") != NULL)
+            t->setLamp(node["lamp"].Read<std::string>().c_str());
+        if(node.FindValue("output_camera") != NULL)
+            t->setOutputCamera(node["output_camera"].Read<std::string>().c_str());
+        if(node.FindValue("display") != NULL)
+            t->setDisplay(node["display"].Read<std::string>().c_str());
+        if(node.FindValue("cube_input") != NULL)
+            t->setCubeInput(node["cube_input"].Read<std::string>().c_str());
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, ConstTruelightTransformRcPtr t)
+    {
+        
+        out << YAML::VerbatimTag("TruelightTransform");
+        out << YAML::Flow << YAML::BeginMap;
+        if(strcmp(t->getConfigRoot(), "") != 0)
+        {
+            out << YAML::Key << "config_root";
+            out << YAML::Value << YAML::Flow << t->getConfigRoot();
+        }
+        if(strcmp(t->getProfile(), "") != 0)
+        {
+            out << YAML::Key << "profile";
+            out << YAML::Value << YAML::Flow << t->getProfile();
+        }
+        if(strcmp(t->getCamera(), "") != 0)
+        {
+            out << YAML::Key << "camera";
+            out << YAML::Value << YAML::Flow << t->getCamera();
+        }
+        if(strcmp(t->getInputDisplay(), "") != 0)
+        {
+            out << YAML::Key << "input_display";
+            out << YAML::Value << YAML::Flow << t->getInputDisplay();
+        }
+        if(strcmp(t->getRecorder(), "") != 0)
+        {
+            out << YAML::Key << "recorder";
+            out << YAML::Value << YAML::Flow << t->getRecorder();
+        }
+        if(strcmp(t->getPrint(), "") != 0)
+        {
+            out << YAML::Key << "print";
+            out << YAML::Value << YAML::Flow << t->getPrint();
+        }
+        if(strcmp(t->getLamp(), "") != 0)
+        {
+            out << YAML::Key << "lamp";
+            out << YAML::Value << YAML::Flow << t->getLamp();
+        }
+        if(strcmp(t->getOutputCamera(), "") != 0)
+        {
+            out << YAML::Key << "output_camera";
+            out << YAML::Value << YAML::Flow << t->getOutputCamera();
+        }
+        if(strcmp(t->getDisplay(), "") != 0)
+        {
+            out << YAML::Key << "display";
+            out << YAML::Value << YAML::Flow << t->getDisplay();
+        }
+        if(strcmp(t->getCubeInput(), "") != 0)
+        {
+            out << YAML::Key << "cube_input";
+            out << YAML::Value << YAML::Flow << t->getCubeInput();
+        }
+        
+        EmitBaseTransformKeyValues(out, t);
+        
         out << YAML::EndMap;
         return out;
     }
