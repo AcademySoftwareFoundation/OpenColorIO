@@ -43,8 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
-#define LERP(a, b, x) ((a) * (1 - (x)) + (b) * (x))
-
 OCIO_NAMESPACE_ENTER
 {
     namespace
@@ -138,7 +136,7 @@ OCIO_NAMESPACE_ENTER
             assert(data!=NULL);
 
             /* Is x in range? */
-            if( isnan(x) ) return x;
+            if( std::isnan(x) ) return x;
 
             if( x<data->stims[0] ) return data->minValue;
             if (x>data->stims[ data->nSamplePoints -1] ) return data->maxValue;
@@ -342,6 +340,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string GetName() const;
             virtual std::string GetExtension () const;
             
+            virtual bool Supports(const std::string & feature) const;
+            
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
             virtual bool Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
@@ -388,7 +388,15 @@ OCIO_NAMESPACE_ENTER
         
         std::string
         FileFormatCSP::GetExtension() const { return "csp"; }
-
+        
+        bool
+        FileFormatCSP::Supports(const std::string & feature) const
+        {
+            if(feature == "load") return true;
+            if(feature == "write") return true;
+            return false;
+        }
+        
         CachedFileRcPtr
         FileFormatCSP::Load(std::istream & istream) const
         {
@@ -668,45 +676,21 @@ OCIO_NAMESPACE_ENTER
             // Output the prelut for each channel
             if(data.shaper_encode.size() != 0 && data.shaper_decode.size() != 0)
             {
-                ostream << data.shaper_ident.size() << "\n";
-                for (size_t i = 0; i < data.shaper_ident.size(); ++i)
-                {
-                    ostream << LERP(data.minlum[0], data.maxlum[0], data.shaper_ident[i]);
-                    ostream << ((i < data.shaper_ident.size()-1) ? " " : "");
+                for(size_t i = 0; i < 3; i++) {
+                    ostream << data.shaperSize << "\n";
+                    for(size_t pnt = 0; pnt < data.shaperSize; pnt++)
+                    {
+                        ostream << data.shaper_ident[3*pnt+i];
+                        ostream << ((pnt < data.shaperSize-1) ? " " : "");
+                    }
+                    ostream << "\n";
+                    for(size_t pnt = 0; pnt < data.shaperSize; pnt++)
+                    {
+                        ostream << data.shaper_encode[3*pnt+i];
+                        ostream << ((pnt < data.shaperSize-1) ? " " : "");
+                    }
+                    ostream << "\n";
                 }
-                ostream << "\n";
-                for (size_t i = 0; i < data.shaper_encode.size(); ++i)
-                {
-                    ostream << data.shaper_encode[i].r;
-                    ostream << ((i < data.shaper_encode.size()-1) ? " " : "");
-                }
-                ostream << "\n";
-                ostream << data.shaper_ident.size() << "\n";
-                for (size_t i = 0; i < data.shaper_ident.size(); ++i)
-                {
-                    ostream << LERP(data.minlum[1], data.maxlum[1], data.shaper_ident[i]);
-                    ostream << ((i < data.shaper_ident.size()-1) ? " " : "");
-                }
-                ostream << "\n";
-                for (size_t i = 0; i < data.shaper_encode.size(); ++i)
-                {
-                    ostream << data.shaper_encode[i].g;
-                    ostream << ((i < data.shaper_encode.size()-1) ? " " : "");
-                }
-                ostream << "\n";
-                ostream << data.shaper_ident.size() << "\n";
-                for (size_t i = 0; i < data.shaper_ident.size(); ++i)
-                {
-                    ostream << LERP(data.minlum[2], data.maxlum[2], data.shaper_ident[i]);
-                    ostream << ((i < data.shaper_ident.size()-1) ? " " : "");
-                }
-                ostream << "\n";
-                for (size_t i = 0; i < data.shaper_encode.size(); ++i)
-                {
-                    ostream << data.shaper_encode[i].b;
-                    ostream << ((i < data.shaper_encode.size()-1) ? " " : "");
-                }
-                ostream << "\n";
             }
             else
             {
@@ -727,12 +711,12 @@ OCIO_NAMESPACE_ENTER
             for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
                 for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {
                     for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
-                        const size_t ii = (ir + data.lookup3DSize
+                        const size_t ii = 3 * (ir + data.lookup3DSize
                                              * ig + data.lookup3DSize
                                              * data.lookup3DSize * ib);
-                        const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii].r));
-                        const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii].g));
-                        const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii].b));
+                        const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii+0]));
+                        const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii+1]));
+                        const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii+2]));
                         ostream << rv << " " << gv << " " << bv << "\n";
                     }
                 }
@@ -995,9 +979,9 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
     baker->setFormat("cinespace");
-    baker->setInput("lnf");
-    baker->setShaper("shaper");
-    baker->setTarget("target");
+    baker->setInputSpace("lnf");
+    baker->setShaperSpace("shaper");
+    baker->setTargetSpace("target");
     baker->setShaperSize(10);
     baker->setCubeSize(2);
     std::ostringstream output;

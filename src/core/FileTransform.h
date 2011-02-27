@@ -46,24 +46,17 @@ OCIO_NAMESPACE_ENTER
     
     typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;
     
-    struct RGB
-    {
-        float r;
-        float g;
-        float b;
-    };
-    
     struct TransformData
     {
         float minlum[3];
         float maxlum[3];
         size_t shaperSize;
         std::vector<float> shaper_ident;
-        std::vector<RGB> shaper_encode;
-        std::vector<RGB> shaper_decode;
-        //std::vector<RGB> lookup1D;
+        std::vector<float> shaper_encode;
+        std::vector<float> shaper_decode;
+        //std::vector<float> lookup1D;
         size_t lookup3DSize;
-        std::vector<RGB> lookup3D;
+        std::vector<float> lookup3D;
     };
     
     class FileFormat
@@ -73,6 +66,8 @@ OCIO_NAMESPACE_ENTER
         
         virtual std::string GetName() const = 0;
         virtual std::string GetExtension() const = 0;
+        
+        virtual bool Supports(const std::string & feature) const = 0;
         
         virtual CachedFileRcPtr Load(std::istream & istream) const = 0;
         

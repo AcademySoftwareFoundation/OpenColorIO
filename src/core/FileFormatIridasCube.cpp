@@ -119,6 +119,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string GetName() const;
             virtual std::string GetExtension () const;
             
+            virtual bool Supports(const std::string & feature) const;
+            
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
             virtual bool Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
@@ -159,6 +161,13 @@ OCIO_NAMESPACE_ENTER
         
         std::string
         LocalFileFormat::GetExtension() const { return "cube"; }
+        
+        bool
+        LocalFileFormat::Supports(const std::string & feature) const
+        {
+            if(feature == "load") return true;
+            return false;
+        }
         
         CachedFileRcPtr
         LocalFileFormat::Load(std::istream & istream) const

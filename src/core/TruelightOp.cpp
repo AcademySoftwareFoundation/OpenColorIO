@@ -135,11 +135,7 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(err.str().c_str());
             }
             
-#ifndef OCIO_TRUELIGHT_SUPPORT
-            std::ostringstream err;
-            err << "OCIO has been built without Truelight support";
-            //throw Exception(err.str().c_str());
-#else
+#ifdef OCIO_TRUELIGHT_SUPPORT
             
             if((TruelightBegin("")) == 0)
             {

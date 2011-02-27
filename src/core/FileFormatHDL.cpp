@@ -101,6 +101,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string GetName() const;
             virtual std::string GetExtension () const;
             
+            virtual bool Supports(const std::string & feature) const;
+            
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
             virtual bool Write(TransformData & data, std::ostream & ostream) const;
@@ -142,7 +144,15 @@ OCIO_NAMESPACE_ENTER
         {
             return "lut";
         }
-
+        
+        bool
+        FileFormatHDL::Supports(const std::string & feature) const
+        {
+            if(feature == "load") return true;
+            if(feature == "write") return true;
+            return false;
+        }
+        
         CachedFileRcPtr
         FileFormatHDL::Load(std::istream & istream) const
         {
@@ -429,7 +439,7 @@ OCIO_NAMESPACE_ENTER
             ostream << "Black\t\t" << 0.f << "\n";
             ostream << "White\t\t" << 1.f << "\n";
             if(data.shaper_encode.size() != 0)
-                ostream << "Length\t\t" << data.lookup3DSize << " " << data.shaper_encode.size() << "\n";
+                ostream << "Length\t\t" << data.lookup3DSize << " " << data.shaperSize << "\n";
             else
                 ostream << "Length\t\t" << data.lookup3DSize << "\n";
             ostream << "LUT:\n";
@@ -438,8 +448,9 @@ OCIO_NAMESPACE_ENTER
             if(data.shaper_encode.size() != 0)
             {
                 ostream << "Pre" << " {\n";
-                for (size_t i = 0; i < data.shaper_encode.size(); ++i) {
-                    ostream << "\t" << std::min(1.f, std::max(0.f, data.shaper_encode[i].r)) << "\n";
+                for(size_t pnt = 0; pnt < data.shaperSize; pnt++)
+                {
+                    ostream << "\t" << std::min(1.f, std::max(0.f, data.shaper_encode[3*pnt+0])) << "\n";
                 }
                 ostream << "}\n";
             }
@@ -452,12 +463,12 @@ OCIO_NAMESPACE_ENTER
             for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
                 for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {
                     for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
-                        const size_t ii = (ir + data.lookup3DSize
-                                         * ig + data.lookup3DSize
-                                              * data.lookup3DSize * ib);
-                        const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii].r));
-                        const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii].g));
-                        const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii].b));
+                        const size_t ii = 3 * (ir + data.lookup3DSize
+                                            * ig + data.lookup3DSize
+                                            * data.lookup3DSize * ib);
+                        const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii+0]));
+                        const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii+1]));
+                        const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii+2]));
                         ostream << tab << rv << " " << gv << " " << bv << "\n";
                     }
                 }
@@ -703,8 +714,8 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
     baker->setFormat("houdini");
-    baker->setInput("lnf");
-    baker->setTarget("target");
+    baker->setInputSpace("lnf");
+    baker->setTargetSpace("target");
     baker->setCubeSize(2);
     std::ostringstream output;
     baker->bake(output);
@@ -869,9 +880,9 @@ BOOST_AUTO_TEST_CASE ( test_simple3D1D )
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
     baker->setFormat("houdini");
-    baker->setInput("lnf");
-    baker->setShaper("shaper");
-    baker->setTarget("target");
+    baker->setInputSpace("lnf");
+    baker->setShaperSpace("shaper");
+    baker->setTargetSpace("target");
     baker->setShaperSize(10);
     baker->setCubeSize(2);
     std::ostringstream output;

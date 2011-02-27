@@ -63,6 +63,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string GetName() const;
             virtual std::string GetExtension () const;
             
+            virtual bool Supports(const std::string & feature) const;
+            
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
             virtual bool Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
@@ -85,7 +87,13 @@ OCIO_NAMESPACE_ENTER
         {
             return "cc";
         }
-            
+        
+        bool LocalFileFormat::Supports(const std::string & feature) const
+        {
+            if(feature == "load") return true;
+            return false;
+        }
+        
             // Try and load the format
             // Raise an exception if it can't be loaded.
         

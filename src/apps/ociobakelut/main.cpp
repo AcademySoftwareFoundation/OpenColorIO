@@ -136,9 +136,9 @@ int main (int argc, const char* argv[])
         // setup the baker for our lut type
         baker->setConfig(config);
         baker->setFormat(format.c_str());
-        baker->setInput(inputspace.c_str());
-        baker->setShaper(shaperspace.c_str());
-        baker->setTarget(outputspace.c_str());
+        baker->setInputSpace(inputspace.c_str());
+        baker->setShaperSpace(shaperspace.c_str());
+        baker->setTargetSpace(outputspace.c_str());
         baker->setShaperSize(shapersize);
         baker->setCubeSize(cubesize);
         

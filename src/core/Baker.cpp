@@ -32,8 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
-
-#define LERP(a, b, x) ((a) * (1 - (x)) + (b) * (x))
+#include "MathUtils.h"
+#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -54,6 +54,8 @@ OCIO_NAMESPACE_ENTER
         
         ConfigRcPtr config_;
         std::string formatName_;
+        std::string type_;
+        std::string metadata_;
         std::string inputSpace_;
         std::string shaperSpace_;
         std::string targetSpace_;
@@ -106,24 +108,93 @@ OCIO_NAMESPACE_ENTER
         getImpl()->config_ = config->createEditableCopy();
     }
     
+    int Baker::getNumFormats() const
+    {
+        int count = 0;
+        FormatRegistry & formats = GetFormatRegistry();
+        for(unsigned int findex=0; findex<formats.size(); ++findex)
+        {
+            FileFormat* format = formats[findex];
+            if(format->Supports("write"))
+                count++;
+        }
+        return count;
+    }
+    
+    const char * Baker::getFormatNameByIndex(int index) const
+    {
+        int count = 0;
+        FormatRegistry & formats = GetFormatRegistry();
+        for(unsigned int findex=0; findex<formats.size(); ++findex)
+        {
+            FileFormat* format = formats[findex];
+            if(format->Supports("write")) {
+                if(count == index)
+                    return pystring::lower(format->GetName()).c_str();
+                count++;
+            }
+        }
+        return "";
+    }
+    
     void Baker::setFormat(const char * formatName)
     {
         getImpl()->formatName_ = formatName;
     }
     
-    void Baker::setInput(const char * inputSpace)
+    const char * Baker::getFormat() const
+    {
+        return getImpl()->formatName_.c_str();
+    }
+    
+    void Baker::setType(const char * type)
+    {
+        getImpl()->type_ = type;
+    }
+    
+    const char * Baker::getType() const
+    {
+        return getImpl()->type_.c_str();
+    }
+    
+    void Baker::setMetadata(const char * metadata)
+    {
+        getImpl()->metadata_ = metadata;
+    }
+    
+    const char * Baker::getMetadata() const
+    {
+        return getImpl()->metadata_.c_str();
+    }
+    
+    void Baker::setInputSpace(const char * inputSpace)
     {
         getImpl()->inputSpace_ = inputSpace;
     }
     
-    void Baker::setShaper(const char * shaperSpace)
+    const char * Baker::getInputSpace() const
+    {
+        return getImpl()->inputSpace_.c_str();
+    }
+    
+    void Baker::setShaperSpace(const char * shaperSpace)
     {
         getImpl()->shaperSpace_ = shaperSpace;
     }
     
-    void Baker::setTarget(const char * targetSpace)
+    const char * Baker::getShaperSpace() const
+    {
+        return getImpl()->shaperSpace_.c_str();
+    }
+    
+    void Baker::setTargetSpace(const char * targetSpace)
     {
         getImpl()->targetSpace_ = targetSpace;
+    }
+    
+    const char * Baker::getTargetSpace() const
+    {
+        return getImpl()->targetSpace_.c_str();
     }
     
     void Baker::setShaperSize(int shapersize)
@@ -191,34 +262,32 @@ OCIO_NAMESPACE_ENTER
             shaper_dec->applyRGB(data.minlum);
             shaper_dec->applyRGB(data.maxlum);
             
-            // build a ramp ident ramp
+            // build an identitiy ramp and setup the encode ramp based
+            // on the max and min luminance
+            
+            data.shaper_ident.resize(data.shaperSize * 3);
+            data.shaper_encode.resize(data.shaperSize * 3);
+            data.shaper_decode.resize(data.shaperSize * 3);
+            
             for (size_t i = 0; i < data.shaperSize; ++i)
             {
                 const float x = (float)(double(i) / double(data.shaperSize - 1));
-                data.shaper_ident.push_back(x);
+                data.shaper_ident[3*i+0] = x;
+                data.shaper_ident[3*i+1] = x;
+                data.shaper_ident[3*i+2] = x;
+                data.shaper_encode[3*i+0] = lerpf(data.minlum[0], data.maxlum[0], x);
+                data.shaper_encode[3*i+1] = lerpf(data.minlum[1], data.maxlum[1], x);
+                data.shaper_encode[3*i+2] = lerpf(data.minlum[2], data.maxlum[2], x);
             }
+            data.shaper_decode = data.shaper_ident;
             
             // uniform shaper to decoded
-            for (size_t i = 0; i < data.shaper_ident.size(); ++i)
-            {
-                RGB _tmp;
-                _tmp.r = data.shaper_ident[i];
-                _tmp.g = data.shaper_ident[i];
-                _tmp.b = data.shaper_ident[i];
-                shaper_dec->applyRGB((float *)&_tmp);
-                data.shaper_decode.push_back(_tmp);
-            }
+            PackedImageDesc _tmp1(&data.shaper_decode[0], data.shaperSize, 1, 3);
+            shaper_dec->apply(_tmp1);
             
             // uniform shaper to encoded
-            for (size_t i = 0; i < data.shaper_ident.size(); ++i)
-            {
-                RGB _tmp;
-                _tmp.r = LERP(data.minlum[0], data.maxlum[0], data.shaper_ident[i]);
-                _tmp.g = LERP(data.minlum[1], data.maxlum[1], data.shaper_ident[i]);
-                _tmp.b = LERP(data.minlum[2], data.maxlum[2], data.shaper_ident[i]);
-                shaper_enc->applyRGB((float *)&_tmp);
-                data.shaper_encode.push_back(_tmp);
-            }
+            PackedImageDesc _tmp2(&data.shaper_encode[0], data.shaperSize, 1, 3);
+            shaper_enc->apply(_tmp2);
             
         }
         
@@ -230,10 +299,7 @@ OCIO_NAMESPACE_ENTER
                     const float gx = (float)(double(ig) / double(data.lookup3DSize - 1));
                     for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
                         const float rx = (float)(double(ir) / double(data.lookup3DSize - 1));
-                        RGB _tmp;
-                        _tmp.r = rx;
-                        _tmp.g = gx;
-                        _tmp.b = bx;
+                        float _tmp[3] = { rx, gx, bx };
                         // run the cube through the shaper first
                         if(shaper_enc && shaper_dec)
                         {
@@ -242,7 +308,9 @@ OCIO_NAMESPACE_ENTER
                         }
                         // apply the cube
                         target->applyRGB((float *)&_tmp);
-                        data.lookup3D.push_back(_tmp);
+                        data.lookup3D.push_back(_tmp[0]);
+                        data.lookup3D.push_back(_tmp[1]);
+                        data.lookup3D.push_back(_tmp[2]);
                     }
                 }
             }
@@ -277,5 +345,38 @@ OCIO_NAMESPACE_ENTER
     
 }
 OCIO_NAMESPACE_EXIT
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+BOOST_AUTO_TEST_SUITE( Baker_Unit_Tests )
+
+BOOST_AUTO_TEST_CASE ( test_listlutwriters )
+{
+    
+    std::vector<std::string> current_writers;
+    current_writers.push_back("cinespace");
+    current_writers.push_back("houdini");
+    
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    
+    BOOST_CHECK_EQUAL(baker->getNumFormats(), (int)current_writers.size());
+    
+    std::vector<std::string> test;
+    for(int i = 0; i < baker->getNumFormats(); ++i)
+        test.push_back(baker->getFormatNameByIndex(i));
+    
+    for(unsigned int i = 0; i < current_writers.size(); ++i)
+        BOOST_CHECK_EQUAL(current_writers[i], test[i]);
+    
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+#endif // OCIO_BUILD_TESTS
 
     

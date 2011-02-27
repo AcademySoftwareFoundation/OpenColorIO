@@ -248,13 +248,7 @@ OCIO_NAMESPACE_ENTER
     {
         TransformDirection combinedDir = CombineTransformDirections(dir,
             transform.getDirection());
-        
-        #ifndef _TRUELIGHT_
-        // TODO: throw exception if we didn't build with truelight support
-        #endif // _TRUELIGHT_
-        
         CreateTruelightOps(ops, transform, combinedDir);
-        
     }
     
 }

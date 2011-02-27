@@ -84,6 +84,13 @@ OCIO_NAMESPACE_ENTER
                 return "spi3d";
             }
             
+            
+            virtual bool Supports(const std::string & feature) const
+            {
+                if(feature == "load") return true;
+                return false;
+            }
+            
             // Try and load the format
             // Raise an exception if it can't be loaded.
 

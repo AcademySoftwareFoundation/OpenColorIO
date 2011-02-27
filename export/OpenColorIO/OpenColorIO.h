@@ -415,7 +415,6 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
-    //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Config&);
     
     
@@ -622,40 +621,84 @@ OCIO_NAMESPACE_ENTER
     // Baker
     // ******
     // 
-    // In certain situations it is nessary to serilize transforms into a
-    // variety of application specific lut formats.
+    // In certain situations it is nessary to serilize transforms into a variety
+    // of application specific lut formats. The Baker can be used to create lut
+    // formats that ocio supports for writing.
     // 
-    // The Baker can be used to create lut formats that ocio supports for
-    // writing.
+    // **Usage Example:** *Bake a houdini sRGB viewer lut*
+    // 
+    // .. code-block:: cpp
+    //    
+    //    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
+    //    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    //    baker->setConfig(config);
+    //    baker->setFormat("houdini"); // set the houdini type
+    //    baker->setType("3D"); // we want a 3D lut
+    //    baker->setInputSpace("lnf");
+    //    baker->setShaperSpace("log");
+    //    baker->setTargetSpace("sRGB");
+    //    std::ostringstream out;
+    //    baker->bake(out); // fresh bread anyone!
+    //    std::cout << out.str();
     
     class OCIOEXPORT Baker
     {
     public:
-        //!cpp:function::
+        //!cpp:function:: create a new Baker
         static BakerRcPtr Create();
         
-        //!cpp:function::
+        //!cpp:function:: create a copy of this Baker
         BakerRcPtr createEditableCopy() const;
         
-        //!cpp:function::
+        //!cpp:function:: set the config to use
         void setConfig(const ConstConfigRcPtr & config);
         
-        //!cpp:function::
+        //!cpp:function:: get the number of lut writers
+        int getNumFormats() const;
+        //!cpp:function:: get the lut writer at index, return empty string if
+        // an invalid index is specified
+        const char * getFormatNameByIndex(int index) const;
+        
+        //!cpp:function:: set the lut output format
         void setFormat(const char * formatName);
+        //!cpp:function:: get the lut output format
+        const char * getFormat() const;
         
-        //!cpp:function::
-        void setInput(const char * inputSpace);
-        //!cpp:function::
-        void setShaper(const char * shaperSpace);
-        //!cpp:function::
-        void setTarget(const char * targetSpace);
+        //!cpp:function:: set the lut output type (1D or 3D)
+        void setType(const char * type);
+        //!cpp:function:: get the lut output type
+        const char * getType() const;
         
-        //!cpp:function::
+        //!cpp:function:: set *optional* meta data for luts that support it
+        void setMetadata(const char * metadata);
+        //!cpp:function:: get the meta data that has been set
+        const char * getMetadata() const;
+        
+        //!cpp:function:: set the input colorspace that the lut will be
+        // applied to
+        void setInputSpace(const char * inputSpace);
+        //!cpp:function:: get the input colorspace that has been set
+        const char * getInputSpace() const;
+        
+        //!cpp:function:: set an *optional* colorspace to be used to shape /
+        // transfer the input colorspace. This is mostly used to allocate
+        // an HDR luminance range into an LDR one.
+        void setShaperSpace(const char * shaperSpace);
+        //!cpp:function:: get the shaper colorspace that has been set
+        const char * getShaperSpace() const;
+        
+        //!cpp:function:: set the target device colorspace for the lut
+        void setTargetSpace(const char * targetSpace);
+        //!cpp:function:: get the target colorspace that has been set
+        const char * getTargetSpace() const;
+        
+        //!cpp:function:: set the shaper sample size, should be atleast
+        // cubesize^2 (default: 1024)
         void setShaperSize(int shapersize);
-        //!cpp:function::
+        //!cpp:function:: set the cube sample size (default: 32)
         void setCubeSize(int cubesize);
         
-        //!cpp:function::
+        //!cpp:function:: bake the lut into the output stream
         void bake(std::ostream & os) const;
         
     private:
