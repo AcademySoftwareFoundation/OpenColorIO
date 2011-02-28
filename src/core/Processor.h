@@ -36,31 +36,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    class LocalProcessor;
-    typedef OCIO_SHARED_PTR<const LocalProcessor> ConstLocalProcessorRcPtr;
-    typedef OCIO_SHARED_PTR<LocalProcessor> LocalProcessorRcPtr;
-    
-    class LocalProcessor : public Processor
+
+
+    class Processor::Impl
     {
+    private:
+        OpRcPtrVec m_cpuOps;
+        
+        // These 3 op vecs represent the 3 stages in our gpu pipe.
+        // 1) preprocess shader text
+        // 2) 3d lut process lookup
+        // 3) postprocess shader text
+        
+        OpRcPtrVec m_gpuOpsHwPreProcess;
+        OpRcPtrVec m_gpuOpsCpuLatticeProcess;
+        OpRcPtrVec m_gpuOpsHwPostProcess;
+        
+        mutable std::string m_shaderText;
+        mutable std::string m_lut3DHash;
+        mutable std::string m_shaderTextHash;
+        
     public:
-        static LocalProcessorRcPtr Create();
+        Impl();
+        ~Impl();
         
-        virtual ~LocalProcessor();
+        bool isNoOp() const;
         
-        // Public interface
+        void apply(ImageDesc& img) const;
         
-        virtual bool isNoOp() const;
+        void applyRGB(float * pixel) const;
+        void applyRGBA(float * pixel) const;
         
-        virtual void apply(ImageDesc& img) const;
+        const char * getGpuShaderText(const GpuShaderDesc & gpuDesc) const;
+        const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const;
         
-        virtual void applyRGB(float * pixel) const;
-        virtual void applyRGBA(float * pixel) const;
-        
-        virtual const char * getGpuShaderText(const GpuShaderDesc & gpuDesc) const;
-        virtual const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const;
-        
-        virtual void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
-        virtual const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const;
+        void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
+        const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const;
         
         ////////////////////////////////////////////
         //
@@ -77,30 +88,7 @@ OCIO_NAMESPACE_ENTER
                           TransformDirection direction);
         
         void finalize();
-        
-    private:
-        LocalProcessor();
-        LocalProcessor(const LocalProcessor &);
-        LocalProcessor& operator= (const LocalProcessor &);
-        
-        static void deleter(LocalProcessor* p);
-        
-        OpRcPtrVec m_cpuOps;
-        
-        // These 3 op vecs represent the 3 stages in our gpu pipe.
-        // 1) preprocess shader text
-        // 2) 3d lut process lookup
-        // 3) postprocess shader text
-        
-        OpRcPtrVec m_gpuOpsHwPreProcess;
-        OpRcPtrVec m_gpuOpsCpuLatticeProcess;
-        OpRcPtrVec m_gpuOpsHwPostProcess;
-        
-        mutable std::string m_shaderText;
-        mutable std::string m_lut3DHash;
-        mutable std::string m_shaderTextHash;
     };
-    
     
     // TODO: Move these!
     // TODO: Its not ideal that buildops requires a config to be passed around

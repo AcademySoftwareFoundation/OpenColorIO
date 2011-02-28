@@ -1129,9 +1129,9 @@ OCIO_NAMESPACE_ENTER
             throw Exception("Config::GetProcessor failed. Destination colorspace is null.");
         }
         
-        LocalProcessorRcPtr processor = LocalProcessor::Create();
-        processor->addColorSpaceConversion(*this, context, src, dst);
-        processor->finalize();
+        ProcessorRcPtr processor = Processor::Create();
+        processor->getImpl()->addColorSpaceConversion(*this, context, src, dst);
+        processor->getImpl()->finalize();
         return processor;
     }
     
@@ -1184,9 +1184,9 @@ OCIO_NAMESPACE_ENTER
                                              const ConstTransformRcPtr& transform,
                                              TransformDirection direction) const
     {
-        LocalProcessorRcPtr processor = LocalProcessor::Create();
-        processor->addTransform(*this, context, transform, direction);
-        processor->finalize();
+        ProcessorRcPtr processor = Processor::Create();
+        processor->getImpl()->addTransform(*this, context, transform, direction);
+        processor->getImpl()->finalize();
         return processor;
     }
     

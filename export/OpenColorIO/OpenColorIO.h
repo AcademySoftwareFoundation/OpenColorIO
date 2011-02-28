@@ -561,10 +561,10 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         //!cpp:function::
-        virtual ~Processor();
+        static ProcessorRcPtr Create();
         
         //!cpp:function::
-        virtual bool isNoOp() const = 0;
+        bool isNoOp() const;
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
@@ -572,7 +572,7 @@ OCIO_NAMESPACE_ENTER
         // ^^^^^^^^
         
         //!cpp:function:: Apply to an image.
-        virtual void apply(ImageDesc& img) const = 0;
+        void apply(ImageDesc& img) const;
         
         //!rst::
         // Apply to a single pixel.
@@ -583,9 +583,9 @@ OCIO_NAMESPACE_ENTER
         //    use the above function instead.
         
         //!cpp:function:: 
-        virtual void applyRGB(float * pixel) const = 0;
+        void applyRGB(float * pixel) const;
         //!cpp:function:: 
-        virtual void applyRGBA(float * pixel) const = 0;
+        void applyRGBA(float * pixel) const;
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
@@ -602,17 +602,31 @@ OCIO_NAMESPACE_ENTER
         // return 0 if unknown
         
         //!cpp:function::
-        virtual const char * getGpuShaderText(const GpuShaderDesc & shaderDesc) const = 0;
+        const char * getGpuShaderText(const GpuShaderDesc & shaderDesc) const;
         //!cpp:function::
-        virtual const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const = 0;
+        const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const;
         
         //!cpp:function::
-        virtual void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const = 0;
+        void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
         //!cpp:function::
-        virtual const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const = 0;
+        const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const;
         
     private:
+        Processor();
+        ~Processor();
+        
+        Processor(const Processor &);
         Processor& operator= (const Processor &);
+        
+        static void deleter(Processor* c);
+        
+        friend class Config;
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
     };
     
     

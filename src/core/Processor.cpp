@@ -46,9 +46,65 @@ OCIO_NAMESPACE_ENTER
     //////////////////////////////////////////////////////////////////////////
     
     
+    ProcessorRcPtr Processor::Create()
+    {
+        return ProcessorRcPtr(new Processor(), &deleter);
+    }
+    
+    void Processor::deleter(Processor* c)
+    {
+        delete c;
+    }
+    
+    Processor::Processor()
+    : m_impl(new Processor::Impl)
+    {
+    }
     
     Processor::~Processor()
-    { }
+    {
+        delete m_impl;
+        m_impl = NULL;
+    }
+    
+    bool Processor::isNoOp() const
+    {
+        return getImpl()->isNoOp();
+    }
+    
+    void Processor::apply(ImageDesc& img) const
+    {
+        getImpl()->apply(img);
+    }
+    void Processor::applyRGB(float * pixel) const
+    {
+        getImpl()->applyRGB(pixel);
+    }
+    
+    void Processor::applyRGBA(float * pixel) const
+    {
+        getImpl()->applyRGBA(pixel);
+    }
+    
+    const char * Processor::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
+    {
+        return getImpl()->getGpuShaderText(shaderDesc);
+    }
+    
+    const char * Processor::getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const
+    {
+        return getImpl()->getGpuShaderTextCacheID(shaderDesc);
+    }
+    
+    void Processor::getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const
+    {
+        return getImpl()->getGpuLut3D(lut3d, shaderDesc);
+    }
+    
+    const char * Processor::getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const
+    {
+        return getImpl()->getGpuLut3DCacheID(shaderDesc);
+    }
     
     
     
@@ -171,23 +227,204 @@ OCIO_NAMESPACE_ENTER
     //////////////////////////////////////////////////////////////////////////
     
     
-    LocalProcessorRcPtr LocalProcessor::Create()
-    {
-        return LocalProcessorRcPtr(new LocalProcessor(), &deleter);
-    }
-    
-    void LocalProcessor::deleter(LocalProcessor* p)
-    {
-        delete p;
-    }
-    
-    LocalProcessor::LocalProcessor()
+    Processor::Impl::Impl()
     { }
     
-    LocalProcessor::~LocalProcessor()
+    Processor::Impl::~Impl()
     { }
     
-    void LocalProcessor::addColorSpaceConversion(const Config & config,
+    bool Processor::Impl::isNoOp() const
+    {
+        return IsOpVecNoOp(m_cpuOps);
+    }
+    
+    void Processor::Impl::apply(ImageDesc& img) const
+    {
+        if(m_cpuOps.empty()) return;
+        
+        ScanlineHelper scanlineHelper(img);
+        float * rgbaBuffer = 0;
+        long numPixels = 0;
+        
+        while(true)
+        {
+            scanlineHelper.prepRGBAScanline(&rgbaBuffer, &numPixels);
+            if(numPixels == 0) break;
+            if(!rgbaBuffer)
+                throw Exception("Cannot apply transform; null image.");
+            
+            for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+            {
+                m_cpuOps[i]->apply(rgbaBuffer, numPixels);
+            }
+            
+            scanlineHelper.finishRGBAScanline();
+        }
+    }
+    
+    void Processor::Impl::applyRGB(float * pixel) const
+    {
+        if(m_cpuOps.empty()) return;
+        
+        // We need to allocate a temp array as the pixel must be 4 floats in size
+        // (otherwise, sse loads will potentially fail)
+        
+        float rgbaBuffer[4] = { pixel[0], pixel[1], pixel[2], 0.0f };
+        
+        for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+        {
+            m_cpuOps[i]->apply(rgbaBuffer, 1);
+        }
+        
+        pixel[0] = rgbaBuffer[0];
+        pixel[1] = rgbaBuffer[1];
+        pixel[2] = rgbaBuffer[2];
+    }
+    
+    void Processor::Impl::applyRGBA(float * pixel) const
+    {
+        for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+        {
+            m_cpuOps[i]->apply(pixel, 1);
+        }
+    }
+    
+    const char * Processor::Impl::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
+    {
+        // TODO: Cache this call so for repeated calls, it doesnt recompute
+        std::ostringstream shader;
+        std::string pixelName = "out_pixel";
+        std::string lut3dName = "lut3d";
+        
+        WriteShaderHeader(shader, pixelName, shaderDesc);
+        
+        
+        for(unsigned int i=0; i<m_gpuOpsHwPreProcess.size(); ++i)
+        {
+            m_gpuOpsHwPreProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+        }
+        
+        if(!m_gpuOpsCpuLatticeProcess.empty())
+        {
+            // Sample the 3D LUT.
+            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
+            shader << pixelName << ".rgb = ";
+            Write_sampleLut3D_rgb(&shader, pixelName,
+                                  lut3dName, lut3DEdgeLen,
+                                  shaderDesc.getLanguage());
+        }
+#ifdef __APPLE__
+        else
+        {
+            // Force a no-op sampling of the 3d lut on OSX to work around a segfault.
+            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
+            shader << "// OSX segfault work-around: Force a no-op sampling of the 3d lut.\n";
+            Write_sampleLut3D_rgb(&shader, pixelName,
+                                  lut3dName, lut3DEdgeLen,
+                                  shaderDesc.getLanguage());
+        }
+#endif // __APPLE__
+        for(unsigned int i=0; i<m_gpuOpsHwPostProcess.size(); ++i)
+        {
+            m_gpuOpsHwPostProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+        }
+        
+        WriteShaderFooter(shader, pixelName, shaderDesc);
+        
+        // TODO: This is not multi-thread safe. Cache result or mutex
+        m_shaderText = shader.str();
+        
+        return m_shaderText.c_str();
+    }
+    
+    const char * Processor::Impl::getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const
+    {
+        std::string shadertext = getGpuShaderText(shaderDesc);
+        
+        // TODO: This is not multi-thread safe. Cache result or mutex
+        m_shaderTextHash = CacheIDHash(shadertext.c_str(), (int)shadertext.size());
+        return m_shaderTextHash.c_str();
+    }
+    
+    
+    const char * Processor::Impl::getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const
+    {
+        // TODO: Cache this call so for repeated calls, it doesnt recompute
+        
+        // Can we write the entire shader using only shader text?
+        // Lut3D is not needed. Blank it.
+        
+        if(m_gpuOpsCpuLatticeProcess.empty())
+        {
+            // TODO: This is not multi-thread safe. Cache result or mutex
+            m_lut3DHash = "<NULL>";
+            return m_lut3DHash.c_str();
+        }
+        
+        // For all ops that will contribute to the 3D lut,
+        // add it to the hash
+        
+        std::ostringstream idhash;
+        
+        // Apply the lattice ops to the cacheid
+        for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
+        {
+            idhash << m_gpuOpsCpuLatticeProcess[i]->getCacheID() << " ";
+        }
+        
+        // Also, add a hash of the shader description
+        idhash << shaderDesc.getLanguage() << " ";
+        idhash << shaderDesc.getFunctionName() << " ";
+        idhash << shaderDesc.getLut3DEdgeLen() << " ";
+        std::string fullstr = idhash.str();
+        
+        // TODO: This is not multi-thread safe. Cache result or mutex
+        m_lut3DHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        return m_lut3DHash.c_str();
+    }
+    
+    void Processor::Impl::getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const
+    {
+        if(!lut3d) return;
+        
+        // Can we write the entire shader using only shader text?
+        // Lut3D is not needed. Blank it.
+        
+        int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
+        int lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
+        
+        if(m_gpuOpsCpuLatticeProcess.empty())
+        {
+            memset(lut3d, 0, sizeof(float) * 3 * lut3DNumPixels);
+            return;
+        }
+        
+        // Allocate rgba 3dlut image
+        float lut3DRGBABuffer[lut3DNumPixels*4];
+        GenerateIdentityLut3D(lut3DRGBABuffer, lut3DEdgeLen, 4);
+        
+        // Apply the lattice ops to it
+        for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
+        {
+            m_gpuOpsCpuLatticeProcess[i]->apply(lut3DRGBABuffer, lut3DNumPixels);
+        }
+        
+        // Copy the lut3d rgba image to the lut3d
+        for(int i=0; i<lut3DNumPixels; ++i)
+        {
+            lut3d[3*i+0] = lut3DRGBABuffer[4*i+0];
+            lut3d[3*i+1] = lut3DRGBABuffer[4*i+1];
+            lut3d[3*i+2] = lut3DRGBABuffer[4*i+2];
+        }
+    }
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    void Processor::Impl::addColorSpaceConversion(const Config & config,
                                  const ConstContextRcPtr & context,
                                  const ConstColorSpaceRcPtr & srcColorSpace,
                                  const ConstColorSpaceRcPtr & dstColorSpace)
@@ -196,7 +433,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void LocalProcessor::addTransform(const Config & config,
+    void Processor::Impl::addTransform(const Config & config,
                       const ConstContextRcPtr & context,
                       const ConstTransformRcPtr& transform,
                       TransformDirection direction)
@@ -204,7 +441,7 @@ OCIO_NAMESPACE_ENTER
         BuildOps(m_cpuOps, config, context, transform, direction);
     }
     
-    void LocalProcessor::finalize()
+    void Processor::Impl::finalize()
     {
         // GPU Process setup
         {
@@ -274,6 +511,7 @@ OCIO_NAMESPACE_ENTER
             FinalizeOpVec(m_cpuOps);
         }
         
+        // TODO: Make this a debug envvar
         /*
         std::cerr << "     ********* CPU OPS ***************" << std::endl;
         std::cerr << GetOpVecInfo(m_cpuOps) << "\n\n";
@@ -287,200 +525,6 @@ OCIO_NAMESPACE_ENTER
         std::cerr << "     ********* GPU OPS POST PROCESS ***************" << std::endl;
         std::cerr << GetOpVecInfo(m_gpuOpsHwPostProcess) << "\n\n";
         */
-    }
-    
-    
-    bool LocalProcessor::isNoOp() const
-    {
-        return IsOpVecNoOp(m_cpuOps);
-    }
-    
-    void LocalProcessor::apply(ImageDesc& img) const
-    {
-        if(m_cpuOps.empty()) return;
-        
-        ScanlineHelper scanlineHelper(img);
-        float * rgbaBuffer = 0;
-        long numPixels = 0;
-        
-        while(true)
-        {
-            scanlineHelper.prepRGBAScanline(&rgbaBuffer, &numPixels);
-            if(numPixels == 0) break;
-            if(!rgbaBuffer)
-                throw Exception("Cannot apply transform; null image.");
-            
-            for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
-            {
-                m_cpuOps[i]->apply(rgbaBuffer, numPixels);
-            }
-            
-            scanlineHelper.finishRGBAScanline();
-        }
-    }
-    
-    void LocalProcessor::applyRGB(float * pixel) const
-    {
-        if(m_cpuOps.empty()) return;
-        
-        // We need to allocate a temp array as the pixel must be 4 floats in size
-        // (otherwise, sse loads will potentially fail)
-        
-        float rgbaBuffer[4] = { pixel[0], pixel[1], pixel[2], 0.0f };
-        
-        for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
-        {
-            m_cpuOps[i]->apply(rgbaBuffer, 1);
-        }
-        
-        pixel[0] = rgbaBuffer[0];
-        pixel[1] = rgbaBuffer[1];
-        pixel[2] = rgbaBuffer[2];
-    }
-    
-    void LocalProcessor::applyRGBA(float * pixel) const
-    {
-        for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
-        {
-            m_cpuOps[i]->apply(pixel, 1);
-        }
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    const char * LocalProcessor::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
-    {
-        // TODO: Cache this call so for repeated calls, it doesnt recompute
-        std::ostringstream shader;
-        std::string pixelName = "out_pixel";
-        std::string lut3dName = "lut3d";
-        
-        WriteShaderHeader(shader, pixelName, shaderDesc);
-        
-        
-        for(unsigned int i=0; i<m_gpuOpsHwPreProcess.size(); ++i)
-        {
-            m_gpuOpsHwPreProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
-        }
-        
-        if(!m_gpuOpsCpuLatticeProcess.empty())
-        {
-            // Sample the 3D LUT.
-            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
-            shader << pixelName << ".rgb = ";
-            Write_sampleLut3D_rgb(&shader, pixelName,
-                                  lut3dName, lut3DEdgeLen,
-                                  shaderDesc.getLanguage());
-        }
-#ifdef __APPLE__
-        else
-        {
-            // Force a no-op sampling of the 3d lut on OSX to work around a segfault.
-            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
-            shader << "// OSX segfault work-around: Force a no-op sampling of the 3d lut.\n";
-            Write_sampleLut3D_rgb(&shader, pixelName,
-                                  lut3dName, lut3DEdgeLen,
-                                  shaderDesc.getLanguage());
-        }
-#endif // __APPLE__
-        for(unsigned int i=0; i<m_gpuOpsHwPostProcess.size(); ++i)
-        {
-            m_gpuOpsHwPostProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
-        }
-        
-        WriteShaderFooter(shader, pixelName, shaderDesc);
-        
-        // TODO: This is not multi-thread safe. Cache result or mutex
-        m_shaderText = shader.str();
-        
-        return m_shaderText.c_str();
-    }
-    
-    const char * LocalProcessor::getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const
-    {
-        std::string shadertext = getGpuShaderText(shaderDesc);
-        
-        // TODO: This is not multi-thread safe. Cache result or mutex
-        m_shaderTextHash = CacheIDHash(shadertext.c_str(), (int)shadertext.size());
-        return m_shaderTextHash.c_str();
-    }
-    
-    const char * LocalProcessor::getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const
-    {
-        // TODO: Cache this call so for repeated calls, it doesnt recompute
-        
-        // Can we write the entire shader using only shader text?
-        // Lut3D is not needed. Blank it.
-        
-        if(m_gpuOpsCpuLatticeProcess.empty())
-        {
-            // TODO: This is not multi-thread safe. Cache result or mutex
-            m_lut3DHash = "<NULL>";
-            return m_lut3DHash.c_str();
-        }
-        
-        // For all ops that will contribute to the 3D lut,
-        // add it to the hash
-        
-        std::ostringstream idhash;
-        
-        // Apply the lattice ops to the cacheid
-        for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
-        {
-            idhash << m_gpuOpsCpuLatticeProcess[i]->getCacheID() << " ";
-        }
-        
-        // Also, add a hash of the shader description
-        idhash << shaderDesc.getLanguage() << " ";
-        idhash << shaderDesc.getFunctionName() << " ";
-        idhash << shaderDesc.getLut3DEdgeLen() << " ";
-        std::string fullstr = idhash.str();
-        
-        // TODO: This is not multi-thread safe. Cache result or mutex
-        m_lut3DHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
-        return m_lut3DHash.c_str();
-    }
-    
-    void LocalProcessor::getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const
-    {
-        if(!lut3d) return;
-        
-        // Can we write the entire shader using only shader text?
-        // Lut3D is not needed. Blank it.
-        
-        int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
-        int lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
-        
-        if(m_gpuOpsCpuLatticeProcess.empty())
-        {
-            memset(lut3d, 0, sizeof(float) * 3 * lut3DNumPixels);
-            return;
-        }
-        
-        // Allocate rgba 3dlut image
-        float lut3DRGBABuffer[lut3DNumPixels*4];
-        GenerateIdentityLut3D(lut3DRGBABuffer, lut3DEdgeLen, 4);
-        
-        // Apply the lattice ops to it
-        for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
-        {
-            m_gpuOpsCpuLatticeProcess[i]->apply(lut3DRGBABuffer, lut3DNumPixels);
-        }
-        
-        // Copy the lut3d rgba image to the lut3d
-        for(int i=0; i<lut3DNumPixels; ++i)
-        {
-            lut3d[3*i+0] = lut3DRGBABuffer[4*i+0];
-            lut3d[3*i+1] = lut3DRGBABuffer[4*i+1];
-            lut3d[3*i+2] = lut3DRGBABuffer[4*i+2];
-        }
     }
 }
 OCIO_NAMESPACE_EXIT
