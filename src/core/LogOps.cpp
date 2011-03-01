@@ -132,7 +132,7 @@ OCIO_NAMESPACE_ENTER
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostringstream & shader,
+            virtual void writeGpuShader(std::ostream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
@@ -247,9 +247,9 @@ OCIO_NAMESPACE_ENTER
             return true;
         }
         
-        void LogOp::writeGpuShader(std::ostringstream & shader,
-                                            const std::string & pixelName,
-                                            const GpuShaderDesc & shaderDesc) const
+        void LogOp::writeGpuShader(std::ostream & shader,
+                                   const std::string & pixelName,
+                                   const GpuShaderDesc & shaderDesc) const
         {
             GpuLanguage lang = shaderDesc.getLanguage();
             

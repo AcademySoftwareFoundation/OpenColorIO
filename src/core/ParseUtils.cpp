@@ -178,6 +178,22 @@ OCIO_NAMESPACE_ENTER
         return INTERP_UNKNOWN;
     }
     
+    const char * GpuLanguageToString(GpuLanguage language)
+    {
+        if(language == GPU_LANGUAGE_CG) return "cg";
+        else if(language == GPU_LANGUAGE_GLSL_1_0) return "glsl_1.0";
+        else if(language == GPU_LANGUAGE_GLSL_1_3) return "glsl_1.3";
+        return "unknown";
+    }
+    
+    GpuLanguage GpuLanguageFromString(const char * s)
+    {
+        std::string str = pystring::lower(s);
+        if(str == "cg") return GPU_LANGUAGE_CG;
+        else if(str == "glsl_1.0") return GPU_LANGUAGE_GLSL_1_0;
+        else if(str == "glsl_1.3") return GPU_LANGUAGE_GLSL_1_3;
+        return GPU_LANGUAGE_UNKNOWN;
+    }
     
     
     const char * ROLE_DEFAULT = "default";

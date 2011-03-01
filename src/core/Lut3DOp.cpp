@@ -261,7 +261,7 @@ OCIO_NAMESPACE_ENTER
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostringstream & shader,
+            virtual void writeGpuShader(std::ostream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
@@ -369,7 +369,7 @@ OCIO_NAMESPACE_ENTER
             return false;
         }
         
-        void Lut3DOp::writeGpuShader(std::ostringstream & /*shader*/,
+        void Lut3DOp::writeGpuShader(std::ostream & /*shader*/,
                                      const std::string & /*pixelName*/,
                                      const GpuShaderDesc & /*shaderDesc*/) const
         {

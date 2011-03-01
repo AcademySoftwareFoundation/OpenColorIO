@@ -36,29 +36,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    void Write_half4x4(std::ostringstream * os, const float * m44, GpuLanguage lang)
+    void Write_half4x4(std::ostream & os, const float * m44, GpuLanguage lang)
     {
-        if(!os) return;
-        
         if(lang == GPU_LANGUAGE_CG)
         {
-            *os << "half4x4(";
+            os << "half4x4(";
             for(int i=0; i<16; i++)
             {
-                if(i!=0) *os << ", ";
-                *os << ClampToNormHalf(m44[i]);
+                if(i!=0) os << ", ";
+                os << ClampToNormHalf(m44[i]);
             }
-            *os << ")";
+            os << ")";
         }
         else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
         {
-            *os << "mat4(";
+            os << "mat4(";
             for(int i=0; i<16; i++)
             {
-                if(i!=0) *os << ", ";
-                *os << m44[i]; // Clamping to half is not necessary
+                if(i!=0) os << ", ";
+                os << m44[i]; // Clamping to half is not necessary
             }
-            *os << ")";
+            os << ")";
         }
         else
         {
@@ -66,29 +64,27 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void Write_half4(std::ostringstream * os, const float * v4,  GpuLanguage lang)
+    void Write_half4(std::ostream & os, const float * v4,  GpuLanguage lang)
     {
-        if(!os) return;
-        
         if(lang == GPU_LANGUAGE_CG)
         {
-            *os << "half4(";
+            os << "half4(";
             for(int i=0; i<4; i++)
             {
-                if(i!=0) *os << ", ";
-                *os << ClampToNormHalf(v4[i]);
+                if(i!=0) os << ", ";
+                os << ClampToNormHalf(v4[i]);
             }
-            *os << ")";
+            os << ")";
         }
         else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
         {
-            *os << "vec4(";
+            os << "vec4(";
             for(int i=0; i<4; i++)
             {
-                if(i!=0) *os << ", ";
-                *os << v4[i]; // Clamping to half is not necessary
+                if(i!=0) os << ", ";
+                os << v4[i]; // Clamping to half is not necessary
             }
-            *os << ")";
+            os << ")";
         }
         else
         {
@@ -96,29 +92,27 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void Write_half3(std::ostringstream * os, const float * v3,  GpuLanguage lang)
+    void Write_half3(std::ostream & os, const float * v3,  GpuLanguage lang)
     {
-        if(!os) return;
-        
         if(lang == GPU_LANGUAGE_CG)
         {
-            *os << "half3(";
+            os << "half3(";
             for(int i=0; i<3; i++)
             {
-                if(i!=0) *os << ", ";
-                *os << ClampToNormHalf(v3[i]);
+                if(i!=0) os << ", ";
+                os << ClampToNormHalf(v3[i]);
             }
-            *os << ")";
+            os << ")";
         }
         else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
         {
-            *os << "vec3(";
+            os << "vec3(";
             for(int i=0; i<3; i++)
             {
-                if(i!=0) *os << ", ";
-                *os << v3[i]; // Clamping to half is not necessary
+                if(i!=0) os << ", ";
+                os << v3[i]; // Clamping to half is not necessary
             }
-            *os << ")";
+            os << ")";
         }
         else
         {
@@ -132,68 +126,67 @@ OCIO_NAMESPACE_ENTER
     std::string GpuTextHalf4x4(const float * m44, GpuLanguage lang)
     {
         std::ostringstream os;
-        Write_half4x4(&os, m44, lang);
+        Write_half4x4(os, m44, lang);
         return os.str();
     }
     
     std::string GpuTextHalf4(const float * v4, GpuLanguage lang)
     {
         std::ostringstream os;
-        Write_half4(&os, v4, lang);
+        Write_half4(os, v4, lang);
         return os.str();
     }
     
     std::string GpuTextHalf3(const float * v3, GpuLanguage lang)
     {
         std::ostringstream os;
-        Write_half3(&os, v3, lang);
+        Write_half3(os, v3, lang);
         return os.str();
     }
     
     // Note that Cg and GLSL have opposite ordering for vec/mtx multiplication
-    void Write_mtx_x_vec(std::ostringstream * os,
+    void Write_mtx_x_vec(std::ostream & os,
                          const std::string & mtx, const std::string & vec,
                          GpuLanguage lang)
     {
-        if(!os) return;
-        
         if(lang == GPU_LANGUAGE_CG)
         {
-            *os << "mul( " << mtx << ", " << vec << ")";
+            os << "mul( " << mtx << ", " << vec << ")";
         }
-        else
+        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
         {
-            *os << vec << " * " << mtx;
-        }
-    }
-    
-    
-    void Write_sampleLut3D_rgb(std::ostringstream * os, const std::string& variableName,
-                               const std::string& lutName, int lut3DEdgeLen,
-                               GpuLanguage lang)
-    {
-        if(!os) return;
-        
-        float m = ((float) lut3DEdgeLen-1.0f) / (float) lut3DEdgeLen;
-        float b = 1.0f / (2.0f * (float) lut3DEdgeLen);
-        
-        if(lang == GPU_LANGUAGE_CG)
-        {
-            *os << "tex3D(";
-            *os << lutName << ", ";
-            *os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
-        }
-        else if(lang == GPU_LANGUAGE_GLSL_1_0)
-        {
-            *os << "texture3D(";
-            *os << lutName << ", ";
-            *os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
+            os << vec << " * " << mtx;
         }
         else
         {
             throw Exception("Unsupported shader language.");
         }
+    }
     
+    
+    void Write_sampleLut3D_rgb(std::ostream & os, const std::string& variableName,
+                               const std::string& lutName, int lut3DEdgeLen,
+                               GpuLanguage lang)
+    {
+        float m = ((float) lut3DEdgeLen-1.0f) / (float) lut3DEdgeLen;
+        float b = 1.0f / (2.0f * (float) lut3DEdgeLen);
+        
+        if(lang == GPU_LANGUAGE_CG)
+        {
+            os << "tex3D(";
+            os << lutName << ", ";
+            os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
+        }
+        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
+        {
+            os << "texture3D(";
+            os << lutName << ", ";
+            os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
+        }
+        else
+        {
+            throw Exception("Unsupported shader language.");
+        }
     }
 
 }

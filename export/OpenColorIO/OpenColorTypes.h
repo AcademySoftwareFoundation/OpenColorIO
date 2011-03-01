@@ -274,6 +274,11 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT Interpolation InterpolationFromString(const char * s);
     
+    //!cpp:function::
+    extern OCIOEXPORT const char * GpuLanguageToString(GpuLanguage language);
+    //!cpp:function::
+    extern OCIOEXPORT GpuLanguage GpuLanguageFromString(const char * s);
+    
     
     /*!rst::
     Roles

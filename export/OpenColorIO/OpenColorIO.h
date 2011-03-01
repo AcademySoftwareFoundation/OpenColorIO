@@ -587,6 +587,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: 
         void applyRGBA(float * pixel) const;
         
+        //!cpp:function:: 
+        const char * getCpuCacheID() const;
+        
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // GPU Path
@@ -899,6 +902,9 @@ OCIO_NAMESPACE_ENTER
         void setLut3DEdgeLen(int len);
         //!cpp:function::
         int getLut3DEdgeLen() const;
+        
+        //!cpp:function:: 
+        const char * getCacheID() const;
         
     private:
         

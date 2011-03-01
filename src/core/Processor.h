@@ -30,13 +30,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_PROCESSOR_H
 #define INCLUDED_OCIO_PROCESSOR_H
 
+#include <sstream>
+
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Mutex.h"
 #include "Op.h"
 
 OCIO_NAMESPACE_ENTER
 {
-
 
     class Processor::Impl
     {
@@ -52,9 +54,17 @@ OCIO_NAMESPACE_ENTER
         OpRcPtrVec m_gpuOpsCpuLatticeProcess;
         OpRcPtrVec m_gpuOpsHwPostProcess;
         
-        mutable std::string m_shaderText;
-        mutable std::string m_lut3DHash;
-        mutable std::string m_shaderTextHash;
+        mutable std::string m_cpuCacheID;
+        
+        // Cache the last last queried value,
+        // for the specified shader description
+        mutable std::string m_lastShaderDesc;
+        mutable std::string m_shader;
+        mutable std::string m_shaderCacheID;
+        mutable std::vector<float> m_lut3D;
+        mutable std::string m_lut3DCacheID;
+        
+        mutable Mutex m_resultsCacheMutex;
         
     public:
         Impl();
@@ -66,6 +76,7 @@ OCIO_NAMESPACE_ENTER
         
         void applyRGB(float * pixel) const;
         void applyRGBA(float * pixel) const;
+        const char * getCpuCacheID() const;
         
         const char * getGpuShaderText(const GpuShaderDesc & gpuDesc) const;
         const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const;
@@ -88,6 +99,10 @@ OCIO_NAMESPACE_ENTER
                           TransformDirection direction);
         
         void finalize();
+        
+        void calcGpuShaderText(std::ostream & shader,
+                               const GpuShaderDesc & shaderDesc) const;
+    
     };
     
     // TODO: Move these!

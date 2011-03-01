@@ -40,17 +40,17 @@ OCIO_NAMESPACE_ENTER
     std::string GpuTextHalf4(const float * v4, GpuLanguage lang);
     std::string GpuTextHalf3(const float * v3, GpuLanguage lang);
     
-    void Write_mtx_x_vec(std::ostringstream * os,
+    void Write_mtx_x_vec(std::ostream & os,
                          const std::string & mtx, const std::string & vec,
                          GpuLanguage lang);
     
-    void Write_half4x4(std::ostringstream * os, const float * m44, GpuLanguage lang);
-    void Write_half4(std::ostringstream * os, const float * v4,  GpuLanguage lang);
-    void Write_half3(std::ostringstream * os, const float * v3,  GpuLanguage lang);
+    void Write_half4x4(std::ostream & os, const float * m44, GpuLanguage lang);
+    void Write_half4(std::ostream & os, const float * v4,  GpuLanguage lang);
+    void Write_half3(std::ostream & os, const float * v3,  GpuLanguage lang);
     
     // returns vec3
-    void Write_sampleLut3D_rgb(std::ostringstream * os, const std::string& variableName,
-                               const std::string& lutName, int lut3DEdgeLen,
+    void Write_sampleLut3D_rgb(std::ostream & os, const std::string & variableName,
+                               const std::string & lutName, int lut3DEdgeLen,
                                GpuLanguage lang);
 }
 OCIO_NAMESPACE_EXIT

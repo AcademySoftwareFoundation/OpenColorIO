@@ -86,6 +86,11 @@ OCIO_NAMESPACE_ENTER
         getImpl()->applyRGBA(pixel);
     }
     
+    const char * Processor::getCpuCacheID() const
+    {
+        return getImpl()->getCpuCacheID();
+    }
+    
     const char * Processor::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
     {
         return getImpl()->getGpuShaderText(shaderDesc);
@@ -114,7 +119,8 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        void WriteShaderHeader(std::ostringstream & shader, const std::string & pixelName,
+        void WriteShaderHeader(std::ostream & shader,
+                               const std::string & pixelName,
                                const GpuShaderDesc & shaderDesc)
         {
             if(!shader) return;
@@ -158,7 +164,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        void WriteShaderFooter(std::ostringstream & shader,
+        void WriteShaderFooter(std::ostream & shader,
                                const std::string & pixelName,
                                const GpuShaderDesc & /*shaderDesc*/)
         {
@@ -289,133 +295,181 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    const char * Processor::Impl::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
+    const char * Processor::Impl::getCpuCacheID() const
     {
-        // TODO: Cache this call so for repeated calls, it doesnt recompute
-        std::ostringstream shader;
-        std::string pixelName = "out_pixel";
-        std::string lut3dName = "lut3d";
+        AutoMutex lock(m_resultsCacheMutex);
         
-        WriteShaderHeader(shader, pixelName, shaderDesc);
+        if(!m_cpuCacheID.empty()) return m_cpuCacheID.c_str();
         
-        
-        for(unsigned int i=0; i<m_gpuOpsHwPreProcess.size(); ++i)
+        if(m_cpuOps.empty())
         {
-            m_gpuOpsHwPreProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+            m_cpuCacheID = "<NOOP>";
         }
-        
-        if(!m_gpuOpsCpuLatticeProcess.empty())
-        {
-            // Sample the 3D LUT.
-            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
-            shader << pixelName << ".rgb = ";
-            Write_sampleLut3D_rgb(&shader, pixelName,
-                                  lut3dName, lut3DEdgeLen,
-                                  shaderDesc.getLanguage());
-        }
-#ifdef __APPLE__
         else
         {
-            // Force a no-op sampling of the 3d lut on OSX to work around a segfault.
-            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
-            shader << "// OSX segfault work-around: Force a no-op sampling of the 3d lut.\n";
-            Write_sampleLut3D_rgb(&shader, pixelName,
-                                  lut3dName, lut3DEdgeLen,
-                                  shaderDesc.getLanguage());
+            std::ostringstream cacheid;
+            for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+            {
+                cacheid << m_cpuOps[i]->getCacheID() << " ";
+            }
+            std::string fullstr = cacheid.str();
+            
+            m_cpuCacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
         }
-#endif // __APPLE__
-        for(unsigned int i=0; i<m_gpuOpsHwPostProcess.size(); ++i)
+        
+        return m_cpuCacheID.c_str();
+    }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    
+    const char * Processor::Impl::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
+    {
+        AutoMutex lock(m_resultsCacheMutex);
+        
+        if(m_lastShaderDesc != shaderDesc.getCacheID())
         {
-            m_gpuOpsHwPostProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+            m_lastShaderDesc = shaderDesc.getCacheID();
+            m_shader = "";
+            m_shaderCacheID = "";
+            m_lut3D.clear();
+            m_lut3DCacheID = "";
         }
         
-        WriteShaderFooter(shader, pixelName, shaderDesc);
+        if(m_shader.empty())
+        {
+            std::ostringstream shader;
+            calcGpuShaderText(shader, shaderDesc);
+            m_shader = shader.str();
+        }
         
-        // TODO: This is not multi-thread safe. Cache result or mutex
-        m_shaderText = shader.str();
-        
-        return m_shaderText.c_str();
+        return m_shader.c_str();
     }
     
     const char * Processor::Impl::getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const
     {
-        std::string shadertext = getGpuShaderText(shaderDesc);
+        AutoMutex lock(m_resultsCacheMutex);
         
-        // TODO: This is not multi-thread safe. Cache result or mutex
-        m_shaderTextHash = CacheIDHash(shadertext.c_str(), (int)shadertext.size());
-        return m_shaderTextHash.c_str();
+        if(m_lastShaderDesc != shaderDesc.getCacheID())
+        {
+            m_lastShaderDesc = shaderDesc.getCacheID();
+            m_shader = "";
+            m_shaderCacheID = "";
+            m_lut3D.clear();
+            m_lut3DCacheID = "";
+        }
+        
+        if(m_shader.empty())
+        {
+            std::ostringstream shader;
+            calcGpuShaderText(shader, shaderDesc);
+            m_shader = shader.str();
+        }
+        
+        if(m_shaderCacheID.empty())
+        {
+            m_shaderCacheID = CacheIDHash(m_shader.c_str(), (int)m_shader.size());
+        }
+        
+        return m_shaderCacheID.c_str();
     }
     
     
     const char * Processor::Impl::getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const
     {
-        // TODO: Cache this call so for repeated calls, it doesnt recompute
+        AutoMutex lock(m_resultsCacheMutex);
         
-        // Can we write the entire shader using only shader text?
-        // Lut3D is not needed. Blank it.
-        
-        if(m_gpuOpsCpuLatticeProcess.empty())
+        if(m_lastShaderDesc != shaderDesc.getCacheID())
         {
-            // TODO: This is not multi-thread safe. Cache result or mutex
-            m_lut3DHash = "<NULL>";
-            return m_lut3DHash.c_str();
+            m_lastShaderDesc = shaderDesc.getCacheID();
+            m_shader = "";
+            m_shaderCacheID = "";
+            m_lut3D.clear();
+            m_lut3DCacheID = "";
         }
         
-        // For all ops that will contribute to the 3D lut,
-        // add it to the hash
-        
-        std::ostringstream idhash;
-        
-        // Apply the lattice ops to the cacheid
-        for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
+        if(m_lut3DCacheID.empty())
         {
-            idhash << m_gpuOpsCpuLatticeProcess[i]->getCacheID() << " ";
+            if(m_gpuOpsCpuLatticeProcess.empty())
+            {
+                m_lut3DCacheID = "<NULL>";
+            }
+            else
+            {
+                std::ostringstream cacheid;
+                for(OpRcPtrVec::size_type i=0, size = m_gpuOpsCpuLatticeProcess.size(); i<size; ++i)
+                {
+                    cacheid << m_gpuOpsCpuLatticeProcess[i]->getCacheID() << " ";
+                }
+                // Also, add a hash of the shader description
+                cacheid << shaderDesc.getCacheID();
+                std::string fullstr = cacheid.str();
+                m_lut3DCacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+            }
         }
         
-        // Also, add a hash of the shader description
-        idhash << shaderDesc.getLanguage() << " ";
-        idhash << shaderDesc.getFunctionName() << " ";
-        idhash << shaderDesc.getLut3DEdgeLen() << " ";
-        std::string fullstr = idhash.str();
-        
-        // TODO: This is not multi-thread safe. Cache result or mutex
-        m_lut3DHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
-        return m_lut3DHash.c_str();
+        return m_lut3DCacheID.c_str();
     }
     
     void Processor::Impl::getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const
     {
         if(!lut3d) return;
         
-        // Can we write the entire shader using only shader text?
-        // Lut3D is not needed. Blank it.
+        AutoMutex lock(m_resultsCacheMutex);
+        
+        if(m_lastShaderDesc != shaderDesc.getCacheID())
+        {
+            m_lastShaderDesc = shaderDesc.getCacheID();
+            m_shader = "";
+            m_shaderCacheID = "";
+            m_lut3D.clear();
+            m_lut3DCacheID = "";
+        }
         
         int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
         int lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
         
+        // Can we write the entire shader using only shader text?
+        // If so, the lut3D is not needed so clear it.
+        // This is preferable to identity, as it lets people notice if
+        // it's accidentally being used.
         if(m_gpuOpsCpuLatticeProcess.empty())
         {
             memset(lut3d, 0, sizeof(float) * 3 * lut3DNumPixels);
             return;
         }
         
-        // Allocate rgba 3dlut image
-        float lut3DRGBABuffer[lut3DNumPixels*4];
-        GenerateIdentityLut3D(lut3DRGBABuffer, lut3DEdgeLen, 4);
-        
-        // Apply the lattice ops to it
-        for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
+        if(m_lut3D.empty())
         {
-            m_gpuOpsCpuLatticeProcess[i]->apply(lut3DRGBABuffer, lut3DNumPixels);
+            // Allocate 3dlut image, RGBA
+            m_lut3D.resize(lut3DNumPixels*4);
+            GenerateIdentityLut3D(&m_lut3D[0], lut3DEdgeLen, 4);
+            
+            // Apply the lattice ops to it
+            for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
+            {
+                m_gpuOpsCpuLatticeProcess[i]->apply(&m_lut3D[0], lut3DNumPixels);
+            }
+            
+            // Convert the RGBA image to an RGB image, in place.
+            // Of course, this only works because we're doing it from left to right
+            // so old pixels are read before they're written over
+            // TODO: is this bad for memory access patterns?
+            //       see if this is faster with a 2nd temp float array
+            
+            for(int i=1; i<lut3DNumPixels; ++i) // skip the 1st pixel, it's ok.
+            {
+                m_lut3D[3*i+0] = m_lut3D[4*i+0];
+                m_lut3D[3*i+1] = m_lut3D[4*i+1];
+                m_lut3D[3*i+2] = m_lut3D[4*i+2];
+            }
         }
         
-        // Copy the lut3d rgba image to the lut3d
-        for(int i=0; i<lut3DNumPixels; ++i)
-        {
-            lut3d[3*i+0] = lut3DRGBABuffer[4*i+0];
-            lut3d[3*i+1] = lut3DRGBABuffer[4*i+1];
-            lut3d[3*i+2] = lut3DRGBABuffer[4*i+2];
-        }
+        // Copy to the destination
+        memcpy(lut3d, &m_lut3D[0], sizeof(float) * 3 * lut3DNumPixels);
     }
     
     
@@ -526,5 +580,48 @@ OCIO_NAMESPACE_ENTER
         std::cerr << GetOpVecInfo(m_gpuOpsHwPostProcess) << "\n\n";
         */
     }
+    
+    void Processor::Impl::calcGpuShaderText(std::ostream & shader,
+                                            const GpuShaderDesc & shaderDesc) const
+    {
+        std::string pixelName = "out_pixel";
+        std::string lut3dName = "lut3d";
+        
+        WriteShaderHeader(shader, pixelName, shaderDesc);
+        
+        
+        for(unsigned int i=0; i<m_gpuOpsHwPreProcess.size(); ++i)
+        {
+            m_gpuOpsHwPreProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+        }
+        
+        if(!m_gpuOpsCpuLatticeProcess.empty())
+        {
+            // Sample the 3D LUT.
+            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
+            shader << pixelName << ".rgb = ";
+            Write_sampleLut3D_rgb(shader, pixelName,
+                                  lut3dName, lut3DEdgeLen,
+                                  shaderDesc.getLanguage());
+        }
+#ifdef __APPLE__
+        else
+        {
+            // Force a no-op sampling of the 3d lut on OSX to work around a segfault.
+            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
+            shader << "// OSX segfault work-around: Force a no-op sampling of the 3d lut.\n";
+            Write_sampleLut3D_rgb(shader, pixelName,
+                                  lut3dName, lut3DEdgeLen,
+                                  shaderDesc.getLanguage());
+        }
+#endif // __APPLE__
+        for(unsigned int i=0; i<m_gpuOpsHwPostProcess.size(); ++i)
+        {
+            m_gpuOpsHwPostProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+        }
+        
+        WriteShaderFooter(shader, pixelName, shaderDesc);
+    }
+    
 }
 OCIO_NAMESPACE_EXIT

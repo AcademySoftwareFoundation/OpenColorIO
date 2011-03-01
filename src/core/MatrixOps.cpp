@@ -121,7 +121,7 @@ OCIO_NAMESPACE_ENTER
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostringstream & shader,
+            virtual void writeGpuShader(std::ostream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
@@ -280,7 +280,7 @@ OCIO_NAMESPACE_ENTER
             return true;
         }
         
-        void MatrixOffsetOp::writeGpuShader(std::ostringstream & shader,
+        void MatrixOffsetOp::writeGpuShader(std::ostream & shader,
                                             const std::string & pixelName,
                                             const GpuShaderDesc & shaderDesc) const
         {
@@ -298,13 +298,13 @@ OCIO_NAMESPACE_ENTER
                         shader << pixelName << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44);
-                        Write_half4(&shader, scale, lang);
+                        Write_half4(shader, scale, lang);
                         shader << " * " << pixelName << ";\n";
                     }
                     else
                     {
                         shader << pixelName << " = ";
-                        Write_mtx_x_vec(&shader,
+                        Write_mtx_x_vec(shader,
                                         GpuTextHalf4x4(m_m44, lang), pixelName,
                                         lang);
                         shader << ";\n";
@@ -314,7 +314,7 @@ OCIO_NAMESPACE_ENTER
                 if(!m_offset4IsIdentity)
                 {
                     shader << pixelName << " = ";
-                    Write_half4(&shader, m_offset4, lang);
+                    Write_half4(shader, m_offset4, lang);
                     shader << " + " << pixelName << ";\n";
                 }
             }
@@ -328,7 +328,7 @@ OCIO_NAMESPACE_ENTER
                                            -m_offset4[3] };
                     
                     shader << pixelName << " = ";
-                    Write_half4(&shader, offset_inv, lang);
+                    Write_half4(shader, offset_inv, lang);
                     shader << " + " << pixelName << ";\n";
                 }
                 
@@ -339,13 +339,13 @@ OCIO_NAMESPACE_ENTER
                         shader << pixelName << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44_inv);
-                        Write_half4(&shader, scale, lang);
+                        Write_half4(shader, scale, lang);
                         shader << " * " << pixelName << ";\n";
                     }
                     else
                     {
                         shader << pixelName << " = ";
-                        Write_mtx_x_vec(&shader,
+                        Write_mtx_x_vec(shader,
                                         GpuTextHalf4x4(m_m44_inv, lang), pixelName,
                                         lang);
                         shader << ";\n";

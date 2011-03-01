@@ -26,7 +26,11 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <sstream>
+
 #include <OpenColorIO/OpenColorIO.h>
+
+#include "Mutex.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -37,11 +41,14 @@ OCIO_NAMESPACE_ENTER
         std::string functionName_;
         int lut3DEdgeLen_;
         
+        mutable std::string cacheID_;
+        mutable Mutex cacheIDMutex_;
         
         Impl() :
             language_(GPU_LANGUAGE_UNKNOWN),
             lut3DEdgeLen_(0)
-        { }
+        {
+        }
         
         ~Impl()
         { }
@@ -51,6 +58,7 @@ OCIO_NAMESPACE_ENTER
             language_ = rhs.language_;
             functionName_ = rhs.functionName_;
             lut3DEdgeLen_ = rhs.lut3DEdgeLen_;
+            cacheID_ = rhs.cacheID_;
             return *this;
         }
     };
@@ -70,7 +78,9 @@ OCIO_NAMESPACE_ENTER
     
     void GpuShaderDesc::setLanguage(GpuLanguage lang)
     {
+        AutoMutex lock(getImpl()->cacheIDMutex_);
         getImpl()->language_ = lang;
+        getImpl()->cacheID_ = "";
     }
     
     GpuLanguage GpuShaderDesc::getLanguage() const
@@ -80,7 +90,9 @@ OCIO_NAMESPACE_ENTER
     
     void GpuShaderDesc::setFunctionName(const char * name)
     {
+        AutoMutex lock(getImpl()->cacheIDMutex_);
         getImpl()->functionName_ = name;
+        getImpl()->cacheID_ = "";
     }
     
     const char * GpuShaderDesc::getFunctionName() const
@@ -90,7 +102,9 @@ OCIO_NAMESPACE_ENTER
     
     void GpuShaderDesc::setLut3DEdgeLen(int len)
     {
+        AutoMutex lock(getImpl()->cacheIDMutex_);
         getImpl()->lut3DEdgeLen_ = len;
+        getImpl()->cacheID_ = "";
     }
     
     int GpuShaderDesc::getLut3DEdgeLen() const
@@ -98,5 +112,20 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->lut3DEdgeLen_;
     }
     
+    const char * GpuShaderDesc::getCacheID() const
+    {
+        AutoMutex lock(getImpl()->cacheIDMutex_);
+        
+        if(getImpl()->cacheID_.empty())
+        {
+            std::ostringstream os;
+            os << GpuLanguageToString(getImpl()->language_) << " ";
+            os << getImpl()->functionName_ << " ";
+            os << getImpl()->lut3DEdgeLen_;
+            getImpl()->cacheID_ = os.str();
+        }
+        
+        return getImpl()->cacheID_.c_str();
+    }
 }
 OCIO_NAMESPACE_EXIT
