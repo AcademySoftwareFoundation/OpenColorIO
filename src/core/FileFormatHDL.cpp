@@ -683,7 +683,7 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
-        float rgb[3] = {0.1, 0.1, 0.1};
+        float rgb[3] = {0.1f, 0.1f, 0.1f};
         transform1->setOffset(rgb);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
@@ -827,7 +827,7 @@ BOOST_AUTO_TEST_CASE ( test_simple3D1D )
         cs->setName("shaper");
         cs->setFamily("shaper");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
-        float test[4] = {2.6, 2.6, 2.6, 1.0};
+        float test[4] = {2.6f, 2.6f, 2.6f, 1.0f};
         transform1->setValue(test);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
@@ -837,7 +837,7 @@ BOOST_AUTO_TEST_CASE ( test_simple3D1D )
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
-        float rgb[3] = {0.1, 0.1, 0.1};
+        float rgb[3] = {0.1f, 0.1f, 0.1f};
         transform1->setOffset(rgb);
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);

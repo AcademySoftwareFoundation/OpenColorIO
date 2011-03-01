@@ -664,6 +664,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: get the lut output format
         const char * getFormat() const;
         
+        // TODO: Change this to an enum
         //!cpp:function:: set the lut output type (1D or 3D)
         void setType(const char * type);
         //!cpp:function:: get the lut output type

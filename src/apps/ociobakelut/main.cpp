@@ -158,7 +158,7 @@ int main (int argc, const char* argv[])
             // TODO: write to file here
         }
         
-        if(!stdout) std::cout << "[OpenColorIO INFO]: done." << std::endl;
+        // if(!stdout) std::cout << "[OpenColorIO INFO]: done." << std::endl;
         
     }
     catch(OCIO::Exception & exception)

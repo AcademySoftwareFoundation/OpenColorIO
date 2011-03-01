@@ -300,10 +300,10 @@ BOOST_AUTO_TEST_CASE ( test_simpletest )
     BOOST_CHECK_THROW(tolog = config->getProcessor("sRGB", "log"), OCIO::Exception);
 #endif
     
+#ifdef OCIO_TRUELIGHT_SUPPORT
     float input[3] = {0.5f, 0.5f, 0.5f};
     float output[3] = {0.500098f, 0.500317f, 0.501134f};
     
-#ifdef OCIO_TRUELIGHT_SUPPORT
     BOOST_CHECK_NO_THROW(tosrgb->applyRGB(input));
     BOOST_CHECK_NO_THROW(tolog->applyRGB(input));
     BOOST_CHECK_CLOSE(input[0], output[0], 1e-4);
