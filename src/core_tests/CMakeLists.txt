@@ -7,6 +7,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
     ${YAML_CPP_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/ext/oiio/src/include
     )
 
 set(EXTERNAL_INCLUDE_DIRS)

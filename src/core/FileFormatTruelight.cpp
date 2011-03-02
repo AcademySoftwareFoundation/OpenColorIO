@@ -364,9 +364,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-BOOST_AUTO_TEST_SUITE( FileFormatTruelight_Unit_Tests )
-
-BOOST_AUTO_TEST_CASE ( test_simple3D )
+OIIO_ADD_TEST(FileFormatTruelight, simpletest3D)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"
@@ -429,7 +427,5 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     
     // TODO: Test the results of truelight loading.
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_UNIT_TEST
