@@ -205,9 +205,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-BOOST_AUTO_TEST_SUITE( PathUtils_Unit_Tests )
-
-BOOST_AUTO_TEST_CASE ( test_envexpand )
+OIIO_ADD_TEST(PathUtils, envexpand)
 {
     // build env by hand for unit test
     OCIO::EnvMap env_map; // = OCIO::GetEnvMap();
@@ -221,10 +219,7 @@ BOOST_AUTO_TEST_CASE ( test_envexpand )
     std::string foo = "/a/b/${TEST1}/${TEST1NG}/$TEST1/$TEST1NG/${FOO_${TEST1}}/";
     std::string foo_result = "/a/b/foo.bar/bar.foo/foo.bar/bar.foo/cheese/";
     std::string testresult = OCIO::EnvExpand(foo, env_map);
-    BOOST_CHECK( testresult == foo_result );
-    
+    OIIO_CHECK_ASSERT( testresult == foo_result );
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_BUILD_TESTS

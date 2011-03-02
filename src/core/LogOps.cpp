@@ -374,9 +374,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-BOOST_AUTO_TEST_SUITE( LogOps_Unit_Tests )
-
-BOOST_AUTO_TEST_CASE ( test_LogOps_LinToLog_Base2 )
+OIIO_ADD_TEST(LogOps, LinToLog_Base2)
 {
     float data[8] = { 4.0f, 2.0f, 1.0f, 1.0f,
                       0.5f, 0.25f, 0.001f, 1.0f, };
@@ -397,11 +395,11 @@ BOOST_AUTO_TEST_CASE ( test_LogOps_LinToLog_Base2 )
     
     for(int i=0; i<8; ++i)
     {
-        BOOST_REQUIRE_CLOSE( data[i], result[i], 1.0e-3 );
+        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
     }
 }
 
-BOOST_AUTO_TEST_CASE ( test_LogOps_LogToLin_Base2 )
+OIIO_ADD_TEST(LogOps, LogToLin_Base2)
 {
     float data[8] = { 2.0f, 1.0f, 0.0f, 1.0f,
                       -1.0f, -2.0f, -9.965784284662087f, 1.0f, };
@@ -422,12 +420,11 @@ BOOST_AUTO_TEST_CASE ( test_LogOps_LogToLin_Base2 )
     
     for(int i=0; i<8; ++i)
     {
-        BOOST_REQUIRE_CLOSE( data[i], result[i], 1.0e-3 );
+        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
     }
 }
 
-
-BOOST_AUTO_TEST_CASE ( test_LogOps_LinToLog_Base10 )
+OIIO_ADD_TEST(LogOps, LinToLog_Base10)
 {
     float k[3] = { 0.18f, 0.18f, 0.18f };
     float m[3] = { 2.0f, 2.0f, 2.0f };
@@ -461,12 +458,11 @@ BOOST_AUTO_TEST_CASE ( test_LogOps_LinToLog_Base10 )
     
     for(int i=0; i<8; ++i)
     {
-        BOOST_REQUIRE_CLOSE( data[i], result[i], 1.0e-3 );
+        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
     }
 }
 
-
-BOOST_AUTO_TEST_CASE ( test_LogOps_LogToLin_Base10 )
+OIIO_ADD_TEST(LogOps, LogToLin_Base10)
 {
     float k[3] = { 0.18f, 0.18f, 0.18f };
     float m[3] = { 2.0f, 2.0f, 2.0f };
@@ -499,11 +495,8 @@ BOOST_AUTO_TEST_CASE ( test_LogOps_LogToLin_Base10 )
     
     for(int i=0; i<8; ++i)
     {
-        BOOST_REQUIRE_CLOSE( data[i], result[i], 1.0e-3 );
+        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
     }
 }
-
-
-BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_UNIT_TEST

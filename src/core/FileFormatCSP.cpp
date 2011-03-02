@@ -798,9 +798,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-BOOST_AUTO_TEST_SUITE( FileFormatCSP_Unit_Tests )
-
-BOOST_AUTO_TEST_CASE ( test_simple1D )
+OIIO_ADD_TEST(FileFormatCSP, simple1D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"              << "\n";
@@ -847,25 +845,24 @@ BOOST_AUTO_TEST_CASE ( test_simple1D )
         {
             float input = float(i) / float(csplut->prelut->luts[c].size()-1);
             float output = csplut->prelut->luts[c][i];
-            BOOST_CHECK_CLOSE (input*2.0f, output, 1e-4);
+            OIIO_CHECK_CLOSE(input*2.0f, output, 1e-4);
         }
     }
     // check 1D data
     // red
     unsigned int i;
     for(i = 0; i < csplut->lut1D->luts[0].size(); ++i)
-        BOOST_CHECK_EQUAL (red[i], csplut->lut1D->luts[0][i]);
+        OIIO_CHECK_EQUAL(red[i], csplut->lut1D->luts[0][i]);
     // green
     for(i = 0; i < csplut->lut1D->luts[1].size(); ++i)
-        BOOST_CHECK_EQUAL (green[i], csplut->lut1D->luts[1][i]);
+        OIIO_CHECK_EQUAL(green[i], csplut->lut1D->luts[1][i]);
     // blue
     for(i = 0; i < csplut->lut1D->luts[2].size(); ++i)
-        BOOST_CHECK_EQUAL (blue[i], csplut->lut1D->luts[2][i]);
+        OIIO_CHECK_EQUAL(blue[i], csplut->lut1D->luts[2][i]);
     
 }
 
-
-BOOST_AUTO_TEST_CASE ( test_simple3D )
+OIIO_ADD_TEST(FileFormatCSP, simple3D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"                                  << "\n";
@@ -909,11 +906,11 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check prelut data
-    BOOST_CHECK(csplut->hasprelut == false);
+    OIIO_CHECK_ASSERT(csplut->hasprelut == false);
     
     // check cube data
     for(unsigned int i = 0; i < csplut->lut3D->lut.size(); ++i) {
-        BOOST_CHECK_EQUAL (cube[i], csplut->lut3D->lut[i]);
+        OIIO_CHECK_EQUAL(cube[i], csplut->lut3D->lut[i]);
     }
     
     // check baker output
@@ -992,17 +989,15 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
     OCIO::pystring::splitlines(bout, resvec);
-    BOOST_CHECK_EQUAL(osvec.size(), resvec.size());
+    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
         // skip timestamp line
-        if(i != 4) BOOST_CHECK_EQUAL(osvec[i], resvec[i]);
+        if(i != 4) OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
     
 }
 
 // TODO: More strenuous tests of prelut resampling (non-noop preluts)
-
-BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_UNIT_TEST

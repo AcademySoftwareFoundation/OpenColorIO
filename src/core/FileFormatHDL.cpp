@@ -548,9 +548,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-BOOST_AUTO_TEST_SUITE( FileFormatHDL_Unit_Tests )
-
-BOOST_AUTO_TEST_CASE ( test_simple1D )
+OIIO_ADD_TEST(FileFormatHDL, simple1D)
 {
     
     std::ostringstream strebuf;
@@ -593,23 +591,23 @@ BOOST_AUTO_TEST_CASE ( test_simple1D )
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
-    BOOST_CHECK_EQUAL (to_min, lut->to_min);
-    BOOST_CHECK_EQUAL (to_max, lut->to_max);
-    BOOST_CHECK_EQUAL (black, lut->hdlblack);
-    BOOST_CHECK_EQUAL (white, lut->hdlwhite);
+    OIIO_CHECK_EQUAL(to_min, lut->to_min);
+    OIIO_CHECK_EQUAL(to_max, lut->to_max);
+    OIIO_CHECK_EQUAL(black, lut->hdlblack);
+    OIIO_CHECK_EQUAL(white, lut->hdlwhite);
     
     // check 1D data (each channel has the same data)
     for(int c = 0; c < 3; ++c) {
-        BOOST_CHECK_EQUAL (from_min, lut->lut1D->from_min[c]);
-        BOOST_CHECK_EQUAL (from_max, lut->lut1D->from_max[c]);
+        OIIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
+        OIIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
         for(unsigned int i = 0; i < lut->lut1D->luts[c].size(); ++i) {
-            BOOST_CHECK_EQUAL (lut1d[i], lut->lut1D->luts[c][i]);
+            OIIO_CHECK_EQUAL(lut1d[i], lut->lut1D->luts[c][i]);
         }
     }
     
 }
 
-BOOST_AUTO_TEST_CASE ( test_simple3D )
+OIIO_ADD_TEST(FileFormatHDL, simple3D)
 {
     
     std::ostringstream strebuf;
@@ -659,14 +657,14 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
         0.f, 0.601016f, 0.917034f };
     
     //
-    BOOST_CHECK_EQUAL (to_min, lut->to_min);
-    BOOST_CHECK_EQUAL (to_max, lut->to_max);
-    BOOST_CHECK_EQUAL (black, lut->hdlblack);
-    BOOST_CHECK_EQUAL (white, lut->hdlwhite);
+    OIIO_CHECK_EQUAL(to_min, lut->to_min);
+    OIIO_CHECK_EQUAL(to_max, lut->to_max);
+    OIIO_CHECK_EQUAL(black, lut->hdlblack);
+    OIIO_CHECK_EQUAL(white, lut->hdlwhite);
     
     // check cube data
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
-        BOOST_CHECK_EQUAL (cube[i], lut->lut3D->lut[i]);
+        OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
     
     // check baker output
@@ -725,13 +723,13 @@ BOOST_AUTO_TEST_CASE ( test_simple3D )
     OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
     OCIO::pystring::splitlines(bout, resvec);
-    BOOST_CHECK_EQUAL(osvec.size(), resvec.size());
+    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
-        BOOST_CHECK_EQUAL(osvec[i], resvec[i]);
+        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
     
 }
 
-BOOST_AUTO_TEST_CASE ( test_simple3D1D )
+OIIO_ADD_TEST(FileFormatHDL, simple3D1D)
 {
     std::ostringstream strebuf;
     strebuf << "Version		3" << "\n";
@@ -794,23 +792,23 @@ BOOST_AUTO_TEST_CASE ( test_simple3D1D )
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
-    BOOST_CHECK_EQUAL (to_min, lut->to_min);
-    BOOST_CHECK_EQUAL (to_max, lut->to_max);
-    BOOST_CHECK_EQUAL (black, lut->hdlblack);
-    BOOST_CHECK_EQUAL (white, lut->hdlwhite);
+    OIIO_CHECK_EQUAL(to_min, lut->to_min);
+    OIIO_CHECK_EQUAL(to_max, lut->to_max);
+    OIIO_CHECK_EQUAL(black, lut->hdlblack);
+    OIIO_CHECK_EQUAL(white, lut->hdlwhite);
     
     // check prelut data (each channel has the same data)
     for(int c = 0; c < 3; ++c) {
-        BOOST_CHECK_EQUAL (from_min, lut->lut1D->from_min[c]);
-        BOOST_CHECK_EQUAL (from_max, lut->lut1D->from_max[c]);
+        OIIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
+        OIIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
         for(unsigned int i = 0; i < lut->lut1D->luts[c].size(); ++i) {
-            BOOST_CHECK_EQUAL (prelut[i], lut->lut1D->luts[c][i]);
+            OIIO_CHECK_EQUAL(prelut[i], lut->lut1D->luts[c][i]);
         }
     }
     
     // check cube data
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
-        BOOST_CHECK_EQUAL (cube[i], lut->lut3D->lut[i]);
+        OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
     
     // check baker output
@@ -893,12 +891,10 @@ BOOST_AUTO_TEST_CASE ( test_simple3D1D )
     OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
     OCIO::pystring::splitlines(bout, resvec);
-    BOOST_CHECK_EQUAL(osvec.size(), resvec.size());
+    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
-        BOOST_CHECK_EQUAL(osvec[i], resvec[i]);
+        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
     
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_BUILD_TESTS

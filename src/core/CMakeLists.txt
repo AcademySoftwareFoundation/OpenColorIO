@@ -6,12 +6,13 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
     ${YAML_CPP_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/ext/oiio/src/include
 )
 
 set(EXTERNAL_INCLUDE_DIRS)
-set(EXTERNAL_COMPILE_FLAGS "")
+set(EXTERNAL_COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
 set(EXTERNAL_LINK_FLAGS "")
-set(EXTERNAL_LIBRARIES)
+set(EXTERNAL_LIBRARIES ${YAML_CPP_STATIC_LIBRARIES})
 
 if(Boost_FOUND)
     set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
@@ -34,38 +35,43 @@ configure_file(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorVersion.h.in
     ${CMAKE_BINARY_DIR}/export/OpenColorVersion.h @ONLY)
 list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorVersion.h)
 
-add_library(OpenColorIO SHARED
-    ${core_src_files})
+# SHARED
 
-add_dependencies(OpenColorIO
-    YAML_CPP_LOCAL)
-
-target_link_libraries(OpenColorIO
-    ${YAML_CPP_STATIC_LIBRARIES})
-
-target_link_libraries(OpenColorIO
-    ${EXTERNAL_LIBRARIES})
-
+add_library(OpenColorIO SHARED ${core_src_files})
+add_dependencies(OpenColorIO YAML_CPP_LOCAL)
+target_link_libraries(OpenColorIO ${EXTERNAL_LIBRARIES})
 set_target_properties(OpenColorIO PROPERTIES
-    COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden ${EXTERNAL_COMPILE_FLAGS}"
+    OUTPUT_NAME OpenColorIO
+    COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
     LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
+install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
+# STATIC
+
+list(REMOVE_ITEM core_src_files ${CMAKE_SOURCE_DIR}/src/core/UnitTest.cpp)
+add_library(OpenColorIO_STATIC STATIC ${core_src_files})
+add_dependencies(OpenColorIO_STATIC YAML_CPP_LOCAL)
+target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_LIBRARIES})
+set_target_properties(OpenColorIO_STATIC PROPERTIES
+    OUTPUT_NAME OpenColorIO
+    COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
+    LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
+install(TARGETS OpenColorIO_STATIC DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+
+#
 if (SOVERSION)
 message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
 set_target_properties(OpenColorIO PROPERTIES
     VERSION ${OCIO_VERSION}
     SOVERSION ${SOVERSION}
 )
+set_target_properties(OpenColorIO_STATIC PROPERTIES
+    VERSION ${OCIO_VERSION}
+    SOVERSION ${SOVERSION}
+)
 endif ()
 
-install(TARGETS OpenColorIO DESTINATION
-    ${CMAKE_INSTALL_PREFIX}/lib)
-
-# TODO: RegisterFileFormat() mechanism doesn't seem to work when static linked?
-#add_library(OpenColorIOStatic STATIC ${core_src_files})
-#set_target_properties(OpenColorIOStatic PROPERTIES OUTPUT_NAME OpenColorIO)
-#install(TARGETS OpenColorIOStatic DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-
+# public interface
 install(FILES ${core_export_headers}
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/OpenColorIO/)
 
