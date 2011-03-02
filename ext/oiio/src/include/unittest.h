@@ -28,8 +28,8 @@
   (This is the Modified BSD License)
 */
 
-#ifndef OPENIMAGEIO_UNITTEST_H
-#define OPENIMAGEIO_UNITTEST_H
+#ifndef OPENCOLORIO_UNITTEST_H
+#define OPENCOLORIO_UNITTEST_H
 
 #include <iostream>
 #include <cmath>
@@ -140,7 +140,7 @@ struct AddTest { AddTest(OIIOTest* test); };
         return oiio_unit_tests; }                                       \
     AddTest::AddTest(OIIOTest* test){GetUnitTests().push_back(test);};  \
     OIIO_TEST_SETUP(); \
-    int main(int, char) { std::cerr << "\n" << #app <<"\n\n";           \
+    int main(int, char **) { std::cerr << "\n" << #app <<"\n\n";        \
         for(size_t i = 0; i < GetUnitTests().size(); ++i) {             \
             int _tmp = unit_test_failures; GetUnitTests()[i]->function(); \
             std::cerr << "Test [" << GetUnitTests()[i]->group << "] [" << GetUnitTests()[i]->name << "] - "; \
@@ -148,4 +148,4 @@ struct AddTest { AddTest(OIIOTest* test); };
         std::cerr << "\n" << unit_test_failures << " tests failed\n\n";   \
         return unit_test_failures; }
 
-#endif /* OPENIMAGEIO_UNITTEST_H */
+#endif /* OPENCOLORIO_UNITTEST_H */
