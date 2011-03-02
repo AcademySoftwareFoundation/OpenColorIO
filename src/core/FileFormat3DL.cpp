@@ -495,8 +495,6 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-BOOST_AUTO_TEST_SUITE( FileFormat3DL_Unit_Tests )
-
 // FILE      EXPECTED MAX    CORRECTLY DECODED IF MAX IN THIS RANGE 
 // 8-bit     255             [0, 511]      
 // 10-bit    1023            [512, 2047]
@@ -504,35 +502,33 @@ BOOST_AUTO_TEST_SUITE( FileFormat3DL_Unit_Tests )
 // 14-bit    16383           [8192, 32767]
 // 16-bit    65535           [32768, 131071]
 
-BOOST_AUTO_TEST_CASE ( test_GetLikelyLutBitDepth )
+OIIO_ADD_TEST(FileFormat3DL, GetLikelyLutBitDepth)
 {
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(-1), -1);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(-1), -1);
     
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(0), 8);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(1), 8);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(255), 8);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(256), 8);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(511), 8);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(0), 8);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1), 8);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(255), 8);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(256), 8);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(511), 8);
     
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(512), 10);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(1023), 10);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(1024), 10);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(2047), 10);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(512), 10);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1023), 10);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(1024), 10);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(2047), 10);
     
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(2048), 12);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(4095), 12);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(4096), 12);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(8191), 12);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(2048), 12);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(4095), 12);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(4096), 12);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(8191), 12);
     
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(16383), 14);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(16383), 14);
     
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(65535), 16);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(65536), 16);
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(131071), 16);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(65535), 16);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(65536), 16);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(131071), 16);
     
-    BOOST_CHECK_EQUAL (OCIO::GetLikelyLutBitDepth(131072), 16);
+    OIIO_CHECK_EQUAL(OCIO::GetLikelyLutBitDepth(131072), 16);
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_UNIT_TEST

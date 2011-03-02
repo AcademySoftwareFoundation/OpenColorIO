@@ -353,9 +353,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-BOOST_AUTO_TEST_SUITE( Baker_Unit_Tests )
-
-BOOST_AUTO_TEST_CASE ( test_listlutwriters )
+OIIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
 {
     
     std::vector<std::string> current_writers;
@@ -364,18 +362,16 @@ BOOST_AUTO_TEST_CASE ( test_listlutwriters )
     
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     
-    BOOST_CHECK_EQUAL(baker->getNumFormats(), (int)current_writers.size());
+    OIIO_CHECK_EQUAL(baker->getNumFormats(), (int)current_writers.size());
     
     std::vector<std::string> test;
     for(int i = 0; i < baker->getNumFormats(); ++i)
         test.push_back(baker->getFormatNameByIndex(i));
     
     for(unsigned int i = 0; i < current_writers.size(); ++i)
-        BOOST_CHECK_EQUAL(current_writers[i], test[i]);
+        OIIO_CHECK_EQUAL(current_writers[i], test[i]);
     
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_BUILD_TESTS
 

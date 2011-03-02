@@ -1460,10 +1460,8 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <sys/stat.h>
 #include "pystring/pystring.h"
 
-BOOST_AUTO_TEST_SUITE( Config_Unit_Tests )
-
 #if 0
-BOOST_AUTO_TEST_CASE ( test_searchpath_filesystem )
+OIIO_ADD_TEST(Config_Unit_Tests, test_searchpath_filesystem)
 {
     
     OCIO::EnvMap env = OCIO::GetEnvMap();
@@ -1526,15 +1524,14 @@ BOOST_AUTO_TEST_CASE ( test_searchpath_filesystem )
 }
 #endif
 
-BOOST_AUTO_TEST_CASE ( test_INTERNAL_RAW_PROFILE )
+OIIO_ADD_TEST(Config_Unit_Tests, test_INTERNAL_RAW_PROFILE)
 {
     std::istringstream is;
     is.str(OCIO::INTERNAL_RAW_PROFILE);
-    
-    BOOST_CHECK_NO_THROW(OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THOW(OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is));
 }
 
-BOOST_AUTO_TEST_CASE ( test_simpleConfig )
+OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
 {
     
     std::string SIMPLE_PROFILE =
@@ -1602,10 +1599,10 @@ BOOST_AUTO_TEST_CASE ( test_simpleConfig )
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
-    BOOST_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
 }
 
-BOOST_AUTO_TEST_CASE ( test_roleAccess )
+OIIO_ADD_TEST(Config_Unit_Tests, test_roleAccess)
 {
     
     std::string SIMPLE_PROFILE =
@@ -1627,23 +1624,23 @@ BOOST_AUTO_TEST_CASE ( test_roleAccess )
     std::istringstream is;
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
-    BOOST_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
     
-    BOOST_CHECK_EQUAL(config->getNumRoles(), 3);
+    OIIO_CHECK_EQUAL(config->getNumRoles(), 3);
     
-    BOOST_CHECK(config->hasRole("compositing_log") == true);
-    BOOST_CHECK(config->hasRole("cheese") == false);
-    BOOST_CHECK(config->hasRole("") == false);
+    OIIO_CHECK_ASSERT(config->hasRole("compositing_log") == true);
+    OIIO_CHECK_ASSERT(config->hasRole("cheese") == false);
+    OIIO_CHECK_ASSERT(config->hasRole("") == false);
     
-    BOOST_CHECK_EQUAL(config->getRoleName(2), "scene_linear");
-    BOOST_CHECK_EQUAL(config->getRoleName(0), "compositing_log");
-    BOOST_CHECK_EQUAL(config->getRoleName(1), "default");
-    BOOST_CHECK_EQUAL(config->getRoleName(10), "");
-    BOOST_CHECK_EQUAL(config->getRoleName(-4), "");
+    OIIO_CHECK_ASSERT(strcmp(config->getRoleName(2), "scene_linear") == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->getRoleName(0), "compositing_log") == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->getRoleName(1), "default") == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->getRoleName(10), "") == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->getRoleName(-4), "") == 0);
     
 }
 
-BOOST_AUTO_TEST_CASE ( test_ser )
+OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
 {
     
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -1722,11 +1719,9 @@ BOOST_AUTO_TEST_CASE ( test_ser )
     std::vector<std::string> PROFILE_OUTvec;
     OCIO::pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
     
-    BOOST_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
+    OIIO_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
     for(unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
-        BOOST_CHECK_EQUAL(osvec[i], PROFILE_OUTvec[i]);
+        OIIO_CHECK_EQUAL(osvec[i], PROFILE_OUTvec[i]);
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_UNIT_TEST

@@ -261,9 +261,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-BOOST_AUTO_TEST_SUITE( Truelight_Unit_Tests )
-
-BOOST_AUTO_TEST_CASE ( test_simpletest )
+OIIO_ADD_TEST(TruelightTransform, simpletest)
 {
     
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -293,27 +291,26 @@ BOOST_AUTO_TEST_CASE ( test_simpletest )
     OCIO::ConstProcessorRcPtr tolog;
     
 #ifdef OCIO_TRUELIGHT_SUPPORT
-    BOOST_CHECK_NO_THROW(tosrgb = config->getProcessor("log", "sRGB"));
-    BOOST_CHECK_NO_THROW(tolog = config->getProcessor("sRGB", "log"));
+    OIIO_CHECK_NO_THOW(tosrgb = config->getProcessor("log", "sRGB"));
+    OIIO_CHECK_NO_THOW(tolog = config->getProcessor("sRGB", "log"));
 #else
-    BOOST_CHECK_THROW(tosrgb = config->getProcessor("log", "sRGB"), OCIO::Exception);
-    BOOST_CHECK_THROW(tolog = config->getProcessor("sRGB", "log"), OCIO::Exception);
+    OIIO_CHECK_THOW(tosrgb = config->getProcessor("log", "sRGB"), OCIO::Exception);
+    OIIO_CHECK_THOW(tolog = config->getProcessor("sRGB", "log"), OCIO::Exception);
 #endif
     
 #ifdef OCIO_TRUELIGHT_SUPPORT
     float input[3] = {0.5f, 0.5f, 0.5f};
     float output[3] = {0.500098f, 0.500317f, 0.501134f};
-    
-    BOOST_CHECK_NO_THROW(tosrgb->applyRGB(input));
-    BOOST_CHECK_NO_THROW(tolog->applyRGB(input));
-    BOOST_CHECK_CLOSE(input[0], output[0], 1e-4);
-    BOOST_CHECK_CLOSE(input[1], output[1], 1e-4);
-    BOOST_CHECK_CLOSE(input[2], output[2], 1e-4);
+    OIIO_CHECK_NO_THOW(tosrgb->applyRGB(input));
+    OIIO_CHECK_NO_THOW(tolog->applyRGB(input));
+    OIIO_CHECK_CLOSE(input[0], output[0], 1e-4);
+    OIIO_CHECK_CLOSE(input[1], output[1], 1e-4);
+    OIIO_CHECK_CLOSE(input[2], output[2], 1e-4);
 #endif
     
     //
     std::ostringstream os;
-    BOOST_CHECK_NO_THROW(config->serialize(os));
+    OIIO_CHECK_NO_THOW(config->serialize(os));
     
     std::string testconfig =
     "---\n"
@@ -352,17 +349,15 @@ BOOST_AUTO_TEST_CASE ( test_simpletest )
     std::vector<std::string> testconfigvec;
     OCIO::pystring::splitlines(testconfig, testconfigvec);
     
-    BOOST_CHECK_EQUAL(osvec.size(), testconfigvec.size());
+    OIIO_CHECK_EQUAL(osvec.size(), testconfigvec.size());
     for(unsigned int i = 0; i < testconfigvec.size(); ++i)
-        BOOST_CHECK_EQUAL(osvec[i], testconfigvec[i]);
+        OIIO_CHECK_EQUAL(osvec[i], testconfigvec[i]);
     
     std::istringstream is;
     is.str(testconfig);
     OCIO::ConstConfigRcPtr rtconfig;
-    BOOST_CHECK_NO_THROW(rtconfig = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_NO_THOW(rtconfig = OCIO::Config::CreateFromStream(is));
     
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 #endif // OCIO_BUILD_TESTS
