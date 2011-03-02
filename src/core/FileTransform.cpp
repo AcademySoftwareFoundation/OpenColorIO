@@ -26,16 +26,16 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <fstream>
+#include <map>
+#include <sstream>
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "Mutex.h"
 #include "PathUtils.h"
-#include "pystring/pystring.h"
-
-#include <fstream>
-#include <map>
-#include <sstream>
 
 OCIO_NAMESPACE_ENTER
 {

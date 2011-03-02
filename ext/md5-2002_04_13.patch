@@ -1,0 +1,15 @@
+diff -Naur md5.orig/CMakeLists.txt md5/CMakeLists.txt
+--- md5.orig/CMakeLists.txt	1970-01-01 10:00:00.000000000 +1000
++++ md5/CMakeLists.txt	2011-03-01 22:51:06.000000000 +1100
+@@ -0,0 +1,11 @@
++project(md5)
++
++cmake_minimum_required(VERSION 2.8)
++
++add_library(md5 STATIC md5.c)
++
++set_target_properties(md5 PROPERTIES
++    COMPILE_FLAGS "-fPIC -fvisibility=hidden")
++
++install(TARGETS md5 DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
++install(FILES md5.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)

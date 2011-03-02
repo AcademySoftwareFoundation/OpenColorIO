@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdio>
 #include <iterator>
+#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -35,7 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut1DOp.h"
 #include "Lut3DOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 
 /*
 

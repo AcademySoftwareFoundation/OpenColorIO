@@ -14,7 +14,6 @@ if(NOT ${SOVERSION} STREQUAL ${OCIO_VERSION_MAJOR})
     set(OCIO_VERSION_MAJOR ${SOVERSION})
 endif()
 
-
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
 if(NOT DEFINED CMAKE_FIRST_RUN)
@@ -26,6 +25,7 @@ endif()
 
 include(ParseArguments)
 include(OCIOMacros)
+include(ExternalProject)
 
 enable_language(CXX)
 
@@ -82,9 +82,47 @@ if(CMAKE_FIRST_RUN)
 endif()
 
 ###############################################################################
+### pystring ###
+
+set(PYSTRING_VERSION r19)
+ExternalProject_Add(pystring
+    URL ${CMAKE_SOURCE_DIR}/ext/pystring-${PYSTRING_VERSION}.tar.gz
+    PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/pystring-${PYSTRING_VERSION}.patch
+    BINARY_DIR ext/build/pystring
+    INSTALL_DIR ext/dist
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist
+)
+set(PYSTRING_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libpystring.a)
+
+###############################################################################
+### md5 ###
+
+set(MD5_VERSION 2002_04_13)
+ExternalProject_Add(md5
+    URL ${CMAKE_SOURCE_DIR}/ext/md5-${MD5_VERSION}.tar.gz
+    PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/md5-${MD5_VERSION}.patch
+    BINARY_DIR ext/build/md5
+    INSTALL_DIR ext/dist
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist
+)
+set(MD5_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libmd5.a)
+
+###############################################################################
+### tinyxml ###
+
+set(TINYXML_VERSION 2_6_1)
+ExternalProject_Add(tinyxml
+    URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
+    PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
+    BINARY_DIR ext/build/tinyxml
+    INSTALL_DIR ext/dist
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist
+)
+set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
+
+###############################################################################
 ### YAML ###
 
-include(ExternalProject)
 set(YAML_CPP_VERSION r423)
 ExternalProject_Add(YAML_CPP_LOCAL
     URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
@@ -93,9 +131,20 @@ ExternalProject_Add(YAML_CPP_LOCAL
     INSTALL_DIR ext/dist
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE
 )
-set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
-set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
 set(YAML_CPP_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
+
+###############################################################################
+### Externals ###
+
+set(EXTERNAL_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
+set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+set(EXTERNAL_LINK_FLAGS "")
+set(EXTERNAL_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
+set(EXTERNAL_LIBRARIES
+    ${PYSTRING_STATIC_LIBRARIES}
+    ${MD5_STATIC_LIBRARIES}
+    ${TINYXML_STATIC_LIBRARIES}
+    ${YAML_CPP_STATIC_LIBRARIES})
 
 ###############################################################################
 ### Documentation ###

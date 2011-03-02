@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "md5/md5.h"
+#include <md5.h>
 #include <string>
 
 OCIO_NAMESPACE_ENTER

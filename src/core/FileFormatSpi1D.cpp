@@ -26,11 +26,12 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "Lut1DOp.h"
-#include "pystring/pystring.h"
 
 #include <cstdio>
 #include <sstream>

@@ -28,12 +28,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 #include <iostream>
+#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "MathUtils.h"
-#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {

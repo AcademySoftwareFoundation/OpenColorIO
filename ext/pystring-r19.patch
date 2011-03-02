@@ -1,0 +1,15 @@
+diff -Naur pystring.orig/CMakeLists.txt pystring/CMakeLists.txt
+--- pystring.orig/CMakeLists.txt	1970-01-01 10:00:00.000000000 +1000
++++ pystring/CMakeLists.txt	2011-03-01 19:22:05.000000000 +1100
+@@ -0,0 +1,11 @@
++project(pystring)
++
++cmake_minimum_required(VERSION 2.8)
++
++add_library(pystring STATIC pystring.cpp)
++
++set_target_properties(pystring PROPERTIES
++    COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
++
++install(TARGETS pystring DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
++install(FILES pystring.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include)

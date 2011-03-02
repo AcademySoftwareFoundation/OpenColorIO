@@ -9,11 +9,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/ext/oiio/src/include
 )
 
-set(EXTERNAL_INCLUDE_DIRS)
-set(EXTERNAL_COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
-set(EXTERNAL_LINK_FLAGS "")
-set(EXTERNAL_LIBRARIES ${YAML_CPP_STATIC_LIBRARIES})
-
 if(Boost_FOUND)
     set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
 endif()
@@ -38,7 +33,7 @@ list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorVersion.h)
 # SHARED
 
 add_library(OpenColorIO SHARED ${core_src_files})
-add_dependencies(OpenColorIO YAML_CPP_LOCAL)
+add_dependencies(OpenColorIO pystring md5 tinyxml YAML_CPP_LOCAL)
 target_link_libraries(OpenColorIO ${EXTERNAL_LIBRARIES})
 set_target_properties(OpenColorIO PROPERTIES
     OUTPUT_NAME OpenColorIO
@@ -50,7 +45,7 @@ install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 
 list(REMOVE_ITEM core_src_files ${CMAKE_SOURCE_DIR}/src/core/UnitTest.cpp)
 add_library(OpenColorIO_STATIC STATIC ${core_src_files})
-add_dependencies(OpenColorIO_STATIC YAML_CPP_LOCAL)
+add_dependencies(OpenColorIO_STATIC pystring md5 tinyxml YAML_CPP_LOCAL)
 target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_LIBRARIES})
 set_target_properties(OpenColorIO_STATIC PROPERTIES
     OUTPUT_NAME OpenColorIO

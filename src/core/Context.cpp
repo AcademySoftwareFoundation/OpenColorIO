@@ -30,12 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Mutex.h"
 #include "PathUtils.h"
-#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {

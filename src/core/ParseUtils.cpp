@@ -29,10 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
-
-#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {

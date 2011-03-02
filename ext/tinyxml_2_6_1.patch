@@ -1,0 +1,24 @@
+diff -Naur tinyxml.orig/CMakeLists.txt tinyxml/CMakeLists.txt
+--- tinyxml.orig/CMakeLists.txt	1970-01-01 10:00:00.000000000 +1000
++++ tinyxml/CMakeLists.txt	2011-03-01 21:10:38.000000000 +1100
+@@ -0,0 +1,20 @@
++project(tinyxml)
++
++cmake_minimum_required(VERSION 2.8)
++
++add_library(tinyxml
++    STATIC
++    tinystr.cpp
++    tinyxml.cpp
++    tinyxmlerror.cpp
++    tinyxmlparser.cpp)
++
++set_target_properties(tinyxml PROPERTIES
++    COMPILE_FLAGS "-DTIXML_USE_STL -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
++
++install(TARGETS
++    tinyxml
++    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
++install(FILES
++    tinyxml.h tinystr.h
++    DESTINATION ${CMAKE_INSTALL_PREFIX}/include)

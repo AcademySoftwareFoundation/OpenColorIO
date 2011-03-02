@@ -26,18 +26,18 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <sstream>
+#include <pystring.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "Lut1DOp.h"
 #include "Lut3DOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
-
-#include <algorithm>
-#include <cmath>
-#include <cstdio>
-#include <sstream>
 
 /*
 // Discreet's Flame Lut Format

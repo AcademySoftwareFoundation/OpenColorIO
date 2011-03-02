@@ -10,11 +10,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/ext/oiio/src/include
     )
 
-set(EXTERNAL_INCLUDE_DIRS)
-set(EXTERNAL_COMPILE_FLAGS "")
-set(EXTERNAL_LINK_FLAGS "")
-set(EXTERNAL_LIBRARIES)
-
 if(Boost_FOUND)
     set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
     set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${Boost_LIBRARIES})
@@ -31,11 +26,9 @@ include_directories(${EXTERNAL_INCLUDE_DIRS})
 
 file( GLOB_RECURSE core_test_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp" )
 
-add_executable(ocio_core_tests
-    ${core_test_src_files})
-    
-add_dependencies(ocio_core_tests
-    YAML_CPP_LOCAL)
+add_executable(ocio_core_tests ${core_test_src_files})
+
+add_dependencies(ocio_core_tests pystring md5 tinyxml YAML_CPP_LOCAL)
 
 set_target_properties(ocio_core_tests PROPERTIES
     COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden ${EXTERNAL_COMPILE_FLAGS}"

@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <iostream>
+#include <pystring.h>
 
 #ifdef OCIO_TRUELIGHT_SUPPORT
 #include <truelight.h>
@@ -39,7 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "TruelightOp.h"
-#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {

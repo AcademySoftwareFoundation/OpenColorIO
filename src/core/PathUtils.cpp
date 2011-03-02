@@ -30,12 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Mutex.h"
 #include "PathUtils.h"
-#include "pystring/pystring.h"
 
 #ifdef __APPLE__
 #include <crt_externs.h> // _NSGetEnviron()

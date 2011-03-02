@@ -27,12 +27,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <iostream>
+#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "OpBuilders.h"
 #include "TruelightOp.h"
-#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -345,9 +345,9 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     "    from_reference: !<TruelightTransform> {config_root: /usr/fl/truelight, print: internal-LowContrast, display: sRGB, cube_input: log}\n";
     
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(os.str(), osvec);
+    pystring::splitlines(os.str(), osvec);
     std::vector<std::string> testconfigvec;
-    OCIO::pystring::splitlines(testconfig, testconfigvec);
+    pystring::splitlines(testconfig, testconfigvec);
     
     OIIO_CHECK_EQUAL(osvec.size(), testconfigvec.size());
     for(unsigned int i = 0; i < testconfigvec.size(); ++i)

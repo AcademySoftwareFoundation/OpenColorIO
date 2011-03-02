@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -41,7 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut3DOp.h"
 #include "MathUtils.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -986,9 +986,9 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout, resvec);
+    pystring::splitlines(bout, resvec);
     OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {

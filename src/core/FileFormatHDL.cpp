@@ -50,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <iterator>
 #include <cmath>
+#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -57,7 +58,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut1DOp.h"
 #include "Lut3DOp.h"
 #include "ParseUtils.h"
-#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -720,9 +720,9 @@ OIIO_ADD_TEST(FileFormatHDL, simple3D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout, resvec);
+    pystring::splitlines(bout, resvec);
     OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
         OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
@@ -888,9 +888,9 @@ OIIO_ADD_TEST(FileFormatHDL, simple3D1D)
     
     //
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(output.str(), osvec);
+    pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout, resvec);
+    pystring::splitlines(bout, resvec);
     OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
         OIIO_CHECK_EQUAL(osvec[i], resvec[i]);

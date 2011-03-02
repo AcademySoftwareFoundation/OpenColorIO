@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <utility>
 #include <vector>
+#include <pystring.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -43,7 +44,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PathUtils.h"
 #include "ParseUtils.h"
 #include "Processor.h"
-#include "pystring/pystring.h"
 #include "OCIOYaml.h"
 
 OCIO_NAMESPACE_ENTER
@@ -1458,7 +1458,6 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
 #include <sys/stat.h>
-#include "pystring/pystring.h"
 
 #if 0
 OIIO_ADD_TEST(Config_Unit_Tests, test_searchpath_filesystem)
@@ -1715,9 +1714,9 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     "        - !<ExponentTransform> {value: [1, 1, 1, 1]}\n";
     
     std::vector<std::string> osvec;
-    OCIO::pystring::splitlines(os.str(), osvec);
+    pystring::splitlines(os.str(), osvec);
     std::vector<std::string> PROFILE_OUTvec;
-    OCIO::pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
+    pystring::splitlines(PROFILE_OUT, PROFILE_OUTvec);
     
     OIIO_CHECK_EQUAL(osvec.size(), PROFILE_OUTvec.size());
     for(unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
