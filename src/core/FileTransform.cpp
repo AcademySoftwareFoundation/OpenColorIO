@@ -173,24 +173,33 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
+    // NOTE: You must be mindful when editing this function.
+    //       FormatRegistry::GetInstance().registerFileFormat(...) is called
+    //       during static initialization, so this full code path
+    //       must be resiliant to the static initialization order 'fiasco'
+    //
+    //       See
+    //       http://www.parashift.com/c++-faq-lite/ctors.html#faq-10.14
+    //       http://stackoverflow.com/questions/335369/finding-c-static-initialization-order-problems
+    //       for more info.
+    //
+    //       In our case, we avoid it by only have POD types as statics,
+    //       and constructing on first use.  If we were to do something
+    //       more clever, such as using a static mutex to guard GetInstance(),
+    //       this would be fragile to compilation unit ordering.
+    
     FormatRegistry & FormatRegistry::GetInstance()
     {
-        static FormatRegistry * g_formatRegistry = NULL;
-        if(g_formatRegistry == NULL)
-        {
-            g_formatRegistry = new FormatRegistry();
-        }
+        static FormatRegistry* g_formatRegistry = new FormatRegistry();
         return *g_formatRegistry;
     }
     
     FormatRegistry::FormatRegistry()
     {
-    
     }
     
     FormatRegistry::~FormatRegistry()
     {
-    
     }
     
     FileFormat* FormatRegistry::getFileFormatByName(const std::string & name) const
