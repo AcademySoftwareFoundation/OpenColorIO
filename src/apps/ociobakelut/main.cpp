@@ -56,13 +56,24 @@ int main (int argc, const char* argv[])
     std::string shaperspace;
     std::string outputspace;
     
+    // What are the allowed baker output formats?
+    std::ostringstream formats;
+    formats << "the lut format to bake (allowed: ";
+    for(int i=0; i<OCIO::Baker::getNumFormats(); ++i)
+    {
+        if(i!=0) formats << ", ";
+        formats << OCIO::Baker::getFormatNameByIndex(i);
+    }
+    formats << ")";
+    std::string formatstr = formats.str();
+    
     ArgParse ap;
     ap.options("ociobakelut -- bake out a lut from an OpenColorIO config\n\n"
                "usage:  ociobakelut [options]\n\n"
                "example:  ociobakelut --iconfig foo.ocio --inputspace lnf --shaperspace jplog --outputspace sRGB --format houdini\n\n",
                "%*", parse_end_args, "",
                "--help", &help, "Print help message",
-               "--format %s", &format, "the lut format to bake",
+               "--format %s", &format, formatstr.c_str(),
                "--inputspace %s", &inputspace, "the OCIO ColorSpace or Role, for the input (required)",
                "--shaperspace %s", &shaperspace, "the OCIO ColorSpace or Role, for the shaper",
                "--outputspace %s", &outputspace, "the OCIO ColorSpace or Role, for the output (required)",

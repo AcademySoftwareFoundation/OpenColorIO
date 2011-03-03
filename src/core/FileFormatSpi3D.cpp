@@ -85,9 +85,9 @@ OCIO_NAMESPACE_ENTER
             }
             
             
-            virtual bool Supports(const std::string & feature) const
+            virtual bool Supports(const FileFormatFeature & feature) const
             {
-                if(feature == "load") return true;
+                if(feature == FILE_FORMAT_READ) return true;
                 return false;
             }
             
@@ -201,7 +201,7 @@ OCIO_NAMESPACE_ENTER
         
         struct AutoRegister
         {
-            AutoRegister() { RegisterFileFormat(new LocalFormat); }
+            AutoRegister() { FormatRegistry::GetInstance().registerFileFormat(new LocalFormat); }
         };
         static AutoRegister registerIt;
     }

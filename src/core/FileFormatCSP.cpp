@@ -340,7 +340,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string GetName() const;
             virtual std::string GetExtension () const;
             
-            virtual bool Supports(const std::string & feature) const;
+            virtual bool Supports(const FileFormatFeature & feature) const;
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
@@ -390,10 +390,10 @@ OCIO_NAMESPACE_ENTER
         FileFormatCSP::GetExtension() const { return "csp"; }
         
         bool
-        FileFormatCSP::Supports(const std::string & feature) const
+        FileFormatCSP::Supports(const FileFormatFeature & feature) const
         {
-            if(feature == "load") return true;
-            if(feature == "write") return true;
+            if(feature == FILE_FORMAT_READ) return true;
+            if(feature == FILE_FORMAT_WRITE) return true;
             return false;
         }
         
@@ -784,7 +784,7 @@ OCIO_NAMESPACE_ENTER
     
     struct AutoRegister
     {
-        AutoRegister() { RegisterFileFormat(new FileFormatCSP); }
+        AutoRegister() { FormatRegistry::GetInstance().registerFileFormat(new FileFormatCSP); }
     };
     static AutoRegister registerIt;
 }

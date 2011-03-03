@@ -30,6 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_FILETRANSFORM_H
 #define INCLUDED_OCIO_FILETRANSFORM_H
 
+#include <map>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
@@ -59,6 +61,12 @@ OCIO_NAMESPACE_ENTER
         std::vector<float> lookup3D;
     };
     
+    enum FileFormatFeature
+    {
+        FILE_FORMAT_READ = 0,
+        FILE_FORMAT_WRITE = 1,
+    };
+    
     class FileFormat
     {
     public:
@@ -67,7 +75,7 @@ OCIO_NAMESPACE_ENTER
         virtual std::string GetName() const = 0;
         virtual std::string GetExtension() const = 0;
         
-        virtual bool Supports(const std::string & feature) const = 0;
+        virtual bool Supports(const FileFormatFeature & feature) const = 0;
         
         virtual CachedFileRcPtr Load(std::istream & istream) const = 0;
         
@@ -83,16 +91,31 @@ OCIO_NAMESPACE_ENTER
         FileFormat& operator= (const FileFormat &);
     };
     
-    typedef std::vector<FileFormat*> FormatRegistry;
+    typedef std::map<std::string, FileFormat*> FileFormatMap;
     
-    FormatRegistry & GetFormatRegistry();
+    class FormatRegistry
+    {
+    public:
+        static FormatRegistry & GetInstance();
+        
+        FileFormat* getFileFormatByName(const std::string & name) const;
+        FileFormat* getFileFormatForExtension(const std::string & extension) const;
+        
+        int getNumFormats() const;
+        FileFormat* getFormatByIndex(int index) const;
+        
+        int getNumFormats(FileFormatFeature feature) const;
+        FileFormat* getFormatByIndex(FileFormatFeature feature, int index) const;
+        
+        void registerFileFormat(FileFormat* format);
     
-    FileFormat* GetFileFormat(const std::string & name);
-    
-    FileFormat* GetFileFormatForExtension(const std::string & str);
-    
-    void RegisterFileFormat(FileFormat* format);
-    
+    private:
+        FormatRegistry();
+        ~FormatRegistry();
+        
+        FileFormatMap m_formatsByName;
+        FileFormatMap m_formatsByExtension;
+    };
 }
 OCIO_NAMESPACE_EXIT
 

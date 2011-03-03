@@ -409,7 +409,13 @@ OCIO_NAMESPACE_ENTER
         Interpolation getInterpolation() const;
         //!cpp:function::
         void setInterpolation(Interpolation interp);
-    
+        
+        //!cpp:function:: get the number of lut readers
+        static int getNumFormats();
+        //!cpp:function:: get the lut readers at index, return empty string if
+        // an invalid index is specified
+        static const char * getFormatNameByIndex(int index);
+        
     private:
         FileTransform();
         FileTransform(const FileTransform &);

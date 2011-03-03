@@ -63,7 +63,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string GetName() const;
             virtual std::string GetExtension () const;
             
-            virtual bool Supports(const std::string & feature) const;
+            virtual bool Supports(const FileFormatFeature & feature) const;
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
@@ -88,9 +88,9 @@ OCIO_NAMESPACE_ENTER
             return "cc";
         }
         
-        bool LocalFileFormat::Supports(const std::string & feature) const
+        bool LocalFileFormat::Supports(const FileFormatFeature & feature) const
         {
-            if(feature == "load") return true;
+            if(feature == FILE_FORMAT_READ) return true;
             return false;
         }
         
@@ -162,7 +162,7 @@ OCIO_NAMESPACE_ENTER
         
         struct AutoRegister
         {
-            AutoRegister() { RegisterFileFormat(new LocalFileFormat); }
+            AutoRegister() { FormatRegistry::GetInstance().registerFileFormat(new LocalFileFormat); }
         };
         static AutoRegister registerIt;
     }
