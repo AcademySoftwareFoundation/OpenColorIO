@@ -291,6 +291,14 @@ OCIO_NAMESPACE_ENTER
     
     }
     
+    void FileFormat::Write(TransformData & /*data*/,
+        std::ostream & /*ostream*/) const
+    {
+        std::ostringstream os;
+        os << "Format " << GetName() << " does not support writing.";
+        throw Exception(os.str().c_str());
+    }
+    
     namespace
     {
         typedef std::pair<FileFormat*, CachedFileRcPtr> FileCachePair;

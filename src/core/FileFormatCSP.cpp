@@ -344,7 +344,7 @@ OCIO_NAMESPACE_ENTER
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
-            virtual bool Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
+            virtual void Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -649,9 +649,8 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        bool FileFormatCSP::Write(TransformData & data, std::ostream & ostream) const
+        void FileFormatCSP::Write(TransformData & data, std::ostream & ostream) const
         {
-            
             // setup the floating point precision
             ostream.setf(std::ios::fixed, std::ios::floatfield);
             ostream.precision(6);
@@ -722,8 +721,6 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             ostream << "\n";
-            
-            return true;
         };
         
         void

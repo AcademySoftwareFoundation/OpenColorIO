@@ -76,7 +76,7 @@ OCIO_NAMESPACE_ENTER
             
             virtual std::string GetName() const
             {
-                return "SPI1D";
+                return "spi1d";
             }
             
             virtual std::string GetExtension() const
@@ -218,11 +218,6 @@ OCIO_NAMESPACE_ENTER
                 cachedFile->lut = lut1d;
                 return cachedFile;
             }
-            
-            virtual bool Write(TransformData & /*data*/, std::ostream & /*ostream*/) const
-            {
-                return false;
-            };
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,

@@ -79,7 +79,7 @@ OCIO_NAMESPACE_ENTER
         
         virtual CachedFileRcPtr Load(std::istream & istream) const = 0;
         
-        virtual bool Write(TransformData & data, std::ostream & ostream) const = 0;
+        virtual void Write(TransformData & data, std::ostream & ostream) const;
         
         virtual void BuildFileOps(OpRcPtrVec & ops,
                                   const Config& config,
