@@ -12,11 +12,6 @@ include_directories(
     ${Nuke_INCLUDE_DIR}
 )
 
-if(Boost_FOUND)
-    include_directories(
-        ${Boost_INCLUDE_DIR})
-endif()
-
 ###############################################################################
 ### NukeOCIOColorSpace ###
 

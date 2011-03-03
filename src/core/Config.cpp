@@ -1475,10 +1475,10 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_searchpath_filesystem)
                           ":$OCIO_TEST1"
                           ":/$OCIO_JOB/${OCIO_SEQ}/$OCIO_SHOT/ocio");
     
-    BOOST_CHECK_EQUAL(config->getSearchPath(),
-        ".:$OCIO_TEST1:/$OCIO_JOB/${OCIO_SEQ}/$OCIO_SHOT/ocio");
-    BOOST_CHECK_EQUAL(config->getSearchPath(true),
-        ".:foobar:/meatballs/cheesecake/mb-cc-001/ocio");
+    OIIO_CHECK_ASSERT(strcmp(config->getSearchPath(),
+        ".:$OCIO_TEST1:/$OCIO_JOB/${OCIO_SEQ}/$OCIO_SHOT/ocio") == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->getSearchPath(true),
+        ".:foobar:/meatballs/cheesecake/mb-cc-001/ocio") == 0);
     
     // find some files
     config->setSearchPath(".."
@@ -1516,10 +1516,14 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_searchpath_filesystem)
     somelutdotdot.close();
     
     // basic search test
-    BOOST_CHECK_EQUAL(config->findFile("somelut1.lut"), lut1.c_str());
-    BOOST_CHECK_EQUAL(config->findFile("somelut2.lut"), lut2.c_str());
-    BOOST_CHECK_EQUAL(config->findFile("somelut3.lut"), lut3.c_str());
-    BOOST_CHECK_EQUAL(config->findFile("lutdotdot.lut"), lutdotdot.c_str());
+    OIIO_CHECK_ASSERT(strcmp(config->findFile("somelut1.lut"),
+        lut1.c_str()) == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->findFile("somelut2.lut"),
+        lut2.c_str()) == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->findFile("somelut3.lut"),
+        lut3.c_str()) == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->findFile("lutdotdot.lut"),
+        lutdotdot.c_str()) == 0);
     
 }
 #endif

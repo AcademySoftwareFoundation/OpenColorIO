@@ -25,11 +25,6 @@ include_directories(
     ${CMAKE_BINARY_DIR}/export/
 )
 
-if(Boost_FOUND)
-    include_directories(
-        ${Boost_INCLUDE_DIR})
-endif()
-
 # Exclude the 'lib' prefix from the name.
 if(NOT PYTHON_INCLUDE_LIB_PREFIX)
     set_property(TARGET PyOpenColorIO

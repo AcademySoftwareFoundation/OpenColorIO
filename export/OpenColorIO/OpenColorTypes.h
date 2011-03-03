@@ -33,14 +33,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <string>
 
-#ifdef __APPLE__
+#if __GNUC__ >= 4
 #include <tr1/memory>
 #define OCIO_SHARED_PTR std::tr1::shared_ptr
 #define OCIO_DYNAMIC_POINTER_CAST std::tr1::dynamic_pointer_cast
 #else
-#include <boost/shared_ptr.hpp>
-#define OCIO_SHARED_PTR boost::shared_ptr
-#define OCIO_DYNAMIC_POINTER_CAST boost::dynamic_pointer_cast
+#error OCIO needs gcc 4 or later to get access to <tr1/memory>
 #endif
 
 #ifndef OCIO_NAMESPACE_ENTER

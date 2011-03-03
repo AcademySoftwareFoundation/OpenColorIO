@@ -14,7 +14,7 @@ The basic requirements are:
 - cmake >2.8
 - (optional) Python 2.x (for the Python bindings)
 - (optional) Nuke 6.x (for the Nuke nodes)
-- (optional) Boost's unit_test_framework
+- (optional) Truelight SDK (for TruelightTransform)
 
 In the OCIO source directory, make a build directory (optionally, but
 highly recommended)::
