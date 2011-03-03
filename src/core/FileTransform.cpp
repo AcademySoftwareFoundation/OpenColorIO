@@ -143,6 +143,22 @@ OCIO_NAMESPACE_ENTER
         getImpl()->interp_ = interp;
     }
     
+    int FileTransform::getNumFormats()
+    {
+        return FormatRegistry::GetInstance().getNumFormats(FILE_FORMAT_READ);
+    }
+    
+    const char * FileTransform::getFormatNameByIndex(int index)
+    {
+        FileFormat* format = FormatRegistry::GetInstance().getFormatByIndex(FILE_FORMAT_READ, index);
+        if(format)
+        {
+            return format->GetName().c_str();
+        }
+        
+        return "";
+    }
+    
     std::ostream& operator<< (std::ostream& os, const FileTransform& t)
     {
         os << "<FileTransform ";
@@ -155,61 +171,124 @@ OCIO_NAMESPACE_ENTER
         return os;
     }
     
+    ///////////////////////////////////////////////////////////////////////////
+    
+    FormatRegistry & FormatRegistry::GetInstance()
+    {
+        static FormatRegistry * g_formatRegistry = NULL;
+        if(g_formatRegistry == NULL)
+        {
+            g_formatRegistry = new FormatRegistry();
+        }
+        return *g_formatRegistry;
+    }
+    
+    FormatRegistry::FormatRegistry()
+    {
+    
+    }
+    
+    FormatRegistry::~FormatRegistry()
+    {
+    
+    }
+    
+    FileFormat* FormatRegistry::getFileFormatByName(const std::string & name) const
+    {
+        FileFormatMap::const_iterator iter = m_formatsByName.find(
+            pystring::lower(name));
+        if(iter != m_formatsByName.end())
+            return iter->second;
+        return NULL;
+    }
+    
+    FileFormat* FormatRegistry::getFileFormatForExtension(const std::string & extension) const
+    {
+        FileFormatMap::const_iterator iter = m_formatsByExtension.find(
+            pystring::lower(extension));
+        if(iter != m_formatsByExtension.end())
+            return iter->second;
+        return NULL;
+    }
+    
+    int FormatRegistry::getNumFormats() const
+    {
+        return static_cast<int>(m_formatsByName.size());
+    }
+    
+    FileFormat* FormatRegistry::getFormatByIndex(int index) const
+    {
+        if(index>=0 && index<getNumFormats())
+        {
+            FileFormatMap::const_iterator iter = m_formatsByName.begin();
+            for(int i=0; i<index; ++i) ++iter;
+            return iter->second;
+        }
+        
+        return NULL;
+    }
+    
+    
+    int FormatRegistry::getNumFormats(FileFormatFeature feature) const
+    {
+        int count = 0;
+        for(FileFormatMap::const_iterator iter = m_formatsByName.begin();
+            iter != m_formatsByName.end();
+            ++iter)
+        {
+            if(iter->second->Supports(feature))
+            {
+                count++;
+            }
+        }
+        
+        return count;
+    }
+    
+    FileFormat* FormatRegistry::getFormatByIndex(FileFormatFeature feature, int index) const
+    {
+        int count = 0;
+        for(FileFormatMap::const_iterator iter = m_formatsByName.begin();
+            iter != m_formatsByName.end();
+            ++iter)
+        {
+            if(iter->second->Supports(feature))
+            {
+                if(count == index)
+                {
+                    return iter->second;
+                }
+                
+                count++;
+            }
+        }
+        
+        return NULL;
+    }
+    
+    void FormatRegistry::registerFileFormat(FileFormat* format)
+    {
+        std::string formatName = pystring::lower(format->GetName());
+        if(getFileFormatByName(formatName))
+        {
+            std::ostringstream os;
+            os << "Cannot register multiple file formats named, '";
+            os << formatName << "'.";
+            throw Exception(os.str().c_str());
+        }
+        
+        m_formatsByName[formatName] = format;
+        
+        // For now, dont worry if multiple formats register the same extension
+        // TODO: keep track of all of em! (make the value a vector)
+        m_formatsByExtension[pystring::lower(format->GetExtension())] = format;
+    }
     
     ///////////////////////////////////////////////////////////////////////////
     
     FileFormat::~FileFormat()
     {
     
-    }
-    
-    FormatRegistry & GetFormatRegistry()
-    {
-        static std::vector<FileFormat*> formats;
-        return formats;
-    }
-    
-    FileFormat* GetFileFormat(const std::string & name)
-    {
-        if(name.empty()) return 0x0;
-        std::string namelower = pystring::lower(name);
-        FormatRegistry & formats = GetFormatRegistry();
-        for(unsigned int findex=0; findex<formats.size(); ++findex)
-        {
-            FileFormat* format = formats[findex];
-            if(namelower == pystring::lower(format->GetName()))
-            {
-                return format;
-            }
-        }
-        return 0x0;
-    }
-    
-    FileFormat* GetFileFormatForExtension(const std::string & str)
-    {
-        if(str.empty()) return 0x0;
-        
-        std::string extension = pystring::lower(str);
-        
-        FormatRegistry & formats = GetFormatRegistry();
-        
-        for(unsigned int findex=0; findex<formats.size(); ++findex)
-        {
-            FileFormat* format = formats[findex];
-            std::string testExtension = pystring::lower(format->GetExtension());
-            if(extension == testExtension)
-            {
-                return format;
-            }
-        }
-        
-        return 0x0;
-    }
-    
-    void RegisterFileFormat(FileFormat* format)
-    {
-        FormatRegistry & formats = GetFormatRegistry();
-        formats.push_back(format);
     }
     
     namespace
@@ -255,7 +334,7 @@ OCIO_NAMESPACE_ENTER
             // Try the initial format.
             std::string primaryErrorText;
             std::string extension = GetExtension(filepath);
-            FileFormat * primaryFormat = GetFileFormatForExtension(extension);
+            FileFormat * primaryFormat = FormatRegistry::GetInstance().getFileFormatForExtension(extension);
             
             if(primaryFormat)
             {
@@ -277,19 +356,21 @@ OCIO_NAMESPACE_ENTER
             }
             
             // If this fails, try all other formats
-            FormatRegistry & formats = GetFormatRegistry();
+            FormatRegistry & formats = FormatRegistry::GetInstance();
             
-            for(unsigned int findex = 0; findex<formats.size(); ++findex)
+            for(int findex = 0; findex<formats.getNumFormats(); ++findex)
             {
+                FileFormat * localFormat = formats.getFormatByIndex(findex);
+                
                 // Dont bother trying the primaryFormat twice.
-                if(formats[findex] == primaryFormat) continue;
+                if(localFormat == primaryFormat) continue;
                 
                 try
                 {
-                    CachedFileRcPtr cachedFile = formats[findex]->Load(filestream);
+                    CachedFileRcPtr cachedFile = localFormat->Load(filestream);
                     
                     // Add the result to our cache, return it.
-                    FileCachePair pair = std::make_pair(formats[findex], cachedFile);
+                    FileCachePair pair = std::make_pair(localFormat, cachedFile);
                     g_fileCache[filepath] = pair;
                     return pair;
                 }

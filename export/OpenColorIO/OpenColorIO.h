@@ -670,12 +670,6 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: set the config to use
         void setConfig(const ConstConfigRcPtr & config);
         
-        //!cpp:function:: get the number of lut writers
-        int getNumFormats() const;
-        //!cpp:function:: get the lut writer at index, return empty string if
-        // an invalid index is specified
-        const char * getFormatNameByIndex(int index) const;
-        
         //!cpp:function:: set the lut output format
         void setFormat(const char * formatName);
         //!cpp:function:: get the lut output format
@@ -718,6 +712,12 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function:: bake the lut into the output stream
         void bake(std::ostream & os) const;
+        
+        //!cpp:function:: get the number of lut writers
+        static int getNumFormats();
+        //!cpp:function:: get the lut writer at index, return empty string if
+        // an invalid index is specified
+        static const char * getFormatNameByIndex(int index);
         
     private:
         Baker();

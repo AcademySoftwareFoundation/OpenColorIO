@@ -108,32 +108,19 @@ OCIO_NAMESPACE_ENTER
         getImpl()->config_ = config->createEditableCopy();
     }
     
-    int Baker::getNumFormats() const
+    int Baker::getNumFormats()
     {
-        int count = 0;
-        FormatRegistry & formats = GetFormatRegistry();
-        for(unsigned int findex=0; findex<formats.size(); ++findex)
-        {
-            FileFormat* format = formats[findex];
-            if(format->Supports("write"))
-                count++;
-        }
-        return count;
+        return FormatRegistry::GetInstance().getNumFormats(FILE_FORMAT_WRITE);
     }
     
-    const char * Baker::getFormatNameByIndex(int index) const
+    const char * Baker::getFormatNameByIndex(int index)
     {
-        int count = 0;
-        FormatRegistry & formats = GetFormatRegistry();
-        for(unsigned int findex=0; findex<formats.size(); ++findex)
+        FileFormat* format = FormatRegistry::GetInstance().getFormatByIndex(FILE_FORMAT_WRITE, index);
+        if(format)
         {
-            FileFormat* format = formats[findex];
-            if(format->Supports("write")) {
-                if(count == index)
-                    return pystring::lower(format->GetName()).c_str();
-                count++;
-            }
+            return format->GetName().c_str();
         }
+        
         return "";
     }
     
@@ -316,14 +303,13 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        //
-        bool supported = false;
-        FileFormat* fmt = GetFileFormat(getImpl()->formatName_);
-        if(fmt)
+        FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(getImpl()->formatName_);
+        
+        if(fmt && fmt->Supports(FILE_FORMAT_WRITE))
         {
             try
             {
-                supported = fmt->Write(data, os);
+                fmt->Write(data, os);
             }
             catch(std::exception & e)
             {
@@ -332,8 +318,7 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(err.str().c_str());
             }
         }
-        
-        if(!supported || !fmt)
+        else
         {
             std::ostringstream err;
             err << "We don't support the '" << getImpl()->formatName_;
