@@ -124,8 +124,6 @@ OCIO_NAMESPACE_ENTER
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
-            virtual bool Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
-            
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
                                       const ConstContextRcPtr & context,
@@ -413,11 +411,6 @@ OCIO_NAMESPACE_ENTER
             
             return cachedFile;
         }
-        
-        bool LocalFileFormat::Write(TransformData & /*data*/, std::ostream & /*ostream*/) const
-        {
-            return false;
-        };
         
         void
         LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
