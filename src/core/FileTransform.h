@@ -67,6 +67,8 @@ OCIO_NAMESPACE_ENTER
         FILE_FORMAT_WRITE = 1,
     };
     
+    void ClearFileTransformCaches();
+    
     class FileFormat
     {
     public:

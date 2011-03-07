@@ -19,23 +19,28 @@ namespace OCIO = OCIO_NAMESPACE;
 class Display : public DD::Image::PixelIop {
     protected:
 
-        bool hasLists; //!< Were colorspaces, display devices, and transform names found? If not, always error.
-        DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
-        int colorSpaceIndex; //!< index of colorspace selection from the pulldown list knob
-        int displayIndex, viewIndex;
-        std::vector<std::string> colorSpaceNames; //!< list of colorspace names (memory for const char* s below)
-        std::vector<std::string> displayNames, viewNames;
-        std::vector<const char*> colorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
-        std::vector<const char*> displayCstrNames, viewCstrNames;
-        double exposure;
-        double display_gamma;
+        bool m_hasLists; //!< Were colorspaces, display devices, and transform names found? If not, always error.
+        DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
+        int m_colorSpaceIndex; //!< index of colorspace selection from the pulldown list knob
+        int m_displayIndex, m_viewIndex;
+        std::vector<std::string> m_colorSpaceNames; //!< list of colorspace names (memory for const char* s below)
+        std::vector<std::string> m_displayNames, m_viewNames;
+        std::vector<const char*> m_colorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
+        std::vector<const char*> m_displayCstrNames, m_viewCstrNames;
+        float m_gain;
+        float m_gamma;
+        //int m_channel;
         
-        OCIO::DisplayTransformRcPtr transformPtr;
-        OCIO::ConstProcessorRcPtr processorPtr;
+        std::string m_contextKey1;
+        std::string m_contextValue1;
+        
+        OCIO::DisplayTransformRcPtr m_transform;
+        OCIO::ConstProcessorRcPtr m_processor;
 
-        DD::Image::Knob *displayKnob, *viewKnob;
+        DD::Image::Knob *m_displayKnob, *m_viewKnob;
         void refreshDisplayTransforms();
-
+        OCIO::ConstContextRcPtr getLocalContext();
+        
     public:
 
         Display(Node *node);
@@ -101,6 +106,8 @@ class Display : public DD::Image::PixelIop {
          * regenerate the display transform list.
          */
         int knob_changed(DD::Image::Knob *k);
+
+        virtual void append(DD::Image::Hash& hash);
 
 
     protected:

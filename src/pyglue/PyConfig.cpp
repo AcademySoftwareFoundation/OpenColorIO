@@ -178,6 +178,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_setDescription( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_Config_serialize( PyObject * self );
+        PyObject * PyOCIO_Config_getCacheID( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_Config_getSearchPath( PyObject * self );
         PyObject * PyOCIO_Config_setSearchPath( PyObject * self,  PyObject *args );
@@ -222,6 +223,7 @@ OCIO_NAMESPACE_ENTER
             {"getDescription", (PyCFunction) PyOCIO_Config_getDescription, METH_NOARGS, "" },
             {"setDescription", PyOCIO_Config_setDescription, METH_VARARGS, "" },
             {"serialize", (PyCFunction) PyOCIO_Config_serialize, METH_NOARGS, "" },
+            {"getCacheID", PyOCIO_Config_getCacheID, METH_VARARGS, "" },
             
             {"getSearchPath", (PyCFunction) PyOCIO_Config_getSearchPath, METH_NOARGS, "" },
             {"setSearchPath", PyOCIO_Config_setSearchPath, METH_VARARGS, "" },
@@ -477,6 +479,33 @@ OCIO_NAMESPACE_ENTER
         }
         
         
+        PyObject * PyOCIO_Config_getCacheID( PyObject * self, PyObject * args )
+        {
+            try
+            {   PyObject * pycontext = NULL;
+                if (!PyArg_ParseTuple(args,"|O:getCacheID", &pycontext)) return NULL;
+                
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                // Parse the context
+                ConstContextRcPtr context;
+                if(pycontext != NULL)
+                {
+                    context = GetConstContext(pycontext, true);
+                }
+                else
+                {
+                    context = config->getCurrentContext();
+                }
+                
+                return PyString_FromString( config->getCacheID(context) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
         
         ////////////////////////////////////////////////////////////////////////

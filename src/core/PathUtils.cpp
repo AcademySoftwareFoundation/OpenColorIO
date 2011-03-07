@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <sys/stat.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -46,6 +47,57 @@ extern char **environ;
 
 OCIO_NAMESPACE_ENTER
 {
+    namespace
+    {
+        typedef std::map<std::string, std::string> StringMap;
+        
+        StringMap g_fastFileHashCache;
+        Mutex g_fastFileHashCache_mutex;
+        
+        std::string ComputeHash(const std::string & filename)
+        {
+            struct stat results;
+            if (stat(filename.c_str(), &results) == 0)
+            {
+                // Treat the mtime + inode as a proxy for the contents
+                std::ostringstream fasthash;
+                fasthash << results.st_ino << ":";
+                fasthash << results.st_mtime;
+                return fasthash.str();
+            }
+            
+            return "";
+        }
+    }
+    
+    std::string GetFastFileHash(const std::string & filename)
+    {
+        AutoMutex lock(g_fastFileHashCache_mutex);
+        
+        StringMap::iterator iter = g_fastFileHashCache.find(filename);
+        if(iter != g_fastFileHashCache.end())
+        {
+            return iter->second;
+        }
+        
+        std::string hash = ComputeHash(filename);
+        g_fastFileHashCache[filename] = hash;
+        
+        return hash;
+    }
+    
+    bool FileExists(const std::string & filename)
+    {
+        std::string hash = GetFastFileHash(filename);
+        return (!hash.empty());
+    }
+    
+    void ClearPathCaches()
+    {
+        AutoMutex lock(g_fastFileHashCache_mutex);
+        g_fastFileHashCache.clear();
+    }
+    
     namespace
     {
         inline char** GetEnviron()
@@ -156,36 +208,6 @@ OCIO_NAMESPACE_ENTER
         }
         
         return orig;
-    }
-    
-    namespace
-    {
-        typedef std::map<std::string, bool> FileExistsMap;
-        
-        FileExistsMap g_fileExistsCache;
-        Mutex g_fileExistsCache_mutex;
-    }
-    
-    bool FileExists(const std::string & filename)
-    {
-        AutoMutex lock(g_fileExistsCache_mutex);
-        
-        FileExistsMap::iterator iter = g_fileExistsCache.find(filename);
-        if(iter != g_fileExistsCache.end())
-        {
-            return iter->second;
-        }
-        
-        bool exists = true;
-        {
-            std::ifstream fin;
-            fin.open (filename.c_str());
-            if (fin.fail()) exists = false;
-            else fin.close();
-        }
-        
-        g_fileExistsCache[filename] = exists;
-        return exists;
     }
     
     std::string GetExtension(const std::string & str)

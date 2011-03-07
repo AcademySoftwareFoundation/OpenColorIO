@@ -105,6 +105,17 @@ OCIO_NAMESPACE_ENTER
     };
     
     
+    //!cpp:function::
+    // OpenColorIO, during normal usage, tends to cache certain information
+    // (such as the contents of LUTs on disk, intermediate results, etc).
+    // Calling this function will flus all such information.
+    // Under normal usage, this is not necessary. But in particular instances
+    // (such as designing OCIO profiles, and wanting to re-read luts without
+    // restarting) it can be helpful.
+    
+    void OCIOEXPORT ClearAllCaches();
+    
+    
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Config
@@ -151,6 +162,7 @@ OCIO_NAMESPACE_ENTER
     // This will store a copy of the specified config.
     extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
     
+    
     //!cpp:class::
     class OCIOEXPORT Config
     {
@@ -187,6 +199,20 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         void serialize(std::ostream & os) const;
+        
+        //!cpp:function:: 
+        // This will produce a hash of the all colorspace definitions, etc.
+        // All external references, such files used in FileTransforms, etc
+        // will be incorporated into the cacheID. While the contents of
+        // the files is not read, the filesystem is queried for relavent
+        // information (mtime, inode) such that the config's cacheID will
+        // change when the underlying luts are updated.
+        // If a context is not provided, the currentContext will be used.
+        // If a null context is provided, file references will not be taken into
+        // account (this is essentially a hash of Config::serialize).
+        
+        const char * getCacheID() const;
+        const char * getCacheID(const ConstContextRcPtr & context) const;
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst:: .. _cfgresource_section:
@@ -933,6 +959,9 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         ContextRcPtr createEditableCopy() const;
+        
+        //!cpp:function:: 
+        const char * getCacheID() const;
         
         //!cpp:function::
         void setSearchPath(const char * path);

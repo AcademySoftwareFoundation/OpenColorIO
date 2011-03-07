@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "HashUtils.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
@@ -132,6 +133,49 @@ OCIO_NAMESPACE_ENTER
     
     // Colorspaces
     typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
+    
+    void GetFileReferences(std::set<std::string> & files,
+                           const ConstTransformRcPtr & transform)
+    {
+        if(!transform) return;
+        
+        if(ConstGroupTransformRcPtr groupTransform = \
+            DynamicPtrCast<const GroupTransform>(transform))
+        {
+            for(int i=0; i<groupTransform->size(); ++i)
+            {
+                GetFileReferences(files, groupTransform->getTransform(i));
+            }
+        }
+        else if(ConstFileTransformRcPtr fileTransform = \
+            DynamicPtrCast<const FileTransform>(transform))
+        {
+            files.insert(fileTransform->getSrc());
+        }
+    }
+    
+    void GetFileReferences(std::set<std::string> & files,
+                           const ColorSpaceVec & colorspaces)
+    {
+        ColorSpaceDirection dirs[] = { COLORSPACE_DIR_TO_REFERENCE,
+                                       COLORSPACE_DIR_FROM_REFERENCE };
+        
+        for(unsigned int csindex=0; csindex<colorspaces.size(); ++csindex)
+        {
+            for(int dirindex=0; dirindex<2; ++dirindex)
+            {
+                if(!colorspaces[csindex]->isTransformSpecified(dirs[dirindex]))
+                    continue;
+                
+                ConstTransformRcPtr t = colorspaces[csindex]->getTransform(dirs[dirindex]);
+                GetFileReferences(files, t);
+            }
+        }
+    }
+    
+    
+    
+    
     
     bool FindColorSpaceIndex(int * index,
                              const ColorSpaceVec & colorspaces,
@@ -324,6 +368,10 @@ OCIO_NAMESPACE_ENTER
         mutable Sanity sanity_;
         mutable std::string sanitytext_;
         
+        mutable Mutex cacheidMutex_;
+        mutable StringMap cacheids_;
+        mutable std::string cacheidnocontext_;
+        
         Impl() : 
             context_(Context::Create()),
             strictParsing_(true),
@@ -384,6 +432,8 @@ OCIO_NAMESPACE_ENTER
             sanity_ = rhs.sanity_;
             sanitytext_ = rhs.sanitytext_;
             
+            cacheids_ = rhs.cacheids_;
+            cacheidnocontext_ = cacheidnocontext_;
             return *this;
         }
         
@@ -613,10 +663,13 @@ OCIO_NAMESPACE_ENTER
     
     void Config::setDescription(const char * description)
     {
+        getImpl()->description_ = description;
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->cacheids_.clear();
+        getImpl()->cacheidnocontext_ = "";
         getImpl()->sanity_ = SANITY_UNKNOWN;
         getImpl()->sanitytext_ = "";
-        
-        getImpl()->description_ = description;
     }
     
     
@@ -635,6 +688,12 @@ OCIO_NAMESPACE_ENTER
     void Config::setSearchPath(const char * path)
     {
         getImpl()->context_->setSearchPath(path);
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->cacheids_.clear();
+        getImpl()->cacheidnocontext_ = "";
+        getImpl()->sanity_ = SANITY_UNKNOWN;
+        getImpl()->sanitytext_ = "";
     }
     
     const char * Config::getWorkingDir() const
@@ -645,6 +704,12 @@ OCIO_NAMESPACE_ENTER
     void Config::setWorkingDir(const char * dirname)
     {
         getImpl()->context_->setWorkingDir(dirname);
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->cacheids_.clear();
+        getImpl()->cacheidnocontext_ = "";
+        getImpl()->sanity_ = SANITY_UNKNOWN;
+        getImpl()->sanitytext_ = "";
     }
     
     
@@ -709,9 +774,6 @@ OCIO_NAMESPACE_ENTER
     
     void Config::addColorSpace(const ConstColorSpaceRcPtr & original)
     {
-        getImpl()->sanity_ = SANITY_UNKNOWN;
-        getImpl()->sanitytext_ = "";
-        
         ColorSpaceRcPtr cs = original->createEditableCopy();
         
         std::string name = cs->getName();
@@ -729,6 +791,12 @@ OCIO_NAMESPACE_ENTER
             // Otherwise, add it
             getImpl()->colorspaces_.push_back( cs );
         }
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->cacheids_.clear();
+        getImpl()->cacheidnocontext_ = "";
+        getImpl()->sanity_ = SANITY_UNKNOWN;
+        getImpl()->sanitytext_ = "";
     }
     
     void Config::clearColorSpaces()
@@ -816,9 +884,6 @@ OCIO_NAMESPACE_ENTER
     // Roles
     void Config::setRole(const char * role, const char * colorSpaceName)
     {
-        getImpl()->sanity_ = SANITY_UNKNOWN;
-        getImpl()->sanitytext_ = "";
-        
         // Set the role
         if(colorSpaceName)
         {
@@ -833,6 +898,12 @@ OCIO_NAMESPACE_ENTER
                 getImpl()->roles_.erase(iter);
             }
         }
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->cacheids_.clear();
+        getImpl()->cacheidnocontext_ = "";
+        getImpl()->sanity_ = SANITY_UNKNOWN;
+        getImpl()->sanitytext_ = "";
     }
     
     int Config::getNumRoles() const
@@ -1103,10 +1174,13 @@ OCIO_NAMESPACE_ENTER
     
     void Config::setDefaultLumaCoefs(const float * c3)
     {
+        memcpy(&getImpl()->defaultLumaCoefs_[0], c3, 3*sizeof(float));
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->cacheids_.clear();
+        getImpl()->cacheidnocontext_ = "";
         getImpl()->sanity_ = SANITY_UNKNOWN;
         getImpl()->sanitytext_ = "";
-        
-        memcpy(&getImpl()->defaultLumaCoefs_[0], c3, 3*sizeof(float));
     }
     
     ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
@@ -1195,6 +1269,73 @@ OCIO_NAMESPACE_ENTER
         config.serialize(os);
         return os;
     }
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //  CacheID
+    
+    const char * Config::getCacheID() const
+    {
+        return getCacheID(getCurrentContext());
+    }
+    
+    const char * Config::getCacheID(const ConstContextRcPtr & context) const
+    {
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        
+        // A null context will use the empty cacheid
+        std::string contextcacheid = "";
+        if(context) contextcacheid = context->getCacheID();
+        
+        StringMap::const_iterator cacheiditer = getImpl()->cacheids_.find(contextcacheid);
+        if(cacheiditer != getImpl()->cacheids_.end())
+        {
+            return cacheiditer->second.c_str();
+        }
+        
+        // Include the hash of the yaml config serialization
+        if(getImpl()->cacheidnocontext_.empty())
+        {
+            std::stringstream cacheid;
+            serialize(cacheid);
+            std::string fullstr = cacheid.str();
+            getImpl()->cacheidnocontext_ = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        }
+        
+        // Also include all file references, using the context (if specified)
+        std::string contextCacheID = "";
+        if(context)
+        {
+            std::ostringstream filehash;
+            
+            std::set<std::string> files;
+            GetFileReferences(files,
+                              getImpl()->colorspaces_);
+            for(std::set<std::string>::iterator iter = files.begin();
+                iter != files.end(); ++iter)
+            {
+                if(iter->empty()) continue;
+                filehash << *iter << "=";
+                
+                try
+                {
+                    std::string resolvedLocation = context->resolveFileLocation(iter->c_str());
+                    filehash << GetFastFileHash(resolvedLocation) << " ";
+                }
+                catch(...)
+                {
+                    filehash << "? ";
+                    continue;
+                }
+            }
+            
+            std::string fullstr = filehash.str();
+            contextCacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        }
+        
+        getImpl()->cacheids_[contextcacheid] = getImpl()->cacheidnocontext_ + ":" + contextCacheID;
+        return getImpl()->cacheids_[contextcacheid].c_str();
+    }
+    
     
     ///////////////////////////////////////////////////////////////////////////
     //  Serialization

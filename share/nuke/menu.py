@@ -23,40 +23,38 @@ def ocio_populate_viewer(remove_nuke_default = True):
     Also unregisters the default Nuke viewer processes (sRGB/rec709)
     unless remove_nuke_default is False
     """
-
+    
+    # TODO: How to we unregister all? This assumes no other luts
+    # have been registered by other viewer processes
     if remove_nuke_default:
         nuke.ViewerProcess.unregister('rec709')
         nuke.ViewerProcess.unregister('sRGB')
 
 
     # Formats the display and transform, e.g "Film1D (sRGB"
-    DISPLAY_UI_FORMAT = "%(transform)s (%(display)s)"
+    DISPLAY_UI_FORMAT = "%(view)s (%(display)s)"
 
     import PyOpenColorIO as OCIO
-    cfg = OCIO.GetCurrentConfig()
-
-    allDisplays = cfg.getDisplayDeviceNames()
+    config = OCIO.GetCurrentConfig()
 
     # For every display, loop over every transform
-    for dname in allDisplays:
-        allTransforms = cfg.getDisplayTransformNames(dname)
-
-        for xform in allTransforms:
+    for display in config.getDisplays():
+        for view in config.getViews(display):
             nuke.ViewerProcess.register(
-                name = DISPLAY_UI_FORMAT % {'transform': xform, "display": dname},
+                name = DISPLAY_UI_FORMAT % {'view': view, "display": display},
                 call = nuke.nodes.OCIODisplay,
                 args = (),
-                kwargs = {"device": dname, "transform": xform})
+                kwargs = {"display": display, "view": view})
 
 
     # Get the default display and transform, register it as the
     # default used on Nuke startup
-    defaultDisplay = cfg.getDefaultDisplayDeviceName()
-    defaultXform = cfg.getDefaultDisplayTransformName(defaultDisplay)
+    defaultDisplay = config.getDefaultDisplay()
+    defaultView = config.getDefaultView(defaultDisplay)
     
     nuke.knobDefault(
         "Viewer.viewerProcess",
-        DISPLAY_UI_FORMAT % {'transform': defaultXform, "display": defaultDisplay})
+        DISPLAY_UI_FORMAT % {'view': defaultView, "display": defaultDisplay})
 
 
 if __name__ == "__main__":

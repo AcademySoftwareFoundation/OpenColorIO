@@ -26,58 +26,20 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-#ifndef INCLUDED_OCIO_PATHUTILS_H
-#define INCLUDED_OCIO_PATHUTILS_H
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <map>
+#include "PathUtils.h"
+#include "FileTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    namespace path
+    // TODO: Processors which the user hangs onto have local caches.
+    // Should these be cleared?
+    
+    void ClearAllCaches()
     {
-        std::string join(const std::string & path1, const std::string & path2);
-        std::string dirname(const std::string & path);
-        std::string realpath(const std::string & path);
+        ClearPathCaches();
+        ClearFileTransformCaches();
     }
-    
-    // The EnvMap is ordered by the length of the keys (long -> short). This
-    // is so that recursive string expansion will deal with similar prefixed
-    // keys as expected.
-    // ie. '$TEST_$TESTING_$TE' will expand in this order '2 1 3'
-    template <class T>
-    struct EnvMapKey : std::binary_function <T, T, bool>
-    {
-        bool
-        operator() (const T &x, const T &y) const
-        {
-            return (x.length() > y.length());
-        }
-    };
-    typedef std::multimap< std::string, std::string, EnvMapKey< std::string > > EnvMap;
-    
-    // Get map of current env key = value,
-    void LoadEnvironment(EnvMap & map);
-    
-    // Expand a string with $VAR, ${VAR} or %VAR% with the keys passed
-    // in the EnvMap.
-    std::string EnvExpand(const std::string & str, const EnvMap & map);
-    
-    // Check if a file exists
-    bool FileExists(const std::string & filename);
-    
-    // Get a fast hash for a file, without reading all the contents.
-    // Currently, this checks the mtime and the inode number.
-    std::string GetFastFileHash(const std::string & filename);
-    
-    // Get the file extension for the specified string.
-    // return "" if '.' is not in string.
-    std::string GetExtension(const std::string & str);
-    
-    void ClearPathCaches();
 }
 OCIO_NAMESPACE_EXIT
-
-#endif

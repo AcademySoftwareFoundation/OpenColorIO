@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "HashUtils.h"
 #include "Mutex.h"
 #include "PathUtils.h"
 #include "pystring/pystring.h"
@@ -56,6 +57,7 @@ namespace
         std::string workingDir_;
         EnvMap envMap_;
         
+        mutable std::string cacheID_;
         mutable StringMap resultsCache_;
         mutable Mutex resultsCacheMutex_;
         
@@ -78,6 +80,7 @@ namespace
             envMap_ = rhs.envMap_;
             
             resultsCache_ = rhs.resultsCache_;
+            cacheID_ = rhs.cacheID_;
             
             return *this;
         }
@@ -118,6 +121,29 @@ namespace
         return context;
     }
     
+    const char * Context::getCacheID() const
+    {
+        AutoMutex lock(getImpl()->resultsCacheMutex_);
+        
+        if(getImpl()->cacheID_.empty())
+        {
+            std::ostringstream cacheid;
+            cacheid << "Search Path " << getImpl()->searchPath_ << " ";
+            cacheid << "Working Dir " << getImpl()->workingDir_ << " ";
+            
+            for (EnvMap::const_iterator iter = getImpl()->envMap_.begin(),
+                 end = getImpl()->envMap_.end();
+                 iter != end; ++iter)
+            {
+                cacheid << iter->first << "=" << iter->second << " ";
+            }
+            
+            std::string fullstr = cacheid.str();
+            getImpl()->cacheID_ = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+        }
+        
+        return getImpl()->cacheID_.c_str();
+    }
     
     void Context::setSearchPath(const char * path)
     {
@@ -125,6 +151,7 @@ namespace
         
         getImpl()->searchPath_ = path;
         getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
     }
     
     const char * Context::getSearchPath() const
@@ -138,6 +165,7 @@ namespace
         
         getImpl()->workingDir_ = dirname;
         getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
     }
     
     const char * Context::getWorkingDir() const
@@ -156,6 +184,7 @@ namespace
         
         AutoMutex lock(getImpl()->resultsCacheMutex_);
         getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
         
         if(value)
         {

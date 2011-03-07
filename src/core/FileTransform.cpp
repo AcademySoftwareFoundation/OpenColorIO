@@ -313,8 +313,6 @@ OCIO_NAMESPACE_ENTER
         typedef std::pair<FileFormat*, CachedFileRcPtr> FileCachePair;
         typedef std::map<std::string, FileCachePair> FileCacheMap;
         
-        // TODO: provide mechanism for flushing cache
-        
         FileCacheMap g_fileCache;
         Mutex g_fileCacheLock;
         
@@ -415,6 +413,12 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
         }
+    }
+    
+    void ClearFileTransformCaches()
+    {
+        AutoMutex lock(g_fileCacheLock);
+        g_fileCache.clear();
     }
     
     void BuildFileOps(OpRcPtrVec & ops,

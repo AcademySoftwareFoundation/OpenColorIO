@@ -164,6 +164,7 @@ OCIO_NAMESPACE_ENTER
         void PyOCIO_Context_delete( PyOCIO_Context * self, PyObject * args );
         PyObject * PyOCIO_Context_isEditable( PyObject * self );
         PyObject * PyOCIO_Context_createEditableCopy( PyObject * self );
+        PyObject * PyOCIO_Context_getCacheID( PyObject * self );
         
         PyObject * PyOCIO_Context_getSearchPath( PyObject * self );
         PyObject * PyOCIO_Context_setSearchPath( PyObject * self,  PyObject *args );
@@ -184,6 +185,7 @@ OCIO_NAMESPACE_ENTER
         PyMethodDef PyOCIO_Context_methods[] = {
             {"isEditable", (PyCFunction) PyOCIO_Context_isEditable, METH_NOARGS, "" },
             {"createEditableCopy", (PyCFunction) PyOCIO_Context_createEditableCopy, METH_NOARGS, "" },
+            {"getCacheID", (PyCFunction) PyOCIO_Context_getCacheID, METH_NOARGS, "" },
             
             {"getSearchPath", (PyCFunction) PyOCIO_Context_getSearchPath, METH_NOARGS, "" },
             {"setSearchPath", PyOCIO_Context_setSearchPath, METH_VARARGS, "" },
@@ -312,6 +314,20 @@ OCIO_NAMESPACE_ENTER
                 ConstContextRcPtr context = GetConstContext(self, true);
                 ContextRcPtr copy = context->createEditableCopy();
                 return BuildEditablePyContext( copy );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Context_getCacheID( PyObject * self )
+        {
+            try
+            {
+                ConstContextRcPtr context = GetConstContext(self, true);
+                return PyString_FromString( context->getCacheID() );
             }
             catch(...)
             {
