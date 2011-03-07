@@ -26,6 +26,7 @@ endif()
 
 include(ParseArguments)
 include(OCIOMacros)
+include(ExternalProject)
 
 enable_language(CXX)
 
@@ -82,9 +83,21 @@ if(CMAKE_FIRST_RUN)
 endif()
 
 ###############################################################################
+### tinyxml ###
+
+set(TINYXML_VERSION 2_6_1)
+ExternalProject_Add(tinyxml
+    URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
+    PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
+    BINARY_DIR ext/build/tinyxml
+    INSTALL_DIR ext/dist
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist
+)
+set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
+
+###############################################################################
 ### YAML ###
 
-include(ExternalProject)
 set(YAML_CPP_VERSION r423)
 ExternalProject_Add(YAML_CPP_LOCAL
     URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
@@ -96,6 +109,17 @@ ExternalProject_Add(YAML_CPP_LOCAL
 set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
 set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
 set(YAML_CPP_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
+
+###############################################################################
+### Externals ###
+
+set(EXTERNAL_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
+set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+set(EXTERNAL_LINK_FLAGS "")
+set(EXTERNAL_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
+set(EXTERNAL_LIBRARIES
+    ${TINYXML_STATIC_LIBRARIES}
+    ${YAML_CPP_STATIC_LIBRARIES})
 
 ###############################################################################
 ### Documentation ###
@@ -135,6 +159,10 @@ find_package(Truelight)
 if(TRUELIGHT_FOUND)
     messageonce("Will build the truelight transform support against ${Truelight_LIBRARY_DIR}")
     add_definitions(-DOCIO_TRUELIGHT_SUPPORT)
+    set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Truelight_INCLUDE_DIR})
+    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} ${Truelight_COMPILE_FLAGS}")
+    set(EXTERNAL_LINK_FLAGS "${EXTERNAL_LINK_FLAGS} ${Truelight_LINK_FLAGS}")
+    set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${Truelight_LIBRARIES})
 else()
     messageonce("Not building truelight transform support. Add the flag -D TRUELIGHT_INSTALL_PATH=... or set the TRUELIGHT_ROOT environment variable")
 endif()

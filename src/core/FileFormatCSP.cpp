@@ -384,7 +384,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         std::string
-        FileFormatCSP::GetName() const { return "CineSpace"; }
+        FileFormatCSP::GetName() const { return "cinespace"; }
         
         std::string
         FileFormatCSP::GetExtension() const { return "csp"; }

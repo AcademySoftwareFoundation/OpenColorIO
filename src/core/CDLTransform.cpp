@@ -26,6 +26,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <tinyxml.h>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "ExponentOps.h"
@@ -34,8 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
-
-#include "tinyxml/tinyxml.h"
 
 OCIO_NAMESPACE_ENTER
 {
