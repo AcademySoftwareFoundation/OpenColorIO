@@ -33,6 +33,12 @@ class Display : public DD::Image::PixelIop {
         
         std::string m_contextKey1;
         std::string m_contextValue1;
+        std::string m_contextKey2;
+        std::string m_contextValue2;
+        std::string m_contextKey3;
+        std::string m_contextValue3;
+        std::string m_contextKey4;
+        std::string m_contextValue4;
         
         OCIO::DisplayTransformRcPtr m_transform;
         OCIO::ConstProcessorRcPtr m_processor;

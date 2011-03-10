@@ -130,12 +130,27 @@ void Display::knobs(DD::Image::Knob_Callback f)
     */
     
     DD::Image::BeginClosedGroup(f, "Context");
-    
-    DD::Image::String_knob(f, &m_contextKey1, "key1");
-    DD::Image::Spacer(f, 10);
-    DD::Image::String_knob(f, &m_contextValue1, "value1");
-    DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
-    
+    {
+        DD::Image::String_knob(f, &m_contextKey1, "key1");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue1, "value1");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+        
+        DD::Image::String_knob(f, &m_contextKey2, "key2");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue2, "value2");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+        
+        DD::Image::String_knob(f, &m_contextKey3, "key3");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue3, "value3");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+        
+        DD::Image::String_knob(f, &m_contextKey4, "key4");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue4, "value4");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+    }
     DD::Image::EndGroup(f);
     
     
@@ -157,9 +172,20 @@ OCIO::ConstContextRcPtr Display::getLocalContext()
         if(!mutableContext) mutableContext = context->createEditableCopy();
         mutableContext->setStringVar(m_contextKey1.c_str(), m_contextValue1.c_str());
     }
-    else if(!m_contextValue1.empty())
+    if(!m_contextKey2.empty())
     {
-        throw OCIO::Exception("Cannot specify context.value without a corresponding key.");
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey2.c_str(), m_contextValue2.c_str());
+    }
+    if(!m_contextKey3.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey3.c_str(), m_contextValue3.c_str());
+    }
+    if(!m_contextKey4.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey4.c_str(), m_contextValue4.c_str());
     }
     
     if(mutableContext) context = mutableContext;
