@@ -200,7 +200,8 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         void serialize(std::ostream & os) const;
         
-        //!cpp:function:: 
+        //!cpp:function::
+        // .. note::
         // This will produce a hash of the all colorspace definitions, etc.
         // All external references, such files used in FileTransforms, etc
         // will be incorporated into the cacheID. While the contents of
@@ -210,8 +211,8 @@ OCIO_NAMESPACE_ENTER
         // If a context is not provided, the currentContext will be used.
         // If a null context is provided, file references will not be taken into
         // account (this is essentially a hash of Config::serialize).
-        
         const char * getCacheID() const;
+        //!cpp:function::
         const char * getCacheID(const ConstContextRcPtr & context) const;
         
         ///////////////////////////////////////////////////////////////////////////
