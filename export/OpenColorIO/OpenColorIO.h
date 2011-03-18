@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 #include "OpenColorVersion.h"
-#include "OpenColorABI.h"
 #include "OpenColorTypes.h"
 #include "OpenColorTransforms.h"
 

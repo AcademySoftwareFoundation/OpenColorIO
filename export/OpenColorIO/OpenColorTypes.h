@@ -30,9 +30,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OPENCOLORTYPES_H
 #define INCLUDED_OCIO_OPENCOLORTYPES_H
 
+#ifndef OCIO_NAMESPACE_ENTER
+#error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
+#endif
+
 #include <limits>
 #include <string>
 
+// Find the system-level shared_ptr / dynamic_pointer_cast
 #if __GNUC__ >= 4
 #include <tr1/memory>
 #define OCIO_SHARED_PTR std::tr1::shared_ptr
@@ -41,9 +46,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #error OCIO needs gcc 4 or later to get access to <tr1/memory>
 #endif
 
-#ifndef OCIO_NAMESPACE_ENTER
-#error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
+// If supported, define OCIOEXPORT, OCIOHIDDEN
+// (used to choose which symbols to export from OpenColorIO)
+#if defined __linux__ || __APPLE__
+    #if __GNUC__ >= 4
+        #define OCIOEXPORT __attribute__ ((visibility("default")))
+        #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
+    #else
+        #define OCIOEXPORT
+        #define OCIOHIDDEN
+    #endif
+#else // _WIN32 and others not supported atm
+    #define OCIOEXPORT
+    #define OCIOHIDDEN
 #endif
+
 
 /*!rst::
 C++ Types
