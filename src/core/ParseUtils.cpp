@@ -195,6 +195,24 @@ OCIO_NAMESPACE_ENTER
         return GPU_LANGUAGE_UNKNOWN;
     }
     
+    const char * IccIntentToString(IccIntent intent)
+    {
+        if(intent == ICC_INTENT_PERCEPTUAL) return "perceptual";
+        else if(intent == ICC_INTENT_RELATIVE_COLORIMETRIC) return "relative_colorimetric";
+        else if(intent == ICC_INTENT_SATURATION) return "saturation";
+        else if(intent == ICC_INTENT_ABSOLUTE_COLORIMETRIC) return "absolute_colorimetric";
+        return "unknown";
+    }
+    
+    IccIntent IccIntentFromString(const char * s)
+    {
+        std::string str = pystring::lower(s);
+        if(str == "perceptual") return ICC_INTENT_PERCEPTUAL;
+        else if(str == "relative_colorimetric") return ICC_INTENT_RELATIVE_COLORIMETRIC;
+        else if(str == "saturation") return ICC_INTENT_SATURATION;
+        else if(str == "absolute_colorimetric") return ICC_INTENT_ABSOLUTE_COLORIMETRIC;
+        return ICC_INTENT_UNKNOWN;
+    }
     
     const char * ROLE_DEFAULT = "default";
     const char * ROLE_REFERENCE = "reference";

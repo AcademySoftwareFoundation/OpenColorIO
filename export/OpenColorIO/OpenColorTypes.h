@@ -163,6 +163,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<TruelightTransform> TruelightTransformRcPtr;
     
+    class OCIOEXPORT ICCTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ICCTransform> ConstICCTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ICCTransform> ICCTransformRcPtr;
+    
     template <class T, class U>
     inline OCIO_SHARED_PTR<T> DynamicPtrCast(OCIO_SHARED_PTR<U> const & ptr)
     {
@@ -227,6 +233,14 @@ OCIO_NAMESPACE_ENTER
         GPU_LANGUAGE_GLSL_1_3,     ///< OpenGL Shading Language
     };
     
+    //!cpp:type::
+    enum IccIntent {
+        ICC_INTENT_UNKNOWN = 0,
+        ICC_INTENT_PERCEPTUAL,
+        ICC_INTENT_RELATIVE_COLORIMETRIC,
+        ICC_INTENT_SATURATION,
+        ICC_INTENT_ABSOLUTE_COLORIMETRIC
+    };
     
     //!rst::
     // Conversion
@@ -276,6 +290,11 @@ OCIO_NAMESPACE_ENTER
     extern OCIOEXPORT const char * GpuLanguageToString(GpuLanguage language);
     //!cpp:function::
     extern OCIOEXPORT GpuLanguage GpuLanguageFromString(const char * s);
+    
+    //!cpp:function::
+    extern OCIOEXPORT const char * IccIntentToString(IccIntent intent);
+    //!cpp:function::
+    extern OCIOEXPORT IccIntent IccIntentFromString(const char * s);
     
     
     /*!rst::

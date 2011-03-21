@@ -116,6 +116,11 @@ OCIO_NAMESPACE_ENTER
                            const TruelightTransform & transform,
                            TransformDirection dir);
     
+    void BuildICCOps(OpRcPtrVec & ops,
+                     const Config & config,
+                     const ICCTransform & transform,
+                     TransformDirection dir);
+    
     ////////////////////////////////////////////////////////////////////////
     
     
