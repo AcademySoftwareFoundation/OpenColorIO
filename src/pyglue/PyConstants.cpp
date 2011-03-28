@@ -116,6 +116,15 @@ OCIO_NAMESPACE_ENTER
         PyModule_AddStringConstant(m, "INTERP_LINEAR",
             const_cast<char*>(InterpolationToString(INTERP_LINEAR)));
         
+        PyModule_AddStringConstant(m, "GPU_LANGUAGE_UNKNOWN",
+            const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_UNKNOWN)));
+        PyModule_AddStringConstant(m, "GPU_LANGUAGE_CG",
+            const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_CG)));
+        PyModule_AddStringConstant(m, "GPU_LANGUAGE_GLSL_1_0",
+            const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_GLSL_1_0)));
+        PyModule_AddStringConstant(m, "GPU_LANGUAGE_GLSL_1_3",
+            const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_GLSL_1_3)));
+        
         PyModule_AddStringConstant(m, "ROLE_REFERENCE", const_cast<char*>(ROLE_REFERENCE));
         PyModule_AddStringConstant(m, "ROLE_DATA", const_cast<char*>(ROLE_DATA));
         PyModule_AddStringConstant(m, "ROLE_COLOR_PICKING", const_cast<char*>(ROLE_COLOR_PICKING));
