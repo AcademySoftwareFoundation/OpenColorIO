@@ -212,7 +212,7 @@ OCIO_NAMESPACE_ENTER
         {
             if(!PyDict_Check(dict))
             {
-                throw Exception("ShaderDesc must be a dict type.");
+                throw Exception("GpuShaderDesc must be a dict type.");
             }
             
             PyObject *key, *value;
@@ -222,36 +222,36 @@ OCIO_NAMESPACE_ENTER
             {
                 std::string keystr;
                 if(!GetStringFromPyObject(key, &keystr))
-                    throw Exception("ShaderDesc keys must be strings.");
+                    throw Exception("GpuShaderDesc keys must be strings.");
                 
                 if(keystr == "language")
                 {
                     GpuLanguage language = GPU_LANGUAGE_UNKNOWN; 
                     if(ConvertPyObjectToGpuLanguage(value, &language) == 0)
-                        throw Exception("ShaderDesc launguage must a GpuLanguage.");
+                        throw Exception("GpuShaderDesc language must be a GpuLanguage.");
                     shaderDesc.setLanguage(language);
                 }
                 else if(keystr == "functionName")
                 {
                     std::string functionName;
                     if(!GetStringFromPyObject(value, &functionName))
-                        throw Exception("ShaderDesc functionName must be a string.");
+                        throw Exception("GpuShaderDesc functionName must be a string.");
                     shaderDesc.setFunctionName(functionName.c_str());
                 }
                 else if(keystr == "lut3DEdgeLen")
                 {
                     int lut3DEdgeLen = 0;
                     if(!GetIntFromPyObject(value, &lut3DEdgeLen))
-                        throw Exception("ShaderDesc lut3DEdgeLen must be an integer.");
+                        throw Exception("GpuShaderDesc lut3DEdgeLen must be an integer.");
                     shaderDesc.setLut3DEdgeLen(lut3DEdgeLen);
                 }
                 else
                 {
                     std::ostringstream os;
-                    os << "Unknown ShaderDesc key, '";
+                    os << "Unknown GpuShaderDesc key, '";
                     os << keystr << "'. ";
                     os << "Allowed keys: (";
-                    os << "'launguage', 'functionName', 'lut3DEdgeLen').";
+                    os << "'language', 'functionName', 'lut3DEdgeLen').";
                     throw Exception(os.str().c_str());
                 }
             }
