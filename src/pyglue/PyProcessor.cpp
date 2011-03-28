@@ -113,6 +113,12 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Processor_isNoOp( PyObject * self );
         PyObject * PyOCIO_Processor_applyRGB( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Processor_applyRGBA( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Processor_getCpuCacheID( PyObject * self );
+        
+        PyObject * PyOCIO_Processor_getGpuShaderText( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Processor_getGpuShaderTextCacheID( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Processor_getGpuLut3D( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Processor_getGpuLut3DCacheID( PyObject * self, PyObject * args );
         
         
         ///////////////////////////////////////////////////////////////////////
@@ -122,6 +128,12 @@ OCIO_NAMESPACE_ENTER
             {"isNoOp", (PyCFunction) PyOCIO_Processor_isNoOp, METH_NOARGS, "" },
             {"applyRGB", PyOCIO_Processor_applyRGB, METH_VARARGS, "" },
             {"applyRGBA", PyOCIO_Processor_applyRGBA, METH_VARARGS, "" },
+            {"getCpuCacheID", (PyCFunction) PyOCIO_Processor_getCpuCacheID, METH_NOARGS, "" },
+            
+            {"getGpuShaderText", PyOCIO_Processor_getGpuShaderText, METH_VARARGS, "" },
+            {"getGpuShaderTextCacheID", PyOCIO_Processor_getGpuShaderTextCacheID, METH_VARARGS, "" },
+            {"getGpuLut3D", PyOCIO_Processor_getGpuLut3D, METH_VARARGS, "" },
+            {"getGpuLut3DCacheID", PyOCIO_Processor_getGpuLut3DCacheID, METH_VARARGS, "" },
             
             {NULL, NULL, 0, NULL}
         };
@@ -192,6 +204,64 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
+        // TODO: The use of a dict, rather than a native class is not ideal
+        // in the next API revision, use a native type.
+        
+        void FillShaderDescFromPyDict(GpuShaderDesc & shaderDesc,
+                                      PyObject * dict)
+        {
+            if(!PyDict_Check(dict))
+            {
+                throw Exception("ShaderDesc must be a dict type.");
+            }
+            
+            PyObject *key, *value;
+            Py_ssize_t pos = 0;
+            
+            while (PyDict_Next(dict, &pos, &key, &value))
+            {
+                std::string keystr;
+                if(!GetStringFromPyObject(key, &keystr))
+                    throw Exception("ShaderDesc keys must be strings.");
+                
+                if(keystr == "language")
+                {
+                    GpuLanguage language = GPU_LANGUAGE_UNKNOWN; 
+                    if(ConvertPyObjectToGpuLanguage(value, &language) == 0)
+                        throw Exception("ShaderDesc launguage must a GpuLanguage.");
+                    shaderDesc.setLanguage(language);
+                }
+                else if(keystr == "functionName")
+                {
+                    std::string functionName;
+                    if(!GetStringFromPyObject(value, &functionName))
+                        throw Exception("ShaderDesc functionName must be a string.");
+                    shaderDesc.setFunctionName(functionName.c_str());
+                }
+                else if(keystr == "lut3DEdgeLen")
+                {
+                    int lut3DEdgeLen = 0;
+                    if(!GetIntFromPyObject(value, &lut3DEdgeLen))
+                        throw Exception("ShaderDesc lut3DEdgeLen must be an integer.");
+                    shaderDesc.setLut3DEdgeLen(lut3DEdgeLen);
+                }
+                else
+                {
+                    std::ostringstream os;
+                    os << "Unknown ShaderDesc key, '";
+                    os << keystr << "'. ";
+                    os << "Allowed keys: (";
+                    os << "'launguage', 'functionName', 'lut3DEdgeLen').";
+                    throw Exception(os.str().c_str());
+                }
+            }
+        }
+    }
+    
+    
+    
+    namespace
+    {
         ///////////////////////////////////////////////////////////////////////
         ///
         int PyOCIO_Processor_init( PyOCIO_Processor */*self*/,
@@ -200,8 +270,6 @@ OCIO_NAMESPACE_ENTER
             PyErr_SetString( PyExc_RuntimeError, initMessage);
             return -1;
         }
-        
-        ////////////////////////////////////////////////////////////////////////
         
         void PyOCIO_Processor_delete( PyOCIO_Processor *self, PyObject * /*args*/ )
         {
@@ -296,7 +364,118 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
+        
+        
+        PyObject * PyOCIO_Processor_getCpuCacheID( PyObject * self )
+        {
+            try
+            {
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                return PyString_FromString( processor->getCpuCacheID() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        PyObject * PyOCIO_Processor_getGpuShaderText( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O!:getGpuShaderText",
+                    &PyDict_Type, &pyData)) return NULL;
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                
+                GpuShaderDesc shaderDesc;
+                FillShaderDescFromPyDict(shaderDesc, pyData);
+                
+                return PyString_FromString( processor->getGpuShaderText(shaderDesc) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Processor_getGpuShaderTextCacheID( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O!:getGpuShaderTextCacheID",
+                    &PyDict_Type, &pyData)) return NULL;
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                
+                GpuShaderDesc shaderDesc;
+                FillShaderDescFromPyDict(shaderDesc, pyData);
+                
+                return PyString_FromString( processor->getGpuShaderTextCacheID(shaderDesc) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Processor_getGpuLut3D( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O!:getGpuLut3D",
+                    &PyDict_Type, &pyData)) return NULL;
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                
+                GpuShaderDesc shaderDesc;
+                FillShaderDescFromPyDict(shaderDesc, pyData);
+                
+                int len = shaderDesc.getLut3DEdgeLen();
+                std::vector<float> lut3d(3*len*len*len);
+                
+                // TODO: return more compact binary data? (ex array, ...)
+                processor->getGpuLut3D(&lut3d[0], shaderDesc);
+                return CreatePyListFromFloatVector(lut3d);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Processor_getGpuLut3DCacheID( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyData = 0;
+                if (!PyArg_ParseTuple(args,"O!:getGpuLut3DCacheID",
+                    &PyDict_Type, &pyData)) return NULL;
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                
+                GpuShaderDesc shaderDesc;
+                FillShaderDescFromPyDict(shaderDesc, pyData);
+                
+                return PyString_FromString( processor->getGpuLut3DCacheID(shaderDesc) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
     }
 
+        
 }
 OCIO_NAMESPACE_EXIT

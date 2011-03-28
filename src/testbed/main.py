@@ -54,7 +54,39 @@ print config.getDefaultLumaCoefs()
 
 """
 
-#config = OCIO.Config.CreateFromEnv()
+config = OCIO.Config.CreateFromEnv()
+config.sanityCheck()
+
+print 'config',config.getCacheID()
+print ''
+
+p = config.getProcessor("lg10", "srgb8")
+print p
+print 'cpuCacheID',p.getCpuCacheID()
+
+shaderDesc = dict( [('language', OCIO.Constants.GPU_LANGUAGE_GLSL_1_3),
+                    ('functionName', 'display_ocio'),
+                    ('lut3DEdgeLen', 32)] )
+
+print 'shaderDesc',shaderDesc
+
+shaderTextCacheID = p.getGpuShaderTextCacheID(shaderDesc)
+print 'shaderTextCacheID', shaderTextCacheID
+
+shaderText = p.getGpuShaderText(shaderDesc)
+print 'shaderText ---'
+print shaderText
+print '---'
+
+print ''
+lut3DCacheID = p.getGpuLut3DCacheID(shaderDesc)
+print 'lut3DCacheID', lut3DCacheID
+
+lut3d = p.getGpuLut3D(shaderDesc)
+print 'lut3d', len(lut3d)
+
+
+"""
 config = OCIO.Config()
 
 
@@ -87,6 +119,7 @@ config.setRole(OCIO.Constants.ROLE_SCENE_LINEAR, cs.getName())
 
 text = config.serialize()
 print text
+"""
 
 """
 print "\n\n\n\n"
@@ -139,5 +172,3 @@ print processor.applyRGB(c)
 #print OCIO.MatrixTransform.Identity()
 
 """
-
-#config.sanityCheck()

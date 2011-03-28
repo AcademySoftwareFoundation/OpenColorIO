@@ -47,6 +47,8 @@ OCIO_NAMESPACE_ENTER
     
     int ConvertPyObjectToColorSpaceDirection(PyObject *object, void *valuePtr);
     
+    int ConvertPyObjectToGpuLanguage(PyObject *object, void *valuePtr);
+    
     ///////////////////////////////////////////////////////////////////////////
     
     // Generics.
