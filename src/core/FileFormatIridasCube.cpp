@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <cstdio>
+#include <cstring>
 #include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -294,6 +295,8 @@ OCIO_NAMESPACE_ENTER
                 if(size1d>0)
                 {
                     cachedFile->has1D = true;
+                    memcpy(cachedFile->lut1D->from_min, domain_min, 3*sizeof(float));
+                    memcpy(cachedFile->lut1D->from_max, domain_max, 3*sizeof(float));
                     
                     for(int channel=0; channel<3; ++channel)
                     {
@@ -333,6 +336,8 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 // Reformat 3D data
+                memcpy(cachedFile->lut3D->from_min, domain_min, 3*sizeof(float));
+                memcpy(cachedFile->lut3D->from_max, domain_max, 3*sizeof(float));
                 cachedFile->lut3D->size[0] = size3d[0];
                 cachedFile->lut3D->size[1] = size3d[1];
                 cachedFile->lut3D->size[2] = size3d[2];
