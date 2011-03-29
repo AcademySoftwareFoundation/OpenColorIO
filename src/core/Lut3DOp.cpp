@@ -110,9 +110,9 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                localIndex[0] = clamp(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), 0.0, maxIndex[0]);
-                localIndex[1] = clamp(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), 0.0, maxIndex[1]);
-                localIndex[2] = clamp(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), 0.0, maxIndex[2]);
+                localIndex[0] = clamp(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), 0.0f, maxIndex[0]);
+                localIndex[1] = clamp(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), 0.0f, maxIndex[1]);
+                localIndex[2] = clamp(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), 0.0f, maxIndex[2]);
                 
                 rgbaBuffer[0] = lookupNearest_3D(localIndex[0], localIndex[1], localIndex[2],
                                                  lutSize[0], lutSize[1], lutSize[2], startPos, 0);
@@ -164,9 +164,9 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                localIndex[0] = std::max(std::min(rgbaBuffer[0] * maxIndex[0], maxIndex[2]), 0.0f);
-                localIndex[1] = std::max(std::min(rgbaBuffer[1] * maxIndex[1], maxIndex[2]), 0.0f);
-                localIndex[2] = std::max(std::min(rgbaBuffer[2] * maxIndex[2], maxIndex[2]), 0.0f);
+                localIndex[0] = std::max(std::min(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0]), 0.0f);
+                localIndex[1] = std::max(std::min(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1]), 0.0f);
+                localIndex[2] = std::max(std::min(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2]), 0.0f);
                 
                 indexLow[0] =  static_cast<int>(std::floor(localIndex[0]));
                 indexLow[1] =  static_cast<int>(std::floor(localIndex[1]));
