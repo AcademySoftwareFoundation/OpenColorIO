@@ -1,3 +1,11 @@
+**Version 0.7.8 (March 31 2011):**
+    * Iridas lut (.cube) bugfix, DOMAIN_MIN / DOMAIN_MAX now obeyed
+    * Exposed GPU functions in python (needed for Mari)
+    * Nuke OCIODisplay cleanup: Fixed knob names and added envvar support
+    * ociobaker cleanup
+    * tinyxml ABI visibility cleaned up
+    * Removed Boost dependency, tr1::shared_ptr now used instead
+
 **Version 0.7.7 (March 1 2011):**
     * Lut baking API + standalone app
     * Truelight runtime support (optional)
