@@ -8,5 +8,5 @@ if (OIIO_FOUND)
     
     target_link_libraries(ocioconvert ${OIIO_LIBRARIES} OpenColorIO dl)
     
-    install(TARGETS ocioconvert DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+    install(TARGETS ocioconvert DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)
 endif()

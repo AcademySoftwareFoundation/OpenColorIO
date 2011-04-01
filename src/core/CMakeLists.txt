@@ -26,7 +26,7 @@ set_target_properties(OpenColorIO PROPERTIES
     OUTPUT_NAME OpenColorIO
     COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
     LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
-install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
 
 # STATIC
 
@@ -38,7 +38,7 @@ set_target_properties(OpenColorIO_STATIC PROPERTIES
     OUTPUT_NAME OpenColorIO
     COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
     LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
-install(TARGETS OpenColorIO_STATIC DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS OpenColorIO_STATIC DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
 
 #
 if (SOVERSION)
@@ -62,4 +62,4 @@ message(STATUS "Create OpenColorIO.pc from OpenColorIO.pc.in")
 configure_file(${CMAKE_SOURCE_DIR}/export/pkgconfig/OpenColorIO.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/pkgconfig/)
+    DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/include/pkgconfig/)

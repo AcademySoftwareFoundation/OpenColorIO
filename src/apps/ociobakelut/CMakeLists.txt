@@ -9,4 +9,4 @@ include_directories(
 
 add_executable(ociobakelut ${share_src_files} main.cpp)
 target_link_libraries(ociobakelut OpenColorIO)
-install(TARGETS ociobakelut DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS ociobakelut DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)

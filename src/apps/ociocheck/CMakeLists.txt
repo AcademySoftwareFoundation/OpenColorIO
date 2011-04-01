@@ -14,4 +14,4 @@ target_link_libraries(ociocheck
     OpenColorIO
     )
 
-install(TARGETS ociocheck DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS ociocheck DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)

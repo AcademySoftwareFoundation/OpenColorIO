@@ -32,4 +32,4 @@ target_link_libraries(ocio2icc
                       ${LCMS_STATIC_LIBRARIES}
                       OpenColorIO)
 
-install(TARGETS ocio2icc DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS ocio2icc DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)

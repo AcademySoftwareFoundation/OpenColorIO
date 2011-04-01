@@ -60,6 +60,14 @@ if(NOT OCIO_NAMESPACE)
       FORCE)
 endif(NOT OCIO_NAMESPACE)
 
+# If CMAKE_INSTALL_EXEC_PREFIX is not specified, install binaries
+# directly into the regular install prefix
+if(NOT CMAKE_INSTALL_EXEC_PREFIX)
+    message(STATUS "Exec prefix not specified, defaulting to ${CMAKE_INSTALL_PREFIX}")
+    set(CMAKE_INSTALL_EXEC_PREFIX ${CMAKE_INSTALL_PREFIX})
+endif()
+
+
 # Enable a bunch of compiler warnings...
 # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")

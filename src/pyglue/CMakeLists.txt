@@ -54,6 +54,6 @@ add_custom_target(PyOpenColorIOTest
     VERBATIM
 )
 
-install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_VERSION})
+install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/python${PYTHON_VERSION})
 install(FILES ${CMAKE_SOURCE_DIR}/export/PyOpenColorIO/PyOpenColorIO.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/PyOpenColorIO/)
