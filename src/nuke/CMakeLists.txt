@@ -77,6 +77,22 @@ set_target_properties(NukeOCIOLogConvert
 )
 
 ###############################################################################
+### NukeOCIOCDLTransform ###
+
+add_library(NukeOCIOCDLTransform MODULE
+    CDLTransform/CDLTransform.cpp
+)
+target_link_libraries(NukeOCIOCDLTransform
+    OpenColorIO
+    #${Nuke_LIBRARIES}
+)
+set_target_properties(NukeOCIOCDLTransform
+    PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "OCIOCDLTransform"
+)
+
+###############################################################################
 ### Nuke Targets ###
 
 add_custom_target(Nuke
@@ -84,6 +100,7 @@ add_custom_target(Nuke
     DEPENDS NukeOCIODisplay
     DEPENDS NukeOCIOFileTransform
     DEPENDS NukeOCIOLogConvert
+    DEPENDS NukeOCIOCDLTransform
 )
 
 install(TARGETS NukeOCIOColorSpace
@@ -96,6 +113,9 @@ install(TARGETS NukeOCIOLogConvert
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_DDImageVersion})
 
 install(TARGETS NukeOCIOFileTransform
+        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+
+install(TARGETS NukeOCIOCDLTransform
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_DDImageVersion})
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/share/nuke
