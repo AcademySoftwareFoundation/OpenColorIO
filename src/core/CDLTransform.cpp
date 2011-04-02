@@ -264,6 +264,14 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
+        if(!doc.RootElement())
+        {
+            std::ostringstream os;
+            os << "Error loading CDL xml, ";
+            os << "please confirm the xml is valid.";
+            throw Exception(os.str().c_str());
+        }
+        
         LoadCDL(cdl, doc.RootElement()->ToElement());
     }
     
