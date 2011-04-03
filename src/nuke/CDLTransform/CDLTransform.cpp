@@ -39,6 +39,7 @@ CDLTransform::~CDLTransform()
 void CDLTransform::knobs(DD::Image::Knob_Callback f)
 {
 
+    // ASC CDL grade numbers
     DD::Image::Color_knob(f, m_slope, DD::Image::IRange(0, 4.0), "slope");
     DD::Image::Color_knob(f, m_offset, DD::Image::IRange(-0.2, 0.2), "offset");
     DD::Image::Color_knob(f, m_power, DD::Image::IRange(0.0, 4.0), "power");
@@ -46,10 +47,20 @@ void CDLTransform::knobs(DD::Image::Knob_Callback f)
     
     DD::Image::Divider(f);
 
+    // Cache ID
     DD::Image::String_knob(f, &m_cccid, "cccid", "cccid");
+    DD::Image::SetFlags(f, DD::Image::Knob::ENDLINE);
+
+    // Import/export buttons
+    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.export_as_cc()", "export_cc", "export grade as .cc");
+    DD::Image::Tooltip(f, "Export this grade as a ColorCorrection XML file, which can be loaded with the OCIOFileTransform, or using a FileTransform in an OCIO config");
+
+    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.import_cc_from_xml()", "import_cc", "import from .cc");
+    DD::Image::Tooltip(f, "Import grade from a ColorCorrection XML file");
 
     DD::Image::Divider(f);
-    
+
+    // Layer selection
     DD::Image::Input_ChannelSet_knob(f, &layersToProcess, 0, "layer", "layer");
     DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
     DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
