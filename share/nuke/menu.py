@@ -1,5 +1,7 @@
 import os
 import nuke
+import ocionuke.cdl
+
 
 def ocio_populate_menu():
     """Adds OCIO nodes to a menu in Color
@@ -14,6 +16,10 @@ def ocio_populate_menu():
     for fname in allplugs:
         p = os.path.splitext(fname)[0] # strip .so extension
         m_ocio.addCommand(p, lambda p=p: nuke.createNode(p))
+
+    m_utils = m_ocio.addMenu("Utils")
+    m_utils.addCommand("Import .ccc to CDL nodes", ocionuke.cdl.import_multiple_from_ccc)
+    m_utils.addCommand("Export selected CDL's to .ccc", ocionuke.cdl.export_multiple_to_ccc)
 
 
 def ocio_populate_viewer(remove_nuke_default = True):
