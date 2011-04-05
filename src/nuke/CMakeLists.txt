@@ -122,6 +122,6 @@ install(DIRECTORY ${CMAKE_SOURCE_DIR}/share/nuke
         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/
         PATTERN .svn EXCLUDE)
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/python/ocionuke
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke
         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/python
         PATTERN .svn EXCLUDE)
