@@ -477,7 +477,7 @@ OCIO_NAMESPACE_ENTER
                 ostream << "}\n";
             else
                 ostream << " }\n";
-        };
+        }
         
         void
         FileFormatHDL::BuildFileOps(OpRcPtrVec & ops,
@@ -527,7 +527,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             return;
-        };
+        }
         
         struct AutoRegister
         {

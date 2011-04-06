@@ -64,7 +64,7 @@ OCIO_NAMESPACE_ENTER
     enum FileFormatFeature
     {
         FILE_FORMAT_READ = 0,
-        FILE_FORMAT_WRITE = 1,
+        FILE_FORMAT_WRITE = 1
     };
     
     void ClearFileTransformCaches();

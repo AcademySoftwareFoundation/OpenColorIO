@@ -721,7 +721,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             ostream << "\n";
-        };
+        }
         
         void
         FileFormatCSP::BuildFileOps(OpRcPtrVec & ops,

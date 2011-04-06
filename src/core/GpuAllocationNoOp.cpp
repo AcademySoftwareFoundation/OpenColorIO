@@ -73,7 +73,7 @@ OCIO_NAMESPACE_ENTER
         
         AllocationNoOp::AllocationNoOp(const AllocationData & allocationData) :
                         m_allocationData(allocationData)
-        { };
+        { }
 
         OpRcPtr AllocationNoOp::clone() const
         {

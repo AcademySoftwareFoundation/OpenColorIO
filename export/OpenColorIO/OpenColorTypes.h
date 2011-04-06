@@ -241,7 +241,7 @@ OCIO_NAMESPACE_ENTER
         GPU_LANGUAGE_UNKNOWN = 0,
         GPU_LANGUAGE_CG,           ///< Nvidia Cg shader
         GPU_LANGUAGE_GLSL_1_0,     ///< OpenGL Shading Language
-        GPU_LANGUAGE_GLSL_1_3,     ///< OpenGL Shading Language
+        GPU_LANGUAGE_GLSL_1_3      ///< OpenGL Shading Language
     };
     
     
