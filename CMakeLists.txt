@@ -68,6 +68,30 @@ if(NOT CMAKE_INSTALL_EXEC_PREFIX)
 endif()
 
 
+# Should we use the boost ptr, or tr1?
+# Boost is occationally necessary for compatibility
+# on systems that do not support tr1/shared_ptr
+option(USE_BOOST_PTR "Set to ON to enable boost shared_ptr" OFF)
+if(USE_BOOST_PTR)
+    messageonce("Boost shared_ptr: Enabled")
+    set(Boost_ADDITIONAL_VERSIONS "1.45" "1.44" "1.43" "1.43.0" "1.42"
+                                  "1.42.0" "1.41" "1.41.0" "1.40"
+                                  "1.40.0" "1.39" "1.39.0" "1.38"
+                                  "1.38.0" "1.37" "1.37.0" "1.34.1"
+                                  "1_34_1")
+    set(Boost_USE_MULTITHREADED ON)
+    find_package(Boost 1.34)
+    if(Boost_FOUND)
+        add_definitions("-DOCIO_USE_BOOST_PTR")
+    else()
+        message(FATAL_ERROR "USE_BOOST_PTR is specified, but a boost installation could not be found.")
+    endif()
+else()
+    messageonce("Boost smart_ptr: Disabled")
+endif()
+
+
+
 # Enable a bunch of compiler warnings...
 # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
