@@ -186,10 +186,12 @@ namespace
         getImpl()->resultsCache_.clear();
         getImpl()->cacheID_ = "";
         
+        // Set the value if specified
         if(value)
         {
-            getImpl()->envMap_.insert(EnvMap::value_type(name, value));
+            getImpl()->envMap_[name] = value;
         }
+        // If a null value is specified, erase it
         else
         {
             StringMap::iterator iter = getImpl()->envMap_.find(name);
@@ -213,6 +215,21 @@ namespace
         return "";
     }
     
+    int Context::getNumStringVars() const
+    {
+        return static_cast<int>(getImpl()->envMap_.size());
+    }
+    
+    const char * Context::getStringVarNameByIndex(int index) const
+    {
+        if(index < 0 || index >= static_cast<int>(getImpl()->envMap_.size()))
+            return "";
+        
+        EnvMap::const_iterator iter = getImpl()->envMap_.begin();
+        for(int count = 0; count<index; ++count) ++iter;
+        
+        return iter->first.c_str();
+    }
     
     const char * Context::resolveStringVar(const char * val) const
     {
@@ -306,6 +323,17 @@ namespace
         throw Exception(errortext.str().c_str());
     }
 
+    std::ostream& operator<< (std::ostream& os, const Context& context)
+    {
+        os << "Context:\n";
+        for(int i=0; i<context.getNumStringVars(); ++i)
+        {
+            const char * key = context.getStringVarNameByIndex(i);
+            os << key << "=" << context.getStringVar(key) << "\n";
+        }
+        return os;
+    }
+    
 
 namespace
 {

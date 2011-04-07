@@ -978,6 +978,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         const char * getStringVar(const char * name) const;
         
+        int getNumStringVars() const;
+        const char * getStringVarNameByIndex(int index) const;
+        
         //!cpp:function:: Seed all string vars with the current environment.
         void loadEnvironment();
         
@@ -1010,6 +1013,8 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
+    
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Context&);
 }
 OCIO_NAMESPACE_EXIT
 
