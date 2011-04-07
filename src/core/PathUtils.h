@@ -53,7 +53,16 @@ OCIO_NAMESPACE_ENTER
         bool
         operator() (const T &x, const T &y) const
         {
-            return (x.length() > y.length());
+            // If the lengths are unequal, sort by length
+            if(x.length() != y.length())
+            {
+                return (x.length() > y.length());
+            }
+            // Otherwise, use the standard string sort comparison
+            else
+            {
+                return (x<y);
+            }
         }
     };
     typedef std::multimap< std::string, std::string, EnvMapKey< std::string > > EnvMap;

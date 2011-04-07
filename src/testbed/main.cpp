@@ -16,6 +16,7 @@ void testASCTransform();
 void testFilmlooks();
 void createConfig();
 void loadConfig();
+void testContext();
 
 int main(int argc, const char* argv[])
 {
@@ -26,11 +27,11 @@ int main(int argc, const char* argv[])
     try
     {
         //testFilmlooks();
-        loadConfigFromEnv();
+        //loadConfigFromEnv();
         //testCoordinateTransform();
         //createConfig();
         //testASCTransform();
-        
+        testContext();
     }
     catch(std::exception& e)
     {
@@ -49,6 +50,27 @@ namespace
     {
         os << name << " : " << c[0] << " " << c[1] << " " << c[2];
     }
+}
+
+void testContext()
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    OCIO::ConstContextRcPtr context = config->getCurrentContext();
+    std::cout << "Context:" << std::endl;
+    //std::cout << *context << std::endl;
+    std::cout << context->getCacheID() << std::endl;
+    std::cout << "SHOW " << context->getStringVar("SHOW") << std::endl;
+    
+    std::cerr << "\nCopy" << std::endl;
+    OCIO::ContextRcPtr mutableContext = context->createEditableCopy();
+    std::cout << mutableContext->getCacheID() << std::endl;
+    std::cout << "SHOW " << mutableContext->getStringVar("SHOW") << std::endl;
+    
+    std::cerr << "\nChanged" << std::endl;
+    mutableContext->setStringVar("SHOW","taco");
+    std::cout << mutableContext->getCacheID() << std::endl;
+    std::cout << "SHOW " << mutableContext->getStringVar("SHOW") << std::endl;
+    
 }
 
 void testASCTransform()
