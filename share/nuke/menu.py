@@ -37,13 +37,13 @@ def ocio_populate_viewer(remove_nuke_default = True):
         nuke.ViewerProcess.unregister('sRGB')
 
 
-    # Formats the display and transform, e.g "Film1D (sRGB"
+    # Formats the display and transform, e.g "Film1D (sRGB)"
     DISPLAY_UI_FORMAT = "%(view)s (%(display)s)"
 
     import PyOpenColorIO as OCIO
     config = OCIO.GetCurrentConfig()
 
-    # For every display, loop over every transform
+    # For every display, loop over every view
     for display in config.getDisplays():
         for view in config.getViews(display):
             nuke.ViewerProcess.register(
@@ -53,7 +53,7 @@ def ocio_populate_viewer(remove_nuke_default = True):
                 kwargs = {"display": display, "view": view})
 
 
-    # Get the default display and transform, register it as the
+    # Get the default display and view, register it as the
     # default used on Nuke startup
     defaultDisplay = config.getDefaultDisplay()
     defaultView = config.getDefaultView(defaultDisplay)
