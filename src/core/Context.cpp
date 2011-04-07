@@ -186,18 +186,19 @@ namespace
         getImpl()->resultsCache_.clear();
         getImpl()->cacheID_ = "";
         
-        // If an existing key exists, we must erase it.
-        // (Otherwise, we'll get two keys with the same value)
-        StringMap::iterator iter = getImpl()->envMap_.find(name);
-        if(iter != getImpl()->envMap_.end())
-        {
-            getImpl()->envMap_.erase(iter);
-        }
-        
-        // Add the new key if one is specified
+        // Set the value if specified
         if(value)
         {
-            getImpl()->envMap_.insert(EnvMap::value_type(name, value));
+            getImpl()->envMap_[name] = value;
+        }
+        // If a null value is specified, erase it
+        else
+        {
+            StringMap::iterator iter = getImpl()->envMap_.find(name);
+            if(iter != getImpl()->envMap_.end())
+            {
+                getImpl()->envMap_.erase(iter);
+            }
         }
     }
     

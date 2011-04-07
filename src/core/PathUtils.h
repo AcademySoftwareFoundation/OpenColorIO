@@ -65,7 +65,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
     };
-    typedef std::multimap< std::string, std::string, EnvMapKey< std::string > > EnvMap;
+    typedef std::map< std::string, std::string, EnvMapKey< std::string > > EnvMap;
     
     // Get map of current env key = value,
     void LoadEnvironment(EnvMap & map);
