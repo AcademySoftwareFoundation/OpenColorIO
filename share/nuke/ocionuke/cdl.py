@@ -32,6 +32,9 @@ def _cdltransform_to_node(cdl, node):
     OCIOCDLTransform node
     """
 
+    # Treat "node" as a dictionary of knobs, as the "node" argument could be
+    # a the return value of PythonPanel.knob(), as in SelectCCCIDPanel
+
     node['slope'].setValue(cdl.getSlope())
     node['offset'].setValue(cdl.getOffset())
     node['power'].setValue(cdl.getPower())
@@ -116,6 +119,12 @@ class SelectCCCIDPanel(nukescripts.PythonPanel):
         return self.available[self.knobs()['cccid'].value()]
 
     def knobChanged(self, knob):
+        """When the user selects a cccid, a grade-preview knobs are set.
+
+        This method is triggered when any knob is changed, which has the
+        useful side-effect of preventing changing the preview values, while
+        keeping them selectable for copy-and-paste.
+        """
         _cdltransform_to_node(self.selected(), self.knobs())
 
 
@@ -225,3 +234,31 @@ def import_multiple_from_ccc(filename = None):
             _make_node(cc)
     else:
         nuke.message("The supplied file (%r) contained no ColorCorrection's" % filename)
+
+
+def select_cccid_for_filetransform(node = None):
+    """Select cccid button for the OCIOFileTransform node.
+    Presents user with list of cccid's within the specified .ccc file
+    """
+
+    if node is None:
+        node = nuke.thisNode()
+
+    filename = node['src'].value()
+
+    try:
+        xml = open(filename).read()
+    except IOError, e:
+        nuke.message("Error opening src file: %s" % e)
+        raise
+
+    allcc = _xml_to_cdltransforms(xml)
+
+    if len(allcc) == 0:
+        nuke.message("The file (%r) contains no ColorCorrection's")
+        return
+
+    sel = SelectCCCIDPanel(allcc)
+    okayed = sel.showModalDialog()
+    if okayed:
+        node['cccid'].setValue(sel.selected().getID())
