@@ -27,6 +27,8 @@ class CDLTransform : public DD::Image::PixelIop {
         float m_power[3];
         float m_saturation;
 
+        bool m_reverse;
+
         // ID used for exporting grades into .cc/.ccc files
         const char* m_cccid;
 
