@@ -16,6 +16,8 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <stdexcept>
 
 
+const char* CDLTransform::dirs[] = { "forward", "inverse", 0 };
+
 CDLTransform::CDLTransform(Node *n) : DD::Image::PixelIop(n)
 {
     layersToProcess = DD::Image::Mask_RGB;
@@ -28,7 +30,7 @@ CDLTransform::CDLTransform(Node *n) : DD::Image::PixelIop(n)
 
     m_saturation = 1.0;
 
-    m_reverse = false;
+    m_dirindex = 0;
 
     m_cccid = "";
 }
@@ -47,9 +49,8 @@ void CDLTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::Color_knob(f, m_power, DD::Image::IRange(0.0, 4.0), "power");
     DD::Image::Float_knob(f, &m_saturation, DD::Image::IRange(0, 4.0), "saturation");
 
-    DD::Image::Bool_knob(f, &m_reverse, "reverse");
-    DD::Image::SetFlags(f, DD::Image::Knob::STARTLINE);
-    DD::Image::Tooltip(f, "Reverses the colour transform");
+    Enumeration_knob(f, &m_dirindex, dirs, "direction", "direction");
+    DD::Image::Tooltip(f, "Specify the transform direction.");
 
     DD::Image::Divider(f);
 
@@ -86,7 +87,10 @@ void CDLTransform::_validate(bool for_real)
         cc->setOffset(m_offset);
         cc->setPower(m_power);
         cc->setSat(m_saturation);
-        cc->setDirection(m_reverse ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
+
+        if(m_dirindex == 0) cc->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+        else cc->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
         m_processor = config->getProcessor(cc);
     }
     catch(OCIO::Exception &e)
