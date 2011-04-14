@@ -20,15 +20,25 @@ class ColorSpace : public DD::Image::PixelIop {
 
     protected:
 
-        bool hasColorSpaces; //!< Were colorspaces found for both input and output? If not, always error.
-        DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
-        int inputColorSpaceIndex; //!< index of input colorspace selection from the pulldown list knob
-        int outputColorSpaceIndex;
-        std::vector<std::string> colorSpaceNames; //!< list of input and output colorspace names (memory for const char* s below)
-        std::vector<const char*> inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
-        std::vector<const char*> outputColorSpaceCstrNames;
+        bool m_hasColorSpaces; //!< Were colorspaces found for both input and output? If not, always error.
+        DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
+        int m_inputColorSpaceIndex; //!< index of input colorspace selection from the pulldown list knob
+        int m_outputColorSpaceIndex;
+        std::vector<std::string> m_colorSpaceNames; //!< list of input and output colorspace names (memory for const char* s below)
+        std::vector<const char*> m_inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
+        std::vector<const char*> m_outputColorSpaceCstrNames;
         
-        OCIO::ConstProcessorRcPtr processor;
+        std::string m_contextKey1;
+        std::string m_contextValue1;
+        std::string m_contextKey2;
+        std::string m_contextValue2;
+        std::string m_contextKey3;
+        std::string m_contextValue3;
+        std::string m_contextKey4;
+        std::string m_contextValue4;
+        OCIO::ConstContextRcPtr getLocalContext();
+        
+        OCIO::ConstProcessorRcPtr m_processor;
     public:
 
         ColorSpace(Node *node);
@@ -89,6 +99,7 @@ class ColorSpace : public DD::Image::PixelIop {
             const DD::Image::ChannelMask outputChannels,
             DD::Image::Row& out);
 
+        virtual void append(DD::Image::Hash& hash);
 
     protected:
 

@@ -19,12 +19,12 @@ namespace OCIO = OCIO_NAMESPACE;
 
 ColorSpace::ColorSpace(Node *n) : DD::Image::PixelIop(n)
 {
-    hasColorSpaces = false;
+    m_hasColorSpaces = false;
 
-    inputColorSpaceIndex = 0;
-    outputColorSpaceIndex = 0;
+    m_inputColorSpaceIndex = 0;
+    m_outputColorSpaceIndex = 0;
 
-    layersToProcess = DD::Image::Mask_RGB;
+    m_layersToProcess = DD::Image::Mask_RGB;
 
     // TODO (when to) re-grab the list of available colorspaces? How to save/load?
     try
@@ -38,16 +38,16 @@ ColorSpace::ColorSpace(Node *n) : DD::Image::PixelIop(n)
         for(int i = 0; i < nColorSpaces; i++)
         {
             std::string csname = config->getColorSpaceNameByIndex(i);
-            colorSpaceNames.push_back(csname);
+            m_colorSpaceNames.push_back(csname);
             
             if (defaultColorSpaceName == csname)
             {
-                inputColorSpaceIndex = static_cast<int>(inputColorSpaceCstrNames.size());
-                outputColorSpaceIndex = static_cast<int>(outputColorSpaceCstrNames.size());
+                m_inputColorSpaceIndex = static_cast<int>(m_inputColorSpaceCstrNames.size());
+                m_outputColorSpaceIndex = static_cast<int>(m_outputColorSpaceCstrNames.size());
             }
             
-            inputColorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
-            outputColorSpaceCstrNames.push_back(colorSpaceNames.back().c_str());
+            m_inputColorSpaceCstrNames.push_back(m_colorSpaceNames.back().c_str());
+            m_outputColorSpaceCstrNames.push_back(m_colorSpaceNames.back().c_str());
         }
     }
     catch (OCIO::Exception& e)
@@ -59,12 +59,12 @@ ColorSpace::ColorSpace(Node *n) : DD::Image::PixelIop(n)
         std::cerr << "Unknown exception during OCIO setup." << std::endl;
     }
 
-    hasColorSpaces = !(inputColorSpaceCstrNames.empty() || outputColorSpaceCstrNames.empty());
+    m_hasColorSpaces = !(m_inputColorSpaceCstrNames.empty() || m_outputColorSpaceCstrNames.empty());
 
-    inputColorSpaceCstrNames.push_back(NULL);
-    outputColorSpaceCstrNames.push_back(NULL);
+    m_inputColorSpaceCstrNames.push_back(NULL);
+    m_outputColorSpaceCstrNames.push_back(NULL);
 
-    if(!hasColorSpaces)
+    if(!m_hasColorSpaces)
     {
         std::cerr << "No ColorSpaces available for input and/or output." << std::endl;
     }
@@ -77,56 +77,131 @@ ColorSpace::~ColorSpace()
 
 void ColorSpace::knobs(DD::Image::Knob_Callback f)
 {
-    DD::Image::Enumeration_knob(f, &inputColorSpaceIndex, &inputColorSpaceCstrNames[0], "in_colorspace", "in");
+    DD::Image::Enumeration_knob(f, &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
 
-    DD::Image::Enumeration_knob(f, &outputColorSpaceIndex, &outputColorSpaceCstrNames[0], "out_colorspace", "out");
+    DD::Image::Enumeration_knob(f, &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
     DD::Image::Tooltip(f, "Image data is converted to this colorspace for output.");
 
+    DD::Image::BeginClosedGroup(f, "Context");
+    {
+        DD::Image::String_knob(f, &m_contextKey1, "key1");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue1, "value1");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+        
+        DD::Image::String_knob(f, &m_contextKey2, "key2");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue2, "value2");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+        
+        DD::Image::String_knob(f, &m_contextKey3, "key3");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue3, "value3");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+        
+        DD::Image::String_knob(f, &m_contextKey4, "key4");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue4, "value4");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+    }
+    DD::Image::EndGroup(f);
+    
+    
     DD::Image::Divider(f);
 
-    DD::Image::Input_ChannelSet_knob(f, &layersToProcess, 0, "layer", "layer");
+    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
     DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
     DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
+}
+
+OCIO::ConstContextRcPtr ColorSpace::getLocalContext()
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    OCIO::ConstContextRcPtr context = config->getCurrentContext();
+    OCIO::ContextRcPtr mutableContext;
+    
+    if(!m_contextKey1.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey1.c_str(), m_contextValue1.c_str());
+    }
+    if(!m_contextKey2.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey2.c_str(), m_contextValue2.c_str());
+    }
+    if(!m_contextKey3.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey3.c_str(), m_contextValue3.c_str());
+    }
+    if(!m_contextKey4.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey4.c_str(), m_contextValue4.c_str());
+    }
+    
+    if(mutableContext) context = mutableContext;
+    return context;
+}
+
+void ColorSpace::append(DD::Image::Hash& localhash)
+{
+    // TODO: Hang onto the context, what if getting it
+    // (and querying getCacheID) is expensive?
+    try
+    {
+        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        OCIO::ConstContextRcPtr context = getLocalContext();
+        std::string configCacheID = config->getCacheID(context);
+        localhash.append(configCacheID);
+    }
+    catch(OCIO::Exception &e)
+    {
+        error(e.what());
+        return;
+    }
 }
 
 void ColorSpace::_validate(bool for_real)
 {
     input0().validate(for_real);
 
-    if(!hasColorSpaces)
+    if(!m_hasColorSpaces)
     {
         error("No colorspaces available for input and/or output.");
         return;
     }
 
-    int inputColorSpaceCount = static_cast<int>(inputColorSpaceCstrNames.size()) - 1;
-    if(inputColorSpaceIndex < 0 || inputColorSpaceIndex >= inputColorSpaceCount)
+    int inputColorSpaceCount = static_cast<int>(m_inputColorSpaceCstrNames.size()) - 1;
+    if(m_inputColorSpaceIndex < 0 || m_inputColorSpaceIndex >= inputColorSpaceCount)
     {
         std::ostringstream err;
-        err << "Input colorspace index (" << inputColorSpaceIndex << ") out of range.";
+        err << "Input colorspace index (" << m_inputColorSpaceIndex << ") out of range.";
         error(err.str().c_str());
         return;
     }
 
-    int outputColorSpaceCount = static_cast<int>(outputColorSpaceCstrNames.size()) - 1;
-    if(outputColorSpaceIndex < 0 || outputColorSpaceIndex >= outputColorSpaceCount)
+    int outputColorSpaceCount = static_cast<int>(m_outputColorSpaceCstrNames.size()) - 1;
+    if(m_outputColorSpaceIndex < 0 || m_outputColorSpaceIndex >= outputColorSpaceCount)
     {
         std::ostringstream err;
-        err << "Output colorspace index (" << outputColorSpaceIndex << ") out of range.";
+        err << "Output colorspace index (" << m_outputColorSpaceIndex << ") out of range.";
         error(err.str().c_str());
         return;
     }
 
     try
     {
-        const char * inputName = inputColorSpaceCstrNames[inputColorSpaceIndex];
-        const char * outputName = outputColorSpaceCstrNames[outputColorSpaceIndex];
+        const char * inputName = m_inputColorSpaceCstrNames[m_inputColorSpaceIndex];
+        const char * outputName = m_outputColorSpaceCstrNames[m_outputColorSpaceIndex];
         
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         config->sanityCheck();
         
-        processor = config->getProcessor(inputName, outputName);
+        OCIO::ConstContextRcPtr context = getLocalContext();
+        m_processor = config->getProcessor(context, inputName, outputName);
     }
     catch(OCIO::Exception &e)
     {
@@ -134,7 +209,7 @@ void ColorSpace::_validate(bool for_real)
         return;
     }
     
-    if(processor->isNoOp())
+    if(m_processor->isNoOp())
     {
         // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
@@ -153,7 +228,7 @@ void ColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) co
     DD::Image::ChannelSet done;
     foreach(c, mask)
     {
-        if ((layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        if ((m_layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
         {
             done.addBrothers(c, 3);
         }
@@ -182,7 +257,7 @@ void ColorSpace::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        if (!(m_layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;
@@ -212,7 +287,7 @@ void ColorSpace::pixel_engine(
         try
         {
             OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
-            processor->apply(img);
+            m_processor->apply(img);
         }
         catch(OCIO::Exception &e)
         {

@@ -39,13 +39,13 @@ class Display : public DD::Image::PixelIop {
         std::string m_contextValue3;
         std::string m_contextKey4;
         std::string m_contextValue4;
+        OCIO::ConstContextRcPtr getLocalContext();
         
         OCIO::DisplayTransformRcPtr m_transform;
         OCIO::ConstProcessorRcPtr m_processor;
 
         DD::Image::Knob *m_displayKnob, *m_viewKnob;
         void refreshDisplayTransforms();
-        OCIO::ConstContextRcPtr getLocalContext();
         
     public:
 
