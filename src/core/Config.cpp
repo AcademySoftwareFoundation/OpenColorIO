@@ -1302,7 +1302,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         // Also include all file references, using the context (if specified)
-        std::string contextCacheID = "";
+        std::string fileReferencesFashHash = "";
         if(context)
         {
             std::ostringstream filehash;
@@ -1329,10 +1329,10 @@ OCIO_NAMESPACE_ENTER
             }
             
             std::string fullstr = filehash.str();
-            contextCacheID = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
+            fileReferencesFashHash = CacheIDHash(fullstr.c_str(), (int)fullstr.size());
         }
         
-        getImpl()->cacheids_[contextcacheid] = getImpl()->cacheidnocontext_ + ":" + contextCacheID;
+        getImpl()->cacheids_[contextcacheid] = getImpl()->cacheidnocontext_ + ":" + fileReferencesFashHash;
         return getImpl()->cacheids_[contextcacheid].c_str();
     }
     
