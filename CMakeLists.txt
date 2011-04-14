@@ -63,10 +63,9 @@ endif(NOT OCIO_NAMESPACE)
 # If CMAKE_INSTALL_EXEC_PREFIX is not specified, install binaries
 # directly into the regular install prefix
 if(NOT CMAKE_INSTALL_EXEC_PREFIX)
-    message(STATUS "Exec prefix not specified, defaulting to ${CMAKE_INSTALL_PREFIX}")
+    messageonce("Exec prefix not specified, defaulting to ${CMAKE_INSTALL_PREFIX}")
     set(CMAKE_INSTALL_EXEC_PREFIX ${CMAKE_INSTALL_PREFIX})
 endif()
-
 
 # Should we use the boost ptr, or tr1?
 # Boost is occationally necessary for compatibility
