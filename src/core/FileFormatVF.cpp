@@ -27,14 +27,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
-#include "Lut1DOp.h"
 #include "Lut3DOp.h"
+#include "MatrixOps.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
@@ -45,13 +46,17 @@ OCIO_NAMESPACE_ENTER
         class LocalCachedFile : public CachedFile
         {
         public:
-            LocalCachedFile ()
+            LocalCachedFile () :
+                useMatrix(false)
             {
                 lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                memset(m44, 0, 16*sizeof(float));
             };
             ~LocalCachedFile() {};
             
             OCIO_SHARED_PTR<Lut3D> lut3D;
+            float m44[16];
+            bool useMatrix;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -132,7 +137,7 @@ OCIO_NAMESPACE_ENTER
             // Parse the file
             std::vector<float> raw3d;
             int size3d[] = { 0, 0, 0 };
-            //std::vector<float> global_transform;
+            std::vector<float> global_transform;
             
             {
                 std::vector<std::string> parts;
@@ -163,8 +168,6 @@ OCIO_NAMESPACE_ENTER
                             
                             raw3d.reserve(3*size3d[0]*size3d[1]*size3d[2]);
                         }
-                        // TODO: global_transform (aka scale3)
-                        /*
                         else if(parts[0] == "global_transform")
                         {
                             if(parts.size() != 17)
@@ -178,7 +181,6 @@ OCIO_NAMESPACE_ENTER
                                 throw Exception("Malformed global_transform tag. Could not convert to float array.");
                             }
                         }
-                        */
                         // TODO: element_size (aka scale3)
                         // TODO: world_origin (aka translate3)
                         else if(parts[0] == "data")
@@ -216,9 +218,22 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            // TODO: Handle global_transform
-            
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
+            
+            // Setup the global matrix.
+            // (Nuke pre-scales this by the 3dlut size, so we must undo that here)
+            if(global_transform.size() == 16)
+            {
+                for(int i=0; i<4; ++i)
+                {
+                    global_transform[4*i+0] *= static_cast<float>(size3d[0]);
+                    global_transform[4*i+1] *= static_cast<float>(size3d[1]);
+                    global_transform[4*i+2] *= static_cast<float>(size3d[2]);
+                }
+                
+                memcpy(cachedFile->m44, &global_transform[0], 16*sizeof(float));
+                cachedFile->useMatrix = true;
+            }
             
             // Reformat 3D data
             cachedFile->lut3D->size[0] = size3d[0];
@@ -277,6 +292,11 @@ OCIO_NAMESPACE_ENTER
             
             if(newDir == TRANSFORM_DIR_FORWARD)
             {
+                if(cachedFile->useMatrix)
+                {
+                    CreateMatrixOp(ops, cachedFile->m44, newDir);
+                }
+                
                 CreateLut3DOp(ops, cachedFile->lut3D,
                               fileTransform.getInterpolation(), newDir);
             }
@@ -284,6 +304,11 @@ OCIO_NAMESPACE_ENTER
             {
                 CreateLut3DOp(ops, cachedFile->lut3D,
                               fileTransform.getInterpolation(), newDir);
+                
+                if(cachedFile->useMatrix)
+                {
+                    CreateMatrixOp(ops, cachedFile->m44, newDir);
+                }
             }
         }
     }
