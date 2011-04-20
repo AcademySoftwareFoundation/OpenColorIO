@@ -30,41 +30,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OPENCOLORTYPES_H
 #define INCLUDED_OCIO_OPENCOLORTYPES_H
 
+#include "OpenColorABI.h"
+
 #ifndef OCIO_NAMESPACE_ENTER
 #error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
 #endif
 
 #include <limits>
 #include <string>
-
-// Find shared_ptr / dynamic_pointer_cast
-#ifdef OCIO_USE_BOOST_PTR
-#include <boost/shared_ptr.hpp>
-#define OCIO_SHARED_PTR boost::shared_ptr
-#define OCIO_DYNAMIC_POINTER_CAST boost::dynamic_pointer_cast
-#elif __GNUC__ >= 4
-#include <tr1/memory>
-#define OCIO_SHARED_PTR std::tr1::shared_ptr
-#define OCIO_DYNAMIC_POINTER_CAST std::tr1::dynamic_pointer_cast
-#else
-#error OCIO needs gcc 4 or later to get access to <tr1/memory> (or specify USE_BOOST_PTR instead)
-#endif
-
-// If supported, define OCIOEXPORT, OCIOHIDDEN
-// (used to choose which symbols to export from OpenColorIO)
-#if defined __linux__ || __APPLE__
-    #if __GNUC__ >= 4
-        #define OCIOEXPORT __attribute__ ((visibility("default")))
-        #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
-    #else
-        #define OCIOEXPORT
-        #define OCIOHIDDEN
-    #endif
-#else // _WIN32 and others not supported atm
-    #define OCIOEXPORT
-    #define OCIOHIDDEN
-#endif
-
 
 /*!rst::
 C++ Types

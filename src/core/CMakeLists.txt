@@ -12,10 +12,10 @@ include_directories(
 file(GLOB_RECURSE core_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp")
 file(GLOB_RECURSE core_export_headers "${CMAKE_SOURCE_DIR}/export/OpenColorIO/*.h")
 
-message(STATUS "Create OpenColorVersion.h from OpenColorVersion.h.in")
-configure_file(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorVersion.h.in
-    ${CMAKE_BINARY_DIR}/export/OpenColorVersion.h @ONLY)
-list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorVersion.h)
+message(STATUS "Create OpenColorABI.h from OpenColorABI.h.in")
+configure_file(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorABI.h.in
+    ${CMAKE_BINARY_DIR}/export/OpenColorABI.h @ONLY)
+list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorABI.h)
 
 # SHARED
 
