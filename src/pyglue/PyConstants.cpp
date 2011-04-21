@@ -125,13 +125,15 @@ OCIO_NAMESPACE_ENTER
         PyModule_AddStringConstant(m, "GPU_LANGUAGE_GLSL_1_3",
             const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_GLSL_1_3)));
         
+        PyModule_AddStringConstant(m, "ROLE_DEFAULT", const_cast<char*>(ROLE_DEFAULT));
         PyModule_AddStringConstant(m, "ROLE_REFERENCE", const_cast<char*>(ROLE_REFERENCE));
         PyModule_AddStringConstant(m, "ROLE_DATA", const_cast<char*>(ROLE_DATA));
         PyModule_AddStringConstant(m, "ROLE_COLOR_PICKING", const_cast<char*>(ROLE_COLOR_PICKING));
         PyModule_AddStringConstant(m, "ROLE_SCENE_LINEAR", const_cast<char*>(ROLE_SCENE_LINEAR));
         PyModule_AddStringConstant(m, "ROLE_COMPOSITING_LOG", const_cast<char*>(ROLE_COMPOSITING_LOG));
         PyModule_AddStringConstant(m, "ROLE_COLOR_TIMING", const_cast<char*>(ROLE_COLOR_TIMING));
-        PyModule_AddStringConstant(m, "ROLE_DEFAULT", const_cast<char*>(ROLE_DEFAULT));
+        PyModule_AddStringConstant(m, "ROLE_TEXTURE_PAINT", const_cast<char*>(ROLE_TEXTURE_PAINT));
+        PyModule_AddStringConstant(m, "ROLE_MATTE_PAINT", const_cast<char*>(ROLE_MATTE_PAINT));
         
         // Add the module
         PyModule_AddObject(enclosingModule, "Constants", m);
