@@ -327,6 +327,19 @@ OCIO_NAMESPACE_ENTER
     //    
     //    "color_timing"
     extern OCIOEXPORT const char * ROLE_COLOR_TIMING;
+    //!rst::
+    // .. c:var:: const char* ROLE_TEXTURE_PAINT
+    //    
+    //    This role defines the transform for painting textures. In some
+    //    workflows this is just a inverse display gamma with some limits
+    extern OCIOEXPORT const char * ROLE_TEXTURE_PAINT;
+    //!rst::
+    // .. c:var:: const char* ROLE_MATTE_PAINT
+    //    
+    //    This role defines the transform for matte painting. In some workflows
+    //    this is a 1D HDR to LDR allocation. It is normally combined with
+    //    another display transform in the host app for preview.
+    extern OCIOEXPORT const char * ROLE_MATTE_PAINT;
     
 }
 OCIO_NAMESPACE_EXIT

@@ -203,6 +203,8 @@ OCIO_NAMESPACE_ENTER
     const char * ROLE_SCENE_LINEAR = "scene_linear";
     const char * ROLE_COMPOSITING_LOG = "compositing_log";
     const char * ROLE_COLOR_TIMING = "color_timing";
+    const char * ROLE_TEXTURE_PAINT = "texture_paint";
+    const char * ROLE_MATTE_PAINT = "matte_paint";
     
     namespace
     {
