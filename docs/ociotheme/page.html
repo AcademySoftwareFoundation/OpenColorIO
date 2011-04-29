@@ -1,0 +1,57 @@
+{#
+    basic/page.html
+    ~~~~~~~~~~~~~~~
+
+    Master template for simple pages.
+
+    :copyright: Copyright 2007-2010 by the Sphinx team, see AUTHORS.
+    :license: BSD, see LICENSE for details.
+#}
+{% extends "layout.html" %}
+{% block body %}
+    <table width="100%" cellspacing="0" cellpadding="0">
+    <tr><td width="200">
+        <div class="sidebar2">
+        <ul>
+        <h4><a class="reference internal" href="#">Home</a></h4>
+        <h4><a class="reference internal" href="#download-source-code">Documentation</a></h4> 
+        <h4>Profiles</h4>
+        <ul>
+            <li><a class="reference internal" href="#contact">SPI Workflow</a><li>
+            <li><a class="reference internal" href="#contact">spi-vfx</a><li>
+            <li><a class="reference internal" href="#contact">spi-anim</a><li>
+            <li><a class="reference internal" href="#contact">nuke-default</a><li>
+        </ul>
+        <h4>Developers</h4>
+        <ul>
+            <li><a class="reference internal" href="#contact">Getting Started</a><li>
+            <li><a class="reference internal" href="#contact">Coding Guidelines</a><li>
+            <li><a class="reference internal" href="#contact">Submitting Changes</a><li>
+            <li><a class="reference internal" href="#contact">Usage Examples</a><li>
+            <li><a class="reference internal" href="#contact">Issues</a><li>
+        </ul>
+        <h4><a class="reference internal" href="#contact">FAQ</a></h4>
+        <h4><a class="reference internal" href="#contact">Downloads</a></h4>
+        </ul>
+    </div>
+    </td>
+    <td width="100%">{{ body }}</td>
+    {% if pagename == "index" %}
+    <td width="275">
+        <div class="imageBar">
+        <p style="text-align: center; font-size: small;"><b>Color Transform Example</b></p>
+            <img src="{{ pathto('_static/clo_res19_vd16.0101.jpg', 1) }}">
+            <div class="caption">Final Image: sRGB</div>
+            <img src="{{ pathto('_static/clo_res19_lm10.0101.jpg', 1) }}">  
+            <div class="caption">Digital Intermediate (DI): log dpx</div>
+            <img src="{{ pathto('_static/clo_res19_lnf.0101.jpg', 1) }}">
+            <div class="caption">Render: scene-linear exr</div>
+        <p style="text-align: right">Images from "Cloudy With A Change of Meatballs"</p>
+        <p style="text-align: right">spi-animation profile, available here.</p>
+        </div>
+    </td>
+    {% endif %}
+    </tr></table>
+Printing Context <br>
+{{ pagename|e }} 
+{% endblock %}
