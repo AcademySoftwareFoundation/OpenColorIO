@@ -228,13 +228,11 @@ OCIO_NAMESPACE_ENTER
                         *(iter->second),
                         newDir);
         }
-        
-        
-        struct AutoRegister
-        {
-            AutoRegister() { FormatRegistry::GetInstance().registerFileFormat(new LocalFileFormat); }
-        };
-        static AutoRegister registerIt;
+    }
+    
+    FileFormat * CreateFileFormatCCC()
+    {
+        return new LocalFileFormat();
     }
 }
 OCIO_NAMESPACE_EXIT

@@ -151,13 +151,11 @@ OCIO_NAMESPACE_ENTER
                         *cachedFile->transform,
                         newDir);
         }
-        
-        
-        struct AutoRegister
-        {
-            AutoRegister() { FormatRegistry::GetInstance().registerFileFormat(new LocalFileFormat); }
-        };
-        static AutoRegister registerIt;
+    }
+    
+    FileFormat * CreateFileFormatCC()
+    {
+        return new LocalFileFormat();
     }
 }
 OCIO_NAMESPACE_EXIT

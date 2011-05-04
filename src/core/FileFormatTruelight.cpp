@@ -340,11 +340,10 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    struct AutoRegister
+    FileFormat * CreateFileFormatTruelight()
     {
-        AutoRegister() { FormatRegistry::GetInstance().registerFileFormat(new LocalFileFormat); }
-    };
-    static AutoRegister registerIt;
+        return new LocalFileFormat();
+    }
 }
 OCIO_NAMESPACE_EXIT
 

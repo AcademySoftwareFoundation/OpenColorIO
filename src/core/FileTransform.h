@@ -93,6 +93,21 @@ OCIO_NAMESPACE_ENTER
         FileFormat& operator= (const FileFormat &);
     };
     
+    // Registry Builders
+    FileFormat * CreateFileFormat3DL();
+    FileFormat * CreateFileFormatCCC();
+    FileFormat * CreateFileFormatCC();
+    FileFormat * CreateFileFormatCSP();
+    FileFormat * CreateFileFormatHDL();
+    FileFormat * CreateFileFormatIridas();
+    FileFormat * CreateFileFormatSpi1D();
+    FileFormat * CreateFileFormatSpi3D();
+    FileFormat * CreateFileFormatSpiMtx();
+    FileFormat * CreateFileFormatTruelight();
+    FileFormat * CreateFileFormatVF();
+    
+    
+    
     typedef std::map<std::string, FileFormat*> FileFormatMap;
     
     class FormatRegistry
@@ -108,12 +123,12 @@ OCIO_NAMESPACE_ENTER
         
         int getNumFormats(FileFormatFeature feature) const;
         FileFormat* getFormatByIndex(FileFormatFeature feature, int index) const;
-        
-        void registerFileFormat(FileFormat* format);
     
     private:
         FormatRegistry();
         ~FormatRegistry();
+        
+        void registerFileFormat(FileFormat* format);
         
         FileFormatMap m_formatsByName;
         FileFormatMap m_formatsByExtension;
