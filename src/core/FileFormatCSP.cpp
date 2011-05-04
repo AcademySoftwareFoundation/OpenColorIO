@@ -779,11 +779,10 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    struct AutoRegister
+    FileFormat * CreateFileFormatCSP()
     {
-        AutoRegister() { FormatRegistry::GetInstance().registerFileFormat(new FileFormatCSP); }
-    };
-    static AutoRegister registerIt;
+        return new FileFormatCSP();
+    }
 }
 OCIO_NAMESPACE_EXIT
 

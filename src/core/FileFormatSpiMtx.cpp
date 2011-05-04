@@ -180,12 +180,11 @@ OCIO_NAMESPACE_ENTER
                                      newDir);
             }
         };
-        
-        struct AutoRegister
-        {
-            AutoRegister() { FormatRegistry::GetInstance().registerFileFormat(new LocalFormat); }
-        };
-        static AutoRegister registerIt;
+    }
+    
+    FileFormat * CreateFileFormatSpiMtx()
+    {
+        return new LocalFormat();
     }
 }
 OCIO_NAMESPACE_EXIT
