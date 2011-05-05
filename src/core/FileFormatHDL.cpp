@@ -115,24 +115,6 @@ OCIO_NAMESPACE_ENTER
                                       TransformDirection dir) const;
         };
         
-        // read the next non empty line
-        static void
-        nextline (std::istream &istream, std::string &line)
-        {
-            while ( istream )
-            {
-                std::getline(istream, line);
-                std::string::size_type firstPos = line.find_first_not_of(" \t\r");
-                if ( firstPos != std::string::npos )
-                {
-                    if ( line[line.size()-1] == '\r' )
-                        line.erase(line.size()-1);
-                    break;
-                }
-            }
-            return;
-        }
-        
         std::string
         FileFormatHDL::GetName() const
         {

@@ -83,26 +83,6 @@ OCIO_NAMESPACE_ENTER
                          TransformDirection dir) const;
         };
         
-        
-        // read the next non empty line
-        // return whether it has succeeded or not.
-        
-        static bool
-        nextline (std::istream &istream, std::string &line)
-        {
-            while ( istream.good() )
-            {
-                std::getline(istream, line);
-                line = pystring::rstrip( line );
-                if(!line.empty())
-                {
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-        
         std::string
         LocalFileFormat::GetName() const { return "truelight"; }
         

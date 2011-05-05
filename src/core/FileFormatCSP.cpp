@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -364,24 +365,6 @@ OCIO_NAMESPACE_ENTER
             return os;
         }
         */
-
-        // read the next non empty line
-        static void
-        nextline (std::istream &istream, std::string &line)
-        {
-            while ( istream )
-            {
-                std::getline(istream, line);
-                std::string::size_type firstPos = line.find_first_not_of(" \t\r");
-                if ( firstPos != std::string::npos )
-                {
-                    if ( line[line.size()-1] == '\r' )
-                        line.erase(line.size()-1);
-                    break;
-                }
-            }
-            return;
-        }
         
         std::string
         FileFormatCSP::GetName() const { return "cinespace"; }
@@ -406,7 +389,7 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception ("file stream empty when trying to read csp lut");
             }
-
+            
             Lut1DRcPtr prelut_ptr(new Lut1D());
             Lut1DRcPtr lut1d_ptr(new Lut1D());
             Lut3DRcPtr lut3d_ptr(new Lut3D());
@@ -416,14 +399,20 @@ OCIO_NAMESPACE_ENTER
             nextline (istream, line);
             if (line != "CSPLUTV100")
             {
-                throw Exception("lut doesn't seem to be a csp file");
+                std::ostringstream os;
+                os << "Lut doesn't seem to be a csp file, expected 'CSPLUTV100'.";
+                os << "First line: '" << line << "'.";
+                throw Exception(os.str().c_str());
             }
 
             // next line tells us if we are reading a 1D or 3D lut
             nextline (istream, line);
             if (line != "1D" && line != "3D")
             {
-                throw Exception("unsupported lut type");
+                std::ostringstream os;
+                os << "Unsupported CSP lut type. Require 1D or 3D. ";
+                os << "Found, '" << line << "'.";
+                throw Exception(os.str().c_str());
             }
             std::string csptype = line;
 
