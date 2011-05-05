@@ -117,6 +117,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
@@ -179,10 +180,14 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
         
-        // TODO: compute real value for isNoOp
         bool MatrixOffsetOp::isNoOp() const
         {
-            return false;
+            return (m_m44IsIdentity && m_offset4IsIdentity);
+        }
+        
+        bool MatrixOffsetOp::hasChannelCrosstalk() const
+        {
+            return (!m_m44IsDiagonal);
         }
         
         void MatrixOffsetOp::finalize()

@@ -394,6 +394,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
@@ -444,6 +445,11 @@ OCIO_NAMESPACE_ENTER
         
         // TODO: compute real value for isNoOp
         bool Lut1DOp::isNoOp() const
+        {
+            return false;
+        }
+        
+        bool Lut1DOp::hasChannelCrosstalk() const
         {
             return false;
         }
@@ -538,6 +544,22 @@ OCIO_NAMESPACE_ENTER
         // If so, return a mtx instead.
         
         ops.push_back( OpRcPtr(new Lut1DOp(lut, interpolation, direction)) );
+    }
+    
+    
+    void GenerateIdentityLut1D(float* img, int numElements, int numChannels)
+    {
+        if(!img) return;
+        int numChannelsToFill = std::min(3, numChannels);
+        
+        float scale = 1.0f / ((float) numElements - 1.0f);
+        for(int i=0; i<numElements; i++)
+        {
+            for(int c=0; c<numChannelsToFill; ++c)
+            {
+                img[numChannels*i+c] = scale * (float)(i);
+            }
+        }
     }
 
 }

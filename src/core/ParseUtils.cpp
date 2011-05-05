@@ -316,6 +316,25 @@ OCIO_NAMESPACE_ENTER
     
     ////////////////////////////////////////////////////////////////////////////
     
+    // read the next non empty line, and store it in 'line'
+    // return 'true' on success
+    
+    bool nextline(std::istream &istream, std::string &line)
+    {
+        while ( istream.good() )
+        {
+            std::getline(istream, line);
+            if(!pystring::strip(line).empty())
+            {
+                return true;
+            }
+        }
+        
+        line = "";
+        return false;
+    }
+    
+    
     bool StrEqualsCaseIgnore(const std::string & a, const std::string & b)
     {
         return (pystring::lower(a) == pystring::lower(b));

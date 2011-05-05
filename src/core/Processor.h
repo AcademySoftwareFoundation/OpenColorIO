@@ -71,6 +71,7 @@ OCIO_NAMESPACE_ENTER
         ~Impl();
         
         bool isNoOp() const;
+        bool hasChannelCrosstalk() const;
         
         void apply(ImageDesc& img) const;
         

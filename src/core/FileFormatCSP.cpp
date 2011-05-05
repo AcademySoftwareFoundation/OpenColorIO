@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -331,20 +332,19 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        class FileFormatCSP : public FileFormat
+        class LocalFileFormat : public FileFormat
         {
         public:
             
-            ~FileFormatCSP() {};
+            ~LocalFileFormat() {};
             
-            virtual std::string GetName() const;
-            virtual std::string GetExtension () const;
+            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual bool Supports(const FileFormatFeature & feature) const;
+            virtual CachedFileRcPtr Read(std::istream & istream) const;
             
-            virtual CachedFileRcPtr Load (std::istream & istream) const;
-            
-            virtual void Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
+            virtual void Write(const Baker & baker,
+                               const std::string & formatName,
+                               std::ostream & ostream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -364,41 +364,18 @@ OCIO_NAMESPACE_ENTER
             return os;
         }
         */
-
-        // read the next non empty line
-        static void
-        nextline (std::istream &istream, std::string &line)
+        
+        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
-            while ( istream )
-            {
-                std::getline(istream, line);
-                std::string::size_type firstPos = line.find_first_not_of(" \t\r");
-                if ( firstPos != std::string::npos )
-                {
-                    if ( line[line.size()-1] == '\r' )
-                        line.erase(line.size()-1);
-                    break;
-                }
-            }
-            return;
-        }
-        
-        std::string
-        FileFormatCSP::GetName() const { return "cinespace"; }
-        
-        std::string
-        FileFormatCSP::GetExtension() const { return "csp"; }
-        
-        bool
-        FileFormatCSP::Supports(const FileFormatFeature & feature) const
-        {
-            if(feature == FILE_FORMAT_READ) return true;
-            if(feature == FILE_FORMAT_WRITE) return true;
-            return false;
+            FormatInfo info;
+            info.name = "cinespace";
+            info.extension = "csp";
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+            formatInfoVec.push_back(info);
         }
         
         CachedFileRcPtr
-        FileFormatCSP::Load(std::istream & istream) const
+        LocalFileFormat::Read(std::istream & istream) const
         {
 
             // this shouldn't happen
@@ -406,7 +383,7 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception ("file stream empty when trying to read csp lut");
             }
-
+            
             Lut1DRcPtr prelut_ptr(new Lut1D());
             Lut1DRcPtr lut1d_ptr(new Lut1D());
             Lut3DRcPtr lut3d_ptr(new Lut3D());
@@ -416,14 +393,20 @@ OCIO_NAMESPACE_ENTER
             nextline (istream, line);
             if (line != "CSPLUTV100")
             {
-                throw Exception("lut doesn't seem to be a csp file");
+                std::ostringstream os;
+                os << "Lut doesn't seem to be a csp file, expected 'CSPLUTV100'.";
+                os << "First line: '" << line << "'.";
+                throw Exception(os.str().c_str());
             }
 
             // next line tells us if we are reading a 1D or 3D lut
             nextline (istream, line);
             if (line != "1D" && line != "3D")
             {
-                throw Exception("unsupported lut type");
+                std::ostringstream os;
+                os << "Unsupported CSP lut type. Require 1D or 3D. ";
+                os << "Found, '" << line << "'.";
+                throw Exception(os.str().c_str());
             }
             std::string csptype = line;
 
@@ -649,82 +632,163 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void FileFormatCSP::Write(TransformData & data, std::ostream & ostream) const
+        
+        void LocalFileFormat::Write(const Baker & baker,
+                                    const std::string & /*formatName*/,
+                                    std::ostream & ostream) const
         {
-            // setup the floating point precision
-            ostream.setf(std::ios::fixed, std::ios::floatfield);
-            ostream.precision(6);
+            const int DEFAULT_CUBE_SIZE = 32;
+            const int DEFAULT_SHAPER_SIZE = 1024;
             
-            // Output the 1D LUT
-            ostream << "CSPLUTV100\n";
-            ostream << "3D\n";
-            ostream << "\n";
+            ConstConfigRcPtr config = baker.getConfig();
             
-            // Output metadata
-            ostream << "BEGIN METADATA" << std::endl;
-            // TODO: add other metadata here
-            char str[20];
-            time_t curTime = time( NULL );
-            struct tm *tm = localtime( &curTime );
-            sprintf(str, "%4d:%02d:%02d %02d:%02d:%02d",
-                    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday,
-                    tm->tm_hour, tm->tm_min, tm->tm_sec);
-            ostream << "date: " << str << std::endl;
-            ostream << "END METADATA" << std::endl << std::endl;
+            // TODO: Add 1d/3d lut writing switch, using hasChannelCrosstalk
+            int cubeSize = baker.getCubeSize();
+            if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+            cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
+            std::vector<float> cubeData;
+            cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+            GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
+            PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
             
-            // Output the prelut for each channel
-            if(data.shaper_encode.size() != 0 && data.shaper_decode.size() != 0)
+            std::vector<float> shaperInData;
+            std::vector<float> shaperOutData;
+            
+            // Use an explicitly shaper space
+            // TODO: Use the optional allocation for the shaper space,
+            //       instead of the implied 0-1 uniform allocation
+            std::string shaperSpace = baker.getShaperSpace();
+            if(!shaperSpace.empty())
             {
-                for(size_t i = 0; i < 3; i++) {
-                    ostream << data.shaperSize << "\n";
-                    for(size_t pnt = 0; pnt < data.shaperSize; pnt++)
-                    {
-                        ostream << data.shaper_ident[3*pnt+i];
-                        ostream << ((pnt < data.shaperSize-1) ? " " : "");
-                    }
-                    ostream << "\n";
-                    for(size_t pnt = 0; pnt < data.shaperSize; pnt++)
-                    {
-                        ostream << data.shaper_encode[3*pnt+i];
-                        ostream << ((pnt < data.shaperSize-1) ? " " : "");
-                    }
-                    ostream << "\n";
+                int shaperSize = baker.getShaperSize();
+                if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+                if(shaperSize<2)
+                {
+                    std::ostringstream os;
+                    os << "When a shaper space has been specified, '";
+                    os << baker.getShaperSpace() << "', a shaper size less than 2 is not allowed.";
+                    throw Exception(os.str().c_str());
                 }
+                
+                shaperOutData.resize(shaperSize*3);
+                shaperInData.resize(shaperSize*3);
+                GenerateIdentityLut1D(&shaperOutData[0], shaperSize, 3);
+                GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
+                
+                ConstProcessorRcPtr shaperToInput = config->getProcessor(baker.getShaperSpace(), baker.getInputSpace());
+                if(shaperToInput->hasChannelCrosstalk())
+                {
+                    // TODO: Automatically turn shaper into non-crosstalked version?
+                    std::ostringstream os;
+                    os << "The specified shaperSpace, '";
+                    os << baker.getShaperSpace() << "' has channel crosstalk, which is not appropriate for shapers. ";
+                    os << "Please select an alternate shaper space or omit this option.";
+                    throw Exception(os.str().c_str());
+                }
+                PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
+                shaperToInput->apply(shaperInImg);
+                
+                ConstProcessorRcPtr shaperToTarget = config->getProcessor(baker.getShaperSpace(), baker.getTargetSpace());
+                shaperToTarget->apply(cubeImg);
             }
             else
             {
-                ostream << "2\n";
-                ostream << "0.0 1.0\n";
-                ostream << "0.0 1.0\n";
-                ostream << "2\n";
-                ostream << "0.0 1.0\n";
-                ostream << "0.0 1.0\n";
-                ostream << "2\n";
-                ostream << "0.0 1.0\n";
-                ostream << "0.0 1.0\n";
+                // A shaper is not specified, let's fake one, using the input space allocation as
+                // our guide
+                
+                ConstColorSpaceRcPtr inputColorSpace = config->getColorSpace(baker.getInputSpace());
+                
+                // Let's make an allocation transform for this colorspace
+                AllocationTransformRcPtr allocationTransform = AllocationTransform::Create();
+                std::vector<float> vars(inputColorSpace->getAllocationNumVars());
+                inputColorSpace->getAllocationVars(&vars[0]);
+                allocationTransform->setAllocation(inputColorSpace->getAllocation());
+                allocationTransform->setVars(static_cast<int>(vars.size()), &vars[0]);
+                
+                // What size shaper should we make?
+                int shaperSize = baker.getShaperSize();
+                if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+                shaperSize = std::max(2, shaperSize);
+                if(inputColorSpace->getAllocation() == ALLOCATION_UNIFORM)
+                {
+                    // This is an awesome optimization.
+                    // If we know it's a uniform scaling, only 2 points will suffice!
+                    shaperSize = 2;
+                }
+                shaperOutData.resize(shaperSize*3);
+                shaperInData.resize(shaperSize*3);
+                GenerateIdentityLut1D(&shaperOutData[0], shaperSize, 3);
+                GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
+                
+                // Apply the forward to the allocation to the output shaper y axis, and the cube
+                ConstProcessorRcPtr shaperToInput = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE);
+                PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
+                shaperToInput->apply(shaperInImg);
+                shaperToInput->apply(cubeImg);
+                
+                // Apply the 3d lut to the remainder (from the input to the output)
+                ConstProcessorRcPtr inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+                inputToTarget->apply(cubeImg);
             }
             
-            // Cube
+            // Write out the file
+            ostream << "CSPLUTV100\n";
+            ostream << "3D\n";
+            ostream << "BEGIN METADATA\n";
+            std::string metadata = baker.getMetadata();
+            if(!metadata.empty())
+            {
+                ostream << metadata << "\n";
+            }
+            ostream << "END METADATA\n";
             ostream << "\n";
-            ostream << data.lookup3DSize << " " << data.lookup3DSize << " " << data.lookup3DSize << "\n";
-            for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
-                for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {
-                    for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
-                        const size_t ii = 3 * (ir + data.lookup3DSize
-                                             * ig + data.lookup3DSize
-                                             * data.lookup3DSize * ib);
-                        const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii+0]));
-                        const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii+1]));
-                        const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii+2]));
-                        ostream << rv << " " << gv << " " << bv << "\n";
+            
+            // Write out the 1D Prelut
+            ostream.setf(std::ios::fixed, std::ios::floatfield);
+            ostream.precision(6);
+            
+            if(shaperInData.size()<2 || shaperOutData.size() != shaperInData.size())
+            {
+                throw Exception("Internal shaper size exception.");
+            }
+            
+            if(!shaperInData.empty())
+            {
+                for(int c=0; c<3; ++c)
+                {
+                    ostream << shaperInData.size()/3 << "\n";
+                    for(unsigned int i = 0; i<shaperInData.size()/3; ++i)
+                    {
+                        if(i != 0) ostream << " ";
+                        ostream << shaperInData[3*i+c];
                     }
+                    ostream << "\n";
+                    
+                    for(unsigned int i = 0; i<shaperInData.size()/3; ++i)
+                    {
+                        if(i != 0) ostream << " ";
+                        ostream << shaperOutData[3*i+c];
+                    }
+                    ostream << "\n";
                 }
+            }
+            ostream << "\n";
+            
+            // Write out the 3D Cube
+            if(cubeSize < 2)
+            {
+                throw Exception("Internal cube size exception.");
+            }
+            ostream << cubeSize << " " << cubeSize << " " << cubeSize << "\n";
+            for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+            {
+                ostream << cubeData[3*i+0] << " " << cubeData[3*i+1] << " " << cubeData[3*i+2] << "\n";
             }
             ostream << "\n";
         }
         
         void
-        FileFormatCSP::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
                                     const Config& /*config*/,
                                     const ConstContextRcPtr & /*context*/,
                                     CachedFileRcPtr untypedCachedFile,
@@ -781,7 +845,7 @@ OCIO_NAMESPACE_ENTER
     
     FileFormat * CreateFileFormatCSP()
     {
-        return new FileFormatCSP();
+        return new LocalFileFormat();
     }
 }
 OCIO_NAMESPACE_EXIT
@@ -794,7 +858,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(FileFormatCSP, simple1D)
+OIIO_ADD_TEST(CSPFileFormat, simple1D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"              << "\n";
@@ -829,9 +893,9 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     std::istringstream simple1D;
     simple1D.str(strebuf.str());
     
-    // Load file
-    OCIO::FileFormatCSP tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Load(simple1D);
+    // Read file
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple1D);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check prelut data (note: the spline is resampled into a 1D LUT)
@@ -858,7 +922,7 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     
 }
 
-OIIO_ADD_TEST(FileFormatCSP, simple3D)
+OIIO_ADD_TEST(CSPFileFormat, simple3D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"                                  << "\n";
@@ -897,8 +961,8 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
     simple3D.str(strebuf.str());
     
     // Load file
-    OCIO::FileFormatCSP tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Load(simple3D);
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check prelut data

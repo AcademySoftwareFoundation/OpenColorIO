@@ -73,6 +73,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
@@ -119,8 +120,12 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
         
-        // TODO: compute real value for isNoOp
         bool ExponentOp::isNoOp() const
+        {
+            return IsVecEqualToOne(m_exp4, 4);
+        }
+        
+        bool ExponentOp::hasChannelCrosstalk() const
         {
             return false;
         }

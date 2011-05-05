@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -53,6 +54,11 @@ OCIO_NAMESPACE_ENTER
                            const std::vector<std::string> & lineParts);
     
     //////////////////////////////////////////////////////////////////////////
+    
+    // read the next non empty line, and store it in 'line'
+    // return 'true' on success
+    
+    bool nextline(std::istream &istream, std::string &line);
     
     bool StrEqualsCaseIgnore(const std::string & a, const std::string & b);
     
