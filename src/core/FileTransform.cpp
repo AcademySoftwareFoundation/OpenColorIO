@@ -316,7 +316,7 @@ OCIO_NAMESPACE_ENTER
     
     }
     
-    void FileFormat::Write(TransformData & /*data*/,
+    void FileFormat::Write(const Baker & /*baker*/,
         std::ostream & /*ostream*/) const
     {
         std::ostringstream os;

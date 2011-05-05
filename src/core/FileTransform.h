@@ -48,19 +48,6 @@ OCIO_NAMESPACE_ENTER
     
     typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;
     
-    struct TransformData
-    {
-        float minlum[3];
-        float maxlum[3];
-        size_t shaperSize;
-        std::vector<float> shaper_ident;
-        std::vector<float> shaper_encode;
-        std::vector<float> shaper_decode;
-        //std::vector<float> lookup1D;
-        size_t lookup3DSize;
-        std::vector<float> lookup3D;
-    };
-    
     enum FileFormatFeature
     {
         FILE_FORMAT_READ = 0,
@@ -81,13 +68,13 @@ OCIO_NAMESPACE_ENTER
         
         virtual CachedFileRcPtr Load(std::istream & istream) const = 0;
         
-        virtual void Write(TransformData & data, std::ostream & ostream) const;
+        virtual void Write(const Baker & baker, std::ostream & ostream) const;
         
         virtual void BuildFileOps(OpRcPtrVec & ops,
-                                  const Config& config,
+                                  const Config & config,
                                   const ConstContextRcPtr & context,
                                   CachedFileRcPtr cachedFile,
-                                  const FileTransform& fileTransform,
+                                  const FileTransform & fileTransform,
                                   TransformDirection dir) const = 0;
     private:
         FileFormat& operator= (const FileFormat &);

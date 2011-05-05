@@ -62,14 +62,14 @@ OCIO_NAMESPACE_ENTER
         int shapersize_;
         int cubesize_;
         
-        Impl()
+        Impl() :
+            shapersize_(1024),
+            cubesize_(1024)
         {
-            shapersize_ = 1024;
-            cubesize_ = 32;
         }
         
         ~Impl()
-        {        
+        {
         }
         
         Impl& operator= (const Impl & rhs)
@@ -196,7 +196,30 @@ OCIO_NAMESPACE_ENTER
     
     void Baker::bake(std::ostream & os) const
     {
+        FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(getImpl()->formatName_);
         
+        if(fmt && fmt->Supports(FILE_FORMAT_WRITE))
+        {
+            try
+            {
+                // fmt->Write(*this, os);
+            }
+            catch(std::exception & e)
+            {
+                std::ostringstream err;
+                err << e.what();
+                throw Exception(err.str().c_str());
+            }
+        }
+        else
+        {
+            std::ostringstream err;
+            err << "We don't support the '" << getImpl()->formatName_;
+            err << "' lut format for baking";
+            throw Exception(err.str().c_str());
+        }
+        
+        /*
         // 
         // TODO:
         // 
@@ -302,29 +325,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
         }
-        
-        FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(getImpl()->formatName_);
-        
-        if(fmt && fmt->Supports(FILE_FORMAT_WRITE))
-        {
-            try
-            {
-                fmt->Write(data, os);
-            }
-            catch(std::exception & e)
-            {
-                std::ostringstream err;
-                err << e.what();
-                throw Exception(err.str().c_str());
-            }
-        }
-        else
-        {
-            std::ostringstream err;
-            err << "We don't support the '" << getImpl()->formatName_;
-            err << "' lut format for baking";
-            throw Exception(err.str().c_str());
-        }
+        */
         
     }
     

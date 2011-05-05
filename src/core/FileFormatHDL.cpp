@@ -105,7 +105,7 @@ OCIO_NAMESPACE_ENTER
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
-            virtual void Write(TransformData & data, std::ostream & ostream) const;
+            virtual void Write(const Baker & baker, std::ostream & ostream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -412,9 +412,10 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        FileFormatHDL::Write(TransformData & data,
+        FileFormatHDL::Write(const Baker & baker,
                              std::ostream & ostream) const
         {
+            /*
             // setup the floating point precision
             ostream.setf(std::ios::fixed, std::ios::floatfield);
             ostream.precision(6);
@@ -477,6 +478,7 @@ OCIO_NAMESPACE_ENTER
                 ostream << "}\n";
             else
                 ostream << " }\n";
+            */
         }
         
         void

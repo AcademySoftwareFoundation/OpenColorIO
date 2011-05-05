@@ -344,7 +344,7 @@ OCIO_NAMESPACE_ENTER
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
             
-            virtual void Write(TransformData & /*data*/, std::ostream & /*ostream*/) const;
+            virtual void Write(const Baker & baker, std::ostream & ostream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -649,7 +649,7 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void FileFormatCSP::Write(TransformData & data, std::ostream & ostream) const
+        void FileFormatCSP::Write(const Baker & baker, std::ostream & ostream) const
         {
             // setup the floating point precision
             ostream.setf(std::ios::fixed, std::ios::floatfield);
@@ -659,7 +659,7 @@ OCIO_NAMESPACE_ENTER
             ostream << "CSPLUTV100\n";
             ostream << "3D\n";
             ostream << "\n";
-            
+            /*
             // Output metadata
             ostream << "BEGIN METADATA" << std::endl;
             // TODO: add other metadata here
@@ -721,6 +721,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             ostream << "\n";
+            */
         }
         
         void
