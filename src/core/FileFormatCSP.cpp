@@ -640,18 +640,68 @@ OCIO_NAMESPACE_ENTER
         
         void FileFormatCSP::Write(const Baker & baker, std::ostream & ostream) const
         {
-            // setup the floating point precision
-            ostream.setf(std::ios::fixed, std::ios::floatfield);
-            ostream.precision(6);
+            ConstConfigRcPtr config = baker.getConfig();
             
-            // Output the 1D LUT
+            std::vector<float> shaperOutData;
+            std::vector<float> shaperInData;
+            
+            const int DEFAULT_SHAPER_SIZE = 1024;
+            int shaperSize = baker.getShaperSize();
+            if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+            
+            std::string currentSpace;
+            
+            // Create the mapping from a uniformly sampled ldr output
+            // to a non-uniform hdr input.
+            if(shaperSize>=2)
+            {
+                shaperOutData.resize(shaperSize*3);
+                shaperInData.resize(shaperSize*3);
+                
+                GenerateIdentityLut1D(&shaperOutData[0], shaperSize, 3);
+                GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
+                
+                std::string shaperSpace = baker.getShaperSpace();
+                if(!shaperSpace.empty())
+                {
+                    /*
+                    shapersize = 2**10
+                    shaperOutData = []
+                    for i in xrange(shapersize):
+                    x = i/(shapersize-1.0)
+                    shaperOutData.extend((x,x,x))
+                    shaperToInput = config.getProcessor(SHAPER_SPACE, INPUT_SPACE)
+                    shaperInData = shaperToInput.applyRGB(shaperOutData)
+                    */
+                    //ConstProcessorRcPtr shaperToInput = 
+                    //    config.getProcessor(shaperSpace, inputSpace);
+                }
+            }
+            
+            // Create a 3D lut from the 1D shaper space to the 3D output space
+            
+            /*
+            lut3dsize = 32
+            lut3dInputData = []
+            # Build an identity lut
+            for i in xrange(lut3dsize):
+                for j in xrange(lut3dsize):
+                    for k in xrange(lut3dsize):
+                        r = k/(lut3dsize-1.0)
+                        g = j/(lut3dsize-1.0)
+                        b = i/(lut3dsize-1.0)
+                        lut3dInputData.extend((r,g,b))
+            # map it from shaper space to output space. (This assumes a 1d shaper, for now)
+            shaperToOutput = config.getProcessor(SHAPER_SPACE, OUTPUT_SPACE)
+            lut3dOuputData = shaperToO
+            */
+            
+            
+            // Write out the file header
             ostream << "CSPLUTV100\n";
             ostream << "3D\n";
-            ostream << "\n";
-            /*
-            // Output metadata
-            ostream << "BEGIN METADATA" << std::endl;
-            // TODO: add other metadata here
+            ostream << "BEGIN METADATA\n";
+            ostream << baker.getMetadata() << "\n";
             char str[20];
             time_t curTime = time( NULL );
             struct tm *tm = localtime( &curTime );
@@ -659,23 +709,30 @@ OCIO_NAMESPACE_ENTER
                     tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday,
                     tm->tm_hour, tm->tm_min, tm->tm_sec);
             ostream << "date: " << str << std::endl;
-            ostream << "END METADATA" << std::endl << std::endl;
+            ostream << "Written by OpenColorIO " << OCIO_VERSION << "\n";
+            ostream << "END METADATA\n";
+            ostream << "n";
             
-            // Output the prelut for each channel
-            if(data.shaper_encode.size() != 0 && data.shaper_decode.size() != 0)
+            // Write out the 1D Prelut
+            ostream.setf(std::ios::fixed, std::ios::floatfield);
+            ostream.precision(6);
+            
+            if(!shaperInData.empty())
             {
-                for(size_t i = 0; i < 3; i++) {
-                    ostream << data.shaperSize << "\n";
-                    for(size_t pnt = 0; pnt < data.shaperSize; pnt++)
+                for(int c=0; c<3; ++c)
+                {
+                    ostream << shaperSize << "\n";
+                    for(int i = 0; i<shaperSize; ++i)
                     {
-                        ostream << data.shaper_ident[3*pnt+i];
-                        ostream << ((pnt < data.shaperSize-1) ? " " : "");
+                        if(i != 0) ostream << " ";
+                        ostream << shaperInData[3*i+c];
                     }
                     ostream << "\n";
-                    for(size_t pnt = 0; pnt < data.shaperSize; pnt++)
+                    
+                    for(int i = 0; i<shaperSize; ++i)
                     {
-                        ostream << data.shaper_encode[3*pnt+i];
-                        ostream << ((pnt < data.shaperSize-1) ? " " : "");
+                        if(i != 0) ostream << " ";
+                        ostream << shaperOutData[3*i+c];
                     }
                     ostream << "\n";
                 }
@@ -692,9 +749,11 @@ OCIO_NAMESPACE_ENTER
                 ostream << "0.0 1.0\n";
                 ostream << "0.0 1.0\n";
             }
-            
-            // Cube
             ostream << "\n";
+            
+            // Write out the 3D Cube
+            
+            /*
             ostream << data.lookup3DSize << " " << data.lookup3DSize << " " << data.lookup3DSize << "\n";
             for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
                 for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {

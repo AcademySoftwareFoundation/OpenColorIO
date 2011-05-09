@@ -695,6 +695,8 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function:: set the config to use
         void setConfig(const ConstConfigRcPtr & config);
+        //!cpp:function:: get the config to use
+        ConstConfigRcPtr getConfig() const;
         
         //!cpp:function:: set the lut output format
         void setFormat(const char * formatName);
@@ -720,7 +722,10 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function:: set an *optional* colorspace to be used to shape /
         // transfer the input colorspace. This is mostly used to allocate
-        // an HDR luminance range into an LDR one.
+        // an HDR luminance range into an LDR one. If a shaper space
+        // is not explicitly specified, and the file format supports one,
+        // the GPU Allocation will be used
+        
         void setShaperSpace(const char * shaperSpace);
         //!cpp:function:: get the shaper colorspace that has been set
         const char * getShaperSpace() const;
@@ -730,11 +735,17 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: get the target colorspace that has been set
         const char * getTargetSpace() const;
         
-        //!cpp:function:: set the shaper sample size, should be atleast
-        // cubesize^2 (default: 1024)
+        //!cpp:function:: override the default the shaper sample size,
+        // default: <format specific>
         void setShaperSize(int shapersize);
-        //!cpp:function:: set the cube sample size (default: 32)
+        //!cpp:function:: get the shaper sample size
+        int getShaperSize() const;
+        
+        //!cpp:function:: override the default cube sample size
+        // default: <format specific>
         void setCubeSize(int cubesize);
+        //!cpp:function:: get the cube sample size
+        int getCubeSize() const;
         
         //!cpp:function:: bake the lut into the output stream
         void bake(std::ostream & os) const;

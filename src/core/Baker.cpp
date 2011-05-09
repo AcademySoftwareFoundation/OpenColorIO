@@ -63,8 +63,8 @@ OCIO_NAMESPACE_ENTER
         int cubesize_;
         
         Impl() :
-            shapersize_(1024),
-            cubesize_(1024)
+            shapersize_(-1),
+            cubesize_(-1)
         {
         }
         
@@ -106,6 +106,11 @@ OCIO_NAMESPACE_ENTER
     void Baker::setConfig(const ConstConfigRcPtr & config)
     {
         getImpl()->config_ = config->createEditableCopy();
+    }
+    
+    ConstConfigRcPtr Baker::getConfig() const
+    {
+        return getImpl()->config_;
     }
     
     int Baker::getNumFormats()
@@ -189,9 +194,19 @@ OCIO_NAMESPACE_ENTER
         getImpl()->shapersize_ = shapersize;
     }
     
+    int Baker::getShaperSize() const
+    {
+        return getImpl()->shapersize_;
+    }
+    
     void Baker::setCubeSize(int cubesize)
     {
         getImpl()->cubesize_ = cubesize;
+    }
+    
+    int Baker::getCubeSize() const
+    {
+        return getImpl()->cubesize_;
     }
     
     void Baker::bake(std::ostream & os) const
@@ -202,7 +217,7 @@ OCIO_NAMESPACE_ENTER
         {
             try
             {
-                // fmt->Write(*this, os);
+                fmt->Write(*this, os);
             }
             catch(std::exception & e)
             {

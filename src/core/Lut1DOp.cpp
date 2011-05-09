@@ -539,6 +539,24 @@ OCIO_NAMESPACE_ENTER
         
         ops.push_back( OpRcPtr(new Lut1DOp(lut, interpolation, direction)) );
     }
+    
+    
+    void GenerateIdentityLut1D(float* img, int numElements, int numChannels)
+    {
+        if(!img) return;
+        if(numChannels < 3)
+        {
+            throw Exception("Cannot generate idenitity 1d lut with less than 3 channels.");
+        }
+        
+        float c = 1.0f / ((float) numElements - 1.0f);
+        for(int i=0; i<numElements; i++)
+        {
+            img[numChannels*i+0] = c * (float)(i);
+            img[numChannels*i+1] = c * (float)(i);
+            img[numChannels*i+2] = c * (float)(i);
+        }
+    }
 
 }
 OCIO_NAMESPACE_EXIT
