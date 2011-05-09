@@ -1,7 +1,15 @@
+**Version 0.8.1 (May 9 2011):**
+    * New roles: TEXTURE_PAINT + MATTE_PAINT
+    * Mari API Example (src/mari)
+    * FileFormat registry updated to allow Windows + Debug support
+    * boost_ptr build compatibility option
+
 **Version 0.8.0 (Apr 19 2011):**
     * ABI Lockoff for stable 0.8 branch
       New features can be added, but the ABI will only be extended in a binary compatible manner
     * Otherwise identical to 0.7.9
+
+-------------------------------------------------------------------------------
 
 **Version 0.7.9 (Apr 18 2011):**
     * Added support for .vf luts
