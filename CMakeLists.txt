@@ -10,9 +10,6 @@ set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PAT
 if(NOT SOVERSION)
     set(SOVERSION ${OCIO_VERSION_MAJOR} CACHE STRING "Set the SO version in the SO name of the output library")
 endif()
-if(NOT ${SOVERSION} STREQUAL ${OCIO_VERSION_MAJOR})
-    set(OCIO_VERSION_MAJOR ${SOVERSION})
-endif()
 
 
 cmake_minimum_required(VERSION 2.8)
@@ -266,7 +263,7 @@ endif()
 ###############################################################################
 ### CPACK ###
 
-set(CPACK_PACKAGE_VERSION_MAJOR ${OCIO_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MAJOR ${SOVERSION})
 set(CPACK_PACKAGE_VERSION_MINOR ${OCIO_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${OCIO_VERSION_PATCH})
 set(CPACK_GENERATOR None)

@@ -30,10 +30,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_OPENCOLORABI_H
 
 // Makefile configuration options
-#define OCIO_VERSION "@OCIO_VERSION@"
 #define OCIO_NAMESPACE @OCIO_NAMESPACE@
-#define OCIO_VERSION_NS v@OCIO_VERSION_MAJOR@
 #define OCIO_USE_BOOST_PTR @OCIO_USE_BOOST_PTR@
+#define OCIO_VERSION "@OCIO_VERSION@"
+#define OCIO_VERSION_NS v@SOVERSION@
+
+/* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2
+   Use this for numeric comparisons, e.g. #if OCIO_VERSION_HEX >= ... 
+   Note: in the case where SOVERSION is overridden at compile-time,
+   this will reflect the original API version number.
+   */
+#define OCIO_VERSION_HEX ((@OCIO_VERSION_MAJOR@ << 24) | \
+                          (@OCIO_VERSION_MINOR@ << 16) | \
+                          (@OCIO_VERSION_PATCH@ <<  8))
+
 
 // Namespace / version mojo
 #define OCIO_NAMESPACE_ENTER namespace OCIO_NAMESPACE { namespace OCIO_VERSION_NS
