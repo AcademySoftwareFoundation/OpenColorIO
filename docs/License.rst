@@ -1,3 +1,5 @@
+.. license:
+
 License
 =======
 .. include:: LICENSE

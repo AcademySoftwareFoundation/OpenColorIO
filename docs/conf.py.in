@@ -30,12 +30,14 @@ rst_prolog = """
 .. |Sony Imageworks| replace:: `Sony Imageworks`_
 .. _Jeremy Selan: mailto:jeremy.selan@gmail.com
 .. |Jeremy Selan| replace:: `Jeremy Selan`_
+.. _ocio-users: http://groups.google.com/group/ocio-users
+.. _ocio-dev: http://groups.google.com/group/ocio-dev
 """
 
 # -- Options for HTML output ---------------------------------------------------
-html_theme = 'haiku'
+html_theme_path = ['.']
+html_theme = 'ociotheme'
 #html_theme_options = {}
-#html_theme_path = []
 #html_title = None
 #html_short_title = None
 #html_logo = None

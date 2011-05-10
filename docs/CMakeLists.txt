@@ -54,7 +54,7 @@ ExternalProject_Add(Sphinx
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${EXTDIST_PYTHONPATH}
     BUILD_COMMAND PYTHONPATH=${PYTHONPATH} python setup.py build
-    INSTALL_COMMAND PYTHONPATH=${PYTHONPATH} python setup.py install --prefix=${EXTDIST_ROOT}
+    INSTALL_COMMAND PYTHONPATH=${PYTHONPATH} python setup.py install --prefix=${EXTDIST_ROOT} --install-scripts=${EXTDIST_ROOT}/bin
 )
 
 ###############################################################################
@@ -64,30 +64,33 @@ message(STATUS "Create sphinx conf.py from conf.py.in")
 configure_file(${CMAKE_SOURCE_DIR}/docs/conf.py.in
     ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
 
-message(STATUS "Copy doc files to staging area")
-file(GLOB_RECURSE DOCFILES *.rst)
+message(STATUS "Copying doc to staging area")
+file(COPY ${CMAKE_SOURCE_DIR}/docs/ DESTINATION ${CMAKE_BINARY_DIR}/docs)
+
+message(STATUS "Copy extra doc files to staging area")
 list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/README)
 list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/INSTALL)
 list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/ChangeLog)
 list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/LICENSE)
-
 CopyFiles(RSTDOC ${DOCFILES})
 
-ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h OpenColorIO.rst)
-ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h OpenColorTransforms.rst)
-ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h OpenColorTypes.rst)
+message(STATUS "Extracting .rst files from C++ headers")
+ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h developers/api/OpenColorIO.rst)
+ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h developers/api/OpenColorTransforms.rst)
+ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h developers/api/OpenColorTypes.rst)
 
 add_custom_target(doc ALL
     COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_BINPATH}/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
     DEPENDS
         OpenColorIO
         ${CMAKE_BINARY_DIR}/docs/conf.py
-        OpenColorIO.rst
-        OpenColorTransforms.rst
-        OpenColorTypes.rst
+        developers/api/OpenColorIO.rst
+        developers/api/OpenColorTransforms.rst
+        developers/api/OpenColorTypes.rst
         ${RSTDOC_OUTPUT}
     COMMENT "Building html docs"
     SOURCES ${DOCFILES})
+
 # note: ExternalProject will not build when added to a add_custom_target this
 # works around this problem. This seems to be fixed in the cmake ^HEAD
 add_dependencies(doc Sphinx) 
@@ -104,9 +107,9 @@ if(PDFLATEX_COMPILER)
         DEPENDS
             OpenColorIO
             ${CMAKE_BINARY_DIR}/docs/conf.py
-            OpenColorIO.rst
-            OpenColorTransforms.rst
-            OpenColorTypes.rst
+            developers/api/OpenColorIO.rst
+            developers/api/OpenColorTransforms.rst
+            developers/api/OpenColorTypes.rst
             ${RSTDOC_OUTPUT}
         COMMENT "Building latex doc"
         SOURCES ${DOCFILES})

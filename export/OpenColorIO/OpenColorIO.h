@@ -151,7 +151,7 @@ OCIO_NAMESPACE_ENTER
     //    a multi-app ecosystem, as it allows all applications to be
     //    consistently configured.
     //
-    // See :doc:`UsageExamples`
+    // See :ref:`developers-usageexamples`
     
     //!cpp:function::
     extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
