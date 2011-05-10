@@ -1,17 +1,14 @@
 project(OpenColorIO)
 set(OCIO_VERSION_MAJOR 0)
 set(OCIO_VERSION_MINOR 8)
-set(OCIO_VERSION_PATCH 1)
+set(OCIO_VERSION_MICRO 1)
 
 # This does not include the SOVERSION override, on purpose, so that the
 # OCIO_VERSION value will be an accurate reflection of the underlying library version.
-set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PATCH}")
+set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_MICRO}")
 
 if(NOT SOVERSION)
     set(SOVERSION ${OCIO_VERSION_MAJOR} CACHE STRING "Set the SO version in the SO name of the output library")
-endif()
-if(NOT ${SOVERSION} STREQUAL ${OCIO_VERSION_MAJOR})
-    set(OCIO_VERSION_MAJOR ${SOVERSION})
 endif()
 
 
@@ -266,9 +263,9 @@ endif()
 ###############################################################################
 ### CPACK ###
 
-set(CPACK_PACKAGE_VERSION_MAJOR ${OCIO_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MAJOR ${SOVERSION})
 set(CPACK_PACKAGE_VERSION_MINOR ${OCIO_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${OCIO_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION_PATCH ${OCIO_VERSION_MICRO})
 set(CPACK_GENERATOR None)
 set(CPACK_SOURCE_GENERATOR TGZ)
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "ocio.${OCIO_VERSION}")

@@ -120,4 +120,5 @@ initPyOpenColorIO(void)
     OCIO::AddProcessorObjectToModule( m );
     
     PyModule_AddStringConstant(m, "version", OCIO_VERSION);
+    PyModule_AddIntConstant(m, "hexversion", OCIO_VERSION_HEX);
 }
