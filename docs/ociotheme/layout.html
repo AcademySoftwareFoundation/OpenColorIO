@@ -39,13 +39,13 @@
           <img class="rightlogo" src="{{ pathto('_static/' + logo, 1) }}" alt="Logo"/>
         {%- endif -%}
         <h1 class="heading"><a href="{{ pathto('index') }}">
-          <span>{{ shorttitle|e }}</span></a></h1>
+          <span>OpenColorIO</span></a></h1>
         <h2 class="heading"><span>Open Source Color Management</span></h2>
         {%- endif %}
         {%- endblock %}
       </div>
       <div class="topnav">
-      {{ nav() }}
+      {{ shorttitle|e }}
       </div>
       <div class="content">
         {#{%- if display_toc %}
@@ -54,7 +54,18 @@
           {{ toc }}
         </div>
         {%- endif %}#}
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                {{toctree()}}
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
         {% block body %}{% endblock %}
+        </td>
+        </tr></table>
+        <br>
       </div>
       <div class="bottomnav">
       {{ nav() }}

@@ -154,7 +154,9 @@ div.title {
     margin-bottom: 25px;
 }
 div.topnav {
-    /* background: #e0e0e0; */
+    background: #e0e0e0;
+    font-size: 0.8em;
+    text-align: right;
 }
 div.topnav p {
     margin-top: 0;
@@ -302,6 +304,7 @@ div.content ul > li {
     list-style-type: none;
     padding: 0 0 0 1.666em;
     margin-bottom: 3px;
+    font-weight: normal;
 }
 
 td {
@@ -343,7 +346,7 @@ hr {
         content: " (" attr(title) ")";
         font-style: italic;
     }
-    /* and hawk362not have mozilla dotted underline */
+    /* and not have mozilla dotted underline */
     acronym {
         border: none;
     }
@@ -382,9 +385,10 @@ div.imageBar {
     background-color: #DDDDDD;
 }
 
-div.caption {
+p.caption {
     font-size:x-small;
     text-align: right;
+    background-color: #cdcdcd;
 }
 
 div.sidebar2 {
@@ -398,22 +402,22 @@ div.sidebar2 {
     */
 }
 
-div.sidebar2 h3,
-div.sidebar2 h4 {
+div.content div.sidebar2 ul > li.toctree-l1 {
     font-family: Arial, sans-serif;
     color: #222;
     font-size: 1.2em;
     font-weight: normal;
     margin: 0; /** reset the margins back to 0**/
-    padding: 5px 10px;
-    background-color: #ddd;
+    padding: 2px 5px;
     text-shadow: 1px 1px 0 white;
-}
-
-div.sidebar2 h4{
+    background: #ddd;
     font-size: 1.1em;
 }
- 
+
+div.content ul > li.toctree-l1 > ul {
+    margin: 0;
+}
+
 div.sidebar2 h3 a {
     color: #444;
 }
@@ -430,8 +434,11 @@ div.sidebar2 ul {
 div.sidebar2 li {
     padding:3px;
 }
- 
+
 div.sidebar2 a {
     color: #444;
 }
- 
+
+#bodycontent {
+    padding: 4px;
+}

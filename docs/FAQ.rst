@@ -1,3 +1,5 @@
+.. _faq:
+
 FAQ
 ===
 
@@ -7,7 +9,7 @@ License?
 New BSD.
 
 You are welcome to include the OpenColorIO in commercial, or open source
-applications. See the :doc:`License` for further details.
+applications. See the :ref:`license` for further details.
 
 
 Terminology

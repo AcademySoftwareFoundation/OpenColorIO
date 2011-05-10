@@ -9,33 +9,7 @@
 #}
 {% extends "layout.html" %}
 {% block body %}
-    <table width="100%" cellspacing="0" cellpadding="0">
-    <tr><td width="200">
-        <div class="sidebar2">
-        <ul>
-        <h4><a class="reference internal" href="#">Home</a></h4>
-        <h4><a class="reference internal" href="#download-source-code">Documentation</a></h4> 
-        <h4>Profiles</h4>
-        <ul>
-            <li><a class="reference internal" href="#contact">SPI Workflow</a><li>
-            <li><a class="reference internal" href="#contact">spi-vfx</a><li>
-            <li><a class="reference internal" href="#contact">spi-anim</a><li>
-            <li><a class="reference internal" href="#contact">nuke-default</a><li>
-        </ul>
-        <h4>Developers</h4>
-        <ul>
-            <li><a class="reference internal" href="#contact">Getting Started</a><li>
-            <li><a class="reference internal" href="#contact">Coding Guidelines</a><li>
-            <li><a class="reference internal" href="#contact">Submitting Changes</a><li>
-            <li><a class="reference internal" href="#contact">Usage Examples</a><li>
-            <li><a class="reference internal" href="#contact">Issues</a><li>
-        </ul>
-        <h4><a class="reference internal" href="#contact">FAQ</a></h4>
-        <h4><a class="reference internal" href="#contact">Downloads</a></h4>
-        </ul>
-    </div>
-    </td>
-    <td width="100%">{{ body }}</td>
+{{ body }}
     {% if pagename == "index" %}
     <td width="275">
         <div class="imageBar">
@@ -51,7 +25,4 @@
         </div>
     </td>
     {% endif %}
-    </tr></table>
-Printing Context <br>
-{{ pagename|e }} 
 {% endblock %}
