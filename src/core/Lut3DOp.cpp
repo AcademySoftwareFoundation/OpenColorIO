@@ -257,6 +257,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
@@ -310,6 +311,12 @@ OCIO_NAMESPACE_ENTER
         bool Lut3DOp::isNoOp() const
         {
             return false;
+        }
+        
+        // TODO: compute real value for hasChannelCrosstalk
+        bool Lut3DOp::hasChannelCrosstalk() const
+        {
+            return true;
         }
         
         void Lut3DOp::finalize()

@@ -592,6 +592,10 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         bool isNoOp() const;
         
+        //!cpp:function:: does the processor represent an image transformation that
+        //                introduces crosstalk between the image channels
+        bool hasChannelCrosstalk() const;
+        
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // CPU Path

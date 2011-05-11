@@ -49,6 +49,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
@@ -99,6 +100,11 @@ OCIO_NAMESPACE_ENTER
         bool AllocationNoOp::isNoOp() const
         {
             return true;
+        }
+        
+        bool AllocationNoOp::hasChannelCrosstalk() const
+        {
+            return false;
         }
         
         void AllocationNoOp::finalize()

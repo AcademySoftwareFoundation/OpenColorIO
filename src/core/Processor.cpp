@@ -72,6 +72,11 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->isNoOp();
     }
     
+    bool Processor::hasChannelCrosstalk() const
+    {
+        return getImpl()->hasChannelCrosstalk();
+    }
+    
     void Processor::apply(ImageDesc& img) const
     {
         getImpl()->apply(img);
@@ -242,6 +247,16 @@ OCIO_NAMESPACE_ENTER
     bool Processor::Impl::isNoOp() const
     {
         return IsOpVecNoOp(m_cpuOps);
+    }
+    
+    bool Processor::Impl::hasChannelCrosstalk() const
+    {
+        for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+        {
+            if(m_cpuOps[i]->hasChannelCrosstalk()) return true;
+        }
+        
+        return false;
     }
     
     void Processor::Impl::apply(ImageDesc& img) const
