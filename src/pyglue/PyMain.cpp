@@ -41,6 +41,20 @@ namespace OCIO = OCIO_NAMESPACE;
 
 namespace
 {
+    PyObject * PyOCIO_ClearAllCaches(PyObject * /* self */)
+    {
+        try
+        {
+            OCIO::ClearAllCaches();
+            Py_RETURN_NONE;
+        }
+        catch(...)
+        {
+            OCIO::Python_Handle_Exception();
+            return NULL;
+        }
+    }
+    
     PyObject * PyOCIO_GetCurrentConfig(PyObject * /* self */)
     {
         try
@@ -79,11 +93,14 @@ namespace
     
     
     PyMethodDef PyOCIO_methods[] = {
+        {"ClearAllCaches",
+            (PyCFunction) PyOCIO_ClearAllCaches,
+            METH_NOARGS,
+            ""},
         {"GetCurrentConfig",
             (PyCFunction) PyOCIO_GetCurrentConfig,
             METH_NOARGS,
             ""},
-        
         {"SetCurrentConfig",
             (PyCFunction) PyOCIO_SetCurrentConfig,
             METH_VARARGS,

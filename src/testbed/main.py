@@ -30,8 +30,34 @@ print ""
 
 
 # Create a new config
+
+if True:
+    config = OCIO.Config()
+    
+    cs = OCIO.ColorSpace()
+    cs.setName("lnh")
+    cs.setFamily("ln")
+    cs.setBitDepth(OCIO.Constants.BIT_DEPTH_F16)
+    cs.setIsData(False)
+    cs.setAllocation(OCIO.Constants.ALLOCATION_LG2)
+    cs.setAllocationVars((-16.0,6.0))
+    
+    fileTransform = OCIO.FileTransform(src='foo.lut', interpolation='linear', direction='inverse')
+    cs2 = OCIO.ColorSpace(name="lnf",
+                          family="ln",
+                          bitDepth=OCIO.Constants.BIT_DEPTH_F32,
+                          allocation=OCIO.Constants.ALLOCATION_LG2,
+                          allocationVars=[-10.0,6.0],
+                          to_reference=fileTransform
+                          )
+    
+    config.addColorSpace(cs)
+    config.addColorSpace(cs2)
+    
+    print config.serialize()
+
 """
-config = OCIO.Config()
+
 
 print 'isEditable', config.isEditable()
 print "resourcePath: '%s' " % (config.getResourcePath(),)
@@ -53,7 +79,7 @@ print config.getDefaultLumaCoefs()
 #print config.getDefaultLumaCoefs()
 
 """
-
+"""
 config = OCIO.Config.CreateFromEnv()
 config.sanityCheck()
 
@@ -84,7 +110,7 @@ print 'lut3DCacheID', lut3DCacheID
 
 lut3d = p.getGpuLut3D(shaderDesc)
 print 'lut3d', len(lut3d)
-
+"""
 
 """
 config = OCIO.Config()

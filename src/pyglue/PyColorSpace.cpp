@@ -281,7 +281,7 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_ColorSpace_init( PyOCIO_ColorSpace *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_ColorSpace_init( PyOCIO_ColorSpace *self, PyObject * args, PyObject * kwds )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
@@ -290,10 +290,70 @@ OCIO_NAMESPACE_ENTER
             self->cppobj = new ColorSpaceRcPtr();
             self->isconst = true;
             
+            // Parse optional kwargs
+            char * name = NULL;
+            char * family = NULL;
+            char * description = NULL;
+            char * bitDepth = NULL;
+            bool isData = false; // TODO: Do not rely on the default value
+            char * allocation = NULL;
+            PyObject * allocationVars = NULL;
+            PyObject * toRefTransform = NULL;
+            PyObject * fromRefTransform = NULL;
+            
+            
+            const char * toRefStr = 
+                ColorSpaceDirectionToString(COLORSPACE_DIR_TO_REFERENCE);
+            const char * fromRefStr = 
+                ColorSpaceDirectionToString(COLORSPACE_DIR_FROM_REFERENCE);
+            const char *kwlist[] = {
+                "name", "family", "description", "bitDepth",
+                "isData",
+                "allocation", "allocationVars",
+                toRefStr, fromRefStr,
+                NULL
+            };
+            
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|ssssO&sOOO",
+                const_cast<char **>(kwlist),
+                &name, &family, &description, &bitDepth,
+                ConvertPyObjectToBool, &isData,
+                &allocation, &allocationVars,
+                &toRefTransform, &fromRefTransform)) return -1;
+            
             try
             {
-                *self->cppobj = ColorSpace::Create();
+                ColorSpaceRcPtr colorSpace = ColorSpace::Create();
+                *self->cppobj = colorSpace;
                 self->isconst = false;
+                
+                if(name) colorSpace->setName(name);
+                if(family) colorSpace->setFamily(family);
+                if(description) colorSpace->setDescription(description);
+                if(bitDepth) colorSpace->setBitDepth(BitDepthFromString(bitDepth));
+                colorSpace->setIsData(isData); // TODO: Do not rely on the default value
+                if(allocation) colorSpace->setAllocation(AllocationFromString(allocation));
+                if(allocationVars)
+                {
+                    std::vector<float> vars;
+                    if(!FillFloatVectorFromPySequence(allocationVars, vars))
+                    {
+                        PyErr_SetString(PyExc_TypeError, "allocationVars kwarg must be a float array.");
+                        return -1;
+                    }
+                    colorSpace->setAllocationVars(static_cast<int>(vars.size()), &vars[0]);
+                }
+                if(toRefTransform)
+                {
+                    ConstTransformRcPtr transform = GetConstTransform(toRefTransform, true);
+                    colorSpace->setTransform(transform, COLORSPACE_DIR_TO_REFERENCE);
+                }
+                if(fromRefTransform)
+                {
+                    ConstTransformRcPtr transform = GetConstTransform(fromRefTransform, true);
+                    colorSpace->setTransform(transform, COLORSPACE_DIR_FROM_REFERENCE);
+                }
+                
                 return 0;
             }
             catch ( const std::exception & e )
