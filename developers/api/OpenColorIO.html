@@ -1,0 +1,1230 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO v0.8.1 documentation" href="../../index.html" />
+    <link rel="up" title="&lt;no title&gt;" href="index.html" />
+    <link rel="next" title="C++ Transforms" href="OpenColorTransforms.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO v0.8.1 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../workflow/index.html">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../submitting_changes.html">Submitting Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../issues.html">Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_examples.html">Usage Examples</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">C++ API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OpenColorTransforms.html">C++ Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OpenColorTypes.html">C++ Types</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">License</a></li>
+</ul>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="c-api">
+<h1>C++ API<a class="headerlink" href="#c-api" title="Permalink to this headline">¶</a></h1>
+<p><strong>Usage Example:</strong> <em>Compositing plugin, which converts from &#8220;log&#8221; to &#8220;lin&#8221;</em></p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &lt;OpenColorIO/OpenColorIO.h&gt;</span>
+<span class="k">namespace</span> <span class="n">OCIO</span> <span class="o">=</span> <span class="n">OCIO_NAMESPACE</span><span class="p">;</span>
+
+<span class="k">try</span>
+<span class="p">{</span>
+    <span class="c1">// Get the global OpenColorIO config</span>
+    <span class="c1">// This will auto-initialize (using $OCIO) on first use</span>
+    <span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">GetCurrentConfig</span><span class="p">();</span>
+
+    <span class="c1">// Get the processor corresponding to this transform.</span>
+    <span class="n">OCIO</span><span class="o">::</span><span class="n">ConstProcessorRcPtr</span> <span class="n">processor</span> <span class="o">=</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">getProcessor</span><span class="p">(</span><span class="n">OCIO</span><span class="o">::</span><span class="n">ROLE_COMPOSITING_LOG</span><span class="p">,</span>
+                                                               <span class="n">OCIO</span><span class="o">::</span><span class="n">ROLE_SCENE_LINEAR</span><span class="p">);</span>
+
+    <span class="c1">// Wrap the image in a light-weight ImageDescription</span>
+    <span class="n">OCIO</span><span class="o">::</span><span class="n">PackedImageDesc</span> <span class="n">img</span><span class="p">(</span><span class="n">imageData</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+    <span class="c1">// Apply the color transformation (in place)</span>
+    <span class="n">processor</span><span class="o">-&gt;</span><span class="n">apply</span><span class="p">(</span><span class="n">img</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">catch</span><span class="p">(</span><span class="n">OCIO</span><span class="o">::</span><span class="n">Exception</span> <span class="o">&amp;</span> <span class="n">exception</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;OpenColorIO Error: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">exception</span><span class="p">.</span><span class="n">what</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="exception">
+<h2>Exception<a class="headerlink" href="#exception" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Exception">
+<em class="property">class </em><tt class="descname">Exception</tt><a class="headerlink" href="#Exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception class to throw for an errors detected at
+runtime.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">ALL fcns on the Config class can potentially throw this exception.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Exception::Exception__cCP">
+ <tt class="descclassname">Exception::</tt><tt class="descname">Exception</tt><big>(</big>const char* <em>None</em><big>)</big><a class="headerlink" href="#Exception::Exception__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Exception::Exception__ExceptionCR">
+ <tt class="descclassname">Exception::</tt><tt class="descname">Exception</tt><big>(</big>const Exception&amp; <em>None</em><big>)</big><a class="headerlink" href="#Exception::Exception__ExceptionCR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Exception::assign-operator__ExceptionCR">
+Exception&amp; <tt class="descclassname">Exception::</tt><tt class="descname">operator=</tt><big>(</big>const Exception&amp; <em>None</em><big>)</big><a class="headerlink" href="#Exception::assign-operator__ExceptionCR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Exception::~Exception">
+ <tt class="descclassname">Exception::</tt><tt class="descname">~Exception</tt><big>(</big><big>)</big><a class="headerlink" href="#Exception::~Exception" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Exception::whatC">
+const char* <tt class="descclassname">Exception::</tt><tt class="descname">what</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Exception::whatC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ClearAllCaches">
+void <tt class="descname">ClearAllCaches</tt><big>(</big><big>)</big><a class="headerlink" href="#ClearAllCaches" title="Permalink to this definition">¶</a></dt>
+<dd><p>OpenColorIO, during normal usage, tends to cache certain information
+(such as the contents of LUTs on disk, intermediate results, etc).
+Calling this function will flus all such information.
+Under normal usage, this is not necessary. But in particular instances
+(such as designing OCIO profiles, and wanting to re-read luts without
+restarting) it can be helpful.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="config">
+<h2>Config<a class="headerlink" href="#config" title="Permalink to this headline">¶</a></h2>
+<p>For applications which are interested in using a single color config at
+a time (this is the vast majority of apps), their API would
+traditionally get the global configuration, and use that, as opposed to
+creating a new one. This simplifies the use case for
+plugins / bindings, as it alleviates the need to pass configuration
+handles around.</p>
+<p>An example of an application where this would not be sufficient would be
+a multi-threaded image proxy server (daemon), which wished to handle
+multiple show configurations in a single process concurrently. This
+app would need to keep multiple configurations alive, and to manage them
+appropriately.</p>
+<p>The color configuration (<a class="reference internal" href="#Config" title="Config"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Config</span></tt></a>) is the main object for
+interacting with this libray. It encapsulates all of the information
+necessary to utilized customized <a class="reference internal" href="OpenColorTransforms.html#ColorSpaceTransform" title="ColorSpaceTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">ColorSpaceTransform</span></tt></a> and
+<a class="reference internal" href="OpenColorTransforms.html#DisplayTransform" title="DisplayTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DisplayTransform</span></tt></a> operations.</p>
+<p>See the included <tt class="xref doc docutils literal"><span class="pre">FAQ</span></tt> for more detailed information on
+selecting / creating / working with custom color configurations.</p>
+<p>Roughly speaking, if you&#8217;re a novice user you will want to select a
+default configuration that most closely approximates your use case
+(animation, visual effects, etc), and set <span class="target" id="index-0"></span><a class="reference internal" href="../../installation.html#envvar-OCIO"><tt class="xref std std-envvar docutils literal"><span class="pre">OCIO</span></tt></a> environment
+variable to point at the root of that configuration.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Initialization using environment variables is typically preferable in
+a multi-app ecosystem, as it allows all applications to be
+consistently configured.</p>
+</div>
+<p>See <a class="reference internal" href="../usage_examples.html#developers-usageexamples"><em>Usage Examples</em></a></p>
+<dl class="function">
+<dt id="GetCurrentConfig">
+<a class="reference internal" href="OpenColorTypes.html#ConstConfigRcPtr" title="ConstConfigRcPtr">ConstConfigRcPtr</a> <tt class="descname">GetCurrentConfig</tt><big>(</big><big>)</big><a class="headerlink" href="#GetCurrentConfig" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="SetCurrentConfig__ConstConfigRcPtrCR">
+void <tt class="descname">SetCurrentConfig</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstConfigRcPtr" title="ConstConfigRcPtr">const ConstConfigRcPtr&amp;</a> <em>config</em><big>)</big><a class="headerlink" href="#SetCurrentConfig__ConstConfigRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the current configuration.</p>
+<p>This will store a copy of the specified config.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="Config">
+<em class="property">class </em><tt class="descname">Config</tt><a class="headerlink" href="#Config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="section" id="initialization">
+<span id="cfginit-section"></span><h3>Initialization<a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="Config::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ConfigRcPtr" title="ConfigRcPtr">ConfigRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#Config::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::CreateFromEnv">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ConstConfigRcPtr" title="ConstConfigRcPtr">ConstConfigRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">CreateFromEnv</tt><big>(</big><big>)</big><a class="headerlink" href="#Config::CreateFromEnv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::CreateFromFile__cCP">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ConstConfigRcPtr" title="ConstConfigRcPtr">ConstConfigRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">CreateFromFile</tt><big>(</big>const char* <em>filename</em><big>)</big><a class="headerlink" href="#Config::CreateFromFile__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::CreateFromStream__isR">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ConstConfigRcPtr" title="ConstConfigRcPtr">ConstConfigRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">CreateFromStream</tt><big>(</big>std::istream&amp; <em>istream</em><big>)</big><a class="headerlink" href="#Config::CreateFromStream__isR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#ConfigRcPtr" title="ConfigRcPtr">ConfigRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::sanityCheckC">
+void <tt class="descclassname">Config::</tt><tt class="descname">sanityCheck</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::sanityCheckC" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will throw an exception if the config is malformed. The most
+common error situation are references to colorspaces that do not
+exist.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::getDescriptionC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getDescription</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getDescriptionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::setDescription__cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">setDescription</tt><big>(</big>const char* <em>description</em><big>)</big><a class="headerlink" href="#Config::setDescription__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::serialize__osRC">
+void <tt class="descclassname">Config::</tt><tt class="descname">serialize</tt><big>(</big>std::ostream&amp; <em>os</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::serialize__osRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getCacheIDC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getCacheID</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getCacheIDC" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will produce a hash of the all colorspace definitions, etc.
+All external references, such files used in FileTransforms, etc
+will be incorporated into the cacheID. While the contents of
+the files is not read, the filesystem is queried for relavent
+information (mtime, inode) such that the config&#8217;s cacheID will
+change when the underlying luts are updated.
+If a context is not provided, the currentContext will be used.
+If a null context is provided, file references will not be taken into
+account (this is essentially a hash of Config::serialize).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::getCacheID__ConstContextRcPtrCRC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getCacheID</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstContextRcPtr" title="ConstContextRcPtr">const ConstContextRcPtr&amp;</a> <em>context</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getCacheID__ConstContextRcPtrCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="resources">
+<span id="cfgresource-section"></span><h3>Resources<a class="headerlink" href="#resources" title="Permalink to this headline">¶</a></h3>
+<p>Given a lut src name, where should we find it?</p>
+<dl class="function">
+<dt id="Config::getCurrentContextC">
+<a class="reference internal" href="OpenColorTypes.html#ConstContextRcPtr" title="ConstContextRcPtr">ConstContextRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getCurrentContext</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getCurrentContextC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getSearchPathC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getSearchPath</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getSearchPathC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getWorkingDirC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getWorkingDir</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getWorkingDirC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="colorspaces">
+<span id="cfgcolorspaces-section"></span><h3>ColorSpaces<a class="headerlink" href="#colorspaces" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="Config::getNumColorSpacesC">
+int <tt class="descclassname">Config::</tt><tt class="descname">getNumColorSpaces</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getNumColorSpacesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getColorSpaceNameByIndex__iC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getColorSpaceNameByIndex</tt><big>(</big>int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getColorSpaceNameByIndex__iC" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will null if an invalid index is specified</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">These fcns all accept either a colorspace OR role name.
+(Colorspace names take precedence over roles.)</p>
+</div>
+<dl class="function">
+<dt id="Config::getColorSpace__cCPC">
+<a class="reference internal" href="OpenColorTypes.html#ConstColorSpaceRcPtr" title="ConstColorSpaceRcPtr">ConstColorSpaceRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getColorSpace</tt><big>(</big>const char* <em>name</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getColorSpace__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will return null if the specified name is not
+found.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::getIndexForColorSpace__cCPC">
+int <tt class="descclassname">Config::</tt><tt class="descname">getIndexForColorSpace</tt><big>(</big>const char* <em>name</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getIndexForColorSpace__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::addColorSpace__ConstColorSpaceRcPtrCR">
+void <tt class="descclassname">Config::</tt><tt class="descname">addColorSpace</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstColorSpaceRcPtr" title="ConstColorSpaceRcPtr">const ConstColorSpaceRcPtr&amp;</a> <em>cs</em><big>)</big><a class="headerlink" href="#Config::addColorSpace__ConstColorSpaceRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If another colorspace is already registered with the same name,
+this will overwrite it. This stores a copy of the specified
+colorspace.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::clearColorSpaces">
+void <tt class="descclassname">Config::</tt><tt class="descname">clearColorSpaces</tt><big>(</big><big>)</big><a class="headerlink" href="#Config::clearColorSpaces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::parseColorSpaceFromString__cCPC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">parseColorSpaceFromString</tt><big>(</big>const char* <em>str</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::parseColorSpaceFromString__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given the specified string, get the longest,
+right-most, colorspace substring that appears.</p>
+<ul class="simple">
+<li>If strict parsing is enabled, and no colorspace is found, return
+an empty string.</li>
+<li>If strict parsing is disabled, return ROLE_DEFAULT (if defined).</li>
+<li>If the default role is not defined, return an empty string.</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::isStrictParsingEnabledC">
+bool <tt class="descclassname">Config::</tt><tt class="descname">isStrictParsingEnabled</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::isStrictParsingEnabledC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::setStrictParsingEnabled__b">
+void <tt class="descclassname">Config::</tt><tt class="descname">setStrictParsingEnabled</tt><big>(</big>bool <em>enabled</em><big>)</big><a class="headerlink" href="#Config::setStrictParsingEnabled__b" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="roles">
+<span id="cfgroles-section"></span><h3>Roles<a class="headerlink" href="#roles" title="Permalink to this headline">¶</a></h3>
+<p>A role is like an alias for a colorspace. You can query the colorspace
+corresponding to a role using the normal getColorSpace fcn.</p>
+<dl class="function">
+<dt id="Config::setRole__cCP.cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">setRole</tt><big>(</big>const char* <em>role</em>, const char* <em>colorSpaceName</em><big>)</big><a class="headerlink" href="#Config::setRole__cCP.cCP" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Setting the <tt class="docutils literal"><span class="pre">colorSpaceName</span></tt> name to a null string unsets it.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::getNumRolesC">
+int <tt class="descclassname">Config::</tt><tt class="descname">getNumRoles</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getNumRolesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::hasRole__cCPC">
+bool <tt class="descclassname">Config::</tt><tt class="descname">hasRole</tt><big>(</big>const char* <em>role</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::hasRole__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return true if the role has been defined.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::getRoleName__iC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getRoleName</tt><big>(</big>int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getRoleName__iC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the role name at index, this will return values
+like &#8216;scene_linear&#8217;, &#8216;compositing_log&#8217;.
+Return empty string if index is out of range.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="display-view-registration">
+<span id="cfgdisplayview-section"></span><h3>Display/View Registration<a class="headerlink" href="#display-view-registration" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="Config::getDefaultDisplayC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getDefaultDisplay</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getDefaultDisplayC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getNumDisplaysC">
+int <tt class="descclassname">Config::</tt><tt class="descname">getNumDisplays</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getNumDisplaysC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getDisplay__iC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getDisplay</tt><big>(</big>int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getDisplay__iC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getDefaultView__cCPC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getDefaultView</tt><big>(</big>const char* <em>display</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getDefaultView__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getNumViews__cCPC">
+int <tt class="descclassname">Config::</tt><tt class="descname">getNumViews</tt><big>(</big>const char* <em>display</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getNumViews__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getView__cCP.iC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getView</tt><big>(</big>const char* <em>display</em>, int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getView__cCP.iC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getDisplayColorSpaceName__cCP.cCPC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getDisplayColorSpaceName</tt><big>(</big>const char* <em>display</em>, const char* <em>view</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getDisplayColorSpaceName__cCP.cCPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::setDisplayColorSpaceName__cCP.cCP.cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">setDisplayColorSpaceName</tt><big>(</big>const char* <em>display</em>, const char* <em>view</em>, const char* <em>colorSpaceName</em><big>)</big><a class="headerlink" href="#Config::setDisplayColorSpaceName__cCP.cCP.cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::setActiveDisplays__cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">setActiveDisplays</tt><big>(</big>const char* <em>displays</em><big>)</big><a class="headerlink" href="#Config::setActiveDisplays__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Comma-delimited list of display names.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::getActiveDisplaysC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getActiveDisplays</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getActiveDisplaysC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::setActiveViews__cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">setActiveViews</tt><big>(</big>const char* <em>displays</em><big>)</big><a class="headerlink" href="#Config::setActiveViews__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Comma-delimited list of view names.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::getActiveViewsC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getActiveViews</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getActiveViewsC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="luma">
+<span id="cfgluma-section"></span><h3>Luma<a class="headerlink" href="#luma" title="Permalink to this headline">¶</a></h3>
+<p>Get the default coefficients for computing luma.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">There is no &#8220;1 size fits all&#8221; set of luma coefficients. (The
+values are typically different for each colorspace, and the
+application of them may be nonsensical depending on the
+intensity coding anyways). Thus, the &#8216;right&#8217; answer is to make
+these functions on the <a class="reference internal" href="#Config" title="Config"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Config</span></tt></a> class. However, it&#8217;s
+often useful to have a config-wide default so here it is. We will
+add the colorspace specific luma call if/when another client is
+interesting in using it.</p>
+</div>
+<dl class="function">
+<dt id="Config::getDefaultLumaCoefs__floatPC">
+void <tt class="descclassname">Config::</tt><tt class="descname">getDefaultLumaCoefs</tt><big>(</big>float* <em>rgb</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getDefaultLumaCoefs__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::setDefaultLumaCoefs__floatCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">setDefaultLumaCoefs</tt><big>(</big>const float* <em>rgb</em><big>)</big><a class="headerlink" href="#Config::setDefaultLumaCoefs__floatCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>These should be normalized (sum to 1.0 exactly).</p>
+</dd></dl>
+
+</div>
+<div class="section" id="processors">
+<span id="cfgprocessors-section"></span><h3>Processors<a class="headerlink" href="#processors" title="Permalink to this headline">¶</a></h3>
+<p>Convert from inputColorSpace to outputColorSpace</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This may provide higher fidelity than anticipated due to internal
+optimizations. For example, if the inputcolorspace and the
+outputColorSpace are members of the same family, no conversion
+will be applied, even though strictly speaking quantization
+should be added.</p>
+</div>
+<p>If you wish to test these calls for quantization characteristics,
+apply in two steps; the image must contain RGB triples (though
+arbitrary numbers of additional channels can be supported (ignored)
+using the pixelStrideBytes arg).</p>
+<dl class="function">
+<dt id="Config::getProcessor__ConstContextRcPtrCR.ConstColorSpaceRcPtrCR.ConstColorSpaceRcPtrCRC">
+<a class="reference internal" href="OpenColorTypes.html#ConstProcessorRcPtr" title="ConstProcessorRcPtr">ConstProcessorRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getProcessor</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstContextRcPtr" title="ConstContextRcPtr">const ConstContextRcPtr&amp;</a> <em>context</em>, <a class="reference internal" href="OpenColorTypes.html#ConstColorSpaceRcPtr" title="ConstColorSpaceRcPtr">const ConstColorSpaceRcPtr&amp;</a> <em>srcColorSpace</em>, <a class="reference internal" href="OpenColorTypes.html#ConstColorSpaceRcPtr" title="ConstColorSpaceRcPtr">const ConstColorSpaceRcPtr&amp;</a> <em>dstColorSpace</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getProcessor__ConstContextRcPtrCR.ConstColorSpaceRcPtrCR.ConstColorSpaceRcPtrCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getProcessor__ConstColorSpaceRcPtrCR.ConstColorSpaceRcPtrCRC">
+<a class="reference internal" href="OpenColorTypes.html#ConstProcessorRcPtr" title="ConstProcessorRcPtr">ConstProcessorRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getProcessor</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstColorSpaceRcPtr" title="ConstColorSpaceRcPtr">const ConstColorSpaceRcPtr&amp;</a> <em>srcColorSpace</em>, <a class="reference internal" href="OpenColorTypes.html#ConstColorSpaceRcPtr" title="ConstColorSpaceRcPtr">const ConstColorSpaceRcPtr&amp;</a> <em>dstColorSpace</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getProcessor__ConstColorSpaceRcPtrCR.ConstColorSpaceRcPtrCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getProcessor__cCP.cCPC">
+<a class="reference internal" href="OpenColorTypes.html#ConstProcessorRcPtr" title="ConstProcessorRcPtr">ConstProcessorRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getProcessor</tt><big>(</big>const char* <em>srcName</em>, const char* <em>dstName</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getProcessor__cCP.cCPC" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Names can be colorspace name, role name, or a combination of both.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::getProcessor__ConstContextRcPtrCR.cCP.cCPC">
+<a class="reference internal" href="OpenColorTypes.html#ConstProcessorRcPtr" title="ConstProcessorRcPtr">ConstProcessorRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getProcessor</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstContextRcPtr" title="ConstContextRcPtr">const ConstContextRcPtr&amp;</a> <em>context</em>, const char* <em>srcName</em>, const char* <em>dstName</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getProcessor__ConstContextRcPtrCR.cCP.cCPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Get the processor for the specified transform.</p>
+<p>Not often needed, but will allow for the re-use of atomic OCIO
+functionality (such as to apply an individual LUT file).</p>
+<dl class="function">
+<dt id="Config::getProcessor__ConstTransformRcPtrCRC">
+<a class="reference internal" href="OpenColorTypes.html#ConstProcessorRcPtr" title="ConstProcessorRcPtr">ConstProcessorRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getProcessor</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getProcessor__ConstTransformRcPtrCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getProcessor__ConstTransformRcPtrCR.TransformDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#ConstProcessorRcPtr" title="ConstProcessorRcPtr">ConstProcessorRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getProcessor</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em>, <a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>direction</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getProcessor__ConstTransformRcPtrCR.TransformDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getProcessor__ConstContextRcPtrCR.ConstTransformRcPtrCR.TransformDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#ConstProcessorRcPtr" title="ConstProcessorRcPtr">ConstProcessorRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getProcessor</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstContextRcPtr" title="ConstContextRcPtr">const ConstContextRcPtr&amp;</a> <em>context</em>, <a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em>, <a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>direction</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getProcessor__ConstContextRcPtrCR.ConstTransformRcPtrCR.TransformDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="colorspace">
+<span id="colorspace-section"></span><h2>ColorSpace<a class="headerlink" href="#colorspace" title="Permalink to this headline">¶</a></h2>
+<p>The <em>ColorSpace</em> is the state of an image with respect to colorimetry
+and color encoding. Transforming images between different
+<em>ColorSpaces</em> is the primary motivation for this library.</p>
+<p>While a complete discussion of colorspaces is beyond the scope of
+header documentation, traditional uses would be to have <em>ColorSpaces</em>
+corresponding to: physical capture devices (known cameras, scanners),
+and internal &#8216;convenience&#8217; spaces (such as scene linear, logarithmic).</p>
+<p><em>ColorSpaces</em> are specific to a particular image precision (float32,
+uint8, etc.), and the set of ColorSpaces that provide equivalent mappings
+(at different precisions) are referred to as a &#8216;family&#8217;.</p>
+<dl class="class">
+<dt id="ColorSpace">
+<em class="property">class </em><tt class="descname">ColorSpace</tt><a class="headerlink" href="#ColorSpace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ColorSpaceRcPtr" title="ColorSpaceRcPtr">ColorSpaceRcPtr</a> <tt class="descclassname">ColorSpace::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#ColorSpace::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#ColorSpaceRcPtr" title="ColorSpaceRcPtr">ColorSpaceRcPtr</a> <tt class="descclassname">ColorSpace::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::getNameC">
+const char* <tt class="descclassname">ColorSpace::</tt><tt class="descname">getName</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getNameC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::setName__cCP">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setName</tt><big>(</big>const char* <em>name</em><big>)</big><a class="headerlink" href="#ColorSpace::setName__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::getFamilyC">
+const char* <tt class="descclassname">ColorSpace::</tt><tt class="descname">getFamily</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getFamilyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::setFamily__cCP">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setFamily</tt><big>(</big>const char* <em>family</em><big>)</big><a class="headerlink" href="#ColorSpace::setFamily__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::getDescriptionC">
+const char* <tt class="descclassname">ColorSpace::</tt><tt class="descname">getDescription</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getDescriptionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::setDescription__cCP">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setDescription</tt><big>(</big>const char* <em>description</em><big>)</big><a class="headerlink" href="#ColorSpace::setDescription__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::getBitDepthC">
+<a class="reference internal" href="OpenColorTypes.html#BitDepth" title="BitDepth">BitDepth</a> <tt class="descclassname">ColorSpace::</tt><tt class="descname">getBitDepth</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getBitDepthC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::setBitDepth__BitDepth">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setBitDepth</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#BitDepth" title="BitDepth">BitDepth</a> <em>bitDepth</em><big>)</big><a class="headerlink" href="#ColorSpace::setBitDepth__BitDepth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="section" id="data">
+<h3>Data<a class="headerlink" href="#data" title="Permalink to this headline">¶</a></h3>
+<p>ColorSpaces that are data are treated a bit special. Basically, any
+colorspace transforms you try to apply to them are ignored. (Think
+of applying a gamut mapping transform to an ID pass). Also, the
+<a class="reference internal" href="OpenColorTransforms.html#DisplayTransform" title="DisplayTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DisplayTransform</span></tt></a> process obeys special &#8216;data min&#8217; and
+&#8216;data max&#8217; args.</p>
+<p>This is traditionally used for pixel data that represents non-color
+pixel data, such as normals, point positions, ID information, etc.</p>
+<dl class="function">
+<dt id="ColorSpace::isDataC">
+bool <tt class="descclassname">ColorSpace::</tt><tt class="descname">isData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::isDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::setIsData__b">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setIsData</tt><big>(</big>bool <em>isData</em><big>)</big><a class="headerlink" href="#ColorSpace::setIsData__b" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="allocation">
+<h3>Allocation<a class="headerlink" href="#allocation" title="Permalink to this headline">¶</a></h3>
+<p>If this colorspace needs to be transferred to a limited dynamic
+range coding space (such as during display with a GPU path), use this
+allocation to maximize bit efficiency.</p>
+<dl class="function">
+<dt id="ColorSpace::getAllocationC">
+<a class="reference internal" href="OpenColorTypes.html#Allocation" title="Allocation">Allocation</a> <tt class="descclassname">ColorSpace::</tt><tt class="descname">getAllocation</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getAllocationC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::setAllocation__Allocation">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setAllocation</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#Allocation" title="Allocation">Allocation</a> <em>allocation</em><big>)</big><a class="headerlink" href="#ColorSpace::setAllocation__Allocation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Specify the optional variable values to configure the allocation.
+If no variables are specified, the defaults are used.</p>
+<p>ALLOCATION_UNIFORM:</p>
+<div class="highlight-python"><pre>2 vars: [min, max]</pre>
+</div>
+<p>ALLOCATION_LG2:</p>
+<div class="highlight-python"><pre>2 vars: [lg2min, lg2max]
+3 vars: [lg2min, lg2max, linear_offset]</pre>
+</div>
+<dl class="function">
+<dt id="ColorSpace::getAllocationNumVarsC">
+int <tt class="descclassname">ColorSpace::</tt><tt class="descname">getAllocationNumVars</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getAllocationNumVarsC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::getAllocationVars__floatPC">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">getAllocationVars</tt><big>(</big>float* <em>vars</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getAllocationVars__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::setAllocationVars__i.floatCP">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setAllocationVars</tt><big>(</big>int <em>numvars</em>, const float* <em>vars</em><big>)</big><a class="headerlink" href="#ColorSpace::setAllocationVars__i.floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="transform">
+<h3>Transform<a class="headerlink" href="#transform" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="ColorSpace::getTransform__ColorSpaceDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">ConstTransformRcPtr</a> <tt class="descclassname">ColorSpace::</tt><tt class="descname">getTransform</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <em>dir</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getTransform__ColorSpaceDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::getEditableTransform__ColorSpaceDirection">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">ColorSpace::</tt><tt class="descname">getEditableTransform</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#ColorSpace::getEditableTransform__ColorSpaceDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::setTransform__ConstTransformRcPtrCR.ColorSpaceDirection">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setTransform</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em>, <a class="reference internal" href="OpenColorTypes.html#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#ColorSpace::setTransform__ConstTransformRcPtrCR.ColorSpaceDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::isTransformSpecified__ColorSpaceDirectionC">
+bool <tt class="descclassname">ColorSpace::</tt><tt class="descname">isTransformSpecified</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <em>dir</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::isTransformSpecified__ColorSpaceDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting a transform to a non-null call makes it specified.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="processor">
+<h2>Processor<a class="headerlink" href="#processor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Processor">
+<em class="property">class </em><tt class="descname">Processor</tt><a class="headerlink" href="#Processor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Processor::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ProcessorRcPtr" title="ProcessorRcPtr">ProcessorRcPtr</a> <tt class="descclassname">Processor::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#Processor::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Processor::isNoOpC">
+bool <tt class="descclassname">Processor::</tt><tt class="descname">isNoOp</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::isNoOpC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="section" id="cpu-path">
+<h3>CPU Path<a class="headerlink" href="#cpu-path" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="Processor::apply__ImageDescRC">
+void <tt class="descclassname">Processor::</tt><tt class="descname">apply</tt><big>(</big>ImageDesc&amp; <em>img</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::apply__ImageDescRC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply to an image.</p>
+</dd></dl>
+
+<p>Apply to a single pixel.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This is not as efficient as applying to an entire image at once.
+If you are processing multiple pixels, and have the flexibility,
+use the above function instead.</p>
+</div>
+<dl class="function">
+<dt id="Processor::applyRGB__floatPC">
+void <tt class="descclassname">Processor::</tt><tt class="descname">applyRGB</tt><big>(</big>float* <em>pixel</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::applyRGB__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Processor::applyRGBA__floatPC">
+void <tt class="descclassname">Processor::</tt><tt class="descname">applyRGBA</tt><big>(</big>float* <em>pixel</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::applyRGBA__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Processor::getCpuCacheIDC">
+const char* <tt class="descclassname">Processor::</tt><tt class="descname">getCpuCacheID</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::getCpuCacheIDC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="gpu-path">
+<h3>GPU Path<a class="headerlink" href="#gpu-path" title="Permalink to this headline">¶</a></h3>
+<p>Get the 3d lut + cg shader for the specified
+<a class="reference internal" href="OpenColorTransforms.html#DisplayTransform" title="DisplayTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DisplayTransform</span></tt></a>.</p>
+<p>cg signature will be:</p>
+<div class="highlight-python"><pre>shaderFcnName(in half4 inPixel, const uniform sampler3D lut3d)</pre>
+</div>
+<p>lut3d should be size: 3 * edgeLen * edgeLen * edgeLen
+return 0 if unknown</p>
+<dl class="function">
+<dt id="Processor::getGpuShaderText__GpuShaderDescCRC">
+const char* <tt class="descclassname">Processor::</tt><tt class="descname">getGpuShaderText</tt><big>(</big>const GpuShaderDesc&amp; <em>shaderDesc</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::getGpuShaderText__GpuShaderDescCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Processor::getGpuShaderTextCacheID__GpuShaderDescCRC">
+const char* <tt class="descclassname">Processor::</tt><tt class="descname">getGpuShaderTextCacheID</tt><big>(</big>const GpuShaderDesc&amp; <em>shaderDesc</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::getGpuShaderTextCacheID__GpuShaderDescCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Processor::getGpuLut3D__floatP.GpuShaderDescCRC">
+void <tt class="descclassname">Processor::</tt><tt class="descname">getGpuLut3D</tt><big>(</big>float* <em>lut3d</em>, const GpuShaderDesc&amp; <em>shaderDesc</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::getGpuLut3D__floatP.GpuShaderDescCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Processor::getGpuLut3DCacheID__GpuShaderDescCRC">
+const char* <tt class="descclassname">Processor::</tt><tt class="descname">getGpuLut3DCacheID</tt><big>(</big>const GpuShaderDesc&amp; <em>shaderDesc</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::getGpuLut3DCacheID__GpuShaderDescCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="baker">
+<h2>Baker<a class="headerlink" href="#baker" title="Permalink to this headline">¶</a></h2>
+<p>In certain situations it is nessary to serilize transforms into a variety
+of application specific lut formats. The Baker can be used to create lut
+formats that ocio supports for writing.</p>
+<p><strong>Usage Example:</strong> <em>Bake a houdini sRGB viewer lut</em></p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">Config</span><span class="o">::</span><span class="n">CreateFromEnv</span><span class="p">();</span>
+<span class="n">OCIO</span><span class="o">::</span><span class="n">BakerRcPtr</span> <span class="n">baker</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">Baker</span><span class="o">::</span><span class="n">Create</span><span class="p">();</span>
+<span class="n">baker</span><span class="o">-&gt;</span><span class="n">setConfig</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
+<span class="n">baker</span><span class="o">-&gt;</span><span class="n">setFormat</span><span class="p">(</span><span class="s">&quot;houdini&quot;</span><span class="p">);</span> <span class="c1">// set the houdini type</span>
+<span class="n">baker</span><span class="o">-&gt;</span><span class="n">setType</span><span class="p">(</span><span class="s">&quot;3D&quot;</span><span class="p">);</span> <span class="c1">// we want a 3D lut</span>
+<span class="n">baker</span><span class="o">-&gt;</span><span class="n">setInputSpace</span><span class="p">(</span><span class="s">&quot;lnf&quot;</span><span class="p">);</span>
+<span class="n">baker</span><span class="o">-&gt;</span><span class="n">setShaperSpace</span><span class="p">(</span><span class="s">&quot;log&quot;</span><span class="p">);</span>
+<span class="n">baker</span><span class="o">-&gt;</span><span class="n">setTargetSpace</span><span class="p">(</span><span class="s">&quot;sRGB&quot;</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">ostringstream</span> <span class="n">out</span><span class="p">;</span>
+<span class="n">baker</span><span class="o">-&gt;</span><span class="n">bake</span><span class="p">(</span><span class="n">out</span><span class="p">);</span> <span class="c1">// fresh bread anyone!</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">out</span><span class="p">.</span><span class="n">str</span><span class="p">();</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#BakerRcPtr" title="BakerRcPtr">BakerRcPtr</a> <tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#Create" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a new Baker</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#BakerRcPtr" title="BakerRcPtr">BakerRcPtr</a> <tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a copy of this Baker</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="setConfig__ConstConfigRcPtrCR">
+void <tt class="descname">setConfig</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstConfigRcPtr" title="ConstConfigRcPtr">const ConstConfigRcPtr&amp;</a> <em>config</em><big>)</big><a class="headerlink" href="#setConfig__ConstConfigRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the config to use</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="setFormat__cCP">
+void <tt class="descname">setFormat</tt><big>(</big>const char* <em>formatName</em><big>)</big><a class="headerlink" href="#setFormat__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the lut output format</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getFormatC">
+const char* <tt class="descname">getFormat</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getFormatC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the lut output format</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="setType__cCP">
+void <tt class="descname">setType</tt><big>(</big>const char* <em>type</em><big>)</big><a class="headerlink" href="#setType__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the lut output type (1D or 3D)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getTypeC">
+const char* <tt class="descname">getType</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getTypeC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the lut output type</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="setMetadata__cCP">
+void <tt class="descname">setMetadata</tt><big>(</big>const char* <em>metadata</em><big>)</big><a class="headerlink" href="#setMetadata__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>set <em>optional</em> meta data for luts that support it</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getMetadataC">
+const char* <tt class="descname">getMetadata</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getMetadataC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the meta data that has been set</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="setInputSpace__cCP">
+void <tt class="descname">setInputSpace</tt><big>(</big>const char* <em>inputSpace</em><big>)</big><a class="headerlink" href="#setInputSpace__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the input colorspace that the lut will be
+applied to</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getInputSpaceC">
+const char* <tt class="descname">getInputSpace</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getInputSpaceC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the input colorspace that has been set</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="setShaperSpace__cCP">
+void <tt class="descname">setShaperSpace</tt><big>(</big>const char* <em>shaperSpace</em><big>)</big><a class="headerlink" href="#setShaperSpace__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>set an <em>optional</em> colorspace to be used to shape /
+transfer the input colorspace. This is mostly used to allocate
+an HDR luminance range into an LDR one.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getShaperSpaceC">
+const char* <tt class="descname">getShaperSpace</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getShaperSpaceC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the shaper colorspace that has been set</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="setTargetSpace__cCP">
+void <tt class="descname">setTargetSpace</tt><big>(</big>const char* <em>targetSpace</em><big>)</big><a class="headerlink" href="#setTargetSpace__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the target device colorspace for the lut</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getTargetSpaceC">
+const char* <tt class="descname">getTargetSpace</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getTargetSpaceC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the target colorspace that has been set</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="setShaperSize__i">
+void <tt class="descname">setShaperSize</tt><big>(</big>int <em>shapersize</em><big>)</big><a class="headerlink" href="#setShaperSize__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the shaper sample size, should be atleast
+cubesize^2 (default: 1024)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="setCubeSize__i">
+void <tt class="descname">setCubeSize</tt><big>(</big>int <em>cubesize</em><big>)</big><a class="headerlink" href="#setCubeSize__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the cube sample size (default: 32)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bake__osRC">
+void <tt class="descname">bake</tt><big>(</big>std::ostream&amp; <em>os</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#bake__osRC" title="Permalink to this definition">¶</a></dt>
+<dd><p>bake the lut into the output stream</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getNumFormats">
+<em class="property">static</em> int <tt class="descname">getNumFormats</tt><big>(</big><big>)</big><a class="headerlink" href="#getNumFormats" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the number of lut writers</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getFormatNameByIndex__i">
+<em class="property">static</em> const char* <tt class="descname">getFormatNameByIndex</tt><big>(</big>int <em>index</em><big>)</big><a class="headerlink" href="#getFormatNameByIndex__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the lut writer at index, return empty string if
+an invalid index is specified</p>
+</dd></dl>
+
+</div>
+<div class="section" id="imagedesc">
+<h2>ImageDesc<a class="headerlink" href="#imagedesc" title="Permalink to this headline">¶</a></h2>
+<dl class="var">
+<dt id="AutoStride">
+const ptrdiff_t <tt class="descname">AutoStride</tt><a class="headerlink" href="#AutoStride" title="Permalink to this definition">¶</a></dt>
+<dd><p>AutoStride</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ImageDesc">
+<em class="property">class </em><tt class="descname">ImageDesc</tt><a class="headerlink" href="#ImageDesc" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a light-weight wrapper around an image, that provides a context
+for pixel access. This does NOT claim ownership of the pixels, or do
+any internal allocations or copying of image data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ImageDesc::~ImageDesc">
+ <tt class="descclassname">ImageDesc::</tt><tt class="descname">~ImageDesc</tt><big>(</big><big>)</big><a class="headerlink" href="#ImageDesc::~ImageDesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ImageDesc::getWidthC">
+long <tt class="descclassname">ImageDesc::</tt><tt class="descname">getWidth</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getWidthC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ImageDesc::getHeightC">
+long <tt class="descclassname">ImageDesc::</tt><tt class="descname">getHeight</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getHeightC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ImageDesc::getXStrideBytesC">
+ptrdiff_t <tt class="descclassname">ImageDesc::</tt><tt class="descname">getXStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getXStrideBytesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ImageDesc::getYStrideBytesC">
+ptrdiff_t <tt class="descclassname">ImageDesc::</tt><tt class="descname">getYStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getYStrideBytesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ImageDesc::getRDataC">
+float* <tt class="descclassname">ImageDesc::</tt><tt class="descname">getRData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getRDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ImageDesc::getGDataC">
+float* <tt class="descclassname">ImageDesc::</tt><tt class="descname">getGData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getGDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ImageDesc::getBDataC">
+float* <tt class="descclassname">ImageDesc::</tt><tt class="descname">getBData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getBDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="section" id="packedimagedesc">
+<h3>PackedImageDesc<a class="headerlink" href="#packedimagedesc" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="PackedImageDesc">
+<em class="property">class </em><tt class="descname">PackedImageDesc</tt><a class="headerlink" href="#PackedImageDesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::PackedImageDesc__floatP.l.l.l.ptrdiff_t.ptrdiff_t.ptrdiff_t">
+ <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">PackedImageDesc</tt><big>(</big>float* <em>data</em>, long <em>width</em>, long <em>height</em>, long <em>numChannels</em>, ptrdiff_t <em>chanStrideBytes</em><em>=AutoStride</em>, ptrdiff_t <em>xStrideBytes</em><em>=AutoStride</em>, ptrdiff_t <em>yStrideBytes</em><em>=AutoStride</em><big>)</big><a class="headerlink" href="#PackedImageDesc::PackedImageDesc__floatP.l.l.l.ptrdiff_t.ptrdiff_t.ptrdiff_t" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::~PackedImageDesc">
+ <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">~PackedImageDesc</tt><big>(</big><big>)</big><a class="headerlink" href="#PackedImageDesc::~PackedImageDesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::getWidthC">
+long <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getWidth</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getWidthC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::getHeightC">
+long <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getHeight</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getHeightC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::getXStrideBytesC">
+ptrdiff_t <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getXStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getXStrideBytesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::getYStrideBytesC">
+ptrdiff_t <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getYStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getYStrideBytesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::getRDataC">
+float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getRData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getRDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::getGDataC">
+float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getGData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getGDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::getBDataC">
+float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getBData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getBDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="planarimagedesc">
+<h3>PlanarImageDesc<a class="headerlink" href="#planarimagedesc" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="PlanarImageDesc">
+<em class="property">class </em><tt class="descname">PlanarImageDesc</tt><a class="headerlink" href="#PlanarImageDesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::PlanarImageDesc__floatP.floatP.floatP.l.l.ptrdiff_t">
+ <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">PlanarImageDesc</tt><big>(</big>float* <em>rData</em>, float* <em>gData</em>, float* <em>bData</em>, long <em>width</em>, long <em>height</em>, ptrdiff_t <em>yStrideBytes</em><em>=AutoStride</em><big>)</big><a class="headerlink" href="#PlanarImageDesc::PlanarImageDesc__floatP.floatP.floatP.l.l.ptrdiff_t" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::~PlanarImageDesc">
+ <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">~PlanarImageDesc</tt><big>(</big><big>)</big><a class="headerlink" href="#PlanarImageDesc::~PlanarImageDesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getWidthC">
+long <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getWidth</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getWidthC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getHeightC">
+long <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getHeight</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getHeightC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getXStrideBytesC">
+ptrdiff_t <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getXStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getXStrideBytesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getYStrideBytesC">
+ptrdiff_t <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getYStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getYStrideBytesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getRDataC">
+float* <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getRData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getRDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getGDataC">
+float* <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getGData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getGDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getBDataC">
+float* <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getBData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getBDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="gpushaderdesc">
+<h2>GpuShaderDesc<a class="headerlink" href="#gpushaderdesc" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="GpuShaderDesc">
+<em class="property">class </em><tt class="descname">GpuShaderDesc</tt><a class="headerlink" href="#GpuShaderDesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuShaderDesc::GpuShaderDesc">
+ <tt class="descclassname">GpuShaderDesc::</tt><tt class="descname">GpuShaderDesc</tt><big>(</big><big>)</big><a class="headerlink" href="#GpuShaderDesc::GpuShaderDesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuShaderDesc::~GpuShaderDesc">
+ <tt class="descclassname">GpuShaderDesc::</tt><tt class="descname">~GpuShaderDesc</tt><big>(</big><big>)</big><a class="headerlink" href="#GpuShaderDesc::~GpuShaderDesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuShaderDesc::setLanguage__GpuLanguage">
+void <tt class="descclassname">GpuShaderDesc::</tt><tt class="descname">setLanguage</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#GpuLanguage" title="GpuLanguage">GpuLanguage</a> <em>lang</em><big>)</big><a class="headerlink" href="#GpuShaderDesc::setLanguage__GpuLanguage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuShaderDesc::getLanguageC">
+<a class="reference internal" href="OpenColorTypes.html#GpuLanguage" title="GpuLanguage">GpuLanguage</a> <tt class="descclassname">GpuShaderDesc::</tt><tt class="descname">getLanguage</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GpuShaderDesc::getLanguageC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuShaderDesc::setFunctionName__cCP">
+void <tt class="descclassname">GpuShaderDesc::</tt><tt class="descname">setFunctionName</tt><big>(</big>const char* <em>name</em><big>)</big><a class="headerlink" href="#GpuShaderDesc::setFunctionName__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuShaderDesc::getFunctionNameC">
+const char* <tt class="descclassname">GpuShaderDesc::</tt><tt class="descname">getFunctionName</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GpuShaderDesc::getFunctionNameC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuShaderDesc::setLut3DEdgeLen__i">
+void <tt class="descclassname">GpuShaderDesc::</tt><tt class="descname">setLut3DEdgeLen</tt><big>(</big>int <em>len</em><big>)</big><a class="headerlink" href="#GpuShaderDesc::setLut3DEdgeLen__i" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuShaderDesc::getLut3DEdgeLenC">
+int <tt class="descclassname">GpuShaderDesc::</tt><tt class="descname">getLut3DEdgeLen</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GpuShaderDesc::getLut3DEdgeLenC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuShaderDesc::getCacheIDC">
+const char* <tt class="descclassname">GpuShaderDesc::</tt><tt class="descname">getCacheID</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GpuShaderDesc::getCacheIDC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="context">
+<h2>Context<a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Context">
+<em class="property">class </em><tt class="descname">Context</tt><a class="headerlink" href="#Context" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ContextRcPtr" title="ContextRcPtr">ContextRcPtr</a> <tt class="descclassname">Context::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#Context::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#ContextRcPtr" title="ContextRcPtr">ContextRcPtr</a> <tt class="descclassname">Context::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::getCacheIDC">
+const char* <tt class="descclassname">Context::</tt><tt class="descname">getCacheID</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::getCacheIDC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::setSearchPath__cCP">
+void <tt class="descclassname">Context::</tt><tt class="descname">setSearchPath</tt><big>(</big>const char* <em>path</em><big>)</big><a class="headerlink" href="#Context::setSearchPath__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::getSearchPathC">
+const char* <tt class="descclassname">Context::</tt><tt class="descname">getSearchPath</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::getSearchPathC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::setWorkingDir__cCP">
+void <tt class="descclassname">Context::</tt><tt class="descname">setWorkingDir</tt><big>(</big>const char* <em>dirname</em><big>)</big><a class="headerlink" href="#Context::setWorkingDir__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::getWorkingDirC">
+const char* <tt class="descclassname">Context::</tt><tt class="descname">getWorkingDir</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::getWorkingDirC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::setStringVar__cCP.cCP">
+void <tt class="descclassname">Context::</tt><tt class="descname">setStringVar</tt><big>(</big>const char* <em>name</em>, const char* <em>value</em><big>)</big><a class="headerlink" href="#Context::setStringVar__cCP.cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::getStringVar__cCPC">
+const char* <tt class="descclassname">Context::</tt><tt class="descname">getStringVar</tt><big>(</big>const char* <em>name</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::getStringVar__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::loadEnvironment">
+void <tt class="descclassname">Context::</tt><tt class="descname">loadEnvironment</tt><big>(</big><big>)</big><a class="headerlink" href="#Context::loadEnvironment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seed all string vars with the current environment.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Context::resolveStringVar__cCPC">
+const char* <tt class="descclassname">Context::</tt><tt class="descname">resolveStringVar</tt><big>(</big>const char* <em>val</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::resolveStringVar__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do a file lookup.</p>
+<p>Evaluate the specified variable (as needed). Will not throw exceptions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Context::resolveFileLocation__cCPC">
+const char* <tt class="descclassname">Context::</tt><tt class="descname">resolveFileLocation</tt><big>(</big>const char* <em>filename</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::resolveFileLocation__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do a file lookup.</p>
+<p>Evaluate all variables (as needed).
+Also, walk the full search path until the file is found.
+If the filename cannot be found, an exception will be thrown.</p>
+</dd></dl>
+
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>

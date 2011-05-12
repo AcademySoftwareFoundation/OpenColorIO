@@ -1,75 +1,127 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset='utf-8'>
-
-  <title>imageworks/OpenColorIO @ GitHub</title>
-
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #027460;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #ffffff;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-    h1 { font-size: 3.8em; color: #fd8b9f; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #fd8b9f; }
-    h3 { text-align: center; color: #fd8b9f; }
-    a { color: #fd8b9f; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-  </style>
-</head>
-
-<body>
-  <a href="http://github.com/imageworks/OpenColorIO"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
-
-  <div id="container">
-
-    <div class="download">
-      <a href="http://github.com/imageworks/OpenColorIO/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/imageworks/OpenColorIO/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
-
-    <h1><a href="http://github.com/imageworks/OpenColorIO">OpenColorIO</a>
-      <span class="small">by <a href="http://github.com/imageworks">imageworks</a></span></h1>
-
-    <div class="description">
-      A color management framework for visual effects and animation.
-    </div>
-
-    <h2>Contact</h2>
-<p>Sony Pictures Imageworks (opensource@imageworks.com)<br/>      </p>
 
 
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/imageworks/OpenColorIO/zipball/master">zip</a> or
-      <a href="http://github.com/imageworks/OpenColorIO/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/imageworks/OpenColorIO</pre>
-    </p>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO v0.8.1 documentation" href="#" />
+    <link rel="next" title="Workflow" href="workflow/index.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="#">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO v0.8.1 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow/index.html">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/index.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
+</ul>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="home">
+<h1>Home<a class="headerlink" href="#home" title="Permalink to this headline">¶</a></h1>
+<p><strong>OpenColorIO</strong> (<em>OCIO</em>) is a new open source project from <a class="reference external" href="http://www.imageworks.com/">Sony Imageworks</a>.</p>
+<p><a class="reference external" href="http://opencolorio.org">http://opencolorio.org</a></p>
+<p>Based on development started in 2003, <em>OCIO</em> enables color transforms and image
+display to be handled in a consistent manner across multiple graphics
+applications. Unlike other color management solutions, <em>OCIO</em> is geared towards
+motion-picture post production, with an emphasis on visual effects and animation
+color pipelines.</p>
+<p>See the <a class="reference internal" href="userguide/tool_overview.html#userguide-tooloverview"><em>Tool overview</em></a> for a brief explanation of the various parts of OpenColorIO, and how it could be used.</p>
+<div class="section" id="mailing-lists">
+<h2>Mailing lists<a class="headerlink" href="#mailing-lists" title="Permalink to this headline">¶</a></h2>
+<p>There are two mailing lists associated with OpenColorIO:</p>
+<dl class="docutils">
+<dt><a class="reference external" href="http://groups.google.com/group/ocio-users">ocio-users</a><tt class="docutils literal"><span class="pre">&#64;googlegroups.com</span></tt></dt>
+<dd>For end-users (artists, often) of OCIO who have questions related to OCIO profile design, management, and workflow questions.</dd>
+<dt><a class="reference external" href="http://groups.google.com/group/ocio-dev">ocio-dev</a><tt class="docutils literal"><span class="pre">&#64;googlegroups.com</span></tt></dt>
+<dd>For users of OCIO tools, APIs, or people integrating OpenColorIO into other applications.  <a class="reference external" href="http://groups.google.com/group/ocio-dev">http://groups.google.com/group/ocio-dev</a></dd>
+</dl>
+</div>
+<div class="section" id="downloading-and-building-the-code">
+<h2>Downloading and building the code<a class="headerlink" href="#downloading-and-building-the-code" title="Permalink to this headline">¶</a></h2>
+<p>At present, there is not a separate precompiled or binary-only distribution of OpenColorIO (though we hope to eventually have one). For now, you&#8217;ll have to check out and build the code yourself.</p>
+<p>Source code is available on Github at <a class="reference external" href="http://github.com/imageworks/OpenColorIO">http://github.com/imageworks/OpenColorIO</a></p>
+<p>Download a <a class="reference external" href="http://github.com/imageworks/OpenColorIO/zipball/master">.zip</a> or <a class="reference external" href="http://github.com/imageworks/OpenColorIO/tarball/master">.tar.gz</a> of the current state of the repository.</p>
+<p>Note that OCIO profiles are required to do any &#8216;real&#8217; work, and are available from the Downloads section of this site. Example images are also available.</p>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+
+    
+    <td width="275">
+        <div class="imageBar">
+        <p style="text-align: center; font-size: small;"><b>Color Transform Example</b></p>
+            <img src="_static/clo_res19_vd16.0101.jpg">
+            <div class="caption">Final Image: sRGB</div>
+            <img src="_static/clo_res19_lm10.0101.jpg">  
+            <div class="caption">Digital Intermediate (DI): log dpx</div>
+            <img src="_static/clo_res19_lnf.0101.jpg">
+            <div class="caption">Render: scene-linear exr</div>
+        <p style="text-align: right">Images from "Cloudy With A Change of Meatballs"</p>
+        <p style="text-align: right">spi-animation profile, available here.</p>
+        </div>
+    </td>
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
 
     <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/imageworks/OpenColorIO">imageworks/OpenColorIO</a>
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
     </div>
-
-  </div>
-
-  
-</body>
+  </body>
 </html>

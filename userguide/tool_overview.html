@@ -1,0 +1,156 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO v0.8.1 documentation" href="../index.html" />
+    <link rel="up" title="User Guide" href="index.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="User Guide" href="index.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO v0.8.1 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../workflow/index.html">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Tool overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contexts.html">Contexts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../developers/index.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
+</ul>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="tool-overview">
+<span id="userguide-tooloverview"></span><h1>Tool overview<a class="headerlink" href="#tool-overview" title="Permalink to this headline">¶</a></h1>
+<p>OCIO is comprised of many parts. At the lowest level there is the C++ API.
+This API can be used in applications and plugins</p>
+<p>Noet that all these plugins use the same config file to define colour spaces,
+roles and so on. For information on setting up configurations, see
+<a class="reference internal" href="configuration.html#userguide-configuration"><em>Configuration</em></a></p>
+<div class="section" id="the-api">
+<h2>The API<a class="headerlink" href="#the-api" title="Permalink to this headline">¶</a></h2>
+<p>Most users will never directly interact with the C++ API. However the API is used by all the supplied applications (e.g <a class="reference internal" href="#overview-ocio2icc"><em>ocio2icc</em></a>) and plugins (e.g
+the <a class="reference internal" href="#overview-nukeplugins"><em>Nuke plugins</em></a>)</p>
+<p>To get started with the API, see the <a class="reference internal" href="../developers/index.html#developer-guide"><em>Developer guide</em></a></p>
+</div>
+<div class="section" id="ociocheck">
+<span id="overview-ociocheck"></span><h2>ociocheck<a class="headerlink" href="#ociocheck" title="Permalink to this headline">¶</a></h2>
+<p>This is a command line tool to validate an OCIO config file.</p>
+<p>It performs various sanity checks, such as that the config does not refer to
+an undefined colour space.</p>
+<p>It cannot verify the defined color transforms are &#8220;correct&#8221;, only that the
+config file can be loaded by OCIO without error.</p>
+<p>As with all the OCIO command line tools, you can use the <cite>&#8211;help</cite> argument to
+read a description and see the other arguments accepted:</p>
+<div class="highlight-python"><pre>$ ociocheck --help
+ociocheck -- validate an OpenColorIO configuration
+
+usage:  ociocheck [options]
+
+    --help        Print help message
+    --iconfig %s  Input .ocio configuration file (default: $OCIO)
+    --oconfig %s  Output .ocio file</pre>
+</div>
+</div>
+<div class="section" id="ociobakelut">
+<span id="overview-ociobakelut"></span><h2>ociobakelut<a class="headerlink" href="#ociobakelut" title="Permalink to this headline">¶</a></h2>
+<p>A command line tool which bakes a color transform into a lookup table.</p>
+</div>
+<div class="section" id="ocio2icc">
+<span id="overview-ocio2icc"></span><h2>ocio2icc<a class="headerlink" href="#ocio2icc" title="Permalink to this headline">¶</a></h2>
+<p>A command line tool to generate an ICC &#8220;proofing&#8221; profile from a color space
+transform, which can be used in applications such as Photoshop.</p>
+<p>A common workflow is for matte-painters to work on sRGB files in Photoshop. An
+ICC profile is used to view the work with the same film emulation transform as
+used in other departments.</p>
+</div>
+<div class="section" id="ocioconvert">
+<span id="overview-ocioconvert"></span><h2>ocioconvert<a class="headerlink" href="#ocioconvert" title="Permalink to this headline">¶</a></h2>
+<p>Loads an image, applies a color transform, and saves it to a new file.</p>
+<p>OpenImageIO is used to open and save the file, so a wide range of formats are supported.</p>
+</div>
+<div class="section" id="ociodisplay">
+<span id="overview-ociodisplay"></span><h2>ociodisplay<a class="headerlink" href="#ociodisplay" title="Permalink to this headline">¶</a></h2>
+<p>A basic image viewer. Uses OpenImageIO to load images, and displays them using OCIO and typical viewer controls (scene-linear exposure control and a post-display gamma control)</p>
+<p>May be useful to users to quickly check colorspace configuration, but
+primarily a demonstration of the OCIO API</p>
+</div>
+<div class="section" id="nuke-plugins">
+<span id="overview-nukeplugins"></span><h2>Nuke plugins<a class="headerlink" href="#nuke-plugins" title="Permalink to this headline">¶</a></h2>
+<p>A set of OCIO nodes for The Foundry&#8217;s Nuke, including:</p>
+<ul class="simple">
+<li>OCIOColorSpace, transforms between two color spaces (similar to the built-in &#8220;ColorSpace&#8221; node, but the colorspaces are described in the OCIO config file)</li>
+<li>OCIODisplay to be used as viewer processes</li>
+<li>OCIOFileTransform loads a transform from a file (e.g a 1D or 3D LUT), and applies it</li>
+<li>OCIOCDLTransform applies CDL-compliant grades, and includes utilities to create/load ASC CDL files</li>
+</ul>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>

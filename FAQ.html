@@ -1,0 +1,179 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO v0.8.1 documentation" href="index.html" />
+    <link rel="next" title="Downloads" href="downloads.html" />
+    <link rel="prev" title="C++ Types" href="developers/api/OpenColorTypes.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO v0.8.1 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow/index.html">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/index.html">Developer guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#license">License?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#terminology">Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-lut-formats-are-supported">What LUT Formats are supported?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
+</ul>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="faq">
+<span id="id1"></span><h1>FAQ<a class="headerlink" href="#faq" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="license">
+<h2>License?<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>New BSD.</p>
+<p>You are welcome to include the OpenColorIO in commercial, or open source
+applications. See the <em class="xref std std-ref">license</em> for further details.</p>
+</div>
+<div class="section" id="terminology">
+<h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Transform - a function that alters RGB(A) data (e.g transform an image from scene linear to sRGB)</li>
+<li>Reference space - a space that connects colorspaces</li>
+<li>Colorspace - a meaningful space that can be transferred to and from the reference space</li>
+<li>Display - a virtual or physical display device (e.g an sRGB display device)</li>
+<li>View - a meaningful view of the reference space on a Display (e.g a film emulation view on an sRGB display device)</li>
+<li>Role - abstract colorspace naming (e.g specify the &#8220;lnh&#8221; colorspace as the scene_linear role)</li>
+</ul>
+</div>
+<div class="section" id="what-lut-formats-are-supported">
+<h2>What LUT Formats are supported?<a class="headerlink" href="#what-lut-formats-are-supported" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="43%" />
+<col width="46%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Ext</th>
+<th class="head">Details</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>3dl</td>
+<td>Autodesk Apps: Lustre, Flame, etc.
+Supports shaper LUT + 3D</td>
+<td>Full support.</td>
+</tr>
+<tr><td>csp</td>
+<td>Cinespace (Rising Sun Research)
+LUT. Spline-based shaper LUT, with
+either 1D or 3D LUT.</td>
+<td>Full support. Shaper LUT is
+resampled into simple 1D LUT
+with 2^16 samples</td>
+</tr>
+<tr><td>cub</td>
+<td>Truelight format. Shaper Lut + 3D</td>
+<td>Full support.</td>
+</tr>
+<tr><td>cube</td>
+<td>Iridas format. Either 1D or 3D Lut.</td>
+<td>Supports arbitrary input domains.
+Full support.</td>
+</tr>
+<tr><td>hdl</td>
+<td>Houdini. 1D Lut, 3D lut, 1D shaper
+Lut</td>
+<td>Only &#8216;C&#8217; type is supported.
+Need to add R G B A RGB RGBA ALL.
+No support for Sampling tag.
+Header fields must be in strict order.</td>
+</tr>
+<tr><td>spi1d</td>
+<td>1D format. Imageworks native 1D
+lut format.  HDR friendly, supports
+arbitrary input and output domains</td>
+<td>Full support.</td>
+</tr>
+<tr><td>spi3d</td>
+<td>3D format. Imageworks native 3D
+lut format.</td>
+<td>Full support.</td>
+</tr>
+<tr><td>spimtx</td>
+<td>3x3 matrix + color offset.
+Imageworks native color matrix
+format</td>
+<td>Full support.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Shaper LUT application in OCIO currently only supports linear interpolation.
+For very small shaper LUT sizes this may not be sufficient.</p>
+</div>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>

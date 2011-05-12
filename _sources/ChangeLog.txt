@@ -1,0 +1,3 @@
+ChangeLog
+=========
+.. include:: ChangeLog
