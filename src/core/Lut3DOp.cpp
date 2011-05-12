@@ -222,7 +222,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels)
+    void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
     {
         if(!img) return;
         if(numChannels < 3)
@@ -232,11 +232,27 @@ OCIO_NAMESPACE_ENTER
         
         float c = 1.0f / ((float)edgeLen - 1.0f);
         
-        for(int i=0; i<edgeLen*edgeLen*edgeLen; i++)
+        if(lut3DOrder == LUT3DORDER_FAST_RED)
         {
-            img[numChannels*i+0] = (float)(i%edgeLen) * c;
-            img[numChannels*i+1] = (float)((i/edgeLen)%edgeLen) * c;
-            img[numChannels*i+2] = (float)((i/edgeLen/edgeLen)%edgeLen) * c;
+            for(int i=0; i<edgeLen*edgeLen*edgeLen; i++)
+            {
+                img[numChannels*i+0] = (float)(i%edgeLen) * c;
+                img[numChannels*i+1] = (float)((i/edgeLen)%edgeLen) * c;
+                img[numChannels*i+2] = (float)((i/edgeLen/edgeLen)%edgeLen) * c;
+            }
+        }
+        else if(lut3DOrder == LUT3DORDER_FAST_BLUE)
+        {
+            for(int i=0; i<edgeLen*edgeLen*edgeLen; i++)
+            {
+                img[numChannels*i+0] = (float)((i/edgeLen/edgeLen)%edgeLen) * c;
+                img[numChannels*i+1] = (float)((i/edgeLen)%edgeLen) * c;
+                img[numChannels*i+2] = (float)(i%edgeLen) * c;
+            }
+        }
+        else
+        {
+            throw Exception("Unknown Lut3DOrder.");
         }
     }
     

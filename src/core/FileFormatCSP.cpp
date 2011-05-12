@@ -640,96 +640,103 @@ OCIO_NAMESPACE_ENTER
         
         void FileFormatCSP::Write(const Baker & baker, std::ostream & ostream) const
         {
+            const int DEFAULT_CUBE_SIZE = 32;
+            const int DEFAULT_SHAPER_SIZE = 1024;
+            
             ConstConfigRcPtr config = baker.getConfig();
             
-            std::vector<float> shaperOutData;
+            // TODO: Add 1d/3d lut writing switch, using hasChannelCrosstalk
+            int cubeSize = baker.getCubeSize();
+            if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+            cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
+            std::vector<float> cubeData;
+            cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+            GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
+            PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+            
             std::vector<float> shaperInData;
+            std::vector<float> shaperOutData;
             
-            const int DEFAULT_SHAPER_SIZE = 1024;
-            int shaperSize = baker.getShaperSize();
-            if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
-            
-            std::string currentSpace;
-            
-            // Create the mapping from a uniformly sampled ldr output
-            // to a non-uniform hdr input.
-            if(shaperSize>=2)
+            // Use an explicitly shaper space
+            // TODO: Use the optional allocation for the shaper space,
+            //       instead of the implied 0-1 uniform allocation
+            std::string shaperSpace = baker.getShaperSpace();
+            if(!shaperSpace.empty())
             {
+                int shaperSize = baker.getShaperSize();
+                if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+                if(shaperSize<2)
+                {
+                    std::ostringstream os;
+                    os << "When a shaper space has been specified, '";
+                    os << baker.getShaperSpace() << "', a shaper size less than 2 is not allowed.";
+                    throw Exception(os.str().c_str());
+                }
+                
                 shaperOutData.resize(shaperSize*3);
                 shaperInData.resize(shaperSize*3);
-                
                 GenerateIdentityLut1D(&shaperOutData[0], shaperSize, 3);
                 GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
                 
-                std::string shaperSpace = baker.getShaperSpace();
-                if(!shaperSpace.empty())
+                ConstProcessorRcPtr shaperToInput = config->getProcessor(baker.getShaperSpace(), baker.getInputSpace());
+                if(shaperToInput->hasChannelCrosstalk())
                 {
-                    /*
-                    shapersize = 2**10
-                    shaperOutData = []
-                    for i in xrange(shapersize):
-                    x = i/(shapersize-1.0)
-                    shaperOutData.extend((x,x,x))
-                    shaperToInput = config.getProcessor(SHAPER_SPACE, INPUT_SPACE)
-                    shaperInData = shaperToInput.applyRGB(shaperOutData)
-                    */
-                    //ConstProcessorRcPtr shaperToInput = 
-                    //    config.getProcessor(shaperSpace, inputSpace);
+                    // TODO: Automatically turn shaper into non-crosstalked version?
+                    std::ostringstream os;
+                    os << "The specified shaperSpace, '";
+                    os << baker.getShaperSpace() << "' has channel crosstalk, which is not appropriate for shapers. ";
+                    os << "Please select an alternate shaper space or omit this option.";
+                    throw Exception(os.str().c_str());
                 }
+                PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
+                shaperToInput->apply(shaperInImg);
+                
+                ConstProcessorRcPtr shaperToTarget = config->getProcessor(baker.getShaperSpace(), baker.getTargetSpace());
+                shaperToTarget->apply(cubeImg);
             }
-            
-            // Create a 3D lut from the 1D shaper space to the 3D output space
-            
-            /*
-            lut3dsize = 32
-            lut3dInputData = []
-            # Build an identity lut
-            for i in xrange(lut3dsize):
-                for j in xrange(lut3dsize):
-                    for k in xrange(lut3dsize):
-                        r = k/(lut3dsize-1.0)
-                        g = j/(lut3dsize-1.0)
-                        b = i/(lut3dsize-1.0)
-                        lut3dInputData.extend((r,g,b))
-            # map it from shaper space to output space. (This assumes a 1d shaper, for now)
-            shaperToOutput = config.getProcessor(SHAPER_SPACE, OUTPUT_SPACE)
-            lut3dOuputData = shaperToO
-            */
-            
+            else
+            {
+                // A shaper is not specified, let's make our own if needed, with some sensible guesses
+                
+                // Is an interesting allocation defined for out input space?
+                
+                throw Exception("A Shaper must be specified");
+            }
             
             // Write out the file header
             ostream << "CSPLUTV100\n";
             ostream << "3D\n";
             ostream << "BEGIN METADATA\n";
-            ostream << baker.getMetadata() << "\n";
-            char str[20];
-            time_t curTime = time( NULL );
-            struct tm *tm = localtime( &curTime );
-            sprintf(str, "%4d:%02d:%02d %02d:%02d:%02d",
-                    tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday,
-                    tm->tm_hour, tm->tm_min, tm->tm_sec);
-            ostream << "date: " << str << std::endl;
-            ostream << "Written by OpenColorIO " << OCIO_VERSION << "\n";
+            std::string metadata = baker.getMetadata();
+            if(!metadata.empty())
+            {
+                ostream << metadata << "\n";
+            }
             ostream << "END METADATA\n";
-            ostream << "n";
+            ostream << "\n";
             
             // Write out the 1D Prelut
             ostream.setf(std::ios::fixed, std::ios::floatfield);
             ostream.precision(6);
             
+            if(shaperInData.size()<2 || shaperOutData.size() != shaperInData.size())
+            {
+                throw Exception("Internal shaper size exception.");
+            }
+            
             if(!shaperInData.empty())
             {
                 for(int c=0; c<3; ++c)
                 {
-                    ostream << shaperSize << "\n";
-                    for(int i = 0; i<shaperSize; ++i)
+                    ostream << shaperInData.size()/3 << "\n";
+                    for(unsigned int i = 0; i<shaperInData.size()/3; ++i)
                     {
                         if(i != 0) ostream << " ";
                         ostream << shaperInData[3*i+c];
                     }
                     ostream << "\n";
                     
-                    for(int i = 0; i<shaperSize; ++i)
+                    for(unsigned int i = 0; i<shaperInData.size()/3; ++i)
                     {
                         if(i != 0) ostream << " ";
                         ostream << shaperOutData[3*i+c];
@@ -737,39 +744,19 @@ OCIO_NAMESPACE_ENTER
                     ostream << "\n";
                 }
             }
-            else
-            {
-                ostream << "2\n";
-                ostream << "0.0 1.0\n";
-                ostream << "0.0 1.0\n";
-                ostream << "2\n";
-                ostream << "0.0 1.0\n";
-                ostream << "0.0 1.0\n";
-                ostream << "2\n";
-                ostream << "0.0 1.0\n";
-                ostream << "0.0 1.0\n";
-            }
             ostream << "\n";
             
             // Write out the 3D Cube
-            
-            /*
-            ostream << data.lookup3DSize << " " << data.lookup3DSize << " " << data.lookup3DSize << "\n";
-            for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
-                for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {
-                    for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
-                        const size_t ii = 3 * (ir + data.lookup3DSize
-                                             * ig + data.lookup3DSize
-                                             * data.lookup3DSize * ib);
-                        const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii+0]));
-                        const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii+1]));
-                        const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii+2]));
-                        ostream << rv << " " << gv << " " << bv << "\n";
-                    }
-                }
+            if(cubeSize < 2)
+            {
+                throw Exception("Internal cube size exception.");
+            }
+            ostream << cubeSize << " " << cubeSize << " " << cubeSize << "\n";
+            for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+            {
+                ostream << cubeData[3*i+0] << " " << cubeData[3*i+1] << " " << cubeData[3*i+2] << "\n";
             }
             ostream << "\n";
-            */
         }
         
         void

@@ -90,8 +90,19 @@ OCIO_NAMESPACE_ENTER
         return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
     }
     
-    // This generates an identity 3d lut in GL layout
-    void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels);
+    // What is the preferred order for the lut3d?
+    // I.e., are the first two entries change along
+    // the blue direction, or the red direction?
+    // OpenGL expects 'red'
+    
+    enum Lut3DOrder
+    {
+        LUT3DORDER_FAST_RED = 0,
+        LUT3DORDER_FAST_BLUE
+    };
+    
+    void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
+                               Lut3DOrder lut3DOrder);
     
     void CreateLut3DOp(OpRcPtrVec & ops,
                        Lut3DRcPtr lut,

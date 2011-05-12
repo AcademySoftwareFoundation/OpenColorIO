@@ -461,7 +461,7 @@ OCIO_NAMESPACE_ENTER
         {
             // Allocate 3dlut image, RGBA
             m_lut3D.resize(lut3DNumPixels*4);
-            GenerateIdentityLut3D(&m_lut3D[0], lut3DEdgeLen, 4);
+            GenerateIdentityLut3D(&m_lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_RED);
             
             // Apply the lattice ops to it
             for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
