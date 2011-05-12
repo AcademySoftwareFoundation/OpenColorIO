@@ -123,6 +123,7 @@ OCIO_NAMESPACE_ENTER
             virtual bool Supports(const FileFormatFeature & feature) const;
             
             virtual CachedFileRcPtr Load (std::istream & istream) const;
+            virtual void Write(const Baker & baker, std::ostream & ostream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -177,6 +178,12 @@ OCIO_NAMESPACE_ENTER
             return static_cast<int>( pow(2.0, bitDepth) ) - 1;
         }
         
+        int GetClampedIntFromNormFloat(float val, float scale)
+        {
+            val = std::min(std::max(0.0f, val), 1.0f) * scale;
+            return static_cast<int>(roundf(val));
+        }
+        
         int Get3DLutEdgeLenFromNumEntries(int numEntries)
         {
             float fdim = powf((float) numEntries / 3.0f, 1.0f/3.0f);
@@ -209,11 +216,12 @@ OCIO_NAMESPACE_ENTER
         bool LocalFileFormat::Supports(const FileFormatFeature & feature) const
         {
             if(feature == FILE_FORMAT_READ) return true;
+            if(feature == FILE_FORMAT_WRITE) return true;
             return false;
         }
         
-            // Try and load the format
-            // Raise an exception if it can't be loaded.
+        // Try and load the format
+        // Raise an exception if it can't be loaded.
         
         CachedFileRcPtr LocalFileFormat::Load(std::istream & istream) const
         {
@@ -410,6 +418,67 @@ OCIO_NAMESPACE_ENTER
             }
             
             return cachedFile;
+        }
+        
+        void LocalFileFormat::Write(const Baker & baker, std::ostream & ostream) const
+        {
+            // Lustre prefers 33x33x33. (flame/smoke 17x17x17)
+            const int DEFAULT_CUBE_SIZE = 17;
+            const int SHAPER_SIZE = 17; // This is fixed for compatibility...
+            const int SHAPER_BIT_DEPTH = 10;
+            const int CUBE_BIT_DEPTH = 10;
+            
+            
+            ConstConfigRcPtr config = baker.getConfig();
+            
+            int cubeSize = baker.getCubeSize();
+            if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+            cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
+            
+            std::vector<float> cubeData;
+            cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+            GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_BLUE);
+            PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+            
+            // Apply our conversion from the input space to the output space.
+            ConstProcessorRcPtr inputToTarget = config->getProcessor(baker.getInputSpace(),
+                baker.getTargetSpace());
+            inputToTarget->apply(cubeImg);
+            
+            
+            // Write out the file.
+            // For for maximum compatibility with other apps, we will
+            // not utilize the shaper or output any metadata
+            
+            std::vector<float> shaperData(SHAPER_SIZE);
+            GenerateIdentityLut1D(&shaperData[0], SHAPER_SIZE, 1);
+            
+            float shaperScale = static_cast<float>(
+                GetMaxValueFromIntegerBitDepth(SHAPER_BIT_DEPTH));
+            
+            for(unsigned int i=0; i<shaperData.size(); ++i)
+            {
+                if(i != 0) ostream << " ";
+                int val = GetClampedIntFromNormFloat(shaperData[i], shaperScale);
+                ostream << val;
+            }
+            ostream << "\n";
+            
+            // Write out the 3D Cube
+            float cubeScale = static_cast<float>(
+                GetMaxValueFromIntegerBitDepth(CUBE_BIT_DEPTH));
+            if(cubeSize < 2)
+            {
+                throw Exception("Internal cube size exception.");
+            }
+            for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+            {
+                int r = GetClampedIntFromNormFloat(cubeData[3*i+0], cubeScale);
+                int g = GetClampedIntFromNormFloat(cubeData[3*i+1], cubeScale);
+                int b = GetClampedIntFromNormFloat(cubeData[3*i+2], cubeScale);
+                ostream << r << " " << g << " " << b << "\n";
+            }
+            ostream << "\n";
         }
         
         void

@@ -550,17 +550,15 @@ OCIO_NAMESPACE_ENTER
     void GenerateIdentityLut1D(float* img, int numElements, int numChannels)
     {
         if(!img) return;
-        if(numChannels < 3)
-        {
-            throw Exception("Cannot generate idenitity 1d lut with less than 3 channels.");
-        }
+        int numChannelsToFill = std::min(3, numChannels);
         
-        float c = 1.0f / ((float) numElements - 1.0f);
+        float scale = 1.0f / ((float) numElements - 1.0f);
         for(int i=0; i<numElements; i++)
         {
-            img[numChannels*i+0] = c * (float)(i);
-            img[numChannels*i+1] = c * (float)(i);
-            img[numChannels*i+2] = c * (float)(i);
+            for(int c=0; c<numChannelsToFill; ++c)
+            {
+                img[numChannels*i+c] = scale * (float)(i);
+            }
         }
     }
 
