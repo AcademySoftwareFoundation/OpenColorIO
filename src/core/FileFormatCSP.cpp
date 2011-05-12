@@ -696,14 +696,45 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                // A shaper is not specified, let's make our own if needed, with some sensible guesses
+                // A shaper is not specified, let's fake one, using the input space allocation as
+                // our guide
                 
-                // Is an interesting allocation defined for out input space?
+                ConstColorSpaceRcPtr inputColorSpace = config->getColorSpace(baker.getInputSpace());
                 
-                throw Exception("A Shaper must be specified");
+                // Let's make an allocation transform for this colorspace
+                AllocationTransformRcPtr allocationTransform = AllocationTransform::Create();
+                std::vector<float> vars(inputColorSpace->getAllocationNumVars());
+                inputColorSpace->getAllocationVars(&vars[0]);
+                allocationTransform->setAllocation(inputColorSpace->getAllocation());
+                allocationTransform->setVars(static_cast<int>(vars.size()), &vars[0]);
+                
+                // What size shaper should we make?
+                int shaperSize = baker.getShaperSize();
+                if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+                shaperSize = std::max(2, shaperSize);
+                if(inputColorSpace->getAllocation() == ALLOCATION_UNIFORM)
+                {
+                    // This is an awesome optimization.
+                    // If we know it's a uniform scaling, only 2 points will suffice!
+                    shaperSize = 2;
+                }
+                shaperOutData.resize(shaperSize*3);
+                shaperInData.resize(shaperSize*3);
+                GenerateIdentityLut1D(&shaperOutData[0], shaperSize, 3);
+                GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
+                
+                // Apply the forward to the allocation to the output shaper y axis, and the cube
+                ConstProcessorRcPtr shaperToInput = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE);
+                PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
+                shaperToInput->apply(shaperInImg);
+                shaperToInput->apply(cubeImg);
+                
+                // Apply the 3d lut to the remainder (from the input to the output)
+                ConstProcessorRcPtr inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+                inputToTarget->apply(cubeImg);
             }
             
-            // Write out the file header
+            // Write out the file
             ostream << "CSPLUTV100\n";
             ostream << "3D\n";
             ostream << "BEGIN METADATA\n";
