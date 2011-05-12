@@ -129,6 +129,17 @@ OCIO_NAMESPACE_ENTER
         return "";
     }
     
+    const char * Baker::getFormatExtensionByIndex(int index)
+    {
+        FileFormat* format = FormatRegistry::GetInstance().getFormatByIndex(FILE_FORMAT_WRITE, index);
+        if(format)
+        {
+            return format->GetExtension().c_str();
+        }
+        
+        return "";
+    }
+    
     void Baker::setFormat(const char * formatName)
     {
         getImpl()->formatName_ = formatName;
@@ -234,7 +245,6 @@ OCIO_NAMESPACE_ENTER
             throw Exception(err.str().c_str());
         }
         
-        /*
         // 
         // TODO:
         // 
@@ -249,98 +259,6 @@ OCIO_NAMESPACE_ENTER
         // - do a compare between ocio transform and output lut transform
         //   throw error if we going beyond tolerance
         //
-        
-        ConstProcessorRcPtr shaper_enc;
-        ConstProcessorRcPtr shaper_dec;
-        ConstProcessorRcPtr target;
-        
-        if(getImpl()->shaperSpace_ != "")
-        {
-            shaper_enc = getImpl()->config_->getProcessor(getImpl()->inputSpace_.c_str(),
-                                                          getImpl()->shaperSpace_.c_str());
-            shaper_dec = getImpl()->config_->getProcessor(getImpl()->shaperSpace_.c_str(),
-                                                          getImpl()->inputSpace_.c_str());
-            target     = getImpl()->config_->getProcessor(getImpl()->shaperSpace_.c_str(),
-                                                          getImpl()->targetSpace_.c_str());
-        }
-        else
-        {
-            target     = getImpl()->config_->getProcessor(getImpl()->inputSpace_.c_str(),
-                                                          getImpl()->targetSpace_.c_str());
-        }
-        
-        TransformData data;
-        
-        // cubesize
-        data.lookup3DSize = getImpl()->cubesize_;
-        
-        // shaper should be atleast cubsize^2
-        data.shaperSize = getImpl()->shapersize_;
-        
-        //
-        data.minlum[0] = 0.f; data.minlum[1] = 0.f; data.minlum[2] = 0.f;
-        data.maxlum[0] = 1.f; data.maxlum[1] = 1.f; data.maxlum[2] = 1.f;
-        
-        if(shaper_enc && shaper_dec)
-        {
-            // find the min and max luminance we can encode
-            shaper_dec->applyRGB(data.minlum);
-            shaper_dec->applyRGB(data.maxlum);
-            
-            // build an identitiy ramp and setup the encode ramp based
-            // on the max and min luminance
-            
-            data.shaper_ident.resize(data.shaperSize * 3);
-            data.shaper_encode.resize(data.shaperSize * 3);
-            data.shaper_decode.resize(data.shaperSize * 3);
-            
-            for (size_t i = 0; i < data.shaperSize; ++i)
-            {
-                const float x = (float)(double(i) / double(data.shaperSize - 1));
-                data.shaper_ident[3*i+0] = x;
-                data.shaper_ident[3*i+1] = x;
-                data.shaper_ident[3*i+2] = x;
-                data.shaper_encode[3*i+0] = lerpf(data.minlum[0], data.maxlum[0], x);
-                data.shaper_encode[3*i+1] = lerpf(data.minlum[1], data.maxlum[1], x);
-                data.shaper_encode[3*i+2] = lerpf(data.minlum[2], data.maxlum[2], x);
-            }
-            data.shaper_decode = data.shaper_ident;
-            
-            // uniform shaper to decoded
-            PackedImageDesc _tmp1(&data.shaper_decode[0], data.shaperSize, 1, 3);
-            shaper_dec->apply(_tmp1);
-            
-            // uniform shaper to encoded
-            PackedImageDesc _tmp2(&data.shaper_encode[0], data.shaperSize, 1, 3);
-            shaper_enc->apply(_tmp2);
-            
-        }
-        
-        if(target)
-        {
-            for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
-                const float bx = (float)(double(ib) / double(data.lookup3DSize - 1));
-                for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {
-                    const float gx = (float)(double(ig) / double(data.lookup3DSize - 1));
-                    for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
-                        const float rx = (float)(double(ir) / double(data.lookup3DSize - 1));
-                        float _tmp[3] = { rx, gx, bx };
-                        // run the cube through the shaper first
-                        if(shaper_enc && shaper_dec)
-                        {
-                            shaper_dec->applyRGB((float *)&_tmp);
-                            shaper_enc->applyRGB((float *)&_tmp);
-                        }
-                        // apply the cube
-                        target->applyRGB((float *)&_tmp);
-                        data.lookup3D.push_back(_tmp[0]);
-                        data.lookup3D.push_back(_tmp[1]);
-                        data.lookup3D.push_back(_tmp[2]);
-                    }
-                }
-            }
-        }
-        */
         
     }
     

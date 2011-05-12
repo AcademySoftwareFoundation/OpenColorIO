@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -37,9 +38,16 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include "argparse.h"
 
+static std::string outputfile;
+
 static int
-parse_end_args(int /*argc*/, const char /**argv[]*/)
+parse_end_args(int argc, const char *argv[])
 {
+    if(argc>0)
+    {
+        outputfile = argv[0];
+    }
+    
     return 0;
 }
 
@@ -47,75 +55,83 @@ int main (int argc, const char* argv[])
 {
     
     bool help = false;
-    bool verbose = true;
-    int cubesize = 32;
-    int shapersize = 1024; // cubsize^2
+    int cubesize = -1;
+    int shapersize = -1; // cubsize^2
     std::string format;
     std::string inputconfig;
     std::string inputspace;
     std::string shaperspace;
     std::string outputspace;
+    bool usestdout = false;
     
     // What are the allowed baker output formats?
     std::ostringstream formats;
-    formats << "the lut format to bake (allowed: ";
+    formats << "the lut format to bake: ";
     for(int i=0; i<OCIO::Baker::getNumFormats(); ++i)
     {
         if(i!=0) formats << ", ";
         formats << OCIO::Baker::getFormatNameByIndex(i);
+        formats << " ." << OCIO::Baker::getFormatExtensionByIndex(i);
     }
-    formats << ")";
     std::string formatstr = formats.str();
     
     ArgParse ap;
     ap.options("ociobakelut -- bake out a lut from an OpenColorIO config\n\n"
-               "usage:  ociobakelut [options]\n\n"
-               "example:  ociobakelut --iconfig foo.ocio --inputspace lnf --shaperspace jplog --outputspace sRGB --format houdini\n\n",
+               "usage:  ociobakelut [options] <OUTPUTFILE.LUT>\n\n"
+               "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl\n\n",
                "%*", parse_end_args, "",
-               "--help", &help, "Print help message",
-               "--format %s", &format, formatstr.c_str(),
                "--inputspace %s", &inputspace, "the OCIO ColorSpace or Role, for the input (required)",
                "--shaperspace %s", &shaperspace, "the OCIO ColorSpace or Role, for the shaper",
                "--outputspace %s", &outputspace, "the OCIO ColorSpace or Role, for the output (required)",
-               "--shapersize %d", &shapersize, "size of the shaper (default: 1024 = cubsize^2)",
-               "--cubesize %d", &cubesize, "size of the cube (default: 32)",
-               // TODO: add --stdout option
-               // TODO: add --file option
-               // TODO: add --metadata option
+               "--format %s", &format, formatstr.c_str(),
+               "--shapersize %d", &shapersize, "size of the shaper (default: format specific)",
+               "--cubesize %d", &cubesize, "size of the cube (default: format specific)",
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)",
+               "--stdout", &usestdout, "Write lut to stdout (rather than file)",
+               "--help", &help, "Print help message",
+               // TODO: add --metadata option
                NULL);
     
     if (ap.parse(argc, argv) < 0)
     {
         std::cout << ap.geterror() << std::endl;
         ap.usage();
+        std::cout << "\n";
         return 1;
     }
     
-    if (help)
+    if (help || (argc == 1 ))
     {
         ap.usage();
+        std::cout << "\n";
         return 1;
     }
     
     if(inputspace.empty())
     {
-        std::cout << "need to specify a --inputspace of the source that the lut will be applied to\n";
         ap.usage();
+        std::cerr << "\nYou must specify the --inputspace.\n";
         return 1;
     }
     
     if(outputspace.empty())
     {
-        std::cout << "need to specify a --outputspace of the display the lut is for\n";
         ap.usage();
+        std::cerr << "\nYou must specify the --outputspace.\n";
         return 1;
     }
     
     if(format.empty())
     {
-        std::cout << "need to specify a --format of the lut to bake\n";
         ap.usage();
+        std::cerr << "\nYou must specify the lut format using --format.\n";
+        return 1;
+    }
+    
+    if(outputfile.empty() && !usestdout)
+    {
+        ap.usage();
+        std::cerr << "\nYou must specify either --outputfile or --stdout.\n";
         return 1;
     }
     
@@ -126,12 +142,12 @@ int main (int argc, const char* argv[])
         
         if(!inputconfig.empty())
         {
-            if(!verbose) std::cout << "[OpenColorIO INFO]: Loading " << inputconfig << std::endl;
+            if(!usestdout) std::cerr << "[OpenColorIO INFO]: Loading " << inputconfig << std::endl;
             config = OCIO::Config::CreateFromFile(inputconfig.c_str());
         }
         else if(getenv("OCIO"))
         {
-            if(!verbose) std::cout << "[OpenColorIO INFO]: Loading $OCIO " << getenv("OCIO") << std::endl;
+            if(!usestdout) std::cout << "[OpenColorIO INFO]: Loading $OCIO " << getenv("OCIO") << std::endl;
             config = OCIO::Config::CreateFromEnv();
         }
         else
@@ -150,27 +166,24 @@ int main (int argc, const char* argv[])
         baker->setInputSpace(inputspace.c_str());
         baker->setShaperSpace(shaperspace.c_str());
         baker->setTargetSpace(outputspace.c_str());
-        baker->setShaperSize(shapersize);
-        baker->setCubeSize(cubesize);
+        if(shapersize!=-1) baker->setShaperSize(shapersize);
+        if(cubesize!=-1) baker->setCubeSize(cubesize);
         
         // output lut
         std::ostringstream output;
         
-        if(!verbose) std::cout << "[OpenColorIO INFO]: Baking '" << format << "' lut" << std::endl;
-        baker->bake(output);
+        if(!usestdout) std::cout << "[OpenColorIO INFO]: Baking '" << format << "' lut" << std::endl;
         
-        // if stdout
-        if(verbose)
+        if(usestdout)
         {
-            std::cout << output.str();
+            baker->bake(std::cout);
         }
         else
         {
-            // TODO: write to file here
+            std::ofstream f(outputfile.c_str());
+            baker->bake(f);
+            std::cout << "[OpenColorIO INFO]: Wrote '" << outputfile << "'" << std::endl;
         }
-        
-        // if(!stdout) std::cout << "[OpenColorIO INFO]: done." << std::endl;
-        
     }
     catch(OCIO::Exception & exception)
     {

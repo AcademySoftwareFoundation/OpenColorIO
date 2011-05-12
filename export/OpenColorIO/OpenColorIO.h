@@ -718,17 +718,17 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: get the meta data that has been set
         const char * getMetadata() const;
         
-        //!cpp:function:: set the input colorspace that the lut will be
+        //!cpp:function:: set the input ColorSpace that the lut will be
         // applied to
         void setInputSpace(const char * inputSpace);
-        //!cpp:function:: get the input colorspace that has been set
+        //!cpp:function:: get the input ColorSpace that has been set
         const char * getInputSpace() const;
         
-        //!cpp:function:: set an *optional* colorspace to be used to shape /
+        //!cpp:function:: set an *optional* ColorSpace to be used to shape /
         // transfer the input colorspace. This is mostly used to allocate
         // an HDR luminance range into an LDR one. If a shaper space
         // is not explicitly specified, and the file format supports one,
-        // the GPU Allocation will be used
+        // the ColorSpace Allocation will be used
         
         void setShaperSpace(const char * shaperSpace);
         //!cpp:function:: get the shaper colorspace that has been set
@@ -756,9 +756,11 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function:: get the number of lut writers
         static int getNumFormats();
+        
         //!cpp:function:: get the lut writer at index, return empty string if
         // an invalid index is specified
         static const char * getFormatNameByIndex(int index);
+        static const char * getFormatExtensionByIndex(int index);
         
     private:
         Baker();
