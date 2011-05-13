@@ -381,9 +381,9 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void LocalFileFormat::Write(const Baker & baker,
-                                    const std::string & formatName,
-                                    std::ostream & ostream) const
+        void LocalFileFormat::Write(const Baker & /*baker*/,
+                                    const std::string & /*formatName*/,
+                                    std::ostream & /*ostream*/) const
         {
             /*
             // setup the floating point precision

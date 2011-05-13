@@ -71,7 +71,7 @@ int main (int argc, const char* argv[])
     {
         if(i!=0) formats << ", ";
         formats << OCIO::Baker::getFormatNameByIndex(i);
-        formats << " ." << OCIO::Baker::getFormatExtensionByIndex(i);
+        formats << " (." << OCIO::Baker::getFormatExtensionByIndex(i) << ")";
     }
     std::string formatstr = formats.str();
     
@@ -80,9 +80,11 @@ int main (int argc, const char* argv[])
                "usage:  ociobakelut [options] <OUTPUTFILE.LUT>\n\n"
                "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl\n\n",
                "%*", parse_end_args, "",
+               "<SEPARATOR>", "Required args",
                "--inputspace %s", &inputspace, "the OCIO ColorSpace or Role, for the input (required)",
-               "--shaperspace %s", &shaperspace, "the OCIO ColorSpace or Role, for the shaper",
                "--outputspace %s", &outputspace, "the OCIO ColorSpace or Role, for the output (required)",
+               "<SEPARATOR>", "Optional args",
+               "--shaperspace %s", &shaperspace, "the OCIO ColorSpace or Role, for the shaper",
                "--format %s", &format, formatstr.c_str(),
                "--shapersize %d", &shapersize, "size of the shaper (default: format specific)",
                "--cubesize %d", &cubesize, "size of the cube (default: format specific)",
@@ -110,28 +112,28 @@ int main (int argc, const char* argv[])
     if(inputspace.empty())
     {
         ap.usage();
-        std::cerr << "\nYou must specify the --inputspace.\n";
+        std::cerr << "\nERROR: You must specify the --inputspace.\n\n";
         return 1;
     }
     
     if(outputspace.empty())
     {
         ap.usage();
-        std::cerr << "\nYou must specify the --outputspace.\n";
+        std::cerr << "\nERROR: You must specify the --outputspace.\n\n";
         return 1;
     }
     
     if(format.empty())
     {
         ap.usage();
-        std::cerr << "\nYou must specify the lut format using --format.\n";
+        std::cerr << "\nERROR: You must specify the lut format using --format.\n\n";
         return 1;
     }
     
     if(outputfile.empty() && !usestdout)
     {
         ap.usage();
-        std::cerr << "\nYou must specify either --outputfile or --stdout.\n";
+        std::cerr << "\nERROR: You must specify the outputfile or --stdout.\n\n";
         return 1;
     }
     
@@ -153,7 +155,7 @@ int main (int argc, const char* argv[])
         else
         {
             std::cout << "ERROR: You must specify an input ocio configuration ";
-            std::cout << "(either with --iconfig or $OCIO).\n";
+            std::cout << "(either with --iconfig or $OCIO).\n\n";
             ap.usage ();
             return 1;
         }

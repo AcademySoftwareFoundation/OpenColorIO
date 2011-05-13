@@ -51,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // cube size is determined from num entries
 // The bit depth of the shaper lut and the 3d lut need not be the same.
 
-Example 1:
+Example 1, FLAME
 # Comment here
 0 64 128 192 256 320 384 448 512 576 640 704 768 832 896 960 1023
 
@@ -60,12 +60,13 @@ Example 1:
 0 0 200
 
 
-Example 2:
+Example 2, LUSTRE
 #Tokens required by applications - do not edit
-
 3DMESH
 Mesh 4 12
 0 64 128 192 256 320 384 448 512 576 640 704 768 832 896 960 1023
+
+
 
 0 17 17
 0 0 88
@@ -80,6 +81,22 @@ Mesh 4 12
 
 LUT8
 gamma 1.0
+
+In this example, the 3D LUT has an input bit depth of 4 bits and an output 
+bit depth of 12 bits. You use the input value to calculate the RGB triplet 
+to be 17*17*17 (where 17=(2 to the power of 4)+1, and 4 is the input bit 
+depth). The first triplet is the output value at (0,0,0);(0,0,1);...;
+(0,0,16) r,g,b coordinates; the second triplet is the output value at 
+(0,1,0);(0,1,1);...;(0,1,16) r,g,b coordinates; and so on. You use the output 
+bit depth to set the output bit depth range (12 bits or 0-4095).
+NoteLustre supports an input and output depth of 16 bits for 3D LUTs; however, 
+in the processing pipeline, the BLACK_LEVEL to WHITE_LEVEL range is only 14 
+bits. This means that even if the 3D LUT is 16 bits, it is normalized to 
+fit the BLACK_LEVEL to WHITE_LEVEL range of Lustre.
+In Lustre, 3D LUT files can contain grids of 17 cubed, 33 cubed, and 65 cubed; 
+however, Lustre converts 17 cubed and 65 cubed grids to 33 cubed for internal 
+processing on the output (for rendering and calibration), but not on the input 
+3D LUT.
 */
 
 
@@ -416,6 +433,16 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
+        // 65 -> 6
+        // 33 -> 5
+        // 17 -> 4
+        
+        int CubeDimensionLenToLustreBitDepth(int size)
+        {
+            float logval = logf(static_cast<int>(size-1)) / logf(2.0);
+            return static_cast<int>(logval);
+        }
+        
         void LocalFileFormat::Write(const Baker & baker,
                                     const std::string & formatName,
                                     std::ostream & ostream) const
@@ -458,10 +485,16 @@ OCIO_NAMESPACE_ENTER
                 baker.getTargetSpace());
             inputToTarget->apply(cubeImg);
             
-            
             // Write out the file.
             // For for maximum compatibility with other apps, we will
             // not utilize the shaper or output any metadata
+            
+            if(formatName == "lustre")
+            {
+                int meshInputBitDepth = CubeDimensionLenToLustreBitDepth(cubeSize);
+                ostream << "3DMESH\n";
+                ostream << "Mesh " << meshInputBitDepth << " " << CUBE_BIT_DEPTH << "\n";
+            }
             
             std::vector<float> shaperData(SHAPER_SIZE);
             GenerateIdentityLut1D(&shaperData[0], SHAPER_SIZE, 1);
@@ -492,6 +525,12 @@ OCIO_NAMESPACE_ENTER
                 ostream << r << " " << g << " " << b << "\n";
             }
             ostream << "\n";
+            
+            if(formatName == "lustre")
+            {
+                ostream << "LUT8\n";
+                ostream << "gamma 1.0\n";
+            }
         }
         
         void
