@@ -439,7 +439,7 @@ OCIO_NAMESPACE_ENTER
         
         int CubeDimensionLenToLustreBitDepth(int size)
         {
-            float logval = logf(static_cast<int>(size-1)) / logf(2.0);
+            float logval = logf(static_cast<float>(size-1)) / logf(2.0);
             return static_cast<int>(logval);
         }
         
