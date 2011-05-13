@@ -117,12 +117,9 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual std::string GetName() const;
-            virtual std::string GetExtension () const;
+            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual bool Supports(const FileFormatFeature & feature) const;
-            
-            virtual CachedFileRcPtr Load (std::istream & istream) const;
+            virtual CachedFileRcPtr Read(std::istream & istream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                          const Config& config,
@@ -132,24 +129,17 @@ OCIO_NAMESPACE_ENTER
                          TransformDirection dir) const;
         };
         
-        std::string
-        LocalFileFormat::GetName() const
+        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
-            return "iridas";
-        }
-        
-        std::string
-        LocalFileFormat::GetExtension() const { return "cube"; }
-        
-        bool
-        LocalFileFormat::Supports(const FileFormatFeature & feature) const
-        {
-            if(feature == FILE_FORMAT_READ) return true;
-            return false;
+            FormatInfo info;
+            info.name = "iridas";
+            info.extension = "cube";
+            info.capabilities = FORMAT_CAPABILITY_READ;
+            formatInfoVec.push_back(info);
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Load(std::istream & istream) const
+        LocalFileFormat::Read(std::istream & istream) const
         {
             // this shouldn't happen
             if(!istream)

@@ -332,20 +332,19 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        class FileFormatCSP : public FileFormat
+        class LocalFileFormat : public FileFormat
         {
         public:
             
-            ~FileFormatCSP() {};
+            ~LocalFileFormat() {};
             
-            virtual std::string GetName() const;
-            virtual std::string GetExtension () const;
+            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual bool Supports(const FileFormatFeature & feature) const;
+            virtual CachedFileRcPtr Read(std::istream & istream) const;
             
-            virtual CachedFileRcPtr Load (std::istream & istream) const;
-            
-            virtual void Write(const Baker & baker, std::ostream & ostream) const;
+            virtual void Write(const Baker & baker,
+                               const std::string & formatName,
+                               std::ostream & ostream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -366,22 +365,17 @@ OCIO_NAMESPACE_ENTER
         }
         */
         
-        std::string
-        FileFormatCSP::GetName() const { return "cinespace"; }
-        
-        std::string
-        FileFormatCSP::GetExtension() const { return "csp"; }
-        
-        bool
-        FileFormatCSP::Supports(const FileFormatFeature & feature) const
+        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
-            if(feature == FILE_FORMAT_READ) return true;
-            if(feature == FILE_FORMAT_WRITE) return true;
-            return false;
+            FormatInfo info;
+            info.name = "cinespace";
+            info.extension = "csp";
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+            formatInfoVec.push_back(info);
         }
         
         CachedFileRcPtr
-        FileFormatCSP::Load(std::istream & istream) const
+        LocalFileFormat::Read(std::istream & istream) const
         {
 
             // this shouldn't happen
@@ -638,7 +632,10 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void FileFormatCSP::Write(const Baker & baker, std::ostream & ostream) const
+        
+        void LocalFileFormat::Write(const Baker & baker,
+                                    const std::string & /*formatName*/,
+                                    std::ostream & ostream) const
         {
             const int DEFAULT_CUBE_SIZE = 32;
             const int DEFAULT_SHAPER_SIZE = 1024;
@@ -791,7 +788,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        FileFormatCSP::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
                                     const Config& /*config*/,
                                     const ConstContextRcPtr & /*context*/,
                                     CachedFileRcPtr untypedCachedFile,
@@ -848,7 +845,7 @@ OCIO_NAMESPACE_ENTER
     
     FileFormat * CreateFileFormatCSP()
     {
-        return new FileFormatCSP();
+        return new LocalFileFormat();
     }
 }
 OCIO_NAMESPACE_EXIT
@@ -861,7 +858,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(FileFormatCSP, simple1D)
+OIIO_ADD_TEST(CSPFileFormat, simple1D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"              << "\n";
@@ -896,9 +893,9 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     std::istringstream simple1D;
     simple1D.str(strebuf.str());
     
-    // Load file
-    OCIO::FileFormatCSP tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Load(simple1D);
+    // Read file
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple1D);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check prelut data (note: the spline is resampled into a 1D LUT)
@@ -925,7 +922,7 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     
 }
 
-OIIO_ADD_TEST(FileFormatCSP, simple3D)
+OIIO_ADD_TEST(CSPFileFormat, simple3D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"                                  << "\n";
@@ -964,8 +961,8 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
     simple3D.str(strebuf.str());
     
     // Load file
-    OCIO::FileFormatCSP tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Load(simple3D);
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check prelut data

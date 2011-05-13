@@ -115,29 +115,17 @@ OCIO_NAMESPACE_ENTER
     
     int Baker::getNumFormats()
     {
-        return FormatRegistry::GetInstance().getNumFormats(FILE_FORMAT_WRITE);
+        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_WRITE);
     }
     
     const char * Baker::getFormatNameByIndex(int index)
     {
-        FileFormat* format = FormatRegistry::GetInstance().getFormatByIndex(FILE_FORMAT_WRITE, index);
-        if(format)
-        {
-            return format->GetName().c_str();
-        }
-        
-        return "";
+        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_WRITE, index);
     }
     
     const char * Baker::getFormatExtensionByIndex(int index)
     {
-        FileFormat* format = FormatRegistry::GetInstance().getFormatByIndex(FILE_FORMAT_WRITE, index);
-        if(format)
-        {
-            return format->GetExtension().c_str();
-        }
-        
-        return "";
+        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_WRITE, index);
     }
     
     void Baker::setFormat(const char * formatName)
@@ -224,24 +212,23 @@ OCIO_NAMESPACE_ENTER
     {
         FileFormat* fmt = FormatRegistry::GetInstance().getFileFormatByName(getImpl()->formatName_);
         
-        if(fmt && fmt->Supports(FILE_FORMAT_WRITE))
-        {
-            try
-            {
-                fmt->Write(*this, os);
-            }
-            catch(std::exception & e)
-            {
-                std::ostringstream err;
-                err << e.what();
-                throw Exception(err.str().c_str());
-            }
-        }
-        else
+        if(!fmt)
         {
             std::ostringstream err;
-            err << "We don't support the '" << getImpl()->formatName_;
-            err << "' lut format for baking";
+            err << "The format named '" << getImpl()->formatName_;
+            err << "' could not be found. ";
+            throw Exception(err.str().c_str());
+        }
+        
+        try
+        {
+            fmt->Write(*this, getImpl()->formatName_, os);
+        }
+        catch(std::exception & e)
+        {
+            std::ostringstream err;
+            err << "Error baking " << getImpl()->formatName_ << ":";
+            err << e.what();
             throw Exception(err.str().c_str());
         }
         
@@ -259,7 +246,6 @@ OCIO_NAMESPACE_ENTER
         // - do a compare between ocio transform and output lut transform
         //   throw error if we going beyond tolerance
         //
-        
     }
     
 }

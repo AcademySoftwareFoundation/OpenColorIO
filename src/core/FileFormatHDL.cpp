@@ -92,20 +92,19 @@ OCIO_NAMESPACE_ENTER
         };
         typedef OCIO_SHARED_PTR<CachedFileHDL> CachedFileHDLRcPtr;
         
-        class FileFormatHDL : public FileFormat
+        class LocalFileFormat : public FileFormat
         {
         public:
             
-            ~FileFormatHDL() {};
+            ~LocalFileFormat() {};
             
-            virtual std::string GetName() const;
-            virtual std::string GetExtension () const;
+            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual bool Supports(const FileFormatFeature & feature) const;
+            virtual CachedFileRcPtr Read(std::istream & istream) const;
             
-            virtual CachedFileRcPtr Load (std::istream & istream) const;
-            
-            virtual void Write(const Baker & baker, std::ostream & ostream) const;
+            virtual void Write(const Baker & baker,
+                               const std::string & formatName,
+                               std::ostream & ostream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -115,28 +114,17 @@ OCIO_NAMESPACE_ENTER
                                       TransformDirection dir) const;
         };
         
-        std::string
-        FileFormatHDL::GetName() const
+        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
-            return "houdini";
-        }
-        
-        std::string
-        FileFormatHDL::GetExtension() const
-        {
-            return "lut";
-        }
-        
-        bool
-        FileFormatHDL::Supports(const FileFormatFeature & feature) const
-        {
-            if(feature == FILE_FORMAT_READ) return true;
-            if(feature == FILE_FORMAT_WRITE) return true;
-            return false;
+            FormatInfo info;
+            info.name = "houdini";
+            info.extension = "lut";
+            info.capabilities = FORMAT_CAPABILITY_READ;
+            formatInfoVec.push_back(info);
         }
         
         CachedFileRcPtr
-        FileFormatHDL::Load(std::istream & istream) const
+        LocalFileFormat::Read(std::istream & istream) const
         {
             
             // this shouldn't happen
@@ -393,9 +381,9 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void
-        FileFormatHDL::Write(const Baker & baker,
-                             std::ostream & ostream) const
+        void LocalFileFormat::Write(const Baker & baker,
+                                    const std::string & formatName,
+                                    std::ostream & ostream) const
         {
             /*
             // setup the floating point precision
@@ -464,7 +452,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void
-        FileFormatHDL::BuildFileOps(OpRcPtrVec & ops,
+        LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
                                     const Config& /*config*/,
                                     const ConstContextRcPtr & /*context*/,
                                     CachedFileRcPtr untypedCachedFile,
@@ -516,7 +504,7 @@ OCIO_NAMESPACE_ENTER
     
     FileFormat * CreateFileFormatHDL()
     {
-        return new FileFormatHDL();
+        return new LocalFileFormat();
     }
 }
 OCIO_NAMESPACE_EXIT
@@ -528,7 +516,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(FileFormatHDL, simple1D)
+OIIO_ADD_TEST(HDLFileFormat, simple1D)
 {
     
     std::ostringstream strebuf;
@@ -566,8 +554,8 @@ OIIO_ADD_TEST(FileFormatHDL, simple1D)
     simple3D1D.str(strebuf.str());
     
     // Load file
-    OCIO::FileFormatHDL tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Load(simple3D1D);
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
@@ -587,7 +575,7 @@ OIIO_ADD_TEST(FileFormatHDL, simple1D)
     
 }
 
-OIIO_ADD_TEST(FileFormatHDL, simple3D)
+OIIO_ADD_TEST(HDLFileFormat, simple3D)
 {
     
     std::ostringstream strebuf;
@@ -615,8 +603,8 @@ OIIO_ADD_TEST(FileFormatHDL, simple3D)
     simple3D1D.str(strebuf.str());
     
     // Load file
-    OCIO::FileFormatHDL tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Load(simple3D1D);
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
@@ -709,7 +697,7 @@ OIIO_ADD_TEST(FileFormatHDL, simple3D)
     
 }
 
-OIIO_ADD_TEST(FileFormatHDL, simple3D1D)
+OIIO_ADD_TEST(HDLFileFormat, simple3D1D)
 {
     std::ostringstream strebuf;
     strebuf << "Version		3" << "\n";
@@ -767,8 +755,8 @@ OIIO_ADD_TEST(FileFormatHDL, simple3D1D)
     simple3D1D.str(strebuf.str());
     
     // Load file
-    OCIO::FileFormatHDL tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Load(simple3D1D);
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //

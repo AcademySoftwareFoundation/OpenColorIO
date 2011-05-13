@@ -416,6 +416,10 @@ OCIO_NAMESPACE_ENTER
         // an invalid index is specified
         static const char * getFormatNameByIndex(int index);
         
+        //!cpp:function:: get the lut reader extension at index, return empty string if
+        // an invalid index is specified
+        static const char * getFormatExtensionByIndex(int index);
+        
     private:
         FileTransform();
         FileTransform(const FileTransform &);

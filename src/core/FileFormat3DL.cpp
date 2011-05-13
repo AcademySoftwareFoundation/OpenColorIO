@@ -117,13 +117,13 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual std::string GetName() const;
-            virtual std::string GetExtension () const;
+            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual bool Supports(const FileFormatFeature & feature) const;
+            virtual CachedFileRcPtr Read(std::istream & istream) const;
             
-            virtual CachedFileRcPtr Load (std::istream & istream) const;
-            virtual void Write(const Baker & baker, std::ostream & ostream) const;
+            virtual void Write(const Baker & baker,
+                               const std::string & formatName,
+                               std::ostream & ostream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -203,27 +203,23 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        std::string LocalFileFormat::GetName() const
+        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
-            return "flame";
-        }
-        
-        std::string LocalFileFormat::GetExtension() const
-        {
-            return "3dl";
-        }
-        
-        bool LocalFileFormat::Supports(const FileFormatFeature & feature) const
-        {
-            if(feature == FILE_FORMAT_READ) return true;
-            if(feature == FILE_FORMAT_WRITE) return true;
-            return false;
+            FormatInfo info;
+            info.name = "flame";
+            info.extension = "3dl";
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+            formatInfoVec.push_back(info);
+            
+            FormatInfo info2 = info;
+            info2.name = "lustre";
+            formatInfoVec.push_back(info2);
         }
         
         // Try and load the format
         // Raise an exception if it can't be loaded.
         
-        CachedFileRcPtr LocalFileFormat::Load(std::istream & istream) const
+        CachedFileRcPtr LocalFileFormat::Read(std::istream & istream) const
         {
             std::vector<int> rawshaper;
             std::vector<int> raw3d;
@@ -420,14 +416,31 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void LocalFileFormat::Write(const Baker & baker, std::ostream & ostream) const
+        void LocalFileFormat::Write(const Baker & baker,
+                                    const std::string & formatName,
+                                    std::ostream & ostream) const
         {
-            // Lustre prefers 33x33x33. (flame/smoke 17x17x17)
-            const int DEFAULT_CUBE_SIZE = 17;
-            const int SHAPER_SIZE = 17; // This is fixed for compatibility...
-            const int SHAPER_BIT_DEPTH = 10;
-            const int CUBE_BIT_DEPTH = 10;
+            int DEFAULT_CUBE_SIZE = 0;
             
+            int SHAPER_SIZE = 17; // This is fixed for compatibility...
+            int SHAPER_BIT_DEPTH = 10;
+            int CUBE_BIT_DEPTH = 12;
+            
+            if(formatName == "lustre")
+            {
+                DEFAULT_CUBE_SIZE = 33;
+            }
+            else if(formatName == "flame")
+            {
+                DEFAULT_CUBE_SIZE = 17;
+            }
+            else
+            {
+                std::ostringstream os;
+                os << "Unknown 3dl format name, '";
+                os << formatName << "'.";
+                throw Exception(os.str().c_str());
+            }
             
             ConstConfigRcPtr config = baker.getConfig();
             

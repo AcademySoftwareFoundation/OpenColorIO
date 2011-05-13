@@ -71,133 +71,138 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        class LocalFormat : public FileFormat
+        class LocalFileFormat : public FileFormat
         {
+        public:
             
-            virtual std::string GetName() const
-            {
-                return "spi3d";
-            }
+            ~LocalFileFormat() {};
             
-            virtual std::string GetExtension() const
-            {
-                return "spi3d";
-            }
+            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            
-            virtual bool Supports(const FileFormatFeature & feature) const
-            {
-                if(feature == FILE_FORMAT_READ) return true;
-                return false;
-            }
-            
-            // Try and load the format
-            // Raise an exception if it can't be loaded.
-
-            virtual CachedFileRcPtr Load(std::istream & istream) const
-            {
-                const int MAX_LINE_SIZE = 4096;
-                char lineBuffer[MAX_LINE_SIZE];
-                
-                Lut3DRcPtr lut3d(new Lut3D());
-                
-                // Read header information
-                istream.getline(lineBuffer, MAX_LINE_SIZE);
-                if(!pystring::startswith(pystring::lower(lineBuffer), "spilut"))
-                {
-                    throw Exception("Lut does not appear to be valid SPILUT format.");
-                }
-                
-                // TODO: Assert 2nd line is 3 3
-                istream.getline(lineBuffer, MAX_LINE_SIZE);
-                
-                // Get LUT Size
-                // TODO: Error handling
-                int rSize, gSize, bSize;
-                istream.getline(lineBuffer, MAX_LINE_SIZE);
-                sscanf(lineBuffer, "%d %d %d", &rSize, &gSize, &bSize);
-                
-                lut3d->size[0] = rSize;
-                lut3d->size[1] = gSize;
-                lut3d->size[2] = bSize;
-                lut3d->lut.resize(rSize * gSize * bSize * 3);
-                
-                // Parse table
-                int index = 0;
-                int rIndex, gIndex, bIndex;
-                float redValue, greenValue, blueValue;
-                
-                int entriesRemaining = rSize * gSize * bSize;
-                
-                while (istream.good() && entriesRemaining > 0)
-                {
-                    istream.getline(lineBuffer, MAX_LINE_SIZE);
-                    
-                    if (sscanf(lineBuffer, "%d %d %d %f %f %f",
-                        &rIndex, &gIndex, &bIndex,
-                        &redValue, &greenValue, &blueValue) == 6)
-                    {
-                        index = GetLut3DIndex_B(rIndex, gIndex, bIndex,
-                                                rSize, gSize, bSize);
-                        if(index < 0 || index >= (int) lut3d->lut.size())
-                        {
-                            std::ostringstream os;
-                            os << "Cannot load .spi3d lut, data is invalid. ";
-                            os << "A lut entry is specified (";
-                            os << rIndex << " " << gIndex << " " << bIndex;
-                            os << " that falls outside of the cube.";
-                            throw Exception(os.str().c_str());
-                        }
-                        
-                        lut3d->lut[index+0] = redValue;
-                        lut3d->lut[index+1] = greenValue;
-                        lut3d->lut[index+2] = blueValue;
-                        
-                        entriesRemaining--;
-                    }
-                }
-                
-                // Have we fully populated the table?
-                if (entriesRemaining>0) 
-                    throw Exception("Not enough entries found.");
-                
-                lut3d->generateCacheID();
-                
-                LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
-                cachedFile->lut = lut3d;
-                return cachedFile;
-            }
+            virtual CachedFileRcPtr Read(std::istream & istream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
-                                      const Config& /*config*/,
-                                      const ConstContextRcPtr & /*context*/,
-                                      CachedFileRcPtr untypedCachedFile,
-                                      const FileTransform& fileTransform,
-                                      TransformDirection dir) const
-            {
-                LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
-                
-                if(!cachedFile) // This should never happen.
-                {
-                    std::ostringstream os;
-                    os << "Cannot build Spi3D Op. Invalid cache type.";
-                    throw Exception(os.str().c_str());
-                }
-                
-                TransformDirection newDir = CombineTransformDirections(dir,
-                    fileTransform.getDirection());
-                
-                CreateLut3DOp(ops,
-                              cachedFile->lut,
-                              fileTransform.getInterpolation(),
-                              newDir);
-            }
+                         const Config& config,
+                         const ConstContextRcPtr & context,
+                         CachedFileRcPtr untypedCachedFile,
+                         const FileTransform& fileTransform,
+                         TransformDirection dir) const;
         };
+        
+        
+        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
+        {
+            FormatInfo info;
+            info.name = "spi3d";
+            info.extension = "spi3d";
+            info.capabilities = FORMAT_CAPABILITY_READ;
+            formatInfoVec.push_back(info);
+        }
+        
+        CachedFileRcPtr
+        LocalFileFormat::Read(std::istream & istream) const
+        {
+            const int MAX_LINE_SIZE = 4096;
+            char lineBuffer[MAX_LINE_SIZE];
+
+            Lut3DRcPtr lut3d(new Lut3D());
+
+            // Read header information
+            istream.getline(lineBuffer, MAX_LINE_SIZE);
+            if(!pystring::startswith(pystring::lower(lineBuffer), "spilut"))
+            {
+                throw Exception("Lut does not appear to be valid spilut format.");
+            }
+
+            // TODO: Assert 2nd line is 3 3
+            istream.getline(lineBuffer, MAX_LINE_SIZE);
+
+            // Get LUT Size
+            // TODO: Error handling
+            int rSize, gSize, bSize;
+            istream.getline(lineBuffer, MAX_LINE_SIZE);
+            sscanf(lineBuffer, "%d %d %d", &rSize, &gSize, &bSize);
+
+            lut3d->size[0] = rSize;
+            lut3d->size[1] = gSize;
+            lut3d->size[2] = bSize;
+            lut3d->lut.resize(rSize * gSize * bSize * 3);
+
+            // Parse table
+            int index = 0;
+            int rIndex, gIndex, bIndex;
+            float redValue, greenValue, blueValue;
+
+            int entriesRemaining = rSize * gSize * bSize;
+
+            while (istream.good() && entriesRemaining > 0)
+            {
+                istream.getline(lineBuffer, MAX_LINE_SIZE);
+
+                if (sscanf(lineBuffer, "%d %d %d %f %f %f",
+                    &rIndex, &gIndex, &bIndex,
+                    &redValue, &greenValue, &blueValue) == 6)
+                {
+                    index = GetLut3DIndex_B(rIndex, gIndex, bIndex,
+                                            rSize, gSize, bSize);
+                    if(index < 0 || index >= (int) lut3d->lut.size())
+                    {
+                        std::ostringstream os;
+                        os << "Cannot load .spi3d lut, data is invalid. ";
+                        os << "A lut entry is specified (";
+                        os << rIndex << " " << gIndex << " " << bIndex;
+                        os << " that falls outside of the cube.";
+                        throw Exception(os.str().c_str());
+                    }
+
+                    lut3d->lut[index+0] = redValue;
+                    lut3d->lut[index+1] = greenValue;
+                    lut3d->lut[index+2] = blueValue;
+
+                    entriesRemaining--;
+                }
+            }
+
+            // Have we fully populated the table?
+            if (entriesRemaining>0) 
+                throw Exception("Not enough entries found.");
+
+            lut3d->generateCacheID();
+
+            LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
+            cachedFile->lut = lut3d;
+            return cachedFile;
+        }
+
+        void LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
+                                  const Config& /*config*/,
+                                  const ConstContextRcPtr & /*context*/,
+                                  CachedFileRcPtr untypedCachedFile,
+                                  const FileTransform& fileTransform,
+                                  TransformDirection dir) const
+        {
+            LocalCachedFileRcPtr cachedFile = DynamicPtrCast<LocalCachedFile>(untypedCachedFile);
+
+            if(!cachedFile) // This should never happen.
+            {
+                std::ostringstream os;
+                os << "Cannot build Spi3D Op. Invalid cache type.";
+                throw Exception(os.str().c_str());
+            }
+
+            TransformDirection newDir = CombineTransformDirections(dir,
+                fileTransform.getDirection());
+
+            CreateLut3DOp(ops,
+                          cachedFile->lut,
+                          fileTransform.getInterpolation(),
+                          newDir);
+        }
     }
     
     FileFormat * CreateFileFormatSpi3D()
     {
-        return new LocalFormat();
+        return new LocalFileFormat();
     }
 }
 OCIO_NAMESPACE_EXIT
