@@ -39,6 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    void ClearFileTransformCaches();
+    
     class CachedFile
     {
     public:
@@ -48,49 +50,85 @@ OCIO_NAMESPACE_ENTER
     
     typedef OCIO_SHARED_PTR<CachedFile> CachedFileRcPtr;
     
-    struct TransformData
+    const int FORMAT_CAPABILITY_NONE = 0;
+    const int FORMAT_CAPABILITY_READ = 1;
+    const int FORMAT_CAPABILITY_WRITE = 2;
+    const int FORMAT_CAPABILITY_ALL = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+    
+    struct FormatInfo
     {
-        float minlum[3];
-        float maxlum[3];
-        size_t shaperSize;
-        std::vector<float> shaper_ident;
-        std::vector<float> shaper_encode;
-        std::vector<float> shaper_decode;
-        //std::vector<float> lookup1D;
-        size_t lookup3DSize;
-        std::vector<float> lookup3D;
+        std::string name;       // name must be globally unique
+        std::string extension;  // extension does not need to be unique
+        int capabilities;
+        
+        FormatInfo():
+            capabilities(FORMAT_CAPABILITY_NONE)
+        { }
     };
     
-    enum FileFormatFeature
-    {
-        FILE_FORMAT_READ = 0,
-        FILE_FORMAT_WRITE = 1
-    };
-    
-    void ClearFileTransformCaches();
+    typedef std::vector<FormatInfo> FormatInfoVec;
     
     class FileFormat
     {
     public:
         virtual ~FileFormat();
         
-        virtual std::string GetName() const = 0;
-        virtual std::string GetExtension() const = 0;
+        virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const = 0;
         
-        virtual bool Supports(const FileFormatFeature & feature) const = 0;
+        virtual CachedFileRcPtr Read(std::istream & istream) const = 0;
         
-        virtual CachedFileRcPtr Load(std::istream & istream) const = 0;
-        
-        virtual void Write(TransformData & data, std::ostream & ostream) const;
+        virtual void Write(const Baker & baker,
+                           const std::string & formatName,
+                           std::ostream & ostream) const;
         
         virtual void BuildFileOps(OpRcPtrVec & ops,
-                                  const Config& config,
+                                  const Config & config,
                                   const ConstContextRcPtr & context,
                                   CachedFileRcPtr cachedFile,
-                                  const FileTransform& fileTransform,
+                                  const FileTransform & fileTransform,
                                   TransformDirection dir) const = 0;
     private:
         FileFormat& operator= (const FileFormat &);
+    };
+    
+    typedef std::map<std::string, FileFormat*> FileFormatMap;
+    typedef std::vector<FileFormat*> FileFormatVector;
+    
+    // TODO: This interface is ugly. What private API is actually appropriate?
+    // Maybe, instead of exposing the raw formats, we wrap it?
+    // FileCachePair GetFile(const std::string & filepath) and all
+    // lookups will move internal
+    
+    class FormatRegistry
+    {
+    public:
+        static FormatRegistry & GetInstance();
+        
+        // TODO: Make these return a vector of possible formats
+        FileFormat* getFileFormatByName(const std::string & name) const;
+        FileFormat* getFileFormatForExtension(const std::string & extension) const;
+        
+        int getNumRawFormats() const;
+        FileFormat* getRawFormatByIndex(int index) const;
+        
+        int getNumFormats(int capability) const;
+        const char * getFormatNameByIndex(int capability, int index) const;
+        const char * getFormatExtensionByIndex(int capability, int index) const;
+    private:
+        FormatRegistry();
+        ~FormatRegistry();
+        
+        void registerFileFormat(FileFormat* format);
+        
+        FileFormatMap m_formatsByName;
+        FileFormatMap m_formatsByExtension;
+        FileFormatVector m_rawFormats;
+        
+        typedef std::vector<std::string> StringVec;
+        StringVec m_readFormatNames;
+        StringVec m_readFormatExtensions;
+        StringVec m_writeFormatNames;
+        StringVec m_writeFormatExtensions;
     };
     
     // Registry Builders
@@ -106,33 +144,6 @@ OCIO_NAMESPACE_ENTER
     FileFormat * CreateFileFormatTruelight();
     FileFormat * CreateFileFormatVF();
     
-    
-    
-    typedef std::map<std::string, FileFormat*> FileFormatMap;
-    
-    class FormatRegistry
-    {
-    public:
-        static FormatRegistry & GetInstance();
-        
-        FileFormat* getFileFormatByName(const std::string & name) const;
-        FileFormat* getFileFormatForExtension(const std::string & extension) const;
-        
-        int getNumFormats() const;
-        FileFormat* getFormatByIndex(int index) const;
-        
-        int getNumFormats(FileFormatFeature feature) const;
-        FileFormat* getFormatByIndex(FileFormatFeature feature, int index) const;
-    
-    private:
-        FormatRegistry();
-        ~FormatRegistry();
-        
-        void registerFileFormat(FileFormat* format);
-        
-        FileFormatMap m_formatsByName;
-        FileFormatMap m_formatsByExtension;
-    };
 }
 OCIO_NAMESPACE_EXIT
 

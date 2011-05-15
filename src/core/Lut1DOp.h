@@ -88,6 +88,9 @@ OCIO_NAMESPACE_ENTER
     
     typedef OCIO_SHARED_PTR<Lut1D> Lut1DRcPtr;
     
+    // This generates an identity 1d lut, from 0.0 to 1.0
+    void GenerateIdentityLut1D(float* img, int numElements, int numChannels);
+    
     void CreateLut1DOp(OpRcPtrVec & ops,
                        const Lut1DRcPtr & lut,
                        Interpolation interpolation,

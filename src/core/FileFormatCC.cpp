@@ -60,12 +60,9 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual std::string GetName() const;
-            virtual std::string GetExtension () const;
+            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual bool Supports(const FileFormatFeature & feature) const;
-            
-            virtual CachedFileRcPtr Load (std::istream & istream) const;
+            virtual CachedFileRcPtr Read(std::istream & istream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -75,27 +72,19 @@ OCIO_NAMESPACE_ENTER
                                       TransformDirection dir) const;
         };
         
-        
-        std::string LocalFileFormat::GetName() const
+        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
-            return "ColorCorrection";
+            FormatInfo info;
+            info.name = "ColorCorrection";
+            info.extension = "cc";
+            info.capabilities = FORMAT_CAPABILITY_READ;
+            formatInfoVec.push_back(info);
         }
         
-        std::string LocalFileFormat::GetExtension() const
-        {
-            return "cc";
-        }
+        // Try and load the format
+        // Raise an exception if it can't be loaded.
         
-        bool LocalFileFormat::Supports(const FileFormatFeature & feature) const
-        {
-            if(feature == FILE_FORMAT_READ) return true;
-            return false;
-        }
-        
-            // Try and load the format
-            // Raise an exception if it can't be loaded.
-        
-        CachedFileRcPtr LocalFileFormat::Load(std::istream & istream) const
+        CachedFileRcPtr LocalFileFormat::Read(std::istream & istream) const
         {
             std::ostringstream rawdata;
             rawdata << istream.rdbuf();

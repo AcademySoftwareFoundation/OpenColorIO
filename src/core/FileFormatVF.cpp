@@ -69,12 +69,9 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual std::string GetName() const;
-            virtual std::string GetExtension () const;
+            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual bool Supports(const FileFormatFeature & feature) const;
-            
-            virtual CachedFileRcPtr Load (std::istream & istream) const;
+            virtual CachedFileRcPtr Read(std::istream & istream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                          const Config& config,
@@ -84,41 +81,17 @@ OCIO_NAMESPACE_ENTER
                          TransformDirection dir) const;
         };
         
-        
-        // read the next non empty line
-        // return whether it has succeeded or not.
-        
-        static bool
-        nextline (std::istream &istream, std::string &line)
+        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
-            while ( istream.good() )
-            {
-                std::getline(istream, line);
-                line = pystring::rstrip( line );
-                if(!line.empty())
-                {
-                    return true;
-                }
-            }
-            
-            return false;
-        }
-        
-        std::string
-        LocalFileFormat::GetName() const { return "nuke"; }
-        
-        std::string
-        LocalFileFormat::GetExtension() const { return "vf"; }
-        
-        bool
-        LocalFileFormat::Supports(const FileFormatFeature & feature) const
-        {
-            if(feature == FILE_FORMAT_READ) return true;
-            return false;
+            FormatInfo info;
+            info.name = "nukevf";
+            info.extension = "vf";
+            info.capabilities = FORMAT_CAPABILITY_READ;
+            formatInfoVec.push_back(info);
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Load(std::istream & istream) const
+        LocalFileFormat::Read(std::istream & istream) const
         {
             // this shouldn't happen
             if(!istream)

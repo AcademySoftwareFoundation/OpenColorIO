@@ -222,7 +222,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels)
+    void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
     {
         if(!img) return;
         if(numChannels < 3)
@@ -232,11 +232,27 @@ OCIO_NAMESPACE_ENTER
         
         float c = 1.0f / ((float)edgeLen - 1.0f);
         
-        for(int i=0; i<edgeLen*edgeLen*edgeLen; i++)
+        if(lut3DOrder == LUT3DORDER_FAST_RED)
         {
-            img[numChannels*i+0] = (float)(i%edgeLen) * c;
-            img[numChannels*i+1] = (float)((i/edgeLen)%edgeLen) * c;
-            img[numChannels*i+2] = (float)((i/edgeLen/edgeLen)%edgeLen) * c;
+            for(int i=0; i<edgeLen*edgeLen*edgeLen; i++)
+            {
+                img[numChannels*i+0] = (float)(i%edgeLen) * c;
+                img[numChannels*i+1] = (float)((i/edgeLen)%edgeLen) * c;
+                img[numChannels*i+2] = (float)((i/edgeLen/edgeLen)%edgeLen) * c;
+            }
+        }
+        else if(lut3DOrder == LUT3DORDER_FAST_BLUE)
+        {
+            for(int i=0; i<edgeLen*edgeLen*edgeLen; i++)
+            {
+                img[numChannels*i+0] = (float)((i/edgeLen/edgeLen)%edgeLen) * c;
+                img[numChannels*i+1] = (float)((i/edgeLen)%edgeLen) * c;
+                img[numChannels*i+2] = (float)(i%edgeLen) * c;
+            }
+        }
+        else
+        {
+            throw Exception("Unknown Lut3DOrder.");
         }
     }
     
@@ -257,6 +273,7 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
@@ -310,6 +327,12 @@ OCIO_NAMESPACE_ENTER
         bool Lut3DOp::isNoOp() const
         {
             return false;
+        }
+        
+        // TODO: compute real value for hasChannelCrosstalk
+        bool Lut3DOp::hasChannelCrosstalk() const
+        {
+            return true;
         }
         
         void Lut3DOp::finalize()

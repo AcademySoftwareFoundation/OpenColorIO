@@ -51,7 +51,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // cube size is determined from num entries
 // The bit depth of the shaper lut and the 3d lut need not be the same.
 
-Example 1:
+Example 1, FLAME
 # Comment here
 0 64 128 192 256 320 384 448 512 576 640 704 768 832 896 960 1023
 
@@ -60,12 +60,13 @@ Example 1:
 0 0 200
 
 
-Example 2:
+Example 2, LUSTRE
 #Tokens required by applications - do not edit
-
 3DMESH
 Mesh 4 12
 0 64 128 192 256 320 384 448 512 576 640 704 768 832 896 960 1023
+
+
 
 0 17 17
 0 0 88
@@ -80,6 +81,22 @@ Mesh 4 12
 
 LUT8
 gamma 1.0
+
+In this example, the 3D LUT has an input bit depth of 4 bits and an output 
+bit depth of 12 bits. You use the input value to calculate the RGB triplet 
+to be 17*17*17 (where 17=(2 to the power of 4)+1, and 4 is the input bit 
+depth). The first triplet is the output value at (0,0,0);(0,0,1);...;
+(0,0,16) r,g,b coordinates; the second triplet is the output value at 
+(0,1,0);(0,1,1);...;(0,1,16) r,g,b coordinates; and so on. You use the output 
+bit depth to set the output bit depth range (12 bits or 0-4095).
+NoteLustre supports an input and output depth of 16 bits for 3D LUTs; however, 
+in the processing pipeline, the BLACK_LEVEL to WHITE_LEVEL range is only 14 
+bits. This means that even if the 3D LUT is 16 bits, it is normalized to 
+fit the BLACK_LEVEL to WHITE_LEVEL range of Lustre.
+In Lustre, 3D LUT files can contain grids of 17 cubed, 33 cubed, and 65 cubed; 
+however, Lustre converts 17 cubed and 65 cubed grids to 33 cubed for internal 
+processing on the output (for rendering and calibration), but not on the input 
+3D LUT.
 */
 
 
@@ -117,12 +134,13 @@ OCIO_NAMESPACE_ENTER
             
             ~LocalFileFormat() {};
             
-            virtual std::string GetName() const;
-            virtual std::string GetExtension () const;
+            virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual bool Supports(const FileFormatFeature & feature) const;
+            virtual CachedFileRcPtr Read(std::istream & istream) const;
             
-            virtual CachedFileRcPtr Load (std::istream & istream) const;
+            virtual void Write(const Baker & baker,
+                               const std::string & formatName,
+                               std::ostream & ostream) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -177,6 +195,12 @@ OCIO_NAMESPACE_ENTER
             return static_cast<int>( pow(2.0, bitDepth) ) - 1;
         }
         
+        int GetClampedIntFromNormFloat(float val, float scale)
+        {
+            val = std::min(std::max(0.0f, val), 1.0f) * scale;
+            return static_cast<int>(roundf(val));
+        }
+        
         int Get3DLutEdgeLenFromNumEntries(int numEntries)
         {
             float fdim = powf((float) numEntries / 3.0f, 1.0f/3.0f);
@@ -196,26 +220,23 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        std::string LocalFileFormat::GetName() const
+        void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
-            return "flame";
+            FormatInfo info;
+            info.name = "flame";
+            info.extension = "3dl";
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
+            formatInfoVec.push_back(info);
+            
+            FormatInfo info2 = info;
+            info2.name = "lustre";
+            formatInfoVec.push_back(info2);
         }
         
-        std::string LocalFileFormat::GetExtension() const
-        {
-            return "3dl";
-        }
+        // Try and load the format
+        // Raise an exception if it can't be loaded.
         
-        bool LocalFileFormat::Supports(const FileFormatFeature & feature) const
-        {
-            if(feature == FILE_FORMAT_READ) return true;
-            return false;
-        }
-        
-            // Try and load the format
-            // Raise an exception if it can't be loaded.
-        
-        CachedFileRcPtr LocalFileFormat::Load(std::istream & istream) const
+        CachedFileRcPtr LocalFileFormat::Read(std::istream & istream) const
         {
             std::vector<int> rawshaper;
             std::vector<int> raw3d;
@@ -410,6 +431,106 @@ OCIO_NAMESPACE_ENTER
             }
             
             return cachedFile;
+        }
+        
+        // 65 -> 6
+        // 33 -> 5
+        // 17 -> 4
+        
+        int CubeDimensionLenToLustreBitDepth(int size)
+        {
+            float logval = logf(static_cast<float>(size-1)) / logf(2.0);
+            return static_cast<int>(logval);
+        }
+        
+        void LocalFileFormat::Write(const Baker & baker,
+                                    const std::string & formatName,
+                                    std::ostream & ostream) const
+        {
+            int DEFAULT_CUBE_SIZE = 0;
+            
+            int SHAPER_SIZE = 17; // This is fixed for compatibility...
+            int SHAPER_BIT_DEPTH = 10;
+            int CUBE_BIT_DEPTH = 12;
+            
+            if(formatName == "lustre")
+            {
+                DEFAULT_CUBE_SIZE = 33;
+            }
+            else if(formatName == "flame")
+            {
+                DEFAULT_CUBE_SIZE = 17;
+            }
+            else
+            {
+                std::ostringstream os;
+                os << "Unknown 3dl format name, '";
+                os << formatName << "'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            ConstConfigRcPtr config = baker.getConfig();
+            
+            int cubeSize = baker.getCubeSize();
+            if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+            cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
+            
+            std::vector<float> cubeData;
+            cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+            GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_BLUE);
+            PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+            
+            // Apply our conversion from the input space to the output space.
+            ConstProcessorRcPtr inputToTarget = config->getProcessor(baker.getInputSpace(),
+                baker.getTargetSpace());
+            inputToTarget->apply(cubeImg);
+            
+            // Write out the file.
+            // For for maximum compatibility with other apps, we will
+            // not utilize the shaper or output any metadata
+            
+            if(formatName == "lustre")
+            {
+                int meshInputBitDepth = CubeDimensionLenToLustreBitDepth(cubeSize);
+                ostream << "3DMESH\n";
+                ostream << "Mesh " << meshInputBitDepth << " " << CUBE_BIT_DEPTH << "\n";
+            }
+            
+            std::vector<float> shaperData(SHAPER_SIZE);
+            GenerateIdentityLut1D(&shaperData[0], SHAPER_SIZE, 1);
+            
+            float shaperScale = static_cast<float>(
+                GetMaxValueFromIntegerBitDepth(SHAPER_BIT_DEPTH));
+            
+            for(unsigned int i=0; i<shaperData.size(); ++i)
+            {
+                if(i != 0) ostream << " ";
+                int val = GetClampedIntFromNormFloat(shaperData[i], shaperScale);
+                ostream << val;
+            }
+            ostream << "\n";
+            
+            // Write out the 3D Cube
+            float cubeScale = static_cast<float>(
+                GetMaxValueFromIntegerBitDepth(CUBE_BIT_DEPTH));
+            if(cubeSize < 2)
+            {
+                throw Exception("Internal cube size exception.");
+            }
+            for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+            {
+                int r = GetClampedIntFromNormFloat(cubeData[3*i+0], cubeScale);
+                int g = GetClampedIntFromNormFloat(cubeData[3*i+1], cubeScale);
+                int b = GetClampedIntFromNormFloat(cubeData[3*i+2], cubeScale);
+                ostream << r << " " << g << " " << b << "\n";
+            }
+            ostream << "\n";
+            
+            if(formatName == "lustre")
+            {
+                ostream << "LUT8\n";
+                ostream << "gamma 1.0\n";
+            }
         }
         
         void

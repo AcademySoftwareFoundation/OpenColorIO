@@ -151,7 +151,7 @@ OCIO_NAMESPACE_ENTER
     {
         for(int i=0; i<16; ++i)
         {
-            if((i%5)==0) continue;
+            if((i%5)==0) continue; // If we're on the diagonal, skip it
             if(!equalWithAbsError(0.0, m44[i], FLTMIN)) return false;
         }
         
