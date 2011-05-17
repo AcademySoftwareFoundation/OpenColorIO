@@ -194,7 +194,7 @@ namespace
         // If a null value is specified, erase it
         else
         {
-            StringMap::iterator iter = getImpl()->envMap_.find(name);
+            EnvMap::iterator iter = getImpl()->envMap_.find(name);
             if(iter != getImpl()->envMap_.end())
             {
                 getImpl()->envMap_.erase(iter);
@@ -206,7 +206,7 @@ namespace
     {
         if(!name) return "";
         
-        StringMap::const_iterator iter = getImpl()->envMap_.find(name);
+        EnvMap::const_iterator iter = getImpl()->envMap_.find(name);
         if(iter != getImpl()->envMap_.end())
         {
             return iter->second.c_str();

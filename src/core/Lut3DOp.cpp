@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HashUtils.h"
 #include "Lut3DOp.h"
+#include "MathUtils.h"
 
 #include <cmath>
 #include <sstream>
