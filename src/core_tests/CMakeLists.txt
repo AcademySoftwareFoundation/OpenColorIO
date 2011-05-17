@@ -13,7 +13,7 @@ include_directories(
 file( GLOB_RECURSE core_test_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp" )
 
 add_executable(ocio_core_tests ${core_test_src_files})
-add_dependencies(ocio_core_tests tinyxml YAML_CPP_LOCAL)
+add_dependencies(ocio_core_tests tinyxml YAML_CPP_LOCAL LCMS)
 set_target_properties(ocio_core_tests PROPERTIES
     COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
     LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")

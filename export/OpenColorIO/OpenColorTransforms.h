@@ -696,6 +696,83 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const TruelightTransform &);
     
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class:: ICC transform using the littlecms2 api
+    class OCIOEXPORT ICCTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static ICCTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+        
+        //!cpp:function::
+        void setInput(const char * input);
+        //!cpp:function::
+        void setInputMem(const void * inputPtr, int size);
+        //!cpp:function::
+        const char * getIntput() const;
+        
+        //!cpp:function::
+        void setOutput(const char * output);
+        //!cpp:function::
+        void setOutputMem(const void * outputPtr, int size);
+        //!cpp:function::
+        const char * getOutput() const;
+        
+        //!cpp:function::
+        void setProof(const char * proof);
+        //!cpp:function::
+        void setProofMem(const void * proofPtr, int size);
+        //!cpp:function::
+        const char * getProof() const;
+        
+        //!cpp:function::
+        void setIntent(IccIntent intent);
+        //!cpp:function::
+        IccIntent getIntent() const;
+        
+        //!cpp:function::
+        void setBlackpointCompensation(bool blackpointCompensation);
+        //!cpp:function::
+        bool getBlackpointCompensation() const;
+        
+        //!cpp:function::
+        void setSoftProofing(bool softProofing);
+        //!cpp:function::
+        bool getSoftProofing() const;
+        
+        //!cpp:function::
+        void setGamutCheck(bool gamutCheck);
+        //!cpp:function::
+        bool getGamutCheck() const;
+        
+    private:
+        ICCTransform();
+        ICCTransform(const ICCTransform &);
+        virtual ~ICCTransform();
+        
+        ICCTransform& operator= (const ICCTransform &);
+        
+        static void deleter(ICCTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ICCTransform &);
+    
 }
 OCIO_NAMESPACE_EXIT
 

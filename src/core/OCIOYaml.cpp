@@ -176,6 +176,8 @@ OCIO_NAMESPACE_ENTER
             t = node.Read<MatrixTransformRcPtr>();
         else if(type == "TruelightTransform")
             t = node.Read<TruelightTransformRcPtr>();
+        else if(type == "ICCTransform")
+            t = node.Read<ICCTransformRcPtr>();
         else
         {
             // TODO: add a new empty (better name?) aka passthru Transform()
@@ -203,7 +205,6 @@ OCIO_NAMESPACE_ENTER
         else if(ConstColorSpaceTransformRcPtr ColorSpace_tran = \
             DynamicPtrCast<const ColorSpaceTransform>(t))
             out << ColorSpace_tran;
-        // ConstExponentTransformRcPtr
         else if(ConstExponentTransformRcPtr Exponent_tran = \
             DynamicPtrCast<const ExponentTransform>(t))
             out << Exponent_tran;
@@ -222,6 +223,9 @@ OCIO_NAMESPACE_ENTER
         else if(ConstTruelightTransformRcPtr Truelight_tran = \
             DynamicPtrCast<const TruelightTransform>(t))
             out << Truelight_tran;
+        else if(ConstICCTransformRcPtr ICC_tran = \
+            DynamicPtrCast<const ICCTransform>(t))
+            out << ICC_tran;
         else
             throw Exception("Unsupported Transform() type for serialization.");
         
@@ -636,6 +640,72 @@ OCIO_NAMESPACE_ENTER
         return out;
     }
     
+    void operator >> (const YAML::Node& node, ICCTransformRcPtr& t)
+    {
+        t = ICCTransform::Create();
+        if(node.FindValue("input") != NULL)
+            t->setInput(node["input"].Read<std::string>().c_str());
+        if(node.FindValue("profile") != NULL)
+            t->setOutput(node["output"].Read<std::string>().c_str());
+        if(node.FindValue("camera") != NULL)
+            t->setProof(node["proof"].Read<std::string>().c_str());
+        if(node.FindValue("intent") != NULL)
+            t->setIntent(node["intent"].Read<IccIntent>());
+        if(node.FindValue("blackpoint_compensation") != NULL)
+            t->setBlackpointCompensation(node["blackpoint_compensation"].Read<bool>());
+        if(node.FindValue("soft_proofing") != NULL)
+            t->setSoftProofing(node["soft_proofing"].Read<bool>());
+        if(node.FindValue("gamut_check") != NULL)
+            t->setGamutCheck(node["gamut_check"].Read<bool>());
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, ConstICCTransformRcPtr t)
+    {
+        
+        out << YAML::VerbatimTag("ICCTransform");
+        out << YAML::Flow << YAML::BeginMap;
+        if(strcmp(t->getIntput(), "") != 0)
+        {
+            out << YAML::Key << "input";
+            out << YAML::Value << YAML::Flow << t->getIntput();
+        }
+        if(strcmp(t->getOutput(), "") != 0)
+        {
+            out << YAML::Key << "output";
+            out << YAML::Value << YAML::Flow << t->getOutput();
+        }
+        if(strcmp(t->getProof(), "") != 0)
+        {
+            out << YAML::Key << "output";
+            out << YAML::Value << YAML::Flow << t->getProof();
+        }
+        if(t->getIntent() != ICC_INTENT_UNKNOWN)
+        {
+            out << YAML::Key << "intent";
+            out << YAML::Value << YAML::Flow << t->getIntent();
+        }
+        if(t->getBlackpointCompensation() != false)
+        {
+            out << YAML::Key << "blackpoint_compensation";
+            out << YAML::Value << YAML::Flow << t->getBlackpointCompensation();
+        }
+        if(t->getSoftProofing() != false)
+        {
+            out << YAML::Key << "soft_proofing";
+            out << YAML::Value << YAML::Flow << t->getSoftProofing();
+        }
+        if(t->getGamutCheck() != false)
+        {
+            out << YAML::Key << "gamut_check";
+            out << YAML::Value << YAML::Flow << t->getGamutCheck();
+        }
+        
+        EmitBaseTransformKeyValues(out, t);
+        
+        out << YAML::EndMap;
+        return out;
+    }
+    
     ///////////////////////////////////////////////////////////////////////////
     //  Enums
     
@@ -687,6 +757,16 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, Interpolation& interp) {
         std::string str = node.Read<std::string>();
         interp = InterpolationFromString(str.c_str());
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, IccIntent intent) {
+        out << IccIntentToString(intent);
+        return out;
+    }
+    
+    void operator >> (const YAML::Node& node, IccIntent& intent) {
+        std::string str = node.Read<std::string>();
+        intent = IccIntentFromString(str.c_str());
     }
     
 }

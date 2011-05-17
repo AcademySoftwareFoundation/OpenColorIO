@@ -92,6 +92,8 @@ OCIO_NAMESPACE_ENTER
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstAllocationTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, TruelightTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstTruelightTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, ICCTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstICCTransformRcPtr t);
     
     // Enums
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, BitDepth depth);
@@ -104,6 +106,8 @@ OCIO_NAMESPACE_ENTER
     OCIOHIDDEN void operator >> (const YAML::Node& node, TransformDirection& dir);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, Interpolation iterp);
     OCIOHIDDEN void operator >> (const YAML::Node& node, Interpolation& iterp);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, IccIntent intent);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, IccIntent& intent);
     
 }
 OCIO_NAMESPACE_EXIT

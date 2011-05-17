@@ -100,6 +100,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildTruelightOps(ops, config, *truelightTransform, dir);
         }
+        else if(ConstICCTransformRcPtr iccTransform = \
+            DynamicPtrCast<const ICCTransform>(transform))
+        {
+            BuildICCOps(ops, config, *iccTransform, dir);
+        }
         else
         {
             std::ostringstream os;
@@ -156,6 +161,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const TruelightTransform*>(t))
         {
             os << *truelightTransform;
+        }
+        else if(const ICCTransform * iccTransform = \
+            dynamic_cast<const ICCTransform*>(t))
+        {
+            os << *iccTransform;
         }
         else
         {

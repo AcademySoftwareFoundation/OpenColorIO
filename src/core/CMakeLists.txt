@@ -20,7 +20,7 @@ list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorABI.h)
 # SHARED
 
 add_library(OpenColorIO SHARED ${core_src_files})
-add_dependencies(OpenColorIO tinyxml YAML_CPP_LOCAL)
+add_dependencies(OpenColorIO tinyxml YAML_CPP_LOCAL LCMS)
 target_link_libraries(OpenColorIO ${EXTERNAL_LIBRARIES})
 set_target_properties(OpenColorIO PROPERTIES
     OUTPUT_NAME OpenColorIO
@@ -32,7 +32,7 @@ install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
 
 list(REMOVE_ITEM core_src_files ${CMAKE_SOURCE_DIR}/src/core/UnitTest.cpp)
 add_library(OpenColorIO_STATIC STATIC ${core_src_files})
-add_dependencies(OpenColorIO_STATIC tinyxml YAML_CPP_LOCAL)
+add_dependencies(OpenColorIO_STATIC tinyxml YAML_CPP_LOCAL LCMS)
 target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_LIBRARIES})
 set_target_properties(OpenColorIO_STATIC PROPERTIES
     OUTPUT_NAME OpenColorIO
