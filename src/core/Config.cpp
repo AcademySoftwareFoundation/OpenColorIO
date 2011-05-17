@@ -218,7 +218,7 @@ OCIO_NAMESPACE_ENTER
     
     void operator >> (const YAML::Node& node, View& v)
     {
-        if(node.GetTag() != "View")
+        if(node.Tag() != "View")
             return; // not a !<Display> tag
         
         if(node.FindValue("name") == NULL)
@@ -226,7 +226,9 @@ OCIO_NAMESPACE_ENTER
             throw Exception("View does not specify 'name'.");
         }
         
-        v.name = node["name"].Read<std::string>();
+        std::string ret;
+        if (node["name"].Read<std::string>(ret))
+          v.name = ret;
         
         if(node.FindValue("colorspace") == NULL)
         {
@@ -236,7 +238,8 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        v.colorspace = node["colorspace"].Read<std::string>();
+        if (node["colorspace"].Read<std::string>(ret))
+          v.colorspace = ret;
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, View view)
@@ -1446,7 +1449,7 @@ OCIO_NAMESPACE_ENTER
             // Luma
             if(node.FindValue("luma") != NULL)
             {
-                if(node["luma"].GetType() != YAML::CT_SEQUENCE)
+                if(node["luma"].Type() != YAML::NodeType::Sequence)
                 {
                     std::ostringstream os;
                     os << "'luma' field needs to be a (luma: [0, 0, 0]) list.";
@@ -1474,7 +1477,7 @@ OCIO_NAMESPACE_ENTER
             
             if(node.FindValue("roles") != NULL)
             {
-                if(node["roles"].GetType() != YAML::CT_MAP)
+                if(node["roles"].Type() != YAML::NodeType::Map)
                 {
                     std::ostringstream os;
                     os << "'roles' field needs to be a (name: key) map.";
@@ -1483,8 +1486,12 @@ OCIO_NAMESPACE_ENTER
                 for (YAML::Iterator it  = node["roles"].begin();
                                     it != node["roles"].end(); ++it)
                 {
-                    const std::string key = it.first();
-                    const std::string value = it.second();
+                    std::string key;
+                    std::string value;
+                    
+                    it.first() >> key;
+                    it.second() >> value;
+
                     roles_[pystring::lower(key)] = value;
                 }
             }
@@ -1493,11 +1500,11 @@ OCIO_NAMESPACE_ENTER
             if(node.FindValue("displays") != NULL)
             {
                 // Backwards Compatibility: load the sequence
-                if(node["displays"].GetType() == YAML::CT_SEQUENCE)
+                if(node["displays"].Type() == YAML::NodeType::Sequence)
                 {
                     for (unsigned i = 0; i < node["displays"].size(); ++i)
                     {
-                        if(node["displays"][i].GetType() != YAML::CT_MAP)
+                      if(node["displays"][i].Type() != YAML::NodeType::Map)
                         {
                             std::ostringstream os;
                             os << "Display entries must be a map.";
@@ -1513,15 +1520,18 @@ OCIO_NAMESPACE_ENTER
                             throw Exception(os.str().c_str());
                         }
                         
-                        std::string display = node["displays"][i]["device"].Read<std::string>();
-                        std::string view = node["displays"][i]["name"].Read<std::string>();
-                        std::string colorspace = node["displays"][i]["colorspace"].Read<std::string>();
+                        std::string display;
+                        node["displays"][i]["device"].Read<std::string>(display);
+                        std::string view;
+                        node["displays"][i]["name"].Read<std::string>(view);
+                        std::string colorspace;
+                        node["displays"][i]["colorspace"].Read<std::string>(colorspace);
                         
                         SetDisplay(displays_,
                                    display, view, colorspace);
                     }
                 }
-                else if(node["displays"].GetType() == YAML::CT_MAP)
+                else if(node["displays"].Type() == YAML::NodeType::Map)
                 {
                     node["displays"] >> displays_;
                 }
@@ -1529,7 +1539,7 @@ OCIO_NAMESPACE_ENTER
             
             if(node.FindValue("active_displays") != NULL)
             {
-                if(node["active_displays"].GetType() != YAML::CT_SEQUENCE)
+                if(node["active_displays"].Type() != YAML::NodeType::Sequence)
                 {
                     std::ostringstream os;
                     os << "'active_displays' field needs to be a list.";
@@ -1541,7 +1551,7 @@ OCIO_NAMESPACE_ENTER
             
             if(node.FindValue("active_views") != NULL)
             {
-                if(node["active_views"].GetType() != YAML::CT_SEQUENCE)
+                if(node["active_views"].Type() != YAML::NodeType::Sequence)
                 {
                     std::ostringstream os;
                     os << "'active_views' field needs to be a list.";
@@ -1553,7 +1563,7 @@ OCIO_NAMESPACE_ENTER
             
             // ColorSpaces
             if(node.FindValue("colorspaces") != NULL) {
-                if(node["colorspaces"].GetType() != YAML::CT_SEQUENCE)
+                if(node["colorspaces"].Type() != YAML::NodeType::Sequence)
                 {
                     std::ostringstream os;
                     os << "'colorspaces' field needs to be a (- !<ColorSpace>) list.";
@@ -1561,7 +1571,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 for(unsigned i = 0; i < node["colorspaces"].size(); ++i)
                 {
-                    if(node["colorspaces"][i].GetTag() == "ColorSpace")
+                    if(node["colorspaces"][i].Tag() == "ColorSpace")
                     {
                         ColorSpaceRcPtr cs = ColorSpace::Create();
                         node["colorspaces"][i] >> cs;

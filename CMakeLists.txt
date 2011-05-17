@@ -127,7 +127,7 @@ set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
 ###############################################################################
 ### YAML ###
 
-set(YAML_CPP_VERSION r423)
+set(YAML_CPP_VERSION r482)
 ExternalProject_Add(YAML_CPP_LOCAL
     URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
     BINARY_DIR ext/build/yaml-cpp

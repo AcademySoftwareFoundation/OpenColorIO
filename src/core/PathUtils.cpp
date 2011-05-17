@@ -117,7 +117,8 @@ OCIO_NAMESPACE_ENTER
         // TODO: make these also work on windows
         // This attempts to match python's path.join, including
         // the relative absolute handling
-        
+        // TODO: Make this return the proper path token on windows,
+        //       and also detect windows-stype absolute paths
         std::string join(const std::string & path1, const std::string & path2)
         {
             std::string pathtoken = "/";
@@ -141,6 +142,14 @@ OCIO_NAMESPACE_ENTER
             if(result.size() == 2)
             {
                 return result[0];
+            }
+            else
+            {
+                pystring::rsplit(path, result, "\\", 1);
+                if(result.size() == 2)
+                {
+                    return result[0];
+                }
             }
             return "";
         }

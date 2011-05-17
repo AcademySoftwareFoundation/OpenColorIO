@@ -74,7 +74,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         #define OCIOHIDDEN
     #endif
 #else // _WIN32 and others not supported atm
-    #define OCIOEXPORT
+    #define OCIOEXPORT __declspec(dllexport)
     #define OCIOHIDDEN
 #endif
 

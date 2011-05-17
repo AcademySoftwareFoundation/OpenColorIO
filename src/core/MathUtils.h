@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_MATHUTILS_H
 
 #include <OpenColorIO/OpenColorIO.h>
+
+#include <cmath>
 #include <vector>
 
 #include "Op.h"
@@ -72,6 +74,19 @@ OCIO_NAMESPACE_ENTER
         return (b - a) * z + a;
     }
     
+#ifdef WIN64
+    inline double
+    round (float val) {
+        return floor (val + 0.5);
+    }
+
+    inline float
+    roundf (float val) {
+        return static_cast<float>(round (val));
+    }
+
+#endif
+
     bool IsScalarEqualToZero(float v);
     bool IsScalarEqualToOne(float v);
     
@@ -119,6 +134,7 @@ OCIO_NAMESPACE_ENTER
     
     bool IsM44Diagonal(const float* m44);
     void GetM44Diagonal(float* out4, const float* m44);
+    
 }
 OCIO_NAMESPACE_EXIT
 

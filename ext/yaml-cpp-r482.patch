@@ -1,0 +1,21 @@
+--- yaml-cpp-r482/CMakeLists.txt	2011-03-29 18:33:02.000000000 -0700
++++ yaml-cpp-r482/CMakeLists.txt.new	2011-05-17 10:12:18.852446000 -0700
+@@ -234,6 +234,7 @@
+ set_target_properties(yaml-cpp PROPERTIES
+ 	VERSION "${YAML_CPP_VERSION}"
+ 	SOVERSION "${YAML_CPP_VERSION_MAJOR}.${YAML_CPP_VERSION_MINOR}"
++	COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden"
+ 	PROJECT_LABEL "yaml-cpp ${LABEL_SUFFIX}"
+ )
+ 
+--- yaml-cpp-r482/src/emitter.cpp	2011-05-17 16:04:01.794448000 -0700
++++ yaml-cpp-r482/src/emitter.cpp.new	2011-05-17 16:04:25.948733000 -0700
+@@ -661,7 +661,7 @@
+ 	{
+ 		PreAtomicWrite();
+ 		EmitSeparationIfNecessary();
+-		str.precision(15);
++		// str.precision(15);
+ 	}
+ 
+ 	void Emitter::PostWriteIntegralType(const std::stringstream& str)

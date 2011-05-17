@@ -39,24 +39,45 @@ OCIO_NAMESPACE_ENTER
     
     void operator >> (const YAML::Node& node, ColorSpaceRcPtr& cs)
     {
-        if(node.GetTag() != "ColorSpace")
+        if(node.Tag() != "ColorSpace")
             return; // not a !<ColorSpace> tag
-        if(node.FindValue("name") != NULL)
-            cs->setName(node["name"].Read<std::string>().c_str());
-        if(node.FindValue("description") != NULL)
-            cs->setDescription(node["description"].Read<std::string>().c_str());
-        if(node.FindValue("family") != NULL)
-            cs->setFamily(node["family"].Read<std::string>().c_str());
-        if(node.FindValue("bitdepth") != NULL)
-            cs->setBitDepth(node["bitdepth"].Read<BitDepth>());
-        if(node.FindValue("isdata") != NULL)
-            cs->setIsData(node["isdata"].Read<bool>());
+        if(node.FindValue("name") != NULL)  {
+            std::string ret;
+            if (node["name"].Read<std::string>(ret))
+              cs->setName(ret.c_str());
+        }
+        if(node.FindValue("description") != NULL) {
+            std::string ret;
+            if (node["description"].Read<std::string>(ret))
+              cs->setDescription(ret.c_str());
+        }
+        if(node.FindValue("family") != NULL)  {
+            std::string ret;
+            if (node["family"].Read<std::string>(ret))
+              cs->setFamily(ret.c_str());
+        }
+        if(node.FindValue("bitdepth") != NULL)  {
+            BitDepth ret;
+            if (node["bitdepth"].Read<BitDepth>(ret))
+              cs->setBitDepth(ret);
+        }
+        if(node.FindValue("isdata") != NULL)  {
+            bool ret;
+            if (node["isdata"].Read<bool>(ret))
+              cs->setIsData(ret);
+        }
         
-        if(node.FindValue("allocation") != NULL)
-            cs->setAllocation(node["allocation"].Read<Allocation>());
+        if(node.FindValue("allocation") != NULL)  {
+            Allocation ret;
+            if (node["allocation"].Read<Allocation>(ret))
+              cs->setAllocation(ret);
+        }
         // Backwards compatibility
-        else if(node.FindValue("gpuallocation") != NULL)
-            cs->setAllocation(node["gpuallocation"].Read<Allocation>());
+        else if(node.FindValue("gpuallocation") != NULL)  {
+            Allocation ret;
+            if (node["gpuallocation"].Read<Allocation>(ret))
+              cs->setAllocation(ret);
+        }
         
         if(node.FindValue("allocationvars") != NULL)
         {
@@ -72,17 +93,21 @@ OCIO_NAMESPACE_ENTER
         {
             // Backwards compatibility
             std::vector<float> value(2);
-            value[0] = node["gpumin"].Read<float>();
-            value[1] = node["gpumax"].Read<float>();
+            node["gpumin"].Read<float>(value[0]);
+            node["gpumax"].Read<float>(value[1]);
             cs->setAllocationVars(static_cast<int>(value.size()), &value[0]);
         }
         
-        if(node.FindValue("to_reference") != NULL)
-            cs->setTransform(node["to_reference"].Read<TransformRcPtr>(),
-                COLORSPACE_DIR_TO_REFERENCE);
-        if(node.FindValue("from_reference") != NULL)
-            cs->setTransform(node["from_reference"].Read<TransformRcPtr>(),
-                COLORSPACE_DIR_FROM_REFERENCE);
+        if(node.FindValue("to_reference") != NULL)  {
+            TransformRcPtr ret;
+            if (node["to_reference"].Read<TransformRcPtr>(ret))
+              cs->setTransform(ret, COLORSPACE_DIR_TO_REFERENCE);
+        }
+        if(node.FindValue("from_reference") != NULL)  {
+            TransformRcPtr ret;
+            if (node["from_reference"].Read<TransformRcPtr>(ret))
+              cs->setTransform(ret, COLORSPACE_DIR_FROM_REFERENCE);
+        }
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceRcPtr cs)
@@ -143,8 +168,11 @@ OCIO_NAMESPACE_ENTER
         
         void ReadBaseTransformKeyValues(const YAML::Node & node, TransformRcPtr & t)
         {
-            if(node.FindValue("direction") != NULL)
-                t->setDirection(node["direction"].Read<TransformDirection>());
+            if(node.FindValue("direction") != NULL) {
+                TransformDirection ret;
+                if (node["direction"].Read<TransformDirection>(ret))
+                  t->setDirection(ret);
+            }
             else
                 t->setDirection(TRANSFORM_DIR_FORWARD);
         }
@@ -155,27 +183,54 @@ OCIO_NAMESPACE_ENTER
         // TODO: when a Transform() types are registered, add logic here so that
         // it calls the correct Transform()::Create() for the !<tag> type
         
-        std::string type = node.GetTag();
+        std::string type = node.Tag();
         
-        if(type == "AllocationTransform")
-            t = node.Read<AllocationTransformRcPtr>();
-        else if(type == "CDLTransform")
-            t = node.Read<CDLTransformRcPtr>();
-        else if(type == "ColorSpaceTransform")
-            t = node.Read<ColorSpaceTransformRcPtr>();
+        if(type == "AllocationTransform") {
+            AllocationTransformRcPtr temp;
+            node.Read<AllocationTransformRcPtr>(temp);
+            t = temp;
+        }
+        else if(type == "CDLTransform") {
+            CDLTransformRcPtr temp;
+            node.Read<CDLTransformRcPtr>(temp);
+            t = temp;
+        }
+        else if(type == "ColorSpaceTransform")  {
+            ColorSpaceTransformRcPtr temp;
+            node.Read<ColorSpaceTransformRcPtr>(temp);
+            t = temp;
+        }
         // TODO: add DisplayTransform
-        else if(type == "ExponentTransform")
-            t = node.Read<ExponentTransformRcPtr>();
-        else if(type == "FileTransform")
-            t = node.Read<FileTransformRcPtr>();
-        else if(type == "GroupTransform")
-            t = node.Read<GroupTransformRcPtr>();
-        else if(type == "LogTransform")
-            t = node.Read<LogTransformRcPtr>();
-        else if(type == "MatrixTransform")
-            t = node.Read<MatrixTransformRcPtr>();
-        else if(type == "TruelightTransform")
-            t = node.Read<TruelightTransformRcPtr>();
+        else if(type == "ExponentTransform")  {
+            ExponentTransformRcPtr temp;
+            node.Read<ExponentTransformRcPtr>(temp);
+            t = temp;
+        }
+        else if(type == "FileTransform")  {
+            FileTransformRcPtr temp;
+            node.Read<FileTransformRcPtr>(temp);
+            t = temp;
+        }
+        else if(type == "GroupTransform") {
+            GroupTransformRcPtr temp;
+            node.Read<GroupTransformRcPtr>(temp);
+            t = temp;
+        }
+        else if(type == "LogTransform") {
+            LogTransformRcPtr temp;
+            node.Read<LogTransformRcPtr>(temp);
+            t = temp;
+        }
+        else if(type == "MatrixTransform")  {
+            MatrixTransformRcPtr temp;
+            node.Read<MatrixTransformRcPtr>(temp);
+            t = temp;
+        }
+        else if(type == "TruelightTransform")  {
+            TruelightTransformRcPtr temp;
+            node.Read<TruelightTransformRcPtr>(temp);
+            t = temp;
+        }
         else
         {
             // TODO: add a new empty (better name?) aka passthru Transform()
@@ -203,7 +258,6 @@ OCIO_NAMESPACE_ENTER
         else if(ConstColorSpaceTransformRcPtr ColorSpace_tran = \
             DynamicPtrCast<const ColorSpaceTransform>(t))
             out << ColorSpace_tran;
-        // ConstExponentTransformRcPtr
         else if(ConstExponentTransformRcPtr Exponent_tran = \
             DynamicPtrCast<const ExponentTransform>(t))
             out << Exponent_tran;
@@ -242,7 +296,9 @@ OCIO_NAMESPACE_ENTER
         {
             for(unsigned i = 0; i <children->size(); ++i)
             {
-                TransformRcPtr childTransform = (*children)[i].Read<TransformRcPtr>();
+                TransformRcPtr childTransform;
+                (*children)[i].Read<TransformRcPtr>(childTransform);
+
                 if(!childTransform)
                 {
                     throw Exception("Child transform could not be parsed.");
@@ -279,12 +335,21 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, FileTransformRcPtr& t)
     {
         t = FileTransform::Create();
-        if(node.FindValue("src") != NULL)
-            t->setSrc(node["src"].Read<std::string>().c_str());
-        if(node.FindValue("cccid") != NULL)
-            t->setCCCId(node["cccid"].Read<std::string>().c_str());
-        if(node.FindValue("interpolation") != NULL)
-            t->setInterpolation(node["interpolation"].Read<Interpolation>());
+        if(node.FindValue("src") != NULL) {
+            std::string ret;
+            if (node["src"].Read<std::string>(ret))
+              t->setSrc(ret.c_str());
+        }
+        if(node.FindValue("cccid") != NULL) {
+            std::string ret;
+            if (node["cccid"].Read<std::string>(ret))
+            t->setCCCId(ret.c_str());
+        }
+        if(node.FindValue("interpolation") != NULL) {
+            Interpolation ret;
+            if (node["interpolation"].Read<Interpolation>(ret))
+              t->setInterpolation(ret);
+        }
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstFileTransformRcPtr t)
@@ -308,10 +373,16 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, ColorSpaceTransformRcPtr& t)
     {
         t = ColorSpaceTransform::Create();
-        if(node.FindValue("src") != NULL)
-            t->setSrc(node["src"].Read<std::string>().c_str());
-        if(node.FindValue("dst") != NULL)
-            t->setDst(node["dst"].Read<std::string>().c_str());
+        if(node.FindValue("src") != NULL) {
+            std::string ret;
+            if (node["src"].Read<std::string>(ret))
+              t->setSrc(ret.c_str());
+        }
+        if(node.FindValue("dst") != NULL) {
+            std::string ret;
+            if (node["dst"].Read<std::string>(ret))
+            t->setDst(ret.c_str());
+        }
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstColorSpaceTransformRcPtr t)
@@ -361,8 +432,11 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, LogTransformRcPtr& t)
     {
         t = LogTransform::Create();
-        if(node.FindValue("base") != NULL)
-            t->setBase(node["base"].Read<float>());
+        if(node.FindValue("base") != NULL)  {
+            float ret;
+            if (node["base"].Read<float>(ret))
+              t->setBase(ret);
+        }
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstLogTransformRcPtr t)
@@ -479,8 +553,11 @@ OCIO_NAMESPACE_ENTER
         }
         else throw Exception("CDLTransform doesn't have a 'power:' specified.");
         
-        if(node.FindValue("saturation") != NULL)
-            t->setSat(node["saturation"].Read<float>());
+        if(node.FindValue("saturation") != NULL)  {
+            float ret;
+            if (node["saturation"].Read<float>(ret))
+              t->setSat(ret);
+        }
         else
             throw Exception("CDLTransform doesn't have a 'saturation:' specified.");
     }
@@ -514,8 +591,11 @@ OCIO_NAMESPACE_ENTER
     {
         t = AllocationTransform::Create();
         
-        if(node.FindValue("allocation") != NULL)
-            t->setAllocation(node["allocation"].Read<Allocation>());
+        if(node.FindValue("allocation") != NULL)  {
+            Allocation ret;
+            if (node["allocation"].Read<Allocation>(ret))
+              t->setAllocation(ret);
+        }
         
         if(node.FindValue("vars") != NULL)
         {
@@ -552,26 +632,56 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, TruelightTransformRcPtr& t)
     {
         t = TruelightTransform::Create();
-        if(node.FindValue("config_root") != NULL)
-            t->setConfigRoot(node["config_root"].Read<std::string>().c_str());
-        if(node.FindValue("profile") != NULL)
-            t->setProfile(node["profile"].Read<std::string>().c_str());
-        if(node.FindValue("camera") != NULL)
-            t->setCamera(node["camera"].Read<std::string>().c_str());
-        if(node.FindValue("input_display") != NULL)
-            t->setInputDisplay(node["input_display"].Read<std::string>().c_str());
-        if(node.FindValue("recorder") != NULL)
-            t->setRecorder(node["recorder"].Read<std::string>().c_str());
-        if(node.FindValue("print") != NULL)
-            t->setPrint(node["print"].Read<std::string>().c_str());
-        if(node.FindValue("lamp") != NULL)
-            t->setLamp(node["lamp"].Read<std::string>().c_str());
-        if(node.FindValue("output_camera") != NULL)
-            t->setOutputCamera(node["output_camera"].Read<std::string>().c_str());
-        if(node.FindValue("display") != NULL)
-            t->setDisplay(node["display"].Read<std::string>().c_str());
-        if(node.FindValue("cube_input") != NULL)
-            t->setCubeInput(node["cube_input"].Read<std::string>().c_str());
+        if(node.FindValue("config_root") != NULL) {
+            std::string ret;
+            if(node["config_root"].Read<std::string>(ret))
+                t->setConfigRoot(ret.c_str());
+        }
+        if(node.FindValue("profile") != NULL) {
+            std::string ret;
+            if(node["profile"].Read<std::string>(ret))
+                t->setProfile(ret.c_str());
+        }
+        if(node.FindValue("camera") != NULL) {
+            std::string ret;
+            if(node["camera"].Read<std::string>(ret))
+                t->setCamera(ret.c_str());
+        }
+        if(node.FindValue("input_display") != NULL) {
+            std::string ret;
+            if(node["input_display"].Read<std::string>(ret))
+                t->setInputDisplay(ret.c_str());
+        }
+        if(node.FindValue("recorder") != NULL) {
+            std::string ret;
+            if(node["recorder"].Read<std::string>(ret))
+                t->setRecorder(ret.c_str());
+        }
+        if(node.FindValue("print") != NULL) {
+            std::string ret;
+            if(node["print"].Read<std::string>(ret))
+                t->setPrint(ret.c_str());
+        }
+        if(node.FindValue("lamp") != NULL) {
+            std::string ret;
+            if(node["lamp"].Read<std::string>(ret))
+                t->setLamp(ret.c_str());
+        }
+        if(node.FindValue("output_camera") != NULL) {
+            std::string ret;
+            if(node["output_camera"].Read<std::string>(ret))
+                t->setOutputCamera(ret.c_str());
+        }
+        if(node.FindValue("display") != NULL) {
+            std::string ret;
+            if(node["display"].Read<std::string>(ret))
+                t->setDisplay(ret.c_str());
+        }
+        if(node.FindValue("cube_input") != NULL) {
+            std::string ret;
+            if(node["cube_input"].Read<std::string>(ret))
+                t->setCubeInput(ret.c_str());
+        }
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstTruelightTransformRcPtr t)
@@ -645,7 +755,8 @@ OCIO_NAMESPACE_ENTER
     }
     
     void operator >> (const YAML::Node& node, BitDepth& depth) {
-        std::string str = node.Read<std::string>();
+        std::string str;
+        node.Read<std::string>(str);
         depth = BitDepthFromString(str.c_str());
     }
     
@@ -655,7 +766,8 @@ OCIO_NAMESPACE_ENTER
     }
     
     void operator >> (const YAML::Node& node, Allocation& alloc) {
-        std::string str = node.Read<std::string>();
+        std::string str;
+        node.Read<std::string>(str);
         alloc = AllocationFromString(str.c_str());
     }
     
@@ -665,7 +777,8 @@ OCIO_NAMESPACE_ENTER
     }
     
     void operator >> (const YAML::Node& node, ColorSpaceDirection& dir) {
-        std::string str = node.Read<std::string>();
+        std::string str;
+        node.Read<std::string>(str);
         dir = ColorSpaceDirectionFromString(str.c_str());
     }
     
@@ -675,7 +788,8 @@ OCIO_NAMESPACE_ENTER
     }
     
     void operator >> (const YAML::Node& node, TransformDirection& dir) {
-        std::string str = node.Read<std::string>();
+        std::string str;
+        node.Read<std::string>(str);
         dir = TransformDirectionFromString(str.c_str());
     }
     
@@ -685,7 +799,8 @@ OCIO_NAMESPACE_ENTER
     }
     
     void operator >> (const YAML::Node& node, Interpolation& interp) {
-        std::string str = node.Read<std::string>();
+        std::string str;
+        node.Read<std::string>(str);
         interp = InterpolationFromString(str.c_str());
     }
     

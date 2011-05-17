@@ -28,6 +28,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#ifndef WIN64
+
 // fwd declare yaml-cpp visibility
 #pragma GCC visibility push(hidden)
 namespace YAML {
@@ -59,6 +61,9 @@ namespace YAML {
     class TypedKeyNotFound<OCIO_NAMESPACE::TruelightTransform>;
 }
 #pragma GCC visibility pop
+
+#endif 
+
 #include <yaml-cpp/yaml.h>
 
 #ifndef INCLUDED_OCIO_YAML_H

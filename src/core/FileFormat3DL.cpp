@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FileTransform.h"
 #include "Lut1DOp.h"
 #include "Lut3DOp.h"
+#include "MathUtils.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
