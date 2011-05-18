@@ -2,7 +2,7 @@
  * OpenColorIO conversion Iop.
  */
 
-#include "LogConvert.h"
+#include "OCIOFileTransform.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -15,28 +15,45 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <sstream>
 #include <stdexcept>
 
-
-const char* LogConvert::modes[] = {
-    "log to lin", "lin to log", 0
-};
-
-LogConvert::LogConvert(Node *n) : DD::Image::PixelIop(n)
+OCIOFileTransform::OCIOFileTransform(Node *n) : DD::Image::PixelIop(n)
 {
-    modeindex = 0;
+    src = NULL;
+    dirindex = 0;
+    interpindex = 1;
+    
     layersToProcess = DD::Image::Mask_RGB;
-
 }
 
-LogConvert::~LogConvert()
+OCIOFileTransform::~OCIOFileTransform()
 {
 
 }
 
-void LogConvert::knobs(DD::Image::Knob_Callback f)
+const char* OCIOFileTransform::dirs[] = { "forward", "inverse", 0 };
+
+const char* OCIOFileTransform::interp[] = { "nearest", "linear", 0 };
+
+void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 {
 
-    Enumeration_knob(f, &modeindex, modes, "operation", "operation");
-    //DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
+    File_knob(f, &src, "src", "src");
+    const char * srchelp = "Specify the src file, on disk, to use for this transform. "
+    "This can be any file format that OpenColorIO supports: "
+    ".3dl, .cc, .ccc, .csp, .cub, .cube, .lut (houdini), .spi1d, .spi3d, .spimtx";
+    DD::Image::Tooltip(f, srchelp);
+    
+    String_knob(f, &cccid, "cccid");
+    const char * srchelp2 = "If the source file is an ASC CDL CCC (color correction collection), "
+    "this specifys the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
+    DD::Image::Tooltip(f, srchelp2);
+    
+    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform()", "select_cccid", "select cccid");
+    
+    Enumeration_knob(f, &dirindex, dirs, "direction", "direction");
+    DD::Image::Tooltip(f, "Specify the transform direction.");
+    
+    Enumeration_knob(f, &interpindex, interp, "interpolation", "interpolation");
+    DD::Image::Tooltip(f, "Specify the interpolation method. For files that are not LUTs (mtx, etc) this is ignored.");
     
     DD::Image::Divider(f);
     
@@ -45,30 +62,35 @@ void LogConvert::knobs(DD::Image::Knob_Callback f)
     DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
-void LogConvert::_validate(bool for_real)
+void OCIOFileTransform::_validate(bool for_real)
 {
     input0().validate(for_real);
+    
+    if(!src)
+    {
+        error("The source file must be specified.");
+        return;
+    }
     
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         config->sanityCheck();
         
-        const char * src = 0;
-        const char * dst = 0;
+        OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
+        transform->setSrc(src);
         
-        if(modeindex == 0)
-        {
-            src = OCIO::ROLE_COMPOSITING_LOG;
-            dst = OCIO::ROLE_SCENE_LINEAR;
-        }
-        else
-        {
-            src = OCIO::ROLE_SCENE_LINEAR;
-            dst = OCIO::ROLE_COMPOSITING_LOG;
-        }
+        // TODO: For some reason, cccid is NOT incorporated in this node's hash.
+        // Until then, cccid is considered broken. Figure out why.
+        transform->setCCCId(cccid.c_str());
         
-        processor = config->getProcessor(src, dst);
+        if(dirindex == 0) transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+        else transform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+        
+        if(interpindex == 0) transform->setInterpolation(OCIO::INTERP_NEAREST);
+        else transform->setInterpolation(OCIO::INTERP_LINEAR);
+        
+        processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_FORWARD);
     }
     catch(OCIO::Exception &e)
     {
@@ -90,7 +112,7 @@ void LogConvert::_validate(bool for_real)
 }
 
 // Note that this is copied by others (OCIODisplay)
-void LogConvert::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
+void OCIOFileTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
     foreach(c, mask)
@@ -105,10 +127,10 @@ void LogConvert::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) co
 
 // See Saturation::pixel_engine for a well-commented example.
 // Note that this is copied by others (OCIODisplay)
-void LogConvert::pixel_engine(
+void OCIOFileTransform::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
-    const DD::Image::ChannelMask outputChannels,
+    DD::Image::ChannelMask outputChannels,
     DD::Image::Row& out)
 {
     int rowWidth = rowXBound - rowX;
@@ -163,28 +185,28 @@ void LogConvert::pixel_engine(
     }
 }
 
-const DD::Image::Op::Description LogConvert::description("OCIOLogConvert", build);
+const DD::Image::Op::Description OCIOFileTransform::description("OCIOFileTransform", build);
 
-const char* LogConvert::Class() const
+const char* OCIOFileTransform::Class() const
 {
     return description.name;
 }
 
-const char* LogConvert::displayName() const
+const char* OCIOFileTransform::displayName() const
 {
     return description.name;
 }
 
-const char* LogConvert::node_help() const
+const char* OCIOFileTransform::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorIO to convert from SCENE_LINEAR to COMPOSITING_LOG (or back).";
+    return "Use OpenColorIO to apply the specified LUT file transform.";
 }
 
 
 DD::Image::Op* build(Node *node)
 {
-    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new LogConvert(node));
+    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOFileTransform(node));
     op->noMix();
     op->noMask();
     op->noChannels(); // prefer our own channels control without checkboxes / alpha

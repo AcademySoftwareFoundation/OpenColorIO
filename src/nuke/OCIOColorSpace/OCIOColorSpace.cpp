@@ -2,7 +2,7 @@
  * OpenColorIO conversion Iop.
  */
 
-#include "ColorSpace.h"
+#include "OCIOColorSpace.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -17,7 +17,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 
 
-ColorSpace::ColorSpace(Node *n) : DD::Image::PixelIop(n)
+OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
 {
     m_hasColorSpaces = false;
 
@@ -70,12 +70,12 @@ ColorSpace::ColorSpace(Node *n) : DD::Image::PixelIop(n)
     }
 }
 
-ColorSpace::~ColorSpace()
+OCIOColorSpace::~OCIOColorSpace()
 {
 
 }
 
-void ColorSpace::knobs(DD::Image::Knob_Callback f)
+void OCIOColorSpace::knobs(DD::Image::Knob_Callback f)
 {
     DD::Image::Enumeration_knob(f, &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
@@ -115,7 +115,7 @@ void ColorSpace::knobs(DD::Image::Knob_Callback f)
     DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
-OCIO::ConstContextRcPtr ColorSpace::getLocalContext()
+OCIO::ConstContextRcPtr OCIOColorSpace::getLocalContext()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     OCIO::ConstContextRcPtr context = config->getCurrentContext();
@@ -146,7 +146,7 @@ OCIO::ConstContextRcPtr ColorSpace::getLocalContext()
     return context;
 }
 
-void ColorSpace::append(DD::Image::Hash& localhash)
+void OCIOColorSpace::append(DD::Image::Hash& localhash)
 {
     // TODO: Hang onto the context, what if getting it
     // (and querying getCacheID) is expensive?
@@ -164,7 +164,7 @@ void ColorSpace::append(DD::Image::Hash& localhash)
     }
 }
 
-void ColorSpace::_validate(bool for_real)
+void OCIOColorSpace::_validate(bool for_real)
 {
     input0().validate(for_real);
 
@@ -223,7 +223,7 @@ void ColorSpace::_validate(bool for_real)
 }
 
 // Note that this is copied by others (OCIODisplay)
-void ColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
+void OCIOColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
     foreach(c, mask)
@@ -238,10 +238,10 @@ void ColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) co
 
 // See Saturation::pixel_engine for a well-commented example.
 // Note that this is copied by others (OCIODisplay)
-void ColorSpace::pixel_engine(
+void OCIOColorSpace::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
-    const DD::Image::ChannelMask outputChannels,
+    DD::Image::ChannelMask outputChannels,
     DD::Image::Row& out)
 {
     int rowWidth = rowXBound - rowX;
@@ -296,19 +296,19 @@ void ColorSpace::pixel_engine(
     }
 }
 
-const DD::Image::Op::Description ColorSpace::description("OCIOColorSpace", build);
+const DD::Image::Op::Description OCIOColorSpace::description("OCIOColorSpace", build);
 
-const char* ColorSpace::Class() const
+const char* OCIOColorSpace::Class() const
 {
     return description.name;
 }
 
-const char* ColorSpace::displayName() const
+const char* OCIOColorSpace::displayName() const
 {
     return description.name;
 }
 
-const char* ColorSpace::node_help() const
+const char* OCIOColorSpace::node_help() const
 {
     // TODO more detailed help text
     return "Use OpenColorIO to convert from one ColorSpace to another.";
@@ -317,7 +317,7 @@ const char* ColorSpace::node_help() const
 
 DD::Image::Op* build(Node *node)
 {
-    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new ColorSpace(node));
+    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOColorSpace(node));
     op->noMix();
     op->noMask();
     op->noChannels(); // prefer our own channels control without checkboxes / alpha

@@ -5,10 +5,6 @@ endif()
 include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
-    ColorSpace
-    Display
-    FileTransform
-    LogConvert
     ${Nuke_INCLUDE_DIR}
 )
 
@@ -16,7 +12,7 @@ include_directories(
 ### NukeOCIOColorSpace ###
 
 add_library(NukeOCIOColorSpace MODULE
-    ColorSpace/ColorSpace.cpp
+    OCIOColorSpace/OCIOColorSpace.cpp
 )
 target_link_libraries(NukeOCIOColorSpace
     OpenColorIO
@@ -32,7 +28,7 @@ set_target_properties(NukeOCIOColorSpace
 ### NukeOCIODisplay ###
 
 add_library(NukeOCIODisplay MODULE
-    Display/Display.cpp
+    OCIODisplay/OCIODisplay.cpp
 )
 target_link_libraries(NukeOCIODisplay
     OpenColorIO
@@ -48,7 +44,7 @@ set_target_properties(NukeOCIODisplay
 ### NukeOCIOFileTransform ###
 
 add_library(NukeOCIOFileTransform MODULE
-    FileTransform/FileTransform.cpp
+    OCIOFileTransform/OCIOFileTransform.cpp
 )
 target_link_libraries(NukeOCIOFileTransform
     OpenColorIO
@@ -64,7 +60,7 @@ set_target_properties(NukeOCIOFileTransform
 ### NukeOCIOLogConvert ###
 
 add_library(NukeOCIOLogConvert MODULE
-    LogConvert/LogConvert.cpp
+    OCIOLogConvert/OCIOLogConvert.cpp
 )
 target_link_libraries(NukeOCIOLogConvert
     OpenColorIO
@@ -80,7 +76,7 @@ set_target_properties(NukeOCIOLogConvert
 ### NukeOCIOCDLTransform ###
 
 add_library(NukeOCIOCDLTransform MODULE
-    CDLTransform/CDLTransform.cpp
+    OCIOCDLTransform/OCIOCDLTransform.cpp
 )
 target_link_libraries(NukeOCIOCDLTransform
     OpenColorIO

@@ -2,7 +2,7 @@
  * OpenColorIO conversion Iop.
  */
 
-#include "CDLTransform.h"
+#include "OCIOLogConvert.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -16,64 +16,36 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <stdexcept>
 
 
-const char* CDLTransform::dirs[] = { "forward", "inverse", 0 };
+const char* OCIOLogConvert::modes[] = {
+    "log to lin", "lin to log", 0
+};
 
-CDLTransform::CDLTransform(Node *n) : DD::Image::PixelIop(n)
+OCIOLogConvert::OCIOLogConvert(Node *n) : DD::Image::PixelIop(n)
 {
+    modeindex = 0;
     layersToProcess = DD::Image::Mask_RGB;
 
-    for (int i = 0; i < 3; i++){
-        m_slope[i] = 1.0;
-        m_offset[i] = 0.0;
-        m_power[i] = 1.0;
-    }
-
-    m_saturation = 1.0;
-
-    m_dirindex = 0;
-
-    m_cccid = "";
 }
 
-CDLTransform::~CDLTransform()
+OCIOLogConvert::~OCIOLogConvert()
 {
 
 }
 
-void CDLTransform::knobs(DD::Image::Knob_Callback f)
+void OCIOLogConvert::knobs(DD::Image::Knob_Callback f)
 {
 
-    // ASC CDL grade numbers
-    DD::Image::Color_knob(f, m_slope, DD::Image::IRange(0, 4.0), "slope");
-    DD::Image::Color_knob(f, m_offset, DD::Image::IRange(-0.2, 0.2), "offset");
-    DD::Image::Color_knob(f, m_power, DD::Image::IRange(0.0, 4.0), "power");
-    DD::Image::Float_knob(f, &m_saturation, DD::Image::IRange(0, 4.0), "saturation");
-
-    Enumeration_knob(f, &m_dirindex, dirs, "direction", "direction");
-    DD::Image::Tooltip(f, "Specify the transform direction.");
-
+    Enumeration_knob(f, &modeindex, modes, "operation", "operation");
+    //DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
+    
     DD::Image::Divider(f);
-
-    // Cache ID
-    DD::Image::String_knob(f, &m_cccid, "cccid", "cccid");
-    DD::Image::SetFlags(f, DD::Image::Knob::ENDLINE);
-
-    // Import/export buttons
-    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.export_as_cc()", "export_cc", "export grade as .cc");
-    DD::Image::Tooltip(f, "Export this grade as a ColorCorrection XML file, which can be loaded with the OCIOFileTransform, or using a FileTransform in an OCIO config");
-
-    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.import_cc_from_xml()", "import_cc", "import from .cc");
-    DD::Image::Tooltip(f, "Import grade from a ColorCorrection XML file");
-
-    DD::Image::Divider(f);
-
-    // Layer selection
+    
     DD::Image::Input_ChannelSet_knob(f, &layersToProcess, 0, "layer", "layer");
     DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
     DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
-void CDLTransform::_validate(bool for_real)
+void OCIOLogConvert::_validate(bool for_real)
 {
     input0().validate(for_real);
     
@@ -81,17 +53,22 @@ void CDLTransform::_validate(bool for_real)
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         config->sanityCheck();
-
-        OCIO::CDLTransformRcPtr cc = OCIO::CDLTransform::Create();
-        cc->setSlope(m_slope);
-        cc->setOffset(m_offset);
-        cc->setPower(m_power);
-        cc->setSat(m_saturation);
-
-        if(m_dirindex == 0) cc->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-        else cc->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-
-        m_processor = config->getProcessor(cc);
+        
+        const char * src = 0;
+        const char * dst = 0;
+        
+        if(modeindex == 0)
+        {
+            src = OCIO::ROLE_COMPOSITING_LOG;
+            dst = OCIO::ROLE_SCENE_LINEAR;
+        }
+        else
+        {
+            src = OCIO::ROLE_SCENE_LINEAR;
+            dst = OCIO::ROLE_COMPOSITING_LOG;
+        }
+        
+        processor = config->getProcessor(src, dst);
     }
     catch(OCIO::Exception &e)
     {
@@ -99,7 +76,7 @@ void CDLTransform::_validate(bool for_real)
         return;
     }
     
-    if(m_processor->isNoOp())
+    if(processor->isNoOp())
     {
         // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
@@ -113,7 +90,7 @@ void CDLTransform::_validate(bool for_real)
 }
 
 // Note that this is copied by others (OCIODisplay)
-void CDLTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
+void OCIOLogConvert::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
     foreach(c, mask)
@@ -128,10 +105,10 @@ void CDLTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) 
 
 // See Saturation::pixel_engine for a well-commented example.
 // Note that this is copied by others (OCIODisplay)
-void CDLTransform::pixel_engine(
+void OCIOLogConvert::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
-    const DD::Image::ChannelMask outputChannels,
+    DD::Image::ChannelMask outputChannels,
     DD::Image::Row& out)
 {
     int rowWidth = rowXBound - rowX;
@@ -177,7 +154,7 @@ void CDLTransform::pixel_engine(
         try
         {
             OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
-            m_processor->apply(img);
+            processor->apply(img);
         }
         catch(OCIO::Exception &e)
         {
@@ -186,30 +163,28 @@ void CDLTransform::pixel_engine(
     }
 }
 
-const DD::Image::Op::Description CDLTransform::description("OCIOCDLTransform", build);
+const DD::Image::Op::Description OCIOLogConvert::description("OCIOLogConvert", build);
 
-const char* CDLTransform::Class() const
+const char* OCIOLogConvert::Class() const
 {
     return description.name;
 }
 
-const char* CDLTransform::displayName() const
+const char* OCIOLogConvert::displayName() const
 {
     return description.name;
 }
 
-const char* CDLTransform::node_help() const
+const char* OCIOLogConvert::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorIO to apply an ASC CDL grade. Applied using:\n\n"\
-        "out = (i * s + o)^p\n\nWhere i is the input value, s is slope, "\
-        "o is offset and p is power";
+    return "Use OpenColorIO to convert from SCENE_LINEAR to COMPOSITING_LOG (or back).";
 }
 
 
 DD::Image::Op* build(Node *node)
 {
-    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new CDLTransform(node));
+    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOLogConvert(node));
     op->noMix();
     op->noMask();
     op->noChannels(); // prefer our own channels control without checkboxes / alpha

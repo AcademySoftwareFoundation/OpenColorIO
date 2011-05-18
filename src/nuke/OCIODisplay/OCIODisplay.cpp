@@ -1,4 +1,4 @@
-#include "Display.h"
+#include "OCIODisplay.h"
 
 #include <algorithm>
 #include <string>
@@ -14,7 +14,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-Display::Display(Node *n) : DD::Image::PixelIop(n)
+OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
 {
     m_layersToProcess = DD::Image::Mask_RGB;
     m_hasLists = false;
@@ -83,12 +83,12 @@ Display::Display(Node *n) : DD::Image::PixelIop(n)
     }
 }
 
-Display::~Display()
+OCIODisplay::~OCIODisplay()
 {
 
 }
 
-void Display::knobs(DD::Image::Knob_Callback f)
+void OCIODisplay::knobs(DD::Image::Knob_Callback f)
 {
     DD::Image::Enumeration_knob(f,
         &m_colorSpaceIndex, &m_colorSpaceCstrNames[0], "colorspace", "input colorspace");
@@ -161,7 +161,7 @@ void Display::knobs(DD::Image::Knob_Callback f)
     DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
-OCIO::ConstContextRcPtr Display::getLocalContext()
+OCIO::ConstContextRcPtr OCIODisplay::getLocalContext()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     OCIO::ConstContextRcPtr context = config->getCurrentContext();
@@ -193,7 +193,7 @@ OCIO::ConstContextRcPtr Display::getLocalContext()
     return context;
 }
 
-void Display::append(DD::Image::Hash& localhash)
+void OCIODisplay::append(DD::Image::Hash& localhash)
 {
     // TODO: Hang onto the context, what if getting it
     // (and querying getCacheID) is expensive?
@@ -211,7 +211,7 @@ void Display::append(DD::Image::Hash& localhash)
     }
 }
 
-void Display::_validate(bool for_real)
+void OCIODisplay::_validate(bool for_real)
 {
     input0().validate(for_real);
 
@@ -333,7 +333,7 @@ void Display::_validate(bool for_real)
 }
 
 // Note: Same as OCIO ColorSpace::in_channels.
-void Display::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
+void OCIODisplay::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
     foreach(c, mask)
@@ -347,10 +347,10 @@ void Display::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 }
 
 // Note: Same as OCIO ColorSpace::pixel_engine.
-void Display::pixel_engine(
+void OCIODisplay::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
-    const DD::Image::ChannelMask outputChannels,
+    DD::Image::ChannelMask outputChannels,
     DD::Image::Row& out)
 {
     int rowWidth = rowXBound - rowX;
@@ -405,7 +405,7 @@ void Display::pixel_engine(
     }
 }
 
-void Display::refreshDisplayTransforms()
+void OCIODisplay::refreshDisplayTransforms()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
 
@@ -468,7 +468,7 @@ void Display::refreshDisplayTransforms()
     }
 }
 
-int Display::knob_changed(DD::Image::Knob *k)
+int OCIODisplay::knob_changed(DD::Image::Knob *k)
 {
     if (k == m_displayKnob && m_displayKnob != NULL)
     {
@@ -481,19 +481,19 @@ int Display::knob_changed(DD::Image::Knob *k)
     }
 }
 
-const DD::Image::Op::Description Display::description("OCIODisplay", build);
+const DD::Image::Op::Description OCIODisplay::description("OCIODisplay", build);
 
-const char* Display::Class() const
+const char* OCIODisplay::Class() const
 {
     return description.name;
 }
 
-const char* Display::displayName() const
+const char* OCIODisplay::displayName() const
 {
     return description.name;
 }
 
-const char* Display::node_help() const
+const char* OCIODisplay::node_help() const
 {
     // TODO more detailed help text
     return "Use OpenColorIO to convert for a display device.";
@@ -502,7 +502,7 @@ const char* Display::node_help() const
 
 DD::Image::Op* build(Node *node)
 {
-    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new Display(node));
+    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIODisplay(node));
     op->noMix();
     op->noMask();
     op->noChannels(); // prefer our own channels control without checkboxes / alpha

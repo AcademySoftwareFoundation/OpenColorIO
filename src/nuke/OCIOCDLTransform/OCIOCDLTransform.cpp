@@ -2,7 +2,7 @@
  * OpenColorIO conversion Iop.
  */
 
-#include "FileTransform.h"
+#include "OCIOCDLTransform.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -15,82 +15,83 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <sstream>
 #include <stdexcept>
 
-FileTransform::FileTransform(Node *n) : DD::Image::PixelIop(n)
+
+const char* OCIOCDLTransform::dirs[] = { "forward", "inverse", 0 };
+
+OCIOCDLTransform::OCIOCDLTransform(Node *n) : DD::Image::PixelIop(n)
 {
-    src = NULL;
-    dirindex = 0;
-    interpindex = 1;
-    
     layersToProcess = DD::Image::Mask_RGB;
+
+    for (int i = 0; i < 3; i++){
+        m_slope[i] = 1.0;
+        m_offset[i] = 0.0;
+        m_power[i] = 1.0;
+    }
+
+    m_saturation = 1.0;
+
+    m_dirindex = 0;
+
+    m_cccid = "";
 }
 
-FileTransform::~FileTransform()
+OCIOCDLTransform::~OCIOCDLTransform()
 {
 
 }
 
-const char* FileTransform::dirs[] = { "forward", "inverse", 0 };
-
-const char* FileTransform::interp[] = { "nearest", "linear", 0 };
-
-void FileTransform::knobs(DD::Image::Knob_Callback f)
+void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
 {
 
-    File_knob(f, &src, "src", "src");
-    const char * srchelp = "Specify the src file, on disk, to use for this transform. "
-    "This can be any file format that OpenColorIO supports: "
-    ".3dl, .cc, .ccc, .csp, .cub, .cube, .lut (houdini), .spi1d, .spi3d, .spimtx";
-    DD::Image::Tooltip(f, srchelp);
-    
-    String_knob(f, &cccid, "cccid");
-    const char * srchelp2 = "If the source file is an ASC CDL CCC (color correction collection), "
-    "this specifys the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
-    DD::Image::Tooltip(f, srchelp2);
-    
-    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform()", "select_cccid", "select cccid");
-    
-    Enumeration_knob(f, &dirindex, dirs, "direction", "direction");
+    // ASC CDL grade numbers
+    DD::Image::Color_knob(f, m_slope, DD::Image::IRange(0, 4.0), "slope");
+    DD::Image::Color_knob(f, m_offset, DD::Image::IRange(-0.2, 0.2), "offset");
+    DD::Image::Color_knob(f, m_power, DD::Image::IRange(0.0, 4.0), "power");
+    DD::Image::Float_knob(f, &m_saturation, DD::Image::IRange(0, 4.0), "saturation");
+
+    Enumeration_knob(f, &m_dirindex, dirs, "direction", "direction");
     DD::Image::Tooltip(f, "Specify the transform direction.");
-    
-    Enumeration_knob(f, &interpindex, interp, "interpolation", "interpolation");
-    DD::Image::Tooltip(f, "Specify the interpolation method. For files that are not LUTs (mtx, etc) this is ignored.");
-    
+
     DD::Image::Divider(f);
-    
+
+    // Cache ID
+    DD::Image::String_knob(f, &m_cccid, "cccid", "cccid");
+    DD::Image::SetFlags(f, DD::Image::Knob::ENDLINE);
+
+    // Import/export buttons
+    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.export_as_cc()", "export_cc", "export grade as .cc");
+    DD::Image::Tooltip(f, "Export this grade as a ColorCorrection XML file, which can be loaded with the OCIOFileTransform, or using a FileTransform in an OCIO config");
+
+    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.import_cc_from_xml()", "import_cc", "import from .cc");
+    DD::Image::Tooltip(f, "Import grade from a ColorCorrection XML file");
+
+    DD::Image::Divider(f);
+
+    // Layer selection
     DD::Image::Input_ChannelSet_knob(f, &layersToProcess, 0, "layer", "layer");
     DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
     DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
-void FileTransform::_validate(bool for_real)
+void OCIOCDLTransform::_validate(bool for_real)
 {
     input0().validate(for_real);
-    
-    if(!src)
-    {
-        error("The source file must be specified.");
-        return;
-    }
     
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         config->sanityCheck();
-        
-        OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
-        transform->setSrc(src);
-        
-        // TODO: For some reason, cccid is NOT incorporated in this node's hash.
-        // Until then, cccid is considered broken. Figure out why.
-        transform->setCCCId(cccid.c_str());
-        
-        if(dirindex == 0) transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-        else transform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
-        
-        if(interpindex == 0) transform->setInterpolation(OCIO::INTERP_NEAREST);
-        else transform->setInterpolation(OCIO::INTERP_LINEAR);
-        
-        processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_FORWARD);
+
+        OCIO::CDLTransformRcPtr cc = OCIO::CDLTransform::Create();
+        cc->setSlope(m_slope);
+        cc->setOffset(m_offset);
+        cc->setPower(m_power);
+        cc->setSat(m_saturation);
+
+        if(m_dirindex == 0) cc->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+        else cc->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+        m_processor = config->getProcessor(cc);
     }
     catch(OCIO::Exception &e)
     {
@@ -98,7 +99,7 @@ void FileTransform::_validate(bool for_real)
         return;
     }
     
-    if(processor->isNoOp())
+    if(m_processor->isNoOp())
     {
         // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
@@ -112,7 +113,7 @@ void FileTransform::_validate(bool for_real)
 }
 
 // Note that this is copied by others (OCIODisplay)
-void FileTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
+void OCIOCDLTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
     foreach(c, mask)
@@ -127,10 +128,10 @@ void FileTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& mask)
 
 // See Saturation::pixel_engine for a well-commented example.
 // Note that this is copied by others (OCIODisplay)
-void FileTransform::pixel_engine(
+void OCIOCDLTransform::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
-    const DD::Image::ChannelMask outputChannels,
+    DD::Image::ChannelMask outputChannels,
     DD::Image::Row& out)
 {
     int rowWidth = rowXBound - rowX;
@@ -176,7 +177,7 @@ void FileTransform::pixel_engine(
         try
         {
             OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
-            processor->apply(img);
+            m_processor->apply(img);
         }
         catch(OCIO::Exception &e)
         {
@@ -185,28 +186,30 @@ void FileTransform::pixel_engine(
     }
 }
 
-const DD::Image::Op::Description FileTransform::description("OCIOFileTransform", build);
+const DD::Image::Op::Description OCIOCDLTransform::description("OCIOCDLTransform", build);
 
-const char* FileTransform::Class() const
+const char* OCIOCDLTransform::Class() const
 {
     return description.name;
 }
 
-const char* FileTransform::displayName() const
+const char* OCIOCDLTransform::displayName() const
 {
     return description.name;
 }
 
-const char* FileTransform::node_help() const
+const char* OCIOCDLTransform::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorIO to apply the specified LUT file transform.";
+    return "Use OpenColorIO to apply an ASC CDL grade. Applied using:\n\n"\
+        "out = (i * s + o)^p\n\nWhere i is the input value, s is slope, "\
+        "o is offset and p is power";
 }
 
 
 DD::Image::Op* build(Node *node)
 {
-    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new FileTransform(node));
+    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOCDLTransform(node));
     op->noMix();
     op->noMask();
     op->noChannels(); // prefer our own channels control without checkboxes / alpha

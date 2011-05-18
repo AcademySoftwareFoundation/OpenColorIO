@@ -1,5 +1,5 @@
-#ifndef INCLUDED_OCIO_NUKE_LOGCONVERT_H_
-#define INCLUDED_OCIO_NUKE_LOGCONVERT_H_
+#ifndef INCLUDED_OCIO_NUKE_FILETRANSFORM_H_
+#define INCLUDED_OCIO_NUKE_FILETRANSFORM_H_
 
 // Include these early, for Nuke's headers under gcc 4.4.2.
 #include <memory>
@@ -16,27 +16,24 @@ namespace OCIO = OCIO_NAMESPACE;
 /*!
  * Iop that uses OpenColorIO to perform colorspace conversions
  */
-class LogConvert : public DD::Image::PixelIop {
+class OCIOFileTransform : public DD::Image::PixelIop {
 
     protected:
         DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
-        int modeindex;
+        const char* src;
+        std::string cccid;
         
-        /*
-        int inputColorSpaceIndex; //!< index of input colorspace selection from the pulldown list knob
-        int outputColorSpaceIndex;
-        std::vector<std::string> colorSpaceNames; //!< list of input and output colorspace names (memory for const char* s below)
-        std::vector<const char*> inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
-        std::vector<const char*> outputColorSpaceCstrNames;
-        */
+        int dirindex;
+        int interpindex;
         
         OCIO::ConstProcessorRcPtr processor;
     public:
-        static const char* modes[];
+        static const char* dirs[];
+        static const char* interp[];
 
-        LogConvert(Node *node);
+        OCIOFileTransform(Node *node);
 
-        ~LogConvert();
+        ~OCIOFileTransform();
 
         static const DD::Image::Op::Description description;
 
@@ -52,7 +49,7 @@ class LogConvert : public DD::Image::PixelIop {
          * Nuke currently will remove any trailing digits and underscores from
          * this and add a new number to make a unique name for the new node.
          * 
-         * \return "OCIOLogConvert"
+         * \return "OCIOFileTransform"
          */
         const char *displayName() const;
 
@@ -73,7 +70,7 @@ class LogConvert : public DD::Image::PixelIop {
          * in mask by modifying mask in-place. (At least one channel in the
          * input is assumed.)
          *
-         * Since LogConvert conversions can have channel cross-talk, any rgb
+         * Since OCIOFileTransform conversions can have channel cross-talk, any rgb
          * output channel requires all its rgb bretheren. (Non-rgb
          * are passed through.)
          */
@@ -89,7 +86,7 @@ class LogConvert : public DD::Image::PixelIop {
         void pixel_engine(
             const DD::Image::Row& in,
             int rowY, int rowX, int rowXBound,
-            const DD::Image::ChannelMask outputChannels,
+            DD::Image::ChannelMask outputChannels,
             DD::Image::Row& out);
 
 
@@ -107,4 +104,4 @@ class LogConvert : public DD::Image::PixelIop {
 
 static DD::Image::Op* build(Node *node);
 
-#endif // INCLUDED_OCIO_NUKE_LOGCONVERT_H_
+#endif // INCLUDED_OCIO_NUKE_FILETRANSFORM_H_

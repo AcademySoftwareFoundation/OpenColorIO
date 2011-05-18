@@ -1,5 +1,5 @@
-#ifndef INCLUDED_OCIO_NUKE_LOGCONVERT_H_
-#define INCLUDED_OCIO_NUKE_LOGCONVERT_H_
+#ifndef INCLUDED_OCIO_NUKE_DISPLAY_H_
+#define INCLUDED_OCIO_NUKE_DISPLAY_H_
 
 // Include these early, for Nuke's headers under gcc 4.4.2.
 #include <memory>
@@ -14,30 +14,44 @@ namespace OCIO = OCIO_NAMESPACE;
 
 
 /*!
- * Iop that uses OpenColorIO to apply an ASC CDL transform
+ * Use OpenColorIO to convert for display output.
  */
-class CDLTransform : public DD::Image::PixelIop {
-
+class OCIODisplay : public DD::Image::PixelIop {
     protected:
-        DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
 
-        // ASC CDL grade numbers
-        float m_slope[3];
-        float m_offset[3];
-        float m_power[3];
-        float m_saturation;
-
-        static const char* dirs[];
-        int m_dirindex;
-
-        // ID used for exporting grades into .cc/.ccc files
-        const char* m_cccid;
-
+        bool m_hasLists; //!< Were colorspaces, OCIODisplay devices, and transform names found? If not, always error.
+        DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
+        int m_colorSpaceIndex; //!< index of colorspace selection from the pulldown list knob
+        int m_displayIndex, m_viewIndex;
+        std::vector<std::string> m_colorSpaceNames; //!< list of colorspace names (memory for const char* s below)
+        std::vector<std::string> m_displayNames, m_viewNames;
+        std::vector<const char*> m_colorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
+        std::vector<const char*> m_displayCstrNames, m_viewCstrNames;
+        float m_gain;
+        float m_gamma;
+        //int m_channel;
+        
+        std::string m_contextKey1;
+        std::string m_contextValue1;
+        std::string m_contextKey2;
+        std::string m_contextValue2;
+        std::string m_contextKey3;
+        std::string m_contextValue3;
+        std::string m_contextKey4;
+        std::string m_contextValue4;
+        OCIO::ConstContextRcPtr getLocalContext();
+        
+        OCIO::DisplayTransformRcPtr m_transform;
         OCIO::ConstProcessorRcPtr m_processor;
-    public:
-        CDLTransform(Node *node);
 
-        ~CDLTransform();
+        DD::Image::Knob *m_displayKnob, *m_viewKnob;
+        void refreshDisplayTransforms();
+        
+    public:
+
+        OCIODisplay(Node *node);
+
+        ~OCIODisplay();
 
         static const DD::Image::Op::Description description;
 
@@ -49,11 +63,11 @@ class CDLTransform : public DD::Image::PixelIop {
          * default implementation returns Class(). You can return a different
          * (ie more user-friendly) name instead here, and there is no need for
          * this to be unique.
-         *
+         * 
          * Nuke currently will remove any trailing digits and underscores from
          * this and add a new number to make a unique name for the new node.
-         *
-         * \return "OCIOCDLTransform"
+         * 
+         * \return "OCIODisplay"
          */
         const char *displayName() const;
 
@@ -74,7 +88,7 @@ class CDLTransform : public DD::Image::PixelIop {
          * in mask by modifying mask in-place. (At least one channel in the
          * input is assumed.)
          *
-         * Since CDLTransform conversions can have channel cross-talk, any rgb
+         * Since colorspace conversions can have channel cross-talk, any rgb
          * output channel requires all its rgb bretheren. (Non-rgb
          * are passed through.)
          */
@@ -90,8 +104,16 @@ class CDLTransform : public DD::Image::PixelIop {
         void pixel_engine(
             const DD::Image::Row& in,
             int rowY, int rowX, int rowXBound,
-            const DD::Image::ChannelMask outputChannels,
+            DD::Image::ChannelMask outputChannels,
             DD::Image::Row& out);
+
+        /*!
+         * When the display device changes,
+         * regenerate the display transform list.
+         */
+        int knob_changed(DD::Image::Knob *k);
+
+        virtual void append(DD::Image::Hash& hash);
 
 
     protected:
@@ -108,4 +130,4 @@ class CDLTransform : public DD::Image::PixelIop {
 
 static DD::Image::Op* build(Node *node);
 
-#endif // INCLUDED_OCIO_NUKE_LOGCONVERT_H_
+#endif // INCLUDED_OCIO_NUKE_DISPLAY_H_

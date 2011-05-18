@@ -1,5 +1,5 @@
-#ifndef INCLUDED_OCIO_NUKE_COLORSPACECONVERSION_H_
-#define INCLUDED_OCIO_NUKE_COLORSPACECONVERSION_H_
+#ifndef INCLUDED_OCIO_NUKE_LOGCONVERT_H_
+#define INCLUDED_OCIO_NUKE_LOGCONVERT_H_
 
 // Include these early, for Nuke's headers under gcc 4.4.2.
 #include <memory>
@@ -16,34 +16,27 @@ namespace OCIO = OCIO_NAMESPACE;
 /*!
  * Iop that uses OpenColorIO to perform colorspace conversions
  */
-class ColorSpace : public DD::Image::PixelIop {
+class OCIOLogConvert : public DD::Image::PixelIop {
 
     protected:
-
-        bool m_hasColorSpaces; //!< Were colorspaces found for both input and output? If not, always error.
-        DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
-        int m_inputColorSpaceIndex; //!< index of input colorspace selection from the pulldown list knob
-        int m_outputColorSpaceIndex;
-        std::vector<std::string> m_colorSpaceNames; //!< list of input and output colorspace names (memory for const char* s below)
-        std::vector<const char*> m_inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
-        std::vector<const char*> m_outputColorSpaceCstrNames;
+        DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
+        int modeindex;
         
-        std::string m_contextKey1;
-        std::string m_contextValue1;
-        std::string m_contextKey2;
-        std::string m_contextValue2;
-        std::string m_contextKey3;
-        std::string m_contextValue3;
-        std::string m_contextKey4;
-        std::string m_contextValue4;
-        OCIO::ConstContextRcPtr getLocalContext();
+        /*
+        int inputColorSpaceIndex; //!< index of input colorspace selection from the pulldown list knob
+        int outputColorSpaceIndex;
+        std::vector<std::string> colorSpaceNames; //!< list of input and output colorspace names (memory for const char* s below)
+        std::vector<const char*> inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
+        std::vector<const char*> outputColorSpaceCstrNames;
+        */
         
-        OCIO::ConstProcessorRcPtr m_processor;
+        OCIO::ConstProcessorRcPtr processor;
     public:
+        static const char* modes[];
 
-        ColorSpace(Node *node);
+        OCIOLogConvert(Node *node);
 
-        ~ColorSpace();
+        ~OCIOLogConvert();
 
         static const DD::Image::Op::Description description;
 
@@ -59,7 +52,7 @@ class ColorSpace : public DD::Image::PixelIop {
          * Nuke currently will remove any trailing digits and underscores from
          * this and add a new number to make a unique name for the new node.
          * 
-         * \return "OCIOColorSpace"
+         * \return "OCIOLogConvert"
          */
         const char *displayName() const;
 
@@ -80,7 +73,7 @@ class ColorSpace : public DD::Image::PixelIop {
          * in mask by modifying mask in-place. (At least one channel in the
          * input is assumed.)
          *
-         * Since colorspace conversions can have channel cross-talk, any rgb
+         * Since OCIOLogConvert conversions can have channel cross-talk, any rgb
          * output channel requires all its rgb bretheren. (Non-rgb
          * are passed through.)
          */
@@ -96,10 +89,9 @@ class ColorSpace : public DD::Image::PixelIop {
         void pixel_engine(
             const DD::Image::Row& in,
             int rowY, int rowX, int rowXBound,
-            const DD::Image::ChannelMask outputChannels,
+            DD::Image::ChannelMask outputChannels,
             DD::Image::Row& out);
 
-        virtual void append(DD::Image::Hash& hash);
 
     protected:
 
@@ -115,4 +107,4 @@ class ColorSpace : public DD::Image::PixelIop {
 
 static DD::Image::Op* build(Node *node);
 
-#endif // INCLUDED_OCIO_NUKE_COLORSPACECONVERSION_H_
+#endif // INCLUDED_OCIO_NUKE_LOGCONVERT_H_
