@@ -1,18 +1,23 @@
+/**
+ * OpenColorIO Display Iop.
+ */
+
 #include "OCIODisplay.h"
+
+namespace OCIO = OCIO_NAMESPACE;
 
 #include <algorithm>
 #include <string>
 #include <sstream>
 #include <stdexcept>
 
+#include <DDImage/Channel.h>
 #include <DDImage/PixelIop.h>
 #include <DDImage/NukeWrapper.h>
 #include <DDImage/Row.h>
 #include <DDImage/Knobs.h>
 #include <DDImage/Enumeration_KnobI.h>
 
-#include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
 
 OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
 {
@@ -23,63 +28,66 @@ OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
     m_gain = 1.0;
     m_gamma = 1.0;
     //m_channel = 2;
+    m_transform = OCIO::DisplayTransform::Create();
     
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         std::string defaultColorSpaceName = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR)->getName();
         
-        int nColorSpaces = config->getNumColorSpaces();
-        
-        for(int i = 0; i < nColorSpaces; i++)
+        for(int i=0; i<config->getNumColorSpaces(); ++i)
         {
             std::string csname = config->getColorSpaceNameByIndex(i);
             m_colorSpaceNames.push_back(csname);
             
-            m_colorSpaceCstrNames.push_back(m_colorSpaceNames.back().c_str());
-            
-            if (defaultColorSpaceName == csname)
+            if(defaultColorSpaceName == csname)
             {
                 m_colorSpaceIndex = i;
             }
         }
         
-        int numDisplays = config->getNumDisplays();
         std::string defaultDisplay = config->getDefaultDisplay();
         
-        for(int i = 0; i < numDisplays; i++)
+        for(int i=0; i<config->getNumDisplays(); ++i)
         {
             std::string display = config->getDisplay(i);
             m_displayNames.push_back(display);
-            m_displayCstrNames.push_back(m_displayNames.back().c_str());
             
-            if (display == defaultDisplay)
+            if(display == defaultDisplay)
             {
                 m_displayIndex = i;
             }
         }
-        
-        refreshDisplayTransforms();
-        
-        m_transform = OCIO::DisplayTransform::Create();
     }
-    catch (OCIO::Exception& e)
+    catch(OCIO::Exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "OCIODisplay: " << e.what() << std::endl;
     }
-    catch (...)
+    catch(...)
     {
-        std::cerr << "Unknown exception during OCIO setup." << std::endl;
+        std::cerr << "OCIODisplay: Unknown exception during OCIO setup." << std::endl;
     }
-
+    
+    // Build the cstr vectors on our second pass
+    for(unsigned int i=0; i<m_colorSpaceNames.size(); ++i)
+    {
+        m_colorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
+    }
     m_colorSpaceCstrNames.push_back(NULL);
+    
+    for(unsigned int i=0; i<m_displayNames.size(); ++i)
+    {
+        m_displayCstrNames.push_back(m_displayNames[i].c_str());
+    }
     m_displayCstrNames.push_back(NULL);
-
+    
+    refreshDisplayTransforms();
+    
     m_hasLists = !(m_colorSpaceNames.empty() || m_displayNames.empty() || m_viewNames.empty());
-
+    
     if(!m_hasLists)
     {
-        std::cerr << "Missing one or more of colorspaces, display devices, or display transforms." << std::endl;
+        std::cerr << "OCIODisplay: Missing one or more of colorspaces, display devices, or display transforms." << std::endl;
     }
 }
 
@@ -234,7 +242,7 @@ void OCIODisplay::_validate(bool for_real)
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
-        const char *csSrcName = m_colorSpaceCstrNames[m_colorSpaceIndex];
+        const char * csSrcName = m_colorSpaceCstrNames[m_colorSpaceIndex];
         const char * display = m_displayCstrNames[m_displayIndex];
         const char * view = m_viewCstrNames[m_viewIndex];
         const char * csDstName = config->getDisplayColorSpaceName(display, view);
@@ -438,7 +446,6 @@ void OCIODisplay::refreshDisplayTransforms()
     {
         std::string view = config->getView(display, i);
         m_viewNames.push_back(view);
-        m_viewCstrNames.push_back(m_viewNames.back().c_str());
         if (hasOldViewName && view == oldViewName)
         {
             newViewIndex = i;
@@ -448,13 +455,17 @@ void OCIODisplay::refreshDisplayTransforms()
             defaultViewIndex = i;
         }
     }
-
+    
+    for(unsigned int i=0; i<m_viewNames.size(); ++i)
+    {
+        m_viewCstrNames.push_back(m_viewNames[i].c_str());
+    }
+    m_viewCstrNames.push_back(NULL);
+    
     if (newViewIndex == -1)
     {
         newViewIndex = defaultViewIndex;
     }
-
-    m_viewCstrNames.push_back(NULL);
 
     if (m_viewKnob == NULL)
     {

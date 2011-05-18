@@ -22,14 +22,6 @@ class OCIOLogConvert : public DD::Image::PixelIop {
         DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
         int modeindex;
         
-        /*
-        int inputColorSpaceIndex; //!< index of input colorspace selection from the pulldown list knob
-        int outputColorSpaceIndex;
-        std::vector<std::string> colorSpaceNames; //!< list of input and output colorspace names (memory for const char* s below)
-        std::vector<const char*> inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
-        std::vector<const char*> outputColorSpaceCstrNames;
-        */
-        
         OCIO::ConstProcessorRcPtr processor;
     public:
         static const char* modes[];

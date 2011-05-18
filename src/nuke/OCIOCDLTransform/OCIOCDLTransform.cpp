@@ -6,14 +6,15 @@
 
 namespace OCIO = OCIO_NAMESPACE;
 
+#include <string>
+#include <sstream>
+#include <stdexcept>
+
+#include <DDImage/Channel.h>
 #include <DDImage/PixelIop.h>
 #include <DDImage/NukeWrapper.h>
 #include <DDImage/Row.h>
 #include <DDImage/Knobs.h>
-
-#include <string>
-#include <sstream>
-#include <stdexcept>
 
 
 const char* OCIOCDLTransform::dirs[] = { "forward", "inverse", 0 };

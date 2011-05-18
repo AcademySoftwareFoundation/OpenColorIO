@@ -1,20 +1,20 @@
 /**
- * OpenColorIO conversion Iop.
+ * OpenColorIO ColorSpace Iop.
  */
 
 #include "OCIOColorSpace.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#include <DDImage/PixelIop.h>
-#include <DDImage/NukeWrapper.h>
-#include <DDImage/Row.h>
-#include <DDImage/Knobs.h>
-
 #include <string>
 #include <sstream>
 #include <stdexcept>
 
+#include <DDImage/Channel.h>
+#include <DDImage/PixelIop.h>
+#include <DDImage/NukeWrapper.h>
+#include <DDImage/Row.h>
+#include <DDImage/Knobs.h>
 
 
 OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
@@ -26,47 +26,53 @@ OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
 
     m_layersToProcess = DD::Image::Mask_RGB;
 
+    
+    // Query the colorspace names from the current config
     // TODO (when to) re-grab the list of available colorspaces? How to save/load?
+    
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        
         std::string defaultColorSpaceName = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR)->getName();
         
-        int nColorSpaces = config->getNumColorSpaces();
-        
-        for(int i = 0; i < nColorSpaces; i++)
+        for(int i = 0; i < config->getNumColorSpaces(); i++)
         {
             std::string csname = config->getColorSpaceNameByIndex(i);
             m_colorSpaceNames.push_back(csname);
             
-            if (defaultColorSpaceName == csname)
+            if(csname == defaultColorSpaceName)
             {
-                m_inputColorSpaceIndex = static_cast<int>(m_inputColorSpaceCstrNames.size());
-                m_outputColorSpaceIndex = static_cast<int>(m_outputColorSpaceCstrNames.size());
+                m_inputColorSpaceIndex = i;
+                m_outputColorSpaceIndex = i;
             }
-            
-            m_inputColorSpaceCstrNames.push_back(m_colorSpaceNames.back().c_str());
-            m_outputColorSpaceCstrNames.push_back(m_colorSpaceNames.back().c_str());
         }
     }
     catch (OCIO::Exception& e)
     {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "OCIOColorSpace: " << e.what() << std::endl;
     }
     catch (...)
     {
-        std::cerr << "Unknown exception during OCIO setup." << std::endl;
+        std::cerr << "OCIOColorSpace: Unknown exception during OCIO setup." << std::endl;
     }
-
-    m_hasColorSpaces = !(m_inputColorSpaceCstrNames.empty() || m_outputColorSpaceCstrNames.empty());
-
+    
+    // Then, create a cstr array for passing to Nuke
+    // This must be done in a second pass, lest the original m_colorSpaceNames
+    // std::string be reallocated in the interim
+    for(unsigned int i=0; i<m_colorSpaceNames.size(); ++i)
+    {
+        m_inputColorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
+        m_outputColorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
+    }
+    
     m_inputColorSpaceCstrNames.push_back(NULL);
     m_outputColorSpaceCstrNames.push_back(NULL);
-
+    
+    m_hasColorSpaces = (!m_colorSpaceNames.empty());
+    
     if(!m_hasColorSpaces)
     {
-        std::cerr << "No ColorSpaces available for input and/or output." << std::endl;
+        std::cerr << "OCIOColorSpace: No ColorSpaces available for input and/or output." << std::endl;
     }
 }
 

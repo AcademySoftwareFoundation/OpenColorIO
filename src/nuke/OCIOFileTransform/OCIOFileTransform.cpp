@@ -1,19 +1,20 @@
 /**
- * OpenColorIO conversion Iop.
+ * OpenColorIO FileTransform Iop.
  */
 
 #include "OCIOFileTransform.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
+#include <string>
+#include <sstream>
+#include <stdexcept>
+
+#include <DDImage/Channel.h>
 #include <DDImage/PixelIop.h>
 #include <DDImage/NukeWrapper.h>
 #include <DDImage/Row.h>
 #include <DDImage/Knobs.h>
-
-#include <string>
-#include <sstream>
-#include <stdexcept>
 
 OCIOFileTransform::OCIOFileTransform(Node *n) : DD::Image::PixelIop(n)
 {
