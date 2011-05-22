@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MathUtils.h"
 
 #include <cmath>
+#include <limits>
 #include <sstream>
 
 OCIO_NAMESPACE_ENTER
@@ -111,18 +112,27 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                localIndex[0] = clamp(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), 0.0f, maxIndex[0]);
-                localIndex[1] = clamp(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), 0.0f, maxIndex[1]);
-                localIndex[2] = clamp(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), 0.0f, maxIndex[2]);
-                
-                rgbaBuffer[0] = lookupNearest_3D(localIndex[0], localIndex[1], localIndex[2],
-                                                 lutSize[0], lutSize[1], lutSize[2], startPos, 0);
-                rgbaBuffer[1] = lookupNearest_3D(localIndex[0], localIndex[1], localIndex[2],
-                                                 lutSize[0], lutSize[1], lutSize[2], startPos, 1);
-                rgbaBuffer[2] = lookupNearest_3D(localIndex[0], localIndex[1], localIndex[2],
-                                                 lutSize[0], lutSize[1], lutSize[2], startPos, 2);
-                
-                rgbaBuffer += 4;
+                if(std::isnan(rgbaBuffer[0]) || std::isnan(rgbaBuffer[1]) || std::isnan(rgbaBuffer[2]))
+                {
+                    rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
+                    rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();
+                    rgbaBuffer[2] = std::numeric_limits<float>::quiet_NaN();
+                }
+                else
+                {
+                    localIndex[0] = clamp(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), 0.0f, maxIndex[0]);
+                    localIndex[1] = clamp(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), 0.0f, maxIndex[1]);
+                    localIndex[2] = clamp(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), 0.0f, maxIndex[2]);
+                    
+                    rgbaBuffer[0] = lookupNearest_3D(localIndex[0], localIndex[1], localIndex[2],
+                                                     lutSize[0], lutSize[1], lutSize[2], startPos, 0);
+                    rgbaBuffer[1] = lookupNearest_3D(localIndex[0], localIndex[1], localIndex[2],
+                                                     lutSize[0], lutSize[1], lutSize[2], startPos, 1);
+                    rgbaBuffer[2] = lookupNearest_3D(localIndex[0], localIndex[1], localIndex[2],
+                                                     lutSize[0], lutSize[1], lutSize[2], startPos, 2);
+                    
+                    rgbaBuffer += 4;
+                }
             }
         }
         
@@ -165,59 +175,68 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                localIndex[0] = std::max(std::min(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0]), 0.0f);
-                localIndex[1] = std::max(std::min(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1]), 0.0f);
-                localIndex[2] = std::max(std::min(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2]), 0.0f);
-                
-                indexLow[0] =  static_cast<int>(std::floor(localIndex[0]));
-                indexLow[1] =  static_cast<int>(std::floor(localIndex[1]));
-                indexLow[2] =  static_cast<int>(std::floor(localIndex[2]));
-                
-                // TODO: Confirm use of ceil, when local index is a maximum
-                // does not clip above the max (and cause an out of bounds access)
-                
-                indexHigh[0] =  static_cast<int>(std::ceil(localIndex[0]));
-                indexHigh[1] =  static_cast<int>(std::ceil(localIndex[1]));
-                indexHigh[2] =  static_cast<int>(std::ceil(localIndex[2]));
-                
-                delta[0] = localIndex[0] - static_cast<float>(indexLow[0]);
-                delta[1] = localIndex[1] - static_cast<float>(indexLow[1]);
-                delta[2] = localIndex[2] - static_cast<float>(indexLow[2]);
-                
-                // TODO: Refactor to make lookups work on rgb triple rather
-                //       than single components.
-                
-                rgbaBuffer[0] = lerp(lookupNearest_3D(indexLow[0],  indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 0),
-                                     lookupNearest_3D(indexLow[0],  indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 0),
-                                     lookupNearest_3D(indexLow[0],  indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 0),
-                                     lookupNearest_3D(indexLow[0],  indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 0),
-                                     lookupNearest_3D(indexHigh[0], indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 0),
-                                     lookupNearest_3D(indexHigh[0], indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 0),
-                                     lookupNearest_3D(indexHigh[0], indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 0),
-                                     lookupNearest_3D(indexHigh[0], indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 0),
-                                     delta[0], delta[1], delta[2]);
-                
-                rgbaBuffer[1] = lerp(lookupNearest_3D(indexLow[0],  indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 1),
-                                     lookupNearest_3D(indexLow[0],  indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 1),
-                                     lookupNearest_3D(indexLow[0],  indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 1),
-                                     lookupNearest_3D(indexLow[0],  indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 1),
-                                     lookupNearest_3D(indexHigh[0], indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 1),
-                                     lookupNearest_3D(indexHigh[0], indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 1),
-                                     lookupNearest_3D(indexHigh[0], indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 1),
-                                     lookupNearest_3D(indexHigh[0], indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 1),
-                                     delta[0], delta[1], delta[2]);
-                
-                rgbaBuffer[2] = lerp(lookupNearest_3D(indexLow[0],  indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 2),
-                                     lookupNearest_3D(indexLow[0],  indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 2),
-                                     lookupNearest_3D(indexLow[0],  indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 2),
-                                     lookupNearest_3D(indexLow[0],  indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 2),
-                                     lookupNearest_3D(indexHigh[0], indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 2),
-                                     lookupNearest_3D(indexHigh[0], indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 2),
-                                     lookupNearest_3D(indexHigh[0], indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 2),
-                                     lookupNearest_3D(indexHigh[0], indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 2),
-                                     delta[0], delta[1], delta[2]);
-                
-                rgbaBuffer += 4;
+                if(std::isnan(rgbaBuffer[0]) || std::isnan(rgbaBuffer[1]) || std::isnan(rgbaBuffer[2]))
+                {
+                    rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
+                    rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();
+                    rgbaBuffer[2] = std::numeric_limits<float>::quiet_NaN();
+                }
+                else
+                {
+                    localIndex[0] = std::max(std::min(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0]), 0.0f);
+                    localIndex[1] = std::max(std::min(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1]), 0.0f);
+                    localIndex[2] = std::max(std::min(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2]), 0.0f);
+                    
+                    indexLow[0] =  static_cast<int>(std::floor(localIndex[0]));
+                    indexLow[1] =  static_cast<int>(std::floor(localIndex[1]));
+                    indexLow[2] =  static_cast<int>(std::floor(localIndex[2]));
+                    
+                    // TODO: Confirm use of ceil, when local index is a maximum
+                    // does not clip above the max (and cause an out of bounds access)
+                    
+                    indexHigh[0] =  static_cast<int>(std::ceil(localIndex[0]));
+                    indexHigh[1] =  static_cast<int>(std::ceil(localIndex[1]));
+                    indexHigh[2] =  static_cast<int>(std::ceil(localIndex[2]));
+                    
+                    delta[0] = localIndex[0] - static_cast<float>(indexLow[0]);
+                    delta[1] = localIndex[1] - static_cast<float>(indexLow[1]);
+                    delta[2] = localIndex[2] - static_cast<float>(indexLow[2]);
+                    
+                    // TODO: Refactor to make lookups work on rgb triple rather
+                    //       than single components.
+                    
+                    rgbaBuffer[0] = lerp(lookupNearest_3D(indexLow[0],  indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 0),
+                                         lookupNearest_3D(indexLow[0],  indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 0),
+                                         lookupNearest_3D(indexLow[0],  indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 0),
+                                         lookupNearest_3D(indexLow[0],  indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 0),
+                                         lookupNearest_3D(indexHigh[0], indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 0),
+                                         lookupNearest_3D(indexHigh[0], indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 0),
+                                         lookupNearest_3D(indexHigh[0], indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 0),
+                                         lookupNearest_3D(indexHigh[0], indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 0),
+                                         delta[0], delta[1], delta[2]);
+                    
+                    rgbaBuffer[1] = lerp(lookupNearest_3D(indexLow[0],  indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 1),
+                                         lookupNearest_3D(indexLow[0],  indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 1),
+                                         lookupNearest_3D(indexLow[0],  indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 1),
+                                         lookupNearest_3D(indexLow[0],  indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 1),
+                                         lookupNearest_3D(indexHigh[0], indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 1),
+                                         lookupNearest_3D(indexHigh[0], indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 1),
+                                         lookupNearest_3D(indexHigh[0], indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 1),
+                                         lookupNearest_3D(indexHigh[0], indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 1),
+                                         delta[0], delta[1], delta[2]);
+                    
+                    rgbaBuffer[2] = lerp(lookupNearest_3D(indexLow[0],  indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 2),
+                                         lookupNearest_3D(indexLow[0],  indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 2),
+                                         lookupNearest_3D(indexLow[0],  indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 2),
+                                         lookupNearest_3D(indexLow[0],  indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 2),
+                                         lookupNearest_3D(indexHigh[0], indexLow[1],  indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 2),
+                                         lookupNearest_3D(indexHigh[0], indexLow[1],  indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 2),
+                                         lookupNearest_3D(indexHigh[0], indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos, 2),
+                                         lookupNearest_3D(indexHigh[0], indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos, 2),
+                                         delta[0], delta[1], delta[2]);
+                    
+                    rgbaBuffer += 4;
+                }
             }
         }
     }
@@ -423,3 +442,51 @@ OCIO_NAMESPACE_ENTER
 
 }
 OCIO_NAMESPACE_EXIT
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+#include <cstring>
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+OIIO_ADD_TEST(Lut3DOp, NanInfValueCheck)
+{
+    OCIO::Lut3D lut;
+    
+    lut.from_min[0] = 0.0f;
+    lut.from_min[1] = 0.0f;
+    lut.from_min[2] = 0.0f;
+    
+    lut.from_max[0] = 1.0f;
+    lut.from_max[1] = 1.0f;
+    lut.from_max[2] = 1.0f;
+    
+    lut.size[0] = 3;
+    lut.size[1] = 3;
+    lut.size[2] = 3;
+    
+    lut.lut.resize(lut.size[0]*lut.size[1]*lut.size[2]*3);
+    
+    GenerateIdentityLut3D(&lut.lut[0], lut.size[0], 3, OCIO::LUT3DORDER_FAST_RED);
+    for(unsigned int i=0; i<lut.lut.size(); ++i)
+    {
+        lut.lut[i] = powf(lut.lut[i], 2.0f);
+    }
+    
+    const float reference[4] = {  std::numeric_limits<float>::signaling_NaN(),
+                                  std::numeric_limits<float>::quiet_NaN(),
+                                  std::numeric_limits<float>::infinity(),
+                                  -std::numeric_limits<float>::infinity() };
+    float color[4];
+    
+    memcpy(color, reference, 4*sizeof(float));
+    OCIO::Lut3D_Nearest(color, 1, lut);
+    
+    memcpy(color, reference, 4*sizeof(float));
+    OCIO::Lut3D_Linear(color, 1, lut);
+}
+
+#endif // OCIO_UNIT_TEST

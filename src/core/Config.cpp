@@ -1833,10 +1833,9 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     config->serialize(os);
     
     std::string PROFILE_OUT =
-    "---\n"
     "ocio_profile_version: 1\n"
     "\n"
-    "search_path: \"\"\n"
+    "search_path: \n"
     "strictparsing: true\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
     "\n"
@@ -1857,7 +1856,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     "    allocation: uniform\n"
     "    to_reference: !<GroupTransform>\n"
     "      children:\n"
-    "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
+    "        - !<FileTransform> {src: , interpolation: unknown}\n"
     "\n"
     "  - !<ColorSpace>\n"
     "    name: testing2\n"

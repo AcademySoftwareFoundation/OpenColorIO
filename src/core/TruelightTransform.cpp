@@ -308,15 +308,13 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     OIIO_CHECK_CLOSE(input[2], output[2], 1e-4);
 #endif
     
-    //
     std::ostringstream os;
     OIIO_CHECK_NO_THOW(config->serialize(os));
     
-    std::string testconfig =
-    "---\n"
+    std::string referenceconfig =
     "ocio_profile_version: 1\n"
     "\n"
-    "search_path: \"\"\n"
+    "search_path: \n"
     "strictparsing: true\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
     "\n"
@@ -344,17 +342,18 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     "    allocation: uniform\n"
     "    from_reference: !<TruelightTransform> {config_root: /usr/fl/truelight, print: internal-LowContrast, display: sRGB, cube_input: log}\n";
     
+    
     std::vector<std::string> osvec;
     OCIO::pystring::splitlines(os.str(), osvec);
-    std::vector<std::string> testconfigvec;
-    OCIO::pystring::splitlines(testconfig, testconfigvec);
+    std::vector<std::string> referenceconfigvec;
+    OCIO::pystring::splitlines(referenceconfig, referenceconfigvec);
     
-    OIIO_CHECK_EQUAL(osvec.size(), testconfigvec.size());
-    for(unsigned int i = 0; i < testconfigvec.size(); ++i)
-        OIIO_CHECK_EQUAL(osvec[i], testconfigvec[i]);
+    OIIO_CHECK_EQUAL(osvec.size(), referenceconfigvec.size());
+    for(unsigned int i = 0; i < referenceconfigvec.size(); ++i)
+        OIIO_CHECK_EQUAL(osvec[i], referenceconfigvec[i]);
     
     std::istringstream is;
-    is.str(testconfig);
+    is.str(referenceconfig);
     OCIO::ConstConfigRcPtr rtconfig;
     OIIO_CHECK_NO_THOW(rtconfig = OCIO::Config::CreateFromStream(is));
     

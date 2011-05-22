@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <iostream>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -135,8 +136,6 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         // Nearest Forward
         
-#ifndef USE_SSE
-        
         inline float lookupNearest_1D(float index, float maxIndex, const float * simple_lut)
         {
             return simple_lut[clamp(index, 0.0f, maxIndex)];
@@ -161,15 +160,18 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                rgbaBuffer[0] = lookupNearest_1D(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0], startPos[0]);
-                rgbaBuffer[1] = lookupNearest_1D(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1], startPos[1]);
-                rgbaBuffer[2] = lookupNearest_1D(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2], startPos[2]);
+                if(!std::isnan(rgbaBuffer[0]))
+                    rgbaBuffer[0] = lookupNearest_1D(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0], startPos[0]);
+                if(!std::isnan(rgbaBuffer[1]))
+                    rgbaBuffer[1] = lookupNearest_1D(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1], startPos[1]);
+                if(!std::isnan(rgbaBuffer[2]))
+                    rgbaBuffer[2] = lookupNearest_1D(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2], startPos[2]);
                 
                 rgbaBuffer += 4;
             }
         }
-#else
-        void Lut1D_Nearest(float* rgbaBuffer, long numPixels, const Lut1D & lut)
+#ifdef USE_SSE
+        void Lut1D_Nearest_SSE(float* rgbaBuffer, long numPixels, const Lut1D & lut)
         {
             // orig: 546 ms
             // curr: 91 ms
@@ -200,6 +202,8 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
+                // TODO: SSE Optimized nancheck
+                
                 __m128 p = _mm_loadu_ps(rgbaBuffer);
                 
                 // mInv_x_maxIndex * (p - b)
@@ -224,9 +228,12 @@ OCIO_NAMESPACE_ENTER
                 // _mm_cvttps_pi32 converts 2 floats to 2 32-bit packed ints,
                 // with truncation
                 
-                rgbaBuffer[0] = startPos[0][(int)(result[0])];
-                rgbaBuffer[1] = startPos[1][(int)(result[1])];
-                rgbaBuffer[2] = startPos[2][(int)(result[2])];
+                if(!std::isnan(result[0]))
+                    rgbaBuffer[0] = startPos[0][(int)(result[0])];
+                if(!std::isnan(result[1]))
+                    rgbaBuffer[1] = startPos[1][(int)(result[1])];
+                if(!std::isnan(result[2]))
+                    rgbaBuffer[2] = startPos[2][(int)(result[2])];
                 
                 rgbaBuffer += 4;
             }
@@ -264,9 +271,12 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                rgbaBuffer[0] = lookupLinear_1D(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0], startPos[0]);
-                rgbaBuffer[1] = lookupLinear_1D(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1], startPos[1]);
-                rgbaBuffer[2] = lookupLinear_1D(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2], startPos[2]);
+                if(!std::isnan(rgbaBuffer[0]))
+                    rgbaBuffer[0] = lookupLinear_1D(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0], startPos[0]);
+                if(!std::isnan(rgbaBuffer[1]))
+                    rgbaBuffer[1] = lookupLinear_1D(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1], startPos[1]);
+                if(!std::isnan(rgbaBuffer[2]))
+                    rgbaBuffer[2] = lookupLinear_1D(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2], startPos[2]);
                 
                 rgbaBuffer += 4;
             }
@@ -317,9 +327,12 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                rgbaBuffer[0] = m[0] * reverseLookupNearest_1D(rgbaBuffer[0], startPos[0], endPos[0]) + b[0];
-                rgbaBuffer[1] = m[1] * reverseLookupNearest_1D(rgbaBuffer[1], startPos[1], endPos[1]) + b[1];
-                rgbaBuffer[2] = m[2] * reverseLookupNearest_1D(rgbaBuffer[2], startPos[2], endPos[2]) + b[2];
+                if(!std::isnan(rgbaBuffer[0]))
+                    rgbaBuffer[0] = m[0] * reverseLookupNearest_1D(rgbaBuffer[0], startPos[0], endPos[0]) + b[0];
+                if(!std::isnan(rgbaBuffer[1]))
+                    rgbaBuffer[1] = m[1] * reverseLookupNearest_1D(rgbaBuffer[1], startPos[1], endPos[1]) + b[1];
+                if(!std::isnan(rgbaBuffer[2]))
+                    rgbaBuffer[2] = m[2] * reverseLookupNearest_1D(rgbaBuffer[2], startPos[2], endPos[2]) + b[2];
                 
                 rgbaBuffer += 4;
             }
@@ -367,9 +380,12 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                rgbaBuffer[0] = m[0] * reverseLookupLinear_1D(rgbaBuffer[0], startPos[0], endPos[0], invMaxIndex[0]) + b[0];
-                rgbaBuffer[1] = m[1] * reverseLookupLinear_1D(rgbaBuffer[1], startPos[1], endPos[1], invMaxIndex[0]) + b[1];
-                rgbaBuffer[2] = m[2] * reverseLookupLinear_1D(rgbaBuffer[2], startPos[2], endPos[2], invMaxIndex[0]) + b[2];
+                if(!std::isnan(rgbaBuffer[0]))
+                    rgbaBuffer[0] = m[0] * reverseLookupLinear_1D(rgbaBuffer[0], startPos[0], endPos[0], invMaxIndex[0]) + b[0];
+                if(!std::isnan(rgbaBuffer[1]))
+                    rgbaBuffer[1] = m[1] * reverseLookupLinear_1D(rgbaBuffer[1], startPos[1], endPos[1], invMaxIndex[0]) + b[1];
+                if(!std::isnan(rgbaBuffer[2]))
+                    rgbaBuffer[2] = m[2] * reverseLookupLinear_1D(rgbaBuffer[2], startPos[2], endPos[2], invMaxIndex[0]) + b[2];
                 
                 rgbaBuffer += 4;
             }
@@ -485,7 +501,11 @@ OCIO_NAMESPACE_ENTER
             {
                 if(m_interpolation == INTERP_NEAREST)
                 {
+#ifdef USE_SSE
+                    Lut1D_Nearest_SSE(rgbaBuffer, numPixels, *m_lut);
+#else
                     Lut1D_Nearest(rgbaBuffer, numPixels, *m_lut);
+#endif
                 }
                 else if(m_interpolation == INTERP_LINEAR)
                 {
@@ -564,3 +584,311 @@ OCIO_NAMESPACE_ENTER
 
 }
 OCIO_NAMESPACE_EXIT
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+#include <cstring>
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+OIIO_ADD_TEST(Lut1DOp, isNoOp)
+{
+    // Make an identity lut
+    
+    OCIO::Lut1D lut;
+    lut.from_min[0] = 0.0f;
+    lut.from_min[1] = 0.0f;
+    lut.from_min[2] = 0.0f;
+    
+    lut.from_max[0] = 1.0f;
+    lut.from_max[1] = 1.0f;
+    lut.from_max[2] = 1.0f;
+    
+    int size = 256;
+    for(int i=0; i<size; ++i)
+    {
+        float x = (float)i / (float)(size-1);
+        for(int c=0; c<3; ++c)
+        {
+            lut.luts[c].push_back(x);
+        }
+    }
+    
+    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
+    OIIO_CHECK_EQUAL(lut.isNoOp, true);
+    
+    lut.isFinal = false;
+    lut.finalize(1e-5f, OCIO::ERROR_ABSOLUTE);
+    OIIO_CHECK_EQUAL(lut.isNoOp, true);
+    
+    // Edit the lut
+    // These should NOT be identity
+    lut.luts[0][125] += 1e-3f;
+    
+    lut.isFinal = false;
+    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
+    OIIO_CHECK_EQUAL(lut.isNoOp, false);
+    
+    lut.isFinal = false;
+    lut.finalize(1e-5f, OCIO::ERROR_ABSOLUTE);
+    OIIO_CHECK_EQUAL(lut.isNoOp, false);
+}
+
+
+OIIO_ADD_TEST(Lut1DOp, FiniteValueCheck)
+{
+    // Make a lut that squares the input
+    OCIO::Lut1D lut;
+    lut.from_min[0] = 0.0f;
+    lut.from_min[1] = 0.0f;
+    lut.from_min[2] = 0.0f;
+    
+    lut.from_max[0] = 1.0f;
+    lut.from_max[1] = 1.0f;
+    lut.from_max[2] = 1.0f;
+    
+    int size = 256;
+    for(int i=0; i<size; ++i)
+    {
+        float x = (float)i / (float)(size-1);
+        float x2 = x*x;
+        
+        for(int c=0; c<3; ++c)
+        {
+            lut.luts[c].push_back(x2);
+        }
+    }
+    
+    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
+    OIIO_CHECK_EQUAL(lut.isNoOp, false);
+    
+    float inputBuffer_linearforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
+    float outputBuffer_linearforward[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
+    OCIO::Lut1D_Linear(inputBuffer_linearforward, 1, lut);
+    for(int i=0; i <4; ++i)
+    {
+        OIIO_CHECK_CLOSE(inputBuffer_linearforward[i], outputBuffer_linearforward[i], 1e-5f);
+    }
+    
+    float inputBuffer_nearestforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
+    float outputBuffer_nearestforward[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
+    OCIO::Lut1D_Nearest(inputBuffer_nearestforward, 1, lut);
+    for(int i=0; i <4; ++i)
+    {
+        OIIO_CHECK_CLOSE(inputBuffer_nearestforward[i], outputBuffer_nearestforward[i], 1e-2f);
+    }
+    
+    float inputBuffer_linearinverse[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
+    float outputBuffer_linearinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
+    OCIO::Lut1D_LinearInverse(outputBuffer_linearinverse, 1, lut);
+    for(int i=0; i <4; ++i)
+    {
+        OIIO_CHECK_CLOSE(inputBuffer_linearinverse[i], outputBuffer_linearinverse[i], 1e-5f);
+    }
+    
+    float inputBuffer_nearestinverse[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
+    float outputBuffer_nearestinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
+    OCIO::Lut1D_NearestInverse(outputBuffer_nearestinverse, 1, lut);
+    for(int i=0; i <4; ++i)
+    {
+        OIIO_CHECK_CLOSE(inputBuffer_nearestinverse[i], outputBuffer_nearestinverse[i], 1e-2f);
+    }
+}
+
+
+#ifdef USE_SSE
+OIIO_ADD_TEST(Lut1DOp, SSE)
+{
+    // Make a lut that squares the input
+    OCIO::Lut1D lut;
+    lut.from_min[0] = 0.0f;
+    lut.from_min[1] = 0.0f;
+    lut.from_min[2] = 0.0f;
+    
+    lut.from_max[0] = 1.0f;
+    lut.from_max[1] = 1.0f;
+    lut.from_max[2] = 1.0f;
+    
+    int size = 256;
+    for(int i=0; i<size; ++i)
+    {
+        float x = (float)i / (float)(size-1);
+        float x2 = x*x;
+        
+        for(int c=0; c<3; ++c)
+        {
+            lut.luts[c].push_back(x2);
+        }
+    }
+    
+    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
+    OIIO_CHECK_EQUAL(lut.isNoOp, false);
+    
+    int NUM_TEST_PIXELS = 1024;
+    std::vector<float> testValues(NUM_TEST_PIXELS*4);
+    std::vector<float> outputBuffer_cpu(NUM_TEST_PIXELS*4);
+    std::vector<float> outputBuffer_sse(NUM_TEST_PIXELS*4);
+    
+    float val = -1.0f;
+    float delta = 0.00123456789f;
+    
+    for(int i=0; i<NUM_TEST_PIXELS*4; ++i)
+    {
+        testValues[i] = val;
+        val += delta;
+    }
+    
+    memcpy(&outputBuffer_cpu[0], &testValues[0], testValues.size()*sizeof(float));
+    memcpy(&outputBuffer_sse[0], &testValues[0], testValues.size()*sizeof(float));
+    
+    OCIO::Lut1D_Nearest(&outputBuffer_cpu[0], NUM_TEST_PIXELS, lut);
+    OCIO::Lut1D_Nearest_SSE(&outputBuffer_sse[0], NUM_TEST_PIXELS, lut);
+    
+    for(int i=0; i<NUM_TEST_PIXELS*4; ++i)
+    {
+        OIIO_CHECK_CLOSE(outputBuffer_cpu[i], outputBuffer_sse[i], 1e-7f);
+        //OIIO_CHECK_EQUAL(outputBuffer_cpu[i], outputBuffer_sse[i]);
+    }
+    
+    
+    // Test special values
+    /*
+    NUM_TEST_PIXELS = 2;
+    testValues.resize(NUM_TEST_PIXELS*4);
+    outputBuffer_cpu.resize(NUM_TEST_PIXELS*4);
+    outputBuffer_sse.resize(NUM_TEST_PIXELS*4);
+    
+    testValues[0] = std::numeric_limits<float>::signaling_NaN();
+    testValues[1] = std::numeric_limits<float>::quiet_NaN();
+    testValues[2] = -std::numeric_limits<float>::signaling_NaN();
+    testValues[3] = -std::numeric_limits<float>::signaling_NaN();
+    
+    testValues[4] = std::numeric_limits<float>::infinity();
+    testValues[5] = -std::numeric_limits<float>::infinity();
+    testValues[6] = 0.0f;
+    
+    
+    memcpy(&outputBuffer_cpu[0], &testValues[0], testValues.size()*sizeof(float));
+    memcpy(&outputBuffer_sse[0], &testValues[0], testValues.size()*sizeof(float));
+    
+    OCIO::Lut1D_Nearest(&outputBuffer_cpu[0], NUM_TEST_PIXELS, lut);
+    OCIO::Lut1D_Nearest_SSE(&outputBuffer_sse[0], NUM_TEST_PIXELS, lut);
+    
+    for(int i=0; i<NUM_TEST_PIXELS*4; ++i)
+    {
+        //OIIO_CHECK_CLOSE(outputBuffer_cpu[i], outputBuffer_sse[i], 1e-7f);
+        OIIO_CHECK_EQUAL(outputBuffer_cpu[i], outputBuffer_sse[i]);
+    }
+    
+    */
+}
+#endif
+
+
+OIIO_ADD_TEST(Lut1DOp, NanInfValueCheck)
+{
+    // Make a lut that squares the input
+    OCIO::Lut1D lut;
+    lut.from_min[0] = 0.0f;
+    lut.from_min[1] = 0.0f;
+    lut.from_min[2] = 0.0f;
+    
+    lut.from_max[0] = 1.0f;
+    lut.from_max[1] = 1.0f;
+    lut.from_max[2] = 1.0f;
+    
+    int size = 256;
+    for(int i=0; i<size; ++i)
+    {
+        float x = (float)i / (float)(size-1);
+        float x2 = x*x;
+        
+        for(int c=0; c<3; ++c)
+        {
+            lut.luts[c].push_back(x2);
+        }
+    }
+    
+    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
+    OIIO_CHECK_EQUAL(lut.isNoOp, false);
+    
+    const float reference[4] = {  std::numeric_limits<float>::signaling_NaN(),
+                                  std::numeric_limits<float>::quiet_NaN(),
+                                  std::numeric_limits<float>::infinity(),
+                                  -std::numeric_limits<float>::infinity() };
+    /*
+    float output[4] = { std::numeric_limits<float>::signaling_NaN(),
+                        std::numeric_limits<float>::quiet_NaN(),
+                        1.0f,
+                        -std::numeric_limits<float>::infinity()  };
+    */
+    float color[4];
+    
+    memcpy(color, reference, 4*sizeof(float));
+    OCIO::Lut1D_Linear(color, 1, lut);
+    /*
+    for(int i=0; i<4; ++i)
+    {
+        if(std::isnan(color[i]))
+        {
+            std::cerr << color[i] << " " << output[i] << std::endl;
+            OIIO_CHECK_EQUAL(std::isnan(color[i]), std::isnan(output[i]));
+        }
+        else
+        {
+            OIIO_CHECK_EQUAL(color[i], output[i]);
+        }
+    }
+    */
+    memcpy(color, reference, 4*sizeof(float));
+    OCIO::Lut1D_Nearest(color, 1, lut);
+    /*
+    for(int i=0; i <4; ++i)
+    {
+        if(std::isnan(color[i]))
+        {
+            OIIO_CHECK_EQUAL(std::isnan(color[i]), std::isnan(output[i]));
+        }
+        else
+        {
+            OIIO_CHECK_EQUAL(color[i], output[i]);
+        }
+    }
+    */
+    memcpy(color, reference, 4*sizeof(float));
+    OCIO::Lut1D_LinearInverse(color, 1, lut);
+    /*
+    for(int i=0; i <4; ++i)
+    {
+        if(std::isnan(color[i]))
+        {
+            OIIO_CHECK_EQUAL(std::isnan(color[i]), std::isnan(output[i]));
+        }
+        else
+        {
+            OIIO_CHECK_EQUAL(color[i], output[i]);
+        }
+    }
+    */
+    memcpy(color, reference, 4*sizeof(float));
+    OCIO::Lut1D_NearestInverse(color, 1, lut);
+    /*
+    for(int i=0; i <4; ++i)
+    {
+        if(std::isnan(color[i]))
+        {
+            OIIO_CHECK_EQUAL(std::isnan(color[i]), std::isnan(output[i]));
+        }
+        else
+        {
+            OIIO_CHECK_EQUAL(color[i], output[i]);
+        }
+    }
+    */
+}
+
+#endif // OCIO_UNIT_TEST
