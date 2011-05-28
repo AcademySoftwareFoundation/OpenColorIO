@@ -115,12 +115,16 @@ endif()
 ### tinyxml ###
 
 set(TINYXML_VERSION 2_6_1)
+set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist)
+if(CMAKE_TOOLCHAIN_FILE)
+    set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+endif()
 ExternalProject_Add(tinyxml
     URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
     PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
     BINARY_DIR ext/build/tinyxml
     INSTALL_DIR ext/dist
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist
+    CMAKE_ARGS ${TINYXML_CMAKE_ARGS}
 )
 set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
 
@@ -128,12 +132,16 @@ set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
 ### YAML ###
 
 set(YAML_CPP_VERSION r482)
+set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE)
+if(CMAKE_TOOLCHAIN_FILE)
+    set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+endif()
 ExternalProject_Add(YAML_CPP_LOCAL
     URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
     BINARY_DIR ext/build/yaml-cpp
     PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
     INSTALL_DIR ext/dist
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE
+    CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS}
 )
 set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
 set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
@@ -149,6 +157,12 @@ set(EXTERNAL_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
 set(EXTERNAL_LIBRARIES
     ${TINYXML_STATIC_LIBRARIES}
     ${YAML_CPP_STATIC_LIBRARIES})
+
+# This is a hack to get some -Lsearch/paths when building for iphone we should
+# be able to find a cleaner way
+if(IPHONE_BUILD)
+    set(EXTERNAL_LINK_FLAGS "${EXTERNAL_LINK_FLAGS} -L${IPHONE_SDK_ROOT}/usr/lib -L${IPHONE_SDK_ROOT}/usr/lib/system")
+endif()
 
 ###############################################################################
 ### Documentation ###
@@ -173,7 +187,7 @@ endif()
 ### SSE ###
 
 option(USE_SSE "Set to OFF to disable SSE optimizations." ON)
-if(USE_SSE)
+if(USE_SSE AND NOT IPHONE_BUILD)
     messageonce("SSE Runtime: ENABLED")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
     add_definitions("-DUSE_SSE")
@@ -184,6 +198,7 @@ endif()
 ###############################################################################
 ### TRUELIGHT ###
 
+if(NOT IPHONE_BUILD)
 find_package(Truelight)
 if(TRUELIGHT_FOUND)
     messageonce("Will build the truelight transform support against ${Truelight_LIBRARY_DIR}")
@@ -195,6 +210,7 @@ if(TRUELIGHT_FOUND)
 else()
     messageonce("Not building truelight transform support. Add the flag -D TRUELIGHT_INSTALL_PATH=... or set the TRUELIGHT_ROOT environment variable")
 endif()
+endif()
 
 ###############################################################################
 ### CORE ###
@@ -205,10 +221,14 @@ add_subdirectory(src/core_tests)
 ###############################################################################
 ### TEST BED ###
 
+if(NOT IPHONE_BUILD)
 add_subdirectory(src/testbed)
+endif()
 
 ###############################################################################
 ### APPS ###
+
+if(NOT IPHONE_BUILD)
 
 # Try to find OpenImageIO (OIIO) and OpenGL stuff
 OCIOFindOpenImageIO()
@@ -240,9 +260,12 @@ add_subdirectory(src/apps/ocio2icc)
 # ociobakelut writes out luts
 add_subdirectory(src/apps/ociobakelut)
 
+endif()
+
 ###############################################################################
 ### NUKE ###
 
+if(NOT IPHONE_BUILD)
 find_package(Nuke)
 if(NUKE_FOUND)
     messageonce("Will build the Nuke plugins against ${Nuke_LIBRARY_DIR}")
@@ -250,14 +273,17 @@ if(NUKE_FOUND)
 else()
     messageonce("Not building Nuke plugins. Add the flag -D NUKE_INSTALL_PATH=... or set the NDK_PATH environment variable")
 endif()
+endif()
 
 ###############################################################################
 ### PYGLUE ###
 
+if(NOT IPHONE_BUILD)
 if(PYTHON_OK)
     add_subdirectory(src/pyglue)
 else()
     messageonce("Python bindings will not be built: ${PYTHON_ERR}")
+endif()
 endif()
 
 ###############################################################################
