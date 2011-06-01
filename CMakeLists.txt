@@ -11,7 +11,6 @@ if(NOT SOVERSION)
     set(SOVERSION ${OCIO_VERSION_MAJOR} CACHE STRING "Set the SO version in the SO name of the output library")
 endif()
 
-
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
 if(NOT DEFINED CMAKE_FIRST_RUN)
@@ -29,7 +28,7 @@ enable_language(CXX)
 
 ENABLE_TESTING()
 
-if(APPLE)
+if(APPLE OR IPHONE_BUILD)
     if(NOT CMAKE_OSX_ARCHITECTURES)
         set(CMAKE_OSX_ARCHITECTURES x86_64 CACHE STRING
             "Setting OSX Architectures, options are: ppc;i386;ppc64;x86_64"
