@@ -350,6 +350,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "First argument must be a float array, size multiple of 4. ";
                     os << "Size: " << data.size() << ".";
+                    PyErr_SetString(PyExc_TypeError, os.str().c_str());
                     return 0;
                 }
                 

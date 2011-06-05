@@ -200,7 +200,7 @@ OCIO_NAMESPACE_ENTER
                     if(!FillFloatVectorFromPySequence(pyvalue, data) || (data.size() != 4))
                     {
                         PyErr_SetString(PyExc_TypeError, "Value argument must be a float array, size 4");
-                        return 0;
+                        return -1;
                     }
                     
                     transform->setValue( &data[0] );
