@@ -138,7 +138,7 @@ OCIO_NAMESPACE_ENTER
     // necessary to utilized customized :cpp:class:`ColorSpaceTransform` and
     // :cpp:class:`DisplayTransform` operations.
     // 
-    // See the included :doc:`FAQ` for more detailed information on
+    // See the :ref:`user-guide` for more detailed information on
     // selecting / creating / working with custom color configurations.
     // 
     // Roughly speaking, if you're a novice user you will want to select a

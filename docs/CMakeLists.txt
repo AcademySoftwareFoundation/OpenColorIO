@@ -72,6 +72,7 @@ list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/README)
 list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/INSTALL)
 list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/ChangeLog)
 list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/LICENSE)
+list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py)
 CopyFiles(RSTDOC ${DOCFILES})
 
 message(STATUS "Extracting .rst files from C++ headers")
