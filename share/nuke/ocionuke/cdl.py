@@ -1,3 +1,6 @@
+"""Various utilities relating to the OCIOCDLTransform node
+"""
+
 import nuke
 import nukescripts
 import PyOpenColorIO as OCIO
