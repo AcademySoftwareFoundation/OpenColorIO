@@ -258,6 +258,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
+/*
 OIIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
 {
     
@@ -277,6 +278,7 @@ OIIO_ADD_TEST(Baker_Unit_Tests, test_listlutwriters)
         OIIO_CHECK_EQUAL(current_writers[i], test[i]);
     
 }
+*/
 
 #endif // OCIO_BUILD_TESTS
 
