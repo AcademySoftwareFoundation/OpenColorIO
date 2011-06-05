@@ -31,6 +31,12 @@ print ""
 
 # Create a new config
 
+config = OCIO.GetCurrentConfig()
+processor = config.getProcessor(OCIO.Constants.ROLE_COMPOSITING_LOG, OCIO.Constants.ROLE_SCENE_LINEAR)
+processor.applyRGBA([0,0,0,0]) # works fine
+processor.applyRGBA(1)
+   
+"""
 if True:
     config = OCIO.Config()
     
@@ -55,6 +61,7 @@ if True:
     config.addColorSpace(cs2)
     
     print config.serialize()
+"""
 
 """
 

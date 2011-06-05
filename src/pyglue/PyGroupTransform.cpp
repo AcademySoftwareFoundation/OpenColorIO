@@ -219,7 +219,7 @@ OCIO_NAMESPACE_ENTER
                     if(!FillTransformVectorFromPySequence(pytransforms, data))
                     {
                         PyErr_SetString(PyExc_TypeError, "Kwarg 'transforms' must be a transform array.");
-                        return 0;
+                        return -1;
                     }
                     
                     for(unsigned int i=0; i<data.size(); ++i)
