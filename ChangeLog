@@ -1,3 +1,10 @@
+**Version 0.8.2 (June 7 2011):**
+    * Numerous Windows compatibility fixes
+    * Python binding improvements
+    * OCIO::Baker / ociobakelut improvements
+    * Lut1D/3D do not crash on nans (bugfix)
+    * Nuke UI doesnt crash in known corner case (bugfix)
+
 **Version 0.8.1 (May 9 2011):**
     * New roles: TEXTURE_PAINT + MATTE_PAINT
     * Mari API Example (src/mari)
