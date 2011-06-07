@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PathUtils.h"
 #include "pystring/pystring.h"
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(__IPHONE__)
 #include <crt_externs.h> // _NSGetEnviron()
 #else
 #include <unistd.h>
@@ -102,7 +102,10 @@ OCIO_NAMESPACE_ENTER
     {
         inline char** GetEnviron()
         {
-#ifdef __APPLE__
+#if __IPHONE__
+            // TODO: fix this
+            return NULL;
+#elif __APPLE__
             return (*_NSGetEnviron());
 #else
             return environ;

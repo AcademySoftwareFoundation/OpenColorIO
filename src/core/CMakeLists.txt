@@ -19,40 +19,40 @@ list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorABI.h)
 
 # SHARED
 
-if(NOT IPHONE_BUILD)
-add_library(OpenColorIO SHARED ${core_src_files})
-add_dependencies(OpenColorIO tinyxml YAML_CPP_LOCAL)
-target_link_libraries(OpenColorIO ${EXTERNAL_LIBRARIES})
-set_target_properties(OpenColorIO PROPERTIES
-    OUTPUT_NAME OpenColorIO
-    COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
-    LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
-install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
+if(OCIO_BUILD_SHARED)
+    add_library(OpenColorIO SHARED ${core_src_files})
+    add_dependencies(OpenColorIO tinyxml YAML_CPP_LOCAL)
+    target_link_libraries(OpenColorIO ${EXTERNAL_LIBRARIES})
+    set_target_properties(OpenColorIO PROPERTIES
+        OUTPUT_NAME OpenColorIO
+        COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
+        LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
+    install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
 endif()
 
 # STATIC
 
-list(REMOVE_ITEM core_src_files ${CMAKE_SOURCE_DIR}/src/core/UnitTest.cpp)
-add_library(OpenColorIO_STATIC STATIC ${core_src_files})
-add_dependencies(OpenColorIO_STATIC tinyxml YAML_CPP_LOCAL)
-target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_LIBRARIES})
-set_target_properties(OpenColorIO_STATIC PROPERTIES
-    OUTPUT_NAME OpenColorIO
-    COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
-    LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
-install(TARGETS OpenColorIO_STATIC DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
+if(OCIO_BUILD_STATIC)
+    list(REMOVE_ITEM core_src_files ${CMAKE_SOURCE_DIR}/src/core/UnitTest.cpp)
+    add_library(OpenColorIO_STATIC STATIC ${core_src_files})
+    add_dependencies(OpenColorIO_STATIC tinyxml YAML_CPP_LOCAL)
+    target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_LIBRARIES})
+    set_target_properties(OpenColorIO_STATIC PROPERTIES
+        OUTPUT_NAME OpenColorIO
+        COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
+        LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
+    install(TARGETS OpenColorIO_STATIC DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
+endif()
 
 #
-if (SOVERSION AND NOT IPHONE_BUILD)
-message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
-set_target_properties(OpenColorIO PROPERTIES
-    VERSION ${OCIO_VERSION}
-    SOVERSION ${SOVERSION}
-)
-set_target_properties(OpenColorIO_STATIC PROPERTIES
-    VERSION ${OCIO_VERSION}
-    SOVERSION ${SOVERSION}
-)
+if (SOVERSION)
+    message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
+    set_target_properties(OpenColorIO PROPERTIES
+        VERSION ${OCIO_VERSION}
+        SOVERSION ${SOVERSION})
+    set_target_properties(OpenColorIO_STATIC PROPERTIES
+        VERSION ${OCIO_VERSION}
+        SOVERSION ${SOVERSION})
 endif()
 
 # public interface
