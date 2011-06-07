@@ -66,7 +66,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 */
 
 // platform-specific includes
-#if defined(_WIN32) || defined(_WINDOWS) || defined(_MSC_VER)
+#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
 #ifndef WINDOWS
 #define WINDOWS
 #endif

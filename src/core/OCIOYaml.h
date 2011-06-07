@@ -28,7 +28,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#ifndef WIN64
+#include "Platform.h"
+
+#ifndef WINDOWS
 
 // fwd declare yaml-cpp visibility
 #pragma GCC visibility push(hidden)

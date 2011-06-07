@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include "Op.h"
+#include "Platform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -74,7 +75,7 @@ OCIO_NAMESPACE_ENTER
         return (b - a) * z + a;
     }
     
-#ifdef WIN64
+#ifdef WINDOWS
     inline double
     round (float val) {
         return floor (val + 0.5);
