@@ -89,7 +89,7 @@ interacting with this libray. It encapsulates all of the information
 necessary to utilized customized :cpp:class:`ColorSpaceTransform` and
 :cpp:class:`DisplayTransform` operations.
 
-See the included :doc:`FAQ` for more detailed information on
+See the :ref:`user-guide` for more detailed information on
 selecting / creating / working with custom color configurations.
 
 Roughly speaking, if you're a novice user you will want to select a
@@ -505,6 +505,11 @@ Processor
 .. cpp:function:: bool Processor::isNoOp() const
    
 
+.. cpp:function:: bool Processor::hasChannelCrosstalk() const
+   
+   does the processor represent an image transformation that
+                  introduces crosstalk between the image channels
+
 
 CPU Path
 ^^^^^^^^
@@ -591,6 +596,10 @@ formats that ocio supports for writing.
    
    set the config to use
 
+.. cpp:function:: ConstConfigRcPtr getConfig() const
+   
+   get the config to use
+
 .. cpp:function:: void setFormat(const char * formatName)
    
    set the lut output format
@@ -617,18 +626,20 @@ formats that ocio supports for writing.
 
 .. cpp:function:: void setInputSpace(const char * inputSpace)
    
-   set the input colorspace that the lut will be
+   set the input ColorSpace that the lut will be
    applied to
 
 .. cpp:function:: const char * getInputSpace() const
    
-   get the input colorspace that has been set
+   get the input ColorSpace that has been set
 
 .. cpp:function:: void setShaperSpace(const char * shaperSpace)
    
-   set an *optional* colorspace to be used to shape /
+   set an *optional* ColorSpace to be used to shape /
    transfer the input colorspace. This is mostly used to allocate
-   an HDR luminance range into an LDR one.
+   an HDR luminance range into an LDR one. If a shaper space
+   is not explicitly specified, and the file format supports one,
+   the ColorSpace Allocation will be used
 
 .. cpp:function:: const char * getShaperSpace() const
    
@@ -644,12 +655,21 @@ formats that ocio supports for writing.
 
 .. cpp:function:: void setShaperSize(int shapersize)
    
-   set the shaper sample size, should be atleast
-   cubesize^2 (default: 1024)
+   override the default the shaper sample size,
+   default: <format specific>
+
+.. cpp:function:: int getShaperSize() const
+   
+   get the shaper sample size
 
 .. cpp:function:: void setCubeSize(int cubesize)
    
-   set the cube sample size (default: 32)
+   override the default cube sample size
+   default: <format specific>
+
+.. cpp:function:: int getCubeSize() const
+   
+   get the cube sample size
 
 .. cpp:function:: void bake(std::ostream & os) const
    

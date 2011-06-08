@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v0.8.1 documentation" href="../../index.html" />
+    <link rel="top" title="OpenColorIO v0.8.2 documentation" href="../../index.html" />
     <link rel="up" title="&lt;no title&gt;" href="index.html" />
     <link rel="next" title="C++ Transforms" href="OpenColorTransforms.html" />
     <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v0.8.1 documentation
+      OpenColorIO v0.8.2 documentation
       </div>
       <div class="content">
         
@@ -168,7 +168,7 @@ appropriately.</p>
 interacting with this libray. It encapsulates all of the information
 necessary to utilized customized <a class="reference internal" href="OpenColorTransforms.html#ColorSpaceTransform" title="ColorSpaceTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">ColorSpaceTransform</span></tt></a> and
 <a class="reference internal" href="OpenColorTransforms.html#DisplayTransform" title="DisplayTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DisplayTransform</span></tt></a> operations.</p>
-<p>See the included <tt class="xref doc docutils literal"><span class="pre">FAQ</span></tt> for more detailed information on
+<p>See the <a class="reference internal" href="../../userguide/index.html#user-guide"><em>User Guide</em></a> for more detailed information on
 selecting / creating / working with custom color configurations.</p>
 <p>Roughly speaking, if you&#8217;re a novice user you will want to select a
 default configuration that most closely approximates your use case
@@ -709,6 +709,15 @@ bool <tt class="descclassname">ColorSpace::</tt><tt class="descname">isTransform
 bool <tt class="descclassname">Processor::</tt><tt class="descname">isNoOp</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::isNoOpC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="function">
+<dt id="Processor::hasChannelCrosstalkC">
+bool <tt class="descclassname">Processor::</tt><tt class="descname">hasChannelCrosstalk</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::hasChannelCrosstalkC" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>does the processor represent an image transformation that</dt>
+<dd>introduces crosstalk between the image channels</dd>
+</dl>
+</dd></dl>
+
 <div class="section" id="cpu-path">
 <h3>CPU Path<a class="headerlink" href="#cpu-path" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
@@ -809,6 +818,12 @@ void <tt class="descname">setConfig</tt><big>(</big><a class="reference internal
 </dd></dl>
 
 <dl class="function">
+<dt id="getConfigC">
+<a class="reference internal" href="OpenColorTypes.html#ConstConfigRcPtr" title="ConstConfigRcPtr">ConstConfigRcPtr</a> <tt class="descname">getConfig</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getConfigC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the config to use</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="setFormat__cCP">
 void <tt class="descname">setFormat</tt><big>(</big>const char* <em>formatName</em><big>)</big><a class="headerlink" href="#setFormat__cCP" title="Permalink to this definition">¶</a></dt>
 <dd><p>set the lut output format</p>
@@ -847,22 +862,24 @@ const char* <tt class="descname">getMetadata</tt><big>(</big><big>)</big><tt cla
 <dl class="function">
 <dt id="setInputSpace__cCP">
 void <tt class="descname">setInputSpace</tt><big>(</big>const char* <em>inputSpace</em><big>)</big><a class="headerlink" href="#setInputSpace__cCP" title="Permalink to this definition">¶</a></dt>
-<dd><p>set the input colorspace that the lut will be
+<dd><p>set the input ColorSpace that the lut will be
 applied to</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="getInputSpaceC">
 const char* <tt class="descname">getInputSpace</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getInputSpaceC" title="Permalink to this definition">¶</a></dt>
-<dd><p>get the input colorspace that has been set</p>
+<dd><p>get the input ColorSpace that has been set</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="setShaperSpace__cCP">
 void <tt class="descname">setShaperSpace</tt><big>(</big>const char* <em>shaperSpace</em><big>)</big><a class="headerlink" href="#setShaperSpace__cCP" title="Permalink to this definition">¶</a></dt>
-<dd><p>set an <em>optional</em> colorspace to be used to shape /
+<dd><p>set an <em>optional</em> ColorSpace to be used to shape /
 transfer the input colorspace. This is mostly used to allocate
-an HDR luminance range into an LDR one.</p>
+an HDR luminance range into an LDR one. If a shaper space
+is not explicitly specified, and the file format supports one,
+the ColorSpace Allocation will be used</p>
 </dd></dl>
 
 <dl class="function">
@@ -886,14 +903,27 @@ const char* <tt class="descname">getTargetSpace</tt><big>(</big><big>)</big><tt 
 <dl class="function">
 <dt id="setShaperSize__i">
 void <tt class="descname">setShaperSize</tt><big>(</big>int <em>shapersize</em><big>)</big><a class="headerlink" href="#setShaperSize__i" title="Permalink to this definition">¶</a></dt>
-<dd><p>set the shaper sample size, should be atleast
-cubesize^2 (default: 1024)</p>
+<dd><p>override the default the shaper sample size,
+default: &lt;format specific&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getShaperSizeC">
+int <tt class="descname">getShaperSize</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getShaperSizeC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the shaper sample size</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="setCubeSize__i">
 void <tt class="descname">setCubeSize</tt><big>(</big>int <em>cubesize</em><big>)</big><a class="headerlink" href="#setCubeSize__i" title="Permalink to this definition">¶</a></dt>
-<dd><p>set the cube sample size (default: 32)</p>
+<dd><p>override the default cube sample size
+default: &lt;format specific&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getCubeSizeC">
+int <tt class="descname">getCubeSize</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getCubeSizeC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the cube sample size</p>
 </dd></dl>
 
 <dl class="function">

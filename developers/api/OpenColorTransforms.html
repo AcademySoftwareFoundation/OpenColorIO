@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.8.1',
+        VERSION:     '0.8.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v0.8.1 documentation" href="../../index.html" />
+    <link rel="top" title="OpenColorIO v0.8.2 documentation" href="../../index.html" />
     <link rel="up" title="&lt;no title&gt;" href="index.html" />
     <link rel="next" title="C++ Types" href="OpenColorTypes.html" />
     <link rel="prev" title="C++ API" href="OpenColorIO.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v0.8.1 documentation
+      OpenColorIO v0.8.2 documentation
       </div>
       <div class="content">
         
@@ -544,6 +544,13 @@ void <tt class="descclassname">FileTransform::</tt><tt class="descname">setInter
 <dt id="FileTransform::getFormatNameByIndex__i">
 <em class="property">static</em> const char* <tt class="descclassname">FileTransform::</tt><tt class="descname">getFormatNameByIndex</tt><big>(</big>int <em>index</em><big>)</big><a class="headerlink" href="#FileTransform::getFormatNameByIndex__i" title="Permalink to this definition">¶</a></dt>
 <dd><p>get the lut readers at index, return empty string if
+an invalid index is specified</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::getFormatExtensionByIndex__i">
+<em class="property">static</em> const char* <tt class="descclassname">FileTransform::</tt><tt class="descname">getFormatExtensionByIndex</tt><big>(</big>int <em>index</em><big>)</big><a class="headerlink" href="#FileTransform::getFormatExtensionByIndex__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the lut reader extension at index, return empty string if
 an invalid index is specified</p>
 </dd></dl>
 

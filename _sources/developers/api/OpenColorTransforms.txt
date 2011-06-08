@@ -316,6 +316,11 @@ included in the serialization.
    get the lut readers at index, return empty string if
    an invalid index is specified
 
+.. cpp:function:: static const char * FileTransform::getFormatExtensionByIndex(int index)
+   
+   get the lut reader extension at index, return empty string if
+   an invalid index is specified
+
 .. cpp:function:: extern std::ostream& operator<< (std::ostream&, const FileTransform&)
    
 
