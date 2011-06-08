@@ -11,7 +11,6 @@ if(NOT SOVERSION)
     set(SOVERSION ${OCIO_VERSION_MAJOR} CACHE STRING "Set the SO version in the SO name of the output library")
 endif()
 
-
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
 if(NOT DEFINED CMAKE_FIRST_RUN)
@@ -29,7 +28,18 @@ enable_language(CXX)
 
 ENABLE_TESTING()
 
-if(APPLE)
+if(NOT CMAKE_CROSSCOMPILING)
+    set(OCIO_BUILD_SHARED TRUE)
+    set(OCIO_BUILD_STATIC TRUE)
+    set(OCIO_BUILD_TRUELIGHT TRUE)
+    set(OCIO_BUILD_TESTBED TRUE)
+    set(OCIO_BUILD_APPS TRUE)
+    set(OCIO_BUILD_NUKE TRUE)
+    set(OCIO_BUILD_PYGLUE TRUE)
+    set(OCIO_BUILD_SSE TRUE)
+endif()
+
+if(APPLE OR IPHONE)
     if(NOT CMAKE_OSX_ARCHITECTURES)
         set(CMAKE_OSX_ARCHITECTURES x86_64 CACHE STRING
             "Setting OSX Architectures, options are: ppc;i386;ppc64;x86_64"
@@ -87,8 +97,6 @@ else()
     set(OCIO_USE_BOOST_PTR 0)
 endif()
 
-
-
 # Enable a bunch of compiler warnings...
 # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
@@ -115,12 +123,16 @@ endif()
 ### tinyxml ###
 
 set(TINYXML_VERSION 2_6_1)
+set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist)
+if(CMAKE_TOOLCHAIN_FILE)
+    set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+endif()
 ExternalProject_Add(tinyxml
     URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
     PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
     BINARY_DIR ext/build/tinyxml
     INSTALL_DIR ext/dist
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist
+    CMAKE_ARGS ${TINYXML_CMAKE_ARGS}
 )
 set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
 
@@ -128,12 +140,16 @@ set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
 ### YAML ###
 
 set(YAML_CPP_VERSION r482)
+set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE)
+if(CMAKE_TOOLCHAIN_FILE)
+    set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+endif()
 ExternalProject_Add(YAML_CPP_LOCAL
     URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
     BINARY_DIR ext/build/yaml-cpp
     PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
     INSTALL_DIR ext/dist
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE
+    CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS}
 )
 set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
 set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
@@ -173,7 +189,7 @@ endif()
 ### SSE ###
 
 option(USE_SSE "Set to OFF to disable SSE optimizations." ON)
-if(USE_SSE)
+if(USE_SSE AND OCIO_BUILD_SSE)
     messageonce("SSE Runtime: ENABLED")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
     add_definitions("-DUSE_SSE")
@@ -184,16 +200,18 @@ endif()
 ###############################################################################
 ### TRUELIGHT ###
 
-find_package(Truelight)
-if(TRUELIGHT_FOUND)
-    messageonce("Will build the truelight transform support against ${Truelight_LIBRARY_DIR}")
-    add_definitions(-DOCIO_TRUELIGHT_SUPPORT)
-    set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Truelight_INCLUDE_DIR})
-    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} ${Truelight_COMPILE_FLAGS}")
-    set(EXTERNAL_LINK_FLAGS "${EXTERNAL_LINK_FLAGS} ${Truelight_LINK_FLAGS}")
-    set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${Truelight_LIBRARIES})
-else()
-    messageonce("Not building truelight transform support. Add the flag -D TRUELIGHT_INSTALL_PATH=... or set the TRUELIGHT_ROOT environment variable")
+if(OCIO_BUILD_TRUELIGHT)
+    find_package(Truelight)
+    if(TRUELIGHT_FOUND)
+        messageonce("Will build the truelight transform support against ${Truelight_LIBRARY_DIR}")
+        add_definitions(-DOCIO_TRUELIGHT_SUPPORT)
+        set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Truelight_INCLUDE_DIR})
+        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} ${Truelight_COMPILE_FLAGS}")
+        set(EXTERNAL_LINK_FLAGS "${EXTERNAL_LINK_FLAGS} ${Truelight_LINK_FLAGS}")
+        set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${Truelight_LIBRARIES})
+    else()
+        messageonce("Not building truelight transform support. Add the flag -D TRUELIGHT_INSTALL_PATH=... or set the TRUELIGHT_ROOT environment variable")
+    endif()
 endif()
 
 ###############################################################################
@@ -205,59 +223,67 @@ add_subdirectory(src/core_tests)
 ###############################################################################
 ### TEST BED ###
 
-add_subdirectory(src/testbed)
+if(OCIO_BUILD_TESTBED)
+    add_subdirectory(src/testbed)
+endif()
 
 ###############################################################################
 ### APPS ###
 
-# Try to find OpenImageIO (OIIO) and OpenGL stuff
-OCIOFindOpenImageIO()
-OCIOFindOpenGL()
-
-# ocioconvert: performs file format conversion and colorspace
-# transforms (uses OpenImageIO)
-if(OIIO_FOUND)
-    add_subdirectory(src/apps/ocioconvert)
-else()
-    messageonce("Not building ocioconvert. Requirement(s) found: OIIO:${OIIO_FOUND}")
+if(OCIO_BUILD_APPS)
+    # Try to find OpenImageIO (OIIO) and OpenGL stuff
+    OCIOFindOpenImageIO()
+    OCIOFindOpenGL()
+    
+    # ocioconvert: performs file format conversion and colorspace
+    # transforms (uses OpenImageIO)
+    if(OIIO_FOUND)
+        add_subdirectory(src/apps/ocioconvert)
+    else()
+        messageonce("Not building ocioconvert. Requirement(s) found: OIIO:${OIIO_FOUND}")
+    endif()
+    
+    # ociodisplay, displays color-transformed images (uses OpenImageIO,
+    # and OpenGL)
+    if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND AND OIIO_FOUND)
+        add_subdirectory(src/apps/ociodisplay)
+    else()
+        messageonce("Not building ociodisplay. Requirement(s) found, OpenGL:${OPENGL_FOUND}, GLUT:${GLUT_FOUND}, GLEW:${GLEW_FOUND}, OIIO:${OIIO_FOUND}")
+    endif()
+    
+    # ociocheck: verifies an OCIO config
+    add_subdirectory(src/apps/ociocheck)
+    
+    # ocio2icc builds ICC profiles from an OCIO color transform
+    # (uses a bundled version of LittleCMS)
+    add_subdirectory(src/apps/ocio2icc)
+    
+    # ociobakelut writes out luts
+    add_subdirectory(src/apps/ociobakelut)
 endif()
-
-# ociodisplay, displays color-transformed images (uses OpenImageIO,
-# and OpenGL)
-if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND AND OIIO_FOUND)
-    add_subdirectory(src/apps/ociodisplay)
-else()
-    messageonce("Not building ociodisplay. Requirement(s) found, OpenGL:${OPENGL_FOUND}, GLUT:${GLUT_FOUND}, GLEW:${GLEW_FOUND}, OIIO:${OIIO_FOUND}")
-endif()
-
-# ociocheck: verifies an OCIO config
-add_subdirectory(src/apps/ociocheck)
-
-# ocio2icc builds ICC profiles from an OCIO color transform
-# (uses a bundled version of LittleCMS)
-add_subdirectory(src/apps/ocio2icc)
-
-# ociobakelut writes out luts
-add_subdirectory(src/apps/ociobakelut)
 
 ###############################################################################
 ### NUKE ###
 
-find_package(Nuke)
-if(NUKE_FOUND)
-    messageonce("Will build the Nuke plugins against ${Nuke_LIBRARY_DIR}")
-    add_subdirectory(src/nuke)
-else()
-    messageonce("Not building Nuke plugins. Add the flag -D NUKE_INSTALL_PATH=... or set the NDK_PATH environment variable")
+if(OCIO_BUILD_NUKE)
+    find_package(Nuke)
+    if(NUKE_FOUND)
+        messageonce("Will build the Nuke plugins against ${Nuke_LIBRARY_DIR}")
+        add_subdirectory(src/nuke)
+    else()
+        messageonce("Not building Nuke plugins. Add the flag -D NUKE_INSTALL_PATH=... or set the NDK_PATH environment variable")
+    endif()
 endif()
 
 ###############################################################################
 ### PYGLUE ###
 
-if(PYTHON_OK)
-    add_subdirectory(src/pyglue)
-else()
-    messageonce("Python bindings will not be built: ${PYTHON_ERR}")
+if(OCIO_BUILD_PYGLUE)
+    if(PYTHON_OK)
+        add_subdirectory(src/pyglue)
+    else()
+        messageonce("Python bindings will not be built: ${PYTHON_ERR}")
+    endif()
 endif()
 
 ###############################################################################
