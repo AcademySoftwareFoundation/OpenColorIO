@@ -404,12 +404,12 @@ div.sidebar2 {
 
 div.content div.sidebar2 ul > li.toctree-l1 {
     font-family: Arial, sans-serif;
-    color: #222;
+    color: #0C3762;
     font-size: 1.2em;
     font-weight: normal;
     margin: 0; /** reset the margins back to 0**/
     padding: 2px 5px;
-    text-shadow: 1px 1px 0 white;
+    /**text-shadow: 1px 1px 0 white;**/
     background: #ddd;
     font-size: 1.1em;
 }
@@ -423,12 +423,13 @@ div.sidebar2 h3 a {
 }
 
 div.sidebar2 ul {
+    /** This is the selected sidebar text **/
     margin: 5px 10px;
     /**
     padding: 5px;
     **/
     padding-left: 0px;
-    background-color: #cdcdcd;
+    /**background-color: #cdcdcd;**/
 }
 
 div.sidebar2 li {
