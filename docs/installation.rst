@@ -29,9 +29,9 @@ First make the build directory and cd to it::
     $ mkdir /tmp/ociobuild
     $ cd /tmp/ociobuild
 
-Next step is to run cmake, which looks for things such as the compiler
-required arguments, optional requirements like Python, Nuke,
-OpenImageIO etc
+Next step is to run cmake, which looks for things such as the
+compiler's required arguments, optional requirements like Python,
+Nuke, OpenImageIO etc
 
 As we want to install OCIO to a custom location (instead of the
 default ``/usr/local``), we will run cmake with
@@ -41,7 +41,7 @@ Still in ``/tmp/ociobuild``, run::
 
     $ cmake -D CMAKE_INSTALL_PREFIX=/software/ocio /source/ocio
 
-The last argument is the location of the OCIO source code (containng
+The last argument is the location of the OCIO source code (containing
 the main CMakeLists.txt file). You should see something along the
 lines of::
 
@@ -49,7 +49,8 @@ lines of::
     -- Generating done
     -- Build files have been written to: /tmp/ociobuild
 
-Next, build everything (with the ``-j`` flag to build using 8 threads)::
+Next, build everything (with the ``-j`` flag to build using 8
+threads)::
 
     $ make -j8
 
@@ -123,38 +124,48 @@ determine these, look at the CMake output when first run::
 
     -- Not building ocioconvert. Requirement(s) found: OIIO:FALSE
 
+
+.. _quick-env-config:
+
+Quick environment configuration
+*******************************
+
+The quickest way to set the required :ref:`environment-setup` is to
+source the ``share/ocio/setup_ocio.sh`` script installed with OCIO.
+
+For a simple single-user setup, add the following to ``~/.bashrc``
+(assuming you are using bash, and the example install directory of
+``/software/ocio``)::
+
+    source /software/ocio/share/ocio/setup_ocio.sh
+
+The only environment variable you must configure manually is
+:envvar:`OCIO`, which points to the configuration file you wish to
+use. For prebuilt config files, see the
+:ref:`download-color-configurations` download section
+
+To do this, you would add a line to ``~/.bashrc`` (or a per-project
+configuration script etc), for example::
+
+    export OCIO="/path/to/my/config.ocio"
+
+
 .. _nuke-configuration:
 
 Nuke Configuration
 ******************
 
-If you specified the NUKE_INSTALL_PATH when running cmake, you should
-have a ``/software/ocio/lib/nuke6.2`` containing various files.
+If you specified the ``NUKE_INSTALL_PATH`` option when running cmake,
+you should have a ``/software/ocio/lib/nuke6.2`` directory containing
+various files.
 
-The bear-minimum required to use the plugins is to point the
-:envvar:`NUKE_PATH` environment variable to this directory. It is also
-recommended you add the ``share/nuke/`` directory to this path
+If you have followed :ref:`quick-env-config`, the plugins should be
+functional. However, one common additional configuration step is to
+register an OCIODisplay node for each display device/view specified in
+the config.
 
-To run Nuke, in a terminal execute the following::
-
-    # Set Nuke location
-    export NUKE_PATH="/software/ocio/lib/nuke6.2:${NUKE_PATH}"
-    export NUKE_PATH="/software/ocio/share/nuke:${NUKE_PATH}"
-
-    # Point to libOpenColorIO.dylib (change "DYLD" to "LD" on Linux)
-    export DYLD_LIBRARY_PATH="/software/ocio/lib:${DYLD_LIBRARY_PATH}"
-
-    # Launch Nuke
-    nuke myscript.nk
-
-The export lines can be point in ``~/.bashrc`` for a single user, or a
-show-specific startup shell script etc.
-
-One common configuration step is to register an OCIODisplay node for
-each display device/view specified in the config.
-
-In a menu.py on :envvar:`NUKE_PATH` (e.g ``~/.nuke/menu.py`` for a single
-user setup), you can call the following:
+To do this, in a menu.py on :envvar:`NUKE_PATH` (e.g
+``~/.nuke/menu.py`` for a single user setup), add the following:
 
 .. code-block:: python
 
@@ -172,6 +183,7 @@ write your own, better viewer setup function!
 .. literalinclude:: viewer.py
    :language: python
 
+
 .. _environment-setup:
 
 Environment variables
@@ -179,7 +191,8 @@ Environment variables
 
 .. envvar:: OCIO
 
-   This variable needs to point to the global OCIO config file, e.g ``config.ocio``
+   This variable needs to point to the global OCIO config file, e.g
+   ``config.ocio``
 
 .. envvar:: DYLD_LIBRARY_PATH
 
@@ -191,8 +204,8 @@ Environment variables
         Referenced from: .../OCIOColorSpace.so
         Reason: image not found
 
-    This applies to anything that links against OCIO, including the Nuke
-    nodes, and the ``PyOpenColorIO`` Python bindings.
+    This applies to anything that links against OCIO, including the
+    Nuke nodes, and the ``PyOpenColorIO`` Python bindings.
 
 .. envvar:: LD_LIBRARY_PATH
 
@@ -200,21 +213,22 @@ Environment variables
 
 .. envvar:: PYTHONPATH
 
-    Python's module search path. If you are using the PyOpenColorIO module,
-    you must add ``lib/python2.x`` to this search path (e.g ``python/2.5``),
-    or importing the module will fail::
+    Python's module search path. If you are using the PyOpenColorIO
+    module, you must add ``lib/python2.x`` to this search path (e.g
+    ``python/2.5``), or importing the module will fail::
 
         >>> import PyOpenColorIO
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
         ImportError: No module named PyOpenColorIO
 
-    Note that :envvar:`DYLD_LIBRARY_PATH` or :envvar:`LD_LIBRARY_PATH` must
-    be set correctly for the module to work.
+    Note that :envvar:`DYLD_LIBRARY_PATH` or :envvar:`LD_LIBRARY_PATH`
+    must be set correctly for the module to work.
 
 .. envvar:: NUKE_PATH
 
     Nuke's customisation search path, where it will look for plugins,
     gizmos, init.py and menu.py scripts and other customisations.
 
-    For information on setting this for OCIO, see :ref:`nuke-configuration`
+    This should point to both ``lib/nuke6.2/`` (or whatever version
+    the plugins are built against), and ``share/nuke/``

@@ -29,6 +29,8 @@ For build instructions, see :ref:`building-from-source`.
 * v0.5.8 – .zip .tar.gz
 
 
+.. _download-color-configurations:
+
 Color Configurations
 ********************
 
