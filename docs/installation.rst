@@ -105,7 +105,7 @@ and others.
 If set correctly, you will see something similar to::
 
     -- Found Nuke: /Applications/Nuke6.2v1/Nuke6.2v1.app/Contents/MacOS/include
-    -- Nuke_DDImageVersion: --6.2--
+    -- Nuke_API_VERSION: --6.2--
 
 The Nuke plugins are installed into ``lib/nuke$MAJOR.$MINOR/``, e.g
 ``lib/nuke6.2/OCIODisdplay.so``
