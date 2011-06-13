@@ -14,6 +14,8 @@ For build instructions, see :ref:`building-from-source`.
 * v0.8.0 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v0.8.0>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v0.8.0>`_
 
 
+.. _download-color-configurations:
+
 Color Configurations
 ********************
 

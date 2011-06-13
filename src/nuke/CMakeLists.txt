@@ -100,19 +100,19 @@ add_custom_target(Nuke
 )
 
 install(TARGETS NukeOCIOColorSpace
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
 install(TARGETS NukeOCIODisplay
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
 install(TARGETS NukeOCIOLogConvert
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
 install(TARGETS NukeOCIOFileTransform
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
 install(TARGETS NukeOCIOCDLTransform
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_DDImageVersion})
+        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/share/nuke
         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/
