@@ -26,6 +26,11 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifdef ANDROID
+// support std::isnan - needs to be tested as it might not be part of the NDK
+#define _GLIBCXX_USE_C99_MATH 1
+#endif
+
 #include <cassert>
 #include <cmath>
 #include <cstdio>

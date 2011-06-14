@@ -246,9 +246,12 @@ OCIO_NAMESPACE_ENTER
         getImpl()->width_ = width;
         getImpl()->height_ = height;
         getImpl()->numChannels_ = numChannels;
-        getImpl()->chanStrideBytes_ = chanStrideBytes;
-        getImpl()->xStrideBytes_ = xStrideBytes;
-        getImpl()->yStrideBytes_ = yStrideBytes;
+        getImpl()->chanStrideBytes_ = (chanStrideBytes == AutoStride)
+            ? sizeof(float) : chanStrideBytes;
+        getImpl()->xStrideBytes_ = (xStrideBytes == AutoStride)
+            ? sizeof(float)*numChannels : xStrideBytes;
+        getImpl()->yStrideBytes_ = (yStrideBytes == AutoStride)
+            ? sizeof(float)*width*numChannels : yStrideBytes;
     }
     
     PackedImageDesc::~PackedImageDesc()
@@ -334,7 +337,8 @@ OCIO_NAMESPACE_ENTER
         getImpl()->aData_ = aData;
         getImpl()->width_ = width;
         getImpl()->height_ = height;
-        getImpl()->yStrideBytes_ = yStrideBytes;
+        getImpl()->yStrideBytes_ = (yStrideBytes == AutoStride)
+            ? sizeof(float)*width : yStrideBytes;
     }
     
     PlanarImageDesc::~PlanarImageDesc()
