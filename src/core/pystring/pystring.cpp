@@ -39,12 +39,43 @@
 #include <cctype>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 
 OCIO_NAMESPACE_ENTER
 {
 
 namespace pystring
 {
+#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#ifndef WINDOWS
+#define WINDOWS
+#endif
+#endif
+
+// This definition codes from configure.in in the python src.
+// Strictly speaking this limits us to str sizes of 2**31.
+// Should we wish to handle this limit, we could use an architecture
+// specific #defines and read from ssize_t (unistd.h) if the header exists.
+// But in the meantime, the use of int assures maximum arch compatibility.
+// This must also equal the size used in the end = MAX_32BIT_INT default arg.
+
+typedef int Py_ssize_t;
+
+/* helper macro to fixup start/end slice values */
+#define ADJUST_INDICES(start, end, len)         \
+    if (end > len)                          \
+        end = len;                          \
+    else if (end < 0) {                     \
+        end += len;                         \
+        if (end < 0)                        \
+        end = 0;                        \
+    }                                       \
+    if (start < 0) {                        \
+        start += len;                       \
+        if (start < 0)                      \
+        start = 0;                      \
+    }
+
 
 	namespace {
 
@@ -220,29 +251,6 @@ namespace pystring
     //////////////////////////////////////////////////////////////////////////////////////////////
     ///
     ///
-    bool __substrcmp( const std::string & str, const std::string & str2, std::string::size_type pos )
-    {
-        std::string::size_type len = str.size(), len2 = str2.size();
-        if ( pos + len2 > len )
-        {
-            return false;
-        }
-
-        for ( std::string::size_type i = 0; i < len2; ++i )
-        {
-
-            if ( str[pos + i] != str2[i] )
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    ///
     std::string do_strip( const std::string & str, int striptype, const std::string & chars  )
     {
         std::string::size_type len = str.size(), i, j, charslen = chars.size();
@@ -399,81 +407,64 @@ namespace pystring
     }
 
 
-
     //////////////////////////////////////////////////////////////////////////////////////////////
     ///
     ///
-    int __adjustslicepos( std::string::size_type len_, int pos )
+    
+    namespace
     {
-        int len = static_cast<int>(len_);
-        int value;
-
-        if ( pos < 0 )
-        {
-            value = len + pos;
-        }
-        else
-        {
-            value = pos;
-        }
-
-        if ( value < 0 )
-        {
-            value = 0;
-        }
-
-        else if ( value > len)
-        {
-            value = len;
-        }
-
-        return value;
-
-    }
-
-
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    ///
-    bool startswith( const std::string & str, const std::string & prefix, int start, int end )
-    {
-        int startp, endp;
+        /* Matches the end (direction >= 0) or start (direction < 0) of self
+         * against substr, using the start and end arguments. Returns
+         * -1 on error, 0 if not found and 1 if found.
+         */
         
-        startp = __adjustslicepos( str.size(), start );
-        endp = __adjustslicepos( str.size(), end );
-
-        if ( start > (int) str.size() ) return false;
-
-        if ( endp - startp < (int) prefix.size()   ) return false;
-        return __substrcmp( str, prefix, startp );
-
+        int _string_tailmatch(const std::string & self, const std::string & substr,
+                              Py_ssize_t start, Py_ssize_t end,
+                              int direction)
+        {
+            Py_ssize_t len = (Py_ssize_t) self.size();
+            Py_ssize_t slen = (Py_ssize_t) substr.size();
+            
+            const char* sub = substr.c_str();
+            const char* str = self.c_str();
+            
+            ADJUST_INDICES(start, end, len);
+            
+            if (direction < 0) {
+                // startswith
+                if (start+slen > len)
+                    return 0;
+            } else {
+                // endswith
+                if (end-start < slen || start > len)
+                    return 0;
+                if (end-slen > start)
+                    start = end - slen;
+            }
+            if (end-start >= slen)
+                return (!std::memcmp(str+start, sub, slen));
+            
+            return 0;
+        }
     }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    ///
+    
     bool endswith( const std::string & str, const std::string & suffix, int start, int end )
     {
-        int startp, endp;
-
-        startp = __adjustslicepos( str.size(), start );
-        endp = __adjustslicepos( str.size(), end );
+        int result = _string_tailmatch(str, suffix,
+                                       (Py_ssize_t) start, (Py_ssize_t) end, +1);
+        //if (result == -1) // TODO: Error condition
         
-        int suffixsize = (int) suffix.size();
-        int upper = endp;
-        int lower = ( upper - suffixsize ) > startp ? ( upper - suffixsize ) : startp;
-
-        if ( start > (int) str.size() ) return false;
-
-
-        if ( upper - lower < suffixsize )
-        {
-            return false;
-        }
-
-
-        return __substrcmp(str, suffix, lower );
+        return static_cast<bool>(result);
+    }
+    
+    
+    bool startswith( const std::string & str, const std::string & prefix, int start, int end )
+    {
+        int result = _string_tailmatch(str, prefix,
+                                       (Py_ssize_t) start, (Py_ssize_t) end, -1);
+        //if (result == -1) // TODO: Error condition
+        
+        return static_cast<bool>(result);
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -739,7 +730,7 @@ namespace pystring
 
         if ( table.size() != 256 )
         {
-            //raise exception instead
+            // TODO : raise exception instead
             return str;
         }
 
@@ -770,7 +761,7 @@ namespace pystring
         {
             if ( trans_table[ (int) str[i] ] != -1 )
             {
-                s += table[ s[i] ];
+                s += table[ str[i] ];
             }
         }
 
@@ -848,23 +839,32 @@ namespace pystring
     //////////////////////////////////////////////////////////////////////////////////////////////
     ///
     ///
+    std::string slice( const std::string & str, int start, int end )
+    {
+        ADJUST_INDICES(start, end, (int) str.size());
+        if ( start >= end ) return "";
+        return str.substr( start, end - start );
+    }
+    
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ///
     int find( const std::string & str, const std::string & sub, int start, int end  )
     {
-        int startp, endp;
-
-        startp = __adjustslicepos( str.size(), start );
-        endp = __adjustslicepos( str.size(), end );
-
-        std::string::size_type result;
-
-        result = str.find( sub, startp );
-
-        if( result == std::string::npos || result >= (std::string::size_type)endp)
+        ADJUST_INDICES(start, end, (int) str.size());
+        
+        std::string::size_type result = str.find( sub, start );
+        
+        // If we cannot find the string, or if the end-point of our found substring is past
+        // the allowed end limit, return that it can't be found.
+        if( result == std::string::npos || 
+           (result + sub.size() > (std::string::size_type)end) )
         {
             return -1;
         }
-
-        return (int)result;
+        
+        return (int) result;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -880,16 +880,13 @@ namespace pystring
     ///
     int rfind( const std::string & str, const std::string & sub, int start, int end )
     {
-        int startp, endp;
-
-        startp = __adjustslicepos( str.size(), start );
-        endp = __adjustslicepos( str.size(), end );
-
-        std::string::size_type result;
-
-        result = str.rfind( sub, endp );
-
-        if( result == std::string::npos || result < (std::string::size_type)startp )
+        ADJUST_INDICES(start, end, (int) str.size());
+        
+        std::string::size_type result = str.rfind( sub, end );
+        
+        if( result == std::string::npos || 
+            result < (std::string::size_type)start  || 
+           (result + sub.size() > (std::string::size_type)end))
             return -1;
         
         return (int)result;
@@ -1042,23 +1039,641 @@ namespace pystring
     //////////////////////////////////////////////////////////////////////////////////////////////
     ///
     ///
-    std::string slice( const std::string & str, int start, int end )
+    std::string mul( const std::string & str, int n )
     {
-        int startp, endp;
-
-        startp = __adjustslicepos( str.size(), start );
-        endp = __adjustslicepos( str.size(), end );
-
-        if ( startp >= endp ) return "";
-
-        return str.substr( startp, endp - startp );
+        // Early exits
+        if (n <= 0) return "";
+        if (n == 1) return str;
+        
+        std::ostringstream os;
+        for(int i=0; i<n; ++i)
+        {
+            os << str;
+        }
+        return os.str();
     }
 
+
+
+namespace os
+{
+namespace path
+{
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ///
+    /// These functions are C++ ports of the python2.6 versions of os.path,
+    /// and come from genericpath.py, ntpath.py, posixpath.py
+
+    /// Split a pathname into drive and path specifiers.
+    /// Returns drivespec, pathspec. Either part may be empty.
+    void splitdrive_nt(std::string & drivespec, std::string & pathspec,
+                       const std::string & p)
+    {
+        if(pystring::slice(p, 1, 2) == ":")
+        {
+            std::string path = p; // In case drivespec == p
+            drivespec = pystring::slice(path, 0, 2);
+            pathspec = pystring::slice(path, 2);
+        }
+        else
+        {
+            drivespec = "";
+            pathspec = p;
+        }
+    }
+
+    // On Posix, drive is always empty
+    void splitdrive_posix(std::string & drivespec, std::string & pathspec,
+                          const std::string & path)
+    {
+        drivespec = "";
+        pathspec = path;
+    }
+
+    void splitdrive(std::string & drivespec, std::string & pathspec,
+                    const std::string & path)
+    {
+#ifdef WINDOWS
+        return splitdrive_nt(drivespec, pathspec, path);
+#else
+        return splitdrive_posix(drivespec, pathspec, path);
+#endif
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ///
+
+    // Test whether a path is absolute
+    // In windows, if the character to the right of the colon
+    // is a forward or backslash it's absolute.
+    bool isabs_nt(const std::string & path)
+    {
+        std::string drivespec, pathspec;
+        splitdrive_nt(drivespec, pathspec, path);
+        if(pathspec.empty()) return false;
+        return ((pathspec[0] == '/') || (pathspec[0] == '\\'));
+    }
+
+    bool isabs_posix(const std::string & s)
+    {
+        return pystring::startswith(s, "/");
+    }
+
+    bool isabs(const std::string & path)
+    {
+#ifdef WINDOWS
+        return isabs_nt(path);
+#else
+        return isabs_posix(path);
+#endif
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ///
+
+    // Join two or more pathname components, inserting "\\" as needed.
+    std::string join_nt(const std::string & a, const std::string & b)
+    {
+        std::string path = a;
+
+        bool b_nts = false;
+        if(path.empty())
+        {
+            b_nts = true;
+        }
+        else if(isabs_nt(b))
+        {
+            // This probably wipes out path so far.  However, it's more
+            // complicated if path begins with a drive letter:
+            //     1. join('c:', '/a') == 'c:/a'
+            //     2. join('c:/', '/a') == 'c:/a'
+            // But
+            //     3. join('c:/a', '/b') == '/b'
+            //     4. join('c:', 'd:/') = 'd:/'
+            //     5. join('c:/', 'd:/') = 'd:/'
+
+            if( (pystring::slice(path, 1, 2) != ":") ||
+                (pystring::slice(b, 1, 2) == ":") )
+            {
+                // Path doesnt start with a drive letter
+                b_nts = true;
+            }
+            // Else path has a drive letter, and b doesn't but is absolute.
+            else if((path.size()>3) || 
+                    ((path.size()==3) && !pystring::endswith(path, "/") && !pystring::endswith(path, "\\")))
+            {
+                b_nts = true;
+            }
+        }
+
+        if(b_nts)
+        {
+            path = b;
+        }
+        else
+        {
+            // Join, and ensure there's a separator.
+            // assert len(path) > 0
+            if( pystring::endswith(path, "/") || pystring::endswith(path, "\\"))
+            {
+                if(pystring::startswith(b,"/") || pystring::startswith(b,"\\"))
+                {
+                    path += pystring::slice(b, 1);
+                }
+                else
+                {
+                    path += b;
+                }
+            }
+            else if(pystring::endswith(path, ":"))
+            {
+                path += b;
+            }
+            else if(!b.empty())
+            {
+                if(pystring::startswith(b,"/") || pystring::startswith(b,"\\"))
+                {
+                    path += b;
+                }
+                else
+                {
+                    path += "\\" + b;
+                }
+            }
+            else
+            {
+                // path is not empty and does not end with a backslash,
+                // but b is empty; since, e.g., split('a/') produces
+                // ('a', ''), it's best if join() adds a backslash in
+                // this case.
+                path += "\\";
+            }
+        }
+
+        return path;
+    }
+
+    // Join pathnames.
+    // If any component is an absolute path, all previous path components
+    // will be discarded.
+    // Ignore the previous parts if a part is absolute.
+    // Insert a '/' unless the first part is empty or already ends in '/'.
+
+    std::string join_posix(const std::string & a, const std::string & b)
+    {
+        std::string path = a;
+
+        if(pystring::startswith(b, "/"))
+        {
+            path = b;
+        }
+        else if(path.empty() || pystring::endswith(path, "/"))
+        {
+            path += b;
+        }
+        else
+        {
+            path += "/" + b;
+        }
+
+        return path;
+    }
+
+    std::string join(const std::string & path1, const std::string & path2)
+    {
+#ifdef WINDOWS
+        return join_nt(path1, path2);
+#else
+        return join_posix(path1, path2);
+#endif
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ///
+
+        
+    // Split a pathname.
+    // Return (head, tail) where tail is everything after the final slash.
+    // Either part may be empty
+
+    void split_nt(std::string & head, std::string & tail, const std::string & path)
+    {
+        std::string d, p;
+        splitdrive_nt(d, p, path);
+        
+        // set i to index beyond p's last slash
+        int i = (int)p.size();
+        
+        while(i>0 && (p[i-1] != '\\') && (p[i-1] != '/'))
+        {
+            i = i - 1;
+        }
+
+        head = pystring::slice(p,0,i);
+        tail = pystring::slice(p,i); // now tail has no slashes
+        
+        // remove trailing slashes from head, unless it's all slashes
+        std::string head2 = head;
+        while(!head2.empty() && ((pystring::slice(head2,-1) == "/") ||
+                                 (pystring::slice(head2,-1) == "\\")))
+        {
+            head2 = pystring::slice(head,0,-1);
+        }
+        
+        if(!head2.empty()) head = head2;
+        head = d + head;
+    }
+
+
+    // Split a path in head (everything up to the last '/') and tail (the
+    // rest).  If the path ends in '/', tail will be empty.  If there is no
+    // '/' in the path, head  will be empty.
+    // Trailing '/'es are stripped from head unless it is the root.
+
+    void split_posix(std::string & head, std::string & tail, const std::string & p)
+    {
+        int i = pystring::rfind(p, "/") + 1;
+        
+        head = pystring::slice(p,0,i);
+        tail = pystring::slice(p,i);
+        
+        if(!head.empty() && (head != pystring::mul("/", (int) head.size())))
+        {
+            head = pystring::rstrip(head, "/");
+        }
+    }
+
+    void split(std::string & head, std::string & tail, const std::string & path)
+    {
+#ifdef WINDOWS
+        return split_nt(head, tail, path);
+#else
+        return split_posix(head, tail, path);
+#endif
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ///
+
+    std::string basename(const std::string & path)
+    {
+        std::string head, tail;
+        split(head, tail, path);
+        return tail;
+    }
+
+    std::string dirname(const std::string & path)
+    {
+        std::string head, tail;
+        split(head, tail, path);
+        return head;
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ///
+
+    // Normalize a path, e.g. A//B, A/./B and A/foo/../B all become A\B.
+    std::string normpath_nt(const std::string & p)
+    {
+        std::string path = p;
+        path = pystring::replace(path, "/","\\");
+        
+        std::string prefix;
+        splitdrive_nt(prefix, path, path);
+        
+        // We need to be careful here. If the prefix is empty, and the path starts
+        // with a backslash, it could either be an absolute path on the current
+        // drive (\dir1\dir2\file) or a UNC filename (\\server\mount\dir1\file). It
+        // is therefore imperative NOT to collapse multiple backslashes blindly in
+        // that case.
+        // The code below preserves multiple backslashes when there is no drive
+        // letter. This means that the invalid filename \\\a\b is preserved
+        // unchanged, where a\\\b is normalised to a\b. It's not clear that there
+        // is any better behaviour for such edge cases.
+        
+        if(prefix.empty())
+        {
+            // No drive letter - preserve initial backslashes
+            while(pystring::slice(path,0,1) == "\\")
+            {
+                prefix = prefix + "\\";
+                path = pystring::slice(path,1);
+            }
+        }
+        else
+        {
+            // We have a drive letter - collapse initial backslashes
+            if(pystring::startswith(path, "\\"))
+            {
+                prefix = prefix + "\\";
+                path = pystring::lstrip(path, "\\");
+            }
+        }
+        
+        std::vector<std::string> comps;
+        pystring::split(path, comps, "\\");
+        
+        int i = 0;
+        
+        while(i<(int)comps.size())
+        {
+            if(comps[i].empty() || comps[i] == ".")
+            {
+                comps.erase(comps.begin()+i);
+            }
+            else if(comps[i] == "..")
+            {
+                if(i>0 && comps[i-1] != "..")
+                {
+                    comps.erase(comps.begin()+i-1, comps.begin()+i+1);
+                    i -= 1;
+                }
+                else if(i == 0 && pystring::endswith(prefix, "\\"))
+                {
+                    comps.erase(comps.begin()+i);
+                }
+                else
+                {
+                    i += 1;
+                }
+            }
+            else
+            {
+                i += 1;
+            }
+        }
+        
+        // If the path is now empty, substitute '.'
+        if(prefix.empty() && comps.empty())
+        {
+            comps.push_back(".");
+        }
+        
+        return prefix + pystring::join("\\", comps);
+    }
+
+    // Normalize a path, e.g. A//B, A/./B and A/foo/../B all become A/B.
+    // It should be understood that this may change the meaning of the path
+    // if it contains symbolic links!
+    // Normalize path, eliminating double slashes, etc.
+
+    std::string normpath_posix(const std::string & p)
+    {
+        if(p.empty()) return ".";
+        
+        std::string path = p;
+        
+        int initial_slashes = pystring::startswith(path,"/") ? 1 : 0;
+        
+        // POSIX allows one or two initial slashes, but treats three or more
+        // as single slash.
+        
+        if (initial_slashes && pystring::startswith(path,"//")
+            && !pystring::startswith(path,"///"))
+            initial_slashes = 2;
+        
+        std::vector<std::string> comps, new_comps;
+        pystring::split(path, comps, "/");
+        
+        for(unsigned int i=0; i<comps.size(); ++i)
+        {
+            std::string comp = comps[i];
+            if(comp.empty() || comp == ".")
+                continue;
+            
+            if( (comp != "..") || ((initial_slashes == 0) && new_comps.empty()) ||
+                (!new_comps.empty() && new_comps[new_comps.size()-1] == ".."))
+            {
+                new_comps.push_back(comp);
+            }
+            else if (!new_comps.empty())
+            {
+                new_comps.pop_back();
+            }
+        }
+        
+        path = pystring::join("/", new_comps);
+        
+        if (initial_slashes > 0)
+            path = pystring::mul("/",initial_slashes) + path;
+        
+        if(path.empty()) return ".";
+        return path;
+    }
+    
+    std::string normpath(const std::string & path)
+    {
+#ifdef WINDOWS
+        return normpath_nt(path);
+#else
+        return normpath_posix(path);
+#endif
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ///
+
+    // Split the extension from a pathname.
+    // Extension is everything from the last dot to the end, ignoring
+    // leading dots.  Returns "(root, ext)"; ext may be empty.
+    // It is always true that root + ext == p
+
+    void splitext_generic(std::string & root, std::string & ext,
+                          const std::string & p,
+                          const std::string & sep,
+                          const std::string & altsep,
+                          const std::string & extsep)
+    {
+        int sepIndex = pystring::rfind(p, sep);
+        if(!altsep.empty())
+        {
+            int altsepIndex = pystring::rfind(p, altsep);
+            sepIndex = std::max(sepIndex, altsepIndex);
+        }
+
+        int dotIndex = pystring::rfind(p, extsep);
+        if(dotIndex > sepIndex)
+        {
+            // Skip all leading dots
+            int filenameIndex = sepIndex + 1;
+
+            while(filenameIndex < dotIndex)
+            {
+                if(pystring::slice(p,filenameIndex) != extsep)
+                {
+                    root = pystring::slice(p, 0, dotIndex);
+                    ext = pystring::slice(p, dotIndex);
+                    return;
+                }
+
+                filenameIndex += 1;
+            }
+        }
+
+        root = p;
+        ext = "";
+    }
+
+    void splitext_nt(std::string & root, std::string & ext, const std::string & path)
+    {
+        return splitext_generic(root, ext, path,
+                                "\\", "/", ".");
+    }
+
+    void splitext_posix(std::string & root, std::string & ext, const std::string & path)
+    {
+        return splitext_generic(root, ext, path,
+                                "/", "", ".");
+    }
+
+    void splitext(std::string & root, std::string & ext, const std::string & path)
+    {
+#ifdef WINDOWS
+        return splitext_nt(root, ext, path);
+#else
+        return splitext_posix(root, ext, path);
+#endif
+    }
+
+} // namespace path
+} // namespace os
 
 
 }//namespace pystring
 
 
+#ifdef PYSTRING_UNITTEST
+
+#include "unittest.h"
+
+PYSTRING_ADD_TEST(pystring_os_path, splitdrive)
+{
+    using namespace pystring::os::path;
+    
+    std::string drivespec, pathspec;
+    splitdrive_posix(drivespec, pathspec, "/Users/test"); PYSTRING_CHECK_EQUAL(drivespec, ""); PYSTRING_CHECK_EQUAL(pathspec, "/Users/test");
+    splitdrive_nt(drivespec, pathspec, "C:\\Users\\test"); PYSTRING_CHECK_EQUAL(drivespec, "C:" ); PYSTRING_CHECK_EQUAL(pathspec, "\\Users\\test" );
+    splitdrive_nt(drivespec, pathspec, "\\Users\\test"); PYSTRING_CHECK_EQUAL(drivespec, "" ); PYSTRING_CHECK_EQUAL(pathspec, "\\Users\\test" );
+}
+
+PYSTRING_ADD_TEST(pystring_os_path, isabs)
+{
+    using namespace pystring::os::path;
+    
+    PYSTRING_CHECK_EQUAL(isabs_posix("/Users/test"), true );
+    PYSTRING_CHECK_EQUAL(isabs_posix("\\Users\\test"), false);
+    PYSTRING_CHECK_EQUAL(isabs_posix("../Users"), false);
+    PYSTRING_CHECK_EQUAL(isabs_posix("Users"), false);
+    
+    PYSTRING_CHECK_EQUAL(isabs_nt("C:\\Users\\test"), true);
+    PYSTRING_CHECK_EQUAL(isabs_nt("C:/Users"), true);
+    PYSTRING_CHECK_EQUAL(isabs_nt("/Users"), true);
+    PYSTRING_CHECK_EQUAL(isabs_nt("../Users"), false);
+    PYSTRING_CHECK_EQUAL(isabs_nt("..\\Users"), false);
+}
+
+PYSTRING_ADD_TEST(pystring_os_path, join)
+{
+    using namespace pystring::os::path;
+    
+    PYSTRING_CHECK_EQUAL(join_posix("a","b"), "a/b" );
+    PYSTRING_CHECK_EQUAL(join_posix("/a","b"), "/a/b" );
+    PYSTRING_CHECK_EQUAL(join_posix("/a","/b"), "/b" );
+    PYSTRING_CHECK_EQUAL(join_posix("a","/b"), "/b" );
+    PYSTRING_CHECK_EQUAL(join_posix("//a","b"), "//a/b" );
+    PYSTRING_CHECK_EQUAL(join_posix("//a","b//"), "//a/b//" );
+    PYSTRING_CHECK_EQUAL(join_posix("../a","/b"), "/b" );
+    PYSTRING_CHECK_EQUAL(join_posix("../a","b"), "../a/b" );
+    
+    PYSTRING_CHECK_EQUAL(join_nt("c:","/a"), "c:/a" );
+    PYSTRING_CHECK_EQUAL(join_nt("c:/","/a"), "c:/a" );
+    PYSTRING_CHECK_EQUAL(join_nt("c:/a","/b"), "/b" );
+    PYSTRING_CHECK_EQUAL(join_nt("c:","d:/"), "d:/" );
+    PYSTRING_CHECK_EQUAL(join_nt("c:/","d:/"), "d:/" );
+    PYSTRING_CHECK_EQUAL(join_nt("a","b"), "a\\b" );
+    PYSTRING_CHECK_EQUAL(join_nt("\\a","b"), "\\a\\b" );
+    PYSTRING_CHECK_EQUAL(join_nt("c:\\a","b"), "c:\\a\\b" );
+    PYSTRING_CHECK_EQUAL(join_nt("c:\\a","c:\\b"), "c:\\b" );
+    PYSTRING_CHECK_EQUAL(join_nt("..\\a","b"), "..\\a\\b" );
+}
+
+PYSTRING_ADD_TEST(pystring_os_path, normpath)
+{
+    using namespace pystring::os::path;
+    
+    PYSTRING_CHECK_EQUAL(normpath_posix("A//B"), "A/B" );
+    PYSTRING_CHECK_EQUAL(normpath_posix("A/./B"), "A/B" );
+    PYSTRING_CHECK_EQUAL(normpath_posix("A/foo/../B"), "A/B" );
+    PYSTRING_CHECK_EQUAL(normpath_posix("/A//B"), "/A/B" );
+    PYSTRING_CHECK_EQUAL(normpath_posix("//A//B"), "//A/B" );
+    PYSTRING_CHECK_EQUAL(normpath_posix("///A//B"), "/A/B" );
+    PYSTRING_CHECK_EQUAL(normpath_posix("../A"), "../A" );
+    PYSTRING_CHECK_EQUAL(normpath_posix("../A../"), "../A.." );
+    PYSTRING_CHECK_EQUAL(normpath_posix("FOO/../A../././B"), "A../B" );
+    
+    PYSTRING_CHECK_EQUAL(normpath_nt(""), "." );
+    PYSTRING_CHECK_EQUAL(normpath_nt("A"), "A" );
+    PYSTRING_CHECK_EQUAL(normpath_nt("A./B"), "A.\\B" );
+    PYSTRING_CHECK_EQUAL(normpath_nt("C:\\"), "C:\\" );
+    PYSTRING_CHECK_EQUAL(normpath_nt("C:\\A"), "C:\\A" );
+    PYSTRING_CHECK_EQUAL(normpath_nt("C:/A"), "C:\\A" );
+    PYSTRING_CHECK_EQUAL(normpath_nt("C:/A..\\"), "C:\\A.." );
+    PYSTRING_CHECK_EQUAL(normpath_nt("C:/A..\\..\\"), "C:\\" );
+    PYSTRING_CHECK_EQUAL(normpath_nt("C:\\\\A"), "C:\\A" );
+    PYSTRING_CHECK_EQUAL(normpath_nt("C:\\\\\\A\\\\B"), "C:\\A\\B" );
+}
+
+PYSTRING_ADD_TEST(pystring_os_path, split)
+{
+    using namespace pystring::os::path;
+    
+    std::string head, tail;
+    split_posix(head, tail, "");  PYSTRING_CHECK_EQUAL(head, "" );  PYSTRING_CHECK_EQUAL(tail, "" );
+    split_posix(head, tail, "/");  PYSTRING_CHECK_EQUAL(head, "/" );  PYSTRING_CHECK_EQUAL(tail, "" );
+    split_posix(head, tail, "a");  PYSTRING_CHECK_EQUAL(head, "" );  PYSTRING_CHECK_EQUAL(tail, "a" );
+    split_posix(head, tail, "a/");  PYSTRING_CHECK_EQUAL(head, "a" );  PYSTRING_CHECK_EQUAL(tail, "" );
+    split_posix(head, tail, "/a");  PYSTRING_CHECK_EQUAL(head, "/" );  PYSTRING_CHECK_EQUAL(tail, "a" );
+    split_posix(head, tail, "/a/b/");  PYSTRING_CHECK_EQUAL(head, "/a/b" );  PYSTRING_CHECK_EQUAL(tail, "" );
+    split_posix(head, tail, "/a/b");  PYSTRING_CHECK_EQUAL(head, "/a" );  PYSTRING_CHECK_EQUAL(tail, "b" );
+    
+    split_nt(head, tail, "");  PYSTRING_CHECK_EQUAL(head, "" );  PYSTRING_CHECK_EQUAL(tail, "" );
+    split_nt(head, tail, "\\");  PYSTRING_CHECK_EQUAL(head, "\\" );  PYSTRING_CHECK_EQUAL(tail, "" );
+    split_nt(head, tail, "a");  PYSTRING_CHECK_EQUAL(head, "" );  PYSTRING_CHECK_EQUAL(tail, "a" );
+    split_nt(head, tail, "a\\");  PYSTRING_CHECK_EQUAL(head, "a" );  PYSTRING_CHECK_EQUAL(tail, "" );
+    split_nt(head, tail, "c:\\a");  PYSTRING_CHECK_EQUAL(head, "c:\\" );  PYSTRING_CHECK_EQUAL(tail, "a" );
+    split_nt(head, tail, "c:\\a\\b");  PYSTRING_CHECK_EQUAL(head, "c:\\a" );  PYSTRING_CHECK_EQUAL(tail, "b" );
+    split_nt(head, tail, "c:\\a\\b\\");  PYSTRING_CHECK_EQUAL(head, "c:\\a\\b" );  PYSTRING_CHECK_EQUAL(tail, "" );
+}
+
+PYSTRING_ADD_TEST(pystring_os_path, splitext)
+{
+    using namespace pystring::os::path;
+    
+    std::string root, ext;
+    splitext_nt(root, ext, ""); PYSTRING_CHECK_EQUAL(root, ""); PYSTRING_CHECK_EQUAL(ext, "");
+    splitext_nt(root, ext, "."); PYSTRING_CHECK_EQUAL(root, "."); PYSTRING_CHECK_EQUAL(ext, "");
+    splitext_nt(root, ext, ".foo"); PYSTRING_CHECK_EQUAL(root, ".foo"); PYSTRING_CHECK_EQUAL(ext, "");
+    splitext_nt(root, ext, ".foo."); PYSTRING_CHECK_EQUAL(root, ".foo"); PYSTRING_CHECK_EQUAL(ext, ".");
+    splitext_nt(root, ext, ".foo.e"); PYSTRING_CHECK_EQUAL(root, ".foo"); PYSTRING_CHECK_EQUAL(ext, ".e");
+    splitext_nt(root, ext, "c"); PYSTRING_CHECK_EQUAL(root, "c"); PYSTRING_CHECK_EQUAL(ext, "");
+    splitext_nt(root, ext, "a_b.c"); PYSTRING_CHECK_EQUAL(root, "a_b"); PYSTRING_CHECK_EQUAL(ext, ".c");
+    splitext_nt(root, ext, "c:\\a.b.c"); PYSTRING_CHECK_EQUAL(root, "c:\\a.b"); PYSTRING_CHECK_EQUAL(ext, ".c");
+    splitext_nt(root, ext, "c:\\a_b.c"); PYSTRING_CHECK_EQUAL(root, "c:\\a_b"); PYSTRING_CHECK_EQUAL(ext, ".c");
+}
+
+#endif
 
 }
 OCIO_NAMESPACE_EXIT
