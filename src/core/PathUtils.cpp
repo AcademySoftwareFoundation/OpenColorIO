@@ -30,12 +30,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <sys/param.h>
 #include <sys/stat.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Mutex.h"
 #include "PathUtils.h"
+#include "Platform.h"
 #include "pystring/pystring.h"
 
 #if defined(__APPLE__) && !defined(__IPHONE__)
@@ -98,6 +100,33 @@ OCIO_NAMESPACE_ENTER
         g_fastFileHashCache.clear();
     }
     
+    namespace pystring
+    {
+    namespace os
+    {
+        std::string getcwd()
+        {
+#ifdef WINDOWS
+#error TODO: implement windows API call for getcwd
+#else
+            char path[MAXPATHLEN];
+            ::getcwd(path, MAXPATHLEN);
+            return path;
+#endif
+        }
+        
+    namespace path
+    {
+        std::string abspath(const std::string & path)
+        {
+            std::string p = path;
+            if(!isabs(p)) p = join(getcwd(), p);
+            return normpath(p);
+        }
+    } // namespace path
+    } // namespace os
+    }
+    
     namespace
     {
         inline char** GetEnviron()
@@ -114,65 +143,6 @@ OCIO_NAMESPACE_ENTER
         
         const int MAX_PATH_LENGTH = 4096;
     }
-    
-    namespace path
-    {
-        // TODO: make these also work on windows
-        // This attempts to match python's path.join, including
-        // the relative absolute handling
-        // TODO: Make this return the proper path token on windows,
-        //       and also detect windows-stype absolute paths
-        std::string join(const std::string & path1, const std::string & path2)
-        {
-            std::string pathtoken = "/";
-            
-            // Absolute paths should be treated as absolute
-            if(pystring::startswith(path2, pathtoken))
-                return path2;
-            
-            // Relative paths will be appended.
-            if (pystring::endswith(path1, pathtoken))
-                return path1 + path2;
-            
-            return path1 + pathtoken + path2;
-        }
-        
-        // TODO: This doesnt return the same result for python in '/foo' case
-        std::string dirname(const std::string & path)
-        {
-            std::vector<std::string> result;
-            pystring::rsplit(path, result, "/", 1);
-            if(result.size() == 2)
-            {
-                return result[0];
-            }
-            else
-            {
-                pystring::rsplit(path, result, "\\", 1);
-                if(result.size() == 2)
-                {
-                    return result[0];
-                }
-            }
-            return "";
-        }
-        
-        
-        
-        std::string realpath(const std::string & path)
-        {
-            char resolved_path[MAX_PATH_LENGTH];
-            char * result = ::realpath(path.c_str(), resolved_path);
-            if(result == NULL)
-            {
-                return "";
-            }
-            
-            return result;
-        }
-        
-    } // path namespace
-    
     
     void LoadEnvironment(EnvMap & map)
     {
@@ -220,14 +190,6 @@ OCIO_NAMESPACE_ENTER
         }
         
         return orig;
-    }
-    
-    std::string GetExtension(const std::string & str)
-    {
-        std::vector<std::string> parts;
-        pystring::rsplit(str, parts, ".", 1);
-        if(parts.size() == 2) return parts[1];
-        return "";
     }
 }
 OCIO_NAMESPACE_EXIT

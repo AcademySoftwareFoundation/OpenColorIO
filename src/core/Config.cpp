@@ -1428,13 +1428,15 @@ OCIO_NAMESPACE_ENTER
             // cast YAML nodes to Impl members
             
             // Query resource_path for compatibility
-            if(node.FindValue("search_path") != NULL)
+            if(node.FindValue("search_path") != NULL && 
+               node["search_path"].Type() != YAML::NodeType::Null)
             {
                 std::string path;
                 node["search_path"] >> path;
                 context_->setSearchPath(path.c_str());
             }
-            else if(node.FindValue("resource_path") != NULL)
+            else if(node.FindValue("resource_path") != NULL && 
+               node["resource_path"].Type() != YAML::NodeType::Null)
             {
                 std::string path;
                 node["resource_path"] >> path;
@@ -1584,8 +1586,8 @@ OCIO_NAMESPACE_ENTER
             
             if(filename)
             {
-                std::string realfilename = path::realpath(filename);
-                std::string configrootdir = path::dirname(realfilename);
+                std::string realfilename = pystring::os::path::abspath(filename);
+                std::string configrootdir = pystring::os::path::dirname(realfilename);
                 context_->setWorkingDir(configrootdir.c_str());
             }
         }
