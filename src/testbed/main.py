@@ -7,6 +7,7 @@ print ""
 print "PyOCIO:", OCIO.__file__
 print "OCIO:",dir(OCIO)
 print "version:",OCIO.version
+print "hexversion:",hex(OCIO.hexversion)
 print ""
 
 #import pydoc
@@ -31,11 +32,13 @@ print ""
 
 # Create a new config
 
+"""
 config = OCIO.GetCurrentConfig()
 processor = config.getProcessor(OCIO.Constants.ROLE_COMPOSITING_LOG, OCIO.Constants.ROLE_SCENE_LINEAR)
 processor.applyRGBA([0,0,0,0]) # works fine
-processor.applyRGBA(1)
-   
+#processor.applyRGBA(1)
+"""
+
 """
 if True:
     config = OCIO.Config()

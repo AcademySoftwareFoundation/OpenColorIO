@@ -79,6 +79,9 @@ int main(int argc, const char **argv)
         OCIO::ConstConfigRcPtr config;
         
         std::cout << std::endl;
+        std::cout << "OpenColorIO Library Version: " << OCIO::GetVersion() << std::endl;
+        std::cout << "OpenColorIO Library VersionHex: " << OCIO::GetVersionHex() << std::endl;
+        
         if(!inputconfig.empty())
         {
             std::cout << "Loading " << inputconfig << std::endl;

@@ -112,8 +112,20 @@ OCIO_NAMESPACE_ENTER
     // (such as designing OCIO profiles, and wanting to re-read luts without
     // restarting) it can be helpful.
     
-    void OCIOEXPORT ClearAllCaches();
+    extern OCIOEXPORT void ClearAllCaches();
     
+    //!cpp:function:: Get the version number for the library, as a
+    // dot-delimited string. (I.e., "1.0.0").  This is also available
+    // at compile time as OCIO_VERSION
+    
+    extern OCIOEXPORT const char * GetVersion();
+    
+    //!cpp:function:: Get the version number for the library, as a
+    // single 4-byte hex number, e.g. 0x01050200 == 1.5.2
+    // Use this for numeric comparisons.  This is also available
+    // at compile time as OCIO_VERSION_HEX.
+    
+    extern OCIOEXPORT int GetVersionHex();
     
     ///////////////////////////////////////////////////////////////////////////
     //!rst::

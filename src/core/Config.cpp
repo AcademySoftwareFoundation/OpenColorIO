@@ -88,7 +88,15 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
+    const char * GetVersion()
+    {
+        return OCIO_VERSION;
+    }
     
+    int GetVersionHex()
+    {
+        return OCIO_VERSION_HEX;
+    }
     
     namespace
     {
