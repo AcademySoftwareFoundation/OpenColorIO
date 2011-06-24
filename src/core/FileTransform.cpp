@@ -415,7 +415,10 @@ OCIO_NAMESPACE_ENTER
             
             // Try the initial format.
             std::string primaryErrorText;
-            std::string extension = GetExtension(filepath);
+            std::string root, extension;
+            pystring::os::path::splitext(root, extension, filepath);
+            extension = pystring::replace(extension,".","",1); // remove the leading '.'
+            
             FileFormat * primaryFormat = FormatRegistry::GetInstance().getFileFormatForExtension(extension);
             
             if(primaryFormat)

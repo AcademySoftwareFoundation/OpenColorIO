@@ -270,7 +270,8 @@ namespace
             return iter->second.c_str();
         }
         
-        if(pystring::startswith(filename, "/"))
+        // Load an absolute file reference
+        if(pystring::os::path::isabs(filename))
         {
             std::string expandedfullpath = EnvExpand(filename, getImpl()->envMap_);
             if(FileExists(expandedfullpath))
@@ -285,20 +286,13 @@ namespace
             throw Exception(errortext.str().c_str());
         }
         
+        // Load a relative file reference
+        // Prep the search path vector
         // TODO: Cache this prepped vector?
         std::vector<std::string> searchpaths;
         GetAbsoluteSearchPaths(searchpaths,
                                getImpl()->searchPath_,
                                getImpl()->workingDir_);
-        
-        if(searchpaths.empty())
-        {
-            std::ostringstream os;
-            os << "Relative file references ";
-            os << "(" << filename << ") are not allowed. ";
-            os << "No search path has been specified. ";
-            throw Exception(os.str().c_str());
-        }
         
         // Loop over each path, and try to find the file
         std::ostringstream errortext;
@@ -308,8 +302,8 @@ namespace
         
         for (unsigned int i = 0; i < searchpaths.size(); ++i)
         {
-            // find the file?
-            std::string fullpath = path::join(searchpaths[i], filename);
+            // Make an attempt to find the lut in one of the search paths
+            std::string fullpath = pystring::os::path::join(searchpaths[i], filename);
             std::string expandedfullpath = EnvExpand(fullpath, getImpl()->envMap_);
             if(FileExists(expandedfullpath))
             {
@@ -341,64 +335,28 @@ namespace
                                 const std::string & pathString,
                                 const std::string & workingDir)
     {
-        if(pathString == "")
+        if(pathString.empty())
         {
-            searchpaths.clear();
+            searchpaths.push_back(workingDir);
             return;
         }
         
-        pystring::split(pathString, searchpaths, ":");
+        std::vector<std::string> parts;
+        pystring::split(pathString, parts, ":");
         
-        // loop over each path and try to find the file
-        for (unsigned int i = 0; i < searchpaths.size(); ++i)
+        for (unsigned int i = 0; i < parts.size(); ++i)
         {
-            // resolve '::' empty entry
-            if(searchpaths[i].size() == 0)
+            // Remove trailing "/", and spaces
+            std::string dirname = pystring::rstrip(pystring::strip(parts[i]), "/");
+            
+            if(!pystring::os::path::isabs(dirname))
             {
-                searchpaths[i] = workingDir;
-            }
-            // TODO: resolve '..'
-            else if(pystring::startswith(searchpaths[i], ".."))
-            {
-                std::ostringstream os;
-                os << "Search paths starting with '..' : ";
-                os << searchpaths[i];
-                os << " are currently unhandled.";
-                throw Exception(os.str().c_str());
-                /*
-                std::vector<std::string> result;
-                pystring::rsplit(profilecwd, result, "/", 1);
-                if(result.size() == 2)
-                    searchpaths[i] = result[0];
-                */
-            }
-            // TODO: resolve '.'
-            else if(pystring::startswith(searchpaths[i], "."))
-            {
-                std::ostringstream os;
-                os << "Search paths starting with '.' : ";
-                os << searchpaths[i];
-                os << " are currently unhandled.";
-                throw Exception(os.str().c_str());
-                /*
-                searchpaths[i] = pystring::strip(searchpaths[i], ".");
-                if(pystring::endswith(profilecwd, "/"))
-                    searchpaths[i] = profilecwd + searchpaths[i];
-                else
-                    searchpaths[i] = profilecwd + "/" + searchpaths[i];
-                */
-            }
-            // resolve relative
-            else if(!pystring::startswith(searchpaths[i], "/"))
-            {
-                searchpaths[i] = path::join(workingDir, searchpaths[i]);
+                dirname = pystring::os::path::join(workingDir, dirname);
             }
             
-            // Remove trailing "/"
-            searchpaths[i] = pystring::rstrip(searchpaths[i], "/");
+            searchpaths.push_back(pystring::os::path::normpath(dirname));
         }
     }
-
 }
 
 
