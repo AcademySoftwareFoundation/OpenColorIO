@@ -1,7 +1,7 @@
 project(OpenColorIO)
 set(OCIO_VERSION_MAJOR 0)
 set(OCIO_VERSION_MINOR 8)
-set(OCIO_VERSION_PATCH 2)
+set(OCIO_VERSION_PATCH 3)
 
 # This does not include the SOVERSION override, on purpose, so that the
 # OCIO_VERSION value will be an accurate reflection of the underlying library version.

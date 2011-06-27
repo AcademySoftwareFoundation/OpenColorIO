@@ -1,3 +1,9 @@
+**Version 0.8.3 (June 27 2011):**
+    * OCIO::Config symlink resolution fixed (bugfix)
+    * Nuke OCIODisplay knobs use string storage (bugfix)
+    * Makefile cleanup
+    * Documentation cleanup
+
 **Version 0.8.2 (June 7 2011):**
     * Numerous Windows compatibility fixes
     * Python binding improvements
