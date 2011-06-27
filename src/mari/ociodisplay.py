@@ -32,103 +32,148 @@ Also - IMPORTANT - you must enable 'Use Color Correction' in the Color Manager.
 
 """
 
-INPUT_IMAGE_COLORSPACE = "dt8"  # THIS IS Config SPECIFIC. TODO: Replace with OCIO.Constants.ROLE_TEXTURE_PAINT
-LUT3D_SIZE = 32
-FSTOP_OFFSET = 1.0
-VIEW_GAMMA = 1.0
-SWIZZLE = (True,  True,  True,  True)
-
-import mari, time
+import mari, time, PythonQt
+QtGui = PythonQt.QtGui
+QtCore = PythonQt.QtCore
 
 try:
     import PyOpenColorIO as OCIO
-    print OCIO.__file__
+    mari.app.log("OCIODisplay: %s" % OCIO.__file__)
 except Exception,e:
-    print "Error: Could not import OpenColorIO python bindings."
-    print "Please confirm PYTHONPATH has dir containing PyOpenColorIO.so"
+    OCIO = None
+    mari.app.log("OCIODisplay: Error: Could not import OpenColorIO python bindings.")
+    mari.app.log("OCIODisplay: Please confirm PYTHONPATH has dir containing PyOpenColorIO.so")
 
-# Viewer controls
-# TODO: Expose in an interface (panel)
+__all__ = [ 'OCIO', 'CreateOCIODisplayTransform', 'OCIODisplayUI']
 
-"""
-SWIZZLE_COLOR = (True,  True,  True,  True)
-SWIZZLE_RED   = (True,  False, False, False)
-SWIZZLE_GREEN = (False, True,  False, False)
-SWIZZLE_BLUE  = (False, False, True,  False)
-SWIZZLE_ALPHA = (False, False, False, True)
-SWIZZLE_LUMA  = (True,  True,  True,  False)
-"""
-"""
-Timings
+LUT3D_SIZE = 32
+WINDOW_NAME = "OpenColorIO Display Manager"
+CREATE_FLOATING = True
 
-OCIO Setup: 0.5 ms
-OCIO 3D Lut creation: 14.7 ms
-Mari Setup: 21.3 ms
-Mari Texture Upload: 44.2 ms
-"""
 
-def RegisterOCIODisplay():
-    if not hasattr(mari.gl_render,"createPostFilter"):
-        print "Error: This version of Mari does not support the mari.gl_render.createPostFilter API"
-        return
+class OCIODisplayUI(QtGui.QWidget):
+    def __init__(self):
+        QtGui.QWidget.__init__(self)
+        QtGui.QGridLayout(self)
+        self.setWindowTitle(WINDOW_NAME)
+        self.setMinimumWidth(300)
+        
+        config = OCIO.GetCurrentConfig()
+        
+        self.__inputColorSpace = OCIO.Constants.ROLE_DEFAULT
+        inputColorSpaces = [ OCIO.Constants.ROLE_TEXTURE_PAINT,
+                             'dt8',
+                             OCIO.Constants.ROLE_SCENE_LINEAR ]
+        for cs in inputColorSpaces:
+            if config.getColorSpace(cs) is None: continue
+            self.__inputColorSpace = cs
+            break
+        
+        self.__fStopOffset = 0.0
+        self.__viewGamma = 1.0
+        self.__swizzle = (True,  True,  True,  True)
+        
+        self.__filter_cacheID = None
+        self.__filter = None
+        self.__texture3d_cacheID = None
+        self.__counter_hack = 0
+        
+        self.__buildUI()
+        self.__rebuildFilter()
     
-    # OpenColorIO SETUP
-    # Use OpenColorIO to generate the shader text and the 3dlut
-    starttime = time.time()
+    def __buildUI(self):
+        config = OCIO.GetCurrentConfig()
+        
+        self.layout().addWidget( QtGui.QLabel("Input Color Space", self), 0, 0)
+        csWidget = QtGui.QComboBox(self)
+        self.layout().addWidget( csWidget, 0, 1)
+        csIndex = None
+        for name in (cs.getName() for cs in config.getColorSpaces()):
+            csWidget.addItem(name)
+            if name == self.__inputColorSpace:
+                csIndex = csWidget.count - 1
+        if csIndex is not None:
+            csWidget.setCurrentIndex(csIndex)
+        csWidget.connect( QtCore.SIGNAL('currentIndexChanged(const QString &)'), self.__csChanged)
+        
+        
+        # This doesnt work until the Horizontal enum is exposed.
+        """
+        self.__fstopWidget_numStops = 3.0
+        self.__fstopWidget_ticksPerStop = 4
+        
+        self.layout().addWidget( QtGui.QLabel("FStop", self), 1, 0)
+        fstopWidget = QtGui.QSlider(Horizontal, self)
+        self.layout().addWidget( fstopWidget, 1, 1)
+        fstopWidget.setMinimum(int(-self.__fstopWidget_numStops*self.__fstopWidget_ticksPerStop))
+        fstopWidget.setMaximum(int(self.__fstopWidget_numStops*self.__fstopWidget_ticksPerStop))
+        fstopWidget.setTickInterval(self.__fstopWidget_ticksPerStop)
+        """
+        
     
-    config = OCIO.GetCurrentConfig()
-    display = config.getDefaultDisplay()
-    view = config.getDefaultView(display)
-    transform = CreateOCIODisplayTransform(config, INPUT_IMAGE_COLORSPACE,
-                                           display, view,
-                                           SWIZZLE,
-                                           FSTOP_OFFSET, VIEW_GAMMA)
+    def __csChanged(self, text):
+        text = str(text)
+        if text != self.__inputColorSpace:
+            self.__inputColorSpace = text
+            self.__rebuildFilter()
     
-    processor = config.getProcessor(transform)
-    
-    shaderDesc = dict( [('language', OCIO.Constants.GPU_LANGUAGE_GLSL_1_3),
-                        ('functionName', 'display_ocio_$ID_'),
-                        ('lut3DEdgeLen', LUT3D_SIZE)] )
-    shaderText = processor.getGpuShaderText(shaderDesc)
-    print "OCIO Setup: %0.1f ms" % (1000* (time.time()-starttime))
-    
-    starttime = time.time()
-    lut3d = processor.getGpuLut3D(shaderDesc)
-    print "OCIO 3D Lut creation: %0.1f ms" % (1000* (time.time()-starttime))
-    
-    starttime = time.time()
-    # Clear the existing color managment filter stack
-    mari.gl_render.clearPostFilterStack()
-    
-    # Create variable pre-declarations
-    desc = "sampler3D lut3d_ocio_$ID_;\n"
-    desc += shaderText
-    
-    # Set the body of the filter
-    body = "{ Out = display_ocio_$ID_(Out, lut3d_ocio_$ID_); }"
-    
-    # HACK: Increment a counter by 1 each time to force a refresh
-    if not hasattr(mari, "ocio_counter_hack"):
-        mari.ocio_counter_hack = 0
-    else:
-        mari.ocio_counter_hack += 1
-    ocio_counter_hack = mari.ocio_counter_hack
-    
-    # Create a new filter
-    name = "OCIO %s %s %s v%d" % (display, view, INPUT_IMAGE_COLORSPACE, ocio_counter_hack)
-    postfilter = mari.gl_render.createPostFilter(name, desc, body)
-    
-    print "Mari Setup: %0.1f ms" % (1000* (time.time()-starttime))
-    
-    starttime = time.time()
-    # Set the texture to use for the given sampler on this filter
-    postfilter.setTexture3D("lut3d_ocio_$ID_",
-                            LUT3D_SIZE, LUT3D_SIZE, LUT3D_SIZE,
-                            postfilter.FORMAT_RGB, lut3d)
-    print "Mari Texture Upload: %0.1f ms" % (1000* (time.time()-starttime))
-    
-    # Append the filter to the end of the current list of filters
-    mari.gl_render.appendPostFilter(postfilter)
+    def __rebuildFilter(self):
+        config = OCIO.GetCurrentConfig()
+        display = config.getDefaultDisplay()
+        view = config.getDefaultView(display)
+        transform = CreateOCIODisplayTransform(config, self.__inputColorSpace,
+                                               display, view,
+                                               self.__swizzle,
+                                               self.__fStopOffset, self.__viewGamma)
+        
+        processor = config.getProcessor(transform)
+        
+        shaderDesc = dict( [('language', OCIO.Constants.GPU_LANGUAGE_GLSL_1_3),
+                            ('functionName', 'display_ocio_$ID_'),
+                            ('lut3DEdgeLen', LUT3D_SIZE)] )
+        
+        filterCacheID = processor.getGpuShaderTextCacheID(shaderDesc)
+        if filterCacheID != self.__filter_cacheID:
+            self.__filter_cacheID = filterCacheID
+            mari.app.log("OCIODisplay: Creating filter %s" % self.__filter_cacheID)
+            
+            desc = "sampler3D lut3d_ocio_$ID_;\n"
+            desc += processor.getGpuShaderText(shaderDesc)
+            body = "{ Out = display_ocio_$ID_(Out, lut3d_ocio_$ID_); }"
+            
+            # Clear the existing color managment filter stack and create a new filter
+            # HACK: Increment a counter by 1 each time to force a refresh
+            #self.__counter_hack += 1
+            #name = "OCIO %s %s %s v%d" % (display, view, self.__inputColorSpace, self.__counter_hack)
+            name = "OCIO %s %s %s" % (display, view, self.__inputColorSpace)
+            
+            self.__filter = None
+            self.__texture3d_cacheID = None
+            
+            mari.gl_render.clearPostFilterStack()
+            self.__filter = mari.gl_render.createPostFilter(name, desc, body)
+            mari.gl_render.appendPostFilter(self.__filter)
+        else:
+            mari.app.log('OCIODisplay: no shader text update required')
+        
+        texture3d_cacheID = processor.getGpuLut3DCacheID(shaderDesc)
+        if texture3d_cacheID != self.__texture3d_cacheID:
+            lut3d = processor.getGpuLut3D(shaderDesc)
+            
+            mari.app.log("OCIODisplay: Updating 3dlut %s" % texture3d_cacheID)
+            
+            if self.__texture3d_cacheID is None:
+                self.__filter.setTexture3D("lut3d_ocio_$ID_",
+                                     LUT3D_SIZE, LUT3D_SIZE, LUT3D_SIZE,
+                                     self.__filter.FORMAT_RGB, lut3d)
+            else:
+                self.__filter.updateTexture3D( "lut3d_ocio_$ID_", lut3d)
+            
+            self.__texture3d_cacheID = texture3d_cacheID
+        else:
+            mari.app.log("OCIODisplay: No lut3d update required")
+
+
 
 def CreateOCIODisplayTransform(config,
                                inputColorSpace,
@@ -165,4 +210,33 @@ def CreateOCIODisplayTransform(config,
     
     return displayTransform
 
-RegisterOCIODisplay()
+"""
+SWIZZLE_COLOR = (True,  True,  True,  True)
+SWIZZLE_RED   = (True,  False, False, False)
+SWIZZLE_GREEN = (False, True,  False, False)
+SWIZZLE_BLUE  = (False, False, True,  False)
+SWIZZLE_ALPHA = (False, False, False, True)
+SWIZZLE_LUMA  = (True,  True,  True,  False)
+
+Timings
+
+OCIO Setup: 0.5 ms
+OCIO 3D Lut creation: 14.7 ms
+Mari Setup: 21.3 ms
+Mari Texture Upload: 44.2 ms
+"""
+
+
+if __name__ == '__main__':
+    if not hasattr(mari.gl_render,"createPostFilter"):
+        mari.app.log("OCIODisplay: Error: This version of Mari does not support the mari.gl_render.createPostFilter API")
+    else:
+        if OCIO is not None:
+            if CREATE_FLOATING:
+                w = OCIODisplayUI()
+                w.show()
+            else:
+                if WINDOW_NAME in mari.app.tabNames():
+                    mari.app.removeTab(WINDOW_NAME)
+                w = OCIODisplayUI()
+                mari.app.addTab(WINDOW_NAME, w)
