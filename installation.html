@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.2',
+        VERSION:     '0.8.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v0.8.2 documentation" href="index.html" />
+    <link rel="top" title="OpenColorIO v0.8.3 documentation" href="index.html" />
     <link rel="next" title="User Guide" href="userguide/index.html" />
     <link rel="prev" title="Nuke default" href="workflow/nuke_default.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v0.8.2 documentation
+      OpenColorIO v0.8.3 documentation
       </div>
       <div class="content">
         
@@ -51,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="workflow/index.html">Workflow</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#building-from-source">Building from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-environment-configuration">Quick environment configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#nuke-configuration">Nuke Configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#environment-variables">Environment variables</a></li>
 </ul>
@@ -92,23 +93,24 @@ paths - these will almost definitely be different for you:</p>
 <div class="highlight-python"><pre>$ mkdir /tmp/ociobuild
 $ cd /tmp/ociobuild</pre>
 </div>
-<p>Next step is to run cmake, which looks for things such as the compiler
-required arguments, optional requirements like Python, Nuke,
-OpenImageIO etc</p>
+<p>Next step is to run cmake, which looks for things such as the
+compiler&#8217;s required arguments, optional requirements like Python,
+Nuke, OpenImageIO etc</p>
 <p>As we want to install OCIO to a custom location (instead of the
 default <tt class="docutils literal"><span class="pre">/usr/local</span></tt>), we will run cmake with
 <tt class="docutils literal"><span class="pre">CMAKE_INSTALL_PREFIX</span></tt></p>
 <p>Still in <tt class="docutils literal"><span class="pre">/tmp/ociobuild</span></tt>, run:</p>
 <div class="highlight-python"><pre>$ cmake -D CMAKE_INSTALL_PREFIX=/software/ocio /source/ocio</pre>
 </div>
-<p>The last argument is the location of the OCIO source code (containng
+<p>The last argument is the location of the OCIO source code (containing
 the main CMakeLists.txt file). You should see something along the
 lines of:</p>
 <div class="highlight-python"><pre>-- Configuring done
 -- Generating done
 -- Build files have been written to: /tmp/ociobuild</pre>
 </div>
-<p>Next, build everything (with the <tt class="docutils literal"><span class="pre">-j</span></tt> flag to build using 8 threads):</p>
+<p>Next, build everything (with the <tt class="docutils literal"><span class="pre">-j</span></tt> flag to build using 8
+threads):</p>
 <div class="highlight-python"><pre>$ make -j8</pre>
 </div>
 <p>This should complete in a few minutes. Finally, install the files into
@@ -151,7 +153,7 @@ automatically). Point cmake to your Nuke install directory by adding
 and others.</p>
 <p>If set correctly, you will see something similar to:</p>
 <div class="highlight-python"><pre>-- Found Nuke: /Applications/Nuke6.2v1/Nuke6.2v1.app/Contents/MacOS/include
--- Nuke_DDImageVersion: --6.2--</pre>
+-- Nuke_API_VERSION: --6.2--</pre>
 </div>
 <p>The Nuke plugins are installed into <tt class="docutils literal"><span class="pre">lib/nuke$MAJOR.$MINOR/</span></tt>, e.g
 <tt class="docutils literal"><span class="pre">lib/nuke6.2/OCIODisdplay.so</span></tt></p>
@@ -168,30 +170,36 @@ determine these, look at the CMake output when first run:</p>
 </div>
 </div>
 </div>
+<div class="section" id="quick-environment-configuration">
+<span id="quick-env-config"></span><h2>Quick environment configuration<a class="headerlink" href="#quick-environment-configuration" title="Permalink to this headline">¶</a></h2>
+<p>The quickest way to set the required <a class="reference internal" href="#environment-setup"><em>Environment variables</em></a> is to
+source the <tt class="docutils literal"><span class="pre">share/ocio/setup_ocio.sh</span></tt> script installed with OCIO.</p>
+<p>For a simple single-user setup, add the following to <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt>
+(assuming you are using bash, and the example install directory of
+<tt class="docutils literal"><span class="pre">/software/ocio</span></tt>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">source</span> <span class="o">/</span><span class="n">software</span><span class="o">/</span><span class="n">ocio</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">ocio</span><span class="o">/</span><span class="n">setup_ocio</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+<p>The only environment variable you must configure manually is
+<span class="target" id="index-0"></span><a class="reference internal" href="#envvar-OCIO"><tt class="xref std std-envvar docutils literal"><span class="pre">OCIO</span></tt></a>, which points to the configuration file you wish to
+use. For prebuilt config files, see the
+<a class="reference internal" href="downloads.html#download-color-configurations"><em>Color Configurations</em></a> download section</p>
+<p>To do this, you would add a line to <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt> (or a per-project
+configuration script etc), for example:</p>
+<div class="highlight-python"><pre>export OCIO="/path/to/my/config.ocio"</pre>
+</div>
+</div>
 <div class="section" id="nuke-configuration">
 <span id="id3"></span><h2>Nuke Configuration<a class="headerlink" href="#nuke-configuration" title="Permalink to this headline">¶</a></h2>
-<p>If you specified the NUKE_INSTALL_PATH when running cmake, you should
-have a <tt class="docutils literal"><span class="pre">/software/ocio/lib/nuke6.2</span></tt> containing various files.</p>
-<p>The bear-minimum required to use the plugins is to point the
-<span class="target" id="index-0"></span><a class="reference internal" href="#envvar-NUKE_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">NUKE_PATH</span></tt></a> environment variable to this directory. It is also
-recommended you add the <tt class="docutils literal"><span class="pre">share/nuke/</span></tt> directory to this path</p>
-<p>To run Nuke, in a terminal execute the following:</p>
-<div class="highlight-python"><pre># Set Nuke location
-export NUKE_PATH="/software/ocio/lib/nuke6.2:${NUKE_PATH}"
-export NUKE_PATH="/software/ocio/share/nuke:${NUKE_PATH}"
-
-# Point to libOpenColorIO.dylib (change "DYLD" to "LD" on Linux)
-export DYLD_LIBRARY_PATH="/software/ocio/lib:${DYLD_LIBRARY_PATH}"
-
-# Launch Nuke
-nuke myscript.nk</pre>
-</div>
-<p>The export lines can be point in <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt> for a single user, or a
-show-specific startup shell script etc.</p>
-<p>One common configuration step is to register an OCIODisplay node for
-each display device/view specified in the config.</p>
-<p>In a menu.py on <span class="target" id="index-1"></span><a class="reference internal" href="#envvar-NUKE_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">NUKE_PATH</span></tt></a> (e.g <tt class="docutils literal"><span class="pre">~/.nuke/menu.py</span></tt> for a single
-user setup), you can call the following:</p>
+<p>If you specified the <tt class="docutils literal"><span class="pre">NUKE_INSTALL_PATH</span></tt> option when running cmake,
+you should have a <tt class="docutils literal"><span class="pre">/software/ocio/lib/nuke6.2</span></tt> directory containing
+various files.</p>
+<p>If you have followed <a class="reference internal" href="#quick-env-config"><em>Quick environment configuration</em></a>, the plugins should be
+functional. However, one common additional configuration step is to
+register an OCIODisplay node for each display device/view specified in
+the config.</p>
+<p>To do this, in a menu.py on <span class="target" id="index-1"></span><a class="reference internal" href="#envvar-NUKE_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">NUKE_PATH</span></tt></a> (e.g
+<tt class="docutils literal"><span class="pre">~/.nuke/menu.py</span></tt> for a single user setup), add the following:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">ocionuke.viewer</span>
 <span class="n">ocionuke</span><span class="o">.</span><span class="n">viewer</span><span class="o">.</span><span class="n">populate_viewer</span><span class="p">(</span><span class="n">also_remove</span> <span class="o">=</span> <span class="s">&quot;default&quot;</span><span class="p">)</span>
 </pre></div>
@@ -264,7 +272,8 @@ write your own, better viewer setup function!</p>
 <dl class="envvar">
 <dt id="envvar-OCIO">
 <tt class="descname">OCIO</tt><a class="headerlink" href="#envvar-OCIO" title="Permalink to this definition">¶</a></dt>
-<dd><p>This variable needs to point to the global OCIO config file, e.g <tt class="docutils literal"><span class="pre">config.ocio</span></tt></p>
+<dd><p>This variable needs to point to the global OCIO config file, e.g
+<tt class="docutils literal"><span class="pre">config.ocio</span></tt></p>
 </dd></dl>
 
 <dl class="envvar">
@@ -277,8 +286,8 @@ similar to:</p>
 Referenced from: .../OCIOColorSpace.so
 Reason: image not found</pre>
 </div>
-<p>This applies to anything that links against OCIO, including the Nuke
-nodes, and the <tt class="docutils literal"><span class="pre">PyOpenColorIO</span></tt> Python bindings.</p>
+<p>This applies to anything that links against OCIO, including the
+Nuke nodes, and the <tt class="docutils literal"><span class="pre">PyOpenColorIO</span></tt> Python bindings.</p>
 </dd></dl>
 
 <dl class="envvar">
@@ -290,17 +299,17 @@ nodes, and the <tt class="docutils literal"><span class="pre">PyOpenColorIO</spa
 <dl class="envvar">
 <dt id="envvar-PYTHONPATH">
 <tt class="descname">PYTHONPATH</tt><a class="headerlink" href="#envvar-PYTHONPATH" title="Permalink to this definition">¶</a></dt>
-<dd><p>Python&#8217;s module search path. If you are using the PyOpenColorIO module,
-you must add <tt class="docutils literal"><span class="pre">lib/python2.x</span></tt> to this search path (e.g <tt class="docutils literal"><span class="pre">python/2.5</span></tt>),
-or importing the module will fail:</p>
+<dd><p>Python&#8217;s module search path. If you are using the PyOpenColorIO
+module, you must add <tt class="docutils literal"><span class="pre">lib/python2.x</span></tt> to this search path (e.g
+<tt class="docutils literal"><span class="pre">python/2.5</span></tt>), or importing the module will fail:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span>
 <span class="gt">Traceback (most recent call last):</span>
   File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n-Identifier">&lt;module&gt;</span>
 <span class="nc">ImportError</span>: <span class="n-Identifier">No module named PyOpenColorIO</span>
 </pre></div>
 </div>
-<p>Note that <span class="target" id="index-2"></span><a class="reference internal" href="#envvar-DYLD_LIBRARY_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">DYLD_LIBRARY_PATH</span></tt></a> or <span class="target" id="index-3"></span><a class="reference internal" href="#envvar-LD_LIBRARY_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">LD_LIBRARY_PATH</span></tt></a> must
-be set correctly for the module to work.</p>
+<p>Note that <span class="target" id="index-2"></span><a class="reference internal" href="#envvar-DYLD_LIBRARY_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">DYLD_LIBRARY_PATH</span></tt></a> or <span class="target" id="index-3"></span><a class="reference internal" href="#envvar-LD_LIBRARY_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">LD_LIBRARY_PATH</span></tt></a>
+must be set correctly for the module to work.</p>
 </dd></dl>
 
 <dl class="envvar">
@@ -308,7 +317,8 @@ be set correctly for the module to work.</p>
 <tt class="descname">NUKE_PATH</tt><a class="headerlink" href="#envvar-NUKE_PATH" title="Permalink to this definition">¶</a></dt>
 <dd><p>Nuke&#8217;s customisation search path, where it will look for plugins,
 gizmos, init.py and menu.py scripts and other customisations.</p>
-<p>For information on setting this for OCIO, see <a class="reference internal" href="#nuke-configuration"><em>Nuke Configuration</em></a></p>
+<p>This should point to both <tt class="docutils literal"><span class="pre">lib/nuke6.2/</span></tt> (or whatever version
+the plugins are built against), and <tt class="docutils literal"><span class="pre">share/nuke/</span></tt></p>
 </dd></dl>
 
 </div>

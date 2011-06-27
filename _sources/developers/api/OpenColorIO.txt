@@ -58,7 +58,7 @@ Exception
 .. cpp:function:: virtual const char* Exception::what() const
    
 
-.. cpp:function:: void ClearAllCaches()
+.. cpp:function:: extern void ClearAllCaches()
    
    OpenColorIO, during normal usage, tends to cache certain information
    (such as the contents of LUTs on disk, intermediate results, etc).
@@ -66,6 +66,19 @@ Exception
    Under normal usage, this is not necessary. But in particular instances
    (such as designing OCIO profiles, and wanting to re-read luts without
    restarting) it can be helpful.
+
+.. cpp:function:: extern const char * GetVersion()
+   
+   Get the version number for the library, as a
+   dot-delimited string. (I.e., "1.0.0").  This is also available
+   at compile time as OCIO_VERSION
+
+.. cpp:function:: extern int GetVersionHex()
+   
+   Get the version number for the library, as a
+   single 4-byte hex number, e.g. 0x01050200 == 1.5.2
+   Use this for numeric comparisons.  This is also available
+   at compile time as OCIO_VERSION_HEX.
 
 
 Config

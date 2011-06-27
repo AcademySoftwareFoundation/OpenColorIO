@@ -10,7 +10,7 @@ cd build
 cmake -D MAKE_DOCS=YES ../mastercopy
 
 # Build the docs
-make doc
+make doc -j8
 
 # Currently in build dir, move HTML up one level
 cp -R docs/build-html/* ..
