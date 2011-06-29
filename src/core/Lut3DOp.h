@@ -108,6 +108,10 @@ OCIO_NAMESPACE_ENTER
                        Lut3DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);
+    
+    // Essentially the cube root, but will throw an exception if the
+    // cuberoot is not exact.
+    int Get3DLutEdgeLenFromNumPixels(int numPixels);
 }
 OCIO_NAMESPACE_EXIT
 
