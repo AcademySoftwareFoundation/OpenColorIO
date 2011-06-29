@@ -277,6 +277,23 @@ OCIO_NAMESPACE_ENTER
     }
     
     
+    int Get3DLutEdgeLenFromNumPixels(int numPixels)
+    {
+        int dim = static_cast<int>(roundf(powf((float) numPixels, 1.0f/3.0f)));
+        
+        if(dim*dim*dim != numPixels)
+        {
+            std::ostringstream os;
+            os << "Cannot infer 3D Lut size. ";
+            os << numPixels << " element(s) does not correspond to a ";
+            os << "unform cube edge length. (nearest edge length is ";
+            os << dim << ").";
+            throw Exception(os.str().c_str());
+        }
+        
+        return dim;
+    }
+    
     namespace
     {
         class Lut3DOp : public Op

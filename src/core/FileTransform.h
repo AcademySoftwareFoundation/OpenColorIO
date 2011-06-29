@@ -138,6 +138,7 @@ OCIO_NAMESPACE_ENTER
     FileFormat * CreateFileFormatCSP();
     FileFormat * CreateFileFormatHDL();
     FileFormat * CreateFileFormatIridas();
+    FileFormat * CreateFileFormatPandora();
     FileFormat * CreateFileFormatSpi1D();
     FileFormat * CreateFileFormatSpi3D();
     FileFormat * CreateFileFormatSpiMtx();
