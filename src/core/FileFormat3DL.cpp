@@ -202,25 +202,6 @@ OCIO_NAMESPACE_ENTER
             return static_cast<int>(roundf(val));
         }
         
-        int Get3DLutEdgeLenFromNumEntries(int numEntries)
-        {
-            float fdim = powf((float) numEntries / 3.0f, 1.0f/3.0f);
-            int dim = static_cast<int>(roundf(fdim));
-            
-            if(dim*dim*dim*3 != numEntries)
-            {
-                std::ostringstream os;
-                os << "Cannot infer 3D Lut size. ";
-                os << numEntries << " element(s) does not correspond to a ";
-                os << "unform cube edge length. (nearest edge length is ";
-                os << dim << ").";
-                throw Exception(os.str().c_str());
-            }
-            
-            return dim;
-        }
-        
-        
         void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
@@ -402,14 +383,12 @@ OCIO_NAMESPACE_ENTER
                 float scale = 1.0f / static_cast<float>(bitdepthmax);
                 
                 // Interpret the int array as a 3dlut
-                int lutEdgeLen = Get3DLutEdgeLenFromNumEntries((int)raw3d.size());
-                
+                int lutEdgeLen = Get3DLutEdgeLenFromNumPixels((int)raw3d.size()/3);
                 
                 // Reformat 3D data
                 cachedFile->lut3D->size[0] = lutEdgeLen;
                 cachedFile->lut3D->size[1] = lutEdgeLen;
                 cachedFile->lut3D->size[2] = lutEdgeLen;
-                
                 cachedFile->lut3D->lut.reserve(lutEdgeLen * lutEdgeLen * lutEdgeLen * 3);
                 
                 for(int rIndex=0; rIndex<lutEdgeLen; ++rIndex)
