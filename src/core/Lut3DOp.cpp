@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HashUtils.h"
 #include "Lut3DOp.h"
 #include "MathUtils.h"
+#include "SSE.h"
 
 #include <cmath>
 #include <limits>
@@ -69,11 +70,23 @@ OCIO_NAMESPACE_ENTER
             out[2] = (b[2] - a[2]) * z[2] + a[2];
         }
         
+        // Out != a
+        // Out may == {b,z}
+        
+        inline void lerp_rgba_sse(__m128 & out, const __m128 & a,
+                                  const __m128 & b, const __m128 & z)
+        {
+            out = _mm_sub_ps(b, a);
+            out = _mm_mul_ps(out, z);
+            out = _mm_add_ps(out, a);
+        }
+        
         // Bilinear
         inline float lerp(float a, float b, float c, float d, float y, float z)
             { return lerp(lerp(a, b, z), lerp(c, d, z), y); }
         
-        inline void lerp_rgb(float* out, float* a, float* b, float* c, float* d, float* y, float* z)
+        inline void lerp_rgb(float* out, float* a, float* b, float* c,
+                             float* d, float* y, float* z)
         {
             float v1[3];
             float v2[3];
@@ -194,23 +207,6 @@ OCIO_NAMESPACE_ENTER
                 lutSize[i] = lut.size[i];
             }
             
-            float localIndex[3];
-            int indexLow[3];
-            int indexHigh[3];
-            float delta[3];
-            
-            float a[4];
-            float b_[4];
-            float c[4];
-            float d[4];
-            float e[4];
-            float f[4];
-            float g[4];
-            float h[4];
-            float x[4];
-            float y[4];
-            float z[4];
-            
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
                 
@@ -222,6 +218,22 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
+                    float localIndex[3];
+                    int indexLow[3];
+                    int indexHigh[3];
+                    float delta[3];
+                    float a[3];
+                    float b_[3];
+                    float c[3];
+                    float d[3];
+                    float e[3];
+                    float f[3];
+                    float g[3];
+                    float h[4];
+                    float x[4];
+                    float y[4];
+                    float z[4];
+                    
                     localIndex[0] = std::max(std::min(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0]), 0.0f);
                     localIndex[1] = std::max(std::min(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1]), 0.0f);
                     localIndex[2] = std::max(std::min(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2]), 0.0f);
@@ -229,9 +241,6 @@ OCIO_NAMESPACE_ENTER
                     indexLow[0] =  static_cast<int>(std::floor(localIndex[0]));
                     indexLow[1] =  static_cast<int>(std::floor(localIndex[1]));
                     indexLow[2] =  static_cast<int>(std::floor(localIndex[2]));
-                    
-                    // TODO: Confirm use of ceil, when local index is a maximum
-                    // does not clip above the max (and cause an out of bounds access)
                     
                     indexHigh[0] =  static_cast<int>(std::ceil(localIndex[0]));
                     indexHigh[1] =  static_cast<int>(std::ceil(localIndex[1]));
@@ -251,12 +260,77 @@ OCIO_NAMESPACE_ENTER
                     lookupNearest_3D_rgb(g, indexHigh[0], indexHigh[1], indexLow[2],  lutSize[0], lutSize[1], lutSize[2], startPos);
                     lookupNearest_3D_rgb(h, indexHigh[0], indexHigh[1], indexHigh[2], lutSize[0], lutSize[1], lutSize[2], startPos);
                     
+                    // Also store the 3d interpolation coordinates
                     x[0] = delta[0]; x[1] = delta[0]; x[2] = delta[0];
                     y[0] = delta[1]; y[1] = delta[1]; y[2] = delta[1];
                     z[0] = delta[2]; z[1] = delta[2]; z[2] = delta[2];
                     
                     // Do a trilinear interpolation of the 8 corners
-                    lerp_rgb(rgbaBuffer, a,b_,c,d,e,f,g,h,x,y,z);
+                    // 4726.8 scanlines/sec
+                    
+                    lerp_rgb(rgbaBuffer, a, b_, c, d, e, f, g, h,
+                                         x, y, z);
+                    
+                    
+                    
+                    // SSE Emulation
+                    // 4709 scanlines/sec
+                    /*
+                    float v3[3];
+                    float v4[3];
+                    lerp_rgb(v3, a, b_, z);
+                    lerp_rgb(v4, c, d, z);
+                    float v1[3];
+                    lerp_rgb(v1, v3, v4, y);
+                    
+                    lerp_rgb(v3, e, f, z);
+                    lerp_rgb(v4, g, h, z);
+                    float v2[3];
+                    lerp_rgb(v2, v3, v4, y);
+                    
+                    float out[3];
+                    lerp_rgb(out, v1, v2, x);
+                    
+                    rgbaBuffer[0] = out[0];
+                    rgbaBuffer[1] = out[1];
+                    rgbaBuffer[2] = out[2];
+                    */
+                    
+                    // SSE Expansion
+                    /*
+                    // 452 scanlines/sec
+                    __m128 mm_a = _mm_loadu_ps(a);
+                    __m128 mm_b = _mm_loadu_ps(b_);
+                    __m128 mm_z = _mm_loadu_ps(z);
+                    __m128 mm_y = _mm_loadu_ps(y);
+                    __m128 mm_v1;
+                    __m128 mm_v3;
+                    __m128 mm_v4;
+                    
+                    lerp_rgba_sse(mm_v3, mm_a, mm_b, mm_z);
+                    mm_a = _mm_loadu_ps(c);
+                    mm_b = _mm_loadu_ps(d);
+                    lerp_rgba_sse(mm_v4, mm_a, mm_b, mm_z);
+                    lerp_rgba_sse(mm_v1, mm_v3, mm_v4, mm_y);
+                    
+                    mm_a = _mm_loadu_ps(e);
+                    mm_b = _mm_loadu_ps(f);
+                    lerp_rgba_sse(mm_v3, mm_a, mm_b, mm_z);
+                    mm_a = _mm_loadu_ps(g);
+                    mm_b = _mm_loadu_ps(h);
+                    lerp_rgba_sse(mm_v4, mm_a, mm_b, mm_z);
+                    lerp_rgba_sse(mm_a, mm_v3, mm_v4, mm_y);
+                    
+                    mm_b = _mm_loadu_ps(x);
+                    lerp_rgba_sse(mm_v4, mm_v1, mm_a, mm_b);
+                    
+                    float out[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                    _mm_storeu_ps(out, mm_v4);
+                    
+                    rgbaBuffer[0] = out[0];
+                    rgbaBuffer[1] = out[1];
+                    rgbaBuffer[2] = out[2];
+                    */
                     
                     rgbaBuffer += 4;
                 }
@@ -574,7 +648,7 @@ OIIO_ADD_TEST(Lut3DOp, ValueCheck)
     OCIO::Lut3D_Nearest(color, 3, lut);
     for(unsigned int i=0; i<12; ++i)
     {
-        OIIO_CHECK_CLOSE(color[i], nearest[i], 1e-5);
+        OIIO_CHECK_CLOSE(color[i], nearest[i], 1e-8);
     }
     
     // Check linear
@@ -582,14 +656,14 @@ OIIO_ADD_TEST(Lut3DOp, ValueCheck)
     OCIO::Lut3D_Linear(color, 3, lut);
     for(unsigned int i=0; i<12; ++i)
     {
-        OIIO_CHECK_CLOSE(color[i], linear[i], 1e-5);
+        OIIO_CHECK_CLOSE(color[i], linear[i], 1e-8);
     }
 }
 
 
 OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
 {
-    /*
+    
     OCIO::Lut3D lut;
     
     lut.from_min[0] = 0.0f;
@@ -600,22 +674,23 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
     lut.from_max[1] = 1.0f;
     lut.from_max[2] = 1.0f;
     
-    lut.size[0] = 16;
-    lut.size[1] = 16;
-    lut.size[2] = 16;
+    lut.size[0] = 32;
+    lut.size[1] = 32;
+    lut.size[2] = 32;
     
     lut.lut.resize(lut.size[0]*lut.size[1]*lut.size[2]*3);
     GenerateIdentityLut3D(&lut.lut[0], lut.size[0], 3, OCIO::LUT3DORDER_FAST_RED);
+    /*
     for(unsigned int i=0; i<lut.lut.size(); ++i)
     {
         lut.lut[i] = powf(lut.lut[i], 2.0f);
     }
+    */
     
     std::vector<float> img;
     int xres = 2048;
-    int yres = 2048;
+    int yres = 1;
     int channels = 4;
-    
     img.resize(xres*yres*channels);
     
     srand48(0);
@@ -633,7 +708,7 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
     gettimeofday(&t, 0);
     double starttime = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;
     
-    int numloops = 1;
+    int numloops = 1024;
     for(int i=0; i<numloops; ++i)
     {
         // OCIO::Lut3D_Nearest(&img[0], xres*yres, lut);
@@ -645,7 +720,6 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
     double totaltime = (endtime-starttime)/numloops;;
     
     printf("time %0.1f ms  - %0.1f fps\n", totaltime*1000.0, 1.0/totaltime);
-    */
 }
 
 
