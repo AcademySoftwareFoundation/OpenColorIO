@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HashUtils.h"
 #include "Lut3DOp.h"
 #include "MathUtils.h"
-#include "SSE.h"
 
 #include <cmath>
 #include <limits>
@@ -68,17 +67,6 @@ OCIO_NAMESPACE_ENTER
             out[0] = (b[0] - a[0]) * z[0] + a[0];
             out[1] = (b[1] - a[1]) * z[1] + a[1];
             out[2] = (b[2] - a[2]) * z[2] + a[2];
-        }
-        
-        // Out != a
-        // Out may == {b,z}
-        
-        inline void lerp_rgba_sse(__m128 & out, const __m128 & a,
-                                  const __m128 & b, const __m128 & z)
-        {
-            out = _mm_sub_ps(b, a);
-            out = _mm_mul_ps(out, z);
-            out = _mm_add_ps(out, a);
         }
         
         // Bilinear
@@ -270,67 +258,6 @@ OCIO_NAMESPACE_ENTER
                     
                     lerp_rgb(rgbaBuffer, a, b_, c, d, e, f, g, h,
                                          x, y, z);
-                    
-                    
-                    
-                    // SSE Emulation
-                    // 4709 scanlines/sec
-                    /*
-                    float v3[3];
-                    float v4[3];
-                    lerp_rgb(v3, a, b_, z);
-                    lerp_rgb(v4, c, d, z);
-                    float v1[3];
-                    lerp_rgb(v1, v3, v4, y);
-                    
-                    lerp_rgb(v3, e, f, z);
-                    lerp_rgb(v4, g, h, z);
-                    float v2[3];
-                    lerp_rgb(v2, v3, v4, y);
-                    
-                    float out[3];
-                    lerp_rgb(out, v1, v2, x);
-                    
-                    rgbaBuffer[0] = out[0];
-                    rgbaBuffer[1] = out[1];
-                    rgbaBuffer[2] = out[2];
-                    */
-                    
-                    // SSE Expansion
-                    /*
-                    // 452 scanlines/sec
-                    __m128 mm_a = _mm_loadu_ps(a);
-                    __m128 mm_b = _mm_loadu_ps(b_);
-                    __m128 mm_z = _mm_loadu_ps(z);
-                    __m128 mm_y = _mm_loadu_ps(y);
-                    __m128 mm_v1;
-                    __m128 mm_v3;
-                    __m128 mm_v4;
-                    
-                    lerp_rgba_sse(mm_v3, mm_a, mm_b, mm_z);
-                    mm_a = _mm_loadu_ps(c);
-                    mm_b = _mm_loadu_ps(d);
-                    lerp_rgba_sse(mm_v4, mm_a, mm_b, mm_z);
-                    lerp_rgba_sse(mm_v1, mm_v3, mm_v4, mm_y);
-                    
-                    mm_a = _mm_loadu_ps(e);
-                    mm_b = _mm_loadu_ps(f);
-                    lerp_rgba_sse(mm_v3, mm_a, mm_b, mm_z);
-                    mm_a = _mm_loadu_ps(g);
-                    mm_b = _mm_loadu_ps(h);
-                    lerp_rgba_sse(mm_v4, mm_a, mm_b, mm_z);
-                    lerp_rgba_sse(mm_a, mm_v3, mm_v4, mm_y);
-                    
-                    mm_b = _mm_loadu_ps(x);
-                    lerp_rgba_sse(mm_v4, mm_v1, mm_a, mm_b);
-                    
-                    float out[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-                    _mm_storeu_ps(out, mm_v4);
-                    
-                    rgbaBuffer[0] = out[0];
-                    rgbaBuffer[1] = out[1];
-                    rgbaBuffer[2] = out[2];
-                    */
                     
                     rgbaBuffer += 4;
                 }
@@ -663,7 +590,7 @@ OIIO_ADD_TEST(Lut3DOp, ValueCheck)
 
 OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
 {
-    
+    /*
     OCIO::Lut3D lut;
     
     lut.from_min[0] = 0.0f;
@@ -680,12 +607,6 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
     
     lut.lut.resize(lut.size[0]*lut.size[1]*lut.size[2]*3);
     GenerateIdentityLut3D(&lut.lut[0], lut.size[0], 3, OCIO::LUT3DORDER_FAST_RED);
-    /*
-    for(unsigned int i=0; i<lut.lut.size(); ++i)
-    {
-        lut.lut[i] = powf(lut.lut[i], 2.0f);
-    }
-    */
     
     std::vector<float> img;
     int xres = 2048;
@@ -720,6 +641,7 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
     double totaltime = (endtime-starttime)/numloops;;
     
     printf("time %0.1f ms  - %0.1f fps\n", totaltime*1000.0, 1.0/totaltime);
+    */
 }
 
 
