@@ -245,7 +245,7 @@ OCIO_NAMESPACE_ENTER
         const char * getDst() const;
         //!cpp:function::
         void setDst(const char * dst);
-    
+        
     private:
         ColorSpaceTransform();
         ColorSpaceTransform(const ColorSpaceTransform &);
@@ -298,21 +298,35 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         ConstTransformRcPtr getColorTimingCC() const;
         
-        //!cpp:function:: Step 3: Apply the Channel Viewing Swizzle (mtx)
+        //!cpp:function:: Step 4: Apply the Channel Viewing Swizzle (mtx)
         void setChannelView(const ConstTransformRcPtr & transform);
         //!cpp:function::
         ConstTransformRcPtr getChannelView() const;
         
-        //!cpp:function:: Step 4: Apply the output display transform
-        void setDisplayColorSpaceName(const char * name);
-        //!cpp:function::
-        const char * getDisplayColorSpaceName() const;
+        //!cpp:function:: Step 5: Apply the output display transform
         
-        //!cpp:function:: Step 5: Apply a post display transform color correction
+        //!cpp:function:: Step 6: Apply a post display transform color correction
         void setDisplayCC(const ConstTransformRcPtr & cc);
         //!cpp:function::
         ConstTransformRcPtr getDisplayCC() const;
         
+        //!cpp:function::Specify which display transform to use
+        void setDisplay(const char * display);
+        //!cpp:function::
+        const char * getDisplay() const;
+        
+        //!cpp:function::Specify which view transform to use
+        void setView(const char * view);
+        //!cpp:function::
+        const char * getView() const;
+        
+        //!cpp:function:: deprecated, to be removed in 0.9+
+        // If you rely on these functions, Views will not be applied
+        void setDisplayColorSpaceName(const char * name);
+        
+        //!cpp:function:: deprecated, to be removed in 0.9+
+        // If you rely on these functions, Views will not be applied
+        const char * getDisplayColorSpaceName() const;
     private:
         DisplayTransform();
         DisplayTransform(const DisplayTransform &);
@@ -535,6 +549,65 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LogTransform&);
+    
+    
+    
+    
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class::
+    class OCIOEXPORT LookTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static LookTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+        
+        //!cpp:function::
+        const char * getSrc() const;
+        //!cpp:function::
+        void setSrc(const char * src);
+        
+        //!cpp:function::
+        const char * getDst() const;
+        //!cpp:function::
+        void setDst(const char * dst);
+        
+        //!cpp:function:: Specify looks to apply.
+        // Looks is a potentially comma (or colon) delimited list of look names,
+        // Where +/- prefixes are optionally allowed to denote forward/inverse
+        // look specification. (And forward is assumed in the absense of either)
+        void setLooks(const char * looks);
+        //!cpp:function::
+        const char * getLooks() const;
+        
+    private:
+        LookTransform();
+        LookTransform(const LookTransform &);
+        virtual ~LookTransform();
+        
+        LookTransform& operator= (const LookTransform &);
+        
+        static void deleter(LookTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LookTransform&);
+    
+    
     
     
     //!rst:: //////////////////////////////////////////////////////////////////

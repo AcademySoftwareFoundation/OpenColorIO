@@ -64,6 +64,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<ColorSpace> ColorSpaceRcPtr;
     
+    class OCIOEXPORT Look;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const Look> ConstLookRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<Look> LookRcPtr;
+    
     class OCIOEXPORT Context;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const Context> ConstContextRcPtr;
@@ -144,6 +150,12 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const LogTransform> ConstLogTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<LogTransform> LogTransformRcPtr;
+    
+    class OCIOEXPORT LookTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const LookTransform> ConstLookTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<LookTransform> LookTransformRcPtr;
     
     class OCIOEXPORT MatrixTransform;
     //!cpp:type::

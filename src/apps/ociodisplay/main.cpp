@@ -69,6 +69,7 @@ GLuint g_lut3dTexID;
 const int LUT3D_EDGE_SIZE = 32;
 std::vector<float> g_lut3d;
 std::string g_lut3dcacheid;
+std::string g_shadercacheid;
 
 std::string g_inputColorSpace;
 std::string g_display;
@@ -465,22 +466,27 @@ void UpdateOCIOGLState()
 {
     // Step 0: Get the processor using any of the pipelines mentioned above.
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    const char * displayColorSpace = config->getDisplayColorSpaceName(g_display.c_str(), g_transformName.c_str());
     
     OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
     transform->setInputColorSpaceName( g_inputColorSpace.c_str() );
-    transform->setDisplayColorSpaceName( displayColorSpace );
+    transform->setDisplay( g_display.c_str() );
+    transform->setView( g_transformName.c_str() );
     
-    // Add custom transforms for our canonical display pipeline
+    // Add optional transforms to create a full-featured, "canonical" display pipeline
+    // Fstop exposure control (in SCENE_LINEAR)
     {
-        // Add an fstop exposure control (in SCENE_LINEAR)
         float gain = powf(2.0f, g_exposure_fstop);
-        const float slope3f[] = { gain, gain, gain };
-        OCIO::CDLTransformRcPtr cc =  OCIO::CDLTransform::Create();
-        cc->setSlope(slope3f);
-        transform->setLinearCC(cc);
-        
-        // Add Channel swizzling
+        const float slope4f[] = { gain, gain, gain, gain };
+        float m44[16];
+        float offset4[4];
+        OCIO::MatrixTransform::Scale(m44, offset4, slope4f);
+        OCIO::MatrixTransformRcPtr mtx =  OCIO::MatrixTransform::Create();
+        mtx->setValue(m44, offset4);
+        transform->setLinearCC(mtx);
+    }
+    
+    // Channel swizzling
+    {
         float lumacoef[3];
         config->getDefaultLumaCoefs(lumacoef);
         float m44[16];
@@ -489,8 +495,10 @@ void UpdateOCIOGLState()
         OCIO::MatrixTransformRcPtr swizzle = OCIO::MatrixTransform::Create();
         swizzle->setValue(m44, offset);
         transform->setChannelView(swizzle);
-        
-        // Specify a post-display gamma transform
+    }
+    
+    // Post-display transform gamma
+    {
         float exponent = 1.0f/std::max(1e-6f, static_cast<float>(g_display_gamma));
         const float exponent4f[] = { exponent, exponent, exponent, exponent };
         OCIO::ExponentTransformRcPtr expTransform =  OCIO::ExponentTransform::Create();
@@ -506,6 +514,7 @@ void UpdateOCIOGLState()
     catch(OCIO::Exception & e)
     {
         std::cerr << e.what() << std::endl;
+        return;
     }
     catch(...)
     {
@@ -534,21 +543,26 @@ void UpdateOCIOGLState()
                         GL_RGB,GL_FLOAT, &g_lut3d[0]);
     }
     
-    std::ostringstream os;
-    os << processor->getGpuShaderText(shaderDesc) << "\n";
-    os << g_fragShaderText;
-    
-    // Print the shader text
-    //std::cerr << "SHADER**********" << std::endl;
-    //std::cerr << os.str() << std::endl;
-    
-    if(g_fragShader) glDeleteShader(g_fragShader);
-    g_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
-    if(g_program) glDeleteProgram(g_program);
-    g_program = LinkShaders(g_fragShader);
+    // Step 3: Compute the Shader
+    std::string shaderCacheID = processor->getGpuShaderTextCacheID(shaderDesc);
+    if(g_program == 0 || shaderCacheID != g_shadercacheid)
+    {
+        //std::cerr << "Computing Shader " << g_shadercacheid << std::endl;
+        
+        g_shadercacheid = shaderCacheID;
+        
+        std::ostringstream os;
+        os << processor->getGpuShaderText(shaderDesc) << "\n";
+        os << g_fragShaderText;
+        //std::cerr << os.str() << std::endl;
+        
+        if(g_fragShader) glDeleteShader(g_fragShader);
+        g_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
+        if(g_program) glDeleteProgram(g_program);
+        g_program = LinkShaders(g_fragShader);
+    }
     
     glUseProgram(g_program);
-    
     glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
     glUniform1i(glGetUniformLocation(g_program, "tex2"), 2);
 }

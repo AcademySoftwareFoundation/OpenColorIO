@@ -73,6 +73,22 @@ set_target_properties(NukeOCIOLogConvert
 )
 
 ###############################################################################
+### NukeOCIOLookTransform ###
+
+add_library(NukeOCIOLookTransform MODULE
+    OCIOLookTransform/OCIOLookTransform.cpp
+)
+target_link_libraries(NukeOCIOLookTransform
+    OpenColorIO
+    #${Nuke_LIBRARIES}
+)
+set_target_properties(NukeOCIOLookTransform
+    PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "OCIOLookTransform"
+)
+
+###############################################################################
 ### NukeOCIOCDLTransform ###
 
 add_library(NukeOCIOCDLTransform MODULE
@@ -109,6 +125,9 @@ install(TARGETS NukeOCIOLogConvert
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
 install(TARGETS NukeOCIOFileTransform
+        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
+
+install(TARGETS NukeOCIOLookTransform
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
 install(TARGETS NukeOCIOCDLTransform

@@ -1,0 +1,393 @@
+/**
+ * OpenColorIO ColorSpace Iop.
+ */
+
+#include "OCIOLookTransform.h"
+
+namespace OCIO = OCIO_NAMESPACE;
+
+#include <string>
+#include <sstream>
+#include <stdexcept>
+
+#include <DDImage/Channel.h>
+#include <DDImage/PixelIop.h>
+#include <DDImage/NukeWrapper.h>
+#include <DDImage/Row.h>
+#include <DDImage/Knobs.h>
+
+
+OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
+{
+    m_hasColorSpaces = false;
+
+    m_inputColorSpaceIndex = 0;
+    m_outputColorSpaceIndex = 0;
+    m_lookIndex = 0;
+    m_invertTransform = false;
+
+    m_layersToProcess = DD::Image::Mask_RGB;
+    
+    // Query the colorspace names from the current config
+    // TODO (when to) re-grab the list of available colorspaces? How to save/load?
+    
+    OCIO::ConstConfigRcPtr config;
+    
+    try
+    {
+        config = OCIO::GetCurrentConfig();
+    }
+    catch (OCIO::Exception& e)
+    {
+        std::cerr << "OCIOLookTransform: " << e.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::cerr << "OCIOLookTransform: Unknown exception during OCIO setup." << std::endl;
+    }
+    
+    if(!config)
+    {
+        m_hasColorSpaces = false;
+        return;
+    }
+    
+    // Step 1: Make the std::vectors
+    for(int i=0; i<config->getNumLooks(); ++i)
+    {
+        m_lookNames.push_back(config->getLookNameByIndex(i));
+    }
+    
+    std::string linear = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR)->getName();
+    
+    for(int i = 0; i < config->getNumColorSpaces(); i++)
+    {
+        std::string csname = config->getColorSpaceNameByIndex(i);
+        m_colorSpaceNames.push_back(csname);
+        
+        if(csname == linear)
+        {
+            m_inputColorSpaceIndex = i;
+            m_outputColorSpaceIndex = i;
+        }
+    }
+    
+    
+    // Step 2: Create a cstr array for passing to Nuke
+    // (This must be done in a second pass, lest the original strings be reallocated)
+    
+    for(unsigned int i=0; i<m_lookNames.size(); ++i)
+    {
+        m_lookCstrNames.push_back(m_lookNames[i].c_str());
+    }
+    m_lookCstrNames.push_back(NULL);
+    
+    for(unsigned int i=0; i<m_colorSpaceNames.size(); ++i)
+    {
+        m_inputColorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
+        m_outputColorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
+    }
+    
+    m_inputColorSpaceCstrNames.push_back(NULL);
+    m_outputColorSpaceCstrNames.push_back(NULL);
+    
+    
+    
+    
+    
+    m_hasColorSpaces = (!m_colorSpaceNames.empty());
+    
+    if(!m_hasColorSpaces)
+    {
+        std::cerr << "OCIOLookTransform: No ColorSpaces available for input and/or output." << std::endl;
+    }
+}
+
+OCIOLookTransform::~OCIOLookTransform()
+{
+
+}
+
+void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
+{
+    DD::Image::Enumeration_knob(f, &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
+    DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
+
+    DD::Image::Enumeration_knob(f, &m_lookIndex, &m_lookCstrNames[0], "look", "look");
+    DD::Image::Tooltip(f, "Specify the look to apply, as predefined in the OpenColorIO configuration.");
+    
+    DD::Image::Spacer(f, 8);
+    
+    DD::Image::Knob * dirKnob = DD::Image::Bool_knob(f, &m_invertTransform, "inverse", "inverse look");
+    DD::Image::Tooltip(f, "Specify the transform direction.");
+    dirKnob->clear_flag( DD::Image::Knob::STARTLINE );
+    
+    DD::Image::Enumeration_knob(f, &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
+    DD::Image::Tooltip(f, "Image data is converted to this colorspace for output.");
+
+    DD::Image::BeginClosedGroup(f, "Context");
+    {
+        DD::Image::String_knob(f, &m_contextKey1, "key1");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue1, "value1");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+        
+        DD::Image::String_knob(f, &m_contextKey2, "key2");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue2, "value2");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+        
+        DD::Image::String_knob(f, &m_contextKey3, "key3");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue3, "value3");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+        
+        DD::Image::String_knob(f, &m_contextKey4, "key4");
+        DD::Image::Spacer(f, 10);
+        DD::Image::String_knob(f, &m_contextValue4, "value4");
+        DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
+    }
+    DD::Image::EndGroup(f);
+    
+    
+    DD::Image::Divider(f);
+
+    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
+    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
+    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
+}
+
+OCIO::ConstContextRcPtr OCIOLookTransform::getLocalContext()
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    OCIO::ConstContextRcPtr context = config->getCurrentContext();
+    OCIO::ContextRcPtr mutableContext;
+    
+    if(!m_contextKey1.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey1.c_str(), m_contextValue1.c_str());
+    }
+    if(!m_contextKey2.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey2.c_str(), m_contextValue2.c_str());
+    }
+    if(!m_contextKey3.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey3.c_str(), m_contextValue3.c_str());
+    }
+    if(!m_contextKey4.empty())
+    {
+        if(!mutableContext) mutableContext = context->createEditableCopy();
+        mutableContext->setStringVar(m_contextKey4.c_str(), m_contextValue4.c_str());
+    }
+    
+    if(mutableContext) context = mutableContext;
+    return context;
+}
+
+void OCIOLookTransform::append(DD::Image::Hash& localhash)
+{
+    // TODO: Hang onto the context, what if getting it
+    // (and querying getCacheID) is expensive?
+    try
+    {
+        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        OCIO::ConstContextRcPtr context = getLocalContext();
+        std::string configCacheID = config->getCacheID(context);
+        localhash.append(configCacheID);
+    }
+    catch(OCIO::Exception &e)
+    {
+        error(e.what());
+        return;
+    }
+}
+
+void OCIOLookTransform::_validate(bool for_real)
+{
+    input0().validate(for_real);
+
+    if(!m_hasColorSpaces)
+    {
+        error("No colorspaces available for input and/or output.");
+        return;
+    }
+
+    int inputColorSpaceCount = static_cast<int>(m_inputColorSpaceCstrNames.size()) - 1;
+    if(m_inputColorSpaceIndex < 0 || m_inputColorSpaceIndex >= inputColorSpaceCount)
+    {
+        std::ostringstream err;
+        err << "Input colorspace index (" << m_inputColorSpaceIndex << ") out of range.";
+        error(err.str().c_str());
+        return;
+    }
+
+    int outputColorSpaceCount = static_cast<int>(m_outputColorSpaceCstrNames.size()) - 1;
+    if(m_outputColorSpaceIndex < 0 || m_outputColorSpaceIndex >= outputColorSpaceCount)
+    {
+        std::ostringstream err;
+        err << "Output colorspace index (" << m_outputColorSpaceIndex << ") out of range.";
+        error(err.str().c_str());
+        return;
+    }
+
+    try
+    {
+        const char * inputName = m_inputColorSpaceCstrNames[m_inputColorSpaceIndex];
+        const char * outputName = m_outputColorSpaceCstrNames[m_outputColorSpaceIndex];
+        
+        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+        config->sanityCheck();
+        
+        OCIO::LookTransformRcPtr transform = OCIO::LookTransform::Create();
+        const char * looks = m_lookCstrNames[m_lookIndex];
+        if(looks != NULL)
+        {
+            transform->setLooks(looks);
+        }
+        
+        OCIO::ConstContextRcPtr context = getLocalContext();
+        
+        // Forward
+        if(!m_invertTransform)
+        {
+            transform->setSrc(inputName);
+            transform->setDst(outputName);
+            m_processor = config->getProcessor(context, transform, OCIO::TRANSFORM_DIR_FORWARD);
+        }
+        else
+        {
+            // The TRANSFORM_DIR_INVERSE applies an inverse for the end-to-end transform,
+            // which would otherwise do dst->inv look -> src.
+            // This is an unintuitive result for the artist (who would expect in, out to
+            // remain unchanged), so we account for that here by flipping src/dst
+            
+            transform->setSrc(outputName);
+            transform->setDst(inputName);
+            m_processor = config->getProcessor(context, transform, OCIO::TRANSFORM_DIR_INVERSE);
+        }
+    }
+    catch(OCIO::Exception &e)
+    {
+        error(e.what());
+        return;
+    }
+    
+    if(m_processor->isNoOp())
+    {
+        // TODO or call disable() ?
+        set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
+        copy_info();
+        return;
+    }
+    
+    set_out_channels(DD::Image::Mask_All);
+
+    DD::Image::PixelIop::_validate(for_real);
+}
+
+// Note that this is copied by others (OCIODisplay)
+void OCIOLookTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
+{
+    DD::Image::ChannelSet done;
+    foreach(c, mask)
+    {
+        if ((m_layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        {
+            done.addBrothers(c, 3);
+        }
+    }
+    mask += done;
+}
+
+// See Saturation::pixel_engine for a well-commented example.
+// Note that this is copied by others (OCIODisplay)
+void OCIOLookTransform::pixel_engine(
+    const DD::Image::Row& in,
+    int /* rowY unused */, int rowX, int rowXBound,
+    DD::Image::ChannelMask outputChannels,
+    DD::Image::Row& out)
+{
+    int rowWidth = rowXBound - rowX;
+
+    DD::Image::ChannelSet done;
+    foreach (requestedChannel, outputChannels)
+    {
+        // Skip channels which had their trios processed already,
+        if (done & requestedChannel)
+        {
+            continue;
+        }
+
+        // Pass through channels which are not selected for processing
+        // and non-rgb channels.
+        if (!(m_layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        {
+            out.copy(in, requestedChannel, rowX, rowXBound);
+            continue;
+        }
+
+        DD::Image::Channel rChannel = DD::Image::brother(requestedChannel, 0);
+        DD::Image::Channel gChannel = DD::Image::brother(requestedChannel, 1);
+        DD::Image::Channel bChannel = DD::Image::brother(requestedChannel, 2);
+
+        done += rChannel;
+        done += gChannel;
+        done += bChannel;
+
+        const float *rIn = in[rChannel] + rowX;
+        const float *gIn = in[gChannel] + rowX;
+        const float *bIn = in[bChannel] + rowX;
+
+        float *rOut = out.writable(rChannel) + rowX;
+        float *gOut = out.writable(gChannel) + rowX;
+        float *bOut = out.writable(bChannel) + rowX;
+
+        // OCIO modifies in-place
+        memcpy(rOut, rIn, sizeof(float)*rowWidth);
+        memcpy(gOut, gIn, sizeof(float)*rowWidth);
+        memcpy(bOut, bIn, sizeof(float)*rowWidth);
+
+        try
+        {
+            OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
+            m_processor->apply(img);
+        }
+        catch(OCIO::Exception &e)
+        {
+            error(e.what());
+        }
+    }
+}
+
+const DD::Image::Op::Description OCIOLookTransform::description("OCIOLookTransform", build);
+
+const char* OCIOLookTransform::Class() const
+{
+    return description.name;
+}
+
+const char* OCIOLookTransform::displayName() const
+{
+    return description.name;
+}
+
+const char* OCIOLookTransform::node_help() const
+{
+    // TODO more detailed help text
+    return "Use OpenColorIO to apply the specified Look Transform";
+}
+
+
+DD::Image::Op* build(Node *node)
+{
+    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOLookTransform(node));
+    op->noMix();
+    op->noMask();
+    op->noChannels(); // prefer our own channels control without checkboxes / alpha
+    op->noUnpremult();
+    return op;
+}

@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
+#include "PrivateTypes.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -106,6 +107,26 @@ OCIO_NAMESPACE_ENTER
                      const LogTransform& transform,
                      TransformDirection dir);
     
+    void BuildLookOps(OpRcPtrVec & ops,
+                      const Config& config,
+                      const ConstContextRcPtr & context,
+                      const LookTransform & lookTransform,
+                      TransformDirection dir);
+    
+    // This has a special behavior in terms of dir handling
+    // If inverse is specified, the looks are applied
+    // in the inverse direction, in the inverse order,
+    // but the input and output colorspace direction is
+    // unmodified. (input is ALWAYS input, etc).
+    //
+    void BuildLookOps(OpRcPtrVec & ops,
+                      ConstColorSpaceRcPtr & currentColorSpace,
+                      bool skipColorSpaceConversions,
+                      const Config& config,
+                      const ConstContextRcPtr & context,
+                      const std::string & looks,
+                      TransformDirection dir);
+    
     void BuildMatrixOps(OpRcPtrVec & ops,
                         const Config& config,
                         const MatrixTransform & transform,
@@ -118,6 +139,8 @@ OCIO_NAMESPACE_ENTER
     
     ////////////////////////////////////////////////////////////////////////
     
+    void SplitLooks(StringVec & lookVec, TransformDirectionVec & directionVec,
+                    const std::string & looks);
     
     void CreateAllocationNoOp(OpRcPtrVec & ops,
                               const AllocationData & allocationData);

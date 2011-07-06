@@ -35,6 +35,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "PyConfig.h"
 #include "PyContext.h"
 #include "PyConstants.h"
+#include "PyLook.h"
 #include "PyProcessor.h"
 #include "PyTransform.h"
 #include "PyUtil.h"
@@ -117,10 +118,15 @@ initPyOpenColorIO(void)
     PyObject * m;
     m = Py_InitModule3("PyOpenColorIO", PyOCIO_methods, "OpenColorIO API");
     
+    PyModule_AddStringConstant(m, "version", OCIO::GetVersion());
+    PyModule_AddIntConstant(m, "hexversion", OCIO::GetVersionHex());
+    
     OCIO::AddColorSpaceObjectToModule( m );
     OCIO::AddConfigObjectToModule( m );
     OCIO::AddConstantsModule( m );
     OCIO::AddContextObjectToModule( m );
+    OCIO::AddLookObjectToModule( m );
+    OCIO::AddProcessorObjectToModule( m );
     
     OCIO::AddTransformObjectToModule( m );
     {
@@ -132,10 +138,7 @@ initPyOpenColorIO(void)
         OCIO::AddFileTransformObjectToModule( m );
         OCIO::AddGroupTransformObjectToModule( m );
         OCIO::AddLogTransformObjectToModule( m );
+        OCIO::AddLookTransformObjectToModule( m );
         OCIO::AddMatrixTransformObjectToModule( m );
     }
-    OCIO::AddProcessorObjectToModule( m );
-    
-    PyModule_AddStringConstant(m, "version", OCIO::GetVersion());
-    PyModule_AddIntConstant(m, "hexversion", OCIO::GetVersionHex());
 }

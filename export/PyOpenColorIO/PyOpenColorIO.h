@@ -60,6 +60,11 @@ OCIO_NAMESPACE_ENTER
     ConstContextRcPtr GetConstContext(PyObject * context, bool allowCast);
     ContextRcPtr GetEditableContext(PyObject * context);
     
+    // Processor
+    PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor);
+    bool IsPyProcessor(PyObject * pyobject);
+    ConstProcessorRcPtr GetConstProcessor(PyObject * pyobject);
+    
     // Transform
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
     PyObject * BuildEditablePyTransform(TransformRcPtr transform);
@@ -68,10 +73,13 @@ OCIO_NAMESPACE_ENTER
     ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast);
     TransformRcPtr GetEditableTransform(PyObject * pyobject);
     
-    // Processor
-    PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor);
-    bool IsPyProcessor(PyObject * pyobject);
-    ConstProcessorRcPtr GetConstProcessor(PyObject * pyobject);
+    // Look
+    PyObject * BuildConstPyLook(ConstLookRcPtr look);
+    PyObject * BuildEditablePyLook(LookRcPtr look);
+    bool IsPyLook(PyObject * pyobject);
+    bool IsPyLookEditable(PyObject * pyobject);
+    ConstLookRcPtr GetConstLook(PyObject * pyobject, bool allowCast);
+    LookRcPtr GetEditableLook(PyObject * pyobject);
 }
 OCIO_NAMESPACE_EXIT
 

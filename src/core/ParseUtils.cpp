@@ -340,10 +340,13 @@ OCIO_NAMESPACE_ENTER
         return (pystring::lower(a) == pystring::lower(b));
     }
     
-    // Split on ':', ',', then nothing
+    // If a ',' is in the string, split on it
+    // If a ':' is in the string, split on it
+    // Otherwise, assume a single string.
+    // Also, strip whitespace from all parts.
+    
     void SplitStringEnvStyle(std::vector<std::string> & outputvec, const char * str)
     {
-        outputvec.clear();
         if(!str) return;
         
         std::string s = pystring::strip(str);

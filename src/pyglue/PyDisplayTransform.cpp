@@ -103,6 +103,12 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_DisplayTransform_getDisplayColorSpaceName( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setDisplayColorSpaceName( PyObject * self,  PyObject *args );
         
+        PyObject * PyOCIO_DisplayTransform_getDisplay( PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setDisplay( PyObject * self,  PyObject *args );
+        
+        PyObject * PyOCIO_DisplayTransform_getView( PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setView( PyObject * self,  PyObject *args );
+        
         PyObject * PyOCIO_DisplayTransform_getDisplayCC( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setDisplayCC( PyObject * self,  PyObject *args );
         
@@ -124,6 +130,12 @@ OCIO_NAMESPACE_ENTER
             
             {"getDisplayColorSpaceName", (PyCFunction) PyOCIO_DisplayTransform_getDisplayColorSpaceName, METH_NOARGS, "" },
             {"setDisplayColorSpaceName", PyOCIO_DisplayTransform_setDisplayColorSpaceName, METH_VARARGS, "" },
+            
+            {"getDisplay", (PyCFunction) PyOCIO_DisplayTransform_getDisplay, METH_NOARGS, "" },
+            {"setDisplay", PyOCIO_DisplayTransform_setDisplay, METH_VARARGS, "" },
+            
+            {"getView", (PyCFunction) PyOCIO_DisplayTransform_getView, METH_NOARGS, "" },
+            {"setView", PyOCIO_DisplayTransform_setView, METH_VARARGS, "" },
             
             {"getDisplayCC", (PyCFunction) PyOCIO_DisplayTransform_getDisplayCC, METH_NOARGS, "" },
             {"setDisplayCC", PyOCIO_DisplayTransform_setDisplayCC, METH_VARARGS, "" },
@@ -390,6 +402,74 @@ OCIO_NAMESPACE_ENTER
                 
                 DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
                 transform->setDisplayColorSpaceName( name );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        PyObject * PyOCIO_DisplayTransform_getDisplay( PyObject * self )
+        {
+            try
+            {
+                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
+                return PyString_FromString( transform->getDisplay() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_DisplayTransform_setDisplay( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * str = 0;
+                if (!PyArg_ParseTuple(args,"s:setDisplay", &str)) return NULL;
+                
+                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+                transform->setDisplay( str );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_DisplayTransform_getView( PyObject * self )
+        {
+            try
+            {
+                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
+                return PyString_FromString( transform->getView() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_DisplayTransform_setView( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * str = 0;
+                if (!PyArg_ParseTuple(args,"s:setView", &str)) return NULL;
+                
+                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+                transform->setView( str );
                 
                 Py_RETURN_NONE;
             }

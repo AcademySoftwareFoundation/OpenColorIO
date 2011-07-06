@@ -4,8 +4,7 @@ Test the Python bindings.
 import PyOpenColorIO as OCIO
 
 print ""
-print "PyOCIO:", OCIO.__file__
-print "OCIO:",dir(OCIO)
+print "library:", OCIO.__file__
 print "version:",OCIO.version
 print "hexversion:",hex(OCIO.hexversion)
 print ""
@@ -23,14 +22,45 @@ print ""
 #print "resourcePath: '%s' " % (c.getResourcePath(),)
 #
 #OCIO.SetCurrentConfig(c)
-#c = OCIO.GetCurrentConfig()
+c = OCIO.GetCurrentConfig()
+c.sanityCheck()
 #print ''
 #print "ColorSpaces"
 #for cs in c.getColorSpaces():
 #    print "%s %s %s" % (cs.getName(), cs.getFamily(), cs.getBitDepth())
 
 
+# Test looks
+
+config = OCIO.Config()
+
+look = OCIO.Look(name = 'None',
+                 processSpace = 'nc10')
+config.addLook(look)
+
+look = OCIO.Look(name = 'CC',
+                 processSpace = 'lg10',
+                 transform = OCIO.FileTransform(src='{$SHOT}_cc.cc', interpolation='linear'))
+config.addLook(look)
+
+f = file('/tmp/a.ocio','w')
+t = config.serialize()
+f.write(t)
+f.close()
+
+print t
+print '\n'*3
+
+config2 = OCIO.Config.CreateFromFile('/tmp/a.ocio')
+print config2.serialize()
+
 # Create a new config
+"""
+environment:
+  - !<env>
+    name: SHOT
+    missing_value: home
+"""
 
 """
 config = OCIO.GetCurrentConfig()

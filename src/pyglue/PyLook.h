@@ -27,54 +27,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCIO_PYTRANSFORM_H
-#define INCLUDED_PYOCIO_PYTRANSFORM_H
+#ifndef INCLUDED_PYOCIO_PYLOOK_H
+#define INCLUDED_PYOCIO_PYLOOK_H
 
 #include <PyOpenColorIO/PyOpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
-    // TODO: Maybe put this in a pyinternal namespace?
-    
     typedef struct {
         PyObject_HEAD
-        ConstTransformRcPtr * constcppobj;
-        TransformRcPtr * cppobj;
+        ConstLookRcPtr * constcppobj;
+        LookRcPtr * cppobj;
         bool isconst;
-    } PyOCIO_Transform;
+    } PyOCIO_Look;
     
-    extern PyTypeObject PyOCIO_TransformType;
-    bool AddTransformObjectToModule( PyObject* m );
+    extern PyTypeObject PyOCIO_LookType;
     
-    extern PyTypeObject PyOCIO_AllocationTransformType;
-    bool AddAllocationTransformObjectToModule( PyObject* m );
-    
-    extern PyTypeObject PyOCIO_CDLTransformType;
-    bool AddCDLTransformObjectToModule( PyObject* m );
-    
-    extern PyTypeObject PyOCIO_ColorSpaceTransformType;
-    bool AddColorSpaceTransformObjectToModule( PyObject* m );
-    
-    extern PyTypeObject PyOCIO_DisplayTransformType;
-    bool AddDisplayTransformObjectToModule( PyObject* m );
-    
-    extern PyTypeObject PyOCIO_ExponentTransformType;
-    bool AddExponentTransformObjectToModule( PyObject* m );
-    
-    extern PyTypeObject PyOCIO_FileTransformType;
-    bool AddFileTransformObjectToModule( PyObject* m );
-    
-    extern PyTypeObject PyOCIO_GroupTransformType;
-    bool AddGroupTransformObjectToModule( PyObject* m );
-    
-    extern PyTypeObject PyOCIO_LogTransformType;
-    bool AddLogTransformObjectToModule( PyObject* m );
-    
-    extern PyTypeObject PyOCIO_LookTransformType;
-    bool AddLookTransformObjectToModule( PyObject* m );
-    
-    extern PyTypeObject PyOCIO_MatrixTransformType;
-    bool AddMatrixTransformObjectToModule( PyObject* m );
+    bool AddLookObjectToModule( PyObject* m );
 }
 OCIO_NAMESPACE_EXIT
 

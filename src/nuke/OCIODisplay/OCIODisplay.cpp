@@ -239,13 +239,9 @@ void OCIODisplay::_validate(bool for_real)
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
-        const char * csSrcName = m_colorSpaceCstrNames[m_colorSpaceIndex];
-        const char * display = m_displayCstrNames[m_displayIndex];
-        const char * view = m_viewCstrNames[m_viewIndex];
-        const char * csDstName = config->getDisplayColorSpaceName(display, view);
-
-        m_transform->setInputColorSpaceName(csSrcName);
-        m_transform->setDisplayColorSpaceName(csDstName);
+        m_transform->setInputColorSpaceName(m_colorSpaceCstrNames[m_colorSpaceIndex]);
+        m_transform->setDisplay(m_displayCstrNames[m_displayIndex]);
+        m_transform->setView(m_viewCstrNames[m_viewIndex]);
         
         // Specify an (optional) linear color correction
         {
