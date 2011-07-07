@@ -61,6 +61,7 @@ OCIO_NAMESPACE_ENTER
         float * data_;
         long width_;
         long height_;
+        long numChannels_;
         ptrdiff_t chanStrideBytes_;
         ptrdiff_t xStrideBytes_;
         ptrdiff_t yStrideBytes_;
@@ -69,6 +70,7 @@ OCIO_NAMESPACE_ENTER
             data_(0x0),
             width_(0),
             height_(0),
+            numChannels_(0),
             chanStrideBytes_(0),
             xStrideBytes_(0),
             yStrideBytes_(0)
@@ -84,6 +86,7 @@ OCIO_NAMESPACE_ENTER
             data_(data),
             width_(width),
             height_(height),
+            numChannels_(numChannels),
             chanStrideBytes_(chanStrideBytes),
             xStrideBytes_(xStrideBytes),
             yStrideBytes_(yStrideBytes)
@@ -174,9 +177,13 @@ OCIO_NAMESPACE_ENTER
             + 2*getImpl()->chanStrideBytes_ );
     }
     
+    float* PackedImageDesc::getAData() const
+    {
+        if(getImpl()->numChannels_<=3) return NULL;
+        return reinterpret_cast<float*>( reinterpret_cast<char*>(getImpl()->data_) \
+            + 3*getImpl()->chanStrideBytes_ );
+    }
     
-    
-    ///////////////////////////////////////////////////////////////////////////
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -189,6 +196,7 @@ OCIO_NAMESPACE_ENTER
         float * rData_;
         float * gData_;
         float * bData_;
+        float * aData_;
         
         long width_;
         long height_;
@@ -198,6 +206,7 @@ OCIO_NAMESPACE_ENTER
             rData_(0x0),
             gData_(0x0),
             bData_(0x0),
+            aData_(0x0),
             width_(0),
             height_(0),
             yStrideBytes_(0)
@@ -209,6 +218,7 @@ OCIO_NAMESPACE_ENTER
             rData_(rData),
             gData_(gData),
             bData_(bData),
+            aData_(0x0),
             width_(width),
             height_(height),
             yStrideBytes_(yStrideBytes)
@@ -284,6 +294,16 @@ OCIO_NAMESPACE_ENTER
     float* PlanarImageDesc::getBData() const
     {
         return getImpl()->bData_;
+    }
+    
+    void PlanarImageDesc::setAData(float * aData)
+    {
+        getImpl()->aData_ = aData;
+    }
+    
+    float* PlanarImageDesc::getAData() const
+    {
+        return getImpl()->aData_;
     }
 }
 OCIO_NAMESPACE_EXIT

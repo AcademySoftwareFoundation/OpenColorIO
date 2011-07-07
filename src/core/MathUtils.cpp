@@ -135,11 +135,11 @@ OCIO_NAMESPACE_ENTER
 
                 if(i==j)
                 {
-                    if(!equalWithAbsError(1.0, m44[index], FLTMIN)) return false;
+                    if(!IsScalarEqualToOne(m44[index])) return false;
                 }
                 else
                 {
-                    if(!equalWithAbsError(0.0, m44[index], FLTMIN)) return false;
+                    if(!IsScalarEqualToZero(m44[index])) return false;
                 }
             }
         }
@@ -152,7 +152,7 @@ OCIO_NAMESPACE_ENTER
         for(int i=0; i<16; ++i)
         {
             if((i%5)==0) continue; // If we're on the diagonal, skip it
-            if(!equalWithAbsError(0.0, m44[i], FLTMIN)) return false;
+            if(!IsScalarEqualToZero(m44[i])) return false;
         }
         
         return true;

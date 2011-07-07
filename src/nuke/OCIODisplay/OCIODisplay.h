@@ -29,7 +29,7 @@ class OCIODisplay : public DD::Image::PixelIop {
         std::vector<const char*> m_displayCstrNames, m_viewCstrNames;
         float m_gain;
         float m_gamma;
-        //int m_channel;
+        int m_channel;
         
         std::string m_contextKey1;
         std::string m_contextValue1;
