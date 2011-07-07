@@ -245,10 +245,16 @@ void OCIODisplay::_validate(bool for_real)
         
         // Specify an (optional) linear color correction
         {
-            const float slope3f[] = { m_gain, m_gain, m_gain };
-            OCIO::CDLTransformRcPtr cc =  OCIO::CDLTransform::Create();
-            cc->setSlope(slope3f);
-            m_transform->setLinearCC(cc);
+            float m44[16];
+            float offset4[4];
+            
+            const float slope4f[] = { m_gain, m_gain, m_gain, m_gain };
+            OCIO::MatrixTransform::Scale(m44, offset4, slope4f);
+            
+            OCIO::MatrixTransformRcPtr mtx =  OCIO::MatrixTransform::Create();
+            mtx->setValue(m44, offset);
+            
+            m_transform->setLinearCC(mtx);
         }
         
         // Specify an (optional) post-display transform.
