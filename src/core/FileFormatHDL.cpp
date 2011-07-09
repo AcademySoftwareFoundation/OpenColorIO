@@ -57,6 +57,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut1DOp.h"
 #include "Lut3DOp.h"
 #include "ParseUtils.h"
+#include "MathUtils.h"
 #include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
@@ -119,7 +120,7 @@ OCIO_NAMESPACE_ENTER
             FormatInfo info;
             info.name = "houdini";
             info.extension = "lut";
-            info.capabilities = FORMAT_CAPABILITY_READ;
+            info.capabilities = FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE;
             formatInfoVec.push_back(info);
         }
         
@@ -244,7 +245,7 @@ OCIO_NAMESPACE_ENTER
                     lut1d_ptr->luts[i].reserve(length_prelut);
                 }
                 
-                // Read single change into all rgb channels
+                // Read single channel into all rgb channels
                 for(int i = 0; i < length_prelut; ++i)
                 {
                     nextline (istream, line);
@@ -280,7 +281,7 @@ OCIO_NAMESPACE_ENTER
                     lut1d_ptr->luts[i].reserve(length_1d);
                 }
                 
-                // Read single change into all rgb channels
+                // Read single channel into all rgb channels
                 for(int i = 0; i < length_1d; ++i)
                 {
                     nextline (istream, line);
@@ -307,7 +308,7 @@ OCIO_NAMESPACE_ENTER
                 nextline (istream, line);
                 if (line.substr(0, 4) != "3D {" &&
                     line.substr(0, 2) != " {")
-                    throw Exception("malformed Houdini lut, couldn't read '3D {' or ' {' line");
+                    throw Exception("malformed Houdini lut, couldn't read '3D {' or '{' line");
                 
                 // resize cube
                 lut3d_ptr->lut.resize (lut3d_ptr->size[0]
@@ -381,74 +382,308 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
-        void LocalFileFormat::Write(const Baker & /*baker*/,
-                                    const std::string & /*formatName*/,
-                                    std::ostream & /*ostream*/) const
+        void LocalFileFormat::Write(const Baker & baker,
+                                    const std::string & formatName,
+                                    std::ostream & ostream) const
         {
-            /*
+
+            if(formatName != "houdini")
+            {
+                std::ostringstream os;
+                os << "Unknown hdl format name, '";
+                os << formatName << "'.";
+                throw Exception(os.str().c_str());
+            }
+
+            // Get config
+            ConstConfigRcPtr config = baker.getConfig();
+
             // setup the floating point precision
             ostream.setf(std::ios::fixed, std::ios::floatfield);
             ostream.precision(6);
+
+            // Default sizes
+            const int DEFAULT_SHAPER_SIZE = 1024;
+            // MPlay produces bad results with 32^3 cube (in a way
+            // that looks more quantised than even "nearest"
+            // interpolation in OCIOFileTransform)
+            const int DEFAULT_CUBE_SIZE = 64;
+            const int DEFAULT_1D_SIZE = 1024;
+
+            // Get configured sizes
+            int cubeSize = baker.getCubeSize();
+            int shaperSize = baker.getShaperSize();
+            // FIXME: Misusing cube size to set 1D LUT size, as it seemed
+            // slightly less confusing than using the shaper LUT size
+            int onedSize = baker.getCubeSize();
             
-            std::string tab = "\t";
-            
-            // Output the lut header
-            ostream << "Version\t\t3\n";
-            ostream << "Format\t\tany\n";
-            if(data.shaper_encode.size() != 0)
+            // Defaults and sanity check on cube size
+            if(cubeSize == -1) cubeSize = DEFAULT_CUBE_SIZE;
+            if(cubeSize < 0) cubeSize = DEFAULT_CUBE_SIZE;
+            if(cubeSize<2)
             {
-                ostream << "Type\t\t3D+1D\n";
+                std::ostringstream os;
+                os << "Cube size must be 2 or larger (was " << cubeSize << ")";
+                throw Exception(os.str().c_str());
+            }
+            
+            // ..and same for shaper size
+            if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+            if(shaperSize<2)
+            {
+                std::ostringstream os;
+                os << "A shaper space ('" << baker.getShaperSpace() << "') has";
+                os << " been specified, so the shaper size must be 2 or larger";
+                throw Exception(os.str().c_str());
+            }
+            
+            // ..and finally, for the 1D LUT size
+            if(onedSize == -1) onedSize = DEFAULT_1D_SIZE;
+            if(onedSize < 2)
+            {
+                std::ostringstream os;
+                os << "1D LUT size must be higher than 2 (was " << onedSize << ")";
+                throw Exception(os.str().c_str());
+            }
+            
+            // Version numbers
+            const int HDL_1D = 1; // 1D LUT version number
+            const int HDL_3D = 2; // 3D LUT version number
+            const int HDL_3D1D = 3; // 3D LUT with 1D prelut
+            
+            // Get spaces from baker
+            const std::string shaperSpace = baker.getShaperSpace();
+            const std::string inputSpace = baker.getInputSpace();
+            const std::string targetSpace = baker.getTargetSpace();
+            
+            // Determine required LUT type
+            ConstProcessorRcPtr inputToTargetProc = config->getProcessor(
+                inputSpace.c_str(),
+                targetSpace.c_str());
+            
+            int required_lut = -1;
+            
+            if(inputToTargetProc->hasChannelCrosstalk())
+            {
+                if(shaperSpace.empty())
+                {
+                    // Has crosstalk, but no prelut, so need 3D LUT
+                    required_lut = HDL_3D;
+                }
+                else
+                {
+                    // Crosstalk with shaper-space
+                    required_lut = HDL_3D1D;
+                }
             }
             else
             {
-                ostream << "Type\t\t3D\n";
-                tab = " ";
+                // No crosstalk
+                required_lut = HDL_1D;
             }
-            ostream << "From\t\t" << data.minlum[0] << " " << data.maxlum[0] << "\n";
-            ostream << "To\t\t" << 0.f << " " << 1.f << "\n";
-            ostream << "Black\t\t" << 0.f << "\n";
-            ostream << "White\t\t" << 1.f << "\n";
-            if(data.shaper_encode.size() != 0)
-                ostream << "Length\t\t" << data.lookup3DSize << " " << data.shaperSize << "\n";
-            else
-                ostream << "Length\t\t" << data.lookup3DSize << "\n";
+
+            if(required_lut == -1)
+            {
+                // Unnecessary paranoia
+                throw Exception(
+                    "Internal logic error, LUT type was not determined");
+            }
+            
+            // Make prelut
+            std::vector<float> prelutData;
+            
+            float fromInStart = 0; // for "From:" part of header
+            float fromInEnd = 1;
+            
+            if(required_lut == HDL_3D1D)
+            {
+                // TODO: Later we only grab the green channel for the prelut,
+                // should ensure the prelut is monochromatic somehow?
+                
+                ConstProcessorRcPtr inputToShaperProc = config->getProcessor(
+                    inputSpace.c_str(),
+                    shaperSpace.c_str());
+                
+                if(inputToShaperProc->hasChannelCrosstalk())
+                {
+                    // TODO: Automatically turn shaper into
+                    // non-crosstalked version?
+                    std::ostringstream os;
+                    os << "The specified shaperSpace, '" << baker.getShaperSpace();
+                    os << "' has channel crosstalk, which is not appropriate for";
+                    os << " shapers. Please select an alternate shaper space or";
+                    os << " omit this option.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                // Calculate min/max value
+                {
+                    // Get input value of 1.0 in shaper space, as this
+                    // is the higest value that is transformed by the
+                    // cube (e.g for a generic lin-to-log trasnform,
+                    // what the log value 1.0 is in linear).
+                    ConstProcessorRcPtr shaperToInputProc = config->getProcessor(
+                        shaperSpace.c_str(),
+                        inputSpace.c_str());
+
+                    float minval[3] = {0.0f, 0.0f, 0.0f};
+                    float maxval[3] = {1.0f, 1.0f, 1.0f};
+
+                    shaperToInputProc->applyRGB(minval);
+                    shaperToInputProc->applyRGB(maxval);
+                    
+                    // Grab green channel, as this is the one used later
+                    fromInStart = minval[1];
+                    fromInEnd = maxval[1];
+                }
+
+                // Generate the identity prelut values, then apply the transform.
+                // Prelut is linearly sampled from fromInStart to fromInEnd
+                prelutData.resize(shaperSize*3);
+                
+                for (int i = 0; i < shaperSize; ++i)
+                {
+                    const float x = (float)(double(i) / double(shaperSize - 1));
+                    float cur_value = lerpf(fromInStart, fromInEnd, x);
+
+                    prelutData[3*i+0] = cur_value;
+                    prelutData[3*i+1] = cur_value;
+                    prelutData[3*i+2] = cur_value;
+                }
+                
+                PackedImageDesc prelutImg(&prelutData[0], shaperSize, 1, 3);
+                inputToShaperProc->apply(prelutImg);
+            }
+            
+            // TODO: Do same "auto prelut" input-space allocation as FileFormatCSP?
+            
+            // Make 3D LUT
+            std::vector<float> cubeData;
+            if(required_lut == HDL_3D || required_lut == HDL_3D1D)
+            {
+                cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+                
+                GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
+                PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+                
+                ConstProcessorRcPtr cubeProc;
+                if(required_lut == HDL_3D1D)
+                {
+                    // Prelut goes from input-to-shaper, so cube goes from shaper-to-target
+                    cubeProc = config->getProcessor(shaperSpace.c_str(),
+                                                    targetSpace.c_str());
+                }
+                else
+                {
+                    // No prelut, so cube goes from input-to-target
+                    cubeProc = config->getProcessor(inputSpace.c_str(),
+                                                    targetSpace.c_str());
+                }
+
+                
+                cubeProc->apply(cubeImg);
+            }
+            
+            
+            // Make 1D LUT
+            std::vector<float> onedData;
+            if(required_lut == HDL_1D)
+            {
+                onedData.resize(onedSize * 3);
+                
+                GenerateIdentityLut1D(&onedData[0], onedSize, 3);
+                PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
+                
+                inputToTargetProc->apply(onedImg);
+            }
+            
+            
+            // Write the file contents
+            ostream << "Version\t\t" << required_lut << "\n";
+            ostream << "Format\t\t" << "any" << "\n";
+            
+            ostream << "Type\t\t";
+            if(required_lut == HDL_1D)
+                ostream << "RGB";
+            if(required_lut == HDL_3D)
+                ostream << "3D";
+            if(required_lut == HDL_3D1D)
+                ostream << "3D+1D";
+            ostream << "\n";
+            
+            ostream << "From\t\t" << fromInStart << " " << fromInEnd << "\n";
+            ostream << "To\t\t" << 0.0f << " " << 1.0f << "\n";
+            ostream << "Black\t\t" << 0.0f << "\n";
+            ostream << "White\t\t" << 1.0f << "\n";
+            
+            if(required_lut == HDL_3D1D)
+                ostream << "Length\t\t" << cubeSize << " " << shaperSize << "\n";
+            if(required_lut == HDL_3D)
+                ostream << "Length\t\t" << cubeSize << "\n";
+            if(required_lut == HDL_1D)
+                ostream << "Length\t\t" << onedSize << "\n";
+            
             ostream << "LUT:\n";
             
-            // Output the shaper
-            if(data.shaper_encode.size() != 0)
+            // Write prelut
+            if(required_lut == HDL_3D1D)
             {
-                ostream << "Pre" << " {\n";
-                for(size_t pnt = 0; pnt < data.shaperSize; pnt++)
+                ostream << "Pre {\n";
+                for(int i=0; i < shaperSize; ++i)
                 {
-                    ostream << "\t" << std::min(1.f, std::max(0.f, data.shaper_encode[3*pnt+0])) << "\n";
+                    // Grab green channel from RGB prelut
+                    ostream << "\t" << prelutData[i*3+1] << "\n";
                 }
                 ostream << "}\n";
             }
             
-            // Output the 3D lut
-            if(data.shaper_encode.size() != 0)
+            // Write "3D {" part of output of 3D+1D LUT
+            if(required_lut == HDL_3D1D)
+            {
                 ostream << "3D {\n";
-            else
-                ostream << " {\n";
-            for (size_t ib = 0; ib < data.lookup3DSize; ++ib) {
-                for (size_t ig = 0; ig < data.lookup3DSize; ++ig) {
-                    for (size_t ir = 0; ir < data.lookup3DSize; ++ir) {
-                        const size_t ii = 3 * (ir + data.lookup3DSize
-                                            * ig + data.lookup3DSize
-                                            * data.lookup3DSize * ib);
-                        const float rv = std::min(1.f, std::max(0.f, data.lookup3D[ii+0]));
-                        const float gv = std::min(1.f, std::max(0.f, data.lookup3D[ii+1]));
-                        const float bv = std::min(1.f, std::max(0.f, data.lookup3D[ii+2]));
-                        ostream << tab << rv << " " << gv << " " << bv << "\n";
-                    }
-                }
             }
             
-            if(data.shaper_encode.size() != 0)
-                ostream << "}\n";
-            else
+            // Write the slightly-different "{" without line for the 3D-only LUT
+            if(required_lut == HDL_3D)
+            {
+                ostream << " {\n";
+            }
+            
+            // Write the cube data after the "{"
+            if(required_lut == HDL_3D || required_lut == HDL_3D1D)
+            {
+                for(int i=0; i < cubeSize*cubeSize*cubeSize; ++i)
+                {
+                    // TODO: Original baker code clamped values to
+                    // 1.0, was this necessary/desirable?
+
+                    ostream << "\t" << cubeData[3*i+0];
+                    ostream << " "  << cubeData[3*i+1];
+                    ostream << " "  << cubeData[3*i+2] << "\n";
+                }
+                
+                // Write closing "}"
                 ostream << " }\n";
-            */
+            }
+            
+            // Write out channels for 1D LUT
+            if(required_lut == HDL_1D)
+            {
+                ostream << "R {\n";
+                for(int i=0; i < onedSize; ++i)
+                    ostream << "\t" << onedData[i*3+0] << "\n";
+                ostream << "}\n";
+
+                ostream << "G {\n";
+                for(int i=0; i < onedSize; ++i)
+                    ostream << "\t" << onedData[i*3+1] << "\n";
+                ostream << "}\n";
+
+                ostream << "B {\n";
+                for(int i=0; i < onedSize; ++i)
+                    ostream << "\t" << onedData[i*3+2] << "\n";
+                ostream << "}\n";
+            }
         }
         
         void
@@ -516,29 +751,29 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(HDLFileFormat, simple1D)
+OIIO_ADD_TEST(HDLFileFormat, read_simple1D)
 {
     
     std::ostringstream strebuf;
-    strebuf << "Version		1" << "\n";
-    strebuf << "Format		any" << "\n";
-    strebuf << "Type		C" << "\n";
-    strebuf << "From		0.1 3.2" << "\n";
-    strebuf << "To		0 1" << "\n";
-    strebuf << "Black		0" << "\n";
-    strebuf << "White		0.99" << "\n";
-    strebuf << "Length		9" << "\n";
+    strebuf << "Version         1" << "\n";
+    strebuf << "Format      any" << "\n";
+    strebuf << "Type        C" << "\n";
+    strebuf << "From        0.1 3.2" << "\n";
+    strebuf << "To      0 1" << "\n";
+    strebuf << "Black       0" << "\n";
+    strebuf << "White       0.99" << "\n";
+    strebuf << "Length      9" << "\n";
     strebuf << "LUT:" << "\n";
     strebuf << "RGB {" << "\n";
-    strebuf << "	0" << "\n";
-    strebuf << "	0.000977517" << "\n";
-    strebuf << "	0.00195503" << "\n";
-    strebuf << "	0.00293255" << "\n";
-    strebuf << "	0.00391007" << "\n";
-    strebuf << "	0.00488759" << "\n";
-    strebuf << "	0.0058651" << "\n";
-    strebuf << "	0.999022" << "\n";
-    strebuf << "	1.67 }" << "\n";
+    strebuf << "\t0" << "\n";
+    strebuf << "\t0.000977517" << "\n";
+    strebuf << "\t0.00195503" << "\n";
+    strebuf << "\t0.00293255" << "\n";
+    strebuf << "\t0.00391007" << "\n";
+    strebuf << "\t0.00488759" << "\n";
+    strebuf << "\t0.0058651" << "\n";
+    strebuf << "\t0.999022" << "\n";
+    strebuf << "\t1.67 }" << "\n";
     
     //
     float from_min = 0.1f;
@@ -572,21 +807,117 @@ OIIO_ADD_TEST(HDLFileFormat, simple1D)
             OIIO_CHECK_EQUAL(lut1d[i], lut->lut1D->luts[c][i]);
         }
     }
-    
 }
 
-OIIO_ADD_TEST(HDLFileFormat, simple3D)
+OIIO_ADD_TEST(HDLFileFormat, bake_simple1D)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    
+    // Add lnf space
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("lnf");
+        cs->setFamily("lnf");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    
+    // Add target space
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        
+        float rgb[3] = {0.1f, 0.1f, 0.1f};
+        transform1->setOffset(rgb);
+        
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        config->addColorSpace(cs);
+    }
+        
+    std::string bout =
+    "Version\t\t1\n"
+    "Format\t\tany\n"
+    "Type\t\tRGB\n"
+    "From\t\t0.000000 1.000000\n"
+    "To\t\t0.000000 1.000000\n"
+    "Black\t\t0.000000\n"
+    "White\t\t1.000000\n"
+    "Length\t\t10\n"
+    "LUT:\n"
+    "R {\n"
+    "\t0.100000\n"
+    "\t0.211111\n"
+    "\t0.322222\n"
+    "\t0.433333\n"
+    "\t0.544444\n"
+    "\t0.655556\n"
+    "\t0.766667\n"
+    "\t0.877778\n"
+    "\t0.988889\n"
+    "\t1.100000\n"
+    " }\n"
+    "G {\n"
+    "\t0.100000\n"
+    "\t0.211111\n"
+    "\t0.322222\n"
+    "\t0.433333\n"
+    "\t0.544444\n"
+    "\t0.655556\n"
+    "\t0.766667\n"
+    "\t0.877778\n"
+    "\t0.988889\n"
+    "\t1.100000\n"
+    " }\n"
+    "B {\n"
+    "\t0.100000\n"
+    "\t0.211111\n"
+    "\t0.322222\n"
+    "\t0.433333\n"
+    "\t0.544444\n"
+    "\t0.655556\n"
+    "\t0.766667\n"
+    "\t0.877778\n"
+    "\t0.988889\n"
+    "\t1.100000\n"
+    " }\n";
+    
+    //
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setFormat("houdini");
+    baker->setInputSpace("lnf");
+    baker->setTargetSpace("target");
+    baker->setCubeSize(10); // FIXME: Misusing the cube size to set the 1D LUT size
+    std::ostringstream output;
+    baker->bake(output);
+    
+    //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
+    //std::cerr << "Expected:" << std::endl << bout << std::endl;
+    
+    //
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(output.str(), osvec);
+    std::vector<std::string> resvec;
+    OCIO::pystring::splitlines(bout, resvec);
+    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
+        OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
+}
+
+OIIO_ADD_TEST(HDLFileFormat, read_simple3D)
 {
     
     std::ostringstream strebuf;
-    strebuf << "Version		2" << "\n";
-    strebuf << "Format		any" << "\n";
-    strebuf << "Type		3D" << "\n";
-    strebuf << "From		0.2 0.9" << "\n";
-    strebuf << "To		0.001 0.999" << "\n";
-    strebuf << "Black		0.002" << "\n";
-    strebuf << "White		0.98" << "\n";
-    strebuf << "Length		2" << "\n";
+    strebuf << "Version         2" << "\n";
+    strebuf << "Format      any" << "\n";
+    strebuf << "Type        3D" << "\n";
+    strebuf << "From        0.2 0.9" << "\n";
+    strebuf << "To      0.001 0.999" << "\n";
+    strebuf << "Black       0.002" << "\n";
+    strebuf << "White       0.98" << "\n";
+    strebuf << "Length      2" << "\n";
     strebuf << "LUT:" << "\n";
     strebuf << " {" << "\n";
     strebuf << " 0 0 0" << "\n";
@@ -634,9 +965,19 @@ OIIO_ADD_TEST(HDLFileFormat, simple3D)
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
         OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
+}
     
-    // check baker output
+OIIO_ADD_TEST(HDLFileFormat, bake_simple3D)
+{
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    
+    // Set luma coef's to simple values
+    {
+        float lumaCoef[3] = {0.333f, 0.333f, 0.333f};
+        config->setDefaultLumaCoefs(lumaCoef);
+    }
+    
+    // Add lnf space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("lnf");
@@ -644,20 +985,23 @@ OIIO_ADD_TEST(HDLFileFormat, simple3D)
         config->addColorSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
+    
+    // Add target space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
-        float rgb[3] = {0.1f, 0.1f, 0.1f};
-        transform1->setOffset(rgb);
+        
+        // Set saturation to cause channel crosstalk, making a 3D LUT
+        transform1->setSat(0.5f);
+
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
     }
-    
-    /*
+        
     std::string bout = 
-    "Version\t\t3\n"
+    "Version\t\t2\n"
     "Format\t\tany\n"
     "Type\t\t3D\n"
     "From\t\t0.000000 1.000000\n"
@@ -667,14 +1011,14 @@ OIIO_ADD_TEST(HDLFileFormat, simple3D)
     "Length\t\t2\n"
     "LUT:\n"
     " {\n"
-    " 0.100000 0.100000 0.100000\n"
-    " 1.000000 0.100000 0.100000\n"
-    " 0.100000 1.000000 0.100000\n"
-    " 1.000000 1.000000 0.100000\n"
-    " 0.100000 0.100000 1.000000\n"
-    " 1.000000 0.100000 1.000000\n"
-    " 0.100000 1.000000 1.000000\n"
-    " 1.000000 1.000000 1.000000\n"
+    "\t0.000000 0.000000 0.000000\n"
+    "\t0.606300 0.106300 0.106300\n"
+    "\t0.357600 0.857600 0.357600\n"
+    "\t0.963900 0.963900 0.463900\n"
+    "\t0.036100 0.036100 0.536100\n"
+    "\t0.642400 0.142400 0.642400\n"
+    "\t0.393700 0.893700 0.893700\n"
+    "\t1.000000 1.000000 1.000000\n"
     " }\n";
     
     //
@@ -687,50 +1031,52 @@ OIIO_ADD_TEST(HDLFileFormat, simple3D)
     std::ostringstream output;
     baker->bake(output);
     
+    //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
+    //std::cerr << "Expected:" << std::endl << bout << std::endl;
+    
     //
     std::vector<std::string> osvec;
     OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
     OCIO::pystring::splitlines(bout, resvec);
     OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
-    for(unsigned int i = 0; i < resvec.size(); ++i)
-        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
-    */
+    for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
+        OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
 }
 
-OIIO_ADD_TEST(HDLFileFormat, simple3D1D)
+OIIO_ADD_TEST(HDLFileFormat, read_simple3D1D)
 {
     std::ostringstream strebuf;
-    strebuf << "Version		3" << "\n";
-    strebuf << "Format		any" << "\n";
-    strebuf << "Type		3D+1D" << "\n";
-    strebuf << "From		0.005478 14.080103" << "\n";
-    strebuf << "To		0 1" << "\n";
-    strebuf << "Black		0" << "\n";
-    strebuf << "White		1" << "\n";
-    strebuf << "Length		2 10" << "\n";
+    strebuf << "Version         3" << "\n";
+    strebuf << "Format      any" << "\n";
+    strebuf << "Type        3D+1D" << "\n";
+    strebuf << "From        0.005478 14.080103" << "\n";
+    strebuf << "To      0 1" << "\n";
+    strebuf << "Black       0" << "\n";
+    strebuf << "White       1" << "\n";
+    strebuf << "Length      2 10" << "\n";
     strebuf << "LUT:" << "\n";
     strebuf << "Pre {" << "\n";
-    strebuf << "	0.994922" << "\n";
-    strebuf << "	0.995052" << "\n";
-    strebuf << "	0.995181" << "\n";
-    strebuf << "	0.995310" << "\n";
-    strebuf << "	0.995439" << "\n";
-    strebuf << "	0.995568" << "\n";
-    strebuf << "	0.995697" << "\n";
-    strebuf << "	0.995826" << "\n";
-    strebuf << "	0.995954" << "\n";
-    strebuf << "	0.996082" << "\n";
+    strebuf << "    0.994922" << "\n";
+    strebuf << "    0.995052" << "\n";
+    strebuf << "    0.995181" << "\n";
+    strebuf << "    0.995310" << "\n";
+    strebuf << "    0.995439" << "\n";
+    strebuf << "    0.995568" << "\n";
+    strebuf << "    0.995697" << "\n";
+    strebuf << "    0.995826" << "\n";
+    strebuf << "    0.995954" << "\n";
+    strebuf << "    0.996082" << "\n";
     strebuf << "}" << "\n";
     strebuf << "3D {" << "\n";
-    strebuf << "	0.093776 0.093776 0.093776" << "\n";
-    strebuf << "	0.105219 0.093776 0.093776" << "\n";
-    strebuf << "	0.118058 0.093776 0.093776" << "\n";
-    strebuf << "	0.132463 0.093776 0.093776" << "\n";
-    strebuf << "	0.148626 0.093776 0.093776" << "\n";
-    strebuf << "	0.166761 0.093776 0.093776" << "\n";
-    strebuf << "	0.187109 0.093776 0.093776" << "\n";
-    strebuf << "	0.209939 0.093776 0.093776" << "\n";
+    strebuf << "    0.093776 0.093776 0.093776" << "\n";
+    strebuf << "    0.105219 0.093776 0.093776" << "\n";
+    strebuf << "    0.118058 0.093776 0.093776" << "\n";
+    strebuf << "    0.132463 0.093776 0.093776" << "\n";
+    strebuf << "    0.148626 0.093776 0.093776" << "\n";
+    strebuf << "    0.166761 0.093776 0.093776" << "\n";
+    strebuf << "    0.187109 0.093776 0.093776" << "\n";
+    strebuf << "    0.209939 0.093776 0.093776" << "\n";
     strebuf << "}" << "\n";
     
     //
@@ -779,9 +1125,19 @@ OIIO_ADD_TEST(HDLFileFormat, simple3D1D)
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
         OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
-    
+}
+OIIO_ADD_TEST(HDLFileFormat, bake_simple3D1D)
+{
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    
+    // Set luma coef's to simple values
+    {
+        float lumaCoef[3] = {0.333f, 0.333f, 0.333f};
+        config->setDefaultLumaCoefs(lumaCoef);
+    }
+
+    // Add lnf space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("lnf");
@@ -789,6 +1145,8 @@ OIIO_ADD_TEST(HDLFileFormat, simple3D1D)
         config->addColorSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
+    
+    // Add shaper space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("shaper");
@@ -799,13 +1157,17 @@ OIIO_ADD_TEST(HDLFileFormat, simple3D1D)
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
         config->addColorSpace(cs);
     }
+    
+    // Add target space
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
-        float rgb[3] = {0.1f, 0.1f, 0.1f};
-        transform1->setOffset(rgb);
+
+        // Set saturation to cause channel crosstalk, making a 3D LUT
+        transform1->setSat(0.5f);
+
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
     }
@@ -833,17 +1195,16 @@ OIIO_ADD_TEST(HDLFileFormat, simple3D1D)
     "\t1.000000\n"
     "}\n"
     "3D {\n"
-    "\t0.100000 0.100000 0.100000\n"
-    "\t1.000000 0.100000 0.100000\n"
-    "\t0.100000 1.000000 0.100000\n"
-    "\t1.000000 1.000000 0.100000\n"
-    "\t0.100000 0.100000 1.000000\n"
-    "\t1.000000 0.100000 1.000000\n"
-    "\t0.100000 1.000000 1.000000\n"
+    "\t0.000000 0.000000 0.000000\n"
+    "\t0.606300 0.106300 0.106300\n"
+    "\t0.357600 0.857600 0.357600\n"
+    "\t0.963900 0.963900 0.463900\n"
+    "\t0.036100 0.036100 0.536100\n"
+    "\t0.642400 0.142400 0.642400\n"
+    "\t0.393700 0.893700 0.893700\n"
     "\t1.000000 1.000000 1.000000\n"
     "}\n";
     
-    /*
     //
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
@@ -855,16 +1216,18 @@ OIIO_ADD_TEST(HDLFileFormat, simple3D1D)
     baker->setCubeSize(2);
     std::ostringstream output;
     baker->bake(output);
-    
+
+    //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
+    //std::cerr << "Expected:" << std::endl << bout << std::endl;
+
     //
     std::vector<std::string> osvec;
     OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
     OCIO::pystring::splitlines(bout, resvec);
     OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
-    for(unsigned int i = 0; i < resvec.size(); ++i)
-        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
-    */
+    for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
+        OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
 }
 
 #endif // OCIO_BUILD_TESTS
