@@ -1026,10 +1026,10 @@ OCIO_NAMESPACE_ENTER
                             getImpl()->activeDisplaysEnvOverride_);
         }
         
-        if(!display) return 0;
+        if(!display) return "";
         
         DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
-        if(iter == getImpl()->displays_.end()) return 0;
+        if(iter == getImpl()->displays_.end()) return "";
         
         const ViewVec & views = iter->second;
         
@@ -1105,7 +1105,7 @@ OCIO_NAMESPACE_ENTER
         if(!display) return "";
         
         DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
-        if(iter == getImpl()->displays_.end()) return 0;
+        if(iter == getImpl()->displays_.end()) return "";
         
         const ViewVec & views = iter->second;
         return views[index].name.c_str();
