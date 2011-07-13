@@ -418,7 +418,7 @@ void OCIODisplay::refreshDisplayTransforms()
     {
         std::ostringstream err;
         err << "No or invalid display specified (index " << m_displayIndex << ").";
-        error(err.str().c_str());
+        std::cerr << err.str(); // This can't set an error, as it's called in the constructor
         return;
     }
 
