@@ -84,6 +84,55 @@ OCIO_NAMESPACE_ENTER
                 rgbaBuffer += 4;
             }
         }
+        
+        void ApplyScale(float* rgbaBuffer, long numPixels,
+                        const float* scale4)
+        {
+            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
+            {
+                rgbaBuffer[0] *= scale4[0];
+                rgbaBuffer[1] *= scale4[1];
+                rgbaBuffer[2] *= scale4[2];
+                rgbaBuffer[3] *= scale4[3];
+                
+                rgbaBuffer += 4;
+            }
+        }
+        
+        void ApplyOffset(float* rgbaBuffer, long numPixels,
+                         const float* offset4)
+        {
+            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
+            {
+                rgbaBuffer[0] += offset4[0];
+                rgbaBuffer[1] += offset4[1];
+                rgbaBuffer[2] += offset4[2];
+                rgbaBuffer[3] += offset4[3];
+                
+                rgbaBuffer += 4;
+            }
+        }
+        
+        void ApplyMatrix(float* rgbaBuffer, long numPixels,
+                         const float* mat44)
+        {
+            float r,g,b,a;
+            
+            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
+            {
+                r = rgbaBuffer[0];
+                g = rgbaBuffer[1];
+                b = rgbaBuffer[2];
+                a = rgbaBuffer[3];
+                
+                rgbaBuffer[0] = r*mat44[0] + g*mat44[1] + b*mat44[2] + a*mat44[3];
+                rgbaBuffer[1] = r*mat44[4] + g*mat44[5] + b*mat44[6] + a*mat44[7];
+                rgbaBuffer[2] = r*mat44[8] + g*mat44[9] + b*mat44[10] + a*mat44[11];
+                rgbaBuffer[3] = r*mat44[12] + g*mat44[13] + b*mat44[14] + a*mat44[15];
+                
+                rgbaBuffer += 4;
+            }
+        }
     }
     
     
@@ -229,6 +278,9 @@ OCIO_NAMESPACE_ENTER
             m_cacheID = cacheIDStream.str();
         }
         
+        // TODO: Add bool processAlpha, which can be obeyed or not?
+        // TODO: Or call the version with alpha handling
+        
         void MatrixOffsetOp::apply(float* rgbaBuffer, long numPixels) const
         {
             if(m_direction == TRANSFORM_DIR_FORWARD)
@@ -239,17 +291,17 @@ OCIO_NAMESPACE_ENTER
                     {
                         float scale[4];
                         GetM44Diagonal(scale, m_m44);
-                        ApplyScaleNoAlpha(rgbaBuffer, numPixels, scale);
+                        ApplyScale(rgbaBuffer, numPixels, scale);
                     }
                     else
                     {
-                        ApplyMatrixNoAlpha(rgbaBuffer, numPixels, m_m44);
+                        ApplyMatrix(rgbaBuffer, numPixels, m_m44);
                     }
                 }
                 
                 if(!m_offset4IsIdentity)
                 {
-                    ApplyOffsetNoAlpha(rgbaBuffer, numPixels, m_offset4);
+                    ApplyOffset(rgbaBuffer, numPixels, m_offset4);
                 }
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
@@ -261,7 +313,7 @@ OCIO_NAMESPACE_ENTER
                                            -m_offset4[2],
                                            -m_offset4[3] };
                     
-                    ApplyOffsetNoAlpha(rgbaBuffer, numPixels, offset_inv);
+                    ApplyOffset(rgbaBuffer, numPixels, offset_inv);
                 }
                 
                 if(!m_m44IsIdentity)
@@ -270,11 +322,11 @@ OCIO_NAMESPACE_ENTER
                     {
                         float scale[4];
                         GetM44Diagonal(scale, m_m44_inv);
-                        ApplyScaleNoAlpha(rgbaBuffer, numPixels, scale);
+                        ApplyScale(rgbaBuffer, numPixels, scale);
                     }
                     else
                     {
-                        ApplyMatrixNoAlpha(rgbaBuffer, numPixels, m_m44_inv);
+                        ApplyMatrix(rgbaBuffer, numPixels, m_m44_inv);
                     }
                 }
             }

@@ -993,7 +993,8 @@ OCIO_NAMESPACE_ENTER
         virtual float* getGData() const;
         //!cpp:function::
         virtual float* getBData() const;
-        
+        //!cpp:function::alpha is optional, may be NULL
+        float* getAData() const;
     private:
         class Impl;
         friend class Impl;
@@ -1038,6 +1039,11 @@ OCIO_NAMESPACE_ENTER
         virtual float* getGData() const;
         //!cpp:function::
         virtual float* getBData() const;
+        
+        //!cpp:function::alpha is optional
+        void setAData(float * aData);
+        //!cpp:function::
+        float* getAData() const;
         
     private:
         class Impl;

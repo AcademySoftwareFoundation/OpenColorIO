@@ -43,9 +43,11 @@ OCIO_NAMESPACE_ENTER
             char* rPtr = reinterpret_cast<char*>(img.getRData());
             char* gPtr = reinterpret_cast<char*>(img.getGData());
             char* bPtr = reinterpret_cast<char*>(img.getBData());
+            char* aPtr = reinterpret_cast<char*>(ImageDesc_GetAData(img));
             
             if(gPtr-rPtr != sizeof(float)) return false;
             if(bPtr-gPtr != sizeof(float)) return false;
+            if(aPtr && (aPtr-bPtr != sizeof(float))) return false;
             
             ptrdiff_t xStrideBytes = img.getXStrideBytes();
             

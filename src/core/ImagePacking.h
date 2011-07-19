@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    float * ImageDesc_GetAData(const ImageDesc& srcImg);
+    
     void PackRGBAFromImageDesc(const ImageDesc& srcImg,
                                float* outputBuffer,
                                int* numPixelsCopied,

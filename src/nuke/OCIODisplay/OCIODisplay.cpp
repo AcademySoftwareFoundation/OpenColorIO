@@ -21,13 +21,13 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
 {
-    m_layersToProcess = DD::Image::Mask_RGB;
+    m_layersToProcess = DD::Image::Mask_RGBA;
     m_hasLists = false;
     m_colorSpaceIndex = m_displayIndex = m_viewIndex = 0;
     m_displayKnob = m_viewKnob = NULL;
     m_gain = 1.0;
     m_gamma = 1.0;
-    //m_channel = 2;
+    m_channel = 2;
     m_transform = OCIO::DisplayTransform::Create();
     
     try
@@ -118,7 +118,6 @@ void OCIODisplay::knobs(DD::Image::Knob_Callback f)
     DD::Image::SetFlags(f, DD::Image::Knob::NO_ANIMATION | DD::Image::Knob::NO_UNDO | DD::Image::Knob::LOG_SLIDER);
     DD::Image::Tooltip(f, "Gamma correction applied after the display transform.");
     
-    /*
     static const char* const channelvalues[] = {
       "Luminance",
       "Matte overlay",
@@ -132,7 +131,6 @@ void OCIODisplay::knobs(DD::Image::Knob_Callback f)
     DD::Image::Enumeration_knob(f, &m_channel, channelvalues, "channel_selector", "channel view");
     DD::Image::SetFlags(f, DD::Image::Knob::NO_ANIMATION | DD::Image::Knob::NO_UNDO);
     DD::Image::Tooltip(f, "Specify which channels to view (prior to the display transform).");
-    */
     
     DD::Image::BeginClosedGroup(f, "Context");
     {
@@ -162,7 +160,7 @@ void OCIODisplay::knobs(DD::Image::Knob_Callback f)
     DD::Image::Divider(f);
     
     DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
-    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
+    // DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
     DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
@@ -208,6 +206,9 @@ void OCIODisplay::append(DD::Image::Hash& localhash)
         OCIO::ConstContextRcPtr context = getLocalContext();
         std::string configCacheID = config->getCacheID(context);
         localhash.append(configCacheID);
+        
+        // This is required due to our custom channel overlay mode post-processing
+        localhash.append(m_channel);
     }
     catch(OCIO::Exception &e)
     {
@@ -252,7 +253,7 @@ void OCIODisplay::_validate(bool for_real)
             OCIO::MatrixTransform::Scale(m44, offset4, slope4f);
             
             OCIO::MatrixTransformRcPtr mtx =  OCIO::MatrixTransform::Create();
-            mtx->setValue(m44, offset);
+            mtx->setValue(m44, offset4);
             
             m_transform->setLinearCC(mtx);
         }
@@ -267,9 +268,6 @@ void OCIODisplay::_validate(bool for_real)
         }
         
         // Add Channel swizzling
-        // TODO: This wont work until OCIO supports alpha swizzling in the
-        // sw path
-        #if 0
         {
             int channelHot[4] = { 0, 0, 0, 0};
             
@@ -280,7 +278,11 @@ void OCIODisplay::_validate(bool for_real)
                 channelHot[1] = 1;
                 channelHot[2] = 1;
                 break;
-            case 1:
+            case 1: //  Channel overlay mode. Do rgb, and then swizzle later
+                channelHot[0] = 1;
+                channelHot[1] = 1;
+                channelHot[2] = 1;
+                channelHot[3] = 1;
                 break;
             case 2: // RGB
                 channelHot[0] = 1;
@@ -313,7 +315,6 @@ void OCIODisplay::_validate(bool for_real)
             swizzle->setValue(m44, offset);
             m_transform->setChannelView(swizzle);
         }
-        #endif
         
         OCIO::ConstContextRcPtr context = getLocalContext();
         m_processor = config->getProcessor(context,
@@ -345,9 +346,9 @@ void OCIODisplay::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) c
     DD::Image::ChannelSet done;
     foreach(c, mask)
     {
-        if ((m_layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        if ((m_layersToProcess & c) && DD::Image::colourIndex(c) < 4 && !(done & c))
         {
-            done.addBrothers(c, 3);
+            done.addBrothers(c, 4);
         }
     }
     mask += done;
@@ -373,7 +374,7 @@ void OCIODisplay::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(m_layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        if (!(m_layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 4)
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;
@@ -382,32 +383,49 @@ void OCIODisplay::pixel_engine(
         DD::Image::Channel rChannel = DD::Image::brother(requestedChannel, 0);
         DD::Image::Channel gChannel = DD::Image::brother(requestedChannel, 1);
         DD::Image::Channel bChannel = DD::Image::brother(requestedChannel, 2);
+        DD::Image::Channel aChannel = DD::Image::brother(requestedChannel, 3);
 
         done += rChannel;
         done += gChannel;
         done += bChannel;
+        done += aChannel;
 
         const float *rIn = in[rChannel] + rowX;
         const float *gIn = in[gChannel] + rowX;
         const float *bIn = in[bChannel] + rowX;
+        const float *aIn = in[aChannel] + rowX;
 
         float *rOut = out.writable(rChannel) + rowX;
         float *gOut = out.writable(gChannel) + rowX;
         float *bOut = out.writable(bChannel) + rowX;
+        float *aOut = out.writable(aChannel) + rowX;
 
         // OCIO modifies in-place
         memcpy(rOut, rIn, sizeof(float)*rowWidth);
         memcpy(gOut, gIn, sizeof(float)*rowWidth);
         memcpy(bOut, bIn, sizeof(float)*rowWidth);
+        memcpy(aOut, aIn, sizeof(float)*rowWidth);
 
         try
         {
             OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
+            img.setAData(aOut);
             m_processor->apply(img);
         }
         catch(OCIO::Exception &e)
         {
             error(e.what());
+        }
+        
+        // Hack to emulate Channel overlay mode
+        if(m_channel == 1)
+        {
+            for(int i=0; i<rowWidth; ++i)
+            {
+                rOut[i] = rOut[i] + (1.0f - rOut[i]) * (0.5f * aOut[i]);
+                gOut[i] = gOut[i] - gOut[i] * (0.5f * aOut[i]);
+                bOut[i] = bOut[i] - bOut[i] * (0.5f * aOut[i]);
+            }
         }
     }
 }
