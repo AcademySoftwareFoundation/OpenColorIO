@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <set>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -103,15 +104,6 @@ int main(int argc, const char **argv)
         
         std::cout << std::endl;
         std::cout << "** General **" << std::endl;
-        try
-        {
-            config->sanityCheck();
-            std::cout << "Passed Sanity Check." << std::endl;
-        }
-        catch(OCIO::Exception & exception)
-        {
-            std::cout << "Error: " << exception.what() << std::endl;
-        }
         std::cout << "Search Path: " << config->getSearchPath() << std::endl;
         std::cout << "Working Dir: " << config->getWorkingDir() << std::endl;
         
@@ -119,21 +111,52 @@ int main(int argc, const char **argv)
         std::cout << "Default Display: " << config->getDefaultDisplay() << std::endl;
         std::cout << "Default View: " << config->getDefaultView(config->getDefaultDisplay()) << std::endl;
         
-        
-        
-        std::cout << std::endl;
-        std::cout << "** Roles **" << std::endl;
-        
-        for(int i=0; i<config->getNumRoles(); ++i)
         {
-            const char * rolename = config->getRoleName(i);
-            std::cout << rolename << " = ";
-            OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(rolename);
-            if(cs) std::cout << cs->getName() << std::endl;
-            else std::cout << "NOT FOUND!" << std::endl;
+            std::cout << std::endl;
+            std::cout << "** Roles **" << std::endl;
+            
+            std::set<std::string> usedroles;
+            const char * allroles[] = { OCIO::ROLE_DEFAULT, OCIO::ROLE_SCENE_LINEAR,
+                                        OCIO::ROLE_DATA, OCIO::ROLE_REFERENCE,
+                                        OCIO::ROLE_COMPOSITING_LOG, OCIO::ROLE_COLOR_TIMING,
+                                        OCIO::ROLE_COLOR_PICKING,
+                                        OCIO::ROLE_TEXTURE_PAINT, OCIO::ROLE_MATTE_PAINT,
+                                        NULL };
+            int MAXROLES=256;
+            for(int i=0;i<MAXROLES; ++i)
+            {
+                const char * role = allroles[i];
+                if(!role) break;
+                usedroles.insert(role);
+                
+                OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(role);
+                if(cs)
+                {
+                    std::cout << cs->getName() << " (" << role << ")" << std::endl;
+                }
+                else
+                {
+                    std::cout << "NOT DEFINED" << " (" << role << ")" << std::endl;
+                }
+            }
+            
+            for(int i=0; i<config->getNumRoles(); ++i)
+            {
+                const char * role = config->getRoleName(i);
+                if(usedroles.find(role) != usedroles.end()) continue;
+                
+                OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(role);
+                if(cs)
+                {
+                    std::cout << cs->getName() << " (" << role << ": user)" << std::endl;
+                }
+                else
+                {
+                    std::cout << "NOT DEFINED" << " (" << role << ")" << std::endl;
+                }
+                
+            }
         }
-        
-        
         
         std::cout << std::endl;
         std::cout << "** ColorSpaces **" << std::endl;
@@ -198,6 +221,23 @@ int main(int argc, const char **argv)
             }
         }
         
+        std::cout << std::endl;
+        std::cout << "** Looks **" << std::endl;
+        for(int i=0; i<config->getNumLooks(); ++i)
+        {
+            std::cout << config->getLookNameByIndex(i) << std::endl;
+        }
+        std::cout << std::endl;
+        
+        try
+        {
+            config->sanityCheck();
+            std::cout << "Passed Sanity Check." << std::endl;
+        }
+        catch(OCIO::Exception & exception)
+        {
+            std::cout << "ERROR: " << exception.what() << std::endl;
+        }
         
         if(!outputconfig.empty())
         {

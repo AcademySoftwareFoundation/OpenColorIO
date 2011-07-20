@@ -142,19 +142,20 @@ OCIO_NAMESPACE_ENTER
         os << "<Look ";
         os << "name=" << look.getName() << ", ";
         os << "processSpace=" << look.getProcessSpace() << ", ";
-        os << ">\n";
         
         if(look.getTransform())
         {
-            os << "\tTransform\n";
-            os << look.getTransform();
+            os << "\tTransform: ";
+            os << *look.getTransform();
         }
         
         if(look.getInverseTransform())
         {
-            os << "\tInverseTransform\n";
-            os << look.getInverseTransform();
+            os << "\tInverseTransform: ";
+            os << *look.getInverseTransform();
         }
+        
+        os << ">";
         
         return os;
     }

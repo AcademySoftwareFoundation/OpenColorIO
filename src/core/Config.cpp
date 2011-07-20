@@ -686,7 +686,7 @@ OCIO_NAMESPACE_ENTER
                 for(unsigned int lookindex=0; lookindex<lookVec.size(); ++lookindex)
                 {
                     if(!lookVec[lookindex].empty() &&
-                        getLook(lookVec[lookindex].c_str()))
+                        !getLook(lookVec[lookindex].c_str()))
                     {
                         std::ostringstream os;
                         os << "Config failed sanitycheck. ";
