@@ -112,6 +112,11 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_DisplayTransform_getDisplayCC( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setDisplayCC( PyObject * self,  PyObject *args );
         
+        PyObject * PyOCIO_DisplayTransform_getLooksOverride( PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setLooksOverride( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled( PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setLooksOverrideEnabled( PyObject * self,  PyObject *args );
+        
         ///////////////////////////////////////////////////////////////////////
         ///
         
@@ -139,6 +144,11 @@ OCIO_NAMESPACE_ENTER
             
             {"getDisplayCC", (PyCFunction) PyOCIO_DisplayTransform_getDisplayCC, METH_NOARGS, "" },
             {"setDisplayCC", PyOCIO_DisplayTransform_setDisplayCC, METH_VARARGS, "" },
+            
+            {"getLooksOverride", (PyCFunction) PyOCIO_DisplayTransform_getLooksOverride, METH_NOARGS, "" },
+            {"setLooksOverride", PyOCIO_DisplayTransform_setLooksOverride, METH_VARARGS, "" },
+            {"getLooksOverrideEnabled", (PyCFunction) PyOCIO_DisplayTransform_getLooksOverrideEnabled, METH_NOARGS, "" },
+            {"setLooksOverrideEnabled", PyOCIO_DisplayTransform_setLooksOverrideEnabled, METH_VARARGS, "" },
             
             {NULL, NULL, 0, NULL}
         };
@@ -517,8 +527,75 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        ////////////////////////////////////////////////////////////////////////
+        
+        PyObject * PyOCIO_DisplayTransform_getLooksOverride( PyObject * self )
+        {
+            try
+            {
+                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
+                return PyString_FromString( transform->getLooksOverride() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_DisplayTransform_setLooksOverride( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * str = 0;
+                if (!PyArg_ParseTuple(args,"s:setLooksOverride", &str)) return NULL;
+                
+                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+                transform->setLooksOverride( str );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
         
+        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled( PyObject * self )
+        {
+            try
+            {
+                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
+                return PyBool_FromLong( transform->getLooksOverrideEnabled() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_DisplayTransform_setLooksOverrideEnabled( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                bool enabled = false;
+                if (!PyArg_ParseTuple(args,"O&:setLooksOverrideEnabled",
+                    ConvertPyObjectToBool, &enabled)) return NULL;
+                
+                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+                transform->setLooksOverrideEnabled( enabled );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
     }
 
 }

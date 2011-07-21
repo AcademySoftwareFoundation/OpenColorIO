@@ -210,6 +210,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self );
         PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args );
         
+        PyObject * PyOCIO_Config_getLook( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getLooks( PyObject * self );
         PyObject * PyOCIO_Config_addLook( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_clearLook( PyObject * self );
@@ -261,6 +262,7 @@ OCIO_NAMESPACE_ENTER
             {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
             {"setDefaultLumaCoefs", PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, "" },
             
+            {"getLook", PyOCIO_Config_getLook, METH_VARARGS, "" },
             {"getLooks", (PyCFunction) PyOCIO_Config_getLooks, METH_NOARGS, "" },
             {"addLook", PyOCIO_Config_addLook, METH_VARARGS, "" },
             {"clearLook", (PyCFunction) PyOCIO_Config_clearLook, METH_NOARGS, "" },
@@ -1093,6 +1095,24 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
+        PyObject * PyOCIO_Config_getLook( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                char * str = 0;
+                if (!PyArg_ParseTuple(args,"s:getLook",
+                    &str)) return NULL;
+                
+                return BuildConstPyLook(config->getLook(str));
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
         PyObject * PyOCIO_Config_getLooks( PyObject * self )
         {

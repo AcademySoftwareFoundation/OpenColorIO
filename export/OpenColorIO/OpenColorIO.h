@@ -341,10 +341,6 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         const char * getDisplayLooks(const char * display, const char * view) const;
         
-        //!cpp:function::Deprecated, use addDisplay instead
-        void setDisplayColorSpaceName(const char * display, const char * view,
-                                      const char * colorSpaceName);
-        
         //!cpp:function:: For the (display,view) combination,
         // specify which colorSpace and look to use.
         // If a look is not desired, then just pass an empty string
@@ -477,6 +473,14 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                          const ConstTransformRcPtr& transform,
                                          TransformDirection direction) const;
+        
+        
+        
+        
+        //!cpp:function:: DEPRECATED. Will be removed in 0.9
+        // Use addDisplay instead
+        void setDisplayColorSpaceName(const char * display, const char * view,
+                                      const char * colorSpaceName);
         
     private:
         Config();

@@ -59,8 +59,12 @@ OCIO_NAMESPACE_ENTER
         std::string view_;
         TransformRcPtr displayCC_;
         
+        std::string looksOverride_;
+        bool looksOverrideEnabled_;
+        
         Impl() :
-            dir_(TRANSFORM_DIR_FORWARD)
+            dir_(TRANSFORM_DIR_FORWARD),
+            looksOverrideEnabled_(false)
         { }
         
         ~Impl()
@@ -86,6 +90,9 @@ OCIO_NAMESPACE_ENTER
             
             displayCC_ = rhs.displayCC_;
             if(displayCC_) displayCC_ = displayCC_->createEditableCopy();
+            
+            looksOverride_ = rhs.looksOverride_;
+            looksOverrideEnabled_ = rhs.looksOverrideEnabled_;
             
             return *this;
         }
@@ -211,6 +218,26 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->displayCC_;
     }
     
+    void DisplayTransform::setLooksOverride(const char * looks)
+    {
+        getImpl()->looksOverride_ = looks;
+    }
+    
+    const char * DisplayTransform::getLooksOverride() const
+    {
+        return getImpl()->looksOverride_.c_str();
+    }
+    
+    void DisplayTransform::setLooksOverrideEnabled(bool enabled)
+    {
+        getImpl()->looksOverrideEnabled_ = enabled;
+    }
+    
+    bool DisplayTransform::getLooksOverrideEnabled() const
+    {
+        return getImpl()->looksOverrideEnabled_;
+    }
+    
     std::ostream& operator<< (std::ostream& os, const DisplayTransform& t)
     {
         os << "<DisplayTransform ";
@@ -255,6 +282,8 @@ OCIO_NAMESPACE_ENTER
         
         std::string display = displayTransform.getDisplay();
         std::string view = displayTransform.getView();
+        
+        // This for backwards compatibility. Remove in 0.9
         std::string displayColorSpaceName = config.getDisplayColorSpaceName(display.c_str(), view.c_str());
         if(displayColorSpaceName.empty())
         {
@@ -349,8 +378,11 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        // Apply a look if specified
-        std::string looks = config.getDisplayLooks(display.c_str(), view.c_str());
+        // Apply a look, if specified
+        std::string looks;
+        if(displayTransform.getLooksOverrideEnabled()) looks = displayTransform.getLooksOverride();
+        else looks = config.getDisplayLooks(display.c_str(), view.c_str());
+        
         if(!looks.empty())
         {
             BuildLookOps(ops,
