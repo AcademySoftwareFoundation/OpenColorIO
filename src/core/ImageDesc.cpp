@@ -218,6 +218,7 @@ OCIO_NAMESPACE_ENTER
             rData_(rData),
             gData_(gData),
             bData_(bData),
+            aData_(0x0),
             width_(width),
             height_(height),
             yStrideBytes_(yStrideBytes)
