@@ -269,7 +269,22 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "BuildLookOps error. ";
                 os << "The specified look, '" << lookVec[i];
-                os << "', cannot be found in the profile.";
+                os << "', cannot be found in this OCIO configuration.";
+                if(config.getNumLooks() == 0)
+                {
+                    os << " (No looks defined in config)";
+                }
+                else
+                {
+                    os << " (looks: ";
+                    for(int ii=0; ii<config.getNumLooks(); ++ii)
+                    {
+                        if(ii != 0) os << ", ";
+                        os << config.getLookNameByIndex(ii);
+                    }
+                    os << ")";
+                }
+                
                 throw Exception(os.str().c_str());
             }
             
