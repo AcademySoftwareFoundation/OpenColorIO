@@ -73,11 +73,9 @@ C++ API
 
 OCIO_NAMESPACE_ENTER
 {
-    
-    
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
-    // Exception
+    // Exceptions
     // *********
     
     //!cpp:class:: An exception class to throw for an errors detected at
@@ -101,6 +99,22 @@ OCIO_NAMESPACE_ENTER
         
     private:
         std::string msg_;
+    };
+    
+    //!cpp:class:: An exception class to throw for an errors detected at
+    // runtime, used when OCIO is expecting a file to exist, yet it
+    // cannot be found. This is provided as a custom type to
+    // to distinguish amongst cases where one wants to continue for
+    // missing files (such as with looks), but wants to properly fail
+    // for other error conditions.
+    
+    class OCIOEXPORT ExceptionMissingFile : public Exception
+    {
+    public:
+        //!cpp:function::
+        ExceptionMissingFile(const char *) throw();
+        //!cpp:function::
+        ExceptionMissingFile(const ExceptionMissingFile&) throw();
     };
     
     
@@ -317,6 +331,10 @@ OCIO_NAMESPACE_ENTER
         // 
         // Display/View Registration
         // ^^^^^^^^^^^^^^^^^^^^^^^^^
+        //
+        // Looks is a potentially comma (or colon) delimited list of lookNames,
+        // Where +/- prefixes are optionally allowed to denote forward/inverse
+        // look specification. (And forward is assumed in the absense of either)
         
         //!cpp:function::
         const char * getDefaultDisplay() const;
@@ -334,11 +352,18 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         const char * getDisplayColorSpaceName(const char * display, const char * view) const;
+        //!cpp:function::
+        const char * getDisplayLooks(const char * display, const char * view) const;
+        
+        //!cpp:function:: For the (display,view) combination,
+        // specify which colorSpace and look to use.
+        // If a look is not desired, then just pass an empty string
+        
+        void addDisplay(const char * display, const char * view,
+                        const char * colorSpaceName, const char * looks);
         
         //!cpp:function::
-        void setDisplayColorSpaceName(const char * display, const char * view,
-                                      const char * colorSpaceName);
-        
+        void clearDisplays();
         
         // $OCIO_ACTIVE_DISPLAYS envvar can, at runtime, optionally override the allowed displays.
         // It is a comma or colon delimited list.
@@ -383,6 +408,32 @@ OCIO_NAMESPACE_ENTER
         void getDefaultLumaCoefs(float * rgb) const;
         //!cpp:function:: These should be normalized (sum to 1.0 exactly).
         void setDefaultLumaCoefs(const float * rgb);
+        
+        
+        ///////////////////////////////////////////////////////////////////////////
+        //!rst:: .. _cflooka_section:
+        // 
+        // Look
+        // ^^^^
+        //
+        // Manager per-shot look settings.
+        //
+        
+        //!cpp:function::
+        ConstLookRcPtr getLook(const char * name) const;
+        
+        //!cpp:function::
+        int getNumLooks() const;
+        
+        //!cpp:function::
+        const char * getLookNameByIndex(int index) const;
+        
+        //!cpp:function::
+        void addLook(const ConstLookRcPtr & look);
+        
+        //!cpp:function::
+        void clearLooks();
+        
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst:: .. _cfgprocessors_section:
@@ -436,6 +487,14 @@ OCIO_NAMESPACE_ENTER
         ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
                                          const ConstTransformRcPtr& transform,
                                          TransformDirection direction) const;
+        
+        
+        
+        
+        //!cpp:function:: DEPRECATED. Will be removed in 0.9
+        // Use addDisplay instead
+        void setDisplayColorSpaceName(const char * display, const char * view,
+                                      const char * colorSpaceName);
         
     private:
         Config();
@@ -587,6 +646,69 @@ OCIO_NAMESPACE_ENTER
     };
     
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpace&);
+    
+    
+    
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst:: .. _look_section:
+    // 
+    // Look
+    // **********
+    // The *Look* is an 'artistic' image modification, in a specified image
+    // state.
+    // The processSpace defines the ColorSpace the image is required to be
+    // in, for the math to apply correctly.
+    
+    //!cpp:class::
+    class OCIOEXPORT Look
+    {
+    public:
+        //!cpp:function::
+        static LookRcPtr Create();
+        
+        //!cpp:function::
+        LookRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        const char * getName() const;
+        //!cpp:function::
+        void setName(const char * name);
+        
+        //!cpp:function::
+        const char * getProcessSpace() const;
+        //!cpp:function::
+        void setProcessSpace(const char * processSpace);
+        
+        //!cpp:function::
+        ConstTransformRcPtr getTransform() const;
+        //!cpp:function:: Setting a transform to a non-null call makes it allowed.
+        void setTransform(const ConstTransformRcPtr & transform);
+        
+        //!cpp:function::
+        ConstTransformRcPtr getInverseTransform() const;
+        //!cpp:function:: Setting a transform to a non-null call makes it allowed.
+        void setInverseTransform(const ConstTransformRcPtr & transform);
+    private:
+        Look();
+        ~Look();
+        
+        Look(const Look &);
+        Look& operator= (const Look &);
+        
+        static void deleter(Look* c);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const Look&);
     
     
     ///////////////////////////////////////////////////////////////////////////

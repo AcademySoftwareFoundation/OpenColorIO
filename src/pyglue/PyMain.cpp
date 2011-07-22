@@ -35,6 +35,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "PyConfig.h"
 #include "PyContext.h"
 #include "PyConstants.h"
+#include "PyLook.h"
 #include "PyProcessor.h"
 #include "PyTransform.h"
 #include "PyUtil.h"
@@ -110,6 +111,39 @@ namespace
     };
 }
 
+OCIO_NAMESPACE_ENTER
+{
+    namespace
+    {
+        PyObject * g_exceptionType = NULL;
+        PyObject * g_exceptionMissingFileType = NULL;
+    }
+    
+    // These are explicitly initialized in the init function
+    // to make sure they're not initialized until after the module is
+    
+    PyObject * GetExceptionPyType()
+    {
+        return g_exceptionType;
+    }
+    
+    void SetExceptionPyType(PyObject * pytypeobj)
+    {
+        g_exceptionType = pytypeobj;
+    }
+    
+    PyObject * GetExceptionMissingFilePyType()
+    {
+        return g_exceptionMissingFileType;
+    }
+    
+    void SetExceptionMissingFilePyType(PyObject * pytypeobj)
+    {
+        g_exceptionMissingFileType = pytypeobj;
+    }
+}
+OCIO_NAMESPACE_EXIT
+
 extern "C"
 PyMODINIT_FUNC
 initPyOpenColorIO(void)
@@ -117,10 +151,28 @@ initPyOpenColorIO(void)
     PyObject * m;
     m = Py_InitModule3("PyOpenColorIO", PyOCIO_methods, "OpenColorIO API");
     
+    PyModule_AddStringConstant(m, "version", OCIO::GetVersion());
+    PyModule_AddIntConstant(m, "hexversion", OCIO::GetVersionHex());
+    
+    // Create Exceptions, and add to the module
+    OCIO::SetExceptionPyType(
+        PyErr_NewException(const_cast<char*>("PyOpenColorIO.Exception"),
+                                                  PyExc_RuntimeError, NULL));
+    PyModule_AddObject(m, "Exception", OCIO::GetExceptionPyType());
+    
+    OCIO::SetExceptionMissingFilePyType(
+        PyErr_NewException(const_cast<char*>("PyOpenColorIO.ExceptionMissingFile"),
+                           OCIO::GetExceptionPyType(), NULL));
+    PyModule_AddObject(m, "ExceptionMissingFile", OCIO::GetExceptionMissingFilePyType());
+    
+    // Register Classes
+    
     OCIO::AddColorSpaceObjectToModule( m );
     OCIO::AddConfigObjectToModule( m );
     OCIO::AddConstantsModule( m );
     OCIO::AddContextObjectToModule( m );
+    OCIO::AddLookObjectToModule( m );
+    OCIO::AddProcessorObjectToModule( m );
     
     OCIO::AddTransformObjectToModule( m );
     {
@@ -132,10 +184,7 @@ initPyOpenColorIO(void)
         OCIO::AddFileTransformObjectToModule( m );
         OCIO::AddGroupTransformObjectToModule( m );
         OCIO::AddLogTransformObjectToModule( m );
+        OCIO::AddLookTransformObjectToModule( m );
         OCIO::AddMatrixTransformObjectToModule( m );
     }
-    OCIO::AddProcessorObjectToModule( m );
-    
-    PyModule_AddStringConstant(m, "version", OCIO::GetVersion());
-    PyModule_AddIntConstant(m, "hexversion", OCIO::GetVersionHex());
 }

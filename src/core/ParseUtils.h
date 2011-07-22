@@ -62,8 +62,11 @@ OCIO_NAMESPACE_ENTER
     
     bool StrEqualsCaseIgnore(const std::string & a, const std::string & b);
     
-    // Split on ':', ',', then nothing.
-    // Also string whitespace.
+    // If a ',' is in the string, split on it
+    // If a ':' is in the string, split on it
+    // Otherwise, assume a single string.
+    // Also, strip whitespace from all parts.
+    
     void SplitStringEnvStyle(std::vector<std::string> & outputvec, const char * str);
     
     // Join on ','

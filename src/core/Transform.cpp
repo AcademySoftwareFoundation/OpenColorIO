@@ -90,6 +90,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildLogOps(ops, config, *logTransform, dir);
         }
+        else if(ConstLookTransformRcPtr lookTransform = \
+            DynamicPtrCast<const LookTransform>(transform))
+        {
+            BuildLookOps(ops, config, context, *lookTransform, dir);
+        }
         else if(ConstMatrixTransformRcPtr matrixTransform = \
             DynamicPtrCast<const MatrixTransform>(transform))
         {

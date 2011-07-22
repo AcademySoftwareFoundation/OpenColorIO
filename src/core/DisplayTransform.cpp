@@ -55,10 +55,16 @@ OCIO_NAMESPACE_ENTER
         TransformRcPtr colorTimingCC_;
         TransformRcPtr channelView_;
         std::string displayColorSpaceName_;
+        std::string display_;
+        std::string view_;
         TransformRcPtr displayCC_;
         
+        std::string looksOverride_;
+        bool looksOverrideEnabled_;
+        
         Impl() :
-            dir_(TRANSFORM_DIR_FORWARD)
+            dir_(TRANSFORM_DIR_FORWARD),
+            looksOverrideEnabled_(false)
         { }
         
         ~Impl()
@@ -78,10 +84,16 @@ OCIO_NAMESPACE_ENTER
             channelView_ = rhs.channelView_;
             if(channelView_) channelView_ = channelView_->createEditableCopy();
             
+            displayColorSpaceName_ = rhs.displayColorSpaceName_;
+            display_ = rhs.display_;
+            view_ = rhs.view_;
+            
             displayCC_ = rhs.displayCC_;
             if(displayCC_) displayCC_ = displayCC_->createEditableCopy();
             
-            displayColorSpaceName_ = rhs.displayColorSpaceName_;
+            looksOverride_ = rhs.looksOverride_;
+            looksOverrideEnabled_ = rhs.looksOverrideEnabled_;
+            
             return *this;
         }
     };
@@ -176,6 +188,26 @@ OCIO_NAMESPACE_ENTER
     }
     
     
+    void DisplayTransform::setDisplay(const char * display)
+    {
+        getImpl()->display_ = display;
+    }
+    
+    const char * DisplayTransform::getDisplay() const
+    {
+        return getImpl()->display_.c_str();
+    }
+    
+    void DisplayTransform::setView(const char * view)
+    {
+        getImpl()->view_ = view;
+    }
+    
+    const char * DisplayTransform::getView() const
+    {
+        return getImpl()->view_.c_str();
+    }
+    
     void DisplayTransform::setDisplayCC(const ConstTransformRcPtr & cc)
     {
         getImpl()->displayCC_ = cc->createEditableCopy();
@@ -186,11 +218,33 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->displayCC_;
     }
     
+    void DisplayTransform::setLooksOverride(const char * looks)
+    {
+        getImpl()->looksOverride_ = looks;
+    }
+    
+    const char * DisplayTransform::getLooksOverride() const
+    {
+        return getImpl()->looksOverride_.c_str();
+    }
+    
+    void DisplayTransform::setLooksOverrideEnabled(bool enabled)
+    {
+        getImpl()->looksOverrideEnabled_ = enabled;
+    }
+    
+    bool DisplayTransform::getLooksOverrideEnabled() const
+    {
+        return getImpl()->looksOverrideEnabled_;
+    }
     
     std::ostream& operator<< (std::ostream& os, const DisplayTransform& t)
     {
         os << "<DisplayTransform ";
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
+        os << "inputColorSpace=" << t.getInputColorSpaceName() << ", ";
+        os << "display=" << t.getDisplay() << ", ";
+        os << "view=" << t.getView() << ", ";
         os << ">\n";
         return os;
     }
@@ -226,21 +280,34 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        std::string displayColorSpaceName = displayTransform.getDisplayColorSpaceName();
+        std::string display = displayTransform.getDisplay();
+        std::string view = displayTransform.getView();
+        
+        // This for backwards compatibility. Remove in 0.9
+        std::string displayColorSpaceName = config.getDisplayColorSpaceName(display.c_str(), view.c_str());
+        if(displayColorSpaceName.empty())
+        {
+            displayColorSpaceName = displayTransform.getDisplayColorSpaceName();
+        }
+        
         ConstColorSpaceRcPtr displayColorspace = config.getColorSpace(displayColorSpaceName.c_str());
         if(!displayColorspace)
         {
             std::ostringstream os;
             os << "DisplayTransform error.";
-            if(displayColorSpaceName.empty()) os << " displayColorspace is unspecified.";
-            else os <<  " Cannot find displayColorspace, named '" << displayColorSpaceName << "'.";
+            os <<  " Cannot find display colorspace,  '" << displayColorSpaceName << "'.";
             throw Exception(os.str().c_str());
         }
         
         bool skipColorSpaceConversions = (inputColorSpace->isData() || displayColorspace->isData());
         
         // If we're viewing alpha, also skip all color space conversions.
-        // TODO: Should we enforce the use of a MatrixTransform at the API level?
+        // If the user does uses a different transform for the channel view,
+        // in place of a simple matrix, they run the risk that when viewing alpha
+        // the colorspace transforms will not be skipped. (I.e., filmlook will be applied
+        // to alpha.)  If this ever becomes an issue, additional engineering will be
+        // added at that time.
+        
         ConstMatrixTransformRcPtr typedChannelView = DynamicPtrCast<const MatrixTransform>(
             displayTransform.getChannelView());
         if(typedChannelView)
@@ -256,7 +323,7 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        ConstColorSpaceRcPtr currentColorspace = inputColorSpace;
+        ConstColorSpaceRcPtr currentColorSpace = inputColorSpace;
         
         
         
@@ -276,9 +343,9 @@ OCIO_NAMESPACE_ENTER
                 if(!skipColorSpaceConversions)
                 {
                     BuildColorSpaceOps(ops, config, context,
-                                       currentColorspace,
+                                       currentColorSpace,
                                        targetColorSpace);
-                    currentColorspace = targetColorSpace;
+                    currentColorSpace = targetColorSpace;
                 }
                 
                 std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
@@ -302,13 +369,29 @@ OCIO_NAMESPACE_ENTER
                 if(!skipColorSpaceConversions)
                 {
                     BuildColorSpaceOps(ops, config, context,
-                                       currentColorspace,
+                                       currentColorSpace,
                                        targetColorSpace);
-                    currentColorspace = targetColorSpace;
+                    currentColorSpace = targetColorSpace;
                 }
                 
                 std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
             }
+        }
+        
+        // Apply a look, if specified
+        std::string looks;
+        if(displayTransform.getLooksOverrideEnabled()) looks = displayTransform.getLooksOverride();
+        else looks = config.getDisplayLooks(display.c_str(), view.c_str());
+        
+        if(!looks.empty())
+        {
+            BuildLookOps(ops,
+                         currentColorSpace,
+                         skipColorSpaceConversions,
+                         config,
+                         context,
+                         looks,
+                         TRANSFORM_DIR_FORWARD);
         }
         
         // Apply a channel view
@@ -323,9 +406,9 @@ OCIO_NAMESPACE_ENTER
         if(!skipColorSpaceConversions)
         {
             BuildColorSpaceOps(ops, config, context,
-                               currentColorspace,
+                               currentColorSpace,
                                displayColorspace);
-            currentColorspace = displayColorspace;
+            currentColorSpace = displayColorspace;
         }
         
         

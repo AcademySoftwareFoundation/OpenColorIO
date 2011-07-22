@@ -26,49 +26,27 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
+#ifndef INCLUDED_OCIO_PRIVATE_TYPES_H
+#define INCLUDED_OCIO_PRIVATE_TYPES_H
+
 #include <OpenColorIO/OpenColorIO.h>
+
+#include <map>
+#include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-  
-    Exception::Exception(const char * msg) throw()
-    : std::exception(),
-      msg_(msg)
-    {}
-
-    Exception::Exception(const Exception& e) throw()
-    : std::exception(),
-      msg_(e.msg_)
-    {}
-
-    //*** operator=
-    Exception& Exception::operator=(const Exception& e) throw()
-    {
-        msg_ = e.msg_;
-        return *this;
-    }
-
-    //*** ~Exception
-    Exception::~Exception() throw()
-    {
-    }
-
-    //*** what
-    const char* Exception::what() const throw()
-    {
-        return msg_.c_str();
-    }
-
-  
-  
-  
-    ExceptionMissingFile::ExceptionMissingFile(const char * msg) throw()
-    : Exception(msg)
-    {}
-
-    ExceptionMissingFile::ExceptionMissingFile(const ExceptionMissingFile& e) throw()
-    : Exception(e)
-    {}
-
+    // Stl types of OCIO classes
+    typedef std::map<std::string, std::string> StringMap;
+    typedef std::vector<std::string> StringVec;
+    
+    typedef std::vector<ConstTransformRcPtr> ConstTransformVec;
+    typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
+    typedef std::vector<LookRcPtr> LookVec;
+    
+    typedef std::vector<TransformDirection> TransformDirectionVec;
 }
 OCIO_NAMESPACE_EXIT
+
+#endif

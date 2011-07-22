@@ -245,7 +245,7 @@ OCIO_NAMESPACE_ENTER
         const char * getDst() const;
         //!cpp:function::
         void setDst(const char * dst);
-    
+        
     private:
         ColorSpaceTransform();
         ColorSpaceTransform(const ColorSpaceTransform &);
@@ -283,6 +283,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        
+        
+        
         //!cpp:function:: Step 0. Specify the incoming color space
         void setInputColorSpaceName(const char * name);
         //!cpp:function::
@@ -304,14 +307,62 @@ OCIO_NAMESPACE_ENTER
         ConstTransformRcPtr getChannelView() const;
         
         //!cpp:function:: Step 4: Apply the output display transform
-        void setDisplayColorSpaceName(const char * name);
+        //! This is controlled by the specification of (display, view)
+        //!cpp:function::Specify which display transform to use
+        void setDisplay(const char * display);
         //!cpp:function::
-        const char * getDisplayColorSpaceName() const;
+        const char * getDisplay() const;
+        
+        //!cpp:function::Specify which view transform to use
+        void setView(const char * view);
+        //!cpp:function::
+        const char * getView() const;
         
         //!cpp:function:: Step 5: Apply a post display transform color correction
         void setDisplayCC(const ConstTransformRcPtr & cc);
         //!cpp:function::
         ConstTransformRcPtr getDisplayCC() const;
+        
+        
+        
+        //!cpp:function:: A user can optionally override the looks that are,
+        // by default, used with the expected display / view combination.
+        // A common use case for this functionality is in an image viewing
+        // app, where per-shot looks are supported.  If for some reason
+        // a per-shot look is not defined for the current Context, the
+        // Config::getProcessor fcn will not succeed by default.  Thus,
+        // with this mechanism the viewing app could override to looks = "",
+        // and this will allow image display to continue (though hopefully)
+        // the interface would reflect this fallback option.)
+        //
+        // Looks is a potentially comma (or colon) delimited list of lookNames,
+        // Where +/- prefixes are optionally allowed to denote forward/inverse
+        // look specification. (And forward is assumed in the absense of either)
+        
+        void setLooksOverride(const char * looks);
+        //!cpp:function:: 
+        const char * getLooksOverride() const;
+        
+        //!cpp:function:: Specifiy whether the lookOverride should be used,
+        // or not. This is a speparate flag, as it's often useful to override
+        // "looks" to an empty string
+        void setLooksOverrideEnabled(bool enabled);
+        //!cpp:function:: 
+        bool getLooksOverrideEnabled() const;
+        
+        
+        
+        
+        
+        //!cpp:function:: DEPRECATED. Will be removed in 0.9
+        // (If you rely on these functions, Views will not be applied)
+        // Use setDisplay / setView instead
+        void setDisplayColorSpaceName(const char * name);
+        
+        //!cpp:function:: DEPRECATED. Will be removed in 0.9
+        // (If you rely on these functions, Views will not be applied)
+        // Use getDisplay / getView instead
+        const char * getDisplayColorSpaceName() const;
         
     private:
         DisplayTransform();
@@ -535,6 +586,65 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LogTransform&);
+    
+    
+    
+    
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class::
+    class OCIOEXPORT LookTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static LookTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+        
+        //!cpp:function::
+        const char * getSrc() const;
+        //!cpp:function::
+        void setSrc(const char * src);
+        
+        //!cpp:function::
+        const char * getDst() const;
+        //!cpp:function::
+        void setDst(const char * dst);
+        
+        //!cpp:function:: Specify looks to apply.
+        // Looks is a potentially comma (or colon) delimited list of look names,
+        // Where +/- prefixes are optionally allowed to denote forward/inverse
+        // look specification. (And forward is assumed in the absense of either)
+        void setLooks(const char * looks);
+        //!cpp:function::
+        const char * getLooks() const;
+        
+    private:
+        LookTransform();
+        LookTransform(const LookTransform &);
+        virtual ~LookTransform();
+        
+        LookTransform& operator= (const LookTransform &);
+        
+        static void deleter(LookTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const LookTransform&);
+    
+    
     
     
     //!rst:: //////////////////////////////////////////////////////////////////

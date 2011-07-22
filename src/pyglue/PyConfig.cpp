@@ -198,7 +198,10 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getDefaultView( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getViews( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getDisplayLooks( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_setDisplayColorSpaceName( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_addDisplay( PyObject * self, PyObject * args, PyObject * kwargs );
+        PyObject * PyOCIO_Config_clearDisplays( PyObject * self );
         PyObject * PyOCIO_Config_setActiveDisplays( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getActiveDisplays( PyObject * self );
         PyObject * PyOCIO_Config_setActiveViews( PyObject * self, PyObject * args );
@@ -206,6 +209,11 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self );
         PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args );
+        
+        PyObject * PyOCIO_Config_getLook( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_getLooks( PyObject * self );
+        PyObject * PyOCIO_Config_addLook( PyObject * self, PyObject * args );
+        PyObject * PyOCIO_Config_clearLook( PyObject * self );
         
         PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args, PyObject * kwargs );
         
@@ -242,7 +250,10 @@ OCIO_NAMESPACE_ENTER
             {"getDefaultView", PyOCIO_Config_getDefaultView, METH_VARARGS, "" },
             {"getViews", PyOCIO_Config_getViews, METH_VARARGS, "" },
             {"getDisplayColorSpaceName", PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, "" },
+            {"getDisplayLooks", PyOCIO_Config_getDisplayLooks, METH_VARARGS, "" },
             {"setDisplayColorSpaceName", PyOCIO_Config_setDisplayColorSpaceName, METH_VARARGS, "" },
+            {"addDisplay", (PyCFunction) PyOCIO_Config_addDisplay, METH_KEYWORDS, "" },
+            {"clearDisplays", (PyCFunction) PyOCIO_Config_clearDisplays, METH_NOARGS, "" },
             {"setActiveDisplays", PyOCIO_Config_setActiveDisplays, METH_VARARGS, "" },
             {"getActiveDisplays", (PyCFunction) PyOCIO_Config_getActiveDisplays, METH_NOARGS, "" },
             {"setActiveViews", PyOCIO_Config_setActiveViews, METH_VARARGS, "" },
@@ -250,6 +261,11 @@ OCIO_NAMESPACE_ENTER
             
             {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
             {"setDefaultLumaCoefs", PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, "" },
+            
+            {"getLook", PyOCIO_Config_getLook, METH_VARARGS, "" },
+            {"getLooks", (PyCFunction) PyOCIO_Config_getLooks, METH_NOARGS, "" },
+            {"addLook", PyOCIO_Config_addLook, METH_VARARGS, "" },
+            {"clearLook", (PyCFunction) PyOCIO_Config_clearLook, METH_NOARGS, "" },
             
             {"getProcessor", (PyCFunction) PyOCIO_Config_getProcessor, METH_KEYWORDS, "" },
             
@@ -805,13 +821,33 @@ OCIO_NAMESPACE_ENTER
         {
             try
             {
-                char * device = 0;
-                char * displayTransformName = 0;
-                if (!PyArg_ParseTuple(args,"ss:getDisplayTransforms",
-                    &device, &displayTransformName)) return NULL;
+                char * display = 0;
+                char * view = 0;
+                if (!PyArg_ParseTuple(args,"ss:getDisplayColorSpaceName",
+                    &display, &view)) return NULL;
                 
                 ConstConfigRcPtr config = GetConstConfig(self, true);
-                return PyString_FromString( config->getDisplayColorSpaceName(device, displayTransformName) );
+                return PyString_FromString( config->getDisplayColorSpaceName(display, view) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        PyObject * PyOCIO_Config_getDisplayLooks( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * display = 0;
+                char * view = 0;
+                if (!PyArg_ParseTuple(args,"ss:getDisplayLooks",
+                    &display, &view)) return NULL;
+                
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                return PyString_FromString( config->getDisplayLooks(display, view) );
             }
             catch(...)
             {
@@ -827,14 +863,88 @@ OCIO_NAMESPACE_ENTER
             {
                 ConfigRcPtr config = GetEditableConfig(self);
                 
-                char * device = 0;
-                char * transformName = 0;
+                char * display = 0;
+                char * view = 0;
                 char * csname = 0;
                 
                 if (!PyArg_ParseTuple(args,"sss:setDisplayColorSpaceName",
-                    &device, &transformName, &csname)) return NULL;
+                    &display, &view, &csname)) return NULL;
                 
-                config->setDisplayColorSpaceName(device, transformName, csname);
+                config->setDisplayColorSpaceName(display, view, csname);
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        /*
+        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args, PyObject * kwargs)
+        {
+            try
+            {
+                // We want this call to be as flexible as possible.
+                // arg1 will either be a PyTransform
+                // or arg1, arg2 will be {str, ColorSpace}
+                
+                PyObject * arg1 = Py_None;
+                PyObject * arg2 = Py_None;
+                
+                const char * direction = 0;
+                PyObject * pycontext = Py_None;
+                
+                const char * kwlist[] = {"arg1", "arg2", "direction", "context",  NULL};
+                
+                if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OsO",
+                    const_cast<char**>(kwlist),
+                    &arg1, &arg2, &direction, &pycontext))
+                    return 0;
+        */
+        
+        PyObject * PyOCIO_Config_addDisplay( PyObject * self, PyObject * args, PyObject * kwargs)
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                
+                char * display = 0;
+                char * view = 0;
+                char * colorSpaceName = 0;
+                char * looks = 0;
+                
+                const char * kwlist[] = {"display", "view", "colorSpaceName", "looks",  NULL};
+                
+                if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sss|s",
+                    const_cast<char**>(kwlist),
+                    &display, &view, &colorSpaceName, &looks))
+                    return 0;
+                
+                std::string lookStr;
+                if(looks) lookStr = looks;
+                
+                config->addDisplay(display, view, colorSpaceName, lookStr.c_str());
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        
+        
+        PyObject * PyOCIO_Config_clearDisplays( PyObject * self )
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                config->clearDisplays();
                 
                 Py_RETURN_NONE;
             }
@@ -964,9 +1074,6 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        ////////////////////////////////////////////////////////////////////////
-        
-        
         
         PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self )
         {
@@ -985,6 +1092,89 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        PyObject * PyOCIO_Config_getLook( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                char * str = 0;
+                if (!PyArg_ParseTuple(args,"s:getLook",
+                    &str)) return NULL;
+                
+                return BuildConstPyLook(config->getLook(str));
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_getLooks( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                int num = config->getNumLooks();
+                
+                PyObject* tuple = PyTuple_New( num );
+                for(int i = 0; i<num; ++i)
+                {
+                    const char * name = config->getLookNameByIndex(i);
+                    ConstLookRcPtr look = config->getLook(name);
+                    PyObject * pylook = BuildConstPyLook(look);
+                    PyTuple_SetItem(tuple, i, pylook);
+                }
+                
+                return tuple;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_addLook( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                
+                PyObject * pyLook = 0;
+                if (!PyArg_ParseTuple(args,"O:addLook", &pyLook)) return NULL;
+                
+                config->addLook( GetConstLook(pyLook, true) );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_clearLook( PyObject * self )
+        {
+            try
+            {
+                ConfigRcPtr config = GetEditableConfig(self);
+                config->clearLooks();
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
         
         ////////////////////////////////////////////////////////////////////////
         

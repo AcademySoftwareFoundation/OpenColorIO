@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PathUtils.h"
 #include "ParseUtils.h"
 #include "Processor.h"
+#include "PrivateTypes.h"
 #include "pystring/pystring.h"
 #include "OCIOYaml.h"
 
@@ -126,9 +127,6 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
     
-    typedef std::map<std::string, std::string> StringMap;
-    typedef std::vector<std::string> StringVec;
-    
     // Roles
     // (lower case role name: colorspace name)
     std::string LookupRole(const StringMap & roles, const std::string & rolename)
@@ -138,9 +136,6 @@ OCIO_NAMESPACE_ENTER
         return iter->second;
     }
     
-    
-    // Colorspaces
-    typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
     
     void GetFileReferences(std::set<std::string> & files,
                            const ConstTransformRcPtr & transform)
@@ -162,27 +157,38 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void GetFileReferences(std::set<std::string> & files,
-                           const ColorSpaceVec & colorspaces)
+    void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
+                                 const ConstTransformRcPtr & transform)
     {
-        ColorSpaceDirection dirs[] = { COLORSPACE_DIR_TO_REFERENCE,
-                                       COLORSPACE_DIR_FROM_REFERENCE };
+        if(!transform) return;
         
-        for(unsigned int csindex=0; csindex<colorspaces.size(); ++csindex)
+        if(ConstGroupTransformRcPtr groupTransform = \
+            DynamicPtrCast<const GroupTransform>(transform))
         {
-            for(int dirindex=0; dirindex<2; ++dirindex)
+            for(int i=0; i<groupTransform->size(); ++i)
             {
-                if(!colorspaces[csindex]->isTransformSpecified(dirs[dirindex]))
-                    continue;
-                
-                ConstTransformRcPtr t = colorspaces[csindex]->getTransform(dirs[dirindex]);
-                GetFileReferences(files, t);
+                GetColorSpaceReferences(colorSpaceNames, groupTransform->getTransform(i));
             }
         }
+        else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
+            DynamicPtrCast<const ColorSpaceTransform>(transform))
+        {
+            colorSpaceNames.insert(colorSpaceTransform->getSrc());
+            colorSpaceNames.insert(colorSpaceTransform->getDst());
+        }
+        else if(ConstDisplayTransformRcPtr displayTransform = \
+            DynamicPtrCast<const DisplayTransform>(transform))
+        {
+            colorSpaceNames.insert(displayTransform->getInputColorSpaceName());
+            colorSpaceNames.insert(displayTransform->getDisplayColorSpaceName());
+        }
+        else if(ConstLookTransformRcPtr lookTransform = \
+            DynamicPtrCast<const LookTransform>(transform))
+        {
+            colorSpaceNames.insert(colorSpaceTransform->getSrc());
+            colorSpaceNames.insert(colorSpaceTransform->getDst());
+        }
     }
-    
-    
-    
     
     
     bool FindColorSpaceIndex(int * index,
@@ -211,13 +217,16 @@ OCIO_NAMESPACE_ENTER
     {
         std::string name;
         std::string colorspace;
+        std::string looks;
         
         View() { }
         
         View(const std::string & name_,
-             const std::string & colorspace_) :
+             const std::string & colorspace_,
+             const std::string & looksList_) :
                 name(name_),
-                colorspace(colorspace_)
+                colorspace(colorspace_),
+                looks(looksList_)
         { }
     };
     
@@ -245,9 +254,14 @@ OCIO_NAMESPACE_ENTER
             os << "does not specify colorspace.";
             throw Exception(os.str().c_str());
         }
-        
         if (node["colorspace"].Read<std::string>(ret))
           v.colorspace = ret;
+        
+        if(node.FindValue("looks") != NULL)
+        {
+            if (node["looks"].Read<std::string>(ret))
+                v.looks = ret;
+        }
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, View view)
@@ -257,6 +271,7 @@ OCIO_NAMESPACE_ENTER
         out << YAML::BeginMap;
         out << YAML::Key << "name" << YAML::Value << view.name;
         out << YAML::Key << "colorspace" << YAML::Value << view.colorspace;
+        if(!view.looks.empty()) out << YAML::Key << "looks" << YAML::Value << view.looks;
         out << YAML::EndMap;
         return out;
     }
@@ -292,16 +307,17 @@ OCIO_NAMESPACE_ENTER
         return -1;
     }
     
-    void SetDisplay(DisplayMap & displays,
+    void AddDisplay(DisplayMap & displays,
                     const std::string & display,
                     const std::string & view,
-                    const std::string & colorspace)
+                    const std::string & colorspace,
+                    const std::string & looks)
     {
         DisplayMap::iterator iter = find_display(displays, display);
         if(iter == displays.end())
         {
             ViewVec views;
-            views.push_back( View(view, colorspace) );
+            views.push_back( View(view, colorspace, looks) );
             displays[display] = views;
         }
         else
@@ -310,11 +326,12 @@ OCIO_NAMESPACE_ENTER
             int index = find_view(views, view);
             if(index<0)
             {
-                views.push_back( View(view, colorspace) );
+                views.push_back( View(view, colorspace, looks) );
             }
             else
             {
                 views[index].colorspace = colorspace;
+                views[index].looks = looks;
             }
         }
     }
@@ -361,6 +378,7 @@ OCIO_NAMESPACE_ENTER
         std::string description_;
         ColorSpaceVec colorspaces_;
         StringMap roles_;
+        LookVec looksList_;
         
         DisplayMap displays_;
         StringVec activeDisplays_;
@@ -391,16 +409,10 @@ OCIO_NAMESPACE_ENTER
             context_->loadEnvironment();
             
             char* activeDisplays = std::getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR);
-            if(activeDisplays)
-            {
-                SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays);
-            }
+            SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays);
             
             char * activeViews = std::getenv(OCIO_ACTIVE_VIEWS_ENVVAR);
-            if(activeViews)
-            {
-                SplitStringEnvStyle(activeViewsEnvOverride_, activeViews);
-            }
+            SplitStringEnvStyle(activeViewsEnvOverride_, activeViews);
             
             defaultLumaCoefs_.resize(3);
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
@@ -418,12 +430,20 @@ OCIO_NAMESPACE_ENTER
             context_ = rhs.context_->createEditableCopy();
             description_ = rhs.description_;
             
+            // Deep copy the colorspaces
             colorspaces_.clear();
             colorspaces_.reserve(rhs.colorspaces_.size());
-            
             for(unsigned int i=0; i<rhs.colorspaces_.size(); ++i)
             {
                 colorspaces_.push_back(rhs.colorspaces_[i]->createEditableCopy());
+            }
+            
+            // Deep copy the looks
+            looksList_.clear();
+            looksList_.reserve(rhs.looksList_.size());
+            for(unsigned int i=0; i<rhs.looksList_.size(); ++i)
+            {
+                looksList_.push_back(rhs.looksList_[i]->createEditableCopy());
             }
             
             // Assignment operator will suffice for these
@@ -449,6 +469,15 @@ OCIO_NAMESPACE_ENTER
         }
         
         void load(std::istream & istream, const char * name);
+        
+        // Any time you modify the state of the config, you must call this
+        // to reset internal cache states.  You also should do this in a
+        // thread safe manner by acquiring the cacheidMutex_;
+        void resetCacheIDs();
+        
+        // Get all internal transforms (to generate cacheIDs, validation, etc).
+        // This currently crawls colorspaces + looks
+        void getAllIntenalTransforms(ConstTransformVec & transformVec) const;
     };
     
     
@@ -537,8 +566,10 @@ OCIO_NAMESPACE_ENTER
         getImpl()->sanity_ = SANITY_INSANE;
         getImpl()->sanitytext_ = "";
         
+        
+        ///// COLORSPACES
+        
         // Confirm all ColorSpaces are valid
-        // TODO: Confirm there arent duplicate colorspaces
         for(unsigned int i=0; i<getImpl()->colorspaces_.size(); ++i)
         {
             if(!getImpl()->colorspaces_[i])
@@ -602,6 +633,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        ///// DISPLAYS
+        
         int numviews = 0;
         
         // Confirm all Displays transforms refer to colorspaces that exit
@@ -645,6 +678,26 @@ OCIO_NAMESPACE_ENTER
                     throw Exception(getImpl()->sanitytext_.c_str());
                 }
                 
+                // Confirm looks references exist
+                StringVec lookVec;
+                TransformDirectionVec directionVec;
+                SplitLooks(lookVec, directionVec, views[i].looks);
+                
+                for(unsigned int lookindex=0; lookindex<lookVec.size(); ++lookindex)
+                {
+                    if(!lookVec[lookindex].empty() &&
+                        !getLook(lookVec[lookindex].c_str()))
+                    {
+                        std::ostringstream os;
+                        os << "Config failed sanitycheck. ";
+                        os << "The display '" << display << "' ";
+                        os << "refers to a look, '" << lookVec[lookindex] << "', ";
+                        os << "which is not defined.";
+                        getImpl()->sanitytext_ = os.str();
+                        throw Exception(getImpl()->sanitytext_.c_str());
+                    }
+                }
+                
                 ++numviews;
             }
         }
@@ -659,7 +712,75 @@ OCIO_NAMESPACE_ENTER
             throw Exception(getImpl()->sanitytext_.c_str());
         }
         
-        // TODO: Confirm for all ColorSpaceTransforms the names spaces exist
+        // Confirm for all Transforms that reference internal colorspaces,
+        // the named space exists
+        {
+            ConstTransformVec allTransforms;
+            getImpl()->getAllIntenalTransforms(allTransforms);
+            
+            std::set<std::string> colorSpaceNames;
+            for(unsigned int i=0; i<colorSpaceNames.size(); ++i)
+            {
+                GetColorSpaceReferences(colorSpaceNames, allTransforms[i]);
+            }
+            
+            for(std::set<std::string>::iterator iter = colorSpaceNames.begin();
+                iter != colorSpaceNames.end(); ++iter)
+            {
+                int csindex = -1;
+                if(!FindColorSpaceIndex(&csindex, getImpl()->colorspaces_, *iter))
+                {
+                    std::ostringstream os;
+                    os << "Config failed sanitycheck. ";
+                    os << "This config references a ColorSpace, '" << *iter << "', ";
+                    os << "which is not defined.";
+                    getImpl()->sanitytext_ = os.str();
+                    throw Exception(getImpl()->sanitytext_.c_str());
+                }
+            }
+        }
+        
+        ///// LOOKS
+        
+        // For all looks, confirm the process space exists and the look is named
+        for(unsigned int i=0; i<getImpl()->looksList_.size(); ++i)
+        {
+            std::string name = getImpl()->looksList_[i]->getName();
+            if(name.empty())
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. ";
+                os << "The look at index '" << i << "' ";
+                os << "does not specify a name.";
+                getImpl()->sanitytext_ = os.str();
+                throw Exception(getImpl()->sanitytext_.c_str());
+            }
+            
+            std::string processSpace = getImpl()->looksList_[i]->getProcessSpace();
+            if(processSpace.empty())
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. ";
+                os << "The look '" << name << "' ";
+                os << "does not specify a process space.";
+                getImpl()->sanitytext_ = os.str();
+                throw Exception(getImpl()->sanitytext_.c_str());
+            }
+            
+            int csindex=0;
+            if(!FindColorSpaceIndex(&csindex, getImpl()->colorspaces_, processSpace))
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. ";
+                os << "The look '" << name << "' ";
+                os << "specifies a process color space, '";
+                os << processSpace << "', which is not defined.";
+                getImpl()->sanitytext_ = os.str();
+                throw Exception(getImpl()->sanitytext_.c_str());
+            }
+        }
+        
+        
         
         // Everything is groovy.
         getImpl()->sanity_ = SANITY_SANE;
@@ -677,10 +798,7 @@ OCIO_NAMESPACE_ENTER
         getImpl()->description_ = description;
         
         AutoMutex lock(getImpl()->cacheidMutex_);
-        getImpl()->cacheids_.clear();
-        getImpl()->cacheidnocontext_ = "";
-        getImpl()->sanity_ = SANITY_UNKNOWN;
-        getImpl()->sanitytext_ = "";
+        getImpl()->resetCacheIDs();
     }
     
     
@@ -701,10 +819,7 @@ OCIO_NAMESPACE_ENTER
         getImpl()->context_->setSearchPath(path);
         
         AutoMutex lock(getImpl()->cacheidMutex_);
-        getImpl()->cacheids_.clear();
-        getImpl()->cacheidnocontext_ = "";
-        getImpl()->sanity_ = SANITY_UNKNOWN;
-        getImpl()->sanitytext_ = "";
+        getImpl()->resetCacheIDs();
     }
     
     const char * Config::getWorkingDir() const
@@ -717,10 +832,7 @@ OCIO_NAMESPACE_ENTER
         getImpl()->context_->setWorkingDir(dirname);
         
         AutoMutex lock(getImpl()->cacheidMutex_);
-        getImpl()->cacheids_.clear();
-        getImpl()->cacheidnocontext_ = "";
-        getImpl()->sanity_ = SANITY_UNKNOWN;
-        getImpl()->sanitytext_ = "";
+        getImpl()->resetCacheIDs();
     }
     
     
@@ -804,10 +916,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         AutoMutex lock(getImpl()->cacheidMutex_);
-        getImpl()->cacheids_.clear();
-        getImpl()->cacheidnocontext_ = "";
-        getImpl()->sanity_ = SANITY_UNKNOWN;
-        getImpl()->sanitytext_ = "";
+        getImpl()->resetCacheIDs();
     }
     
     void Config::clearColorSpaces()
@@ -890,6 +999,9 @@ OCIO_NAMESPACE_ENTER
     void Config::setStrictParsingEnabled(bool enabled)
     {
         getImpl()->strictParsing_ = enabled;
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
     }
     
     // Roles
@@ -911,10 +1023,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         AutoMutex lock(getImpl()->cacheidMutex_);
-        getImpl()->cacheids_.clear();
-        getImpl()->cacheidnocontext_ = "";
-        getImpl()->sanity_ = SANITY_UNKNOWN;
-        getImpl()->sanitytext_ = "";
+        getImpl()->resetCacheIDs();
     }
     
     int Config::getNumRoles() const
@@ -1026,10 +1135,10 @@ OCIO_NAMESPACE_ENTER
                             getImpl()->activeDisplaysEnvOverride_);
         }
         
-        if(!display) return 0;
+        if(!display) return "";
         
         DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
-        if(iter == getImpl()->displays_.end()) return 0;
+        if(iter == getImpl()->displays_.end()) return "";
         
         const ViewVec & views = iter->second;
         
@@ -1105,7 +1214,7 @@ OCIO_NAMESPACE_ENTER
         if(!display) return "";
         
         DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
-        if(iter == getImpl()->displays_.end()) return 0;
+        if(iter == getImpl()->displays_.end()) return "";
         
         const ViewVec & views = iter->second;
         return views[index].name.c_str();
@@ -1125,28 +1234,58 @@ OCIO_NAMESPACE_ENTER
         return views[index].colorspace.c_str();
     }
     
+    const char * Config::getDisplayLooks(const char * display, const char * view) const
+    {
+        if(!display || !view) return "";
+        
+        DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
+        if(iter == getImpl()->displays_.end()) return "";
+        
+        const ViewVec & views = iter->second;
+        int index = find_view(views, view);
+        if(index<0) return "";
+        
+        return views[index].looks.c_str();
+    }
+    
     void Config::setDisplayColorSpaceName(const char * display, const char * view,
                                           const char * colorSpaceName)
     {
-        if(!display || !view || !colorSpaceName) return;
-        
-        SetDisplay(getImpl()->displays_,
-                   display, view, colorSpaceName);
-        getImpl()->displayCache_.clear();
+        addDisplay(display, view, colorSpaceName, "");
     }
-
+    
+    void Config::addDisplay(const char * display, const char * view,
+                            const char * colorSpaceName, const char * lookName)
+    {
+        
+        if(!display || !view || !colorSpaceName || !lookName) return;
+        
+        AddDisplay(getImpl()->displays_,
+                   display, view, colorSpaceName, lookName);
+        getImpl()->displayCache_.clear();
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
+    }
+    
+    void Config::clearDisplays()
+    {
+        getImpl()->displays_.clear();
+        getImpl()->displayCache_.clear();
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
+    }
+    
     void Config::setActiveDisplays(const char * displays)
     {
-        if(!displays)
-        {
-            getImpl()->activeDisplays_.clear();
-        }
-        else
-        {
-            SplitStringEnvStyle(getImpl()->activeDisplays_, displays);
-        }
+        getImpl()->activeDisplays_.clear();
+        SplitStringEnvStyle(getImpl()->activeDisplays_, displays);
         
         getImpl()->displayCache_.clear();
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
     }
 
     const char * Config::getActiveDisplays() const
@@ -1157,16 +1296,13 @@ OCIO_NAMESPACE_ENTER
     
     void Config::setActiveViews(const char * views)
     {
-        if(!views)
-        {
-            getImpl()->activeViews_.clear();
-        }
-        else
-        {
-            SplitStringEnvStyle(getImpl()->activeViews_, views);
-        }
+        getImpl()->activeViews_.clear();
+        SplitStringEnvStyle(getImpl()->activeViews_, views);
         
         getImpl()->displayCache_.clear();
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
     }
 
     const char * Config::getActiveViews() const
@@ -1188,11 +1324,83 @@ OCIO_NAMESPACE_ENTER
         memcpy(&getImpl()->defaultLumaCoefs_[0], c3, 3*sizeof(float));
         
         AutoMutex lock(getImpl()->cacheidMutex_);
-        getImpl()->cacheids_.clear();
-        getImpl()->cacheidnocontext_ = "";
-        getImpl()->sanity_ = SANITY_UNKNOWN;
-        getImpl()->sanitytext_ = "";
+        getImpl()->resetCacheIDs();
     }
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    
+    ConstLookRcPtr Config::getLook(const char * name) const
+    {
+        std::string namelower = pystring::lower(name);
+        
+        for(unsigned int i=0; i<getImpl()->looksList_.size(); ++i)
+        {
+            if(pystring::lower(getImpl()->looksList_[i]->getName()) == namelower)
+            {
+                return getImpl()->looksList_[i];
+            }
+        }
+        
+        return ConstLookRcPtr();
+    }
+    
+    int Config::getNumLooks() const
+    {
+        return static_cast<int>(getImpl()->looksList_.size());
+    }
+    
+    const char * Config::getLookNameByIndex(int index) const
+    {
+        if(index<0 || index>=static_cast<int>(getImpl()->looksList_.size()))
+        {
+            return "";
+        }
+        
+        return getImpl()->looksList_[index]->getName();
+    }
+    
+    void Config::addLook(const ConstLookRcPtr & look)
+    {
+        std::string name = look->getName();
+        if(name.empty())
+            throw Exception("Cannot addLook with an empty name.");
+        
+        std::string namelower = pystring::lower(name);
+        
+        // If the look exists, replace it
+        for(unsigned int i=0; i<getImpl()->looksList_.size(); ++i)
+        {
+            if(pystring::lower(getImpl()->looksList_[i]->getName()) == namelower)
+            {
+                getImpl()->looksList_[i] = look->createEditableCopy();
+                return;
+            }
+        }
+        
+        // Otherwise, add it
+        getImpl()->looksList_.push_back(look->createEditableCopy());
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
+    }
+    
+    void Config::clearLooks()
+    {
+        getImpl()->looksList_.clear();
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
     
     ConstProcessorRcPtr Config::getProcessor(const ConstColorSpaceRcPtr & src,
                                              const ConstColorSpaceRcPtr & dst) const
@@ -1318,9 +1526,15 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream filehash;
             
+            ConstTransformVec allTransforms;
+            getImpl()->getAllIntenalTransforms(allTransforms);
+            
             std::set<std::string> files;
-            GetFileReferences(files,
-                              getImpl()->colorspaces_);
+            for(unsigned int i=0; i<allTransforms.size(); ++i)
+            {
+                GetFileReferences(files, allTransforms[i]);
+            }
+            
             for(std::set<std::string>::iterator iter = files.begin();
                 iter != files.end(); ++iter)
             {
@@ -1381,22 +1595,30 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Newline;
             out << YAML::Key << "displays";
             out << YAML::Value << getImpl()->displays_;
+            out << YAML::Newline;
             out << YAML::Key << "active_displays";
             out << YAML::Value << YAML::Flow << getImpl()->activeDisplays_;
             out << YAML::Key << "active_views";
             out << YAML::Value << YAML::Flow << getImpl()->activeViews_;
             
+            // Looks
+            if(!getImpl()->looksList_.empty())
+            {
+                out << YAML::Newline;
+                out << YAML::Key << "looks";
+                out << YAML::Value << getImpl()->looksList_;
+            }
+            
             // ColorSpaces
-            if(getImpl()->colorspaces_.size() > 0)
             {
                 out << YAML::Newline;
                 out << YAML::Key << "colorspaces";
-                out << YAML::Value << getImpl()->colorspaces_; // std::vector -> Seq
+                out << YAML::Value << getImpl()->colorspaces_;
             }
             
             out << YAML::EndMap;
+            
             os << out.c_str();
-        
         }
         catch( const std::exception & e)
         {
@@ -1465,6 +1687,7 @@ OCIO_NAMESPACE_ENTER
                     os << "'luma' field needs to be a (luma: [0, 0, 0]) list.";
                     throw Exception(os.str().c_str());
                 }
+                
                 std::vector<float> value;
                 node["luma"] >> value;
                 if(value.size() != 3)
@@ -1479,12 +1702,6 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Roles
-            // TODO: We should really output roles in a dictionary
-            // (alphabetical) order, or a roundtrip yaml file wont
-            // agree with the original, in role ordering. (Is it
-            //  precious or not?). Alternative is to store roles
-            // in a map, rather than a vec.
-            
             if(node.FindValue("roles") != NULL)
             {
                 if(node["roles"].Type() != YAML::NodeType::Map)
@@ -1493,15 +1710,13 @@ OCIO_NAMESPACE_ENTER
                     os << "'roles' field needs to be a (name: key) map.";
                     throw Exception(os.str().c_str());
                 }
+                
                 for (YAML::Iterator it  = node["roles"].begin();
                                     it != node["roles"].end(); ++it)
                 {
-                    std::string key;
-                    std::string value;
-                    
+                    std::string key, value;
                     it.first() >> key;
                     it.second() >> value;
-
                     roles_[pystring::lower(key)] = value;
                 }
             }
@@ -1530,15 +1745,18 @@ OCIO_NAMESPACE_ENTER
                             throw Exception(os.str().c_str());
                         }
                         
-                        std::string display;
-                        node["displays"][i]["device"].Read<std::string>(display);
-                        std::string view;
-                        node["displays"][i]["name"].Read<std::string>(view);
-                        std::string colorspace;
-                        node["displays"][i]["colorspace"].Read<std::string>(colorspace);
+                        std::string look, display, view, colorspace;
                         
-                        SetDisplay(displays_,
-                                   display, view, colorspace);
+                        node["displays"][i]["device"].Read<std::string>(display);
+                        node["displays"][i]["name"].Read<std::string>(view);
+                        node["displays"][i]["colorspace"].Read<std::string>(colorspace);
+                        if(node["displays"][i].FindValue("look") != NULL)
+                        {
+                            node["displays"][i]["look"].Read<std::string>(look);
+                        }
+                        
+                        AddDisplay(displays_,
+                                   display, view, colorspace, look);
                     }
                 }
                 else if(node["displays"].Type() == YAML::NodeType::Map)
@@ -1587,8 +1805,25 @@ OCIO_NAMESPACE_ENTER
                         node["colorspaces"][i] >> cs;
                         colorspaces_.push_back( cs );
                     }
-                    // ignore other tags
-                    // TODO: print something in this case
+                }
+            }
+            
+            // Looks
+            if(node.FindValue("looks") != NULL) {
+                if(node["looks"].Type() != YAML::NodeType::Sequence)
+                {
+                    std::ostringstream os;
+                    os << "'looks' field needs to be a (- !<Look>) list.";
+                    throw Exception(os.str().c_str());
+                }
+                for(unsigned i = 0; i < node["looks"].size(); ++i)
+                {
+                    if(node["looks"][i].Tag() == "Look")
+                    {
+                        LookRcPtr look = Look::Create();
+                        node["looks"][i] >> look;
+                        looksList_.push_back( look );
+                    }
                 }
             }
             
@@ -1607,6 +1842,42 @@ OCIO_NAMESPACE_ENTER
             os << "failed. " << e.what();
             throw Exception(os.str().c_str());
         }
+    }
+    
+    void Config::Impl::resetCacheIDs()
+    {
+        cacheids_.clear();
+        cacheidnocontext_ = "";
+        sanity_ = SANITY_UNKNOWN;
+        sanitytext_ = "";
+    }
+    
+    void Config::Impl::getAllIntenalTransforms(ConstTransformVec & transformVec) const
+    {
+        // Grab all transform from the ColorSpaces
+        ColorSpaceDirection dirs[] = { COLORSPACE_DIR_TO_REFERENCE,
+                                       COLORSPACE_DIR_FROM_REFERENCE };
+        
+        for(unsigned int csindex=0; csindex<colorspaces_.size(); ++csindex)
+        {
+            for(int dirindex=0; dirindex<2; ++dirindex)
+            {
+                if(!colorspaces_[csindex]->isTransformSpecified(dirs[dirindex]))
+                    continue;
+                
+                transformVec.push_back(colorspaces_[csindex]->getTransform(dirs[dirindex]));
+            }
+        }
+        
+        // Looks
+        for(unsigned int i=0; i<looksList_.size(); ++i)
+        {
+            if(looksList_[i]->getTransform())
+                transformVec.push_back(looksList_[i]->getTransform());
+            if(looksList_[i]->getInverseTransform())
+                transformVec.push_back(looksList_[i]->getInverseTransform());
+        }
+    
     }
 }
 OCIO_NAMESPACE_EXIT

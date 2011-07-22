@@ -60,6 +60,18 @@ OCIO_NAMESPACE_ENTER
     ConstContextRcPtr GetConstContext(PyObject * context, bool allowCast);
     ContextRcPtr GetEditableContext(PyObject * context);
     
+    // Exception
+    // Warning: these cannot return valid PyObject pointers before
+    // the python module has been initialized. Beware of calling these
+    // at static construction time.
+    PyObject * GetExceptionPyType();
+    PyObject * GetExceptionMissingFilePyType();
+    
+    // Processor
+    PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor);
+    bool IsPyProcessor(PyObject * pyobject);
+    ConstProcessorRcPtr GetConstProcessor(PyObject * pyobject);
+    
     // Transform
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
     PyObject * BuildEditablePyTransform(TransformRcPtr transform);
@@ -68,10 +80,13 @@ OCIO_NAMESPACE_ENTER
     ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast);
     TransformRcPtr GetEditableTransform(PyObject * pyobject);
     
-    // Processor
-    PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor);
-    bool IsPyProcessor(PyObject * pyobject);
-    ConstProcessorRcPtr GetConstProcessor(PyObject * pyobject);
+    // Look
+    PyObject * BuildConstPyLook(ConstLookRcPtr look);
+    PyObject * BuildEditablePyLook(LookRcPtr look);
+    bool IsPyLook(PyObject * pyobject);
+    bool IsPyLookEditable(PyObject * pyobject);
+    ConstLookRcPtr GetConstLook(PyObject * pyobject, bool allowCast);
+    LookRcPtr GetEditableLook(PyObject * pyobject);
 }
 OCIO_NAMESPACE_EXIT
 

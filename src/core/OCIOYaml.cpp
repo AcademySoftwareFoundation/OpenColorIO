@@ -221,6 +221,11 @@ OCIO_NAMESPACE_ENTER
             node.Read<LogTransformRcPtr>(temp);
             t = temp;
         }
+        else if(type == "LookTransform") {
+            LookTransformRcPtr temp;
+            node.Read<LookTransformRcPtr>(temp);
+            t = temp;
+        }
         else if(type == "MatrixTransform")  {
             MatrixTransformRcPtr temp;
             node.Read<MatrixTransformRcPtr>(temp);
@@ -270,6 +275,9 @@ OCIO_NAMESPACE_ENTER
         else if(ConstLogTransformRcPtr Log_tran = \
             DynamicPtrCast<const LogTransform>(t))
             out << Log_tran;
+        else if(ConstLookTransformRcPtr Look_tran = \
+            DynamicPtrCast<const LookTransform>(t))
+            out << Look_tran;
         else if(ConstMatrixTransformRcPtr Matrix_tran = \
             DynamicPtrCast<const MatrixTransform>(t))
             out << Matrix_tran;
@@ -282,6 +290,60 @@ OCIO_NAMESPACE_ENTER
         return out;
     }
     
+    
+    void operator >> (const YAML::Node& node, LookRcPtr& look)
+    {
+        if(node.Tag() != "Look")
+            return;
+        if(node.FindValue("name") != NULL)  {
+            std::string ret;
+            if (node["name"].Read<std::string>(ret))
+              look->setName(ret.c_str());
+        }
+        if(node.FindValue("process_space") != NULL) {
+            std::string ret;
+            if (node["process_space"].Read<std::string>(ret))
+              look->setProcessSpace(ret.c_str());
+        }
+        if(node.FindValue("transform") != NULL)  {
+            TransformRcPtr ret;
+            if (node["transform"].Read<TransformRcPtr>(ret))
+              look->setTransform(ret);
+        }
+        if(node.FindValue("inverse_transform") != NULL)  {
+            TransformRcPtr ret;
+            if (node["inverse_transform"].Read<TransformRcPtr>(ret))
+              look->setInverseTransform(ret);
+        }
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, LookRcPtr look)
+    {
+        out << YAML::VerbatimTag("Look");
+        out << YAML::BeginMap;
+        out << YAML::Key << "name" << YAML::Value << look->getName();
+        out << YAML::Key << "process_space" << YAML::Value << look->getProcessSpace();
+        
+        if(look->getTransform())
+        {
+            out << YAML::Key << "transform";
+            out << YAML::Value << look->getTransform();
+        }
+        
+        if(look->getInverseTransform())
+        {
+            out << YAML::Key << "inverse_transform";
+            out << YAML::Value << look->getInverseTransform();
+        }
+        
+        out << YAML::EndMap;
+        out << YAML::Newline;
+        
+        return out;
+    }
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
     
     
     
@@ -391,6 +453,38 @@ OCIO_NAMESPACE_ENTER
         out << YAML::Flow << YAML::BeginMap;
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
         out << YAML::Key << "dst" << YAML::Value << t->getDst();
+        EmitBaseTransformKeyValues(out, t);
+        out << YAML::EndMap;
+        return out;
+    }
+    
+    void operator >> (const YAML::Node& node, LookTransformRcPtr& t)
+    {
+        t = LookTransform::Create();
+        if(node.FindValue("src") != NULL) {
+            std::string ret;
+            if (node["src"].Read<std::string>(ret))
+              t->setSrc(ret.c_str());
+        }
+        if(node.FindValue("dst") != NULL) {
+            std::string ret;
+            if (node["dst"].Read<std::string>(ret))
+            t->setDst(ret.c_str());
+        }
+        if(node.FindValue("looks") != NULL) {
+            std::string ret;
+            if (node["looks"].Read<std::string>(ret))
+            t->setLooks(ret.c_str());
+        }
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, ConstLookTransformRcPtr t)
+    {
+        out << YAML::VerbatimTag("LookTransform");
+        out << YAML::Flow << YAML::BeginMap;
+        out << YAML::Key << "src" << YAML::Value << t->getSrc();
+        out << YAML::Key << "dst" << YAML::Value << t->getDst();
+        out << YAML::Key << "looks" << YAML::Value << t->getLooks();
         EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
         return out;
