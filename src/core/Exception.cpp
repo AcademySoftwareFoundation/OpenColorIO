@@ -32,7 +32,8 @@ OCIO_NAMESPACE_ENTER
 {
   
     Exception::Exception(const char * msg) throw()
-    : msg_(msg)
+    : std::exception(),
+      msg_(msg)
     {}
 
     Exception::Exception(const Exception& e) throw()
@@ -58,6 +59,16 @@ OCIO_NAMESPACE_ENTER
         return msg_.c_str();
     }
 
+  
+  
+  
+    ExceptionMissingFile::ExceptionMissingFile(const char * msg) throw()
+    : Exception(msg)
+    {}
+
+    ExceptionMissingFile::ExceptionMissingFile(const ExceptionMissingFile& e) throw()
+    : Exception(e)
+    {}
 
 }
 OCIO_NAMESPACE_EXIT

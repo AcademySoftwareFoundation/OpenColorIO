@@ -60,6 +60,13 @@ OCIO_NAMESPACE_ENTER
     ConstContextRcPtr GetConstContext(PyObject * context, bool allowCast);
     ContextRcPtr GetEditableContext(PyObject * context);
     
+    // Exception
+    // Warning: these cannot return valid PyObject pointers before
+    // the python module has been initialized. Beware of calling these
+    // at static construction time.
+    PyObject * GetExceptionPyType();
+    PyObject * GetExceptionMissingFilePyType();
+    
     // Processor
     PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor);
     bool IsPyProcessor(PyObject * pyobject);

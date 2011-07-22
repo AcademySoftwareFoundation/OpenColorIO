@@ -37,7 +37,7 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     {
         config = OCIO::GetCurrentConfig();
     }
-    catch (OCIO::Exception& e)
+    catch (const OCIO::Exception& e)
     {
         std::cerr << "OCIOLookTransform: " << e.what() << std::endl;
     }
@@ -209,10 +209,13 @@ void OCIOLookTransform::append(DD::Image::Hash& localhash)
         std::string configCacheID = config->getCacheID(context);
         localhash.append(configCacheID);
     }
-    catch(OCIO::Exception &e)
+    catch(const OCIO::Exception &e)
     {
         error(e.what());
-        return;
+    }
+    catch (...)
+    {
+        error("OCIOLookTransform: Unknown exception during hash generation.");
     }
 }
 
@@ -286,15 +289,23 @@ void OCIOLookTransform::_validate(bool for_real)
         {
             m_processor = config->getProcessor(context, transform, direction);
         }
-        catch(...)
+        // We only catch the exceptions for missing files, and try to succeed
+        // in this case. All other errors represent more serious problems and
+        // should fail through.
+        catch(const OCIO::ExceptionMissingFile &e)
         {
             if(!m_ignoreErrors) throw;
             m_processor = config->getProcessor(context, inputName, outputName);
         }
     }
-    catch(OCIO::Exception &e)
+    catch(const OCIO::Exception &e)
     {
         error(e.what());
+        return;
+    }
+    catch (...)
+    {
+        error("OCIOLookTransform: Unknown exception during _validate.");
         return;
     }
     
@@ -378,9 +389,13 @@ void OCIOLookTransform::pixel_engine(
             OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
             m_processor->apply(img);
         }
-        catch(OCIO::Exception &e)
+        catch(const OCIO::Exception &e)
         {
             error(e.what());
+        }
+        catch (...)
+        {
+            error("OCIOLookTransform: Unknown exception during pixel_engine.");
         }
     }
 }

@@ -73,11 +73,9 @@ C++ API
 
 OCIO_NAMESPACE_ENTER
 {
-    
-    
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
-    // Exception
+    // Exceptions
     // *********
     
     //!cpp:class:: An exception class to throw for an errors detected at
@@ -101,6 +99,22 @@ OCIO_NAMESPACE_ENTER
         
     private:
         std::string msg_;
+    };
+    
+    //!cpp:class:: An exception class to throw for an errors detected at
+    // runtime, used when OCIO is expecting a file to exist, yet it
+    // cannot be found. This is provided as a custom type to
+    // to distinguish amongst cases where one wants to continue for
+    // missing files (such as with looks), but wants to properly fail
+    // for other error conditions.
+    
+    class OCIOEXPORT ExceptionMissingFile : public Exception
+    {
+    public:
+        //!cpp:function::
+        ExceptionMissingFile(const char *) throw();
+        //!cpp:function::
+        ExceptionMissingFile(const ExceptionMissingFile&) throw();
     };
     
     

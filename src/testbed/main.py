@@ -29,9 +29,22 @@ c.sanityCheck()
 #for cs in c.getColorSpaces():
 #    print "%s %s %s" % (cs.getName(), cs.getFamily(), cs.getBitDepth())
 
+processor = c.getProcessor("qt8",'lnf')
+
+# Test exceptions
+"""
+try:
+    raise OCIO.ExceptionMissingFile("Fsdfsdf")
+except OCIO.ExceptionMissingFile,e:
+    print 'ocio ExceptionMissingFile',type(e)
+except OCIO.Exception,e:
+    print 'ocio exception',type(e)
+except Exception,e:
+    print 'exception',type(e)
+"""
 
 # Test looks
-
+"""
 config = OCIO.Config()
 
 look = OCIO.Look(name = 'None',
@@ -53,6 +66,7 @@ print '\n'*3
 
 config2 = OCIO.Config.CreateFromFile('/tmp/a.ocio')
 print config2.serialize()
+"""
 
 # Create a new config
 """

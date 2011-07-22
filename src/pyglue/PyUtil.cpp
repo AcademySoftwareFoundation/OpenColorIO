@@ -721,9 +721,13 @@ OCIO_NAMESPACE_ENTER
             // from inside an exception handler catch block!
             throw;
         }
+        catch (ExceptionMissingFile & e)
+        {
+            PyErr_SetString(GetExceptionMissingFilePyType(), e.what());
+        }
         catch (Exception & e)
         {
-            PyErr_SetString(PyExc_RuntimeError, e.what());
+            PyErr_SetString(GetExceptionPyType(), e.what());
         }
         catch (std::exception& e)
         {

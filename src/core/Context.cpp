@@ -314,7 +314,7 @@ namespace
             errortext << expandedfullpath;
         }
         
-        throw Exception(errortext.str().c_str());
+        throw ExceptionMissingFile(errortext.str().c_str());
     }
 
     std::ostream& operator<< (std::ostream& os, const Context& context)
