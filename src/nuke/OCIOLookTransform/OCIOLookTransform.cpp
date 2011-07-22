@@ -24,9 +24,9 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     m_inputColorSpaceIndex = 0;
     m_outputColorSpaceIndex = 0;
     m_lookIndex = 0;
-    m_invertTransform = false;
-
+    m_dirIndex = 0;
     m_layersToProcess = DD::Image::Mask_RGB;
+    m_ignoreErrors = false;
     
     // Query the colorspace names from the current config
     // TODO (when to) re-grab the list of available colorspaces? How to save/load?
@@ -108,6 +108,11 @@ OCIOLookTransform::~OCIOLookTransform()
 
 }
 
+namespace
+{
+    static const char * directions[] = { "forward", "inverse", 0 };
+}
+
 void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
 {
     DD::Image::Enumeration_knob(f, &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
@@ -118,13 +123,18 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     
     DD::Image::Spacer(f, 8);
     
-    DD::Image::Knob * dirKnob = DD::Image::Bool_knob(f, &m_invertTransform, "inverse", "inverse look");
-    DD::Image::Tooltip(f, "Specify the transform direction.");
-    dirKnob->clear_flag( DD::Image::Knob::STARTLINE );
+    Enumeration_knob(f, &m_dirIndex, directions, "direction", "direction");
+    DD::Image::Tooltip(f, "Specify the look transform direction. in/out colorspace handling is not affected.");
+    DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE );
     
     DD::Image::Enumeration_knob(f, &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
     DD::Image::Tooltip(f, "Image data is converted to this colorspace for output.");
-
+    
+    DD::Image::Bool_knob(f, &m_ignoreErrors, "ignore_errors", "ignore errors");
+    DD::Image::Tooltip(f, "If enabled, looks that cannot find the specified correction"
+                          " are treated as a normal ColorSpace conversion instead of triggering a render error.");
+    DD::Image::SetFlags(f, DD::Image::Knob::STARTLINE );
+    
     DD::Image::BeginClosedGroup(f, "Context");
     {
         DD::Image::String_knob(f, &m_contextKey1, "key1");
@@ -243,20 +253,22 @@ void OCIOLookTransform::_validate(bool for_real)
         config->sanityCheck();
         
         OCIO::LookTransformRcPtr transform = OCIO::LookTransform::Create();
-        const char * looks = m_lookCstrNames[m_lookIndex];
-        if(looks != NULL)
+        const char * look = m_lookCstrNames[m_lookIndex];
+        if(look != NULL)
         {
-            transform->setLooks(looks);
+            transform->setLooks(look);
         }
         
         OCIO::ConstContextRcPtr context = getLocalContext();
+        OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_UNKNOWN;
+        bool invertTransform = (m_dirIndex == 0) ? false : true;
         
         // Forward
-        if(!m_invertTransform)
+        if(!invertTransform)
         {
             transform->setSrc(inputName);
             transform->setDst(outputName);
-            m_processor = config->getProcessor(context, transform, OCIO::TRANSFORM_DIR_FORWARD);
+            direction = OCIO::TRANSFORM_DIR_FORWARD;
         }
         else
         {
@@ -267,7 +279,17 @@ void OCIOLookTransform::_validate(bool for_real)
             
             transform->setSrc(outputName);
             transform->setDst(inputName);
-            m_processor = config->getProcessor(context, transform, OCIO::TRANSFORM_DIR_INVERSE);
+            direction = OCIO::TRANSFORM_DIR_INVERSE;
+        }
+        
+        try
+        {
+            m_processor = config->getProcessor(context, transform, direction);
+        }
+        catch(...)
+        {
+            if(!m_ignoreErrors) throw;
+            m_processor = config->getProcessor(context, inputName, outputName);
         }
     }
     catch(OCIO::Exception &e)

@@ -24,6 +24,7 @@ class OCIOLookTransform : public DD::Image::PixelIop {
         DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
         
         int m_lookIndex;
+        int m_dirIndex;
         int m_inputColorSpaceIndex;
         int m_outputColorSpaceIndex;
         
@@ -34,7 +35,7 @@ class OCIOLookTransform : public DD::Image::PixelIop {
         std::vector<const char*> m_inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
         std::vector<const char*> m_outputColorSpaceCstrNames;
         
-        bool m_invertTransform;
+        bool m_ignoreErrors;
         
         std::string m_contextKey1;
         std::string m_contextValue1;
