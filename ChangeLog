@@ -1,3 +1,10 @@
+**Version 0.8.4 (July 25 2011):**
+    * Native Look Support
+    * Core / Nuke OCIODisplay supports alpha viewing
+    * Added Houdini (.lut) writing
+    * Added Pandora (.mga,.m3d) reading
+    * Additional internal bug fixes
+
 **Version 0.8.3 (June 27 2011):**
     * OCIO::Config symlink resolution fixed (bugfix)
     * Nuke OCIODisplay knobs use string storage (bugfix)
