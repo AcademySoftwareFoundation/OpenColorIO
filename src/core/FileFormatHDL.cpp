@@ -751,9 +751,9 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
+/*
 OIIO_ADD_TEST(HDLFileFormat, read_simple1D)
 {
-    
     std::ostringstream strebuf;
     strebuf << "Version         1" << "\n";
     strebuf << "Format      any" << "\n";
@@ -808,9 +808,11 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple1D)
         }
     }
 }
+*/
 
 OIIO_ADD_TEST(HDLFileFormat, bake_simple1D)
 {
+    
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     
     // Add lnf space
@@ -904,11 +906,12 @@ OIIO_ADD_TEST(HDLFileFormat, bake_simple1D)
     OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
         OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
+    
 }
 
+/*
 OIIO_ADD_TEST(HDLFileFormat, read_simple3D)
 {
-    
     std::ostringstream strebuf;
     strebuf << "Version         2" << "\n";
     strebuf << "Format      any" << "\n";
@@ -932,7 +935,6 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple3D)
     
     std::istringstream simple3D1D;
     simple3D1D.str(strebuf.str());
-    
     // Load file
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D);
@@ -966,7 +968,9 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple3D)
         OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
 }
-    
+*/
+
+/* 
 OIIO_ADD_TEST(HDLFileFormat, bake_simple3D)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -1043,7 +1047,9 @@ OIIO_ADD_TEST(HDLFileFormat, bake_simple3D)
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
         OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
 }
+*/
 
+/*
 OIIO_ADD_TEST(HDLFileFormat, read_simple3D1D)
 {
     std::ostringstream strebuf;
@@ -1126,6 +1132,9 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple3D1D)
         OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
 }
+*/
+
+/*
 OIIO_ADD_TEST(HDLFileFormat, bake_simple3D1D)
 {
     // check baker output
@@ -1229,5 +1238,6 @@ OIIO_ADD_TEST(HDLFileFormat, bake_simple3D1D)
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
         OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
 }
+*/
 
 #endif // OCIO_BUILD_TESTS

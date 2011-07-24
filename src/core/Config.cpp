@@ -2125,6 +2125,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     "\n"
     "displays:\n"
     "  {}\n"
+    "\n"
     "active_displays: []\n"
     "active_views: []\n"
     "\n"

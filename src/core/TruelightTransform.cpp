@@ -323,6 +323,7 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     "\n"
     "displays:\n"
     "  {}\n"
+    "\n"
     "active_displays: []\n"
     "active_views: []\n"
     "\n"
