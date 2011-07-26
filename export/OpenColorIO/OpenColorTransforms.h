@@ -307,8 +307,7 @@ OCIO_NAMESPACE_ENTER
         ConstTransformRcPtr getChannelView() const;
         
         //!cpp:function:: Step 4: Apply the output display transform
-        //! This is controlled by the specification of (display, view)
-        //!cpp:function::Specify which display transform to use
+        // This is controlled by the specification of (display, view)
         void setDisplay(const char * display);
         //!cpp:function::
         const char * getDisplay() const;
