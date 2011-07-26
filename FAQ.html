@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.3',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v0.8.3 documentation" href="index.html" />
+    <link rel="top" title="OpenColorIO v0.8.4 documentation" href="index.html" />
     <link rel="next" title="Downloads" href="downloads.html" />
     <link rel="prev" title="C++ Types" href="developers/api/OpenColorTypes.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v0.8.3 documentation
+      OpenColorIO v0.8.4 documentation
       </div>
       <div class="content">
         
@@ -104,24 +104,31 @@ applications. See the <em class="xref std std-ref">license</em> for further deta
 <tr><td>3dl</td>
 <td>Autodesk Apps: Lustre, Flame, etc.
 Supports shaper LUT + 3D</td>
-<td>Full support.</td>
+<td>Read + Write Support.</td>
+</tr>
+<tr><td>ccc</td>
+<td>ASC CDL ColorCorrectionCollection</td>
+<td>Full read support.</td>
+</tr>
+<tr><td>cc</td>
+<td>ASC CDL ColorCorrection</td>
+<td>Full read support.</td>
 </tr>
 <tr><td>csp</td>
 <td>Cinespace (Rising Sun Research)
 LUT. Spline-based shaper LUT, with
 either 1D or 3D LUT.</td>
-<td>Full support. Shaper LUT is
+<td>Read + Write Support.  Shaper is
 resampled into simple 1D LUT
-with 2^16 samples</td>
+with 2^16 samples.</td>
 </tr>
 <tr><td>cub</td>
 <td>Truelight format. Shaper Lut + 3D</td>
-<td>Full support.</td>
+<td>Full read support.</td>
 </tr>
 <tr><td>cube</td>
 <td>Iridas format. Either 1D or 3D Lut.</td>
-<td>Supports arbitrary input domains.
-Full support.</td>
+<td>Full read support</td>
 </tr>
 <tr><td>hdl</td>
 <td>Houdini. 1D Lut, 3D lut, 1D shaper
@@ -131,29 +138,39 @@ Need to add R G B A RGB RGBA ALL.
 No support for Sampling tag.
 Header fields must be in strict order.</td>
 </tr>
+<tr><td>mga/m3d</td>
+<td>Pandora 3D lut</td>
+<td>Full read support.</td>
+</tr>
 <tr><td>spi1d</td>
 <td>1D format. Imageworks native 1D
 lut format.  HDR friendly, supports
 arbitrary input and output domains</td>
-<td>Full support.</td>
+<td>Full read support.</td>
 </tr>
 <tr><td>spi3d</td>
 <td>3D format. Imageworks native 3D
 lut format.</td>
-<td>Full support.</td>
+<td>Full read support.</td>
 </tr>
 <tr><td>spimtx</td>
 <td>3x3 matrix + color offset.
 Imageworks native color matrix
 format</td>
-<td>Full support.</td>
+<td>Full read support.</td>
+</tr>
+<tr><td>vf</td>
+<td>Inventor 3d lut.</td>
+<td>Read support for 3d lut data
+and global_transform element</td>
 </tr>
 </tbody>
 </table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Shaper LUT application in OCIO currently only supports linear interpolation.
-For very small shaper LUT sizes this may not be sufficient.</p>
+For very small shaper LUT sizes this may not be sufficient. (CSP shaper luts
+excluded; they do use spline interpolation at load-time).</p>
 </div>
 </div>
 </div>

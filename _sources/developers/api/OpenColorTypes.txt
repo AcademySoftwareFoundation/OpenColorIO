@@ -19,6 +19,12 @@ Core
 .. cpp:type:: ColorSpaceRcPtr
    
 
+.. cpp:type:: ConstLookRcPtr
+   
+
+.. cpp:type:: LookRcPtr
+   
+
 .. cpp:type:: ConstContextRcPtr
    
 
@@ -93,6 +99,12 @@ Transforms
    
 
 .. cpp:type:: LogTransformRcPtr
+   
+
+.. cpp:type:: ConstLookTransformRcPtr
+   
+
+.. cpp:type:: LookTransformRcPtr
    
 
 .. cpp:type:: ConstMatrixTransformRcPtr

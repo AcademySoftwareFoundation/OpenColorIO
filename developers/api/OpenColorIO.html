@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.8.3',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v0.8.3 documentation" href="../../index.html" />
+    <link rel="top" title="OpenColorIO v0.8.4 documentation" href="../../index.html" />
     <link rel="up" title="&lt;no title&gt;" href="index.html" />
     <link rel="next" title="C++ Transforms" href="OpenColorTransforms.html" />
     <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v0.8.3 documentation
+      OpenColorIO v0.8.4 documentation
       </div>
       <div class="content">
         
@@ -101,8 +101,8 @@
 <span class="p">}</span>
 </pre></div>
 </div>
-<div class="section" id="exception">
-<h2>Exception<a class="headerlink" href="#exception" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Exception">
 <em class="property">class </em><tt class="descname">Exception</tt><a class="headerlink" href="#Exception" title="Permalink to this definition">¶</a></dt>
@@ -137,6 +137,27 @@ Exception&amp; <tt class="descclassname">Exception::</tt><tt class="descname">op
 <dl class="function">
 <dt id="Exception::whatC">
 const char* <tt class="descclassname">Exception::</tt><tt class="descname">what</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Exception::whatC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="ExceptionMissingFile">
+<em class="property">class </em><tt class="descname">ExceptionMissingFile</tt><a class="headerlink" href="#ExceptionMissingFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception class to throw for an errors detected at
+runtime, used when OCIO is expecting a file to exist, yet it
+cannot be found. This is provided as a custom type to
+to distinguish amongst cases where one wants to continue for
+missing files (such as with looks), but wants to properly fail
+for other error conditions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ExceptionMissingFile::ExceptionMissingFile__cCP">
+ <tt class="descclassname">ExceptionMissingFile::</tt><tt class="descname">ExceptionMissingFile</tt><big>(</big>const char* <em>None</em><big>)</big><a class="headerlink" href="#ExceptionMissingFile::ExceptionMissingFile__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ExceptionMissingFile::ExceptionMissingFile__ExceptionMissingFileCR">
+ <tt class="descclassname">ExceptionMissingFile::</tt><tt class="descname">ExceptionMissingFile</tt><big>(</big>const ExceptionMissingFile&amp; <em>None</em><big>)</big><a class="headerlink" href="#ExceptionMissingFile::ExceptionMissingFile__ExceptionMissingFileCR" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -409,6 +430,9 @@ Return empty string if index is out of range.</p>
 </div>
 <div class="section" id="display-view-registration">
 <span id="cfgdisplayview-section"></span><h3>Display/View Registration<a class="headerlink" href="#display-view-registration" title="Permalink to this headline">¶</a></h3>
+<p>Looks is a potentially comma (or colon) delimited list of lookNames,
+Where +/- prefixes are optionally allowed to denote forward/inverse
+look specification. (And forward is assumed in the absense of either)</p>
 <dl class="function">
 <dt id="Config::getDefaultDisplayC">
 const char* <tt class="descclassname">Config::</tt><tt class="descname">getDefaultDisplay</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getDefaultDisplayC" title="Permalink to this definition">¶</a></dt>
@@ -445,8 +469,21 @@ const char* <tt class="descclassname">Config::</tt><tt class="descname">getDispl
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="Config::setDisplayColorSpaceName__cCP.cCP.cCP">
-void <tt class="descclassname">Config::</tt><tt class="descname">setDisplayColorSpaceName</tt><big>(</big>const char* <em>display</em>, const char* <em>view</em>, const char* <em>colorSpaceName</em><big>)</big><a class="headerlink" href="#Config::setDisplayColorSpaceName__cCP.cCP.cCP" title="Permalink to this definition">¶</a></dt>
+<dt id="Config::getDisplayLooks__cCP.cCPC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getDisplayLooks</tt><big>(</big>const char* <em>display</em>, const char* <em>view</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getDisplayLooks__cCP.cCPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::addDisplay__cCP.cCP.cCP.cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">addDisplay</tt><big>(</big>const char* <em>display</em>, const char* <em>view</em>, const char* <em>colorSpaceName</em>, const char* <em>looks</em><big>)</big><a class="headerlink" href="#Config::addDisplay__cCP.cCP.cCP.cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>For the (display,view) combination,
+specify which colorSpace and look to use.
+If a look is not desired, then just pass an empty string</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Config::clearDisplays">
+void <tt class="descclassname">Config::</tt><tt class="descname">clearDisplays</tt><big>(</big><big>)</big><a class="headerlink" href="#Config::clearDisplays" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -496,6 +533,35 @@ void <tt class="descclassname">Config::</tt><tt class="descname">getDefaultLumaC
 void <tt class="descclassname">Config::</tt><tt class="descname">setDefaultLumaCoefs</tt><big>(</big>const float* <em>rgb</em><big>)</big><a class="headerlink" href="#Config::setDefaultLumaCoefs__floatCP" title="Permalink to this definition">¶</a></dt>
 <dd><p>These should be normalized (sum to 1.0 exactly).</p>
 </dd></dl>
+
+</div>
+<div class="section" id="look">
+<span id="cflooka-section"></span><h3>Look<a class="headerlink" href="#look" title="Permalink to this headline">¶</a></h3>
+<p>Manager per-shot look settings.</p>
+<dl class="function">
+<dt id="Config::getLook__cCPC">
+<a class="reference internal" href="OpenColorTypes.html#ConstLookRcPtr" title="ConstLookRcPtr">ConstLookRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getLook</tt><big>(</big>const char* <em>name</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getLook__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getNumLooksC">
+int <tt class="descclassname">Config::</tt><tt class="descname">getNumLooks</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getNumLooksC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getLookNameByIndex__iC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getLookNameByIndex</tt><big>(</big>int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getLookNameByIndex__iC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::addLook__ConstLookRcPtrCR">
+void <tt class="descclassname">Config::</tt><tt class="descname">addLook</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstLookRcPtr" title="ConstLookRcPtr">const ConstLookRcPtr&amp;</a> <em>look</em><big>)</big><a class="headerlink" href="#Config::addLook__ConstLookRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::clearLooks">
+void <tt class="descclassname">Config::</tt><tt class="descname">clearLooks</tt><big>(</big><big>)</big><a class="headerlink" href="#Config::clearLooks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 <div class="section" id="processors">
@@ -554,6 +620,13 @@ functionality (such as to apply an individual LUT file).</p>
 <dt id="Config::getProcessor__ConstContextRcPtrCR.ConstTransformRcPtrCR.TransformDirectionC">
 <a class="reference internal" href="OpenColorTypes.html#ConstProcessorRcPtr" title="ConstProcessorRcPtr">ConstProcessorRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getProcessor</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstContextRcPtr" title="ConstContextRcPtr">const ConstContextRcPtr&amp;</a> <em>context</em>, <a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em>, <a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>direction</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getProcessor__ConstContextRcPtrCR.ConstTransformRcPtrCR.TransformDirectionC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::setDisplayColorSpaceName__cCP.cCP.cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">setDisplayColorSpaceName</tt><big>(</big>const char* <em>display</em>, const char* <em>view</em>, const char* <em>colorSpaceName</em><big>)</big><a class="headerlink" href="#Config::setDisplayColorSpaceName__cCP.cCP.cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>DEPRECATED. Will be removed in 0.9
+Use addDisplay instead</p>
+</dd></dl>
 
 </div>
 </div>
@@ -708,6 +781,70 @@ bool <tt class="descclassname">ColorSpace::</tt><tt class="descname">isTransform
 </dd></dl>
 
 </div>
+</div>
+<div class="section" id="look-section">
+<span id="id1"></span><h2>Look<a class="headerlink" href="#look-section" title="Permalink to this headline">¶</a></h2>
+<p>The <em>Look</em> is an &#8216;artistic&#8217; image modification, in a specified image
+state.
+The processSpace defines the ColorSpace the image is required to be
+in, for the math to apply correctly.</p>
+<dl class="class">
+<dt id="Look">
+<em class="property">class </em><tt class="descname">Look</tt><a class="headerlink" href="#Look" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#LookRcPtr" title="LookRcPtr">LookRcPtr</a> <tt class="descclassname">Look::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#Look::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#LookRcPtr" title="LookRcPtr">LookRcPtr</a> <tt class="descclassname">Look::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Look::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::getNameC">
+const char* <tt class="descclassname">Look::</tt><tt class="descname">getName</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Look::getNameC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::setName__cCP">
+void <tt class="descclassname">Look::</tt><tt class="descname">setName</tt><big>(</big>const char* <em>name</em><big>)</big><a class="headerlink" href="#Look::setName__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::getProcessSpaceC">
+const char* <tt class="descclassname">Look::</tt><tt class="descname">getProcessSpace</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Look::getProcessSpaceC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::setProcessSpace__cCP">
+void <tt class="descclassname">Look::</tt><tt class="descname">setProcessSpace</tt><big>(</big>const char* <em>processSpace</em><big>)</big><a class="headerlink" href="#Look::setProcessSpace__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::getTransformC">
+<a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">ConstTransformRcPtr</a> <tt class="descclassname">Look::</tt><tt class="descname">getTransform</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Look::getTransformC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::setTransform__ConstTransformRcPtrCR">
+void <tt class="descclassname">Look::</tt><tt class="descname">setTransform</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em><big>)</big><a class="headerlink" href="#Look::setTransform__ConstTransformRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting a transform to a non-null call makes it allowed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="Look::getInverseTransformC">
+<a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">ConstTransformRcPtr</a> <tt class="descclassname">Look::</tt><tt class="descname">getInverseTransform</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Look::getInverseTransformC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::setInverseTransform__ConstTransformRcPtrCR">
+void <tt class="descclassname">Look::</tt><tt class="descname">setInverseTransform</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em><big>)</big><a class="headerlink" href="#Look::setInverseTransform__ConstTransformRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting a transform to a non-null call makes it allowed.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="processor">
 <h2>Processor<a class="headerlink" href="#processor" title="Permalink to this headline">¶</a></h2>
@@ -1071,6 +1208,12 @@ float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getG
 float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getBData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getBDataC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="function">
+<dt id="PackedImageDesc::getADataC">
+float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getAData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getADataC" title="Permalink to this definition">¶</a></dt>
+<dd><p>alpha is optional, may be NULL</p>
+</dd></dl>
+
 </div>
 <div class="section" id="planarimagedesc">
 <h3>PlanarImageDesc<a class="headerlink" href="#planarimagedesc" title="Permalink to this headline">¶</a></h3>
@@ -1122,6 +1265,17 @@ float* <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getG
 <dl class="function">
 <dt id="PlanarImageDesc::getBDataC">
 float* <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getBData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getBDataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::setAData__floatP">
+void <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">setAData</tt><big>(</big>float* <em>aData</em><big>)</big><a class="headerlink" href="#PlanarImageDesc::setAData__floatP" title="Permalink to this definition">¶</a></dt>
+<dd><p>alpha is optional</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getADataC">
+float* <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getAData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getADataC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>

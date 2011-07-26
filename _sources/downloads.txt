@@ -9,6 +9,7 @@ Core Library (`ChangeLog <http://github.com/imageworks/OpenColorIO/raw/master/Ch
 
 For build instructions, see :ref:`building-from-source`.
 
+* v0.8.4 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v0.8.4>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v0.8.4>`_
 * v0.8.3 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v0.8.3>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v0.8.3>`_
 * v0.8.2 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v0.8.2>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v0.8.2>`_
 * v0.8.1 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v0.8.1>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v0.8.1>`_
@@ -20,7 +21,7 @@ For build instructions, see :ref:`building-from-source`.
 Color Configurations
 ********************
 
-* v0.7v4 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-configs.0.7v4.tgz>`_ (OCIO v0.7.6+)
+* latest -- `.zip <http://github.com/imageworks/OpenColorIO-Configs/zipball/master>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO-Configs/tarball/master>`_ (OCIO v0.8+)
 
 Sample Images
 *************
@@ -42,6 +43,7 @@ Please see the `Imageworks Open Source website <http://opensource.imageworks.com
 
 Deprecated Downloads
 
+* Color Config v0.7v4 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-configs.0.7v4.tgz>`_ (OCIO v0.7.6+)
 * Color Config v0.7v3 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-configs.0.7v3.tgz>`_ (OCIO v0.7.4 - v0.7.5)
 * Color Config v0.7v2 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-configs.0.7v2.tgz>`_ (OCIO v0.7.3)
 * Color Config v0.7v1 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-configs.0.7.1.tgz>`_ (OCIO v0.7.1)

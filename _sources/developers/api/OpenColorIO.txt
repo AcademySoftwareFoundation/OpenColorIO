@@ -32,7 +32,7 @@ C++ API
    }
 
 
-Exception
+Exceptions
 *********
 
 .. cpp:class:: Exception
@@ -56,6 +56,21 @@ Exception
    
 
 .. cpp:function:: virtual const char* Exception::what() const
+   
+
+.. cpp:class:: ExceptionMissingFile
+   
+   An exception class to throw for an errors detected at
+   runtime, used when OCIO is expecting a file to exist, yet it
+   cannot be found. This is provided as a custom type to
+   to distinguish amongst cases where one wants to continue for
+   missing files (such as with looks), but wants to properly fail
+   for other error conditions.
+
+.. cpp:function:: ExceptionMissingFile::ExceptionMissingFile(const char *)
+   
+
+.. cpp:function:: ExceptionMissingFile::ExceptionMissingFile(const ExceptionMissingFile&)
    
 
 .. cpp:function:: extern void ClearAllCaches()
@@ -276,6 +291,10 @@ corresponding to a role using the normal getColorSpace fcn.
 Display/View Registration
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Looks is a potentially comma (or colon) delimited list of lookNames,
+Where +/- prefixes are optionally allowed to denote forward/inverse
+look specification. (And forward is assumed in the absense of either)
+
 .. cpp:function:: const char * Config::getDefaultDisplay() const
    
 
@@ -297,7 +316,16 @@ Display/View Registration
 .. cpp:function:: const char * Config::getDisplayColorSpaceName(const char * display, const char * view) const
    
 
-.. cpp:function:: void Config::setDisplayColorSpaceName(const char * display, const char * view, const char * colorSpaceName)
+.. cpp:function:: const char * Config::getDisplayLooks(const char * display, const char * view) const
+   
+
+.. cpp:function:: void Config::addDisplay(const char * display, const char * view, const char * colorSpaceName, const char * looks)
+   
+   For the (display,view) combination,
+   specify which colorSpace and look to use.
+   If a look is not desired, then just pass an empty string
+
+.. cpp:function:: void Config::clearDisplays()
    
 
 .. cpp:function:: void Config::setActiveDisplays(const char * displays)
@@ -337,6 +365,29 @@ Get the default coefficients for computing luma.
 .. cpp:function:: void Config::setDefaultLumaCoefs(const float * rgb)
    
    These should be normalized (sum to 1.0 exactly).
+
+.. _cflooka_section:
+
+Look
+^^^^
+
+Manager per-shot look settings.
+
+
+.. cpp:function:: ConstLookRcPtr Config::getLook(const char * name) const
+   
+
+.. cpp:function:: int Config::getNumLooks() const
+   
+
+.. cpp:function:: const char * Config::getLookNameByIndex(int index) const
+   
+
+.. cpp:function:: void Config::addLook(const ConstLookRcPtr & look)
+   
+
+.. cpp:function:: void Config::clearLooks()
+   
 
 .. _cfgprocessors_section:
 
@@ -384,6 +435,11 @@ functionality (such as to apply an individual LUT file).
 
 .. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context, const ConstTransformRcPtr& transform, TransformDirection direction) const
    
+
+.. cpp:function:: void Config::setDisplayColorSpaceName(const char * display, const char * view, const char * colorSpaceName)
+   
+   DEPRECATED. Will be removed in 0.9
+   Use addDisplay instead
 
 .. _colorspace_section:
 
@@ -504,6 +560,50 @@ Transform
 .. cpp:function:: bool ColorSpace::isTransformSpecified(ColorSpaceDirection dir) const
    
    Setting a transform to a non-null call makes it specified.
+
+.. _look_section:
+
+Look
+**********
+The *Look* is an 'artistic' image modification, in a specified image
+state.
+The processSpace defines the ColorSpace the image is required to be
+in, for the math to apply correctly.
+
+.. cpp:class:: Look
+   
+
+.. cpp:function:: static LookRcPtr Look::Create()
+   
+
+.. cpp:function:: LookRcPtr Look::createEditableCopy() const
+   
+
+.. cpp:function:: const char * Look::getName() const
+   
+
+.. cpp:function:: void Look::setName(const char * name)
+   
+
+.. cpp:function:: const char * Look::getProcessSpace() const
+   
+
+.. cpp:function:: void Look::setProcessSpace(const char * processSpace)
+   
+
+.. cpp:function:: ConstTransformRcPtr Look::getTransform() const
+   
+
+.. cpp:function:: void Look::setTransform(const ConstTransformRcPtr & transform)
+   
+   Setting a transform to a non-null call makes it allowed.
+
+.. cpp:function:: ConstTransformRcPtr Look::getInverseTransform() const
+   
+
+.. cpp:function:: void Look::setInverseTransform(const ConstTransformRcPtr & transform)
+   
+   Setting a transform to a non-null call makes it allowed.
 
 
 Processor
@@ -770,6 +870,10 @@ PackedImageDesc
 .. cpp:function:: virtual float* PackedImageDesc::getBData() const
    
 
+.. cpp:function:: float* PackedImageDesc::getAData() const
+   
+   alpha is optional, may be NULL
+
 
 PlanarImageDesc
 ^^^^^^^^^^^^^^^
@@ -802,6 +906,13 @@ PlanarImageDesc
    
 
 .. cpp:function:: virtual float* PlanarImageDesc::getBData() const
+   
+
+.. cpp:function:: void PlanarImageDesc::setAData(float * aData)
+   
+   alpha is optional
+
+.. cpp:function:: float* PlanarImageDesc::getAData() const
    
 
 

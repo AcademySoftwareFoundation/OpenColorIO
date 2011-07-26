@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.3',
+        VERSION:     '0.8.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v0.8.3 documentation" href="index.html" /> 
+    <link rel="top" title="OpenColorIO v0.8.4 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="header"><h1 class="heading"><a href="index.html">
@@ -36,7 +36,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v0.8.3 documentation
+      OpenColorIO v0.8.4 documentation
       </div>
       <div class="content">
         
@@ -173,14 +173,18 @@
     <dt><a href="developers/api/OpenColorTypes.html#CombineTransformDirections">CombineTransformDirections (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config">Config (C++ class)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::addColorSpace">Config::addColorSpace (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Config::addDisplay">Config::addDisplay (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Config::addLook">Config::addLook (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::clearColorSpaces">Config::clearColorSpaces (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Config::clearDisplays">Config::clearDisplays (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Config::clearLooks">Config::clearLooks (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::Create">Config::Create (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::createEditableCopy">Config::createEditableCopy (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::CreateFromEnv">Config::CreateFromEnv (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::CreateFromFile">Config::CreateFromFile (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Config::CreateFromStream">Config::CreateFromStream (C++ function)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
-    <dt><a href="developers/api/OpenColorIO.html#Config::CreateFromStream">Config::CreateFromStream (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getActiveDisplays">Config::getActiveDisplays (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getActiveViews">Config::getActiveViews (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getCacheID">Config::getCacheID (C++ function)</a>, <a href="developers/api/OpenColorIO.html#Config::getCacheID">[1]</a></dt>
@@ -193,9 +197,13 @@
     <dt><a href="developers/api/OpenColorIO.html#Config::getDescription">Config::getDescription (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getDisplay">Config::getDisplay (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getDisplayColorSpaceName">Config::getDisplayColorSpaceName (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Config::getDisplayLooks">Config::getDisplayLooks (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getIndexForColorSpace">Config::getIndexForColorSpace (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Config::getLook">Config::getLook (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Config::getLookNameByIndex">Config::getLookNameByIndex (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getNumColorSpaces">Config::getNumColorSpaces (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getNumDisplays">Config::getNumDisplays (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Config::getNumLooks">Config::getNumLooks (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getNumRoles">Config::getNumRoles (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getNumViews">Config::getNumViews (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Config::getProcessor">Config::getProcessor (C++ function)</a>, <a href="developers/api/OpenColorIO.html#Config::getProcessor">[1]</a>, <a href="developers/api/OpenColorIO.html#Config::getProcessor">[2]</a>, <a href="developers/api/OpenColorIO.html#Config::getProcessor">[3]</a>, <a href="developers/api/OpenColorIO.html#Config::getProcessor">[4]</a>, <a href="developers/api/OpenColorIO.html#Config::getProcessor">[5]</a>, <a href="developers/api/OpenColorIO.html#Config::getProcessor">[6]</a></dt>
@@ -228,6 +236,8 @@
     <dt><a href="developers/api/OpenColorTypes.html#ConstFileTransformRcPtr">ConstFileTransformRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstGroupTransformRcPtr">ConstGroupTransformRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstLogTransformRcPtr">ConstLogTransformRcPtr (C++ type)</a></dt>
+    <dt><a href="developers/api/OpenColorTypes.html#ConstLookRcPtr">ConstLookRcPtr (C++ type)</a></dt>
+    <dt><a href="developers/api/OpenColorTypes.html#ConstLookTransformRcPtr">ConstLookTransformRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstMatrixTransformRcPtr">ConstMatrixTransformRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstProcessorRcPtr">ConstProcessorRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstTransformRcPtr">ConstTransformRcPtr (C++ type)</a></dt>
@@ -260,19 +270,27 @@
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getChannelView">DisplayTransform::getChannelView (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getColorTimingCC">DisplayTransform::getColorTimingCC (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getDirection">DisplayTransform::getDirection (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getDisplay">DisplayTransform::getDisplay (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getDisplayCC">DisplayTransform::getDisplayCC (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getDisplayColorSpaceName">DisplayTransform::getDisplayColorSpaceName (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getInputColorSpaceName">DisplayTransform::getInputColorSpaceName (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getLinearCC">DisplayTransform::getLinearCC (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getLooksOverride">DisplayTransform::getLooksOverride (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getLooksOverrideEnabled">DisplayTransform::getLooksOverrideEnabled (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::getView">DisplayTransform::getView (C++ function)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setChannelView">DisplayTransform::setChannelView (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setColorTimingCC">DisplayTransform::setColorTimingCC (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setDirection">DisplayTransform::setDirection (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setDisplay">DisplayTransform::setDisplay (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setDisplayCC">DisplayTransform::setDisplayCC (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setDisplayColorSpaceName">DisplayTransform::setDisplayColorSpaceName (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setInputColorSpaceName">DisplayTransform::setInputColorSpaceName (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setLinearCC">DisplayTransform::setLinearCC (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setLooksOverride">DisplayTransform::setLooksOverride (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setLooksOverrideEnabled">DisplayTransform::setLooksOverrideEnabled (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#DisplayTransform::setView">DisplayTransform::setView (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#DisplayTransformRcPtr">DisplayTransformRcPtr (C++ type)</a></dt>
     <dt><a href="installation.html#index-2">DYLD_LIBRARY_PATH</a></dt>
 </dl></td>
@@ -294,9 +312,11 @@
     <dt><a href="developers/api/OpenColorIO.html#Exception::operator=">Exception::operator= (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Exception::what">Exception::what (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Exception::~Exception">Exception::~Exception (C++ function)</a></dt>
-    <dt><a href="developers/api/OpenColorTransforms.html#ExponentTransform">ExponentTransform (C++ class)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ExceptionMissingFile">ExceptionMissingFile (C++ class)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ExceptionMissingFile::ExceptionMissingFile">ExceptionMissingFile::ExceptionMissingFile (C++ function)</a>, <a href="developers/api/OpenColorIO.html#ExceptionMissingFile::ExceptionMissingFile">[1]</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
+    <dt><a href="developers/api/OpenColorTransforms.html#ExponentTransform">ExponentTransform (C++ class)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#ExponentTransform::Create">ExponentTransform::Create (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#ExponentTransform::createEditableCopy">ExponentTransform::createEditableCopy (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#ExponentTransform::getDirection">ExponentTransform::getDirection (C++ function)</a></dt>
@@ -405,12 +425,36 @@
     <dt><a href="developers/api/OpenColorTransforms.html#LogTransform::Create">LogTransform::Create (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#LogTransform::createEditableCopy">LogTransform::createEditableCopy (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#LogTransform::getBase">LogTransform::getBase (C++ function)</a></dt>
-</dl></td>
-  <td width="33%" valign="top"><dl>
     <dt><a href="developers/api/OpenColorTransforms.html#LogTransform::getDirection">LogTransform::getDirection (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#LogTransform::setBase">LogTransform::setBase (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTransforms.html#LogTransform::setDirection">LogTransform::setDirection (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#LogTransformRcPtr">LogTransformRcPtr (C++ type)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look">Look (C++ class)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look::Create">Look::Create (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look::createEditableCopy">Look::createEditableCopy (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look::getInverseTransform">Look::getInverseTransform (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look::getName">Look::getName (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look::getProcessSpace">Look::getProcessSpace (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look::getTransform">Look::getTransform (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look::setInverseTransform">Look::setInverseTransform (C++ function)</a></dt>
+</dl></td>
+  <td width="33%" valign="top"><dl>
+    <dt><a href="developers/api/OpenColorIO.html#Look::setName">Look::setName (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look::setProcessSpace">Look::setProcessSpace (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Look::setTransform">Look::setTransform (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTypes.html#LookRcPtr">LookRcPtr (C++ type)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform">LookTransform (C++ class)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::Create">LookTransform::Create (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::createEditableCopy">LookTransform::createEditableCopy (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::getDirection">LookTransform::getDirection (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::getDst">LookTransform::getDst (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::getLooks">LookTransform::getLooks (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::getSrc">LookTransform::getSrc (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::setDirection">LookTransform::setDirection (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::setDst">LookTransform::setDst (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::setLooks">LookTransform::setLooks (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTransforms.html#LookTransform::setSrc">LookTransform::setSrc (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTypes.html#LookTransformRcPtr">LookTransformRcPtr (C++ type)</a></dt>
 </dl></td>
 </tr></table>
 
@@ -454,6 +498,7 @@
 <table width="100%" class="indextable genindextable"><tr>
   <td width="33%" valign="top"><dl>
     <dt><a href="developers/api/OpenColorIO.html#PackedImageDesc">PackedImageDesc (C++ class)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#PackedImageDesc::getAData">PackedImageDesc::getAData (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PackedImageDesc::getBData">PackedImageDesc::getBData (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PackedImageDesc::getGData">PackedImageDesc::getGData (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PackedImageDesc::getHeight">PackedImageDesc::getHeight (C++ function)</a></dt>
@@ -464,16 +509,18 @@
     <dt><a href="developers/api/OpenColorIO.html#PackedImageDesc::PackedImageDesc">PackedImageDesc::PackedImageDesc (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PackedImageDesc::~PackedImageDesc">PackedImageDesc::~PackedImageDesc (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc">PlanarImageDesc (C++ class)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getAData">PlanarImageDesc::getAData (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getBData">PlanarImageDesc::getBData (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getGData">PlanarImageDesc::getGData (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getHeight">PlanarImageDesc::getHeight (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getRData">PlanarImageDesc::getRData (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getWidth">PlanarImageDesc::getWidth (C++ function)</a></dt>
-    <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getXStrideBytes">PlanarImageDesc::getXStrideBytes (C++ function)</a></dt>
 </dl></td>
   <td width="33%" valign="top"><dl>
+    <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getXStrideBytes">PlanarImageDesc::getXStrideBytes (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getYStrideBytes">PlanarImageDesc::getYStrideBytes (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::PlanarImageDesc">PlanarImageDesc::PlanarImageDesc (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::setAData">PlanarImageDesc::setAData (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::~PlanarImageDesc">PlanarImageDesc::~PlanarImageDesc (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Processor">Processor (C++ class)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Processor::apply">Processor::apply (C++ function)</a></dt>

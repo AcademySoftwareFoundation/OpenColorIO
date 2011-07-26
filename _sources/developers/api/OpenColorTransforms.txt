@@ -225,11 +225,19 @@ included in the serialization.
 .. cpp:function:: ConstTransformRcPtr DisplayTransform::getChannelView() const
    
 
-.. cpp:function:: void DisplayTransform::setDisplayColorSpaceName(const char * name)
+.. cpp:function:: void DisplayTransform::setDisplay(const char * display)
    
    Step 4: Apply the output display transform
+   This is controlled by the specification of (display, view)
 
-.. cpp:function:: const char * DisplayTransform::getDisplayColorSpaceName() const
+.. cpp:function:: const char * DisplayTransform::getDisplay() const
+   
+
+.. cpp:function:: void DisplayTransform::setView(const char * view)
+   
+   Specify which view transform to use
+
+.. cpp:function:: const char * DisplayTransform::getView() const
    
 
 .. cpp:function:: void DisplayTransform::setDisplayCC(const ConstTransformRcPtr & cc)
@@ -238,6 +246,46 @@ included in the serialization.
 
 .. cpp:function:: ConstTransformRcPtr DisplayTransform::getDisplayCC() const
    
+
+.. cpp:function:: void DisplayTransform::setLooksOverride(const char * looks)
+   
+   A user can optionally override the looks that are,
+   by default, used with the expected display / view combination.
+   A common use case for this functionality is in an image viewing
+   app, where per-shot looks are supported.  If for some reason
+   a per-shot look is not defined for the current Context, the
+   Config::getProcessor fcn will not succeed by default.  Thus,
+   with this mechanism the viewing app could override to looks = "",
+   and this will allow image display to continue (though hopefully)
+   the interface would reflect this fallback option.)
+   
+   Looks is a potentially comma (or colon) delimited list of lookNames,
+   Where +/- prefixes are optionally allowed to denote forward/inverse
+   look specification. (And forward is assumed in the absense of either)
+
+.. cpp:function:: const char * DisplayTransform::getLooksOverride() const
+   
+
+.. cpp:function:: void DisplayTransform::setLooksOverrideEnabled(bool enabled)
+   
+   Specifiy whether the lookOverride should be used,
+   or not. This is a speparate flag, as it's often useful to override
+   "looks" to an empty string
+
+.. cpp:function:: bool DisplayTransform::getLooksOverrideEnabled() const
+   
+
+.. cpp:function:: void DisplayTransform::setDisplayColorSpaceName(const char * name)
+   
+   DEPRECATED. Will be removed in 0.9
+   (If you rely on these functions, Views will not be applied)
+   Use setDisplay / setView instead
+
+.. cpp:function:: const char * DisplayTransform::getDisplayColorSpaceName() const
+   
+   DEPRECATED. Will be removed in 0.9
+   (If you rely on these functions, Views will not be applied)
+   Use getDisplay / getView instead
 
 .. cpp:function:: extern std::ostream& operator<< (std::ostream&, const DisplayTransform&)
    
@@ -392,6 +440,48 @@ included in the serialization.
    
 
 .. cpp:function:: extern std::ostream& operator<< (std::ostream&, const LogTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: LookTransform
+   
+
+.. cpp:function:: static LookTransformRcPtr LookTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr LookTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection LookTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void LookTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: const char * LookTransform::getSrc() const
+   
+
+.. cpp:function:: void LookTransform::setSrc(const char * src)
+   
+
+.. cpp:function:: const char * LookTransform::getDst() const
+   
+
+.. cpp:function:: void LookTransform::setDst(const char * dst)
+   
+
+.. cpp:function:: void LookTransform::setLooks(const char * looks)
+   
+   Specify looks to apply.
+   Looks is a potentially comma (or colon) delimited list of look names,
+   Where +/- prefixes are optionally allowed to denote forward/inverse
+   look specification. (And forward is assumed in the absense of either)
+
+.. cpp:function:: const char * LookTransform::getLooks() const
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const LookTransform&)
    
 
 //////////////////////////////////////////////////////////////////
