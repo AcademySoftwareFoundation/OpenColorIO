@@ -40,7 +40,7 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
     File_knob(f, &src, "src", "src");
     const char * srchelp = "Specify the src file, on disk, to use for this transform. "
     "This can be any file format that OpenColorIO supports: "
-    ".3dl, .cc, .ccc, .csp, .cub, .cube, .lut (houdini), .spi1d, .spi3d, .spimtx";
+    ".3dl, .cc, .ccc, .csp, .cub, .cube, .lut (houdini), .mga, .m3d, .spi1d, .spi3d, .spimtx, .vf";
     DD::Image::Tooltip(f, srchelp);
     
     String_knob(f, &cccid, "cccid");
