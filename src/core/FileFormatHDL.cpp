@@ -37,11 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       - 3D Lut with 1D Prelut
     
     TODO:
-        - cleanup some of the code duplication
         - Add support for other 1D types (R, G, B, A, RGB, RGBA, All)
           we only support type 'C' atm.
-        - Relax the ordering of header fields (the order matches what
-          houdini creates)
         - Add support for 'Sampling' tag
     
 */
@@ -50,6 +47,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <iterator>
 #include <cmath>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <map>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -64,9 +65,183 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        
-        static int MAX_LINE_LENGTH = 128;
-        
+        // HDL parser helpers
+
+        // HDL headers/LUT's are shoved into these datatypes
+        typedef std::map<std::string, std::vector<std::string> > StringToStringVecMap;
+        typedef std::map<std::string, std::vector<float> > StringToFloatVecMap;
+
+        void
+        readHeaders(StringToStringVecMap& headers,
+                    std::istream& istream)
+        {
+            std::string line;
+            while(nextline(istream, line))
+            {
+                std::vector<std::string> chunks;
+
+                // Remove trailing/leading whitespace, lower-case and
+                // split into words
+                pystring::split(pystring::lower(pystring::strip(line)), chunks);
+
+                // Skip empty lines
+                if(chunks.empty()) continue;
+
+                // Stop looking for headers at the "LUT:" line
+                if(chunks[0] == "lut:") break;
+
+                // Use first index as key, and remove it from the value
+                std::string key = chunks[0];
+                chunks.erase(chunks.begin());
+
+                headers[key] = chunks;
+            }
+        }
+
+        // Try to grab key (e.g "version") from headers. Throws
+        // exception if not found, or if number of chunks in value is
+        // not between min_vals and max_vals (e.g the "length" key
+        // must exist, and must have either 1 or 2 values)
+        std::vector<std::string>
+        findHeaderItem(StringToStringVecMap& headers,
+                       const std::string key,
+                       const unsigned int min_vals,
+                       const unsigned int max_vals)
+        {
+            StringToStringVecMap::iterator iter;
+            iter = headers.find(key);
+
+            // Error if key is not found
+            if(iter == headers.end())
+            {
+                std::ostringstream os;
+                os << "'" << key << "' line not found";
+                throw Exception(os.str().c_str());
+            }
+
+            // Error if incorrect number of values is found
+            if(iter->second.size() < min_vals ||
+               iter->second.size() > max_vals)
+            {
+                std::ostringstream os;
+                os << "Incorrect number of chunks (" << iter->second.size() << ")";
+                os << " after '" << key << "' line, expected ";
+
+                if(min_vals == max_vals)
+                {
+                    os << min_vals;
+                }
+                else
+                {
+                    os << "between " << min_vals << " and " << max_vals;
+                }
+
+                throw Exception(os.str().c_str());
+            }
+
+            return iter->second;
+        }
+
+        // Simple wrapper to call findHeaderItem with a fixed number
+        // of values (e.g "version" should have a single value)
+        std::vector<std::string>
+        findHeaderItem(StringToStringVecMap& chunks,
+                       const std::string key,
+                       const unsigned int numvals)
+        {
+            return findHeaderItem(chunks, key, numvals, numvals);
+        }
+
+        // Crudely parse LUT's - doesn't do any length checking etc,
+        // just grabs a series of floats for Pre{...}, 3d{...} etc
+        // Does some basic error checking, but there are situations
+        // were it could incorrectly accept broken data (like
+        // "Pre{0.0\n1.0}blah"), but hopefully none where it misses
+        // data
+        void
+        readLuts(std::istream& istream,
+                 StringToFloatVecMap& lutValues)
+        {
+            // State variables
+            bool inlut = false;
+            std::string lutname;
+
+            std::string word;
+
+            while(istream >> word)
+            {
+                if(!inlut)
+                {
+                    if(word == "{")
+                    {
+                        // Lone "{" is for a 3D
+                        inlut = true;
+                        lutname = "3d";
+                    }
+                    else
+                    {
+                        // Named lut, e.g "Pre {"
+                        inlut = true;
+                        lutname = pystring::lower(word);
+
+                        // Ensure next word is "{"
+                        std::string nextword;
+                        istream >> nextword;
+                        if(nextword != "{")
+                        {
+                            std::ostringstream os;
+                            os << "Malformed LUT - Unknown word '";
+                            os << word << "' after LUT name '";
+                            os << nextword << "'";
+                            throw Exception(os.str().c_str());
+                        }
+                    }
+                }
+                else if(word == "}")
+                {
+                    // end of LUT
+                    inlut = false;
+                    lutname = "";
+                }
+                else if(inlut)
+                {
+                    // StringToFloat was far slower, for 787456 values:
+                    // - StringToFloat took 3879 (avg nanoseconds per value)
+                    // - stdtod took 169 nanoseconds
+                    char* endptr = 0;
+                    float v = static_cast<float>(strtod(word.c_str(), &endptr));
+
+                    if(!*endptr)
+                    {
+                        // Since each word should contain a single
+                        // float value, the pointer should be null
+                        lutValues[lutname].push_back(v);
+                    }
+                    else
+                    {
+                        // stdtod endptr still contained stuff,
+                        // meaning an invalid float value
+                        std::ostringstream os;
+                        os << "Invalid float value in " << lutname;
+                        os << " LUT, '" << word << "'";
+                        throw Exception(os.str().c_str());
+                    }
+                }
+                else
+                {
+                    std::ostringstream os;
+                    os << "Unexpected word, possibly a value outside";
+                    os <<" a LUT {} block. Word was '" << word << "'";
+                    throw Exception(os.str().c_str());
+
+                }
+            }
+        }
+
+    } // end anonymous "HDL parser helpers" namespace
+
+    namespace
+    {
         class CachedFileHDL : public CachedFile
         {
         public:
@@ -137,248 +312,264 @@ OCIO_NAMESPACE_ENTER
             Lut1DRcPtr lut1d_ptr(new Lut1D());
             Lut3DRcPtr lut3d_ptr(new Lut3D());
 
-            // try and read the lut header
-            std::string line;
-            nextline (istream, line);
-            if (line.substr(0, 7) != "Version" || line.length() <= 9)
-                throw Exception("lut doesn't seem to be a houdini lut file");
-            cachedFile->hdlversion = line.substr(9, MAX_LINE_LENGTH);
-            
-            // Format
-            nextline (istream, line);
-            if (line.substr(0, 6) != "Format" || line.length() <= 8)
-                throw Exception("malformed Houdini lut, couldn't read Format line");
-            cachedFile->hdlformat = line.substr(8, MAX_LINE_LENGTH);
-            
-            // Type
-            nextline (istream, line);
-            if (line.substr(0, 4) != "Type" || line.length() <= 6)
-                throw Exception("malformed Houdini lut, couldn't read Type line");
-            cachedFile->hdltype = line.substr(6, MAX_LINE_LENGTH);
-            if(cachedFile->hdltype != "3D" &&
-               cachedFile->hdltype != "C" &&
-               cachedFile->hdltype != "3D+1D")
-                throw Exception("Unsupported Houdini lut type");
-            
-            // From
-            nextline (istream, line);
-            if (line.substr(0, 4) != "From" || line.length() <= 6)
-                throw Exception("malformed Houdini lut, couldn't read From line");
-            float from_min, from_max;
-            if (sscanf (line.c_str(), "From\t\t%f %f",
-                &from_min, &from_max) != 2) {
-                throw Exception ("malformed Houdini lut, 'From' line incomplete");
-            }
-            
-            // To
-            nextline (istream, line);
-            if (line.substr(0, 2) != "To" || line.length() <= 4)
-                throw Exception("malformed Houdini lut, couldn't read To line");
-            if (sscanf (line.c_str(), "To\t\t%f %f",
-                &cachedFile->to_min, &cachedFile->to_max) != 2) {
-                throw Exception ("malformed Houdini lut, 'To' line incomplete");
-            }
-            
-            // Black
-            nextline (istream, line);
-            if (line.substr(0, 5) != "Black" || line.length() <= 5)
-                throw Exception("malformed Houdini lut, couldn't read Black line");
-            if (sscanf (line.c_str(), "Black\t\t%f",
-                &cachedFile->hdlblack) != 1) {
-                throw Exception ("malformed Houdini lut, 'Black' line incomplete");
-            }
-            
-            // White
-            nextline (istream, line);
-            if (line.substr(0, 5) != "White" || line.length() <= 5)
-                throw Exception("malformed Houdini lut, couldn't read White line");
-            if (sscanf (line.c_str(), "White\t\t%f",
-                &cachedFile->hdlwhite) != 1) {
-                throw Exception ("malformed Houdini lut, 'White' line incomplete");
-            }
-            
-            // Length
-            nextline (istream, line);
-            if (line.substr(0, 6) != "Length" || line.length() <= 8)
-                throw Exception("malformed Houdini lut, couldn't read Length line");
-            int length_prelut, length_1d, length_3d = 0;
-            if (cachedFile->hdltype == "3D")
+            // Parse headers into key-value pairs
+            StringToStringVecMap header_chunks;
+            StringToStringVecMap::iterator iter;
+
+            // Read headers, ending after the "LUT:" line
+            readHeaders(header_chunks, istream);
+
+            // Grab useful values from headers
+            std::vector<std::string> value;
+
+            // "Version 3" - format version (currently one version
+            // number per LUT type)
+            value = findHeaderItem(header_chunks, "version", 1);
+            cachedFile->hdlversion = value[0];
+
+            // "Format any" - bit depth of image the LUT should be
+            // applied to (this is basically ignored)
+            value = findHeaderItem(header_chunks, "format", 1);
+            cachedFile->hdlformat = value[0];
+
+            // "Type 3d" - type of LUT
             {
-                if (sscanf (line.c_str(), "Length\t\t%d",
-                    &length_3d) != 1)
-                    throw Exception ("malformed Houdini lut, 'Length' line incomplete");
+                value = findHeaderItem(header_chunks, "type", 1);
+
+                cachedFile->hdltype = value[0];
             }
-            else if (cachedFile->hdltype == "C")
+
+            // "From 0.0 1.0" - range of input values
             {
-                if (sscanf (line.c_str(), "Length\t\t%d",
-                    &length_1d) != 1)
-                    throw Exception ("malformed Houdini lut, 'Length' line incomplete");
-            }
-            else if(cachedFile->hdltype == "3D+1D")
-            {
-                if (sscanf (line.c_str(), "Length\t\t%d %d",
-                    &length_3d, &length_prelut) != 2)
-                    throw Exception ("malformed Houdini lut, 'Length' line incomplete");
-            }
-            lut3d_ptr->size[0] = length_3d;
-            lut3d_ptr->size[1] = length_3d;
-            lut3d_ptr->size[2] = length_3d;
-            
-            // LUT:
-            nextline (istream, line);
-            if (line.substr(0, 4) != "LUT:")
-                throw Exception("malformed Houdini lut, couldn't read 'LUT:' line");
-            
-            if(cachedFile->hdltype == "3D+1D")
-            {
-                // Pre {
-                nextline (istream, line);
-                if (line.substr(0, 5) != "Pre {")
-                    throw Exception("malformed Houdini lut, couldn't read 'Pre {' line");
-                
-                // Pre lut data
+                float from_min, from_max;
+
+                value = findHeaderItem(header_chunks, "from", 2);
+
+                if(!StringToFloat(&from_min, value[0].c_str()) ||
+                   !StringToFloat(&from_max, value[1].c_str()))
+                {
+                    std::ostringstream os;
+                    os << "Invalid float value(s) on 'From' line, '";
+                    os << value[0] << "' and '"  << value[1] << "'";
+                    throw Exception(os.str().c_str());
+                }
+
                 for(int i = 0; i < 3; ++i)
                 {
                     lut1d_ptr->from_min[i] = from_min;
                     lut1d_ptr->from_max[i] = from_max;
-                    lut1d_ptr->luts[i].clear();
-                    lut1d_ptr->luts[i].reserve(length_prelut);
                 }
-                
-                // Read single channel into all rgb channels
-                for(int i = 0; i < length_prelut; ++i)
-                {
-                    nextline (istream, line);
-                    float p;
-                    if (sscanf (line.c_str(), "%f", &p) != 1) {
-                        throw Exception ("malformed Houdini lut, prelut incomplete");
-                    }
-                    lut1d_ptr->luts[0].push_back(p);
-                    lut1d_ptr->luts[1].push_back(p);
-                    lut1d_ptr->luts[2].push_back(p);
-                }
-                
-                // } - end of Prelut
-                nextline (istream, line);
-                if (line.substr(0, 1) != "}")
-                    throw Exception("malformed Houdini lut, couldn't read '}' end of prelut");
-                
             }
-            
-            if(cachedFile->hdltype == "C")
+
+
+            // "To 0.0 1.0" - range of values in LUT (e.g "0 255"
+            // to specify values as 8-bit numbers, usually "0 1")
             {
-                // RGB
-                nextline (istream, line);
-                if (line.substr(0, 5) != "RGB {")
-                    throw Exception("malformed Houdini lut, couldn't read 'RGB {' line");
-                
-                // 1D lut data
-                for(int i = 0; i < 3; ++i)
+                float to_min, to_max;
+
+                value = findHeaderItem(header_chunks, "to", 2);
+
+                if(!StringToFloat(&to_min, value[0].c_str()) ||
+                   !StringToFloat(&to_max, value[1].c_str()))
                 {
-                    lut1d_ptr->from_min[i] = from_min;
-                    lut1d_ptr->from_max[i] = from_max;
-                    lut1d_ptr->luts[i].clear();
-                    lut1d_ptr->luts[i].reserve(length_1d);
+                    std::ostringstream os;
+                    os << "Invalid float value(s) on 'To' line, '";
+                    os << value[0] << "' and '"  << value[1] << "'";
+                    throw Exception(os.str().c_str());
                 }
-                
-                // Read single channel into all rgb channels
-                for(int i = 0; i < length_1d; ++i)
+                cachedFile->to_min = to_min;
+                cachedFile->to_max = to_max;
+            }
+
+            // "Black 0" and "White 1" - obsolete options, should be 0
+            // and 1
+
+            {
+                value = findHeaderItem(header_chunks, "black", 1);
+
+                float black;
+
+                if(!StringToFloat(&black, value[0].c_str()))
                 {
-                    nextline (istream, line);
-                    float p;
-                    if (sscanf (line.c_str(), "%f", &p) != 1) {
-                        throw Exception ("malformed Houdini lut, prelut incomplete");
-                    }
-                    lut1d_ptr->luts[0].push_back(p);
-                    lut1d_ptr->luts[1].push_back(p);
-                    lut1d_ptr->luts[2].push_back(p);
-                    
-                    // check we have a } on the last line
-                    if(i == (length_1d - 1))
+                    std::ostringstream os;
+                    os << "Invalid float value on 'Black' line, '";
+                    os << value[0] << "'";
+                    throw Exception(os.str().c_str());
+                }
+                cachedFile->hdlblack = black;
+            }
+
+            {
+                value = findHeaderItem(header_chunks, "white", 1);
+
+                float white;
+
+                if(!StringToFloat(&white, value[0].c_str()))
+                {
+                    std::ostringstream os;
+                    os << "Invalid float value on 'White' line, '";
+                    os << value[0] << "'";
+                    throw Exception(os.str().c_str());
+                }
+                cachedFile->hdlwhite = white;
+            }
+
+
+            // Verify type is valid and supported - used to handle
+            // length sensibly, and checking the LUT later
+            {
+                std::string ltype = cachedFile->hdltype;
+                if(ltype != "3d" && ltype != "3d+1d" && ltype != "c")
+                {
+                    std::ostringstream os;
+                    os << "Unsupported Houdini LUT type: '" << ltype << "'";
+                    throw Exception(os.str().c_str());
+                }
+            }
+
+
+            // "Length 2" or "Length 2 5" - either "[cube size]", or "[cube
+            // size] [prelut size]"
+            int size_3d = -1;
+            int size_prelut = -1;
+            int size_1d = -1;
+
+            {
+                std::vector<int> lut_sizes;
+
+                value = findHeaderItem(header_chunks, "length", 1, 2);
+                for(unsigned int i = 0; i < value.size(); ++i)
+                {
+                    int tmpsize = -1;
+                    if(!StringToInt(&tmpsize, value[i].c_str()))
                     {
-                        if(line[line.length()-1] != '}')
-                            throw Exception("malformed Houdini lut, couldn't read '}' end of 1D lut");
+                        std::ostringstream os;
+                        os << "Invalid integer on 'Length' line: ";
+                        os << "'" << value[0] << "'";
+                        throw Exception(os.str().c_str());
                     }
+                    lut_sizes.push_back(tmpsize);
+                }
+
+                if(cachedFile->hdltype == "3d" || cachedFile->hdltype == "3d+1d")
+                {
+                    // Set cube size
+                    size_3d = lut_sizes[0];
+
+                    lut3d_ptr->size[0] = lut_sizes[0];
+                    lut3d_ptr->size[1] = lut_sizes[0];
+                    lut3d_ptr->size[2] = lut_sizes[0];
+                }
+
+                if(cachedFile->hdltype == "c")
+                {
+                    size_1d = lut_sizes[0];
+                }
+
+                if(cachedFile->hdltype == "3d+1d")
+                {
+                    size_prelut = lut_sizes[1];
                 }
             }
-            else if (cachedFile->hdltype == "3D" ||
-                     cachedFile->hdltype == "3D+1D")
-            {
-                // 3D
-                nextline (istream, line);
-                if (line.substr(0, 4) != "3D {" &&
-                    line.substr(0, 2) != " {")
-                    throw Exception("malformed Houdini lut, couldn't read '3D {' or '{' line");
-                
-                // resize cube
-                lut3d_ptr->lut.resize (lut3d_ptr->size[0]
-                                     * lut3d_ptr->size[1]
-                                     * lut3d_ptr->size[2] * 3);
-                
-                // load the cube
-                int entries_remaining = lut3d_ptr->size[0] * lut3d_ptr->size[1] * lut3d_ptr->size[2];
-                for (int b = 0; b < lut3d_ptr->size[0]; ++b) {
-                    for (int g = 0; g < lut3d_ptr->size[1]; ++g) {
-                        for (int r = 0; r < lut3d_ptr->size[2]; ++r) {
-                            
-                            // store each row
-                            int i = GetLut3DIndex_B(r, g, b,
-                                                    lut3d_ptr->size[0],
-                                                    lut3d_ptr->size[1],
-                                                    lut3d_ptr->size[2]);
-                            
-                            if(i < 0 || i >= (int) lut3d_ptr->lut.size ()) {
-                                std::ostringstream os;
-                                os << "Cannot load Houdini lut, data is invalid. ";
-                                os << "A lut entry is specified (";
-                                os << r << " " << g << " " << b;
-                                os << ") that falls outside of the cube.";
-                                throw Exception(os.str ().c_str ());
-                            }
-                            
-                            nextline (istream, line);
-                            if(sscanf (line.c_str(), "%f %f %f",
-                               &lut3d_ptr->lut[i],
-                               &lut3d_ptr->lut[i+1],
-                               &lut3d_ptr->lut[i+2]) != 3 ) {
-                                   throw Exception("malformed 3D Houdini lut, couldn't read cube row");
-                            }
-                            
-                            // reverse count
-                            entries_remaining--;
-                        }
-                    }
-                }
-                
-                // Have we fully populated the table?
-                if (entries_remaining != 0) 
-                    throw Exception("malformed Houdini lut, number of cube points don't match cube size");
-                nextline (istream, line);
-                if (line.substr(0, 1) != "}" && line != " }")
-                    throw Exception("malformed Houdini lut, couldn't read '}' line");
-            }
-            
+
+            // Read stuff after "LUT:"
+            StringToFloatVecMap lut_data;
+            readLuts(istream, lut_data);
+
             //
-            if(cachedFile->hdltype == "C" ||
-               cachedFile->hdltype == "3D+1D")
+            StringToFloatVecMap::iterator lut_iter;
+
+            if(cachedFile->hdltype == "3d+1d")
             {
+                // Read prelut, and bind onto cachedFile
+                lut_iter = lut_data.find("pre");
+                if(lut_iter == lut_data.end())
+                {
+                    std::ostringstream os;
+                    os << "3D+1D LUT should contain Pre{} LUT section";
+                    throw Exception(os.str().c_str());
+                }
+
+                if(size_prelut != static_cast<int>(lut_iter->second.size()))
+                {
+                    std::ostringstream os;
+                    os << "Pre{} LUT was " << lut_iter->second.size();
+                    os << " values long, expected " << size_prelut << " values";
+                    throw Exception(os.str().c_str());
+                }
+
+                lut1d_ptr->luts[0] = lut_iter->second;
+                lut1d_ptr->luts[1] = lut_iter->second;
+                lut1d_ptr->luts[2] = lut_iter->second;
+
                 lut1d_ptr->finalize(0.0, ERROR_RELATIVE);
                 cachedFile->lut1D = lut1d_ptr;
             }
-            if(cachedFile->hdltype == "3D" ||
-               cachedFile->hdltype == "3D+1D")
+
+            if(cachedFile->hdltype == "3d" ||
+               cachedFile->hdltype == "3d+1d")
             {
-                lut3d_ptr->generateCacheID ();
+                // Bind 3D LUT to lut3d_ptr, along with some
+                // slightly-elabourate error messages
+
+                lut_iter = lut_data.find("3d");
+                if(lut_iter == lut_data.end())
+                {
+                    std::ostringstream os;
+                    os << "3D LUT section not found";
+                    throw Exception(os.str().c_str());
+                }
+
+                int size_3d_cubed = size_3d * size_3d * size_3d;
+
+                if(size_3d_cubed * 3 != static_cast<int>(lut_iter->second.size()))
+                {
+                    int foundsize = lut_iter->second.size();
+                    int foundlines = foundsize / 3;
+
+                    std::ostringstream os;
+                    os << "3D LUT contains incorrect number of values. ";
+                    os << "Contained " << foundsize << " values ";
+                    os << "(" << foundlines << " lines), ";
+                    os << "expected " << (size_3d_cubed*3) << " values ";
+                    os << "(" << size_3d_cubed << " lines)";
+                    throw Exception(os.str().c_str());
+                }
+
+                lut3d_ptr->lut = lut_iter->second;
+
+                // Make cache ID and bind to cachedFile
+                lut3d_ptr->generateCacheID();
                 cachedFile->lut3D = lut3d_ptr;
             }
-            
-            if(cachedFile->hdltype != "C" &&
-               cachedFile->hdltype != "3D" &&
-               cachedFile->hdltype != "3D+1D")
+
+            if(cachedFile->hdltype == "c")
             {
-                throw Exception("Unsupported Houdini lut type");
+                // Bind simple 1D RGB LUT
+                lut_iter = lut_data.find("rgb");
+                if(lut_iter == lut_data.end())
+                {
+                    std::ostringstream os;
+                    os << "3D+1D LUT should contain Pre{} LUT section";
+                    throw Exception(os.str().c_str());
+                }
+
+                if(size_1d != static_cast<int>(lut_iter->second.size()))
+                {
+                    std::ostringstream os;
+                    os << "RGB{} LUT was " << lut_iter->second.size();
+                    os << " values long, expected " << size_1d << " values";
+                    throw Exception(os.str().c_str());
+                }
+
+                lut1d_ptr->luts[0] = lut_iter->second;
+                lut1d_ptr->luts[1] = lut_iter->second;
+                lut1d_ptr->luts[2] = lut_iter->second;
+
+                lut1d_ptr->finalize(0.0, ERROR_RELATIVE);
+                cachedFile->lut1D = lut1d_ptr;
             }
-            
+
             return cachedFile;
         }
         
@@ -709,28 +900,48 @@ OCIO_NAMESPACE_ENTER
                 fileTransform.getDirection());
             
             if(newDir == TRANSFORM_DIR_FORWARD) {
-                if(cachedFile->hdltype == "C")
+                if(cachedFile->hdltype == "c")
                 {
                     CreateLut1DOp(ops, cachedFile->lut1D,
                                   fileTransform.getInterpolation(), newDir);
                 }
-                else if(cachedFile->hdltype == "3D")
+                else if(cachedFile->hdltype == "3d")
                 {
                     CreateLut3DOp(ops, cachedFile->lut3D,
                                   fileTransform.getInterpolation(), newDir);
                 }
-                else if(cachedFile->hdltype == "3D+1D")
+                else if(cachedFile->hdltype == "3d+1d")
                 {
                     CreateLut1DOp(ops, cachedFile->lut1D,
                                   fileTransform.getInterpolation(), newDir);
                     CreateLut3DOp(ops, cachedFile->lut3D,
                                   fileTransform.getInterpolation(), newDir);
+                }
+                else
+                {
+                    throw Exception("Unhandled hdltype while creating forward ops");
                 }
             } else if(newDir == TRANSFORM_DIR_INVERSE) {
-                if(cachedFile->hdltype == "C")
+                if(cachedFile->hdltype == "c")
                 {
                     CreateLut1DOp(ops, cachedFile->lut1D,
                                   fileTransform.getInterpolation(), newDir);
+                }
+                else if(cachedFile->hdltype == "3d")
+                {
+                    CreateLut3DOp(ops, cachedFile->lut3D,
+                                  fileTransform.getInterpolation(), newDir);
+                }
+                else if(cachedFile->hdltype == "3d+1d")
+                {
+                    CreateLut3DOp(ops, cachedFile->lut3D,
+                                  fileTransform.getInterpolation(), newDir);
+                    CreateLut1DOp(ops, cachedFile->lut1D,
+                                  fileTransform.getInterpolation(), newDir);
+                }
+                else
+                {
+                    throw Exception("Unhandled hdltype while creating reverse ops");
                 }
             }
             return;
@@ -751,18 +962,17 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-/*
 OIIO_ADD_TEST(HDLFileFormat, read_simple1D)
 {
     std::ostringstream strebuf;
-    strebuf << "Version         1" << "\n";
-    strebuf << "Format      any" << "\n";
-    strebuf << "Type        C" << "\n";
-    strebuf << "From        0.1 3.2" << "\n";
-    strebuf << "To      0 1" << "\n";
-    strebuf << "Black       0" << "\n";
-    strebuf << "White       0.99" << "\n";
-    strebuf << "Length      9" << "\n";
+    strebuf << "Version\t\t1" << "\n";
+    strebuf << "Format\t\tany" << "\n";
+    strebuf << "Type\t\tC" << "\n";
+    strebuf << "From\t\t0.1 3.2" << "\n";
+    strebuf << "To\t\t0 1" << "\n";
+    strebuf << "Black\t\t0" << "\n";
+    strebuf << "White\t\t0.99" << "\n";
+    strebuf << "Length\t\t9" << "\n";
     strebuf << "LUT:" << "\n";
     strebuf << "RGB {" << "\n";
     strebuf << "\t0" << "\n";
@@ -782,7 +992,7 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple1D)
     float to_max = 1.0f;
     float black = 0.0f;
     float white = 0.99f;
-    float lut1d[10] = { 0.0f, 0.000977517f, 0.00195503f, 0.00293255f,
+    float lut1d[9] = { 0.0f, 0.000977517f, 0.00195503f, 0.00293255f,
         0.00391007f, 0.00488759f, 0.0058651f, 0.999022f, 1.67f };
     
     std::istringstream simple3D1D;
@@ -803,12 +1013,14 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple1D)
     for(int c = 0; c < 3; ++c) {
         OIIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
         OIIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
+
+        OIIO_CHECK_EQUAL(9, lut->lut1D->luts[c].size());
+
         for(unsigned int i = 0; i < lut->lut1D->luts[c].size(); ++i) {
             OIIO_CHECK_EQUAL(lut1d[i], lut->lut1D->luts[c][i]);
         }
     }
 }
-*/
 
 OIIO_ADD_TEST(HDLFileFormat, bake_simple1D)
 {
@@ -909,7 +1121,6 @@ OIIO_ADD_TEST(HDLFileFormat, bake_simple1D)
     
 }
 
-/*
 OIIO_ADD_TEST(HDLFileFormat, read_simple3D)
 {
     std::ostringstream strebuf;
@@ -964,13 +1175,13 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple3D)
     OIIO_CHECK_EQUAL(white, lut->hdlwhite);
     
     // check cube data
+    OIIO_CHECK_EQUAL(2*2*2*3, lut->lut3D->lut.size());
+
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
         OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
 }
-*/
 
-/* 
 OIIO_ADD_TEST(HDLFileFormat, bake_simple3D)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -1047,9 +1258,7 @@ OIIO_ADD_TEST(HDLFileFormat, bake_simple3D)
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
         OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
 }
-*/
 
-/*
 OIIO_ADD_TEST(HDLFileFormat, read_simple3D1D)
 {
     std::ostringstream strebuf;
@@ -1122,19 +1331,20 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple3D1D)
     for(int c = 0; c < 3; ++c) {
         OIIO_CHECK_EQUAL(from_min, lut->lut1D->from_min[c]);
         OIIO_CHECK_EQUAL(from_max, lut->lut1D->from_max[c]);
+        OIIO_CHECK_EQUAL(10, lut->lut1D->luts[c].size());
+
         for(unsigned int i = 0; i < lut->lut1D->luts[c].size(); ++i) {
             OIIO_CHECK_EQUAL(prelut[i], lut->lut1D->luts[c][i]);
         }
     }
+
+    OIIO_CHECK_EQUAL(2*2*2*3, lut->lut3D->lut.size());
     
     // check cube data
     for(unsigned int i = 0; i < lut->lut3D->lut.size(); ++i) {
         OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
 }
-*/
-
-/*
 OIIO_ADD_TEST(HDLFileFormat, bake_simple3D1D)
 {
     // check baker output
@@ -1238,6 +1448,5 @@ OIIO_ADD_TEST(HDLFileFormat, bake_simple3D1D)
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
         OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
 }
-*/
 
 #endif // OCIO_BUILD_TESTS
