@@ -383,7 +383,7 @@ void OCIODisplay::pixel_engine(
         DD::Image::Channel rChannel = DD::Image::brother(requestedChannel, 0);
         DD::Image::Channel gChannel = DD::Image::brother(requestedChannel, 1);
         DD::Image::Channel bChannel = DD::Image::brother(requestedChannel, 2);
-        DD::Image::Channel aChannel = DD::Image::brother(requestedChannel, 3);
+        DD::Image::Channel aChannel = outputChannels.next(bChannel);
 
         done += rChannel;
         done += gChannel;
