@@ -1,3 +1,7 @@
+**Version 0.8.5 (Aug 2 2011):**
+    * Nuke OCIODisplay fixed (bug from 0.8.4)
+    * Updated Houdini HDL Reader / Writer
+
 **Version 0.8.4 (July 25 2011):**
     * Native Look Support
     * Core / Nuke OCIODisplay supports alpha viewing
