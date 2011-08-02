@@ -524,7 +524,7 @@ OCIO_NAMESPACE_ENTER
 
                 if(size_3d_cubed * 3 != static_cast<int>(lut_iter->second.size()))
                 {
-                    int foundsize = lut_iter->second.size();
+                    int foundsize = static_cast<int>(lut_iter->second.size());
                     int foundlines = foundsize / 3;
 
                     std::ostringstream os;
@@ -1406,7 +1406,7 @@ OIIO_ADD_TEST(HDLFileFormat, bake_simple3D1D)
     "\t0.429520\n"
     "\t0.560744\n"
     "\t0.655378\n"
-    "\t0.732058\n"
+    "\t0.732057\n"
     "\t0.797661\n"
     "\t0.855604\n"
     "\t0.907865\n"
