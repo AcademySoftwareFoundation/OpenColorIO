@@ -374,7 +374,7 @@ void OCIODisplay::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(m_layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 4)
+        if (!(m_layersToProcess & requestedChannel))
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;
@@ -383,7 +383,7 @@ void OCIODisplay::pixel_engine(
         DD::Image::Channel rChannel = DD::Image::brother(requestedChannel, 0);
         DD::Image::Channel gChannel = DD::Image::brother(requestedChannel, 1);
         DD::Image::Channel bChannel = DD::Image::brother(requestedChannel, 2);
-        DD::Image::Channel aChannel = DD::Image::brother(requestedChannel, 3);
+        DD::Image::Channel aChannel = outputChannels.next(bChannel);
 
         done += rChannel;
         done += gChannel;
