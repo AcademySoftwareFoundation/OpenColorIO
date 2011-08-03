@@ -29,11 +29,11 @@ OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
     m_inputColorSpaceIndex = 0;
     m_outputColorSpaceIndex = 0;
 
-    m_layersToProcess = DD::Image::Mask_RGB;
+    m_layersToProcess = DD::Image::Mask_RGBA;
 
     
-    // Query the colorspace names from the current config
-    // TODO (when to) re-grab the list of available colorspaces? How to save/load?
+    // Query the color space names from the current config
+    // TODO (when to) re-grab the list of available color spaces? How to save/load?
     
     try
     {
@@ -89,7 +89,7 @@ OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
     
     if(!m_hasColorSpaces)
     {
-        std::cerr << "OCIOColorSpace: No ColorSpaces available for input and/or output." << std::endl;
+        std::cerr << "OCIOColorSpace: No color spaces available for input and/or output." << std::endl;
     }
 }
 
@@ -100,29 +100,25 @@ OCIOColorSpace::~OCIOColorSpace()
 
 void OCIOColorSpace::knobs(DD::Image::Knob_Callback f)
 {
-#ifdef OCIO_CASCADE
+    DD::Image::Divider(f, "Color Space");
+    
+#ifdef OCIO_CASCASE
     DD::Image::CascadingEnumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
-    DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
+    DD::Image::Tooltip(f, "Input data is taken to be in this color space.");
 
     DD::Image::CascadingEnumeration_knob(f,
         &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
-    DD::Image::Tooltip(f, "Image data is converted to this colorspace for output.");
+    DD::Image::Tooltip(f, "Image data is converted to this color space for output.");
 #else
     DD::Image::Enumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
-    DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
+    DD::Image::Tooltip(f, "Input data is taken to be in this color space.");
 
     DD::Image::Enumeration_knob(f,
         &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
-    DD::Image::Tooltip(f, "Image data is converted to this colorspace for output.");
+    DD::Image::Tooltip(f, "Image data is converted to this color space for output.");
 #endif
-
-    DD::Image::Divider(f);
-
-    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
-    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
-    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
     
     DD::Image::Tab_knob(f, "Context");
     {
@@ -203,7 +199,7 @@ void OCIOColorSpace::_validate(bool for_real)
 
     if(!m_hasColorSpaces)
     {
-        error("No colorspaces available for input and/or output.");
+        error("No color spaces available for input and/or output.");
         return;
     }
 
@@ -211,7 +207,7 @@ void OCIOColorSpace::_validate(bool for_real)
     if(m_inputColorSpaceIndex < 0 || m_inputColorSpaceIndex >= inputColorSpaceCount)
     {
         std::ostringstream err;
-        err << "Input colorspace index (" << m_inputColorSpaceIndex << ") out of range.";
+        err << "Input color space index (" << m_inputColorSpaceIndex << ") out of range.";
         error(err.str().c_str());
         return;
     }
@@ -220,7 +216,7 @@ void OCIOColorSpace::_validate(bool for_real)
     if(m_outputColorSpaceIndex < 0 || m_outputColorSpaceIndex >= outputColorSpaceCount)
     {
         std::ostringstream err;
-        err << "Output colorspace index (" << m_outputColorSpaceIndex << ") out of range.";
+        err << "Output color space index (" << m_outputColorSpaceIndex << ") out of range.";
         error(err.str().c_str());
         return;
     }
@@ -344,16 +340,33 @@ const char* OCIOColorSpace::displayName() const
 const char* OCIOColorSpace::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorIO to convert from one ColorSpace to another.";
+    return "Use OpenColorIO to convert from one color space to another.";
 }
 
-
-DD::Image::Op* build(Node *node)
+// This class is necessary in order to call knobsAtTheEnd(). Otherwise, the NukeWrapper knobs 
+// will be added to the Context tab instead of the primary tab.
+class OCIOColorSpaceNukeWrapper : public DD::Image::NukeWrapper
 {
-    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOColorSpace(node));
-    op->noMix();
-    op->noMask();
-    op->noChannels(); // prefer our own channels control without checkboxes / alpha
-    op->noUnpremult();
+public:
+    OCIOColorSpaceNukeWrapper(DD::Image::PixelIop* op) : DD::Image::NukeWrapper(op)
+    {
+        knobsAtTheEnd();
+    }
+    
+    virtual void attach()
+    {
+        wrapped_iop()->attach();
+    }
+    
+    virtual void detach()
+    {
+        wrapped_iop()->detach();
+    }  
+    
+};
+
+static DD::Image::Op* build(Node *node)
+{
+    DD::Image::NukeWrapper *op = (new OCIOColorSpaceNukeWrapper(new OCIOColorSpace(node)));
     return op;
 }

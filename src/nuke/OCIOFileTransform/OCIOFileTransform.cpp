@@ -22,7 +22,7 @@ OCIOFileTransform::OCIOFileTransform(Node *n) : DD::Image::PixelIop(n)
     dirindex = 0;
     interpindex = 1;
     
-    layersToProcess = DD::Image::Mask_RGB;
+    layersToProcess = DD::Image::Mask_RGBA;
 }
 
 OCIOFileTransform::~OCIOFileTransform()
@@ -51,12 +51,6 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
     
     Enumeration_knob(f, &interpindex, interp, "interpolation", "interpolation");
     DD::Image::Tooltip(f, "Specify the interpolation method. For files that are not LUTs (mtx, etc) this is ignored.");
-    
-    DD::Image::Divider(f);
-    
-    DD::Image::Input_ChannelSet_knob(f, &layersToProcess, 0, "layer", "layer");
-    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
-    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
 void OCIOFileTransform::_validate(bool for_real)
@@ -267,9 +261,5 @@ const char* OCIOFileTransform::node_help() const
 DD::Image::Op* build(Node *node)
 {
     DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOFileTransform(node));
-    op->noMix();
-    op->noMask();
-    op->noChannels(); // prefer our own channels control without checkboxes / alpha
-    op->noUnpremult();
     return op;
 }
