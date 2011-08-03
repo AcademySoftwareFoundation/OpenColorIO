@@ -151,7 +151,7 @@ OCIO_NAMESPACE_ENTER
             else if(lang == GPU_LANGUAGE_GLSL_1_3)
             {
                 shader << "vec4 " << fcnName << "(in vec4 inPixel, \n";
-                shader << "    const uniform sampler3D " << lut3dName << ") \n";
+                shader << "    const sampler3D " << lut3dName << ") \n";
             }
             else throw Exception("Unsupported shader language.");
             

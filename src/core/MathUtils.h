@@ -38,6 +38,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Op.h"
 #include "Platform.h"
 
+#ifdef WINDOWS
+#include <float.h>
+#endif
+
 OCIO_NAMESPACE_ENTER
 {
     // From Imath
@@ -87,6 +91,16 @@ OCIO_NAMESPACE_ENTER
     }
 
 #endif
+
+    inline int
+    isnan (float val) {
+        // Windows uses a non-standard version of 'isnan'
+#ifdef WINDOWS
+        return _isnan (val);
+#else
+        return std::isnan (val);
+#endif
+    }
 
     bool IsScalarEqualToZero(float v);
     bool IsScalarEqualToOne(float v);
