@@ -18,15 +18,11 @@ def register_viewers(also_remove = "default"):
     if also_remove == "default":
         nuke.ViewerProcess.unregister('rec709')
         nuke.ViewerProcess.unregister('sRGB')
+        nuke.ViewerProcess.unregister('None')
     elif also_remove == "all":
-        # Unregister all processes, but retain the useful "None" option
+        # Unregister all processes, including None, which should be defined in config.ocio
         for curname in nuke.ViewerProcess.registeredNames():
             nuke.ViewerProcess.unregister(curname)
-
-        nuke.ViewerProcess.register(
-            name = "None",
-            call = nuke.nodes.ViewerProcess_None,
-            args = ())
 
     # Formats the display and transform, e.g "Film1D (sRGB)"
     DISPLAY_UI_FORMAT = "%(view)s (%(display)s)"
