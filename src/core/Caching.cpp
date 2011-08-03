@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "CDLTransform.h"
 #include "PathUtils.h"
 #include "FileTransform.h"
 
@@ -40,6 +41,7 @@ OCIO_NAMESPACE_ENTER
     {
         ClearPathCaches();
         ClearFileTransformCaches();
+        ClearCDLTransformFileCache();
     }
 }
 OCIO_NAMESPACE_EXIT

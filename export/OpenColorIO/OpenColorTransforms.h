@@ -131,6 +131,13 @@ OCIO_NAMESPACE_ENTER
         static CDLTransformRcPtr Create();
         
         //!cpp:function::
+        // Load the CDL from the src .cc or .ccc file.
+        // If a .ccc is used, the cccid must also be specified
+        // src must be an absolute path reference, no relative directory
+        // or envvar resolution is performed.
+        static CDLTransformRcPtr CreateFromFile(const char * src, const char * cccid);
+        
+        //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
         
         //!cpp:function::

@@ -126,40 +126,7 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            TiXmlNode * child = rootElement->FirstChild("ColorCorrection");
-            while(child)
-            {
-                TiXmlPrinter printer;
-                printer.SetStreamPrinting();
-                child->Accept( &printer );
-                std::string xml = printer.Str();
-                
-                CDLTransformRcPtr transform = CDLTransform::Create();
-                LoadCDL(transform.get(), child->ToElement());
-                
-                std::string id = pystring::lower(transform->getID());
-                if(id.empty())
-                {
-                    std::ostringstream os;
-                    os << "Error loading ccc xml, ";
-                    os << "All ASC ColorCorrections must specify an 'id' value.";
-                    throw Exception(os.str().c_str());
-                }
-                
-                CDLMap::iterator iter = cachedFile->transforms.find(id);
-                if(iter != cachedFile->transforms.end())
-                {
-                    std::ostringstream os;
-                    os << "Error loading ccc xml. ";
-                    os << "All ASC ColorCorrections must specify a unique 'id' value. ";
-                    os << "Duplicate elements with '" << id << "' found.";
-                    throw Exception(os.str().c_str());
-                }
-                
-                cachedFile->transforms[id] = transform;
-                
-                child = child->NextSibling("ColorCorrection");
-            }
+            GetCDLTransforms(cachedFile->transforms, rootElement);
             
             if(cachedFile->transforms.empty())
             {
@@ -203,7 +170,7 @@ OCIO_NAMESPACE_ENTER
             std::string cccid = fileTransform.getCCCId();
             cccid = context->resolveStringVar(cccid.c_str());
             
-            CDLMap::const_iterator iter = cachedFile->transforms.find(pystring::lower(cccid));
+            CDLMap::const_iterator iter = cachedFile->transforms.find(cccid);
             if(iter == cachedFile->transforms.end())
             {
                 std::ostringstream os;
