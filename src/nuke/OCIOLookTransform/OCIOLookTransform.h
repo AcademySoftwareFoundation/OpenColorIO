@@ -37,14 +37,6 @@ class OCIOLookTransform : public DD::Image::PixelIop {
         
         bool m_ignoreErrors;
         
-        std::string m_contextKey1;
-        std::string m_contextValue1;
-        std::string m_contextKey2;
-        std::string m_contextValue2;
-        std::string m_contextKey3;
-        std::string m_contextValue3;
-        std::string m_contextKey4;
-        std::string m_contextValue4;
         OCIO::ConstContextRcPtr getLocalContext();
         
         OCIO::ConstProcessorRcPtr m_processor;
@@ -54,6 +46,17 @@ class OCIOLookTransform : public DD::Image::PixelIop {
 
         ~OCIOLookTransform();
 
+        // These are public so the nuke wrapper can introspect into it
+        // TODO: use 'friend' instead
+        std::string m_contextKey1;
+        std::string m_contextValue1;
+        std::string m_contextKey2;
+        std::string m_contextValue2;
+        std::string m_contextKey3;
+        std::string m_contextValue3;
+        std::string m_contextKey4;
+        std::string m_contextValue4;
+        
         static const DD::Image::Op::Description description;
 
         /*! Return the command name that will be stored in Nuke scripts. */
