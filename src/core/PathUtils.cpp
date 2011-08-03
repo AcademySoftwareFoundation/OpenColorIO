@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <limits>
 #include <sstream>
-#include <sys/param.h>
 #include <sys/stat.h>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -40,9 +39,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Platform.h"
 #include "pystring/pystring.h"
 
+#if !defined(WINDOWS)
+#include <sys/param.h>
+#else
+#include <direct.h>
+#define MAXPATHLEN 4096
+#endif
+
 #if defined(__APPLE__) && !defined(__IPHONE__)
 #include <crt_externs.h> // _NSGetEnviron()
-#else
+#elif !defined(WINDOWS)
 #include <unistd.h>
 extern char **environ;
 #endif
@@ -107,7 +113,9 @@ OCIO_NAMESPACE_ENTER
         std::string getcwd()
         {
 #ifdef WINDOWS
-#error TODO: implement windows API call for getcwd
+            char path[MAXPATHLEN];
+            _getcwd(path, MAXPATHLEN);
+            return path;
 #else
             char path[MAXPATHLEN];
             ::getcwd(path, MAXPATHLEN);

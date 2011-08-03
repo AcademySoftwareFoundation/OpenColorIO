@@ -92,25 +92,39 @@ if(USE_BOOST_PTR)
     else()
         set(OCIO_USE_BOOST_PTR 1)
     endif()
+
+    set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
+    # set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 else()
     messageonce("Boost smart_ptr: Disabled")
     set(OCIO_USE_BOOST_PTR 0)
 endif()
 
-# Enable a bunch of compiler warnings...
-# http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
+if(CMAKE_COMPILER_IS_GNUCXX)
+    # Enable a bunch of compiler warnings...
+    # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
+endif(CMAKE_COMPILER_IS_GNUCXX)
 
-# Find Python, used for (possibly) building pyglue, and now to
-# construct the external project path
-OCIOFindPython()
+if(WIN32)
+    if(PYTHON_VERSION AND PYTHON_INCLUDE AND PYTHON_LIB)
+        set(EXTDIST_PYTHONPATH ${PYTHON_LIB}/python${PYTHON_VERSION}/site-packages)
+        set(PYTHONPATH ${EXTDIST_PYTHONPATH};$ENV{PYTHONPATH})
+        set(PYTHON_OK YES)
+        message(STATUS "Setting Python path to: ${PYTHONPATH}")
+    endif()
+else()
+    # Find Python, used for (possibly) building pyglue, and now to
+    # construct the external project path
+    OCIOFindPython()
 
-set(EXTDIST_ROOT ${CMAKE_BINARY_DIR}/ext/dist)
-set(EXTDIST_BINPATH ${EXTDIST_ROOT}/bin)
-if(PYTHON_OK)
-    set(EXTDIST_PYTHONPATH ${EXTDIST_ROOT}/lib/python${PYTHON_VERSION}/site-packages)
-    set(PYTHONPATH ${EXTDIST_PYTHONPATH}:$ENV{PYTHONPATH})
+    set(EXTDIST_ROOT ${CMAKE_BINARY_DIR}/ext/dist)
+    set(EXTDIST_BINPATH ${EXTDIST_ROOT}/bin)
+    if(PYTHON_OK)
+        set(EXTDIST_PYTHONPATH ${EXTDIST_ROOT}/lib/python${PYTHON_VERSION}/site-packages)
+        set(PYTHONPATH ${EXTDIST_PYTHONPATH}:$ENV{PYTHONPATH})
+    endif()
 endif()
 
 if(CMAKE_FIRST_RUN)
@@ -134,7 +148,11 @@ ExternalProject_Add(tinyxml
     INSTALL_DIR ext/dist
     CMAKE_ARGS ${TINYXML_CMAKE_ARGS}
 )
-set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
+if(WIN32)
+    set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml.lib)
+else()
+    set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
+endif()
 
 ###############################################################################
 ### YAML ###
@@ -153,18 +171,26 @@ ExternalProject_Add(YAML_CPP_LOCAL
 )
 set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
 set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
-set(YAML_CPP_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
+if(WIN32)
+    set(YAML_CPP_STATIC_DEBUG_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmdd.lib)
+    set(YAML_CPP_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmd.lib)
+else()
+    set(YAML_CPP_STATIC_GENERAL_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
+endif()
 
 ###############################################################################
 ### Externals ###
 
-set(EXTERNAL_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
-set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
+set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL")
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+endif()
 set(EXTERNAL_LINK_FLAGS "")
 set(EXTERNAL_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
-set(EXTERNAL_LIBRARIES
-    ${TINYXML_STATIC_LIBRARIES}
-    ${YAML_CPP_STATIC_LIBRARIES})
+set(EXTERNAL_DEBUG_LIBRARIES ${YAML_CPP_STATIC_DEBUG_LIBRARIES})
+set(EXTERNAL_OPTIMIZED_LIBRARIES ${YAML_CPP_STATIC_OPTIMIZED_LIBRARIES})
+set(EXTERNAL_GENERAL_LIBRARIES ${TINYXML_STATIC_LIBRARIES} ${YAML_CPP_STATIC_GENERAL_LIBRARIES})
 
 ###############################################################################
 ### Documentation ###
@@ -189,7 +215,7 @@ endif()
 ### SSE ###
 
 option(USE_SSE "Set to OFF to disable SSE optimizations." ON)
-if(USE_SSE AND OCIO_BUILD_SSE)
+if(USE_SSE AND OCIO_BUILD_SSE AND CMAKE_COMPILER_IS_GNUCXX)
     messageonce("SSE Runtime: ENABLED")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
     add_definitions("-DUSE_SSE")

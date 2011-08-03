@@ -13,14 +13,17 @@ if(CMAKE_FIRST_RUN)
     message(STATUS "Python ${PYTHON_VERSION} okay, will build the Python bindings against ${PYTHON_INCLUDE}")
 endif()
     
-# Python breaks strict-aliasing rules. Disable the warning here.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing")
+if(CMAKE_COMPILER_IS_GNUCXX)
+    # Python breaks strict-aliasing rules. Disable the warning here.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing")
+endif()
 
 file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
 
 add_library(PyOpenColorIO MODULE ${pyglue_src_files} )
 include_directories(
     ${PYTHON_INCLUDE}
+    ${Boost_INCLUDE_DIR}
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
 )
@@ -32,7 +35,13 @@ if(NOT PYTHON_INCLUDE_LIB_PREFIX)
     )
 endif()
 
-target_link_libraries(PyOpenColorIO OpenColorIO)
+if(WIN32)
+    target_link_libraries(PyOpenColorIO OpenColorIO
+        debug ${PYTHON_LIB}/python26_d.lib
+        optimized ${PYTHON_LIB}/python26.lib)
+else()
+    target_link_libraries(PyOpenColorIO OpenColorIO)
+endif()
 
 if (SOVERSION)
 message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")
