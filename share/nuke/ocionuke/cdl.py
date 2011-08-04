@@ -247,7 +247,7 @@ def select_cccid_for_filetransform(node = None):
     if node is None:
         node = nuke.thisNode()
 
-    filename = node['src'].value()
+    filename = node['file'].value()
 
     try:
         xml = open(filename).read()

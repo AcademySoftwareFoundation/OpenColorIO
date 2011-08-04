@@ -77,7 +77,12 @@ void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
     "this specifys the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
     DD::Image::Tooltip(f, ccchelp);
     
-    /*
+    /* TODO:
+    These scripts should be updated to make use of native OCIO APIs, rather than convenience functions
+    exposed in ocionuke.  Ideally, ocionuke would be a minimal module (essentially only ui code) that makes
+    use of OCIO for all heavy lifting.
+    */
+    
     DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform()", "select_cccid", "select cccid");
     
     // Import/export buttons
@@ -86,7 +91,7 @@ void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
 
     DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.import_cc_from_xml()", "import_cc", "import from .cc");
     DD::Image::Tooltip(f, "Import grade from a ColorCorrection XML file");
-    */
+    
     
     DD::Image::Divider(f);
 
@@ -119,8 +124,9 @@ void OCIOCDLTransform::refreshKnobEnabledState()
         m_powerKnob->disable();
         m_saturationKnob->disable();
         
-        m_fileKnob->enable();
-        m_cccidKnob->enable();
+        // We leave these active to allow knob re-use with the import/export buttons
+        //m_fileKnob->enable();
+        //m_cccidKnob->enable();
         
         loadCDLFromFile();
     }
@@ -131,8 +137,9 @@ void OCIOCDLTransform::refreshKnobEnabledState()
         m_powerKnob->enable();
         m_saturationKnob->enable();
         
-        m_fileKnob->disable();
-        m_cccidKnob->disable();
+        // We leave these active to allow knob re-use with the import/export buttons
+        //m_fileKnob->disable();
+        //m_cccidKnob->disable();
     }
 }
 
