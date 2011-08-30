@@ -153,7 +153,7 @@ OCIO_NAMESPACE_ENTER
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                if(OCIO_IS_NAN(rgbaBuffer[0]) || OCIO_IS_NAN(rgbaBuffer[1]) || OCIO_IS_NAN(rgbaBuffer[2]))
+                if(isnan(rgbaBuffer[0]) || isnan(rgbaBuffer[1]) || isnan(rgbaBuffer[2]))
                 {
                     rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
                     rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();
@@ -198,7 +198,7 @@ OCIO_NAMESPACE_ENTER
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
                 
-                if(OCIO_IS_NAN(rgbaBuffer[0]) || OCIO_IS_NAN(rgbaBuffer[1]) || OCIO_IS_NAN(rgbaBuffer[2]))
+                if(isnan(rgbaBuffer[0]) || isnan(rgbaBuffer[1]) || isnan(rgbaBuffer[2]))
                 {
                     rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
                     rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();

@@ -137,7 +137,7 @@ OCIO_NAMESPACE_ENTER
             assert(data!=NULL);
 
             /* Is x in range? */
-            if( OCIO_IS_NAN(x) ) return x;
+            if( isnan(x) ) return x;
 
             if( x<data->stims[0] ) return data->minValue;
             if (x>data->stims[ data->nSamplePoints -1] ) return data->maxValue;

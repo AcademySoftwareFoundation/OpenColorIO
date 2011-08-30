@@ -86,11 +86,4 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #define OCIOHIDDEN
 #endif
 
-// Windows uses a non-standard version of 'isnan'
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-    #define OCIO_IS_NAN _isnan
-#else
-    #define OCIO_IS_NAN std::isnan
-#endif
-
 #endif // INCLUDED_OCIO_OPENCOLORABI_H

@@ -21,12 +21,20 @@ endif()
 file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
 
 add_library(PyOpenColorIO MODULE ${pyglue_src_files} )
-include_directories(
-    ${PYTHON_INCLUDE}
-    ${Boost_INCLUDE_DIR}
-    ${CMAKE_SOURCE_DIR}/export/
-    ${CMAKE_BINARY_DIR}/export/
-)
+if(USE_BOOST_PTR)
+    include_directories(
+        ${PYTHON_INCLUDE}
+        ${Boost_INCLUDE_DIR}
+        ${CMAKE_SOURCE_DIR}/export/
+        ${CMAKE_BINARY_DIR}/export/
+    )
+else()
+    include_directories(
+        ${PYTHON_INCLUDE}
+        ${CMAKE_SOURCE_DIR}/export/
+        ${CMAKE_BINARY_DIR}/export/
+    )
+endif()
 
 # Exclude the 'lib' prefix from the name.
 if(NOT PYTHON_INCLUDE_LIB_PREFIX)

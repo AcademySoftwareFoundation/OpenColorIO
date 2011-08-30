@@ -215,9 +215,17 @@ endif()
 ### SSE ###
 
 option(USE_SSE "Set to OFF to disable SSE optimizations." ON)
-if(USE_SSE AND OCIO_BUILD_SSE AND CMAKE_COMPILER_IS_GNUCXX)
+if(USE_SSE AND OCIO_BUILD_SSE)
     messageonce("SSE Runtime: ENABLED")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+    if(WIN32)
+        # SSE instructions are automatically compiled into 64-bit applications so enabling the option is redundant and
+        # actually produces an unknown option warning in Visual Studio.
+        if(NOT CMAKE_CL_64)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:SSE2")
+        endif()
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+    endif()
     add_definitions("-DUSE_SSE")
 else()
     messageonce("SSE Runtime: DISABLED")

@@ -22,10 +22,14 @@ list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorABI.h)
 if(OCIO_BUILD_SHARED)
     add_library(OpenColorIO SHARED ${core_src_files})
     add_dependencies(OpenColorIO tinyxml YAML_CPP_LOCAL)
-    target_link_libraries(OpenColorIO
-        debug ${EXTERNAL_DEBUG_LIBRARIES}
-        optimized ${EXTERNAL_OPTIMIZED_LIBRARIES}
-        general ${EXTERNAL_GENERAL_LIBRARIES})
+    if(WIN32)
+        target_link_libraries(OpenColorIO
+            debug ${EXTERNAL_DEBUG_LIBRARIES}
+            optimized ${EXTERNAL_OPTIMIZED_LIBRARIES}
+            general ${EXTERNAL_GENERAL_LIBRARIES})
+    else()
+        target_link_libraries(OpenColorIO ${EXTERNAL_GENERAL_LIBRARIES})
+    endif()
     set_target_properties(OpenColorIO PROPERTIES
         OUTPUT_NAME OpenColorIO
         COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
@@ -39,10 +43,14 @@ if(OCIO_BUILD_STATIC)
     list(REMOVE_ITEM core_src_files ${CMAKE_SOURCE_DIR}/src/core/UnitTest.cpp)
     add_library(OpenColorIO_STATIC STATIC ${core_src_files})
     add_dependencies(OpenColorIO_STATIC tinyxml YAML_CPP_LOCAL)
-    target_link_libraries(OpenColorIO_STATIC
-        debug ${EXTERNAL_DEBUG_LIBRARIES}
-        optimized ${EXTERNAL_OPTIMIZED_LIBRARIES}
-        general ${EXTERNAL_GENERAL_LIBRARIES})
+    if(WIN32)
+        target_link_libraries(OpenColorIO_STATIC
+            debug ${EXTERNAL_DEBUG_LIBRARIES}
+            optimized ${EXTERNAL_OPTIMIZED_LIBRARIES}
+            general ${EXTERNAL_GENERAL_LIBRARIES})
+    else()
+        target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_GENERAL_LIBRARIES})
+    endif()
     set_target_properties(OpenColorIO_STATIC PROPERTIES
         OUTPUT_NAME OpenColorIO
         COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
