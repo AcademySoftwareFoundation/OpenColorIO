@@ -17,7 +17,14 @@ add_dependencies(ocio_core_tests tinyxml YAML_CPP_LOCAL)
 set_target_properties(ocio_core_tests PROPERTIES
     COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
     LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
-target_link_libraries(ocio_core_tests ${EXTERNAL_LIBRARIES})
+if(WIN32)
+    target_link_libraries(ocio_core_tests
+            debug ${EXTERNAL_DEBUG_LIBRARIES}
+            optimized ${EXTERNAL_OPTIMIZED_LIBRARIES}
+            general ${EXTERNAL_GENERAL_LIBRARIES})
+else()
+    target_link_libraries(ocio_core_tests ${EXTERNAL_GENERAL_LIBRARIES})
+endif()
 
 ###############################################################################
 ### CTEST ###
