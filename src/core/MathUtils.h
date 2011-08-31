@@ -90,17 +90,16 @@ OCIO_NAMESPACE_ENTER
         return static_cast<float>(round (val));
     }
 
-#endif
-
     inline int
     isnan (float val) {
         // Windows uses a non-standard version of 'isnan'
-#ifdef WINDOWS
         return _isnan (val);
-#else
-        return std::isnan (val);
-#endif
     }
+#else
+    // This lets all platforms just use isnan, within the OCIO namespace,
+    // across all platforms. (Windows defines the function above).
+    using std::isnan;
+#endif
 
     bool IsScalarEqualToZero(float v);
     bool IsScalarEqualToOne(float v);
