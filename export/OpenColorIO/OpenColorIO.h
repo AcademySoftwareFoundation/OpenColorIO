@@ -381,7 +381,7 @@ OCIO_NAMESPACE_ENTER
         // left-most defined view will be the default.
         
         //!cpp:function:: Comma-delimited list of view names.
-        void setActiveViews(const char * displays);
+        void setActiveViews(const char * views);
         //!cpp:function::
         const char * getActiveViews() const;
         
