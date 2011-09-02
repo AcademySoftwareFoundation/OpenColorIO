@@ -135,18 +135,6 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->vec_[index];
     }
     
-    TransformRcPtr GroupTransform::getEditableTransform(int index)
-    {
-        if(index < 0 || index >= (int)getImpl()->vec_.size())
-        {
-            std::ostringstream os;
-            os << "Invalid transform index " << index << ".";
-            throw Exception(os.str().c_str());
-        }
-        
-        return getImpl()->vec_[index];
-    }
-    
     void GroupTransform::push_back(const ConstTransformRcPtr& transform)
     {
         getImpl()->vec_.push_back(transform->createEditableCopy());

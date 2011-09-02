@@ -644,8 +644,6 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         ConstTransformRcPtr getTransform(ColorSpaceDirection dir) const;
         //!cpp:function::
-        TransformRcPtr getEditableTransform(ColorSpaceDirection dir);
-        //!cpp:function::
         void setTransform(const ConstTransformRcPtr & transform,
                           ColorSpaceDirection dir);
         //!cpp:function:: Setting a transform to a non-null call makes it specified.
