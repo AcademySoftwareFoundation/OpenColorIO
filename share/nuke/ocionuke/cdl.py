@@ -239,15 +239,16 @@ def import_multiple_from_ccc(filename = None):
         nuke.message("The supplied file (%r) contained no ColorCorrection's" % filename)
 
 
-def select_cccid_for_filetransform(node = None):
-    """Select cccid button for the OCIOFileTransform node.
-    Presents user with list of cccid's within the specified .ccc file
+def select_cccid_for_filetransform(node = None, fileknob = 'file', cccidknob = 'cccid'):
+    """Select cccid button for the OCIOFileTransform node, also used
+    in OCIOCDLTransform. Presents user with list of cccid's within the
+    specified .ccc file, and sets the cccid knob to the selected ID.
     """
 
     if node is None:
         node = nuke.thisNode()
 
-    filename = node['file'].value()
+    filename = node[fileknob].value()
 
     try:
         xml = open(filename).read()
@@ -264,4 +265,4 @@ def select_cccid_for_filetransform(node = None):
     sel = SelectCCCIDPanel(allcc)
     okayed = sel.showModalDialog()
     if okayed:
-        node['cccid'].setValue(sel.selected().getID())
+        node[cccidknob].setValue(sel.selected().getID())

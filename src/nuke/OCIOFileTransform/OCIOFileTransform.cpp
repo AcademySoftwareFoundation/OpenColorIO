@@ -38,9 +38,19 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 {
 
     File_knob(f, &src, "src", "src");
-    const char * srchelp = "Specify the src file, on disk, to use for this transform. "
-    "This can be any file format that OpenColorIO supports: "
-    ".3dl, .cc, .ccc, .csp, .cub, .cube, .lut (houdini), .mga, .m3d, .spi1d, .spi3d, .spimtx, .vf";
+
+    std::ostringstream os;
+    os << "Specify the source file, on disk, to use for this transform. ";
+    os << "Can be any file format that OpenColorIO supports:\n";
+
+    for(int i=0; i<OCIO::FileTransform::getNumFormats(); ++i)
+    {
+        const char* name = OCIO::FileTransform::getFormatNameByIndex(i);
+        const char* exten = OCIO::FileTransform::getFormatExtensionByIndex(i);
+        os << "\n." << exten << " (" << name << ")";
+    }
+
+    const char * srchelp = os.str().c_str();
     DD::Image::Tooltip(f, srchelp);
     
     String_knob(f, &cccid, "cccid");
@@ -48,7 +58,7 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
     "this specifys the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
     DD::Image::Tooltip(f, srchelp2);
     
-    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform()", "select_cccid", "select cccid");
+    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform(fileknob='src', cccidknob = 'cccid')", "select_cccid", "select cccid");
     
     Enumeration_knob(f, &dirindex, dirs, "direction", "direction");
     DD::Image::Tooltip(f, "Specify the transform direction.");
@@ -81,8 +91,6 @@ void OCIOFileTransform::_validate(bool for_real)
         OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
         transform->setSrc(src);
         
-        // TODO: For some reason, cccid is NOT incorporated in this node's hash.
-        // Until then, cccid is considered broken. Figure out why.
         transform->setCCCId(cccid.c_str());
         
         if(dirindex == 0) transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
@@ -124,6 +132,46 @@ void OCIOFileTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& m
         }
     }
     mask += done;
+}
+
+void OCIOFileTransform::append(DD::Image::Hash& nodehash)
+{
+    // There is a bug where in Nuke <6.3 the String_knob (used for
+    // cccid) is not included in the node's hash. Include it manually
+    // so the node correctly redraws. Appears fixed in in 6.3
+    nodehash.append(cccid.c_str());
+}
+
+int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
+{
+    // Only show the cccid knob when loading a .cc/.ccc file. Set
+    // hidden state when the src is changed, or the node properties
+    // are shown
+    if(k->is("src") | k->is("showPanel"))
+    {
+        // Convoluted equiv to pysting::endswith(src, ".ccc")
+        // TODO: Could this be queried from the processor?
+        const std::string srcstring = src;
+        const std::string cccext = "ccc";
+        const std::string ccext = "cc";
+        if(std::equal(cccext.rbegin(), cccext.rend(), srcstring.rbegin()) ||
+           std::equal(ccext.rbegin(), ccext.rend(), srcstring.rbegin()))
+        {
+            knob("cccid")->show();
+            knob("select_cccid")->show();
+        }
+        else
+        {
+            knob("cccid")->hide();
+            knob("select_cccid")->hide();
+        }
+
+        // Ensure this callback is always triggered (for src knob)
+        return 1;
+    }
+
+    // Return zero to avoid callbacks for other knobs
+    return 0;
 }
 
 // See Saturation::pixel_engine for a well-commented example.
@@ -200,8 +248,17 @@ const char* OCIOFileTransform::displayName() const
 
 const char* OCIOFileTransform::node_help() const
 {
-    // TODO more detailed help text
-    return "Use OpenColorIO to apply the specified LUT file transform.";
+    return
+        "Use OpenColorIO to apply a transform loaded from the given "
+        "file.\n\n"
+        "This is usually a 1D or 3D LUT file, but can be other file-based "
+        "transform, for example an ASC ColorCorrection XML file.\n\n"
+        "For a complete list of supported file formats, see the src "
+        "knob's tooltip\n\n"
+        "Note that the file's transform is applied with no special "
+        "input/output colorspace handling - so if the file expects "
+        "log-encoded pixels, but you apply the node to a linear "
+        "image, you will get incorrect results";
 }
 
 
