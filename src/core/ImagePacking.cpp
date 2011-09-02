@@ -27,34 +27,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <OpenColorIO/OpenColorIO.h>
-#include "ImagePacking.h"
 
 #include <sstream>
 #include <iostream>
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
+
+#include "ImagePacking.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    float * ImageDesc_GetAData(const ImageDesc& srcImg)
-    {
-        if(const PackedImageDesc * packedImg = dynamic_cast<const PackedImageDesc*>(&srcImg))
-        {
-            return packedImg->getAData();
-        }
-        else if(const PlanarImageDesc * planarImg = dynamic_cast<const PlanarImageDesc*>(&srcImg))
-        {
-            return planarImg->getAData();
-        }
-        
-        throw Exception("Cannot query alpha ptr on unknown ImageDesc type.");
-    }
-    
+
     namespace
     {
         // GENERIC CASE, SLOW BUT ALWAYS WORKS
         
-        void PackRGBAFromImageDesc_Generic(const ImageDesc& srcImg,
+        void PackRGBAFromImageDesc_Generic(const GenericImageDesc& srcImg,
                                            float* outputBuffer,
                                            int* numPixelsCopied,
                                            int outputBufferSize,
@@ -63,8 +52,8 @@ OCIO_NAMESPACE_ENTER
             assert(outputBuffer);
             assert(numPixelsCopied);
             
-            long imgWidth = srcImg.getWidth();
-            long imgHeight = srcImg.getHeight();
+            long imgWidth = srcImg.width;
+            long imgHeight = srcImg.height;
             long imgPixels = imgWidth * imgHeight;
             
             if(imagePixelStartIndex<0 || imagePixelStartIndex>=imgPixels)
@@ -73,17 +62,17 @@ OCIO_NAMESPACE_ENTER
                 return;
             }
             
-            ptrdiff_t xStrideBytes  = srcImg.getXStrideBytes();
-            ptrdiff_t yStrideBytes  = srcImg.getYStrideBytes();
+            ptrdiff_t xStrideBytes  = srcImg.xStrideBytes;
+            ptrdiff_t yStrideBytes  = srcImg.yStrideBytes;
             long yIndex = imagePixelStartIndex / imgWidth;
             long xIndex = imagePixelStartIndex % imgWidth;
             
             // Figure out our initial ptr positions
-            char* rRow = reinterpret_cast<char*>(srcImg.getRData()) +
+            char* rRow = reinterpret_cast<char*>(srcImg.rData) +
                 yStrideBytes * yIndex;
-            char* gRow = reinterpret_cast<char*>(srcImg.getGData()) +
+            char* gRow = reinterpret_cast<char*>(srcImg.gData) +
                 yStrideBytes * yIndex;
-            char* bRow = reinterpret_cast<char*>(srcImg.getBData()) +
+            char* bRow = reinterpret_cast<char*>(srcImg.bData) +
                 yStrideBytes * yIndex;
             char* aRow = NULL;
             
@@ -92,10 +81,9 @@ OCIO_NAMESPACE_ENTER
             float* bPtr = reinterpret_cast<float*>(bRow + xStrideBytes*xIndex);
             float* aPtr = NULL;
             
-            if(ImageDesc_GetAData(srcImg))
+            if(srcImg.aData)
             {
-                aRow = reinterpret_cast<char*>(ImageDesc_GetAData(srcImg)) +
-                    yStrideBytes * yIndex;
+                aRow = reinterpret_cast<char*>(srcImg.aData) + yStrideBytes * yIndex;
                 aPtr = reinterpret_cast<float*>(aRow + xStrideBytes*xIndex);
             }
             
@@ -195,15 +183,15 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        void UnpackRGBAToImageDesc_Generic(ImageDesc& dstImg,
+        void UnpackRGBAToImageDesc_Generic(GenericImageDesc& dstImg,
                                            float* inputBuffer,
                                            int numPixelsToUnpack,
                                            long imagePixelStartIndex)
         {
             assert(inputBuffer);
             
-            long imgWidth = dstImg.getWidth();
-            long imgHeight = dstImg.getHeight();
+            long imgWidth = dstImg.width;
+            long imgHeight = dstImg.height;
             long imgPixels = imgWidth * imgHeight;
             
             if(imagePixelStartIndex<0 || imagePixelStartIndex>=imgPixels)
@@ -211,17 +199,17 @@ OCIO_NAMESPACE_ENTER
                 return;
             }
             
-            ptrdiff_t xStrideBytes  = dstImg.getXStrideBytes();
-            ptrdiff_t yStrideBytes  = dstImg.getYStrideBytes();
+            ptrdiff_t xStrideBytes  = dstImg.xStrideBytes;
+            ptrdiff_t yStrideBytes  = dstImg.yStrideBytes;
             long yIndex = imagePixelStartIndex / imgWidth;
             long xIndex = imagePixelStartIndex % imgWidth;
             
             // Figure out our initial ptr positions
-            char* rRow = reinterpret_cast<char*>(dstImg.getRData()) +
+            char* rRow = reinterpret_cast<char*>(dstImg.rData) +
                 yStrideBytes * yIndex;
-            char* gRow = reinterpret_cast<char*>(dstImg.getGData()) +
+            char* gRow = reinterpret_cast<char*>(dstImg.gData) +
                 yStrideBytes * yIndex;
-            char* bRow = reinterpret_cast<char*>(dstImg.getBData()) +
+            char* bRow = reinterpret_cast<char*>(dstImg.bData) +
                 yStrideBytes * yIndex;
             char* aRow = NULL;
             
@@ -230,10 +218,9 @@ OCIO_NAMESPACE_ENTER
             float* bPtr = reinterpret_cast<float*>(bRow + xStrideBytes*xIndex);
             float* aPtr = NULL;
             
-            if(ImageDesc_GetAData(dstImg))
+            if(dstImg.aData)
             {
-                aRow = reinterpret_cast<char*>(ImageDesc_GetAData(dstImg)) +
-                    yStrideBytes * yIndex;
+                aRow = reinterpret_cast<char*>(dstImg.aData) + yStrideBytes * yIndex;
                 aPtr = reinterpret_cast<float*>(aRow + xStrideBytes*xIndex);
             }
             
@@ -335,7 +322,7 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
     
-        void PackRGBAFromImageDesc_RGBAMemcpy(const ImageDesc& srcImg,
+        void PackRGBAFromImageDesc_RGBAMemcpy(const GenericImageDesc& srcImg,
                                               float* outputBuffer,
                                               int* numPixelsCopied,
                                               int outputBufferSize,
@@ -394,7 +381,7 @@ OCIO_NAMESPACE_ENTER
     
     // TODO: Add optimized codepaths to image packing / unpacking
     
-    void PackRGBAFromImageDesc(const ImageDesc& srcImg,
+    void PackRGBAFromImageDesc(const GenericImageDesc& srcImg,
                                float* outputBuffer,
                                int* numPixelsCopied,
                                int outputBufferSize,
@@ -407,7 +394,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void UnpackRGBAToImageDesc(ImageDesc& dstImg,
+    void UnpackRGBAToImageDesc(GenericImageDesc& dstImg,
                                float* inputBuffer,
                                int numPixelsToUnpack,
                                long imagePixelStartIndex)

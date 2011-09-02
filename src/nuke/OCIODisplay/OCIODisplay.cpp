@@ -428,8 +428,7 @@ void OCIODisplay::pixel_engine(
 
         try
         {
-            OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
-            img.setAData(aOut);
+            OCIO::PlanarImageDesc img(rOut, gOut, bOut, aOut, rowWidth, /*height*/ 1);
             m_processor->apply(img);
         }
         catch(OCIO::Exception &e)

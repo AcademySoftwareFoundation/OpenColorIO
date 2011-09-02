@@ -34,15 +34,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    float * ImageDesc_GetAData(const ImageDesc& srcImg);
+    struct GenericImageDesc
+    {
+        long width;
+        long height;
+        ptrdiff_t xStrideBytes;
+        ptrdiff_t yStrideBytes;
+        
+        float* rData;
+        float* gData;
+        float* bData;
+        float* aData;
+        
+        GenericImageDesc();
+        ~GenericImageDesc();
+        
+        // Resolves all AutoStride
+        void init(const ImageDesc& img);
+        
+        bool isPackedRGBA() const;
+    };
     
-    void PackRGBAFromImageDesc(const ImageDesc& srcImg,
+    void PackRGBAFromImageDesc(const GenericImageDesc& srcImg,
                                float* outputBuffer,
                                int* numPixelsCopied,
                                int outputBufferSize,
                                long imagePixelStartIndex);
     
-    void UnpackRGBAToImageDesc(ImageDesc& dstImg,
+    void UnpackRGBAToImageDesc(GenericImageDesc& dstImg,
                                float* inputBuffer,
                                int numPixelsToUnpack,
                                long imagePixelStartIndex);

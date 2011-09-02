@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ImagePacking.h"
+
 OCIO_NAMESPACE_ENTER
 {
     
@@ -54,7 +56,7 @@ OCIO_NAMESPACE_ENTER
         void finishRGBAScanline();
         
         private:
-            ImageDesc* m_img;
+            GenericImageDesc m_img;
             
             // Copy mode
             float* m_buffer;
