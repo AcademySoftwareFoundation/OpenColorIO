@@ -17,7 +17,12 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <DDImage/Row.h>
 #include <DDImage/Knobs.h>
 #include <DDImage/Enumeration_KnobI.h>
+#include <DDImage/ddImageVersionNumbers.h>
 
+// Should we use cascasing ColorSpace menus
+#if defined kDDImageVersionInteger && (kDDImageVersionInteger>=62300)
+#define OCIO_CASCASE
+#endif
 
 OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
 {
@@ -33,12 +38,24 @@ OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        std::string defaultColorSpaceName = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR)->getName();
+        
+        OCIO::ConstColorSpaceRcPtr defaultcs = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
+        if(!defaultcs) throw std::runtime_error("ROLE_SCENE_LINEAR not defined.");
+        std::string defaultColorSpaceName = defaultcs->getName();
         
         for(int i=0; i<config->getNumColorSpaces(); ++i)
         {
             std::string csname = config->getColorSpaceNameByIndex(i);
+            
+#ifdef OCIO_CASCASE
+            std::string family = config->getColorSpace(csname.c_str())->getFamily();
+            if(family.empty())
+                m_colorSpaceNames.push_back(csname.c_str());
+            else
+                m_colorSpaceNames.push_back(family + "/" + csname);
+#else
             m_colorSpaceNames.push_back(csname);
+#endif
             
             if(defaultColorSpaceName == csname)
             {
@@ -98,8 +115,13 @@ OCIODisplay::~OCIODisplay()
 
 void OCIODisplay::knobs(DD::Image::Knob_Callback f)
 {
+#ifdef OCIO_CASCASE
+    DD::Image::CascadingEnumeration_knob(f,
+        &m_colorSpaceIndex, &m_colorSpaceCstrNames[0], "colorspace", "input colorspace");
+#else
     DD::Image::Enumeration_knob(f,
         &m_colorSpaceIndex, &m_colorSpaceCstrNames[0], "colorspace", "input colorspace");
+#endif
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
 
     m_displayKnob = DD::Image::Enumeration_knob(f,
@@ -132,7 +154,13 @@ void OCIODisplay::knobs(DD::Image::Knob_Callback f)
     DD::Image::SetFlags(f, DD::Image::Knob::NO_ANIMATION | DD::Image::Knob::NO_UNDO);
     DD::Image::Tooltip(f, "Specify which channels to view (prior to the display transform).");
     
-    DD::Image::BeginClosedGroup(f, "Context");
+    DD::Image::Divider(f);
+    
+    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
+    // DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
+    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
+    
+    DD::Image::Tab_knob(f, "Context");
     {
         DD::Image::String_knob(f, &m_contextKey1, "key1");
         DD::Image::Spacer(f, 10);
@@ -154,14 +182,6 @@ void OCIODisplay::knobs(DD::Image::Knob_Callback f)
         DD::Image::String_knob(f, &m_contextValue4, "value4");
         DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
     }
-    DD::Image::EndGroup(f);
-    
-    
-    DD::Image::Divider(f);
-    
-    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
-    // DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
-    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
 OCIO::ConstContextRcPtr OCIODisplay::getLocalContext()
@@ -240,7 +260,7 @@ void OCIODisplay::_validate(bool for_real)
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
-        m_transform->setInputColorSpaceName(m_colorSpaceCstrNames[m_colorSpaceIndex]);
+        m_transform->setInputColorSpaceName(config->getColorSpaceNameByIndex(m_colorSpaceIndex));
         m_transform->setDisplay(m_displayCstrNames[m_displayIndex]);
         m_transform->setView(m_viewCstrNames[m_viewIndex]);
         
