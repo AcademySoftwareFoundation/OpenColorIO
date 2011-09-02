@@ -182,7 +182,6 @@ OCIO_NAMESPACE_ENTER
             DynamicPtrCast<const DisplayTransform>(transform))
         {
             colorSpaceNames.insert(displayTransform->getInputColorSpaceName());
-            colorSpaceNames.insert(displayTransform->getDisplayColorSpaceName());
         }
         else if(ConstLookTransformRcPtr lookTransform = \
             DynamicPtrCast<const LookTransform>(transform))
@@ -1256,12 +1255,6 @@ OCIO_NAMESPACE_ENTER
         if(index<0) return "";
         
         return views[index].looks.c_str();
-    }
-    
-    void Config::setDisplayColorSpaceName(const char * display, const char * view,
-                                          const char * colorSpaceName)
-    {
-        addDisplay(display, view, colorSpaceName, "");
     }
     
     void Config::addDisplay(const char * display, const char * view,
