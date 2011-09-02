@@ -80,6 +80,7 @@ OCIO_NAMESPACE_ENTER
         "  - !<ColorSpace>\n"
         "      name: raw\n"
         "      family: raw\n"
+        "      equalitygroup:\n"
         "      bitdepth: 32f\n"
         "      isdata: true\n"
         "      gpuallocation: uniform\n"
@@ -587,17 +588,6 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Config failed sanitycheck. ";
                 os << "The colorspace at index " << i << " is not named.";
-                getImpl()->sanitytext_ = os.str();
-                throw Exception(getImpl()->sanitytext_.c_str());
-            }
-            
-            const char * family = getImpl()->colorspaces_[i]->getFamily();
-            if(!family || strlen(family) == 0)
-            {
-                std::ostringstream os;
-                os << "Config failed sanitycheck. ";
-                os << "The colorspace named '" << name << "' ";
-                os << "does not specify a family.";
                 getImpl()->sanitytext_ = os.str();
                 throw Exception(getImpl()->sanitytext_.c_str());
             }
@@ -1988,6 +1978,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
     "  - !<ColorSpace>\n"
     "      name: raw\n"
     "      family: raw\n"
+    "      equalitygroup: \n"
     "      bitdepth: 32f\n"
     "      description: |\n"
     "        A raw color space. Conversions to and from this space are no-ops.\n"
@@ -1996,6 +1987,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
     "  - !<ColorSpace>\n"
     "      name: lnh\n"
     "      family: ln\n"
+    "      equalitygroup: \n"
     "      bitdepth: 16f\n"
     "      description: |\n"
     "        The show reference space. This is a sensor referred linear\n"
@@ -2007,6 +1999,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
     "  - !<ColorSpace>\n"
     "      name: loads_of_transforms\n"
     "      family: vd8\n"
+    "      equalitygroup: \n"
     "      bitdepth: 8ui\n"
     "      description: 'how many transforms can we use?'\n"
     "      isdata: false\n"
@@ -2133,6 +2126,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     "  - !<ColorSpace>\n"
     "    name: testing\n"
     "    family: test\n"
+    "    equalitygroup: \n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    allocation: uniform\n"
@@ -2143,6 +2137,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     "  - !<ColorSpace>\n"
     "    name: testing2\n"
     "    family: test\n"
+    "    equalitygroup: \n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    allocation: uniform\n"

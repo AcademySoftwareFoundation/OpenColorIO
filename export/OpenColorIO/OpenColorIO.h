@@ -548,10 +548,20 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         void setName(const char * name);
         
-        //!cpp:function::
+        //!cpp:function::Get the family, for use in user interfaces (optional)
         const char * getFamily() const;
-        //!cpp:function::
+        //!cpp:function::Set the family, for use in user interfaces (optional)
         void setFamily(const char * family);
+        
+        //!cpp:function::Get the ColorSpace group name (used for equality comparisons)
+        // This allows no-op transforms between different colorspaces.
+        // If an equalityGroup is not defined (an empty string), it will be considered
+        // unique (i.e., it will not compare as equal to other ColorSpaces with an
+        // empty equality group).  This is often, though not always, set to the
+        // same value as 'family'.
+        const char * getEqualityGroup() const;
+        //!cpp:function::
+        void setEqualityGroup(const char * equalityGroup);
         
         //!cpp:function::
         const char * getDescription() const;
