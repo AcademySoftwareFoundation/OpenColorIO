@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 #include "ScanlineHelper.h"
-#include "ImagePacking.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -38,54 +37,21 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        bool IsPackedRGBA(const ImageDesc& img)
-        {
-            char* rPtr = reinterpret_cast<char*>(img.getRData());
-            char* gPtr = reinterpret_cast<char*>(img.getGData());
-            char* bPtr = reinterpret_cast<char*>(img.getBData());
-            char* aPtr = reinterpret_cast<char*>(ImageDesc_GetAData(img));
-            
-            if(gPtr-rPtr != sizeof(float)) return false;
-            if(bPtr-gPtr != sizeof(float)) return false;
-            if(aPtr && (aPtr-bPtr != sizeof(float))) return false;
-            
-            ptrdiff_t xStrideBytes = img.getXStrideBytes();
-            
-            // Confirm xStrideBytes is a pure float-sized packing
-            // (I.e., it will divide evenly)
-            if(xStrideBytes <= 0) return false;
-            div_t result = div((int) xStrideBytes, (int)sizeof(float));
-            if(result.rem != 0) return false;
-            
-            int numChannels = result.quot;
-            if(numChannels != 4) return false;
-            
-            return true;
-        }
-        
         const int PIXELS_PER_LINE = 4096;
     }
     
     ////////////////////////////////////////////////////////////////////////////
     
     ScanlineHelper::ScanlineHelper(ImageDesc& img):
-                                   m_img(&img),
                                    m_buffer(0),
                                    m_imagePixelIndex(0),
                                    m_numPixelsCopied(0),
                                    m_yIndex(0),
                                    m_inPlaceMode(false)
         {
-            if((img.getWidth() <= 0) || (img.getHeight() <= 0))
-            {
-                std::ostringstream os;
-                os << "Cannot process scanline request,";
-                os << " img has invalid size: ";
-                os << img.getWidth() << " x " << img.getHeight();
-                throw Exception(os.str().c_str()); 
-            }
+            m_img.init(img);
             
-            if(IsPackedRGBA(img))
+            if(m_img.isPackedRGBA())
             {
                 m_inPlaceMode = true;
             }
@@ -111,21 +77,21 @@ OCIO_NAMESPACE_ENTER
             if(m_inPlaceMode)
             {
                 // TODO: what if scanline is too short, or too long?
-                if(m_yIndex >= m_img->getHeight())
+                if(m_yIndex >= m_img.height)
                 {
                     *numPixels = 0;
                     return;
                 }
                 
-                char* rowPtr = reinterpret_cast<char*>(m_img->getRData());
-                rowPtr += m_img->getYStrideBytes()*m_yIndex;
+                char* rowPtr = reinterpret_cast<char*>(m_img.rData);
+                rowPtr += m_img.yStrideBytes*m_yIndex;
                 
                 *buffer = reinterpret_cast<float*>(rowPtr);
-                *numPixels = m_img->getWidth();
+                *numPixels = m_img.width;
             }
             else
             {
-                PackRGBAFromImageDesc(*m_img, m_buffer,
+                PackRGBAFromImageDesc(m_img, m_buffer,
                                       &m_numPixelsCopied,
                                       PIXELS_PER_LINE,
                                       m_imagePixelIndex);
@@ -145,7 +111,7 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                UnpackRGBAToImageDesc(*m_img,
+                UnpackRGBAToImageDesc(m_img,
                                       m_buffer,
                                       m_numPixelsCopied,
                                       m_imagePixelIndex);

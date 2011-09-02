@@ -938,31 +938,14 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:class::
     // This is a light-weight wrapper around an image, that provides a context
-    // for pixel access. This does NOT claim ownership of the pixels, or do
-    // any internal allocations or copying of image data.
+    // for pixel access. This does NOT claim ownership of the pixels or copy
+    // image data
+    
     class OCIOEXPORT ImageDesc
     {
     public:
         //!cpp:function::
         virtual ~ImageDesc();
-        
-        //!cpp:function::
-        virtual long getWidth() const = 0;
-        //!cpp:function::
-        virtual long getHeight() const = 0;
-        
-        //!cpp:function::
-        virtual ptrdiff_t getXStrideBytes() const = 0;
-        //!cpp:function::
-        virtual ptrdiff_t getYStrideBytes() const = 0;
-        
-        //!cpp:function::
-        virtual float* getRData() const = 0;
-        //!cpp:function::
-        virtual float* getGData() const = 0;
-        //!cpp:function::
-        virtual float* getBData() const = 0;
-    
     private:
         ImageDesc& operator= (const ImageDesc &);
     };
@@ -980,6 +963,11 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         //!cpp:function::
+        // Pass the pointer to packed image data: rgbrgbrgb, etc.
+        // The number of channels must be greater than or equal to 3
+        // If a 4th channel is specified, it is assumed to be alpha
+        // information.  Channels > 4 will be ignored.
+        
         PackedImageDesc(float * data,
                         long width, long height,
                         long numChannels,
@@ -990,23 +978,22 @@ OCIO_NAMESPACE_ENTER
         virtual ~PackedImageDesc();
         
         //!cpp:function::
-        virtual long getWidth() const;
-        //!cpp:function::
-        virtual long getHeight() const;
+        float * getData() const;
         
         //!cpp:function::
-        virtual ptrdiff_t getXStrideBytes() const;
+        long getWidth() const;
         //!cpp:function::
-        virtual ptrdiff_t getYStrideBytes() const;
+        long getHeight() const;
+        //!cpp:function::
+        long getNumChannels() const;
         
         //!cpp:function::
-        virtual float* getRData() const;
+        ptrdiff_t getChanStrideBytes() const;
         //!cpp:function::
-        virtual float* getGData() const;
+        ptrdiff_t getXStrideBytes() const;
         //!cpp:function::
-        virtual float* getBData() const;
-        //!cpp:function::alpha is optional, may be NULL
-        float* getAData() const;
+        ptrdiff_t getYStrideBytes() const;
+        
     private:
         class Impl;
         friend class Impl;
@@ -1029,33 +1016,32 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         //!cpp:function::
-        PlanarImageDesc(float * rData, float * gData, float * bData,
+        // Pass the pointer to the specified image planes: rrrr gggg bbbb, etc.
+        // aData is optional, pass NULL if no alpha exists.
+        // {r,g,b} Data must be specified
+        
+        PlanarImageDesc(float * rData, float * gData, float * bData, float * aData,
                         long width, long height,
                         ptrdiff_t yStrideBytes = AutoStride);
         //!cpp:function::
         virtual ~PlanarImageDesc();
         
         //!cpp:function::
-        virtual long getWidth() const;
+        float* getRData() const;
         //!cpp:function::
-        virtual long getHeight() const;
-        
+        float* getGData() const;
         //!cpp:function::
-        virtual ptrdiff_t getXStrideBytes() const;
-        //!cpp:function::
-        virtual ptrdiff_t getYStrideBytes() const;
-        
-        //!cpp:function::
-        virtual float* getRData() const;
-        //!cpp:function::
-        virtual float* getGData() const;
-        //!cpp:function::
-        virtual float* getBData() const;
-        
-        //!cpp:function::alpha is optional
-        void setAData(float * aData);
+        float* getBData() const;
         //!cpp:function::
         float* getAData() const;
+        
+        //!cpp:function::
+        long getWidth() const;
+        //!cpp:function::
+        long getHeight() const;
+        
+        //!cpp:function::
+        ptrdiff_t getYStrideBytes() const;
         
     private:
         class Impl;
