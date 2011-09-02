@@ -231,59 +231,15 @@ OCIO_NAMESPACE_ENTER
     void ColorSpace::setTransform(const ConstTransformRcPtr & transform,
                                   ColorSpaceDirection dir)
     {
-        TransformRcPtr * majorTransform;
-        TransformRcPtr * minorTransform;
-        bool * majorIsSpecified = 0;
-        bool * minorIsSpecified = 0;
+        TransformRcPtr transformCopy;
+        if(transform) transformCopy = transform->createEditableCopy();
         
         if(dir == COLORSPACE_DIR_TO_REFERENCE)
-        {
-            majorTransform = &(getImpl()->toRefTransform_);
-            majorIsSpecified = &(getImpl()->toRefSpecified_);
-            
-            minorTransform = &(getImpl()->fromRefTransform_);
-            minorIsSpecified = &(getImpl()->fromRefSpecified_);
-        }
+            getImpl()->toRefTransform_ = transformCopy;
         else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
-        {
-            majorTransform = &(getImpl()->fromRefTransform_);
-            majorIsSpecified = &(getImpl()->fromRefSpecified_);
-            
-            minorTransform = &(getImpl()->toRefTransform_);
-            minorIsSpecified = &(getImpl()->toRefSpecified_);
-        }
+            getImpl()->fromRefTransform_ = transformCopy;
         else
-        {
             throw Exception("Unspecified ColorSpaceDirection");
-        }
-        
-        if(!transform)
-        {
-            *majorTransform = TransformRcPtr();
-            *majorIsSpecified = false;
-            if(!*minorIsSpecified) *minorTransform = TransformRcPtr();
-        }
-        else
-        {
-            *majorTransform = transform->createEditableCopy();
-            *majorIsSpecified = true;
-            
-            if(!*minorIsSpecified)
-            {
-                *minorTransform = transform->createEditableCopy();
-                (*minorTransform)->setDirection( GetInverseTransformDirection((*majorTransform)->getDirection()) );
-            }
-        }
-    }
-    
-    bool ColorSpace::isTransformSpecified(ColorSpaceDirection dir) const
-    {
-        if(dir == COLORSPACE_DIR_TO_REFERENCE)
-            return getImpl()->toRefSpecified_;
-        else if(COLORSPACE_DIR_FROM_REFERENCE)
-            return getImpl()->fromRefSpecified_;
-        
-        throw Exception("Unspecified ColorSpaceDirection");
     }
     
     std::ostream& operator<< (std::ostream& os, const ColorSpace& cs)
@@ -297,13 +253,13 @@ OCIO_NAMESPACE_ENTER
         os << "allocation=" << AllocationToString(cs.getAllocation()) << ", ";
         os << ">\n";
         
-        if(cs.isTransformSpecified(COLORSPACE_DIR_TO_REFERENCE))
+        if(cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
         {
             os << "\t" << cs.getName() << " --> Reference\n";
             os << cs.getTransform(COLORSPACE_DIR_TO_REFERENCE);
         }
         
-        if(cs.isTransformSpecified(COLORSPACE_DIR_FROM_REFERENCE))
+        if(cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE))
         {
             os << "\tReference --> " << cs.getName() << "\n";
             os << cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);

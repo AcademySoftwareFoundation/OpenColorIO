@@ -170,12 +170,12 @@ OCIO_NAMESPACE_ENTER
         
         ConstTransformRcPtr toref = \
             cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        if(toref && cs->isTransformSpecified(COLORSPACE_DIR_TO_REFERENCE))
+        if(toref)
             out << YAML::Key << "to_reference" << YAML::Value << toref;
         
         ConstTransformRcPtr fromref = \
             cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        if(fromref && cs->isTransformSpecified(COLORSPACE_DIR_FROM_REFERENCE))
+        if(fromref)
             out << YAML::Key << "from_reference" << YAML::Value << fromref;
         
         out << YAML::EndMap;

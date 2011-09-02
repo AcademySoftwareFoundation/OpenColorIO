@@ -185,7 +185,6 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_ColorSpace_getTransform( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_ColorSpace_setTransform( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_ColorSpace_isTransformSpecified( PyObject * self,  PyObject *args );
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -214,7 +213,6 @@ OCIO_NAMESPACE_ENTER
             
             {"getTransform", PyOCIO_ColorSpace_getTransform, METH_VARARGS, "" },
             {"setTransform", PyOCIO_ColorSpace_setTransform, METH_VARARGS, "" },
-            {"isTransformSpecified", PyOCIO_ColorSpace_isTransformSpecified, METH_VARARGS, "" },
             
             {NULL, NULL, 0, NULL}
         };
@@ -746,27 +744,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        PyObject * PyOCIO_ColorSpace_isTransformSpecified( PyObject * self,  PyObject *args )
-        {
-            try
-            {
-                ColorSpaceDirection dir;
-                if (!PyArg_ParseTuple(args,"O&:isTransformSpecified",
-                    ConvertPyObjectToColorSpaceDirection, &dir)) return NULL;
-                
-                ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
-                
-                return PyBool_FromLong(colorSpace->isTransformSpecified(dir));
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        
     }
 
 }

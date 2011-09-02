@@ -202,12 +202,31 @@ OCIO_NAMESPACE_ENTER
         
         CreateAllocationNoOp(ops, srcAllocation);
         
-        ConstTransformRcPtr toref = srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE);
-        BuildOps(ops, config, context, toref, TRANSFORM_DIR_FORWARD);
+        // Go to the reference space, either by using
+        // * cs->ref in the forward direction
+        // * ref->cs in the inverse direction
+        if(srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE))
+        {
+            BuildOps(ops, config, context, srcColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE), TRANSFORM_DIR_FORWARD);
+        }
+        else if(srcColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE))
+        {
+            BuildOps(ops, config, context, srcColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE), TRANSFORM_DIR_INVERSE);
+        }
+        // Otherwise, both are not defined so its a no-op. This is not an error condition.
         
-        
-        ConstTransformRcPtr fromref = dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
-        BuildOps(ops, config, context, fromref, TRANSFORM_DIR_FORWARD);
+        // Go from the reference space, either by using
+        // * ref->cs in the forward direction
+        // * cs->ref in the inverse direction
+        if(dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE))
+        {
+            BuildOps(ops, config, context, dstColorSpace->getTransform(COLORSPACE_DIR_FROM_REFERENCE), TRANSFORM_DIR_FORWARD);
+        }
+        else if(dstColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE))
+        {
+            BuildOps(ops, config, context, dstColorSpace->getTransform(COLORSPACE_DIR_TO_REFERENCE), TRANSFORM_DIR_INVERSE);
+        }
+        // Otherwise, both are not defined so its a no-op. This is not an error condition.
         
         AllocationData dstAllocation;
         dstAllocation.allocation = dstColorSpace->getAllocation();
