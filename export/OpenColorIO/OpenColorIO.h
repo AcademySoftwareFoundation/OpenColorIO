@@ -500,14 +500,6 @@ OCIO_NAMESPACE_ENTER
                                          const ConstTransformRcPtr& transform,
                                          TransformDirection direction) const;
         
-        
-        
-        
-        //!cpp:function:: DEPRECATED. Will be removed in 0.9
-        // Use addDisplay instead
-        void setDisplayColorSpaceName(const char * display, const char * view,
-                                      const char * colorSpaceName);
-        
     private:
         Config();
         ~Config();

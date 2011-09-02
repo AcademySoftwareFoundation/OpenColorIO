@@ -100,9 +100,6 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_DisplayTransform_getChannelView( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setChannelView( PyObject * self,  PyObject *args );
         
-        PyObject * PyOCIO_DisplayTransform_getDisplayColorSpaceName( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setDisplayColorSpaceName( PyObject * self,  PyObject *args );
-        
         PyObject * PyOCIO_DisplayTransform_getDisplay( PyObject * self );
         PyObject * PyOCIO_DisplayTransform_setDisplay( PyObject * self,  PyObject *args );
         
@@ -132,9 +129,6 @@ OCIO_NAMESPACE_ENTER
             
             {"getChannelView", (PyCFunction) PyOCIO_DisplayTransform_getChannelView, METH_NOARGS, "" },
             {"setChannelView", PyOCIO_DisplayTransform_setChannelView, METH_VARARGS, "" },
-            
-            {"getDisplayColorSpaceName", (PyCFunction) PyOCIO_DisplayTransform_getDisplayColorSpaceName, METH_NOARGS, "" },
-            {"setDisplayColorSpaceName", PyOCIO_DisplayTransform_setDisplayColorSpaceName, METH_VARARGS, "" },
             
             {"getDisplay", (PyCFunction) PyOCIO_DisplayTransform_getDisplay, METH_NOARGS, "" },
             {"setDisplay", PyOCIO_DisplayTransform_setDisplay, METH_VARARGS, "" },
@@ -377,41 +371,6 @@ OCIO_NAMESPACE_ENTER
                 
                 ConstTransformRcPtr t = GetConstTransform(pyCC, true);
                 transform->setChannelView(t);
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        PyObject * PyOCIO_DisplayTransform_getDisplayColorSpaceName( PyObject * self )
-        {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return PyString_FromString( transform->getDisplayColorSpaceName() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_DisplayTransform_setDisplayColorSpaceName( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                char * name = 0;
-                if (!PyArg_ParseTuple(args,"s:setDisplayColorSpaceName", &name)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                transform->setDisplayColorSpaceName( name );
                 
                 Py_RETURN_NONE;
             }
