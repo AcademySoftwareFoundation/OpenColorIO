@@ -228,16 +228,6 @@ OCIO_NAMESPACE_ENTER
         throw Exception("Unspecified ColorSpaceDirection");
     }
     
-    TransformRcPtr ColorSpace::getEditableTransform(ColorSpaceDirection dir)
-    {
-        if(dir == COLORSPACE_DIR_TO_REFERENCE)
-            return getImpl()->toRefTransform_;
-        else if(dir == COLORSPACE_DIR_FROM_REFERENCE)
-            return getImpl()->fromRefTransform_;
-        
-        throw Exception("Unspecified ColorSpaceDirection");
-    }
-    
     void ColorSpace::setTransform(const ConstTransformRcPtr & transform,
                                   ColorSpaceDirection dir)
     {

@@ -184,7 +184,6 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_ColorSpace_setAllocationVars( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_ColorSpace_getTransform( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_ColorSpace_getEditableTransform( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_ColorSpace_setTransform( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_ColorSpace_isTransformSpecified( PyObject * self,  PyObject *args );
         
@@ -214,7 +213,6 @@ OCIO_NAMESPACE_ENTER
             {"setAllocationVars", PyOCIO_ColorSpace_setAllocationVars, METH_VARARGS, "" },
             
             {"getTransform", PyOCIO_ColorSpace_getTransform, METH_VARARGS, "" },
-            {"getEditableTransform", PyOCIO_ColorSpace_getEditableTransform, METH_VARARGS, "" },
             {"setTransform", PyOCIO_ColorSpace_setTransform, METH_VARARGS, "" },
             {"isTransformSpecified", PyOCIO_ColorSpace_isTransformSpecified, METH_VARARGS, "" },
             
@@ -710,31 +708,12 @@ OCIO_NAMESPACE_ENTER
             try
             {
                 ColorSpaceDirection dir;
-                if (!PyArg_ParseTuple(args,"O&:getEditableTransform",
+                if (!PyArg_ParseTuple(args,"O&:getTransform",
                     ConvertPyObjectToColorSpaceDirection, &dir)) return NULL;
                 
                 ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
                 ConstTransformRcPtr transform = colorSpace->getTransform(dir);
                 return BuildConstPyTransform(transform);
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_ColorSpace_getEditableTransform( PyObject * self,  PyObject *args )
-        {
-            try
-            {
-                ColorSpaceDirection dir;
-                if (!PyArg_ParseTuple(args,"O&:getEditableTransform",
-                    ConvertPyObjectToColorSpaceDirection, &dir)) return NULL;
-                
-                ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
-                TransformRcPtr transform = colorSpace->getEditableTransform(dir);
-                return BuildEditablePyTransform(transform);
             }
             catch(...)
             {
@@ -773,7 +752,7 @@ OCIO_NAMESPACE_ENTER
             try
             {
                 ColorSpaceDirection dir;
-                if (!PyArg_ParseTuple(args,"O&:getEditableTransform",
+                if (!PyArg_ParseTuple(args,"O&:isTransformSpecified",
                     ConvertPyObjectToColorSpaceDirection, &dir)) return NULL;
                 
                 ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
