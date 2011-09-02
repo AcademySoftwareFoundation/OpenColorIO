@@ -634,12 +634,14 @@ OCIO_NAMESPACE_ENTER
         // ^^^^^^^^^
         
         //!cpp:function::
+        // If a transform in the specified direction has been specified,
+        // return it. Otherwise return a null ConstTransformRcPtr
         ConstTransformRcPtr getTransform(ColorSpaceDirection dir) const;
         //!cpp:function::
+        // Specify the transform for the appropriate direction.
+        // Setting the transform to null will clear it.
         void setTransform(const ConstTransformRcPtr & transform,
                           ColorSpaceDirection dir);
-        //!cpp:function:: Setting a transform to a non-null call makes it specified.
-        bool isTransformSpecified(ColorSpaceDirection dir) const;
     
     private:
         ColorSpace();
