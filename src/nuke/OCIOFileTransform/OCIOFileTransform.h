@@ -99,6 +99,11 @@ class OCIOFileTransform : public DD::Image::PixelIop {
          */
         void _validate(bool for_real);
 
+        /*!
+         * Ensure Node hash is reflects all parameters
+         */
+        void append(DD::Image::Hash& nodehash);
+
 };
 
 

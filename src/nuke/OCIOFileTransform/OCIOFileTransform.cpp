@@ -81,8 +81,6 @@ void OCIOFileTransform::_validate(bool for_real)
         OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
         transform->setSrc(src);
         
-        // TODO: For some reason, cccid is NOT incorporated in this node's hash.
-        // Until then, cccid is considered broken. Figure out why.
         transform->setCCCId(cccid.c_str());
         
         if(dirindex == 0) transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
@@ -124,6 +122,16 @@ void OCIOFileTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& m
         }
     }
     mask += done;
+}
+
+void OCIOFileTransform::append(DD::Image::Hash& nodehash)
+{
+    // There is a bug where in Nuke <6.3 the String_knob (used for
+    // cccid) is not included in the node's hash. Include it manually
+    // so the node correctly redraws. Appears fixed in in 6.3
+    nodehash.append(cccid.c_str());
+}
+
 }
 
 // See Saturation::pixel_engine for a well-commented example.
