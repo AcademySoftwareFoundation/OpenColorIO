@@ -104,6 +104,11 @@ class OCIOFileTransform : public DD::Image::PixelIop {
          */
         void append(DD::Image::Hash& nodehash);
 
+        /*!
+         * Hide and show UI elements based on other parameters
+         */
+        int knob_changed(DD::Image::Knob* k);
+
 };
 
 

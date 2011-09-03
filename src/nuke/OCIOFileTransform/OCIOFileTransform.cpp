@@ -142,6 +142,36 @@ void OCIOFileTransform::append(DD::Image::Hash& nodehash)
     nodehash.append(cccid.c_str());
 }
 
+int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
+{
+    // Only show the cccid knob when loading a .cc/.ccc file. Set
+    // hidden state when the src is changed, or the node properties
+    // are shown
+    if(k->is("src") | k->is("showPanel"))
+    {
+        // Convoluted equiv to pysting::endswith(src, ".ccc")
+        // TODO: Could this be queried from the processor?
+        const std::string srcstring = src;
+        const std::string cccext = "ccc";
+        const std::string ccext = "cc";
+        if(std::equal(cccext.rbegin(), cccext.rend(), srcstring.rbegin()) ||
+           std::equal(ccext.rbegin(), ccext.rend(), srcstring.rbegin()))
+        {
+            knob("cccid")->show();
+            knob("select_cccid")->show();
+        }
+        else
+        {
+            knob("cccid")->hide();
+            knob("select_cccid")->hide();
+        }
+
+        // Ensure this callback is always triggered (for src knob)
+        return 1;
+    }
+
+    // Return zero to avoid callbacks for other knobs
+    return 0;
 }
 
 // See Saturation::pixel_engine for a well-commented example.
