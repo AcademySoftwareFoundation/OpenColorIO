@@ -38,9 +38,19 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 {
 
     File_knob(f, &src, "src", "src");
-    const char * srchelp = "Specify the src file, on disk, to use for this transform. "
-    "This can be any file format that OpenColorIO supports: "
-    ".3dl, .cc, .ccc, .csp, .cub, .cube, .lut (houdini), .mga, .m3d, .spi1d, .spi3d, .spimtx, .vf";
+
+    std::ostringstream os;
+    os << "Specify the source file, on disk, to use for this transform. ";
+    os << "Can be any file format that OpenColorIO supports:\n";
+
+    for(int i=0; i<OCIO::FileTransform::getNumFormats(); ++i)
+    {
+        const char* name = OCIO::FileTransform::getFormatNameByIndex(i);
+        const char* exten = OCIO::FileTransform::getFormatExtensionByIndex(i);
+        os << "\n." << exten << " (" << name << ")";
+    }
+
+    const char * srchelp = os.str().c_str();
     DD::Image::Tooltip(f, srchelp);
     
     String_knob(f, &cccid, "cccid");
@@ -208,8 +218,17 @@ const char* OCIOFileTransform::displayName() const
 
 const char* OCIOFileTransform::node_help() const
 {
-    // TODO more detailed help text
-    return "Use OpenColorIO to apply the specified LUT file transform.";
+    return
+        "Use OpenColorIO to apply a transform loaded from the given "
+        "file.\n\n"
+        "This is usually a 1D or 3D LUT file, but can be other file-based "
+        "transform, for example an ASC ColorCorrection XML file.\n\n"
+        "For a complete list of supported file formats, see the src "
+        "knob's tooltip\n\n"
+        "Note that the file's transform is applied with no special "
+        "input/output colorspace handling - so if the file expects "
+        "log-encoded pixels, but you apply the node to a linear "
+        "image, you will get incorrect results";
 }
 
 
