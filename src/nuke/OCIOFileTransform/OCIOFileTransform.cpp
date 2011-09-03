@@ -58,7 +58,7 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
     "this specifys the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
     DD::Image::Tooltip(f, srchelp2);
     
-    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform()", "select_cccid", "select cccid");
+    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform(fileknob='src', cccidknob = 'cccid')", "select_cccid", "select cccid");
     
     Enumeration_knob(f, &dirindex, dirs, "direction", "direction");
     DD::Image::Tooltip(f, "Specify the transform direction.");
