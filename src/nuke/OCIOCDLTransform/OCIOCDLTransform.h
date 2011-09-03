@@ -30,10 +30,21 @@ class OCIOCDLTransform : public DD::Image::PixelIop {
         static const char* dirs[];
         int m_dirindex;
 
+        bool m_readFromFile;
+        
         // ID used for exporting grades into .cc/.ccc files
-        const char* m_cccid;
-
+        const char* m_file;
+        std::string m_cccid;
+        
+        DD::Image::Knob* m_slopeKnob;
+        DD::Image::Knob* m_offsetKnob;
+        DD::Image::Knob* m_powerKnob;
+        DD::Image::Knob* m_saturationKnob;
+        DD::Image::Knob* m_fileKnob;
+        DD::Image::Knob* m_cccidKnob;
+        
         OCIO::ConstProcessorRcPtr m_processor;
+        bool m_firstLoad;
     public:
         OCIOCDLTransform(Node *node);
 
@@ -63,12 +74,19 @@ class OCIOCDLTransform : public DD::Image::PixelIop {
          * the lower-left corner of the control panel.
          */
         const char *node_help() const;
-
+        
         /*!
          * Define the knobs that will be presented in the control panel.
          */
         void knobs(DD::Image::Knob_Callback f);
 
+        //! The will handle the knob changes.
+        int knob_changed(DD::Image::Knob*);
+        
+        void refreshKnobEnabledState();
+        void loadCDLFromFile();
+        
+        
         /*!
          * Specify the channels required from input n to produce the channels
          * in mask by modifying mask in-place. (At least one channel in the
