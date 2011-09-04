@@ -169,6 +169,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_ColorSpace_setName( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_ColorSpace_getFamily( PyObject * self );
         PyObject * PyOCIO_ColorSpace_setFamily( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_ColorSpace_getEqualityGroup( PyObject * self );
+        PyObject * PyOCIO_ColorSpace_setEqualityGroup( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_ColorSpace_getDescription( PyObject * self );
         PyObject * PyOCIO_ColorSpace_setDescription( PyObject * self,  PyObject *args );
         
@@ -197,6 +199,8 @@ OCIO_NAMESPACE_ENTER
             {"setName", PyOCIO_ColorSpace_setName, METH_VARARGS, "" },
             {"getFamily", (PyCFunction) PyOCIO_ColorSpace_getFamily, METH_NOARGS, "" },
             {"setFamily", PyOCIO_ColorSpace_setFamily, METH_VARARGS, "" },
+            {"getEqualityGroup", (PyCFunction) PyOCIO_ColorSpace_getEqualityGroup, METH_NOARGS, "" },
+            {"setEqualityGroup", PyOCIO_ColorSpace_setEqualityGroup, METH_VARARGS, "" },
             {"getDescription", (PyCFunction) PyOCIO_ColorSpace_getDescription, METH_NOARGS, "" },
             {"setDescription", PyOCIO_ColorSpace_setDescription, METH_VARARGS, "" },
             
@@ -293,6 +297,7 @@ OCIO_NAMESPACE_ENTER
             // Parse optional kwargs
             char * name = NULL;
             char * family = NULL;
+            char * equalityGroup = NULL;
             char * description = NULL;
             char * bitDepth = NULL;
             bool isData = false; // TODO: Do not rely on the default value
@@ -307,16 +312,17 @@ OCIO_NAMESPACE_ENTER
             const char * fromRefStr = 
                 ColorSpaceDirectionToString(COLORSPACE_DIR_FROM_REFERENCE);
             const char *kwlist[] = {
-                "name", "family", "description", "bitDepth",
+                "name", "family", "equalityGroup",
+                "description", "bitDepth",
                 "isData",
                 "allocation", "allocationVars",
                 toRefStr, fromRefStr,
                 NULL
             };
             
-            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|ssssO&sOOO",
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|sssssO&sOOO",
                 const_cast<char **>(kwlist),
-                &name, &family, &description, &bitDepth,
+                &name, &family, &equalityGroup, &description, &bitDepth,
                 ConvertPyObjectToBool, &isData,
                 &allocation, &allocationVars,
                 &toRefTransform, &fromRefTransform)) return -1;
@@ -329,6 +335,7 @@ OCIO_NAMESPACE_ENTER
                 
                 if(name) colorSpace->setName(name);
                 if(family) colorSpace->setFamily(family);
+                if(equalityGroup) colorSpace->setEqualityGroup(equalityGroup);
                 if(description) colorSpace->setDescription(description);
                 if(bitDepth) colorSpace->setBitDepth(BitDepthFromString(bitDepth));
                 colorSpace->setIsData(isData); // TODO: Do not rely on the default value
@@ -457,6 +464,41 @@ OCIO_NAMESPACE_ENTER
                 
                 ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
                 colorSpace->setFamily( name );
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        PyObject * PyOCIO_ColorSpace_getEqualityGroup( PyObject * self )
+        {
+            try
+            {
+                ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
+                return PyString_FromString( colorSpace->getEqualityGroup() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_ColorSpace_setEqualityGroup( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                char * name = 0;
+                if (!PyArg_ParseTuple(args,"s:setEqualityGroup", &name)) return NULL;
+                
+                ColorSpaceRcPtr colorSpace = GetEditableColorSpace(self);
+                colorSpace->setEqualityGroup( name );
                 
                 Py_RETURN_NONE;
             }

@@ -161,6 +161,19 @@ OCIO_NAMESPACE_ENTER
         BuildColorSpaceOps(ops, config, context, src, dst);
     }
     
+    namespace
+    {
+        bool AreColorSpacesInSameEqualityGroup(const ConstColorSpaceRcPtr & csa,
+                                               const ConstColorSpaceRcPtr & csb)
+        {
+            std::string a = csa->getEqualityGroup();
+            std::string b = csb->getEqualityGroup();
+            
+            if(!a.empty()) return (a==b);
+            return false;
+        }
+    }
+    
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config & config,
                             const ConstContextRcPtr & context,
@@ -172,7 +185,7 @@ OCIO_NAMESPACE_ENTER
         if(!dstColorSpace)
             throw Exception("BuildColorSpaceOps failed, null dstColorSpace.");
         
-        if(srcColorSpace->getFamily() == dstColorSpace->getFamily())
+        if(AreColorSpacesInSameEqualityGroup(srcColorSpace, dstColorSpace))
             return;
         if(dstColorSpace->isData() || srcColorSpace->isData())
             return;

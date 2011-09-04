@@ -46,15 +46,23 @@ OCIO_NAMESPACE_ENTER
             if (node["name"].Read<std::string>(ret))
               cs->setName(ret.c_str());
         }
-        if(node.FindValue("description") != NULL) {
+        if(node.FindValue("description") != NULL &&
+           node["description"].Type() != YAML::NodeType::Null) {
             std::string ret;
             if (node["description"].Read<std::string>(ret))
               cs->setDescription(ret.c_str());
         }
-        if(node.FindValue("family") != NULL)  {
+        if(node.FindValue("family") != NULL &&
+           node["family"].Type() != YAML::NodeType::Null) {
             std::string ret;
             if (node["family"].Read<std::string>(ret))
               cs->setFamily(ret.c_str());
+        }
+        if(node.FindValue("equalitygroup") != NULL &&
+           node["equalitygroup"].Type() != YAML::NodeType::Null) {
+            std::string ret;
+            if (node["equalitygroup"].Read<std::string>(ret))
+              cs->setEqualityGroup(ret.c_str());
         }
         if(node.FindValue("bitdepth") != NULL)  {
             BitDepth ret;
@@ -117,6 +125,7 @@ OCIO_NAMESPACE_ENTER
         
         out << YAML::Key << "name" << YAML::Value << cs->getName();
         out << YAML::Key << "family" << YAML::Value << cs->getFamily();
+        out << YAML::Key << "equalitygroup" << YAML::Value << cs->getEqualityGroup();
         out << YAML::Key << "bitdepth" << YAML::Value << cs->getBitDepth();
         if(strlen(cs->getDescription()) > 0)
         {

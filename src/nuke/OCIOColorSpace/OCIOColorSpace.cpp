@@ -15,7 +15,12 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <DDImage/NukeWrapper.h>
 #include <DDImage/Row.h>
 #include <DDImage/Knobs.h>
+#include <DDImage/ddImageVersionNumbers.h>
 
+// Should we use cascasing ColorSpace menus
+#if defined kDDImageVersionInteger && (kDDImageVersionInteger>=62300)
+#define OCIO_CASCASE
+#endif
 
 OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
 {
@@ -33,12 +38,24 @@ OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        std::string defaultColorSpaceName = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR)->getName();
+        
+        OCIO::ConstColorSpaceRcPtr defaultcs = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
+        if(!defaultcs) throw std::runtime_error("ROLE_SCENE_LINEAR not defined.");
+        std::string defaultColorSpaceName = defaultcs->getName();
         
         for(int i = 0; i < config->getNumColorSpaces(); i++)
         {
             std::string csname = config->getColorSpaceNameByIndex(i);
+            
+#ifdef OCIO_CASCASE
+            std::string family = config->getColorSpace(csname.c_str())->getFamily();
+            if(family.empty())
+                m_colorSpaceNames.push_back(csname.c_str());
+            else
+                m_colorSpaceNames.push_back(family + "/" + csname);
+#else
             m_colorSpaceNames.push_back(csname);
+#endif
             
             if(csname == defaultColorSpaceName)
             {
@@ -83,13 +100,31 @@ OCIOColorSpace::~OCIOColorSpace()
 
 void OCIOColorSpace::knobs(DD::Image::Knob_Callback f)
 {
-    DD::Image::Enumeration_knob(f, &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
+#ifdef OCIO_CASCASE
+    DD::Image::CascadingEnumeration_knob(f,
+        &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
 
-    DD::Image::Enumeration_knob(f, &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
+    DD::Image::CascadingEnumeration_knob(f,
+        &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
     DD::Image::Tooltip(f, "Image data is converted to this colorspace for output.");
+#else
+    DD::Image::Enumeration_knob(f,
+        &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
+    DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
 
-    DD::Image::BeginClosedGroup(f, "Context");
+    DD::Image::Enumeration_knob(f,
+        &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
+    DD::Image::Tooltip(f, "Image data is converted to this colorspace for output.");
+#endif
+
+    DD::Image::Divider(f);
+
+    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
+    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
+    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
+    
+    DD::Image::Tab_knob(f, "Context");
     {
         DD::Image::String_knob(f, &m_contextKey1, "key1");
         DD::Image::Spacer(f, 10);
@@ -111,14 +146,6 @@ void OCIOColorSpace::knobs(DD::Image::Knob_Callback f)
         DD::Image::String_knob(f, &m_contextValue4, "value4");
         DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
     }
-    DD::Image::EndGroup(f);
-    
-    
-    DD::Image::Divider(f);
-
-    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
-    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
-    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
 OCIO::ConstContextRcPtr OCIOColorSpace::getLocalContext()
@@ -200,11 +227,11 @@ void OCIOColorSpace::_validate(bool for_real)
 
     try
     {
-        const char * inputName = m_inputColorSpaceCstrNames[m_inputColorSpaceIndex];
-        const char * outputName = m_outputColorSpaceCstrNames[m_outputColorSpaceIndex];
-        
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         config->sanityCheck();
+        
+        const char * inputName = config->getColorSpaceNameByIndex(m_inputColorSpaceIndex);
+        const char * outputName = config->getColorSpaceNameByIndex(m_outputColorSpaceIndex);
         
         OCIO::ConstContextRcPtr context = getLocalContext();
         m_processor = config->getProcessor(context, inputName, outputName);

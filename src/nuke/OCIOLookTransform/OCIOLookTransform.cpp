@@ -15,7 +15,12 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <DDImage/NukeWrapper.h>
 #include <DDImage/Row.h>
 #include <DDImage/Knobs.h>
+#include <DDImage/ddImageVersionNumbers.h>
 
+// Should we use cascasing ColorSpace menus
+#if defined kDDImageVersionInteger && (kDDImageVersionInteger>=62300)
+#define OCIO_CASCASE
+#endif
 
 OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
 {
@@ -32,10 +37,15 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     // TODO (when to) re-grab the list of available colorspaces? How to save/load?
     
     OCIO::ConstConfigRcPtr config;
+    std::string linear;
     
     try
     {
         config = OCIO::GetCurrentConfig();
+        
+        OCIO::ConstColorSpaceRcPtr linearcs = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
+        if(!linearcs) throw std::runtime_error("ROLE_SCENE_LINEAR not defined.");
+        std::string linear = linearcs->getName();
     }
     catch (const OCIO::Exception& e)
     {
@@ -58,13 +68,19 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
         m_lookNames.push_back(config->getLookNameByIndex(i));
     }
     
-    std::string linear = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR)->getName();
-    
     for(int i = 0; i < config->getNumColorSpaces(); i++)
     {
         std::string csname = config->getColorSpaceNameByIndex(i);
-        m_colorSpaceNames.push_back(csname);
         
+#ifdef OCIO_CASCASE
+            std::string family = config->getColorSpace(csname.c_str())->getFamily();
+            if(family.empty())
+                m_colorSpaceNames.push_back(csname.c_str());
+            else
+                m_colorSpaceNames.push_back(family + "/" + csname);
+#else
+            m_colorSpaceNames.push_back(csname);
+#endif
         if(csname == linear)
         {
             m_inputColorSpaceIndex = i;
@@ -115,9 +131,16 @@ namespace
 
 void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
 {
-    DD::Image::Enumeration_knob(f, &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
+#ifdef OCIO_CASCASE
+    DD::Image::CascadingEnumeration_knob(f,
+        &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
+#else
+    DD::Image::Enumeration_knob(f,
+        &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
+#endif
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
-
+    
+    
     DD::Image::Enumeration_knob(f, &m_lookIndex, &m_lookCstrNames[0], "look", "look");
     DD::Image::Tooltip(f, "Specify the look to apply, as predefined in the OpenColorIO configuration.");
     
@@ -127,15 +150,28 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::Tooltip(f, "Specify the look transform direction. in/out colorspace handling is not affected.");
     DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE );
     
-    DD::Image::Enumeration_knob(f, &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
+#ifdef OCIO_CASCASE
+    DD::Image::CascadingEnumeration_knob(f,
+        &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
+#else
+    DD::Image::Enumeration_knob(f,
+        &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
+#endif
     DD::Image::Tooltip(f, "Image data is converted to this colorspace for output.");
+    
     
     DD::Image::Bool_knob(f, &m_ignoreErrors, "ignore_errors", "ignore errors");
     DD::Image::Tooltip(f, "If enabled, looks that cannot find the specified correction"
                           " are treated as a normal ColorSpace conversion instead of triggering a render error.");
     DD::Image::SetFlags(f, DD::Image::Knob::STARTLINE );
     
-    DD::Image::BeginClosedGroup(f, "Context");
+    DD::Image::Divider(f);
+
+    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
+    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
+    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
+    
+    DD::Image::Tab_knob(f, "Context");
     {
         DD::Image::String_knob(f, &m_contextKey1, "key1");
         DD::Image::Spacer(f, 10);
@@ -158,13 +194,6 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
         DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
     }
     DD::Image::EndGroup(f);
-    
-    
-    DD::Image::Divider(f);
-
-    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
-    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
-    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
 OCIO::ConstContextRcPtr OCIOLookTransform::getLocalContext()
@@ -249,11 +278,11 @@ void OCIOLookTransform::_validate(bool for_real)
 
     try
     {
-        const char * inputName = m_inputColorSpaceCstrNames[m_inputColorSpaceIndex];
-        const char * outputName = m_outputColorSpaceCstrNames[m_outputColorSpaceIndex];
-        
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         config->sanityCheck();
+        
+        const char * inputName = config->getColorSpaceNameByIndex(m_inputColorSpaceIndex);
+        const char * outputName = config->getColorSpaceNameByIndex(m_outputColorSpaceIndex);
         
         OCIO::LookTransformRcPtr transform = OCIO::LookTransform::Create();
         const char * look = m_lookCstrNames[m_lookIndex];

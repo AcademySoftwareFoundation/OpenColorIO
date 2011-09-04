@@ -50,6 +50,7 @@ OCIO_NAMESPACE_ENTER
     public:
         std::string name_;
         std::string family_;
+        std::string equalityGroup_;
         std::string description_;
         
         BitDepth bitDepth_;
@@ -79,6 +80,7 @@ OCIO_NAMESPACE_ENTER
         {
             name_ = rhs.name_;
             family_ = rhs.family_;
+            equalityGroup_ = rhs.equalityGroup_;
             description_ = rhs.description_;
             bitDepth_ = rhs.bitDepth_;
             isData_ = rhs.isData_;
@@ -137,6 +139,16 @@ OCIO_NAMESPACE_ENTER
     void ColorSpace::setFamily(const char * family)
     {
         getImpl()->family_ = family;
+    }
+    
+    const char * ColorSpace::getEqualityGroup() const
+    {
+        return getImpl()->equalityGroup_.c_str();
+    }
+    
+    void ColorSpace::setEqualityGroup(const char * equalityGroup)
+    {
+        getImpl()->equalityGroup_ = equalityGroup;
     }
     
     const char * ColorSpace::getDescription() const
@@ -289,6 +301,7 @@ OCIO_NAMESPACE_ENTER
         os << "<ColorSpace ";
         os << "name=" << cs.getName() << ", ";
         os << "family=" << cs.getFamily() << ", ";
+        os << "equalityGroup=" << cs.getEqualityGroup() << ", ";
         os << "bitDepth=" << BitDepthToString(cs.getBitDepth()) << ", ";
         os << "isData=" << BoolToString(cs.isData()) << ", ";
         os << "allocation=" << AllocationToString(cs.getAllocation()) << ", ";
