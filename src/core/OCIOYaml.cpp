@@ -30,6 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Logging.h"
+#include "MathUtils.h"
 #include "OCIOYaml.h"
 
 OCIO_NAMESPACE_ENTER
@@ -37,84 +39,107 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     //  Core
     
+    void LogUnknownKeyWarning(const std::string & name, const YAML::Node& tag)
+    {
+        std::string key;
+        tag >> key;
+        
+        std::ostringstream os;
+        os << "Unknown key in " << name << ": ";
+        os << "'" << key << "'. (line ";
+        os << (tag.GetMark().line+1) << ", column "; // (yaml line numbers start at 0)
+        os << tag.GetMark().column << ")";
+        LogWarning(os.str());
+    }
+    
     void operator >> (const YAML::Node& node, ColorSpaceRcPtr& cs)
     {
         if(node.Tag() != "ColorSpace")
             return; // not a !<ColorSpace> tag
-        if(node.FindValue("name") != NULL)  {
-            std::string ret;
-            if (node["name"].Read<std::string>(ret))
-              cs->setName(ret.c_str());
-        }
-        if(node.FindValue("description") != NULL &&
-           node["description"].Type() != YAML::NodeType::Null) {
-            std::string ret;
-            if (node["description"].Read<std::string>(ret))
-              cs->setDescription(ret.c_str());
-        }
-        if(node.FindValue("family") != NULL &&
-           node["family"].Type() != YAML::NodeType::Null) {
-            std::string ret;
-            if (node["family"].Read<std::string>(ret))
-              cs->setFamily(ret.c_str());
-        }
-        if(node.FindValue("equalitygroup") != NULL &&
-           node["equalitygroup"].Type() != YAML::NodeType::Null) {
-            std::string ret;
-            if (node["equalitygroup"].Read<std::string>(ret))
-              cs->setEqualityGroup(ret.c_str());
-        }
-        if(node.FindValue("bitdepth") != NULL)  {
-            BitDepth ret;
-            if (node["bitdepth"].Read<BitDepth>(ret))
-              cs->setBitDepth(ret);
-        }
-        if(node.FindValue("isdata") != NULL)  {
-            bool ret;
-            if (node["isdata"].Read<bool>(ret))
-              cs->setIsData(ret);
-        }
         
-        if(node.FindValue("allocation") != NULL)  {
-            Allocation ret;
-            if (node["allocation"].Read<Allocation>(ret))
-              cs->setAllocation(ret);
-        }
-        // Backwards compatibility
-        else if(node.FindValue("gpuallocation") != NULL)  {
-            Allocation ret;
-            if (node["gpuallocation"].Read<Allocation>(ret))
-              cs->setAllocation(ret);
-        }
+        std::string key, stringval;
+        bool boolval;
         
-        if(node.FindValue("allocationvars") != NULL)
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
         {
-            std::vector<float> value;
-            node["allocationvars"] >> value;
-            if(!value.empty())
+            iter.first() >> key;
+            
+            if(key == "name")
             {
-                cs->setAllocationVars(static_cast<int>(value.size()), &value[0]);
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                    cs->setName(stringval.c_str());
             }
-        }
-        else if( (node.FindValue("gpumin") != NULL) &&
-                 (node.FindValue("gpumax") != NULL) )
-        {
-            // Backwards compatibility
-            std::vector<float> value(2);
-            node["gpumin"].Read<float>(value[0]);
-            node["gpumax"].Read<float>(value[1]);
-            cs->setAllocationVars(static_cast<int>(value.size()), &value[0]);
-        }
-        
-        if(node.FindValue("to_reference") != NULL)  {
-            TransformRcPtr ret;
-            if (node["to_reference"].Read<TransformRcPtr>(ret))
-              cs->setTransform(ret, COLORSPACE_DIR_TO_REFERENCE);
-        }
-        if(node.FindValue("from_reference") != NULL)  {
-            TransformRcPtr ret;
-            if (node["from_reference"].Read<TransformRcPtr>(ret))
-              cs->setTransform(ret, COLORSPACE_DIR_FROM_REFERENCE);
+            else if(key == "description")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                    cs->setDescription(stringval.c_str());
+            }
+            else if(key == "family")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                    cs->setFamily(stringval.c_str());
+            }
+            else if(key == "equalitygroup")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                    cs->setEqualityGroup(stringval.c_str());
+            }
+            else if(key == "bitdepth")
+            {
+                BitDepth ret;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<BitDepth>(ret))
+                    cs->setBitDepth(ret);
+            }
+            else if(key == "isdata")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<bool>(boolval))
+                    cs->setIsData(boolval);
+            }
+            else if(key == "allocation")
+            {
+                Allocation val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<Allocation>(val))
+                    cs->setAllocation(val);
+            }
+            else if(key == "allocationvars")
+            {
+                std::vector<float> val;
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> val;
+                    if(!val.empty())
+                    {
+                        cs->setAllocationVars(static_cast<int>(val.size()), &val[0]);
+                    }
+                }
+            }
+            else if(key == "to_reference")
+            {
+                TransformRcPtr val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformRcPtr>(val))
+                  cs->setTransform(val, COLORSPACE_DIR_TO_REFERENCE);
+            }
+            else if(key == "from_reference")
+            {
+                TransformRcPtr val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformRcPtr>(val))
+                  cs->setTransform(val, COLORSPACE_DIR_FROM_REFERENCE);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
         }
     }
     
@@ -162,35 +187,108 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
+    // Look. (not the transform, the top-level class)
+    
+    void operator >> (const YAML::Node& node, LookRcPtr& look)
+    {
+        if(node.Tag() != "Look")
+            return;
+        
+        std::string key, stringval;
+        
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
+        {
+            iter.first() >> key;
+            
+            if(key == "name")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                    look->setName(stringval.c_str());
+            }
+            else if(key == "process_space")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                    look->setProcessSpace(stringval.c_str());
+            }
+            else if(key == "transform")
+            {
+                TransformRcPtr val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformRcPtr>(val))
+                    look->setTransform(val);
+            }
+            else if(key == "inverse_transform")
+            {
+                TransformRcPtr val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformRcPtr>(val))
+                    look->setInverseTransform(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
+        }
+    }
+    
+    YAML::Emitter& operator << (YAML::Emitter& out, LookRcPtr look)
+    {
+        out << YAML::VerbatimTag("Look");
+        out << YAML::BeginMap;
+        out << YAML::Key << "name" << YAML::Value << look->getName();
+        out << YAML::Key << "process_space" << YAML::Value << look->getProcessSpace();
+        
+        if(look->getTransform())
+        {
+            out << YAML::Key << "transform";
+            out << YAML::Value << look->getTransform();
+        }
+        
+        if(look->getInverseTransform())
+        {
+            out << YAML::Key << "inverse_transform";
+            out << YAML::Value << look->getInverseTransform();
+        }
+        
+        out << YAML::EndMap;
+        out << YAML::Newline;
+        
+        return out;
+    }
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
     
     namespace
     {
         void EmitBaseTransformKeyValues(YAML::Emitter & out,
                                         const ConstTransformRcPtr & t)
         {
-            // Default direction is always forward.
-            if(t->getDirection() == TRANSFORM_DIR_FORWARD) return;
-            
-            out << YAML::Key << "direction";
-            out << YAML::Value << YAML::Flow << t->getDirection();
-        }
-        
-        void ReadBaseTransformKeyValues(const YAML::Node & node, TransformRcPtr & t)
-        {
-            if(node.FindValue("direction") != NULL) {
-                TransformDirection ret;
-                if (node["direction"].Read<TransformDirection>(ret))
-                  t->setDirection(ret);
+            if(t->getDirection() != TRANSFORM_DIR_FORWARD)
+            {
+                out << YAML::Key << "direction";
+                out << YAML::Value << YAML::Flow << t->getDirection();
             }
-            else
-                t->setDirection(TRANSFORM_DIR_FORWARD);
         }
     }
     
     void operator >> (const YAML::Node& node, TransformRcPtr& t)
     {
-        // TODO: when a Transform() types are registered, add logic here so that
-        // it calls the correct Transform()::Create() for the !<tag> type
+        if(node.Type() != YAML::NodeType::Map)
+        {
+            std::ostringstream os;
+            os << "Unsupported Transform type encountered: (" << node.Type() << ") in OCIO profile. ";
+            os << "Only Mapping types supported. (line ";
+            os << (node.GetMark().line+1) << ", column "; // (yaml line numbers start at 0)
+            os << node.GetMark().column << ")";
+            throw Exception(os.str().c_str());
+        }
         
         std::string type = node.Tag();
         
@@ -209,7 +307,7 @@ OCIO_NAMESPACE_ENTER
             node.Read<ColorSpaceTransformRcPtr>(temp);
             t = temp;
         }
-        // TODO: add DisplayTransform
+        // TODO: DisplayTransform
         else if(type == "ExponentTransform")  {
             ExponentTransformRcPtr temp;
             node.Read<ExponentTransformRcPtr>(temp);
@@ -252,13 +350,18 @@ OCIO_NAMESPACE_ENTER
             // throw an exception. Alternativly this could be caught in the
             // GroupTransformRcPtr >> operator with some type of
             // supported_tag() method
+            
+            // TODO: consider the forwards-compatibility implication of
+            // throwing an exception.  Should this be a warning, instead?
+            
             //  t = EmptyTransformRcPtr(new EmptyTransform(), &deleter);
             std::ostringstream os;
-            os << "Unsupported transform type !<" << type << "> in OCIO profile";
+            os << "Unsupported transform type !<" << type << "> in OCIO profile. ";
+            os << " (line ";
+            os << (node.GetMark().line+1) << ", column "; // (yaml line numbers start at 0)
+            os << node.GetMark().column << ")";
             throw Exception(os.str().c_str());
         }
-        
-        ReadBaseTransformKeyValues(node, t);
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstTransformRcPtr t)
@@ -300,62 +403,6 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    void operator >> (const YAML::Node& node, LookRcPtr& look)
-    {
-        if(node.Tag() != "Look")
-            return;
-        if(node.FindValue("name") != NULL)  {
-            std::string ret;
-            if (node["name"].Read<std::string>(ret))
-              look->setName(ret.c_str());
-        }
-        if(node.FindValue("process_space") != NULL) {
-            std::string ret;
-            if (node["process_space"].Read<std::string>(ret))
-              look->setProcessSpace(ret.c_str());
-        }
-        if(node.FindValue("transform") != NULL)  {
-            TransformRcPtr ret;
-            if (node["transform"].Read<TransformRcPtr>(ret))
-              look->setTransform(ret);
-        }
-        if(node.FindValue("inverse_transform") != NULL)  {
-            TransformRcPtr ret;
-            if (node["inverse_transform"].Read<TransformRcPtr>(ret))
-              look->setInverseTransform(ret);
-        }
-    }
-    
-    YAML::Emitter& operator << (YAML::Emitter& out, LookRcPtr look)
-    {
-        out << YAML::VerbatimTag("Look");
-        out << YAML::BeginMap;
-        out << YAML::Key << "name" << YAML::Value << look->getName();
-        out << YAML::Key << "process_space" << YAML::Value << look->getProcessSpace();
-        
-        if(look->getTransform())
-        {
-            out << YAML::Key << "transform";
-            out << YAML::Value << look->getTransform();
-        }
-        
-        if(look->getInverseTransform())
-        {
-            out << YAML::Key << "inverse_transform";
-            out << YAML::Value << look->getInverseTransform();
-        }
-        
-        out << YAML::EndMap;
-        out << YAML::Newline;
-        
-        return out;
-    }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
     ///////////////////////////////////////////////////////////////////////////
     //  Transforms
     
@@ -363,19 +410,42 @@ OCIO_NAMESPACE_ENTER
     {
         t = GroupTransform::Create();
         
-        if(const YAML::Node * children = node.FindValue("children"))
+        std::string key;
+        
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
         {
-            for(unsigned i = 0; i <children->size(); ++i)
+            iter.first() >> key;
+            
+            if(key == "children")
             {
-                TransformRcPtr childTransform;
-                (*children)[i].Read<TransformRcPtr>(childTransform);
-
-                if(!childTransform)
+                const YAML::Node & children = iter.second();
+                for(unsigned i = 0; i <children.size(); ++i)
                 {
-                    throw Exception("Child transform could not be parsed.");
+                    TransformRcPtr childTransform;
+                    children[i].Read<TransformRcPtr>(childTransform);
+                    
+                    // TODO: consider the forwards-compatibility implication of
+                    // throwing an exception.  Should this be a warning, instead?
+                    if(!childTransform)
+                    {
+                        throw Exception("Child transform could not be parsed.");
+                    }
+                    
+                    t->push_back(childTransform);
                 }
-                
-                t->push_back(childTransform);
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
             }
         }
     }
@@ -406,20 +476,45 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, FileTransformRcPtr& t)
     {
         t = FileTransform::Create();
-        if(node.FindValue("src") != NULL) {
-            std::string ret;
-            if (node["src"].Read<std::string>(ret))
-              t->setSrc(ret.c_str());
-        }
-        if(node.FindValue("cccid") != NULL) {
-            std::string ret;
-            if (node["cccid"].Read<std::string>(ret))
-            t->setCCCId(ret.c_str());
-        }
-        if(node.FindValue("interpolation") != NULL) {
-            Interpolation ret;
-            if (node["interpolation"].Read<Interpolation>(ret))
-              t->setInterpolation(ret);
+        
+        std::string key, stringval;
+        
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
+        {
+            iter.first() >> key;
+            
+            if(key == "src")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setSrc(stringval.c_str());
+            }
+            else if(key == "cccid")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setCCCId(stringval.c_str());
+            }
+            else if(key == "interpolation")
+            {
+                Interpolation val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<Interpolation>(val))
+                  t->setInterpolation(val);
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
         }
     }
     
@@ -444,15 +539,38 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, ColorSpaceTransformRcPtr& t)
     {
         t = ColorSpaceTransform::Create();
-        if(node.FindValue("src") != NULL) {
-            std::string ret;
-            if (node["src"].Read<std::string>(ret))
-              t->setSrc(ret.c_str());
-        }
-        if(node.FindValue("dst") != NULL) {
-            std::string ret;
-            if (node["dst"].Read<std::string>(ret))
-            t->setDst(ret.c_str());
+        
+        std::string key, stringval;
+        
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
+        {
+            iter.first() >> key;
+            
+            if(key == "src")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setSrc(stringval.c_str());
+            }
+            else if(key == "dst")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setDst(stringval.c_str());
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
         }
     }
     
@@ -470,20 +588,44 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, LookTransformRcPtr& t)
     {
         t = LookTransform::Create();
-        if(node.FindValue("src") != NULL) {
-            std::string ret;
-            if (node["src"].Read<std::string>(ret))
-              t->setSrc(ret.c_str());
-        }
-        if(node.FindValue("dst") != NULL) {
-            std::string ret;
-            if (node["dst"].Read<std::string>(ret))
-            t->setDst(ret.c_str());
-        }
-        if(node.FindValue("looks") != NULL) {
-            std::string ret;
-            if (node["looks"].Read<std::string>(ret))
-            t->setLooks(ret.c_str());
+        
+        std::string key, stringval;
+        
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
+        {
+            iter.first() >> key;
+            
+            if(key == "src")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setSrc(stringval.c_str());
+            }
+            else if(key == "dst")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setDst(stringval.c_str());
+            }
+            else if(key == "looks")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setLooks(stringval.c_str());
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
         }
     }
     
@@ -502,20 +644,43 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, ExponentTransformRcPtr& t)
     {
         t = ExponentTransform::Create();
-        if(node.FindValue("value") != NULL)
+        
+        std::string key;
+        
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
         {
-            std::vector<float> value;
-            node["value"] >> value;
-            if(value.size() != 4)
+            iter.first() >> key;
+            
+            if(key == "value")
             {
-                std::ostringstream os;
-                os << "ExponentTransform parse error, value field must be 4 ";
-                os << "floats. Found '" << value.size() << "'.";
-                throw Exception(os.str().c_str());
+                std::vector<float> val;
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> val;
+                    if(val.size() != 4)
+                    {
+                        std::ostringstream os;
+                        os << "ExponentTransform parse error, value field must be 4 ";
+                        os << "floats. Found '" << val.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setValue(&val[0]);
+                }
             }
-            t->setValue(&value[0]);
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
         }
-        else throw Exception("ExponentTransform doesn't have a 'value:' specified.");
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstExponentTransformRcPtr t)
@@ -535,10 +700,33 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, LogTransformRcPtr& t)
     {
         t = LogTransform::Create();
-        if(node.FindValue("base") != NULL)  {
-            float ret;
-            if (node["base"].Read<float>(ret))
-              t->setBase(ret);
+        
+        std::string key;
+        
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
+        {
+            iter.first() >> key;
+            
+            if(key == "base")
+            {
+                float val = 0.0f;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<float>(val))
+                  t->setBase(val);
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
         }
     }
     
@@ -556,51 +744,80 @@ OCIO_NAMESPACE_ENTER
     {
         t = MatrixTransform::Create();
         
-        std::vector<float> matrix;
-        std::vector<float> offset;
+        std::string key;
         
-        // matrix
-        if(node.FindValue("matrix") != NULL)
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
         {
-            node["matrix"] >> matrix;
-            if(matrix.size() != 16)
+            iter.first() >> key;
+            
+            if(key == "matrix")
             {
-                std::ostringstream os;
-                os << "MatrixTransform parse error, 'matrix' field must be 16 ";
-                os << "floats. Found '" << matrix.size() << "'.";
-                throw Exception(os.str().c_str());
+                std::vector<float> val;
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> val;
+                    if(val.size() != 16)
+                    {
+                        std::ostringstream os;
+                        os << "MatrixTransform parse error, matrix field must be 16 ";
+                        os << "floats. Found '" << val.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setMatrix(&val[0]);
+                }
+            }
+            else if(key == "offset")
+            {
+                std::vector<float> val;
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> val;
+                    if(val.size() != 4)
+                    {
+                        std::ostringstream os;
+                        os << "MatrixTransform parse error, offset field must be 4 ";
+                        os << "floats. Found '" << val.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setOffset(&val[0]);
+                }
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
             }
         }
-        
-        // offset
-        if(node.FindValue("offset") != NULL)
-        {
-            node["offset"] >> offset;
-            if(offset.size() != 4)
-            {
-                std::ostringstream os;
-                os << "MatrixTransform parse error, 'offset' field must be 4 ";
-                os << "floats. Found '" << offset.size() << "'.";
-                throw Exception(os.str().c_str());
-            }
-        }
-        
-        t->setValue(&matrix[0], &offset[0]);
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstMatrixTransformRcPtr t)
     {
-        std::vector<float> matrix(16, 0.0);
-        std::vector<float> offset(4, 0.0);
-        t->getValue(&matrix[0], &offset[0]);
-        
         out << YAML::VerbatimTag("MatrixTransform");
         out << YAML::Flow << YAML::BeginMap;
         
-        out << YAML::Key << "matrix";
-        out << YAML::Value << YAML::Flow << matrix;
-        out << YAML::Key << "offset";
-        out << YAML::Value << YAML::Flow << offset;
+        std::vector<float> matrix(16, 0.0);
+        t->getMatrix(&matrix[0]);
+        if(!IsM44Identity(&matrix[0]))
+        {
+            out << YAML::Key << "matrix";
+            out << YAML::Value << YAML::Flow << matrix;
+        }
+        
+        std::vector<float> offset(4, 0.0);
+        t->getOffset(&offset[0]);
+        if(!IsVecEqualToZero(&offset[0],4))
+        {
+            out << YAML::Key << "offset";
+            out << YAML::Value << YAML::Flow << offset;
+        }
         
         EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
@@ -611,79 +828,114 @@ OCIO_NAMESPACE_ENTER
     {
         t = CDLTransform::Create();
         
-        if(node.FindValue("slope") != NULL)
-        {
-            std::vector<float> slope;
-            node["slope"] >> slope;
-            if(slope.size() != 3)
-            {
-                std::ostringstream os;
-                os << "CDLTransform parse error, 'slope' field must be 3 ";
-                os << "floats. Found '" << slope.size() << "'.";
-                throw Exception(os.str().c_str());
-            }
-            t->setSlope(&slope[0]);
-        }
-        else throw Exception("CDLTransform doesn't have a 'slope:' specified.");
+        std::string key;
+        std::vector<float> floatvecval;
         
-        if(node.FindValue("offset") != NULL)
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
         {
-            std::vector<float> offset;
-            node["offset"] >> offset;
-            if(offset.size() != 3)
+            iter.first() >> key;
+            
+            if(key == "slope")
             {
-                std::ostringstream os;
-                os << "CDLTransform parse error, 'offset' field must be 3 ";
-                os << "floats. Found '" << offset.size() << "'.";
-                throw Exception(os.str().c_str());
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> floatvecval;
+                    if(floatvecval.size() != 3)
+                    {
+                        std::ostringstream os;
+                        os << "CDLTransform parse error, 'slope' field must be 3 ";
+                        os << "floats. Found '" << floatvecval.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setSlope(&floatvecval[0]);
+                }
             }
-            t->setOffset(&offset[0]);
-        }
-        else throw Exception("CDLTransform doesn't have a 'offset:' specified.");
-        
-        if(node.FindValue("power") != NULL)
-        {
-            std::vector<float> power;
-            node["power"] >> power;
-            if(power.size() != 3)
+            else if(key == "offset")
             {
-                std::ostringstream os;
-                os << "CDLTransform parse error, 'power' field must be 3 ";
-                os << "floats. Found '" << power.size() << "'.";
-                throw Exception(os.str().c_str());
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> floatvecval;
+                    if(floatvecval.size() != 3)
+                    {
+                        std::ostringstream os;
+                        os << "CDLTransform parse error, 'offset' field must be 3 ";
+                        os << "floats. Found '" << floatvecval.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setOffset(&floatvecval[0]);
+                }
             }
-            t->setPower(&power[0]);
+            else if(key == "power")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> floatvecval;
+                    if(floatvecval.size() != 3)
+                    {
+                        std::ostringstream os;
+                        os << "CDLTransform parse error, 'power' field must be 3 ";
+                        os << "floats. Found '" << floatvecval.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setPower(&floatvecval[0]);
+                }
+            }
+            else if(key == "saturation" || key == "sat")
+            {
+                float val = 0.0f;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<float>(val))
+                  t->setSat(val);
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
         }
-        else throw Exception("CDLTransform doesn't have a 'power:' specified.");
-        
-        if(node.FindValue("saturation") != NULL)  {
-            float ret;
-            if (node["saturation"].Read<float>(ret))
-              t->setSat(ret);
-        }
-        else
-            throw Exception("CDLTransform doesn't have a 'saturation:' specified.");
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, ConstCDLTransformRcPtr t)
     {
-        std::vector<float> slope(3, 1.0);
-        t->getSlope(&slope[0]);
-        std::vector<float> offset(3, 0.0);
-        t->getOffset(&offset[0]);
-        std::vector<float> power(3, 1.0);
-        t->getPower(&power[0]);
-        
         out << YAML::VerbatimTag("CDLTransform");
         out << YAML::Flow << YAML::BeginMap;
         
-        out << YAML::Key << "slope";
-        out << YAML::Value << YAML::Flow << slope;
-        out << YAML::Key << "offset";
-        out << YAML::Value << YAML::Flow << offset;
-        out << YAML::Key << "power";
-        out << YAML::Value << YAML::Flow << power;
-        out << YAML::Key << "saturation" << YAML::Value << t->getSat();
+        std::vector<float> slope(3);
+        t->getSlope(&slope[0]);
+        if(!IsVecEqualToOne(&slope[0], 3))
+        {
+            out << YAML::Key << "slope";
+            out << YAML::Value << YAML::Flow << slope;
+        }
+        
+        std::vector<float> offset(3);
+        t->getOffset(&offset[0]);
+        if(!IsVecEqualToZero(&offset[0], 3))
+        {
+            out << YAML::Key << "offset";
+            out << YAML::Value << YAML::Flow << offset;
+        }
+        
+        std::vector<float> power(3);
+        t->getPower(&power[0]);
+        if(!IsVecEqualToOne(&power[0], 3))
+        {
+            out << YAML::Key << "power";
+            out << YAML::Value << YAML::Flow << power;
+        }
+        
+        if(!IsScalarEqualToOne(t->getSat()))
+        {
+            out << YAML::Key << "sat" << YAML::Value << t->getSat();
+        }
         
         EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;
@@ -694,19 +946,43 @@ OCIO_NAMESPACE_ENTER
     {
         t = AllocationTransform::Create();
         
-        if(node.FindValue("allocation") != NULL)  {
-            Allocation ret;
-            if (node["allocation"].Read<Allocation>(ret))
-              t->setAllocation(ret);
-        }
+        std::string key;
         
-        if(node.FindValue("vars") != NULL)
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
         {
-            std::vector<float> value;
-            node["vars"] >> value;
-            if(!value.empty())
+            iter.first() >> key;
+            
+            if(key == "allocation")
             {
-                t->setVars(static_cast<int>(value.size()), &value[0]);
+                Allocation val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<Allocation>(val))
+                  t->setAllocation(val);
+            }
+            else if(key == "vars")
+            {
+                std::vector<float> val;
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> val;
+                    if(!val.empty())
+                    {
+                        t->setVars(static_cast<int>(val.size()), &val[0]);
+                    }
+                }
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
             }
         }
     }
@@ -735,55 +1011,86 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, TruelightTransformRcPtr& t)
     {
         t = TruelightTransform::Create();
-        if(node.FindValue("config_root") != NULL) {
-            std::string ret;
-            if(node["config_root"].Read<std::string>(ret))
-                t->setConfigRoot(ret.c_str());
-        }
-        if(node.FindValue("profile") != NULL) {
-            std::string ret;
-            if(node["profile"].Read<std::string>(ret))
-                t->setProfile(ret.c_str());
-        }
-        if(node.FindValue("camera") != NULL) {
-            std::string ret;
-            if(node["camera"].Read<std::string>(ret))
-                t->setCamera(ret.c_str());
-        }
-        if(node.FindValue("input_display") != NULL) {
-            std::string ret;
-            if(node["input_display"].Read<std::string>(ret))
-                t->setInputDisplay(ret.c_str());
-        }
-        if(node.FindValue("recorder") != NULL) {
-            std::string ret;
-            if(node["recorder"].Read<std::string>(ret))
-                t->setRecorder(ret.c_str());
-        }
-        if(node.FindValue("print") != NULL) {
-            std::string ret;
-            if(node["print"].Read<std::string>(ret))
-                t->setPrint(ret.c_str());
-        }
-        if(node.FindValue("lamp") != NULL) {
-            std::string ret;
-            if(node["lamp"].Read<std::string>(ret))
-                t->setLamp(ret.c_str());
-        }
-        if(node.FindValue("output_camera") != NULL) {
-            std::string ret;
-            if(node["output_camera"].Read<std::string>(ret))
-                t->setOutputCamera(ret.c_str());
-        }
-        if(node.FindValue("display") != NULL) {
-            std::string ret;
-            if(node["display"].Read<std::string>(ret))
-                t->setDisplay(ret.c_str());
-        }
-        if(node.FindValue("cube_input") != NULL) {
-            std::string ret;
-            if(node["cube_input"].Read<std::string>(ret))
-                t->setCubeInput(ret.c_str());
+        
+        std::string key, stringval;
+        
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
+        {
+            iter.first() >> key;
+            
+            if(key == "config_root")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setConfigRoot(stringval.c_str());
+            }
+            else if(key == "profile")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setProfile(stringval.c_str());
+            }
+            else if(key == "camera")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setCamera(stringval.c_str());
+            }
+            else if(key == "input_display")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setInputDisplay(stringval.c_str());
+            }
+            else if(key == "recorder")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setRecorder(stringval.c_str());
+            }
+            else if(key == "print")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setPrint(stringval.c_str());
+            }
+            else if(key == "lamp")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setLamp(stringval.c_str());
+            }
+            else if(key == "output_camera")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setOutputCamera(stringval.c_str());
+            }
+            else if(key == "display")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setDisplay(stringval.c_str());
+            }
+            else if(key == "cube_input")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                  t->setCubeInput(stringval.c_str());
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
         }
     }
     

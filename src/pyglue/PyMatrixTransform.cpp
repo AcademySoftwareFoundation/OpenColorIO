@@ -91,6 +91,10 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_MatrixTransform_getValue( PyObject * self );
         PyObject * PyOCIO_MatrixTransform_setValue( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_MatrixTransform_getMatrix( PyObject * self );
+        PyObject * PyOCIO_MatrixTransform_setMatrix( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_MatrixTransform_getOffset( PyObject * self );
+        PyObject * PyOCIO_MatrixTransform_setOffset( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_MatrixTransform_Identity( PyObject * cls );
         PyObject * PyOCIO_MatrixTransform_Fit( PyObject * cls, PyObject * args );
@@ -104,6 +108,10 @@ OCIO_NAMESPACE_ENTER
         PyMethodDef PyOCIO_MatrixTransform_methods[] = {
             {"getValue", (PyCFunction) PyOCIO_MatrixTransform_getValue, METH_NOARGS, "" },
             {"setValue", PyOCIO_MatrixTransform_setValue, METH_VARARGS, "" },
+            {"getMatrix", (PyCFunction) PyOCIO_MatrixTransform_getMatrix, METH_NOARGS, "" },
+            {"setMatrix", PyOCIO_MatrixTransform_setMatrix, METH_VARARGS, "" },
+            {"getOffset", (PyCFunction) PyOCIO_MatrixTransform_getOffset, METH_NOARGS, "" },
+            {"setOffset", PyOCIO_MatrixTransform_setOffset, METH_VARARGS, "" },
             
             {"Identity", (PyCFunction) PyOCIO_MatrixTransform_Identity,
                 METH_NOARGS | METH_CLASS, "" },
@@ -264,6 +272,109 @@ OCIO_NAMESPACE_ENTER
                 
                 MatrixTransformRcPtr transform = GetEditableMatrixTransform(self);
                 transform->setValue(&matrix[0], &offset[0]);
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        PyObject * PyOCIO_MatrixTransform_getMatrix( PyObject * self )
+        {
+            try
+            {
+                ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self, true);
+                
+                std::vector<float> matrix(16);
+                transform->getMatrix(&matrix[0]);
+                
+                return CreatePyListFromFloatVector(matrix);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_MatrixTransform_setMatrix( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pymatrix = 0;
+                if (!PyArg_ParseTuple(args,"O:setValue", &pymatrix)) return NULL;
+                
+                std::vector<float> matrix;
+                
+                if(!FillFloatVectorFromPySequence(pymatrix, matrix) ||
+                    (matrix.size() != 16))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                        "First argument must be a float array, size 16");
+                    return 0;
+                }
+                
+                MatrixTransformRcPtr transform = GetEditableMatrixTransform(self);
+                transform->setMatrix(&matrix[0]);
+                
+                Py_RETURN_NONE;
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        
+        
+        PyObject * PyOCIO_MatrixTransform_getOffset( PyObject * self )
+        {
+            try
+            {
+                ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self, true);
+                
+                std::vector<float> offset(4);
+                transform->getOffset(&offset[0]);
+                
+                return CreatePyListFromFloatVector(offset);
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_MatrixTransform_setOffset( PyObject * self, PyObject * args )
+        {
+            try
+            {
+                PyObject * pyoffset = 0;
+                if (!PyArg_ParseTuple(args,"O:setValue", &pyoffset)) return NULL;
+                
+                std::vector<float> offset;
+                
+                if(!FillFloatVectorFromPySequence(pyoffset, offset) ||
+                    (offset.size() != 4))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                        "First argument must be a float array, size 4");
+                    return 0;
+                }
+                
+                MatrixTransformRcPtr transform = GetEditableMatrixTransform(self);
+                transform->setOffset(&offset[0]);
                 
                 Py_RETURN_NONE;
             }

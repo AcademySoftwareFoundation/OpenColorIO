@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "HashUtils.h"
+#include "Logging.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
@@ -83,7 +84,7 @@ OCIO_NAMESPACE_ENTER
         "      equalitygroup:\n"
         "      bitdepth: 32f\n"
         "      isdata: true\n"
-        "      gpuallocation: uniform\n"
+        "      allocation: uniform\n"
         "      description: 'A raw color space. Conversions to and from this space are no-ops.'\n";
     }
     
@@ -237,31 +238,50 @@ OCIO_NAMESPACE_ENTER
     void operator >> (const YAML::Node& node, View& v)
     {
         if(node.Tag() != "View")
-            return; // not a !<Display> tag
+            return;
         
-        if(node.FindValue("name") == NULL)
+        std::string key, stringval;
+        
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
+        {
+            iter.first() >> key;
+            
+            if(key == "name")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                    v.name = stringval;
+            }
+            else if(key == "colorspace")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                    v.colorspace = stringval;
+            }
+            else if(key == "looks" || key == "look")
+            {
+                if (iter.second().Type() != YAML::NodeType::Null && 
+                    iter.second().Read<std::string>(stringval))
+                    v.looks = stringval;
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
+        }
+        
+        if(v.name.empty())
         {
             throw Exception("View does not specify 'name'.");
         }
-        
-        std::string ret;
-        if (node["name"].Read<std::string>(ret))
-          v.name = ret;
-        
-        if(node.FindValue("colorspace") == NULL)
+        if(v.colorspace.empty())
         {
             std::ostringstream os;
             os << "View '" << v.name << "' ";
             os << "does not specify colorspace.";
             throw Exception(os.str().c_str());
-        }
-        if (node["colorspace"].Read<std::string>(ret))
-          v.colorspace = ret;
-        
-        if(node.FindValue("looks") != NULL)
-        {
-            if (node["looks"].Read<std::string>(ret))
-                v.looks = ret;
         }
     }
     
@@ -502,7 +522,7 @@ OCIO_NAMESPACE_ENTER
         std::ostringstream os;
         os << "Color management disabled. ";
         os << "(Specify the $OCIO environment variable to enable.)";
-        ReportInfo(os.str());
+        LogInfo(os.str());
         
         std::istringstream istream;
         istream.str(INTERNAL_RAW_PROFILE);
@@ -1627,7 +1647,7 @@ OCIO_NAMESPACE_ENTER
             parser.GetNextDocument(node);
             
             // check profile version
-            int profile_version;
+            int profile_version = 0;
             if(node.FindValue("ocio_profile_version") == NULL)
             {
                 std::ostringstream os;
@@ -1637,183 +1657,167 @@ OCIO_NAMESPACE_ENTER
             }
             
             node["ocio_profile_version"] >> profile_version;
-            if(profile_version != 1)
+            if(profile_version > 1)
             {
                 std::ostringstream os;
-                os << "version " << profile_version << " is not ";
-                os << "supported by OCIO v" << OCIO_VERSION ".";
-                throw Exception (os.str().c_str());
-            }
-            
-            // cast YAML nodes to Impl members
-            
-            // Query resource_path for compatibility
-            if(node.FindValue("search_path") != NULL && 
-               node["search_path"].Type() != YAML::NodeType::Null)
-            {
-                std::string path;
-                node["search_path"] >> path;
-                context_->setSearchPath(path.c_str());
-            }
-            else if(node.FindValue("resource_path") != NULL && 
-               node["resource_path"].Type() != YAML::NodeType::Null)
-            {
-                std::string path;
-                node["resource_path"] >> path;
-                context_->setSearchPath(path.c_str());
-            }
-            
-            if(node.FindValue("strictparsing") != NULL)
-                node["strictparsing"] >> strictParsing_;
-            if(node.FindValue("description") != NULL)
-                node["description"] >> description_;
-            
-            // Luma
-            if(node.FindValue("luma") != NULL)
-            {
-                if(node["luma"].Type() != YAML::NodeType::Sequence)
+                os << "This .ocio config ";
+                if(filename && *filename)
                 {
-                    std::ostringstream os;
-                    os << "'luma' field needs to be a (luma: [0, 0, 0]) list.";
-                    throw Exception(os.str().c_str());
+                    os << " '" << filename << "' ";
                 }
+                os << "is version " << profile_version << ". ";
+                os << "This version of the OpenColorIO library (" << OCIO_VERSION ") ";
+                os << "is not known to be able to load this profile. ";
+                os << "An attempt will be made, but there are no guarantees that the ";
+                os << "results will be accurate. Continue at your own risk.";
+                LogWarning(os.str());
+            }
+            
+            
+            std::string key, stringval;
+            bool boolval = false;
+            
+            for (YAML::Iterator iter = node.begin();
+                 iter != node.end();
+                 ++iter)
+            {
+                iter.first() >> key;
                 
-                std::vector<float> value;
-                node["luma"] >> value;
-                if(value.size() != 3)
+                if(key == "ocio_profile_version") { } // Already handled above.
+                else if(key == "search_path" || key == "resource_path")
                 {
-                    std::ostringstream os;
-                    os << "'luma' field must be 3 ";
-                    os << "floats. Found '" << value.size() << "'.";
-                    throw Exception(os.str().c_str());
+                    if (iter.second().Type() != YAML::NodeType::Null && 
+                        iter.second().Read<std::string>(stringval))
+                        context_->setSearchPath(stringval.c_str());
                 }
-                
-                defaultLumaCoefs_ = value;
-            }
-            
-            // Roles
-            if(node.FindValue("roles") != NULL)
-            {
-                if(node["roles"].Type() != YAML::NodeType::Map)
+                else if(key == "strictparsing")
                 {
-                    std::ostringstream os;
-                    os << "'roles' field needs to be a (name: key) map.";
-                    throw Exception(os.str().c_str());
+                    if (iter.second().Type() != YAML::NodeType::Null && 
+                        iter.second().Read<bool>(boolval))
+                        strictParsing_ = boolval;
                 }
-                
-                for (YAML::Iterator it  = node["roles"].begin();
-                                    it != node["roles"].end(); ++it)
+                else if(key == "description")
                 {
-                    std::string key, value;
-                    it.first() >> key;
-                    it.second() >> value;
-                    roles_[pystring::lower(key)] = value;
+                    if (iter.second().Type() != YAML::NodeType::Null && 
+                        iter.second().Read<std::string>(stringval))
+                        description_ = stringval;
                 }
-            }
-            
-            // Displays
-            if(node.FindValue("displays") != NULL)
-            {
-                // Backwards Compatibility: load the sequence
-                if(node["displays"].Type() == YAML::NodeType::Sequence)
+                else if(key == "luma")
                 {
-                    for (unsigned i = 0; i < node["displays"].size(); ++i)
+                    std::vector<float> val;
+                    if (iter.second().Type() != YAML::NodeType::Null)
                     {
-                      if(node["displays"][i].Type() != YAML::NodeType::Map)
+                        iter.second() >> val;
+                        if(val.size() != 3)
                         {
                             std::ostringstream os;
-                            os << "Display entries must be a map.";
+                            os << "'luma' field must be 3 ";
+                            os << "floats. Found '" << val.size() << "'.";
                             throw Exception(os.str().c_str());
                         }
-                        
-                        if(node["displays"][i].FindValue("device") == NULL ||
-                           node["displays"][i].FindValue("name") == NULL ||
-                           node["displays"][i].FindValue("colorspace") == NULL)
+                        defaultLumaCoefs_ = val;
+                    }
+                }
+                else if(key == "roles")
+                {
+                    const YAML::Node& roles = iter.second();
+                    if(roles.Type() != YAML::NodeType::Map)
+                    {
+                        std::ostringstream os;
+                        os << "'roles' field needs to be a (name: key) map.";
+                        throw Exception(os.str().c_str());
+                    }
+                    for (YAML::Iterator it  = roles.begin();
+                                        it != roles.end(); ++it)
+                    {
+                        std::string k, v;
+                        it.first() >> k;
+                        it.second() >> v;
+                        roles_[pystring::lower(k)] = v;
+                    }
+                }
+                else if(key == "displays")
+                {
+                    if (iter.second().Type() != YAML::NodeType::Null)
+                    {
+                        iter.second() >> displays_;
+                    }
+                }
+                else if(key == "active_displays")
+                {
+                    if (iter.second().Type() != YAML::NodeType::Null)
+                    {
+                        iter.second() >> activeDisplays_;
+                    }
+                }
+                else if(key == "active_views")
+                {
+                    if (iter.second().Type() != YAML::NodeType::Null)
+                    {
+                        iter.second() >> activeViews_;
+                    }
+                }
+                else if(key == "colorspaces")
+                {
+                    const YAML::Node& colorspaces = iter.second();
+                    
+                    if(colorspaces.Type() != YAML::NodeType::Sequence)
+                    {
+                        std::ostringstream os;
+                        os << "'colorspaces' field needs to be a (- !<ColorSpace>) list.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    for(unsigned i = 0; i < colorspaces.size(); ++i)
+                    {
+                        if(colorspaces[i].Tag() == "ColorSpace")
+                        {
+                            ColorSpaceRcPtr cs = ColorSpace::Create();
+                            colorspaces[i] >> cs;
+                            colorspaces_.push_back( cs );
+                        }
+                        else
                         {
                             std::ostringstream os;
-                            os << "Display entries must define 'device', 'name', and 'colorspace'.";
-                            throw Exception(os.str().c_str());
+                            os << "Unknown element found in colorspaces:";
+                            os << colorspaces[i].Tag() << ". Only ColorSpace(s)";
+                            os << " currently handled.";
+                            LogWarning(os.str());
                         }
-                        
-                        std::string look, display, view, colorspace;
-                        
-                        node["displays"][i]["device"].Read<std::string>(display);
-                        node["displays"][i]["name"].Read<std::string>(view);
-                        node["displays"][i]["colorspace"].Read<std::string>(colorspace);
-                        if(node["displays"][i].FindValue("look") != NULL)
+                    }
+                }
+                else if(key == "looks")
+                {
+                    const YAML::Node& looks = iter.second();
+                    
+                    if(looks.Type() != YAML::NodeType::Sequence)
+                    {
+                        std::ostringstream os;
+                        os << "'looks' field needs to be a (- !<Look>) list.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    for(unsigned i = 0; i < looks.size(); ++i)
+                    {
+                        if(looks[i].Tag() == "Look")
                         {
-                            node["displays"][i]["look"].Read<std::string>(look);
+                            LookRcPtr look = Look::Create();
+                            looks[i] >> look;
+                            looksList_.push_back( look );
                         }
-                        
-                        AddDisplay(displays_,
-                                   display, view, colorspace, look);
+                        else
+                        {
+                            std::ostringstream os;
+                            os << "Unknown element found in looks:";
+                            os << looks[i].Tag() << ". Only Look(s)";
+                            os << " currently handled.";
+                            LogWarning(os.str());
+                        }
                     }
                 }
-                else if(node["displays"].Type() == YAML::NodeType::Map)
+                else
                 {
-                    node["displays"] >> displays_;
-                }
-            }
-            
-            if(node.FindValue("active_displays") != NULL)
-            {
-                if(node["active_displays"].Type() != YAML::NodeType::Sequence)
-                {
-                    std::ostringstream os;
-                    os << "'active_displays' field needs to be a list.";
-                    throw Exception(os.str().c_str());
-                }
-                
-                node["active_displays"] >> activeDisplays_;
-            }
-            
-            if(node.FindValue("active_views") != NULL)
-            {
-                if(node["active_views"].Type() != YAML::NodeType::Sequence)
-                {
-                    std::ostringstream os;
-                    os << "'active_views' field needs to be a list.";
-                    throw Exception(os.str().c_str());
-                }
-                
-                node["active_views"] >> activeViews_;
-            }
-            
-            // ColorSpaces
-            if(node.FindValue("colorspaces") != NULL) {
-                if(node["colorspaces"].Type() != YAML::NodeType::Sequence)
-                {
-                    std::ostringstream os;
-                    os << "'colorspaces' field needs to be a (- !<ColorSpace>) list.";
-                    throw Exception(os.str().c_str());
-                }
-                for(unsigned i = 0; i < node["colorspaces"].size(); ++i)
-                {
-                    if(node["colorspaces"][i].Tag() == "ColorSpace")
-                    {
-                        ColorSpaceRcPtr cs = ColorSpace::Create();
-                        node["colorspaces"][i] >> cs;
-                        colorspaces_.push_back( cs );
-                    }
-                }
-            }
-            
-            // Looks
-            if(node.FindValue("looks") != NULL) {
-                if(node["looks"].Type() != YAML::NodeType::Sequence)
-                {
-                    std::ostringstream os;
-                    os << "'looks' field needs to be a (- !<Look>) list.";
-                    throw Exception(os.str().c_str());
-                }
-                for(unsigned i = 0; i < node["looks"].size(); ++i)
-                {
-                    if(node["looks"][i].Tag() == "Look")
-                    {
-                        LookRcPtr look = Look::Create();
-                        node["looks"][i] >> look;
-                        looksList_.push_back( look );
-                    }
+                    LogUnknownKeyWarning("profile", iter.first());
                 }
             }
             
@@ -1983,7 +1987,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
     "      description: |\n"
     "        A raw color space. Conversions to and from this space are no-ops.\n"
     "      isdata: true\n"
-    "      gpuallocation: uniform\n"
+    "      allocation: uniform\n"
     "  - !<ColorSpace>\n"
     "      name: lnh\n"
     "      family: ln\n"
@@ -1995,7 +1999,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
     "        scanned film. 0.18 in this space corresponds to a properly\n"
     "        exposed 18% grey card.\n"
     "      isdata: false\n"
-    "      gpuallocation: lg2\n"
+    "      allocation: lg2\n"
     "  - !<ColorSpace>\n"
     "      name: loads_of_transforms\n"
     "      family: vd8\n"
@@ -2003,7 +2007,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
     "      bitdepth: 8ui\n"
     "      description: 'how many transforms can we use?'\n"
     "      isdata: false\n"
-    "      gpuallocation: uniform\n"
+    "      allocation: uniform\n"
     "      to_reference: !<GroupTransform>\n"
     "        direction: forward\n"
     "        children:\n"

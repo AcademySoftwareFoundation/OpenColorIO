@@ -147,6 +147,25 @@ OCIO_NAMESPACE_ENTER
         if(offset4) memcpy(getImpl()->offset_, offset4, 4*sizeof(float));
     }
     
+    void MatrixTransform::setMatrix(const float * m44)
+    {
+        if(m44) memcpy(getImpl()->matrix_, m44, 16*sizeof(float));
+    }
+    
+    void MatrixTransform::getMatrix(float * m44) const
+    {
+        if(m44) memcpy(m44, getImpl()->matrix_, 16*sizeof(float));
+    }
+    
+    void MatrixTransform::setOffset(const float * offset4)
+    {
+        if(offset4) memcpy(getImpl()->offset_, offset4, 4*sizeof(float));
+    }
+    
+    void MatrixTransform::getOffset(float * offset4) const
+    {
+        if(offset4) memcpy(offset4, getImpl()->offset_, 4*sizeof(float));
+    }
     
     /*
     Fit is canonically formulated as:
