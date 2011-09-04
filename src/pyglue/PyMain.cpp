@@ -56,6 +56,51 @@ namespace
         }
     }
     
+    PyObject * PyOCIO_GetLoggingLevel(PyObject * /* self */)
+    {
+        try
+        {
+            return PyString_FromString(
+                OCIO::LoggingLevelToString(OCIO::GetLoggingLevel()) );
+        }
+        catch(...)
+        {
+            OCIO::Python_Handle_Exception();
+            return NULL;
+        }
+    }
+    
+    PyObject * PyOCIO_SetLoggingLevel(PyObject * /*self*/, PyObject * args)
+    {
+        try
+        {
+            PyObject * pylevel;
+            if (!PyArg_ParseTuple(args, "O:SetLoggingLevel", &pylevel))
+            {
+                return NULL;
+            }
+            
+            // We explicitly cast to a str to handle both the str and int cases.
+            PyObject * pystr = PyObject_Str(pylevel);
+            if(!pystr)
+            {
+                throw OCIO::Exception("Fist argument must be a LOGGING_LEVEL");
+            }
+            
+            OCIO::LoggingLevel level = OCIO::LoggingLevelFromString(PyString_AsString(pystr));
+            OCIO::SetLoggingLevel(level);
+            
+            Py_DECREF(pystr);
+            
+            Py_RETURN_NONE;
+        }
+        catch(...)
+        {
+            OCIO::Python_Handle_Exception();
+            return NULL;
+        }
+    }
+    
     PyObject * PyOCIO_GetCurrentConfig(PyObject * /* self */)
     {
         try
@@ -97,6 +142,14 @@ namespace
         {"ClearAllCaches",
             (PyCFunction) PyOCIO_ClearAllCaches,
             METH_NOARGS,
+            ""},
+        {"GetLoggingLevel",
+            (PyCFunction) PyOCIO_GetLoggingLevel,
+            METH_NOARGS,
+            ""},
+        {"SetLoggingLevel",
+            (PyCFunction) PyOCIO_SetLoggingLevel,
+            METH_VARARGS,
             ""},
         {"GetCurrentConfig",
             (PyCFunction) PyOCIO_GetCurrentConfig,

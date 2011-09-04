@@ -678,6 +678,16 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         void getValue(float * m44, float * offset4) const;
         
+        //!cpp:function::
+        void setMatrix(const float * m44);
+        //!cpp:function::
+        void getMatrix(float * m44) const;
+        
+        //!cpp:function::
+        void setOffset(const float * offset4);
+        //!cpp:function::
+        void getOffset(float * offset4) const;
+        
         //!rst:: **Convenience functions**
         //
         // to get the mtx and offset corresponding to higher-level concepts

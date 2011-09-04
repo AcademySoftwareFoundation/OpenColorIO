@@ -49,6 +49,25 @@ OCIO_NAMESPACE_ENTER
         return false;
     }
     
+    const char * LoggingLevelToString(LoggingLevel level)
+    {
+        if(level == LOGGING_LEVEL_NONE) return "none";
+        else if(level == LOGGING_LEVEL_WARNING) return "warning";
+        else if(level == LOGGING_LEVEL_INFO) return "info";
+        else if(level == LOGGING_LEVEL_DEBUG) return "debug";
+        return "unknown";
+    }
+    
+    LoggingLevel LoggingLevelFromString(const char * s)
+    {
+        std::string str = pystring::lower(s);
+        if(str == "0" || str == "none") return LOGGING_LEVEL_NONE;
+        else if(str == "1" || str == "warning") return LOGGING_LEVEL_WARNING;
+        else if(str == "2" || str == "info") return LOGGING_LEVEL_INFO;
+        else if(str == "3" || str == "debug") return LOGGING_LEVEL_DEBUG;
+        return LOGGING_LEVEL_UNKNOWN;
+    }
+    
     const char * TransformDirectionToString(TransformDirection dir)
     {
         if(dir == TRANSFORM_DIR_FORWARD) return "forward";
@@ -411,11 +430,5 @@ OCIO_NAMESPACE_ENTER
         return -1;
     }
     
-    ////////////////////////////////////////////////////////////////////////////
-    
-    void ReportInfo(const std::string & text)
-    {
-        std::cerr << "[OpenColorIO INFO]: " << text << "\n";
-    }
 }
 OCIO_NAMESPACE_EXIT

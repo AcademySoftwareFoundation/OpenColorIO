@@ -118,6 +118,7 @@ OCIO_NAMESPACE_ENTER
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, Interpolation iterp);
     OCIOHIDDEN void operator >> (const YAML::Node& node, Interpolation& iterp);
     
+    void LogUnknownKeyWarning(const std::string & name, const YAML::Node& tag);
 }
 OCIO_NAMESPACE_EXIT
 

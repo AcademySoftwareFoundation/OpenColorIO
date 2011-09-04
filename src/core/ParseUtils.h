@@ -81,9 +81,6 @@ OCIO_NAMESPACE_ENTER
     
     int FindInStringVecCaseIgnore(const std::vector<std::string> & vec, const std::string & str);
     
-    ///////////////////////////////////////////////////////////////////////////
-    
-    void ReportInfo(const std::string & text);
 }
 OCIO_NAMESPACE_EXIT
 

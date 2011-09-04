@@ -180,6 +180,15 @@ OCIO_NAMESPACE_ENTER
     // Enums
     // *****
     
+    enum LoggingLevel
+    {
+        LOGGING_LEVEL_NONE = 0,
+        LOGGING_LEVEL_WARNING = 1,
+        LOGGING_LEVEL_INFO = 2,
+        LOGGING_LEVEL_DEBUG = 3,
+        LOGGING_LEVEL_UNKNOWN = 255
+    };
+    
     //!cpp:type::
     enum ColorSpaceDirection
     {
@@ -242,6 +251,11 @@ OCIO_NAMESPACE_ENTER
     extern OCIOEXPORT const char * BoolToString(bool val);
     //!cpp:function::
     extern OCIOEXPORT bool BoolFromString(const char * s);
+    
+    //!cpp:function::
+    extern OCIOEXPORT const char * LoggingLevelToString(LoggingLevel level);
+    //!cpp:function::
+    extern OCIOEXPORT LoggingLevel LoggingLevelFromString(const char * s);
     
     //!cpp:function::
     extern OCIOEXPORT const char * TransformDirectionToString(TransformDirection dir);

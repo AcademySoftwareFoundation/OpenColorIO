@@ -141,6 +141,18 @@ OCIO_NAMESPACE_ENTER
     
     extern OCIOEXPORT int GetVersionHex();
     
+    //!cpp:function:: Get the global logging level
+    // You can also override this at runtime using the $OCIO_LOGGING_LEVEL
+    // envvar. (Client application who which to set this should use
+    // SetLoggingLevel, not the envvar). The default value is INFO.
+    
+    extern OCIOEXPORT LoggingLevel GetLoggingLevel();
+    
+    //!cpp:function:: Get the global logging level
+    extern OCIOEXPORT void SetLoggingLevel(LoggingLevel level);
+    
+    
+    
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Config

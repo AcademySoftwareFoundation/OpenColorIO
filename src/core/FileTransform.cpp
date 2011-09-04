@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
+#include "Logging.h"
 #include "Mutex.h"
 #include "PathUtils.h"
 #include "pystring/pystring.h"
@@ -399,6 +400,11 @@ OCIO_NAMESPACE_ENTER
             }
             
             // We did not find the file in the cache; let's read it.
+            {
+                std::ostringstream os;
+                os << "Opening " << filepath;
+                LogDebug(os.str());
+            }
             
             // Open the filePath
             std::ifstream filestream;

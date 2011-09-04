@@ -9,6 +9,16 @@ print "version:",OCIO.version
 print "hexversion:",hex(OCIO.hexversion)
 print ""
 
+"""
+print "logging level", OCIO.GetLoggingLevel()
+OCIO.SetLoggingLevel(0)
+print "logging level", OCIO.GetLoggingLevel()
+OCIO.SetLoggingLevel('None')
+print "logging level", OCIO.GetLoggingLevel()
+OCIO.SetLoggingLevel('Foo')
+print "logging level", OCIO.GetLoggingLevel()
+"""
+
 #import pydoc
 #print pydoc.render_doc(OCIO)
 
@@ -29,7 +39,9 @@ c.sanityCheck()
 #for cs in c.getColorSpaces():
 #    print "%s %s %s" % (cs.getName(), cs.getFamily(), cs.getBitDepth())
 
+"""
 processor = c.getProcessor("qt8",'lnf')
+"""
 
 # Test exceptions
 """

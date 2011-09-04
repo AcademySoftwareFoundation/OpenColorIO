@@ -69,6 +69,15 @@ OCIO_NAMESPACE_ENTER
         Py_INCREF(m);
         
         // Add Module Constants
+        PyModule_AddStringConstant(m, "LOGGING_LEVEL_NONE",
+            const_cast<char*>(LoggingLevelToString(LOGGING_LEVEL_NONE)));
+        PyModule_AddStringConstant(m, "LOGGING_LEVEL_WARNING",
+            const_cast<char*>(LoggingLevelToString(LOGGING_LEVEL_WARNING)));
+        PyModule_AddStringConstant(m, "LOGGING_LEVEL_INFO",
+            const_cast<char*>(LoggingLevelToString(LOGGING_LEVEL_INFO)));
+        PyModule_AddStringConstant(m, "LOGGING_LEVEL_UNKNOWN",
+            const_cast<char*>(LoggingLevelToString(LOGGING_LEVEL_UNKNOWN)));
+        
         PyModule_AddStringConstant(m, "TRANSFORM_DIR_UNKNOWN",
             const_cast<char*>(TransformDirectionToString(TRANSFORM_DIR_UNKNOWN)));
         PyModule_AddStringConstant(m, "TRANSFORM_DIR_FORWARD",
