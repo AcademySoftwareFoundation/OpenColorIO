@@ -10,7 +10,7 @@ if(CMAKE_FIRST_RUN)
 endif()
 
 if(CMAKE_FIRST_RUN)
-    message(STATUS "Python ${PYTHON_VERSION} okay, will build the Python bindings against ${PYTHON_INCLUDE}")
+    message(STATUS "Python ${PYTHON_VERSION} okay (UCS: ${PYTHON_UCS}), will build the Python bindings against ${PYTHON_INCLUDE}")
 endif()
     
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -71,6 +71,19 @@ add_custom_target(PyOpenColorIOTest
     VERBATIM
 )
 
-install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/python${PYTHON_VERSION})
+
+if(PYTHON_RESPECT_UCS)
+    # Respect Python UCS (unicode content system) version, and install
+    # into "lib/python2.6/ucs4" or similar.
+    set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}/${PYTHON_UCS}")
+else()
+    # Ignore UCS version and install into lib/python2.6
+    set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}")
+endif()
+
+message("PYTHON_VARIANT_PATH: ${PYTHON_VARIANT_PATH}")
+
+install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/${PYTHON_VARIANT_PATH})
+
 install(FILES ${CMAKE_SOURCE_DIR}/export/PyOpenColorIO/PyOpenColorIO.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/PyOpenColorIO/)

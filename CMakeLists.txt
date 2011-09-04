@@ -109,7 +109,7 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 
 if(WIN32)
     if(PYTHON_VERSION AND PYTHON_INCLUDE AND PYTHON_LIB)
-        set(EXTDIST_PYTHONPATH ${PYTHON_LIB}/python${PYTHON_VERSION}/site-packages)
+        set(EXTDIST_PfYTHONPATH ${PYTHON_LIB}/python${PYTHON_VARIANT_PATH}/site-packages)
         set(PYTHONPATH ${EXTDIST_PYTHONPATH};$ENV{PYTHONPATH})
         set(PYTHON_OK YES)
         message(STATUS "Setting Python path to: ${PYTHONPATH}")

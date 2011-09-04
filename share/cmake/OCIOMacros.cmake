@@ -121,6 +121,10 @@ MACRO(OCIOFindPython)
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
         set(PYTHON_OK YES)
+        execute_process(COMMAND ${PYTHON} -c "import sys; print sys.maxunicode > 65536 and 'ucs4' or 'ucs2'"
+            OUTPUT_VARIABLE PYTHON_UCS
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
     elseif(${PYTHON_RETURNVALUE} GREATER 0)
         set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine header location.")
     else()
