@@ -27,6 +27,8 @@ class OCIOFileTransform : public DD::Image::PixelIop {
         int interpindex;
         
         OCIO::ConstProcessorRcPtr processor;
+        
+        mutable std::string m_nodehelp;
     public:
         static const char* dirs[];
         static const char* interp[];

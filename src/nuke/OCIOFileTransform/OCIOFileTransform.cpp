@@ -36,22 +36,8 @@ const char* OCIOFileTransform::interp[] = { "nearest", "linear", 0 };
 
 void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 {
-
     File_knob(f, &src, "src", "src");
-
-    std::ostringstream os;
-    os << "Specify the source file, on disk, to use for this transform. ";
-    os << "Can be any file format that OpenColorIO supports:\n";
-
-    for(int i=0; i<OCIO::FileTransform::getNumFormats(); ++i)
-    {
-        const char* name = OCIO::FileTransform::getFormatNameByIndex(i);
-        const char* exten = OCIO::FileTransform::getFormatExtensionByIndex(i);
-        os << "\n." << exten << " (" << name << ")";
-    }
-
-    const char * srchelp = os.str().c_str();
-    DD::Image::Tooltip(f, srchelp);
+    DD::Image::Tooltip(f, "Specify the source file, on disk, to use for this transform. See the node help for the list of supported formats.");
     
     String_knob(f, &cccid, "cccid");
     const char * srchelp2 = "If the source file is an ASC CDL CCC (color correction collection), "
@@ -248,17 +234,33 @@ const char* OCIOFileTransform::displayName() const
 
 const char* OCIOFileTransform::node_help() const
 {
-    return
+    if(m_nodehelp.empty())
+    {
+        const char * helptext =
         "Use OpenColorIO to apply a transform loaded from the given "
         "file.\n\n"
         "This is usually a 1D or 3D LUT file, but can be other file-based "
         "transform, for example an ASC ColorCorrection XML file.\n\n"
-        "For a complete list of supported file formats, see the src "
-        "knob's tooltip\n\n"
         "Note that the file's transform is applied with no special "
         "input/output colorspace handling - so if the file expects "
         "log-encoded pixels, but you apply the node to a linear "
-        "image, you will get incorrect results";
+        "image, you will get incorrect results.\n\n";
+        
+        std::ostringstream os;
+        os << helptext;
+        
+        os << "Supported formats:\n";
+        for(int i=0; i<OCIO::FileTransform::getNumFormats(); ++i)
+        {
+            const char* name = OCIO::FileTransform::getFormatNameByIndex(i);
+            const char* exten = OCIO::FileTransform::getFormatExtensionByIndex(i);
+            os << "\n." << exten << " (" << name << ")";
+        }
+        
+        m_nodehelp = os.str();
+    }
+    
+    return m_nodehelp.c_str();
 }
 
 
