@@ -19,7 +19,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 // Should we use cascasing ColorSpace menus
 #if defined kDDImageVersionInteger && (kDDImageVersionInteger>=62300)
-#define OCIO_CASCASE
+#define OCIO_CASCADE
 #endif
 
 OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
@@ -45,7 +45,7 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
         
         OCIO::ConstColorSpaceRcPtr linearcs = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
         if(!linearcs) throw std::runtime_error("ROLE_SCENE_LINEAR not defined.");
-        std::string linear = linearcs->getName();
+        linear = linearcs->getName();
     }
     catch (const OCIO::Exception& e)
     {
@@ -72,7 +72,7 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     {
         std::string csname = config->getColorSpaceNameByIndex(i);
         
-#ifdef OCIO_CASCASE
+#ifdef OCIO_CASCADE
             std::string family = config->getColorSpace(csname.c_str())->getFamily();
             if(family.empty())
                 m_colorSpaceNames.push_back(csname.c_str());
@@ -131,7 +131,7 @@ namespace
 
 void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
 {
-#ifdef OCIO_CASCASE
+#ifdef OCIO_CASCADE
     DD::Image::CascadingEnumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
 #else
@@ -150,7 +150,7 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::Tooltip(f, "Specify the look transform direction. in/out colorspace handling is not affected.");
     DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE );
     
-#ifdef OCIO_CASCASE
+#ifdef OCIO_CASCADE
     DD::Image::CascadingEnumeration_knob(f,
         &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
 #else

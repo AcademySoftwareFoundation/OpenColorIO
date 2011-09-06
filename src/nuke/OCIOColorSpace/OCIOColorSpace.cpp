@@ -19,7 +19,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 // Should we use cascasing ColorSpace menus
 #if defined kDDImageVersionInteger && (kDDImageVersionInteger>=62300)
-#define OCIO_CASCASE
+#define OCIO_CASCADE
 #endif
 
 OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
@@ -47,7 +47,7 @@ OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
         {
             std::string csname = config->getColorSpaceNameByIndex(i);
             
-#ifdef OCIO_CASCASE
+#ifdef OCIO_CASCADE
             std::string family = config->getColorSpace(csname.c_str())->getFamily();
             if(family.empty())
                 m_colorSpaceNames.push_back(csname.c_str());
@@ -100,7 +100,7 @@ OCIOColorSpace::~OCIOColorSpace()
 
 void OCIOColorSpace::knobs(DD::Image::Knob_Callback f)
 {
-#ifdef OCIO_CASCASE
+#ifdef OCIO_CASCADE
     DD::Image::CascadingEnumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
