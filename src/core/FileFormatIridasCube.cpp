@@ -132,7 +132,7 @@ OCIO_NAMESPACE_ENTER
         void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
-            info.name = "iridas";
+            info.name = "iridas_cube";
             info.extension = "cube";
             info.capabilities = FORMAT_CAPABILITY_READ;
             formatInfoVec.push_back(info);
@@ -387,7 +387,7 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    FileFormat * CreateFileFormatIridas()
+    FileFormat * CreateFileFormatIridasCube()
     {
         return new LocalFileFormat();
     }
