@@ -1,3 +1,12 @@
+**Version 0.8.6 (Sept 7 2011):**
+    * Updated .ocio config reading / writing to be forwards compatibile with 1.0
+      (Profiles written in 0.8.6+ will be 1.0 compatible. Compatibility from prior versions is likely, though not guaranteed.)
+    * Better logging
+    * Added ColorSpace.equalitygroup (makes ColorSpace equality explicit)
+    * Substantial Nuke node updates
+    * Added support for Iridas .itx read/write
+    * Windows Build Support
+
 **Version 0.8.5 (Aug 2 2011):**
     * Nuke OCIODisplay fixed (bug from 0.8.4)
     * Updated Houdini HDL Reader / Writer
