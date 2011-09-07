@@ -30,7 +30,7 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     m_outputColorSpaceIndex = 0;
     m_lookIndex = 0;
     m_dirIndex = 0;
-    m_layersToProcess = DD::Image::Mask_RGB;
+    m_layersToProcess = DD::Image::Mask_RGBA;
     m_ignoreErrors = false;
     
     // Query the colorspace names from the current config
@@ -131,7 +131,9 @@ namespace
 
 void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
 {
-#ifdef OCIO_CASCADE
+    DD::Image::Divider(f, "Look Transform");    
+    
+#ifdef OCIO_CASCASE
     DD::Image::CascadingEnumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
 #else
@@ -165,12 +167,6 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
                           " are treated as a normal ColorSpace conversion instead of triggering a render error.");
     DD::Image::SetFlags(f, DD::Image::Knob::STARTLINE );
     
-    DD::Image::Divider(f);
-
-    DD::Image::Input_ChannelSet_knob(f, &m_layersToProcess, 0, "layer", "layer");
-    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
-    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
-    
     DD::Image::Tab_knob(f, "Context");
     {
         DD::Image::String_knob(f, &m_contextKey1, "key1");
@@ -193,7 +189,6 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
         DD::Image::String_knob(f, &m_contextValue4, "value4");
         DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE);
     }
-    DD::Image::EndGroup(f);
 }
 
 OCIO::ConstContextRcPtr OCIOLookTransform::getLocalContext()
@@ -447,13 +442,30 @@ const char* OCIOLookTransform::node_help() const
     return "Use OpenColorIO to apply the specified Look Transform";
 }
 
-
-DD::Image::Op* build(Node *node)
+// This class is necessary in order to call knobsAtTheEnd(). Otherwise, the NukeWrapper knobs 
+// will be added to the Context tab instead of the primary tab.
+class OCIOLookTransformNukeWrapper : public DD::Image::NukeWrapper
 {
-    DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOLookTransform(node));
-    op->noMix();
-    op->noMask();
-    op->noChannels(); // prefer our own channels control without checkboxes / alpha
-    op->noUnpremult();
+public:
+    OCIOLookTransformNukeWrapper(DD::Image::PixelIop* op) : DD::Image::NukeWrapper(op)
+    {
+        knobsAtTheEnd();
+    }
+    
+    virtual void attach()
+    {
+        wrapped_iop()->attach();
+    }
+    
+    virtual void detach()
+    {
+        wrapped_iop()->detach();
+    }  
+    
+};
+
+static DD::Image::Op* build(Node *node)
+{
+    DD::Image::NukeWrapper *op = (new OCIOLookTransformNukeWrapper(new OCIOLookTransform(node)));
     return op;
 }

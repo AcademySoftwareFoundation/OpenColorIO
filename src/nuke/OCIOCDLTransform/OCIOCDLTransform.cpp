@@ -21,7 +21,7 @@ const char* OCIOCDLTransform::dirs[] = { "forward", "inverse", 0 };
 
 OCIOCDLTransform::OCIOCDLTransform(Node *n) : DD::Image::PixelIop(n)
 {
-    layersToProcess = DD::Image::Mask_RGB;
+    layersToProcess = DD::Image::Mask_RGBA;
 
     for (int i = 0; i < 3; i++){
         m_slope[i] = 1.0;
@@ -74,7 +74,7 @@ void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
     
     m_cccidKnob = String_knob(f, &m_cccid, "cccid");
     const char * ccchelp = "If the source file is an ASC CDL CCC (color correction collection), "
-    "this specifys the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
+    "this specifies the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
     DD::Image::Tooltip(f, ccchelp);
     
     /* TODO:
@@ -94,11 +94,6 @@ void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
     
     
     DD::Image::Divider(f);
-
-    // Layer selection
-    DD::Image::Input_ChannelSet_knob(f, &layersToProcess, 0, "layer", "layer");
-    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
-    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
     
     /*
     TODO: One thing thats sucks is that we dont apparently have a mechansism to call refreshKnobEnabledState
@@ -365,9 +360,5 @@ const char* OCIOCDLTransform::node_help() const
 DD::Image::Op* build(Node *node)
 {
     DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOCDLTransform(node));
-    op->noMix();
-    op->noMask();
-    op->noChannels(); // prefer our own channels control without checkboxes / alpha
-    op->noUnpremult();
     return op;
 }

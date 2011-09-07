@@ -23,7 +23,7 @@ const char* OCIOLogConvert::modes[] = {
 OCIOLogConvert::OCIOLogConvert(Node *n) : DD::Image::PixelIop(n)
 {
     modeindex = 0;
-    layersToProcess = DD::Image::Mask_RGB;
+    layersToProcess = DD::Image::Mask_RGBA;
 
 }
 
@@ -37,12 +37,6 @@ void OCIOLogConvert::knobs(DD::Image::Knob_Callback f)
 
     Enumeration_knob(f, &modeindex, modes, "operation", "operation");
     //DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
-    
-    DD::Image::Divider(f);
-    
-    DD::Image::Input_ChannelSet_knob(f, &layersToProcess, 0, "layer", "layer");
-    DD::Image::SetFlags(f, DD::Image::Knob::NO_CHECKMARKS | DD::Image::Knob::NO_ALPHA_PULLDOWN);
-    DD::Image::Tooltip(f, "Set which layer to process. This should be a layer with rgb data.");
 }
 
 void OCIOLogConvert::_validate(bool for_real)
@@ -185,9 +179,5 @@ const char* OCIOLogConvert::node_help() const
 DD::Image::Op* build(Node *node)
 {
     DD::Image::NukeWrapper *op = new DD::Image::NukeWrapper(new OCIOLogConvert(node));
-    op->noMix();
-    op->noMask();
-    op->noChannels(); // prefer our own channels control without checkboxes / alpha
-    op->noUnpremult();
     return op;
 }
