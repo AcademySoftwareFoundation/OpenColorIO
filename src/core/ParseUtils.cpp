@@ -53,7 +53,8 @@ OCIO_NAMESPACE_ENTER
     {
         if(level == LOGGING_LEVEL_NONE) return "none";
         else if(level == LOGGING_LEVEL_WARNING) return "warning";
-        else if(level == LOGGING_LEVEL_INFO) return "warning";
+        else if(level == LOGGING_LEVEL_INFO) return "info";
+        else if(level == LOGGING_LEVEL_DEBUG) return "debug";
         return "unknown";
     }
     
@@ -63,6 +64,7 @@ OCIO_NAMESPACE_ENTER
         if(str == "0" || str == "none") return LOGGING_LEVEL_NONE;
         else if(str == "1" || str == "warning") return LOGGING_LEVEL_WARNING;
         else if(str == "2" || str == "info") return LOGGING_LEVEL_INFO;
+        else if(str == "3" || str == "debug") return LOGGING_LEVEL_DEBUG;
         return LOGGING_LEVEL_UNKNOWN;
     }
     

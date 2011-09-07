@@ -36,8 +36,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    void LogInfo(const std::string & text);
     void LogWarning(const std::string & text);
+    void LogInfo(const std::string & text);
+    void LogDebug(const std::string & text);
 }
 OCIO_NAMESPACE_EXIT
 

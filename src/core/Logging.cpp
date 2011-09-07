@@ -65,7 +65,7 @@ OCIO_NAMESPACE_ENTER
                 if(g_logginglevel == LOGGING_LEVEL_UNKNOWN)
                 {
                     std::cerr << "[OpenColorIO Warning]: Invalid $OCIO_LOGGING_LEVEL specified. ";
-                    std::cerr << "Options: none (0), warning (1), info (2)" << std::endl;
+                    std::cerr << "Options: none (0), warning (1), info (2), debug (3)" << std::endl;
                     g_logginglevel = OCIO_DEFAULT_LOGGING_LEVEL;
                 }
             }
@@ -87,6 +87,17 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
+    void LogWarning(const std::string & text)
+    {
+        LoggingLevel level = GetLoggingLevel();
+        
+        AutoMutex lock(g_logmutex);
+        if (level>=LOGGING_LEVEL_WARNING)
+        {
+            std::cerr << "[OpenColorIO Warning]: " << text << std::endl;
+        }
+    }
+    
     void LogInfo(const std::string & text)
     {
         LoggingLevel level = GetLoggingLevel();
@@ -98,15 +109,16 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    void LogWarning(const std::string & text)
+    void LogDebug(const std::string & text)
     {
         LoggingLevel level = GetLoggingLevel();
         
         AutoMutex lock(g_logmutex);
-        if (level>=LOGGING_LEVEL_WARNING)
+        if (level>=LOGGING_LEVEL_DEBUG)
         {
-            std::cerr << "[OpenColorIO Warning]: " << text << std::endl;
+            std::cerr << "[OpenColorIO Debug]: " << text << std::endl;
         }
     }
+    
 }
 OCIO_NAMESPACE_EXIT
