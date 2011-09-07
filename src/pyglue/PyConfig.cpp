@@ -199,7 +199,6 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getViews( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getDisplayLooks( PyObject * self, PyObject * args );
-        PyObject * PyOCIO_Config_setDisplayColorSpaceName( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_addDisplay( PyObject * self, PyObject * args, PyObject * kwargs );
         PyObject * PyOCIO_Config_clearDisplays( PyObject * self );
         PyObject * PyOCIO_Config_setActiveDisplays( PyObject * self, PyObject * args );
@@ -251,7 +250,6 @@ OCIO_NAMESPACE_ENTER
             {"getViews", PyOCIO_Config_getViews, METH_VARARGS, "" },
             {"getDisplayColorSpaceName", PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, "" },
             {"getDisplayLooks", PyOCIO_Config_getDisplayLooks, METH_VARARGS, "" },
-            {"setDisplayColorSpaceName", PyOCIO_Config_setDisplayColorSpaceName, METH_VARARGS, "" },
             {"addDisplay", (PyCFunction) PyOCIO_Config_addDisplay, METH_KEYWORDS, "" },
             {"clearDisplays", (PyCFunction) PyOCIO_Config_clearDisplays, METH_NOARGS, "" },
             {"setActiveDisplays", PyOCIO_Config_setActiveDisplays, METH_VARARGS, "" },
@@ -855,54 +853,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
-        PyObject * PyOCIO_Config_setDisplayColorSpaceName( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                ConfigRcPtr config = GetEditableConfig(self);
-                
-                char * display = 0;
-                char * view = 0;
-                char * csname = 0;
-                
-                if (!PyArg_ParseTuple(args,"sss:setDisplayColorSpaceName",
-                    &display, &view, &csname)) return NULL;
-                
-                config->setDisplayColorSpaceName(display, view, csname);
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        /*
-        PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args, PyObject * kwargs)
-        {
-            try
-            {
-                // We want this call to be as flexible as possible.
-                // arg1 will either be a PyTransform
-                // or arg1, arg2 will be {str, ColorSpace}
-                
-                PyObject * arg1 = Py_None;
-                PyObject * arg2 = Py_None;
-                
-                const char * direction = 0;
-                PyObject * pycontext = Py_None;
-                
-                const char * kwlist[] = {"arg1", "arg2", "direction", "context",  NULL};
-                
-                if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OsO",
-                    const_cast<char**>(kwlist),
-                    &arg1, &arg2, &direction, &pycontext))
-                    return 0;
-        */
         
         PyObject * PyOCIO_Config_addDisplay( PyObject * self, PyObject * args, PyObject * kwargs)
         {

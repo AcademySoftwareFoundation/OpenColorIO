@@ -89,7 +89,6 @@ OCIO_NAMESPACE_ENTER
         int PyOCIO_GroupTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
         PyObject * PyOCIO_GroupTransform_getTransform( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_GroupTransform_getEditableTransform( PyObject * self,  PyObject *args );
         
         PyObject * PyOCIO_GroupTransform_getTransforms( PyObject * self );
         PyObject * PyOCIO_GroupTransform_setTransforms( PyObject * self,  PyObject *args );
@@ -106,7 +105,6 @@ OCIO_NAMESPACE_ENTER
         
         PyMethodDef PyOCIO_GroupTransform_methods[] = {
             {"getTransform", PyOCIO_GroupTransform_getTransform, METH_VARARGS, "" },
-            {"getEditableTransform", PyOCIO_GroupTransform_getEditableTransform, METH_VARARGS, "" },
             
             {"getTransforms", (PyCFunction) PyOCIO_GroupTransform_getTransforms, METH_NOARGS, "" },
             {"setTransforms", PyOCIO_GroupTransform_setTransforms, METH_VARARGS, "" },
@@ -263,28 +261,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        PyObject * PyOCIO_GroupTransform_getEditableTransform( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                int index = 0;
-                
-                if (!PyArg_ParseTuple(args,"i:getEditableTransform", &index)) return NULL;
-                
-                GroupTransformRcPtr transform = GetEditableGroupTransform(self);
-                TransformRcPtr childTransform = transform->getEditableTransform(index);
-                
-                return BuildEditablePyTransform(childTransform);
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        
         
         
         PyObject * PyOCIO_GroupTransform_getTransforms( PyObject * self)

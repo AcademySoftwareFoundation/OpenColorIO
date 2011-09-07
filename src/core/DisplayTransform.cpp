@@ -54,7 +54,6 @@ OCIO_NAMESPACE_ENTER
         TransformRcPtr linearCC_;
         TransformRcPtr colorTimingCC_;
         TransformRcPtr channelView_;
-        std::string displayColorSpaceName_;
         std::string display_;
         std::string view_;
         TransformRcPtr displayCC_;
@@ -84,7 +83,6 @@ OCIO_NAMESPACE_ENTER
             channelView_ = rhs.channelView_;
             if(channelView_) channelView_ = channelView_->createEditableCopy();
             
-            displayColorSpaceName_ = rhs.displayColorSpaceName_;
             display_ = rhs.display_;
             view_ = rhs.view_;
             
@@ -176,17 +174,6 @@ OCIO_NAMESPACE_ENTER
     {
         return getImpl()->channelView_;
     }
-    
-    void DisplayTransform::setDisplayColorSpaceName(const char * name)
-    {
-        getImpl()->displayColorSpaceName_ = name;
-    }
-    
-    const char * DisplayTransform::getDisplayColorSpaceName() const
-    {
-        return getImpl()->displayColorSpaceName_.c_str();
-    }
-    
     
     void DisplayTransform::setDisplay(const char * display)
     {
@@ -283,13 +270,7 @@ OCIO_NAMESPACE_ENTER
         std::string display = displayTransform.getDisplay();
         std::string view = displayTransform.getView();
         
-        // This for backwards compatibility. Remove in 0.9
         std::string displayColorSpaceName = config.getDisplayColorSpaceName(display.c_str(), view.c_str());
-        if(displayColorSpaceName.empty())
-        {
-            displayColorSpaceName = displayTransform.getDisplayColorSpaceName();
-        }
-        
         ConstColorSpaceRcPtr displayColorspace = config.getColorSpace(displayColorSpaceName.c_str());
         if(!displayColorspace)
         {

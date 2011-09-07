@@ -356,20 +356,6 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: 
         bool getLooksOverrideEnabled() const;
         
-        
-        
-        
-        
-        //!cpp:function:: DEPRECATED. Will be removed in 0.9
-        // (If you rely on these functions, Views will not be applied)
-        // Use setDisplay / setView instead
-        void setDisplayColorSpaceName(const char * name);
-        
-        //!cpp:function:: DEPRECATED. Will be removed in 0.9
-        // (If you rely on these functions, Views will not be applied)
-        // Use getDisplay / getView instead
-        const char * getDisplayColorSpaceName() const;
-        
     private:
         DisplayTransform();
         DisplayTransform(const DisplayTransform &);
@@ -516,8 +502,6 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         ConstTransformRcPtr getTransform(int index) const;
-        //!cpp:function:This returns the actual internal transform, not a copy.:
-        TransformRcPtr getEditableTransform(int index);
         
         //!cpp:function::
         int size() const;

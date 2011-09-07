@@ -319,7 +319,7 @@ void OCIOColorSpace::pixel_engine(
 
         try
         {
-            OCIO::PlanarImageDesc img(rOut, gOut, bOut, rowWidth, /*height*/ 1);
+            OCIO::PlanarImageDesc img(rOut, gOut, bOut, NULL, rowWidth, /*height*/ 1);
             m_processor->apply(img);
         }
         catch(OCIO::Exception &e)

@@ -182,7 +182,6 @@ OCIO_NAMESPACE_ENTER
             DynamicPtrCast<const DisplayTransform>(transform))
         {
             colorSpaceNames.insert(displayTransform->getInputColorSpaceName());
-            colorSpaceNames.insert(displayTransform->getDisplayColorSpaceName());
         }
         else if(ConstLookTransformRcPtr lookTransform = \
             DynamicPtrCast<const LookTransform>(transform))
@@ -1258,12 +1257,6 @@ OCIO_NAMESPACE_ENTER
         return views[index].looks.c_str();
     }
     
-    void Config::setDisplayColorSpaceName(const char * display, const char * view,
-                                          const char * colorSpaceName)
-    {
-        addDisplay(display, view, colorSpaceName, "");
-    }
-    
     void Config::addDisplay(const char * display, const char * view,
                             const char * colorSpaceName, const char * lookName)
     {
@@ -1848,22 +1841,16 @@ OCIO_NAMESPACE_ENTER
     
     void Config::Impl::getAllIntenalTransforms(ConstTransformVec & transformVec) const
     {
-        // Grab all transform from the ColorSpaces
-        ColorSpaceDirection dirs[] = { COLORSPACE_DIR_TO_REFERENCE,
-                                       COLORSPACE_DIR_FROM_REFERENCE };
-        
-        for(unsigned int csindex=0; csindex<colorspaces_.size(); ++csindex)
+        // Grab all transforms from the ColorSpaces
+        for(unsigned int i=0; i<colorspaces_.size(); ++i)
         {
-            for(int dirindex=0; dirindex<2; ++dirindex)
-            {
-                if(!colorspaces_[csindex]->isTransformSpecified(dirs[dirindex]))
-                    continue;
-                
-                transformVec.push_back(colorspaces_[csindex]->getTransform(dirs[dirindex]));
-            }
+            if(colorspaces_[i]->getTransform(COLORSPACE_DIR_TO_REFERENCE))
+                transformVec.push_back(colorspaces_[i]->getTransform(COLORSPACE_DIR_TO_REFERENCE));
+            if(colorspaces_[i]->getTransform(COLORSPACE_DIR_FROM_REFERENCE))
+                transformVec.push_back(colorspaces_[i]->getTransform(COLORSPACE_DIR_FROM_REFERENCE));
         }
         
-        // Looks
+        // Grab all transforms from the Looks
         for(unsigned int i=0; i<looksList_.size(); ++i)
         {
             if(looksList_[i]->getTransform())
