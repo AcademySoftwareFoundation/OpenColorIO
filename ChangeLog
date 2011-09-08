@@ -1,3 +1,13 @@
+**Version 1.0.0 (Sept 8 2011):**
+    * ABI Lockoff for 1.0 branch
+    * General API Cleanup (removed deprecated / unnecessary functions)
+    * New features can be added, but the ABI will only be extended in a binary compatible manner.
+      Profiles written from 1.0 will always be readable in future versions.
+
+
+-------------------------------------------------------------------------------
+
+
 **Version 0.8.6 (Sept 7 2011):**
     * Updated .ocio config reading / writing to be forwards compatibile with 1.0
       (Profiles written in 0.8.6+ will be 1.0 compatible. Compatibility from prior versions is likely, though not guaranteed.)
