@@ -1,3 +1,0 @@
-#!/bin/sh
-OCIO=@CMAKE_SOURCE_DIR@/configs/testing/config.ocio \
-@CMAKE_CURRENT_BINARY_DIR@/OpenColorIOTest;
