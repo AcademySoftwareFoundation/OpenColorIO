@@ -32,7 +32,6 @@ if(NOT CMAKE_CROSSCOMPILING)
     set(OCIO_BUILD_SHARED TRUE)
     set(OCIO_BUILD_STATIC TRUE)
     set(OCIO_BUILD_TRUELIGHT TRUE)
-    set(OCIO_BUILD_TESTBED TRUE)
     set(OCIO_BUILD_APPS TRUE)
     set(OCIO_BUILD_NUKE TRUE)
     set(OCIO_BUILD_PYGLUE TRUE)
@@ -253,13 +252,6 @@ endif()
 
 add_subdirectory(src/core)
 add_subdirectory(src/core_tests)
-
-###############################################################################
-### TEST BED ###
-
-if(OCIO_BUILD_TESTBED)
-    add_subdirectory(src/testbed)
-endif()
 
 ###############################################################################
 ### APPS ###
