@@ -64,13 +64,6 @@ if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
 
-add_custom_target(PyOpenColorIOTest
-    COMMAND env PYTHONPATH=${OpenColorIO_LIBRARY_OUTPUT_DIRECTORY} ${PYTHON} ${CMAKE_SOURCE_DIR}/src/testbed/main.py
-    DEPENDS PyOpenColorIO
-    SOURCES ${CMAKE_SOURCE_DIR}/src/testbed/main.py
-    VERBATIM
-)
-
 
 if(PYTHON_RESPECT_UCS)
     # Respect Python UCS (unicode content system) version, and install
