@@ -3,14 +3,6 @@ set(OCIO_VERSION_MAJOR 0)
 set(OCIO_VERSION_MINOR 9)
 set(OCIO_VERSION_PATCH 0)
 
-# This does not include the SOVERSION override, on purpose, so that the
-# OCIO_VERSION value will be an accurate reflection of the underlying library version.
-set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PATCH}")
-
-if(NOT SOVERSION)
-    set(SOVERSION ${OCIO_VERSION_MAJOR} CACHE STRING "Set the SO version in the SO name of the output library")
-endif()
-
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
 if(NOT DEFINED CMAKE_FIRST_RUN)
@@ -20,6 +12,29 @@ endif()
 ###############################################################################
 ### GLOBAL ###
 
+option(OCIO_BUILD_SHARED "Set to OFF to disable building the shared core library" ON)
+option(OCIO_BUILD_STATIC "Set to OFF to disable building the static core library" ON)
+option(OCIO_BUILD_TRUELIGHT "Set to OFF to disable truelight" ON)
+option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
+option(OCIO_BUILD_NUKE "Set to OFF to disable building nuke plugins" ON)
+option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
+option(OCIO_BUILD_TESTS "Specify whether to build unittests" OFF)
+option(OCIO_BUILD_PYGLUE "Specify whether to build python bindings" ON)
+
+option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" OFF)
+
+# This does not include the SOVERSION override, on purpose, so that the
+# OCIO_VERSION value will be an accurate reflection of the underlying library version.
+set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PATCH}")
+
+if(NOT SOVERSION)
+    set(SOVERSION ${OCIO_VERSION_MAJOR} CACHE STRING "Set the SO version in the SO name of the output library")
+endif()
+
+###############################################################################
+
+
 include(ParseArguments)
 include(OCIOMacros)
 include(ExternalProject)
@@ -27,16 +42,6 @@ include(ExternalProject)
 enable_language(CXX)
 
 ENABLE_TESTING()
-
-if(NOT CMAKE_CROSSCOMPILING)
-    set(OCIO_BUILD_SHARED TRUE)
-    set(OCIO_BUILD_STATIC TRUE)
-    set(OCIO_BUILD_TRUELIGHT TRUE)
-    set(OCIO_BUILD_APPS TRUE)
-    set(OCIO_BUILD_NUKE TRUE)
-    set(OCIO_BUILD_PYGLUE TRUE)
-    set(OCIO_BUILD_SSE TRUE)
-endif()
 
 if(APPLE OR IPHONE)
     if(NOT CMAKE_OSX_ARCHITECTURES)
@@ -65,6 +70,7 @@ if(NOT OCIO_NAMESPACE)
       "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc."
       FORCE)
 endif(NOT OCIO_NAMESPACE)
+messageonce(STATUS "Setting Namespace to: ${OCIO_NAMESPACE}")
 
 # If CMAKE_INSTALL_EXEC_PREFIX is not specified, install binaries
 # directly into the regular install prefix
@@ -73,12 +79,8 @@ if(NOT CMAKE_INSTALL_EXEC_PREFIX)
     set(CMAKE_INSTALL_EXEC_PREFIX ${CMAKE_INSTALL_PREFIX})
 endif()
 
-# Should we use the boost ptr, or tr1?
-# Boost is occationally necessary for compatibility
-# on systems that do not support tr1/shared_ptr
-option(USE_BOOST_PTR "Set to ON to enable boost shared_ptr" OFF)
-if(USE_BOOST_PTR)
-    messageonce("Boost shared_ptr: Enabled")
+messageonce("Use Boost Ptr: ${OCIO_USE_BOOST_PTR}")
+if(OCIO_USE_BOOST_PTR)
     set(Boost_ADDITIONAL_VERSIONS "1.45" "1.44" "1.43" "1.43.0" "1.42"
                                   "1.42.0" "1.41" "1.41.0" "1.40"
                                   "1.40.0" "1.39" "1.39.0" "1.38"
@@ -87,7 +89,7 @@ if(USE_BOOST_PTR)
     set(Boost_USE_MULTITHREADED ON)
     find_package(Boost 1.34)
     if(NOT Boost_FOUND)
-        message(FATAL_ERROR "USE_BOOST_PTR is specified, but a boost installation could not be found.")
+        message(FATAL_ERROR "OCIO_USE_BOOST_PTR is specified, but a boost installation could not be found.")
     else()
         set(OCIO_USE_BOOST_PTR 1)
     endif()
@@ -95,7 +97,6 @@ if(USE_BOOST_PTR)
     set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
     # set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 else()
-    messageonce("Boost smart_ptr: Disabled")
     set(OCIO_USE_BOOST_PTR 0)
 endif()
 
@@ -126,11 +127,8 @@ else()
     endif()
 endif()
 
-if(CMAKE_FIRST_RUN)
-    message(STATUS "Setting Namespace to: ${OCIO_NAMESPACE}")
-    message(STATUS "Setting EXTDIST_BINPATH: ${EXTDIST_BINPATH}")
-    message(STATUS "Setting EXTDIST_PYTHONPATH: ${EXTDIST_PYTHONPATH}")
-endif()
+messageonce(STATUS "Setting EXTDIST_BINPATH: ${EXTDIST_BINPATH}")
+messageonce(STATUS "Setting EXTDIST_PYTHONPATH: ${EXTDIST_PYTHONPATH}")
 
 ###############################################################################
 ### tinyxml ###
@@ -194,15 +192,9 @@ set(EXTERNAL_GENERAL_LIBRARIES ${TINYXML_STATIC_LIBRARIES} ${YAML_CPP_STATIC_GEN
 ###############################################################################
 ### Documentation ###
 
-if(NOT MAKE_DOCS)
-    set(MAKE_DOCS NO CACHE BOOL
-      "Specify whether to build documentation."
-      FORCE)
-endif()
+messageonce("Generate Documentation: ${OCIO_BUILD_DOCS}")
 
-messageonce("Generate Documentation: ${MAKE_DOCS}")
-
-if(MAKE_DOCS)
+if(OCIO_BUILD_DOCS)
     if(PYTHON_OK)
         add_subdirectory(docs)
     else()
@@ -213,9 +205,9 @@ endif()
 ###############################################################################
 ### SSE ###
 
-option(USE_SSE "Set to OFF to disable SSE optimizations." ON)
-if(USE_SSE AND OCIO_BUILD_SSE)
-    messageonce("SSE Runtime: ENABLED")
+messageonce("SSE Optimizations: ${OCIO_USE_SSE}")
+
+if(OCIO_USE_SSE)
     if(WIN32)
         # SSE instructions are automatically compiled into 64-bit applications so enabling the option is redundant and
         # actually produces an unknown option warning in Visual Studio.
@@ -226,8 +218,6 @@ if(USE_SSE AND OCIO_BUILD_SSE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
     endif()
     add_definitions("-DUSE_SSE")
-else()
-    messageonce("SSE Runtime: DISABLED")
 endif()
 
 ###############################################################################
@@ -251,7 +241,11 @@ endif()
 ### CORE ###
 
 add_subdirectory(src/core)
-add_subdirectory(src/core_tests)
+
+messageonce("Build Unit Tests: ${OCIO_BUILD_TESTS}")
+if(OCIO_BUILD_TESTS)
+    add_subdirectory(src/core_tests)
+endif()
 
 ###############################################################################
 ### APPS ###
