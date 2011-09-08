@@ -18,11 +18,10 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OCIOFileTransform::OCIOFileTransform(Node *n) : DD::Image::PixelIop(n)
 {
-    src = NULL;
-    dirindex = 0;
-    interpindex = 1;
-    
-    layersToProcess = DD::Image::Mask_RGBA;
+    m_file = NULL;
+    m_dirindex = 0;
+    m_interpindex = 1;
+    m_layersToProcess = DD::Image::Mask_RGBA;
 }
 
 OCIOFileTransform::~OCIOFileTransform()
@@ -36,20 +35,20 @@ const char* OCIOFileTransform::interp[] = { "nearest", "linear", 0 };
 
 void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 {
-    File_knob(f, &src, "src", "src");
-    DD::Image::Tooltip(f, "Specify the source file, on disk, to use for this transform. See the node help for the list of supported formats.");
+    File_knob(f, &m_file, "file", "file");
+    DD::Image::Tooltip(f, "Specify the file, on disk, to use for this transform. See the node help for the list of supported formats.");
     
-    String_knob(f, &cccid, "cccid");
+    String_knob(f, &m_cccid, "cccid");
     const char * srchelp2 = "If the source file is an ASC CDL CCC (color correction collection), "
     "this specifys the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
     DD::Image::Tooltip(f, srchelp2);
     
-    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform(fileknob='src', cccidknob = 'cccid')", "select_cccid", "select cccid");
+    DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform(fileknob='file', cccidknob = 'cccid')", "select_cccid", "select cccid");
     
-    Enumeration_knob(f, &dirindex, dirs, "direction", "direction");
+    Enumeration_knob(f, &m_dirindex, dirs, "direction", "direction");
     DD::Image::Tooltip(f, "Specify the transform direction.");
     
-    Enumeration_knob(f, &interpindex, interp, "interpolation", "interpolation");
+    Enumeration_knob(f, &m_interpindex, interp, "interpolation", "interpolation");
     DD::Image::Tooltip(f, "Specify the interpolation method. For files that are not LUTs (mtx, etc) this is ignored.");
 }
 
@@ -57,7 +56,7 @@ void OCIOFileTransform::_validate(bool for_real)
 {
     input0().validate(for_real);
     
-    if(!src)
+    if(!m_file)
     {
         error("The source file must be specified.");
         return;
@@ -69,17 +68,17 @@ void OCIOFileTransform::_validate(bool for_real)
         config->sanityCheck();
         
         OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
-        transform->setSrc(src);
+        transform->setSrc(m_file);
         
-        transform->setCCCId(cccid.c_str());
+        transform->setCCCId(m_cccid.c_str());
         
-        if(dirindex == 0) transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+        if(m_dirindex == 0) transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
         else transform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
         
-        if(interpindex == 0) transform->setInterpolation(OCIO::INTERP_NEAREST);
+        if(m_interpindex == 0) transform->setInterpolation(OCIO::INTERP_NEAREST);
         else transform->setInterpolation(OCIO::INTERP_LINEAR);
         
-        processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_FORWARD);
+        m_processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_FORWARD);
     }
     catch(OCIO::Exception &e)
     {
@@ -87,7 +86,7 @@ void OCIOFileTransform::_validate(bool for_real)
         return;
     }
     
-    if(processor->isNoOp())
+    if(m_processor->isNoOp())
     {
         // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
@@ -106,7 +105,7 @@ void OCIOFileTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& m
     DD::Image::ChannelSet done;
     foreach(c, mask)
     {
-        if ((layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        if ((m_layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
         {
             done.addBrothers(c, 3);
         }
@@ -119,7 +118,7 @@ void OCIOFileTransform::append(DD::Image::Hash& nodehash)
     // There is a bug where in Nuke <6.3 the String_knob (used for
     // cccid) is not included in the node's hash. Include it manually
     // so the node correctly redraws. Appears fixed in in 6.3
-    nodehash.append(cccid.c_str());
+    nodehash.append(m_cccid.c_str());
 }
 
 int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
@@ -127,11 +126,11 @@ int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
     // Only show the cccid knob when loading a .cc/.ccc file. Set
     // hidden state when the src is changed, or the node properties
     // are shown
-    if(k->is("src") | k->is("showPanel"))
+    if(k->is("file") | k->is("showPanel"))
     {
-        // Convoluted equiv to pysting::endswith(src, ".ccc")
+        // Convoluted equiv to pysting::endswith(m_file, ".ccc")
         // TODO: Could this be queried from the processor?
-        const std::string srcstring = src;
+        const std::string srcstring = m_file;
         const std::string cccext = "ccc";
         const std::string ccext = "cc";
         if(std::equal(cccext.rbegin(), cccext.rend(), srcstring.rbegin()) ||
@@ -175,7 +174,7 @@ void OCIOFileTransform::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        if (!(m_layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;
@@ -205,7 +204,7 @@ void OCIOFileTransform::pixel_engine(
         try
         {
             OCIO::PlanarImageDesc img(rOut, gOut, bOut, NULL, rowWidth, /*height*/ 1);
-            processor->apply(img);
+            m_processor->apply(img);
         }
         catch(OCIO::Exception &e)
         {
