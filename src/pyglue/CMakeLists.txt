@@ -21,7 +21,7 @@ endif()
 file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
 
 add_library(PyOpenColorIO MODULE ${pyglue_src_files} )
-if(USE_BOOST_PTR)
+if(OCIO_USE_BOOST_PTR)
     include_directories(
         ${PYTHON_INCLUDE}
         ${Boost_INCLUDE_DIR}
