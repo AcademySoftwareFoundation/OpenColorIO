@@ -19,14 +19,14 @@ namespace OCIO = OCIO_NAMESPACE;
 class OCIOFileTransform : public DD::Image::PixelIop {
 
     protected:
-        DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
-        const char* src;
-        std::string cccid;
+        DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
+        const char* m_file;
+        std::string m_cccid;
         
-        int dirindex;
-        int interpindex;
+        int m_dirindex;
+        int m_interpindex;
         
-        OCIO::ConstProcessorRcPtr processor;
+        OCIO::ConstProcessorRcPtr m_processor;
         
         mutable std::string m_nodehelp;
     public:
