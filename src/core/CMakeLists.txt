@@ -34,6 +34,14 @@ if(OCIO_BUILD_SHARED)
         OUTPUT_NAME OpenColorIO
         COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
         LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
+    
+    if (SOVERSION)
+        message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
+        set_target_properties(OpenColorIO PROPERTIES
+            VERSION ${OCIO_VERSION}
+            SOVERSION ${SOVERSION})
+    endif()
+    
     install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
 endif()
 
@@ -55,18 +63,15 @@ if(OCIO_BUILD_STATIC)
         OUTPUT_NAME OpenColorIO
         COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
         LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
+    
+    if (SOVERSION)
+        message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
+        set_target_properties(OpenColorIO_STATIC PROPERTIES
+            VERSION ${OCIO_VERSION}
+            SOVERSION ${SOVERSION})
+    endif()
+    
     install(TARGETS OpenColorIO_STATIC DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
-endif()
-
-#
-if (SOVERSION)
-    message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
-    set_target_properties(OpenColorIO PROPERTIES
-        VERSION ${OCIO_VERSION}
-        SOVERSION ${SOVERSION})
-    set_target_properties(OpenColorIO_STATIC PROPERTIES
-        VERSION ${OCIO_VERSION}
-        SOVERSION ${SOVERSION})
 endif()
 
 # public interface
