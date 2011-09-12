@@ -95,6 +95,17 @@ Exceptions
    Use this for numeric comparisons.  This is also available
    at compile time as OCIO_VERSION_HEX.
 
+.. cpp:function:: extern LoggingLevel GetLoggingLevel()
+   
+   Get the global logging level
+   You can also override this at runtime using the $OCIO_LOGGING_LEVEL
+   envvar. (Client application who which to set this should use
+   SetLoggingLevel, not the envvar). The default value is INFO.
+
+.. cpp:function:: extern void SetLoggingLevel(LoggingLevel level)
+   
+   Get the global logging level
+
 
 Config
 ******
@@ -335,7 +346,7 @@ look specification. (And forward is assumed in the absense of either)
 .. cpp:function:: const char * Config::getActiveDisplays() const
    
 
-.. cpp:function:: void Config::setActiveViews(const char * displays)
+.. cpp:function:: void Config::setActiveViews(const char * views)
    
    Comma-delimited list of view names.
 
@@ -436,11 +447,6 @@ functionality (such as to apply an individual LUT file).
 .. cpp:function:: ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context, const ConstTransformRcPtr& transform, TransformDirection direction) const
    
 
-.. cpp:function:: void Config::setDisplayColorSpaceName(const char * display, const char * view, const char * colorSpaceName)
-   
-   DEPRECATED. Will be removed in 0.9
-   Use addDisplay instead
-
 .. _colorspace_section:
 
 ColorSpace
@@ -475,8 +481,22 @@ uint8, etc.), and the set of ColorSpaces that provide equivalent mappings
 
 .. cpp:function:: const char * ColorSpace::getFamily() const
    
+   Get the family, for use in user interfaces (optional)
 
 .. cpp:function:: void ColorSpace::setFamily(const char * family)
+   
+   Set the family, for use in user interfaces (optional)
+
+.. cpp:function:: const char * ColorSpace::getEqualityGroup() const
+   
+   Get the ColorSpace group name (used for equality comparisons)
+   This allows no-op transforms between different colorspaces.
+   If an equalityGroup is not defined (an empty string), it will be considered
+   unique (i.e., it will not compare as equal to other ColorSpaces with an
+   empty equality group).  This is often, though not always, set to the
+   same value as 'family'.
+
+.. cpp:function:: void ColorSpace::setEqualityGroup(const char * equalityGroup)
    
 
 .. cpp:function:: const char * ColorSpace::getDescription() const
@@ -550,16 +570,13 @@ Transform
 
 .. cpp:function:: ConstTransformRcPtr ColorSpace::getTransform(ColorSpaceDirection dir) const
    
-
-.. cpp:function:: TransformRcPtr ColorSpace::getEditableTransform(ColorSpaceDirection dir)
-   
+   If a transform in the specified direction has been specified,
+   return it. Otherwise return a null ConstTransformRcPtr
 
 .. cpp:function:: void ColorSpace::setTransform(const ConstTransformRcPtr & transform, ColorSpaceDirection dir)
    
-
-.. cpp:function:: bool ColorSpace::isTransformSpecified(ColorSpaceDirection dir) const
-   
-   Setting a transform to a non-null call makes it specified.
+   Specify the transform for the appropriate direction.
+   Setting the transform to null will clear it.
 
 .. _look_section:
 
@@ -809,31 +826,10 @@ ImageDesc
 .. cpp:class:: ImageDesc
    
    This is a light-weight wrapper around an image, that provides a context
-   for pixel access. This does NOT claim ownership of the pixels, or do
-   any internal allocations or copying of image data.
+   for pixel access. This does NOT claim ownership of the pixels or copy
+   image data
 
 .. cpp:function:: virtual ImageDesc::~ImageDesc()
-   
-
-.. cpp:function:: virtual long ImageDesc::getWidth() const = 0
-   
-
-.. cpp:function:: virtual long ImageDesc::getHeight() const = 0
-   
-
-.. cpp:function:: virtual ptrdiff_t ImageDesc::getXStrideBytes() const = 0
-   
-
-.. cpp:function:: virtual ptrdiff_t ImageDesc::getYStrideBytes() const = 0
-   
-
-.. cpp:function:: virtual float* ImageDesc::getRData() const = 0
-   
-
-.. cpp:function:: virtual float* ImageDesc::getGData() const = 0
-   
-
-.. cpp:function:: virtual float* ImageDesc::getBData() const = 0
    
 
 
@@ -845,34 +841,34 @@ PackedImageDesc
 
 .. cpp:function:: PackedImageDesc::PackedImageDesc(float * data, long width, long height, long numChannels, ptrdiff_t chanStrideBytes = AutoStride, ptrdiff_t xStrideBytes = AutoStride, ptrdiff_t yStrideBytes = AutoStride)
    
+   Pass the pointer to packed image data: rgbrgbrgb, etc.
+   The number of channels must be greater than or equal to 3
+   If a 4th channel is specified, it is assumed to be alpha
+   information.  Channels > 4 will be ignored.
 
 .. cpp:function:: virtual PackedImageDesc::~PackedImageDesc()
    
 
-.. cpp:function:: virtual long PackedImageDesc::getWidth() const
+.. cpp:function:: float * PackedImageDesc::getData() const
    
 
-.. cpp:function:: virtual long PackedImageDesc::getHeight() const
+.. cpp:function:: long PackedImageDesc::getWidth() const
    
 
-.. cpp:function:: virtual ptrdiff_t PackedImageDesc::getXStrideBytes() const
+.. cpp:function:: long PackedImageDesc::getHeight() const
    
 
-.. cpp:function:: virtual ptrdiff_t PackedImageDesc::getYStrideBytes() const
+.. cpp:function:: long PackedImageDesc::getNumChannels() const
    
 
-.. cpp:function:: virtual float* PackedImageDesc::getRData() const
+.. cpp:function:: ptrdiff_t PackedImageDesc::getChanStrideBytes() const
    
 
-.. cpp:function:: virtual float* PackedImageDesc::getGData() const
+.. cpp:function:: ptrdiff_t PackedImageDesc::getXStrideBytes() const
    
 
-.. cpp:function:: virtual float* PackedImageDesc::getBData() const
+.. cpp:function:: ptrdiff_t PackedImageDesc::getYStrideBytes() const
    
-
-.. cpp:function:: float* PackedImageDesc::getAData() const
-   
-   alpha is optional, may be NULL
 
 
 PlanarImageDesc
@@ -881,38 +877,34 @@ PlanarImageDesc
 .. cpp:class:: PlanarImageDesc
    
 
-.. cpp:function:: PlanarImageDesc::PlanarImageDesc(float * rData, float * gData, float * bData, long width, long height, ptrdiff_t yStrideBytes = AutoStride)
+.. cpp:function:: PlanarImageDesc::PlanarImageDesc(float * rData, float * gData, float * bData, float * aData, long width, long height, ptrdiff_t yStrideBytes = AutoStride)
    
+   Pass the pointer to the specified image planes: rrrr gggg bbbb, etc.
+   aData is optional, pass NULL if no alpha exists.
+   {r,g,b} Data must be specified
 
 .. cpp:function:: virtual PlanarImageDesc::~PlanarImageDesc()
    
 
-.. cpp:function:: virtual long PlanarImageDesc::getWidth() const
+.. cpp:function:: float* PlanarImageDesc::getRData() const
    
 
-.. cpp:function:: virtual long PlanarImageDesc::getHeight() const
+.. cpp:function:: float* PlanarImageDesc::getGData() const
    
 
-.. cpp:function:: virtual ptrdiff_t PlanarImageDesc::getXStrideBytes() const
+.. cpp:function:: float* PlanarImageDesc::getBData() const
    
-
-.. cpp:function:: virtual ptrdiff_t PlanarImageDesc::getYStrideBytes() const
-   
-
-.. cpp:function:: virtual float* PlanarImageDesc::getRData() const
-   
-
-.. cpp:function:: virtual float* PlanarImageDesc::getGData() const
-   
-
-.. cpp:function:: virtual float* PlanarImageDesc::getBData() const
-   
-
-.. cpp:function:: void PlanarImageDesc::setAData(float * aData)
-   
-   alpha is optional
 
 .. cpp:function:: float* PlanarImageDesc::getAData() const
+   
+
+.. cpp:function:: long PlanarImageDesc::getWidth() const
+   
+
+.. cpp:function:: long PlanarImageDesc::getHeight() const
+   
+
+.. cpp:function:: ptrdiff_t PlanarImageDesc::getYStrideBytes() const
    
 
 

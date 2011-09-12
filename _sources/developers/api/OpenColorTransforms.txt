@@ -64,6 +64,13 @@ Typically only needed when creating and/or manipulating configurations
 .. cpp:function:: static CDLTransformRcPtr CDLTransform::Create()
    
 
+.. cpp:function:: static CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cccid)
+   
+   Load the CDL from the src .cc or .ccc file.
+   If a .ccc is used, the cccid must also be specified
+   src must be an absolute path reference, no relative directory
+   or envvar resolution is performed.
+
 .. cpp:function:: virtual TransformRcPtr CDLTransform::createEditableCopy() const
    
 
@@ -275,18 +282,6 @@ included in the serialization.
 .. cpp:function:: bool DisplayTransform::getLooksOverrideEnabled() const
    
 
-.. cpp:function:: void DisplayTransform::setDisplayColorSpaceName(const char * name)
-   
-   DEPRECATED. Will be removed in 0.9
-   (If you rely on these functions, Views will not be applied)
-   Use setDisplay / setView instead
-
-.. cpp:function:: const char * DisplayTransform::getDisplayColorSpaceName() const
-   
-   DEPRECATED. Will be removed in 0.9
-   (If you rely on these functions, Views will not be applied)
-   Use getDisplay / getView instead
-
 .. cpp:function:: extern std::ostream& operator<< (std::ostream&, const DisplayTransform&)
    
 
@@ -391,10 +386,6 @@ included in the serialization.
 
 .. cpp:function:: ConstTransformRcPtr GroupTransform::getTransform(int index) const
    
-
-.. None TransformRcPtr GroupTransform::getEditableTransform(int index)
-   
-   !cpp:function:This returns the actual internal transform, not a copy.:
 
 .. cpp:function:: int GroupTransform::size() const
    
@@ -509,6 +500,18 @@ included in the serialization.
    
 
 .. cpp:function:: void MatrixTransform::getValue(float * m44, float * offset4) const
+   
+
+.. cpp:function:: void MatrixTransform::setMatrix(const float * m44)
+   
+
+.. cpp:function:: void MatrixTransform::getMatrix(float * m44) const
+   
+
+.. cpp:function:: void MatrixTransform::setOffset(const float * offset4)
+   
+
+.. cpp:function:: void MatrixTransform::getOffset(float * offset4) const
    
 
 **Convenience functions**

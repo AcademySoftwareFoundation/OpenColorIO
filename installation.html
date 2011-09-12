@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8.5',
+        VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v0.8.5 documentation" href="index.html" />
+    <link rel="top" title="OpenColorIO v1.0.0 documentation" href="index.html" />
     <link rel="next" title="User Guide" href="userguide/index.html" />
     <link rel="prev" title="Nuke default" href="workflow/nuke_default.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v0.8.5 documentation
+      OpenColorIO v1.0.0 documentation
       </div>
       <div class="content">
         
@@ -230,15 +230,11 @@ write your own, better viewer setup function!</p>
     <span class="k">if</span> <span class="n">also_remove</span> <span class="o">==</span> <span class="s">&quot;default&quot;</span><span class="p">:</span>
         <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s">&#39;rec709&#39;</span><span class="p">)</span>
         <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s">&#39;sRGB&#39;</span><span class="p">)</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s">&#39;None&#39;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">also_remove</span> <span class="o">==</span> <span class="s">&quot;all&quot;</span><span class="p">:</span>
-        <span class="c"># Unregister all processes, but retain the useful &quot;None&quot; option</span>
+        <span class="c"># Unregister all processes, including None, which should be defined in config.ocio</span>
         <span class="k">for</span> <span class="n">curname</span> <span class="ow">in</span> <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">registeredNames</span><span class="p">():</span>
             <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">curname</span><span class="p">)</span>
-
-        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;None&quot;</span><span class="p">,</span>
-            <span class="n">call</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">ViewerProcess_None</span><span class="p">,</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="p">())</span>
 
     <span class="c"># Formats the display and transform, e.g &quot;Film1D (sRGB)&quot;</span>
     <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%(view)s</span><span class="s"> (</span><span class="si">%(display)s</span><span class="s">)&quot;</span>

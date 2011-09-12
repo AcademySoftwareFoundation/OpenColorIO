@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.8.5',
+        VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v0.8.5 documentation" href="../../index.html" />
+    <link rel="top" title="OpenColorIO v1.0.0 documentation" href="../../index.html" />
     <link rel="up" title="&lt;no title&gt;" href="index.html" />
     <link rel="next" title="C++ Transforms" href="OpenColorTransforms.html" />
     <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v0.8.5 documentation
+      OpenColorIO v1.0.0 documentation
       </div>
       <div class="content">
         
@@ -186,6 +186,21 @@ int <tt class="descname">GetVersionHex</tt><big>(</big><big>)</big><a class="hea
 single 4-byte hex number, e.g. 0x01050200 == 1.5.2
 Use this for numeric comparisons.  This is also available
 at compile time as OCIO_VERSION_HEX.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="GetLoggingLevel">
+LoggingLevel <tt class="descname">GetLoggingLevel</tt><big>(</big><big>)</big><a class="headerlink" href="#GetLoggingLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the global logging level
+You can also override this at runtime using the $OCIO_LOGGING_LEVEL
+envvar. (Client application who which to set this should use
+SetLoggingLevel, not the envvar). The default value is INFO.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="SetLoggingLevel__LoggingLevel">
+void <tt class="descname">SetLoggingLevel</tt><big>(</big>LoggingLevel <em>level</em><big>)</big><a class="headerlink" href="#SetLoggingLevel__LoggingLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the global logging level</p>
 </dd></dl>
 
 </div>
@@ -499,7 +514,7 @@ const char* <tt class="descclassname">Config::</tt><tt class="descname">getActiv
 
 <dl class="function">
 <dt id="Config::setActiveViews__cCP">
-void <tt class="descclassname">Config::</tt><tt class="descname">setActiveViews</tt><big>(</big>const char* <em>displays</em><big>)</big><a class="headerlink" href="#Config::setActiveViews__cCP" title="Permalink to this definition">¶</a></dt>
+void <tt class="descclassname">Config::</tt><tt class="descname">setActiveViews</tt><big>(</big>const char* <em>views</em><big>)</big><a class="headerlink" href="#Config::setActiveViews__cCP" title="Permalink to this definition">¶</a></dt>
 <dd><p>Comma-delimited list of view names.</p>
 </dd></dl>
 
@@ -621,13 +636,6 @@ functionality (such as to apply an individual LUT file).</p>
 <a class="reference internal" href="OpenColorTypes.html#ConstProcessorRcPtr" title="ConstProcessorRcPtr">ConstProcessorRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">getProcessor</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstContextRcPtr" title="ConstContextRcPtr">const ConstContextRcPtr&amp;</a> <em>context</em>, <a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em>, <a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>direction</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getProcessor__ConstContextRcPtrCR.ConstTransformRcPtrCR.TransformDirectionC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
-<dt id="Config::setDisplayColorSpaceName__cCP.cCP.cCP">
-void <tt class="descclassname">Config::</tt><tt class="descname">setDisplayColorSpaceName</tt><big>(</big>const char* <em>display</em>, const char* <em>view</em>, const char* <em>colorSpaceName</em><big>)</big><a class="headerlink" href="#Config::setDisplayColorSpaceName__cCP.cCP.cCP" title="Permalink to this definition">¶</a></dt>
-<dd><p>DEPRECATED. Will be removed in 0.9
-Use addDisplay instead</p>
-</dd></dl>
-
 </div>
 </div>
 <div class="section" id="colorspace">
@@ -670,11 +678,29 @@ void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setName</tt
 <dl class="function">
 <dt id="ColorSpace::getFamilyC">
 const char* <tt class="descclassname">ColorSpace::</tt><tt class="descname">getFamily</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getFamilyC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Get the family, for use in user interfaces (optional)</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="ColorSpace::setFamily__cCP">
 void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setFamily</tt><big>(</big>const char* <em>family</em><big>)</big><a class="headerlink" href="#ColorSpace::setFamily__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the family, for use in user interfaces (optional)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::getEqualityGroupC">
+const char* <tt class="descclassname">ColorSpace::</tt><tt class="descname">getEqualityGroup</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getEqualityGroupC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the ColorSpace group name (used for equality comparisons)
+This allows no-op transforms between different colorspaces.
+If an equalityGroup is not defined (an empty string), it will be considered
+unique (i.e., it will not compare as equal to other ColorSpaces with an
+empty equality group).  This is often, though not always, set to the
+same value as &#8216;family&#8217;.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ColorSpace::setEqualityGroup__cCP">
+void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setEqualityGroup</tt><big>(</big>const char* <em>equalityGroup</em><big>)</big><a class="headerlink" href="#ColorSpace::setEqualityGroup__cCP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -762,22 +788,15 @@ void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setAllocati
 <dl class="function">
 <dt id="ColorSpace::getTransform__ColorSpaceDirectionC">
 <a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">ConstTransformRcPtr</a> <tt class="descclassname">ColorSpace::</tt><tt class="descname">getTransform</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <em>dir</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::getTransform__ColorSpaceDirectionC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="ColorSpace::getEditableTransform__ColorSpaceDirection">
-<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">ColorSpace::</tt><tt class="descname">getEditableTransform</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#ColorSpace::getEditableTransform__ColorSpaceDirection" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>If a transform in the specified direction has been specified,
+return it. Otherwise return a null ConstTransformRcPtr</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="ColorSpace::setTransform__ConstTransformRcPtrCR.ColorSpaceDirection">
 void <tt class="descclassname">ColorSpace::</tt><tt class="descname">setTransform</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em>, <a class="reference internal" href="OpenColorTypes.html#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#ColorSpace::setTransform__ConstTransformRcPtrCR.ColorSpaceDirection" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="ColorSpace::isTransformSpecified__ColorSpaceDirectionC">
-bool <tt class="descclassname">ColorSpace::</tt><tt class="descname">isTransformSpecified</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <em>dir</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpace::isTransformSpecified__ColorSpaceDirectionC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Setting a transform to a non-null call makes it specified.</p>
+<dd><p>Specify the transform for the appropriate direction.
+Setting the transform to null will clear it.</p>
 </dd></dl>
 
 </div>
@@ -1112,48 +1131,13 @@ const ptrdiff_t <tt class="descname">AutoStride</tt><a class="headerlink" href="
 <dt id="ImageDesc">
 <em class="property">class </em><tt class="descname">ImageDesc</tt><a class="headerlink" href="#ImageDesc" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a light-weight wrapper around an image, that provides a context
-for pixel access. This does NOT claim ownership of the pixels, or do
-any internal allocations or copying of image data.</p>
+for pixel access. This does NOT claim ownership of the pixels or copy
+image data</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="ImageDesc::~ImageDesc">
  <tt class="descclassname">ImageDesc::</tt><tt class="descname">~ImageDesc</tt><big>(</big><big>)</big><a class="headerlink" href="#ImageDesc::~ImageDesc" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="ImageDesc::getWidthC">
-long <tt class="descclassname">ImageDesc::</tt><tt class="descname">getWidth</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getWidthC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="ImageDesc::getHeightC">
-long <tt class="descclassname">ImageDesc::</tt><tt class="descname">getHeight</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getHeightC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="ImageDesc::getXStrideBytesC">
-ptrdiff_t <tt class="descclassname">ImageDesc::</tt><tt class="descname">getXStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getXStrideBytesC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="ImageDesc::getYStrideBytesC">
-ptrdiff_t <tt class="descclassname">ImageDesc::</tt><tt class="descname">getYStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getYStrideBytesC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="ImageDesc::getRDataC">
-float* <tt class="descclassname">ImageDesc::</tt><tt class="descname">getRData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getRDataC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="ImageDesc::getGDataC">
-float* <tt class="descclassname">ImageDesc::</tt><tt class="descname">getGData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getGDataC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="ImageDesc::getBDataC">
-float* <tt class="descclassname">ImageDesc::</tt><tt class="descname">getBData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><tt class="descclassname"> = 0</tt><a class="headerlink" href="#ImageDesc::getBDataC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <div class="section" id="packedimagedesc">
@@ -1166,11 +1150,20 @@ float* <tt class="descclassname">ImageDesc::</tt><tt class="descname">getBData</
 <dl class="function">
 <dt id="PackedImageDesc::PackedImageDesc__floatP.l.l.l.ptrdiff_t.ptrdiff_t.ptrdiff_t">
  <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">PackedImageDesc</tt><big>(</big>float* <em>data</em>, long <em>width</em>, long <em>height</em>, long <em>numChannels</em>, ptrdiff_t <em>chanStrideBytes</em><em>=AutoStride</em>, ptrdiff_t <em>xStrideBytes</em><em>=AutoStride</em>, ptrdiff_t <em>yStrideBytes</em><em>=AutoStride</em><big>)</big><a class="headerlink" href="#PackedImageDesc::PackedImageDesc__floatP.l.l.l.ptrdiff_t.ptrdiff_t.ptrdiff_t" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Pass the pointer to packed image data: rgbrgbrgb, etc.
+The number of channels must be greater than or equal to 3
+If a 4th channel is specified, it is assumed to be alpha
+information.  Channels &gt; 4 will be ignored.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="PackedImageDesc::~PackedImageDesc">
  <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">~PackedImageDesc</tt><big>(</big><big>)</big><a class="headerlink" href="#PackedImageDesc::~PackedImageDesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::getDataC">
+float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getDataC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -1184,6 +1177,16 @@ long <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getHei
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="PackedImageDesc::getNumChannelsC">
+long <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getNumChannels</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getNumChannelsC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PackedImageDesc::getChanStrideBytesC">
+ptrdiff_t <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getChanStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getChanStrideBytesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="PackedImageDesc::getXStrideBytesC">
 ptrdiff_t <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getXStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getXStrideBytesC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1192,27 +1195,6 @@ ptrdiff_t <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">g
 <dt id="PackedImageDesc::getYStrideBytesC">
 ptrdiff_t <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getYStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getYStrideBytesC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="function">
-<dt id="PackedImageDesc::getRDataC">
-float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getRData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getRDataC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="PackedImageDesc::getGDataC">
-float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getGData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getGDataC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="PackedImageDesc::getBDataC">
-float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getBData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getBDataC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="PackedImageDesc::getADataC">
-float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getAData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PackedImageDesc::getADataC" title="Permalink to this definition">¶</a></dt>
-<dd><p>alpha is optional, may be NULL</p>
-</dd></dl>
 
 </div>
 <div class="section" id="planarimagedesc">
@@ -1223,33 +1205,16 @@ float* <tt class="descclassname">PackedImageDesc::</tt><tt class="descname">getA
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="PlanarImageDesc::PlanarImageDesc__floatP.floatP.floatP.l.l.ptrdiff_t">
- <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">PlanarImageDesc</tt><big>(</big>float* <em>rData</em>, float* <em>gData</em>, float* <em>bData</em>, long <em>width</em>, long <em>height</em>, ptrdiff_t <em>yStrideBytes</em><em>=AutoStride</em><big>)</big><a class="headerlink" href="#PlanarImageDesc::PlanarImageDesc__floatP.floatP.floatP.l.l.ptrdiff_t" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="PlanarImageDesc::PlanarImageDesc__floatP.floatP.floatP.floatP.l.l.ptrdiff_t">
+ <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">PlanarImageDesc</tt><big>(</big>float* <em>rData</em>, float* <em>gData</em>, float* <em>bData</em>, float* <em>aData</em>, long <em>width</em>, long <em>height</em>, ptrdiff_t <em>yStrideBytes</em><em>=AutoStride</em><big>)</big><a class="headerlink" href="#PlanarImageDesc::PlanarImageDesc__floatP.floatP.floatP.floatP.l.l.ptrdiff_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pass the pointer to the specified image planes: rrrr gggg bbbb, etc.
+aData is optional, pass NULL if no alpha exists.
+{r,g,b} Data must be specified</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="PlanarImageDesc::~PlanarImageDesc">
  <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">~PlanarImageDesc</tt><big>(</big><big>)</big><a class="headerlink" href="#PlanarImageDesc::~PlanarImageDesc" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="PlanarImageDesc::getWidthC">
-long <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getWidth</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getWidthC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="PlanarImageDesc::getHeightC">
-long <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getHeight</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getHeightC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="PlanarImageDesc::getXStrideBytesC">
-ptrdiff_t <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getXStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getXStrideBytesC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="PlanarImageDesc::getYStrideBytesC">
-ptrdiff_t <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getYStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getYStrideBytesC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -1268,14 +1233,23 @@ float* <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getB
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="PlanarImageDesc::setAData__floatP">
-void <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">setAData</tt><big>(</big>float* <em>aData</em><big>)</big><a class="headerlink" href="#PlanarImageDesc::setAData__floatP" title="Permalink to this definition">¶</a></dt>
-<dd><p>alpha is optional</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="PlanarImageDesc::getADataC">
 float* <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getAData</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getADataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getWidthC">
+long <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getWidth</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getWidthC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getHeightC">
+long <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getHeight</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getHeightC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="PlanarImageDesc::getYStrideBytesC">
+ptrdiff_t <tt class="descclassname">PlanarImageDesc::</tt><tt class="descname">getYStrideBytes</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#PlanarImageDesc::getYStrideBytesC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>

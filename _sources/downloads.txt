@@ -9,6 +9,7 @@ Core Library (`ChangeLog <http://github.com/imageworks/OpenColorIO/raw/master/Ch
 
 For build instructions, see :ref:`building-from-source`.
 
+* v0.8.6 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v0.8.6>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v0.8.6>`_
 * v0.8.5 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v0.8.5>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v0.8.5>`_
 * v0.8.4 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v0.8.4>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v0.8.4>`_
 * v0.8.3 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v0.8.3>`_ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v0.8.3>`_

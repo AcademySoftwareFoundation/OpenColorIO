@@ -152,6 +152,12 @@ Conversion
 .. cpp:function:: extern bool BoolFromString(const char * s)
    
 
+.. cpp:function:: extern const char * LoggingLevelToString(LoggingLevel level)
+   
+
+.. cpp:function:: extern LoggingLevel LoggingLevelFromString(const char * s)
+   
+
 .. cpp:function:: extern const char * TransformDirectionToString(TransformDirection dir)
    
 
