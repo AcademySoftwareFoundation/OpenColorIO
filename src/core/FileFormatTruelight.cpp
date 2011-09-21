@@ -38,6 +38,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
 
+// This implements the spec for:
+// Per http://www.filmlight.ltd.uk/resources/documents/truelight/white-papers_tl.php
+// FL-TL-TN-0388-TLCubeFormat2.0.pdf
+//
+// Known deficiency in implementation:
+// 1D shaper luts (InputLUT) using integer encodings (vs float) are not supported.
+// How to we determine if the input is integer? MaxVal?  Or do we look for a decimal-point?
+// How about scientific notation? (which is explicitly allowed?)
+
+/*
+The input LUT is used to interpolate a higher precision LUT matched to the particular image
+format. For integer formats, the range 0-1 is mapped onto the integer range. Floating point
+values outside the 0-1 range are allowed but may be truncated for integer formats.
+*/
+
+
 OCIO_NAMESPACE_ENTER
 {
     namespace
@@ -46,7 +62,8 @@ OCIO_NAMESPACE_ENTER
         {
         public:
             LocalCachedFile () : 
-                has1D(false)
+                has1D(false),
+                has3D(false)
             {
                 lut1D = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
                 lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
@@ -54,6 +71,7 @@ OCIO_NAMESPACE_ENTER
             ~LocalCachedFile() {};
             
             bool has1D;
+            bool has3D;
             OCIO_SHARED_PTR<Lut1D> lut1D;
             OCIO_SHARED_PTR<Lut3D> lut3D;
         };
@@ -125,6 +143,7 @@ OCIO_NAMESPACE_ENTER
                     
                     if(parts.empty()) continue;
                     
+                    // Parse header metadata (which starts with #)
                     if(pystring::startswith(parts[0],"#"))
                     {
                         if(parts.size() < 2) continue;
@@ -160,25 +179,33 @@ OCIO_NAMESPACE_ENTER
                             in3d = true;
                             in1d = false;
                         }
+                        else if(parts[1] == "end")
+                        {
+                            in3d = false;
+                            in1d = false;
+                            
+                            // If we hit the end tag, don't bother searching further in the file.
+                            break;
+                        }
                     }
                     
-                    if(StringVecToFloatVec(tmpfloats, parts) && (tmpfloats.size() == 3))
+                    
+                    if(in1d || in3d)
                     {
-                        if(in1d)
+                        if(StringVecToFloatVec(tmpfloats, parts) && (tmpfloats.size() == 3))
                         {
-                            raw1d.push_back(tmpfloats[0]);
-                            raw1d.push_back(tmpfloats[1]);
-                            raw1d.push_back(tmpfloats[2]);
-                        }
-                        else if(in3d)
-                        {
-                            raw3d.push_back(tmpfloats[0]);
-                            raw3d.push_back(tmpfloats[1]);
-                            raw3d.push_back(tmpfloats[2]);
-                        }
-                        else
-                        {
-                            throw Exception("Parse error in Truelight .cub lut. Numbers outside of lut block.");
+                            if(in1d)
+                            {
+                                raw1d.push_back(tmpfloats[0]);
+                                raw1d.push_back(tmpfloats[1]);
+                                raw1d.push_back(tmpfloats[2]);
+                            }
+                            else if(in3d)
+                            {
+                                raw3d.push_back(tmpfloats[0]);
+                                raw3d.push_back(tmpfloats[1]);
+                                raw3d.push_back(tmpfloats[2]);
+                            }
                         }
                     }
                 }
@@ -204,25 +231,28 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            if(size3d[0]*size3d[1]*size3d[2] == 0)
-            {
-                std::ostringstream os;
-                os << "Parse error in Truelight .cub lut. ";
-                os << "No 3D Lut entries found.";
-                throw Exception(os.str().c_str());
-            }
-            
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
+            cachedFile->has1D = (size1d>0);
+            cachedFile->has3D = (size3d[0]*size3d[1]*size3d[2]>0);
+            
             // Reformat 1D data
-            if(size1d>0)
+            if(cachedFile->has1D)
             {
-                cachedFile->has1D = true;
-                
                 for(int channel=0; channel<3; ++channel)
                 {
-                    float descale = 1.0f / static_cast<float>(size3d[channel]);
+                    // Determine the scale factor for the 1d lut. Example:
+                    // The inputlut feeding a 6x6x6 3dlut should be scaled from 0.0-5.0.
+                    // Beware: Nuke Truelight Writer (at least 6.3 and before) is busted
+                    // and does this scaling incorrectly.
+                    
+                    float descale = 1.0f;
+                    if(cachedFile->has3D)
+                    {
+                        descale = 1.0f / static_cast<float>(size3d[channel]-1);
+                    }
+                    
                     cachedFile->lut1D->luts[channel].resize(size1d);
                     for(int i=0; i<size1d; ++i)
                     {
@@ -246,11 +276,14 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Reformat 3D data
-            cachedFile->lut3D->size[0] = size3d[0];
-            cachedFile->lut3D->size[1] = size3d[1];
-            cachedFile->lut3D->size[2] = size3d[2];
-            cachedFile->lut3D->lut = raw3d;
-            cachedFile->lut3D->generateCacheID();
+            if(cachedFile->has3D)
+            {
+                cachedFile->lut3D->size[0] = size3d[0];
+                cachedFile->lut3D->size[1] = size3d[1];
+                cachedFile->lut3D->size[2] = size3d[2];
+                cachedFile->lut3D->lut = raw3d;
+                cachedFile->lut3D->generateCacheID();
+            }
             
             return cachedFile;
         }
@@ -328,19 +361,20 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(FileFormatTruelight, simpletest3D)
+OIIO_ADD_TEST(TruelightFileFormat, shaperAndLut3D)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"
        "# iDims 3\n"
        "# oDims 3\n"
        "# width 3 3 3\n"
-       "# lutLength 4\n"
+       "# lutLength 5\n"
        "# InputLUT\n"
        " 0.000000 0.000000 0.000000\n"
+       " 0.500000 0.500000 0.500000\n"
        " 1.000000 1.000000 1.000000\n"
+       " 1.500000 1.500000 1.500000\n"
        " 2.000000 2.000000 2.000000\n"
-       " 3.000000 3.000000 3.000000\n"
        "\n"
        "# Cube\n"
        " 0.000000 0.000000 0.000000\n"
@@ -379,17 +413,208 @@ OIIO_ADD_TEST(FileFormatTruelight, simpletest3D)
        "display{some}\n"
        "cubeFile{madeup.cube}\n"
        "\n"
-       "# Date Tue Jan 25 17:57:57 2011\n";
+       " # This last line confirms 'end' tag is obeyed\n"
+       " 1.23456 1.23456 1.23456\n";
     
-    std::istringstream simple3D;
-    simple3D.str(luttext);
+    std::istringstream lutIStream;
+    lutIStream.str(luttext);
     
     // Read file
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D);
-    OCIO::LocalCachedFileRcPtr csplut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    OCIO::CachedFileRcPtr cachedFile;
+    OIIO_CHECK_NO_THOW(cachedFile = tester.Read(lutIStream));
+    OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
-    // TODO: Test the results of truelight loading.
+    OIIO_CHECK_ASSERT(lut->has1D);
+    OIIO_CHECK_ASSERT(lut->has3D);
+    
+    float data[4*3] = { 0.1f, 0.2f, 0.3f, 0.0f,
+                        1.0f, 0.5f, 0.123456f, 0.0f,
+                       -1.0f, 1.5f, 0.5f, 0.0f };
+    
+    float result[4*3] = { 0.05f, 0.2f, 0.3f, 0.0f,
+                          0.50f, 0.5f, 0.123456f, 0.0f,
+                          0.0f, 1.5f, 0.5f, 0.0f };
+    
+    OCIO::OpRcPtrVec ops;
+    if(lut->has1D)
+    {
+        CreateLut1DOp(ops, lut->lut1D,
+                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+    }
+    if(lut->has3D)
+    {
+        CreateLut3DOp(ops, lut->lut3D,
+                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+    }
+    FinalizeOpVec(ops);
+    
+    
+    // Apply the result
+    for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
+    {
+        ops[i]->apply(data, 3);
+    }
+    
+    for(int i=0; i<3; ++i)
+    {
+        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
+    }
+}
+
+OIIO_ADD_TEST(TruelightFileFormat, shaper)
+{
+    const char * luttext = "# Truelight Cube v2.0\n"
+       "# lutLength 11\n"
+       "# iDims 3\n"
+       "\n"
+       "\n"
+       "# InputLUT\n"
+       " 0.000 0.000 -0.000\n"
+       " 0.200 0.010 -0.100\n"
+       " 0.400 0.040 -0.200\n"
+       " 0.600 0.090 -0.300\n"
+       " 0.800 0.160 -0.400\n"
+       " 1.000 0.250 -0.500\n"
+       " 1.200 0.360 -0.600\n"
+       " 1.400 0.490 -0.700\n"
+       " 1.600 0.640 -0.800\n"
+       " 1.800 0.820 -0.900\n"
+       " 2.000 1.000 -1.000\n"
+       "\n\n\n"
+       "# end\n";
+    
+    std::istringstream lutIStream;
+    lutIStream.str(luttext);
+    
+    // Read file
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile;
+    OIIO_CHECK_NO_THOW(cachedFile = tester.Read(lutIStream));
+    
+    OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    
+    OIIO_CHECK_ASSERT(lut->has1D);
+    OIIO_CHECK_ASSERT(!lut->has3D);
+    
+    float data[4*3] = { 0.1f, 0.2f, 0.3f, 0.0f,
+                        1.0f, 0.5f, 0.123456f, 0.0f,
+                       -1.0f, 1.5f, 0.5f, 0.0f };
+    
+    float result[4*3] = { 0.2f, 0.04f, -0.3f, 0.0f,
+                          2.0f, 0.25f, -0.123456f, 0.0f,
+                          0.0f, 1.0f, -0.5f, 0.0f };
+    
+    OCIO::OpRcPtrVec ops;
+    if(lut->has1D)
+    {
+        CreateLut1DOp(ops, lut->lut1D,
+                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+    }
+    if(lut->has3D)
+    {
+        CreateLut3DOp(ops, lut->lut3D,
+                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+    }
+    FinalizeOpVec(ops);
+    
+    
+    // Apply the result
+    for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
+    {
+        ops[i]->apply(data, 3);
+    }
+    
+    for(int i=0; i<3; ++i)
+    {
+        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
+    }
+}
+
+
+OIIO_ADD_TEST(TruelightFileFormat, Lut3D)
+{
+    // This lowers the red channel by 0.5, other channels are unaffected.
+    const char * luttext = "# Truelight Cube v2.0\n"
+       "# iDims 3\n"
+       "# oDims 3\n"
+       "# width 3 3 3\n"
+       "\n\n\n"
+       "# Cube\n"
+       " 0.000000 0.000000 0.000000\n"
+       " 0.250000 0.000000 0.000000\n"
+       " 0.500000 0.000000 0.000000\n"
+       " 0.000000 0.500000 0.000000\n"
+       " 0.250000 0.500000 0.000000\n"
+       " 0.500000 0.500000 0.000000\n"
+       " 0.000000 1.000000 0.000000\n"
+       " 0.250000 1.000000 0.000000\n"
+       " 0.500000 1.000000 0.000000\n"
+       " 0.000000 0.000000 0.500000\n"
+       " 0.250000 0.000000 0.500000\n"
+       " 0.500000 0.000000 0.500000\n"
+       " 0.000000 0.500000 0.500000\n"
+       " 0.250000 0.500000 0.500000\n"
+       " 0.500000 0.500000 0.500000\n"
+       " 0.000000 1.000000 0.500000\n"
+       " 0.250000 1.000000 0.500000\n"
+       " 0.500000 1.000000 0.500000\n"
+       " 0.000000 0.000000 1.000000\n"
+       " 0.250000 0.000000 1.000000\n"
+       " 0.500000 0.000000 1.000000\n"
+       " 0.000000 0.500000 1.000000\n"
+       " 0.250000 0.500000 1.000000\n"
+       " 0.500000 0.500000 1.000000\n"
+       " 0.000000 1.000000 1.000000\n"
+       " 0.250000 1.000000 1.000000\n"
+       " 0.500000 1.000000 1.000000\n"
+       "\n"
+       "# end\n";
+    
+    std::istringstream lutIStream;
+    lutIStream.str(luttext);
+    
+    // Read file
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile;
+    OIIO_CHECK_NO_THOW(cachedFile = tester.Read(lutIStream));
+    OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    
+    OIIO_CHECK_ASSERT(!lut->has1D);
+    OIIO_CHECK_ASSERT(lut->has3D);
+    
+    float data[4*3] = { 0.1f, 0.2f, 0.3f, 0.0f,
+                        1.0f, 0.5f, 0.123456f, 0.0f,
+                       -1.0f, 1.5f, 0.5f, 0.0f };
+    
+    float result[4*3] = { 0.05f, 0.2f, 0.3f, 0.0f,
+                          0.50f, 0.5f, 0.123456f, 0.0f,
+                          0.0f, 1.5f, 0.5f, 0.0f };
+    
+    OCIO::OpRcPtrVec ops;
+    if(lut->has1D)
+    {
+        CreateLut1DOp(ops, lut->lut1D,
+                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+    }
+    if(lut->has3D)
+    {
+        CreateLut3DOp(ops, lut->lut3D,
+                      OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+    }
+    FinalizeOpVec(ops);
+    
+    
+    // Apply the result
+    for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
+    {
+        ops[i]->apply(data, 3);
+    }
+    
+    for(int i=0; i<3; ++i)
+    {
+        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
+    }
 }
 
 #endif // OCIO_UNIT_TEST
