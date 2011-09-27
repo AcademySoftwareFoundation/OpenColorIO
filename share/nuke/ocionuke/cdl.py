@@ -69,6 +69,7 @@ def _xml_to_cdltransforms(xml):
     elif filetype == "ColorCorrectionCollection":
         allcdl = []
         for cc in tree.getchildren():
+            if cc.tag != "ColorCorrection": continue
             ccxml = ET.tostring(cc)
             cdl = OCIO.CDLTransform()
             cdl.setXML(ccxml)
