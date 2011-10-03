@@ -1,12 +1,17 @@
-**Version 1.0.0 (Sept 8 2011):**
+**Version 1.0.0 (Oct 3 2011):**
     * ABI Lockoff for 1.0 branch
     * General API Cleanup (removed deprecated / unnecessary functions)
     * New features can be added, but the ABI will only be extended in a binary compatible manner.
       Profiles written from 1.0 will always be readable in future versions.
+    * Fixed Truelight Reading Bug
+    * ocio2icc no longer requires ocio config (can provide raw lut(s)
 
 
 -------------------------------------------------------------------------------
 
+
+**Version 0.8.7 (Oct 3 2011):**
+    * Fixed Truelight Reading Bug
 
 **Version 0.8.6 (Sept 7 2011):**
     * Updated .ocio config reading / writing to be forwards compatibile with 1.0
