@@ -1,4 +1,4 @@
-SPI Workflow
+Sony Pictures Imageworks Color Pipeline
 ============
 
 This document describes a high-level overview on how to emulate the current color management practice at Sony Imageworks. It applies equally to all profiles used at Imageworks, including both the VFX and Animation profiles.  It's by no means a requirement to follow this workflow at your own facility, this is merely a guideline on how we choose to work.
