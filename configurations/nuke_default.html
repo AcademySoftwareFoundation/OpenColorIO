@@ -29,9 +29,9 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
     <link rel="top" title="OpenColorIO v1.0.0 documentation" href="../index.html" />
-    <link rel="up" title="Developer guide" href="index.html" />
-    <link rel="next" title="Usage Examples" href="usage_examples.html" />
-    <link rel="prev" title="Submitting Changes" href="submitting_changes.html" /> 
+    <link rel="up" title="Configurations" href="index.html" />
+    <link rel="next" title="How to Configure ColorSpace Allocation" href="allocation_vars.html" />
+    <link rel="prev" title="spi-anim" href="spi_anim.html" /> 
   </head>
   <body>
     <div class="header"><h1 class="heading"><a href="../index.html">
@@ -49,20 +49,17 @@
             <div class="sidebar2">
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer guide</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting started</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding guidelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="submitting_changes.html">Submitting Changes</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Issues</a></li>
-<li class="toctree-l2"><a class="reference internal" href="usage_examples.html">Usage Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/OpenColorIO.html">C++ API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTransforms.html">C++ Transforms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTypes.html">C++ Types</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Configurations</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="spi_pipeline.html">Sony Pictures Imageworks Color Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spi_vfx.html">spi-vfx</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spi_anim.html">spi-anim</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Nuke default</a></li>
+<li class="toctree-l2"><a class="reference internal" href="allocation_vars.html">How to Configure ColorSpace Allocation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developers/index.html">Developer guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
@@ -73,9 +70,23 @@
         </td>
         <td width="100%" id="bodycontent">
         
-<div class="section" id="issues">
-<h1>Issues<a class="headerlink" href="#issues" title="Permalink to this headline">¶</a></h1>
-<p>Please visit <a class="reference external" href="http://github.com/imageworks/OpenColorIO/issues">http://github.com/imageworks/OpenColorIO/issues</a> for an up to date listing of bugs, feature requests etc</p>
+<div class="section" id="nuke-default">
+<h1>Nuke default<a class="headerlink" href="#nuke-default" title="Permalink to this headline">¶</a></h1>
+<p>This profile corresponds to the default Nuke color configuration (currently generated from Nuke 6.1).</p>
+<p>If you have made modifications to a nuke color configuration, and wish to re-export your own custom OCIO profile, please refer to the nuke_to_ocio utility script distributed with OpenColorIO.</p>
+<p>The following color transforms are defined:</p>
+<ul class="simple">
+<li>linear</li>
+<li>sRGB</li>
+<li>rec709</li>
+<li>Cineon</li>
+<li>Gamma 1.8</li>
+<li>Gamma 2.2</li>
+<li>Panalog</li>
+<li>REDLog</li>
+<li>ViperLog</li>
+<li>REDSpace</li>
+</ul>
 </div>
 
     

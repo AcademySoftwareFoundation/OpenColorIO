@@ -34,7 +34,7 @@ Note that OCIO profiles are required to do any 'real' work, and are available fr
 
     self
 
-    workflow/index
+    configurations/index
     installation
 
     userguide/index
