@@ -23,7 +23,7 @@ Color Configurations
 Sample Images
 *************
 
-* v0.7v1 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.0.7v1.tgz>`__
+* v1.0v1 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v1.tgz>`__
 
 Current development version
 ***************************
