@@ -75,20 +75,25 @@ int main (int argc, const char* argv[])
     }
     std::string formatstr = formats.str();
     
+    std::vector<std::string> luts;
+    
     ArgParse ap;
-    ap.options("ociobakelut -- bake out a lut from an OpenColorIO config\n\n"
+    ap.options("ociobakelut -- create a new LUT from an OCIO config or lut file(s)\n\n"
                "usage:  ociobakelut [options] <OUTPUTFILE.LUT>\n\n"
-               "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl\n\n",
+               "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl\n"
+               "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format flame lg_to_srgb.3dl\n\n",
                "%*", parse_end_args, "",
-               "<SEPARATOR>", "Required args",
-               "--inputspace %s", &inputspace, "the OCIO ColorSpace or Role, for the input (required)",
-               "--outputspace %s", &outputspace, "the OCIO ColorSpace or Role, for the output (required)",
-               "<SEPARATOR>", "Optional args",
+               "<SEPARATOR>", "Using Existing OCIO Configurations",
+               "--inputspace %s", &inputspace, "Input OCIO ColorSpace (or Role)",
+               "--outputspace %s", &outputspace, "Output OCIO ColorSpace (or Role)",
                "--shaperspace %s", &shaperspace, "the OCIO ColorSpace or Role, for the shaper",
+               "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)\n",
+               "<SEPARATOR>", "Config-Free LUT Baking",
+               "--lut %L", &luts, "Specify lut(s) to apply, in the forward direction.\n",
+               "<SEPARATOR>", "Output Options",
                "--format %s", &format, formatstr.c_str(),
                "--shapersize %d", &shapersize, "size of the shaper (default: format specific)",
                "--cubesize %d", &cubesize, "size of the cube (default: format specific)",
-               "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)",
                "--stdout", &usestdout, "Write lut to stdout (rather than file)",
                "--help", &help, "Print help message",
                // TODO: add --metadata option
@@ -109,38 +114,84 @@ int main (int argc, const char* argv[])
         return 1;
     }
     
-    if(inputspace.empty())
-    {
-        ap.usage();
-        std::cerr << "\nERROR: You must specify the --inputspace.\n\n";
-        return 1;
-    }
+    // Create the OCIO processor for the specified transform.
+    OCIO::ConstConfigRcPtr config;
     
-    if(outputspace.empty())
-    {
-        ap.usage();
-        std::cerr << "\nERROR: You must specify the --outputspace.\n\n";
-        return 1;
-    }
     
-    if(format.empty())
+    // If --luts have been specified, synthesize a new (temporary) configuration
+    // with the transformation embedded in a colorspace.
+    if(!luts.empty())
     {
-        ap.usage();
-        std::cerr << "\nERROR: You must specify the lut format using --format.\n\n";
-        return 1;
+        if(!inputspace.empty())
+        {
+            ap.usage();
+            std::cerr << "\nERROR: --inputspace is not allowed when using --lut\n\n";
+            return 1;
+        }
+        if(!outputspace.empty())
+        {
+            ap.usage();
+            std::cerr << "\nERROR: --outputspace is not allowed when using --lut\n\n";
+            return 1;
+        }
+        if(!shaperspace.empty())
+        {
+            ap.usage();
+            std::cerr << "\nERROR: --shaperspace is not allowed when using --lut\n\n";
+            return 1;
+        }
+        
+        OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
+        
+        OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
+        inputspace = "RawInput";
+        inputColorSpace->setName(inputspace.c_str());
+        editableConfig->addColorSpace(inputColorSpace);
+        
+        OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
+        outputspace = "ProcessedOutput";
+        outputColorSpace->setName(outputspace.c_str());
+        
+        OCIO::GroupTransformRcPtr groupTransform = 
+            OCIO::GroupTransform::Create();
+        
+        for(unsigned int i=0; i<luts.size(); ++i)
+        {
+            OCIO::FileTransformRcPtr f = OCIO::FileTransform::Create();
+            f->setSrc(luts[i].c_str());
+            f->setInterpolation(OCIO::INTERP_LINEAR);
+            groupTransform->push_back(f);
+        }
+        
+        outputColorSpace->setTransform(groupTransform,
+            OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        
+        editableConfig->addColorSpace(outputColorSpace);
+        config = editableConfig;
     }
-    
-    if(outputfile.empty() && !usestdout)
+    else
     {
-        ap.usage();
-        std::cerr << "\nERROR: You must specify the outputfile or --stdout.\n\n";
-        return 1;
-    }
     
-    try
-    {
-        // Create the OCIO processor for the specified transform.
-        OCIO::ConstConfigRcPtr config;
+        if(inputspace.empty())
+        {
+            ap.usage();
+            std::cerr << "\nERROR: You must specify the --inputspace.\n\n";
+            return 1;
+        }
+        
+        if(outputspace.empty())
+        {
+            ap.usage();
+            std::cerr << "\nERROR: You must specify the --outputspace.\n\n";
+            return 1;
+        }
+        
+        if(format.empty())
+        {
+            ap.usage();
+            std::cerr << "\nERROR: You must specify the lut format using --format.\n\n";
+            return 1;
+        }
         
         if(!inputconfig.empty())
         {
@@ -159,7 +210,17 @@ int main (int argc, const char* argv[])
             ap.usage ();
             return 1;
         }
+    }
+    
+    if(outputfile.empty() && !usestdout)
+    {
+        ap.usage();
+        std::cerr << "\nERROR: You must specify the outputfile or --stdout.\n\n";
+        return 1;
+    }
         
+    try
+    {
         OCIO::BakerRcPtr baker = OCIO::Baker::Create();
         
         // setup the baker for our lut type

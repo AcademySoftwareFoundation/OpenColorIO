@@ -149,19 +149,22 @@ int main (int argc, const char* argv[])
     ArgParse ap;
     ap.options("ocio2icc -- generate an icc profile from either an OpenColorIO config, or from specific lut(s)\n\n"
                "usage:  ocio2icc [options] output.icc\n\n"
-               "example:  ocio2icc --inputspace lg10 --outputspace srgb8 ~/Library/ColorSync/Profiles/test.icc\n\n"
+               "example:  ocio2icc --inputspace lg10 --outputspace srgb8 ~/Library/ColorSync/Profiles/test.icc\n"
                "example:  ocio2icc --lut filmlut.3dl --lut calibration.3dl ~/Library/ColorSync/Profiles/test.icc\n\n",
                "%*", parse_end_args, "",
-               "--help", &help, "Print help message",
+               "<SEPARATOR>", "Using Existing OCIO Configurations",
                "--inputspace %s", &inputspace , "the OCIO ColorSpace or Role, for the input",
                "--outputspace %s", &outputspace , "the OCIO ColorSpace or Role, for the output",
-               "--lut %L", &luts, "Specify lut(s) to apply, in the forward direction.",
+               "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)\n",
+               "<SEPARATOR>", "Config-Free LUT Baking",
+               "--lut %L", &luts, "Specify lut(s) to apply, in the forward direction.\n",
+               "<SEPARATOR>", "Output Options",
                "--cubesize %d", &cubesize, "size of the icc CLUT cube (default: 32)",
                "--whitepoint %d", &whitepointtemp, "whitepoint for the profile (default: 6505)",
                "--displayicc %s", &displayicc , "an icc profile which matches the OCIO profiles target display",
                "--description %s", &description , "a meaningful description, this will show up in UI like photoshop",
                "--copyright %s", &copyright , "a copyright field (default: OpenColorIO, Sony Imageworks)",
-               "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)",
+               "--help", &help, "Print help message",
                NULL);
     
     if (ap.parse(argc, argv) < 0)
