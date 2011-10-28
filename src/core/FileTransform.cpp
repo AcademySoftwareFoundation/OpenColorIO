@@ -368,6 +368,18 @@ OCIO_NAMESPACE_ENTER
     
     }
     
+    std::string FileFormat::getName() const
+    {
+        FormatInfoVec infoVec;
+        GetFormatInfo(infoVec);
+        if(infoVec.size()>0)
+        {
+            return infoVec[0].name;
+        }
+        return "Unknown Format";
+    }
+        
+    
     
     void FileFormat::Write(const Baker & /*baker*/,
                            const std::string & formatName,
@@ -439,12 +451,30 @@ OCIO_NAMESPACE_ENTER
                     FileCachePair pair = std::make_pair(primaryFormat, cachedFile);
                     g_fileCache[filepath] = pair;
                     
+                    if(IsDebugLoggingEnabled())
+                    {
+                        std::ostringstream os;
+                        os << "    Loaded primary format ";
+                        os << primaryFormat->getName();
+                        LogDebug(os.str());
+                    }
+                    
                     return pair;
                 }
                 catch(std::exception & e)
                 {
                     primaryErrorText = e.what();
+                    filestream.clear();
                     filestream.seekg( std::ifstream::beg );
+                    
+                    if(IsDebugLoggingEnabled())
+                    {
+                        std::ostringstream os;
+                        os << "    Failed primary format ";
+                        os << primaryFormat->getName();
+                        os << ":  " << e.what();
+                        LogDebug(os.str());
+                    }
                 }
             }
             
@@ -452,23 +482,42 @@ OCIO_NAMESPACE_ENTER
             FormatRegistry & formats = FormatRegistry::GetInstance();
             for(int findex = 0; findex<formats.getNumRawFormats(); ++findex)
             {
-                FileFormat * localFormat = formats.getRawFormatByIndex(findex);
+                FileFormat * altFormat = formats.getRawFormatByIndex(findex);
                 
                 // Dont bother trying the primaryFormat twice.
-                if(localFormat == primaryFormat) continue;
+                if(altFormat == primaryFormat) continue;
                 
                 try
                 {
-                    CachedFileRcPtr cachedFile = localFormat->Read(filestream);
+                    CachedFileRcPtr cachedFile = altFormat->Read(filestream);
                     
                     // Add the result to our cache, return it.
-                    FileCachePair pair = std::make_pair(localFormat, cachedFile);
+                    FileCachePair pair = std::make_pair(altFormat, cachedFile);
                     g_fileCache[filepath] = pair;
+                    
+                    if(IsDebugLoggingEnabled())
+                    {
+                        std::ostringstream os;
+                        os << "    Loaded alt format ";
+                        os << altFormat->getName();
+                        LogDebug(os.str());
+                    }
+                    
                     return pair;
                 }
                 catch(std::exception & e)
                 {
+                    filestream.clear();
                     filestream.seekg( std::ifstream::beg );
+                    
+                    if(IsDebugLoggingEnabled())
+                    {
+                        std::ostringstream os;
+                        os << "    Failed alt format ";
+                        os << altFormat->getName();
+                        os << ":  " << e.what();
+                        LogDebug(os.str());
+                    }
                 }
             }
             

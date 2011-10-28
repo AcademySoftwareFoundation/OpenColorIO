@@ -39,6 +39,8 @@ OCIO_NAMESPACE_ENTER
     void LogWarning(const std::string & text);
     void LogInfo(const std::string & text);
     void LogDebug(const std::string & text);
+    
+    bool IsDebugLoggingEnabled();
 }
 OCIO_NAMESPACE_EXIT
 

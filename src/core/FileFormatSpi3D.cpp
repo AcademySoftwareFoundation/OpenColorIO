@@ -111,7 +111,10 @@ OCIO_NAMESPACE_ENTER
             istream.getline(lineBuffer, MAX_LINE_SIZE);
             if(!pystring::startswith(pystring::lower(lineBuffer), "spilut"))
             {
-                throw Exception("Lut does not appear to be valid spilut format.");
+                std::ostringstream os;
+                os << "Lut does not appear to be valid spilut format. ";
+                os << "Expected 'SPILUT'.  Found, '" << lineBuffer << "'.";
+                throw Exception(os.str().c_str());
             }
 
             // TODO: Assert 2nd line is 3 3

@@ -87,6 +87,9 @@ OCIO_NAMESPACE_ENTER
                                   CachedFileRcPtr cachedFile,
                                   const FileTransform & fileTransform,
                                   TransformDirection dir) const = 0;
+        
+        // For logging purposes
+        std::string getName() const;
     private:
         FileFormat& operator= (const FileFormat &);
     };

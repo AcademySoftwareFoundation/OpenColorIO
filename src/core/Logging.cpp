@@ -120,5 +120,10 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
+    bool IsDebugLoggingEnabled()
+    {
+        return (GetLoggingLevel()>=LOGGING_LEVEL_DEBUG);
+    }
+    
 }
 OCIO_NAMESPACE_EXIT
