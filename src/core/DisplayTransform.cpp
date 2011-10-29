@@ -361,8 +361,14 @@ OCIO_NAMESPACE_ENTER
         
         // Apply a look, if specified
         std::string looks;
-        if(displayTransform.getLooksOverrideEnabled()) looks = displayTransform.getLooksOverride();
-        else looks = config.getDisplayLooks(display.c_str(), view.c_str());
+        if(displayTransform.getLooksOverrideEnabled())
+        {
+            looks = displayTransform.getLooksOverride();
+        }
+        else if(!skipColorSpaceConversions)
+        {
+            looks = config.getDisplayLooks(display.c_str(), view.c_str());
+        }
         
         if(!looks.empty())
         {
