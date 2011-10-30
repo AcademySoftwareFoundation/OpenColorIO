@@ -51,14 +51,26 @@ else()
     target_link_libraries(PyOpenColorIO OpenColorIO)
 endif()
 
-if (SOVERSION)
-message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")
-set_target_properties(PyOpenColorIO PROPERTIES
-    VERSION ${OCIO_VERSION}
-    SOVERSION ${SOVERSION}
-)
-endif ()
+# PyOpenColorIO so serves dual roles:
+# - First, to provide the C API function necessary to act as a cpython module, 
+#   (extern "C" PyMODINIT_FUNC initPyOpenColorIO(void)
+# - Second, to act as a normal shared library, providing the C++ API functions 
+#   to convert between C++ and python representation of the OCIO object.
+#
+# To fulfill this second role, as a shared libary, we must continue to define
+# so version.
+#
+# TODO: This wont let the normal shared library symbols work on OSX.
+# We should explore whether this should be built as a normal dylib, instead
+# of as a bundle
 
+if(NOT APPLE)
+    message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")
+    set_target_properties(PyOpenColorIO PROPERTIES
+        VERSION ${OCIO_VERSION}
+        SOVERSION ${SOVERSION}
+    )
+endif()
 
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
