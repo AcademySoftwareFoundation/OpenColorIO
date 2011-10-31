@@ -697,7 +697,14 @@ OCIO_NAMESPACE_ENTER
                 // our guide
                 
                 ConstColorSpaceRcPtr inputColorSpace = config->getColorSpace(baker.getInputSpace());
-                
+
+                if(!inputColorSpace)
+                {
+                    std::ostringstream os;
+                    os << "Could not find colorspace '" << baker.getInputSpace() << "'";
+                    throw Exception(os.str().c_str());
+                }
+
                 // Let's make an allocation transform for this colorspace
                 AllocationTransformRcPtr allocationTransform = AllocationTransform::Create();
                 std::vector<float> vars(inputColorSpace->getAllocationNumVars());
