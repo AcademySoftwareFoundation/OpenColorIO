@@ -1,3 +1,8 @@
+**Version 1.0.1 (Oct 31 2011):**
+    * Luts with incorrect extension are properly loaded
+    * ocio2icc / ociobakelut get --lut option (no longer requires ocio config)
+    * DisplayTransform looks do not apply to 'data' passes.
+
 **Version 1.0.0 (Oct 3 2011):**
     * ABI Lockoff for 1.0 branch
     * General API Cleanup (removed deprecated / unnecessary functions)
