@@ -444,6 +444,7 @@ OCIO_NAMESPACE_ENTER
                 catch(std::exception & e)
                 {
                     primaryErrorText = e.what();
+                    filestream.clear();
                     filestream.seekg( std::ifstream::beg );
                 }
             }
@@ -468,6 +469,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 catch(std::exception & e)
                 {
+                    filestream.clear();
                     filestream.seekg( std::ifstream::beg );
                 }
             }
