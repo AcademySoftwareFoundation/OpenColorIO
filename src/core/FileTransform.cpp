@@ -164,9 +164,9 @@ OCIO_NAMESPACE_ENTER
         os << "<FileTransform ";
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
         os << "interpolation=" << InterpolationToString(t.getInterpolation()) << ", ";
-        os << "src='" << t.getSrc() << "'";
+        os << "src='" << t.getSrc() << "', ";
         os << "cccid='" << t.getCCCId() << "'";
-        os << ">\n";
+        os << ">";
         
         return os;
     }
