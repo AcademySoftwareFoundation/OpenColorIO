@@ -51,6 +51,9 @@ parse_end_args(int argc, const char *argv[])
     return 0;
 }
 
+OCIO::GroupTransformRcPtr
+parse_luts(int argc, const char *argv[]);
+
 int main (int argc, const char* argv[])
 {
     
@@ -63,6 +66,7 @@ int main (int argc, const char* argv[])
     std::string shaperspace;
     std::string outputspace;
     bool usestdout = false;
+    bool verbose = false;
     
     // What are the allowed baker output formats?
     std::ostringstream formats;
@@ -75,13 +79,15 @@ int main (int argc, const char* argv[])
     }
     std::string formatstr = formats.str();
     
-    std::vector<std::string> luts;
+    std::string dummystr;
+    float dummyf1, dummyf2, dummyf3;
     
     ArgParse ap;
     ap.options("ociobakelut -- create a new LUT from an OCIO config or lut file(s)\n\n"
                "usage:  ociobakelut [options] <OUTPUTFILE.LUT>\n\n"
                "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl\n"
-               "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format flame lg_to_srgb.3dl\n\n",
+               "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format flame display.3dl\n"
+               "example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Using Existing OCIO Configurations",
                "--inputspace %s", &inputspace, "Input OCIO ColorSpace (or Role)",
@@ -89,12 +95,20 @@ int main (int argc, const char* argv[])
                "--shaperspace %s", &shaperspace, "the OCIO ColorSpace or Role, for the shaper",
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)\n",
                "<SEPARATOR>", "Config-Free LUT Baking",
-               "--lut %L", &luts, "Specify a lut to apply in the forward direction (can be specified multiple times; each is applied in order)\n",
+               "<SEPARATOR>", "    (all options can be specified multiple times, each is applied in order)",
+               "--lut %s", &dummystr, "Specify a LUT (forward direction)",
+               "--invlut %s", &dummystr, "Specify a LUT (inverse direction)",
+               "--slope %f %f %f", &dummyf1, &dummyf2, &dummyf3, "slope",
+               "--offset %f %f %f", &dummyf1, &dummyf2, &dummyf3, "offset (float)",
+               "--offset10 %f %f %f", &dummyf1, &dummyf2, &dummyf3, "offset (10-bit)",
+               "--power %f %f %f", &dummyf1, &dummyf2, &dummyf3, "power",
+               "--sat %f", &dummyf1, "saturation (ASC-CDL luma coefficients)\n",
                "<SEPARATOR>", "Output Options",
                "--format %s", &format, formatstr.c_str(),
                "--shapersize %d", &shapersize, "size of the shaper (default: format specific)",
                "--cubesize %d", &cubesize, "size of the cube (default: format specific)",
                "--stdout", &usestdout, "Write lut to stdout (rather than file)",
+               "--v", &verbose, "Verbose",
                "--help", &help, "Print help message",
                // TODO: add --metadata option
                NULL);
@@ -114,13 +128,38 @@ int main (int argc, const char* argv[])
         return 1;
     }
     
+    // If we're printing to stdout, disable verbose printouts
+    if(usestdout)
+    {
+        verbose = false;
+    }
+    
     // Create the OCIO processor for the specified transform.
     OCIO::ConstConfigRcPtr config;
     
     
+    OCIO::GroupTransformRcPtr groupTransform;
+    
+    try
+    {
+        groupTransform = parse_luts(argc, argv);
+    }
+    catch(const OCIO::Exception & e)
+    {
+        ap.usage();
+        std::cerr << "\nERROR: " << e.what() << std::endl;
+        return 1;
+    }
+    catch(...)
+    {
+        ap.usage();
+        std::cerr << "\nERROR: An unknown error occurred in parse_luts" << std::endl;
+        return 1;
+    }
+    
     // If --luts have been specified, synthesize a new (temporary) configuration
     // with the transformation embedded in a colorspace.
-    if(!luts.empty())
+    if(!groupTransform->empty())
     {
         if(!inputspace.empty())
         {
@@ -141,6 +180,8 @@ int main (int argc, const char* argv[])
             return 1;
         }
         
+        parse_luts(argc, argv);
+
         OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
         
         OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
@@ -152,19 +193,15 @@ int main (int argc, const char* argv[])
         outputspace = "ProcessedOutput";
         outputColorSpace->setName(outputspace.c_str());
         
-        OCIO::GroupTransformRcPtr groupTransform = 
-            OCIO::GroupTransform::Create();
-        
-        for(unsigned int i=0; i<luts.size(); ++i)
-        {
-            OCIO::FileTransformRcPtr f = OCIO::FileTransform::Create();
-            f->setSrc(luts[i].c_str());
-            f->setInterpolation(OCIO::INTERP_LINEAR);
-            groupTransform->push_back(f);
-        }
-        
         outputColorSpace->setTransform(groupTransform,
             OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        
+        if(verbose)
+        {
+            std::cout << "[OpenColorIO DEBUG]: Specified Transform:";
+            std::cout << *groupTransform;
+            std::cout << "\n";
+        }
         
         editableConfig->addColorSpace(outputColorSpace);
         config = editableConfig;
@@ -266,3 +303,137 @@ int main (int argc, const char* argv[])
     
     return 0;
 }
+
+
+// TODO: Replace this dirty argument parsing code with a clean version
+// that leverages the same codepath for the standard arguments.  If
+// the OIIO derived argparse does not suffice, options we may want to consider
+// include simpleopt, tclap, ultraopt
+
+OCIO::GroupTransformRcPtr
+parse_luts(int argc, const char *argv[])
+{
+    OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
+    
+    for(int i=0; i<argc; ++i)
+    {
+        std::string arg(argv[i]);
+        
+        if(arg == "--lut" || arg == "-lut")
+        {
+            if(i+1>=argc)
+            {
+                throw OCIO::Exception("Error parsing --invlut. Invalid num args");
+            }
+            
+            OCIO::FileTransformRcPtr t = OCIO::FileTransform::Create();
+            t->setSrc(argv[i+1]);
+            t->setInterpolation(OCIO::INTERP_LINEAR);
+            groupTransform->push_back(t);
+            
+            i += 1;
+        }
+        else if(arg == "--invlut" || arg == "-invlut")
+        {
+            if(i+1>=argc)
+            {
+                throw OCIO::Exception("Error parsing --invlut. Invalid num args");
+            }
+            
+            OCIO::FileTransformRcPtr t = OCIO::FileTransform::Create();
+            t->setSrc(argv[i+1]);
+            t->setInterpolation(OCIO::INTERP_LINEAR);
+            t->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+            groupTransform->push_back(t);
+            
+            i += 1;
+        }
+        else if(arg == "--slope" || arg == "-slope")
+        {
+            if(i+3>=argc)
+            {
+                throw OCIO::Exception("Error parsing --slope. Invalid num args");
+            }
+            
+            OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
+            
+            float scale[3];
+            scale[0] = (float) atof(argv[i+1]);
+            scale[1] = (float) atof(argv[i+2]);
+            scale[2] = (float) atof(argv[i+3]);
+            t->setSlope(scale);
+            groupTransform->push_back(t);
+            
+            i += 3;
+        }
+        else if(arg == "--offset" || arg == "-offset")
+        {
+            if(i+3>=argc)
+            {
+                throw OCIO::Exception("Error parsing --offset. Invalid num args");
+            }
+            
+            OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
+            
+            float offset[3];
+            offset[0] = (float) atof(argv[i+1]);
+            offset[1] = (float) atof(argv[i+2]);
+            offset[2] = (float) atof(argv[i+3]);
+            t->setOffset(offset);
+            groupTransform->push_back(t);
+            
+            i += 3;
+        }
+        else if(arg == "--offset10" || arg == "-offset10")
+        {
+            if(i+3>=argc)
+            {
+                throw OCIO::Exception("Error parsing --offset10. Invalid num args");
+            }
+            
+            OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
+            
+            float offset[3];
+            offset[0] = (float) atof(argv[i+1]) / 1023.0f;
+            offset[1] = (float) atof(argv[i+2]) / 1023.0f;
+            offset[2] = (float) atof(argv[i+3]) / 1023.0f;
+            t->setOffset(offset);
+            groupTransform->push_back(t);
+            i += 3;
+        }
+        else if(arg == "--power" || arg == "-power")
+        {
+            if(i+3>=argc)
+            {
+                throw OCIO::Exception("Error parsing --power. Invalid num args");
+            }
+            
+            OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
+            
+            float power[3];
+            power[0] = (float) atof(argv[i+1]);
+            power[1] = (float) atof(argv[i+2]);
+            power[2] = (float) atof(argv[i+3]);
+            t->setPower(power);
+            groupTransform->push_back(t);
+            
+            i += 3;
+        }
+        else if(arg == "--sat" || arg == "-sat")
+        {
+            if(i+1>=argc)
+            {
+                throw OCIO::Exception("Error parsing --sat. Invalid num args");
+            }
+            
+            OCIO::CDLTransformRcPtr t = OCIO::CDLTransform::Create();
+            t->setSat((float) atof(argv[i+1]));
+            groupTransform->push_back(t);
+            
+            i += 1;
+        }
+    }
+    
+    return groupTransform;
+}
+
