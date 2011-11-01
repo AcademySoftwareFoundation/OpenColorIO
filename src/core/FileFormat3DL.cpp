@@ -428,8 +428,6 @@ OCIO_NAMESPACE_ENTER
                                     std::ostream & ostream) const
         {
             int DEFAULT_CUBE_SIZE = 0;
-            
-            int SHAPER_SIZE = 17; // This is fixed for compatibility...
             int SHAPER_BIT_DEPTH = 10;
             int CUBE_BIT_DEPTH = 12;
             
@@ -455,6 +453,9 @@ OCIO_NAMESPACE_ENTER
             if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
             cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
             
+            int shaperSize = baker.getShaperSize();
+            if(shaperSize==-1) shaperSize = cubeSize;
+            
             std::vector<float> cubeData;
             cubeData.resize(cubeSize*cubeSize*cubeSize*3);
             GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_BLUE);
@@ -476,8 +477,8 @@ OCIO_NAMESPACE_ENTER
                 ostream << "Mesh " << meshInputBitDepth << " " << CUBE_BIT_DEPTH << "\n";
             }
             
-            std::vector<float> shaperData(SHAPER_SIZE);
-            GenerateIdentityLut1D(&shaperData[0], SHAPER_SIZE, 1);
+            std::vector<float> shaperData(shaperSize);
+            GenerateIdentityLut1D(&shaperData[0], shaperSize, 1);
             
             float shaperScale = static_cast<float>(
                 GetMaxValueFromIntegerBitDepth(SHAPER_BIT_DEPTH));
