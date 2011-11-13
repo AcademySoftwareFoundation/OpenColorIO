@@ -130,6 +130,16 @@ MACRO(OCIOFindPython)
     else()
         set(PYTHON_ERR "${PYTHON}: ${PYTHON_RETURNVALUE}.")
     endif()
+
+    if(PYTHON_RESPECT_UCS)
+        # Respect Python UCS (unicode content system) version, and install
+        # into "lib/python2.6/ucs4" or similar.
+        set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}/${PYTHON_UCS}")
+    else()
+        # Ignore UCS version and install into lib/python2.6
+        set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}")
+    endif()
+
 ENDMACRO()
 
 MACRO(ExtractRst INFILE OUTFILE)
