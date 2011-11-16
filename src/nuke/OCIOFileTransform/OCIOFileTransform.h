@@ -20,15 +20,25 @@ class OCIOFileTransform : public DD::Image::PixelIop {
 
     protected:
         DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
+
         const char* m_file;
         std::string m_cccid;
-        
+
+        /*! Transform direction dropdown index */
         int m_dirindex;
+
+        /*! Interpolation dropdown index */
         int m_interpindex;
-        
+
+        /*! Processor used to apply the FileTransform */
         OCIO::ConstProcessorRcPtr m_processor;
-        
+
+        /*! Holds computed help string */
         mutable std::string m_nodehelp;
+
+        /*! Controlled by hidden "version" knob, incremented to redraw image */
+        int m_reload_version;
+
     public:
         static const char* dirs[];
         static const char* interp[];
@@ -107,7 +117,8 @@ class OCIOFileTransform : public DD::Image::PixelIop {
         void append(DD::Image::Hash& nodehash);
 
         /*!
-         * Hide and show UI elements based on other parameters
+         * Hide and show UI elements based on other parameters.
+         Also handles reload button
          */
         int knob_changed(DD::Image::Knob* k);
 

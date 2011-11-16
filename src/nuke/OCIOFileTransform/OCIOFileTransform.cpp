@@ -21,6 +21,7 @@ OCIOFileTransform::OCIOFileTransform(Node *n) : DD::Image::PixelIop(n)
     m_file = NULL;
     m_dirindex = 0;
     m_interpindex = 1;
+    m_reload_version = 1;
     m_layersToProcess = DD::Image::Mask_RGBA;
 }
 
@@ -37,6 +38,12 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 {
     File_knob(f, &m_file, "file", "file");
     DD::Image::Tooltip(f, "Specify the file, on disk, to use for this transform. See the node help for the list of supported formats.");
+
+    // Reload button button, and hidden "version" knob to cause redrawing
+    Button(f, "reload", "reload");
+    DD::Image::Tooltip(f, "Reloads specified files");
+    Int_knob(f, &m_reload_version, "version");
+    DD::Image::SetFlags(f, DD::Image::Knob::HIDDEN);
     
     String_knob(f, &m_cccid, "cccid");
     const char * srchelp2 = "If the source file is an ASC CDL CCC (color correction collection), "
@@ -119,6 +126,9 @@ void OCIOFileTransform::append(DD::Image::Hash& nodehash)
     // cccid) is not included in the node's hash. Include it manually
     // so the node correctly redraws. Appears fixed in in 6.3
     nodehash.append(m_cccid.c_str());
+
+    // Incremented to force reloading after rereading the LUT file
+    nodehash.append(m_reload_version);
 }
 
 int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
@@ -147,6 +157,15 @@ int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
 
         // Ensure this callback is always triggered (for src knob)
         return 1;
+    }
+
+    if(k->is("reload"))
+    {
+        std::cerr << "Reloading caches!\n";
+        knob("version")->set_value(m_reload_version+1);
+        OCIO::ClearAllCaches();
+
+        return 1; // ensure callback is triggered again
     }
 
     // Return zero to avoid callbacks for other knobs
