@@ -78,4 +78,4 @@ message(STATUS "Create OpenColorIO.pc from OpenColorIO.pc.in")
 configure_file(${CMAKE_SOURCE_DIR}/export/pkgconfig/OpenColorIO.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO.pc
-    DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/include/pkgconfig/)
+    DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX}/pkgconfig/)
