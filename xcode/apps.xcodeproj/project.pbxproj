@@ -16,6 +16,8 @@
 				2ACFA26014782EC400991ED5 /* PBXTargetDependency */,
 				2ACFA26214782EC900991ED5 /* PBXTargetDependency */,
 				2ACFA26414782EC900991ED5 /* PBXTargetDependency */,
+				2AF56ABC1479B0C600F9968C /* PBXTargetDependency */,
+				2AF56ABE1479B0C600F9968C /* PBXTargetDependency */,
 			);
 			name = All;
 			productName = All;
@@ -295,6 +297,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 2ACF559B1477692300991ED5;
 			remoteInfo = yaml;
+		};
+		2AF56ABB1479B0C600F9968C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2AF569DE14799E7300F9968C /* ocioconvert */;
+			remoteInfo = ocioconvert;
+		};
+		2AF56ABD1479B0C600F9968C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2AF56A1E14799EF700F9968C /* ociodisplay */;
+			remoteInfo = ociodisplay;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -977,9 +993,9 @@
 			buildRules = (
 			);
 			dependencies = (
-				2ACF9E0A1478243200991ED5 /* PBXTargetDependency */,
 				2ACF9E0C1478243200991ED5 /* PBXTargetDependency */,
 				2ACF9E0E1478243200991ED5 /* PBXTargetDependency */,
+				2ACF9E0A1478243200991ED5 /* PBXTargetDependency */,
 				2ACF9F7C1478256000991ED5 /* PBXTargetDependency */,
 			);
 			name = ocio2icc;
@@ -999,9 +1015,9 @@
 			buildRules = (
 			);
 			dependencies = (
-				2ACF9F891478263800991ED5 /* PBXTargetDependency */,
 				2ACF9F8B1478263800991ED5 /* PBXTargetDependency */,
 				2ACF9F8D1478263800991ED5 /* PBXTargetDependency */,
+				2ACF9F891478263800991ED5 /* PBXTargetDependency */,
 			);
 			name = ociobakelut;
 			productInstallPath = "$(HOME)/bin";
@@ -1020,9 +1036,9 @@
 			buildRules = (
 			);
 			dependencies = (
-				2AF569DF14799E7300F9968C /* PBXTargetDependency */,
 				2AF569E114799E7300F9968C /* PBXTargetDependency */,
 				2AF569E314799E7300F9968C /* PBXTargetDependency */,
+				2AF569DF14799E7300F9968C /* PBXTargetDependency */,
 			);
 			name = ocioconvert;
 			productInstallPath = "$(HOME)/bin";
@@ -1041,9 +1057,9 @@
 			buildRules = (
 			);
 			dependencies = (
-				2AF56A1F14799EF700F9968C /* PBXTargetDependency */,
 				2AF56A2114799EF700F9968C /* PBXTargetDependency */,
 				2AF56A2314799EF700F9968C /* PBXTargetDependency */,
+				2AF56A1F14799EF700F9968C /* PBXTargetDependency */,
 			);
 			name = ociodisplay;
 			productInstallPath = "$(HOME)/bin";
@@ -1062,9 +1078,9 @@
 			buildRules = (
 			);
 			dependencies = (
-				2ACF57AF147792CD00991ED5 /* PBXTargetDependency */,
 				2ACF57B1147792D200991ED5 /* PBXTargetDependency */,
 				2ACF57B3147792D200991ED5 /* PBXTargetDependency */,
+				2ACF57AF147792CD00991ED5 /* PBXTargetDependency */,
 			);
 			name = ociocheck;
 			productInstallPath = "$(HOME)/bin";
@@ -1298,6 +1314,16 @@
 			isa = PBXTargetDependency;
 			name = yaml;
 			targetProxy = 2AF56A2414799EF700F9968C /* PBXContainerItemProxy */;
+		};
+		2AF56ABC1479B0C600F9968C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2AF569DE14799E7300F9968C /* ocioconvert */;
+			targetProxy = 2AF56ABB1479B0C600F9968C /* PBXContainerItemProxy */;
+		};
+		2AF56ABE1479B0C600F9968C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2AF56A1E14799EF700F9968C /* ociodisplay */;
+			targetProxy = 2AF56ABD1479B0C600F9968C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
