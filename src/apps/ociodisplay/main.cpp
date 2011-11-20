@@ -37,7 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #ifdef __APPLE__
-#include <GL/glew.h>
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 #include <GLUT/glut.h>
@@ -678,12 +677,14 @@ int main(int argc, char **argv)
     
     g_win = glutCreateWindow(argv[0]);
     
+#ifndef __APPLE__
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
         printf("OpenGL 2.0 not supported\n");
         exit(1);
     }
+#endif
     
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Key);
