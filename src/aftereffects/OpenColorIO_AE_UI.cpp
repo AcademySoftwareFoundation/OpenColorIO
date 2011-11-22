@@ -86,7 +86,27 @@ DoClick (
 	{
 		params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
 		
-		seq_data->ready = FALSE;
+		if(seq_data->context)
+		{
+			delete seq_data->context;
+			
+			seq_data->context = NULL;
+		}
+		
+		try
+		{
+			seq_data->context = new OCIO_Context(arb_data);
+		}
+		catch(...)
+		{
+			// this is probably not necessary
+			if(seq_data->context)
+			{
+				delete seq_data->context;
+				
+				seq_data->context = NULL;
+			}
+		}
 	}
 	
 	

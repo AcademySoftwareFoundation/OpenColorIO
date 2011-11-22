@@ -3,6 +3,23 @@
 #include "OpenColorIO_AE.h"
 
 
+OCIO_Context::OCIO_Context(ArbitraryData *arb_data)
+{
+	if(arb_data->path[0] != '\0')
+	{
+		OCIO::ConstConfigRcPtr config = OCIO::Config::Create();
+		
+		OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
+		transform = OCIO::FileTransform::Create();
+		transform->setSrc((char *)arb_data->path);
+		transform->setInterpolation(OCIO::INTERP_LINEAR);
+		transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+		
+		_processor = config->getProcessor(transform);
+	}
+	else
+		throw OCIO::Exception("Got nothin");
+}
 
 
 static PF_Err 
@@ -137,7 +154,7 @@ SequenceSetup (
 	}
 	
 	
-	seq_data->ready = FALSE;
+	seq_data->context = NULL;
 	
 	
 	PF_UNLOCK_HANDLE(in_data->sequence_data);
@@ -157,6 +174,15 @@ SequenceSetdown (
 	
 	if(in_data->sequence_data)
 	{
+		SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+		
+		if(seq_data->context)
+		{
+			delete seq_data->context;
+			
+			seq_data->context = NULL;
+		}
+		
 		PF_DISPOSE_HANDLE(in_data->sequence_data);
 	}
 
@@ -177,7 +203,12 @@ SequenceFlatten (
 	{
 		SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
 		
-		seq_data->ready = FALSE;
+		if(seq_data->context)
+		{
+			delete seq_data->context;
+			
+			seq_data->context = NULL;
+		}
 
 		PF_UNLOCK_HANDLE(in_data->sequence_data);
 	}
@@ -185,16 +216,6 @@ SequenceFlatten (
 	return err;
 }
 
-
-void
-SetupProcessor(ArbitraryData *arb_data, SequenceData *seq_data)
-{
-	if(arb_data->path[0] != '\0')
-	{
-		
-		seq_data->ready = TRUE;
-	}
-}
 
 
 static
@@ -318,18 +339,53 @@ CopyWorld_Iterate(void *refconPV,
 	InFormat *in_pix = (InFormat *)((char *)i_data->in_buffer + (i * i_data->in_rowbytes)); 
 	OutFormat *out_pix = (OutFormat *)((char *)i_data->out_buffer + (i * i_data->out_rowbytes));
 	
-	for(int x=0; x < i_data->width; x++)
-	{
-		*out_pix++ = Convert<InFormat, OutFormat>( *in_pix++ );
-	}
-	
 #ifdef NDEBUG
 	if(thread_indexL == 0)
 		err = PF_ABORT(in_data);
 #endif
 
+	for(int x=0; x < i_data->width; x++)
+	{
+		*out_pix++ = Convert<InFormat, OutFormat>( *in_pix++ );
+	}
+	
 	return err;
 }
+
+
+typedef struct {
+	int				width;
+	OCIO_Context	*context;
+} ProcessData;
+
+static PF_Err
+Process_Iterate(void *refconP,
+					A_long xL,
+					A_long yL,	
+					PF_PixelFloat *inP,
+					PF_PixelFloat *outP)
+{
+	PF_Err err = PF_Err_NONE;
+	
+	try
+	{
+		ProcessData *i_data = (ProcessData *)refconP;
+
+		float *rOut = &outP->red;
+
+		OCIO::PackedImageDesc img(rOut, i_data->width, 1, 4, sizeof(float), sizeof(PF_PixelFloat));
+												
+		i_data->context->processor()->apply(img);
+	}
+	catch(...)
+	{
+		err = PF_Err_INTERNAL_STRUCT_DAMAGED;
+	}
+	
+	
+	return err;
+}
+
 
 
 static PF_Err
@@ -354,20 +410,26 @@ DoRender(
 		ArbitraryData *arb_data = (ArbitraryData *)PF_LOCK_HANDLE(OCIO_data->u.arb_d.value);
 		SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
 		
-		if(!seq_data->ready)
+		if(!seq_data->context)
 		{
 			try
 			{
-				SetupProcessor(arb_data, seq_data);
+				seq_data->context = new OCIO_Context(arb_data);
 			}
 			catch(...)
 			{
-				seq_data->ready = FALSE;
+				// this is probably not necessary
+				if(seq_data->context)
+				{
+					delete seq_data->context;
+					
+					seq_data->context = NULL;
+				}
 			}
 		}
 
 		
-		if(!seq_data->ready)
+		if(seq_data->context == NULL)
 		{
 			PF_COPY(input, output, NULL, NULL);
 		}
@@ -411,19 +473,26 @@ DoRender(
 			if(!err)
 			{
 				// OpenColorIO processing
+				PF_Point origin;
+				PF_Rect areaR;
+				
+				origin.h = in_data->output_origin_x;
+				origin.v = in_data->output_origin_y;
+				
+				areaR.top = 0;
+				areaR.left = 0;
+				areaR.bottom = output->height;
+				areaR.right = 1;
+				
+				ProcessData p_data = { output->width, seq_data->context };
+				
+				err = suites.IterateFloatSuite1()->iterate_origin(in_data, 0, output->height,
+																float_world, &areaR, &origin,
+																&p_data, Process_Iterate, float_world);
+				
+				/*
 				try
-				{					
-					OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-					
-					OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
-					transform = OCIO::FileTransform::Create();
-					transform->setSrc((char *)arb_data->path);
-					transform->setInterpolation(OCIO::INTERP_LINEAR);
-					transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-					
-					OCIO::ConstProcessorRcPtr processor = config->getProcessor(transform);
-					
-
+				{
 					PF_PixelFloat *pix = (PF_PixelFloat *)float_world->data;
 					
 					float *rOut = &pix->red;
@@ -432,12 +501,14 @@ DoRender(
 											float_world->width, float_world->height,
 											4, sizeof(float), sizeof(PF_PixelFloat), float_world->rowbytes);
 											
-					processor->apply(img);
+					seq_data->context->processor()->apply(img);
+					
 				}
 				catch(...)
 				{
 					err = PF_Err_INTERNAL_STRUCT_DAMAGED;
 				}
+				*/
 			}
 			
 			

@@ -64,18 +64,33 @@ enum {
 
 #define ARB_PATH_LEN 255
 
+
+#ifdef __cplusplus
+
 typedef struct {
 	A_u_char		version; // version of this data structure
 	A_u_char		path[ARB_PATH_LEN+1];
 } ArbitraryData;
 
 
+class OCIO_Context
+{
+  public:
+	OCIO_Context(ArbitraryData *arb_data);
+	~OCIO_Context() {}
+	
+	OCIO::ConstProcessorRcPtr & processor() { return _processor; }
+
+  private:
+	OCIO::ConstProcessorRcPtr	_processor;
+};
+
+
 typedef struct {
-	A_Boolean					ready;
-	//OCIO::ConstConfigRcPtr		config;
-	//OCIO::ConstTransformRcPtr	*transform;
-	//OCIO::ConstProcessorRcPtr	*processor;
+	OCIO_Context	*context;
 } SequenceData;
+
+#endif
 
 // UI drawing constants
 
@@ -124,9 +139,6 @@ HandleArbitrary(
 	PF_LayerDef			*output,
 	PF_ArbParamsExtra	*extra);
 
-
-void
-SetupProcessor(ArbitraryData *arb_data, SequenceData *seq_data);
 
 #ifdef __cplusplus
 	}
