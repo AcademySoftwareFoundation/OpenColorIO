@@ -29,10 +29,6 @@
 #endif	
 
 
-#include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
-
-
 // Versioning information 
 
 #define NAME				"OpenColorIO"
@@ -61,42 +57,43 @@ enum {
 
 
 #define CURRENT_ARB_VERSION 1
-
 #define ARB_PATH_LEN 255
+#define ARB_SPACE_LEN	63
+
+enum {
+	ARB_TYPE_NONE = 0,
+	ARB_TYPE_LUT,
+	ARB_TYPE_OCIO
+};
+typedef A_u_char ArbType;
+
+typedef struct {
+	A_u_char	version; // version of this data structure
+	ArbType		type;
+	A_u_char	reserved[62]; // 64 pre-path bytes
+	char		path[ARB_PATH_LEN+1];
+	char		input[ARB_SPACE_LEN+1];
+	char		transform[ARB_SPACE_LEN+1];
+	char		device[ARB_SPACE_LEN+1];
+} ArbitraryData;
 
 
 #ifdef __cplusplus
 
-typedef struct {
-	A_u_char		version; // version of this data structure
-	A_u_char		path[ARB_PATH_LEN+1];
-} ArbitraryData;
-
-
-class OCIO_Context
-{
-  public:
-	OCIO_Context(ArbitraryData *arb_data);
-	~OCIO_Context() {}
-	
-	OCIO::ConstProcessorRcPtr & processor() { return _processor; }
-
-  private:
-	OCIO::ConstProcessorRcPtr	_processor;
-};
+class OpenColorIO_AE_Context;
 
 
 typedef struct {
-	OCIO_Context	*context;
+	OpenColorIO_AE_Context	*context;
 } SequenceData;
 
 #endif
 
-// UI drawing constants
 
 
 #define UI_CONTROL_HEIGHT	200
 #define UI_CONTROL_WIDTH	0
+
 
 #ifdef __cplusplus
 	extern "C" {

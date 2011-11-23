@@ -19,6 +19,8 @@
 		2AF56EE8147AD11200F9968C /* libOpenColorIO.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AF56EE7147AD10E00F9968C /* libOpenColorIO.a */; };
 		2AF57004147AE17200F9968C /* libtinyxml.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AF56FFB147AE16A00F9968C /* libtinyxml.a */; };
 		2AF57005147AE17400F9968C /* libyaml.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AF57001147AE16A00F9968C /* libyaml.a */; };
+		2AF57B93147C6FE000F9968C /* OpenColorIO_AE_Menu.m in Sources */ = {isa = PBXBuildFile; fileRef = 2AF57B92147C6FE000F9968C /* OpenColorIO_AE_Menu.m */; };
+		2AF57D20147C994100F9968C /* OpenColorIO_AE_Context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AF57D1F147C994100F9968C /* OpenColorIO_AE_Context.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -83,6 +85,10 @@
 		2AF56FF0147AE16A00F9968C /* tinyxml.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = tinyxml.xcodeproj; path = ../ext/tinyxml.xcodeproj; sourceTree = SOURCE_ROOT; };
 		2AF56FF3147AE16A00F9968C /* yaml.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = yaml.xcodeproj; path = ../ext/yaml.xcodeproj; sourceTree = SOURCE_ROOT; };
 		2AF57171147B36F300F9968C /* OpenColorIO_AE_Dialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE_Dialogs.h; path = ../../src/aftereffects/OpenColorIO_AE_Dialogs.h; sourceTree = SOURCE_ROOT; };
+		2AF57B91147C6FE000F9968C /* OpenColorIO_AE_Menu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenColorIO_AE_Menu.h; sourceTree = "<group>"; };
+		2AF57B92147C6FE000F9968C /* OpenColorIO_AE_Menu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenColorIO_AE_Menu.m; sourceTree = "<group>"; };
+		2AF57D1E147C994100F9968C /* OpenColorIO_AE_Context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE_Context.h; path = ../../src/aftereffects/OpenColorIO_AE_Context.h; sourceTree = SOURCE_ROOT; };
+		2AF57D1F147C994100F9968C /* OpenColorIO_AE_Context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OpenColorIO_AE_Context.cpp; path = ../../src/aftereffects/OpenColorIO_AE_Context.cpp; sourceTree = SOURCE_ROOT; };
 		C4E618CC095A3CE80012CA3F /* OpenColorIO.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenColorIO.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -130,10 +136,14 @@
 			children = (
 				2AF56B95147A431100F9968C /* OpenColorIO_AE.h */,
 				2AF56B94147A431100F9968C /* OpenColorIO_AE.cpp */,
+				2AF57D1E147C994100F9968C /* OpenColorIO_AE_Context.h */,
+				2AF57D1F147C994100F9968C /* OpenColorIO_AE_Context.cpp */,
 				2AF56B8F147A431100F9968C /* OpenColorIO_AE_ArbData.cpp */,
 				2AF56B93147A431100F9968C /* OpenColorIO_AE_UI.cpp */,
 				2AF57171147B36F300F9968C /* OpenColorIO_AE_Dialogs.h */,
 				2AF56B90147A431100F9968C /* OpenColorIO_AE_Dialogs_Cocoa.mm */,
+				2AF57B91147C6FE000F9968C /* OpenColorIO_AE_Menu.h */,
+				2AF57B92147C6FE000F9968C /* OpenColorIO_AE_Menu.m */,
 				2AF56B92147A431100F9968C /* OpenColorIO_AE_PiPL.r */,
 				2AF56B9E147A458800F9968C /* AEGP_SuiteHandler.h */,
 				2AF56B9D147A458800F9968C /* AEGP_SuiteHandler.cpp */,
@@ -277,6 +287,8 @@
 				2AF56BA1147A458800F9968C /* MissingSuiteError.cpp in Sources */,
 				2AF56C24147A54A300F9968C /* OpenColorIO_AE_Dialogs_Cocoa.mm in Sources */,
 				2AF56D06147AB5C900F9968C /* DrawbotBot.cpp in Sources */,
+				2AF57B93147C6FE000F9968C /* OpenColorIO_AE_Menu.m in Sources */,
+				2AF57D20147C994100F9968C /* OpenColorIO_AE_Context.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

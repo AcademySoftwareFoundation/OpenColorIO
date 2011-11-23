@@ -2,25 +2,7 @@
 
 #include "OpenColorIO_AE.h"
 
-
-OCIO_Context::OCIO_Context(ArbitraryData *arb_data)
-{
-	if(arb_data->path[0] != '\0')
-	{
-		OCIO::ConstConfigRcPtr config = OCIO::Config::Create();
-		
-		OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
-		transform = OCIO::FileTransform::Create();
-		transform->setSrc((char *)arb_data->path);
-		transform->setInterpolation(OCIO::INTERP_LINEAR);
-		transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-		
-		_processor = config->getProcessor(transform);
-	}
-	else
-		throw OCIO::Exception("Got nothin");
-}
-
+#include "OpenColorIO_AE_Context.h"
 
 static PF_Err 
 About (	
@@ -281,16 +263,19 @@ PreRender(
 
 
 template <typename InFormat, typename OutFormat>
-OutFormat Convert(InFormat in);
+static inline OutFormat
+Convert(InFormat in);
 
 template <>
-float Convert<A_u_char, float>(A_u_char in)
+static inline float
+Convert<A_u_char, float>(A_u_char in)
 {
 	return (float)in / (float)PF_MAX_CHAN8;
 }
 
 template <>
-float Convert<A_u_short, float>(A_u_short in)
+static inline float
+Convert<A_u_short, float>(A_u_short in)
 {
 	return (float)in / (float)PF_MAX_CHAN16;
 }
@@ -302,13 +287,15 @@ Clamp(float in)
 }
 
 template <>
-A_u_char Convert<float, A_u_char>(float in)
+static inline A_u_char
+Convert<float, A_u_char>(float in)
 {
 	return ( Clamp(in) * (float)PF_MAX_CHAN8 ) + 0.5f;
 }
 
 template <>
-A_u_short Convert<float, A_u_short>(float in)
+static inline A_u_short
+Convert<float, A_u_short>(float in)
 {
 	return ( Clamp(in) * (float)PF_MAX_CHAN16 ) + 0.5f;
 }
@@ -354,8 +341,8 @@ CopyWorld_Iterate(void *refconPV,
 
 
 typedef struct {
-	int				width;
-	OCIO_Context	*context;
+	int						width;
+	OpenColorIO_AE_Context	*context;
 } ProcessData;
 
 static PF_Err
@@ -373,7 +360,7 @@ Process_Iterate(void *refconP,
 
 		float *rOut = &outP->red;
 
-		OCIO::PackedImageDesc img(rOut, i_data->width, 1, 4, sizeof(float), sizeof(PF_PixelFloat));
+		OCIO::PackedImageDesc img(rOut, i_data->width, 1, 4);
 												
 		i_data->context->processor()->apply(img);
 	}
@@ -410,22 +397,13 @@ DoRender(
 		ArbitraryData *arb_data = (ArbitraryData *)PF_LOCK_HANDLE(OCIO_data->u.arb_d.value);
 		SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
 		
-		if(!seq_data->context)
+		if(!seq_data->context && arb_data->path[0] != '\0')
 		{
 			try
 			{
-				seq_data->context = new OCIO_Context(arb_data);
+				seq_data->context = new OpenColorIO_AE_Context(arb_data);
 			}
-			catch(...)
-			{
-				// this is probably not necessary
-				if(seq_data->context)
-				{
-					delete seq_data->context;
-					
-					seq_data->context = NULL;
-				}
-			}
+			catch(...) { }
 		}
 
 		

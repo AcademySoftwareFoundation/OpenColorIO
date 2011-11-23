@@ -28,7 +28,14 @@ ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
 			
 			// set up defaults
 			arb_data->version = CURRENT_ARB_VERSION;
+			
+			arb_data->type = ARB_TYPE_NONE;
+			
 			arb_data->path[0] = '\0';
+			
+			arb_data->input[0] = '\0';
+			arb_data->transform[0] = '\0';
+			arb_data->device[0] = '\0';
 			
 			PF_UNLOCK_HANDLE(*arbPH);
 		}
@@ -56,7 +63,13 @@ CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
 	// copy contents
 	out_arb_data->version = in_arb_data->version;
 	
+	out_arb_data->type = in_arb_data->type;
+	
 	strcpy((char *)out_arb_data->path, (char *)in_arb_data->path);
+	
+	strcpy((char *)out_arb_data->input, (char *)in_arb_data->input);
+	strcpy((char *)out_arb_data->transform, (char *)in_arb_data->transform);
+	strcpy((char *)out_arb_data->device, (char *)in_arb_data->device);
 }
 
 
