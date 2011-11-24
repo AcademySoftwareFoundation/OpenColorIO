@@ -16,13 +16,15 @@
 using namespace std;
 
 
-#define LEFT_MARGIN 50
-#define TOP_MARGIN	50
-#define RIGHT_MARGIN	50
+// UI drawing constants
+
+#define LEFT_MARGIN			50
+#define TOP_MARGIN			40
+#define RIGHT_MARGIN		50
 
 #define FILE_LABEL_WIDTH	30
 
-#define FIELD_HEIGHT	22
+#define FIELD_HEIGHT		22
 
 #define FIELD_TEXT_INDENT_H	10
 #define FIELD_TEXT_INDENT_V	4
@@ -35,7 +37,7 @@ using namespace std;
 #define BUTTON_HEIGHT		20
 #define BUTTON_WIDTH		80
 
-#define BUTTON_TEXT_INDENT_V	3
+#define BUTTON_TEXT_INDENT_V 3
 
 #define MENUS_INDENT_H		30
 
@@ -44,8 +46,8 @@ using namespace std;
 #define MENU_LABEL_WIDTH	100
 #define MENU_LABEL_SPACE	5
 
-#define MENU_WIDTH	150
-#define MENU_HEIGHT	20
+#define MENU_WIDTH			150
+#define MENU_HEIGHT			20
 
 #define MENU_TEXT_INDENT_H	10
 #define MENU_TEXT_INDENT_V	2
@@ -58,9 +60,11 @@ using namespace std;
 
 #define MENU_SHADOW_OFFSET	3
 
-#define MENU_SPACE_V 20
+#define MENU_SPACE_V		20
 
 #define	TEXT_COLOR		PF_App_Color_TEXT_DISABLED
+
+
 
 typedef enum {
 	REGION_NONE=0,
@@ -72,6 +76,7 @@ typedef enum {
 	REGION_MENU2,
 	REGION_MENU3
 } UIRegion;
+
 
 static UIRegion
 WhichRegion(PF_Point ui_point, bool menus, bool third_menu)
@@ -232,11 +237,6 @@ DrawEvent(
 {
 	PF_Err			err		=	PF_Err_NONE;
 	
-	//AEGP_SuiteHandler suites(in_data->pica_basicP);
-	
-
-	event_extra->evt_out_flags = 0;
-	
 
 	if (!(event_extra->evt_in_flags & PF_EI_DONT_DRAW) && params[OCIO_DATA]->u.arb_d.value != NULL)
 	{
@@ -245,7 +245,7 @@ DrawEvent(
 			ArbitraryData *arb_data = (ArbitraryData *)PF_LOCK_HANDLE(params[OCIO_DATA]->u.arb_d.value);
 			SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
 		
-		
+			// TODO: When you apply two instances, the second one's UI is draw somewhere weird
 			DrawbotBot bot(in_data->pica_basicP, event_extra->contextH);
 			
 			
@@ -254,6 +254,9 @@ DrawEvent(
 			
 			bool have_file = (arb_data->path[0] != '\0');
 			
+			
+			//bot.MoveTo(0,0);
+			//bot.PaintRect(300,300);
 			
 			// path text field
 			bot.MoveTo(LEFT_MARGIN + FILE_LABEL_WIDTH, TOP_MARGIN);
@@ -369,6 +372,335 @@ FindInVec(const vector<string> &vec, const string val)
 }
 
 
+static void
+DoClickPath(
+	PF_InData		*in_data,
+	PF_OutData		*out_data,
+	PF_ParamDef		*params[],
+	PF_LayerDef		*output,
+	PF_EventExtra	*event_extra,
+	ArbitraryData	*arb_data,
+	SequenceData	*seq_data,
+	UIRegion		reg )
+{
+	ExtensionMap extensions;
+	
+	for(int i=0; i < OCIO::FileTransform::getNumFormats(); i++)
+	{
+		const char *extension = OCIO::FileTransform::getFormatExtensionByIndex(i);
+		const char *format = OCIO::FileTransform::getFormatNameByIndex(i);
+	
+		extensions[ extension ] = format;
+	}
+	
+	extensions[ "ocio" ] = "OCIO Format";
+	
+	
+	char path[ARB_PATH_LEN + 1];
+	
+	bool result = OpenFile(path, ARB_PATH_LEN, extensions, NULL);
+	
+	
+	if(result)
+	{
+		try
+		{
+			OpenColorIO_AE_Context *new_context = new OpenColorIO_AE_Context(path);
+			
+			if(new_context == NULL)
+				throw OCIO::Exception("WTF?");
+				
+			
+			if(seq_data->context)
+			{
+				delete seq_data->context;
+			}
+			
+			seq_data->context = new_context;
+			
+			
+			strncpy(arb_data->path, path, ARB_PATH_LEN);
+			
+			
+			// try to retain settings if it looks like the same situation,
+			// possibly fixing a moved path
+			if(	OCIO_TYPE_LUT == new_context->getType() ||
+				arb_data->type != new_context->getType() ||
+				-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
+				-1 == FindInVec(new_context->getInputs(), arb_data->output) ||
+				-1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
+				-1 == FindInVec(new_context->getDevices(), arb_data->device) )
+			{
+				// Configuration is different, so initialize defaults
+				arb_data->type = seq_data->context->getType();
+				
+				if(arb_data->type != OCIO_TYPE_LUT)
+				{
+					strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
+					strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
+					strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
+					strncpy(arb_data->device, seq_data->context->getDevice().c_str(), ARB_SPACE_LEN);
+				}
+			}
+			else
+			{
+				// Configuration is the same, retain current settings
+				if(arb_data->type == OCIO_TYPE_LUT)
+				{
+					if(arb_data->invert)
+					{
+						seq_data->context->setupLUT(arb_data->invert);
+					}
+				}
+				else if(arb_data->type == OCIO_TYPE_CONVERT)
+				{
+					seq_data->context->setupConvert(arb_data->input, arb_data->output);
+				}
+				else if(arb_data->type == OCIO_TYPE_DISPLAY)
+				{
+					seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+				}
+			}
+			
+			params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+		}
+		catch(std::exception &e)
+		{
+			PF_SPRINTF(out_data->return_msg, e.what());
+			
+			out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+		}
+		catch(...)
+		{
+			PF_SPRINTF(out_data->return_msg, "OCIO Error reading file.");
+			
+			out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+		}
+	}
+}
+
+static void
+DoClickConvertDisplay(
+	PF_InData		*in_data,
+	PF_OutData		*out_data,
+	PF_ParamDef		*params[],
+	PF_LayerDef		*output,
+	PF_EventExtra	*event_extra,
+	ArbitraryData	*arb_data,
+	SequenceData	*seq_data,
+	UIRegion		reg )
+{
+	if(arb_data->type == OCIO_TYPE_LUT)
+	{
+		if(reg == REGION_CONVERT_BUTTON) // i.e. Invert
+		{
+			try
+			{
+				seq_data->context->setupLUT(!arb_data->invert);
+				
+				arb_data->invert = !arb_data->invert;
+			
+				params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+			}
+			catch(std::exception &e)
+			{
+				PF_SPRINTF(out_data->return_msg, e.what());
+				
+				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+			}
+			catch(...)
+			{
+				PF_SPRINTF(out_data->return_msg, "LUT can not be inverted.");
+				
+				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+			}
+		}
+	}
+	else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
+	{
+		if(reg == REGION_CONVERT_BUTTON && arb_data->type != OCIO_TYPE_CONVERT)
+		{
+			arb_data->type = OCIO_TYPE_CONVERT;
+			
+			seq_data->context->setupConvert(arb_data->input, arb_data->output);
+		
+			params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+		}
+		else if(reg == REGION_DISPLAY_BUTTON && arb_data->type != OCIO_TYPE_DISPLAY)
+		{
+			arb_data->type = OCIO_TYPE_DISPLAY;
+			
+			seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+			
+			params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+		}
+	}
+}
+
+
+static void
+DoClickExport(
+	PF_InData		*in_data,
+	PF_OutData		*out_data,
+	PF_ParamDef		*params[],
+	PF_LayerDef		*output,
+	PF_EventExtra	*event_extra,
+	ArbitraryData	*arb_data,
+	SequenceData	*seq_data,
+	UIRegion		reg )
+{
+	ExtensionMap extensions;
+	
+	for(int i=0; i < OCIO::Baker::getNumFormats(); ++i)
+	{
+		const char *extension = OCIO::Baker::getFormatExtensionByIndex(i);
+		const char *format = OCIO::Baker::getFormatNameByIndex(i);
+		
+		extensions[ extension ] = format;
+	}
+	
+	extensions[ "icc" ] = "ICC Profile";
+	
+	
+	char path[256];
+	
+	bool result = SaveFile(path, 255, extensions, NULL);
+	
+	
+	if(result)
+	{
+		string the_path(path);
+		string the_extension = the_path.substr( the_path.find_last_of('.') + 1 );
+		
+		string monitor_icc_path;
+		
+		if(the_extension == "icc")
+		{
+			// TODO: monitor ICC dialog
+		}
+		
+		try
+		{
+			seq_data->context->ExportLUT(the_path, monitor_icc_path);
+		}
+		catch(std::exception &e)
+		{
+			PF_SPRINTF(out_data->return_msg, e.what());
+			
+			out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+		}
+		catch(...)
+		{
+			PF_SPRINTF(out_data->return_msg, "Export failed.");
+			
+			out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+		}
+	}
+}
+
+
+static void
+DoClickMenus(
+	PF_InData		*in_data,
+	PF_OutData		*out_data,
+	PF_ParamDef		*params[],
+	PF_LayerDef		*output,
+	PF_EventExtra	*event_extra,
+	ArbitraryData	*arb_data,
+	SequenceData	*seq_data,
+	UIRegion		reg )
+{
+	if(seq_data->context != NULL && arb_data->type == seq_data->context->getType())
+	{
+		MenuVec menu_items;
+		int selected_item;
+		
+		if(arb_data->type == OCIO_TYPE_CONVERT)
+		{
+			menu_items = seq_data->context->getInputs();
+			
+			if(reg == REGION_MENU1)
+			{
+				selected_item = FindInVec(menu_items, arb_data->input);
+			}
+			else
+			{
+				selected_item = FindInVec(menu_items, arb_data->output);
+			}
+		}
+		else if(arb_data->type == OCIO_TYPE_DISPLAY)
+		{
+			if(reg == REGION_MENU1)
+			{
+				menu_items = seq_data->context->getInputs();
+				
+				selected_item = FindInVec(menu_items, arb_data->input);
+			}
+			else if(reg == REGION_MENU2)
+			{
+				menu_items = seq_data->context->getTransforms();
+				
+				selected_item = FindInVec(menu_items, arb_data->transform);
+			}
+			else if(reg == REGION_MENU3)
+			{
+				menu_items = seq_data->context->getDevices();
+				
+				selected_item = FindInVec(menu_items, arb_data->device);
+			}
+		}
+		
+		
+		if(selected_item < 0)
+			selected_item = 0;
+		
+		
+		int result = PopUpMenu(menu_items, selected_item);
+		
+		
+		if(result != selected_item)
+		{
+			string color_space = menu_items[ result ];
+			
+			if(arb_data->type == OCIO_TYPE_CONVERT)
+			{
+				if(reg == REGION_MENU1)
+				{
+					strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
+				}
+				else if(reg == REGION_MENU2)
+				{
+					strncpy(arb_data->output, color_space.c_str(), ARB_SPACE_LEN);
+				}
+				
+				seq_data->context->setupConvert(arb_data->input, arb_data->output);
+				
+				params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+			}
+			else if(arb_data->type == OCIO_TYPE_DISPLAY)
+			{
+				if(reg == REGION_MENU1)
+				{
+					strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
+				}
+				else if(reg == REGION_MENU2)
+				{
+					strncpy(arb_data->transform, color_space.c_str(), ARB_SPACE_LEN);
+				}
+				else if(reg == REGION_MENU3)
+				{
+					strncpy(arb_data->device, color_space.c_str(), ARB_SPACE_LEN);
+				}
+				
+				seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+				
+				params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+			}
+		}
+	}
+}
+
+
 static PF_Err
 DoClick( 
 	PF_InData		*in_data,
@@ -388,321 +720,42 @@ DoClick(
 	
 	UIRegion reg = WhichRegion(event_extra->u.do_click.screen_point, menus_visible, third_menu);
 	
-	
-	if(reg == REGION_PATH)
+	if(reg != REGION_NONE)
 	{
-		ExtensionMap extensions;
-		
-		for(int i=0; i < OCIO::FileTransform::getNumFormats(); i++)
+		try
 		{
-			const char *extension = OCIO::FileTransform::getFormatExtensionByIndex(i);
-			const char *format = OCIO::FileTransform::getFormatNameByIndex(i);
-		
-			extensions[ extension ] = format;
-		}
-		
-		extensions[ "ocio" ] = "OCIO Format";
-		
-		
-		char path[ARB_PATH_LEN + 1];
-		
-		bool result = OpenFile(path, ARB_PATH_LEN, extensions, NULL);
-		
-		
-		if(result)
-		{
-			try
+			if(reg == REGION_PATH)
 			{
-				OpenColorIO_AE_Context *new_context = new OpenColorIO_AE_Context(path);
-				
-				if(new_context == NULL)
-					throw OCIO::Exception("WTF?");
-					
-				
-				if(seq_data->context)
-				{
-					delete seq_data->context;
-				}
-				
-				seq_data->context = new_context;
-				
-				
-				strncpy(arb_data->path, path, ARB_PATH_LEN);
-				
-				
-				// try to retain settings if it looks like the same situation,
-				// possibly fixing a moved path
-				if(	OCIO_TYPE_LUT == new_context->getType() ||
-					arb_data->type != new_context->getType() ||
-					-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
-					-1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-					-1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
-					-1 == FindInVec(new_context->getDevices(), arb_data->device) )
-				{
-					// Configuration is different, so initialize defaults
-					arb_data->type = seq_data->context->getType();
-					
-					if(arb_data->type != OCIO_TYPE_LUT)
-					{
-						strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
-						strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
-						strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
-						strncpy(arb_data->device, seq_data->context->getDevice().c_str(), ARB_SPACE_LEN);
-					}
-				}
-				else
-				{
-					// Configuration is the same, retain current settings
-					if(arb_data->type == OCIO_TYPE_LUT)
-					{
-						if(arb_data->invert)
-						{
-							seq_data->context->setupLUT(arb_data->invert);
-						}
-					}
-					else if(arb_data->type == OCIO_TYPE_CONVERT)
-					{
-						seq_data->context->setupConvert(arb_data->input, arb_data->output);
-					}
-					else if(arb_data->type == OCIO_TYPE_DISPLAY)
-					{
-						seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
-					}
-				}
-				
-				
-				params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+				DoClickPath(in_data, out_data, params, output, event_extra, arb_data, seq_data, reg);
 			}
-			catch(...)
+			else if(arb_data->type != OCIO_TYPE_NONE)
 			{
-				PF_SPRINTF(out_data->return_msg, "OCIO Error reading file.");
-				
-				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-			}
-			
-		}
-	}
-	else if( (reg == REGION_CONVERT_BUTTON || reg == REGION_DISPLAY_BUTTON) &&
-				(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY) )
-	{
-		if(seq_data->context == NULL)
-		{
-			try
-			{
-				seq_data->context = new OpenColorIO_AE_Context(arb_data);
-			}
-			catch(...) {}
-		}
-		
-		if(arb_data->type == OCIO_TYPE_LUT)
-		{
-			if(reg == REGION_CONVERT_BUTTON) // i.e. Invert
-			{
-				try
+				if(seq_data->context == NULL)
 				{
-					seq_data->context->setupLUT(!arb_data->invert);
-					
-					arb_data->invert = !arb_data->invert;
-				
-					params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+					seq_data->context = new OpenColorIO_AE_Context(arb_data);
 				}
-				catch(...)
-				{
-					PF_SPRINTF(out_data->return_msg, "LUT can not be inverted.");
 					
-					out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+				if(reg == REGION_CONVERT_BUTTON || reg == REGION_DISPLAY_BUTTON)
+				{
+					DoClickConvertDisplay(in_data, out_data, params, output, event_extra, arb_data, seq_data, reg);
+				}
+				else if(reg == REGION_EXPORT_BUTTON)
+				{
+					DoClickExport(in_data, out_data, params, output, event_extra, arb_data, seq_data, reg);
+				}
+				else // must be a menu then
+				{
+					DoClickMenus(in_data, out_data, params, output, event_extra, arb_data, seq_data, reg);
 				}
 			}
 		}
-		else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
+		catch(std::exception &e)
 		{
-			if(reg == REGION_CONVERT_BUTTON && arb_data->type != OCIO_TYPE_CONVERT)
-			{
-				arb_data->type = OCIO_TYPE_CONVERT;
-				
-				try
-				{
-					seq_data->context->setupConvert(arb_data->input, arb_data->output);
-				
-					params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
-				}
-				catch(...) {}
-			}
-			else if(reg == REGION_DISPLAY_BUTTON && arb_data->type != OCIO_TYPE_DISPLAY)
-			{
-				arb_data->type = OCIO_TYPE_DISPLAY;
-				
-				try
-				{
-					seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
-					
-					params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
-				}
-				catch(...) {}
-			}
+			PF_SPRINTF(out_data->return_msg, e.what());
+			
+			out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
 		}
-	}
-	else if(reg == REGION_EXPORT_BUTTON && arb_data->type != OCIO_TYPE_NONE)
-	{
-		if(seq_data->context == NULL)
-		{
-			try
-			{
-				seq_data->context = new OpenColorIO_AE_Context(arb_data);
-			}
-			catch(...) {}
-		}
-		
-		ExtensionMap extensions;
-		
-		for(int i=0; i < OCIO::Baker::getNumFormats(); ++i)
-		{
-			const char *extension = OCIO::Baker::getFormatExtensionByIndex(i);
-			const char *format = OCIO::Baker::getFormatNameByIndex(i);
-			
-			extensions[ extension ] = format;
-		}
-		
-		extensions[ "icc" ] = "ICC Profile";
-		
-		
-		char path[256];
-		
-		bool result = SaveFile(path, 255, extensions, NULL);
-		
-		
-		if(result)
-		{
-			string the_path(path);
-			string the_extension = the_path.substr( the_path.find_last_of('.') + 1 );
-			
-			string monitor_icc_path;
-			
-			if(the_extension == "icc")
-			{
-			
-			}
-			
-			try
-			{
-				seq_data->context->ExportLUT(the_path, monitor_icc_path);
-			}
-			catch(...)
-			{
-				PF_SPRINTF(out_data->return_msg, "Export failed.");
-				
-				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-			}
-		}
-	}
-	else if(reg != REGION_NONE && arb_data->type != OCIO_TYPE_NONE)
-	{
-		if(seq_data->context == NULL)
-		{
-			try
-			{
-				seq_data->context = new OpenColorIO_AE_Context(arb_data);
-			}
-			catch(...) {}
-		}
-				
-
-		if(seq_data->context != NULL && arb_data->type == seq_data->context->getType())
-		{
-			MenuVec menu_items;
-			int selected_item;
-			
-			if(arb_data->type == OCIO_TYPE_CONVERT)
-			{
-				menu_items = seq_data->context->getInputs();
-				
-				if(reg == REGION_MENU1)
-				{
-					selected_item = FindInVec(menu_items, arb_data->input);
-				}
-				else
-				{
-					selected_item = FindInVec(menu_items, arb_data->output);
-				}
-			}
-			else if(arb_data->type == OCIO_TYPE_DISPLAY)
-			{
-				if(reg == REGION_MENU1)
-				{
-					menu_items = seq_data->context->getInputs();
-					
-					selected_item = FindInVec(menu_items, arb_data->input);
-				}
-				else if(reg == REGION_MENU2)
-				{
-					menu_items = seq_data->context->getTransforms();
-					
-					selected_item = FindInVec(menu_items, arb_data->transform);
-				}
-				else if(reg == REGION_MENU3)
-				{
-					menu_items = seq_data->context->getDevices();
-					
-					selected_item = FindInVec(menu_items, arb_data->device);
-				}
-			}
-			
-			
-			if(selected_item < 0)
-				selected_item = 0;
-			
-			
-			int result = PopUpMenu(menu_items, selected_item);
-			
-			
-			if(result != selected_item)
-			{
-				string color_space = menu_items[ result ];
-				
-				if(arb_data->type == OCIO_TYPE_CONVERT)
-				{
-					if(reg == REGION_MENU1)
-					{
-						strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
-					}
-					else if(reg == REGION_MENU2)
-					{
-						strncpy(arb_data->output, color_space.c_str(), ARB_SPACE_LEN);
-					}
-					
-					try
-					{
-						seq_data->context->setupConvert(arb_data->input, arb_data->output);
-						
-						params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
-					}
-					catch(...) {}
-				}
-				else if(arb_data->type == OCIO_TYPE_DISPLAY)
-				{
-					if(reg == REGION_MENU1)
-					{
-						strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
-					}
-					else if(reg == REGION_MENU2)
-					{
-						strncpy(arb_data->transform, color_space.c_str(), ARB_SPACE_LEN);
-					}
-					else if(reg == REGION_MENU3)
-					{
-						strncpy(arb_data->device, color_space.c_str(), ARB_SPACE_LEN);
-					}
-					
-					try
-					{
-						seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
-						
-						params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
-					}
-					catch(...) {}
-				}
-			}
-		}
+		catch(...) { }
 	}
 	
 	
@@ -752,6 +805,8 @@ HandleEvent (
 	PF_EventExtra	*extra )
 {
 	PF_Err		err		= PF_Err_NONE;
+	
+	extra->evt_out_flags = 0;
 	
 	if (!err) 
 	{

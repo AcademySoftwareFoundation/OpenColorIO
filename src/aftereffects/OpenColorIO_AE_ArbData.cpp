@@ -27,21 +27,21 @@ ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
 			ArbitraryData *arb_data = (ArbitraryData *)PF_LOCK_HANDLE(*arbPH);
 			
 			// set up defaults
-			arb_data->version = CURRENT_ARB_VERSION;
+			arb_data->version			= CURRENT_ARB_VERSION;
 			
-			arb_data->type = OCIO_TYPE_NONE;
-			arb_data->invert = FALSE;
+			arb_data->type				= OCIO_TYPE_NONE;
+			arb_data->invert			= FALSE;
 			
-			arb_data->storage = OCIO_STORAGE_NONE;
-			arb_data->store_size = 0;
+			arb_data->storage			= OCIO_STORAGE_NONE;
+			arb_data->storage_size		= 0;
 			
-			arb_data->path[0] = '\0';
-			arb_data->relative_path[0] = '\0';
+			arb_data->path[0]			= '\0';
+			arb_data->relative_path[0]	= '\0';
 			
-			arb_data->input[0] = '\0';
-			arb_data->output[0] = '\0';
-			arb_data->transform[0] = '\0';
-			arb_data->device[0] = '\0';
+			arb_data->input[0]			= '\0';
+			arb_data->output[0]			= '\0';
+			arb_data->transform[0]		= '\0';
+			arb_data->device[0]			= '\0';
 			
 			PF_UNLOCK_HANDLE(*arbPH);
 		}

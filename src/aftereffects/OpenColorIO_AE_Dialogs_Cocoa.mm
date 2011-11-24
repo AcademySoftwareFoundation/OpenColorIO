@@ -68,7 +68,7 @@ bool SaveFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
 		else
 			message += ", ";
 			
-		message += i->second + "(." + i->first + ")";
+		message += i->second + " (." + i->first + ")";
 	}
 	
 	[panel setAllowedFileTypes:extension_array];

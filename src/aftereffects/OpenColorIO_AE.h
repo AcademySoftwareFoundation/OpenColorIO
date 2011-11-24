@@ -6,18 +6,12 @@
 #define _OPENCOLORIO_AE_H_
 
 
-#define PF_DEEP_COLOR_AWARE 1
+#define PF_DEEP_COLOR_AWARE 1  // do we really still need this?
 
 #include "AEConfig.h"
 #include "entry.h"
-#include "AE_Effect.h"
-#include "AE_EffectCB.h"
 #include "AE_Macros.h"
 #include "Param_Utils.h"
-#include "AE_ChannelSuites.h"
-#include "AE_EffectCBSuites.h"
-#include "String_Utils.h"
-#include "AE_GeneralPlug.h"
 #include "AEGP_SuiteHandler.h"
 
 #ifdef MSWindows
@@ -30,20 +24,13 @@
 
 
 // Versioning information 
-
-#define NAME				"OpenColorIO"
-#define DESCRIPTION			"color space operations"
-#define RELEASE_DATE		__DATE__
-#define AUTHOR				"Brendan Bolles"
-#define COPYRIGHT			"\xA9 2007-2011 fnord"
-#define WEBSITE				"www.fnordware.com"
 #define	MAJOR_VERSION		1
 #define	MINOR_VERSION		0
 #define	BUG_VERSION			0
 #define	STAGE_VERSION		PF_Stage_RELEASE
 #define	BUILD_VERSION		0
 
-
+// Paramater constants
 enum {
 	OCIO_INPUT = 0,
 	OCIO_DATA,
@@ -55,6 +42,8 @@ enum {
 	OCIO_DATA_ID = 1
 };
 
+
+// Our Arbitrary Data struct
 
 #define CURRENT_ARB_VERSION 1
 #define ARB_PATH_LEN 255
@@ -79,7 +68,7 @@ typedef struct {
 	OCIO_Type		type;
 	A_Boolean		invert; // only used for LUTs
 	OCIO_Storage	storage; // storage not used...yet
-	A_u_long		store_size;
+	A_u_long		storage_size;
 	A_u_char		reserved[56]; // 64 pre-path bytes
 	char			path[ARB_PATH_LEN+1];
 	char			relative_path[ARB_PATH_LEN+1]; // also not yet used
@@ -95,7 +84,6 @@ typedef struct {
 
 class OpenColorIO_AE_Context;
 
-
 typedef struct {
 	OpenColorIO_AE_Context	*context;
 } SequenceData;
@@ -104,7 +92,7 @@ typedef struct {
 
 
 
-#define UI_CONTROL_HEIGHT	222
+#define UI_CONTROL_HEIGHT	200
 #define UI_CONTROL_WIDTH	0
 
 

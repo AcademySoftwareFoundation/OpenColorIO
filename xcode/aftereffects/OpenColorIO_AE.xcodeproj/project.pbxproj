@@ -71,14 +71,14 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 2AF999C0147E1DCA00FEB83B /* lcms.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 2ACF9E56147824F500991ED5 /* liblcms.a */;
+			remoteGlobalIDString = 2ACF9E56147824F500991ED5;
 			remoteInfo = lcms;
 		};
 		2AF999CC147E1DDB00FEB83B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 2AF999C0147E1DCA00FEB83B /* lcms.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 2ACF9E55147824F500991ED5 /* lcms */;
+			remoteGlobalIDString = 2ACF9E55147824F500991ED5;
 			remoteInfo = lcms;
 		};
 /* End PBXContainerItemProxy section */

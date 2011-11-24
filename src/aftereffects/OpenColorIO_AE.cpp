@@ -27,8 +27,6 @@ GlobalSetup (
 	PF_ParamDef		*params[],
 	PF_LayerDef		*output )
 {
-	//	We do very little here.
-		
 	out_data->my_version 	= 	PF_VERSION(	MAJOR_VERSION, 
 											MINOR_VERSION,
 											BUG_VERSION, 
@@ -65,7 +63,7 @@ ParamsSetup(
 	
 	ArbNewDefault(in_data, out_data, NULL, &def.u.arb_d.dephault);
 	
-	PF_ADD_ARBITRARY("Channel Info (Click for Dialog)",
+	PF_ADD_ARBITRARY("OCIO",
 						UI_CONTROL_WIDTH,
 						UI_CONTROL_HEIGHT,
 						PF_PUI_CONTROL,
@@ -392,13 +390,13 @@ DoRender(
 		ArbitraryData *arb_data = (ArbitraryData *)PF_LOCK_HANDLE(OCIO_data->u.arb_d.value);
 		SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
 		
-		if(!seq_data->context && arb_data->path[0] != '\0')
+		if(seq_data->context == NULL && arb_data->type != OCIO_TYPE_NONE)
 		{
 			try
 			{
 				seq_data->context = new OpenColorIO_AE_Context(arb_data);
 			}
-			catch(...) { }
+			catch(...) {}
 		}
 
 		
@@ -435,7 +433,6 @@ DoRender(
 
 				IterateData i_data = { in_data, input->data, input->rowbytes, float_world->data, float_world->rowbytes, float_world->width * 4 };
 				
-				
 				if(format == PF_PixelFormat_ARGB32)
 					err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<A_u_char, float>);
 				else if(format == PF_PixelFormat_ARGB64)
@@ -462,26 +459,6 @@ DoRender(
 				err = suites.IterateFloatSuite1()->iterate_origin(in_data, 0, output->height,
 																float_world, &areaR, &origin,
 																&p_data, Process_Iterate, float_world);
-				
-				/*
-				try
-				{
-					PF_PixelFloat *pix = (PF_PixelFloat *)float_world->data;
-					
-					float *rOut = &pix->red;
-					
-					OCIO::PackedImageDesc img(rOut,
-											float_world->width, float_world->height,
-											4, sizeof(float), sizeof(PF_PixelFloat), float_world->rowbytes);
-											
-					seq_data->context->processor()->apply(img);
-					
-				}
-				catch(...)
-				{
-					err = PF_Err_INTERNAL_STRUCT_DAMAGED;
-				}
-				*/
 			}
 			
 			
@@ -491,7 +468,6 @@ DoRender(
 				if(!err)
 				{
 					IterateData i_data = { in_data, float_world->data, float_world->rowbytes, output->data, output->rowbytes, output->width * 4 };
-					
 					
 					if(format == PF_PixelFormat_ARGB32)
 						err = suites.Iterate8Suite1()->iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, A_u_char>);
@@ -505,9 +481,6 @@ DoRender(
 				
 			PF_UNLOCK_HANDLE(OCIO_data->u.arb_d.value);
 			PF_UNLOCK_HANDLE(in_data->sequence_data);
-			
-			// to force a UI refresh after pixels have been sampled - might want to do this less often
-			//out_data->out_flags |= PF_OutFlag_REFRESH_UI;
 		}
 	}
 

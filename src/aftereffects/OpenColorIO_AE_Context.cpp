@@ -263,7 +263,7 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 		string copyright = "OpenColorIO, Sony Imageworks";
 		
 		// create a description tag from the filename
-#ifdef WIN32
+#ifdef WIN_ENV
 #define PATH_DELIMITER	'\\'
 #else
 #define PATH_DELIMITER	'/'
