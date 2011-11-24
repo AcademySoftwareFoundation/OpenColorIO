@@ -27,6 +27,18 @@ using namespace std;
 #define FIELD_TEXT_INDENT_H	10
 #define FIELD_TEXT_INDENT_V	4
 
+#define BUTTONS_INDENT_H	(RIGHT_MARGIN + 70)
+
+#define BUTTONS_GAP_V		20
+#define BUTTONS_GAP_H		30
+
+#define BUTTON_HEIGHT		20
+#define BUTTON_WIDTH		80
+
+#define BUTTON_TEXT_INDENT_V	3
+
+#define MENUS_INDENT_H		30
+
 #define MENUS_GAP_V			20
 
 #define MENU_LABEL_WIDTH	100
@@ -53,6 +65,9 @@ using namespace std;
 typedef enum {
 	REGION_NONE=0,
 	REGION_PATH,
+	REGION_CONVERT_BUTTON,
+	REGION_DISPLAY_BUTTON,
+	REGION_EXPORT_BUTTON,
 	REGION_MENU1,
 	REGION_MENU2,
 	REGION_MENU3
@@ -61,32 +76,64 @@ typedef enum {
 static UIRegion
 WhichRegion(PF_Point ui_point, bool menus, bool third_menu)
 {
-	if(ui_point.v >= TOP_MARGIN && ui_point.v <= (TOP_MARGIN + FIELD_HEIGHT))
+	int field_top = TOP_MARGIN;
+	int field_bottom = field_top + FIELD_HEIGHT;
+	
+	if(ui_point.v >= field_top && ui_point.v <= field_bottom)
 	{
-		if(ui_point.h >= (LEFT_MARGIN + FILE_LABEL_WIDTH))
+		int field_left = LEFT_MARGIN + FILE_LABEL_WIDTH;
+		
+		if(ui_point.h >= field_left)
 			return REGION_PATH;
 	}
-	else if(menus &&
-			ui_point.h >= (LEFT_MARGIN + FILE_LABEL_WIDTH + MENU_LABEL_WIDTH) &&
-			ui_point.h <= (LEFT_MARGIN + FILE_LABEL_WIDTH + MENU_LABEL_WIDTH + MENU_WIDTH))
+	else
 	{
-		int menu1_top = TOP_MARGIN + FIELD_HEIGHT + MENUS_GAP_V;
-		int menu1_bottom = menu1_top + MENU_HEIGHT;
-		int menu2_top = menu1_bottom + MENU_SPACE_V;
-		int menu2_bottom = menu2_top + MENU_HEIGHT;
-		int menu3_top = menu2_bottom + MENU_SPACE_V;
-		int menu3_bottom = menu3_top + MENU_HEIGHT;
+		int buttons_top = field_bottom + BUTTONS_GAP_V;
+		int buttons_bottom = buttons_top + BUTTON_HEIGHT;
 		
-		if(ui_point.v >= menu1_top && ui_point.v <= menu1_bottom)
-			return REGION_MENU1;
-		else if(ui_point.v >= menu2_top && ui_point.v <= menu2_bottom)
-			return REGION_MENU2;
-		else if(third_menu && ui_point.v >= menu3_top && ui_point.v <= menu3_bottom)
-			return REGION_MENU3;
+		if(ui_point.v >= buttons_top && ui_point.v <= buttons_bottom)
+		{
+			int convert_left = BUTTONS_INDENT_H;
+			int convert_right = convert_left + BUTTON_WIDTH;
+			int display_left = convert_right + BUTTONS_GAP_H;
+			int display_right = display_left + BUTTON_WIDTH;
+			int export_left = display_right + BUTTONS_GAP_H;
+			int export_right = export_left + BUTTON_WIDTH;
+			
+			if(ui_point.h >= convert_left && ui_point.h <= convert_right)
+				return REGION_CONVERT_BUTTON;
+			else if(ui_point.h >= display_left && ui_point.h <= display_right)
+				return REGION_DISPLAY_BUTTON;
+			else if(ui_point.h >= export_left && ui_point.h <= export_right)
+				return REGION_EXPORT_BUTTON;
+		}
+		else if(menus)
+		{
+			int menu_left = LEFT_MARGIN + MENUS_INDENT_H + MENU_LABEL_WIDTH;
+			int menu_right = menu_left + MENU_WIDTH;
+		
+			if(ui_point.h >= menu_left && ui_point.h <= menu_right)
+			{
+				int menu1_top = buttons_bottom + MENUS_GAP_V;
+				int menu1_bottom = menu1_top + MENU_HEIGHT;
+				int menu2_top = menu1_bottom + MENU_SPACE_V;
+				int menu2_bottom = menu2_top + MENU_HEIGHT;
+				int menu3_top = menu2_bottom + MENU_SPACE_V;
+				int menu3_bottom = menu3_top + MENU_HEIGHT;
+				
+				if(ui_point.v >= menu1_top && ui_point.v <= menu1_bottom)
+					return REGION_MENU1;
+				else if(ui_point.v >= menu2_top && ui_point.v <= menu2_bottom)
+					return REGION_MENU2;
+				else if(third_menu && ui_point.v >= menu3_top && ui_point.v <= menu3_bottom)
+					return REGION_MENU3;
+			}
+		}
 	}
 	
 	return REGION_NONE;
 }
+
 
 static void
 DrawMenu(DrawbotBot &bot, const char *label, const char *item)
@@ -132,6 +179,49 @@ DrawMenu(DrawbotBot &bot, const char *label, const char *item)
 }
 
 
+static void
+DrawButton(DrawbotBot &bot, const char *label, int width, bool pressed)
+{
+	DRAWBOT_PointF32 original = bot.Pos();
+	
+	float text_height = bot.FontSize();
+	
+	if(pressed)
+		bot.SetColor(PF_App_Color_BUTTON_PRESSED_FILL);
+	else
+		bot.SetColor(PF_App_Color_BUTTON_FILL);
+
+	bot.PaintRect(width, BUTTON_HEIGHT);
+	
+	if(pressed)
+	{
+		bot.SetColor(PF_App_Color_BLACK);
+		bot.MoveTo(original.x + 2, original.y + BUTTON_HEIGHT - 2);
+		
+		bot.DrawLineTo(original.x + 2, original.y + 2);
+		bot.DrawLineTo(original.x + width - 2, original.y + 2);
+	}
+	else
+	{
+		bot.SetColor(PF_App_Color_HILITE);
+		bot.MoveTo(original.x + 1, original.y + BUTTON_HEIGHT - 1);
+		
+		bot.DrawLineTo(original.x + width - 1, original.y + BUTTON_HEIGHT - 1);
+		bot.DrawLineTo(original.x + width - 1, original.y + 2);
+	}
+	
+	bot.MoveTo(original.x + (width / 2), original.y + text_height + BUTTON_TEXT_INDENT_V);
+	
+	if(pressed)
+		bot.Move(1, 1);
+	
+	bot.SetColor(TEXT_COLOR);
+	bot.DrawString(label, kDRAWBOT_TextAlignment_Center);
+	
+	bot.MoveTo(original);
+}
+
+
 static PF_Err
 DrawEvent(	
 	PF_InData		*in_data,
@@ -165,6 +255,7 @@ DrawEvent(
 			bool have_file = (arb_data->path[0] != '\0');
 			
 			
+			// path text field
 			bot.MoveTo(LEFT_MARGIN + FILE_LABEL_WIDTH, TOP_MARGIN);
 			
 			DRAWBOT_PointF32 field_corner = bot.Pos();
@@ -194,11 +285,51 @@ DrawEvent(
 			}
 			
 			
-			bot.MoveTo(field_corner.x, field_corner.y + FIELD_HEIGHT + MENUS_GAP_V);
+			// buttons
+			int field_bottom = TOP_MARGIN + FIELD_HEIGHT;
+			int buttons_top = field_bottom + BUTTONS_GAP_V;
 			
-			if(have_file)
+			// Export button
+			if(arb_data->type != OCIO_TYPE_NONE)
 			{
-				if(arb_data->type == ARB_TYPE_OCIO)
+				bot.MoveTo(BUTTONS_INDENT_H + (2 * (BUTTON_WIDTH + BUTTONS_GAP_H)), buttons_top);
+				
+				DrawButton(bot, "Export...", BUTTON_WIDTH, false);
+			}
+			
+			if(arb_data->type == OCIO_TYPE_LUT)
+			{
+				// Invert button
+				bot.MoveTo(BUTTONS_INDENT_H, buttons_top);
+				
+				DrawButton(bot, "Invert", BUTTON_WIDTH, arb_data->invert);
+			}
+			else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
+			{
+				// Convert/Display buttons
+				bot.MoveTo(BUTTONS_INDENT_H, buttons_top);
+				
+				DrawButton(bot, "Convert", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_CONVERT);
+				
+				bot.Move(BUTTON_WIDTH + BUTTONS_GAP_H);
+				
+				DrawButton(bot, "Display", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_DISPLAY);
+				
+				
+				// menus
+				int buttons_bottom = buttons_top + BUTTON_HEIGHT;
+				
+				bot.MoveTo(MENUS_INDENT_H, buttons_bottom + MENUS_GAP_V);
+				
+				if(arb_data->type == OCIO_TYPE_CONVERT)
+				{
+					DrawMenu(bot, "Input Space:", arb_data->input);
+					
+					bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+					
+					DrawMenu(bot, "Output Space:", arb_data->output);
+				}
+				else if(arb_data->type == OCIO_TYPE_DISPLAY)
 				{
 					// color space transformations
 					DrawMenu(bot, "Input Space:", arb_data->input);
@@ -225,9 +356,8 @@ DrawEvent(
 }
 
 
-template <typename T>
 static int
-FindInVec(vector<T> &vec, T val)
+FindInVec(const vector<string> &vec, const string val)
 {
 	for(int i=0; i < vec.size(); i++)
 	{
@@ -235,7 +365,7 @@ FindInVec(vector<T> &vec, T val)
 			return i;
 	}
 	
-	return 0;
+	return -1;
 }
 
 
@@ -252,7 +382,12 @@ DoClick(
 	ArbitraryData *arb_data = (ArbitraryData *)PF_LOCK_HANDLE(params[OCIO_DATA]->u.arb_d.value);
 	SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
 	
-	UIRegion reg = WhichRegion(event_extra->u.do_click.screen_point, true, true);
+	
+	bool menus_visible = (arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY);
+	bool third_menu = (arb_data->type == OCIO_TYPE_DISPLAY);
+	
+	UIRegion reg = WhichRegion(event_extra->u.do_click.screen_point, menus_visible, third_menu);
+	
 	
 	if(reg == REGION_PATH)
 	{
@@ -294,13 +429,45 @@ DoClick(
 				
 				strncpy(arb_data->path, path, ARB_PATH_LEN);
 				
-				if( seq_data->context->isOCIO() )
+				
+				// try to retain settings if it looks like the same situation,
+				// possibly fixing a moved path
+				if(	OCIO_TYPE_LUT == new_context->getType() ||
+					arb_data->type != new_context->getType() ||
+					-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
+					-1 == FindInVec(new_context->getInputs(), arb_data->output) ||
+					-1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
+					-1 == FindInVec(new_context->getDevices(), arb_data->device) )
 				{
-					arb_data->type = ARB_TYPE_OCIO;
+					// Configuration is different, so initialize defaults
+					arb_data->type = seq_data->context->getType();
 					
-					strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
-					strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
-					strncpy(arb_data->device, seq_data->context->getDevice().c_str(), ARB_SPACE_LEN);
+					if(arb_data->type != OCIO_TYPE_LUT)
+					{
+						strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
+						strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
+						strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
+						strncpy(arb_data->device, seq_data->context->getDevice().c_str(), ARB_SPACE_LEN);
+					}
+				}
+				else
+				{
+					// Configuration is the same, retain current settings
+					if(arb_data->type == OCIO_TYPE_LUT)
+					{
+						if(arb_data->invert)
+						{
+							seq_data->context->setupLUT(arb_data->invert);
+						}
+					}
+					else if(arb_data->type == OCIO_TYPE_CONVERT)
+					{
+						seq_data->context->setupConvert(arb_data->input, arb_data->output);
+					}
+					else if(arb_data->type == OCIO_TYPE_DISPLAY)
+					{
+						seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+					}
 				}
 				
 				
@@ -315,7 +482,120 @@ DoClick(
 			
 		}
 	}
-	else if(reg != REGION_NONE && seq_data->context && seq_data->context->isOCIO())
+	else if( (reg == REGION_CONVERT_BUTTON || reg == REGION_DISPLAY_BUTTON) &&
+				(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY) )
+	{
+		if(seq_data->context == NULL)
+		{
+			try
+			{
+				seq_data->context = new OpenColorIO_AE_Context(arb_data);
+			}
+			catch(...) {}
+		}
+		
+		if(arb_data->type == OCIO_TYPE_LUT)
+		{
+			if(reg == REGION_CONVERT_BUTTON) // i.e. Invert
+			{
+				try
+				{
+					seq_data->context->setupLUT(!arb_data->invert);
+					
+					arb_data->invert = !arb_data->invert;
+				
+					params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+				}
+				catch(...)
+				{
+					PF_SPRINTF(out_data->return_msg, "LUT can not be inverted.");
+					
+					out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+				}
+			}
+		}
+		else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
+		{
+			if(reg == REGION_CONVERT_BUTTON && arb_data->type != OCIO_TYPE_CONVERT)
+			{
+				arb_data->type = OCIO_TYPE_CONVERT;
+				
+				try
+				{
+					seq_data->context->setupConvert(arb_data->input, arb_data->output);
+				
+					params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+				}
+				catch(...) {}
+			}
+			else if(reg == REGION_DISPLAY_BUTTON && arb_data->type != OCIO_TYPE_DISPLAY)
+			{
+				arb_data->type = OCIO_TYPE_DISPLAY;
+				
+				try
+				{
+					seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+					
+					params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+				}
+				catch(...) {}
+			}
+		}
+	}
+	else if(reg == REGION_EXPORT_BUTTON && arb_data->type != OCIO_TYPE_NONE)
+	{
+		if(seq_data->context == NULL)
+		{
+			try
+			{
+				seq_data->context = new OpenColorIO_AE_Context(arb_data);
+			}
+			catch(...) {}
+		}
+		
+		ExtensionMap extensions;
+		
+		for(int i=0; i < OCIO::Baker::getNumFormats(); ++i)
+		{
+			const char *extension = OCIO::Baker::getFormatExtensionByIndex(i);
+			const char *format = OCIO::Baker::getFormatNameByIndex(i);
+			
+			extensions[ extension ] = format;
+		}
+		
+		extensions[ "icc" ] = "ICC Profile";
+		
+		
+		char path[256];
+		
+		bool result = SaveFile(path, 255, extensions, NULL);
+		
+		
+		if(result)
+		{
+			string the_path(path);
+			string the_extension = the_path.substr( the_path.find_last_of('.') + 1 );
+			
+			string monitor_icc_path;
+			
+			if(the_extension == "icc")
+			{
+			
+			}
+			
+			try
+			{
+				seq_data->context->ExportLUT(the_path, monitor_icc_path);
+			}
+			catch(...)
+			{
+				PF_SPRINTF(out_data->return_msg, "Export failed.");
+				
+				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+			}
+		}
+	}
+	else if(reg != REGION_NONE && arb_data->type != OCIO_TYPE_NONE)
 	{
 		if(seq_data->context == NULL)
 		{
@@ -327,33 +607,49 @@ DoClick(
 		}
 				
 
-		if(seq_data->context != NULL && seq_data->context->isOCIO())
+		if(seq_data->context != NULL && arb_data->type == seq_data->context->getType())
 		{
 			MenuVec menu_items;
-			
 			int selected_item;
 			
-			if(arb_data->type == ARB_TYPE_OCIO)
+			if(arb_data->type == OCIO_TYPE_CONVERT)
+			{
+				menu_items = seq_data->context->getInputs();
+				
+				if(reg == REGION_MENU1)
+				{
+					selected_item = FindInVec(menu_items, arb_data->input);
+				}
+				else
+				{
+					selected_item = FindInVec(menu_items, arb_data->output);
+				}
+			}
+			else if(arb_data->type == OCIO_TYPE_DISPLAY)
 			{
 				if(reg == REGION_MENU1)
 				{
 					menu_items = seq_data->context->getInputs();
 					
-					selected_item = FindInVec<string>(menu_items, string(arb_data->input));
+					selected_item = FindInVec(menu_items, arb_data->input);
 				}
 				else if(reg == REGION_MENU2)
 				{
 					menu_items = seq_data->context->getTransforms();
 					
-					selected_item = FindInVec<string>(menu_items, string(arb_data->transform));
+					selected_item = FindInVec(menu_items, arb_data->transform);
 				}
 				else if(reg == REGION_MENU3)
 				{
 					menu_items = seq_data->context->getDevices();
 					
-					selected_item = FindInVec<string>(menu_items, string(arb_data->device));
+					selected_item = FindInVec(menu_items, arb_data->device);
 				}
 			}
+			
+			
+			if(selected_item < 0)
+				selected_item = 0;
 			
 			
 			int result = PopUpMenu(menu_items, selected_item);
@@ -361,10 +657,29 @@ DoClick(
 			
 			if(result != selected_item)
 			{
-				if(arb_data->type == ARB_TYPE_OCIO)
-				{
-					string color_space = menu_items[ result ];
+				string color_space = menu_items[ result ];
 				
+				if(arb_data->type == OCIO_TYPE_CONVERT)
+				{
+					if(reg == REGION_MENU1)
+					{
+						strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
+					}
+					else if(reg == REGION_MENU2)
+					{
+						strncpy(arb_data->output, color_space.c_str(), ARB_SPACE_LEN);
+					}
+					
+					try
+					{
+						seq_data->context->setupConvert(arb_data->input, arb_data->output);
+						
+						params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+					}
+					catch(...) {}
+				}
+				else if(arb_data->type == OCIO_TYPE_DISPLAY)
+				{
 					if(reg == REGION_MENU1)
 					{
 						strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
@@ -380,12 +695,12 @@ DoClick(
 					
 					try
 					{
-						seq_data->context->setupOCIO(arb_data->input, arb_data->transform, arb_data->device);
+						seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+						
+						params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
 					}
 					catch(...) {}
 				}
-				
-				params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
 			}
 		}
 	}

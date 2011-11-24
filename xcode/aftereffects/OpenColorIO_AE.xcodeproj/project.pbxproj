@@ -21,6 +21,7 @@
 		2AF57005147AE17400F9968C /* libyaml.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AF57001147AE16A00F9968C /* libyaml.a */; };
 		2AF57B93147C6FE000F9968C /* OpenColorIO_AE_Menu.m in Sources */ = {isa = PBXBuildFile; fileRef = 2AF57B92147C6FE000F9968C /* OpenColorIO_AE_Menu.m */; };
 		2AF57D20147C994100F9968C /* OpenColorIO_AE_Context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AF57D1F147C994100F9968C /* OpenColorIO_AE_Context.cpp */; };
+		2AF999CB147E1DD200FEB83B /* liblcms.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AF999C8147E1DCA00FEB83B /* liblcms.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +67,20 @@
 			remoteGlobalIDString = 2ACF567014776A0A00991ED5;
 			remoteInfo = OpenColorIO;
 		};
+		2AF999C7147E1DCA00FEB83B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2AF999C0147E1DCA00FEB83B /* lcms.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 2ACF9E56147824F500991ED5 /* liblcms.a */;
+			remoteInfo = lcms;
+		};
+		2AF999CC147E1DDB00FEB83B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2AF999C0147E1DCA00FEB83B /* lcms.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 2ACF9E55147824F500991ED5 /* lcms */;
+			remoteInfo = lcms;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +104,7 @@
 		2AF57B92147C6FE000F9968C /* OpenColorIO_AE_Menu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenColorIO_AE_Menu.m; sourceTree = "<group>"; };
 		2AF57D1E147C994100F9968C /* OpenColorIO_AE_Context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE_Context.h; path = ../../src/aftereffects/OpenColorIO_AE_Context.h; sourceTree = SOURCE_ROOT; };
 		2AF57D1F147C994100F9968C /* OpenColorIO_AE_Context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OpenColorIO_AE_Context.cpp; path = ../../src/aftereffects/OpenColorIO_AE_Context.cpp; sourceTree = SOURCE_ROOT; };
+		2AF999C0147E1DCA00FEB83B /* lcms.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = lcms.xcodeproj; path = ../ext/lcms.xcodeproj; sourceTree = SOURCE_ROOT; };
 		C4E618CC095A3CE80012CA3F /* OpenColorIO.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenColorIO.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -101,6 +117,7 @@
 				2AF56EE8147AD11200F9968C /* libOpenColorIO.a in Frameworks */,
 				2AF57004147AE17200F9968C /* libtinyxml.a in Frameworks */,
 				2AF57005147AE17400F9968C /* libyaml.a in Frameworks */,
+				2AF999CB147E1DD200FEB83B /* liblcms.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +148,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		2AF999C1147E1DCA00FEB83B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2AF999C8147E1DCA00FEB83B /* liblcms.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		C4E6187C095A3C800012CA3F = {
 			isa = PBXGroup;
 			children = (
@@ -153,6 +178,7 @@
 				2AF56EE2147AD10E00F9968C /* OpenColorIO.xcodeproj */,
 				2AF56FF0147AE16A00F9968C /* tinyxml.xcodeproj */,
 				2AF56FF3147AE16A00F9968C /* yaml.xcodeproj */,
+				2AF999C0147E1DCA00FEB83B /* lcms.xcodeproj */,
 				C4E6188C095A3C800012CA3F /* Products */,
 				2A3BAA7010C0F40600AD32F2 /* Cocoa.framework */,
 			);
@@ -185,6 +211,7 @@
 				2AF57013147AE18600F9968C /* PBXTargetDependency */,
 				2AF57015147AE18600F9968C /* PBXTargetDependency */,
 				2AF57017147AE18600F9968C /* PBXTargetDependency */,
+				2AF999CD147E1DDB00FEB83B /* PBXTargetDependency */,
 			);
 			name = OpenColorIO;
 			productName = SDK_Backwards.plugin;
@@ -210,6 +237,10 @@
 			productRefGroup = C4E6188C095A3C800012CA3F /* Products */;
 			projectDirPath = "";
 			projectReferences = (
+				{
+					ProductGroup = 2AF999C1147E1DCA00FEB83B /* Products */;
+					ProjectRef = 2AF999C0147E1DCA00FEB83B /* lcms.xcodeproj */;
+				},
 				{
 					ProductGroup = 2AF56EE3147AD10E00F9968C /* Products */;
 					ProjectRef = 2AF56EE2147AD10E00F9968C /* OpenColorIO.xcodeproj */;
@@ -250,6 +281,13 @@
 			fileType = archive.ar;
 			path = libyaml.a;
 			remoteRef = 2AF57000147AE16A00F9968C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		2AF999C8147E1DCA00FEB83B /* liblcms.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = liblcms.a;
+			remoteRef = 2AF999C7147E1DCA00FEB83B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -310,6 +348,11 @@
 			name = OpenColorIO;
 			targetProxy = 2AF57016147AE18600F9968C /* PBXContainerItemProxy */;
 		};
+		2AF999CD147E1DDB00FEB83B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = lcms;
+			targetProxy = 2AF999CC147E1DDB00FEB83B /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -334,6 +377,7 @@
 					../../src/core,
 					../../ext/tinyxml,
 					"../../ext/yaml-cpp-r482/include",
+					"../../ext/lcms2-2.1/include",
 				);
 				REZ_PREPROCESSOR_DEFINITIONS = __MACH__;
 				REZ_SEARCH_PATHS = "$(SDK_PATH)/Developer/Headers/FlatCarbon";
@@ -379,6 +423,7 @@
 					../../src/core,
 					../../ext/tinyxml,
 					"../../ext/yaml-cpp-r482/include",
+					"../../ext/lcms2-2.1/include",
 				);
 				REZ_PREPROCESSOR_DEFINITIONS = __MACH__;
 				REZ_SEARCH_PATHS = "$(SDK_PATH)/Developer/Headers/FlatCarbon";

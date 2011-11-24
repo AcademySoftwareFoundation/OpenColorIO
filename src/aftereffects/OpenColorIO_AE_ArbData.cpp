@@ -29,11 +29,17 @@ ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
 			// set up defaults
 			arb_data->version = CURRENT_ARB_VERSION;
 			
-			arb_data->type = ARB_TYPE_NONE;
+			arb_data->type = OCIO_TYPE_NONE;
+			arb_data->invert = FALSE;
+			
+			arb_data->storage = OCIO_STORAGE_NONE;
+			arb_data->store_size = 0;
 			
 			arb_data->path[0] = '\0';
+			arb_data->relative_path[0] = '\0';
 			
 			arb_data->input[0] = '\0';
+			arb_data->output[0] = '\0';
 			arb_data->transform[0] = '\0';
 			arb_data->device[0] = '\0';
 			
@@ -65,11 +71,15 @@ CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
 	
 	out_arb_data->type = in_arb_data->type;
 	
-	strcpy((char *)out_arb_data->path, (char *)in_arb_data->path);
+	out_arb_data->invert = in_arb_data->invert;
 	
-	strcpy((char *)out_arb_data->input, (char *)in_arb_data->input);
-	strcpy((char *)out_arb_data->transform, (char *)in_arb_data->transform);
-	strcpy((char *)out_arb_data->device, (char *)in_arb_data->device);
+	strcpy(out_arb_data->path, in_arb_data->path);
+	strcpy(out_arb_data->relative_path, in_arb_data->relative_path);
+	
+	strcpy(out_arb_data->input, in_arb_data->input);
+	strcpy(out_arb_data->output, in_arb_data->output);
+	strcpy(out_arb_data->transform, in_arb_data->transform);
+	strcpy(out_arb_data->device, in_arb_data->device);
 }
 
 
@@ -236,13 +246,23 @@ ArbCompare(PF_InData *in_data, PF_OutData *out_data,
 		ArbitraryData *a_data = (ArbitraryData *)PF_LOCK_HANDLE(a_arbH),
 						*b_data = (ArbitraryData *)PF_LOCK_HANDLE(b_arbH);
 		
+		
 		if( a_data->version == b_data->version &&
-			!strcmp((char *)a_data->path, (char *)b_data->path) )
+			a_data->type == b_data->type &&
+			a_data->invert == b_data->invert &&
+			!strcmp(a_data->path, b_data->path) &&
+			!strcmp(a_data->input, b_data->input) &&
+			!strcmp(a_data->output, b_data->output) &&
+			!strcmp(a_data->transform, b_data->transform) &&
+			!strcmp(a_data->device, b_data->device) )
 		{
 			*compareP = PF_ArbCompare_EQUAL;
 		}
 		else
+		{
 			*compareP = PF_ArbCompare_NOT_EQUAL;
+		}
+			
 		
 		
 		PF_UNLOCK_HANDLE(a_arbH);

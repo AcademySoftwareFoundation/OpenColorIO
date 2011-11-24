@@ -26,33 +26,42 @@ class OpenColorIO_AE_Context
 	OpenColorIO_AE_Context(const ArbitraryData *arb_data);
 	~OpenColorIO_AE_Context() {}
 	
-	OCIO::ConstProcessorRcPtr & processor() { return _processor; }
-	
-	void setupOCIO(const char *input, const char *transform, const char *device);
-	
+	void setupConvert(const char *input, const char *output);
+	void setupDisplay(const char *input, const char *transform, const char *device);
+	void setupLUT(bool invert = false);
+  
 	typedef std::vector<std::string> SpaceVec;
 	
-	bool isOCIO() const { return _ocio; }
+	OCIO_Type getType() const { return _type; }
 	const std::string & getInput() const { return _input; }
+	const std::string & getOutput() const { return _output; }
 	const std::string & getTransform() const { return _transform; }
 	const std::string & getDevice() const { return _device; }
 	const SpaceVec & getInputs() const { return _inputs; }
 	const SpaceVec & getTransforms() const { return _transforms; }
 	const SpaceVec & getDevices() const { return _devices; }
+	
+	OCIO::ConstProcessorRcPtr & processor() { return _processor; }
+	
+	bool ExportLUT(const std::string path, const std::string display_icc_path = "");
 
   private:
-	void setupLUT(const char *path);
+	std::string _path;
   
 	OCIO::ConstConfigRcPtr		_config;
 	OCIO::ConstProcessorRcPtr	_processor;
 	
-	bool _ocio;
+	OCIO_Type _type;
+	
 	std::string _input;
+	std::string _output;
 	std::string _transform;
 	std::string _device;
 	SpaceVec _inputs;
 	SpaceVec _transforms;
 	SpaceVec _devices;
+	
+	bool _invert;
 };
 
 

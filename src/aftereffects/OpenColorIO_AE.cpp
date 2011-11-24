@@ -12,15 +12,10 @@ About (
 	PF_LayerDef		*output )
 {
 	PF_SPRINTF(	out_data->return_msg, 
-				"%s - %s\r\rwritten by %s\r\rv%d.%d - %s\r\r%s\r%s",
-				NAME,
-				DESCRIPTION,
-				AUTHOR, 
-				MAJOR_VERSION, 
-				MINOR_VERSION,
-				RELEASE_DATE,
-				COPYRIGHT,
-				WEBSITE);
+				"OpenColorIO\r\r"
+				"opencolorio.org\r"
+				"version %s",
+				OCIO_VERSION);
 				
 	return PF_Err_NONE;
 }

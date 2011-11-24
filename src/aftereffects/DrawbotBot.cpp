@@ -55,6 +55,22 @@ DrawbotBot::SetColor(PF_App_ColorType color, float a)
 
 
 void
+DrawbotBot::DrawLineTo(float x, float y)
+{
+	DRAWBOT_PathP pathP(_suiteP, _supplier_ref);
+	DRAWBOT_PenP penP(_suiteP, _supplier_ref, &_brush_color, _brush_size);
+	
+	suites.PathSuiteCurrent()->MoveTo(pathP.Get(), _brush_pos.x, _brush_pos.y);
+	
+	suites.PathSuiteCurrent()->LineTo(pathP.Get(), x, y);
+	
+	suites.SurfaceSuiteCurrent()->StrokePath(_surface_ref, penP.Get(), pathP.Get());
+	
+	MoveTo(x, y);
+}
+
+
+void
 DrawbotBot::DrawRect(float w, float h) const
 {
 	DRAWBOT_PathP pathP(_suiteP, _supplier_ref);

@@ -61,20 +61,33 @@ enum {
 #define ARB_SPACE_LEN	63
 
 enum {
-	ARB_TYPE_NONE = 0,
-	ARB_TYPE_LUT,
-	ARB_TYPE_OCIO
+	OCIO_TYPE_NONE = 0,
+	OCIO_TYPE_LUT,
+	OCIO_TYPE_CONVERT,
+	OCIO_TYPE_DISPLAY
 };
-typedef A_u_char ArbType;
+typedef A_u_char OCIO_Type;
+
+enum {
+	OCIO_STORAGE_NONE = 0,
+	OCIO_STORAGE_ZIP_FILE
+};
+typedef A_u_char OCIO_Storage;
 
 typedef struct {
-	A_u_char	version; // version of this data structure
-	ArbType		type;
-	A_u_char	reserved[62]; // 64 pre-path bytes
-	char		path[ARB_PATH_LEN+1];
-	char		input[ARB_SPACE_LEN+1];
-	char		transform[ARB_SPACE_LEN+1];
-	char		device[ARB_SPACE_LEN+1];
+	A_u_char		version; // version of this data structure
+	OCIO_Type		type;
+	A_Boolean		invert; // only used for LUTs
+	OCIO_Storage	storage; // storage not used...yet
+	A_u_long		store_size;
+	A_u_char		reserved[56]; // 64 pre-path bytes
+	char			path[ARB_PATH_LEN+1];
+	char			relative_path[ARB_PATH_LEN+1]; // also not yet used
+	char			input[ARB_SPACE_LEN+1];
+	char			output[ARB_SPACE_LEN+1];
+	char			transform[ARB_SPACE_LEN+1];
+	char			device[ARB_SPACE_LEN+1];
+	A_u_char		storage_buf[1];
 } ArbitraryData;
 
 
@@ -91,7 +104,7 @@ typedef struct {
 
 
 
-#define UI_CONTROL_HEIGHT	200
+#define UI_CONTROL_HEIGHT	222
 #define UI_CONTROL_WIDTH	0
 
 

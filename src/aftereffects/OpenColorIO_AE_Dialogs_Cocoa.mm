@@ -12,18 +12,28 @@ bool OpenFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
 	NSOpenPanel *op = [NSOpenPanel openPanel];
 	 
 	[op setTitle:@"OpenColorIO"];
-	[op setMessage:@"Open a LUT"];
 	
 	
 	NSMutableArray *extension_array = [[NSMutableArray alloc] init];
+	std::string message = "Formats: ";
+	bool first_one = true;
 	
 	for(ExtensionMap::const_iterator i = extensions.begin(); i != extensions.end(); i++)
 	{
 		[extension_array addObject:[NSString stringWithUTF8String:i->first.c_str()]];
+		
+		if(first_one)
+			first_one = false;
+		else
+			message += ", ";
+			
+		message += "." + i->first;
 	}
 	
+	[op setMessage:[NSString stringWithUTF8String:message.c_str()]];
 	
-	int result = [op runModalForTypes:extension_array];
+	
+	NSInteger result = [op runModalForTypes:extension_array];
 	
 	
 	[extension_array release];
@@ -32,6 +42,48 @@ bool OpenFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
 	if(result == NSOKButton)
 	{
 		return [[op filename] getCString:path maxLength:buf_len encoding:NSASCIIStringEncoding];
+	}
+	else
+		return false;
+}
+
+
+bool SaveFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
+{
+	NSSavePanel *panel = [NSSavePanel savePanel];
+	
+	[panel setTitle:@"OpenColorIO"];
+	
+	
+	NSMutableArray *extension_array = [[NSMutableArray alloc] init];
+	std::string message = "Formats: ";
+	bool first_one = true;
+	
+	for(ExtensionMap::const_iterator i = extensions.begin(); i != extensions.end(); i++)
+	{
+		[extension_array addObject:[NSString stringWithUTF8String:i->first.c_str()]];
+		
+		if(first_one)
+			first_one = false;
+		else
+			message += ", ";
+			
+		message += i->second + "(." + i->first + ")";
+	}
+	
+	[panel setAllowedFileTypes:extension_array];
+	[panel setMessage:[NSString stringWithUTF8String:message.c_str()]];
+	
+	
+	NSInteger result = [panel runModal];
+	
+	
+	[extension_array release];
+	
+	
+	if(result == NSOKButton)
+	{
+		return [[panel filename] getCString:path maxLength:buf_len encoding:NSASCIIStringEncoding];
 	}
 	else
 		return false;

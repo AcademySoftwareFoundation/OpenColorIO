@@ -31,6 +31,8 @@ class DrawbotBot
 
 	DRAWBOT_PointF32 Pos() const { return _brush_pos; }
 	float FontSize() const { return _font_size; }
+	
+	void DrawLineTo(float x, float y);
 
 	void DrawRect(float w, float h) const;
 	void PaintRect(float w, float h) const;

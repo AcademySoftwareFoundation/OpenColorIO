@@ -11,6 +11,8 @@ typedef std::map<std::string, std::string> ExtensionMap; // map[ ext ] = format
 
 bool OpenFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd);
 
+bool SaveFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd);
+
 
 typedef std::vector<std::string> MenuVec;
 
