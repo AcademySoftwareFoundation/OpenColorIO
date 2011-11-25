@@ -32,9 +32,9 @@ class DrawbotBot
 	DRAWBOT_PointF32 Pos() const { return _brush_pos; }
 	float FontSize() const { return _font_size; }
 	
-	void DrawLineTo(float x, float y);
+	void DrawLineTo(float x, float y, float brush_size = 0.5f);
 
-	void DrawRect(float w, float h) const;
+	void DrawRect(float w, float h, float brush_size = 0.5f) const;
 	void PaintRect(float w, float h) const;
 	
 	void PaintTriangle(float w, float h) const;
@@ -60,7 +60,6 @@ class DrawbotBot
 	
 	DRAWBOT_PointF32		_brush_pos;
 	DRAWBOT_ColorRGBA		_brush_color;
-	float					_brush_size;
 	float					_font_size;
 };
 

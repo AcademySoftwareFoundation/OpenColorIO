@@ -29,8 +29,6 @@ DrawbotBot::DrawbotBot(struct SPBasicSuite *pica_basicP, PF_ContextH contextH) :
 	
 	SetColor(PF_App_Color_TEXT);
 	
-	_brush_size = 0.5f;
-	
 	_suiteP->GetDefaultFontSize(_supplier_ref, &_font_size);
 }
 
@@ -55,10 +53,10 @@ DrawbotBot::SetColor(PF_App_ColorType color, float a)
 
 
 void
-DrawbotBot::DrawLineTo(float x, float y)
+DrawbotBot::DrawLineTo(float x, float y, float brush_size)
 {
 	DRAWBOT_PathP pathP(_suiteP, _supplier_ref);
-	DRAWBOT_PenP penP(_suiteP, _supplier_ref, &_brush_color, _brush_size);
+	DRAWBOT_PenP penP(_suiteP, _supplier_ref, &_brush_color, brush_size);
 	
 	suites.PathSuiteCurrent()->MoveTo(pathP.Get(), _brush_pos.x, _brush_pos.y);
 	
@@ -71,10 +69,10 @@ DrawbotBot::DrawLineTo(float x, float y)
 
 
 void
-DrawbotBot::DrawRect(float w, float h) const
+DrawbotBot::DrawRect(float w, float h, float brush_size) const
 {
 	DRAWBOT_PathP pathP(_suiteP, _supplier_ref);
-	DRAWBOT_PenP penP(_suiteP, _supplier_ref, &_brush_color, _brush_size);
+	DRAWBOT_PenP penP(_suiteP, _supplier_ref, &_brush_color, brush_size);
 	
 	DRAWBOT_RectF32 rect;
 	
