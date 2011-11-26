@@ -179,7 +179,7 @@ OpenColorIO_AE_Context::setupLUT(bool invert)
 	transform = FileTransform::Create();
 	transform->setSrc( _path.c_str() );
 	transform->setInterpolation(INTERP_LINEAR);
-	transform->setDirection(_invert ? TRANSFORM_DIR_INVERSE : TRANSFORM_DIR_FORWARD);
+	transform->setDirection(invert ? TRANSFORM_DIR_INVERSE : TRANSFORM_DIR_FORWARD);
 	
 	_processor = _config->getProcessor(transform);
 	

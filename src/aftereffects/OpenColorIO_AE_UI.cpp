@@ -405,10 +405,16 @@ DoClickPath(
 	
 	extensions[ "ocio" ] = "OCIO Format";
 	
-	
+
+	void *hwndOwner = NULL;
+
+#ifdef WIN_ENV
+	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, (void **)&hwndOwner);
+#endif
+
 	char path[ARB_PATH_LEN + 1];
 	
-	bool result = OpenFile(path, ARB_PATH_LEN, extensions, NULL);
+	bool result = OpenFile(path, ARB_PATH_LEN, extensions, hwndOwner);
 	
 	
 	if(result)
@@ -545,9 +551,15 @@ DoClickExport(
 	extensions[ "icc" ] = "ICC Profile";
 	
 	
+	void *hwndOwner = NULL;
+
+#ifdef WIN_ENV
+	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, (void **)&hwndOwner);
+#endif
+
 	char path[256];
 	
-	bool result = SaveFile(path, 255, extensions, NULL);
+	bool result = SaveFile(path, 255, extensions, hwndOwner);
 	
 	
 	if(result)
@@ -563,7 +575,7 @@ DoClickExport(
 		{
 			char monitor_path[256] = {'\0'};
 		
-			do_export = GetMonitorProfile(monitor_path, 255, NULL);
+			do_export = GetMonitorProfile(monitor_path, 255, hwndOwner);
 		
 			if(monitor_path[0] != '\0')
 				monitor_icc_path = monitor_path;
