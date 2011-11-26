@@ -2,7 +2,9 @@
 
 #include "OpenColorIO_AE_Dialogs.h"
 
-#import <Cocoa/Cocoa.h>
+//#import <Cocoa/Cocoa.h>
+
+#import "OpenColorIO_AE_MonitorProfileChooser_Controller.h"
 
 #import "OpenColorIO_AE_Menu.h"
 
@@ -87,6 +89,43 @@ bool SaveFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
 	}
 	else
 		return false;
+}
+
+
+bool GetMonitorProfile(char *path, int buf_len, void *hwnd)
+{
+	bool hit_ok = false;
+	
+	Class ui_controller_class = [[NSBundle bundleWithIdentifier:@"org.OpenColorIO.AfterEffects"]
+									classNamed:@"OpenColorIO_AE_MonitorProfileChooser_Controller"];
+	
+	if(ui_controller_class)
+	{
+		OpenColorIO_AE_MonitorProfileChooser_Controller *ui_controller = [[ui_controller_class alloc] init];
+		
+		if(ui_controller)
+		{
+			NSWindow *my_window = [ui_controller getWindow];
+			
+			if(my_window)
+			{
+				NSInteger result = [NSApp runModalForWindow:my_window];
+				
+				if(result == NSRunStoppedResponse)
+				{
+					[ui_controller getMonitorProfile:path bufferSize:buf_len];
+					
+					hit_ok = true;
+				}
+				
+				[my_window release];
+			}
+			
+			[ui_controller release];
+		}
+	}
+	
+	return hit_ok;
 }
 
 

@@ -413,79 +413,64 @@ DoClickPath(
 	
 	if(result)
 	{
-		try
+		OpenColorIO_AE_Context *new_context = new OpenColorIO_AE_Context(path);
+		
+		if(new_context == NULL)
+			throw OCIO::Exception("WTF?");
+			
+		
+		if(seq_data->context)
 		{
-			OpenColorIO_AE_Context *new_context = new OpenColorIO_AE_Context(path);
+			delete seq_data->context;
+		}
+		
+		seq_data->context = new_context;
+		
+		
+		strncpy(arb_data->path, path, ARB_PATH_LEN);
+		
+		
+		// try to retain settings if it looks like the same situation,
+		// possibly fixing a moved path
+		if(	OCIO_TYPE_LUT == new_context->getType() ||
+			arb_data->type != new_context->getType() ||
+			-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
+			-1 == FindInVec(new_context->getInputs(), arb_data->output) ||
+			-1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
+			-1 == FindInVec(new_context->getDevices(), arb_data->device) )
+		{
+			// Configuration is different, so initialize defaults
+			arb_data->type = seq_data->context->getType();
 			
-			if(new_context == NULL)
-				throw OCIO::Exception("WTF?");
-				
-			
-			if(seq_data->context)
+			if(arb_data->type != OCIO_TYPE_LUT)
 			{
-				delete seq_data->context;
+				strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
+				strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
+				strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
+				strncpy(arb_data->device, seq_data->context->getDevice().c_str(), ARB_SPACE_LEN);
 			}
-			
-			seq_data->context = new_context;
-			
-			
-			strncpy(arb_data->path, path, ARB_PATH_LEN);
-			
-			
-			// try to retain settings if it looks like the same situation,
-			// possibly fixing a moved path
-			if(	OCIO_TYPE_LUT == new_context->getType() ||
-				arb_data->type != new_context->getType() ||
-				-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
-				-1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-				-1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
-				-1 == FindInVec(new_context->getDevices(), arb_data->device) )
+		}
+		else
+		{
+			// Configuration is the same, retain current settings
+			if(arb_data->type == OCIO_TYPE_LUT)
 			{
-				// Configuration is different, so initialize defaults
-				arb_data->type = seq_data->context->getType();
-				
-				if(arb_data->type != OCIO_TYPE_LUT)
+				if(arb_data->invert)
 				{
-					strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
-					strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
-					strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
-					strncpy(arb_data->device, seq_data->context->getDevice().c_str(), ARB_SPACE_LEN);
-				}
-			}
-			else
-			{
-				// Configuration is the same, retain current settings
-				if(arb_data->type == OCIO_TYPE_LUT)
-				{
-					if(arb_data->invert)
-					{
-						seq_data->context->setupLUT(arb_data->invert);
-					}
-				}
-				else if(arb_data->type == OCIO_TYPE_CONVERT)
-				{
-					seq_data->context->setupConvert(arb_data->input, arb_data->output);
-				}
-				else if(arb_data->type == OCIO_TYPE_DISPLAY)
-				{
-					seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+					seq_data->context->setupLUT(arb_data->invert);
 				}
 			}
-			
-			params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+			else if(arb_data->type == OCIO_TYPE_CONVERT)
+			{
+				seq_data->context->setupConvert(arb_data->input, arb_data->output);
+			}
+			else if(arb_data->type == OCIO_TYPE_DISPLAY)
+			{
+				seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+			}
 		}
-		catch(std::exception &e)
-		{
-			PF_SPRINTF(out_data->return_msg, e.what());
-			
-			out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-		}
-		catch(...)
-		{
-			PF_SPRINTF(out_data->return_msg, "OCIO Error reading file.");
-			
-			out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-		}
+		
+		params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
 	}
 }
 
@@ -504,26 +489,14 @@ DoClickConvertDisplay(
 	{
 		if(reg == REGION_CONVERT_BUTTON) // i.e. Invert
 		{
-			try
-			{
-				seq_data->context->setupLUT(!arb_data->invert);
-				
-				arb_data->invert = !arb_data->invert;
+			// doing it this way so that any exceptions thrown by setupLUT
+			// because the LUT can't be inverted are thrown before
+			// I actually chenge the ArbData setting
+			seq_data->context->setupLUT(!arb_data->invert);
 			
-				params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
-			}
-			catch(std::exception &e)
-			{
-				PF_SPRINTF(out_data->return_msg, e.what());
-				
-				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-			}
-			catch(...)
-			{
-				PF_SPRINTF(out_data->return_msg, "LUT can not be inverted.");
-				
-				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-			}
+			arb_data->invert = !arb_data->invert;
+		
+			params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
 		}
 	}
 	else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
@@ -582,29 +555,22 @@ DoClickExport(
 		string the_path(path);
 		string the_extension = the_path.substr( the_path.find_last_of('.') + 1 );
 		
+		bool do_export = true;
+		
 		string monitor_icc_path;
 		
 		if(the_extension == "icc")
 		{
-			// TODO: monitor ICC dialog
+			char monitor_path[256] = {'\0'};
+		
+			do_export = GetMonitorProfile(monitor_path, 255, NULL);
+		
+			if(monitor_path[0] != '\0')
+				monitor_icc_path = monitor_path;
 		}
 		
-		try
-		{
+		if(do_export)
 			seq_data->context->ExportLUT(the_path, monitor_icc_path);
-		}
-		catch(std::exception &e)
-		{
-			PF_SPRINTF(out_data->return_msg, e.what());
-			
-			out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-		}
-		catch(...)
-		{
-			PF_SPRINTF(out_data->return_msg, "Export failed.");
-			
-			out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-		}
 	}
 }
 
@@ -772,7 +738,12 @@ DoClick(
 				
 				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
 			}
-			catch(...) { }
+			catch(...)
+			{
+				PF_SPRINTF(out_data->return_msg, "Unknown error");
+				
+				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+			}
 		}
 	}
 	

@@ -13,6 +13,8 @@ bool OpenFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd);
 
 bool SaveFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd);
 
+bool GetMonitorProfile(char *path, int buf_len, void *hwnd);
+
 
 typedef std::vector<std::string> MenuVec;
 
