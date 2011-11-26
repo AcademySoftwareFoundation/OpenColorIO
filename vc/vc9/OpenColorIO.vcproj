@@ -457,6 +457,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\core\md5\md5.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\core\OCIOYaml.cpp"
 				>
 			</File>
@@ -474,6 +478,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\core\Processor.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\core\pystring\pystring.cpp"
 				>
 			</File>
 			<File
@@ -555,6 +563,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\core\md5\md5.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\core\Mutex.h"
 				>
 			</File>
@@ -600,6 +612,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\core\Processor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\core\pystring\pystring.h"
 				>
 			</File>
 			<File
