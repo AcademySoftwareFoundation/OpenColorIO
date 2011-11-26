@@ -31,6 +31,22 @@ static void AppendNull(char *text, int &length)
 
 static void MakeFilterText(char *filter_text, const ExtensionMap &extensions, bool do_combined)
 {
+	// Construct the Windows file dialog filter string, which looks like this:
+	//
+	//	"All OCIO files\0"
+	//		"*.ocio;*.cube;*.vf;*.mga\0"
+	//	"OpenColorIO (*.ocio)\0"
+	//		"*.ocio\0"
+	//	"Iridas (*.cube)\0"
+	//		"*.cube\0"
+	//	"Nuke Vectorfield (*.vf)\0"
+	//		"*.vf\0"
+	//	"Apple Color (*.mga)\0"
+	//		"*.mga\0"
+	//	"\0";
+	//
+	// Note the inline nulls and final double-null, which foil regular string functions.
+
 	char combined_entry[512];;
 	int combined_length = 0;
 
@@ -86,30 +102,7 @@ bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
 
 	char my_lpstrFilter[512];
 	MakeFilterText(my_lpstrFilter, extensions, true);
-/*
-	char *my_lpstrFilter =
-		"All LUT files\0"
-			"*.alut;*.cube;*.ocio;*.vf;*.a3d;*.shklut;*.amp;*.mga\0"
-		"Fusion (*.alut)\0"
-			"*.alut\0"
-		"Iridas (*.cube)\0"
-			"*.cube\0"
-		"OpenColorIO (*.ocio)\0"
-			"*.ocio\0"
-		//"Nuke Lookup Project (*.nk)\0"
-		//	"*.nk\0"
-		"Nuke Vectorfield (*.vf)\0"
-			"*.vf\0"
-		"Panavision (*.a3d)\0"
-			"*.a3d\0"
-		"Shake (*.shklut)\0"
-			"*.shklut\0"
-		"Photoshop (*.amp)\0"
-			"*.amp\0"
-		"Apple Color (*.mga)\0"
-			"*.mga\0"
-		"\0";
-*/
+
 
 	OPENFILENAME lpofn;
 
@@ -138,19 +131,7 @@ bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
 	lpofn.lpTemplateName = NULL;
 	lpofn.lStructSize = sizeof(lpofn);
 
-	BOOL result = GetOpenFileName(&lpofn);
-
-	if(!result)
-	{
-		DWORD err = CommDlgExtendedError();
-
-		if(err == PDERR_SETUPFAILURE)
-		{
-			err = PDERR_PARSEFAILURE;
-		}
-	}
-
-	return result;
+	return GetOpenFileName(&lpofn);
 }
 
 
@@ -200,9 +181,36 @@ bool GetMonitorProfile(char *path, int buf_len, const void *hwnd)
 }
 
 
-int PopUpMenu(const MenuVec &menu_items, int selected_index)
+int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 {
-	return 0;
+	HMENU menu = CreatePopupMenu();
+
+	if(menu)
+	{
+		for(int i=0; i < menu_items.size(); i++)
+		{
+			UINT flags = (i == selected_index ? (MF_STRING | MF_CHECKED) : MF_STRING);
+
+			AppendMenu(menu, flags, i + 1, menu_items[i].c_str());
+		}
+
+		POINT pos;
+		GetCursorPos(&pos);
+
+		int result = TrackPopupMenuEx(menu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD, pos.x, pos.y, (HWND)hwnd, NULL);
+
+		DestroyMenu(menu);
+
+		if(result == 0)
+		{
+			// means the user clicked off the menu
+			return selected_index;
+		}
+		else
+			return result - 1;
+	}
+	else
+		return selected_index;
 }
 
 
@@ -211,5 +219,5 @@ BOOL WINAPI DllMain(HANDLE hInstance, DWORD fdwReason, LPVOID lpReserved)
 	if (fdwReason == DLL_PROCESS_ATTACH)
 		hDllInstance = (HINSTANCE)hInstance;
 
-	return TRUE;   // Indicate that the DLL was initialized successfully.
+	return TRUE;
 }

@@ -18,7 +18,7 @@ bool GetMonitorProfile(char *path, int buf_len, const void *hwnd);
 
 typedef std::vector<std::string> MenuVec;
 
-int PopUpMenu(const MenuVec &menu_items, int selected);
+int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd);
 
 
 #ifdef __APPLE__

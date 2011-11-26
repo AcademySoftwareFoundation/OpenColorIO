@@ -412,7 +412,7 @@ DoClickPath(
 	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, (void **)&hwndOwner);
 #endif
 
-	char path[ARB_PATH_LEN + 1];
+	char path[ARB_PATH_LEN + 1] = { '\0' };
 	
 	bool result = OpenFile(path, ARB_PATH_LEN, extensions, hwndOwner);
 	
@@ -557,7 +557,7 @@ DoClickExport(
 	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, (void **)&hwndOwner);
 #endif
 
-	char path[256];
+	char path[256] = { '\0' };
 	
 	bool result = SaveFile(path, 255, extensions, hwndOwner);
 	
@@ -643,7 +643,13 @@ DoClickMenus(
 			selected_item = 0;
 		
 		
-		int result = PopUpMenu(menu_items, selected_item);
+		void *hwndOwner = NULL;
+
+	#ifdef WIN_ENV
+		PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, (void **)&hwndOwner);
+	#endif
+
+		int result = PopUpMenu(menu_items, selected_item, hwndOwner);
 		
 		
 		if(result != selected_item)
