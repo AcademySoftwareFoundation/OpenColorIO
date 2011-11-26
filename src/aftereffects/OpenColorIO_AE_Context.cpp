@@ -174,8 +174,6 @@ OpenColorIO_AE_Context::setupDisplay(const char *input, const char *xform, const
 void
 OpenColorIO_AE_Context::setupLUT(bool invert)
 {
-	_invert = invert;
-	
 	FileTransformRcPtr transform = FileTransform::Create();
 	
 	transform = FileTransform::Create();
@@ -184,6 +182,8 @@ OpenColorIO_AE_Context::setupLUT(bool invert)
 	transform->setDirection(_invert ? TRANSFORM_DIR_INVERSE : TRANSFORM_DIR_FORWARD);
 	
 	_processor = _config->getProcessor(transform);
+	
+	_invert = invert;
 	
 	_type = OCIO_TYPE_LUT;
 }
