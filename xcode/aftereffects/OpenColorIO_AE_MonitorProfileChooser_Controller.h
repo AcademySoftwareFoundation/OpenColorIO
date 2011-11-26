@@ -11,11 +11,9 @@
     IBOutlet NSPopUpButton *profileMenu;
 	IBOutlet NSWindow *window;
 	
-	NSMutableArray *path_array;
-	NSMutableArray *name_array;
+	NSMutableArray	*name_array;
+	NSMapTable		*profile_map;
 }
-
-- (id)init;
 
 - (IBAction)clickOK:(NSButton *)sender;
 - (IBAction)clickCancel:(NSButton *)sender;

@@ -9,8 +9,10 @@
 
 
 typedef struct {
-	NSMutableArray *path_array;
-	NSMutableArray *name_array;
+	NSMutableArray	*name_array;
+	NSMapTable		*profile_map;
+	const char		*monitor_profile_path;
+	char			*monitor_profile_name;
 } IterateData;
 
 static OSErr
@@ -22,9 +24,16 @@ profIterateProc(CMProfileIterateData* data, void* refcon)
 	
 	if(data->header.dataColorSpace == cmRGBData && data->location.locType == cmPathBasedProfile)
 	{
-		[i_data->path_array addObject:[NSString stringWithUTF8String:data->location.u.pathLoc.path]];
+		[i_data->name_array addObject:[NSString stringWithUTF8String:data->asciiName]];
+	
+		[i_data->profile_map setObject:[NSString stringWithUTF8String:data->location.u.pathLoc.path]
+								forKey:[NSString stringWithUTF8String:data->asciiName] ];
 		
-		[i_data->name_array addObject:[NSString stringWithUTF8String:data->asciiName] ];
+		if( i_data->monitor_profile_path &&
+			!strcmp(data->location.u.pathLoc.path, i_data->monitor_profile_path) )
+		{
+			strncpy(i_data->monitor_profile_name, data->asciiName, 255);
+		}
 	}
 	
 	return err;
@@ -40,40 +49,29 @@ profIterateProc(CMProfileIterateData* data, void* refcon)
 	if(!([NSBundle loadNibNamed:@"OpenColorIO_AE_MonitorProfileChooser" owner:self]))
 		return nil;
 	
-	path_array = [[NSMutableArray alloc] init];
-	name_array = [[NSMutableArray alloc] init];
+	
+	// Originally tried to implement this with two NSArrays, one with paths and
+	// one with profile names (ICC descriptions).  The problem is that when you
+	// add items to NSArrays one at a time, they auto-sort.  But then it turns out I
+	// WANT them to sort because the profiles come in random order and the menu looks
+	// terrible if they're not sorted.
+	
+	// So I make an NSArray to set up the menu and an NSMapTable to convert from the
+	// selected menu item to the actual path.  Got that?
 	
 	
-	// build profile arrays
-	IterateData i_data = { path_array, name_array };
-	
-    UInt32 seed = 0;
-    UInt32 count;
-	
-	CMProfileIterateUPP iterateUPP;
-	iterateUPP = NewCMProfileIterateUPP((CMProfileIterateProcPtr)&profIterateProc);
-
-	CMError err = CMIterateColorSyncFolder(iterateUPP, &seed, &count, (void *)&i_data);
-		
-	DisposeCMProfileIterateUPP(iterateUPP);
+	name_array  = [[NSMutableArray alloc] init];
+	profile_map = [[NSMapTable alloc] init];
 	
 	
-	// set menu items with tags
-	// the tag tells us the index of the menu item in the arrays
-	int i;
+	// get monitor profile path
 	
-	for(i=0; i < [name_array count]; i++)
-	{
-		NSString *title = [name_array objectAtIndex:i];
+	// Oddly enough, the "Name" given to me by ColorSync for this os often "Display",
+	// but if you get the profile's description, you get something like
+	// "Apple Cinema HD Display".  So to see if ColorSync runs accross the the monitor's
+	// profile so I can select it, I have to compare the paths, and then save the name
+	// I'm currently getting.
 	
-		[profileMenu addItemWithTitle:title];
-		
-		[[profileMenu itemWithTitle] setTag:i];
-	}
-	
-	
-	
-	// set menu to monitor profile
 	CMProfileRef prof;
 	CMProfileLocation profLoc;
 	
@@ -83,63 +81,70 @@ profIterateProc(CMProfileIterateData* data, void* refcon)
 	CGDirectDisplayID theAVID = CGMainDisplayID();
 
 	// Get the profile for that AVID.
-	err = CMGetProfileByAVID(theAVID, &prof);
+	CMError err = CMGetProfileByAVID(theAVID, &prof);
 	
 	// Get location (FSRef) for that profile
 	err = NCMGetProfileLocation(prof, &profLoc, &locationSize);
 	
+	const char *monitor_profile_path = NULL;
+	char monitor_profile_name[256] = { '\0' };
+	
 	if(profLoc.locType == cmPathBasedProfile)
 	{
-		BOOL found = NO;
+		monitor_profile_path = profLoc.u.pathLoc.path;
+	}
+	
+	
+	
+	// build profile map and name array
+	IterateData i_data = { name_array, profile_map, monitor_profile_path, monitor_profile_name };
+	
+    UInt32 seed = 0;
+    UInt32 count;
+	
+	CMProfileIterateUPP iterateUPP;
+	iterateUPP = NewCMProfileIterateUPP((CMProfileIterateProcPtr)&profIterateProc);
+
+	err = CMIterateColorSyncFolder(iterateUPP, &seed, &count, (void *)&i_data);
 		
-		for(i=0; i < [path_array count]; i++)
-		{
-			NSString *icc_path = [path_array objectAtIndex:i];
-			NSString *icc_name = [name_array objectAtIndex:i];
-			
-			if(icc_path && 0 == [icc_path compare:[NSString stringWithUTF8String:profLoc.u.pathLoc.path]])
-			{
-				NSInteger index = [profileMenu indexOfItemWithTag:i];
-				
-				//[profileMenu selectItemAtIndex:index];
-				[profileMenu selectItemWithTitle:icc_name];
-				
-				found = YES;
-			}
-		}
+	DisposeCMProfileIterateUPP(iterateUPP);
+	
+	
+	
+	// set up menu with array
+	[profileMenu addItemsWithTitles:name_array];
+	
+	
+	
+	// choose the display profile name if we have it (usually "Display")
+	if(monitor_profile_name[0] != '\0')
+	{
+		[profileMenu selectItemWithTitle:[NSString stringWithUTF8String:monitor_profile_name]];
+	}
+	else if(monitor_profile_path != NULL)
+	{
+		CFStringRef m_name;
 		
-		if(!found)
-		{
-			CFStringRef name;
-			
-			err = CMCopyProfileDescriptionString(prof, &name);
-			
-			NSString *ns_name = (NSString *)name;
-			
-			[path_array addObject:[NSString stringWithUTF8String:profLoc.u.pathLoc.path]];
-			
-			[name_array addObject:[NSString stringWithString:ns_name] ];
-			
-			
-			NSInteger new_item_tag = [path_array count] - 1;
-			
-			[profileMenu addItemWithTitle:ns_name];
-			
-			[[profileMenu lastItem] setTag:new_item_tag];
-			
-			[profileMenu selectItemWithTag:new_item_tag];
-			
-			
-			CFRelease(name);
-		}
+		err = CMCopyProfileDescriptionString(prof, &m_name);
+		
+		NSString *ns_name = (NSString *)monitor_profile_name;
+		
+		[profile_map setObject:[NSString stringWithUTF8String:monitor_profile_path]
+						forKey:ns_name ];
+		
+		[profileMenu addItemWithTitle:ns_name];
+		
+		[profileMenu selectItemWithTitle:ns_name];
+		
+		CFRelease(m_name);
 	}
 	
 	return self;
 }
 
 - (void)dealloc {
-	[path_array release];
 	[name_array release];
+	[profile_map release];
 	
 	[super dealloc];
 }
@@ -157,9 +162,10 @@ profIterateProc(CMProfileIterateData* data, void* refcon)
 }
 
 - (BOOL)getMonitorProfile:(char *)path bufferSize:(int)buf_len {
-	NSInteger index = [[profileMenu selectedItem] tag];
+	NSString *icc_name = [[profileMenu selectedItem] title];
+	NSString *icc_path = [profile_map objectForKey:icc_name];
 
-	return [[path_array objectAtIndex:index] getCString:path maxLength:buf_len encoding:NSMacOSRomanStringEncoding];
+	return [icc_path getCString:path maxLength:buf_len encoding:NSMacOSRomanStringEncoding];
 }
 
 @end
