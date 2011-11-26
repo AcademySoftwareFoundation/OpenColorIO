@@ -267,7 +267,7 @@ typedef int Py_ssize_t;
             }
 
             j = len;
-            if ( striptype != LEFTSTRIP )
+            if ( striptype != LEFTSTRIP && j > 0 )
             {
                 do
                 {
