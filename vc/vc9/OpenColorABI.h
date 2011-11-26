@@ -86,4 +86,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #define OCIOHIDDEN
 #endif
 
+// Windows defines these troublesome macros that collide with std::limits
+#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#undef min
+#undef max
+#endif
+
 #endif // INCLUDED_OCIO_OPENCOLORABI_H
