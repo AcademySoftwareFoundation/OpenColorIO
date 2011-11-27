@@ -10,7 +10,6 @@
 #include "OpenColorIO_AE_Context.h"
 
 #include "lcms2.h"
-#include "lcms2_plugin.h"
 
 #include <map>
 #include <fstream>

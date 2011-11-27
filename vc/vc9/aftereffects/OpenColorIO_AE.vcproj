@@ -79,7 +79,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="Mscms.lib"
 				ShowProgress="0"
-				OutputFile="C:\Program Files\Adobe\Adobe After Effects CS6\Support Files\Plug-ins\OpenColorIO_AE.aex"
+				OutputFile="C:\Program Files\Adobe\Adobe After Effects CS6\Support Files\Plug-ins\OpenColorIO.aex"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -178,7 +178,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="Mscms.lib"
 				ShowProgress="0"
-				OutputFile="$(OutDir)\$(ProjectName).aex"
+				OutputFile="$(OutDir)\OpenColorIO.aex"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -259,11 +259,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\resource.h"
+				RelativePath="..\..\..\After Effects 8.0\OpenEXR\win\resource.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\After Effects 8.0\OpenEXR\win\resource.h"
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<Filter

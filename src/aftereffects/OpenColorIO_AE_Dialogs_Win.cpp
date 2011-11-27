@@ -8,7 +8,6 @@
 #include <list>
 
 #include "lcms2.h"
-#include "lcms2_plugin.h"
 
 
 using namespace std;
