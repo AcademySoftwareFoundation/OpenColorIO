@@ -3,6 +3,13 @@
 #include "OpenColorIO_AE_Dialogs.h"
 
 #include <Windows.h>
+#include <Icm.h>
+
+#include <list>
+
+#include "lcms2.h"
+#include "lcms2_plugin.h"
+
 
 using namespace std;
 
@@ -98,8 +105,6 @@ bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
 	const char *my_lpstrTitle = "Import OCIO";
 	const char *my_lpstrDefExt = "ocio";
 
-	path[0] = '\0';
-
 	char my_lpstrFilter[512];
 	MakeFilterText(my_lpstrFilter, extensions, true);
 
@@ -174,10 +179,183 @@ bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
 	return GetSaveFileName(&lpofn);
 }
 
+// dialog item IDs
+enum {
+	DLOG_noUI = -1,
+	DLOG_OK = IDOK, // was 1
+	DLOG_Cancel = IDCANCEL, // was 2
+	DLOG_Profile_Menu = 3
+};
+
+
+static vector<string> *g_profile_vec = NULL;
+static int g_selected_item = DLOG_noUI;
+
+static WORD	g_item_clicked = 0;
+
+static BOOL CALLBACK DialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam) 
+{ 
+    BOOL fError; 
+ 
+    switch (message) 
+    { 
+      case WM_INITDIALOG:
+		do{
+			// add profile list to combo boxe
+			HWND menu = GetDlgItem(hwndDlg, DLOG_Profile_Menu);
+
+			for(int i=0; i < g_profile_vec->size(); i++)
+			{
+				SendMessage(menu,(UINT)CB_ADDSTRING,(WPARAM)wParam,(LPARAM)(LPCTSTR)g_profile_vec->at(i).c_str() );
+				SendMessage(menu,(UINT)CB_SETITEMDATA, (WPARAM)i, (LPARAM)(DWORD)i); // this is the channel index number
+
+				if( g_selected_item == i )
+					SendMessage(menu, CB_SETCURSEL, (WPARAM)i, (LPARAM)0);
+			}
+		}while(0);
+		return FALSE;
+ 
+        case WM_COMMAND: 
+			g_item_clicked = LOWORD(wParam);
+
+            switch(LOWORD(wParam)) 
+            { 
+                case DLOG_OK: 
+				case DLOG_Cancel:  // do the same thing, but g_item_clicked will be different
+					do{
+						HWND menu = GetDlgItem(hwndDlg, DLOG_Profile_Menu);
+
+						LRESULT cur_sel = SendMessage(menu,(UINT)CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+
+						g_selected_item = SendMessage(menu,(UINT)CB_GETITEMDATA, (WPARAM)cur_sel, (LPARAM)0);
+
+					}while(0);
+
+					EndDialog(hwndDlg, 0);
+                    return TRUE; 
+            } 
+    }
+
+    return FALSE; 
+} 
 
 bool GetMonitorProfile(char *path, int buf_len, const void *hwnd)
 {
-	return false;
+	list<string> profile_descriptions;
+	map<string, string> profile_paths;
+
+	// path to the monitor's profile
+	char monitor_profile_path[256] = { '\0' };
+	DWORD path_size = 256;
+	BOOL get_icm_result = GetICMProfile(GetDC((HWND)hwnd), &path_size, monitor_profile_path);
+
+	// directory where Windows stores its profiles
+	char profile_directory[256] = { '\0' };
+	DWORD dir_name_size = 256;
+	BOOL get_color_dir_result = GetColorDirectory(NULL, profile_directory, &dir_name_size);
+
+	// Get the profile file names from Windows
+	ENUMTYPE enum_type;
+	enum_type.dwSize = sizeof(ENUMTYPE);
+	enum_type.dwVersion = ENUM_TYPE_VERSION;
+	enum_type.dwFields = ET_DEVICECLASS;  // alternately could use ET_CLASS
+	enum_type.dwDeviceClass = CLASS_MONITOR;
+
+	BYTE *buf = NULL;
+	DWORD buf_size = 0;
+	DWORD num_profiles = 0;
+
+	BOOL other_enum_result = EnumColorProfiles(NULL, &enum_type, buf, &buf_size, &num_profiles);
+
+	if(buf_size > 0 && num_profiles > 0) // expect other_enum_result == FALSE and err == ERROR_INSUFFICIENT_BUFFER
+	{
+		buf = (BYTE *)malloc(buf_size);
+
+		other_enum_result = EnumColorProfiles(NULL, &enum_type, buf, &buf_size, &num_profiles);
+
+		if(other_enum_result)
+		{
+			// build a list of the profile descriptions
+			// and a map to return the paths
+			char *prof_name = (char *)buf;
+
+			for(int i=0; i < num_profiles; i++)
+			{
+				string prof = prof_name;
+				string prof_path = string(profile_directory) + "\\" + prof_name;
+
+				cmsHPROFILE hProfile = cmsOpenProfileFromFile(prof_path.c_str(), "r");
+
+				// Note: Windows will give us profiles that aren't ICC (.cdmp for example).
+				// Don't worry, LittleCMS will just return NULL for those.
+				if(hProfile)
+				{
+					char profile_description[256];
+
+					cmsUInt32Number got_desc = cmsGetProfileInfoASCII(hProfile, cmsInfoDescription, "en", "US", profile_description, 256);
+
+					if(got_desc)
+					{
+						profile_descriptions.push_back(profile_description);
+
+						profile_paths[ profile_description ] = prof_path;
+					}
+
+					cmsCloseProfile(hProfile);
+				}
+
+				prof_name += strlen(prof_name) + 1;
+			}
+		}
+
+		free(buf);
+	}
+
+
+	if(profile_descriptions.size() > 0)
+	{
+		// set a vector and selected index for building the profile menu
+		profile_descriptions.sort();
+		profile_descriptions.unique();
+
+		vector<string> profile_vec;
+		int selected = 0;
+
+		for(list<string>::const_iterator i = profile_descriptions.begin(); i != profile_descriptions.end(); i++)
+		{
+			profile_vec.push_back( *i );
+
+			if( profile_paths[ *i ] == monitor_profile_path)
+			{
+				selected = profile_vec.size() - 1;
+			}
+		}
+
+		// run the dialog
+		g_profile_vec = &profile_vec;
+		g_selected_item = selected;
+
+		int status = DialogBox(hDllInstance, (LPSTR)"PROFILEDIALOG", (HWND)hwnd, (DLGPROC)DialogProc);
+
+
+		if(status == -1)
+		{
+			// dialog didn't open, my bad
+			return true;
+		}
+		else if(g_item_clicked == DLOG_Cancel)
+		{
+			return false;
+		}
+		else
+		{
+			strncpy(path, profile_paths[ profile_vec[ g_selected_item ] ].c_str(), buf_len);
+
+			return true;
+		}
+	}
+	else
+		return true;
 }
 
 

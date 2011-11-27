@@ -77,6 +77,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
+				AdditionalDependencies="Mscms.lib"
 				ShowProgress="0"
 				OutputFile="C:\Program Files\Adobe\Adobe After Effects CS6\Support Files\Plug-ins\OpenColorIO_AE.aex"
 				LinkIncremental="2"
@@ -175,6 +176,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
+				AdditionalDependencies="Mscms.lib"
 				ShowProgress="0"
 				OutputFile="$(OutDir)\$(ProjectName).aex"
 				LinkIncremental="2"
@@ -254,6 +256,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_Dialogs.h"
+				>
+			</File>
+			<File
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
@@ -353,6 +359,10 @@
 			Name="Resource Files"
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 			>
+			<File
+				RelativePath=".\OpenColorIO.rc"
+				>
+			</File>
 			<File
 				RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_PiPL.r"
 				>
