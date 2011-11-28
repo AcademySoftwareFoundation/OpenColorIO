@@ -4,6 +4,11 @@
 
 #include "OpenColorIO_AE_Context.h"
 
+
+// this lives in OpenColorIO_AE_UI.cpp
+std::string GetProjectDir(PF_InData *in_data);
+
+
 static PF_Err 
 About (	
 	PF_InData		*in_data,
@@ -408,7 +413,7 @@ DoRender(
 		
 			if(seq_data->context == NULL && arb_data->type != OCIO_TYPE_NONE)
 			{
-				seq_data->context = new OpenColorIO_AE_Context(arb_data);
+				seq_data->context = new OpenColorIO_AE_Context(arb_data, GetProjectDir(in_data));
 			}
 		}
 		catch(...) {}

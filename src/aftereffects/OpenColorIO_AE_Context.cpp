@@ -18,6 +18,263 @@ using namespace OCIO;
 using namespace std;
 
 
+static const char mac_delimiter = '/';
+static const char win_delimiter = '\\';
+
+#ifdef WIN_ENV
+static const char delimiter = win_delimiter;
+#else
+static const char delimiter = mac_delimiter;
+#endif
+
+
+Path::Path(const std::string path, const std::string dir) :
+	_path(path),
+	_dir(dir)
+{
+
+}
+
+
+Path::Path(const Path & path)
+{
+	_path = path._path;
+	_dir  = path._dir;
+}
+
+
+string
+Path::full_path() const
+{
+	if( is_relative(_path) && !_dir.empty() )
+	{
+		vector<string> path_vec = components( convert_delimiters(_path) );
+		vector<string> dir_vec = components(_dir);
+		
+		int up_dirs = 0;
+		int down_dirs = 0;
+		
+		while(down_dirs < path_vec.size() - 1 && (path_vec[down_dirs] == ".." || path_vec[down_dirs] == "."))
+		{
+			down_dirs++;
+			
+			if(path_vec[down_dirs] == "..")
+				up_dirs++;
+		}
+		
+		
+		string path;
+		
+		if(path_type(_dir) == TYPE_MAC)
+			path += mac_delimiter;
+			
+		for(int i=0; i < dir_vec.size() - up_dirs; i++)
+		{
+			path += dir_vec[i] + delimiter;
+		}
+		
+		for(int i = down_dirs; i < path_vec.size() - 1; i++)
+		{
+			path += path_vec[i] + delimiter;
+		}
+		
+		path += path_vec.back();
+		
+		return path;
+	}
+	else
+	{
+		return _path;
+	}
+}
+
+
+string
+Path::relative_path(bool force) const
+{
+	if( is_relative(_path) || _dir.empty() || _path.empty() )
+	{
+		return _path;
+	}
+	else
+	{
+		vector<string> path_vec = components(_path);
+		vector<string> dir_vec = components(_dir);
+		
+		int match_idx = 0;
+		
+		while(match_idx < path_vec.size() && match_idx < dir_vec.size() && path_vec[match_idx] == dir_vec[match_idx])
+			match_idx++;
+		
+		if(match_idx == 0)
+		{
+			// can't do relative path
+			if(force)
+				return _path;
+			else
+				return string("");
+		}
+		else
+		{
+			string rel_path;
+			
+			// is the file actually inside the dir?
+			if(match_idx == path_vec.size() - 1)
+			{
+				rel_path += string(".") + delimiter;
+			}
+			else
+			{
+				for(int i = match_idx; i < dir_vec.size(); i++)
+				{
+					rel_path += string("..") + delimiter;
+				}
+				
+				for(int i = match_idx; i < path_vec.size() - 1; i++)
+				{
+					rel_path += path_vec[i] + delimiter;
+				}
+			}
+			
+			rel_path += path_vec.back();
+			
+			return rel_path;
+		}
+	}
+}
+
+
+bool
+Path::exists() const
+{
+	string path = full_path();
+	
+	if(path.empty())
+		return false;
+	
+	ifstream f( path.c_str() );
+	
+	return !!f;
+}
+
+
+Path::PathType
+Path::path_type(string path)
+{
+	if( path.empty() )
+	{
+		return TYPE_UNKNOWN;
+	}
+	if(path[0] == mac_delimiter)
+	{
+		return TYPE_MAC;
+	}
+	else if(path[1] == ':' && path[2] == win_delimiter)
+	{
+		return TYPE_WIN;
+	}
+	else
+	{
+		size_t mac_pos = path.find(mac_delimiter);
+		size_t win_pos = path.find(win_delimiter);
+		
+		if(mac_pos != string::npos && win_pos == string::npos)
+		{
+			return TYPE_MAC;
+		}
+		else if(mac_pos == string::npos && win_pos != string::npos)
+		{
+			return TYPE_WIN;
+		}
+		else if(mac_pos == string::npos && win_pos == string::npos)
+		{
+			return TYPE_UNKNOWN;
+		}
+		else // neighther npos
+		{
+			if(mac_pos < win_pos)
+				return TYPE_MAC;
+			else
+				return TYPE_WIN;
+		}
+	}
+}
+
+
+bool
+Path::is_relative(string path)
+{
+	Path::PathType type = path_type(path);
+	
+	if(type == TYPE_MAC)
+	{
+		return (path[0] != mac_delimiter);
+	}
+	else if(type == TYPE_WIN)
+	{
+		return !(path[1] == ':' && path[2] == win_delimiter);
+	}
+	else
+		return false;
+}
+
+
+string
+Path::convert_delimiters(string path)
+{
+#ifdef WIN_ENV
+	char search = mac_delimiter;
+	char replace = win_delimiter;
+#else
+	char search = win_delimiter;
+	char replace = mac_delimiter;
+#endif
+
+	for(int i=0; i < path.size(); i++)
+	{
+		if(path[i] == search)
+			path[i] = replace;
+	}
+	
+	return path;
+}
+
+
+vector<string>
+Path::components(string path)
+{
+	vector<string> vec;
+	
+	size_t pos = 0;
+	size_t len = path.size();
+	
+	size_t start, finish;
+	
+	while(path[pos] == delimiter && pos < len)
+		pos++;
+	
+	while(pos < len)
+	{
+		start = pos;
+		
+		while(path[pos] != delimiter && pos < len)
+			pos++;
+		
+		finish = ((pos == len - 1) ? pos : pos - 1);
+		
+		vec.push_back( path.substr(start, 1 + finish - start) );
+		
+		while(path[pos] == delimiter && pos < len)
+			pos++;
+	}
+	
+	return vec;
+}
+
+
+#pragma mark-
+
+
 OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string path)
 {
 	_type = OCIO_TYPE_NONE;
@@ -71,11 +328,23 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string path)
 }
 
 
-OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data)
+OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, const string dir)
 {
 	_type = OCIO_TYPE_NONE;
 	
-	_path = arb_data->path;
+	
+	Path absolute_path(arb_data->path);
+	Path relative_path(arb_data->relative_path, dir);
+	
+	if( absolute_path.exists() )
+	{
+		_path = arb_data->path;
+	}
+	else
+	{
+		_path = relative_path.full_path();
+	}
+	
 
 	if(!_path.empty())
 	{

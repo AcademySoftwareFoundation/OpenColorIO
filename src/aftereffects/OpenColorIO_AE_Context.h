@@ -19,11 +19,42 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <string>
 #include <vector>
 
+
+// yeah, this probably could/should go in a seperate file
+class Path
+{
+  public:
+	Path(const std::string path, const std::string dir = "");
+	Path(const Path & path);
+	~Path() {}
+	
+	std::string full_path() const;
+	std::string relative_path(bool force = false) const;
+	
+	bool exists() const;
+	
+  private:
+	std::string _path;
+	std::string _dir;
+	
+	typedef enum {
+		TYPE_UNKNOWN = 0,
+		TYPE_MAC,
+		TYPE_WIN
+	} PathType;
+	
+	static PathType path_type(std::string path);
+	static bool is_relative(std::string path);
+	static std::string convert_delimiters(std::string path);
+	static std::vector<std::string> components(std::string path);
+};
+
+
 class OpenColorIO_AE_Context
 {
   public:
 	OpenColorIO_AE_Context(const std::string path);
-	OpenColorIO_AE_Context(const ArbitraryData *arb_data);
+	OpenColorIO_AE_Context(const ArbitraryData *arb_data, const std::string dir = "");
 	~OpenColorIO_AE_Context() {}
 	
 	bool Verify(const ArbitraryData *arb_data);
@@ -33,7 +64,7 @@ class OpenColorIO_AE_Context
 	void setupLUT(bool invert = false);
   
 	typedef std::vector<std::string> SpaceVec;
-	
+
 	OCIO_Type getType() const { return _type; }
 	const std::string & getInput() const { return _input; }
 	const std::string & getOutput() const { return _output; }
