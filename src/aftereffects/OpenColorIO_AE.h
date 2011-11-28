@@ -84,7 +84,17 @@ typedef struct {
 
 class OpenColorIO_AE_Context;
 
+enum {
+	STATUS_UNKNOWN = 0,
+	STATUS_USING_ABSOLUTE,
+	STATUS_USING_RELATIVE,
+	STATUS_FILE_MISSING,
+	STATUS_OCIO_ERROR
+};
+typedef A_u_char FileStatus;
+
 typedef struct {
+	FileStatus				status;
 	OpenColorIO_AE_Context	*context;
 } SequenceData;
 

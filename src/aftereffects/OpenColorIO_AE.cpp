@@ -134,6 +134,7 @@ SequenceSetup (
 	}
 	
 	
+	seq_data->status = STATUS_UNKNOWN;
 	seq_data->context = NULL;
 	
 	
@@ -160,6 +161,7 @@ SequenceSetdown (
 		{
 			delete seq_data->context;
 			
+			seq_data->status = STATUS_UNKNOWN;
 			seq_data->context = NULL;
 		}
 		
@@ -187,6 +189,7 @@ SequenceFlatten (
 		{
 			delete seq_data->context;
 			
+			seq_data->status = STATUS_UNKNOWN;
 			seq_data->context = NULL;
 		}
 
@@ -401,22 +404,62 @@ DoRender(
 			// things like undo can change them without notice
 			if(seq_data->context != NULL)
 			{
-				bool verified = seq_data->context->Verify(arb_data);
+				bool verified = false;
+				
+				if(seq_data->status = STATUS_USING_ABSOLUTE)
+				{
+					verified = seq_data->context->Verify(arb_data);
+				}
+				else if(seq_data->status = STATUS_USING_RELATIVE)
+				{
+					// try with dir for relative path
+					verified = seq_data->context->Verify(arb_data, GetProjectDir(in_data));
+				}
 				
 				if(!verified)
 				{
 					delete seq_data->context;
 					
+					seq_data->status = STATUS_UNKNOWN;
 					seq_data->context = NULL;
 				}
 			}
 		
 			if(seq_data->context == NULL && arb_data->type != OCIO_TYPE_NONE)
 			{
-				seq_data->context = new OpenColorIO_AE_Context(arb_data, GetProjectDir(in_data));
+				std::string dir = GetProjectDir(in_data);
+			
+				Path absolute_path(arb_data->path);
+				Path relative_path(arb_data->relative_path, dir);
+				
+				if( absolute_path.exists() )
+				{
+					seq_data->status = STATUS_USING_ABSOLUTE;
+				}
+				else if( relative_path.exists() )
+				{
+					seq_data->status = STATUS_USING_RELATIVE;
+				}
+				else
+					seq_data->status = STATUS_FILE_MISSING;
+			
+			
+				if(seq_data->status != STATUS_FILE_MISSING)
+				{
+					seq_data->context = new OpenColorIO_AE_Context(arb_data, dir);
+				}
 			}
 		}
-		catch(...) {}
+		catch(...)
+		{
+			seq_data->status = STATUS_OCIO_ERROR;
+		}
+		
+		
+		if(seq_data->status == STATUS_FILE_MISSING || seq_data->status == STATUS_OCIO_ERROR)
+		{
+			err = PF_Err_INTERNAL_STRUCT_DAMAGED;
+		}
 
 		
 		if(seq_data->context == NULL)

@@ -287,7 +287,7 @@ DrawEvent(
 			
 			if(have_file)
 			{	
-				char *display_string = (arb_data->relative_path[0] != '\0' ? arb_data->relative_path : arb_data->path);
+				char *display_string = (seq_data->status == STATUS_USING_RELATIVE ? arb_data->relative_path : arb_data->path);
 			
 				bot.DrawString(display_string,
 								kDRAWBOT_TextAlignment_Default,
@@ -300,62 +300,76 @@ DrawEvent(
 			}
 			
 			
-			// buttons
-			int field_bottom = panel_top + TOP_MARGIN + FIELD_HEIGHT;
-			int buttons_top = field_bottom + BUTTONS_GAP_V;
-			
-			// Export button
-			if(arb_data->type != OCIO_TYPE_NONE)
+			if(seq_data->status == STATUS_FILE_MISSING)
 			{
-				bot.MoveTo(panel_left + BUTTONS_INDENT_H + (2 * (BUTTON_WIDTH + BUTTONS_GAP_H)), buttons_top);
+				bot.Move(25, 50);
 				
-				DrawButton(bot, "Export...", BUTTON_WIDTH, false);
+				bot.SetColor(PF_App_Color_RED);
+				bot.PaintRect(200, 50);
+				
+				bot.Move(100, 25 + (bot.FontSize() / 2));
+				bot.SetColor(PF_App_Color_WHITE);
+				bot.DrawString("FILE MISSING", kDRAWBOT_TextAlignment_Center);
 			}
-			
-			if(arb_data->type == OCIO_TYPE_LUT)
+			else
 			{
-				// Invert button
-				bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
+				// buttons
+				int field_bottom = panel_top + TOP_MARGIN + FIELD_HEIGHT;
+				int buttons_top = field_bottom + BUTTONS_GAP_V;
 				
-				DrawButton(bot, "Invert", BUTTON_WIDTH, arb_data->invert);
-			}
-			else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
-			{
-				// Convert/Display buttons
-				bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
-				
-				DrawButton(bot, "Convert", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_CONVERT);
-				
-				bot.Move(BUTTON_WIDTH + BUTTONS_GAP_H);
-				
-				DrawButton(bot, "Display", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_DISPLAY);
-				
-				
-				// menus
-				int buttons_bottom = buttons_top + BUTTON_HEIGHT;
-				
-				bot.MoveTo(panel_left + MENUS_INDENT_H, buttons_bottom + MENUS_GAP_V);
-				
-				if(arb_data->type == OCIO_TYPE_CONVERT)
+				// Export button
+				if(arb_data->type != OCIO_TYPE_NONE)
 				{
-					DrawMenu(bot, "Input Space:", arb_data->input);
+					bot.MoveTo(panel_left + BUTTONS_INDENT_H + (2 * (BUTTON_WIDTH + BUTTONS_GAP_H)), buttons_top);
 					
-					bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
-					
-					DrawMenu(bot, "Output Space:", arb_data->output);
+					DrawButton(bot, "Export...", BUTTON_WIDTH, false);
 				}
-				else if(arb_data->type == OCIO_TYPE_DISPLAY)
+				
+				if(arb_data->type == OCIO_TYPE_LUT)
 				{
-					// color space transformations
-					DrawMenu(bot, "Input Space:", arb_data->input);
+					// Invert button
+					bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
 					
-					bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+					DrawButton(bot, "Invert", BUTTON_WIDTH, arb_data->invert);
+				}
+				else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
+				{
+					// Convert/Display buttons
+					bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
 					
-					DrawMenu(bot, "Transform:", arb_data->transform);
+					DrawButton(bot, "Convert", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_CONVERT);
 					
-					bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+					bot.Move(BUTTON_WIDTH + BUTTONS_GAP_H);
 					
-					DrawMenu(bot, "Device:", arb_data->device);
+					DrawButton(bot, "Display", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_DISPLAY);
+					
+					
+					// menus
+					int buttons_bottom = buttons_top + BUTTON_HEIGHT;
+					
+					bot.MoveTo(panel_left + MENUS_INDENT_H, buttons_bottom + MENUS_GAP_V);
+					
+					if(arb_data->type == OCIO_TYPE_CONVERT)
+					{
+						DrawMenu(bot, "Input Space:", arb_data->input);
+						
+						bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+						
+						DrawMenu(bot, "Output Space:", arb_data->output);
+					}
+					else if(arb_data->type == OCIO_TYPE_DISPLAY)
+					{
+						// color space transformations
+						DrawMenu(bot, "Input Space:", arb_data->input);
+						
+						bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+						
+						DrawMenu(bot, "Transform:", arb_data->transform);
+						
+						bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+						
+						DrawMenu(bot, "Device:", arb_data->device);
+					}
 				}
 			}
 			
@@ -409,7 +423,10 @@ GetProjectDir(PF_InData *in_data)
 
 			string proj_path(c_path);
 			
-			proj_dir = proj_path.substr(0, proj_path.find_last_of(PATH_DELIMITER));
+			if(proj_path.find_last_of(PATH_DELIMITER) != string::npos)
+			{
+				proj_dir = proj_path.substr(0, proj_path.find_last_of(PATH_DELIMITER));
+			}
 		}
 		
 		suites.MemorySuite1()->AEGP_FreeMemHandle(pathH);
@@ -532,6 +549,8 @@ DoClickPath(
 		}
 		
 		params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+		
+		seq_data->status = STATUS_USING_ABSOLUTE;
 	}
 }
 
@@ -784,11 +803,11 @@ DoClick(
 				{
 					DoClickPath(in_data, out_data, params, output, event_extra, arb_data, seq_data, reg);
 				}
-				else if(arb_data->type != OCIO_TYPE_NONE)
+				else if(arb_data->type != OCIO_TYPE_NONE && seq_data->status != STATUS_FILE_MISSING)
 				{
 					if(seq_data->context == NULL)
 					{
-						seq_data->context = new OpenColorIO_AE_Context(arb_data);
+						seq_data->context = new OpenColorIO_AE_Context(arb_data, GetProjectDir(in_data));
 					}
 						
 					if(reg == REGION_CONVERT_BUTTON || reg == REGION_DISPLAY_BUTTON)
@@ -810,12 +829,16 @@ DoClick(
 				PF_SPRINTF(out_data->return_msg, e.what());
 				
 				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+				
+				seq_data->status = STATUS_OCIO_ERROR;
 			}
 			catch(...)
 			{
 				PF_SPRINTF(out_data->return_msg, "Unknown error");
 				
 				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+				
+				seq_data->status = STATUS_OCIO_ERROR;
 			}
 		}
 	}

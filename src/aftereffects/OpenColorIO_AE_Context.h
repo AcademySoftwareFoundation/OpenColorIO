@@ -57,7 +57,7 @@ class OpenColorIO_AE_Context
 	OpenColorIO_AE_Context(const ArbitraryData *arb_data, const std::string dir = "");
 	~OpenColorIO_AE_Context() {}
 	
-	bool Verify(const ArbitraryData *arb_data);
+	bool Verify(const ArbitraryData *arb_data, const std::string dir = "");
 	
 	void setupConvert(const char *input, const char *output);
 	void setupDisplay(const char *input, const char *transform, const char *device);

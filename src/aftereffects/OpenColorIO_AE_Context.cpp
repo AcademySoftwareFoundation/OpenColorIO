@@ -338,7 +338,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
 	
 	if( absolute_path.exists() )
 	{
-		_path = arb_data->path;
+		_path = absolute_path.full_path();
 	}
 	else
 	{
@@ -403,10 +403,22 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
 
 
 bool
-OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data)
+OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const string dir)
 {
 	if(_path != arb_data->path)
-		return false;
+	{
+		string rel_path(arb_data->relative_path);
+		
+		if( !dir.empty() && !rel_path.empty() )
+		{
+			Path relative_path(rel_path, dir);
+			
+			if( _path != relative_path.full_path() )
+				return false;
+		}
+		else
+			return false;
+	}
 	
 	// we can switch between Convert and Display, but not LUT and non-LUT
 	if((arb_data->type == OCIO_TYPE_NONE) ||
