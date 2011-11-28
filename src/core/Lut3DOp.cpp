@@ -167,9 +167,9 @@ OCIO_NAMESPACE_ENTER
                     
                     lookupNearest_3D_rgb(rgbaBuffer, localIndex[0], localIndex[1], localIndex[2],
                                                      lutSize[0], lutSize[1], lutSize[2], startPos);
-                    
-                    rgbaBuffer += 4;
                 }
+                
+                rgbaBuffer += 4;
             }
         }
         
@@ -258,9 +258,9 @@ OCIO_NAMESPACE_ENTER
                     
                     lerp_rgb(rgbaBuffer, a, b_, c, d, e, f, g, h,
                                          x, y, z);
-                    
-                    rgbaBuffer += 4;
                 }
+                
+                rgbaBuffer += 4;
             }
         }
     }
