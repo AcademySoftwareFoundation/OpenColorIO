@@ -1,10 +1,12 @@
+
 //
-//  OCIO_AE_Menu.m
-//  OpenColorIO_AE
+// OpenColorIO AE
 //
-//  Created by Brendan Bolles on 11/22/11.
-//  Copyright 2011 fnord. All rights reserved.
+// After Effects implementation of OpenColorIO
 //
+// OpenColorIO.org
+//
+
 
 #import "OpenColorIO_AE_Menu.h"
 

@@ -1,11 +1,12 @@
-/*
- *  OpenColorIO_AE_Context.h
- *  OpenColorIO_AE
- *
- *  Created by Brendan Bolles on 11/22/11.
- *  Copyright 2011 fnord. All rights reserved.
- *
- */
+
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
+
 
 #ifndef _OPENCOLORIO_AE_CONTEXT_H_
 #define _OPENCOLORIO_AE_CONTEXT_H_

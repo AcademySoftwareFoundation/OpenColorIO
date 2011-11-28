@@ -1,11 +1,12 @@
-/*
- *  OpenColorIO_AE_Context.cpp
- *  OpenColorIO_AE
- *
- *  Created by Brendan Bolles on 11/22/11.
- *  Copyright 2011 fnord. All rights reserved.
- *
- */
+
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
+
 
 #include "OpenColorIO_AE_Context.h"
 
@@ -405,6 +406,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
 bool
 OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const string dir)
 {
+	// comparing the paths, cheking relative path only if necessary
 	if(_path != arb_data->path)
 	{
 		string rel_path(arb_data->relative_path);
@@ -598,15 +600,10 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 		string copyright = "OpenColorIO, Sony Imageworks";
 		
 		// create a description tag from the filename
-#ifdef WIN_ENV
-#define PATH_DELIMITER	'\\'
-#else
-#define PATH_DELIMITER	'/'
-#endif
-		size_t filename_start = path.find_last_of(PATH_DELIMITER) + 1;
+		size_t filename_start = path.find_last_of(delimiter) + 1;
 		size_t filename_end = path.find_last_of('.') - 1;
 		
-		string description = path.substr( path.find_last_of(PATH_DELIMITER) + 1, filename_end - filename_start);
+		string description = path.substr( path.find_last_of(delimiter) + 1, filename_end - filename_start);
 		
 		
 		// Create the ICC Profile

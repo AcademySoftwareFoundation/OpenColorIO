@@ -1,9 +1,12 @@
+
 //
-//  OpenColorIO_AE_MonitorProfileChooser_Controller.m
+// OpenColorIO AE
 //
-//  Created by Brendan Bolles on 11/25/11.
-//  Copyright 2011 fnord. All rights reserved.
+// After Effects implementation of OpenColorIO
 //
+// OpenColorIO.org
+//
+
 
 #import "OpenColorIO_AE_MonitorProfileChooser_Controller.h"
 
@@ -66,7 +69,7 @@ profIterateProc(CMProfileIterateData* data, void* refcon)
 	
 	// get monitor profile path
 	
-	// Oddly enough, the "Name" given to me by ColorSync for this os often "Display",
+	// Oddly enough, the "Name" given to me by ColorSync for this is often "Display",
 	// but if you get the profile's description, you get something like
 	// "Apple Cinema HD Display".  So to see if ColorSync runs accross the the monitor's
 	// profile so I can select it, I have to compare the paths, and then save the name
@@ -123,6 +126,8 @@ profIterateProc(CMProfileIterateData* data, void* refcon)
 	}
 	else if(monitor_profile_path != NULL)
 	{
+		// somehow the display profile wasn't found during iteration
+		// so let's add it
 		CFStringRef m_name;
 		
 		err = CMCopyProfileDescriptionString(prof, &m_name);

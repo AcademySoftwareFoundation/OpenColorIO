@@ -1,4 +1,11 @@
 
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
 
 #ifndef _OPENCOLORIC_AE_DIALOG_H_
 #define _OPENCOLORIC_AE_DIALOG_H_

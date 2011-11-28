@@ -1,9 +1,12 @@
+
 //
-//  OpenColorIO_AE_MonitorProfileChooser_Controller.h
+// OpenColorIO AE
 //
-//  Created by Brendan Bolles on 11/25/11.
-//  Copyright 2011 fnord. All rights reserved.
+// After Effects implementation of OpenColorIO
 //
+// OpenColorIO.org
+//
+
 
 #import <Cocoa/Cocoa.h>
 

@@ -1,4 +1,11 @@
 
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
 
 #include "OpenColorIO_AE_Dialogs.h"
 

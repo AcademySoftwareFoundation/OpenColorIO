@@ -1,5 +1,13 @@
 
 
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
+
 #include "AEConfig.h"
 
 #include "AE_EffectVers.h"

@@ -1,4 +1,12 @@
 
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
+
 
 #include "OpenColorIO_AE.h"
 
@@ -236,7 +244,7 @@ PreRender(
 	PF_RenderRequest req = extra->input->output_request;
 	PF_CheckoutResult in_result;
 	
-	req.preserve_rgb_of_zero_alpha = TRUE;	//	Hey, we care.
+	req.preserve_rgb_of_zero_alpha = TRUE;
 
 	ERR(extra->cb->checkout_layer(	in_data->effect_ref,
 									OCIO_INPUT,
@@ -250,12 +258,6 @@ PreRender(
 
 	UnionLRect(&in_result.result_rect, 		&extra->output->result_rect);
 	UnionLRect(&in_result.max_result_rect, 	&extra->output->max_result_rect);	
-	
-	//	Notice something missing, namely the PF_CHECKIN_PARAM to balance
-	//	the old-fashioned PF_CHECKOUT_PARAM, above? 
-	
-	//	For SmartFX, AE automagically checks in any params checked out 
-	//	during PF_Cmd_SMART_PRE_RENDER, new or old-fashioned.
 	
 	return err;
 }
@@ -425,7 +427,12 @@ DoRender(
 				}
 			}
 		
-			if(seq_data->context == NULL && arb_data->type != OCIO_TYPE_NONE)
+		
+			if(arb_data->type == OCIO_TYPE_NONE)
+			{
+				seq_data->status = STATUS_NO_FILE;
+			}
+			else if(seq_data->context == NULL)
 			{
 				std::string dir = GetProjectDir(in_data);
 			

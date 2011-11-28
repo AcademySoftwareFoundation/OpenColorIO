@@ -1,8 +1,12 @@
 
 //
-//	mmm...arbitrary
+// OpenColorIO AE
 //
+// After Effects implementation of OpenColorIO
 //
+// OpenColorIO.org
+//
+
 
 #include "OpenColorIO_AE.h"
 
@@ -72,6 +76,9 @@ CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
 	out_arb_data->type = in_arb_data->type;
 	
 	out_arb_data->invert = in_arb_data->invert;
+	
+	out_arb_data->storage = in_arb_data->storage;
+	out_arb_data->storage_size = in_arb_data->storage_size;
 	
 	strcpy(out_arb_data->path, in_arb_data->path);
 	strcpy(out_arb_data->relative_path, in_arb_data->relative_path);

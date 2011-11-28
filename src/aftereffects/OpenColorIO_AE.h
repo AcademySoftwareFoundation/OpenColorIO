@@ -1,4 +1,11 @@
 
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
 
 #pragma once
 
@@ -6,7 +13,7 @@
 #define _OPENCOLORIO_AE_H_
 
 
-#define PF_DEEP_COLOR_AWARE 1  // do we really still need this?
+//#define PF_DEEP_COLOR_AWARE 1  // do we really still need this?
 
 #include "AEConfig.h"
 #include "entry.h"
@@ -71,7 +78,7 @@ typedef struct {
 	A_u_long		storage_size;
 	A_u_char		reserved[56]; // 64 pre-path bytes
 	char			path[ARB_PATH_LEN+1];
-	char			relative_path[ARB_PATH_LEN+1]; // also not yet used
+	char			relative_path[ARB_PATH_LEN+1];
 	char			input[ARB_SPACE_LEN+1];
 	char			output[ARB_SPACE_LEN+1];
 	char			transform[ARB_SPACE_LEN+1];
@@ -86,6 +93,7 @@ class OpenColorIO_AE_Context;
 
 enum {
 	STATUS_UNKNOWN = 0,
+	STATUS_NO_FILE,
 	STATUS_USING_ABSOLUTE,
 	STATUS_USING_RELATIVE,
 	STATUS_FILE_MISSING,

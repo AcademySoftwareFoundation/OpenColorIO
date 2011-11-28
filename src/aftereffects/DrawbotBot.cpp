@@ -1,11 +1,12 @@
-/*
- *  DrawBotBot.cpp
- *  OpenColorIO_AE
- *
- *  Created by Brendan Bolles on 11/21/11.
- *  Copyright 2011 fnord. All rights reserved.
- *
- */
+
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
+
 
 #include "DrawbotBot.h"
 

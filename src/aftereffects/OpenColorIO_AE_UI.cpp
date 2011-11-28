@@ -1,13 +1,16 @@
 
 //
-//	mmm...our custom UI
+// OpenColorIO AE
 //
+// After Effects implementation of OpenColorIO
 //
+// OpenColorIO.org
+//
+
 
 #include "OpenColorIO_AE.h"
 
 #include "OpenColorIO_AE_Context.h"
-
 #include "OpenColorIO_AE_Dialogs.h"
 
 #include "DrawbotBot.h"
@@ -478,7 +481,7 @@ DoClickPath(
 	void *hwndOwner = NULL;
 
 #ifdef WIN_ENV
-	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, (void **)&hwndOwner);
+	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
 #endif
 
 	char c_path[ARB_PATH_LEN + 1] = { '\0' };
@@ -628,7 +631,7 @@ DoClickExport(
 	void *hwndOwner = NULL;
 
 #ifdef WIN_ENV
-	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, (void **)&hwndOwner);
+	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
 #endif
 
 	char path[256] = { '\0' };
@@ -720,7 +723,7 @@ DoClickMenus(
 		void *hwndOwner = NULL;
 
 	#ifdef WIN_ENV
-		PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, (void **)&hwndOwner);
+		PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
 	#endif
 
 		int result = PopUpMenu(menu_items, selected_item, hwndOwner);
