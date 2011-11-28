@@ -37,7 +37,7 @@ using namespace std;
 #define BUTTON_HEIGHT		20
 #define BUTTON_WIDTH		80
 
-#define BUTTON_TEXT_INDENT_V 3
+#define BUTTON_TEXT_INDENT_V 2
 
 #define MENUS_INDENT_H		20
 
@@ -229,7 +229,7 @@ DrawButton(DrawbotBot &bot, const char *label, int width, bool pressed)
 	bot.MoveTo(original.x + (width / 2), original.y + text_height + BUTTON_TEXT_INDENT_V);
 	
 	if(pressed)
-		bot.Move(1, 1);
+		bot.Move(2, 2);
 	
 	bot.SetColor(TEXT_COLOR);
 	bot.DrawString(label, kDRAWBOT_TextAlignment_Center);

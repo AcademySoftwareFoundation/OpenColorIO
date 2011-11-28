@@ -26,6 +26,8 @@ class OpenColorIO_AE_Context
 	OpenColorIO_AE_Context(const ArbitraryData *arb_data);
 	~OpenColorIO_AE_Context() {}
 	
+	bool Verify(const ArbitraryData *arb_data);
+	
 	void setupConvert(const char *input, const char *output);
 	void setupDisplay(const char *input, const char *transform, const char *device);
 	void setupLUT(bool invert = false);

@@ -132,6 +132,61 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data)
 		throw Exception("Got nothin");
 }
 
+
+bool
+OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data)
+{
+	if(_path != arb_data->path)
+		return false;
+	
+	// we can switch between Convert and Display, but not LUT and non-LUT
+	if((arb_data->type == OCIO_TYPE_NONE) ||
+		(_type == OCIO_TYPE_LUT && arb_data->type != OCIO_TYPE_LUT) ||
+		(_type != OCIO_TYPE_LUT && arb_data->type == OCIO_TYPE_LUT) )
+	{
+		return false;
+	}
+	
+	bool force_reset = (_type != arb_data->type);	
+	
+	
+	// If the type and path are compatible, we can patch up
+	// differences here and return true.
+	// Returning false means the context will be deleted and rebuilt.
+	if(arb_data->type == OCIO_TYPE_LUT)
+	{
+		if(_invert != (bool)arb_data->invert || force_reset)
+		{
+			setupLUT(arb_data->invert);
+		}
+	}
+	else if(arb_data->type == OCIO_TYPE_CONVERT)
+	{
+		if(_input != arb_data->input ||
+			_output != arb_data->output ||
+			force_reset)
+		{
+			setupConvert(arb_data->input, arb_data->output);
+		}
+	}
+	else if(arb_data->type == OCIO_TYPE_DISPLAY)
+	{
+		if(_input != arb_data->input ||
+			_transform != arb_data->transform ||
+			_device != arb_data->device ||
+			force_reset)
+		{
+			setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+		}
+	}
+	else
+		throw Exception("Bad OCIO type");
+	
+	
+	return true;
+}
+
+
 void
 OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
 {

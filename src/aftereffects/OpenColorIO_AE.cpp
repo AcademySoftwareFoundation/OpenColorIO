@@ -390,14 +390,28 @@ DoRender(
 		ArbitraryData *arb_data = (ArbitraryData *)PF_LOCK_HANDLE(OCIO_data->u.arb_d.value);
 		SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
 		
-		if(seq_data->context == NULL && arb_data->type != OCIO_TYPE_NONE)
+		try
 		{
-			try
+			// must always verify that our context lines up with the parameters
+			// things like undo can change them without notice
+			if(seq_data->context != NULL)
+			{
+				bool verified = seq_data->context->Verify(arb_data);
+				
+				if(!verified)
+				{
+					delete seq_data->context;
+					
+					seq_data->context = NULL;
+				}
+			}
+		
+			if(seq_data->context == NULL && arb_data->type != OCIO_TYPE_NONE)
 			{
 				seq_data->context = new OpenColorIO_AE_Context(arb_data);
 			}
-			catch(...) {}
 		}
+		catch(...) {}
 
 		
 		if(seq_data->context == NULL)
