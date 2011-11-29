@@ -469,7 +469,7 @@ DoRender(
 		}
 
 		
-		if(seq_data->context == NULL)
+		if(seq_data->context == NULL || seq_data->context->processor()->isNoOp())
 		{
 			PF_COPY(input, output, NULL, NULL);
 		}
