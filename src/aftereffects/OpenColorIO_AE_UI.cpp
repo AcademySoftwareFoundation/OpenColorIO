@@ -716,9 +716,6 @@ DoClickMenus(
 		}
 		
 		
-		if(selected_item < 0)
-			selected_item = 0;
-		
 		
 		void *hwndOwner = NULL;
 
