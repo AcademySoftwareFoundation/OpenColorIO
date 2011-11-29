@@ -53,6 +53,8 @@ profIterateProc(CMProfileIterateData* data, void* refcon)
 		return nil;
 	
 	
+	[window center];
+	
 	// Originally tried to implement this with two NSArrays, one with paths and
 	// one with profile names (ICC descriptions).  The problem is that when you
 	// add items to NSArrays one at a time, they auto-sort.  But then it turns out I
