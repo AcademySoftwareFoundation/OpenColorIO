@@ -174,6 +174,10 @@ Path::path_type(string path)
 	{
 		return TYPE_WIN;
 	}
+	else if(path[0] == win_delimiter && path[1] == win_delimiter)
+	{
+		return TYPE_WIN;
+	}
 	else
 	{
 		size_t mac_pos = path.find(mac_delimiter);
@@ -191,7 +195,7 @@ Path::path_type(string path)
 		{
 			return TYPE_UNKNOWN;
 		}
-		else // neighther npos
+		else // neither npos?
 		{
 			if(mac_pos < win_pos)
 				return TYPE_MAC;
@@ -213,10 +217,19 @@ Path::is_relative(string path)
 	}
 	else if(type == TYPE_WIN)
 	{
-		return !(path[1] == ':' && path[2] == win_delimiter);
+		return !( (path[1] == ':' && path[2] == win_delimiter) ||
+				  (path[0] == win_delimiter && path[1] == win_delimiter) );
 	}
 	else
-		return false;
+	{	// TYPE_UNKNOWN
+	
+		// just a filename perhaps?
+		// should never have this: even a file in the same directory will be ./file.ocio
+		// we'll assume it's relative, but raise a stink during debugging
+		assert(type != TYPE_UNKNOWN);
+		
+		return true;
+	}
 }
 
 
@@ -603,7 +616,7 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 		size_t filename_start = path.find_last_of(delimiter) + 1;
 		size_t filename_end = path.find_last_of('.') - 1;
 		
-		string description = path.substr( path.find_last_of(delimiter) + 1, filename_end - filename_start);
+		string description = path.substr( path.find_last_of(delimiter) + 1, 1 + filename_end - filename_start);
 		
 		
 		// Create the ICC Profile
