@@ -1,3 +1,11 @@
+**Version 1.0.2 (Nov 30 2011):**
+    * 3D lut processing (cpu) is resiliant to nans
+    * Nuke OCIOFileTransform gains Reload buttons
+    * Installation on multi-lib *nix systems improved
+    * Installation handling of soversion for C++/python improved
+    * ociobakelut improvements
+    * Initial version of Java bindings (alpha)
+
 **Version 1.0.1 (Oct 31 2011):**
     * Luts with incorrect extension are properly loaded
     * ocio2icc / ociobakelut get --lut option (no longer requires ocio config)
