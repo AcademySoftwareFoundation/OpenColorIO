@@ -77,15 +77,6 @@ if(APPLE)
 endif()
 
 
-if(PYTHON_RESPECT_UCS)
-    # Respect Python UCS (unicode content system) version, and install
-    # into "lib/python2.6/ucs4" or similar.
-    set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}/${PYTHON_UCS}")
-else()
-    # Ignore UCS version and install into lib/python2.6
-    set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}")
-endif()
-
 message("PYTHON_VARIANT_PATH: ${PYTHON_VARIANT_PATH}")
 
 install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX})

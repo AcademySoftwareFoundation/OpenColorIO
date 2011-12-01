@@ -96,6 +96,12 @@ OCIO_NAMESPACE_ENTER
         return _isnan (val);
     }
 #else
+
+#ifdef ANDROID
+// support std::isnan - needs to be tested as it might not be part of the NDK
+#define _GLIBCXX_USE_C99_MATH 1
+#endif
+
     // This lets all platforms just use isnan, within the OCIO namespace,
     // across all platforms. (Windows defines the function above).
     using std::isnan;

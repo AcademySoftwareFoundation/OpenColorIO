@@ -158,7 +158,7 @@ OCIO_NAMESPACE_ENTER
 	pthread_mutex_t _mutex;
     };
 
-#ifdef __APPLE__
+#if __APPLE__
     class _SpinLock {
     public:
 	_SpinLock()   { _spinlock = 0; }
@@ -167,6 +167,16 @@ OCIO_NAMESPACE_ENTER
 	void unlock() { OSSpinLockUnlock(&_spinlock); }
     private:
 	OSSpinLock _spinlock;
+    };
+#elif ANDROID
+    // we don't have access to pthread on andriod so we just make an empty
+    // class that does nothing.
+    class _SpinLock {
+    public:
+    _SpinLock()   { }
+    ~_SpinLock()  { }
+    void lock()   { }
+    void unlock() { }
     };
 #else
     class _SpinLock {
@@ -179,7 +189,8 @@ OCIO_NAMESPACE_ENTER
 	pthread_spinlock_t _spinlock;
     };
 #endif // __APPLE__
-#endif
+#endif // WINDOWS
+
 }
 OCIO_NAMESPACE_EXIT
 

@@ -1,7 +1,7 @@
 project(OpenColorIO)
 set(OCIO_VERSION_MAJOR 1)
 set(OCIO_VERSION_MINOR 0)
-set(OCIO_VERSION_PATCH 1)
+set(OCIO_VERSION_PATCH 2)
 
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
@@ -20,6 +20,7 @@ option(OCIO_BUILD_NUKE "Set to OFF to disable building nuke plugins" ON)
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" OFF)
 option(OCIO_BUILD_PYGLUE "Specify whether to build python bindings" ON)
+option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" OFF)
@@ -304,6 +305,15 @@ if(OCIO_BUILD_PYGLUE)
     else()
         messageonce("Python bindings will not be built: ${PYTHON_ERR}")
     endif()
+endif()
+
+###############################################################################
+### JNIGLUE ###
+
+if(OCIO_BUILD_JNIGLUE)
+    find_package(Java)
+    find_package(JNI)
+    add_subdirectory(src/jniglue)
 endif()
 
 ###############################################################################
