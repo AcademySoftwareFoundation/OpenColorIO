@@ -18,6 +18,14 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing")
 endif()
 
+if(NOT WIN32)
+    find_package(PythonLibs)
+    if(NOT PYTHONLIBS_FOUND)
+        message(FATAL "Python libraries were not found, exiting.")
+    endif()
+    SET(PYTHON_INCLUDES ${PYTHON_INCLUDE_DIRS})
+endif()
+
 file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
 
 add_library(PyOpenColorIO MODULE ${pyglue_src_files} )
@@ -48,7 +56,9 @@ if(WIN32)
         debug ${PYTHON_LIB}/python26_d.lib
         optimized ${PYTHON_LIB}/python26.lib)
 else()
-    target_link_libraries(PyOpenColorIO OpenColorIO)
+    target_link_libraries(PyOpenColorIO OpenColorIO
+        ${PYTHON_LIBRARIES})
+
 endif()
 
 # PyOpenColorIO so serves dual roles:
