@@ -97,7 +97,7 @@ add_custom_target(doc ALL
 add_dependencies(doc Sphinx) 
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-html/
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/docs/html
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/html
         PATTERN .git EXCLUDE)
 
 find_package(LATEX)
@@ -124,6 +124,6 @@ if(PDFLATEX_COMPILER)
     add_dependencies(pdf latex)
     
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/docs/)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/)
     
 endif()
