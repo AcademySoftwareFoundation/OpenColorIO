@@ -321,7 +321,7 @@ endif()
 configure_file(${CMAKE_SOURCE_DIR}/share/ocio/setup_ocio.sh.in
     ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/setup_ocio.sh @ONLY)
 
-INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/setup_ocio.sh DESTINATION share/ocio/)
+INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/setup_ocio.sh DESTINATION share/ocio/)
 
 ###############################################################################
 ### CPACK ###
