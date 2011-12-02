@@ -10,6 +10,8 @@
 
 #include "OpenColorIO_AE.h"
 
+#include "OpenColorIO_AE_Context.h"
+
 #ifndef __MACH__
 #include <assert.h>
 #endif
@@ -46,6 +48,32 @@ ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
 			arb_data->output[0]			= '\0';
 			arb_data->transform[0]		= '\0';
 			arb_data->device[0]			= '\0';
+			
+			
+			// set default with environment variable if it's set
+			char *file = std::getenv("OCIO");
+			
+			if(file)
+			{
+				try
+				{
+					OpenColorIO_AE_Context context(file);
+					
+					strncpy(arb_data->path, file, ARB_PATH_LEN);
+					
+					arb_data->type = context.getType();
+					
+					if(arb_data->type != OCIO_TYPE_LUT)
+					{
+						strncpy(arb_data->input, context.getInput().c_str(), ARB_SPACE_LEN);
+						strncpy(arb_data->output, context.getOutput().c_str(), ARB_SPACE_LEN);
+						strncpy(arb_data->transform, context.getTransform().c_str(), ARB_SPACE_LEN);
+						strncpy(arb_data->device, context.getDevice().c_str(), ARB_SPACE_LEN);
+					}
+				}
+				catch(...) {}
+			}
+			
 			
 			PF_UNLOCK_HANDLE(*arbPH);
 		}
