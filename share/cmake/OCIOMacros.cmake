@@ -36,13 +36,13 @@ MACRO(OCIOFindOpenGL)
         DOC "The directory where GL/glew.h resides")
     FIND_LIBRARY(GLEW_LIBRARIES
         NAMES GLEW glew
-        PATHS
         /usr/lib64
         /usr/lib
         /usr/local/lib64
         /usr/local/lib
         /sw/lib
         /opt/local/lib
+        PATHS
         DOC "The GLEW library")
     if(GLEW_INCLUDES AND GLEW_LIBRARIES)
         set(GLEW_FOUND TRUE)
