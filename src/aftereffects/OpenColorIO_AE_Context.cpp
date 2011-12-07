@@ -119,8 +119,8 @@ Path::relative_path(bool force) const
 		{
 			string rel_path;
 			
-			// is the file actually inside the dir?
-			if(match_idx == path_vec.size() - 1)
+			// is the file in a folder below or actually inside the dir?
+			if(match_idx == dir_vec.size())
 			{
 				rel_path += string(".") + delimiter;
 			}
@@ -130,11 +130,11 @@ Path::relative_path(bool force) const
 				{
 					rel_path += string("..") + delimiter;
 				}
+			}
 				
-				for(int i = match_idx; i < path_vec.size() - 1; i++)
-				{
-					rel_path += path_vec[i] + delimiter;
-				}
+			for(int i = match_idx; i < path_vec.size() - 1; i++)
+			{
+				rel_path += path_vec[i] + delimiter;
 			}
 			
 			rel_path += path_vec.back();

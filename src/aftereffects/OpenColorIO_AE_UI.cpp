@@ -510,6 +510,9 @@ DoClickPath(
 		strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN);
 		strncpy(arb_data->relative_path, path.relative_path().c_str(), ARB_PATH_LEN);
 		
+		strncpy(seq_data->path, path.full_path().c_str(), ARB_PATH_LEN);
+		strncpy(seq_data->relative_path, path.relative_path().c_str(), ARB_PATH_LEN);
+		
 		
 		// try to retain settings if it looks like the same situation,
 		// possibly fixing a moved path

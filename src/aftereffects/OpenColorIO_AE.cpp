@@ -49,7 +49,8 @@ GlobalSetup (
 	out_data->out_flags 	= 	PF_OutFlag_DEEP_COLOR_AWARE		|
 								PF_OutFlag_PIX_INDEPENDENT		|
 								PF_OutFlag_CUSTOM_UI			|
-								PF_OutFlag_USE_OUTPUT_EXTENT;
+								PF_OutFlag_USE_OUTPUT_EXTENT	|
+								PF_OutFlag_I_HAVE_EXTERNAL_DEPENDENCIES;
 
 	out_data->out_flags2 	=	PF_OutFlag2_PARAM_GROUP_START_COLLAPSED_FLAG |
 								PF_OutFlag2_SUPPORTS_SMART_RENDER	|
@@ -130,6 +131,9 @@ SequenceSetup (
 		out_data->sequence_data = PF_NEW_HANDLE( sizeof(SequenceData) );
 		
 		seq_data = (SequenceData *)PF_LOCK_HANDLE(out_data->sequence_data);
+		
+		seq_data->path[0] = '\0';
+		seq_data->relative_path[0] = '\0';
 	}
 	else // reset pre-existing sequence data
 	{
@@ -436,16 +440,22 @@ DoRender(
 			{
 				std::string dir = GetProjectDir(in_data);
 			
-				Path absolute_path(arb_data->path);
+				Path absolute_path(arb_data->path, dir);
 				Path relative_path(arb_data->relative_path, dir);
 				
 				if( absolute_path.exists() )
 				{
 					seq_data->status = STATUS_USING_ABSOLUTE;
+					
+					strncpy(seq_data->path, absolute_path.full_path().c_str(), ARB_PATH_LEN);
+					strncpy(seq_data->relative_path, absolute_path.relative_path().c_str(), ARB_PATH_LEN);
 				}
 				else if( relative_path.exists() )
 				{
 					seq_data->status = STATUS_USING_RELATIVE;
+					
+					strncpy(seq_data->path, relative_path.full_path().c_str(), ARB_PATH_LEN);
+					strncpy(seq_data->relative_path, relative_path.relative_path().c_str(), ARB_PATH_LEN);
 				}
 				else
 					seq_data->status = STATUS_FILE_MISSING;
@@ -609,6 +619,66 @@ SmartRender(
 }
 
 
+static PF_Err
+GetExternalDependencies(
+	PF_InData					*in_data,
+	PF_OutData					*out_data,
+	PF_ExtDependenciesExtra		*extra)
+
+{
+	PF_Err err = PF_Err_NONE;
+	
+	SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
+	
+	if(seq_data == NULL)
+		return PF_Err_BAD_CALLBACK_PARAM;
+	
+
+	if(seq_data->path[0] != '\0')
+	{
+		std::string dir = GetProjectDir(in_data);
+			
+		Path absolute_path(seq_data->path);
+		Path relative_path(seq_data->relative_path, dir);
+	
+		std::string path;
+		
+		if(extra->check_type == PF_DepCheckType_ALL_DEPENDENCIES)
+		{
+			if( absolute_path.exists() )
+			{
+				path = absolute_path.full_path();
+			}
+			else if( relative_path.exists() )
+			{
+				path = relative_path.full_path();
+			}
+			else
+				path = absolute_path.full_path();
+		}
+		else if(extra->check_type == PF_DepCheckType_MISSING_DEPENDENCIES &&
+					!absolute_path.exists() && !relative_path.exists() )
+		{
+			path = absolute_path.full_path();
+		}
+		
+		
+		if( !path.empty() )
+		{
+			extra->dependencies_strH = PF_NEW_HANDLE(sizeof(char) * (path.size() + 1));
+			
+			char *p = (char *)PF_LOCK_HANDLE(extra->dependencies_strH);
+			
+			strcpy(p, path.c_str());
+		}
+	}
+	
+	PF_UNLOCK_HANDLE(in_data->sequence_data);
+	
+	return err;
+}
+
+
 DllExport	
 PF_Err 
 PluginMain (	
@@ -651,11 +721,11 @@ PluginMain (
 			case PF_Cmd_EVENT:
 				err = HandleEvent(in_data, out_data, params, output, (PF_EventExtra	*)extra);
 				break;
-			case PF_Cmd_DO_DIALOG:
-				//err = DoDialog(in_data, out_data, params, output);
-				break;	
 			case PF_Cmd_ARBITRARY_CALLBACK:
 				err = HandleArbitrary(in_data, out_data, params, output, (PF_ArbParamsExtra	*)extra);
+				break;
+			case PF_Cmd_GET_EXTERNAL_DEPENDENCIES:
+				err = GetExternalDependencies(in_data, out_data, (PF_ExtDependenciesExtra *)extra);
 				break;
 		}
 	}

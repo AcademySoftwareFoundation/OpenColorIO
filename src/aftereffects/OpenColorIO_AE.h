@@ -103,7 +103,10 @@ typedef A_u_char FileStatus;
 
 typedef struct {
 	FileStatus				status;
+	A_u_char				reserved[3];
 	OpenColorIO_AE_Context	*context;
+	char					path[ARB_PATH_LEN+1];
+	char					relative_path[ARB_PATH_LEN+1];
 } SequenceData;
 
 #endif
