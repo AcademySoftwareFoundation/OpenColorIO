@@ -181,9 +181,20 @@ endif()
 
 set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
 set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL")
+
 if(CMAKE_COMPILER_IS_GNUCXX)
-    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+    
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+                    OUTPUT_VARIABLE GCC_VERSION)
+                    
+    if (GCC_VERSION VERSION_LESS 4.2)
+        message(STATUS "GCC Version < 4.2 - symbol visibility hiding disabled")
+        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC")
+    else()
+        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+    endif()
 endif()
+
 set(EXTERNAL_LINK_FLAGS "")
 set(EXTERNAL_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
 set(EXTERNAL_DEBUG_LIBRARIES ${YAML_CPP_STATIC_DEBUG_LIBRARIES})
