@@ -19,7 +19,10 @@
 #include "entry.h"
 #include "AE_Macros.h"
 #include "Param_Utils.h"
-#include "AEGP_SuiteHandler.h"
+#include "AE_Effect.h"
+#include "AE_EffectUI.h"
+#include "AE_EffectCB.h"
+
 
 #ifdef MSWindows
 	#include <Windows.h>

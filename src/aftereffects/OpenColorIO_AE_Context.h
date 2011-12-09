@@ -16,6 +16,17 @@
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#include <GLUT/glut.h>
+#else
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glut.h>
+#endif
+
 
 #include <string>
 #include <vector>
@@ -56,7 +67,7 @@ class OpenColorIO_AE_Context
   public:
 	OpenColorIO_AE_Context(const std::string path);
 	OpenColorIO_AE_Context(const ArbitraryData *arb_data, const std::string dir = "");
-	~OpenColorIO_AE_Context() {}
+	~OpenColorIO_AE_Context();
 	
 	bool Verify(const ArbitraryData *arb_data, const std::string dir = "");
 	
@@ -75,16 +86,15 @@ class OpenColorIO_AE_Context
 	const SpaceVec & getTransforms() const { return _transforms; }
 	const SpaceVec & getDevices() const { return _devices; }
 	
-	OCIO::ConstProcessorRcPtr & processor() { return _processor; }
+	const OCIO::ConstProcessorRcPtr & processor() const { return _processor; }
 	
 	bool ExportLUT(const std::string path, const std::string display_icc_path = "");
+	
+	bool ProcessWorldGL(PF_EffectWorld *float_world);
 
   private:
 	std::string _path;
   
-	OCIO::ConstConfigRcPtr		_config;
-	OCIO::ConstProcessorRcPtr	_processor;
-	
 	OCIO_Type _type;
 	
 	std::string _input;
@@ -96,6 +106,36 @@ class OpenColorIO_AE_Context
 	SpaceVec _devices;
 	
 	bool _invert;
+	
+	
+	OCIO::ConstConfigRcPtr		_config;
+	OCIO::ConstProcessorRcPtr	_processor;
+	
+	
+	bool _gl_init;
+	
+	GLuint _fragShader;
+	GLuint _program;
+
+	GLuint _imageTexID;
+
+	GLuint _lut3dTexID;
+	std::vector<float> _lut3d;
+	std::string _lut3dcacheid;
+	std::string _shadercacheid;
+
+	std::string _inputColorSpace;
+	std::string _display;
+	std::string _transformName;
+	
+	
+	GLuint _frameBuffer;
+	GLuint _renderBuffer;
+	int _bufferWidth;
+	int _bufferHeight;
+	
+	void InitOCIOGL();
+	void UpdateOCIOGLState();
 };
 
 

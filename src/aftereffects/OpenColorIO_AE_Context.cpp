@@ -14,6 +14,7 @@
 
 #include <map>
 #include <fstream>
+#include <sstream>
 
 using namespace OCIO;
 using namespace std;
@@ -27,6 +28,8 @@ static const char delimiter = win_delimiter;
 #else
 static const char delimiter = mac_delimiter;
 #endif
+
+static const int LUT3D_EDGE_SIZE = 32;
 
 
 Path::Path(const std::string path, const std::string dir) :
@@ -289,7 +292,8 @@ Path::components(string path)
 #pragma mark-
 
 
-OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string path)
+OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string path) :
+	_gl_init(false)
 {
 	_type = OCIO_TYPE_NONE;
 	
@@ -342,7 +346,8 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string path)
 }
 
 
-OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, const string dir)
+OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, const string dir) :
+	_gl_init(false)
 {
 	_type = OCIO_TYPE_NONE;
 	
@@ -413,6 +418,21 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
 	}
 	else
 		throw Exception("Got nothin");
+}
+
+
+OpenColorIO_AE_Context::~OpenColorIO_AE_Context()
+{
+	if(_gl_init)
+	{
+		glDeleteShader(_fragShader);
+		glDeleteProgram(_program);
+		glDeleteTextures(1, &_imageTexID);
+		glDeleteFramebuffersEXT(1, &_frameBuffer);
+		
+		if(_bufferWidth != 0 && _bufferHeight != 0)
+			glDeleteRenderbuffersEXT(1, &_renderBuffer);
+	}
 }
 
 
@@ -498,6 +518,8 @@ OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
 	_processor = _config->getProcessor(transform);
 	
 	_type = OCIO_TYPE_CONVERT;
+	
+	UpdateOCIOGLState();
 }
 
 
@@ -518,6 +540,8 @@ OpenColorIO_AE_Context::setupDisplay(const char *input, const char *xform, const
 	_processor = _config->getProcessor(transform);
 	
 	_type = OCIO_TYPE_DISPLAY;
+	
+	UpdateOCIOGLState();
 }
 
 
@@ -536,6 +560,8 @@ OpenColorIO_AE_Context::setupLUT(bool invert)
 	_invert = invert;
 	
 	_type = OCIO_TYPE_LUT;
+	
+	UpdateOCIOGLState();
 }
 
 
@@ -548,55 +574,55 @@ ErrorHandler(cmsContext /*ContextID*/, cmsUInt32Number /*ErrorCode*/, const char
 
 typedef struct
 {
-    cmsHTRANSFORM to_PCS16;
-    cmsHTRANSFORM from_PCS16;
-    //OCIO::ConstProcessorRcPtr shaper_processor;
-    OCIO::ConstProcessorRcPtr processor;
+	cmsHTRANSFORM to_PCS16;
+	cmsHTRANSFORM from_PCS16;
+	//OCIO::ConstProcessorRcPtr shaper_processor;
+	OCIO::ConstProcessorRcPtr processor;
 } SamplerData;
 
 static void Add3GammaCurves(cmsPipeline* lut, cmsFloat64Number Curve)
 {
-    cmsToneCurve* id = cmsBuildGamma(NULL, Curve);
-    cmsToneCurve* id3[3];
-    id3[0] = id;
-    id3[1] = id;
-    id3[2] = id;
-    cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocToneCurves(NULL, 3, id3));
-    cmsFreeToneCurve(id);
+	cmsToneCurve* id = cmsBuildGamma(NULL, Curve);
+	cmsToneCurve* id3[3];
+	id3[0] = id;
+	id3[1] = id;
+	id3[2] = id;
+	cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocToneCurves(NULL, 3, id3));
+	cmsFreeToneCurve(id);
 }
 
 static void AddIdentityMatrix(cmsPipeline* lut)
 {
-    const cmsFloat64Number Identity[] = {
-        1, 0, 0,
-        0, 1, 0, 
-        0, 0, 1, 
-        0, 0, 0 };
-    cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocMatrix(NULL, 3, 3, Identity, NULL));
+	const cmsFloat64Number Identity[] = {
+		1, 0, 0,
+		0, 1, 0, 
+		0, 0, 1, 
+		0, 0, 0 };
+	cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocMatrix(NULL, 3, 3, Identity, NULL));
 }
 
 static cmsInt32Number Display2PCS_Sampler16(const cmsUInt16Number in[], cmsUInt16Number out[], void* userdata)
 {
-    //std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
-    SamplerData* data = (SamplerData*) userdata;
-    cmsFloat32Number pix[3] = { static_cast<float>(in[0])/65535.f,
-                                static_cast<float>(in[1])/65535.f,
-                                static_cast<float>(in[2])/65535.f};
-    data->processor->applyRGB(pix);
-    out[0] = (cmsUInt16Number)std::max(std::min(pix[0] * 65535.f, 65535.f), 0.f);
-    out[1] = (cmsUInt16Number)std::max(std::min(pix[1] * 65535.f, 65535.f), 0.f);
-    out[2] = (cmsUInt16Number)std::max(std::min(pix[2] * 65535.f, 65535.f), 0.f);
-    cmsDoTransform(data->to_PCS16, out, out, 1);
-    return 1;
+	//std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
+	SamplerData* data = (SamplerData*) userdata;
+	cmsFloat32Number pix[3] = { static_cast<float>(in[0])/65535.f,
+								static_cast<float>(in[1])/65535.f,
+								static_cast<float>(in[2])/65535.f};
+	data->processor->applyRGB(pix);
+	out[0] = (cmsUInt16Number)std::max(std::min(pix[0] * 65535.f, 65535.f), 0.f);
+	out[1] = (cmsUInt16Number)std::max(std::min(pix[1] * 65535.f, 65535.f), 0.f);
+	out[2] = (cmsUInt16Number)std::max(std::min(pix[2] * 65535.f, 65535.f), 0.f);
+	cmsDoTransform(data->to_PCS16, out, out, 1);
+	return 1;
 }
 
 static cmsInt32Number PCS2Display_Sampler16(const cmsUInt16Number in[], cmsUInt16Number out[], void* userdata)
 {
-    //std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
-    SamplerData* data = (SamplerData*) userdata;
-    cmsDoTransform(data->from_PCS16, in, out, 1);
-    // we don't have a reverse Lab -> Display transform
-    return 1;
+	//std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
+	SamplerData* data = (SamplerData*) userdata;
+	cmsDoTransform(data->from_PCS16, in, out, 1);
+	// we don't have a reverse Lab -> Display transform
+	return 1;
 }
 
 bool
@@ -671,9 +697,9 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 		//
 		// cmsSigCurveSetElemType
 		// `- cmsSigCLutElemType
-		//  `- cmsSigCurveSetElemType
-		//   `- cmsSigMatrixElemType
-		//    `- cmsSigCurveSetElemType
+		//	`- cmsSigCurveSetElemType
+		//	 `- cmsSigMatrixElemType
+		//	  `- cmsSigCurveSetElemType
 		//
 		//std::cout << "[OpenColorIO INFO]: Adding AToB0Tag\n";
 		cmsPipeline* AToB0Tag = cmsPipelineAlloc(NULL, 3, 3);
@@ -687,7 +713,7 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 		cmsPipelineInsertStage(AToB0Tag, cmsAT_END, AToB0Clut);
 
 		Add3GammaCurves(AToB0Tag, 1.f); // cmsSigCurveSetElemType
-		AddIdentityMatrix(AToB0Tag);    // cmsSigMatrixElemType
+		AddIdentityMatrix(AToB0Tag);	// cmsSigMatrixElemType
 		Add3GammaCurves(AToB0Tag, 1.f); // cmsSigCurveSetElemType
 
 		// Add AToB0Tag
@@ -699,15 +725,15 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 		//
 		// cmsSigCurveSetElemType
 		// `- cmsSigMatrixElemType
-		//  `- cmsSigCurveSetElemType
-		//   `- cmsSigCLutElemType 
-		//    `- cmsSigCurveSetElemType
+		//	`- cmsSigCurveSetElemType
+		//	 `- cmsSigCLutElemType 
+		//	  `- cmsSigCurveSetElemType
 		//
 		//std::cout << "[OpenColorIO INFO]: Adding BToA0Tag\n";
 		cmsPipeline* BToA0Tag = cmsPipelineAlloc(NULL, 3, 3);
 
 		Add3GammaCurves(BToA0Tag, 1.f); // cmsSigCurveSetElemType
-		AddIdentityMatrix(BToA0Tag);    // cmsSigMatrixElemType
+		AddIdentityMatrix(BToA0Tag);	// cmsSigMatrixElemType
 		Add3GammaCurves(BToA0Tag, 1.f); // cmsSigCurveSetElemType
 
 		// cmsSigCLutElemType
@@ -837,5 +863,254 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 	
 	}catch(...) { return false; }
 	
+	return true;
+}
+
+
+void
+OpenColorIO_AE_Context::InitOCIOGL()
+{
+	if(!_gl_init)
+	{
+		glGenTextures(1, &_imageTexID);
+		glGenTextures(1, &_lut3dTexID);
+		
+		int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
+		_lut3d.resize(num3Dentries);
+		memset(&_lut3d[0], 0, sizeof(float)*num3Dentries);
+		
+		_fragShader = 0;
+		_program = 0;
+		
+		glGenFramebuffersEXT(1, &_frameBuffer);
+		_bufferWidth = _bufferHeight = 0;
+		
+		_gl_init = true;
+	}
+}
+
+static const char * g_fragShaderText = ""
+"\n"
+"uniform sampler2D tex1;\n"
+"uniform sampler3D tex2;\n"
+"\n"
+"void main()\n"
+"{\n"
+"	 vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
+"	 gl_FragColor = OCIODisplay(col, tex2);\n"
+"}\n";
+
+
+static GLuint
+CompileShaderText(GLenum shaderType, const char *text)
+{
+	GLuint shader;
+	GLint stat;
+	
+	shader = glCreateShader(shaderType);
+	glShaderSource(shader, 1, (const GLchar **) &text, NULL);
+	glCompileShader(shader);
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &stat);
+	
+	if (!stat)
+	{
+		GLchar log[1000];
+		GLsizei len;
+		glGetShaderInfoLog(shader, 1000, &len, log);
+		//fprintf(stderr, "Error: problem compiling shader: %s\n", log);
+		return 0;
+	}
+	
+	return shader;
+}
+
+
+static GLuint
+LinkShaders(GLuint fragShader)
+{
+	if (!fragShader) return 0;
+	
+	GLuint program = glCreateProgram();
+	
+	if (fragShader)
+		glAttachShader(program, fragShader);
+	
+	glLinkProgram(program);
+	
+	/* check link */
+	{
+		GLint stat;
+		glGetProgramiv(program, GL_LINK_STATUS, &stat);
+		if (!stat) {
+			GLchar log[1000];
+			GLsizei len;
+			glGetProgramInfoLog(program, 1000, &len, log);
+			//fprintf(stderr, "Shader link error:\n%s\n", log);
+			return 0;
+		}
+	}
+	
+	return program;
+}
+
+
+void
+OpenColorIO_AE_Context::UpdateOCIOGLState()
+{
+	if(_gl_init)
+	{
+		// Step 1: Create a GPU Shader Description
+		OCIO::GpuShaderDesc shaderDesc;
+		shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
+		shaderDesc.setFunctionName("OCIODisplay");
+		shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
+		
+		// Step 2: Compute the 3D LUT
+		std::string lut3dCacheID = _processor->getGpuLut3DCacheID(shaderDesc);
+		if(lut3dCacheID != _lut3dcacheid)
+		{
+			//std::cerr << "Computing 3DLut " << g_lut3dcacheid << std::endl;
+			
+			_lut3dcacheid = lut3dCacheID;
+			_processor->getGpuLut3D(&_lut3d[0], shaderDesc);
+			
+			glBindTexture(GL_TEXTURE_3D, _lut3dTexID);
+			glTexSubImage3D(GL_TEXTURE_3D, 0,
+							0, 0, 0, 
+							LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
+							GL_RGB,GL_FLOAT, &_lut3d[0]);
+		}
+		
+		// Step 3: Compute the Shader
+		std::string shaderCacheID = _processor->getGpuShaderTextCacheID(shaderDesc);
+		if(_program == 0 || shaderCacheID != _shadercacheid)
+		{
+			//std::cerr << "Computing Shader " << g_shadercacheid << std::endl;
+			
+			_shadercacheid = shaderCacheID;
+			
+			std::ostringstream os;
+			os << _processor->getGpuShaderText(shaderDesc) << "\n";
+			os << g_fragShaderText;
+			//std::cerr << os.str() << std::endl;
+			
+			if(_fragShader) glDeleteShader(_fragShader);
+			_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
+			if(_program) glDeleteProgram(_program);
+			_program = LinkShaders(_fragShader);
+		}
+		
+		//glUseProgram(_program);
+		//glUniform1i(glGetUniformLocation(_program, "tex1"), 1);
+		//glUniform1i(glGetUniformLocation(_program, "tex2"), 2);
+	}
+}
+
+
+bool
+OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
+{
+	if(!_gl_init)
+	{
+		InitOCIOGL();
+		UpdateOCIOGLState();
+	}
+
+	PF_PixelFloat *pix = (PF_PixelFloat *)float_world->data;
+	float *rgba_origin = &pix->red;
+	
+	
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, _imageTexID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, float_world->width, float_world->height, 0,
+		GL_RGBA, GL_FLOAT, rgba_origin);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_3D, _lut3dTexID);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB,
+					LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
+					0, GL_RGB,GL_FLOAT, &_lut3d[0]);
+
+
+	glUseProgram(_program);
+	glUniform1i(glGetUniformLocation(_program, "tex1"), 1);
+	glUniform1i(glGetUniformLocation(_program, "tex2"), 2);
+	
+
+	
+	
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, _frameBuffer);
+
+	if(_bufferWidth != float_world->width || _bufferHeight != float_world->height)
+	{
+		if(_bufferWidth != 0 && _bufferHeight != 0)
+			glDeleteRenderbuffersEXT(1, &_renderBuffer);
+	
+		_bufferWidth = float_world->width;
+		_bufferHeight = float_world->height;
+	
+		glGenRenderbuffersEXT(1, &_renderBuffer);
+		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, _renderBuffer);
+		glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_RGBA, _bufferWidth, _bufferHeight);
+		
+		// attach renderbuffer to framebuffer
+		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, _renderBuffer);
+	}
+	
+	glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+	
+
+	
+	
+	glViewport(0, 0, float_world->width, float_world->height);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0, float_world->width, 0.0, float_world->height, -100.0, 100.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+
+	glEnable(GL_TEXTURE_2D);
+	glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glColor3f(1, 1, 1);
+	
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 1.0f);
+	glVertex2f(0.0f, float_world->height);
+	
+	glTexCoord2f(0.0f, 0.0f);
+	glVertex2f(0.0f, 0.0f);
+	
+	glTexCoord2f(1.0f, 0.0f);
+	glVertex2f(float_world->width, 0.0f);
+	
+	glTexCoord2f(1.0f, 1.0f);
+	glVertex2f(float_world->width, float_world->height);
+	
+	glEnd();
+	glPopMatrix();
+	
+	glDisable(GL_TEXTURE_2D);
+		
+	
+	glFlush();
+	
+	
+	glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
+	glReadPixels(0, 0, _bufferWidth, _bufferHeight, GL_RGBA, GL_FLOAT, rgba_origin);
+
+
 	return true;
 }

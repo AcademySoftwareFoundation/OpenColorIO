@@ -12,6 +12,9 @@
 
 #include "OpenColorIO_AE_Context.h"
 
+#include "OpenColorIO_AE_GL.h"
+
+#include "AEGP_SuiteHandler.h"
 
 // this lives in OpenColorIO_AE_UI.cpp
 std::string GetProjectDir(PF_InData *in_data);
@@ -33,6 +36,7 @@ About (
 	return PF_Err_NONE;
 }
 
+
 static PF_Err 
 GlobalSetup (	
 	PF_InData		*in_data,
@@ -40,6 +44,8 @@ GlobalSetup (
 	PF_ParamDef		*params[],
 	PF_LayerDef		*output )
 {
+	PF_Err err = PF_Err_NONE;
+	
 	out_data->my_version 	= 	PF_VERSION(	MAJOR_VERSION, 
 											MINOR_VERSION,
 											BUG_VERSION, 
@@ -56,8 +62,28 @@ GlobalSetup (
 								PF_OutFlag2_SUPPORTS_SMART_RENDER	|
 								PF_OutFlag2_FLOAT_COLOR_AWARE;
 	
-	return PF_Err_NONE;
+	
+	err = GlobalSetup_GL(in_data, out_data, params, output);
+	
+	
+	return err;
 }
+
+
+static PF_Err 
+GlobalSetdown (	
+	PF_InData		*in_data,
+	PF_OutData		*out_data,
+	PF_ParamDef		*params[],
+	PF_LayerDef		*output )
+{
+	PF_Err err = PF_Err_NONE;
+	
+	err = GlobalSetdown_GL(in_data, out_data, params, output);
+	
+	return err;
+}
+
 
 static PF_Err
 ParamsSetup(
@@ -522,22 +548,29 @@ DoRender(
 			if(!err)
 			{
 				// OpenColorIO processing
-				PF_Point origin;
-				PF_Rect areaR;
-				
-				origin.h = in_data->output_origin_x;
-				origin.v = in_data->output_origin_y;
-				
-				areaR.top = 0;
-				areaR.left = 0;
-				areaR.bottom = output->height;
-				areaR.right = 1;
-				
-				ProcessData p_data = { output->width, seq_data->context };
-				
-				err = suites.IterateFloatSuite1()->iterate_origin(in_data, 0, output->height,
-																float_world, &areaR, &origin,
-																&p_data, Process_Iterate, float_world);
+				if(true)
+				{
+					seq_data->context->ProcessWorldGL(float_world);
+				}
+				else
+				{
+					PF_Point origin;
+					PF_Rect areaR;
+					
+					origin.h = in_data->output_origin_x;
+					origin.v = in_data->output_origin_y;
+					
+					areaR.top = 0;
+					areaR.left = 0;
+					areaR.bottom = output->height;
+					areaR.right = 1;
+					
+					ProcessData p_data = { output->width, seq_data->context };
+					
+					err = suites.IterateFloatSuite1()->iterate_origin(in_data, 0, output->height,
+																	float_world, &areaR, &origin,
+																	&p_data, Process_Iterate, float_world);
+				}
 			}
 			
 			
@@ -645,11 +678,7 @@ GetExternalDependencies(
 		
 		if(extra->check_type == PF_DepCheckType_ALL_DEPENDENCIES)
 		{
-			if( absolute_path.exists() )
-			{
-				path = absolute_path.full_path();
-			}
-			else if( relative_path.exists() )
+			if( !absolute_path.exists() && relative_path.exists() )
 			{
 				path = relative_path.full_path();
 			}
@@ -698,6 +727,9 @@ PluginMain (
 				break;
 			case PF_Cmd_GLOBAL_SETUP:
 				err = GlobalSetup(in_data,out_data,params,output);
+				break;
+			case PF_Cmd_GLOBAL_SETDOWN:
+				err = GlobalSetdown(in_data,out_data,params,output);
 				break;
 			case PF_Cmd_PARAMS_SETUP:
 				err = ParamsSetup(in_data,out_data,params,output);
