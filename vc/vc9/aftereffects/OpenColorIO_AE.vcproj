@@ -48,8 +48,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\src\aftereffects;..\..\..\export;..\..\..\ext\boost_1_48_0;&quot;..\..\..\ext\lcms2-2.1\include&quot;;..\;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\SP&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\Win&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util&quot;"
-				PreprocessorDefinitions="MSWindows;WIN32;_DEBUG;_WINDOWS"
+				AdditionalIncludeDirectories="..\..\..\src\aftereffects;..\..\..\export;..\..\..\ext\boost_1_48_0;&quot;..\..\..\ext\lcms2-2.1\include&quot;;..\;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\SP&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\Win&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util&quot;;&quot;..\..\..\ext\glew-1.7.0\include&quot;"
+				PreprocessorDefinitions="MSWindows;WIN32;_DEBUG;_WINDOWS;GLEW_STATIC"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough="AE_Effect.h"
@@ -147,8 +147,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="..\..\..\src\aftereffects;..\..\..\export;..\..\..\ext\boost_1_48_0;&quot;..\..\..\ext\lcms2-2.1\include&quot;;..\;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\SP&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\Win&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util&quot;"
-				PreprocessorDefinitions="MSWindows;WIN32;NDEBUG;_WINDOWS"
+				AdditionalIncludeDirectories="..\..\..\src\aftereffects;..\..\..\export;..\..\..\ext\boost_1_48_0;&quot;..\..\..\ext\lcms2-2.1\include&quot;;..\;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\SP&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\Win&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util&quot;;&quot;..\..\..\ext\glew-1.7.0\include&quot;"
+				PreprocessorDefinitions="MSWindows;WIN32;NDEBUG;_WINDOWS;GLEW_STATIC"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough="AE_Effect.h"
@@ -176,7 +176,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="Mscms.lib"
+				AdditionalDependencies="Mscms.lib opengl32.lib"
 				ShowProgress="0"
 				OutputFile="$(OutDir)\OpenColorIO.aex"
 				LinkIncremental="2"
@@ -259,11 +259,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\After Effects 8.0\OpenEXR\win\resource.h"
+				RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_GL.h"
 				>
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\After Effects 8.0\OpenEXR\win\resource.h"
 				>
 			</File>
 			<Filter
@@ -428,6 +432,10 @@
 		</File>
 		<File
 			RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_Dialogs_Win.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\..\src\aftereffects\win\OpenColorIO_AE_GL_Win.cpp"
 			>
 		</File>
 		<File

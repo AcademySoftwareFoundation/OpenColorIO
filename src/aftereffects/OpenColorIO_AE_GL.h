@@ -6,11 +6,8 @@
 #include "AEConfig.h"
 
 #ifdef AE_OS_WIN
-	#include <windows.h>
-	#include <stdlib.h>
-	#include <GL\gl.h>
-	#include <GL\glu.h>
-	#include <glext.h>
+	//#include <GL/glew.h>
+typedef unsigned int GLuint;
 #elif defined(AE_OS_MAC)
 	#include <OpenGL/OpenGL.h>
 	#include <OpenGL/gl.h>
