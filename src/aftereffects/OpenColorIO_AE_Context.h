@@ -12,20 +12,10 @@
 #define _OPENCOLORIO_AE_CONTEXT_H_
 
 #include "OpenColorIO_AE.h"
+#include "OpenColorIO_AE_GL.h"
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
-
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <OpenGL/glext.h>
-#include <GLUT/glut.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glext.h>
-#include <GL/glut.h>
-#endif
 
 
 #include <string>
@@ -129,7 +119,6 @@ class OpenColorIO_AE_Context
 	std::string _transformName;
 	
 	
-	GLuint _frameBuffer;
 	GLuint _renderBuffer;
 	int _bufferWidth;
 	int _bufferHeight;

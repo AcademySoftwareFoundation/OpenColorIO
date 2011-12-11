@@ -428,7 +428,6 @@ OpenColorIO_AE_Context::~OpenColorIO_AE_Context()
 		glDeleteShader(_fragShader);
 		glDeleteProgram(_program);
 		glDeleteTextures(1, &_imageTexID);
-		glDeleteFramebuffersEXT(1, &_frameBuffer);
 		
 		if(_bufferWidth != 0 && _bufferHeight != 0)
 			glDeleteRenderbuffersEXT(1, &_renderBuffer);
@@ -882,7 +881,6 @@ OpenColorIO_AE_Context::InitOCIOGL()
 		_fragShader = 0;
 		_program = 0;
 		
-		glGenFramebuffersEXT(1, &_frameBuffer);
 		_bufferWidth = _bufferHeight = 0;
 		
 		_gl_init = true;
@@ -999,10 +997,6 @@ OpenColorIO_AE_Context::UpdateOCIOGLState()
 			if(_program) glDeleteProgram(_program);
 			_program = LinkShaders(_fragShader);
 		}
-		
-		//glUseProgram(_program);
-		//glUniform1i(glGetUniformLocation(_program, "tex1"), 1);
-		//glUniform1i(glGetUniformLocation(_program, "tex2"), 2);
 	}
 }
 
@@ -1049,8 +1043,8 @@ OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
 
 	
 	
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, _frameBuffer);
-
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, GetFrameBuffer());
+	
 	if(_bufferWidth != float_world->width || _bufferHeight != float_world->height)
 	{
 		if(_bufferWidth != 0 && _bufferHeight != 0)
@@ -1067,6 +1061,9 @@ OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, _renderBuffer);
 	}
 	
+	if(GL_FRAMEBUFFER_COMPLETE_EXT != glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT))
+		return false;
+
 	glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 	
 

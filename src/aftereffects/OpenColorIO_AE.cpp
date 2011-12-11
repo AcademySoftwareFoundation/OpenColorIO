@@ -44,8 +44,6 @@ GlobalSetup (
 	PF_ParamDef		*params[],
 	PF_LayerDef		*output )
 {
-	PF_Err err = PF_Err_NONE;
-	
 	out_data->my_version 	= 	PF_VERSION(	MAJOR_VERSION, 
 											MINOR_VERSION,
 											BUG_VERSION, 
@@ -63,10 +61,10 @@ GlobalSetup (
 								PF_OutFlag2_FLOAT_COLOR_AWARE;
 	
 	
-	err = GlobalSetup_GL(in_data, out_data, params, output);
+	GlobalSetup_GL();
 	
 	
-	return err;
+	return PF_Err_NONE;
 }
 
 
@@ -77,11 +75,9 @@ GlobalSetdown (
 	PF_ParamDef		*params[],
 	PF_LayerDef		*output )
 {
-	PF_Err err = PF_Err_NONE;
+	GlobalSetdown_GL();
 	
-	err = GlobalSetdown_GL(in_data, out_data, params, output);
-	
-	return err;
+	return PF_Err_NONE;
 }
 
 
@@ -110,6 +106,15 @@ ParamsSetup(
 						def.u.arb_d.dephault,
 						OCIO_DATA,
 						NULL);
+	
+	
+	AEFX_CLR_STRUCT(def);
+	PF_ADD_CHECKBOX("",
+					"Use GPU",
+					FALSE,
+					0,
+					OCIO_GPU_ID);
+					
 
 	out_data->num_params = OCIO_NUM_PARAMS;
 
@@ -313,6 +318,13 @@ Convert<A_u_short, float>(A_u_short in)
 	return (float)in / (float)PF_MAX_CHAN16;
 }
 
+template <>
+static inline float
+Convert<float, float>(float in)
+{
+	return in;
+}
+
 static inline float
 Clamp(float in)
 {
@@ -413,6 +425,7 @@ DoRender(
 		PF_InData		*in_data,
 		PF_EffectWorld 	*input,
 		PF_ParamDef		*OCIO_data,
+		PF_ParamDef		*OCIO_gpu,
 		PF_OutData		*out_data,
 		PF_EffectWorld	*output)
 {
@@ -505,94 +518,118 @@ DoRender(
 		}
 
 		
-		if(seq_data->context == NULL || seq_data->context->processor()->isNoOp())
+		if(!err)
 		{
-			PF_COPY(input, output, NULL, NULL);
-		}
-		else
-		{
-			// OpenColorIO only does float worlds
-			// might have to create one
-			PF_EffectWorld *float_world = NULL;
-			
-			PF_EffectWorld temp_world_data;
-			PF_EffectWorld *temp_world = NULL;
-			
-			
-			PF_PixelFormat format;
-			wsP->PF_GetPixelFormat(output, &format);
-			
-
-			if(format == PF_PixelFormat_ARGB128)
+			if(seq_data->context == NULL || seq_data->context->processor()->isNoOp())
 			{
 				PF_COPY(input, output, NULL, NULL);
-				
-				float_world = output;
 			}
 			else
 			{
-				err = wsP->PF_NewWorld(in_data->effect_ref, output->width, output->height, FALSE, PF_PixelFormat_ARGB128, &temp_world_data);
+				// OpenColorIO only does float worlds
+				// might have to create one
+				PF_EffectWorld *float_world = NULL;
 				
-				float_world = temp_world = &temp_world_data;
-
-
-				IterateData i_data = { in_data, input->data, input->rowbytes, float_world->data, float_world->rowbytes, float_world->width * 4 };
+				PF_EffectWorld temp_world_data;
+				PF_EffectWorld *temp_world = NULL;
+				PF_Handle temp_worldH = NULL;
 				
-				if(format == PF_PixelFormat_ARGB32)
-					err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<A_u_char, float>);
-				else if(format == PF_PixelFormat_ARGB64)
-					err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<A_u_short, float>);
-			}
-			
-			
-			if(!err)
-			{
-				// OpenColorIO processing
-				if(true)
+				
+				PF_PixelFormat format;
+				wsP->PF_GetPixelFormat(output, &format);
+				
+				
+				A_Boolean use_gpu = OCIO_gpu->u.bd.value;
+				A_long non_padded_rowbytes = sizeof(PF_PixelFloat) * output->width;
+				
+
+				if(format == PF_PixelFormat_ARGB128 &&
+					(!use_gpu || output->rowbytes == non_padded_rowbytes)) // GPU doesn't do padding
 				{
-					seq_data->context->ProcessWorldGL(float_world);
+					PF_COPY(input, output, NULL, NULL);
+					
+					float_world = output;
 				}
 				else
 				{
-					PF_Point origin;
-					PF_Rect areaR;
+					temp_worldH = PF_NEW_HANDLE(non_padded_rowbytes * output->height);
 					
-					origin.h = in_data->output_origin_x;
-					origin.v = in_data->output_origin_y;
-					
-					areaR.top = 0;
-					areaR.left = 0;
-					areaR.bottom = output->height;
-					areaR.right = 1;
-					
-					ProcessData p_data = { output->width, seq_data->context };
-					
-					err = suites.IterateFloatSuite1()->iterate_origin(in_data, 0, output->height,
-																	float_world, &areaR, &origin,
-																	&p_data, Process_Iterate, float_world);
+					if(temp_worldH)
+					{
+						temp_world_data.data = (PF_PixelPtr)PF_LOCK_HANDLE(temp_worldH);
+						
+						temp_world_data.width = output->width;
+						temp_world_data.height = output->height;
+						temp_world_data.rowbytes = non_padded_rowbytes;
+						
+						float_world = temp_world = &temp_world_data;
+
+
+						IterateData i_data = { in_data, input->data, input->rowbytes, float_world->data, float_world->rowbytes, float_world->width * 4 };
+						
+						if(format == PF_PixelFormat_ARGB32)
+							err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<A_u_char, float>);
+						else if(format == PF_PixelFormat_ARGB64)
+							err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<A_u_short, float>);
+						else if(format == PF_PixelFormat_ARGB128)
+							err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<float, float>);
+					}
+					else
+						err = PF_Err_OUT_OF_MEMORY;
 				}
-			}
-			
-			
-			// copy back to non-float world and dispose
-			if(temp_world)
-			{
+				
+				
 				if(!err)
 				{
-					IterateData i_data = { in_data, float_world->data, float_world->rowbytes, output->data, output->rowbytes, output->width * 4 };
-					
-					if(format == PF_PixelFormat_ARGB32)
-						err = suites.Iterate8Suite1()->iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, A_u_char>);
-					else if(format == PF_PixelFormat_ARGB64)
-						err = suites.Iterate8Suite1()->iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, A_u_short>);
+					// OpenColorIO processing
+					if(use_gpu && HaveOpenGL())
+					{
+						seq_data->context->ProcessWorldGL(float_world);
+					}
+					else
+					{
+						PF_Point origin;
+						PF_Rect areaR;
+						
+						origin.h = in_data->output_origin_x;
+						origin.v = in_data->output_origin_y;
+						
+						areaR.top = 0;
+						areaR.left = 0;
+						areaR.bottom = output->height;
+						areaR.right = 1;
+						
+						ProcessData p_data = { output->width, seq_data->context };
+						
+						err = suites.IterateFloatSuite1()->iterate_origin(in_data, 0, output->height,
+																		float_world, &areaR, &origin,
+																		&p_data, Process_Iterate, float_world);
+					}
 				}
+				
+				
+				// copy back to non-float world and dispose
+				if(temp_world)
+				{
+					if(!err)
+					{
+						IterateData i_data = { in_data, float_world->data, float_world->rowbytes, output->data, output->rowbytes, output->width * 4 };
+						
+						if(format == PF_PixelFormat_ARGB32)
+							err = suites.Iterate8Suite1()->iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, A_u_char>);
+						else if(format == PF_PixelFormat_ARGB64)
+							err = suites.Iterate8Suite1()->iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, A_u_short>);
+						else if(format == PF_PixelFormat_ARGB128)
+							err = suites.Iterate8Suite1()->iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, float>);
+					}
 
-				wsP->PF_DisposeWorld(in_data->effect_ref, temp_world);
+					PF_DISPOSE_HANDLE(temp_worldH);
+				}
+					
+					
+				PF_UNLOCK_HANDLE(OCIO_data->u.arb_d.value);
+				PF_UNLOCK_HANDLE(in_data->sequence_data);
 			}
-				
-				
-			PF_UNLOCK_HANDLE(OCIO_data->u.arb_d.value);
-			PF_UNLOCK_HANDLE(in_data->sequence_data);
 		}
 	}
 
@@ -617,10 +654,11 @@ SmartRender(
 					
 	PF_EffectWorld *input, *output;
 	
-	PF_ParamDef OCIO_data;
+	PF_ParamDef OCIO_data, OCIO_gpu;
 
 	// zero-out parameters
 	AEFX_CLR_STRUCT(OCIO_data);
+	AEFX_CLR_STRUCT(OCIO_gpu);
 	
 	
 	// checkout input & output buffers.
@@ -636,15 +674,18 @@ SmartRender(
 
 	// checkout the required params
 	ERR(	PF_CHECKOUT_PARAM_NOW( OCIO_DATA,	&OCIO_data )	);
+	ERR(	PF_CHECKOUT_PARAM_NOW( OCIO_GPU,	&OCIO_gpu  )	);
 
 	ERR(DoRender(	in_data, 
 					input, 
 					&OCIO_data,
+					&OCIO_gpu,
 					out_data, 
 					output));
 
 	// Always check in, no matter what the error condition!
 	ERR2(	PF_CHECKIN_PARAM(in_data, &OCIO_data )	);
+	ERR2(	PF_CHECKIN_PARAM(in_data, &OCIO_gpu  )	);
 
 
 	return err;

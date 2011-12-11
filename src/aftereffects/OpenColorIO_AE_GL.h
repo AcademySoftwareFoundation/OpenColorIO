@@ -4,24 +4,29 @@
 #define _OPENCOLORIO_AE_GL_H_
 
 #include "AEConfig.h"
-#include "entry.h"
-#include "AE_Macros.h"
-#include "AE_Effect.h"
+
+#ifdef AE_OS_WIN
+	#include <windows.h>
+	#include <stdlib.h>
+	#include <GL\gl.h>
+	#include <GL\glu.h>
+	#include <glext.h>
+#elif defined(AE_OS_MAC)
+	#include <OpenGL/OpenGL.h>
+	#include <OpenGL/gl.h>
+	#include <OpenGL/glu.h>
+	#include <OpenGL/glext.h>
+	#include <AGL/agl.h>
+#endif
 
 
-PF_Err
-GlobalSetup_GL ( 
-	PF_InData		*in_data,
-	PF_OutData		*out_data,
-	PF_ParamDef		*params[],
-	PF_LayerDef		*output);
+void GlobalSetup_GL();
 
-PF_Err
-GlobalSetdown_GL ( 
-	PF_InData		*in_data,
-	PF_OutData		*out_data,
-	PF_ParamDef		*params[],
-	PF_LayerDef		*output);
+bool HaveOpenGL();
+
+GLuint GetFrameBuffer();
+
+void GlobalSetdown_GL();
 
 
 #endif // _OPENCOLORIO_AE_GL_H_

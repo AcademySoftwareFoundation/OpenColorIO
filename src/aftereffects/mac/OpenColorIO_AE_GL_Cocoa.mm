@@ -5,54 +5,60 @@
 
 #import <Cocoa/Cocoa.h>
 
-#include <OpenGL/OpenGL.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#include <OpenGL/glext.h>
-#include <AGL/agl.h>
 
 
 static NSWindow		*g_win = nil;
 static AGLContext	g_context = NULL;
+static GLuint		g_framebuffer;
 
 
-PF_Err
-GlobalSetup_GL ( 
-	PF_InData		*in_data,
-	PF_OutData		*out_data,
-	PF_ParamDef		*params[],
-	PF_LayerDef		*output)
+static bool
+HaveRequiredExtensions()
 {
-	PF_Err err = PF_Err_NONE;
+	const GLubyte *strVersion = glGetString(GL_VERSION);
+	const GLubyte *strExt = glGetString(GL_EXTENSIONS);
+	
+	if(strVersion == NULL || strExt == NULL)
+		return false;
+		
+	float gl_version;
+	sscanf((char *)strVersion, "%f", &gl_version);
+	
+#define CheckExtension(N) gluCheckExtension((const GLubyte *)N, strExt)
 
-	//NSRect rect = NSMakeRect(0, 0, 50, 50);
-	
-	g_win = [[NSWindow alloc] initWithContentRect:NSZeroRect //rect
-								styleMask:NSBorderlessWindowMask
-								backing:NSBackingStoreBuffered
-								defer:NO];
-	
-	
+	return (gl_version >= 2.0 &&
+			CheckExtension("GL_ARB_vertex_program") &&
+			CheckExtension("GL_ARB_vertex_shader") &&
+			CheckExtension("GL_ARB_texture_cube_map") &&
+			CheckExtension("GL_ARB_fragment_shader") &&
+			CheckExtension("GL_ARB_draw_buffers") &&
+			CheckExtension("GL_ARB_framebuffer_object") &&
+			CheckExtension("GL_EXT_framebuffer_object") );
+}
+
+
+void
+GlobalSetup_GL()
+{
 	GLint aAttribs[64];
 	u_short nIndexS= -1;
 
-	// NO color index support
 	aAttribs[++nIndexS]= AGL_RGBA;
 	aAttribs[++nIndexS]= AGL_DOUBLEBUFFER;
+	aAttribs[++nIndexS]= AGL_COLOR_FLOAT;
 	
-	// color
 	aAttribs[++nIndexS] = AGL_RED_SIZE;
-	aAttribs[++nIndexS] = 8;
+	aAttribs[++nIndexS] = 32;
 	aAttribs[++nIndexS] = AGL_GREEN_SIZE;
-	aAttribs[++nIndexS] = 8;
+	aAttribs[++nIndexS] = 32;
 	aAttribs[++nIndexS] = AGL_BLUE_SIZE;
-	aAttribs[++nIndexS] = 8;
+	aAttribs[++nIndexS] = 32;
 	aAttribs[++nIndexS] = AGL_ALPHA_SIZE;
-	aAttribs[++nIndexS] = 8;
+	aAttribs[++nIndexS] = 32;
 	
 	aAttribs[++nIndexS] = AGL_NONE;
-
-	// get an appropriate pixel format
+	
+	
 	AGLPixelFormat oPixelFormat = aglChoosePixelFormat(NULL, 0, aAttribs);
 
 	if(oPixelFormat)
@@ -63,39 +69,60 @@ GlobalSetup_GL (
 	}
 	
 	
-	if(oPixelFormat == NULL || g_context == NULL)
-	{
-		[g_win release];
-		g_win = nil;
-		return err;
-	}
+	if(g_context == NULL)
+		return;
 	
 	
+	g_win = [[NSWindow alloc] initWithContentRect:NSZeroRect
+								styleMask:NSBorderlessWindowMask
+								backing:NSBackingStoreBuffered
+								defer:NO];
+	
+
 	aglSetDrawable(g_context, (AGLDrawable)[[g_win graphicsContext] graphicsPort]);
 
 
 	glFlush();
+	
 	aglSetCurrentContext(g_context);
 
 
-	return err;
+	if( !HaveRequiredExtensions() )
+	{
+		GlobalSetdown_GL();
+		return;
+	}
+	
+	glGenFramebuffersEXT(1, &g_framebuffer);
 }
 
 
-PF_Err
-GlobalSetdown_GL ( 
-	PF_InData		*in_data,
-	PF_OutData		*out_data,
-	PF_ParamDef		*params[],
-	PF_LayerDef		*output)
+bool HaveOpenGL()
 {
-	PF_Err err = PF_Err_NONE;
-	
+	return (g_context != NULL && g_win != nil);
+}
+
+
+GLuint GetFrameBuffer()
+{
+	return g_framebuffer;
+}
+
+
+void
+GlobalSetdown_GL()
+{
 	if(g_context)
+	{
 		aglDestroyContext(g_context);
+		g_context = NULL;
+		
+		glDeleteFramebuffersEXT(1, &g_framebuffer);
+	}
 	
 	if(g_win)
+	{
 		[g_win release];
-	
-	return err;
+		g_win = nil;
+	}
 }

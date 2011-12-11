@@ -44,12 +44,14 @@
 enum {
 	OCIO_INPUT = 0,
 	OCIO_DATA,
+	OCIO_GPU,
 	
 	OCIO_NUM_PARAMS
 };
 
 enum {
-	OCIO_DATA_ID = 1
+	OCIO_DATA_ID = 1,
+	OCIO_GPU_ID
 };
 
 
