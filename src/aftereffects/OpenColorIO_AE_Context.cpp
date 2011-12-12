@@ -329,7 +329,12 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string path) :
 			}
 			
 			
-			setupConvert(ROLE_SCENE_LINEAR, ROLE_SCENE_LINEAR);
+			ConstColorSpaceRcPtr defaultInput = _config->getColorSpace(ROLE_SCENE_LINEAR);
+			
+			const char *defaultInputName = (defaultInput ? defaultInput->getName() : ROLE_SCENE_LINEAR);
+			
+			
+			setupConvert(defaultInputName, defaultInputName);
 			
 			_transform = defaultTransform;
 			_device = defaultDisplay;

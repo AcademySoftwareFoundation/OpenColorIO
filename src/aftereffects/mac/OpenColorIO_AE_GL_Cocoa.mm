@@ -44,9 +44,9 @@ GlobalSetup_GL()
 	GLint aAttribs[64];
 	u_short nIndexS= -1;
 
-	aAttribs[++nIndexS]= AGL_RGBA;
-	aAttribs[++nIndexS]= AGL_DOUBLEBUFFER;
-	aAttribs[++nIndexS]= AGL_COLOR_FLOAT;
+	aAttribs[++nIndexS] = AGL_RGBA;
+	aAttribs[++nIndexS] = AGL_DOUBLEBUFFER;
+	aAttribs[++nIndexS] = AGL_COLOR_FLOAT;
 	
 	aAttribs[++nIndexS] = AGL_RED_SIZE;
 	aAttribs[++nIndexS] = 32;
