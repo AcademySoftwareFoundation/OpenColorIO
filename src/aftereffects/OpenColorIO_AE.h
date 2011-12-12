@@ -108,7 +108,8 @@ typedef A_u_char FileStatus;
 
 typedef struct {
 	FileStatus				status;
-	A_u_char				reserved[3];
+	A_Boolean				gpu_err;
+	A_u_char				reserved[2];
 	OpenColorIO_AE_Context	*context;
 	char					path[ARB_PATH_LEN+1];
 	char					relative_path[ARB_PATH_LEN+1];

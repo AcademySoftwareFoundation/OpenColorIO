@@ -320,6 +320,14 @@ DrawEvent(
 				int field_bottom = panel_top + TOP_MARGIN + FIELD_HEIGHT;
 				int buttons_top = field_bottom + BUTTONS_GAP_V;
 				
+				// GPU alert
+				if(seq_data->gpu_err)
+				{
+					bot.MoveTo(panel_left + 1, buttons_top + bot.FontSize() + BUTTON_TEXT_INDENT_V);
+					
+					bot.DrawString("NO GPU");
+				}
+				
 				// Export button
 				if(arb_data->type != OCIO_TYPE_NONE)
 				{

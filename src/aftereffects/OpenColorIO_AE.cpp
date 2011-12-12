@@ -176,6 +176,7 @@ SequenceSetup (
 	
 	
 	seq_data->status = STATUS_UNKNOWN;
+	seq_data->gpu_err = FALSE;
 	seq_data->context = NULL;
 	
 	
@@ -203,6 +204,7 @@ SequenceSetdown (
 			delete seq_data->context;
 			
 			seq_data->status = STATUS_UNKNOWN;
+			seq_data->gpu_err = FALSE;
 			seq_data->context = NULL;
 		}
 		
@@ -231,6 +233,7 @@ SequenceFlatten (
 			delete seq_data->context;
 			
 			seq_data->status = STATUS_UNKNOWN;
+			seq_data->gpu_err = FALSE;
 			seq_data->context = NULL;
 		}
 
@@ -548,6 +551,7 @@ DoRender(
 				
 				
 				A_Boolean use_gpu = OCIO_gpu->u.bd.value;
+				seq_data->gpu_err = FALSE;
 				A_long non_padded_rowbytes = sizeof(PF_PixelFloat) * output->width;
 				
 
@@ -592,9 +596,14 @@ DoRender(
 					bool gpu_rendered = false;
 
 					// OpenColorIO processing
-					if(use_gpu && HaveOpenGL())
+					if(use_gpu)
 					{
-						gpu_rendered = seq_data->context->ProcessWorldGL(float_world);
+						if( HaveOpenGL() )
+						{
+							gpu_rendered = seq_data->context->ProcessWorldGL(float_world);
+						}
+						else
+							seq_data->gpu_err = TRUE;
 					}
 					
 					if(!gpu_rendered)
