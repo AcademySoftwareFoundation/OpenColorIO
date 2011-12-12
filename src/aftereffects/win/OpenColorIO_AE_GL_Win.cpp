@@ -27,14 +27,15 @@ HaveRequiredExtensions()
 	
 #define CheckExtension(N) glewIsExtensionSupported(N)
 
-	return (gl_version >= 2.0 &&
+	return (gl_version >= 2.0 && GLEW_VERSION_2_0 &&
+			CheckExtension("GL_ARB_color_buffer_float") &&
+			CheckExtension("GL_ARB_texture_float") &&
 			CheckExtension("GL_ARB_vertex_program") &&
 			CheckExtension("GL_ARB_vertex_shader") &&
 			CheckExtension("GL_ARB_texture_cube_map") &&
 			CheckExtension("GL_ARB_fragment_shader") &&
 			CheckExtension("GL_ARB_draw_buffers") &&
-			CheckExtension("GL_ARB_framebuffer_object") &&
-			CheckExtension("GL_EXT_framebuffer_object") );
+			CheckExtension("GL_ARB_framebuffer_object") );
 }
 
 
@@ -80,7 +81,11 @@ GlobalSetup_GL()
 	if(g_win == NULL)
 		return;
 
-	GLuint PixelFormat;
+	g_hdc = GetDC(g_win);
+
+
+	int PixelFormat;
+
 	PIXELFORMATDESCRIPTOR pfd;
 	ZeroMemory( &pfd, sizeof( pfd ) );
 
@@ -89,32 +94,103 @@ GlobalSetup_GL()
 	pfd.dwFlags    = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = 128;
-	pfd.cDepthBits = 32;
 	
-	
-	g_hdc = GetDC(g_win);
-	PixelFormat = ChoosePixelFormat(g_hdc, &pfd);
-	SetPixelFormat(g_hdc, PixelFormat, &pfd);
-	
-	g_context = wglCreateContext(g_hdc);
-	wglMakeCurrent(g_hdc, g_context);
-	
-	glFlush();
-	
+	//PixelFormat = ChoosePixelFormat(g_hdc, &pfd);
 
-	if( g_context == NULL || !HaveRequiredExtensions() )
+	int aAttribs[64];
+	int nIndexS= -1;
+	
+	aAttribs[++nIndexS] = WGL_DRAW_TO_WINDOW_ARB;
+	aAttribs[++nIndexS] = GL_TRUE;
+	aAttribs[++nIndexS] = WGL_SUPPORT_OPENGL_ARB;
+	aAttribs[++nIndexS] = GL_TRUE;
+	aAttribs[++nIndexS] = WGL_DOUBLE_BUFFER_ARB;
+	aAttribs[++nIndexS] = GL_TRUE;
+
+	aAttribs[++nIndexS] = WGL_PIXEL_TYPE_ARB;
+	aAttribs[++nIndexS] = WGL_TYPE_RGBA_FLOAT_ARB;
+	
+	aAttribs[++nIndexS] = WGL_COLOR_BITS_ARB;
+	aAttribs[++nIndexS] = 128;
+
+	aAttribs[++nIndexS] = 0;
+
+	UINT numFormats;
+	BOOL got_format = wglChoosePixelFormatARB(g_hdc, aAttribs, NULL, 1, &PixelFormat, &numFormats);
+
+	BOOL set_format = SetPixelFormat(g_hdc, PixelFormat, &pfd);
+	
+	if(!got_format || !set_format)
+	{
+		GlobalSetdown_GL();
+		return;
+	}
+
+	g_context = wglCreateContext(g_hdc);
+
+	nIndexS= -1;
+
+	aAttribs[++nIndexS] = WGL_CONTEXT_MAJOR_VERSION_ARB;
+	aAttribs[++nIndexS] = 2;
+	aAttribs[++nIndexS] = WGL_CONTEXT_MINOR_VERSION_ARB;
+	aAttribs[++nIndexS] = 0;
+
+	aAttribs[++nIndexS] = 0;
+
+
+	//g_context = wglCreateContextAttribsARB(g_hdc, NULL, aAttribs);
+
+	glFlush();
+
+	if(g_context == NULL)
 	{
 		GlobalSetdown_GL();
 		return;
 	}
 	
+
+	SetPluginContext();
+	
+
+	GLint units;
+	glGetIntegerv(GL_MAX_TEXTURE_UNITS, &units);
+	
+	
+	if( !HaveRequiredExtensions() || units < 2)
+	{
+		GlobalSetdown_GL();
+		SetAEContext();
+		return;
+	}
+	
 	glGenFramebuffersEXT(1, &g_framebuffer);
+	
+	
+	SetAEContext();
 }
 
 
 bool HaveOpenGL()
 {
 	return (g_context != NULL && g_win != NULL);
+}
+
+
+static HDC g_ae_hdc;
+static HGLRC g_ae_context;
+
+void SetPluginContext()
+{
+	g_ae_hdc = wglGetCurrentDC();
+	g_ae_context = wglGetCurrentContext();
+
+	wglMakeCurrent(g_hdc, g_context);
+}
+
+
+void SetAEContext()
+{
+	wglMakeCurrent(g_ae_hdc, g_ae_context);
 }
 
 

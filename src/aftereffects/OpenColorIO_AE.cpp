@@ -643,6 +643,16 @@ DoRender(
 					
 				PF_UNLOCK_HANDLE(OCIO_data->u.arb_d.value);
 				PF_UNLOCK_HANDLE(in_data->sequence_data);
+
+
+				if(seq_data->gpu_err == GPU_ERR_INSUFFICIENT)
+				{
+					suites.AdvAppSuite2()->PF_AppendInfoText("OpenColorIO: GPU Insufficient");
+				}
+				else if(seq_data->gpu_err == GPU_ERR_RENDER_ERR)
+				{
+					suites.AdvAppSuite2()->PF_AppendInfoText("OpenColorIO: GPU Render Error");
+				}
 			}
 		}
 	}

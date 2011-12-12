@@ -7,6 +7,7 @@
 
 #ifdef AE_OS_WIN
 	#include <GL/glew.h>
+	#include <GL/wglew.h>
 #elif defined(AE_OS_MAC)
 	#include <OpenGL/OpenGL.h>
 	#include <OpenGL/gl.h>
