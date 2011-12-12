@@ -423,7 +423,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
 
 OpenColorIO_AE_Context::~OpenColorIO_AE_Context()
 {
-/*	if(_gl_init)
+	if(_gl_init)
 	{
 		glDeleteShader(_fragShader);
 		glDeleteProgram(_program);
@@ -431,7 +431,7 @@ OpenColorIO_AE_Context::~OpenColorIO_AE_Context()
 		
 		if(_bufferWidth != 0 && _bufferHeight != 0)
 			glDeleteRenderbuffersEXT(1, &_renderBuffer);
-	}*/
+	}
 }
 
 
@@ -869,7 +869,7 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 void
 OpenColorIO_AE_Context::InitOCIOGL()
 {
-/*	if(!_gl_init)
+	if(!_gl_init)
 	{
 		glGenTextures(1, &_imageTexID);
 		glGenTextures(1, &_lut3dTexID);
@@ -884,9 +884,10 @@ OpenColorIO_AE_Context::InitOCIOGL()
 		_bufferWidth = _bufferHeight = 0;
 		
 		_gl_init = true;
-	}*/
+	}
 }
-/*
+
+
 static const char * g_fragShaderText = ""
 "\n"
 "uniform sampler2D tex1;\n"
@@ -950,12 +951,12 @@ LinkShaders(GLuint fragShader)
 	
 	return program;
 }
-*/
+
 
 void
 OpenColorIO_AE_Context::UpdateOCIOGLState()
 {
-/*	if(_gl_init)
+	if(_gl_init)
 	{
 		// Step 1: Create a GPU Shader Description
 		OCIO::GpuShaderDesc shaderDesc;
@@ -997,14 +998,14 @@ OpenColorIO_AE_Context::UpdateOCIOGLState()
 			if(_program) glDeleteProgram(_program);
 			_program = LinkShaders(_fragShader);
 		}
-	}*/
+	}
 }
 
 
 bool
 OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
 {
-/*	if(!_gl_init)
+	if(!_gl_init)
 	{
 		InitOCIOGL();
 		UpdateOCIOGLState();
@@ -1108,6 +1109,6 @@ OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
 	glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
 	glReadPixels(0, 0, _bufferWidth, _bufferHeight, GL_RGBA, GL_FLOAT, rgba_origin);
 
-*/
+
 	return true;
 }

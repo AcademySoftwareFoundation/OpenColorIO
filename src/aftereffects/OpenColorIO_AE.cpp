@@ -12,8 +12,6 @@
 
 #include "OpenColorIO_AE_Context.h"
 
-#include "OpenColorIO_AE_GL.h"
-
 #include "AEGP_SuiteHandler.h"
 
 // this lives in OpenColorIO_AE_UI.cpp
@@ -386,24 +384,34 @@ CopyWorld_Iterate(void *refconPV,
 
 
 typedef struct {
+	PF_InData				*in_data;
+	void					*buffer;
+	size_t					rowbytes;
 	int						width;
 	OpenColorIO_AE_Context	*context;
 } ProcessData;
 
 static PF_Err
-Process_Iterate(void *refconP,
-					A_long xL,
-					A_long yL,	
-					PF_PixelFloat *inP,
-					PF_PixelFloat *outP)
+Process_Iterate(void *refconPV,
+					A_long thread_indexL,
+					A_long i,
+					A_long iterationsL)
 {
 	PF_Err err = PF_Err_NONE;
 	
+	ProcessData *i_data = (ProcessData *)refconPV;
+	PF_InData *in_data = i_data->in_data;
+	
+	PF_PixelFloat *pix = (PF_PixelFloat *)((char *)i_data->buffer + (i * i_data->rowbytes)); 
+	
+#ifdef NDEBUG
+	if(thread_indexL == 0)
+		err = PF_ABORT(in_data);
+#endif
+
 	try
 	{
-		ProcessData *i_data = (ProcessData *)refconP;
-
-		float *rOut = &outP->red;
+		float *rOut = &pix->red;
 
 		OCIO::PackedImageDesc img(rOut, i_data->width, 1, 4);
 												
@@ -552,7 +560,7 @@ DoRender(
 				}
 				else
 				{
-					temp_worldH = PF_NEW_HANDLE(non_padded_rowbytes * output->height);
+					temp_worldH = PF_NEW_HANDLE(non_padded_rowbytes * (output->height + 1)); // little extra because we go over by a channel
 					
 					if(temp_worldH)
 					{
@@ -581,29 +589,23 @@ DoRender(
 				
 				if(!err)
 				{
+					bool gpu_rendered = false;
+
 					// OpenColorIO processing
 					if(use_gpu && HaveOpenGL())
 					{
-						seq_data->context->ProcessWorldGL(float_world);
+						gpu_rendered = seq_data->context->ProcessWorldGL(float_world);
 					}
-					else
+					
+					if(!gpu_rendered)
 					{
-						PF_Point origin;
-						PF_Rect areaR;
-						
-						origin.h = in_data->output_origin_x;
-						origin.v = in_data->output_origin_y;
-						
-						areaR.top = 0;
-						areaR.left = 0;
-						areaR.bottom = output->height;
-						areaR.right = 1;
-						
-						ProcessData p_data = { output->width, seq_data->context };
-						
-						err = suites.IterateFloatSuite1()->iterate_origin(in_data, 0, output->height,
-																		float_world, &areaR, &origin,
-																		&p_data, Process_Iterate, float_world);
+						ProcessData p_data = { in_data,
+												float_world->data,
+												float_world->rowbytes,
+												float_world->width,
+												seq_data->context };
+
+						err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &p_data, Process_Iterate);
 					}
 				}
 				

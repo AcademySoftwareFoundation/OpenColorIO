@@ -77,7 +77,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="Mscms.lib"
+				AdditionalDependencies="Mscms.lib opengl32.lib"
 				ShowProgress="0"
 				OutputFile="C:\Program Files\Adobe\Adobe After Effects CS6\Support Files\Plug-ins\OpenColorIO.aex"
 				LinkIncremental="2"
@@ -263,11 +263,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\resource.h"
+				RelativePath="..\..\..\After Effects 8.0\OpenEXR\win\resource.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\After Effects 8.0\OpenEXR\win\resource.h"
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<Filter
