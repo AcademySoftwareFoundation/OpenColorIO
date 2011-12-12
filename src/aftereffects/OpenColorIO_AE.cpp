@@ -176,7 +176,7 @@ SequenceSetup (
 	
 	
 	seq_data->status = STATUS_UNKNOWN;
-	seq_data->gpu_err = FALSE;
+	seq_data->gpu_err = GPU_ERR_NONE;
 	seq_data->context = NULL;
 	
 	
@@ -204,7 +204,7 @@ SequenceSetdown (
 			delete seq_data->context;
 			
 			seq_data->status = STATUS_UNKNOWN;
-			seq_data->gpu_err = FALSE;
+			seq_data->gpu_err = GPU_ERR_NONE;
 			seq_data->context = NULL;
 		}
 		
@@ -233,7 +233,7 @@ SequenceFlatten (
 			delete seq_data->context;
 			
 			seq_data->status = STATUS_UNKNOWN;
-			seq_data->gpu_err = FALSE;
+			seq_data->gpu_err = GPU_ERR_NONE;
 			seq_data->context = NULL;
 		}
 
@@ -551,7 +551,7 @@ DoRender(
 				
 				
 				A_Boolean use_gpu = OCIO_gpu->u.bd.value;
-				seq_data->gpu_err = FALSE;
+				seq_data->gpu_err = GPU_ERR_NONE;
 				A_long non_padded_rowbytes = sizeof(PF_PixelFloat) * output->width;
 				
 
@@ -601,9 +601,12 @@ DoRender(
 						if( HaveOpenGL() )
 						{
 							gpu_rendered = seq_data->context->ProcessWorldGL(float_world);
+							
+							if(!gpu_rendered)
+								seq_data->gpu_err = GPU_ERR_RENDER_ERR;
 						}
 						else
-							seq_data->gpu_err = TRUE;
+							seq_data->gpu_err = GPU_ERR_INSUFFICIENT;
 					}
 					
 					if(!gpu_rendered)

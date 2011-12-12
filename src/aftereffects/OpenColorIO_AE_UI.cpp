@@ -321,11 +321,18 @@ DrawEvent(
 				int buttons_top = field_bottom + BUTTONS_GAP_V;
 				
 				// GPU alert
-				if(seq_data->gpu_err)
+				if(seq_data->gpu_err != GPU_ERR_NONE)
 				{
-					bot.MoveTo(panel_left + 1, buttons_top + bot.FontSize() + BUTTON_TEXT_INDENT_V);
+					bot.MoveTo(field_corner.x, field_bottom + bot.FontSize() + BUTTON_TEXT_INDENT_V);
 					
-					bot.DrawString("NO GPU");
+					if(seq_data->gpu_err == GPU_ERR_INSUFFICIENT)
+					{
+						bot.DrawString("GPU Insufficient");
+					}
+					else if(seq_data->gpu_err == GPU_ERR_RENDER_ERR)
+					{
+						bot.DrawString("GPU Render Error");
+					}
 				}
 				
 				// Export button

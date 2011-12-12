@@ -106,9 +106,16 @@ enum {
 };
 typedef A_u_char FileStatus;
 
+enum {
+	GPU_ERR_NONE = 0,
+	GPU_ERR_INSUFFICIENT,
+	GPU_ERR_RENDER_ERR
+};
+typedef A_u_char GPUErr;
+
 typedef struct {
 	FileStatus				status;
-	A_Boolean				gpu_err;
+	GPUErr					gpu_err;
 	A_u_char				reserved[2];
 	OpenColorIO_AE_Context	*context;
 	char					path[ARB_PATH_LEN+1];

@@ -1010,6 +1010,10 @@ OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
 		InitOCIOGL();
 		UpdateOCIOGLState();
 	}
+	
+	if(_program == 0 || _fragShader == 0)
+		return false;
+	
 
 	PF_PixelFloat *pix = (PF_PixelFloat *)float_world->data;
 	float *rgba_origin = &pix->red;
