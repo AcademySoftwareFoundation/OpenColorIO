@@ -871,6 +871,8 @@ OpenColorIO_AE_Context::InitOCIOGL()
 {
 	if(!_gl_init)
 	{
+		SetPluginContext();
+	
 		glGenTextures(1, &_imageTexID);
 		glGenTextures(1, &_lut3dTexID);
 		
@@ -878,12 +880,25 @@ OpenColorIO_AE_Context::InitOCIOGL()
 		_lut3d.resize(num3Dentries);
 		memset(&_lut3d[0], 0, sizeof(float)*num3Dentries);
 		
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_3D, _lut3dTexID);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F_ARB,
+						LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
+							0, GL_RGB,GL_FLOAT, &_lut3d[0]);
+							
 		_fragShader = 0;
 		_program = 0;
 		
 		_bufferWidth = _bufferHeight = 0;
 		
 		_gl_init = true;
+		
+		SetAEContext();
 	}
 }
 
@@ -958,6 +973,8 @@ OpenColorIO_AE_Context::UpdateOCIOGLState()
 {
 	if(_gl_init)
 	{
+		SetPluginContext();
+		
 		// Step 1: Create a GPU Shader Description
 		OCIO::GpuShaderDesc shaderDesc;
 		shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
@@ -972,12 +989,6 @@ OpenColorIO_AE_Context::UpdateOCIOGLState()
 			
 			_lut3dcacheid = lut3dCacheID;
 			_processor->getGpuLut3D(&_lut3d[0], shaderDesc);
-			
-			glBindTexture(GL_TEXTURE_3D, _lut3dTexID);
-			glTexSubImage3D(GL_TEXTURE_3D, 0,
-							0, 0, 0, 
-							LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-							GL_RGB,GL_FLOAT, &_lut3d[0]);
 		}
 		
 		// Step 3: Compute the Shader
@@ -998,6 +1009,8 @@ OpenColorIO_AE_Context::UpdateOCIOGLState()
 			if(_program) glDeleteProgram(_program);
 			_program = LinkShaders(_fragShader);
 		}
+		
+		SetAEContext();
 	}
 }
 
@@ -1011,42 +1024,56 @@ OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
 		UpdateOCIOGLState();
 	}
 	
+	
 	if(_program == 0 || _fragShader == 0)
 		return false;
+		
 	
+	SetPluginContext();
+	
+
+	GLint max;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
+	
+	if(max < float_world->width || max < float_world->height || GL_NO_ERROR != glGetError())
+	{
+		SetAEContext();
+		return false;
+	}
+
 
 	PF_PixelFloat *pix = (PF_PixelFloat *)float_world->data;
 	float *rgba_origin = &pix->red;
 	
 	
-	glActiveTexture(GL_TEXTURE1);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, _imageTexID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, float_world->width, float_world->height, 0,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, float_world->width, float_world->height, 0,
 		GL_RGBA, GL_FLOAT, rgba_origin);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-
-	glActiveTexture(GL_TEXTURE2);
+	
+	
 	glBindTexture(GL_TEXTURE_3D, _lut3dTexID);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB,
+	glTexSubImage3D(GL_TEXTURE_3D, 0,
+					0, 0, 0, 
 					LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-					0, GL_RGB,GL_FLOAT, &_lut3d[0]);
-
-
+					GL_RGB, GL_FLOAT, &_lut3d[0]);
+	
+	
 	glUseProgram(_program);
-	glUniform1i(glGetUniformLocation(_program, "tex1"), 1);
-	glUniform1i(glGetUniformLocation(_program, "tex2"), 2);
+	glUniform1i(glGetUniformLocation(_program, "tex1"), 0);
+	glUniform1i(glGetUniformLocation(_program, "tex2"), 1);
 	
 
-	
+	if(GL_NO_ERROR != glGetError())
+	{
+		SetAEContext();
+		return false;
+	}
+
 	
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, GetFrameBuffer());
 	
@@ -1067,7 +1094,10 @@ OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
 	}
 	
 	if(GL_FRAMEBUFFER_COMPLETE_EXT != glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT))
+	{
+		SetAEContext();
 		return false;
+	}
 
 	glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
 	
@@ -1084,7 +1114,7 @@ OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
 
 	glEnable(GL_TEXTURE_2D);
 	glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1, 1, 1);
 	
 	glPushMatrix();
@@ -1107,12 +1137,14 @@ OpenColorIO_AE_Context::ProcessWorldGL(PF_EffectWorld *float_world)
 	glDisable(GL_TEXTURE_2D);
 		
 	
-	glFlush();
-	
-	
 	glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);
-	glReadPixels(0, 0, _bufferWidth, _bufferHeight, GL_RGBA, GL_FLOAT, rgba_origin);
+	glReadPixels(0, 0, float_world->width, float_world->height, GL_RGBA, GL_FLOAT, rgba_origin);
 
 
+	glFinish();
+	
+
+	SetAEContext();
+	
 	return true;
 }

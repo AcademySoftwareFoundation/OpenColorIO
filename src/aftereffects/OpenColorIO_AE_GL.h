@@ -20,6 +20,11 @@ void GlobalSetup_GL();
 
 bool HaveOpenGL();
 
+// must surround plug-in OpenGL calls with these functions so that AE
+// doesn't know we're borrowing the OpenGL renderer
+void SetPluginContext();
+void SetAEContext();
+
 GLuint GetFrameBuffer();
 
 void GlobalSetdown_GL();

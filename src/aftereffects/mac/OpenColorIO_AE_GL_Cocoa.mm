@@ -27,13 +27,14 @@ HaveRequiredExtensions()
 #define CheckExtension(N) gluCheckExtension((const GLubyte *)N, strExt)
 
 	return (gl_version >= 2.0 &&
+			CheckExtension("GL_ARB_color_buffer_float") &&
+			CheckExtension("GL_ARB_texture_float") &&
 			CheckExtension("GL_ARB_vertex_program") &&
 			CheckExtension("GL_ARB_vertex_shader") &&
 			CheckExtension("GL_ARB_texture_cube_map") &&
 			CheckExtension("GL_ARB_fragment_shader") &&
 			CheckExtension("GL_ARB_draw_buffers") &&
-			CheckExtension("GL_ARB_framebuffer_object") &&
-			CheckExtension("GL_EXT_framebuffer_object") );
+			CheckExtension("GL_ARB_framebuffer_object") );
 }
 
 
@@ -81,25 +82,51 @@ GlobalSetup_GL()
 
 	aglSetDrawable(g_context, (AGLDrawable)[[g_win graphicsContext] graphicsPort]);
 
-
 	glFlush();
 	
-	aglSetCurrentContext(g_context);
+	
+	SetPluginContext();
+	
 
-
-	if( !HaveRequiredExtensions() )
+	
+	GLint units;
+	glGetIntegerv(GL_MAX_TEXTURE_UNITS, &units);
+	
+	
+	if( !HaveRequiredExtensions() || units < 2)
 	{
 		GlobalSetdown_GL();
+		SetAEContext();
 		return;
 	}
 	
 	glGenFramebuffersEXT(1, &g_framebuffer);
+	
+	
+	SetAEContext();
 }
 
 
 bool HaveOpenGL()
 {
 	return (g_context != NULL && g_win != nil);
+}
+
+
+static AGLContext g_ae_context;
+
+void SetPluginContext()
+{
+	g_ae_context = aglGetCurrentContext();
+
+	aglSetCurrentContext(g_context);
+}
+
+
+void SetAEContext()
+{
+	// g_ae_context might be NULL...so be it
+	aglSetCurrentContext(g_ae_context);
 }
 
 
