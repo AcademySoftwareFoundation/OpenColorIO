@@ -22,12 +22,9 @@ HaveRequiredExtensions()
 	if(strVersion == NULL)
 		return false;
 
-	float gl_version;
-	sscanf((char *)strVersion, "%f", &gl_version);
-	
 #define CheckExtension(N) glewIsExtensionSupported(N)
 
-	return (gl_version >= 2.0 && GLEW_VERSION_2_0 &&
+	return (GLEW_VERSION_2_0 &&
 			CheckExtension("GL_ARB_color_buffer_float") &&
 			CheckExtension("GL_ARB_texture_float") &&
 			CheckExtension("GL_ARB_vertex_program") &&
@@ -84,61 +81,31 @@ GlobalSetup_GL()
 	g_hdc = GetDC(g_win);
 
 
-	int PixelFormat;
+	int pixelFormat;
 
 	PIXELFORMATDESCRIPTOR pfd;
 	ZeroMemory( &pfd, sizeof( pfd ) );
 
-	pfd.nSize      = sizeof(PIXELFORMATDESCRIPTOR);
-	pfd.nVersion   = 1;
-	pfd.dwFlags    = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-	pfd.iPixelType = PFD_TYPE_RGBA;
-	pfd.cColorBits = 128;
+	pfd.nSize			= sizeof(PIXELFORMATDESCRIPTOR);
+	pfd.nVersion		= 1;
+	pfd.dwFlags			= PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+	pfd.iPixelType		= PFD_TYPE_RGBA;
+	pfd.cColorBits		= 128;
+	pfd.cDepthBits		= 32;
+	pfd.cStencilBits	= 32;
+	pfd.iLayerType		= PFD_MAIN_PLANE;
 	
-	//PixelFormat = ChoosePixelFormat(g_hdc, &pfd);
+	pixelFormat = ChoosePixelFormat(g_hdc, &pfd);
 
-	int aAttribs[64];
-	int nIndexS= -1;
-	
-	aAttribs[++nIndexS] = WGL_DRAW_TO_WINDOW_ARB;
-	aAttribs[++nIndexS] = GL_TRUE;
-	aAttribs[++nIndexS] = WGL_SUPPORT_OPENGL_ARB;
-	aAttribs[++nIndexS] = GL_TRUE;
-	aAttribs[++nIndexS] = WGL_DOUBLE_BUFFER_ARB;
-	aAttribs[++nIndexS] = GL_TRUE;
-
-	aAttribs[++nIndexS] = WGL_PIXEL_TYPE_ARB;
-	aAttribs[++nIndexS] = WGL_TYPE_RGBA_FLOAT_ARB;
-	
-	aAttribs[++nIndexS] = WGL_COLOR_BITS_ARB;
-	aAttribs[++nIndexS] = 128;
-
-	aAttribs[++nIndexS] = 0;
-
-	UINT numFormats;
-	BOOL got_format = wglChoosePixelFormatARB(g_hdc, aAttribs, NULL, 1, &PixelFormat, &numFormats);
-
-	BOOL set_format = SetPixelFormat(g_hdc, PixelFormat, &pfd);
-	
-	if(!got_format || !set_format)
+	BOOL set_format = SetPixelFormat(g_hdc, pixelFormat, &pfd);
+ 	
+	if(!set_format)
 	{
 		GlobalSetdown_GL();
 		return;
 	}
 
 	g_context = wglCreateContext(g_hdc);
-
-	nIndexS= -1;
-
-	aAttribs[++nIndexS] = WGL_CONTEXT_MAJOR_VERSION_ARB;
-	aAttribs[++nIndexS] = 2;
-	aAttribs[++nIndexS] = WGL_CONTEXT_MINOR_VERSION_ARB;
-	aAttribs[++nIndexS] = 0;
-
-	aAttribs[++nIndexS] = 0;
-
-
-	//g_context = wglCreateContextAttribsARB(g_hdc, NULL, aAttribs);
 
 	glFlush();
 

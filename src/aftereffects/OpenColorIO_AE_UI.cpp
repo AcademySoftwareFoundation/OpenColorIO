@@ -531,8 +531,8 @@ DoClickPath(
 		
 		// try to retain settings if it looks like the same situation,
 		// possibly fixing a moved path
-		if(	OCIO_TYPE_LUT == new_context->getType() ||
-			arb_data->type != new_context->getType() ||
+		if(	(OCIO_TYPE_LUT == new_context->getType() && OCIO_TYPE_LUT != arb_data->type) ||
+			(OCIO_TYPE_LUT != new_context->getType() && OCIO_TYPE_LUT == arb_data->type) ||
 			-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
 			-1 == FindInVec(new_context->getInputs(), arb_data->output) ||
 			-1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
