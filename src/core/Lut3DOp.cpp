@@ -266,6 +266,217 @@ OCIO_NAMESPACE_ENTER
     }
     
     
+    void Lut3D_Tetrahedral(float* rgbaBuffer, long numPixels, const Lut3D & lut)
+    {
+        // Tetrahedral interoplation, as described by:
+        // http://www.filmlight.ltd.uk/pdf/whitepapers/FL-TL-TN-0057-SoftwareLib.pdf
+        // http://blogs.mathworks.com/steve/2006/11/24/tetrahedral-interpolation-for-colorspace-conversion/
+        // http://www.hpl.hp.com/techreports/98/HPL-98-95.html
+
+        float maxIndex[3];
+        float mInv[3];
+        float b[3];
+        float mInv_x_maxIndex[3];
+        int lutSize[3];
+        const float* startPos = &(lut.lut[0]);
+
+        for(int i=0; i<3; ++i)
+        {
+            maxIndex[i] = (float) (lut.size[i] - 1);
+            mInv[i] = 1.0f / (lut.from_max[i] - lut.from_min[i]);
+            b[i] = lut.from_min[i];
+            mInv_x_maxIndex[i] = (float) (mInv[i] * maxIndex[i]);
+
+            lutSize[i] = lut.size[i];
+        }
+
+        for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
+        {
+
+            if(isnan(rgbaBuffer[0]) || isnan(rgbaBuffer[1]) || isnan(rgbaBuffer[2]))
+            {
+                rgbaBuffer[0] = std::numeric_limits<float>::quiet_NaN();
+                rgbaBuffer[1] = std::numeric_limits<float>::quiet_NaN();
+                rgbaBuffer[2] = std::numeric_limits<float>::quiet_NaN();
+            }
+            else
+            {
+                float localIndex[3];
+                int indexLow[3];
+                int indexHigh[3];
+                float delta[3];
+
+                // Same index/delta calculation as linear interpolation
+                localIndex[0] = std::max(std::min(mInv_x_maxIndex[0] * (rgbaBuffer[0] - b[0]), maxIndex[0]), 0.0f);
+                localIndex[1] = std::max(std::min(mInv_x_maxIndex[1] * (rgbaBuffer[1] - b[1]), maxIndex[1]), 0.0f);
+                localIndex[2] = std::max(std::min(mInv_x_maxIndex[2] * (rgbaBuffer[2] - b[2]), maxIndex[2]), 0.0f);
+
+                indexLow[0] =  static_cast<int>(std::floor(localIndex[0]));
+                indexLow[1] =  static_cast<int>(std::floor(localIndex[1]));
+                indexLow[2] =  static_cast<int>(std::floor(localIndex[2]));
+
+                indexHigh[0] =  static_cast<int>(std::ceil(localIndex[0]));
+                indexHigh[1] =  static_cast<int>(std::ceil(localIndex[1]));
+                indexHigh[2] =  static_cast<int>(std::ceil(localIndex[2]));
+
+                delta[0] = localIndex[0] - static_cast<float>(indexLow[0]);
+                delta[1] = localIndex[1] - static_cast<float>(indexLow[1]);
+                delta[2] = localIndex[2] - static_cast<float>(indexLow[2]);
+
+                // Rebind for consistency with Truelight paper
+                float fx = delta[0];
+                float fy = delta[1];
+                float fz = delta[2];
+
+                // Compute index into LUT for surrounding corners
+                const int n000 = GetLut3DIndex_B(indexLow[0], indexLow[1], indexLow[2],
+                                                 lutSize[0], lutSize[1], lutSize[2]);
+                const int n100 = GetLut3DIndex_B(indexHigh[0], indexLow[1], indexLow[2],
+                                                 lutSize[0], lutSize[1], lutSize[2]);
+                const int n010 = GetLut3DIndex_B(indexLow[0], indexHigh[1], indexLow[2],
+                                                 lutSize[0], lutSize[1], lutSize[2]);
+                const int n001 = GetLut3DIndex_B(indexLow[0], indexLow[1], indexHigh[2],
+                                                 lutSize[0], lutSize[1], lutSize[2]);
+                const int n110 = GetLut3DIndex_B(indexHigh[0], indexHigh[1], indexLow[2],
+                                                 lutSize[0], lutSize[1], lutSize[2]);
+                const int n101 = GetLut3DIndex_B(indexHigh[0], indexLow[1], indexHigh[2],
+                                                 lutSize[0], lutSize[1], lutSize[2]);
+                const int n011 = GetLut3DIndex_B(indexLow[0], indexHigh[1], indexHigh[2],
+                                                 lutSize[0], lutSize[1], lutSize[2]);
+                const int n111 = GetLut3DIndex_B(indexHigh[0], indexHigh[1], indexHigh[2],
+                                                 lutSize[0], lutSize[1], lutSize[2]);
+
+                if (fx > fy) {
+                    if (fy > fz) {
+                       rgbaBuffer[0] =
+                           (1-fx)  * startPos[n000] +
+                           (fx-fy) * startPos[n100] +
+                           (fy-fz) * startPos[n110] +
+                           (fz)    * startPos[n111];
+
+                       rgbaBuffer[1] =
+                           (1-fx)  * startPos[n000+1] +
+                           (fx-fy) * startPos[n100+1] +
+                           (fy-fz) * startPos[n110+1] +
+                           (fz)    * startPos[n111+1];
+
+                       rgbaBuffer[2] =
+                           (1-fx)  * startPos[n000+2] +
+                           (fx-fy) * startPos[n100+2] +
+                           (fy-fz) * startPos[n110+2] +
+                           (fz)    * startPos[n111+2];
+                    }
+                    else if (fx > fz)
+                    {
+                        rgbaBuffer[0] =
+                            (1-fx)  * startPos[n000] +
+                            (fx-fz) * startPos[n100] +
+                            (fz-fy) * startPos[n101] +
+                            (fy)    * startPos[n111];
+
+                        rgbaBuffer[1] =
+                            (1-fx)  * startPos[n000+1] +
+                            (fx-fz) * startPos[n100+1] +
+                            (fz-fy) * startPos[n101+1] +
+                            (fy)    * startPos[n111+1];
+
+                        rgbaBuffer[2] =
+                            (1-fx)  * startPos[n000+2] +
+                            (fx-fz) * startPos[n100+2] +
+                            (fz-fy) * startPos[n101+2] +
+                            (fy)    * startPos[n111+2];
+                    }
+                    else
+                    {
+                        rgbaBuffer[0] =
+                            (1-fz)  * startPos[n000] +
+                            (fz-fx) * startPos[n001] +
+                            (fx-fy) * startPos[n101] +
+                            (fy)    * startPos[n111];
+
+                        rgbaBuffer[1] =
+                            (1-fz)  * startPos[n000+1] +
+                            (fz-fx) * startPos[n001+1] +
+                            (fx-fy) * startPos[n101+1] +
+                            (fy)    * startPos[n111+1];
+
+                        rgbaBuffer[2] =
+                            (1-fz)  * startPos[n000+2] +
+                            (fz-fx) * startPos[n001+2] +
+                            (fx-fy) * startPos[n101+2] +
+                            (fy)    * startPos[n111+2];
+                    }
+                }
+                else
+                {
+                    if (fz > fy)
+                    {
+                        rgbaBuffer[0] =
+                            (1-fz)  * startPos[n000] +
+                            (fz-fy) * startPos[n001] +
+                            (fy-fx) * startPos[n011] +
+                            (fx)    * startPos[n111];
+
+                        rgbaBuffer[1] =
+                            (1-fz)  * startPos[n000+1] +
+                            (fz-fy) * startPos[n001+1] +
+                            (fy-fx) * startPos[n011+1] +
+                            (fx)    * startPos[n111+1];
+
+                        rgbaBuffer[2] =
+                            (1-fz)  * startPos[n000+2] +
+                            (fz-fy) * startPos[n001+2] +
+                            (fy-fx) * startPos[n011+2] +
+                            (fx)    * startPos[n111+2];
+                    }
+                    else if (fz > fx)
+                    {
+                        rgbaBuffer[0] =
+                            (1-fy)  * startPos[n000] +
+                            (fy-fz) * startPos[n010] +
+                            (fz-fx) * startPos[n011] +
+                            (fx)    * startPos[n111];
+
+                        rgbaBuffer[1] =
+                            (1-fy)  * startPos[n000+1] +
+                            (fy-fz) * startPos[n010+1] +
+                            (fz-fx) * startPos[n011+1] +
+                            (fx)    * startPos[n111+1];
+
+                        rgbaBuffer[2] =
+                            (1-fy)  * startPos[n000+2] +
+                            (fy-fz) * startPos[n010+2] +
+                            (fz-fx) * startPos[n011+2] +
+                            (fx)    * startPos[n111+2];
+                    }
+                    else
+                    {
+                        rgbaBuffer[0] =
+                            (1-fy)  * startPos[n000] +
+                            (fy-fx) * startPos[n010] +
+                            (fx-fz) * startPos[n110] +
+                            (fz)    * startPos[n111];
+
+                        rgbaBuffer[1] =
+                            (1-fy)  * startPos[n000+1] +
+                            (fy-fx) * startPos[n010+1] +
+                            (fx-fz) * startPos[n110+1] +
+                            (fz)    * startPos[n111+1];
+
+                        rgbaBuffer[2] =
+                            (1-fy)  * startPos[n000+2] +
+                            (fy-fx) * startPos[n010+2] +
+                            (fx-fz) * startPos[n110+2] +
+                            (fz)    * startPos[n111+2];
+                    }
+                }
+            } // !isnan
+            
+            rgbaBuffer += 4;
+        }
+    }
+
+
     void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
     {
         if(!img) return;
@@ -446,6 +657,10 @@ OCIO_NAMESPACE_ENTER
             {
                 Lut3D_Linear(rgbaBuffer, numPixels, *m_lut);
             }
+            else if(m_interpolation == INTERP_TETRAHEDRAL)
+            {
+                Lut3D_Tetrahedral(rgbaBuffer, numPixels, *m_lut);
+            }
         }
         
         bool Lut3DOp::supportsGpuShader() const
@@ -585,6 +800,14 @@ OIIO_ADD_TEST(Lut3DOp, ValueCheck)
     {
         OIIO_CHECK_CLOSE(color[i], linear[i], 1e-8);
     }
+
+    // Check tetrahedral
+    memcpy(color, reference, 12*sizeof(float));
+    OCIO::Lut3D_Tetrahedral(color, 3, lut);
+    for(unsigned int i=0; i<12; ++i)
+    {
+        OIIO_CHECK_CLOSE(color[i], linear[i], 1e-7); // Note, max delta lowered from 1e-8
+    }
 }
 
 
@@ -632,17 +855,34 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
     int numloops = 1024;
     for(int i=0; i<numloops; ++i)
     {
-        // OCIO::Lut3D_Nearest(&img[0], xres*yres, lut);
+        //OCIO::Lut3D_Nearest(&img[0], xres*yres, lut);
         OCIO::Lut3D_Linear(&img[0], xres*yres, lut);
     }
     
     gettimeofday(&t, 0);
     double endtime = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;
-    double totaltime = (endtime-starttime)/numloops;;
+    double totaltime_a = (endtime-starttime)/numloops;
     
-    printf("time %0.1f ms  - %0.1f fps\n", totaltime*1000.0, 1.0/totaltime);
+    printf("Linear: %0.1f ms  - %0.1f fps\n", totaltime_a*1000.0, 1.0/totaltime_a);
+
+
+    // Tetrahedral
+    gettimeofday(&t, 0);
+    starttime = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;
+
+    for(int i=0; i<numloops; ++i)
+    {
+        OCIO::Lut3D_Tetrahedral(&img[0], xres*yres, lut);
+    }
+
+    gettimeofday(&t, 0);
+    endtime = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;
+    double totaltime_b = (endtime-starttime)/numloops;
+
+    printf("Tetra: %0.1f ms  - %0.1f fps\n", totaltime_b*1000.0, 1.0/totaltime_b);
+
+    double speed_diff = totaltime_a/totaltime_b;
+    printf("Tetra is %.04f speed of Linear\n", speed_diff);
     */
 }
-
-
 #endif // OCIO_UNIT_TEST

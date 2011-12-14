@@ -186,6 +186,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(interp == INTERP_NEAREST) return "nearest";
         else if(interp == INTERP_LINEAR) return "linear";
+        else if(interp == INTERP_TETRAHEDRAL) return "tetrahedral";
         return "unknown";
     }
     
@@ -194,6 +195,7 @@ OCIO_NAMESPACE_ENTER
         std::string str = pystring::lower(s);
         if(str == "nearest") return INTERP_NEAREST;
         else if(str == "linear") return INTERP_LINEAR;
+        else if(str == "tetrahedral") return INTERP_TETRAHEDRAL;
         return INTERP_UNKNOWN;
     }
     

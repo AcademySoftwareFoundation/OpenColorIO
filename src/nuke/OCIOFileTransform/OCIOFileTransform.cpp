@@ -32,7 +32,7 @@ OCIOFileTransform::~OCIOFileTransform()
 
 const char* OCIOFileTransform::dirs[] = { "forward", "inverse", 0 };
 
-const char* OCIOFileTransform::interp[] = { "nearest", "linear", 0 };
+const char* OCIOFileTransform::interp[] = { "nearest", "linear", "tetrahedral", 0 };
 
 void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 {
@@ -83,7 +83,14 @@ void OCIOFileTransform::_validate(bool for_real)
         else transform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
         
         if(m_interpindex == 0) transform->setInterpolation(OCIO::INTERP_NEAREST);
-        else transform->setInterpolation(OCIO::INTERP_LINEAR);
+        else if(m_interpindex == 1) transform->setInterpolation(OCIO::INTERP_LINEAR);
+        else if(m_interpindex == 2) transform->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+        else
+        {
+            // Should never happen
+            error("Interpolation value out of bounds");
+            return;
+        }
         
         m_processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_FORWARD);
     }
