@@ -1,10 +1,12 @@
+
 //
-//  OCIO_AE_Menu.h
-//  OpenColorIO_AE
+// OpenColorIO AE
 //
-//  Created by Brendan Bolles on 11/22/11.
-//  Copyright 2011 fnord. All rights reserved.
+// After Effects implementation of OpenColorIO
 //
+// OpenColorIO.org
+//
+
 
 #import <Cocoa/Cocoa.h>
 
@@ -14,7 +16,6 @@
 	NSInteger chosen_item;
 }
 
-// send in an array of NSStrings
 - (id)init:(NSArray *)menuItems selectedItem:(NSInteger)selected;
 
 - (void)showMenu;

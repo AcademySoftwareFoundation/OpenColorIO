@@ -1,13 +1,16 @@
 
 //
-//	mmm...our custom UI
+// OpenColorIO AE
 //
+// After Effects implementation of OpenColorIO
 //
+// OpenColorIO.org
+//
+
 
 #include "OpenColorIO_AE.h"
 
 #include "OpenColorIO_AE_Context.h"
-
 #include "OpenColorIO_AE_Dialogs.h"
 
 #include "DrawbotBot.h"
@@ -37,7 +40,7 @@ using namespace std;
 #define BUTTON_HEIGHT		20
 #define BUTTON_WIDTH		80
 
-#define BUTTON_TEXT_INDENT_V 3
+#define BUTTON_TEXT_INDENT_V 2
 
 #define MENUS_INDENT_H		20
 
@@ -229,7 +232,7 @@ DrawButton(DrawbotBot &bot, const char *label, int width, bool pressed)
 	bot.MoveTo(original.x + (width / 2), original.y + text_height + BUTTON_TEXT_INDENT_V);
 	
 	if(pressed)
-		bot.Move(1, 1);
+		bot.Move(2, 2);
 	
 	bot.SetColor(TEXT_COLOR);
 	bot.DrawString(label, kDRAWBOT_TextAlignment_Center);
@@ -286,8 +289,10 @@ DrawEvent(
 			bot.SetColor(TEXT_COLOR);
 			
 			if(have_file)
-			{
-				bot.DrawString(arb_data->path,
+			{	
+				char *display_string = (seq_data->status == STATUS_USING_RELATIVE ? arb_data->relative_path : arb_data->path);
+			
+				bot.DrawString(display_string,
 								kDRAWBOT_TextAlignment_Default,
 								kDRAWBOT_TextTruncation_PathEllipsis,
 								field_width - (2 * FIELD_TEXT_INDENT_H));
@@ -298,62 +303,91 @@ DrawEvent(
 			}
 			
 			
-			// buttons
-			int field_bottom = panel_top + TOP_MARGIN + FIELD_HEIGHT;
-			int buttons_top = field_bottom + BUTTONS_GAP_V;
-			
-			// Export button
-			if(arb_data->type != OCIO_TYPE_NONE)
+			if(seq_data->status == STATUS_FILE_MISSING)
 			{
-				bot.MoveTo(panel_left + BUTTONS_INDENT_H + (2 * (BUTTON_WIDTH + BUTTONS_GAP_H)), buttons_top);
+				bot.Move(25, 50);
 				
-				DrawButton(bot, "Export...", BUTTON_WIDTH, false);
+				bot.SetColor(PF_App_Color_RED);
+				bot.PaintRect(200, 50);
+				
+				bot.Move(100, 25 + (bot.FontSize() / 2));
+				bot.SetColor(PF_App_Color_WHITE);
+				bot.DrawString("FILE MISSING", kDRAWBOT_TextAlignment_Center);
 			}
-			
-			if(arb_data->type == OCIO_TYPE_LUT)
+			else
 			{
-				// Invert button
-				bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
+				// buttons
+				int field_bottom = panel_top + TOP_MARGIN + FIELD_HEIGHT;
+				int buttons_top = field_bottom + BUTTONS_GAP_V;
 				
-				DrawButton(bot, "Invert", BUTTON_WIDTH, arb_data->invert);
-			}
-			else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
-			{
-				// Convert/Display buttons
-				bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
-				
-				DrawButton(bot, "Convert", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_CONVERT);
-				
-				bot.Move(BUTTON_WIDTH + BUTTONS_GAP_H);
-				
-				DrawButton(bot, "Display", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_DISPLAY);
-				
-				
-				// menus
-				int buttons_bottom = buttons_top + BUTTON_HEIGHT;
-				
-				bot.MoveTo(panel_left + MENUS_INDENT_H, buttons_bottom + MENUS_GAP_V);
-				
-				if(arb_data->type == OCIO_TYPE_CONVERT)
+				// GPU alert
+				if(seq_data->gpu_err != GPU_ERR_NONE)
 				{
-					DrawMenu(bot, "Input Space:", arb_data->input);
+					bot.MoveTo(field_corner.x, field_bottom + bot.FontSize() + BUTTON_TEXT_INDENT_V);
 					
-					bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
-					
-					DrawMenu(bot, "Output Space:", arb_data->output);
+					if(seq_data->gpu_err == GPU_ERR_INSUFFICIENT)
+					{
+						bot.DrawString("GPU Insufficient");
+					}
+					else if(seq_data->gpu_err == GPU_ERR_RENDER_ERR)
+					{
+						bot.DrawString("GPU Render Error");
+					}
 				}
-				else if(arb_data->type == OCIO_TYPE_DISPLAY)
+				
+				// Export button
+				if(arb_data->type != OCIO_TYPE_NONE)
 				{
-					// color space transformations
-					DrawMenu(bot, "Input Space:", arb_data->input);
+					bot.MoveTo(panel_left + BUTTONS_INDENT_H + (2 * (BUTTON_WIDTH + BUTTONS_GAP_H)), buttons_top);
 					
-					bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+					DrawButton(bot, "Export...", BUTTON_WIDTH, false);
+				}
+				
+				if(arb_data->type == OCIO_TYPE_LUT)
+				{
+					// Invert button
+					bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
 					
-					DrawMenu(bot, "Transform:", arb_data->transform);
+					DrawButton(bot, "Invert", BUTTON_WIDTH, arb_data->invert);
+				}
+				else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
+				{
+					// Convert/Display buttons
+					bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
 					
-					bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+					DrawButton(bot, "Convert", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_CONVERT);
 					
-					DrawMenu(bot, "Device:", arb_data->device);
+					bot.Move(BUTTON_WIDTH + BUTTONS_GAP_H);
+					
+					DrawButton(bot, "Display", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_DISPLAY);
+					
+					
+					// menus
+					int buttons_bottom = buttons_top + BUTTON_HEIGHT;
+					
+					bot.MoveTo(panel_left + MENUS_INDENT_H, buttons_bottom + MENUS_GAP_V);
+					
+					if(arb_data->type == OCIO_TYPE_CONVERT)
+					{
+						DrawMenu(bot, "Input Space:", arb_data->input);
+						
+						bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+						
+						DrawMenu(bot, "Output Space:", arb_data->output);
+					}
+					else if(arb_data->type == OCIO_TYPE_DISPLAY)
+					{
+						// color space transformations
+						DrawMenu(bot, "Input Space:", arb_data->input);
+						
+						bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+						
+						DrawMenu(bot, "Transform:", arb_data->transform);
+						
+						bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
+						
+						DrawMenu(bot, "Device:", arb_data->device);
+					}
 				}
 			}
 			
@@ -366,6 +400,59 @@ DrawEvent(
 	}
 
 	return err;
+}
+
+
+string
+GetProjectDir(PF_InData *in_data)
+{
+	AEGP_SuiteHandler suites(in_data->pica_basicP);
+
+	AEGP_ProjectH projH = NULL;
+	suites.ProjSuite5()->AEGP_GetProjectByIndex(0, &projH);
+
+	AEGP_MemHandle pathH = NULL;
+	suites.ProjSuite5()->AEGP_GetProjectPath(projH, &pathH);
+
+	if(pathH)
+	{
+		string proj_dir;
+		
+		A_UTF16Char *path = NULL;
+		suites.MemorySuite1()->AEGP_LockMemHandle(pathH, (void **)&path);
+
+		if(path)
+		{
+			// poor-man's unicode copy
+			char c_path[AEGP_MAX_PATH_SIZE];
+
+			char *c = c_path;
+			A_UTF16Char *s = path;
+
+			do{
+				*c++ = *s;
+			}while(*s++ != '\0');
+
+#ifdef WIN_ENV
+#define PATH_DELIMITER	'\\'
+#else
+#define PATH_DELIMITER	'/'
+#endif
+
+			string proj_path(c_path);
+			
+			if(proj_path.find_last_of(PATH_DELIMITER) != string::npos)
+			{
+				proj_dir = proj_path.substr(0, proj_path.find_last_of(PATH_DELIMITER));
+			}
+		}
+		
+		suites.MemorySuite1()->AEGP_FreeMemHandle(pathH);
+		
+		return proj_dir;
+	}
+
+	return string("");
 }
 
 
@@ -405,15 +492,23 @@ DoClickPath(
 	
 	extensions[ "ocio" ] = "OCIO Format";
 	
+
+	void *hwndOwner = NULL;
+
+#ifdef WIN_ENV
+	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
+#endif
+
+	char c_path[ARB_PATH_LEN + 1] = { '\0' };
 	
-	char path[ARB_PATH_LEN + 1];
-	
-	bool result = OpenFile(path, ARB_PATH_LEN, extensions, NULL);
+	bool result = OpenFile(c_path, ARB_PATH_LEN, extensions, hwndOwner);
 	
 	
 	if(result)
 	{
-		OpenColorIO_AE_Context *new_context = new OpenColorIO_AE_Context(path);
+		Path path(c_path, GetProjectDir(in_data));
+		
+		OpenColorIO_AE_Context *new_context = new OpenColorIO_AE_Context( path.full_path() );
 		
 		if(new_context == NULL)
 			throw OCIO::Exception("WTF?");
@@ -427,13 +522,17 @@ DoClickPath(
 		seq_data->context = new_context;
 		
 		
-		strncpy(arb_data->path, path, ARB_PATH_LEN);
+		strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN);
+		strncpy(arb_data->relative_path, path.relative_path().c_str(), ARB_PATH_LEN);
+		
+		strncpy(seq_data->path, path.full_path().c_str(), ARB_PATH_LEN);
+		strncpy(seq_data->relative_path, path.relative_path().c_str(), ARB_PATH_LEN);
 		
 		
 		// try to retain settings if it looks like the same situation,
 		// possibly fixing a moved path
-		if(	OCIO_TYPE_LUT == new_context->getType() ||
-			arb_data->type != new_context->getType() ||
+		if(	(OCIO_TYPE_LUT == new_context->getType() && OCIO_TYPE_LUT != arb_data->type) ||
+			(OCIO_TYPE_LUT != new_context->getType() && OCIO_TYPE_LUT == arb_data->type) ||
 			-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
 			-1 == FindInVec(new_context->getInputs(), arb_data->output) ||
 			-1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
@@ -471,6 +570,8 @@ DoClickPath(
 		}
 		
 		params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+		
+		seq_data->status = STATUS_USING_ABSOLUTE;
 	}
 }
 
@@ -545,9 +646,15 @@ DoClickExport(
 	extensions[ "icc" ] = "ICC Profile";
 	
 	
-	char path[256];
+	void *hwndOwner = NULL;
+
+#ifdef WIN_ENV
+	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
+#endif
+
+	char path[256] = { '\0' };
 	
-	bool result = SaveFile(path, 255, extensions, NULL);
+	bool result = SaveFile(path, 255, extensions, hwndOwner);
 	
 	
 	if(result)
@@ -563,7 +670,7 @@ DoClickExport(
 		{
 			char monitor_path[256] = {'\0'};
 		
-			do_export = GetMonitorProfile(monitor_path, 255, NULL);
+			do_export = GetMonitorProfile(monitor_path, 255, hwndOwner);
 		
 			if(monitor_path[0] != '\0')
 				monitor_icc_path = monitor_path;
@@ -627,11 +734,14 @@ DoClickMenus(
 		}
 		
 		
-		if(selected_item < 0)
-			selected_item = 0;
 		
-		
-		int result = PopUpMenu(menu_items, selected_item);
+		void *hwndOwner = NULL;
+
+	#ifdef WIN_ENV
+		PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
+	#endif
+
+		int result = PopUpMenu(menu_items, selected_item, hwndOwner);
 		
 		
 		if(result != selected_item)
@@ -711,11 +821,11 @@ DoClick(
 				{
 					DoClickPath(in_data, out_data, params, output, event_extra, arb_data, seq_data, reg);
 				}
-				else if(arb_data->type != OCIO_TYPE_NONE)
+				else if(arb_data->type != OCIO_TYPE_NONE && seq_data->status != STATUS_FILE_MISSING)
 				{
 					if(seq_data->context == NULL)
 					{
-						seq_data->context = new OpenColorIO_AE_Context(arb_data);
+						seq_data->context = new OpenColorIO_AE_Context(arb_data, GetProjectDir(in_data));
 					}
 						
 					if(reg == REGION_CONVERT_BUTTON || reg == REGION_DISPLAY_BUTTON)
@@ -737,12 +847,16 @@ DoClick(
 				PF_SPRINTF(out_data->return_msg, e.what());
 				
 				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+				
+				seq_data->status = STATUS_OCIO_ERROR;
 			}
 			catch(...)
 			{
 				PF_SPRINTF(out_data->return_msg, "Unknown error");
 				
 				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+				
+				seq_data->status = STATUS_OCIO_ERROR;
 			}
 		}
 	}

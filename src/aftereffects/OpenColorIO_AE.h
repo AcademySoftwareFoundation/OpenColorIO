@@ -1,4 +1,11 @@
 
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
 
 #pragma once
 
@@ -6,13 +13,16 @@
 #define _OPENCOLORIO_AE_H_
 
 
-#define PF_DEEP_COLOR_AWARE 1  // do we really still need this?
+//#define PF_DEEP_COLOR_AWARE 1  // do we really still need this?
 
 #include "AEConfig.h"
 #include "entry.h"
 #include "AE_Macros.h"
 #include "Param_Utils.h"
-#include "AEGP_SuiteHandler.h"
+#include "AE_Effect.h"
+#include "AE_EffectUI.h"
+#include "AE_EffectCB.h"
+
 
 #ifdef MSWindows
 	#include <Windows.h>
@@ -34,12 +44,14 @@
 enum {
 	OCIO_INPUT = 0,
 	OCIO_DATA,
+	OCIO_GPU,
 	
 	OCIO_NUM_PARAMS
 };
 
 enum {
-	OCIO_DATA_ID = 1
+	OCIO_DATA_ID = 1,
+	OCIO_GPU_ID
 };
 
 
@@ -71,7 +83,7 @@ typedef struct {
 	A_u_long		storage_size;
 	A_u_char		reserved[56]; // 64 pre-path bytes
 	char			path[ARB_PATH_LEN+1];
-	char			relative_path[ARB_PATH_LEN+1]; // also not yet used
+	char			relative_path[ARB_PATH_LEN+1];
 	char			input[ARB_SPACE_LEN+1];
 	char			output[ARB_SPACE_LEN+1];
 	char			transform[ARB_SPACE_LEN+1];
@@ -84,8 +96,30 @@ typedef struct {
 
 class OpenColorIO_AE_Context;
 
+enum {
+	STATUS_UNKNOWN = 0,
+	STATUS_NO_FILE,
+	STATUS_USING_ABSOLUTE,
+	STATUS_USING_RELATIVE,
+	STATUS_FILE_MISSING,
+	STATUS_OCIO_ERROR
+};
+typedef A_u_char FileStatus;
+
+enum {
+	GPU_ERR_NONE = 0,
+	GPU_ERR_INSUFFICIENT,
+	GPU_ERR_RENDER_ERR
+};
+typedef A_u_char GPUErr;
+
 typedef struct {
+	FileStatus				status;
+	GPUErr					gpu_err;
+	A_u_char				reserved[2];
 	OpenColorIO_AE_Context	*context;
+	char					path[ARB_PATH_LEN+1];
+	char					relative_path[ARB_PATH_LEN+1];
 } SequenceData;
 
 #endif

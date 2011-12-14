@@ -1,19 +1,24 @@
 
+//
+// OpenColorIO AE
+//
+// After Effects implementation of OpenColorIO
+//
+// OpenColorIO.org
+//
 
 #include "OpenColorIO_AE_Dialogs.h"
-
-//#import <Cocoa/Cocoa.h>
 
 #import "OpenColorIO_AE_MonitorProfileChooser_Controller.h"
 
 #import "OpenColorIO_AE_Menu.h"
 
 
-bool OpenFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
+bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd)
 {
-	NSOpenPanel *op = [NSOpenPanel openPanel];
+	NSOpenPanel *panel = [NSOpenPanel openPanel];
 	 
-	[op setTitle:@"OpenColorIO"];
+	[panel setTitle:@"OpenColorIO"];
 	
 	
 	NSMutableArray *extension_array = [[NSMutableArray alloc] init];
@@ -32,10 +37,10 @@ bool OpenFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
 		message += "." + i->first;
 	}
 	
-	[op setMessage:[NSString stringWithUTF8String:message.c_str()]];
+	[panel setMessage:[NSString stringWithUTF8String:message.c_str()]];
 	
 	
-	NSInteger result = [op runModalForTypes:extension_array];
+	NSInteger result = [panel runModalForTypes:extension_array];
 	
 	
 	[extension_array release];
@@ -43,14 +48,14 @@ bool OpenFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
 	  
 	if(result == NSOKButton)
 	{
-		return [[op filename] getCString:path maxLength:buf_len encoding:NSASCIIStringEncoding];
+		return [[panel filename] getCString:path maxLength:buf_len encoding:NSASCIIStringEncoding];
 	}
 	else
 		return false;
 }
 
 
-bool SaveFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
+bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd)
 {
 	NSSavePanel *panel = [NSSavePanel savePanel];
 	
@@ -92,7 +97,7 @@ bool SaveFile(char *path, int buf_len, ExtensionMap &extensions, void *hwnd)
 }
 
 
-bool GetMonitorProfile(char *path, int buf_len, void *hwnd)
+bool GetMonitorProfile(char *path, int buf_len, const void *hwnd)
 {
 	bool hit_ok = false;
 	
@@ -129,7 +134,7 @@ bool GetMonitorProfile(char *path, int buf_len, void *hwnd)
 }
 
 
-int PopUpMenu(MenuVec &menu_items, int selected_index)
+int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 {
 	NSMutableArray *item_array = [[NSMutableArray alloc] init];
 	

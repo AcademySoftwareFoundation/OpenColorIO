@@ -63,27 +63,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #error OCIO needs gcc 4 or later to get access to <tr1/memory> (or specify USE_BOOST_PTR instead)
 #endif
 
-// If supported, define OCIOEXPORT, OCIOHIDDEN
-// (used to choose which symbols to export from OpenColorIO)
-#if defined __linux__ || __APPLE__
-    #if __GNUC__ >= 4
-        #define OCIOEXPORT __attribute__ ((visibility("default")))
-        #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
-    #else
-        #define OCIOEXPORT
-        #define OCIOHIDDEN
-    #endif
-#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-    // Windows requires you to export from the main library and then import in any others
-    #if defined OpenColorIO_EXPORTS
-        #define OCIOEXPORT __declspec(dllexport)
-    #else
-        #define OCIOEXPORT __declspec(dllimport)
-    #endif
-    #define OCIOHIDDEN
-#else // Others platforms not supported atm
-    #define OCIOEXPORT
-    #define OCIOHIDDEN
+#ifdef OpenColorIO_SHARED
+	// If supported, define OCIOEXPORT, OCIOHIDDEN
+	// (used to choose which symbols to export from OpenColorIO)
+	#if defined __linux__ || __APPLE__
+		#if __GNUC__ >= 4
+			#define OCIOEXPORT __attribute__ ((visibility("default")))
+			#define OCIOHIDDEN __attribute__ ((visibility("hidden")))
+		#else
+			#define OCIOEXPORT
+			#define OCIOHIDDEN
+		#endif
+	#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+		// Windows requires you to export from the main library and then import in any others
+		#if defined OpenColorIO_EXPORTS
+			#define OCIOEXPORT __declspec(dllexport)
+		#else
+			#define OCIOEXPORT __declspec(dllimport)
+		#endif
+		#define OCIOHIDDEN
+	#else // Others platforms not supported atm
+		#define OCIOEXPORT
+		#define OCIOHIDDEN
+	#endif
+#else
+	#define OCIOEXPORT
+	#define OCIOHIDDEN
 #endif
 
 // Windows defines these troublesome macros that collide with std::limits
