@@ -22,11 +22,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="build\$(PlatformName)\$(ConfigurationName)"
-<<<<<<< HEAD
 			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
-=======
-			IntermediateDirectory="$(ConfigurationName)"
->>>>>>> 466286fb00fc2f1c0b8b12774ed7651d74480348
 			ConfigurationType="4"
 			CharacterSet="1"
 			>
@@ -88,11 +84,7 @@
 		<Configuration
 			Name="Debug|x64"
 			OutputDirectory="build\$(PlatformName)\$(ConfigurationName)"
-<<<<<<< HEAD
 			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
-=======
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
->>>>>>> 466286fb00fc2f1c0b8b12774ed7651d74480348
 			ConfigurationType="4"
 			CharacterSet="1"
 			>
