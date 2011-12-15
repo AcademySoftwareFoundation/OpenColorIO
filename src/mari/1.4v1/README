@@ -1,0 +1,10 @@
+These files ship with Mari, and are *not* required to be manually installed.
+
+They are provided as a reference example of using the OCIO API to create a GPU
+monitor implementation in python.
+
+Media/Scripts/mari/utils/ocio.py
+Media/Scripts/mari/system/_ocio_toolbar.py
+Media/Scripts/mari/system/_ocio_filter.py
+
+All code in these examples is Copyright (c) 2011 The Foundry Visionmongers Ltd.
