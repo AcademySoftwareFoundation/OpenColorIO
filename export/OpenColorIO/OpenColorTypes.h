@@ -209,8 +209,9 @@ OCIO_NAMESPACE_ENTER
     enum Interpolation
     {
         INTERP_UNKNOWN = 0,
-        INTERP_NEAREST, //! nearest neighbor in all dimensions
-        INTERP_LINEAR   //! linear interpolation in all dimensions
+        INTERP_NEAREST,    //! nearest neighbor in all dimensions
+        INTERP_LINEAR,     //! linear interpolation in all dimensions
+        INTERP_TETRAHEDRAL //! tetrahedral interpolation in all directions
     };
     
     //!cpp:type::
