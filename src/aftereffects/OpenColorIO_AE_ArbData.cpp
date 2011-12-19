@@ -48,6 +48,7 @@ ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
 			arb_data->output[0]			= '\0';
 			arb_data->transform[0]		= '\0';
 			arb_data->device[0]			= '\0';
+			arb_data->look[0]			= '\0';
 			
 			
 			// set default with environment variable if it's set
@@ -115,6 +116,7 @@ CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
 	strcpy(out_arb_data->output, in_arb_data->output);
 	strcpy(out_arb_data->transform, in_arb_data->transform);
 	strcpy(out_arb_data->device, in_arb_data->device);
+	strcpy(out_arb_data->look, in_arb_data->look);
 }
 
 
@@ -289,7 +291,8 @@ ArbCompare(PF_InData *in_data, PF_OutData *out_data,
 			!strcmp(a_data->input, b_data->input) &&
 			!strcmp(a_data->output, b_data->output) &&
 			!strcmp(a_data->transform, b_data->transform) &&
-			!strcmp(a_data->device, b_data->device) )
+			!strcmp(a_data->device, b_data->device) &&
+			!strcmp(a_data->look, b_data->look) )
 		{
 			*compareP = PF_ArbCompare_EQUAL;
 		}
