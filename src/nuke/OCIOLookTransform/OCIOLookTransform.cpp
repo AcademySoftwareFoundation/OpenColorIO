@@ -30,7 +30,6 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     m_outputColorSpaceIndex = 0;
     m_lookIndex = 0;
     m_dirIndex = 0;
-    m_layersToProcess = DD::Image::Mask_RGBA;
     m_ignoreErrors = false;
     
     // Query the colorspace names from the current config
@@ -220,8 +219,6 @@ void OCIOLookTransform::append(DD::Image::Hash& localhash)
 
 void OCIOLookTransform::_validate(bool for_real)
 {
-    input0().validate(for_real);
-
     if(!m_hasColorSpaces)
     {
         error("No colorspaces available for input and/or output.");
@@ -309,13 +306,10 @@ void OCIOLookTransform::_validate(bool for_real)
     
     if(m_processor->isNoOp())
     {
-        // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
-        copy_info();
-        return;
+    } else {    
+        set_out_channels(DD::Image::Mask_All);
     }
-    
-    set_out_channels(DD::Image::Mask_All);
 
     DD::Image::PixelIop::_validate(for_real);
 }
@@ -326,7 +320,7 @@ void OCIOLookTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& m
     DD::Image::ChannelSet done;
     foreach(c, mask)
     {
-        if ((m_layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        if (DD::Image::colourIndex(c) < 3 && !(done & c))
         {
             done.addBrothers(c, 3);
         }
@@ -355,7 +349,7 @@ void OCIOLookTransform::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(m_layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        if (colourIndex(requestedChannel) >= 3)
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;

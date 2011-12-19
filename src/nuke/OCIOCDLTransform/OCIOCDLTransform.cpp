@@ -21,8 +21,6 @@ const char* OCIOCDLTransform::dirs[] = { "forward", "inverse", 0 };
 
 OCIOCDLTransform::OCIOCDLTransform(Node *n) : DD::Image::PixelIop(n)
 {
-    layersToProcess = DD::Image::Mask_RGBA;
-
     for (int i = 0; i < 3; i++){
         m_slope[i] = 1.0;
         m_offset[i] = 0.0;
@@ -252,8 +250,6 @@ void OCIOCDLTransform::_validate(bool for_real)
     
     refreshKnobEnabledState();
     
-    input0().validate(for_real);
-    
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
@@ -277,13 +273,10 @@ void OCIOCDLTransform::_validate(bool for_real)
     
     if(m_processor->isNoOp())
     {
-        // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
-        copy_info();
-        return;
+    } else {    
+        set_out_channels(DD::Image::Mask_All);
     }
-    
-    set_out_channels(DD::Image::Mask_All);
 
     DD::Image::PixelIop::_validate(for_real);
 }
@@ -294,7 +287,7 @@ void OCIOCDLTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& ma
     DD::Image::ChannelSet done;
     foreach(c, mask)
     {
-        if ((layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        if (DD::Image::colourIndex(c) < 3 && !(done & c))
         {
             done.addBrothers(c, 3);
         }
@@ -323,7 +316,7 @@ void OCIOCDLTransform::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        if (colourIndex(requestedChannel) >= 3)
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;
