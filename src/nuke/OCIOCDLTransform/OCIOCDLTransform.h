@@ -52,12 +52,12 @@ class OCIOCDLTransform : public DD::Image::PixelIop {
     public:
         OCIOCDLTransform(Node *node);
 
-        ~OCIOCDLTransform();
+        virtual ~OCIOCDLTransform();
 
         static const DD::Image::Op::Description description;
 
         /*! Return the command name that will be stored in Nuke scripts. */
-        const char *Class() const;
+        virtual const char *Class() const;
 
         /*!
          * Return a name for this class that will be shown to the user. The
@@ -70,22 +70,22 @@ class OCIOCDLTransform : public DD::Image::PixelIop {
          *
          * \return "OCIOCDLTransform"
          */
-        const char *displayName() const;
+        virtual const char *displayName() const;
 
         /*!
          * Return help information for this node. This information is in the
          * pop-up window that the user gets when they hit the [?] button in
          * the lower-left corner of the control panel.
          */
-        const char *node_help() const;
+        virtual const char *node_help() const;
         
         /*!
          * Define the knobs that will be presented in the control panel.
          */
-        void knobs(DD::Image::Knob_Callback f);
+        virtual void knobs(DD::Image::Knob_Callback f);
 
         //! The will handle the knob changes.
-        int knob_changed(DD::Image::Knob*);
+        virtual int knob_changed(DD::Image::Knob*);
         
         void refreshKnobEnabledState();
         void loadCDLFromFile();
@@ -100,7 +100,7 @@ class OCIOCDLTransform : public DD::Image::PixelIop {
          * output channel requires all its rgb bretheren. (Non-rgb
          * are passed through.)
          */
-        void in_channels(int n, DD::Image::ChannelSet& mask) const;
+        virtual void in_channels(int n, DD::Image::ChannelSet& mask) const;
 
         /*!
          * Calculate the output pixel data.
@@ -109,7 +109,7 @@ class OCIOCDLTransform : public DD::Image::PixelIop {
          * \param rowXBound exclusive right bound
          * \param outputChannels a subset of out_channels(), the required channels to be produced
          */
-        void pixel_engine(
+        virtual void pixel_engine(
             const DD::Image::Row& in,
             int rowY, int rowX, int rowXBound,
             DD::Image::ChannelMask outputChannels,
@@ -123,7 +123,7 @@ class OCIOCDLTransform : public DD::Image::PixelIop {
          * is not a noop. (As OCIO whether a given transform is a noop, since it
          * can do more analysis than just name matching.)
          */
-        void _validate(bool for_real);
+        virtual void _validate(bool for_real);
 
         /*!
          * Ensure Node hash is reflects all parameters
