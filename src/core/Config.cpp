@@ -233,6 +233,7 @@ OCIO_NAMESPACE_ENTER
     
     typedef std::vector<View> ViewVec;
     typedef std::map<std::string, ViewVec> DisplayMap;  // (display name : ViewVec)
+    typedef std::set<std::string> StringSet;
     
     void operator >> (const YAML::Node& node, View& v)
     {
@@ -588,6 +589,7 @@ OCIO_NAMESPACE_ENTER
         
         
         ///// COLORSPACES
+        StringSet existingColorSpaces;
         
         // Confirm all ColorSpaces are valid
         for(unsigned int i=0; i<getImpl()->colorspaces_.size(); ++i)
@@ -610,6 +612,20 @@ OCIO_NAMESPACE_ENTER
                 getImpl()->sanitytext_ = os.str();
                 throw Exception(getImpl()->sanitytext_.c_str());
             }
+            
+            std::string namelower = pystring::lower(name);
+            StringSet::const_iterator it = existingColorSpaces.find(namelower);
+            if(it != existingColorSpaces.end())
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. ";
+                os << "Two colorspaces are defined with the same name, '";
+                os << namelower << "'.";
+                getImpl()->sanitytext_ = os.str();
+                throw Exception(getImpl()->sanitytext_.c_str());
+            }
+            
+            existingColorSpaces.insert(namelower);
         }
         
         // Confirm all roles are valid
@@ -2145,5 +2161,55 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     for(unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
         OIIO_CHECK_EQUAL(osvec[i], PROFILE_OUTvec[i]);
 }
+
+
+OIIO_ADD_TEST(Config_Unit_Tests, test_sanityCheckDuplicateSpaces)
+{
+    std::string SIMPLE_PROFILE =
+    "ocio_profile_version: 1\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "strictparsing: false\n"
+    "roles:\n"
+    "  default: raw\n"
+    "displays:\n"
+    "  sRGB:\n"
+    "  - !<View> {name: Raw, colorspace: raw}\n"
+    "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
+    
+    OIIO_CHECK_THOW(config->sanityCheck(), OCIO::Exception);
+}
+
+OIIO_ADD_TEST(Config_Unit_Tests, test_sanityCheckNoDuplicateSpaces)
+{
+    std::string SIMPLE_PROFILE =
+    "ocio_profile_version: 1\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "strictparsing: false\n"
+    "roles:\n"
+    "  default: raw\n"
+    "displays:\n"
+    "  sRGB:\n"
+    "  - !<View> {name: Raw, colorspace: raw}\n"
+    "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
+    
+    OIIO_CHECK_NO_THOW(config->sanityCheck());
+}
+
 
 #endif // OCIO_UNIT_TEST
