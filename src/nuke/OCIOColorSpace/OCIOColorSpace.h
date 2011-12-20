@@ -21,7 +21,6 @@ class OCIOColorSpace : public DD::Image::PixelIop {
     protected:
 
         bool m_hasColorSpaces; //!< Were colorspaces found for both input and output? If not, always error.
-        DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
         int m_inputColorSpaceIndex; //!< index of input colorspace selection from the pulldown list knob
         int m_outputColorSpaceIndex;
         std::vector<std::string> m_colorSpaceNames; //!< list of input and output colorspace names (memory for const char* s below)
