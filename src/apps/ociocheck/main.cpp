@@ -49,6 +49,7 @@ const char * DESC_STRING = "\n\n"
 int main(int argc, const char **argv)
 {
     bool help = false;
+    int errorcount = 0;
     std::string inputconfig;
     std::string outputconfig;
     
@@ -136,7 +137,8 @@ int main(int argc, const char **argv)
                 }
                 else
                 {
-                    std::cout << "NOT DEFINED" << " (" << role << ")" << std::endl;
+                    std::cout << "ERROR: NOT DEFINED" << " (" << role << ")" << std::endl;
+                    errorcount += 1;
                 }
             }
             
@@ -152,7 +154,8 @@ int main(int argc, const char **argv)
                 }
                 else
                 {
-                    std::cout << "NOT DEFINED" << " (" << role << ")" << std::endl;
+                    std::cout << "ERROR: NOT DEFINED" << " (" << role << ")" << std::endl;
+                    errorcount += 1;
                 }
                 
             }
@@ -164,6 +167,7 @@ int main(int argc, const char **argv)
         if(!lin)
         {
             std::cout << "Error: scene_linear role must be defined." << std::endl;
+            errorcount += 1;
         }
         else
         {
@@ -207,6 +211,8 @@ int main(int argc, const char **argv)
                     std::cout << " -- error" << std::endl;
                     std::cout << "\t" << convertsToLinearErrorText << std::endl;
                     std::cout << "\t" << convertsFromLinearErrorText << std::endl;
+                    
+                    errorcount += 1;
                 }
                 else if(convertsToLinear)
                 {
@@ -223,20 +229,30 @@ int main(int argc, const char **argv)
         
         std::cout << std::endl;
         std::cout << "** Looks **" << std::endl;
-        for(int i=0; i<config->getNumLooks(); ++i)
+        if(config->getNumLooks()>0)
         {
-            std::cout << config->getLookNameByIndex(i) << std::endl;
+            for(int i=0; i<config->getNumLooks(); ++i)
+            {
+                std::cout << config->getLookNameByIndex(i) << std::endl;
+            }
+        }
+        else
+        {
+            std::cout << "no looks defined" << std::endl;
         }
         std::cout << std::endl;
+        std::cout << "** Sanity Check **" << std::endl;
         
         try
         {
             config->sanityCheck();
-            std::cout << "Passed Sanity Check." << std::endl;
+            std::cout << "passed" << std::endl;
         }
         catch(OCIO::Exception & exception)
         {
-            std::cout << "ERROR: " << exception.what() << std::endl;
+            std::cout << "ERROR" << std::endl;
+            errorcount += 1;
+            std::cout << exception.what() << std::endl;
         }
         
         if(!outputconfig.empty())
@@ -255,9 +271,6 @@ int main(int argc, const char **argv)
                 std::cout << "Wrote " << outputconfig << std::endl;
             }
         }
-        
-        std::cout << std::endl;
-        std::cout << "Tests complete." << std::endl << std::endl;
     }
     catch(OCIO::Exception & exception)
     {
@@ -273,5 +286,16 @@ int main(int argc, const char **argv)
         return 1;
     }
     
-    return 0;
+        
+    std::cout << std::endl;
+    if(errorcount == 0)
+    {
+        std::cout << "Tests complete." << std::endl << std::endl;
+        return 0;
+    }
+    else
+    {
+        std::cout << errorcount << " tests failed." << std::endl << std::endl;
+        return 1;
+    }
 }
