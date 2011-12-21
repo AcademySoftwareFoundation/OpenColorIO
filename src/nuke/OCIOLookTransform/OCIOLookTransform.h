@@ -21,7 +21,6 @@ class OCIOLookTransform : public DD::Image::PixelIop {
     protected:
 
         bool m_hasColorSpaces; //!< Were colorspaces found for both input and output? If not, always error.
-        DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
         
         int m_lookIndex;
         int m_dirIndex;

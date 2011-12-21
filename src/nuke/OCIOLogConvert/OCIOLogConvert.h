@@ -19,7 +19,6 @@ namespace OCIO = OCIO_NAMESPACE;
 class OCIOLogConvert : public DD::Image::PixelIop {
 
     protected:
-        DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
         int modeindex;
         
         OCIO::ConstProcessorRcPtr processor;

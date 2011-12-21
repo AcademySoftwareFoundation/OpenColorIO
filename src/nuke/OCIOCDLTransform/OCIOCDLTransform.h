@@ -19,7 +19,6 @@ namespace OCIO = OCIO_NAMESPACE;
 class OCIOCDLTransform : public DD::Image::PixelIop {
 
     protected:
-        DD::Image::ChannelSet layersToProcess; //!< layers (rgb channel groups) to process
 
         // ASC CDL grade numbers
         float m_slope[3];
