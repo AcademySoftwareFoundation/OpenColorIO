@@ -52,13 +52,20 @@ if(NOT PYTHON_INCLUDE_LIB_PREFIX)
 endif()
 
 if(WIN32)
+    if(OCIO_LINK_PYGLUE)
     target_link_libraries(PyOpenColorIO OpenColorIO
         debug ${PYTHON_LIB}/python26_d.lib
         optimized ${PYTHON_LIB}/python26.lib)
+    else()
+    target_link_libraries(PyOpenColorIO OpenColorIO)
+    endif(OCIO_LINK_PYGLUE)
 else()
+    if(OCIO_LINK_PYGLUE)
     target_link_libraries(PyOpenColorIO OpenColorIO
         ${PYTHON_LIBRARIES})
-
+    else()
+    target_link_libraries(PyOpenColorIO OpenColorIO)
+    endif(OCIO_LINK_PYGLUE)
 endif()
 
 # PyOpenColorIO so serves dual roles:
