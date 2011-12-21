@@ -6,6 +6,7 @@ Downloads
 
 Core Library
 ************
+* Core Library v1.0.3 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.3>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.3>`__
 * Core Library v1.0.2 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.2>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.2>`__
 * Core Library v1.0.1 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.1>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.1>`__
 * Core Library v1.0.0 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.0>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.0>`__

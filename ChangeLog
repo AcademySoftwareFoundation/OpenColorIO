@@ -1,3 +1,9 @@
+**Version 1.0.3 (Dec 21 2011):**
+    * Tetrahedral 3dlut interpolation (CPU only)
+    * ociocheck and Config.sanityCheck() have improved validation
+    * Mari: updated examples
+    * Makefile: misc updates to match distro library conventions
+
 **Version 1.0.2 (Nov 30 2011):**
     * 3D lut processing (cpu) is resiliant to nans
     * Nuke OCIOFileTransform gains Reload buttons
