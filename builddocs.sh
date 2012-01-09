@@ -1,11 +1,10 @@
 #!/bin/sh
 
 # Clone master branch into sub-directory
-#mkdir -p mastercopy
-#git archive master | tar -x -C mastercopy
+mkdir -p mastercopy
+git archive master | tar -x -C mastercopy
 
 # Run cmake in a build directory
-#rm -rf build
 mkdir -p build
 cd build
 cmake \
@@ -15,7 +14,7 @@ cmake \
 -D OCIO_BUILD_APPS=NO \
 -D OCIO_BUILD_TESTS=NO \
 -D OCIO_BUILD_PYGLUE=NO \
-/net/homedirs/jeremys/git/ocio.spi/
+../mastercopy
 
 # Build the docs
 make doc -j8
