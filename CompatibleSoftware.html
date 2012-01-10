@@ -1,0 +1,220 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO v1.0.3 documentation" href="index.html" />
+    <link rel="next" title="Configurations" href="configurations/index.html" />
+    <link rel="prev" title="Home" href="index.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO v1.0.3 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Compatible Software</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#silhouette">Silhouette</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nuke">Nuke</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mari">Mari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#katana">Katana</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#openimageio">OpenImageIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#c">C++</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#apps-w-icc-photoshop-etc">Apps w/icc (Photoshop, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#apps-w-lut-flame-lustre-etc">Apps w/lut (Flame, Lustre, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#after-effects-beta">After Effects (Beta)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#java-beta">Java (Beta)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#blender-beta">Blender (Beta)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ramen-beta">Ramen (Beta)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/index.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
+</ul>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="compatible-software">
+<span id="compatiblesoftware"></span><h1>Compatible Software<a class="headerlink" href="#compatible-software" title="Permalink to this headline">¶</a></h1>
+<p>The following sofware all supports OpenColorIO (to varying degrees).</p>
+<p>If you are interested in getting OCIO support for an application not listed
+here, please contact the ocio-dev mailing list.</p>
+<p>If you are a developer and would like assistance integration OCIO into your
+application, please contant ocio-dev as well.</p>
+<div class="section" id="silhouette">
+<h2>Silhouette<a class="headerlink" href="#silhouette" title="Permalink to this headline">¶</a></h2>
+<p>Roto, Paint, Keying - SilhouetteFX
+<a class="reference external" href="http://www.silhouettefx.com/silhouette/">http://www.silhouettefx.com/silhouette/</a></p>
+<p>OCIO is natively integrated in 4.5+
+Full support is provide for both image import/export, as well as image display.</p>
+<p><a class="reference external" href="http://www.silhouettefx.com/silhouette/silhouette-4.5-WhatsNew.pdf">http://www.silhouettefx.com/silhouette/silhouette-4.5-WhatsNew.pdf</a></p>
+</div>
+<div class="section" id="nuke">
+<h2>Nuke<a class="headerlink" href="#nuke" title="Permalink to this headline">¶</a></h2>
+<p>Compositor - The Foundry
+<a class="reference external" href="http://www.thefoundry.co.uk/products/nuke/">http://www.thefoundry.co.uk/products/nuke/</a></p>
+<p>Ships with 6.3v7+</p>
+<p>OCIO Nodes: OCIOCDLTransform, OCIOColorSpace, OCIODisplay, OCIOFileTransform,
+OCIOLookConvert, OCIOLogConvert</p>
+<p>The OCIODisplay node is suitable for use in the Viewer as an input process (IP),
+and a register function is provides to add viewer options for each display upon
+launch.</p>
+<p>The OCIO config &#8220;nuke-default&#8221; is provided, which matches the built-in Nuke
+color processing. This profile is useful for those who want to mirror the native
+nuke color processing in other applications.  (The underlying equations are
+also provided as python code in the config as well).</p>
+</div>
+<div class="section" id="mari">
+<h2>Mari<a class="headerlink" href="#mari" title="Permalink to this headline">¶</a></h2>
+<p>3D Paint - The Foundry
+<a class="reference external" href="http://www.thefoundry.co.uk/products/mari/">http://www.thefoundry.co.uk/products/mari/</a></p>
+<p>Mari 1.4v1+ ships with native support for OCIO in the display.
+A video demonstration of the OCIO workflow:
+<a class="reference external" href="http://vimeo.com/32909648">http://vimeo.com/32909648</a></p>
+</div>
+<div class="section" id="katana">
+<h2>Katana<a class="headerlink" href="#katana" title="Permalink to this headline">¶</a></h2>
+<p>CG Pipeline / Lighting Tool - The Foundry
+<a class="reference external" href="http://www.thefoundry.co.uk/products/katana/">http://www.thefoundry.co.uk/products/katana/</a></p>
+<p>Color management in Katana (all version) natively relies on OCIO.</p>
+<p>2D Nodes: OCIODisplay, OCIOColorSpace, OCIOCDLTransform
+Monitor Panel: Full OCIO Support</p>
+</div>
+<div class="section" id="openimageio">
+<h2>OpenImageIO<a class="headerlink" href="#openimageio" title="Permalink to this headline">¶</a></h2>
+<p>Open Source Image Library / Renderer Texture Engine
+openimageio.org</p>
+<p>Available in the current code trunk. Integration is with makecolortx (allowing
+for color space conversion during mipmap generation), and also through the
+public header src/include/color.h.  Remaining integration tasks include color
+conversion at runtime (see <a class="reference external" href="https://github.com/OpenImageIO/oiio/issues/193">https://github.com/OpenImageIO/oiio/issues/193</a> )</p>
+</div>
+<div class="section" id="c">
+<h2>C++<a class="headerlink" href="#c" title="Permalink to this headline">¶</a></h2>
+<p>The core OpenColorIO API is avaiable for use in C++. See the &#8220;export&#8221; directory
+for the C++ API headers.  Minimal code examples are also available in the source
+code distribution. Of particular note are apps/ocioconvert and apps/ociodisplay.</p>
+</div>
+<div class="section" id="python">
+<h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
+<p>The OpenColorIO API is available for use in python. See the &#8220;pyglue&#8221; directory
+in the codebase.</p>
+</div>
+<div class="section" id="apps-w-icc-photoshop-etc">
+<h2>Apps w/icc (Photoshop, etc.)<a class="headerlink" href="#apps-w-icc-photoshop-etc" title="Permalink to this headline">¶</a></h2>
+<p>Export capabilities through ocio2icc.</p>
+<p>See
+<a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread">http://groups.google.com/group/ocio-dev/browse_thread/thread</a>/56fd58e60d98e0f6#</p>
+<p>When exporting an ICC Profile, you will be asked to specify your monitor’s
+profile (it will be selected for you by default). This is because ICC Profile
+are not LUTs per se. An ICC Profile describes a color space and then needs a
+destination profile to calculate the transformation. So if you have an operation
+working and looking good on the monitor you’re using (and maybe its
+profile has been properly measured using a spectrophotometer), then choose your
+display. If the transform was approved on a different monitor, then maybe you
+should choose its profile instead.</p>
+</div>
+<div class="section" id="apps-w-lut-flame-lustre-etc">
+<h2>Apps w/lut (Flame, Lustre, etc.)<a class="headerlink" href="#apps-w-lut-flame-lustre-etc" title="Permalink to this headline">¶</a></h2>
+<p>Truelight, Iridas, Autodesk (Flame, lustre, etc)</p>
+<p>Export capabilities through ociobakelut</p>
+</div>
+<div class="section" id="after-effects-beta">
+<h2>After Effects (Beta)<a class="headerlink" href="#after-effects-beta" title="Permalink to this headline">¶</a></h2>
+<p>Compositor - Adobe
+<a class="reference external" href="http://www.adobe.com/products/aftereffects.html">http://www.adobe.com/products/aftereffects.html</a></p>
+<p>Native OCIO support through a plugin:
+<a class="reference external" href="http://www.fnordware.com/OpenColorIO/">http://www.fnordware.com/OpenColorIO/</a></p>
+<p>This code has not yet been rolled into the OCIO source tree, though we hope to
+add support in the near future.</p>
+<p>See this email thread for additional details:
+<a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread/5b37c04e2d743759">http://groups.google.com/group/ocio-dev/browse_thread/thread/5b37c04e2d743759</a></p>
+<p>This plugins is currently considered a work in progress, and should not be
+relied upon for critical production work.</p>
+</div>
+<div class="section" id="java-beta">
+<h2>Java (Beta)<a class="headerlink" href="#java-beta" title="Permalink to this headline">¶</a></h2>
+<p>The OpenColorIO API is available for use in Java. See the &#8220;jni&#8221; directory
+in the codebase.</p>
+<p>This integration is currently considered a work in progress, and should not be
+relied upon for critical production work.</p>
+<p>java.com</p>
+</div>
+<div class="section" id="blender-beta">
+<h2>Blender (Beta)<a class="headerlink" href="#blender-beta" title="Permalink to this headline">¶</a></h2>
+<p>Open Source 3D Application</p>
+<p>A user has begun a Blender integration. Not sure of the current state of the
+project.</p>
+<p><a class="reference external" href="https://github.com/thmxv/blender-ocio">https://github.com/thmxv/blender-ocio</a></p>
+</div>
+<div class="section" id="ramen-beta">
+<h2>Ramen (Beta)<a class="headerlink" href="#ramen-beta" title="Permalink to this headline">¶</a></h2>
+<p>Open Source Compositor
+<a class="reference external" href="http://ramencomp.blogspot.com/">http://ramencomp.blogspot.com/</a></p>
+<p>Has native OCIO integration.</p>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>
