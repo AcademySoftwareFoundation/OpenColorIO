@@ -26,7 +26,8 @@ Nuke
 Compositor - The Foundry
 http://www.thefoundry.co.uk/products/nuke/
 
-Ships with 6.3v7+
+OCIO Nuke nodes currently require compiling by the user, but are expected to
+ship in a commercial Nuke release sometime soon.
 
 OCIO Nodes: OCIOCDLTransform, OCIOColorSpace, OCIODisplay, OCIOFileTransform,
 OCIOLookConvert, OCIOLogConvert
@@ -58,6 +59,18 @@ Color management in Katana (all version) natively relies on OCIO.
 
 2D Nodes: OCIODisplay, OCIOColorSpace, OCIOCDLTransform
 Monitor Panel: Full OCIO Support
+
+Hiero
+*****
+
+Conform & Review - The Foundry http://www.thefoundry.co.uk/products/hiero/
+
+Hiero 1.0 will ship with native support for OCIO in the display and the
+equivalent of Nuke's OCIOColorSpace in the Read nodes.
+
+It comes with “nuke-default” OCIO config by default, so the Hiero viewer
+matches when sending files to Nuke for rendering.
+
 
 OpenImageIO
 ***********
@@ -137,11 +150,13 @@ Blender (Beta)
 ***************************
 Open Source 3D Application
 
-A user has begun a Blender integration. Not sure of the current state of the
-project.
+Xaview Thomas has begun a Blender OCIO integration.  Currently undergoing
+development.
 
 https://github.com/thmxv/blender-ocio
 
+Blender Developers Meeting Notes July 31, 2011
+http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011/
 
 Ramen (Beta)
 *************************
