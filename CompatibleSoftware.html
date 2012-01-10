@@ -58,7 +58,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#c">C++</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#apps-w-icc-photoshop-etc">Apps w/icc (Photoshop, etc.)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#apps-w-lut-flame-lustre-etc">Apps w/lut (Flame, Lustre, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#apps-w-lut-flame-houdini-etc">Apps w/lut (Flame, Houdini, etc.)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#after-effects-beta">After Effects (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#java-beta">Java (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#blender-beta">Blender (Beta)</a></li>
@@ -88,16 +88,14 @@ here, please contact the ocio-dev mailing list.</p>
 application, please contant ocio-dev as well.</p>
 <div class="section" id="silhouette">
 <h2>Silhouette<a class="headerlink" href="#silhouette" title="Permalink to this headline">¶</a></h2>
-<p>Roto, Paint, Keying - SilhouetteFX
-<a class="reference external" href="http://www.silhouettefx.com/silhouette/">http://www.silhouettefx.com/silhouette/</a></p>
-<p>OCIO is natively integrated in 4.5+
+<p><a class="reference external" href="http://www.silhouettefx.com/silhouette">Roto, Paint, Keying - SilhouetteFX</a></p>
+<p>OCIO is natively integrated in
+<a class="reference external" href="http://www.silhouettefx.com/silhouette/silhouette-4.5-WhatsNew.pdf">4.5+</a>
 Full support is provide for both image import/export, as well as image display.</p>
-<p><a class="reference external" href="http://www.silhouettefx.com/silhouette/silhouette-4.5-WhatsNew.pdf">http://www.silhouettefx.com/silhouette/silhouette-4.5-WhatsNew.pdf</a></p>
 </div>
 <div class="section" id="nuke">
 <h2>Nuke<a class="headerlink" href="#nuke" title="Permalink to this headline">¶</a></h2>
-<p>Compositor - The Foundry
-<a class="reference external" href="http://www.thefoundry.co.uk/products/nuke/">http://www.thefoundry.co.uk/products/nuke/</a></p>
+<p><a class="reference external" href="http://www.thefoundry.co.uk/products/nuke">Compositor - The Foundry</a></p>
 <p>OCIO Nuke nodes currently require compiling by the user, but are expected to
 ship in a commercial Nuke release sometime soon.</p>
 <p>OCIO Nodes: OCIOCDLTransform, OCIOColorSpace, OCIODisplay, OCIOFileTransform,
@@ -112,23 +110,20 @@ also provided as python code in the config as well).</p>
 </div>
 <div class="section" id="mari">
 <h2>Mari<a class="headerlink" href="#mari" title="Permalink to this headline">¶</a></h2>
-<p>3D Paint - The Foundry
-<a class="reference external" href="http://www.thefoundry.co.uk/products/mari/">http://www.thefoundry.co.uk/products/mari/</a></p>
-<p>Mari 1.4v1+ ships with native support for OCIO in the display.
-A video demonstration of the OCIO workflow:
-<a class="reference external" href="http://vimeo.com/32909648">http://vimeo.com/32909648</a></p>
+<p><a class="reference external" href="http://www.thefoundry.co.uk/products/mari">3D Paint - The Foundry</a></p>
+<p>Mari 1.4v1+ ships with native support for OCIO in the display.</p>
+<p>A <a class="reference external" href="http://vimeo.com/32909648">video demonstration</a> of the Mari OCIO workflow.</p>
 </div>
 <div class="section" id="katana">
 <h2>Katana<a class="headerlink" href="#katana" title="Permalink to this headline">¶</a></h2>
-<p>CG Pipeline / Lighting Tool - The Foundry
-<a class="reference external" href="http://www.thefoundry.co.uk/products/katana/">http://www.thefoundry.co.uk/products/katana/</a></p>
-<p>Color management in Katana (all version) natively relies on OCIO.</p>
+<p><a class="reference external" href="http://www.thefoundry.co.uk/products/katana">CG Pipeline / Lighting Tool - The Foundry</a></p>
+<p>Color management in Katana (all versions) natively relies on OCIO.</p>
 <p>2D Nodes: OCIODisplay, OCIOColorSpace, OCIOCDLTransform
 Monitor Panel: Full OCIO Support</p>
 </div>
 <div class="section" id="hiero">
 <h2>Hiero<a class="headerlink" href="#hiero" title="Permalink to this headline">¶</a></h2>
-<p>Conform &amp; Review - The Foundry <a class="reference external" href="http://www.thefoundry.co.uk/products/hiero/">http://www.thefoundry.co.uk/products/hiero/</a></p>
+<p><a class="reference external" href="http://www.thefoundry.co.uk/products/hiero">Conform &amp; Review - The Foundry</a></p>
 <p>Hiero 1.0 will ship with native support for OCIO in the display and the
 equivalent of Nuke&#8217;s OCIOColorSpace in the Read nodes.</p>
 <p>It comes with “nuke-default” OCIO config by default, so the Hiero viewer
@@ -136,16 +131,16 @@ matches when sending files to Nuke for rendering.</p>
 </div>
 <div class="section" id="openimageio">
 <h2>OpenImageIO<a class="headerlink" href="#openimageio" title="Permalink to this headline">¶</a></h2>
-<p>Open Source Image Library / Renderer Texture Engine
-openimageio.org</p>
+<p><a class="reference external" href="http://openimageio.org">Open Source Image Library / Renderer Texture Engine</a></p>
 <p>Available in the current code trunk. Integration is with makecolortx (allowing
 for color space conversion during mipmap generation), and also through the
-public header src/include/color.h.  Remaining integration tasks include color
-conversion at runtime (see <a class="reference external" href="https://github.com/OpenImageIO/oiio/issues/193">https://github.com/OpenImageIO/oiio/issues/193</a> )</p>
+public header <a class="reference external" href="http://github.com/OpenImageIO/oiio/blob/master/src/include/color.h">src/include/color.h</a> .</p>
+<p>Remaining integration tasks include
+<a class="reference external" href="http://github.com/OpenImageIO/oiio/issues/193">color conversion at runtime</a> .</p>
 </div>
 <div class="section" id="c">
 <h2>C++<a class="headerlink" href="#c" title="Permalink to this headline">¶</a></h2>
-<p>The core OpenColorIO API is avaiable for use in C++. See the &#8220;export&#8221; directory
+<p>The core OpenColorIO API is avaiable for use in C++. See the <a class="reference external" href="http://github.com/imageworks/OpenColorIO/tree/master/export/OpenColorIO">export directory</a>
 for the C++ API headers.  Minimal code examples are also available in the source
 code distribution. Of particular note are apps/ocioconvert and apps/ociodisplay.</p>
 </div>
@@ -156,9 +151,34 @@ in the codebase.</p>
 </div>
 <div class="section" id="apps-w-icc-photoshop-etc">
 <h2>Apps w/icc (Photoshop, etc.)<a class="headerlink" href="#apps-w-icc-photoshop-etc" title="Permalink to this headline">¶</a></h2>
-<p>Export capabilities through ocio2icc.</p>
-<p>See
-<a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread">http://groups.google.com/group/ocio-dev/browse_thread/thread</a>/56fd58e60d98e0f6#</p>
+<p>Export capabilities through ocio2icc:</p>
+<div class="highlight-python"><pre>$ ocio2icc -- generate an icc profile from either an OpenColorIO config, or from specific lut(s)
+$
+$ usage:  ocio2icc [options] output.icc
+$
+$ example:  ocio2icc --inputspace lg10 --outputspace srgb8 ~/Library/ColorSync/Profiles/test.icc
+$ example:  ocio2icc --lut filmlut.3dl --lut calibration.3dl ~/Library/ColorSync/Profiles/test.icc
+$
+$
+$ Using Existing OCIO Configurations
+$     --inputspace %s   the OCIO ColorSpace or Role, for the input
+$     --outputspace %s  the OCIO ColorSpace or Role, for the output
+$     --iconfig %s      Input .ocio configuration file (default: $OCIO)
+$
+$ Config-Free LUT Baking
+$     --lut %L          Specify a lut to apply in the forward direction
+$                       (can be specified multiple times; each is applied in order)
+$
+$ Output Options
+$     --cubesize %d     size of the icc CLUT cube (default: 32)
+$     --whitepoint %d   whitepoint for the profile (default: 6505)
+$     --displayicc %s   an icc profile which matches the OCIO profiles target display
+$     --description %s  a meaningful description, this will show up in UI like photoshop
+$     --copyright %s    a copyright field (default: OpenColorIO, Sony Imageworks)
+$     --help            Print help message</pre>
+</div>
+<p>See this <a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread/56fd58e60d98e0f6#">ocio-dev thread</a>
+for additional usage discussions.</p>
 <p>When exporting an ICC Profile, you will be asked to specify your monitor’s
 profile (it will be selected for you by default). This is because ICC Profile
 are not LUTs per se. An ICC Profile describes a color space and then needs a
@@ -168,27 +188,58 @@ profile has been properly measured using a spectrophotometer), then choose your
 display. If the transform was approved on a different monitor, then maybe you
 should choose its profile instead.</p>
 </div>
-<div class="section" id="apps-w-lut-flame-lustre-etc">
-<h2>Apps w/lut (Flame, Lustre, etc.)<a class="headerlink" href="#apps-w-lut-flame-lustre-etc" title="Permalink to this headline">¶</a></h2>
-<p>Truelight, Iridas, Autodesk (Flame, lustre, etc)</p>
-<p>Export capabilities through ociobakelut</p>
+<div class="section" id="apps-w-lut-flame-houdini-etc">
+<h2>Apps w/lut (Flame, Houdini, etc.)<a class="headerlink" href="#apps-w-lut-flame-houdini-etc" title="Permalink to this headline">¶</a></h2>
+<p>flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)</p>
+<p>Export capabilities through ociobakelut:</p>
+<div class="highlight-python"><pre>$ usage:  ociobakelut [options] &lt;OUTPUTFILE.LUT&gt;
+$
+$ example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl
+$ example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format flame display.3dl
+$ example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl
+$                       --format flame display_with_look.3dl
+$
+$
+$ Using Existing OCIO Configurations
+$     --inputspace %s      Input OCIO ColorSpace (or Role)
+$     --outputspace %s     Output OCIO ColorSpace (or Role)
+$     --shaperspace %s     the OCIO ColorSpace or Role, for the shaper
+$     --iconfig %s         Input .ocio configuration file (default: $OCIO)
+$
+$ Config-Free LUT Baking
+$     (all options can be specified multiple times, each is applied in order)
+$     --lut %s             Specify a LUT (forward direction)
+$     --invlut %s          Specify a LUT (inverse direction)
+$     --slope %f %f %f     slope
+$     --offset %f %f %f    offset (float)
+$     --offset10 %f %f %f  offset (10-bit)
+$     --power %f %f %f     power
+$     --sat %f             saturation (ASC-CDL luma coefficients)
+$
+$ Output Options
+$     --format %s          the lut format to bake: flame (.3dl), lustre (.3dl),
+$                          cinespace (.csp), houdini (.lut), iridas_itx (.itx)
+$     --shapersize %d      size of the shaper (default: format specific)
+$     --cubesize %d        size of the cube (default: format specific)
+$     --stdout             Write lut to stdout (rather than file)
+$     --v                  Verbose
+$     --help               Print help message</pre>
+</div>
 </div>
 <div class="section" id="after-effects-beta">
 <h2>After Effects (Beta)<a class="headerlink" href="#after-effects-beta" title="Permalink to this headline">¶</a></h2>
-<p>Compositor - Adobe
-<a class="reference external" href="http://www.adobe.com/products/aftereffects.html">http://www.adobe.com/products/aftereffects.html</a></p>
-<p>Native OCIO support through a plugin:
-<a class="reference external" href="http://www.fnordware.com/OpenColorIO/">http://www.fnordware.com/OpenColorIO/</a></p>
+<p><a class="reference external" href="http://www.adobe.com/products/aftereffects.html">Compositor - Adobe</a></p>
+<p>OCIO support through <cite>this plugin &lt;http://www.fnordware.com/OpenColorIO&gt;</cite>.</p>
 <p>This code has not yet been rolled into the OCIO source tree, though we hope to
 add support in the near future.</p>
-<p>See this email thread for additional details:
-<a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread/5b37c04e2d743759">http://groups.google.com/group/ocio-dev/browse_thread/thread/5b37c04e2d743759</a></p>
+<p>See this <a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread/5b37c04e2d743759">email thread</a>
+for additional details.</p>
 <p>This plugins is currently considered a work in progress, and should not be
 relied upon for critical production work.</p>
 </div>
 <div class="section" id="java-beta">
 <h2>Java (Beta)<a class="headerlink" href="#java-beta" title="Permalink to this headline">¶</a></h2>
-<p>The OpenColorIO API is available for use in Java. See the &#8220;jni&#8221; directory
+<p>The OpenColorIO API is available for use in Java. See the <a class="reference external" href="http://github.com/imageworks/OpenColorIO/tree/master/src/jniglue">jniglue directory</a>
 in the codebase.</p>
 <p>This integration is currently considered a work in progress, and should not be
 relied upon for critical production work.</p>
@@ -196,18 +247,15 @@ relied upon for critical production work.</p>
 </div>
 <div class="section" id="blender-beta">
 <h2>Blender (Beta)<a class="headerlink" href="#blender-beta" title="Permalink to this headline">¶</a></h2>
-<p>Open Source 3D Application</p>
-<p>Xaview Thomas has begun a Blender OCIO integration.  Currently undergoing
-development.</p>
-<p><a class="reference external" href="https://github.com/thmxv/blender-ocio">https://github.com/thmxv/blender-ocio</a></p>
-<p>Blender Developers Meeting Notes July 31, 2011
-<a class="reference external" href="http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011/">http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011/</a></p>
+<p><a class="reference external" href="http://www.blender.org/">Open Source 3D Application</a></p>
+<p>Xaview Thomas has begun the <a class="reference external" href="http://github.com/thmxv/blender-ocio">Blender OCIO integration</a> .
+Currently undergoing development.</p>
+<p><a class="reference external" href="http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011">Blender Developers Meeting Notes July 31, 2011</a></p>
 </div>
 <div class="section" id="ramen-beta">
 <h2>Ramen (Beta)<a class="headerlink" href="#ramen-beta" title="Permalink to this headline">¶</a></h2>
-<p>Open Source Compositor
-<a class="reference external" href="http://ramencomp.blogspot.com/">http://ramencomp.blogspot.com/</a></p>
-<p>Has native OCIO integration.</p>
+<p><a class="reference external" href="http://ramencomp.blogspot.com">Open Source Compositor</a></p>
+<p>Under development, with native OCIO color managment.</p>
 </div>
 </div>
 
