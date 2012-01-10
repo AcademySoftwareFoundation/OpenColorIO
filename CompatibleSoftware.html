@@ -53,6 +53,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#nuke">Nuke</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#mari">Mari</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#katana">Katana</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hiero">Hiero</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#openimageio">OpenImageIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#c">C++</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
@@ -97,7 +98,8 @@ Full support is provide for both image import/export, as well as image display.<
 <h2>Nuke<a class="headerlink" href="#nuke" title="Permalink to this headline">¶</a></h2>
 <p>Compositor - The Foundry
 <a class="reference external" href="http://www.thefoundry.co.uk/products/nuke/">http://www.thefoundry.co.uk/products/nuke/</a></p>
-<p>Ships with 6.3v7+</p>
+<p>OCIO Nuke nodes currently require compiling by the user, but are expected to
+ship in a commercial Nuke release sometime soon.</p>
 <p>OCIO Nodes: OCIOCDLTransform, OCIOColorSpace, OCIODisplay, OCIOFileTransform,
 OCIOLookConvert, OCIOLogConvert</p>
 <p>The OCIODisplay node is suitable for use in the Viewer as an input process (IP),
@@ -123,6 +125,14 @@ A video demonstration of the OCIO workflow:
 <p>Color management in Katana (all version) natively relies on OCIO.</p>
 <p>2D Nodes: OCIODisplay, OCIOColorSpace, OCIOCDLTransform
 Monitor Panel: Full OCIO Support</p>
+</div>
+<div class="section" id="hiero">
+<h2>Hiero<a class="headerlink" href="#hiero" title="Permalink to this headline">¶</a></h2>
+<p>Conform &amp; Review - The Foundry <a class="reference external" href="http://www.thefoundry.co.uk/products/hiero/">http://www.thefoundry.co.uk/products/hiero/</a></p>
+<p>Hiero 1.0 will ship with native support for OCIO in the display and the
+equivalent of Nuke&#8217;s OCIOColorSpace in the Read nodes.</p>
+<p>It comes with “nuke-default” OCIO config by default, so the Hiero viewer
+matches when sending files to Nuke for rendering.</p>
 </div>
 <div class="section" id="openimageio">
 <h2>OpenImageIO<a class="headerlink" href="#openimageio" title="Permalink to this headline">¶</a></h2>
@@ -187,9 +197,11 @@ relied upon for critical production work.</p>
 <div class="section" id="blender-beta">
 <h2>Blender (Beta)<a class="headerlink" href="#blender-beta" title="Permalink to this headline">¶</a></h2>
 <p>Open Source 3D Application</p>
-<p>A user has begun a Blender integration. Not sure of the current state of the
-project.</p>
+<p>Xaview Thomas has begun a Blender OCIO integration.  Currently undergoing
+development.</p>
 <p><a class="reference external" href="https://github.com/thmxv/blender-ocio">https://github.com/thmxv/blender-ocio</a></p>
+<p>Blender Developers Meeting Notes July 31, 2011
+<a class="reference external" href="http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011/">http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011/</a></p>
 </div>
 <div class="section" id="ramen-beta">
 <h2>Ramen (Beta)<a class="headerlink" href="#ramen-beta" title="Permalink to this headline">¶</a></h2>
