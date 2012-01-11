@@ -157,6 +157,18 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 }
 
 
+void ErrorMessage(const char *message)
+{
+	NSAlert *alert = [[NSAlert alloc] init];
+	
+	[alert setMessageText:[NSString stringWithUTF8String:message]];
+										
+	[alert runModal];
+	
+	[alert release];
+}
+
+
 void SetMickeyCursor()
 {
 	[[NSCursor pointingHandCursor] set];

@@ -19,7 +19,7 @@ std::string GetProjectDir(PF_InData *in_data);
 
 
 static PF_Err 
-About (	
+About(	
 	PF_InData		*in_data,
 	PF_OutData		*out_data,
 	PF_ParamDef		*params[],
@@ -36,7 +36,7 @@ About (
 
 
 static PF_Err 
-GlobalSetup (	
+GlobalSetup(	
 	PF_InData		*in_data,
 	PF_OutData		*out_data,
 	PF_ParamDef		*params[],
@@ -56,18 +56,39 @@ GlobalSetup (
 
 	out_data->out_flags2 	=	PF_OutFlag2_PARAM_GROUP_START_COLLAPSED_FLAG |
 								PF_OutFlag2_SUPPORTS_SMART_RENDER	|
-								PF_OutFlag2_FLOAT_COLOR_AWARE;
+								PF_OutFlag2_FLOAT_COLOR_AWARE		|
+								PF_OutFlag2_PPRO_DO_NOT_CLONE_SEQUENCE_DATA_FOR_RENDER;
 	
 	
 	GlobalSetup_GL();
 	
+	
+	if(in_data->appl_id == 'PrMr')
+	{
+		PF_PixelFormatSuite1 *pfS = NULL;
+		
+		in_data->pica_basicP->AcquireSuite(kPFPixelFormatSuite,
+											kPFPixelFormatSuiteVersion1,
+											(const void **)&pfS);
+											
+		if(pfS)
+		{
+			pfS->ClearSupportedPixelFormats(in_data->effect_ref);
+			
+			pfS->AddSupportedPixelFormat(in_data->effect_ref, PrPixelFormat_BGRA_4444_32f_Linear);
+			//pfS->AddSupportedPixelFormat(in_data->effect_ref, PrPixelFormat_BGRA_4444_32f);
+			//pfS->AddSupportedPixelFormat(in_data->effect_ref, PrPixelFormat_BGRA_4444_8u);
+			
+			in_data->pica_basicP->ReleaseSuite(kPFPixelFormatSuite, kPFPixelFormatSuiteVersion1);
+		}
+	}
 	
 	return PF_Err_NONE;
 }
 
 
 static PF_Err 
-GlobalSetdown (	
+GlobalSetdown(	
 	PF_InData		*in_data,
 	PF_OutData		*out_data,
 	PF_ParamDef		*params[],
@@ -144,7 +165,7 @@ ParamsSetup(
 }
 
 static PF_Err
-SequenceSetup (
+SequenceSetup(
 	PF_InData		*in_data,
 	PF_OutData		*out_data,
 	PF_ParamDef		*params[],
@@ -177,6 +198,7 @@ SequenceSetup (
 	
 	seq_data->status = STATUS_UNKNOWN;
 	seq_data->gpu_err = GPU_ERR_NONE;
+	seq_data->prem_status = PREMIERE_UNKNOWN;
 	seq_data->context = NULL;
 	
 	
@@ -187,7 +209,7 @@ SequenceSetup (
 
 
 static PF_Err 
-SequenceSetdown (
+SequenceSetdown(
 	PF_InData		*in_data,
 	PF_OutData		*out_data,
 	PF_ParamDef		*params[],
@@ -205,6 +227,7 @@ SequenceSetdown (
 			
 			seq_data->status = STATUS_UNKNOWN;
 			seq_data->gpu_err = GPU_ERR_NONE;
+			seq_data->prem_status = PREMIERE_UNKNOWN;
 			seq_data->context = NULL;
 		}
 		
@@ -216,7 +239,7 @@ SequenceSetdown (
 
 
 static PF_Err 
-SequenceFlatten (
+SequenceFlatten(
 	PF_InData		*in_data,
 	PF_OutData		*out_data,
 	PF_ParamDef		*params[],
@@ -234,6 +257,7 @@ SequenceFlatten (
 			
 			seq_data->status = STATUS_UNKNOWN;
 			seq_data->gpu_err = GPU_ERR_NONE;
+			seq_data->prem_status = PREMIERE_UNKNOWN;
 			seq_data->context = NULL;
 		}
 
@@ -351,9 +375,9 @@ Convert<float, A_u_short>(float in)
 typedef struct {
 	PF_InData *in_data;
 	void *in_buffer;
-	size_t in_rowbytes;
+	A_long in_rowbytes;
 	void *out_buffer;
-	size_t out_rowbytes;
+	A_long out_rowbytes;
 	int width;
 } IterateData;
 
@@ -387,9 +411,53 @@ CopyWorld_Iterate(void *refconPV,
 
 
 typedef struct {
+	PF_InData *in_data;
+	void *in_buffer;
+	A_long in_rowbytes;
+	int width;
+} SwapData;
+
+static PF_Err
+Swap_Iterate(void *refconPV,
+				A_long thread_indexL,
+				A_long i,
+				A_long iterationsL)
+{
+	PF_Err err = PF_Err_NONE;
+	
+	SwapData *i_data = (SwapData *)refconPV;
+	PF_InData *in_data = i_data->in_data;
+	
+	PF_PixelFloat *pix = (PF_PixelFloat *)((char *)i_data->in_buffer + (i * i_data->in_rowbytes));
+	
+#ifdef NDEBUG
+	if(thread_indexL == 0)
+		err = PF_ABORT(in_data);
+#endif
+
+	for(int x=0; x < i_data->width; x++)
+	{
+		float temp;
+		
+		// BGRA -> ARGB
+		temp       = pix->alpha; // BGRA temp B
+		pix->alpha = pix->blue;  // AGRA temp B
+		pix->blue  = temp;       // AGRB temp B
+		temp       = pix->red;   // AGRB temp G
+		pix->red   = pix->green; // ARRB temp G
+		pix->green = temp;       // ARGB temp G
+		
+		pix++;
+	}
+	
+	return err;
+}
+
+
+typedef struct {
 	PF_InData				*in_data;
 	void					*buffer;
-	size_t					rowbytes;
+	A_long					rowbytes;
 	int						width;
 	OpenColorIO_AE_Context	*context;
 } ProcessData;
@@ -430,6 +498,85 @@ Process_Iterate(void *refconPV,
 }
 
 
+// two functions below to get Premiere to run my functions multi-threaded
+// because they couldn't bother to give me PF_Iterate8Suite1->iterate_generic
+
+typedef PF_Err (*GenericIterator)(void *refconPV,
+									A_long thread_indexL,
+									A_long i,
+									A_long iterationsL);
+
+typedef struct {
+	PF_InData		*in_data;
+	GenericIterator	fn_func;
+	void			*refconPV;
+	A_long			height;
+} FakeData;
+
+static PF_Err
+MyFakeIterator(
+		void *refcon,
+		A_long x,
+		A_long y,
+		PF_Pixel *in,
+		PF_Pixel *out)
+{
+	PF_Err err = PF_Err_NONE;
+	
+	FakeData *i_data = (FakeData *)refcon;
+	PF_InData *in_data = i_data->in_data;
+	
+	err = i_data->fn_func(i_data->refconPV, 1, y, i_data->height);
+	
+	return err;
+}
+
+typedef PF_Err (*GenericIterateFunc)(
+		A_long			iterationsL,
+		void			*refconPV,
+		GenericIterator fn_func);
+
+static PF_Err
+MyGenericIterateFunc(
+		A_long			iterationsL,
+		void			*refconPV,
+		GenericIterator fn_func)
+{
+	PF_Err err = PF_Err_NONE;
+	
+	PF_InData **in_dataH = (PF_InData **)refconPV; // always put PF_InData first
+	PF_InData *in_data = *in_dataH;
+	
+	PF_Iterate8Suite1 *i8sP = NULL;
+	in_data->pica_basicP->AcquireSuite(kPFIterate8Suite, kPFIterate8SuiteVersion1, (const void **)&i8sP);
+
+	if(i8sP && i8sP->iterate)
+	{
+		PF_EffectWorld fake_world;
+		PF_NEW_WORLD(1, iterationsL, PF_NewWorldFlag_NONE, &fake_world);
+		
+		
+		FakeData i_data = { in_data, fn_func, refconPV, iterationsL };
+		
+		err = i8sP->iterate(in_data, 0, iterationsL, &fake_world, NULL,
+							(void *)&i_data, MyFakeIterator, &fake_world);
+		
+		
+		PF_DISPOSE_WORLD(&fake_world);
+		
+		in_data->pica_basicP->ReleaseSuite(kPFIterate8Suite, kPFIterate8SuiteVersion1);
+	}
+	else
+	{
+		for(int i=0; i < iterationsL && !err; i++)
+		{
+			err = fn_func(refconPV, 0, i, iterationsL);
+		}
+	}
+	
+	return err;
+}
+
 
 static PF_Err
 DoRender(
@@ -444,10 +591,11 @@ DoRender(
 
 	AEGP_SuiteHandler suites(in_data->pica_basicP);
 
+	PF_PixelFormatSuite1 *pfS = NULL;
 	PF_WorldSuite2 *wsP = NULL;
 	
+	err = in_data->pica_basicP->AcquireSuite(kPFPixelFormatSuite, kPFPixelFormatSuiteVersion1, (const void **)&pfS);
 	err = in_data->pica_basicP->AcquireSuite(kPFWorldSuite, kPFWorldSuiteVersion2, (const void **)&wsP);
-	
 
 	if(!err)
 	{
@@ -533,10 +681,15 @@ DoRender(
 		{
 			if(seq_data->context == NULL || seq_data->context->processor()->isNoOp())
 			{
-				PF_COPY(input, output, NULL, NULL);
+				err = PF_COPY(input, output, NULL, NULL);
 			}
 			else
 			{
+				GenericIterateFunc iterate_generic = suites.Iterate8Suite1()->iterate_generic;
+				
+				if(iterate_generic == NULL)
+					iterate_generic = MyGenericIterateFunc; // thanks a lot, Premiere
+			
 				// OpenColorIO only does float worlds
 				// might have to create one
 				PF_EffectWorld *float_world = NULL;
@@ -549,6 +702,15 @@ DoRender(
 				PF_PixelFormat format;
 				wsP->PF_GetPixelFormat(output, &format);
 				
+				if(in_data->appl_id == 'PrMr' && pfS)
+				{
+					// the regular world suite function will give a bogus value for Premiere
+					pfS->GetPixelFormat(output, (PrPixelFormat *)&format);
+					
+					seq_data->prem_status = (format == PrPixelFormat_BGRA_4444_32f_Linear ?
+												PREMIERE_LINEAR : PREMIERE_NON_LINEAR);
+				}
+				
 				
 				A_Boolean use_gpu = OCIO_gpu->u.bd.value;
 				seq_data->gpu_err = GPU_ERR_NONE;
@@ -558,7 +720,7 @@ DoRender(
 				if(format == PF_PixelFormat_ARGB128 &&
 					(!use_gpu || output->rowbytes == non_padded_rowbytes)) // GPU doesn't do padding
 				{
-					PF_COPY(input, output, NULL, NULL);
+					err = PF_COPY(input, output, NULL, NULL);
 					
 					float_world = output;
 				}
@@ -576,15 +738,26 @@ DoRender(
 						
 						float_world = temp_world = &temp_world_data;
 
-
+						// convert to new temp float world
 						IterateData i_data = { in_data, input->data, input->rowbytes, float_world->data, float_world->rowbytes, float_world->width * 4 };
 						
-						if(format == PF_PixelFormat_ARGB32)
-							err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<A_u_char, float>);
+						if(format == PF_PixelFormat_ARGB32 || format == PrPixelFormat_BGRA_4444_8u)
+							err = iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<A_u_char, float>);
 						else if(format == PF_PixelFormat_ARGB64)
-							err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<A_u_short, float>);
-						else if(format == PF_PixelFormat_ARGB128)
-							err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<float, float>);
+							err = iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<A_u_short, float>);
+						else if(format == PF_PixelFormat_ARGB128 || format == PrPixelFormat_BGRA_4444_32f || format == PrPixelFormat_BGRA_4444_32f_Linear)
+							err = iterate_generic(float_world->height, &i_data, CopyWorld_Iterate<float, float>);
+						
+						// switch BGRA to ARGB for premiere
+						if(!err &&
+							(format == PrPixelFormat_BGRA_4444_8u ||
+							format == PrPixelFormat_BGRA_4444_32f_Linear ||
+							format == PrPixelFormat_BGRA_4444_32f))
+						{
+							SwapData s_data = { in_data, float_world->data, float_world->rowbytes, float_world->width };
+							
+							err = iterate_generic(float_world->height, &s_data, Swap_Iterate);
+						}
 					}
 					else
 						err = PF_Err_OUT_OF_MEMORY;
@@ -617,7 +790,7 @@ DoRender(
 												float_world->width,
 												seq_data->context };
 
-						err = suites.Iterate8Suite1()->iterate_generic(float_world->height, &p_data, Process_Iterate);
+						err = iterate_generic(float_world->height, &p_data, Process_Iterate);
 					}
 				}
 				
@@ -625,16 +798,27 @@ DoRender(
 				// copy back to non-float world and dispose
 				if(temp_world)
 				{
+					if(!err &&
+						(format == PrPixelFormat_BGRA_4444_8u ||
+						format == PrPixelFormat_BGRA_4444_32f_Linear ||
+						format == PrPixelFormat_BGRA_4444_32f))
+					{
+						SwapData s_data = { in_data, float_world->data, float_world->rowbytes, float_world->width };
+						
+						err = iterate_generic(float_world->height, &s_data, Swap_Iterate);
+					}
+					
 					if(!err)
 					{
 						IterateData i_data = { in_data, float_world->data, float_world->rowbytes, output->data, output->rowbytes, output->width * 4 };
 						
-						if(format == PF_PixelFormat_ARGB32)
-							err = suites.Iterate8Suite1()->iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, A_u_char>);
+						if(format == PF_PixelFormat_ARGB32 || format == PrPixelFormat_BGRA_4444_8u)
+							err = iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, A_u_char>);
 						else if(format == PF_PixelFormat_ARGB64)
-							err = suites.Iterate8Suite1()->iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, A_u_short>);
-						else if(format == PF_PixelFormat_ARGB128)
-							err = suites.Iterate8Suite1()->iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, float>);
+							err = iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, A_u_short>);
+						else if(format == PF_PixelFormat_ARGB128 || format == PrPixelFormat_BGRA_4444_32f || format == PrPixelFormat_BGRA_4444_32f_Linear)
+							err = iterate_generic(output->height, &i_data, CopyWorld_Iterate<float, float>);
+							
 					}
 
 					PF_DISPOSE_HANDLE(temp_worldH);
@@ -657,6 +841,8 @@ DoRender(
 		}
 	}
 
+	if(pfS)
+		in_data->pica_basicP->ReleaseSuite(kPFPixelFormatSuite, kPFPixelFormatSuiteVersion1);
 	
 	if(wsP)
 		in_data->pica_basicP->ReleaseSuite(kPFWorldSuite, kPFWorldSuiteVersion2);
@@ -665,6 +851,7 @@ DoRender(
 
 	return err;
 }
+
 
 static PF_Err
 SmartRender(
@@ -714,6 +901,22 @@ SmartRender(
 
 	return err;
   
+}
+
+
+static PF_Err 
+Render(
+	PF_InData		*in_data,
+	PF_OutData		*out_data,
+	PF_ParamDef		*params[],
+	PF_LayerDef		*output )
+{
+	return DoRender(in_data,
+					&params[OCIO_INPUT]->u.ld,
+					params[OCIO_DATA],
+					params[OCIO_GPU],
+					out_data,
+					output);
 }
 
 
@@ -786,7 +989,7 @@ PluginMain (
 	PF_Err		err = PF_Err_NONE;
 	
 	try	{
-		switch (cmd) {
+		switch(cmd) {
 			case PF_Cmd_ABOUT:
 				err = About(in_data,out_data,params,output);
 				break;
@@ -814,6 +1017,9 @@ PluginMain (
 				break;
 			case PF_Cmd_SMART_RENDER:
 				err = SmartRender(in_data, out_data, (PF_SmartRenderExtra*)extra);
+				break;
+			case PF_Cmd_RENDER:
+				err = Render(in_data, out_data, params, output);
 				break;
 			case PF_Cmd_EVENT:
 				err = HandleEvent(in_data, out_data, params, output, (PF_EventExtra	*)extra);

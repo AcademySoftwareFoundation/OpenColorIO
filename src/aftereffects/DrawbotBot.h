@@ -18,7 +18,7 @@ class DrawbotBot
 {
   public:
   
-	DrawbotBot(struct SPBasicSuite *pica_basicP, PF_ContextH contextH);
+	DrawbotBot(struct SPBasicSuite *pica_basicP, PF_ContextH contextH, A_long appl_id);
 	~DrawbotBot();
 	
 	void MoveTo(DRAWBOT_PointF32 pos) { _brush_pos = pos; }
@@ -52,6 +52,7 @@ class DrawbotBot
 	
   private:
 	AEGP_SuiteHandler		suites;
+	A_long					_appl_id;
 	
 	DRAWBOT_SupplierSuiteCurrent *_suiteP;
 

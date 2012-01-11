@@ -259,15 +259,22 @@ DrawEvent(
 			ArbitraryData *arb_data = (ArbitraryData *)PF_LOCK_HANDLE(params[OCIO_DATA]->u.arb_d.value);
 			SequenceData *seq_data = (SequenceData *)PF_LOCK_HANDLE(in_data->sequence_data);
 		
-			DrawbotBot bot(in_data->pica_basicP, event_extra->contextH);
+			DrawbotBot bot(in_data->pica_basicP, event_extra->contextH, in_data->appl_id);
 			
 			
-			int panel_top = event_extra->effect_win.current_frame.top;
 			int panel_left = event_extra->effect_win.current_frame.left;
+			int panel_top = event_extra->effect_win.current_frame.top;
 			int panel_width = event_extra->effect_win.current_frame.right;
+			int panel_height = event_extra->effect_win.current_frame.bottom;
 			float text_height = bot.FontSize();
 			
-			bool have_file = (arb_data->path[0] != '\0');
+			if(in_data->appl_id != 'FXTC')
+			{
+				// for Premiere we need to paint the background first
+				bot.SetColor(PF_App_Color_PANEL_BACKGROUND);
+				bot.MoveTo(panel_left, panel_top);
+				bot.PaintRect(panel_width, panel_height);
+			}
 			
 			// path text field
 			bot.MoveTo(panel_left + LEFT_MARGIN + FILE_LABEL_WIDTH, panel_top + TOP_MARGIN);
@@ -287,6 +294,8 @@ DrawEvent(
 			
 			bot.Move(2 * FIELD_TEXT_INDENT_H);
 			bot.SetColor(TEXT_COLOR);
+			
+			bool have_file = (arb_data->path[0] != '\0');
 			
 			if(have_file)
 			{	
@@ -334,6 +343,25 @@ DrawEvent(
 						bot.DrawString("GPU Render Error");
 					}
 				}
+				
+			#ifndef NDEBUG
+				// Premiere color space (only for debugging purposes)
+				if(in_data->appl_id == 'PrMr' && seq_data->prem_status != PREMIERE_UNKNOWN)
+				{
+					bot.MoveTo(field_corner.x + 200, field_bottom + bot.FontSize() + BUTTON_TEXT_INDENT_V);
+					
+					bot.SetColor(PF_App_Color_WHITE);
+					
+					if(seq_data->prem_status == PREMIERE_LINEAR)
+					{
+						bot.DrawString("Linear Float");
+					}
+					else if(seq_data->prem_status == PREMIERE_NON_LINEAR)
+					{
+						bot.DrawString("Non-Linear Float");
+					}
+				}
+			#endif
 				
 				// Export button
 				if(arb_data->type != OCIO_TYPE_NONE)
@@ -406,6 +434,9 @@ DrawEvent(
 string
 GetProjectDir(PF_InData *in_data)
 {
+	if(in_data->appl_id == 'PrMr')
+		return string("");
+	
 	AEGP_SuiteHandler suites(in_data->pica_basicP);
 
 	AEGP_ProjectH projH = NULL;
@@ -842,13 +873,20 @@ DoClick(
 					}
 				}
 			}
-			catch(std::exception &e)
+			catch(exception &e)
 			{
-				PF_SPRINTF(out_data->return_msg, e.what());
-				
-				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-				
-				seq_data->status = STATUS_OCIO_ERROR;
+				if(in_data->appl_id == 'FXTC')
+				{
+					PF_SPRINTF(out_data->return_msg, e.what());
+					
+					out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
+					
+					seq_data->status = STATUS_OCIO_ERROR;
+				}
+				else
+				{
+					ErrorMessage( e.what() );
+				}
 			}
 			catch(...)
 			{
@@ -923,7 +961,7 @@ HandleEvent (
 	
 	extra->evt_out_flags = 0;
 	
-	if (!err) 
+	if(!err) 
 	{
 		switch (extra->e_type) 
 		{

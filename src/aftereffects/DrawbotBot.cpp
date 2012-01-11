@@ -11,8 +11,9 @@
 #include "DrawbotBot.h"
 
 
-DrawbotBot::DrawbotBot(struct SPBasicSuite *pica_basicP, PF_ContextH contextH) :
+DrawbotBot::DrawbotBot(struct SPBasicSuite *pica_basicP, PF_ContextH contextH, A_long appl_id) :
 	suites(pica_basicP),
+	_appl_id(appl_id),
 	_suiteP(NULL),
 	_drawbot_ref(NULL),
 	_supplier_ref(NULL),
@@ -43,12 +44,76 @@ DrawbotBot::~DrawbotBot()
 void
 DrawbotBot::SetColor(PF_App_ColorType color, float a)
 {
-	PF_App_Color text_color;
-	suites.AppSuite4()->PF_AppGetColor(color, &text_color);
+	if(_appl_id == 'FXTC')
+	{
+		PF_App_Color app_color;
 	
-	_brush_color.red	= (float)text_color.red / (float)PF_MAX_CHAN16;
-	_brush_color.green	= (float)text_color.green / (float)PF_MAX_CHAN16;
-	_brush_color.blue	= (float)text_color.blue / (float)PF_MAX_CHAN16;
+		suites.AppSuite4()->PF_AppGetColor(color, &app_color);
+		
+		_brush_color.red	= (float)app_color.red / (float)PF_MAX_CHAN16;
+		_brush_color.green	= (float)app_color.green / (float)PF_MAX_CHAN16;
+		_brush_color.blue	= (float)app_color.blue / (float)PF_MAX_CHAN16;
+	}
+	else
+	{
+		// Premiere isn't doing this properly, so I'll have to.
+		// Only supporting the colors I'm actually using at the moment.
+		switch(color)
+		{
+			case PF_App_Color_BLACK:
+				_brush_color.red = _brush_color.green = _brush_color.blue = 0.f;
+				break;
+			
+			case PF_App_Color_WHITE:
+				_brush_color.red = _brush_color.green = _brush_color.blue = 1.f;
+				break;
+
+			case PF_App_Color_RED:
+				_brush_color.red = 1.f;
+				_brush_color.green = _brush_color.blue = 0.f;
+				break;
+
+			case PF_App_Color_TEXT_DISABLED:
+				_brush_color.red = _brush_color.green = _brush_color.blue = 0.6f;
+				break;
+
+			case PF_App_Color_SHADOW:
+				_brush_color.red = _brush_color.green = _brush_color.blue = 0.3f;
+				break;
+
+			case PF_App_Color_HILITE:
+				_brush_color.red = _brush_color.green = _brush_color.blue = 0.8f;
+				break;
+
+			case PF_App_Color_LIGHT_TINGE:
+				_brush_color.red = _brush_color.green = _brush_color.blue = 0.7f;
+				break;
+
+			case PF_App_Color_BUTTON_FILL:
+				_brush_color.red = _brush_color.green = _brush_color.blue = 0.5f;
+				break;
+				
+			case PF_App_Color_BUTTON_PRESSED_FILL:
+				_brush_color.red = _brush_color.green = _brush_color.blue = 0.3f;
+				break;
+			
+			case PF_App_Color_PANEL_BACKGROUND:
+				{
+					PF_App_Color app_color;
+					suites.AppSuite4()->PF_AppGetBgColor(&app_color);
+					
+					_brush_color.red	= (float)app_color.red / (float)65535;
+					_brush_color.green	= (float)app_color.green / (float)65535;
+					_brush_color.blue	= (float)app_color.blue / (float)65535;
+				}
+				break;
+			
+			default:
+				_brush_color.red = _brush_color.green = _brush_color.blue = 0.9f;
+				break;
+		}
+	}
+	
 	_brush_color.alpha	= a;
 }
 

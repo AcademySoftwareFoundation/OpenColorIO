@@ -28,6 +28,8 @@ typedef std::vector<std::string> MenuVec;
 int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd);
 
 
+void ErrorMessage(const char *message);
+
 #ifdef __APPLE__
 void SetMickeyCursor();
 #endif

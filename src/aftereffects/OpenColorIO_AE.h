@@ -17,6 +17,8 @@
 
 #include "AEConfig.h"
 #include "entry.h"
+#include "SPTypes.h"
+#include "PrSDKAESupport.h"
 #include "AE_Macros.h"
 #include "Param_Utils.h"
 #include "AE_Effect.h"
@@ -114,10 +116,18 @@ enum {
 };
 typedef A_u_char GPUErr;
 
+enum {
+	PREMIERE_UNKNOWN = 0,
+	PREMIERE_LINEAR,
+	PREMIERE_NON_LINEAR
+};
+typedef A_u_char PremiereStatus;
+
 typedef struct {
 	FileStatus				status;
 	GPUErr					gpu_err;
-	A_u_char				reserved[2];
+	PremiereStatus			prem_status;
+	A_u_char				reserved[1];
 	OpenColorIO_AE_Context	*context;
 	char					path[ARB_PATH_LEN+1];
 	char					relative_path[ARB_PATH_LEN+1];
@@ -128,7 +138,7 @@ typedef struct {
 
 
 #define UI_CONTROL_HEIGHT	200
-#define UI_CONTROL_WIDTH	0
+#define UI_CONTROL_WIDTH	500
 
 
 #ifdef __cplusplus
