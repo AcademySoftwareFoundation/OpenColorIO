@@ -28,7 +28,7 @@ typedef std::vector<std::string> MenuVec;
 int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd);
 
 
-void ErrorMessage(const char *message);
+void ErrorMessage(const char *message, const void *hwnd);
 
 #ifdef __APPLE__
 void SetMickeyCursor();

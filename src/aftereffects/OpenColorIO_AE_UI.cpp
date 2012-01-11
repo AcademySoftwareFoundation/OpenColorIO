@@ -880,12 +880,16 @@ DoClick(
 					PF_SPRINTF(out_data->return_msg, e.what());
 					
 					out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-					
-					seq_data->status = STATUS_OCIO_ERROR;
 				}
 				else
 				{
-					ErrorMessage( e.what() );
+					void *hwndOwner = NULL;
+
+				#ifdef WIN_ENV
+					PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
+				#endif
+
+					ErrorMessage(e.what(), hwndOwner);
 				}
 			}
 			catch(...)
@@ -893,8 +897,6 @@ DoClick(
 				PF_SPRINTF(out_data->return_msg, "Unknown error");
 				
 				out_data->out_flags |= PF_OutFlag_DISPLAY_ERROR_MESSAGE;
-				
-				seq_data->status = STATUS_OCIO_ERROR;
 			}
 		}
 	}
