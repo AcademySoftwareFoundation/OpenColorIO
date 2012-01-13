@@ -640,6 +640,8 @@ DoRender(
 			
 				Path absolute_path(arb_data->path, dir);
 				Path relative_path(arb_data->relative_path, dir);
+				Path seq_absolute_path(seq_data->path, dir);
+				Path seq_relative_path(seq_data->relative_path, dir);
 				
 				if( absolute_path.exists() )
 				{
@@ -654,6 +656,25 @@ DoRender(
 					
 					strncpy(seq_data->path, relative_path.full_path().c_str(), ARB_PATH_LEN);
 					strncpy(seq_data->relative_path, relative_path.relative_path().c_str(), ARB_PATH_LEN);
+				}
+				else if( seq_absolute_path.exists() )
+				{
+					// In some cases, we may have a good path in sequence options but not in
+					// the arbitrary parameter.  An alert will not be provided because it is the
+					// sequence options that get checked.  Therefore, we have to use the sequence
+					// options as a last resort.  We copy the path back to arb data, but the change
+					// should not stick.
+					seq_data->status = STATUS_USING_ABSOLUTE;
+					
+					strncpy(arb_data->path, seq_absolute_path.full_path().c_str(), ARB_PATH_LEN);
+					strncpy(arb_data->relative_path, seq_absolute_path.relative_path().c_str(), ARB_PATH_LEN);
+				}
+				else if( seq_relative_path.exists() )
+				{
+					seq_data->status = STATUS_USING_RELATIVE;
+					
+					strncpy(arb_data->path, seq_relative_path.full_path().c_str(), ARB_PATH_LEN);
+					strncpy(arb_data->relative_path, seq_relative_path.relative_path().c_str(), ARB_PATH_LEN);
 				}
 				else
 					seq_data->status = STATUS_FILE_MISSING;
