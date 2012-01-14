@@ -39,7 +39,7 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
     File_knob(f, &m_file, "file", "file");
     DD::Image::Tooltip(f, "Specify the file, on disk, to use for this transform. See the node help for the list of supported formats.");
 
-    // Reload button button, and hidden "version" knob to cause redrawing
+    // Reload button, and hidden "version" knob to invalidate cache on reload
     Button(f, "reload", "reload");
     DD::Image::Tooltip(f, "Reloads specified files");
     Int_knob(f, &m_reload_version, "version");
@@ -163,7 +163,7 @@ int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
         }
 
         // Ensure this callback is always triggered (for src knob)
-        return 1;
+        return true;
     }
 
     if(k->is("reload"))
@@ -171,11 +171,11 @@ int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
         knob("version")->set_value(m_reload_version+1);
         OCIO::ClearAllCaches();
 
-        return 1; // ensure callback is triggered again
+        return true; // ensure callback is triggered again
     }
 
     // Return zero to avoid callbacks for other knobs
-    return 0;
+    return false;
 }
 
 // See Saturation::pixel_engine for a well-commented example.

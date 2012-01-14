@@ -33,6 +33,7 @@ OCIOCDLTransform::OCIOCDLTransform(Node *n) : DD::Image::PixelIop(n)
     m_readFromFile = false;
     m_dirindex = 0;
     m_file = NULL;
+    m_reload_version = 1;
     
     m_slopeKnob = NULL;
     m_offsetKnob = NULL;
@@ -70,6 +71,13 @@ void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
     const char * filehelp = "Specify the src ASC CDL file, on disk, to use for this transform. "
     "This can be either a .cc or .ccc file. If .ccc is specified, the cccid is required.";
     DD::Image::Tooltip(f, filehelp);
+
+    // Reload button, and hidden "version" knob to invalidate cache on reload
+    Button(f, "reload", "reload");
+    DD::Image::Tooltip(f, "Reloads specified files");
+    Int_knob(f, &m_reload_version, "version");
+    DD::Image::SetFlags(f, DD::Image::Knob::HIDDEN);
+
     DD::Image::SetFlags(f, DD::Image::Knob::ENDLINE);
     
     m_cccidKnob = String_knob(f, &m_cccid, "cccid");
@@ -138,6 +146,16 @@ void OCIOCDLTransform::refreshKnobEnabledState()
     }
 }
 
+void OCIOCDLTransform::append(DD::Image::Hash& nodehash)
+{
+    // There is a bug where in Nuke <6.3 the String_knob (used for
+    // cccid) is not included in the node's hash. Include it manually
+    // so the node correctly redraws. Appears fixed in in 6.3
+    nodehash.append(m_cccid.c_str());
+
+    // Incremented to force reloading after rereading the LUT file
+    nodehash.append(m_reload_version);
+}
 
 int OCIOCDLTransform::knob_changed(DD::Image::Knob* k)
 {
@@ -162,7 +180,16 @@ int OCIOCDLTransform::knob_changed(DD::Image::Knob* k)
         }
         return true;
     }
-    
+
+    else if(knobname == "reload")
+    {
+        knob("version")->set_value(m_reload_version+1);
+        OCIO::ClearAllCaches();
+        m_firstLoad = true;
+
+        return true; // ensure callback is triggered again
+    }
+
     return false;
 }
 
