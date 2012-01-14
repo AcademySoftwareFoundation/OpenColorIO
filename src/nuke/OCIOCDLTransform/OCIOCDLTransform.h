@@ -45,6 +45,10 @@ class OCIOCDLTransform : public DD::Image::PixelIop {
         
         OCIO::ConstProcessorRcPtr m_processor;
         bool m_firstLoad;
+
+        /*! Controlled by hidden "version" knob, incremented to redraw image */
+        int m_reload_version;
+
     public:
         OCIOCDLTransform(Node *node);
 
@@ -120,6 +124,11 @@ class OCIOCDLTransform : public DD::Image::PixelIop {
          * can do more analysis than just name matching.)
          */
         void _validate(bool for_real);
+
+        /*!
+         * Ensure Node hash is reflects all parameters
+         */
+        void append(DD::Image::Hash& nodehash);
 
 };
 
