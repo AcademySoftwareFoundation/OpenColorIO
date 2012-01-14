@@ -287,10 +287,6 @@ if(OCIO_BUILD_APPS)
     # ociocheck: verifies an OCIO config
     add_subdirectory(src/apps/ociocheck)
     
-    # ocio2icc builds ICC profiles from an OCIO color transform
-    # (uses a bundled version of LittleCMS)
-    add_subdirectory(src/apps/ocio2icc)
-    
     # ociobakelut writes out luts
     add_subdirectory(src/apps/ociobakelut)
 endif()

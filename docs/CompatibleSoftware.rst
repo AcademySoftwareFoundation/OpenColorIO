@@ -96,34 +96,56 @@ The OpenColorIO API is available for use in python. See the "pyglue" directory
 in the codebase.
 
 
-Apps w/icc (Photoshop, etc.)
+Apps w/icc or luts
 **************************************************
-Export capabilities through ocio2icc::
+flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)
+photoshop (.icc)
 
-    $ ocio2icc -- generate an icc profile from either an OpenColorIO config, or from specific lut(s)
+Export capabilities through ociobakelut::
+
+    $ ociobakelut -- create a new LUT or icc profile from an OCIO config or lut file(s)
     $ 
-    $ usage:  ocio2icc [options] output.icc
+    $ usage:  ociobakelut [options] <OUTPUTFILE.LUT>
     $ 
-    $ example:  ocio2icc --inputspace lg10 --outputspace srgb8 ~/Library/ColorSync/Profiles/test.icc
-    $ example:  ocio2icc --lut filmlut.3dl --lut calibration.3dl ~/Library/ColorSync/Profiles/test.icc
+    $ example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl
+    $ example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format flame display.3dl
+    $ example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl
+    $ example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColorSync/Profiles/test.icc
+    $ example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColorSync/Profiles/test.icc
     $ 
     $ 
     $ Using Existing OCIO Configurations
-    $     --inputspace %s   the OCIO ColorSpace or Role, for the input
-    $     --outputspace %s  the OCIO ColorSpace or Role, for the output
-    $     --iconfig %s      Input .ocio configuration file (default: $OCIO)                                                                                                                                                  
-    $                                                                                                                                                                                                                       
-    $ Config-Free LUT Baking                                                                                                                                                                                                 
-    $     --lut %L          Specify a lut to apply in the forward direction
-    $                       (can be specified multiple times; each is applied in order)                                                                                      
-    $                                                                                                                                                                                                                        
-    $ Output Options                                                                                                                                                                                                         
-    $     --cubesize %d     size of the icc CLUT cube (default: 32)                                                                                                                                                          
-    $     --whitepoint %d   whitepoint for the profile (default: 6505)
-    $     --displayicc %s   an icc profile which matches the OCIO profiles target display
-    $     --description %s  a meaningful description, this will show up in UI like photoshop
-    $     --copyright %s    a copyright field (default: OpenColorIO, Sony Imageworks)
-    $     --help            Print help message
+    $     --inputspace %s      Input OCIO ColorSpace (or Role)
+    $     --outputspace %s     Output OCIO ColorSpace (or Role)
+    $     --shaperspace %s     the OCIO ColorSpace or Role, for the shaper
+    $     --iconfig %s         Input .ocio configuration file (default: $OCIO)
+    $ 
+    $ Config-Free LUT Baking
+    $     (all options can be specified multiple times, each is applied in order)
+    $     --lut %s             Specify a LUT (forward direction)
+    $     --invlut %s          Specify a LUT (inverse direction)
+    $     --slope %f %f %f     slope
+    $     --offset %f %f %f    offset (float)
+    $     --offset10 %f %f %f  offset (10-bit)
+    $     --power %f %f %f     power
+    $     --sat %f             saturation (ASC-CDL luma coefficients)
+    $ 
+    $ Baking Options
+    $     --format %s          the lut format to bake: flame (.3dl), lustre (.3dl),
+    $                          cinespace (.csp), houdini (.lut), iridas_itx (.itx), icc (.icc)
+    $     --shapersize %d      size of the shaper (default: format specific)
+    $     --cubesize %d        size of the cube (default: format specific)
+    $     --stdout             Write to stdout (rather than file)
+    $     --v                  Verbose
+    $     --help               Print help message
+    $ 
+    $ ICC Options
+    $     --whitepoint %d      whitepoint for the profile (default: 6505)
+    $     --displayicc %s      an icc profile which matches the OCIO profiles target display
+    $     --description %s     a meaningful description, this will show up in UI like photoshop
+    $     --copyright %s       a copyright field
+    
+
 
 See this `ocio-dev thread 
 <http://groups.google.com/group/ocio-dev/browse_thread/thread/56fd58e60d98e0f6#>`__
@@ -140,7 +162,6 @@ should choose its profile instead.
 
 Apps w/lut (Flame, Houdini, etc.)
 ***************************
-flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)
 
 Export capabilities through ociobakelut::
 
