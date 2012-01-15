@@ -3,3 +3,4 @@ attic
 build*
 dist*
 mastercopy
+*.pyc
