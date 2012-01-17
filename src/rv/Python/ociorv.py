@@ -20,10 +20,6 @@ def set_lut(proc, nodename):
     """
 
     if proc.isNoOp():
-        # Nothing to do, just ensure sure the LUT is deactivated, in
-        # case we switch from a non-noop to a noop processor
-        is_active = False
-        setIntProperty("%s.lut.active" % nodename, [is_active], False);
         return
 
     if hasattr(proc, "hasChannelCrosstalk"):
@@ -52,27 +48,25 @@ def _set_lut_3d(proc, nodename, size = 32):
 
     # Make noop cube
     size_minus_one = float(size-1)
-    one_axis = [x/size_minus_one for x in range(size)]
-    zecube = itertools.product(one_axis, one_axis, one_axis)
+    one_axis = (x/size_minus_one for x in range(size))
+    cube_raw = itertools.product(one_axis, repeat=3)
 
     # Unpack and fix ordering, by turning [(0, 0, 0), (0, 0, 1), ...]
     # into [0, 0, 0, 1, 0, 0] as generator
-    zecube = (item for sublist in zecube for item in sublist[::-1])
+    cube_raw = (item for sublist in cube_raw for item in sublist[::-1])
 
     # Apply transform
-    # TODO: Make applyRGB accept an iterable, rather than requiring a
-    # list, to avoid making the intermediate list
-    zecube = proc.applyRGB(list(zecube))
+    cube_processed = proc.applyRGB(cube_raw)
 
     # TODO: Use allocation vars to set prelut
 
     # Set LUT type and size, then LUT values
     setStringProperty("%s.lut.type" % nodename, ["RGB"], False)
-    setIntProperty("%s.lut.size" % nodename, [size, size, size], False);
-    setFloatProperty("%s.lut.lut" % nodename, zecube, True);
+    setIntProperty("%s.lut.size" % nodename, [size, size, size], False)
+    setFloatProperty("%s.lut.lut" % nodename, cube_processed, True)
 
     # Activate
-    setIntProperty("%s.lut.active" % nodename, [1], False);
+    setIntProperty("%s.lut.active" % nodename, [1], False)
 
 
 def _set_lut_1d(proc, nodename, size = 1024):
@@ -93,11 +87,20 @@ def _set_lut_1d(proc, nodename, size = 1024):
 
     # Set LUT type and size, then LUT values
     setStringProperty("%s.lut.type" % nodename, ["RGB"], False)
-    setIntProperty("%s.lut.size" % nodename, [size], False);
-    setFloatProperty("%s.lut.lut" % nodename, ramp_transformed, True);
+    setIntProperty("%s.lut.size" % nodename, [size], False)
+    setFloatProperty("%s.lut.lut" % nodename, ramp_transformed, True)
 
     # Activate
-    setIntProperty("%s.lut.active" % nodename, [1], False);
+    setIntProperty("%s.lut.active" % nodename, [1], False)
+
+
+def set_noop(nodename):
+    """Just ensure sure the LUT is deactivated, in case source changes
+    from switch from a non-noop to a noop processor
+    """
+
+    is_active = False
+    setIntProperty("%s.lut.active" % nodename, [is_active], False)
 
 
 class PyMyStuffMode(rv.rvtypes.MinorMode):
@@ -120,20 +123,44 @@ class PyMyStuffMode(rv.rvtypes.MinorMode):
         import PyOpenColorIO as OCIO
         cfg = OCIO.GetCurrentConfig()
 
-
         # FIXME: Need a way to customise this per-facility without
         # modifying this file (try: import ociorv_custom_stuff ?)
         inspace = cfg.parseColorSpaceFromString(srcpath)
+        outspace = "srgb8" # nonsense
+
+        testproc = cfg.getProcessor(inspace, outspace)
+
+        if testproc.isNoOp():
+            return
 
         # Get processor from input space to scene-linear, so grading
         # controls etc work as expected
-        input_proc = cfg.getProcessor(inspace, OCIO.Constants.ROLE_SCENE_LINEAR)
+        try:
+            input_proc = cfg.getProcessor(inspace, OCIO.Constants.ROLE_SCENE_LINEAR)
+        except OCIO.Exception, e:
+            print "INFO: Cannot linearise source %s - OCIO error was %s" % (
+                srcpath,
+                e)
+            set_noop(nodename = filelut_node)
+            set_noop(nodename = looklut_node)
+            return
+
+        # Get processor form scene-linear to output space
+        try:
+            output_proc = cfg.getProcessor(OCIO.Constants.ROLE_SCENE_LINEAR, outspace)
+        except OCIO.Exception, e:
+            print "INFO: Cannot apply scene-linear to %s %s - OCIO error was %s" % (
+                outspace,
+                srcpath,
+                e)
+            set_noop(nodename = filelut_node)
+            set_noop(nodename = looklut_node)
+            return
 
         # LUT to be applied to input file, before any grading etc
         set_lut(proc = input_proc, nodename = filelut_node)
 
-        # Get processor form scene-linear to output space
-        output_proc = cfg.getProcessor(OCIO.Constants.ROLE_SCENE_LINEAR, "srgb8") # FIXME: Hardcoded output space, use display config
+        # LUT after grading etc performed
         set_lut(proc = output_proc, nodename = looklut_node)
 
         # Update LUT
