@@ -96,60 +96,22 @@ The OpenColorIO API is available for use in python. See the "pyglue" directory
 in the codebase.
 
 
-Apps w/icc (Photoshop, etc.)
+Apps w/icc or luts
 **************************************************
-Export capabilities through ocio2icc::
-
-    $ ocio2icc -- generate an icc profile from either an OpenColorIO config, or from specific lut(s)
-    $ 
-    $ usage:  ocio2icc [options] output.icc
-    $ 
-    $ example:  ocio2icc --inputspace lg10 --outputspace srgb8 ~/Library/ColorSync/Profiles/test.icc
-    $ example:  ocio2icc --lut filmlut.3dl --lut calibration.3dl ~/Library/ColorSync/Profiles/test.icc
-    $ 
-    $ 
-    $ Using Existing OCIO Configurations
-    $     --inputspace %s   the OCIO ColorSpace or Role, for the input
-    $     --outputspace %s  the OCIO ColorSpace or Role, for the output
-    $     --iconfig %s      Input .ocio configuration file (default: $OCIO)                                                                                                                                                  
-    $                                                                                                                                                                                                                       
-    $ Config-Free LUT Baking                                                                                                                                                                                                 
-    $     --lut %L          Specify a lut to apply in the forward direction
-    $                       (can be specified multiple times; each is applied in order)                                                                                      
-    $                                                                                                                                                                                                                        
-    $ Output Options                                                                                                                                                                                                         
-    $     --cubesize %d     size of the icc CLUT cube (default: 32)                                                                                                                                                          
-    $     --whitepoint %d   whitepoint for the profile (default: 6505)
-    $     --displayicc %s   an icc profile which matches the OCIO profiles target display
-    $     --description %s  a meaningful description, this will show up in UI like photoshop
-    $     --copyright %s    a copyright field (default: OpenColorIO, Sony Imageworks)
-    $     --help            Print help message
-
-See this `ocio-dev thread 
-<http://groups.google.com/group/ocio-dev/browse_thread/thread/56fd58e60d98e0f6#>`__
-for additional usage discussions.
-
-When exporting an ICC Profile, you will be asked to specify your monitor’s
-profile (it will be selected for you by default). This is because ICC Profile
-are not LUTs per se. An ICC Profile describes a color space and then needs a
-destination profile to calculate the transformation. So if you have an operation
-working and looking good on the monitor you’re using (and maybe its
-profile has been properly measured using a spectrophotometer), then choose your
-display. If the transform was approved on a different monitor, then maybe you
-should choose its profile instead.
-
-Apps w/lut (Flame, Houdini, etc.)
-***************************
 flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)
+photoshop (.icc)
 
 Export capabilities through ociobakelut::
 
+    $ ociobakelut -- create a new LUT or icc profile from an OCIO config or lut file(s)
+    $ 
     $ usage:  ociobakelut [options] <OUTPUTFILE.LUT>
     $ 
     $ example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl
     $ example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format flame display.3dl
-    $ example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl
-    $                       --format flame display_with_look.3dl
+    $ example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl
+    $ example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColorSync/Profiles/test.icc
+    $ example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColorSync/Profiles/test.icc
     $ 
     $ 
     $ Using Existing OCIO Configurations
@@ -168,14 +130,36 @@ Export capabilities through ociobakelut::
     $     --power %f %f %f     power
     $     --sat %f             saturation (ASC-CDL luma coefficients)
     $ 
-    $ Output Options
+    $ Baking Options
     $     --format %s          the lut format to bake: flame (.3dl), lustre (.3dl),
-    $                          cinespace (.csp), houdini (.lut), iridas_itx (.itx)
+    $                          cinespace (.csp), houdini (.lut), iridas_itx (.itx), icc (.icc)
     $     --shapersize %d      size of the shaper (default: format specific)
     $     --cubesize %d        size of the cube (default: format specific)
-    $     --stdout             Write lut to stdout (rather than file)
+    $     --stdout             Write to stdout (rather than file)
     $     --v                  Verbose
     $     --help               Print help message
+    $ 
+    $ ICC Options
+    $     --whitepoint %d      whitepoint for the profile (default: 6505)
+    $     --displayicc %s      an icc profile which matches the OCIO profiles target display
+    $     --description %s     a meaningful description, this will show up in UI like photoshop
+    $     --copyright %s       a copyright field
+    
+
+
+See this `ocio-dev thread 
+<http://groups.google.com/group/ocio-dev/browse_thread/thread/56fd58e60d98e0f6#>`__
+for additional usage discussions.
+
+When exporting an ICC Profile, you will be asked to specify your monitor’s
+profile (it will be selected for you by default). This is because ICC Profile
+are not LUTs per se. An ICC Profile describes a color space and then needs a
+destination profile to calculate the transformation. So if you have an operation
+working and looking good on the monitor you’re using (and maybe its
+profile has been properly measured using a spectrophotometer), then choose your
+display. If the transform was approved on a different monitor, then maybe you
+should choose its profile instead.
+
 
 
 After Effects (Beta)
@@ -183,7 +167,7 @@ After Effects (Beta)
 
 `Compositor - Adobe <http://www.adobe.com/products/aftereffects.html>`__
 
-OCIO support through `this plugin <http://www.fnordware.com/OpenColorIO>`.
+OCIO support through `this plugin <http://www.fnordware.com/OpenColorIO>`__.
 
 This code has not yet been rolled into the OCIO source tree, though we hope to
 add support in the near future.
@@ -216,6 +200,9 @@ Currently undergoing development.
 
 `Blender Developers Meeting Notes July 31, 2011
 <http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011>`__
+
+`YouTube Blender Example
+<http://www.youtube.com/watch?v=O43ItUVvcks>`__
 
 Ramen (Beta)
 *************************

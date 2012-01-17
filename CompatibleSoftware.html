@@ -57,8 +57,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#openimageio">OpenImageIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#c">C++</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#apps-w-icc-photoshop-etc">Apps w/icc (Photoshop, etc.)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#apps-w-lut-flame-houdini-etc">Apps w/lut (Flame, Houdini, etc.)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#apps-w-icc-or-luts">Apps w/icc or luts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#after-effects-beta">After Effects (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#java-beta">Java (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#blender-beta">Blender (Beta)</a></li>
@@ -149,55 +148,20 @@ code distribution. Of particular note are apps/ocioconvert and apps/ociodisplay.
 <p>The OpenColorIO API is available for use in python. See the &#8220;pyglue&#8221; directory
 in the codebase.</p>
 </div>
-<div class="section" id="apps-w-icc-photoshop-etc">
-<h2>Apps w/icc (Photoshop, etc.)<a class="headerlink" href="#apps-w-icc-photoshop-etc" title="Permalink to this headline">¶</a></h2>
-<p>Export capabilities through ocio2icc:</p>
-<div class="highlight-python"><pre>$ ocio2icc -- generate an icc profile from either an OpenColorIO config, or from specific lut(s)
-$
-$ usage:  ocio2icc [options] output.icc
-$
-$ example:  ocio2icc --inputspace lg10 --outputspace srgb8 ~/Library/ColorSync/Profiles/test.icc
-$ example:  ocio2icc --lut filmlut.3dl --lut calibration.3dl ~/Library/ColorSync/Profiles/test.icc
-$
-$
-$ Using Existing OCIO Configurations
-$     --inputspace %s   the OCIO ColorSpace or Role, for the input
-$     --outputspace %s  the OCIO ColorSpace or Role, for the output
-$     --iconfig %s      Input .ocio configuration file (default: $OCIO)
-$
-$ Config-Free LUT Baking
-$     --lut %L          Specify a lut to apply in the forward direction
-$                       (can be specified multiple times; each is applied in order)
-$
-$ Output Options
-$     --cubesize %d     size of the icc CLUT cube (default: 32)
-$     --whitepoint %d   whitepoint for the profile (default: 6505)
-$     --displayicc %s   an icc profile which matches the OCIO profiles target display
-$     --description %s  a meaningful description, this will show up in UI like photoshop
-$     --copyright %s    a copyright field (default: OpenColorIO, Sony Imageworks)
-$     --help            Print help message</pre>
-</div>
-<p>See this <a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread/56fd58e60d98e0f6#">ocio-dev thread</a>
-for additional usage discussions.</p>
-<p>When exporting an ICC Profile, you will be asked to specify your monitor’s
-profile (it will be selected for you by default). This is because ICC Profile
-are not LUTs per se. An ICC Profile describes a color space and then needs a
-destination profile to calculate the transformation. So if you have an operation
-working and looking good on the monitor you’re using (and maybe its
-profile has been properly measured using a spectrophotometer), then choose your
-display. If the transform was approved on a different monitor, then maybe you
-should choose its profile instead.</p>
-</div>
-<div class="section" id="apps-w-lut-flame-houdini-etc">
-<h2>Apps w/lut (Flame, Houdini, etc.)<a class="headerlink" href="#apps-w-lut-flame-houdini-etc" title="Permalink to this headline">¶</a></h2>
-<p>flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)</p>
+<div class="section" id="apps-w-icc-or-luts">
+<h2>Apps w/icc or luts<a class="headerlink" href="#apps-w-icc-or-luts" title="Permalink to this headline">¶</a></h2>
+<p>flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)
+photoshop (.icc)</p>
 <p>Export capabilities through ociobakelut:</p>
-<div class="highlight-python"><pre>$ usage:  ociobakelut [options] &lt;OUTPUTFILE.LUT&gt;
+<div class="highlight-python"><pre>$ ociobakelut -- create a new LUT or icc profile from an OCIO config or lut file(s)
+$
+$ usage:  ociobakelut [options] &lt;OUTPUTFILE.LUT&gt;
 $
 $ example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl
 $ example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format flame display.3dl
-$ example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl
-$                       --format flame display_with_look.3dl
+$ example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl
+$ example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColorSync/Profiles/test.icc
+$ example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColorSync/Profiles/test.icc
 $
 $
 $ Using Existing OCIO Configurations
@@ -216,20 +180,36 @@ $     --offset10 %f %f %f  offset (10-bit)
 $     --power %f %f %f     power
 $     --sat %f             saturation (ASC-CDL luma coefficients)
 $
-$ Output Options
+$ Baking Options
 $     --format %s          the lut format to bake: flame (.3dl), lustre (.3dl),
-$                          cinespace (.csp), houdini (.lut), iridas_itx (.itx)
+$                          cinespace (.csp), houdini (.lut), iridas_itx (.itx), icc (.icc)
 $     --shapersize %d      size of the shaper (default: format specific)
 $     --cubesize %d        size of the cube (default: format specific)
-$     --stdout             Write lut to stdout (rather than file)
+$     --stdout             Write to stdout (rather than file)
 $     --v                  Verbose
-$     --help               Print help message</pre>
+$     --help               Print help message
+$
+$ ICC Options
+$     --whitepoint %d      whitepoint for the profile (default: 6505)
+$     --displayicc %s      an icc profile which matches the OCIO profiles target display
+$     --description %s     a meaningful description, this will show up in UI like photoshop
+$     --copyright %s       a copyright field</pre>
 </div>
+<p>See this <a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread/56fd58e60d98e0f6#">ocio-dev thread</a>
+for additional usage discussions.</p>
+<p>When exporting an ICC Profile, you will be asked to specify your monitor’s
+profile (it will be selected for you by default). This is because ICC Profile
+are not LUTs per se. An ICC Profile describes a color space and then needs a
+destination profile to calculate the transformation. So if you have an operation
+working and looking good on the monitor you’re using (and maybe its
+profile has been properly measured using a spectrophotometer), then choose your
+display. If the transform was approved on a different monitor, then maybe you
+should choose its profile instead.</p>
 </div>
 <div class="section" id="after-effects-beta">
 <h2>After Effects (Beta)<a class="headerlink" href="#after-effects-beta" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://www.adobe.com/products/aftereffects.html">Compositor - Adobe</a></p>
-<p>OCIO support through <cite>this plugin &lt;http://www.fnordware.com/OpenColorIO&gt;</cite>.</p>
+<p>OCIO support through <a class="reference external" href="http://www.fnordware.com/OpenColorIO">this plugin</a>.</p>
 <p>This code has not yet been rolled into the OCIO source tree, though we hope to
 add support in the near future.</p>
 <p>See this <a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread/5b37c04e2d743759">email thread</a>
@@ -251,6 +231,7 @@ relied upon for critical production work.</p>
 <p>Xaview Thomas has begun the <a class="reference external" href="http://github.com/thmxv/blender-ocio">Blender OCIO integration</a> .
 Currently undergoing development.</p>
 <p><a class="reference external" href="http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011">Blender Developers Meeting Notes July 31, 2011</a></p>
+<p><a class="reference external" href="http://www.youtube.com/watch?v=O43ItUVvcks">YouTube Blender Example</a></p>
 </div>
 <div class="section" id="ramen-beta">
 <h2>Ramen (Beta)<a class="headerlink" href="#ramen-beta" title="Permalink to this headline">¶</a></h2>
