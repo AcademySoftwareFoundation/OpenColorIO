@@ -162,21 +162,21 @@ int main (int argc, const char* argv[])
     }
     catch(const OCIO::Exception & e)
     {
-        ap.usage();
         std::cerr << "\nERROR: " << e.what() << std::endl;
+        std::cerr << "See --help for more info." << std::endl;
         return 1;
     }
     catch(...)
     {
-        ap.usage();
         std::cerr << "\nERROR: An unknown error occurred in parse_luts" << std::endl;
+        std::cerr << "See --help for more info." << std::endl;
         return 1;
     }
     
     if(!groupTransform)
     {
-        ap.usage();
         std::cerr << "\nERROR: parse_luts returned null transform" << std::endl;
+        std::cerr << "See --help for more info." << std::endl;
         return 1;
     }
     
@@ -186,20 +186,20 @@ int main (int argc, const char* argv[])
     {
         if(!inputspace.empty())
         {
-            ap.usage();
             std::cerr << "\nERROR: --inputspace is not allowed when using --lut\n\n";
+            std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
         if(!outputspace.empty())
         {
-            ap.usage();
             std::cerr << "\nERROR: --outputspace is not allowed when using --lut\n\n";
+            std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
         if(!shaperspace.empty())
         {
-            ap.usage();
             std::cerr << "\nERROR: --shaperspace is not allowed when using --lut\n\n";
+            std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
         
@@ -232,22 +232,22 @@ int main (int argc, const char* argv[])
     
         if(inputspace.empty())
         {
-            ap.usage();
             std::cerr << "\nERROR: You must specify the --inputspace.\n\n";
+            std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
         
         if(outputspace.empty())
         {
-            ap.usage();
             std::cerr << "\nERROR: You must specify the --outputspace.\n\n";
+            std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
         
         if(format.empty())
         {
-            ap.usage();
             std::cerr << "\nERROR: You must specify the lut format using --format.\n\n";
+            std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
         
@@ -274,8 +274,8 @@ int main (int argc, const char* argv[])
     
     if(outputfile.empty() && !usestdout)
     {
-        ap.usage();
         std::cerr << "\nERROR: You must specify the outputfile or --stdout.\n\n";
+        std::cerr << "See --help for more info." << std::endl;
         return 1;
     }
     
@@ -286,21 +286,21 @@ int main (int argc, const char* argv[])
             if(usestdout)
             {
                 std::cerr << "\nERROR: --stdout not supported when writing icc profiles.\n\n";
-                ap.usage();
+                std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
             
             if(outputfile.empty())
             {
-                std::cout << "ERROR: you need to specify a output icc path\n";
-                ap.usage();
+                std::cerr << "ERROR: you need to specify a output icc path\n";
+                std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
             
             if(copyright.empty())
             {
-                std::cout << "ERROR: need to specify a --copyright to embed in the icc profile\n";
-                ap.usage();
+                std::cerr << "ERROR: need to specify a --copyright to embed in the icc profile\n";
+                std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
             
@@ -354,16 +354,19 @@ int main (int argc, const char* argv[])
     catch(OCIO::Exception & exception)
     {
         std::cerr << "OCIO Error: " << exception.what() << std::endl;
+        std::cerr << "See --help for more info." << std::endl;
         return 1;
     }
     catch (std::exception& exception)
     {
         std::cerr << "Error: " << exception.what() << "\n";
+        std::cerr << "See --help for more info." << std::endl;
         return 1;
     }
     catch(...)
     {
         std::cerr << "Unknown OCIO error encountered." << std::endl;
+        std::cerr << "See --help for more info." << std::endl;
         return 1;
     }
     
