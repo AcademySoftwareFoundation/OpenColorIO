@@ -45,7 +45,7 @@ Mari
 
 `3D Paint - The Foundry <http://www.thefoundry.co.uk/products/mari>`__
 
-Mari 1.4v1+ ships with native support for OCIO in the display.
+Mari 1.4v1+ ships with native support for OpenColorIO in their display toolbar.
 
 A `video demonstration <http://vimeo.com/32909648>`__ of the Mari OCIO workflow.
 
@@ -162,6 +162,21 @@ should choose its profile instead.
 
 
 
+RV (Beta)
+*********************************
+
+`Playback Tool - Tweak Software <http://www.tweaksoftware.com>`__
+
+`OCIO support in RV <https://github.com/imageworks/OpenColorIO/tree/master/src/rv>`__
+is currently being developed by Ben Dickson (dbr).
+
+See this `email thread <http://groups.google.com/group/ocio-dev/browse_thread/thread/955fc6271f89a28e>`__
+for additional details.
+
+This integration is currently considered a work in progress, and should not be
+relied upon for critical production work.
+
+
 After Effects (Beta)
 *********************************
 
@@ -175,7 +190,7 @@ add support in the near future.
 See this `email thread <http://groups.google.com/group/ocio-dev/browse_thread/thread/5b37c04e2d743759>`__
 for additional details.
 
-This plugins is currently considered a work in progress, and should not be
+This plugin is currently considered a work in progress, and should not be
 relied upon for critical production work.
 
 
