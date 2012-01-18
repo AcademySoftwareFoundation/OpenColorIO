@@ -200,7 +200,6 @@ void OCIOColorSpace::_validate(bool for_real)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        config->sanityCheck();
         
         const char * inputName = config->getColorSpaceNameByIndex(m_inputColorSpaceIndex);
         const char * outputName = config->getColorSpaceNameByIndex(m_outputColorSpaceIndex);

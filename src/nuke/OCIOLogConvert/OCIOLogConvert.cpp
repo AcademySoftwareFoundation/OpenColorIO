@@ -46,7 +46,6 @@ void OCIOLogConvert::_validate(bool for_real)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        config->sanityCheck();
         
         const char * src = 0;
         const char * dst = 0;

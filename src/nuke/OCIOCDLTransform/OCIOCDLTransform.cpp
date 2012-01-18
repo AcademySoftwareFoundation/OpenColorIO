@@ -257,7 +257,6 @@ void OCIOCDLTransform::_validate(bool for_real)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        config->sanityCheck();
 
         OCIO::CDLTransformRcPtr cc = OCIO::CDLTransform::Create();
         cc->setSlope(m_slope);
