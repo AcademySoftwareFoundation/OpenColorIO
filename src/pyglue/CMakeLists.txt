@@ -62,10 +62,13 @@ if(WIN32)
     endif(OCIO_LINK_PYGLUE)
 else()
     if(OCIO_LINK_PYGLUE)
-    target_link_libraries(PyOpenColorIO OpenColorIO
-        ${PYTHON_LIBRARIES})
+        message(STATUS "Linking python bindings against: ${PYTHON_LIBRARY}")
+        message(STATUS "Python library dirs: ${PYTHON_LIBRARY_DIRS}")
+        link_directories(${PYTHON_LIBRARY})
+        target_link_libraries(PyOpenColorIO OpenColorIO
+            ${PYTHON_LIBRARIES})
     else()
-    target_link_libraries(PyOpenColorIO OpenColorIO)
+        target_link_libraries(PyOpenColorIO OpenColorIO)
     endif(OCIO_LINK_PYGLUE)
 endif()
 
@@ -80,7 +83,7 @@ endif()
 #
 # TODO: This wont let the normal shared library symbols work on OSX.
 # We should explore whether this should be built as a normal dylib, instead
-# of as a bundle
+# of as a bundle. See https://github.com/imageworks/OpenColorIO/pull/175
 
 if(NOT APPLE)
     message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")

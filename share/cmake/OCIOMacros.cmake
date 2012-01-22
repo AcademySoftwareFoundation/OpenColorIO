@@ -170,6 +170,7 @@ MACRO(OCIOFindPython)
         FIND_LIBRARY(PYTHON_LIBRARY
             NAMES "python${PYTHON_VERSION}"
             PATHS ${PYTHON_LIBRARY_DIRS}
+            NO_DEFAULT_PATH # Don't be "helpful" and randomly grab library from /usr/lib etc
         )
         message("Python library: ${PYTHON_LIBRARY}")
     else()
