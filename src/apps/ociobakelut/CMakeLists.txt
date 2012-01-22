@@ -29,6 +29,10 @@ include_directories(
     ${LCMS_INCLUDE_DIRS}
 )
 
+link_directories(
+    ${LCMS_LIBRARY_DIRS}
+)
+
 add_executable(ociobakelut ${share_src_files} main.cpp ocioicc.cpp)
 
 if(LCMS_BUNDLED)
