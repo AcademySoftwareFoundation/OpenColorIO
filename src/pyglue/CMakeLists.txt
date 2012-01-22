@@ -11,6 +11,7 @@ endif()
 
 if(CMAKE_FIRST_RUN)
     message(STATUS "Python ${PYTHON_VERSION} okay (UCS: ${PYTHON_UCS}), will build the Python bindings against ${PYTHON_INCLUDE}")
+    message(STATUS "Python variant path is ${PYTHON_VARIANT_PATH}")
 endif()
     
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -61,10 +62,13 @@ if(WIN32)
     endif(OCIO_LINK_PYGLUE)
 else()
     if(OCIO_LINK_PYGLUE)
-    target_link_libraries(PyOpenColorIO OpenColorIO
-        ${PYTHON_LIBRARIES})
+        message(STATUS "Linking python bindings against: ${PYTHON_LIBRARY}")
+        message(STATUS "Python library dirs: ${PYTHON_LIBRARY_DIRS}")
+        link_directories(${PYTHON_LIBRARY})
+        target_link_libraries(PyOpenColorIO OpenColorIO
+            ${PYTHON_LIBRARIES})
     else()
-    target_link_libraries(PyOpenColorIO OpenColorIO)
+        target_link_libraries(PyOpenColorIO OpenColorIO)
     endif(OCIO_LINK_PYGLUE)
 endif()
 
@@ -79,7 +83,7 @@ endif()
 #
 # TODO: This wont let the normal shared library symbols work on OSX.
 # We should explore whether this should be built as a normal dylib, instead
-# of as a bundle
+# of as a bundle. See https://github.com/imageworks/OpenColorIO/pull/175
 
 if(NOT APPLE)
     message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")
@@ -96,7 +100,7 @@ endif()
 
 message("PYTHON_VARIANT_PATH: ${PYTHON_VARIANT_PATH}")
 
-install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX})
+install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/${PYTHON_VARIANT_PATH})
 
 install(FILES ${CMAKE_SOURCE_DIR}/export/PyOpenColorIO/PyOpenColorIO.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/PyOpenColorIO/)
