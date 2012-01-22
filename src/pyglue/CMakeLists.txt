@@ -11,6 +11,7 @@ endif()
 
 if(CMAKE_FIRST_RUN)
     message(STATUS "Python ${PYTHON_VERSION} okay (UCS: ${PYTHON_UCS}), will build the Python bindings against ${PYTHON_INCLUDE}")
+    message(STATUS "Python variant path is ${PYTHON_VARIANT_PATH}")
 endif()
     
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -96,7 +97,7 @@ endif()
 
 message("PYTHON_VARIANT_PATH: ${PYTHON_VARIANT_PATH}")
 
-install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX})
+install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/${PYTHON_VARIANT_PATH})
 
 install(FILES ${CMAKE_SOURCE_DIR}/export/PyOpenColorIO/PyOpenColorIO.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/PyOpenColorIO/)

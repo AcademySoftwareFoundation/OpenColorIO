@@ -106,38 +106,86 @@ MACRO(OCIOFindPython)
     if(CMAKE_FIRST_RUN)
         message(STATUS "Setting python bin to: ${PYTHON}")
     endif()
-    
+
+    set(PYTHON_OK YES) # OK until something goes wrong
+
+    # Get Python version
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_version()"
+        OUTPUT_VARIABLE PYTHON_VERSION
+        RESULT_VARIABLE PYTHON_RETURNVALUE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(${PYTHON_RETURNVALUE} EQUAL 0)
+        # Everything is fine
+    else()
+        # TODO: These error strings clobber previous values
+        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine version number.")
+        set(PYTHON_OK NO)
+    endif()
+
+
+    # Determine Python UCS version
+    execute_process(COMMAND ${PYTHON} -c "import sys; print sys.maxunicode > 65536 and 'ucs4' or 'ucs2'"
+        OUTPUT_VARIABLE PYTHON_UCS
+        RESULT_VARIABLE PYTHON_RETURNVALUE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(${PYTHON_RETURNVALUE} EQUAL 0)
+        # Hurray
+    else()
+        set(PYTHON_OK NO)
+        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine UCS version.")
+    endif()
+
+
+    # Locate headers
     execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print ':'.join(set(sysconfig.get_config_var('INCLDIRSTOMAKE').split()))"
         OUTPUT_VARIABLE PYTHON_INCLUDE_RAW
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    set(PYTHON_OK NO)
-    
+
+    # Handle errors, and process include path
     if(${PYTHON_RETURNVALUE} EQUAL 0)
         file(TO_CMAKE_PATH "${PYTHON_INCLUDE_RAW}" PYTHON_INCLUDE)
-        execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_version()"
-            OUTPUT_VARIABLE PYTHON_VERSION
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        set(PYTHON_OK YES)
-        execute_process(COMMAND ${PYTHON} -c "import sys; print sys.maxunicode > 65536 and 'ucs4' or 'ucs2'"
-            OUTPUT_VARIABLE PYTHON_UCS
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-    elseif(${PYTHON_RETURNVALUE} GREATER 0)
-        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine header location.")
     else()
-        set(PYTHON_ERR "${PYTHON}: ${PYTHON_RETURNVALUE}.")
+        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine header location.")
+        set(PYTHON_OK NO)
     endif()
 
-    if(PYTHON_RESPECT_UCS)
-        # Respect Python UCS (unicode content system) version, and install
-        # into "lib/python2.6/ucs4" or similar.
-        set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}/${PYTHON_UCS}")
+
+    # Locate Python library
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print ':'.join(set(sysconfig.get_config_var('LIBPL').split()))"
+        OUTPUT_VARIABLE PYTHON_LIBRARY_DIRS_RAW
+        RESULT_VARIABLE PYTHON_RETURNVALUE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    # Handle errors, and process include path
+    if(${PYTHON_RETURNVALUE} EQUAL 0)
+        file(TO_CMAKE_PATH "${PYTHON_LIBRARY_DIRS_RAW}" PYTHON_LIBRARY_DIRS)
+
+        FIND_LIBRARY(PYTHON_LIBRARY
+            NAMES "python${PYTHON_VERSION}"
+            PATHS ${PYTHON_LIBRARY_DIRS}
+        )
+        message("Python library: ${PYTHON_LIBRARY}")
     else()
-        # Ignore UCS version and install into lib/python2.6
-        set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}")
+        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine library path.")
+        set(PYTHON_OK NO)
+    endif()
+
+    # Construct variant path - a path that sufficiently identifies the
+    # ABI-compatbility of the built library
+    if(OCIO_PYGLUE_RESPECT_ABI)
+        # Respect Python major/minor version, and UCS version (unicode
+        # content system). E.g install into "lib/python2.6/ucs4"
+        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/${PYTHON_UCS}")
+    else()
+        # Ignore ABI stuff and install into lib/ dir
+        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}")
     endif()
 
 ENDMACRO()
