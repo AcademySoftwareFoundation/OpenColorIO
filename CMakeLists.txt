@@ -159,7 +159,7 @@ endif()
 ###############################################################################
 ### YAML ###
 
-set(YAML_CPP_VERSION r482)
+set(YAML_CPP_VERSION 0.3.0)
 set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE)
 if(CMAKE_TOOLCHAIN_FILE)
     set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
