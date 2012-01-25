@@ -1,3 +1,9 @@
+**Version 1.0.4 (Jan 25 2012):**
+    * ocio2icc deprecated (functionality merged into ociobakelut)
+    * rv integration (beta)
+    * nuke: updated channel handling
+    * Documentation / website updates
+
 **Version 1.0.3 (Dec 21 2011):**
     * Tetrahedral 3dlut interpolation (CPU only)
     * ociocheck and Config.sanityCheck() have improved validation
