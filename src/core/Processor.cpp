@@ -29,8 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "AllocationOp.h"
+#include "GpuAllocationNoOp.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
+#include "Logging.h"
 #include "Lut3DOp.h"
 #include "OpBuilders.h"
 #include "Processor.h"
@@ -176,62 +178,6 @@ OCIO_NAMESPACE_ENTER
             shader << "return " << pixelName << ";\n";
             shader << "}" << "\n\n";
         }
-        
-        // Find the minimal index range in the opVec that does not support
-        // shader text generation.  The endIndex *is* inclusive.
-        // 
-        // I.e., if the entire opVec does not support GPUShaders, the
-        // result will be startIndex = 0, endIndex = opVec.size() - 1
-        // 
-        // If the entire opVec supports GPU generation, both the
-        // startIndex and endIndex will equal -1
-        
-        void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
-                                         const OpRcPtrVec & opVec)
-        {
-            int start = -1;
-            int end = -1;
-            
-            for(unsigned int i=0; i<opVec.size(); ++i)
-            {
-                // We've found a gpu unsupported op.
-                // If it's the first, save it as our start.
-                // Otherwise, update the end.
-                
-                if(!opVec[i]->supportsGpuShader())
-                {
-                    if(start<0)
-                    {
-                        start = i;
-                        end = i;
-                    }
-                    else end = i;
-                }
-            }
-            
-            // Now that we've found a startIndex, walk back until we find
-            // one that defines a GpuAllocation. (we can only upload to
-            // the gpu at a location are tagged with an allocation)
-            
-            while(start>0)
-            {
-                if(opVec[start]->definesAllocation()) break;
-                 --start;
-            }
-            
-            if(startIndex) *startIndex = start;
-            if(endIndex) *endIndex = end;
-        }
-        
-        AllocationData GetAllocation(int index, const OpRcPtrVec & opVec)
-        {
-            if(index >=0 && opVec[index]->definesAllocation())
-            {
-                return opVec[index]->getAllocation();
-            }
-            
-            return AllocationData();
-        }
     }
     
     
@@ -359,6 +305,12 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream shader;
             calcGpuShaderText(shader, shaderDesc);
             m_shader = shader.str();
+            
+            if(IsDebugLoggingEnabled())
+            {
+                LogDebug("GPU Shader");
+                LogDebug(m_shader);
+            }
         }
         
         return m_shader.c_str();
@@ -551,7 +503,32 @@ OCIO_NAMESPACE_ENTER
                 // does the inverse (making the overall operation a no-op
                 // color-wise
                 
-                AllocationData allocation = GetAllocation(gpuLut3DOpStartIndex, m_cpuOps);
+                AllocationData allocation;
+                if(gpuLut3DOpStartIndex<0 || gpuLut3DOpStartIndex>=(int)m_cpuOps.size())
+                {
+                    std::ostringstream error;
+                    error << "Invalid GpuUnsupportedIndexRange: ";
+                    error << "gpuLut3DOpStartIndex: " << gpuLut3DOpStartIndex << " ";
+                    error << "gpuLut3DOpEndIndex: " << gpuLut3DOpEndIndex << " ";
+                    error << "cpuOps.size: " << m_cpuOps.size();
+                    throw Exception(error.str().c_str());
+                }
+                
+                if(!GetGpuAllocation(allocation, m_cpuOps[gpuLut3DOpStartIndex]))
+                {
+                    std::ostringstream error;
+                    error << "Specified GpuAllocation could not be queried at ";
+                    error << "op index.";
+                    throw Exception(error.str().c_str());
+                }
+                
+                if(IsDebugLoggingEnabled())
+                {
+                    std::ostringstream os;
+                    os << "GPU Allocation: " << allocation;
+                    LogDebug(os.str());
+                }
+                
                 CreateAllocationOps(m_gpuOpsHwPreProcess, allocation, TRANSFORM_DIR_FORWARD);
                 CreateAllocationOps(m_gpuOpsCpuLatticeProcess, allocation, TRANSFORM_DIR_INVERSE);
                 
@@ -568,32 +545,19 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             
-            // TODO: Optimize opvecs
+            LogDebug("GPU Ops: Pre-3DLUT");
             FinalizeOpVec(m_gpuOpsHwPreProcess);
+            
+            LogDebug("GPU Ops: 3DLUT");
             FinalizeOpVec(m_gpuOpsCpuLatticeProcess);
+            
+            LogDebug("GPU Ops: Post-3DLUT");
             FinalizeOpVec(m_gpuOpsHwPostProcess);
         }
         
         // CPU Process setup
-        {
-            // TODO: Optimize opvec
-            FinalizeOpVec(m_cpuOps);
-        }
-        
-        // TODO: Make this a debug envvar
-        /*
-        std::cerr << "     ********* CPU OPS ***************" << std::endl;
-        std::cerr << GetOpVecInfo(m_cpuOps) << "\n\n";
-        
-        std::cerr << "     ********* GPU OPS PRE PROCESS ***************" << std::endl;
-        std::cerr << GetOpVecInfo(m_gpuOpsHwPreProcess) << "\n\n";
-        
-        std::cerr << "     ********* GPU OPS LATTICE PROCESS ***************" << std::endl;
-        std::cerr << GetOpVecInfo(m_gpuOpsCpuLatticeProcess) << "\n\n";
-        
-        std::cerr << "     ********* GPU OPS POST PROCESS ***************" << std::endl;
-        std::cerr << GetOpVecInfo(m_gpuOpsHwPostProcess) << "\n\n";
-        */
+        LogDebug("CPU Ops");
+        FinalizeOpVec(m_cpuOps);
     }
     
     void Processor::Impl::calcGpuShaderText(std::ostream & shader,

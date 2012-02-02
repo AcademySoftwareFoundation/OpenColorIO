@@ -38,8 +38,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    void Lut3D::generateCacheID()
+    Lut3D::Lut3D()
     {
+        for(int i=0; i<3; ++i)
+        {
+            from_min[i] = 0.0f;
+            from_max[i] = 1.0f;
+            size[i] = 0;
+        }
+    }
+    
+    Lut3DRcPtr Lut3D::Create()
+    {
+        return Lut3DRcPtr(new Lut3D());
+    }
+
+    std::string Lut3D::getCacheID() const
+    {
+        AutoMutex lock(m_cacheidMutex);
+        
+        if(lut.empty())
+            throw Exception("Cannot compute cacheID of invalid Lut3D");
+        
+        if(!m_cacheID.empty())
+            return m_cacheID;
+        
         md5_state_t state;
         md5_byte_t digest[16];
         
@@ -52,7 +75,9 @@ OCIO_NAMESPACE_ENTER
         
         md5_finish(&state, digest);
         
-        cacheID = GetPrintableHash(digest);
+        m_cacheID = GetPrintableHash(digest);
+        
+        return m_cacheID;
     }
     
     
@@ -545,6 +570,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
@@ -554,16 +581,16 @@ OCIO_NAMESPACE_ENTER
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
-            virtual bool definesAllocation() const;
-            virtual AllocationData getAllocation() const;
-            
         private:
             Lut3DRcPtr m_lut;
             Interpolation m_interpolation;
             TransformDirection m_direction;
             
+            // Set in finalize
             std::string m_cacheID;
         };
+        
+        typedef OCIO_SHARED_PTR<Lut3DOp> Lut3DOpRcPtr;
         
         
         Lut3DOp::Lut3DOp(Lut3DRcPtr lut,
@@ -599,6 +626,24 @@ OCIO_NAMESPACE_ENTER
         bool Lut3DOp::isNoOp() const
         {
             return false;
+        }
+        
+        bool Lut3DOp::isSameType(const OpRcPtr & op) const
+        {
+            Lut3DOpRcPtr typedRcPtr = DynamicPtrCast<Lut3DOp>(op);
+            if(!typedRcPtr) return false;
+            return true;
+        }
+        
+        bool Lut3DOp::isInverse(const OpRcPtr & op) const
+        {
+            Lut3DOpRcPtr typedRcPtr = DynamicPtrCast<Lut3DOp>(op);
+            if(!typedRcPtr) return false;
+            
+            if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
+                return false;
+            
+            return (m_lut->getCacheID() == typedRcPtr->m_lut->getCacheID());
         }
         
         // TODO: compute real value for hasChannelCrosstalk
@@ -640,7 +685,7 @@ OCIO_NAMESPACE_ENTER
             // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<Lut3DOp ";
-            cacheIDStream << m_lut->cacheID << " ";
+            cacheIDStream << m_lut->getCacheID() << " ";
             cacheIDStream << InterpolationToString(m_interpolation) << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
             cacheIDStream << ">";
@@ -674,16 +719,6 @@ OCIO_NAMESPACE_ENTER
         {
             throw Exception("Lut3DOp does not support analytical shader generation.");
         }
-        
-        bool Lut3DOp::definesAllocation() const
-        {
-            return false;
-        }
-        
-        AllocationData Lut3DOp::getAllocation() const
-        {
-            throw Exception("Lut3DOp does not define an allocation.");
-        }
     }
     
     void CreateLut3DOp(OpRcPtrVec & ops,
@@ -691,11 +726,8 @@ OCIO_NAMESPACE_ENTER
                        Interpolation interpolation,
                        TransformDirection direction)
     {
-        ops.push_back( OpRcPtr(new Lut3DOp(lut, interpolation, direction)) );
+        ops.push_back( Lut3DOpRcPtr(new Lut3DOp(lut, interpolation, direction)) );
     }
-    
-    
-
 }
 OCIO_NAMESPACE_EXIT
 
@@ -712,26 +744,26 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OIIO_ADD_TEST(Lut3DOp, NanInfValueCheck)
 {
-    OCIO::Lut3D lut;
+    OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
     
-    lut.from_min[0] = 0.0f;
-    lut.from_min[1] = 0.0f;
-    lut.from_min[2] = 0.0f;
+    lut->from_min[0] = 0.0f;
+    lut->from_min[1] = 0.0f;
+    lut->from_min[2] = 0.0f;
     
-    lut.from_max[0] = 1.0f;
-    lut.from_max[1] = 1.0f;
-    lut.from_max[2] = 1.0f;
+    lut->from_max[0] = 1.0f;
+    lut->from_max[1] = 1.0f;
+    lut->from_max[2] = 1.0f;
     
-    lut.size[0] = 3;
-    lut.size[1] = 3;
-    lut.size[2] = 3;
+    lut->size[0] = 3;
+    lut->size[1] = 3;
+    lut->size[2] = 3;
     
-    lut.lut.resize(lut.size[0]*lut.size[1]*lut.size[2]*3);
+    lut->lut.resize(lut->size[0]*lut->size[1]*lut->size[2]*3);
     
-    GenerateIdentityLut3D(&lut.lut[0], lut.size[0], 3, OCIO::LUT3DORDER_FAST_RED);
-    for(unsigned int i=0; i<lut.lut.size(); ++i)
+    GenerateIdentityLut3D(&lut->lut[0], lut->size[0], 3, OCIO::LUT3DORDER_FAST_RED);
+    for(unsigned int i=0; i<lut->lut.size(); ++i)
     {
-        lut.lut[i] = powf(lut.lut[i], 2.0f);
+        lut->lut[i] = powf(lut->lut[i], 2.0f);
     }
     
     const float reference[4] = {  std::numeric_limits<float>::signaling_NaN(),
@@ -741,34 +773,34 @@ OIIO_ADD_TEST(Lut3DOp, NanInfValueCheck)
     float color[4];
     
     memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut3D_Nearest(color, 1, lut);
+    OCIO::Lut3D_Nearest(color, 1, *lut);
     
     memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut3D_Linear(color, 1, lut);
+    OCIO::Lut3D_Linear(color, 1, *lut);
 }
 
 
 OIIO_ADD_TEST(Lut3DOp, ValueCheck)
 {
-    OCIO::Lut3D lut;
+    OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
     
-    lut.from_min[0] = 0.0f;
-    lut.from_min[1] = 0.0f;
-    lut.from_min[2] = 0.0f;
+    lut->from_min[0] = 0.0f;
+    lut->from_min[1] = 0.0f;
+    lut->from_min[2] = 0.0f;
     
-    lut.from_max[0] = 1.0f;
-    lut.from_max[1] = 1.0f;
-    lut.from_max[2] = 1.0f;
+    lut->from_max[0] = 1.0f;
+    lut->from_max[1] = 1.0f;
+    lut->from_max[2] = 1.0f;
     
-    lut.size[0] = 32;
-    lut.size[1] = 32;
-    lut.size[2] = 32;
+    lut->size[0] = 32;
+    lut->size[1] = 32;
+    lut->size[2] = 32;
     
-    lut.lut.resize(lut.size[0]*lut.size[1]*lut.size[2]*3);
-    GenerateIdentityLut3D(&lut.lut[0], lut.size[0], 3, OCIO::LUT3DORDER_FAST_RED);
-    for(unsigned int i=0; i<lut.lut.size(); ++i)
+    lut->lut.resize(lut->size[0]*lut->size[1]*lut->size[2]*3);
+    GenerateIdentityLut3D(&lut->lut[0], lut->size[0], 3, OCIO::LUT3DORDER_FAST_RED);
+    for(unsigned int i=0; i<lut->lut.size(); ++i)
     {
-        lut.lut[i] = powf(lut.lut[i], 2.0f);
+        lut->lut[i] = powf(lut->lut[i], 2.0f);
     }
     
     const float reference[] = {  0.0f, 0.2f, 0.3f, 1.0f,
@@ -787,7 +819,7 @@ OIIO_ADD_TEST(Lut3DOp, ValueCheck)
     
     // Check nearest
     memcpy(color, reference, 12*sizeof(float));
-    OCIO::Lut3D_Nearest(color, 3, lut);
+    OCIO::Lut3D_Nearest(color, 3, *lut);
     for(unsigned int i=0; i<12; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], nearest[i], 1e-8);
@@ -795,7 +827,7 @@ OIIO_ADD_TEST(Lut3DOp, ValueCheck)
     
     // Check linear
     memcpy(color, reference, 12*sizeof(float));
-    OCIO::Lut3D_Linear(color, 3, lut);
+    OCIO::Lut3D_Linear(color, 3, *lut);
     for(unsigned int i=0; i<12; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], linear[i], 1e-8);
@@ -803,11 +835,60 @@ OIIO_ADD_TEST(Lut3DOp, ValueCheck)
 
     // Check tetrahedral
     memcpy(color, reference, 12*sizeof(float));
-    OCIO::Lut3D_Tetrahedral(color, 3, lut);
+    OCIO::Lut3D_Tetrahedral(color, 3, *lut);
     for(unsigned int i=0; i<12; ++i)
     {
         OIIO_CHECK_CLOSE(color[i], linear[i], 1e-7); // Note, max delta lowered from 1e-8
     }
+}
+
+
+
+OIIO_ADD_TEST(Lut3DOp, InverseComparisonCheck)
+{
+    OCIO::Lut3DRcPtr lut_a = OCIO::Lut3D::Create();
+    lut_a->from_min[0] = 0.0f;
+    lut_a->from_min[1] = 0.0f;
+    lut_a->from_min[2] = 0.0f;
+    lut_a->from_max[0] = 1.0f;
+    lut_a->from_max[1] = 1.0f;
+    lut_a->from_max[2] = 1.0f;
+    lut_a->size[0] = 32;
+    lut_a->size[1] = 32;
+    lut_a->size[2] = 32;
+    lut_a->lut.resize(lut_a->size[0]*lut_a->size[1]*lut_a->size[2]*3);
+    GenerateIdentityLut3D(&lut_a->lut[0], lut_a->size[0], 3, OCIO::LUT3DORDER_FAST_RED);
+    
+    OCIO::Lut3DRcPtr lut_b = OCIO::Lut3D::Create();
+    lut_b->from_min[0] = 0.5f;
+    lut_b->from_min[1] = 0.5f;
+    lut_b->from_min[2] = 0.5f;
+    lut_b->from_max[0] = 1.0f;
+    lut_b->from_max[1] = 1.0f;
+    lut_b->from_max[2] = 1.0f;
+    lut_b->size[0] = 32;
+    lut_b->size[1] = 32;
+    lut_b->size[2] = 32;
+    lut_b->lut.resize(lut_b->size[0]*lut_b->size[1]*lut_b->size[2]*3);
+    GenerateIdentityLut3D(&lut_b->lut[0], lut_b->size[0], 3, OCIO::LUT3DORDER_FAST_RED);
+    
+    OCIO::OpRcPtrVec ops;
+    CreateLut3DOp(ops, lut_a, OCIO::INTERP_NEAREST, OCIO::TRANSFORM_DIR_FORWARD);
+    CreateLut3DOp(ops, lut_a, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE);
+    CreateLut3DOp(ops, lut_b, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+    CreateLut3DOp(ops, lut_b, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 4);
+    
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[2]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]->clone()));
+    
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[1]), true);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[3]), false);
+    OIIO_CHECK_EQUAL( ops[2]->isInverse(ops[3]), true);
 }
 
 

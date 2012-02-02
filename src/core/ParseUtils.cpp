@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ParseUtils.h"
 #include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
@@ -430,6 +431,34 @@ OCIO_NAMESPACE_ENTER
         }
         
         return -1;
+    }
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    
+    
+    void SplitLooks(StringVec & lookVec, TransformDirectionVec & directionVec,
+                    const std::string & looks)
+    {
+        SplitStringEnvStyle(lookVec, looks.c_str());
+        
+        for(unsigned int i=0; i<lookVec.size(); ++i)
+        {
+            if(pystring::startswith(lookVec[i], "+"))
+            {
+                directionVec.push_back(TRANSFORM_DIR_FORWARD);
+                lookVec[i] = pystring::lstrip(lookVec[i], "+");
+            }
+            else if(pystring::startswith(lookVec[i], "-"))
+            {
+                directionVec.push_back(TRANSFORM_DIR_INVERSE);
+                lookVec[i] = pystring::lstrip(lookVec[i], "-");
+            }
+            else
+            {
+                directionVec.push_back(TRANSFORM_DIR_FORWARD);
+            }
+        }
     }
     
 }

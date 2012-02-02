@@ -40,51 +40,6 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        void ApplyScaleNoAlpha(float* rgbaBuffer, long numPixels,
-                               const float* scale4)
-        {
-            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
-            {
-                rgbaBuffer[0] *= scale4[0];
-                rgbaBuffer[1] *= scale4[1];
-                rgbaBuffer[2] *= scale4[2];
-                
-                rgbaBuffer += 4;
-            }
-        }
-        
-        void ApplyOffsetNoAlpha(float* rgbaBuffer, long numPixels,
-                                const float* offset4)
-        {
-            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
-            {
-                rgbaBuffer[0] += offset4[0];
-                rgbaBuffer[1] += offset4[1];
-                rgbaBuffer[2] += offset4[2];
-                
-                rgbaBuffer += 4;
-            }
-        }
-        
-        void ApplyMatrixNoAlpha(float* rgbaBuffer, long numPixels,
-                                const float* mat44)
-        {
-            float r,g,b;
-            
-            for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
-            {
-                r = rgbaBuffer[0];
-                g = rgbaBuffer[1];
-                b = rgbaBuffer[2];
-                
-                rgbaBuffer[0] = r*mat44[0] + g*mat44[1] + b*mat44[2];
-                rgbaBuffer[1] = r*mat44[4] + g*mat44[5] + b*mat44[6];
-                rgbaBuffer[2] = r*mat44[8] + g*mat44[9] + b*mat44[10];
-                
-                rgbaBuffer += 4;
-            }
-        }
-        
         void ApplyScale(float* rgbaBuffer, long numPixels,
                         const float* scale4)
         {
@@ -166,6 +121,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
@@ -174,22 +131,23 @@ OCIO_NAMESPACE_ENTER
             virtual void writeGpuShader(std::ostream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
-            
-            virtual bool definesAllocation() const;
-            virtual AllocationData getAllocation() const;
         
         private:
             float m_m44[16];
             float m_offset4[4];
             TransformDirection m_direction;
             
+            // Set in finalize
             bool m_m44IsIdentity;
             bool m_m44IsDiagonal;
             bool m_offset4IsIdentity;
             float m_m44_inv[16];
-            
             std::string m_cacheID;
         };
+        
+        
+        typedef OCIO_SHARED_PTR<MatrixOffsetOp> MatrixOffsetOpRcPtr;
+        
         
         MatrixOffsetOp::MatrixOffsetOp(const float * m44,
                                        const float * offset4,
@@ -234,6 +192,30 @@ OCIO_NAMESPACE_ENTER
             return (m_m44IsIdentity && m_offset4IsIdentity);
         }
         
+        bool MatrixOffsetOp::isSameType(const OpRcPtr & op) const
+        {
+            MatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<MatrixOffsetOp>(op);
+            if(!typedRcPtr) return false;
+            return true;
+        }
+        
+        bool MatrixOffsetOp::isInverse(const OpRcPtr & op) const
+        {
+            MatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<MatrixOffsetOp>(op);
+            if(!typedRcPtr) return false;
+            
+            if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
+                return false;
+            
+            float error = std::numeric_limits<float>::min();
+            if(!VecsEqualWithRelError(m_m44, 16, typedRcPtr->m_m44, 16, error))
+                return false;
+            if(!VecsEqualWithRelError(m_offset4, 4,typedRcPtr->m_offset4, 4, error))
+                return false;
+            
+            return true;
+        }
+            
         bool MatrixOffsetOp::hasChannelCrosstalk() const
         {
             return (!m_m44IsDiagonal);
@@ -411,16 +393,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        bool MatrixOffsetOp::definesAllocation() const
-        {
-            return false;
-        }
-        
-        AllocationData MatrixOffsetOp::getAllocation() const
-        {
-            throw Exception("MatrixOffsetOp does not define an allocation.");
-        }
-        
     }  // Anon namespace
     
     
@@ -504,7 +476,7 @@ OCIO_NAMESPACE_ENTER
         bool offsetIsIdentity = IsVecEqualToZero(offset4, 4);
         if(mtxIsIdentity && offsetIsIdentity) return;
         
-        ops.push_back( OpRcPtr(new MatrixOffsetOp(m44,
+        ops.push_back( MatrixOffsetOpRcPtr(new MatrixOffsetOp(m44,
             offset4, direction)) );
     }
     
@@ -521,5 +493,14 @@ OCIO_NAMESPACE_ENTER
         
         CreateMatrixOffsetOp(ops, matrix, offset, direction);
     }
+    
+    
+    bool IsMatrixOp(const OpRcPtr & op)
+    {
+        MatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<MatrixOffsetOp>(op);
+        if(!typedRcPtr) return false;
+        return true;
+    }
+    
 }
 OCIO_NAMESPACE_EXIT

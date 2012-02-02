@@ -40,6 +40,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    Lut1D::Lut1D() :
+        maxerror(std::numeric_limits<float>::min()),
+        errortype(ERROR_RELATIVE)
+    {
+        for(int i=0; i<3; ++i)
+        {
+            from_min[i] = 0.0f;
+            from_max[i] = 1.0f;
+        }
+    }
+    
+    Lut1DRcPtr Lut1D::Create()
+    {
+        return Lut1DRcPtr(new Lut1D());
+    }
+    
+    
     namespace
     {
         bool IsLut1DNoOp(const Lut1D & lut,
@@ -89,18 +106,49 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    
-    void Lut1D::finalize(float maxerror,
-                         ErrorType errortype)
+    std::string Lut1D::getCacheID() const
     {
-        if(isFinal) return;
+        AutoMutex lock(m_mutex);
         
-        isFinal = true;
-        isNoOp = IsLut1DNoOp(*this, maxerror, errortype);
+        if(luts[0].empty() || luts[1].empty() || luts[2].empty())
+            throw Exception("Cannot compute cacheID of invalid Lut1D");
         
-        if(isNoOp)
+        if(!m_cacheID.empty())
+            return m_cacheID;
+        
+        finalize();
+        return m_cacheID;
+    }
+    
+    bool Lut1D::isNoOp() const
+    {
+        AutoMutex lock(m_mutex);
+        
+        if(luts[0].empty() || luts[1].empty() || luts[2].empty())
+            throw Exception("Cannot compute noOp of invalid Lut1D");
+        
+        if(!m_cacheID.empty())
+            return m_isNoOp;
+        
+        finalize();
+        
+        return m_isNoOp;
+    }
+    
+    void Lut1D::unfinalize()
+    {
+        AutoMutex lock(m_mutex);
+        m_cacheID = "";
+        m_isNoOp = false;
+    }
+    
+    void Lut1D::finalize() const
+    {
+        m_isNoOp = IsLut1DNoOp(*this, maxerror, errortype);
+        
+        if(m_isNoOp)
         {
-            cacheID = "<NULL 1D>";
+            m_cacheID = "<NULL 1D>";
         }
         else
         {
@@ -119,7 +167,7 @@ OCIO_NAMESPACE_ENTER
             
             md5_finish(&state, digest);
             
-            cacheID = GetPrintableHash(digest);
+            m_cacheID = GetPrintableHash(digest);
         }
     }
     
@@ -410,6 +458,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
@@ -419,9 +469,6 @@ OCIO_NAMESPACE_ENTER
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
-            virtual bool definesAllocation() const;
-            virtual AllocationData getAllocation() const;
-            
         private:
             const Lut1DRcPtr m_lut;
             Interpolation m_interpolation;
@@ -429,6 +476,9 @@ OCIO_NAMESPACE_ENTER
             
             std::string m_cacheID;
         };
+        
+        typedef OCIO_SHARED_PTR<Lut1DOp> Lut1DOpRcPtr;
+        
         
         Lut1DOp::Lut1DOp(const Lut1DRcPtr & lut,
                          Interpolation interpolation,
@@ -465,6 +515,24 @@ OCIO_NAMESPACE_ENTER
             return false;
         }
         
+        bool Lut1DOp::isSameType(const OpRcPtr & op) const
+        {
+            Lut1DOpRcPtr typedRcPtr = DynamicPtrCast<Lut1DOp>(op);
+            if(!typedRcPtr) return false;
+            return true;
+        }
+        
+        bool Lut1DOp::isInverse(const OpRcPtr & op) const
+        {
+            Lut1DOpRcPtr typedRcPtr = DynamicPtrCast<Lut1DOp>(op);
+            if(!typedRcPtr) return false;
+            
+            if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
+                return false;
+            
+            return (m_lut->getCacheID() == typedRcPtr->m_lut->getCacheID());
+        }
+    
         bool Lut1DOp::hasChannelCrosstalk() const
         {
             return false;
@@ -488,7 +556,7 @@ OCIO_NAMESPACE_ENTER
             // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<Lut1DOp ";
-            cacheIDStream << m_lut->cacheID << " ";
+            cacheIDStream << m_lut->getCacheID() << " ";
             cacheIDStream << InterpolationToString(m_interpolation) << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
             cacheIDStream << ">";
@@ -536,16 +604,6 @@ OCIO_NAMESPACE_ENTER
         {
             throw Exception("Lut1DOp does not support analytical shader generation.");
         }
-        
-        bool Lut1DOp::definesAllocation() const
-        {
-            return false;
-        }
-        
-        AllocationData Lut1DOp::getAllocation() const
-        {
-            throw Exception("Lut1DOp does not define an allocation.");
-        }
     }
     
     void CreateLut1DOp(OpRcPtrVec & ops,
@@ -553,12 +611,7 @@ OCIO_NAMESPACE_ENTER
                        Interpolation interpolation,
                        TransformDirection direction)
     {
-        if(!lut->isFinal)
-        {
-            throw Exception("The specified Lut1D has not been finalized.");
-        }
-        
-        if(lut->isNoOp) return;
+        if(lut->isNoOp()) return;
         
         // TODO: Detect if lut1d can be exactly approximated as y = mx + b
         // If so, return a mtx instead.
@@ -581,7 +634,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
     }
-
 }
 OCIO_NAMESPACE_EXIT
 
@@ -598,15 +650,14 @@ namespace OCIO = OCIO_NAMESPACE;
 OIIO_ADD_TEST(Lut1DOp, isNoOp)
 {
     // Make an identity lut
+    OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
+    lut->from_min[0] = 0.0f;
+    lut->from_min[1] = 0.0f;
+    lut->from_min[2] = 0.0f;
     
-    OCIO::Lut1D lut;
-    lut.from_min[0] = 0.0f;
-    lut.from_min[1] = 0.0f;
-    lut.from_min[2] = 0.0f;
-    
-    lut.from_max[0] = 1.0f;
-    lut.from_max[1] = 1.0f;
-    lut.from_max[2] = 1.0f;
+    lut->from_max[0] = 1.0f;
+    lut->from_max[1] = 1.0f;
+    lut->from_max[2] = 1.0f;
     
     int size = 256;
     for(int i=0; i<size; ++i)
@@ -614,42 +665,45 @@ OIIO_ADD_TEST(Lut1DOp, isNoOp)
         float x = (float)i / (float)(size-1);
         for(int c=0; c<3; ++c)
         {
-            lut.luts[c].push_back(x);
+            lut->luts[c].push_back(x);
         }
     }
     
-    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
-    OIIO_CHECK_EQUAL(lut.isNoOp, true);
+    lut->maxerror = 1e-5f;
+    lut->errortype = OCIO::ERROR_RELATIVE;
+    OIIO_CHECK_EQUAL(lut->isNoOp(), true);
     
-    lut.isFinal = false;
-    lut.finalize(1e-5f, OCIO::ERROR_ABSOLUTE);
-    OIIO_CHECK_EQUAL(lut.isNoOp, true);
+    lut->unfinalize();
+    lut->maxerror = 1e-5f;
+    lut->errortype = OCIO::ERROR_ABSOLUTE;
+    OIIO_CHECK_EQUAL(lut->isNoOp(), true);
     
     // Edit the lut
     // These should NOT be identity
-    lut.luts[0][125] += 1e-3f;
+    lut->unfinalize();
+    lut->luts[0][125] += 1e-3f;
+    lut->maxerror = 1e-5f;
+    lut->errortype = OCIO::ERROR_RELATIVE;
+    OIIO_CHECK_EQUAL(lut->isNoOp(), false);
     
-    lut.isFinal = false;
-    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
-    OIIO_CHECK_EQUAL(lut.isNoOp, false);
-    
-    lut.isFinal = false;
-    lut.finalize(1e-5f, OCIO::ERROR_ABSOLUTE);
-    OIIO_CHECK_EQUAL(lut.isNoOp, false);
+    lut->unfinalize();
+    lut->maxerror = 1e-5f;
+    lut->errortype = OCIO::ERROR_ABSOLUTE;
+    OIIO_CHECK_EQUAL(lut->isNoOp(), false);
 }
 
 
 OIIO_ADD_TEST(Lut1DOp, FiniteValueCheck)
 {
     // Make a lut that squares the input
-    OCIO::Lut1D lut;
-    lut.from_min[0] = 0.0f;
-    lut.from_min[1] = 0.0f;
-    lut.from_min[2] = 0.0f;
+    OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
+    lut->from_min[0] = 0.0f;
+    lut->from_min[1] = 0.0f;
+    lut->from_min[2] = 0.0f;
     
-    lut.from_max[0] = 1.0f;
-    lut.from_max[1] = 1.0f;
-    lut.from_max[2] = 1.0f;
+    lut->from_max[0] = 1.0f;
+    lut->from_max[1] = 1.0f;
+    lut->from_max[2] = 1.0f;
     
     int size = 256;
     for(int i=0; i<size; ++i)
@@ -659,16 +713,17 @@ OIIO_ADD_TEST(Lut1DOp, FiniteValueCheck)
         
         for(int c=0; c<3; ++c)
         {
-            lut.luts[c].push_back(x2);
+            lut->luts[c].push_back(x2);
         }
     }
     
-    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
-    OIIO_CHECK_EQUAL(lut.isNoOp, false);
+    lut->maxerror = 1e-5f;
+    lut->errortype = OCIO::ERROR_RELATIVE;
+    OIIO_CHECK_EQUAL(lut->isNoOp(), false);
     
     float inputBuffer_linearforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
     float outputBuffer_linearforward[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
-    OCIO::Lut1D_Linear(inputBuffer_linearforward, 1, lut);
+    OCIO::Lut1D_Linear(inputBuffer_linearforward, 1, *lut);
     for(int i=0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(inputBuffer_linearforward[i], outputBuffer_linearforward[i], 1e-5f);
@@ -676,7 +731,7 @@ OIIO_ADD_TEST(Lut1DOp, FiniteValueCheck)
     
     float inputBuffer_nearestforward[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
     float outputBuffer_nearestforward[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
-    OCIO::Lut1D_Nearest(inputBuffer_nearestforward, 1, lut);
+    OCIO::Lut1D_Nearest(inputBuffer_nearestforward, 1, *lut);
     for(int i=0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(inputBuffer_nearestforward[i], outputBuffer_nearestforward[i], 1e-2f);
@@ -684,7 +739,7 @@ OIIO_ADD_TEST(Lut1DOp, FiniteValueCheck)
     
     float inputBuffer_linearinverse[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
     float outputBuffer_linearinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
-    OCIO::Lut1D_LinearInverse(outputBuffer_linearinverse, 1, lut);
+    OCIO::Lut1D_LinearInverse(outputBuffer_linearinverse, 1, *lut);
     for(int i=0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(inputBuffer_linearinverse[i], outputBuffer_linearinverse[i], 1e-5f);
@@ -692,7 +747,7 @@ OIIO_ADD_TEST(Lut1DOp, FiniteValueCheck)
     
     float inputBuffer_nearestinverse[4] = { 0.5f, 0.6f, 0.7f, 0.5f };
     float outputBuffer_nearestinverse[4] = { 0.25f, 0.36f, 0.49f, 0.5f };
-    OCIO::Lut1D_NearestInverse(outputBuffer_nearestinverse, 1, lut);
+    OCIO::Lut1D_NearestInverse(outputBuffer_nearestinverse, 1, *lut);
     for(int i=0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(inputBuffer_nearestinverse[i], outputBuffer_nearestinverse[i], 1e-2f);
@@ -700,18 +755,88 @@ OIIO_ADD_TEST(Lut1DOp, FiniteValueCheck)
 }
 
 
+OIIO_ADD_TEST(Lut1DOp, InverseComparisonCheck)
+{
+    // Make a lut that squares the input
+    OCIO::Lut1DRcPtr lut_a = OCIO::Lut1D::Create();
+    {
+    lut_a->from_min[0] = 0.0f;
+    lut_a->from_min[1] = 0.0f;
+    lut_a->from_min[2] = 0.0f;
+    lut_a->from_max[0] = 1.0f;
+    lut_a->from_max[1] = 1.0f;
+    lut_a->from_max[2] = 1.0f;
+    int size = 256;
+    for(int i=0; i<size; ++i)
+    {
+        float x = (float)i / (float)(size-1);
+        float x2 = x*x;
+        
+        for(int c=0; c<3; ++c)
+        {
+            lut_a->luts[c].push_back(x2);
+        }
+    }
+    lut_a->maxerror = 1e-5f;
+    lut_a->errortype = OCIO::ERROR_RELATIVE;
+    }
+    
+    // Make another lut
+    OCIO::Lut1DRcPtr lut_b = OCIO::Lut1D::Create();
+    {
+    lut_b->from_min[0] = 0.5f;
+    lut_b->from_min[1] = 0.6f;
+    lut_b->from_min[2] = 0.7f;
+    lut_b->from_max[0] = 1.0f;
+    lut_b->from_max[1] = 1.0f;
+    lut_b->from_max[2] = 1.0f;
+    int size = 256;
+    for(int i=0; i<size; ++i)
+    {
+        float x = (float)i / (float)(size-1);
+        float x2 = x*x;
+        
+        for(int c=0; c<3; ++c)
+        {
+            lut_b->luts[c].push_back(x2);
+        }
+    }
+    lut_b->maxerror = 1e-5f;
+    lut_b->errortype = OCIO::ERROR_RELATIVE;
+    }
+    
+    OCIO::OpRcPtrVec ops;
+    CreateLut1DOp(ops, lut_a, OCIO::INTERP_NEAREST, OCIO::TRANSFORM_DIR_FORWARD);
+    CreateLut1DOp(ops, lut_a, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE);
+    CreateLut1DOp(ops, lut_b, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD);
+    CreateLut1DOp(ops, lut_b, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 4);
+    
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[2]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]->clone()));
+    
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[1]), true);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[3]), false);
+    OIIO_CHECK_EQUAL( ops[2]->isInverse(ops[3]), true);
+}
+
+
 #ifdef USE_SSE
 OIIO_ADD_TEST(Lut1DOp, SSE)
 {
     // Make a lut that squares the input
-    OCIO::Lut1D lut;
-    lut.from_min[0] = 0.0f;
-    lut.from_min[1] = 0.0f;
-    lut.from_min[2] = 0.0f;
+    OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
+    lut->from_min[0] = 0.0f;
+    lut->from_min[1] = 0.0f;
+    lut->from_min[2] = 0.0f;
     
-    lut.from_max[0] = 1.0f;
-    lut.from_max[1] = 1.0f;
-    lut.from_max[2] = 1.0f;
+    lut->from_max[0] = 1.0f;
+    lut->from_max[1] = 1.0f;
+    lut->from_max[2] = 1.0f;
     
     int size = 256;
     for(int i=0; i<size; ++i)
@@ -721,12 +846,13 @@ OIIO_ADD_TEST(Lut1DOp, SSE)
         
         for(int c=0; c<3; ++c)
         {
-            lut.luts[c].push_back(x2);
+            lut->luts[c].push_back(x2);
         }
     }
     
-    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
-    OIIO_CHECK_EQUAL(lut.isNoOp, false);
+    lut->maxerror = 1e-5f;
+    lut->errortype = OCIO::ERROR_RELATIVE;
+    OIIO_CHECK_EQUAL(lut->isNoOp(), false);
     
     int NUM_TEST_PIXELS = 1024;
     std::vector<float> testValues(NUM_TEST_PIXELS*4);
@@ -745,8 +871,8 @@ OIIO_ADD_TEST(Lut1DOp, SSE)
     memcpy(&outputBuffer_cpu[0], &testValues[0], testValues.size()*sizeof(float));
     memcpy(&outputBuffer_sse[0], &testValues[0], testValues.size()*sizeof(float));
     
-    OCIO::Lut1D_Nearest(&outputBuffer_cpu[0], NUM_TEST_PIXELS, lut);
-    OCIO::Lut1D_Nearest_SSE(&outputBuffer_sse[0], NUM_TEST_PIXELS, lut);
+    OCIO::Lut1D_Nearest(&outputBuffer_cpu[0], NUM_TEST_PIXELS, *lut);
+    OCIO::Lut1D_Nearest_SSE(&outputBuffer_sse[0], NUM_TEST_PIXELS, *lut);
     
     for(int i=0; i<NUM_TEST_PIXELS*4; ++i)
     {
@@ -792,14 +918,14 @@ OIIO_ADD_TEST(Lut1DOp, SSE)
 OIIO_ADD_TEST(Lut1DOp, NanInfValueCheck)
 {
     // Make a lut that squares the input
-    OCIO::Lut1D lut;
-    lut.from_min[0] = 0.0f;
-    lut.from_min[1] = 0.0f;
-    lut.from_min[2] = 0.0f;
+    OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
+    lut->from_min[0] = 0.0f;
+    lut->from_min[1] = 0.0f;
+    lut->from_min[2] = 0.0f;
     
-    lut.from_max[0] = 1.0f;
-    lut.from_max[1] = 1.0f;
-    lut.from_max[2] = 1.0f;
+    lut->from_max[0] = 1.0f;
+    lut->from_max[1] = 1.0f;
+    lut->from_max[2] = 1.0f;
     
     int size = 256;
     for(int i=0; i<size; ++i)
@@ -809,12 +935,13 @@ OIIO_ADD_TEST(Lut1DOp, NanInfValueCheck)
         
         for(int c=0; c<3; ++c)
         {
-            lut.luts[c].push_back(x2);
+            lut->luts[c].push_back(x2);
         }
     }
     
-    lut.finalize(1e-5f, OCIO::ERROR_RELATIVE);
-    OIIO_CHECK_EQUAL(lut.isNoOp, false);
+    lut->maxerror = 1e-5f;
+    lut->errortype = OCIO::ERROR_RELATIVE;
+    OIIO_CHECK_EQUAL(lut->isNoOp(), false);
     
     const float reference[4] = {  std::numeric_limits<float>::signaling_NaN(),
                                   std::numeric_limits<float>::quiet_NaN(),
@@ -829,7 +956,7 @@ OIIO_ADD_TEST(Lut1DOp, NanInfValueCheck)
     float color[4];
     
     memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut1D_Linear(color, 1, lut);
+    OCIO::Lut1D_Linear(color, 1, *lut);
     /*
     for(int i=0; i<4; ++i)
     {
@@ -845,7 +972,7 @@ OIIO_ADD_TEST(Lut1DOp, NanInfValueCheck)
     }
     */
     memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut1D_Nearest(color, 1, lut);
+    OCIO::Lut1D_Nearest(color, 1, *lut);
     /*
     for(int i=0; i <4; ++i)
     {
@@ -860,7 +987,7 @@ OIIO_ADD_TEST(Lut1DOp, NanInfValueCheck)
     }
     */
     memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut1D_LinearInverse(color, 1, lut);
+    OCIO::Lut1D_LinearInverse(color, 1, *lut);
     /*
     for(int i=0; i <4; ++i)
     {
@@ -875,7 +1002,7 @@ OIIO_ADD_TEST(Lut1DOp, NanInfValueCheck)
     }
     */
     memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut1D_NearestInverse(color, 1, lut);
+    OCIO::Lut1D_NearestInverse(color, 1, *lut);
     /*
     for(int i=0; i <4; ++i)
     {

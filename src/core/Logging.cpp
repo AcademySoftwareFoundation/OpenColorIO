@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Logging.h"
 #include "Mutex.h"
+#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -103,9 +104,14 @@ OCIO_NAMESPACE_ENTER
         AutoMutex lock(g_logmutex);
         InitLogging();
         
-        if (g_logginglevel>=LOGGING_LEVEL_WARNING)
+        if(g_logginglevel<LOGGING_LEVEL_WARNING) return;
+        
+        std::vector<std::string> parts;
+        pystring::split( pystring::rstrip(text), parts, "\n");
+        
+        for(unsigned int i=0; i<parts.size(); ++i)
         {
-            std::cerr << "[OpenColorIO Warning]: " << text << std::endl;
+            std::cerr << "[OpenColorIO Warning]: " << parts[i] << std::endl;
         }
     }
     
@@ -114,9 +120,14 @@ OCIO_NAMESPACE_ENTER
         AutoMutex lock(g_logmutex);
         InitLogging();
         
-        if (g_logginglevel>=LOGGING_LEVEL_INFO)
+        if(g_logginglevel<LOGGING_LEVEL_INFO) return;
+        
+        std::vector<std::string> parts;
+        pystring::split( pystring::rstrip(text), parts, "\n");
+        
+        for(unsigned int i=0; i<parts.size(); ++i)
         {
-            std::cerr << "[OpenColorIO Info]: " << text << std::endl;
+            std::cerr << "[OpenColorIO Info]: " << parts[i] << std::endl;
         }
     }
     
@@ -125,9 +136,14 @@ OCIO_NAMESPACE_ENTER
         AutoMutex lock(g_logmutex);
         InitLogging();
         
-        if (g_logginglevel>=LOGGING_LEVEL_DEBUG)
+        if(g_logginglevel<LOGGING_LEVEL_DEBUG) return;
+        
+        std::vector<std::string> parts;
+        pystring::split( pystring::rstrip(text), parts, "\n");
+        
+        for(unsigned int i=0; i<parts.size(); ++i)
         {
-            std::cerr << "[OpenColorIO Debug]: " << text << std::endl;
+            std::cerr << "[OpenColorIO Debug]: " << parts[i] << std::endl;
         }
     }
     

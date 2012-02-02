@@ -252,8 +252,8 @@ OCIO_NAMESPACE_ENTER
                 hdltype = "unknown";
                 hdlblack = 0.0;
                 hdlwhite = 1.0;
-                lut1D = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
-                lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                lut1D = Lut1D::Create();
+                lut3D = Lut3D::Create();
             };
             ~CachedFileHDL() {};
             std::string hdlversion;
@@ -263,8 +263,8 @@ OCIO_NAMESPACE_ENTER
             float to_max; // TODO: maybe add this to Lut1DOp?
             float hdlblack;
             float hdlwhite;
-            OCIO_SHARED_PTR<Lut1D> lut1D;
-            OCIO_SHARED_PTR<Lut3D> lut3D;
+            Lut1DRcPtr lut1D;
+            Lut3DRcPtr lut3D;
         };
         typedef OCIO_SHARED_PTR<CachedFileHDL> CachedFileHDLRcPtr;
         
@@ -309,8 +309,8 @@ OCIO_NAMESPACE_ENTER
 
             //
             CachedFileHDLRcPtr cachedFile = CachedFileHDLRcPtr (new CachedFileHDL ());
-            Lut1DRcPtr lut1d_ptr(new Lut1D());
-            Lut3DRcPtr lut3d_ptr(new Lut3D());
+            Lut1DRcPtr lut1d_ptr = Lut1D::Create();
+            Lut3DRcPtr lut3d_ptr = Lut3D::Create();
 
             // Parse headers into key-value pairs
             StringToStringVecMap header_chunks;
@@ -501,8 +501,8 @@ OCIO_NAMESPACE_ENTER
                 lut1d_ptr->luts[0] = lut_iter->second;
                 lut1d_ptr->luts[1] = lut_iter->second;
                 lut1d_ptr->luts[2] = lut_iter->second;
-
-                lut1d_ptr->finalize(0.0, ERROR_RELATIVE);
+                lut1d_ptr->maxerror = 0.0f;
+                lut1d_ptr->errortype = ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
 
@@ -538,8 +538,7 @@ OCIO_NAMESPACE_ENTER
 
                 lut3d_ptr->lut = lut_iter->second;
 
-                // Make cache ID and bind to cachedFile
-                lut3d_ptr->generateCacheID();
+                // Bind to cachedFile
                 cachedFile->lut3D = lut3d_ptr;
             }
 
@@ -565,8 +564,8 @@ OCIO_NAMESPACE_ENTER
                 lut1d_ptr->luts[0] = lut_iter->second;
                 lut1d_ptr->luts[1] = lut_iter->second;
                 lut1d_ptr->luts[2] = lut_iter->second;
-
-                lut1d_ptr->finalize(0.0, ERROR_RELATIVE);
+                lut1d_ptr->maxerror = 0.0f;
+                lut1d_ptr->errortype = ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
 

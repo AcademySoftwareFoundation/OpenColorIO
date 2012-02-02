@@ -136,14 +136,6 @@ OCIO_NAMESPACE_ENTER
                            const Config & config,
                            const TruelightTransform & transform,
                            TransformDirection dir);
-    
-    ////////////////////////////////////////////////////////////////////////
-    
-    void SplitLooks(StringVec & lookVec, TransformDirectionVec & directionVec,
-                    const std::string & looks);
-    
-    void CreateAllocationNoOp(OpRcPtrVec & ops,
-                              const AllocationData & allocationData);
 }
 OCIO_NAMESPACE_EXIT
 

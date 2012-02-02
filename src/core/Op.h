@@ -49,14 +49,18 @@ OCIO_NAMESPACE_ENTER
         std::string getCacheID() const;
     };
     
+    std::ostream& operator<< (std::ostream&, const AllocationData&);
+    
     class Op;
     typedef OCIO_SHARED_PTR<Op> OpRcPtr;
     typedef std::vector<OpRcPtr> OpRcPtrVec;
     
-    std::string GetOpVecInfo(const OpRcPtrVec & ops);
+    std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
-    void FinalizeOpVec(OpRcPtrVec & opVec);
+    void FinalizeOpVec(OpRcPtrVec & opVec, bool optimize=true);
+    
+    void OptimizeOpVec(OpRcPtrVec & result);
     
     class Op
     {
@@ -77,6 +81,10 @@ OCIO_NAMESPACE_ENTER
             //! (Even no-ops may define Allocation though.)
             
             virtual bool isNoOp() const = 0;
+            
+            virtual bool isSameType(const OpRcPtr & op) const = 0;
+            
+            virtual bool isInverse(const OpRcPtr & op) const = 0;
             
             virtual bool hasChannelCrosstalk() const = 0;
             
@@ -102,10 +110,6 @@ OCIO_NAMESPACE_ENTER
             virtual void writeGpuShader(std::ostream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const = 0;
-            
-            
-            virtual bool definesAllocation() const = 0;
-            virtual AllocationData getAllocation() const = 0;
             
         private:
             Op& operator= (const Op &);

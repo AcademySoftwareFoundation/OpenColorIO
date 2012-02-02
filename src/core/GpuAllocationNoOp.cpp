@@ -49,6 +49,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
@@ -57,20 +59,16 @@ OCIO_NAMESPACE_ENTER
             virtual void writeGpuShader(std::ostream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
-            
-            virtual bool definesAllocation() const;
-            virtual AllocationData getAllocation() const;
-            
-            float getMin() const;
-            float getMax() const;
         
+            void getGpuAllocation(AllocationData & allocation) const;
+            
         private:
             AllocationData m_allocationData;
             
             std::string m_cacheID;
         };
         
-        
+        typedef OCIO_SHARED_PTR<AllocationNoOp> AllocationNoOpRcPtr;
         
         AllocationNoOp::AllocationNoOp(const AllocationData & allocationData) :
                         m_allocationData(allocationData)
@@ -102,6 +100,19 @@ OCIO_NAMESPACE_ENTER
             return true;
         }
         
+        bool AllocationNoOp::isSameType(const OpRcPtr & op) const
+        {
+            AllocationNoOpRcPtr typedRcPtr = DynamicPtrCast<AllocationNoOp>(op);
+            if(!typedRcPtr) return false;
+            return true;
+        }
+        
+        bool AllocationNoOp::isInverse(const OpRcPtr & op) const
+        {
+            if(!isSameType(op)) return false;
+            return true;
+        }
+         
         bool AllocationNoOp::hasChannelCrosstalk() const
         {
             return false;
@@ -130,23 +141,88 @@ OCIO_NAMESPACE_ENTER
                                              const GpuShaderDesc & /*shaderDesc*/) const
         { }
         
-        bool AllocationNoOp::definesAllocation() const
+        void AllocationNoOp::getGpuAllocation(AllocationData & allocation) const
         {
-            return true;
+            allocation = m_allocationData;
         }
         
-        AllocationData AllocationNoOp::getAllocation() const
+        // Return whether the op defines an Allocation
+        bool DefinesGpuAllocation(const OpRcPtr & op)
         {
-            return m_allocationData;
+            AllocationNoOpRcPtr allocationNoOpRcPtr = 
+                DynamicPtrCast<AllocationNoOp>(op);
+            
+            if(allocationNoOpRcPtr) return true;
+            return false;
         }
-
+    }
+    
+    // Find the minimal index range in the opVec that does not support
+    // shader text generation.  The endIndex *is* inclusive.
+    // 
+    // I.e., if the entire opVec does not support GPUShaders, the
+    // result will be startIndex = 0, endIndex = opVec.size() - 1
+    // 
+    // If the entire opVec supports GPU generation, both the
+    // startIndex and endIndex will equal -1
+    
+    void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
+                                     const OpRcPtrVec & opVec)
+    {
+        int start = -1;
+        int end = -1;
+        
+        for(unsigned int i=0; i<opVec.size(); ++i)
+        {
+            // We've found a gpu unsupported op.
+            // If it's the first, save it as our start.
+            // Otherwise, update the end.
+            
+            if(!opVec[i]->supportsGpuShader())
+            {
+                if(start<0)
+                {
+                    start = i;
+                    end = i;
+                }
+                else end = i;
+            }
+        }
+        
+        // Now that we've found a startIndex, walk back until we find
+        // one that defines a GpuAllocation. (we can only upload to
+        // the gpu at a location are tagged with an allocation)
+        
+        while(start>0)
+        {
+            if(DefinesGpuAllocation(opVec[start])) break;
+             --start;
+        }
+        
+        if(startIndex) *startIndex = start;
+        if(endIndex) *endIndex = end;
     }
     
     
-    void CreateAllocationNoOp(OpRcPtrVec & ops,
-                              const AllocationData & allocationData)
+    bool GetGpuAllocation(AllocationData & allocation,
+                          const OpRcPtr & op)
     {
-        ops.push_back( OpRcPtr(new AllocationNoOp(allocationData)) );
+        AllocationNoOpRcPtr allocationNoOpRcPtr = 
+            DynamicPtrCast<AllocationNoOp>(op);
+        
+        if(!allocationNoOpRcPtr)
+        {
+            return false;
+        }
+        
+        allocationNoOpRcPtr->getGpuAllocation(allocation);
+        return true;
+    }
+    
+    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
+                                 const AllocationData & allocationData)
+    {
+        ops.push_back( AllocationNoOpRcPtr(new AllocationNoOp(allocationData)) );
     }
 
 }

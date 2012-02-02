@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "PrivateTypes.h"
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -80,6 +82,16 @@ OCIO_NAMESPACE_ENTER
     // return -1 if not found.
     
     int FindInStringVecCaseIgnore(const std::vector<std::string> & vec, const std::string & str);
+    
+    
+    //////////////////////////////////////////////////////////////////////////
+    
+    // Split a looks string, example: "+cc, -di, onset"
+    // into vectors of looknames, directions.  The output vectors will be
+    // identical sizes
+    
+    void SplitLooks(StringVec & lookVec, TransformDirectionVec & directionVec,
+                    const std::string & looks);
     
 }
 OCIO_NAMESPACE_EXIT

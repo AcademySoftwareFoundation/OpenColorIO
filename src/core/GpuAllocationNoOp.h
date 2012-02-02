@@ -27,8 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_LOGOPS_H
-#define INCLUDED_OCIO_LOGOPS_H
+#ifndef INCLUDED_OCIO_GPUALLOCATIONNOOP_H
+#define INCLUDED_OCIO_GPUALLOCATIONNOOP_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -38,18 +38,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // output = k * log(mx+b, base) + kb
-    // This does not affect alpha
-    // In the forward direction this is lin->log
-    // All input vectors are size 3 (including base)
+    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
+                                 const AllocationData & allocationData);
     
-    void CreateLogOp(OpRcPtrVec & ops,
-                     const float * k,
-                     const float * m,
-                     const float * b,
-                     const float * base,
-                     const float * kb,
-                     TransformDirection direction);
+    // Find the minimal index range in the opVec that does not support
+    // shader text generation.  The endIndex *is* inclusive.
+    // 
+    // I.e., if the entire opVec does not support GPUShaders, the
+    // result will be startIndex = 0, endIndex = opVec.size() - 1
+    // 
+    // If the entire opVec supports GPU generation, both the
+    // startIndex and endIndex will equal -1
+    
+    void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
+                                     const OpRcPtrVec & opVec);
+    
+    // Get the GpuAllocation at the specified index
+    // return true on success
+    bool GetGpuAllocation(AllocationData & allocation,
+                          const OpRcPtr & op);
     
 }
 OCIO_NAMESPACE_EXIT
