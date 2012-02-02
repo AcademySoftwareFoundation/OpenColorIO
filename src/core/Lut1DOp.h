@@ -32,14 +32,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Mutex.h"
 #include "Op.h"
 
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-    // TODO: Do not allow for a naked Lut1D object, always have it be an rc ptr to a lut1d.
-    // Expose static factory fcn, make constructor private?
     // TODO: turn into a class instead of a struct?
     
     enum ErrorType
@@ -48,18 +47,13 @@ OCIO_NAMESPACE_ENTER
         ERROR_RELATIVE
     };
     
+    
+    struct Lut1D;
+    typedef OCIO_SHARED_PTR<Lut1D> Lut1DRcPtr;
+    
     struct Lut1D
     {
-        Lut1D() :
-            isFinal(false),
-            isNoOp(false)
-        {
-            for(int i=0; i<3; ++i)
-            {
-                from_min[i] = 0.0f;
-                from_max[i] = 1.0f;
-            }
-        };
+        static Lut1DRcPtr Create();
         
         // This will compute the cacheid, and also
         // determine if the lut is a no-op.
@@ -71,9 +65,12 @@ OCIO_NAMESPACE_ENTER
         // Example: reading 10-bit ints? Use 2/1023.0
         // If you dont want to do the noop computation,
         // specify a 0.0 tolerance.
-        
-        void finalize(float maxerror,
-                      ErrorType errortype);
+        //
+        // TODO: Instead of having each user compute the error
+        // individually, maybe they should specify the original file bitdepth?
+        // (with appropriate precision tokens?)
+        float maxerror;
+        ErrorType errortype;
         
         float from_min[3];
         float from_max[3];
@@ -81,9 +78,18 @@ OCIO_NAMESPACE_ENTER
         typedef std::vector<float> fv_t;
         fv_t luts[3];
         
-        std::string cacheID;
-        bool isFinal;
-        bool isNoOp;
+        std::string getCacheID() const;
+        bool isNoOp() const;
+        
+        void unfinalize();
+    private:
+        Lut1D();
+        
+        mutable std::string m_cacheID;
+        mutable bool m_isNoOp;
+        mutable Mutex m_mutex;
+        
+        void finalize() const;
     };
     
     typedef OCIO_SHARED_PTR<Lut1D> Lut1DRcPtr;

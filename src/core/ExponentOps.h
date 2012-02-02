@@ -44,6 +44,11 @@ OCIO_NAMESPACE_ENTER
     void CreateExponentOp(OpRcPtrVec & ops,
                           const float * exponent4,
                           TransformDirection direction);
+    
+    bool IsExponentOp(const OpRcPtr & op);
+    
+    // Will return a nullptr if either input is not an exponent Op
+    OpRcPtr CreateCombinedExponentOp(const OpRcPtr & op1, const OpRcPtr & op2);
 }
 OCIO_NAMESPACE_EXIT
 

@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "AllocationOp.h"
 #include "OpBuilders.h"
 #include "Op.h"
 
@@ -49,6 +50,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
@@ -57,20 +60,16 @@ OCIO_NAMESPACE_ENTER
             virtual void writeGpuShader(std::ostream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
-            
-            virtual bool definesAllocation() const;
-            virtual AllocationData getAllocation() const;
-            
-            float getMin() const;
-            float getMax() const;
         
+            void getGpuAllocation(AllocationData & allocation) const;
+            
         private:
             AllocationData m_allocationData;
             
             std::string m_cacheID;
         };
         
-        
+        typedef OCIO_SHARED_PTR<AllocationNoOp> AllocationNoOpRcPtr;
         
         AllocationNoOp::AllocationNoOp(const AllocationData & allocationData) :
                         m_allocationData(allocationData)
@@ -102,6 +101,19 @@ OCIO_NAMESPACE_ENTER
             return true;
         }
         
+        bool AllocationNoOp::isSameType(const OpRcPtr & op) const
+        {
+            AllocationNoOpRcPtr typedRcPtr = DynamicPtrCast<AllocationNoOp>(op);
+            if(!typedRcPtr) return false;
+            return true;
+        }
+        
+        bool AllocationNoOp::isInverse(const OpRcPtr & op) const
+        {
+            if(!isSameType(op)) return false;
+            return true;
+        }
+         
         bool AllocationNoOp::hasChannelCrosstalk() const
         {
             return false;
@@ -130,24 +142,419 @@ OCIO_NAMESPACE_ENTER
                                              const GpuShaderDesc & /*shaderDesc*/) const
         { }
         
-        bool AllocationNoOp::definesAllocation() const
+        void AllocationNoOp::getGpuAllocation(AllocationData & allocation) const
         {
-            return true;
+            allocation = m_allocationData;
         }
         
-        AllocationData AllocationNoOp::getAllocation() const
+        // Return whether the op defines an Allocation
+        bool DefinesGpuAllocation(const OpRcPtr & op)
         {
-            return m_allocationData;
+            AllocationNoOpRcPtr allocationNoOpRcPtr = 
+                DynamicPtrCast<AllocationNoOp>(op);
+            
+            if(allocationNoOpRcPtr) return true;
+            return false;
         }
-
     }
     
-    
-    void CreateAllocationNoOp(OpRcPtrVec & ops,
-                              const AllocationData & allocationData)
+    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
+                                 const AllocationData & allocationData)
     {
-        ops.push_back( OpRcPtr(new AllocationNoOp(allocationData)) );
+        ops.push_back( AllocationNoOpRcPtr(new AllocationNoOp(allocationData)) );
     }
-
+    
+    
+    namespace
+    {
+        // Find the minimal index range in the opVec that does not support
+        // shader text generation.  The endIndex *is* inclusive.
+        // 
+        // I.e., if the entire opVec does not support GPUShaders, the
+        // result will be startIndex = 0, endIndex = opVec.size() - 1
+        // 
+        // If the entire opVec supports GPU generation, both the
+        // startIndex and endIndex will equal -1
+        
+        void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
+                                         const OpRcPtrVec & opVec)
+        {
+            int start = -1;
+            int end = -1;
+            
+            for(unsigned int i=0; i<opVec.size(); ++i)
+            {
+                // We've found a gpu unsupported op.
+                // If it's the first, save it as our start.
+                // Otherwise, update the end.
+                
+                if(!opVec[i]->supportsGpuShader())
+                {
+                    if(start<0)
+                    {
+                        start = i;
+                        end = i;
+                    }
+                    else end = i;
+                }
+            }
+            
+            // Now that we've found a startIndex, walk back until we find
+            // one that defines a GpuAllocation. (we can only upload to
+            // the gpu at a location are tagged with an allocation)
+            
+            while(start>0)
+            {
+                if(DefinesGpuAllocation(opVec[start])) break;
+                 --start;
+            }
+            
+            if(startIndex) *startIndex = start;
+            if(endIndex) *endIndex = end;
+        }
+        
+        
+        bool GetGpuAllocation(AllocationData & allocation,
+                              const OpRcPtr & op)
+        {
+            AllocationNoOpRcPtr allocationNoOpRcPtr = 
+                DynamicPtrCast<AllocationNoOp>(op);
+            
+            if(!allocationNoOpRcPtr)
+            {
+                return false;
+            }
+            
+            allocationNoOpRcPtr->getGpuAllocation(allocation);
+            return true;
+        }
+    }
+    
+    
+    void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
+                         OpRcPtrVec & gpuLatticeOps,
+                         OpRcPtrVec & gpuPostOps,
+                         const OpRcPtrVec & ops)
+    {
+        //
+        // Partition the original, raw opvec into 3 segments for GPU Processing
+        //
+        // gpuLatticeOps need not support analytical gpu shader generation
+        // the pre and post ops must support analytical generation.
+        // Additional ops will be inserted to take into account allocations
+        // transformations.
+        
+        
+        // This is used to bound our analytical shader text generation
+        // start index and end index are inclusive.
+        
+        int gpuLut3DOpStartIndex = 0;
+        int gpuLut3DOpEndIndex = 0;
+        GetGpuUnsupportedIndexRange(&gpuLut3DOpStartIndex,
+                                    &gpuLut3DOpEndIndex,
+                                    ops);
+        
+        // Write the entire shader using only shader text (3d lut is unused)
+        if(gpuLut3DOpStartIndex == -1 && gpuLut3DOpEndIndex == -1)
+        {
+            for(unsigned int i=0; i<ops.size(); ++i)
+            {
+                gpuPreOps.push_back( ops[i]->clone() );
+            }
+        }
+        // Analytical -> 3dlut -> analytical
+        else
+        {
+            // Handle analytical shader block before start index.
+            for(int i=0; i<gpuLut3DOpStartIndex; ++i)
+            {
+                gpuPreOps.push_back( ops[i]->clone() );
+            }
+            
+            // Get the GPU Allocation at the cross-over point
+            // Create 2 symmetrically canceling allocation ops,
+            // where the shader text moves to a nicely allocated LDR
+            // (low dynamic range color space), and the lattice processing
+            // does the inverse (making the overall operation a no-op
+            // color-wise
+            
+            AllocationData allocation;
+            if(gpuLut3DOpStartIndex<0 || gpuLut3DOpStartIndex>=(int)ops.size())
+            {
+                std::ostringstream error;
+                error << "Invalid GpuUnsupportedIndexRange: ";
+                error << "gpuLut3DOpStartIndex: " << gpuLut3DOpStartIndex << " ";
+                error << "gpuLut3DOpEndIndex: " << gpuLut3DOpEndIndex << " ";
+                error << "cpuOps.size: " << ops.size();
+                throw Exception(error.str().c_str());
+            }
+            
+            // If the specified location defines an allocation, use it.
+            // It's possible that this index wont define an allocation.
+            // (For example in the case of getProcessor(FileTransform)
+            if(GetGpuAllocation(allocation, ops[gpuLut3DOpStartIndex]))
+            {
+                CreateAllocationOps(gpuPreOps, allocation,
+                    TRANSFORM_DIR_FORWARD);
+                CreateAllocationOps(gpuLatticeOps, allocation,
+                    TRANSFORM_DIR_INVERSE);
+            }
+            
+            // Handle cpu lattice processing
+            for(int i=gpuLut3DOpStartIndex; i<=gpuLut3DOpEndIndex; ++i)
+            {
+                gpuLatticeOps.push_back( ops[i]->clone() );
+            }
+            
+            // And then handle the gpu post processing
+            for(int i=gpuLut3DOpEndIndex+1; i<(int)ops.size(); ++i)
+            {
+                gpuPostOps.push_back( ops[i]->clone() );
+            }
+        }
+    }
+    
+    void AssertPartitionIntegrity(OpRcPtrVec & gpuPreOps,
+                                  OpRcPtrVec & gpuLatticeOps,
+                                  OpRcPtrVec & gpuPostOps)
+    {
+        // All gpu pre ops must support analytical gpu shader generation
+        for(unsigned int i=0; i<gpuPreOps.size(); ++i)
+        {
+            if(!gpuPreOps[i]->supportsGpuShader())
+            {
+                throw Exception("Patition failed check. gpuPreOps");
+            }
+        }
+        
+        // If there are any lattice ops, at lease one must NOT support GPU
+        // shaders (otherwise this block isnt necessary!)
+        if(gpuLatticeOps.size()>0)
+        {
+            bool requireslattice = false;
+            for(unsigned int i=0; i<gpuLatticeOps.size(); ++i)
+            {
+                if(!gpuLatticeOps[i]->supportsGpuShader()) requireslattice = true;
+            }
+            
+            if(!requireslattice)
+            {
+                throw Exception("Patition failed check. gpuLatticeOps");
+            }
+        }
+        
+        // All gpu post ops must support analytical gpu shader generation
+        for(unsigned int i=0; i<gpuPostOps.size(); ++i)
+        {
+            if(!gpuPostOps[i]->supportsGpuShader())
+            {
+                throw Exception("Patition failed check. gpuPostOps");
+            }
+        }
+    }
+    
+                         
 }
 OCIO_NAMESPACE_EXIT
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+OCIO_NAMESPACE_USING
+
+#include "UnitTest.h"
+#include "Lut1DOp.h"
+#include "MatrixOps.h"
+
+void CreateGenericAllocationOp(OpRcPtrVec & ops)
+{
+    AllocationData srcAllocation;
+    srcAllocation.allocation = ALLOCATION_LG2;
+    srcAllocation.vars.push_back(-8.0f);
+    srcAllocation.vars.push_back(8.0f);
+    CreateGpuAllocationNoOp(ops, srcAllocation);
+}
+
+void CreateGenericScaleOp(OpRcPtrVec & ops)
+{
+    float scale4[4] = { 1.04f, 1.05f, 1.06f, 1.0f };
+    CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+}
+
+void CreateGenericLutOp(OpRcPtrVec & ops)
+{
+    // Make a lut that squares the input
+    Lut1DRcPtr lut = Lut1D::Create();
+    {
+        lut->from_min[0] = 0.0f;
+        lut->from_min[1] = 0.0f;
+        lut->from_min[2] = 0.0f;
+        lut->from_max[0] = 1.0f;
+        lut->from_max[1] = 1.0f;
+        lut->from_max[2] = 1.0f;
+        int size = 256;
+        for(int i=0; i<size; ++i)
+        {
+            float x = (float)i / (float)(size-1);
+            float x2 = x*x;
+            
+            for(int c=0; c<3; ++c)
+            {
+                lut->luts[c].push_back(x2);
+            }
+        }
+    }
+    
+    CreateLut1DOp(ops, lut, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps1a)
+{
+    OpRcPtrVec ops;
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps1b)
+{
+    OpRcPtrVec ops;
+    CreateGenericAllocationOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 1);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps2)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericAllocationOp(ops);
+    CreateGenericScaleOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps3)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericAllocationOp(ops);
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 1);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps4)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericLutOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 1);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps5)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericAllocationOp(ops);
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericAllocationOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 2);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps6)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericAllocationOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericAllocationOp(ops);
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericAllocationOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 8);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 2);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+    /*
+    std::cerr << "gpuPreOps" << std::endl;
+    std::cerr << SerializeOpVec(gpuPreOps, 4) << std::endl;
+    std::cerr << "gpuLatticeOps" << std::endl;
+    std::cerr << SerializeOpVec(gpuLatticeOps, 4) << std::endl;
+    std::cerr << "gpuPostOps" << std::endl;
+    std::cerr << SerializeOpVec(gpuPostOps, 4) << std::endl;
+    */
+}
+
+#endif // OCIO_UNIT_TEST

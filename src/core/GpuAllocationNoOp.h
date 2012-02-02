@@ -27,8 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_LOGOPS_H
-#define INCLUDED_OCIO_LOGOPS_H
+#ifndef INCLUDED_OCIO_GPUALLOCATIONNOOP_H
+#define INCLUDED_OCIO_GPUALLOCATIONNOOP_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -38,18 +38,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // output = k * log(mx+b, base) + kb
-    // This does not affect alpha
-    // In the forward direction this is lin->log
-    // All input vectors are size 3 (including base)
+    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
+                                 const AllocationData & allocationData);
     
-    void CreateLogOp(OpRcPtrVec & ops,
-                     const float * k,
-                     const float * m,
-                     const float * b,
-                     const float * base,
-                     const float * kb,
-                     TransformDirection direction);
+    
+    // Partition an opvec into 3 segments for GPU Processing
+    //
+    // gpuLatticeOps need not support analytical gpu shader generation
+    // the pre and post ops must support analytical generation.
+    //
+    // Additional ops will optinally be inserted to take into account
+    // allocation transformations
+    
+    void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
+                         OpRcPtrVec & gpuLatticeOps,
+                         OpRcPtrVec & gpuPostOps,
+                         const OpRcPtrVec & ops);
     
 }
 OCIO_NAMESPACE_EXIT

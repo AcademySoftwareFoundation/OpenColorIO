@@ -73,6 +73,9 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
+            
             virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
@@ -82,28 +85,52 @@ OCIO_NAMESPACE_ENTER
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
-            virtual bool definesAllocation() const;
-            virtual AllocationData getAllocation() const;
-        
+            const float * getExponent() const
+            {
+                return m_exp4;            
+            }
         private:
             float m_exp4[4];
-            float m_finalExp4[4];
-            TransformDirection m_direction;
+            
+            // Set in finalize
             std::string m_cacheID;
         };
         
+        typedef OCIO_SHARED_PTR<ExponentOp> ExponentOpRcPtr;
+        
+        
         ExponentOp::ExponentOp(const float * exp4,
                                TransformDirection direction):
-                               Op(),
-                               m_direction(direction)
+                               Op()
         {
-            memcpy(m_exp4, exp4, 4*sizeof(float));
-            memset(m_finalExp4, 0, 4*sizeof(float));
+            if(direction == TRANSFORM_DIR_UNKNOWN)
+            {
+                throw Exception("Cannot create ExponentOp with unspecified transform direction.");
+            }
+            
+            if(direction == TRANSFORM_DIR_INVERSE)
+            {
+                for(int i=0; i<4; ++i)
+                {
+                    if(!IsScalarEqualToZero(exp4[i]))
+                    {
+                        m_exp4[i] = 1.0f / exp4[i];
+                    }
+                    else
+                    {
+                        throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
+                    }
+                }
+            }
+            else
+            {
+                memcpy(m_exp4, exp4, 4*sizeof(float));
+            }
         }
         
         OpRcPtr ExponentOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new ExponentOp(m_exp4, m_direction));
+            OpRcPtr op = OpRcPtr(new ExponentOp(m_exp4, TRANSFORM_DIR_FORWARD));
             return op;
         }
         
@@ -125,6 +152,26 @@ OCIO_NAMESPACE_ENTER
             return IsVecEqualToOne(m_exp4, 4);
         }
         
+        bool ExponentOp::isSameType(const OpRcPtr & op) const
+        {
+            ExponentOpRcPtr typedRcPtr = DynamicPtrCast<ExponentOp>(op);
+            if(!typedRcPtr) return false;
+            return true;
+        }
+        
+        bool ExponentOp::isInverse(const OpRcPtr & op) const
+        {
+            ExponentOpRcPtr typedRcPtr = DynamicPtrCast<ExponentOp>(op);
+            if(!typedRcPtr) return false;
+            
+            float combined[4] = { m_exp4[0]*typedRcPtr->m_exp4[0],
+                                  m_exp4[1]*typedRcPtr->m_exp4[1],
+                                  m_exp4[2]*typedRcPtr->m_exp4[2],
+                                  m_exp4[3]*typedRcPtr->m_exp4[3] };
+            
+            return IsVecEqualToOne(combined, 4);
+        }
+        
         bool ExponentOp::hasChannelCrosstalk() const
         {
             return false;
@@ -132,37 +179,13 @@ OCIO_NAMESPACE_ENTER
         
         void ExponentOp::finalize()
         {
-            if(m_direction == TRANSFORM_DIR_UNKNOWN)
-            {
-                throw Exception("Cannot apply ExponentOp op, unspecified transform direction.");
-            }
-            
-            if(m_direction == TRANSFORM_DIR_INVERSE)
-            {
-                for(int i=0; i<4; ++i)
-                {
-                    if(!IsScalarEqualToZero(m_exp4[i]))
-                    {
-                        m_finalExp4[i] = 1.0f / m_exp4[i];
-                    }
-                    else
-                    {
-                        throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
-                    }
-                }
-            }
-            else
-            {
-                memcpy(m_finalExp4, m_exp4, 4*sizeof(float));
-            }
-            
             // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<ExponentOp ";
             cacheIDStream.precision(FLOAT_DECIMALS);
             for(int i=0; i<4; ++i)
             {
-                cacheIDStream << m_finalExp4[i] << " ";
+                cacheIDStream << m_exp4[i] << " ";
             }
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
@@ -172,7 +195,7 @@ OCIO_NAMESPACE_ENTER
         {
             if(!rgbaBuffer) return;
             
-            ApplyClampExponent(rgbaBuffer, numPixels, m_finalExp4);
+            ApplyClampExponent(rgbaBuffer, numPixels, m_exp4);
         }
         
         bool ExponentOp::supportsGpuShader() const
@@ -189,17 +212,7 @@ OCIO_NAMESPACE_ENTER
             
             shader << pixelName << " = pow(";
             shader << "max(" << pixelName << ", " << GpuTextHalf4(zerovec, lang) << ")";
-            shader << ", " << GpuTextHalf4(m_finalExp4, lang) << ");\n";
-        }
-        
-        bool ExponentOp::definesAllocation() const
-        {
-            return false;
-        }
-        
-        AllocationData ExponentOp::getAllocation() const
-        {
-            throw Exception("ExponentOp does not define an allocation.");
+            shader << ", " << GpuTextHalf4(m_exp4, lang) << ");\n";
         }
         
     }  // Anon namespace
@@ -213,7 +226,152 @@ OCIO_NAMESPACE_ENTER
         bool expIsIdentity = IsVecEqualToOne(exp4, 4);
         if(expIsIdentity) return;
         
-        ops.push_back( OpRcPtr(new ExponentOp(exp4, direction)) );
+        ops.push_back( ExponentOpRcPtr(new ExponentOp(exp4, direction)) );
+    }
+    
+    bool IsExponentOp(const OpRcPtr & op)
+    {
+        ExponentOpRcPtr typedRcPtr = DynamicPtrCast<ExponentOp>(op);
+        if(typedRcPtr) return true;
+        return false;
+    }
+    
+    OpRcPtr CreateCombinedExponentOp(const OpRcPtr & op1, const OpRcPtr & op2)
+    {
+        ExponentOpRcPtr typedRcPtr1 = DynamicPtrCast<ExponentOp>(op1);
+        ExponentOpRcPtr typedRcPtr2 = DynamicPtrCast<ExponentOp>(op2);
+        if(!typedRcPtr1 || !typedRcPtr2) return OpRcPtr();
+        
+        const float * exp1 = typedRcPtr1->getExponent();
+        const float * exp2 = typedRcPtr2->getExponent();
+        float newexp[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        for(unsigned int i=0; i<4; ++i)
+        {
+            newexp[i] = exp1[i]*exp2[i];
+        }
+        
+        return ExponentOpRcPtr(new ExponentOp(newexp, TRANSFORM_DIR_FORWARD));
     }
 }
 OCIO_NAMESPACE_EXIT
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+OIIO_ADD_TEST(ExponentOps, ValueCheck)
+{
+    float exp1[4] = { 1.2f, 1.3f, 1.4f, 1.5f };
+    
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    
+    for(unsigned int i=0; i<ops.size(); ++i)
+    {
+        ops[i]->finalize();
+    }
+    
+    float error = 1e-6f;
+    
+    const float source[] = {  0.5f, 0.5f, 0.5f, 0.5f, };
+    
+    const float result1[] = {  0.43527528164806206f, 0.40612619817811774f,
+                               0.37892914162759955f, 0.35355339059327379f };
+    
+    float tmp[4];
+    memcpy(tmp, source, 4*sizeof(float));
+    ops[0]->apply(tmp, 1);
+    
+    for(unsigned int i=0; i<4; ++i)
+    {
+        OIIO_CHECK_CLOSE(tmp[i], result1[i], error);
+    }
+    
+    ops[1]->apply(tmp, 1);
+    for(unsigned int i=0; i<4; ++i)
+    {
+        OIIO_CHECK_CLOSE(tmp[i], source[i], error);
+    }
+}
+
+OIIO_ADD_TEST(ExponentOps, InverseComparisonCheck)
+{
+    float exp1[4] = { 2.0f, 1.02345f, 5.651321f, 0.12345678910f };
+    float exp2[4] = { 2.0f, 2.0f, 2.0f, 2.0f };
+    
+    OCIO::OpRcPtrVec ops;
+    
+    OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateExponentOp(ops, exp2, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateExponentOp(ops, exp2, OCIO::TRANSFORM_DIR_INVERSE);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 4);
+    
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[2]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]->clone()));
+    
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[0]), false);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[1]), true);
+    OIIO_CHECK_EQUAL(ops[1]->isInverse(ops[0]), true);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[2]), false);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[3]), false);
+    OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[0]), false);
+    OIIO_CHECK_EQUAL(ops[2]->isInverse(ops[3]), true);
+    OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[2]), true);
+    OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[3]), false);
+}
+
+OIIO_ADD_TEST(ExponentOps, Combining)
+{
+    float exp1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    float exp2[4] = { 1.2f, 1.2f, 1.2f, 1.0f };
+    
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateExponentOp(ops, exp1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateExponentOp(ops, exp2, OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    
+    for(unsigned int i=0; i<ops.size(); ++i)
+    {
+        ops[i]->finalize();
+    }
+    
+    float error = 1e-6f;
+    
+    const float source[] = {  0.5f, 0.5f, 0.5f, 0.5f, };
+    
+    const float result[] = {  0.18946457081379978f, 0.18946457081379978f,
+                               0.18946457081379978f, 0.5f };
+    
+    float tmp[4];
+    memcpy(tmp, source, 4*sizeof(float));
+    ops[0]->apply(tmp, 1);
+    ops[1]->apply(tmp, 1);
+    
+    for(unsigned int i=0; i<4; ++i)
+    {
+        OIIO_CHECK_CLOSE(tmp[i], result[i], error);
+    }
+    
+    OCIO::OpRcPtr combined = OCIO::CreateCombinedExponentOp(ops[0],ops[1]);
+    combined->finalize();
+    
+    float tmp2[4];
+    memcpy(tmp2, source, 4*sizeof(float));
+    combined->apply(tmp2, 1);
+    
+    for(unsigned int i=0; i<4; ++i)
+    {
+        OIIO_CHECK_CLOSE(tmp2[i], result[i], error);
+    }
+}
+
+#endif // OCIO_UNIT_TEST

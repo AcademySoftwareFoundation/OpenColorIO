@@ -32,18 +32,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Mutex.h"
 #include "Op.h"
 
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-    // TODO: Do not allow for a naked Lut3D object, always have it be an rc ptr to a lut3d.
-    // Expose static factory fcn, make constructor private?
     // TODO: turn into a class instead of a struct?
+    
+    struct Lut3D;
+    typedef OCIO_SHARED_PTR<Lut3D> Lut3DRcPtr;
     
     struct Lut3D
     {
+        static Lut3DRcPtr Create();
+        
         float from_min[3];
         float from_max[3];
         int size[3];
@@ -51,23 +55,13 @@ OCIO_NAMESPACE_ENTER
         typedef std::vector<float> fv_t;
         fv_t lut;
         
-        std::string cacheID;
+        std::string getCacheID() const;
         
-        Lut3D()
-        {
-            for(int i=0; i<3; ++i)
-            {
-                from_min[i] = 0.0f;
-                from_max[i] = 1.0f;
-                size[i] = 0;
-            }
-        };
-        
-        // TODO: This must be explicitly called now. Make it deferred / lazy?
-        void generateCacheID();
+    private:
+        Lut3D();
+        mutable std::string m_cacheID;
+        mutable Mutex m_cacheidMutex;
     };
-    
-    typedef OCIO_SHARED_PTR<Lut3D> Lut3DRcPtr;
     
     // RGB channel ordering.
     // Pixels ordered in such a way that the blue coordinate changes fastest,
@@ -104,14 +98,16 @@ OCIO_NAMESPACE_ENTER
     void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
                                Lut3DOrder lut3DOrder);
     
+    // Essentially the cube root, but will throw an exception if the
+    // cuberoot is not exact.
+    int Get3DLutEdgeLenFromNumPixels(int numPixels);
+    
+    
+    
     void CreateLut3DOp(OpRcPtrVec & ops,
                        Lut3DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);
-    
-    // Essentially the cube root, but will throw an exception if the
-    // cuberoot is not exact.
-    int Get3DLutEdgeLenFromNumPixels(int numPixels);
 }
 OCIO_NAMESPACE_EXIT
 

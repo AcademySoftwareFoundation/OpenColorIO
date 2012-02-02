@@ -96,15 +96,15 @@ OCIO_NAMESPACE_ENTER
                 has1D(false),
                 has3D(false)
             {
-                lut1D = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
-                lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                lut1D = Lut1D::Create();
+                lut3D = Lut3D::Create();
             };
             ~LocalCachedFile() {};
             
             bool has1D;
             bool has3D;
-            OCIO_SHARED_PTR<Lut1D> lut1D;
-            OCIO_SHARED_PTR<Lut3D> lut3D;
+            Lut1DRcPtr lut1D;
+            Lut3DRcPtr lut3D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -289,7 +289,8 @@ OCIO_NAMESPACE_ENTER
                     // 0.0
                     // 0.000001 not equal
                     
-                    cachedFile->lut1D->finalize(1e-5f, ERROR_RELATIVE);
+                    cachedFile->lut1D->maxerror = 1e-5f;
+                    cachedFile->lut1D->errortype = ERROR_RELATIVE;
                 }
             }
             else if(in3d)
@@ -312,7 +313,6 @@ OCIO_NAMESPACE_ENTER
                 cachedFile->lut3D->size[1] = size3d[1];
                 cachedFile->lut3D->size[2] = size3d[2];
                 cachedFile->lut3D->lut = raw;
-                cachedFile->lut3D->generateCacheID();
             }
             else
             {

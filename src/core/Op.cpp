@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
+#include "pystring/pystring.h"
 
 #include <sstream>
 
@@ -62,23 +63,26 @@ OCIO_NAMESPACE_ENTER
         return os.str();
     }
     
+    std::ostream& operator<< (std::ostream & os, const AllocationData & allocation)
+    {
+        os << allocation.getCacheID();
+        return os;
+    }
     
-    
-    std::string GetOpVecInfo(const OpRcPtrVec & ops)
+    std::string SerializeOpVec(const OpRcPtrVec & ops, int indent)
     {
         std::ostringstream os;
-        os << "Size " << ops.size() << std::endl;
         
         for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
         {
-            os << "Index " << i << " -- " << *ops[i] << std::endl;
-            os << "      supportsGPUShader: " << ops[i]->supportsGpuShader() << std::endl;
-            os << "      cacheID " << ops[i]->getCacheID() << std::endl;
+            os << pystring::mul(" ", indent);
+            os << "Op " << i << ": " << *ops[i] << " ";
+            os << ops[i]->getCacheID() << " supports_gpu:" << ops[i]->supportsGpuShader();
+            os << "\n";
         }
         
         return os.str();
     }
-    
     
     bool IsOpVecNoOp(const OpRcPtrVec & ops)
     {
@@ -90,8 +94,15 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
-    void FinalizeOpVec(OpRcPtrVec & ops)
+    void FinalizeOpVec(OpRcPtrVec & ops, bool optimize)
     {
+        // TODO: Add envvar to force disable optimizations
+        
+        if(optimize)
+        {
+            OptimizeOpVec(ops);
+        }
+        
         for(OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
         {
             ops[i]->finalize();

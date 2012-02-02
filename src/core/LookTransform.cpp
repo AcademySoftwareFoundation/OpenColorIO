@@ -155,30 +155,6 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////
     
-    void SplitLooks(StringVec & lookVec, TransformDirectionVec & directionVec,
-                    const std::string & looks)
-    {
-        SplitStringEnvStyle(lookVec, looks.c_str());
-        
-        for(unsigned int i=0; i<lookVec.size(); ++i)
-        {
-            if(pystring::startswith(lookVec[i], "+"))
-            {
-                directionVec.push_back(TRANSFORM_DIR_FORWARD);
-                lookVec[i] = pystring::lstrip(lookVec[i], "+");
-            }
-            else if(pystring::startswith(lookVec[i], "-"))
-            {
-                directionVec.push_back(TRANSFORM_DIR_INVERSE);
-                lookVec[i] = pystring::lstrip(lookVec[i], "-");
-            }
-            else
-            {
-                directionVec.push_back(TRANSFORM_DIR_FORWARD);
-            }
-        }
-    }
-    
     void BuildLookOps(OpRcPtrVec & ops,
                       const Config& config,
                       const ConstContextRcPtr & context,

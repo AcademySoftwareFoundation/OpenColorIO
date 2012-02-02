@@ -60,11 +60,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile()
             {
-                lut = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
+                lut = Lut1D::Create();
             };
             ~LocalCachedFile() {};
             
-            OCIO_SHARED_PTR<Lut1D> lut;
+            Lut1DRcPtr lut;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -102,7 +102,7 @@ OCIO_NAMESPACE_ENTER
 
         CachedFileRcPtr LocalFileFormat::Read(std::istream & istream) const
         {
-            Lut1DRcPtr lut1d(new Lut1D());
+            Lut1DRcPtr lut1d = Lut1D::Create();
 
             // Parse Header Info
             int lut_size = -1;
@@ -219,7 +219,8 @@ OCIO_NAMESPACE_ENTER
             // 1.000010 not equal
             // 0.0
             // 0.000001 not equal
-            lut1d->finalize(1e-5f, ERROR_RELATIVE);
+            lut1d->maxerror = 1e-5f;
+            lut1d->errortype = ERROR_RELATIVE;
 
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             cachedFile->lut = lut1d;

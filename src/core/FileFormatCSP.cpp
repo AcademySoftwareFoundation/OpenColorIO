@@ -315,18 +315,18 @@ OCIO_NAMESPACE_ENTER
                 csptype("unknown"),
                 metadata("none")
             {
-                prelut = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
-                lut1D = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
-                lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                prelut = Lut1D::Create();
+                lut1D = Lut1D::Create();
+                lut3D = Lut3D::Create();
             };
             ~CachedFileCSP() {};
             
             bool hasprelut;
             std::string csptype;
             std::string metadata;
-            OCIO_SHARED_PTR<Lut1D> prelut;
-            OCIO_SHARED_PTR<Lut1D> lut1D;
-            OCIO_SHARED_PTR<Lut3D> lut3D;
+            Lut1DRcPtr prelut;
+            Lut1DRcPtr lut1D;
+            Lut3DRcPtr lut3D;
         };
         typedef OCIO_SHARED_PTR<CachedFileCSP> CachedFileCSPRcPtr;
         
@@ -384,9 +384,9 @@ OCIO_NAMESPACE_ENTER
                 throw Exception ("file stream empty when trying to read csp lut");
             }
             
-            Lut1DRcPtr prelut_ptr(new Lut1D());
-            Lut1DRcPtr lut1d_ptr(new Lut1D());
-            Lut3DRcPtr lut3d_ptr(new Lut3D());
+            Lut1DRcPtr prelut_ptr = Lut1D::Create();
+            Lut1DRcPtr lut1d_ptr = Lut1D::Create();
+            Lut3DRcPtr lut3d_ptr = Lut3D::Create();
 
             // try and read the lut header
             std::string line;
@@ -614,18 +614,20 @@ OCIO_NAMESPACE_ENTER
                     rsr_Interpolator1D_destroy(interpolater);
                 }
                 
-                prelut_ptr->finalize(1e-6f, ERROR_RELATIVE);
+                prelut_ptr->maxerror = 1e-6f;
+                prelut_ptr->errortype = ERROR_RELATIVE;
+                
                 cachedFile->prelut = prelut_ptr;
             }
             
             if(csptype == "1D")
             {
-                lut1d_ptr->finalize(0.0, ERROR_RELATIVE);
+                lut1d_ptr->maxerror = 0.0f;
+                lut1d_ptr->errortype = ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
             else if (csptype == "3D")
             {
-                lut3d_ptr->generateCacheID ();
                 cachedFile->lut3D = lut3d_ptr;
             }
             
