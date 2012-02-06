@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -36,21 +37,68 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <OpenImageIO/typedesc.h>
 namespace OIIO = OIIO_NAMESPACE;
 
-const char * USAGE_TEXT = "\n"
-"ocioconvert inputimage inputcolorspace outputimage outputcolorspace\n";
 
-int main(int argc, char **argv)
+#include "argparse.h"
+
+// array of non openimageIO arguments
+static std::vector<std::string> args;
+
+
+// fill 'args' array with openimageIO arguments
+static int
+parse_end_args(int argc, const char *argv[])
 {
-    if(argc<5)
+  while(argc>0)
+  {
+    args.push_back(argv[0]);
+    argc--;
+    argv++;
+  }
+  
+  return 0;
+}
+
+
+bool ParseNameValuePair(std::string& name, std::string& value,
+                        const std::string& input);
+
+bool StringToFloat(float * fval, const char * str);
+
+bool StringToInt(int * ival, const char * str);
+
+int main(int argc, const char **argv)
+{
+    ArgParse ap;
+    
+    std::vector<std::string> floatAttrs;
+    std::vector<std::string> intAttrs;
+    std::vector<std::string> stringAttrs;
+     
+    ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
+               "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n\n",
+               "%*", parse_end_args, "",
+               "<SEPARATOR>", "OpenImageIO options",
+               "--float-attribute %L", &floatAttrs, "name=float pair defining OIIO float attribute",
+               "--int-attribute %L", &intAttrs, "name=int pair defining OIIO int attribute",
+               "--string-attribute %L", &stringAttrs, "name=string pair defining OIIO string attribute",
+               NULL
+               );
+    if (ap.parse (argc, argv) < 0) {
+        std::cerr << ap.geterror() << std::endl;
+        ap.usage ();
+        exit(1);
+    }
+
+    if(args.size()!=4)
     {
-        std::cerr << USAGE_TEXT << std::endl;
-        exit(0);
+      ap.usage();
+      exit(1);
     }
     
-    const char * inputimage = argv[1];
-    const char * inputcolorspace = argv[2];
-    const char * outputimage = argv[3];
-    const char * outputcolorspace = argv[4];
+    const char * inputimage = args[0].c_str();
+    const char * inputcolorspace = args[1].c_str();
+    const char * outputimage = args[2].c_str();
+    const char * outputcolorspace = args[3].c_str();
     
     OIIO::ImageSpec spec;
     std::vector<float> img;
@@ -58,6 +106,7 @@ int main(int argc, char **argv)
     int imgheight = 0;
     int components = 0;
     
+
     // Load the image
     std::cerr << "Loading " << inputimage << std::endl;
     try
@@ -113,11 +162,71 @@ int main(int argc, char **argv)
     catch(OCIO::Exception & exception)
     {
         std::cerr << "OCIO Error: " << exception.what() << std::endl;
+        exit(1);
     }
     catch(...)
     {
         std::cerr << "Unknown OCIO error encountered." << std::endl;
+        exit(1);
     }
+    
+    
+        
+    //
+    // set the provided OpenImageIO attributes
+    //
+    bool parseerror = false;
+    for(unsigned int i=0; i<floatAttrs.size(); ++i)
+    {
+        std::string name, value;
+        float fval = 0.0f;
+        
+        if(!ParseNameValuePair(name, value, floatAttrs[i]) ||
+           !StringToFloat(&fval,value.c_str()))
+        {
+            std::cerr << "Error: attribute string '" << floatAttrs[i] << "' should be in the form name=floatvalue\n";
+            parseerror = true;
+            continue;
+        }
+        
+        spec.attribute(name, fval);
+    }
+    
+    for(unsigned int i=0; i<intAttrs.size(); ++i)
+    {
+        std::string name, value;
+        int ival = 0;
+        if(!ParseNameValuePair(name, value, intAttrs[i]) ||
+           !StringToInt(&ival,value.c_str()))
+        {
+            std::cerr << "Error: attribute string '" << intAttrs[i] << "' should be in the form name=intvalue\n";
+            parseerror = true;
+            continue;
+        }
+        
+        spec.attribute(name, ival);
+    }
+    
+    for(unsigned int i=0; i<stringAttrs.size(); ++i)
+    {
+        std::string name, value;
+        if(!ParseNameValuePair(name, value, stringAttrs[i]))
+        {
+            std::cerr << "Error: attribute string '" << stringAttrs[i] << "' should be in the form name=value\n";
+            parseerror = true;
+            continue;
+        }
+        
+        spec.attribute(name, value);
+    }
+   
+    if(parseerror)
+    {
+        exit(1);
+    }
+    
+    
+    
     
     // Write out the result
     try
@@ -144,3 +253,55 @@ int main(int argc, char **argv)
     
     return 0;
 }
+
+
+// Parse name=value parts
+// return true on success
+
+bool ParseNameValuePair(std::string& name,
+                        std::string& value,
+                        const std::string& input)
+{
+    // split string into name=value 
+    size_t pos = input.find('=');
+    if(pos==std::string::npos) return false;
+    
+    name = input.substr(0,pos);
+    value = input.substr(pos+1);
+    return true;
+}
+
+// return true on success
+bool StringToFloat(float * fval, const char * str)
+{
+    if(!str) return false;
+    
+    std::istringstream inputStringstream(str);
+    float x;
+    if(!(inputStringstream >> x))
+    {
+        return false;
+    }
+    
+    if(fval) *fval = x;
+    return true;
+}
+
+bool StringToInt(int * ival, const char * str)
+{
+    if(!str) return false;
+    
+    std::istringstream inputStringstream(str);
+    int x;
+    if(!(inputStringstream >> x))
+    {
+        return false;
+    }
+    
+    if(ival) *ival = x;
+    return true;
+}
+
+
+
+
