@@ -36,6 +36,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
+/*+doc
+Python: Processor
+========
+
+Usage
+^^^^^
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+    
+    config = OCIO.Config()
+    processor = config.getProcessor()
+
+Description
+^^^^^
+The :py:class:`Processor` is the object used to actually perform image transformations.
+*/
+
 OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -280,7 +298,17 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        /*+doc
+        Functions
+        ^^^^^
         
+        .. py:method:: Processor.isNoOp()
+                     
+           Returns whether the actual transformation represented by :py:class:`Processor` is a no-op.
+           
+           :return: whether transform is a no-op
+           :rtype: bool
+        */
         PyObject * PyOCIO_Processor_isNoOp( PyObject * self )
         {
             try
@@ -295,7 +323,15 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-
+        /*+doc
+        .. py:method:: Processor.hasChannelCrosstalk()
+                     
+           Returns whether the transformation of :py:class:`Processor` introduces crosstalk between the image
+           channels.
+           
+           :return: whether there's crosstalk between channels
+           :rtype: bool
+        */
         PyObject * PyOCIO_Processor_hasChannelCrosstalk( PyObject * self )
         {
             try
@@ -309,8 +345,20 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-
         
+        /*+doc
+        CPU Path Methods
+        ^^^^^
+        
+        .. py:method:: Processor.applyRGB()
+                     
+           Apply the RGB part of the transform represented by :py:class:`Processor` to an image. ???
+           
+           :param pyData: ???
+           :type pyData: object
+           :return: list of ???
+           :rtype: list
+        */
         PyObject * PyOCIO_Processor_applyRGB( PyObject * self, PyObject * args )
         {
             try
@@ -347,6 +395,16 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Processor.applyRGBA()
+                     
+           Apply the RGB and alpha part of the transform represented by :py:class:`Processor` to an image. ???
+           
+           :param pyData: ???
+           :type pyData: object
+           :return: list of ???
+           :rtype: list
+        */
         PyObject * PyOCIO_Processor_applyRGBA( PyObject * self, PyObject * args )
         {
             try
@@ -383,7 +441,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
+        /*+doc
+        .. py:method:: Processor.getCpuCacheID()
+                     
+           Returns the cache ID of the CPU that :py:class:`Processor` will run on. ???
+           
+           :return: CPU cache ID
+           :rtype: string
+        */
         PyObject * PyOCIO_Processor_getCpuCacheID( PyObject * self )
         {
             try
@@ -403,6 +468,19 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
+        /*+doc
+        GPU Path Methods
+        ^^^^^
+        
+        .. py:method:: Processor.getGpuShaderText()
+                     
+           Returns the GPU shader text. ???
+           
+           :param pyData: ??? two params?
+           :type pyData: object ??? !
+           :return: GPU shader text
+           :rtype: string
+        */
         PyObject * PyOCIO_Processor_getGpuShaderText( PyObject * self, PyObject * args )
         {
             try
@@ -424,6 +502,16 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Processor.getGpuShaderTextCacheID()
+                     
+           Returns the GPU shader text cache ID. ???
+           
+           :param pyData: ??? two params???
+           :type pyData: object ??? !
+           :return: GPU shader text cache ID
+           :rtype: string
+        */
         PyObject * PyOCIO_Processor_getGpuShaderTextCacheID( PyObject * self, PyObject * args )
         {
             try
@@ -445,6 +533,16 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Processor.getGpuLut3D()
+                     
+           Returns the GPU LUT 3D. ???
+           
+           :param pyData: ??? two params?
+           :type pyData: object ??? !
+           :return: GPU LUT 3D
+           :rtype: list
+        */
         PyObject * PyOCIO_Processor_getGpuLut3D( PyObject * self, PyObject * args )
         {
             try
@@ -471,6 +569,16 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Processor.getGpuLut3DCacheID()
+                     
+           Returns the GPU 3D LUT cache ID. ???
+           
+           :param pyData: ??? two params???
+           :type pyData: object ??? !
+           :return: GPU 3D LUT cache ID
+           :rtype: string
+        */
         PyObject * PyOCIO_Processor_getGpuLut3DCacheID( PyObject * self, PyObject * args )
         {
             try

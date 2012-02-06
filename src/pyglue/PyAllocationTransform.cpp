@@ -34,6 +34,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyTransform.h"
 #include "PyUtil.h"
 
+
+/*+doc
+PythonAPI: AllocationTransform
+==============================
+
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+    
+    transform = OCIO.AllocationTransform()
+    transform.setAllocation(OCIO.Constants.ALLOCATION_KAZ)
+*/
+
+
 OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -168,10 +182,17 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
+
     namespace
     {
         ///////////////////////////////////////////////////////////////////////
         ///
+        
+        /*+doc
+        .. py:class:: AllocationTransform()
+           wraps the 'expanded' range into the specified, often compressed, range.
+        */
+        
         int PyOCIO_AllocationTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
@@ -199,6 +220,15 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
+        /*+doc
+        .. py:method:: AllocationTransform.getAllocation() -> Allocation
+           
+           Get the specified Allocation. Allocation is an enum, defined in
+           Constants.
+           
+           :rtype: PyAllocation
+        */
+        
         PyObject * PyOCIO_AllocationTransform_getAllocation( PyObject * self )
         {
             try
@@ -212,6 +242,11 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
+        
+        /*+doc
+        .. py:method:: AllocationTransform.setAllocation(Allocation)
+        blah
+        */
         
         PyObject * PyOCIO_AllocationTransform_setAllocation( PyObject * self, PyObject * args )
         {

@@ -191,10 +191,19 @@ MACRO(OCIOFindPython)
 
 ENDMACRO()
 
-MACRO(ExtractRst INFILE OUTFILE)
+MACRO(ExtractRstCPP INFILE OUTFILE)
    add_custom_command(
       OUTPUT ${OUTFILE}
-      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSource.py ${INFILE} ${OUTFILE}
+      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py ${INFILE} ${OUTFILE}
+      DEPENDS ${INFILE}
+      COMMENT "Extracting reStructuredText from ${INFILE} (using old process)"
+   )
+ENDMACRO()
+
+MACRO(ExtractRstSimple INFILE OUTFILE)
+   add_custom_command(
+      OUTPUT ${OUTFILE}
+      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceSimple.py ${INFILE} ${OUTFILE}
       DEPENDS ${INFILE}
       COMMENT "Extracting reStructuredText from ${INFILE}"
    )

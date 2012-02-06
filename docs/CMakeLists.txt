@@ -76,9 +76,20 @@ list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py)
 CopyFiles(RSTDOC ${DOCFILES})
 
 message(STATUS "Extracting .rst files from C++ headers")
-ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h developers/api/OpenColorIO.rst)
-ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h developers/api/OpenColorTransforms.rst)
-ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h developers/api/OpenColorTypes.rst)
+ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h developers/api/OpenColorIO.rst)
+ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h developers/api/OpenColorTransforms.rst)
+ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h developers/api/OpenColorTypes.rst)
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyConfig.cpp developers/api/PyConfig.rst)
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyProcessor.cpp developers/api/PyProcessor.rst)
+
+#message(STATUS "Merging related python API .rst files")
+#file(GLOB_RECURSE share_src_files "${CMAKE_SOURCE_DIR}/src/apps/share/*.cpp")
+
+#    add_executable(ocioconvert ${share_src_files} main.cpp) 
+
+#ADD_CUSTOM_COMMAND(OUTPUT developers/api/PyTransforms.rst
+#                   COMMAND cat developers/api/PyAllocationTransform.rst developers/api/PyDisplayTransform.rst > developers/api/PyTransforms.rst
+#                   COMMENT "Creating PyTransforms.rst")
 
 add_custom_target(doc ALL
     COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_BINPATH}/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
@@ -88,6 +99,8 @@ add_custom_target(doc ALL
         developers/api/OpenColorIO.rst
         developers/api/OpenColorTransforms.rst
         developers/api/OpenColorTypes.rst
+        developers/api/PyConfig.rst
+        developers/api/PyProcessor.rst
         ${RSTDOC_OUTPUT}
     COMMENT "Building html docs"
     SOURCES ${DOCFILES})

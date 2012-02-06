@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 C++ API
 =======
 
-**Usage Example:** *Compositing plugin that converts from "log" to "lin"*
+**Usage Example:** *Compositing plugin, which converts from "log" to "lin"*
 
 .. code-block:: cpp
    
@@ -79,19 +79,19 @@ OCIO_NAMESPACE_ENTER
     // Exceptions
     // *********
     
-    //!cpp:class:: An exception class to throw for errors detected at
+    //!cpp:class:: An exception class to throw for an errors detected at
     // runtime.
     //
     // .. warning:: 
-    //    All functions in the Config class can potentially throw this exception.
+    //    ALL fcns on the Config class can potentially throw this exception.
     class OCIOEXPORT Exception : public std::exception
     {
     public:
-        //!cpp:function:: Constructor that takes a string as the exception message.
+        //!cpp:function::
         Exception(const char *) throw();
-        //!cpp:function:: Constructor that takes an exception pointer.
+        //!cpp:function::
         Exception(const Exception&) throw();
-        //!cpp:function:: Constructor that takes an exception pointer and returns an exception pointer (???).
+        //!cpp:function::
         Exception& operator=(const Exception&) throw();
         //!cpp:function::
         virtual ~Exception() throw();
@@ -102,11 +102,11 @@ OCIO_NAMESPACE_ENTER
         std::string msg_;
     };
     
-    //!cpp:class:: An exception class for errors detected at
-    // runtime, thrown when OCIO cannot find a file that is expected to
-    // exist. This is provided as a custom type to
-    // distinguish cases where one wants to continue looking for
-    // missing files, but wants to properly fail
+    //!cpp:class:: An exception class to throw for an errors detected at
+    // runtime, used when OCIO is expecting a file to exist, yet it
+    // cannot be found. This is provided as a custom type to
+    // to distinguish amongst cases where one wants to continue for
+    // missing files (such as with looks), but wants to properly fail
     // for other error conditions.
     
     class OCIOEXPORT ExceptionMissingFile : public Exception
@@ -121,35 +121,35 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function::
     // OpenColorIO, during normal usage, tends to cache certain information
-    // (such as the contents of LUTs on disk, intermediate results, etc.).
-    // Calling this function will flush all such information.
-    // Under normal usage, this is not necessary, but it can be helpful in particular instances,
-    // such as designing OCIO profiles, and wanting to re-read luts without
-    // restarting.
+    // (such as the contents of LUTs on disk, intermediate results, etc).
+    // Calling this function will flus all such information.
+    // Under normal usage, this is not necessary. But in particular instances
+    // (such as designing OCIO profiles, and wanting to re-read luts without
+    // restarting) it can be helpful.
     
     extern OCIOEXPORT void ClearAllCaches();
     
     //!cpp:function:: Get the version number for the library, as a
-    // dot-delimited string (e.g., "1.0.0"). This is also available
-    // at compile time as OCIO_VERSION.
+    // dot-delimited string. (I.e., "1.0.0").  This is also available
+    // at compile time as OCIO_VERSION
     
     extern OCIOEXPORT const char * GetVersion();
     
     //!cpp:function:: Get the version number for the library, as a
-    // single 4-byte hex number (e.g., 0x01050200 for "1.5.2"), to be used
-    // for numeric comparisons. This is also available
+    // single 4-byte hex number, e.g. 0x01050200 == 1.5.2
+    // Use this for numeric comparisons.  This is also available
     // at compile time as OCIO_VERSION_HEX.
     
     extern OCIOEXPORT int GetVersionHex();
     
-    //!cpp:function:: Get the global logging level.
-    // You can override this at runtime using the :envvar:`OCIO_LOGGING_LEVEL`
-    // environment variable. The client application that sets this should use
-    // :cpp:func:`SetLoggingLevel`, and not the environment variable. The default value is INFO.
+    //!cpp:function:: Get the global logging level
+    // You can also override this at runtime using the $OCIO_LOGGING_LEVEL
+    // envvar. (Client application who which to set this should use
+    // SetLoggingLevel, not the envvar). The default value is INFO.
     
     extern OCIOEXPORT LoggingLevel GetLoggingLevel();
     
-    //!cpp:function:: Set the global logging level.
+    //!cpp:function:: Get the global logging level
     extern OCIOEXPORT void SetLoggingLevel(LoggingLevel level);
     
     
@@ -159,22 +159,12 @@ OCIO_NAMESPACE_ENTER
     // Config
     // ******
     //
-    // A config defines all the color spaces to be available at runtime.
-    // 
-    // The color configuration (:cpp:class:`Config`) is the main object for
-    // interacting with this library. It encapsulates all of the information
-    // necessary to use customized :cpp:class:`ColorSpaceTransform` and
-    // :cpp:class:`DisplayTransform` operations.
-    // 
-    // See the :ref:`user-guide` for more information on
-    // selecting, creating, and working with custom color configurations.
-    // 
-    // For applications interested in using only one color config at
+    // For applications which are interested in using a single color config at
     // a time (this is the vast majority of apps), their API would
-    // traditionally get the global configuration and use that, as opposed to
+    // traditionally get the global configuration, and use that, as opposed to
     // creating a new one. This simplifies the use case for
-    // plugins and bindings, as it alleviates the need to pass around configuration
-    // handles.
+    // plugins / bindings, as it alleviates the need to pass configuration
+    // handles around.
     // 
     // An example of an application where this would not be sufficient would be
     // a multi-threaded image proxy server (daemon), which wished to handle
@@ -182,9 +172,17 @@ OCIO_NAMESPACE_ENTER
     // app would need to keep multiple configurations alive, and to manage them
     // appropriately.
     // 
-    // Roughly speaking, a novice user should select a
-    // default configuration that most closely approximates the use case
-    // (animation, visual effects, etc.), and set the :envvar:`OCIO` environment
+    // The color configuration (:cpp:class:`Config`) is the main object for
+    // interacting with this libray. It encapsulates all of the information
+    // necessary to utilized customized :cpp:class:`ColorSpaceTransform` and
+    // :cpp:class:`DisplayTransform` operations.
+    // 
+    // See the :ref:`user-guide` for more detailed information on
+    // selecting / creating / working with custom color configurations.
+    // 
+    // Roughly speaking, if you're a novice user you will want to select a
+    // default configuration that most closely approximates your use case
+    // (animation, visual effects, etc), and set :envvar:`OCIO` environment
     // variable to point at the root of that configuration.
     // 
     // .. note::
@@ -194,11 +192,12 @@ OCIO_NAMESPACE_ENTER
     //
     // See :ref:`developers-usageexamples`
     
-    //!cpp:function:: Get the current configuration.
-    
+    //!cpp:function::
     extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
     
-    //!cpp:function:: Set the current configuration. This will then store a copy of the specified config.
+    //!cpp:function:: Set the current configuration.
+    //
+    // This will store a copy of the specified config.
     extern OCIOEXPORT void SetCurrentConfig(const ConstConfigRcPtr & config);
     
     
@@ -213,9 +212,9 @@ OCIO_NAMESPACE_ENTER
         // Initialization
         // ^^^^^^^^^^^^^^
         
-        //!cpp:function:: Constructor...ELABORATE
+        //!cpp:function::
         static ConfigRcPtr Create();
-        //!cpp:function:: 
+        //!cpp:function::
         static ConstConfigRcPtr CreateFromEnv();
         //!cpp:function::
         static ConstConfigRcPtr CreateFromFile(const char * filename);
@@ -227,7 +226,7 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         // This will throw an exception if the config is malformed. The most
-        // common error occurs when references are made to colorspaces that do not
+        // common error situation are references to colorspaces that do not
         // exist.
         void sanityCheck() const;
         
@@ -237,18 +236,17 @@ OCIO_NAMESPACE_ENTER
         void setDescription(const char * description);
         
         //!cpp:function::
-        // Returns the string representation of the Config in YAML text form.
-        // This is typically stored on disk in a file with the extension .ocio.
         void serialize(std::ostream & os) const;
         
         //!cpp:function::
+        // .. note::
         // This will produce a hash of the all colorspace definitions, etc.
-        // All external references, such as files used in FileTransforms, etc.,
+        // All external references, such files used in FileTransforms, etc
         // will be incorporated into the cacheID. While the contents of
-        // the files are not read, the file system is queried for relavent
-        // information (mtime, inode) so that the config's cacheID will
+        // the files is not read, the filesystem is queried for relavent
+        // information (mtime, inode) such that the config's cacheID will
         // change when the underlying luts are updated.
-        // If a context is not provided, the current Context will be used.
+        // If a context is not provided, the currentContext will be used.
         // If a null context is provided, file references will not be taken into
         // account (this is essentially a hash of Config::serialize).
         const char * getCacheID() const;
@@ -286,7 +284,7 @@ OCIO_NAMESPACE_ENTER
         
         //!rst::
         // .. note::
-        //    These fcns all accept either a color space OR role name.
+        //    These fcns all accept either a colorspace OR role name.
         //    (Colorspace names take precedence over roles.)
         
         //!cpp:function:: This will return null if the specified name is not
@@ -297,9 +295,9 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         // .. note::
-        //    If another color space is already registered with the same name,
+        //    If another colorspace is already registered with the same name,
         //    this will overwrite it. This stores a copy of the specified
-        //    color space.
+        //    colorspace.
         void addColorSpace(const ConstColorSpaceRcPtr & cs);
         //!cpp:function::
         void clearColorSpaces();
@@ -307,7 +305,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Given the specified string, get the longest,
         // right-most, colorspace substring that appears.
         //
-        // * If strict parsing is enabled, and no color space is found, return
+        // * If strict parsing is enabled, and no colorspace is found, return
         //   an empty string.
         // * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
         // * If the default role is not defined, return an empty string.

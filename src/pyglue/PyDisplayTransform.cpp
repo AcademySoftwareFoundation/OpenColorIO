@@ -34,6 +34,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyTransform.h"
 #include "PyUtil.h"
 
+/*+doc
+PyDisplayTransform
+==================
+dasdsdas
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+    
+    transform = OCIO.DisplayTransform()
+*/
+
+
 OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
