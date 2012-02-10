@@ -418,10 +418,13 @@ void OCIODisplay::pixel_engine(
         float *aOut = out.writable(aChannel) + rowX;
 
         // OCIO modifies in-place
-        memcpy(rOut, rIn, sizeof(float)*rowWidth);
-        memcpy(gOut, gIn, sizeof(float)*rowWidth);
-        memcpy(bOut, bIn, sizeof(float)*rowWidth);
-        memcpy(aOut, aIn, sizeof(float)*rowWidth);
+        // Note: xOut can equal xIn in some circumstances, such as when the
+        // 'Black' (throwaway) scanline is uses. We thus must guard memcpy,
+        // which does not allow for overlapping regions.
+        if (rOut != rIn) memcpy(rOut, rIn, sizeof(float)*rowWidth);
+        if (gOut != gIn) memcpy(gOut, gIn, sizeof(float)*rowWidth);
+        if (bOut != bIn) memcpy(bOut, bIn, sizeof(float)*rowWidth);
+        if (aOut != aIn) memcpy(aOut, aIn, sizeof(float)*rowWidth);
 
         try
         {
