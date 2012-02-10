@@ -418,10 +418,10 @@ void OCIODisplay::pixel_engine(
         float *aOut = out.writable(aChannel) + rowX;
 
         // OCIO modifies in-place
-        memcpy(rOut, rIn, sizeof(float)*rowWidth);
-        memcpy(gOut, gIn, sizeof(float)*rowWidth);
-        memcpy(bOut, bIn, sizeof(float)*rowWidth);
-        memcpy(aOut, aIn, sizeof(float)*rowWidth);
+        if (rOut != rIn) memcpy(rOut, rIn, sizeof(float)*rowWidth);
+        if (gOut != gIn) memcpy(gOut, gIn, sizeof(float)*rowWidth);
+        if (bOut != bIn) memcpy(bOut, bIn, sizeof(float)*rowWidth);
+        if (aOut != aIn) memcpy(aOut, aIn, sizeof(float)*rowWidth);
 
         try
         {
