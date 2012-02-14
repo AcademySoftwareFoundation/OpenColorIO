@@ -26,11 +26,11 @@ available separately on the :ref:`downloads` section of this site. Example
 images are also available. For assistance customizing .ocio configurations,
 contact the ocio-users email alias.
 
-- Step 1:  setenv $OCIO /path/to/your/profile.ocio
+- Step 1:  set the OCIO environment-variable to /path/to/your/profile.ocio
 - Step 2:  Launch supported application.
 
 If you are on a platform that is not envvar friendly, most applications also
-provide a menu option to select a different ocio configuration after launch.
+provide a menu option to select a different OCIO configuration after launch.
 
 Please be sure to select a profile that matches your color workflow. (VFX work
 typically require a different profile than animated features).  If you need

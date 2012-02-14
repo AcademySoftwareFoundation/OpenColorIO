@@ -10,4 +10,6 @@ For a "broader picture" expiation of how to use OCIO, see the :ref:`configuratio
     :maxdepth: 2
 
     tool_overview
+    baking_luts
     contexts
+    looks
