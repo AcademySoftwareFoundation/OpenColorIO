@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO v1.0.4 documentation" href="../index.html" />
+    <link rel="up" title="User Guide" href="index.html" />
+    <link rel="next" title="Developer guide" href="../developers/index.html" />
+    <link rel="prev" title="Contexts" href="contexts.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO v1.0.4 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tool_overview.html">Tool overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baking_luts.html">Baking LUT&#8217;s</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contexts.html">Contexts</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Looks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../developers/index.html">Developer guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
+</ul>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="looks">
+<h1>Looks<a class="headerlink" href="#looks" title="Permalink to this headline">¶</a></h1>
+<p>A &#8220;look&#8221; is a named color transform, intended to modify the look of an
+image in a &#8220;creative&#8221; manner (as opposed to a colorspace definion
+which tends to be technically/mathematically defined)</p>
+<p>Examples of looks may be a neutral grade, to be applied to film scans
+prior to VFX work, or a per-shot DI grade decided on by the director,
+to be applied just before the viewing transform</p>
+<p>Looks are defined similarly to colorspaces, you specify a name and a
+transform (possibly a GroupTransform containing several other
+transforms), and optionally an inverse transform.</p>
+<p>Where looks differ from colorspace definions are in how they are
+applied. With a look, you also specify the &#8220;process space&#8221; - the
+colorspace in which the transform is applied.</p>
+<div class="section" id="example-configuration">
+<h2>Example configuration<a class="headerlink" href="#example-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Step 1: Setup a Look</p>
+<p>A look is a top-level OCIO configuration object. Conceptually, it&#8217;s a
+named transform which gets applied in a specific color space. All of the
+changes below to the .ocio configs can be done manually by editing the
+text, or using the Python API.</p>
+<p>Example look definition in a OCIO config:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">looks</span><span class="p-Indicator">:</span>
+<span class="p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
+  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">di</span>
+  <span class="l-Scalar-Plain">process_space</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rclg16</span>
+  <span class="l-Scalar-Plain">transform</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">look_di.cc</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+</pre></div>
+</div>
+<p>The src file can be any LUT type that OCIO supports (in this case, it&#8217;s a
+file that contains the <tt class="docutils literal"><span class="pre">&lt;ColorCorrection&gt;</span></tt> element from a CDL file.) You
+could also specify a .3dl, etc.</p>
+<p>Once you define a look in your configuration, you&#8217;ll see that the
+<tt class="docutils literal"><span class="pre">OCIOLookTransform</span></tt> node in Nuke will provide the named option. In
+this example, the &#8216;DI&#8217; look conceptually represents a look that will
+be applied in DI. Other look names we often used are &#8216;onset&#8217;,
+&#8216;editorial&#8217;, etc.  The <tt class="docutils literal"><span class="pre">process_space</span></tt> specifies that the transform
+should be applied in that space. In this example, if you provide
+linear input to the <tt class="docutils literal"><span class="pre">OCIOLookTransform</span></tt> node, the pixels will be
+converted to <tt class="docutils literal"><span class="pre">rclg16</span></tt> before applying the <tt class="docutils literal"><span class="pre">look_di.cc</span></tt>
+file-transform.</p>
+<p>Step 2: Update the Display to use a look.</p>
+<p>You can specify an optional &#8216;looks&#8217; tag in the View tag, which will
+apply the specified look(s). This lets application in the viewer
+provide options which use the looks.</p>
+<p>Example:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">displays</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">DLP</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Raw</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">nc10</span><span class="p-Indicator">}</span>
+    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Log</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">rclg10</span><span class="p-Indicator">}</span>
+    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">p3dci16</span><span class="p-Indicator">}</span>
+    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film DI</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">p3dci16</span><span class="p-Indicator">,</span> <span class="nv">looks</span><span class="p-Indicator">:</span> <span class="nv">di</span><span class="p-Indicator">}</span>
+  <span class="l-Scalar-Plain">sRGB</span><span class="p-Indicator">:</span>
+    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Raw</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">nc10</span><span class="p-Indicator">}</span>
+    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Log</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">rclg10</span><span class="p-Indicator">}</span>
+    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">srgb10</span><span class="p-Indicator">}</span>
+    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film DI</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">srgb10</span><span class="p-Indicator">,</span> <span class="nv">looks</span><span class="p-Indicator">:</span> <span class="nv">di</span><span class="p-Indicator">}</span>
+</pre></div>
+</div>
+<p>Option for advanced users: The looks tag is actually a comma-delimited
+list supporting +/- modifiers. So if you you wanted to specify a View
+that undoes DI, and then adds Onset, you could do &#8220;-di,+onset&#8221;.</p>
+<p>Step 3: Get per-shot looks supported.</p>
+<p>In the top example, look_di.cc, being a relative path location, will check
+each location in the config&#8217;s search_path. The first file that&#8217;s found
+will be used.</p>
+<p>So if your config contains:</p>
+<div class="highlight-python"><pre>search_path: luts</pre>
+</div>
+<p>... then only the &#8216;luts&#8217; subdir relative to the OCIO config will be
+checked.</p>
+<p>However if you specify:</p>
+<div class="highlight-python"><pre>search_path: /shots/show/$SHOT/cc/data:luts</pre>
+</div>
+<p>...the directory &#8216;/shots/show/$SHOT/cc/data/&#8217; will be evaluated first,
+and only if not found will the &#8216;luts&#8217; directory be checked.</p>
+<p>env-vars, absolute, and relative paths can be used both in the config&#8217;s
+<tt class="docutils literal"><span class="pre">search_path</span></tt>, as well as the View&#8217;s src specification.</p>
+<p>Example:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
+  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">di</span>
+  <span class="l-Scalar-Plain">process_space</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rclg16</span>
+  <span class="l-Scalar-Plain">transform</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">looks/$SHOT_di/current/look_$SHOT_di.cc</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+</pre></div>
+</div>
+<p>Note that if the per-shot lut is not found, you can control whether a
+fallback LUT succeeds based on if it&#8217;s in the master location. You can
+also use this for multiple levels (show, shot, etc).</p>
+<p>Advanced option: If some shots use .cc files, and some use 3d-luts
+currently there&#8217;s no simple way to handle this. What we&#8217;d recommend as a
+work around is to label all of your files with the same extension (such as
+.cc), and then rely on OCIO&#8217;s resiliance to misnamed lut files to just load
+them anyways. Caveat: this only works in 1.0.1+ (commit sha-1: 6da3411ced)</p>
+<p>Advanced option: In the Nuke OCIO nodes, you often want to preview
+looks &#8216;across shots&#8217; (often for reference, same-as, etc). You can
+override the env-vars in each node, using the &#8216;Context&#8217; menu. For
+example, if you know that $SHOT is being used, in the context key1 you
+should specify &#8216;SHOT&#8217;, and the in value1 specify the shot to use (such
+as dev.lookdev). You can also use expressions, to say parse a shot
+name out of <tt class="docutils literal"><span class="pre">[metadata</span> <span class="pre">&quot;input/filename&quot;]</span></tt></p>
+<p>Advanced option: If you are writing your own OCIO integration code,
+<tt class="docutils literal"><span class="pre">getProcessor</span></tt> will fail if the per-shot lut is not found, and you
+may want to distinguish this error from other OCIO errors. For this
+reason, we provide OCIO::ExceptionMissingFile, which can be explicitly
+caught (this can then handled using
+<tt class="docutils literal"><span class="pre">OCIO::DisplayTransform::setLooksOverride()</span></tt>). I&#8217;d expect image
+flipbook applications to use this approach.</p>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>

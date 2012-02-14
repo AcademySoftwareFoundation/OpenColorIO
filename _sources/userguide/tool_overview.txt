@@ -6,7 +6,7 @@ Tool overview
 OCIO is comprised of many parts. At the lowest level there is the C++ API.
 This API can be used in applications and plugins
 
-Note that all these plugins use the same config file to define colour spaces,
+Note that all these plugins use the same config file to define color spaces,
 roles and so on. For information on setting up configurations, see 
 :ref:`userguide-configuration`
 
@@ -27,7 +27,7 @@ This is a command line tool which shows an overview of an OCIO config
 file, and check for obvious errors
 
 For example, the following shows the output of a config with a typo -
-the colourspace used for ``compositing_log`` is not incorrect::
+the colorspace used for ``compositing_log`` is not incorrect::
 
     $ ociocheck --iconfig example.ocio
 

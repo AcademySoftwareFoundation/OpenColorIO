@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
     <link rel="top" title="OpenColorIO v1.0.4 documentation" href="../index.html" />
     <link rel="up" title="User Guide" href="index.html" />
-    <link rel="next" title="Contexts" href="contexts.html" />
+    <link rel="next" title="Baking LUT’s" href="baking_luts.html" />
     <link rel="prev" title="User Guide" href="index.html" /> 
   </head>
   <body>
@@ -54,7 +54,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">User Guide</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="">Tool overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baking_luts.html">Baking LUT&#8217;s</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contexts.html">Contexts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="looks.html">Looks</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../developers/index.html">Developer guide</a></li>
@@ -72,7 +74,7 @@
 <span id="userguide-tooloverview"></span><h1>Tool overview<a class="headerlink" href="#tool-overview" title="Permalink to this headline">¶</a></h1>
 <p>OCIO is comprised of many parts. At the lowest level there is the C++ API.
 This API can be used in applications and plugins</p>
-<p>Note that all these plugins use the same config file to define colour spaces,
+<p>Note that all these plugins use the same config file to define color spaces,
 roles and so on. For information on setting up configurations, see
 <em class="xref std std-ref">userguide-configuration</em></p>
 <div class="section" id="the-api">
@@ -86,7 +88,7 @@ the <a class="reference internal" href="#overview-nukeplugins"><em>Nuke plugins<
 <p>This is a command line tool which shows an overview of an OCIO config
 file, and check for obvious errors</p>
 <p>For example, the following shows the output of a config with a typo -
-the colourspace used for <tt class="docutils literal"><span class="pre">compositing_log</span></tt> is not incorrect:</p>
+the colorspace used for <tt class="docutils literal"><span class="pre">compositing_log</span></tt> is not incorrect:</p>
 <div class="highlight-python"><pre>$ ociocheck --iconfig example.ocio
 
 OpenColorIO Library Version: 0.8.3
