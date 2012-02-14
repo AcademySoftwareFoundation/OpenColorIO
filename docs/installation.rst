@@ -78,7 +78,7 @@ this::
 Enabling optional components
 ----------------------------
 
-The OpenColourIO library is probably not all you want - the Python
+The OpenColorIO library is probably not all you want - the Python
 libraries bindings, the Nuke nodes and several applications are only
 built if their dependencies are found.
 
