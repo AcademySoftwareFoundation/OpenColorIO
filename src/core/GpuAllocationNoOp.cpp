@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "AllocationOp.h"
 #include "OpBuilders.h"
 #include "Op.h"
 
@@ -157,73 +158,160 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    // Find the minimal index range in the opVec that does not support
-    // shader text generation.  The endIndex *is* inclusive.
-    // 
-    // I.e., if the entire opVec does not support GPUShaders, the
-    // result will be startIndex = 0, endIndex = opVec.size() - 1
-    // 
-    // If the entire opVec supports GPU generation, both the
-    // startIndex and endIndex will equal -1
-    
-    void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
-                                     const OpRcPtrVec & opVec)
-    {
-        int start = -1;
-        int end = -1;
-        
-        for(unsigned int i=0; i<opVec.size(); ++i)
-        {
-            // We've found a gpu unsupported op.
-            // If it's the first, save it as our start.
-            // Otherwise, update the end.
-            
-            if(!opVec[i]->supportsGpuShader())
-            {
-                if(start<0)
-                {
-                    start = i;
-                    end = i;
-                }
-                else end = i;
-            }
-        }
-        
-        // Now that we've found a startIndex, walk back until we find
-        // one that defines a GpuAllocation. (we can only upload to
-        // the gpu at a location are tagged with an allocation)
-        
-        while(start>0)
-        {
-            if(DefinesGpuAllocation(opVec[start])) break;
-             --start;
-        }
-        
-        if(startIndex) *startIndex = start;
-        if(endIndex) *endIndex = end;
-    }
-    
-    
-    bool GetGpuAllocation(AllocationData & allocation,
-                          const OpRcPtr & op)
-    {
-        AllocationNoOpRcPtr allocationNoOpRcPtr = 
-            DynamicPtrCast<AllocationNoOp>(op);
-        
-        if(!allocationNoOpRcPtr)
-        {
-            return false;
-        }
-        
-        allocationNoOpRcPtr->getGpuAllocation(allocation);
-        return true;
-    }
-    
     void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
                                  const AllocationData & allocationData)
     {
         ops.push_back( AllocationNoOpRcPtr(new AllocationNoOp(allocationData)) );
     }
-
+    
+    
+    namespace
+    {
+        // Find the minimal index range in the opVec that does not support
+        // shader text generation.  The endIndex *is* inclusive.
+        // 
+        // I.e., if the entire opVec does not support GPUShaders, the
+        // result will be startIndex = 0, endIndex = opVec.size() - 1
+        // 
+        // If the entire opVec supports GPU generation, both the
+        // startIndex and endIndex will equal -1
+        
+        void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
+                                         const OpRcPtrVec & opVec)
+        {
+            int start = -1;
+            int end = -1;
+            
+            for(unsigned int i=0; i<opVec.size(); ++i)
+            {
+                // We've found a gpu unsupported op.
+                // If it's the first, save it as our start.
+                // Otherwise, update the end.
+                
+                if(!opVec[i]->supportsGpuShader())
+                {
+                    if(start<0)
+                    {
+                        start = i;
+                        end = i;
+                    }
+                    else end = i;
+                }
+            }
+            
+            // Now that we've found a startIndex, walk back until we find
+            // one that defines a GpuAllocation. (we can only upload to
+            // the gpu at a location are tagged with an allocation)
+            
+            while(start>0)
+            {
+                if(DefinesGpuAllocation(opVec[start])) break;
+                 --start;
+            }
+            
+            if(startIndex) *startIndex = start;
+            if(endIndex) *endIndex = end;
+        }
+        
+        
+        bool GetGpuAllocation(AllocationData & allocation,
+                              const OpRcPtr & op)
+        {
+            AllocationNoOpRcPtr allocationNoOpRcPtr = 
+                DynamicPtrCast<AllocationNoOp>(op);
+            
+            if(!allocationNoOpRcPtr)
+            {
+                return false;
+            }
+            
+            allocationNoOpRcPtr->getGpuAllocation(allocation);
+            return true;
+        }
+    }
+    
+    
+    void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
+                         OpRcPtrVec & gpuLatticeOps,
+                         OpRcPtrVec & gpuPostOps,
+                         const OpRcPtrVec & ops)
+    {
+        //
+        // Partition the original, raw opvec into 3 segments for GPU Processing
+        //
+        // gpuLatticeOps need not support analytical gpu shader generation
+        // the pre and post ops must support analytical generation.
+        // Additional ops will be inserted to take into account allocations
+        // transformations.
+        
+        
+        // This is used to bound our analytical shader text generation
+        // start index and end index are inclusive.
+        
+        int gpuLut3DOpStartIndex = 0;
+        int gpuLut3DOpEndIndex = 0;
+        GetGpuUnsupportedIndexRange(&gpuLut3DOpStartIndex,
+                                    &gpuLut3DOpEndIndex,
+                                    ops);
+        
+        // Write the entire shader using only shader text (3d lut is unused)
+        if(gpuLut3DOpStartIndex == -1 && gpuLut3DOpEndIndex == -1)
+        {
+            for(unsigned int i=0; i<ops.size(); ++i)
+            {
+                gpuPreOps.push_back( ops[i]->clone() );
+            }
+        }
+        // Analytical -> 3dlut -> analytical
+        else
+        {
+            // Handle analytical shader block before start index.
+            for(int i=0; i<gpuLut3DOpStartIndex; ++i)
+            {
+                gpuPreOps.push_back( ops[i]->clone() );
+            }
+            
+            // Get the GPU Allocation at the cross-over point
+            // Create 2 symmetrically canceling allocation ops,
+            // where the shader text moves to a nicely allocated LDR
+            // (low dynamic range color space), and the lattice processing
+            // does the inverse (making the overall operation a no-op
+            // color-wise
+            
+            AllocationData allocation;
+            if(gpuLut3DOpStartIndex<0 || gpuLut3DOpStartIndex>=(int)ops.size())
+            {
+                std::ostringstream error;
+                error << "Invalid GpuUnsupportedIndexRange: ";
+                error << "gpuLut3DOpStartIndex: " << gpuLut3DOpStartIndex << " ";
+                error << "gpuLut3DOpEndIndex: " << gpuLut3DOpEndIndex << " ";
+                error << "cpuOps.size: " << ops.size();
+                throw Exception(error.str().c_str());
+            }
+            
+            if(!GetGpuAllocation(allocation, ops[gpuLut3DOpStartIndex]))
+            {
+                std::ostringstream error;
+                error << "Specified GpuAllocation could not be queried at ";
+                error << "index " << gpuLut3DOpStartIndex << " in cpuOps.";
+                throw Exception(error.str().c_str());
+            }
+            
+            CreateAllocationOps(gpuPreOps, allocation, TRANSFORM_DIR_FORWARD);
+            CreateAllocationOps(gpuLatticeOps, allocation, TRANSFORM_DIR_INVERSE);
+            
+            // Handle cpu lattice processing
+            for(int i=gpuLut3DOpStartIndex; i<=gpuLut3DOpEndIndex; ++i)
+            {
+                gpuLatticeOps.push_back( ops[i]->clone() );
+            }
+            
+            // And then handle the gpu post processing
+            for(int i=gpuLut3DOpEndIndex+1; i<(int)ops.size(); ++i)
+            {
+                gpuPostOps.push_back( ops[i]->clone() );
+            }
+        }
+    }
 }
 OCIO_NAMESPACE_EXIT

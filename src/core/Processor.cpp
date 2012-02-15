@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "AllocationOp.h"
-#include "GpuAllocationNoOp.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "Logging.h"
@@ -463,99 +462,29 @@ OCIO_NAMESPACE_ENTER
     }
     
     void Processor::Impl::finalize()
-    {
+    { 
         // GPU Process setup
-        {
-            //
-            // Partition the original, raw opvec into 3 segments for GPU Processing
-            //
-            // Interior index range does not support the gpu shader.
-            // This is used to bound our analytical shader text generation
-            // start index and end index are inclusive.
-            
-            int gpuLut3DOpStartIndex = 0;
-            int gpuLut3DOpEndIndex = 0;
-            GetGpuUnsupportedIndexRange(&gpuLut3DOpStartIndex,
-                                        &gpuLut3DOpEndIndex,
-                                        m_cpuOps);
-            
-            // Write the entire shader using only shader text (3d lut is unused)
-            if(gpuLut3DOpStartIndex == -1 && gpuLut3DOpEndIndex == -1)
-            {
-                for(unsigned int i=0; i<m_cpuOps.size(); ++i)
-                {
-                    m_gpuOpsHwPreProcess.push_back( m_cpuOps[i]->clone() );
-                }
-            }
-            // Analytical -> 3dlut -> analytical
-            else
-            {
-                // Handle analytical shader block before start index.
-                for(int i=0; i<gpuLut3DOpStartIndex; ++i)
-                {
-                    m_gpuOpsHwPreProcess.push_back( m_cpuOps[i]->clone() );
-                }
-                
-                // Get the GPU Allocation at the cross-over point
-                // Create 2 symmetrically canceling allocation ops,
-                // where the shader text moves to a nicely allocated LDR
-                // (low dynamic range color space), and the lattice processing
-                // does the inverse (making the overall operation a no-op
-                // color-wise
-                
-                AllocationData allocation;
-                if(gpuLut3DOpStartIndex<0 || gpuLut3DOpStartIndex>=(int)m_cpuOps.size())
-                {
-                    std::ostringstream error;
-                    error << "Invalid GpuUnsupportedIndexRange: ";
-                    error << "gpuLut3DOpStartIndex: " << gpuLut3DOpStartIndex << " ";
-                    error << "gpuLut3DOpEndIndex: " << gpuLut3DOpEndIndex << " ";
-                    error << "cpuOps.size: " << m_cpuOps.size();
-                    throw Exception(error.str().c_str());
-                }
-                
-                if(!GetGpuAllocation(allocation, m_cpuOps[gpuLut3DOpStartIndex]))
-                {
-                    std::ostringstream error;
-                    error << "Specified GpuAllocation could not be queried at ";
-                    error << "op index.";
-                    throw Exception(error.str().c_str());
-                }
-                
-                if(IsDebugLoggingEnabled())
-                {
-                    std::ostringstream os;
-                    os << "GPU Allocation: " << allocation;
-                    LogDebug(os.str());
-                }
-                
-                CreateAllocationOps(m_gpuOpsHwPreProcess, allocation, TRANSFORM_DIR_FORWARD);
-                CreateAllocationOps(m_gpuOpsCpuLatticeProcess, allocation, TRANSFORM_DIR_INVERSE);
-                
-                // Handle cpu lattice processing
-                for(int i=gpuLut3DOpStartIndex; i<=gpuLut3DOpEndIndex; ++i)
-                {
-                    m_gpuOpsCpuLatticeProcess.push_back( m_cpuOps[i]->clone() );
-                }
-                
-                // And then handle the gpu post processing
-                for(int i=gpuLut3DOpEndIndex+1; i<(int)m_cpuOps.size(); ++i)
-                {
-                    m_gpuOpsHwPostProcess.push_back( m_cpuOps[i]->clone() );
-                }
-            }
-            
-            LogDebug("GPU Ops: Pre-3DLUT");
-            FinalizeOpVec(m_gpuOpsHwPreProcess);
-            
-            LogDebug("GPU Ops: 3DLUT");
-            FinalizeOpVec(m_gpuOpsCpuLatticeProcess);
-            
-            LogDebug("GPU Ops: Post-3DLUT");
-            FinalizeOpVec(m_gpuOpsHwPostProcess);
-        }
+        //
+        // Partition the original, raw opvec into 3 segments for GPU Processing
+        //
+        // Interior index range does not support the gpu shader.
+        // This is used to bound our analytical shader text generation
+        // start index and end index are inclusive.
         
-        // CPU Process setup
+        PartitionGPUOps(m_gpuOpsHwPreProcess,
+                        m_gpuOpsCpuLatticeProcess,
+                        m_gpuOpsHwPostProcess,
+                        m_cpuOps);
+        
+        LogDebug("GPU Ops: Pre-3DLUT");
+        FinalizeOpVec(m_gpuOpsHwPreProcess);
+        
+        LogDebug("GPU Ops: 3DLUT");
+        FinalizeOpVec(m_gpuOpsCpuLatticeProcess);
+        
+        LogDebug("GPU Ops: Post-3DLUT");
+        FinalizeOpVec(m_gpuOpsHwPostProcess);
+        
         LogDebug("CPU Ops");
         FinalizeOpVec(m_cpuOps);
     }

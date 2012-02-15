@@ -41,22 +41,19 @@ OCIO_NAMESPACE_ENTER
     void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
                                  const AllocationData & allocationData);
     
-    // Find the minimal index range in the opVec that does not support
-    // shader text generation.  The endIndex *is* inclusive.
-    // 
-    // I.e., if the entire opVec does not support GPUShaders, the
-    // result will be startIndex = 0, endIndex = opVec.size() - 1
-    // 
-    // If the entire opVec supports GPU generation, both the
-    // startIndex and endIndex will equal -1
     
-    void GetGpuUnsupportedIndexRange(int * startIndex, int * endIndex,
-                                     const OpRcPtrVec & opVec);
+    // Partition an opvec into 3 segments for GPU Processing
+    //
+    // gpuLatticeOps need not support analytical gpu shader generation
+    // the pre and post ops must support analytical generation.
+    //
+    // Additional ops will optinally be inserted to take into account
+    // allocation transformations
     
-    // Get the GpuAllocation at the specified index
-    // return true on success
-    bool GetGpuAllocation(AllocationData & allocation,
-                          const OpRcPtr & op);
+    void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
+                         OpRcPtrVec & gpuLatticeOps,
+                         OpRcPtrVec & gpuPostOps,
+                         const OpRcPtrVec & ops);
     
 }
 OCIO_NAMESPACE_EXIT
