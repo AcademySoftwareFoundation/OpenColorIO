@@ -52,6 +52,9 @@ Usage
 Description
 ^^^^^
 The :py:class:`Processor` is the object used to actually perform image transformations.
+
+:py:class:`Processor` objects are not instantiated directly, but are created from the :py:class:`Config`
+object, as shown above.
 */
 
 OCIO_NAMESPACE_ENTER
@@ -70,7 +73,6 @@ OCIO_NAMESPACE_ENTER
         
         return true;
     }
-    
     
     PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor)
     {
