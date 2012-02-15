@@ -79,17 +79,44 @@ message(STATUS "Extracting .rst files from C++ headers")
 ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h developers/api/OpenColorIO.rst)
 ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h developers/api/OpenColorTransforms.rst)
 ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h developers/api/OpenColorTypes.rst)
+
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyAllocationTransform.cpp developers/api/PyAllocationTransform.rst)
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyCDLTransform.cpp developers/api/PyCDLTransform.rst)
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyColorSpaceTransform.cpp developers/api/PyColorSpaceTransform.rst)
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyDisplayTransform.cpp developers/api/PyDisplayTransform.rst)
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyExponentTransform.cpp developers/api/PyExponentTransform.rst)
 ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyConfig.cpp developers/api/PyConfig.rst)
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyConstants.cpp developers/api/PyConstants.rst)
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyContext.cpp developers/api/PyContext.rst)
+ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyLogTransform.cpp developers/api/PyLogTransform.rst)
 ExtractRstSimple(${CMAKE_SOURCE_DIR}/src/pyglue/PyProcessor.cpp developers/api/PyProcessor.rst)
 
-#message(STATUS "Merging related python API .rst files")
+message(STATUS "Merging related python API .rst files")
 #file(GLOB_RECURSE share_src_files "${CMAKE_SOURCE_DIR}/src/apps/share/*.cpp")
 
 #    add_executable(ocioconvert ${share_src_files} main.cpp) 
 
-#ADD_CUSTOM_COMMAND(OUTPUT developers/api/PyTransforms.rst
-#                   COMMAND cat developers/api/PyAllocationTransform.rst developers/api/PyDisplayTransform.rst > developers/api/PyTransforms.rst
-#                   COMMENT "Creating PyTransforms.rst")
+ADD_CUSTOM_COMMAND(OUTPUT developers/api/PyTransforms.rst
+                   COMMAND cat developers/api/PyAllocationTransform.rst developers/api/PyCDLTransform.rst
+                   developers/api/PyColorSpaceTransform.rst developers/api/PyDisplayTransform.rst
+                   developers/api/PyExponentTransform.rst developers/api/PyLogTransform.rst
+                   > developers/api/PyTransforms.rst
+                   DEPENDS
+                    developers/api/PyAllocationTransform.rst
+                    developers/api/PyCDLTransform.rst
+                    developers/api/PyColorSpaceTransform.rst
+                    developers/api/PyDisplayTransform.rst
+                    developers/api/PyExponentTransform.rst
+                    developers/api/PyLogTransform.rst
+                   COMMENT "Creating PyTransforms.rst")
+                   
+ADD_CUSTOM_COMMAND(OUTPUT developers/api/PyOther.rst
+                   COMMAND cat developers/api/PyConstants.rst developers/api/PyContext.rst
+                   > developers/api/PyOther.rst
+                   DEPENDS
+                    developers/api/PyConstants.rst
+                    developers/api/PyContext.rst
+                   COMMENT "Creating PyOther.rst")
 
 add_custom_target(doc ALL
     COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_BINPATH}/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
@@ -99,8 +126,19 @@ add_custom_target(doc ALL
         developers/api/OpenColorIO.rst
         developers/api/OpenColorTransforms.rst
         developers/api/OpenColorTypes.rst
+        developers/api/PyAllocationTransform.rst
+        developers/api/PyCDLTransform.rst
+        developers/api/PyColorSpaceTransform.rst
+        developers/api/PyDisplayTransform.rst
+        developers/api/PyExponentTransform.rst
         developers/api/PyConfig.rst
-        developers/api/PyProcessor.rst
+        developers/api/PyConstants.rst
+        developers/api/PyContext.rst
+        developers/api/PyExponentTransform.rst
+        developers/api/PyLogTransform.rst
+        developers/api/PyOther.rst
+        developers/api/PyProcessor.rst     
+        developers/api/PyTransforms.rst
         ${RSTDOC_OUTPUT}
     COMMENT "Building html docs"
     SOURCES ${DOCFILES})

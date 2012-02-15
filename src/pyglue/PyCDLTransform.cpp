@@ -34,6 +34,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyTransform.h"
 #include "PyUtil.h"
 
+
+/*+doc
+Python: CDLTransform
+====================
+
+Examples of Use
+^^^^^^^^^^^^^^^
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+    
+    cdl = OCIO.CDLTransform()
+    
+    # Set the slope, offset, power, and saturation for each channel.
+    cdl.setSOP([, , , , , , , , ])
+    cdl.setSat([, , ])
+    
+    cdl.getSatLumaCoefs()
+*/
+
 OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -201,6 +221,17 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     ///
+    
+    /*+doc
+    .. py:class::CDLTransform()
+    
+    Description
+    ^^^^^^^^^^^
+       Used to define a transform based on a color decision list (CDL), 
+       based on the 9 numbers defined in SOP (slope, offset, and power)
+       and Sat (saturation). Each element in SOP and Sat are characterized 
+       by three floats (for RGB).
+    */
     
     namespace
     {
@@ -382,7 +413,14 @@ OCIO_NAMESPACE_ENTER
         
         ////////////////////////////////////////////////////////////////////////
         
-        
+        /*+doc
+        .. py:method:: Config.setSlope(pyData)
+                     
+           Sets the slope ('S' part of SOP) in :py:class:`CDLTransform`.
+
+           :param pyData: 
+           :type pyData: object
+        */        
         PyObject * PyOCIO_CDLTransform_setSlope( PyObject * self, PyObject * args )
         {
             try
@@ -409,6 +447,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Config.setOffset(pyData)
+                     
+           Sets the offset ('O' part of SOP) in :py:class:`CDLTransform`.
+
+           :param pyData: list of three floats
+           :type pyData: object
+        */        
         PyObject * PyOCIO_CDLTransform_setOffset( PyObject * self, PyObject * args )
         {
             try
@@ -435,6 +481,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Config.setPower(pyData)
+                     
+           Sets the power ('P' part of SOP) in :py:class:`CDLTransform`.
+
+           :param pyData: list of three floats
+           :type pyData: object
+        */        
         PyObject * PyOCIO_CDLTransform_setPower( PyObject * self, PyObject * args )
         {
             try
@@ -461,6 +515,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Config.setSOP(pyData)
+                     
+           Sets SOP in :py:class:`CDLTransform`.
+
+           :param pyData: list of nine floats
+           :type pyData: object
+        */        
         PyObject * PyOCIO_CDLTransform_setSOP( PyObject * self, PyObject * args )
         {
             try
@@ -487,6 +549,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Config.setSAT(pyData)
+                     
+           Sets SAT (saturation) in :py:class:`CDLTransform`.
+
+           :param pyData: saturation
+           :type pyData: float
+        */        
         PyObject * PyOCIO_CDLTransform_setSat( PyObject * self, PyObject * args )
         {
             try
@@ -510,7 +580,14 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
-        
+        /*+doc
+        .. py:method:: Config.getSatLumaCoefs(pyData)
+                     
+           Returns the SAT (saturation) and luma coefficients in :py:class:`CDLTransform`.
+
+           :return: saturation and luma coefficients
+           :rtype: list of floats
+        */        
         PyObject * PyOCIO_CDLTransform_getSatLumaCoefs( PyObject * self )
         {
             try
@@ -530,6 +607,14 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
+        /*+doc
+        .. py:method:: Config.getID()
+                     
+           Returns the ID from :py:class:`CDLTransform`.
+
+           :return: ID
+           :rtype: string
+        */        
         PyObject * PyOCIO_CDLTransform_getID( PyObject * self )
         {
             try
@@ -544,6 +629,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Config.setID(str)
+                     
+           Sets the ID in :py:class:`CDLTransform`.
+
+           :param str: ID
+           :type str: string
+        */        
         PyObject * PyOCIO_CDLTransform_setID( PyObject * self, PyObject * args )
         {
             try
@@ -564,6 +657,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Config.getDescription()
+                     
+           Returns the description of :py:class:`CDLTransform`.
+
+           :return: description
+           :rtype: string
+        */        
         PyObject * PyOCIO_CDLTransform_getDescription( PyObject * self )
         {
             try
@@ -578,6 +679,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: Config.setDescription(str)
+                     
+           Sets the description of :py:class:`CDLTransform`.
+
+           :param str: description
+           :type str: string
+        */        
         PyObject * PyOCIO_CDLTransform_setDescription( PyObject * self, PyObject * args )
         {
             try

@@ -77,7 +77,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Exceptions
-    // *********
+    // **********
     
     //!cpp:class:: An exception class to throw for an errors detected at
     // runtime.

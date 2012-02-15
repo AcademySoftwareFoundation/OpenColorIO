@@ -35,6 +35,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyTransform.h"
 #include "PyUtil.h"
 
+
+/*+doc
+Python: Context
+===============
+
+Examples of Use
+^^^^^^^^^^^^^^^
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+
+Description
+^^^^^^^^^^^
+:py:class:`Context` is used to override parameters (as 
+opposed to the default of using the environment variable).
+
+The working directory is the location of :py:class:`Config`, 
+and search paths are relative to that.
+*/
+
 OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
