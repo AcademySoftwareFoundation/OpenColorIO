@@ -381,7 +381,7 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 		POINT pos;
 		GetCursorPos(&pos);
 
-		int result = TrackPopupMenuEx(menu, (TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD), pos.x, pos.y, (HWND)hwnd, NULL);
+		int result = TrackPopupMenuEx(menu, (TPM_NONOTIFY | TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD), pos.x, pos.y, (HWND)hwnd, NULL);
 
 		DestroyMenu(menu);
 
