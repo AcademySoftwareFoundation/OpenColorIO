@@ -289,16 +289,16 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(error.str().c_str());
             }
             
-            if(!GetGpuAllocation(allocation, ops[gpuLut3DOpStartIndex]))
+            // If the specified location defines an allocation, use it.
+            // It's possible that this index wont define an allocation.
+            // (For example in the case of getProcessor(FileTransform)
+            if(GetGpuAllocation(allocation, ops[gpuLut3DOpStartIndex]))
             {
-                std::ostringstream error;
-                error << "Specified GpuAllocation could not be queried at ";
-                error << "index " << gpuLut3DOpStartIndex << " in cpuOps.";
-                throw Exception(error.str().c_str());
+                CreateAllocationOps(gpuPreOps, allocation,
+                    TRANSFORM_DIR_FORWARD);
+                CreateAllocationOps(gpuLatticeOps, allocation,
+                    TRANSFORM_DIR_INVERSE);
             }
-            
-            CreateAllocationOps(gpuPreOps, allocation, TRANSFORM_DIR_FORWARD);
-            CreateAllocationOps(gpuLatticeOps, allocation, TRANSFORM_DIR_INVERSE);
             
             // Handle cpu lattice processing
             for(int i=gpuLut3DOpStartIndex; i<=gpuLut3DOpEndIndex; ++i)
@@ -313,5 +313,248 @@ OCIO_NAMESPACE_ENTER
             }
         }
     }
+    
+    void AssertPartitionIntegrity(OpRcPtrVec & gpuPreOps,
+                                  OpRcPtrVec & gpuLatticeOps,
+                                  OpRcPtrVec & gpuPostOps)
+    {
+        // All gpu pre ops must support analytical gpu shader generation
+        for(unsigned int i=0; i<gpuPreOps.size(); ++i)
+        {
+            if(!gpuPreOps[i]->supportsGpuShader())
+            {
+                throw Exception("Patition failed check. gpuPreOps");
+            }
+        }
+        
+        // If there are any lattice ops, at lease one must NOT support GPU
+        // shaders (otherwise this block isnt necessary!)
+        if(gpuLatticeOps.size()>0)
+        {
+            bool requireslattice = false;
+            for(unsigned int i=0; i<gpuLatticeOps.size(); ++i)
+            {
+                if(!gpuLatticeOps[i]->supportsGpuShader()) requireslattice = true;
+            }
+            
+            if(!requireslattice)
+            {
+                throw Exception("Patition failed check. gpuLatticeOps");
+            }
+        }
+        
+        // All gpu post ops must support analytical gpu shader generation
+        for(unsigned int i=0; i<gpuPostOps.size(); ++i)
+        {
+            if(!gpuPostOps[i]->supportsGpuShader())
+            {
+                throw Exception("Patition failed check. gpuPostOps");
+            }
+        }
+    }
+    
+                         
 }
 OCIO_NAMESPACE_EXIT
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+OCIO_NAMESPACE_USING
+
+#include "UnitTest.h"
+#include "Lut1DOp.h"
+#include "MatrixOps.h"
+
+void CreateGenericAllocationOp(OpRcPtrVec & ops)
+{
+    AllocationData srcAllocation;
+    srcAllocation.allocation = ALLOCATION_LG2;
+    srcAllocation.vars.push_back(-8.0f);
+    srcAllocation.vars.push_back(8.0f);
+    CreateGpuAllocationNoOp(ops, srcAllocation);
+}
+
+void CreateGenericScaleOp(OpRcPtrVec & ops)
+{
+    float scale4[4] = { 1.04f, 1.05f, 1.06f, 1.0f };
+    CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
+}
+
+void CreateGenericLutOp(OpRcPtrVec & ops)
+{
+    // Make a lut that squares the input
+    Lut1DRcPtr lut = Lut1D::Create();
+    {
+        lut->from_min[0] = 0.0f;
+        lut->from_min[1] = 0.0f;
+        lut->from_min[2] = 0.0f;
+        lut->from_max[0] = 1.0f;
+        lut->from_max[1] = 1.0f;
+        lut->from_max[2] = 1.0f;
+        int size = 256;
+        for(int i=0; i<size; ++i)
+        {
+            float x = (float)i / (float)(size-1);
+            float x2 = x*x;
+            
+            for(int c=0; c<3; ++c)
+            {
+                lut->luts[c].push_back(x2);
+            }
+        }
+    }
+    
+    CreateLut1DOp(ops, lut, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps1a)
+{
+    OpRcPtrVec ops;
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps1b)
+{
+    OpRcPtrVec ops;
+    CreateGenericAllocationOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 1);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps2)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericAllocationOp(ops);
+    CreateGenericScaleOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps3)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericAllocationOp(ops);
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 1);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps4)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericLutOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 1);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps5)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericAllocationOp(ops);
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericAllocationOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 2);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+}
+
+OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps6)
+{
+    OpRcPtrVec ops;
+    
+    CreateGenericAllocationOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericAllocationOp(ops);
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+    CreateGenericAllocationOp(ops);
+    
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    
+    OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
+    OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 8);
+    OIIO_CHECK_EQUAL(gpuPostOps.size(), 2);
+    
+    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
+                                                 gpuLatticeOps,
+                                                 gpuPostOps) );
+    /*
+    std::cerr << "gpuPreOps" << std::endl;
+    std::cerr << SerializeOpVec(gpuPreOps, 4) << std::endl;
+    std::cerr << "gpuLatticeOps" << std::endl;
+    std::cerr << SerializeOpVec(gpuLatticeOps, 4) << std::endl;
+    std::cerr << "gpuPostOps" << std::endl;
+    std::cerr << SerializeOpVec(gpuPostOps, 4) << std::endl;
+    */
+}
+
+#endif // OCIO_UNIT_TEST

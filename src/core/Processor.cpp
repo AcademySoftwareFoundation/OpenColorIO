@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "AllocationOp.h"
+#include "GpuAllocationNoOp.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "Logging.h"
