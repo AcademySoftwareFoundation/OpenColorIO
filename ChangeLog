@@ -1,3 +1,9 @@
+**Version 1.0.5 (Feb 22 2012):**
+    * Internal optimization framework added
+    * SetLoggingLevel(..) bugfix
+    * Python API Documentation / website updates
+    * Clang compilation fix
+
 **Version 1.0.4 (Jan 25 2012):**
     * ocio2icc deprecated (functionality merged into ociobakelut)
     * rv integration (beta)
