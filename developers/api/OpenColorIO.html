@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.0.4',
+        VERSION:     '1.0.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,10 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.4 documentation" href="../../index.html" />
-    <link rel="up" title="&lt;no title&gt;" href="index.html" />
+    <link rel="top" title="OpenColorIO v1.0.5 documentation" href="../../index.html" />
+    <link rel="up" title="&lt;no title&gt;" href="index_cpp.html" />
     <link rel="next" title="C++ Transforms" href="OpenColorTransforms.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
+    <link rel="prev" title="&lt;no title&gt;" href="index_cpp.html" /> 
   </head>
   <body>
     <div class="header"><h1 class="heading"><a href="../../index.html">
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.4 documentation
+      OpenColorIO v1.0.5 documentation
       </div>
       <div class="content">
         
@@ -62,6 +62,16 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="">C++ API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="OpenColorTransforms.html">C++ Transforms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="OpenColorTypes.html">C++ Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyConfig.html">Python: Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyProcessor.html">Python: Processor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyTransforms.html">Python: AllocationTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyTransforms.html#python-cdltransform">Python: CDLTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyTransforms.html#python-colorspacetransform">Python: ColorSpaceTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyTransforms.html#python-displaytransform">Python: DisplayTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyTransforms.html#python-exponenttransform">Python: ExponentTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyTransforms.html#python-logtransform">Python: LogTransform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyOther.html">Python: Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PyOther.html#python-context">Python: Context</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../FAQ.html">FAQ</a></li>
@@ -76,7 +86,7 @@
         
 <div class="section" id="c-api">
 <h1>C++ API<a class="headerlink" href="#c-api" title="Permalink to this headline">¶</a></h1>
-<p><strong>Usage Example:</strong> <em>Compositing plugin, which converts from &#8220;log&#8221; to &#8220;lin&#8221;</em></p>
+<p><strong>Usage Example:</strong> <em>Compositing plugin that converts from &#8220;log&#8221; to &#8220;lin&#8221;</em></p>
 <div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &lt;OpenColorIO/OpenColorIO.h&gt;</span>
 <span class="k">namespace</span> <span class="n">OCIO</span> <span class="o">=</span> <span class="n">OCIO_NAMESPACE</span><span class="p">;</span>
 
@@ -107,28 +117,31 @@
 <dl class="class">
 <dt id="Exception">
 <em class="property">class </em><tt class="descname">Exception</tt><a class="headerlink" href="#Exception" title="Permalink to this definition">¶</a></dt>
-<dd><p>An exception class to throw for an errors detected at
+<dd><p>An exception class to throw for errors detected at
 runtime.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">ALL fcns on the Config class can potentially throw this exception.</p>
+<p class="last">All functions in the Config class can potentially throw this exception.</p>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="Exception::Exception__cCP">
  <tt class="descclassname">Exception::</tt><tt class="descname">Exception</tt><big>(</big>const char* <em>None</em><big>)</big><a class="headerlink" href="#Exception::Exception__cCP" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Constructor that takes a string as the exception message.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="Exception::Exception__ExceptionCR">
  <tt class="descclassname">Exception::</tt><tt class="descname">Exception</tt><big>(</big>const Exception&amp; <em>None</em><big>)</big><a class="headerlink" href="#Exception::Exception__ExceptionCR" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Constructor that takes an exception pointer.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="Exception::assign-operator__ExceptionCR">
 Exception&amp; <tt class="descclassname">Exception::</tt><tt class="descname">operator=</tt><big>(</big>const Exception&amp; <em>None</em><big>)</big><a class="headerlink" href="#Exception::assign-operator__ExceptionCR" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Constructor that takes an exception pointer and returns an exception pointer (???).</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="Exception::~Exception">
@@ -143,11 +156,11 @@ const char* <tt class="descclassname">Exception::</tt><tt class="descname">what<
 <dl class="class">
 <dt id="ExceptionMissingFile">
 <em class="property">class </em><tt class="descname">ExceptionMissingFile</tt><a class="headerlink" href="#ExceptionMissingFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>An exception class to throw for an errors detected at
-runtime, used when OCIO is expecting a file to exist, yet it
-cannot be found. This is provided as a custom type to
-to distinguish amongst cases where one wants to continue for
-missing files (such as with looks), but wants to properly fail
+<dd><p>An exception class for errors detected at
+runtime, thrown when OCIO cannot find a file that is expected to
+exist. This is provided as a custom type to
+distinguish cases where one wants to continue looking for
+missing files, but wants to properly fail
 for other error conditions.</p>
 </dd></dl>
 
@@ -165,68 +178,69 @@ for other error conditions.</p>
 <dt id="ClearAllCaches">
 void <tt class="descname">ClearAllCaches</tt><big>(</big><big>)</big><a class="headerlink" href="#ClearAllCaches" title="Permalink to this definition">¶</a></dt>
 <dd><p>OpenColorIO, during normal usage, tends to cache certain information
-(such as the contents of LUTs on disk, intermediate results, etc).
-Calling this function will flus all such information.
-Under normal usage, this is not necessary. But in particular instances
-(such as designing OCIO profiles, and wanting to re-read luts without
-restarting) it can be helpful.</p>
+(such as the contents of LUTs on disk, intermediate results, etc.).
+Calling this function will flush all such information.
+Under normal usage, this is not necessary, but it can be helpful in particular instances,
+such as designing OCIO profiles, and wanting to re-read luts without
+restarting.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="GetVersion">
 const char* <tt class="descname">GetVersion</tt><big>(</big><big>)</big><a class="headerlink" href="#GetVersion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the version number for the library, as a
-dot-delimited string. (I.e., &#8220;1.0.0&#8221;).  This is also available
-at compile time as OCIO_VERSION</p>
+dot-delimited string (e.g., &#8220;1.0.0&#8221;). This is also available
+at compile time as OCIO_VERSION.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="GetVersionHex">
 int <tt class="descname">GetVersionHex</tt><big>(</big><big>)</big><a class="headerlink" href="#GetVersionHex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the version number for the library, as a
-single 4-byte hex number, e.g. 0x01050200 == 1.5.2
-Use this for numeric comparisons.  This is also available
+single 4-byte hex number (e.g., 0x01050200 for &#8220;1.5.2&#8221;), to be used
+for numeric comparisons. This is also available
 at compile time as OCIO_VERSION_HEX.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="GetLoggingLevel">
 LoggingLevel <tt class="descname">GetLoggingLevel</tt><big>(</big><big>)</big><a class="headerlink" href="#GetLoggingLevel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the global logging level
-You can also override this at runtime using the $OCIO_LOGGING_LEVEL
-envvar. (Client application who which to set this should use
-SetLoggingLevel, not the envvar). The default value is INFO.</p>
+<dd><p>Get the global logging level.
+You can override this at runtime using the <span class="target" id="index-0"></span><tt class="xref std std-envvar docutils literal"><span class="pre">OCIO_LOGGING_LEVEL</span></tt>
+environment variable. The client application that sets this should use
+<a class="reference internal" href="#SetLoggingLevel__LoggingLevel" title="SetLoggingLevel"><tt class="xref cpp cpp-func docutils literal"><span class="pre">SetLoggingLevel()</span></tt></a>, and not the environment variable. The default value is INFO.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="SetLoggingLevel__LoggingLevel">
 void <tt class="descname">SetLoggingLevel</tt><big>(</big>LoggingLevel <em>level</em><big>)</big><a class="headerlink" href="#SetLoggingLevel__LoggingLevel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the global logging level</p>
+<dd><p>Set the global logging level.</p>
 </dd></dl>
 
 </div>
 <div class="section" id="config">
 <h2>Config<a class="headerlink" href="#config" title="Permalink to this headline">¶</a></h2>
-<p>For applications which are interested in using a single color config at
+<p>A config defines all the color spaces to be available at runtime.</p>
+<p>The color configuration (<a class="reference internal" href="#Config" title="Config"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Config</span></tt></a>) is the main object for
+interacting with this library. It encapsulates all of the information
+necessary to use customized <a class="reference internal" href="OpenColorTransforms.html#ColorSpaceTransform" title="ColorSpaceTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">ColorSpaceTransform</span></tt></a> and
+<a class="reference internal" href="OpenColorTransforms.html#DisplayTransform" title="DisplayTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DisplayTransform</span></tt></a> operations.</p>
+<p>See the <a class="reference internal" href="../../userguide/index.html#user-guide"><em>User Guide</em></a> for more information on
+selecting, creating, and working with custom color configurations.</p>
+<p>For applications interested in using only one color config at
 a time (this is the vast majority of apps), their API would
-traditionally get the global configuration, and use that, as opposed to
+traditionally get the global configuration and use that, as opposed to
 creating a new one. This simplifies the use case for
-plugins / bindings, as it alleviates the need to pass configuration
-handles around.</p>
+plugins and bindings, as it alleviates the need to pass around configuration
+handles.</p>
 <p>An example of an application where this would not be sufficient would be
 a multi-threaded image proxy server (daemon), which wished to handle
 multiple show configurations in a single process concurrently. This
 app would need to keep multiple configurations alive, and to manage them
 appropriately.</p>
-<p>The color configuration (<a class="reference internal" href="#Config" title="Config"><tt class="xref cpp cpp-class docutils literal"><span class="pre">Config</span></tt></a>) is the main object for
-interacting with this libray. It encapsulates all of the information
-necessary to utilized customized <a class="reference internal" href="OpenColorTransforms.html#ColorSpaceTransform" title="ColorSpaceTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">ColorSpaceTransform</span></tt></a> and
-<a class="reference internal" href="OpenColorTransforms.html#DisplayTransform" title="DisplayTransform"><tt class="xref cpp cpp-class docutils literal"><span class="pre">DisplayTransform</span></tt></a> operations.</p>
-<p>See the <a class="reference internal" href="../../userguide/index.html#user-guide"><em>User Guide</em></a> for more detailed information on
-selecting / creating / working with custom color configurations.</p>
-<p>Roughly speaking, if you&#8217;re a novice user you will want to select a
-default configuration that most closely approximates your use case
-(animation, visual effects, etc), and set <span class="target" id="index-0"></span><a class="reference internal" href="../../installation.html#envvar-OCIO"><tt class="xref std std-envvar docutils literal"><span class="pre">OCIO</span></tt></a> environment
+<p>Roughly speaking, a novice user should select a
+default configuration that most closely approximates the use case
+(animation, visual effects, etc.), and set the <span class="target" id="index-1"></span><a class="reference internal" href="../../installation.html#envvar-OCIO"><tt class="xref std std-envvar docutils literal"><span class="pre">OCIO</span></tt></a> environment
 variable to point at the root of that configuration.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -238,13 +252,13 @@ consistently configured.</p>
 <dl class="function">
 <dt id="GetCurrentConfig">
 <a class="reference internal" href="OpenColorTypes.html#ConstConfigRcPtr" title="ConstConfigRcPtr">ConstConfigRcPtr</a> <tt class="descname">GetCurrentConfig</tt><big>(</big><big>)</big><a class="headerlink" href="#GetCurrentConfig" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Get the current configuration.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="SetCurrentConfig__ConstConfigRcPtrCR">
 void <tt class="descname">SetCurrentConfig</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstConfigRcPtr" title="ConstConfigRcPtr">const ConstConfigRcPtr&amp;</a> <em>config</em><big>)</big><a class="headerlink" href="#SetCurrentConfig__ConstConfigRcPtrCR" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the current configuration.</p>
-<p>This will store a copy of the specified config.</p>
+<dd><p>Set the current configuration. This will then store a copy of the specified config.</p>
 </dd></dl>
 
 <dl class="class">
@@ -257,7 +271,8 @@ void <tt class="descname">SetCurrentConfig</tt><big>(</big><a class="reference i
 <dl class="function">
 <dt id="Config::Create">
 <em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ConfigRcPtr" title="ConfigRcPtr">ConfigRcPtr</a> <tt class="descclassname">Config::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#Config::Create" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Constructor...ELABORATE</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="Config::CreateFromEnv">
@@ -283,7 +298,7 @@ void <tt class="descname">SetCurrentConfig</tt><big>(</big><a class="reference i
 <dt id="Config::sanityCheckC">
 void <tt class="descclassname">Config::</tt><tt class="descname">sanityCheck</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::sanityCheckC" title="Permalink to this definition">¶</a></dt>
 <dd><p>This will throw an exception if the config is malformed. The most
-common error situation are references to colorspaces that do not
+common error occurs when references are made to colorspaces that do not
 exist.</p>
 </dd></dl>
 
@@ -300,18 +315,20 @@ void <tt class="descclassname">Config::</tt><tt class="descname">setDescription<
 <dl class="function">
 <dt id="Config::serialize__osRC">
 void <tt class="descclassname">Config::</tt><tt class="descname">serialize</tt><big>(</big>std::ostream&amp; <em>os</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::serialize__osRC" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns the string representation of the Config in YAML text form.
+This is typically stored on disk in a file with the extension .ocio.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="Config::getCacheIDC">
 const char* <tt class="descclassname">Config::</tt><tt class="descname">getCacheID</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getCacheIDC" title="Permalink to this definition">¶</a></dt>
 <dd><p>This will produce a hash of the all colorspace definitions, etc.
-All external references, such files used in FileTransforms, etc
+All external references, such as files used in FileTransforms, etc.,
 will be incorporated into the cacheID. While the contents of
-the files is not read, the filesystem is queried for relavent
-information (mtime, inode) such that the config&#8217;s cacheID will
+the files are not read, the file system is queried for relavent
+information (mtime, inode) so that the config&#8217;s cacheID will
 change when the underlying luts are updated.
-If a context is not provided, the currentContext will be used.
+If a context is not provided, the current Context will be used.
 If a null context is provided, file references will not be taken into
 account (this is essentially a hash of Config::serialize).</p>
 </dd></dl>
@@ -356,7 +373,7 @@ const char* <tt class="descclassname">Config::</tt><tt class="descname">getColor
 
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">These fcns all accept either a colorspace OR role name.
+<p class="last">These fcns all accept either a color space OR role name.
 (Colorspace names take precedence over roles.)</p>
 </div>
 <dl class="function">
@@ -376,9 +393,9 @@ int <tt class="descclassname">Config::</tt><tt class="descname">getIndexForColor
 void <tt class="descclassname">Config::</tt><tt class="descname">addColorSpace</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstColorSpaceRcPtr" title="ConstColorSpaceRcPtr">const ConstColorSpaceRcPtr&amp;</a> <em>cs</em><big>)</big><a class="headerlink" href="#Config::addColorSpace__ConstColorSpaceRcPtrCR" title="Permalink to this definition">¶</a></dt>
 <dd><div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">If another colorspace is already registered with the same name,
+<p class="last">If another color space is already registered with the same name,
 this will overwrite it. This stores a copy of the specified
-colorspace.</p>
+color space.</p>
 </div>
 </dd></dl>
 
@@ -393,7 +410,7 @@ const char* <tt class="descclassname">Config::</tt><tt class="descname">parseCol
 <dd><p>Given the specified string, get the longest,
 right-most, colorspace substring that appears.</p>
 <ul class="simple">
-<li>If strict parsing is enabled, and no colorspace is found, return
+<li>If strict parsing is enabled, and no color space is found, return
 an empty string.</li>
 <li>If strict parsing is disabled, return ROLE_DEFAULT (if defined).</li>
 <li>If the default role is not defined, return an empty string.</li>

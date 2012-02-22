@@ -3,7 +3,7 @@
 C++ API
 =======
 
-**Usage Example:** *Compositing plugin, which converts from "log" to "lin"*
+**Usage Example:** *Compositing plugin that converts from "log" to "lin"*
 
 .. code-block:: cpp
    
@@ -33,24 +33,27 @@ C++ API
 
 
 Exceptions
-*********
+**********
 
 .. cpp:class:: Exception
    
-   An exception class to throw for an errors detected at
+   An exception class to throw for errors detected at
    runtime.
    
    .. warning:: 
-      ALL fcns on the Config class can potentially throw this exception.
+      All functions in the Config class can potentially throw this exception.
 
 .. cpp:function:: Exception::Exception(const char *)
    
+   Constructor that takes a string as the exception message.
 
 .. cpp:function:: Exception::Exception(const Exception&)
    
+   Constructor that takes an exception pointer.
 
 .. cpp:function:: Exception& Exception::operator=(const Exception&)
    
+   Constructor that takes an exception pointer and returns an exception pointer (???).
 
 .. cpp:function:: virtual Exception::~Exception()
    
@@ -60,11 +63,11 @@ Exceptions
 
 .. cpp:class:: ExceptionMissingFile
    
-   An exception class to throw for an errors detected at
-   runtime, used when OCIO is expecting a file to exist, yet it
-   cannot be found. This is provided as a custom type to
-   to distinguish amongst cases where one wants to continue for
-   missing files (such as with looks), but wants to properly fail
+   An exception class for errors detected at
+   runtime, thrown when OCIO cannot find a file that is expected to
+   exist. This is provided as a custom type to
+   distinguish cases where one wants to continue looking for
+   missing files, but wants to properly fail
    for other error conditions.
 
 .. cpp:function:: ExceptionMissingFile::ExceptionMissingFile(const char *)
@@ -76,46 +79,56 @@ Exceptions
 .. cpp:function:: extern void ClearAllCaches()
    
    OpenColorIO, during normal usage, tends to cache certain information
-   (such as the contents of LUTs on disk, intermediate results, etc).
-   Calling this function will flus all such information.
-   Under normal usage, this is not necessary. But in particular instances
-   (such as designing OCIO profiles, and wanting to re-read luts without
-   restarting) it can be helpful.
+   (such as the contents of LUTs on disk, intermediate results, etc.).
+   Calling this function will flush all such information.
+   Under normal usage, this is not necessary, but it can be helpful in particular instances,
+   such as designing OCIO profiles, and wanting to re-read luts without
+   restarting.
 
 .. cpp:function:: extern const char * GetVersion()
    
    Get the version number for the library, as a
-   dot-delimited string. (I.e., "1.0.0").  This is also available
-   at compile time as OCIO_VERSION
+   dot-delimited string (e.g., "1.0.0"). This is also available
+   at compile time as OCIO_VERSION.
 
 .. cpp:function:: extern int GetVersionHex()
    
    Get the version number for the library, as a
-   single 4-byte hex number, e.g. 0x01050200 == 1.5.2
-   Use this for numeric comparisons.  This is also available
+   single 4-byte hex number (e.g., 0x01050200 for "1.5.2"), to be used
+   for numeric comparisons. This is also available
    at compile time as OCIO_VERSION_HEX.
 
 .. cpp:function:: extern LoggingLevel GetLoggingLevel()
    
-   Get the global logging level
-   You can also override this at runtime using the $OCIO_LOGGING_LEVEL
-   envvar. (Client application who which to set this should use
-   SetLoggingLevel, not the envvar). The default value is INFO.
+   Get the global logging level.
+   You can override this at runtime using the :envvar:`OCIO_LOGGING_LEVEL`
+   environment variable. The client application that sets this should use
+   :cpp:func:`SetLoggingLevel`, and not the environment variable. The default value is INFO.
 
 .. cpp:function:: extern void SetLoggingLevel(LoggingLevel level)
    
-   Get the global logging level
+   Set the global logging level.
 
 
 Config
 ******
 
-For applications which are interested in using a single color config at
+A config defines all the color spaces to be available at runtime.
+
+The color configuration (:cpp:class:`Config`) is the main object for
+interacting with this library. It encapsulates all of the information
+necessary to use customized :cpp:class:`ColorSpaceTransform` and
+:cpp:class:`DisplayTransform` operations.
+
+See the :ref:`user-guide` for more information on
+selecting, creating, and working with custom color configurations.
+
+For applications interested in using only one color config at
 a time (this is the vast majority of apps), their API would
-traditionally get the global configuration, and use that, as opposed to
+traditionally get the global configuration and use that, as opposed to
 creating a new one. This simplifies the use case for
-plugins / bindings, as it alleviates the need to pass configuration
-handles around.
+plugins and bindings, as it alleviates the need to pass around configuration
+handles.
 
 An example of an application where this would not be sufficient would be
 a multi-threaded image proxy server (daemon), which wished to handle
@@ -123,17 +136,9 @@ multiple show configurations in a single process concurrently. This
 app would need to keep multiple configurations alive, and to manage them
 appropriately.
 
-The color configuration (:cpp:class:`Config`) is the main object for
-interacting with this libray. It encapsulates all of the information
-necessary to utilized customized :cpp:class:`ColorSpaceTransform` and
-:cpp:class:`DisplayTransform` operations.
-
-See the :ref:`user-guide` for more detailed information on
-selecting / creating / working with custom color configurations.
-
-Roughly speaking, if you're a novice user you will want to select a
-default configuration that most closely approximates your use case
-(animation, visual effects, etc), and set :envvar:`OCIO` environment
+Roughly speaking, a novice user should select a
+default configuration that most closely approximates the use case
+(animation, visual effects, etc.), and set the :envvar:`OCIO` environment
 variable to point at the root of that configuration.
 
 .. note::
@@ -145,12 +150,11 @@ See :ref:`developers-usageexamples`
 
 .. cpp:function:: extern ConstConfigRcPtr GetCurrentConfig()
    
+   Get the current configuration.
 
 .. cpp:function:: extern void SetCurrentConfig(const ConstConfigRcPtr & config)
    
-   Set the current configuration.
-   
-   This will store a copy of the specified config.
+   Set the current configuration. This will then store a copy of the specified config.
 
 .. cpp:class:: Config
    
@@ -162,6 +166,7 @@ Initialization
 
 .. cpp:function:: static ConfigRcPtr Config::Create()
    
+   Constructor...ELABORATE
 
 .. cpp:function:: static ConstConfigRcPtr Config::CreateFromEnv()
    
@@ -178,7 +183,7 @@ Initialization
 .. cpp:function:: void Config::sanityCheck() const
    
    This will throw an exception if the config is malformed. The most
-   common error situation are references to colorspaces that do not
+   common error occurs when references are made to colorspaces that do not
    exist.
 
 .. cpp:function:: const char * Config::getDescription() const
@@ -189,17 +194,18 @@ Initialization
 
 .. cpp:function:: void Config::serialize(std::ostream & os) const
    
+   Returns the string representation of the Config in YAML text form.
+   This is typically stored on disk in a file with the extension .ocio.
 
 .. cpp:function:: const char * Config::getCacheID() const
    
-   .. note::
    This will produce a hash of the all colorspace definitions, etc.
-   All external references, such files used in FileTransforms, etc
+   All external references, such as files used in FileTransforms, etc.,
    will be incorporated into the cacheID. While the contents of
-   the files is not read, the filesystem is queried for relavent
-   information (mtime, inode) such that the config's cacheID will
+   the files are not read, the file system is queried for relavent
+   information (mtime, inode) so that the config's cacheID will
    change when the underlying luts are updated.
-   If a context is not provided, the currentContext will be used.
+   If a context is not provided, the current Context will be used.
    If a null context is provided, file references will not be taken into
    account (this is essentially a hash of Config::serialize).
 
@@ -235,7 +241,7 @@ ColorSpaces
 
 
 .. note::
-   These fcns all accept either a colorspace OR role name.
+   These fcns all accept either a color space OR role name.
    (Colorspace names take precedence over roles.)
 
 .. cpp:function:: ConstColorSpaceRcPtr Config::getColorSpace(const char * name) const
@@ -249,9 +255,9 @@ ColorSpaces
 .. cpp:function:: void Config::addColorSpace(const ConstColorSpaceRcPtr & cs)
    
    .. note::
-      If another colorspace is already registered with the same name,
+      If another color space is already registered with the same name,
       this will overwrite it. This stores a copy of the specified
-      colorspace.
+      color space.
 
 .. cpp:function:: void Config::clearColorSpaces()
    
@@ -261,7 +267,7 @@ ColorSpaces
    Given the specified string, get the longest,
    right-most, colorspace substring that appears.
    
-   * If strict parsing is enabled, and no colorspace is found, return
+   * If strict parsing is enabled, and no color space is found, return
      an empty string.
    * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
    * If the default role is not defined, return an empty string.
@@ -581,7 +587,7 @@ Transform
 .. _look_section:
 
 Look
-**********
+****
 The *Look* is an 'artistic' image modification, in a specified image
 state.
 The processSpace defines the ColorSpace the image is required to be
@@ -692,7 +698,7 @@ return 0 if unknown
 
 
 Baker
-******
+*****
 
 In certain situations it is nessary to serilize transforms into a variety
 of application specific lut formats. The Baker can be used to create lut

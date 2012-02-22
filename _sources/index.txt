@@ -9,7 +9,7 @@ Mailing lists
 There are two mailing lists associated with OpenColorIO:
 
 `ocio-users <http://groups.google.com/group/ocio-users>`__\ ``@googlegroups.com``
-    For end-users (artists, often) interested in OCIO profile design,
+    For end users (artists, often) interested in OCIO profile design,
     facility color management, and workflow.
 
 `ocio-dev <http://groups.google.com/group/ocio-dev>`__\ ``@googlegroups.com``
@@ -21,7 +21,7 @@ Most users will likely want to use the OpenColorIO that comes precompiled with
 their applications.  See the :ref:`compatiblesoftware` for further details on
 each application.
 
-Note that OCIO configurations are required to do any 'real' work, and are
+Note that OCIO configurations aren't required to do any 'real' work, and are
 available separately on the :ref:`downloads` section of this site. Example
 images are also available. For assistance customizing .ocio configurations,
 contact the ocio-users email alias.
@@ -32,8 +32,8 @@ contact the ocio-users email alias.
 If you are on a platform that is not envvar friendly, most applications also
 provide a menu option to select a different OCIO configuration after launch.
 
-Please be sure to select a profile that matches your color workflow. (VFX work
-typically require a different profile than animated features).  If you need
+Please be sure to select a profile that matches your color workflow (VFX work
+typically requires a different profile than animated features). If you need
 assistance picking a profile, email ocio-users.
 
 
