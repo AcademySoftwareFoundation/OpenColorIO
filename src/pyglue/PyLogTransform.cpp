@@ -34,6 +34,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyTransform.h"
 #include "PyUtil.h"
 
+
+/*+doc
+Python: LogTransform
+====================
+
+Examples of Use
+^^^^^^^^^^^^^^^
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+
+Description
+^^^^^^^^^^^
+:py:class:`LogTransform` is used to define a log transform.
+
+The direction of the transform and its numerical base can be specified.
+*/
+
 OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -213,6 +231,12 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
+        /*+doc
+        .. py:method:: Config.getBase()
+                     
+           Returns the base of :py:class:`LogTransform`.
+
+        */        
         PyObject * PyOCIO_LogTransform_getBase( PyObject * self )
         {
             try
@@ -227,7 +251,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
+        /*+doc
+        .. py:method:: Config.setBase(base)
+                     
+           Sets the base in :py:class:`LogTransform`.
+
+           :param base: base of log transform
+           :type base: float
+        */        
         PyObject * PyOCIO_LogTransform_setBase( PyObject * self, PyObject * args )
         {
             try

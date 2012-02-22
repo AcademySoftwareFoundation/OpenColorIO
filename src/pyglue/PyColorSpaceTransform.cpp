@@ -34,6 +34,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyTransform.h"
 #include "PyUtil.h"
 
+
+/*+doc
+Python: ColorSpaceTransform
+===========================
+
+   This class is meant so that ColorSpace conversions can be reused, referencing ColorSpaces that already exist.
+
+.. note::
+     Careless use of this may create infinite loops, so avoid referencing the colorspace you're in. 
+
+Examples of Use
+^^^^^^^^^^^^^^^
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+    
+    transform = OCIO.ColorSpaceTransform()
+*/
+
 OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -219,6 +238,14 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
+        /*+doc
+        .. py:method:: ColorSpaceTransform.getSrc()
+        
+           Returns the name of the source ColorSpace in this transform.
+           
+           :return: ColorSpace
+           :rtype: string
+        */
         PyObject * PyOCIO_ColorSpaceTransform_getSrc( PyObject * self )
         {
             try
@@ -233,6 +260,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: ColorSpaceTransform.setSrc()
+        
+           Sets the source ColorSpace in this transform.
+           
+           :param str: source ColorSpace
+           :type str: string
+        */
         PyObject * PyOCIO_ColorSpaceTransform_setSrc( PyObject * self, PyObject * args )
         {
             try
@@ -253,6 +288,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: ColorSpaceTransform.getDst()
+        
+           Returns the name of the destination ColorSpace in this transform.
+           
+           :return: ColorSpace
+           :rtype: string
+        */
         PyObject * PyOCIO_ColorSpaceTransform_getDst( PyObject * self )
         {
             try
@@ -267,6 +310,14 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        /*+doc
+        .. py:method:: ColorSpaceTransform.setDst()
+        
+           Sets the destination ColorSpace in this transform.
+           
+           :param str: destination ColorSpace
+           :type str: string
+        */
         PyObject * PyOCIO_ColorSpaceTransform_setDst( PyObject * self, PyObject * args )
         {
             try

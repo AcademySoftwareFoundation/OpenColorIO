@@ -40,43 +40,44 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*+doc
 Python: Config
-========
+==============
 
-Usage
-^^^^^
+Examples of Use
+^^^^^^^^^^^^^^^
 .. code-block:: python
 
     import PyOpenColorIO as OCIO
     
-    # Load an existing configuration from the environment
-    # The resulting configuration is read-only
+    # Load an existing configuration from the environment.
+    # The resulting configuration is read-only. If $OCIO is set, it will use that.
+    # Otherwise it will use an internal default.
     config = OCIO.GetCurrentConfig()
     
     # What color spaces exist?
     colorSpaceNames = [ cs.getName() for cs in config.getColorSpaces() ]
     
     # Given a string, can we parse a color space name from it?
-    inputstring = 'myname_linear.exr'
+    inputString = 'myname_linear.exr'
     colorSpaceName = config.parseColorSpaceFromString(inputString)
     if colorSpaceName:
-        print 'Found color space',colorSpaceName
+        print 'Found color space', colorSpaceName
     else:
-        print 'Could not get colorspace from string',inputString
+        print 'Could not get color space from string', inputString
     
-    # What is the name of scene-linear, in the existing configuration?
+    # What is the name of scene-linear in the configuration?
     colorSpace = config.getColorSpace(OCIO.Constants.ROLE_SCENE_LINEAR)
     if colorSpace:
         print colorSpace.getName()
     else:
-        print 'The role of Scene Linear is not defined in the existing configuration'
+        print 'The role of scene-linear is not defined in the configuration'
     
     # For examples of how to actually perform the color transform math,
-    # see PyProcessor docs.
+    # see 'Python: Processor' docs.
     
     # Create a new, empty, editable configuration
     config = OCIO.Config()
     
-    # Create a new colorspace, and add it
+    # Create a new color space, and add it
     cs = OCIO.ColorSpace(...)
     # (See ColorSpace for details)
     config.addColorSpace(cs)
@@ -85,16 +86,17 @@ Usage
     # https://github.com/imageworks/OpenColorIO-Configs/blob/master/nuke-default/make.py
 
 Description
-^^^^^
+^^^^^^^^^^^
 A color configuration (:py:class:`Config`) defines all the color spaces to be available at runtime.
 
-(:py:class:`Config`)  is the main object for interacting with this library. It encapsulates all
-of the information necessary to use customized
+(:py:class:`Config`)  is the main object for interacting with this library. 
+It encapsulates all the information necessary to use customized
 :py:class:`ColorSpaceTransform` and :py:class:`DisplayTransform` operations.
 
-See the :ref:`user-guide` for more information on selecting, creating, and working with custom color configurations.
+See the :ref:`user-guide` for more information on selecting, creating, 
+and working with custom color configurations.
 
-For applications interested in using only one color config at
+For applications interested in using only one color configuration at
 a time (this is the vast majority of apps), their API would
 traditionally get the global configuration and use that, as
 opposed to creating a new one. This simplifies the use case
@@ -103,9 +105,9 @@ around configuration handles.
 
 An example of an application where this would not be
 sufficient would be a multi-threaded image proxy server
-(daemon), which wished to handle multiple show configurations
-in a single process concurrently. This app would need to keep
-multiple configurations alive, and to manage them appropriately.
+(daemon) that wants to handle multiple show configurations
+concurrently in a single process. This app would need to keep
+multiple configurations alive, and manage them appropriately.
 
 Roughly speaking, a novice user should select a default
 configuration that most closely approximates the use case
@@ -113,11 +115,15 @@ configuration that most closely approximates the use case
 environment variable to point at the root of that configuration.
 
 .. note::
-Initialization using environment variables is typically
-preferable in a multi-app ecosystem, as it allows all
-applications to be consistently configured.
+   Initialization using environment variables is typically preferable
+   in a multi-app ecosystem, as it allows all applications to be consistently configured.
+
+.. note::
+   Paths to LUTs can be relative. The search paths are defined in :py:class:`Config`.
 
 See :ref:`developers-usageexamples`
+
+.. cpp:class:: Config
 */
 
 
@@ -416,7 +422,7 @@ OCIO_NAMESPACE_ENTER
     {
         /*+doc
         Functions
-        ^^^^^
+        ^^^^^^^^^
         .. py:function:: Config.CreateFromEnv()
                      
            Create a :py:class:`Config` object using the environment variable.
@@ -464,15 +470,10 @@ OCIO_NAMESPACE_ENTER
         
         ///////////////////////////////////////////////////////////////////////
         // Insert class markup here
-        //+doc WHAT CLASS INFO GOES HERE?
         int PyOCIO_Config_init( PyOCIO_Config *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
             /// init pyobject fields
-            /*+doc
-            Class
-            ^^^^^
-            */
             self->constcppobj = new ConstConfigRcPtr();
             self->cppobj = new ConfigRcPtr();
             self->isconst = true;
@@ -506,7 +507,7 @@ OCIO_NAMESPACE_ENTER
         // method markup
         /*+doc
         Initialization Methods
-        ^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^
         
         .. py:method:: Config.isEditable()
                      
@@ -577,7 +578,7 @@ OCIO_NAMESPACE_ENTER
         
         /*+doc
         Resource Methods
-        ^^^^^
+        ^^^^^^^^^^^^^^^^
         
         .. py:method:: Config.getDescription()
                      
@@ -712,7 +713,7 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.getSearchPath()
                      
-           Returns the search path???
+           Returns the search path.
            
            :return: search path
            :rtype: string
@@ -734,7 +735,7 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.setSearchPath(path)
                      
-           Sets the search path???
+           Sets the search path.
            
            :param path: the search path
            :type path: string
@@ -811,7 +812,7 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         /*+doc
         ColorSpace Methods
-        ^^^^^
+        ^^^^^^^^^^^^^^^^^^
         
         .. py:method:: Config.getColorSpaces()
                      
@@ -883,7 +884,7 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.addColorSpace(pyColorSpace)
                      
-           Add a specified color space to :py:class:`Config`, and stores it.
+           Add a specified color space to :py:class:`Config`.
            
            :param pyColorSpace: color space
            :type pyColorSpace: object
@@ -914,7 +915,7 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.clearColorSpaces()
                      
-           Clear the color spaces in :py:class:`Config`. ?????
+           Clear the color spaces in :py:class:`Config`.
         */
         PyObject * PyOCIO_Config_clearColorSpaces( PyObject * self )
         {
@@ -935,14 +936,14 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.parseColorSpaceFromString(str)
                      
-           Parses the color space data from a string.
+           Parses out the color space from a string.
            
            Given the specified string, gets the longest, right-most color space substring.
            * If strict parsing is enabled, and no color space is found, return an empty string.
            * If strict parsing is disabled, return the default role, if defined.
            * If the default role is not defined, return an empty string.
 
-           :param str: color space data
+           :param str: ColorSpace data
            :type str: string
            :return: parsed data
            :rtype: string
@@ -974,22 +975,24 @@ OCIO_NAMESPACE_ENTER
         }
         
         /*+doc
-           Methods for roles
-           ^^^^^
+        Roles Methods
+        ^^^^^^^^^^^^^
            
-           A role acts as an alias for a color space. You can query the color space corresponding to a role using
+           A role acts as an alias for a ColorSpace.
+           
+           You can query for the ColorSpace corresponding to a role using
            :py:function:`getColorSpace()`.
         
         .. py:method:: Config.setRole(role, csname)
                      
-           Set the role of a color space???
+           Set a role's ColorSpace.
            
            Setting the colorSpaceName name to a null string unsets it.
 
-           :param role: 
-           :type role: 
-           :param csname: 
-           :type csname: 
+           :param role: role whose ColorSpace will be set
+           :type role: string
+           :param csname: name of ColorSpace
+           :type csname: string
         */
         PyObject * PyOCIO_Config_setRole( PyObject * self, PyObject * args )
         {
@@ -1021,15 +1024,18 @@ OCIO_NAMESPACE_ENTER
         
         /*+doc
         Display/View Registration Methods
-        ^^^^^
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         
-        Looks is a comma- or colon-delimited list of lookNames, where optional '+' and '-' prefixes
-        denote forward and inverse look specifications, respectively. A forward look is assumed in
-        the absence of a prefix.
+        A display is a virtual or physical display device (e.g., DLP projector or sRGB monitor).
+        
+        A view further specifies what you're trying to see. I.e., display 
+        set to sRGB and view set to film_avid would be asking to see what 
+        film_avid on a movie screen would look like on your sRGB
+        monitor.
         
         .. py:method:: Config.getDefaultDisplay()
                      
-           Returns the default display???
+           Returns the default display set in :py:class:`Config`.
 
            :return: default display
            :rtype: string 
@@ -1051,8 +1057,7 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.getDisplays()
                      
-           Returns all the displays listed in
-           :py:class:`Config`.
+           Returns all the displays defined in :py:class:`Config`.
 
            :return: displays in :py:class:`Config`
            :rtype: list of strings
@@ -1083,7 +1088,7 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.getDefaultView(display)
                      
-           Returns the default view of :py:class:`Config`. ???
+           Returns the default view of :py:class:`Config`.
 
            :param display: default view
            :type display: string
@@ -1111,11 +1116,11 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.getViews(display)
                      
-           Returns all the views listed in :py:class:`Config`.
+           Returns all the views defined in :py:class:`Config`.
 
            :param display: views in :py:class:`Config`
            :type display: string
-           :return: views
+           :return: views in :py:class:`Config`.
            :rtype: list of strings
         */
         PyObject * PyOCIO_Config_getViews( PyObject * self, PyObject * args )
@@ -1146,8 +1151,8 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.getDisplayColorSpaceName(display, view)
                      
-           Returns the color space name corresponding to the display and
-           view combination in :py:class:`Config`. ???
+           Returns the ColorSpace name corresponding to the display and
+           view combination in :py:class:`Config`.
 
            :param display: display
            :type display: string
@@ -1179,7 +1184,7 @@ OCIO_NAMESPACE_ENTER
         .. py:method:: Config.getDisplayLooks(display, view)
                      
            Returns the looks corresponding to the display and
-           view combination in :py:class:`Config`. ???
+           view combination in :py:class:`Config`.
 
            :param display: display
            :type display: string
@@ -1256,7 +1261,7 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.clearDisplays()
                      
-           ???
+           
         */  
         PyObject * PyOCIO_Config_clearDisplays( PyObject * self )
         {
@@ -1390,17 +1395,17 @@ OCIO_NAMESPACE_ENTER
         
         /*+doc
         Luma Methods
-        ^^^^^
+        ^^^^^^^^^^^^
         
         Manage the default coefficients for computing luma.
         
         .. note::
            There is no one-size-fits-all set of luma coefficients. The values are typically
-           different for each color space, and the application of them may be nonsensical 
+           different for each ColorSpace, and the application of them may be nonsensical 
            depending on the intensity coding. Thus, the right answer is to make these functions
-           on the :py:class:`Config` class. However, it's often useful to have a config-wide
-           default so here it is. We will add the color space specific luma call when another
-           client is interesting in using it.
+           on the :py:class:`Config` class. However, it's often useful to have a Config-wide
+           default, so here it is. We will add the ColorSpace specific luma call when another
+           client is interested in using it.
         
         .. py:method:: Config.setDefaultLumaCoefs()
                      
@@ -1469,10 +1474,14 @@ OCIO_NAMESPACE_ENTER
         
         /*+doc
         Look Methods
-        ^^^^^
+        ^^^^^^^^^^^^
         
         Manage per-shot look settings.
         
+        Looks is a comma- or colon-delimited list of lookNames, where optional '+' and '-' prefixes
+        denote forward and inverse look specifications, respectively. A forward look is assumed in
+        the absence of a prefix.
+
         .. py:method:: Config.getLook()
                      
            Returns the information of a specified look in :py:class:`Config`.
@@ -1565,7 +1574,7 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Config.clearLook()
                      
-           ??? :py:class:`Config`.
+           Clear look in :py:class:`Config`.
         */  
         PyObject * PyOCIO_Config_clearLook( PyObject * self )
         {
@@ -1587,33 +1596,44 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         /*+doc
-        Processors Methods
-        ^^^^^
+        Processor Methods
+        ^^^^^^^^^^^^^^^^^
         
-        Convert from inputColorSpace to outputColorSpace.
-        
-        .. note::
-           This may provide higher fidelity than anticipated due to internal optimizations. 
-           For example, if inputColorSpace and outputColorSpace are members of the same family,
-           no conversion will be applied, even though, strictly speaking, quantization should be added.
-           
-        If you wish to test these calls for quantization characteristics, apply in two steps; 
-        the image must contain RGB triples (though arbitrary numbers of additional channels 
-        can be optionally supported using the pixelStrideBytes arg). HUH???
+        Used to convert from inputColorSpace to outputColorSpace.
         
         .. py:method:: Config.getProcessor(arg1[, arg2[, direction[, context]])
            
-           Get processor for the specified transform.
+           Returns a processor for a specified transform.
            
-           Not often needed, but will allow for the reuse of atomic OCIO functionality (such as to apply an individual LUT file).
+           Although this is not often needed, it allows for the reuse of atomic 
+           OCIO functionality, such as applying an individual LUT file.
+           
+           There are two canonical ways of creating a
+           :py:class:`Processor`:
+           
+           #. Pass a transform into arg1, in which case arg2 will be ignored. 
+           #. Set arg1 as the source and arg2 as the destination. These can be ColorSpace names, objects, or roles.
+           
+           Both arguments, ``direction`` (of transform) and ``context``, are
+           optional and respected for both methods of :py:class:`Processor`
+           creation.
            
            This will fail if either the source or destination color space is null.
            
-           ??? :py:class:`Config`.
+           See Python: Processor for more details.
            
+           .. note::
+             This may provide higher fidelity than anticipated due to internal optimizations. 
+             For example, if inputColorSpace and outputColorSpace are members of the same family,
+             no conversion will be applied, even though, strictly speaking, quantization should be added.
+           
+             If you wish to test these calls for quantization characteristics, apply in two steps; 
+             the image must contain RGB triples (though arbitrary numbers of additional channels 
+             can be optionally supported using the pixelStrideBytes arg). ???
+        
            :param arg1: 
            :type arg1: object
-           :param arg2: optional
+           :param arg2: ignored if arg1 is a transform
            :type arg2: object
            :param direction: optional
            :type direction: string

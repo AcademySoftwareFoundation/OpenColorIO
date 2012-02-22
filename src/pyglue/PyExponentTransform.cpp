@@ -34,6 +34,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyTransform.h"
 #include "PyUtil.h"
 
+
+/*+doc
+Python: ExponentTransform
+=========================
+.. code-block:: python
+
+    import PyOpenColorIO as OCIO
+    
+    transform = OCIO.ExponentTransform()
+*/
+
 OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -222,6 +233,13 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         
         
+        /*+doc
+        .. py:method:: ExponentTransform.getValue()
+                     
+           Returns the values in the exponent transform of :py:class:`ExponentTransform`.
+           :return: exponent transform values
+           :rtype: list of floats
+        */        
         PyObject * PyOCIO_ExponentTransform_getValue( PyObject * self )
         {
             try
@@ -238,7 +256,13 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
+        /*+doc
+        .. py:method:: ExponentTransform.setValue()
+                     
+           Sets the values in the exponent transform of :py:class:`ExponentTransform`.
+           :param pyData: exponent transform values
+           :type pyData: list of 4 floats
+        */        
         PyObject * PyOCIO_ExponentTransform_setValue( PyObject * self, PyObject * args )
         {
             try

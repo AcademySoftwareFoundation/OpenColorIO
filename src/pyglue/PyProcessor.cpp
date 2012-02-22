@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*+doc
 Python: Processor
-========
+=================
 
 Usage
 ^^^^^
@@ -50,7 +50,7 @@ Usage
     processor = config.getProcessor()
 
 Description
-^^^^^
+^^^^^^^^^^^
 The :py:class:`Processor` is the object used to actually perform image transformations.
 
 :py:class:`Processor` objects are not instantiated directly, but are created from the :py:class:`Config`
@@ -302,7 +302,7 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         /*+doc
         Functions
-        ^^^^^
+        ^^^^^^^^^
         
         .. py:method:: Processor.isNoOp()
                      
@@ -350,15 +350,15 @@ OCIO_NAMESPACE_ENTER
         
         /*+doc
         CPU Path Methods
-        ^^^^^
+        ^^^^^^^^^^^^^^^^
         
         .. py:method:: Processor.applyRGB()
                      
-           Apply the RGB part of the transform represented by :py:class:`Processor` to an image. ???
+           Apply the RGB part of the transform represented by :py:class:`Processor` to an image.
            
-           :param pyData: ???
+           :param pyData: 
            :type pyData: object
-           :return: list of ???
+           :return: 
            :rtype: list
         */
         PyObject * PyOCIO_Processor_applyRGB( PyObject * self, PyObject * args )
@@ -400,11 +400,11 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Processor.applyRGBA()
                      
-           Apply the RGB and alpha part of the transform represented by :py:class:`Processor` to an image. ???
+           Apply the RGB and alpha part of the transform represented by :py:class:`Processor` to an image.
            
-           :param pyData: ???
+           :param pyData:
            :type pyData: object
-           :return: list of ???
+           :return: 
            :rtype: list
         */
         PyObject * PyOCIO_Processor_applyRGBA( PyObject * self, PyObject * args )
@@ -446,7 +446,7 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Processor.getCpuCacheID()
                      
-           Returns the cache ID of the CPU that :py:class:`Processor` will run on. ???
+           Returns the cache ID of the CPU that :py:class:`Processor` will run on.
            
            :return: CPU cache ID
            :rtype: string
@@ -472,14 +472,14 @@ OCIO_NAMESPACE_ENTER
         
         /*+doc
         GPU Path Methods
-        ^^^^^
+        ^^^^^^^^^^^^^^^^
         
         .. py:method:: Processor.getGpuShaderText()
                      
-           Returns the GPU shader text. ???
+           Returns the GPU shader text.
            
-           :param pyData: ??? two params?
-           :type pyData: object ??? !
+           :param pyData: two params
+           :type pyData: object
            :return: GPU shader text
            :rtype: string
         */
@@ -507,10 +507,10 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Processor.getGpuShaderTextCacheID()
                      
-           Returns the GPU shader text cache ID. ???
+           Returns the GPU shader text cache ID.
            
-           :param pyData: ??? two params???
-           :type pyData: object ??? !
+           :param pyData: two params
+           :type pyData: object
            :return: GPU shader text cache ID
            :rtype: string
         */
@@ -538,10 +538,10 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Processor.getGpuLut3D()
                      
-           Returns the GPU LUT 3D. ???
+           Returns the GPU LUT 3D.
            
-           :param pyData: ??? two params?
-           :type pyData: object ??? !
+           :param pyData: two params?
+           :type pyData: object
            :return: GPU LUT 3D
            :rtype: list
         */
@@ -574,10 +574,10 @@ OCIO_NAMESPACE_ENTER
         /*+doc
         .. py:method:: Processor.getGpuLut3DCacheID()
                      
-           Returns the GPU 3D LUT cache ID. ???
+           Returns the GPU 3D LUT cache ID.
            
-           :param pyData: ??? two params???
-           :type pyData: object ??? !
+           :param pyData: two params
+           :type pyData: object
            :return: GPU 3D LUT cache ID
            :rtype: string
         */

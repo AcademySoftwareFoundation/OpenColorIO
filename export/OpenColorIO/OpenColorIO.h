@@ -77,7 +77,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Exceptions
-    // *********
+    // **********
     
     //!cpp:class:: An exception class to throw for errors detected at
     // runtime.
@@ -674,7 +674,7 @@ OCIO_NAMESPACE_ENTER
     //!rst:: .. _look_section:
     // 
     // Look
-    // **********
+    // ****
     // The *Look* is an 'artistic' image modification, in a specified image
     // state.
     // The processSpace defines the ColorSpace the image is required to be
@@ -817,7 +817,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Baker
-    // ******
+    // *****
     // 
     // In certain situations it is nessary to serilize transforms into a variety
     // of application specific lut formats. The Baker can be used to create lut

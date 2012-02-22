@@ -3,3 +3,5 @@
     
     PyConfig
     PyProcessor
+    PyTransforms
+    PyOther
