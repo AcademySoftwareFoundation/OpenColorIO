@@ -1,0 +1,7 @@
+Name: org/OpenColorIO/
+Specification-Title: OpenColorIO - Open Source Color Management
+Specification-Version: @OCIO_VERSION@
+Specification-Vendor: Sony Pictures Imageworks Inc., et al.
+Implementation-Title: org.OpenColorIO
+Implementation-Version: @OCIO_VERSION@
+Implementation-Vendor: Sony Pictures Imageworks Inc., et al.

@@ -321,9 +321,12 @@ endif()
 ### JNIGLUE ###
 
 if(OCIO_BUILD_JNIGLUE)
-    find_package(Java)
-    find_package(JNI)
-    add_subdirectory(src/jniglue)
+    OCIOFindJava()
+    if(Java_FOUND)
+      add_subdirectory(src/jniglue)
+    else()
+      messageonce("Java bindings will not be built as we can't find Java")
+    endif()
 endif()
 
 ###############################################################################

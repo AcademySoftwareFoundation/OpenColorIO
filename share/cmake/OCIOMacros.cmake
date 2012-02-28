@@ -191,6 +191,106 @@ MACRO(OCIOFindPython)
 
 ENDMACRO()
 
+MACRO(OCIOFindJava)
+    if(APPLE)
+      
+      SET(_JAVA_HINTS $ENV{JAVA_HOME}/bin)
+      SET(_JAVA_PATHS /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands)
+      
+      FIND_PROGRAM(Java_JAVA_EXECUTABLE
+        NAMES java
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      IF(Java_JAVA_EXECUTABLE)
+          EXECUTE_PROCESS(COMMAND ${Java_JAVA_EXECUTABLE} -version
+            RESULT_VARIABLE res
+            OUTPUT_VARIABLE var
+            ERROR_VARIABLE var # sun-java output to stderr
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_STRIP_TRAILING_WHITESPACE)
+          IF( res )
+            IF(${Java_FIND_REQUIRED})
+              MESSAGE( FATAL_ERROR "Error executing java -version" )
+            ELSE()
+              MESSAGE( STATUS "Warning, could not run java --version")
+            ENDIF()
+          ELSE()
+            # extract major/minor version and patch level from "java -version" output
+            # Tested on linux using 
+            # 1. Sun / Sun OEM
+            # 2. OpenJDK 1.6
+            # 3. GCJ 1.5
+            # 4. Kaffe 1.4.2
+            IF(var MATCHES "java version \"[0-9]+\\.[0-9]+\\.[0-9_.]+[oem-]*\".*")
+              # This is most likely Sun / OpenJDK, or maybe GCJ-java compat layer
+              STRING( REGEX REPLACE ".* version \"([0-9]+\\.[0-9]+\\.[0-9_.]+)[oem-]*\".*"
+                      "\\1" Java_VERSION_STRING "${var}" )
+            ELSEIF(var MATCHES "java full version \"kaffe-[0-9]+\\.[0-9]+\\.[0-9_]+\".*")
+              # Kaffe style
+              STRING( REGEX REPLACE "java full version \"kaffe-([0-9]+\\.[0-9]+\\.[0-9_]+).*"
+                      "\\1" Java_VERSION_STRING "${var}" )
+            ELSE()
+              IF(NOT Java_FIND_QUIETLY)
+                message(WARNING "regex not supported: ${var}. Please report")
+              ENDIF(NOT Java_FIND_QUIETLY)
+            ENDIF()
+            STRING( REGEX REPLACE "([0-9]+).*" "\\1" Java_VERSION_MAJOR "${Java_VERSION_STRING}" )
+            STRING( REGEX REPLACE "[0-9]+\\.([0-9]+).*" "\\1" Java_VERSION_MINOR "${Java_VERSION_STRING}" )
+            STRING( REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" Java_VERSION_PATCH "${Java_VERSION_STRING}" )
+            # warning tweak version can be empty:
+            STRING( REGEX REPLACE "[0-9]+\\.[0-9]+\\.[0-9]+\\_?\\.?([0-9]*)$" "\\1" Java_VERSION_TWEAK "${Java_VERSION_STRING}" )
+            if( Java_VERSION_TWEAK STREQUAL "" ) # check case where tweak is not defined
+              set(Java_VERSION ${Java_VERSION_MAJOR}.${Java_VERSION_MINOR}.${Java_VERSION_PATCH})
+            else( )
+              set(Java_VERSION ${Java_VERSION_MAJOR}.${Java_VERSION_MINOR}.${Java_VERSION_PATCH}.${Java_VERSION_TWEAK})
+            endif( )
+          ENDIF()
+      ENDIF(Java_JAVA_EXECUTABLE)
+      
+      FIND_PROGRAM(Java_JAR_EXECUTABLE
+        NAMES jar
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      FIND_PROGRAM(Java_JAVAC_EXECUTABLE
+        NAMES javac
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      FIND_PROGRAM(Java_JAVAH_EXECUTABLE
+        NAMES javah
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      FIND_PROGRAM(Java_JAVADOC_EXECUTABLE
+        NAMES javadoc
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      # Check for everything
+      include(FindPackageHandleStandardArgs)
+      find_package_handle_standard_args(Java
+        REQUIRED_VARS Java_JAVA_EXECUTABLE Java_JAR_EXECUTABLE Java_JAVAC_EXECUTABLE
+                      Java_JAVAH_EXECUTABLE Java_JAVADOC_EXECUTABLE Java_VERSION)
+      set(Java_FOUND TRUE)
+      
+      find_package(JNI)
+      
+    else()
+      
+      find_package(Java)
+      find_package(JNI)
+      
+    endif()
+    
+ENDMACRO()
+
 MACRO(ExtractRstCPP INFILE OUTFILE)
    add_custom_command(
       OUTPUT ${OUTFILE}
