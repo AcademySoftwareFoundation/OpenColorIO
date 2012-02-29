@@ -61,7 +61,7 @@ endforeach()
 message(STATUS "Creating OpenColorIOJNI.h that includes all the ocio jni headers")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/OpenColorIOJNI.h" "${JNIOCIO_H_INCLUDE}")
 
-set(JNIOCIO_JAR "${CMAKE_CURRENT_BINARY_DIR}/org.OpenColorIO.jar")
+set(JNIOCIO_JAR "${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO-${OCIO_VERSION}.jar")
 add_custom_command(OUTPUT ${JNIOCIO_HEADERS}
                    COMMAND cmake -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/org/OpenColorIO
                    COMMAND ${Java_JAVAC_EXECUTABLE} -cp ${CMAKE_CURRENT_BINARY_DIR} -d ${CMAKE_CURRENT_BINARY_DIR} ${JNIOCIO_JAVAS}
@@ -77,4 +77,4 @@ target_link_libraries(JNIOpenColorIO OpenColorIO)
 add_subdirectory(tests)
 
 install(TARGETS JNIOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX})
-install(FILES ${JNIOCIO_JAR} DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX})
+install(FILES ${JNIOCIO_JAR} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/java/)
