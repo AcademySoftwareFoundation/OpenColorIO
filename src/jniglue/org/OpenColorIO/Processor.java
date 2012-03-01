@@ -30,10 +30,10 @@ package org.OpenColorIO;
 import org.OpenColorIO.*;
 import java.nio.FloatBuffer;
 
-public class Processor
+public class Processor extends LoadLibrary
 {
-    public Processor() { }
-    protected Processor(long impl) { m_impl = impl; }
+    public Processor() { super(); }
+    protected Processor(long impl) { super(impl); }
     public native void dispose();
     protected void finalize() { dispose(); }
     public native Processor Create();
@@ -47,10 +47,5 @@ public class Processor
     public native String getGpuShaderTextCacheID(GpuShaderDesc shaderDesc);
     public native void getGpuLut3D(FloatBuffer lut3d, GpuShaderDesc shaderDesc);
     public native String getGpuLut3DCacheID(GpuShaderDesc shaderDesc);
-    private long m_impl = 0;
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 };
 

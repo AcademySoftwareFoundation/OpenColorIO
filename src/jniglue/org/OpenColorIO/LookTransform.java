@@ -31,7 +31,7 @@ import org.OpenColorIO.*;
 
 public class LookTransform extends Transform
 {
-    public LookTransform() { }
+    public LookTransform() { super(); }
     protected LookTransform(long impl) { super(impl); }
     public native LookTransform Create();
     public native String getSrc();
@@ -40,8 +40,4 @@ public class LookTransform extends Transform
     public native void setDst(String dst);
     public native void setLooks(String looks);
     public native String getLooks();
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

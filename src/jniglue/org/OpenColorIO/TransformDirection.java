@@ -29,9 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class TransformDirection {
+public class TransformDirection extends LoadLibrary
+{
     private final int m_enum;
-    protected TransformDirection(int type) { m_enum = type; }
+    protected TransformDirection(int type) { super(); m_enum = type; }
     public native String toString();
     public native boolean equals(Object obj);
     public static final TransformDirection
@@ -40,8 +41,4 @@ public class TransformDirection {
         TRANSFORM_DIR_FORWARD = new TransformDirection(1);
     public static final TransformDirection
         TRANSFORM_DIR_INVERSE = new TransformDirection(2);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

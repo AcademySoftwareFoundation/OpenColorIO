@@ -29,9 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class ColorSpaceDirection {
+public class ColorSpaceDirection extends LoadLibrary
+{
     private final int m_enum;
-    protected ColorSpaceDirection(int type) { m_enum = type; }
+    protected ColorSpaceDirection(int type) { super(); m_enum = type; }
     public native String toString();
     public native boolean equals(Object obj);
     public static final ColorSpaceDirection
@@ -40,8 +41,4 @@ public class ColorSpaceDirection {
       COLORSPACE_DIR_TO_REFERENCE = new ColorSpaceDirection(1);
     public static final ColorSpaceDirection
       COLORSPACE_DIR_FROM_REFERENCE = new ColorSpaceDirection(2);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

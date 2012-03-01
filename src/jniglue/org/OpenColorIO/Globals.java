@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class Globals
+public class Globals extends LoadLibrary
 {
     public native void ClearAllCaches();
     public native String GetVersion();
@@ -73,10 +73,6 @@ public class Globals
     public String ROLE_MATTE_PAINT;
     
     //
-    public Globals() { create(); }
+    public Globals() { super(); create(); }
     private native void create();
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

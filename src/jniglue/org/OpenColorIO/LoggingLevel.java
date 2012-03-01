@@ -29,9 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class LoggingLevel {
+public class LoggingLevel extends LoadLibrary
+{
     private final int m_enum;
-    protected LoggingLevel(int type) { m_enum = type; }
+    protected LoggingLevel(int type) { super(); m_enum = type; }
     public native String toString();
     public native boolean equals(Object obj);
     public static final LoggingLevel
@@ -44,8 +45,4 @@ public class LoggingLevel {
         LOGGING_LEVEL_DEBUG = new LoggingLevel(3);
     public static final LoggingLevel
         LOGGING_LEVEL_UNKNOWN = new LoggingLevel(255);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

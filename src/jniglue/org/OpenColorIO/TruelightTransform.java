@@ -31,7 +31,7 @@ import org.OpenColorIO.*;
 
 public class TruelightTransform extends Transform
 {
-    public TruelightTransform() { }
+    public TruelightTransform() { super(); }
     protected TruelightTransform(long impl) { super(impl); }
     public native TruelightTransform Create();
     public native void setConfigRoot(String configroot);
@@ -54,9 +54,5 @@ public class TruelightTransform extends Transform
     public native String getDisplay();
     public native void setCubeInput(String type);
     public native String getCubeInput();
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }
 

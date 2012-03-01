@@ -12,6 +12,6 @@ add_custom_target(JNITests
                   COMMAND java -cp ${_JCLASS_PATH}
                     -Djava.library.path=${_JLIB_PATH} junit.textui.TestRunner
                     OpenColorIOTestSuite
-                  DEPENDS JNIOpenColorIO
+                  DEPENDS OpenColorIO-JNI
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   COMMENT "Setting Up and Running JNI OCIO JUNIT tests")

@@ -31,7 +31,7 @@ import org.OpenColorIO.*;
 
 public class GroupTransform extends Transform
 {
-    public GroupTransform() { }
+    public GroupTransform() { super(); }
     protected GroupTransform(long impl) { super(impl); }
     public native GroupTransform Create();
     public native Transform getTransform(int index);
@@ -39,8 +39,4 @@ public class GroupTransform extends Transform
     public native void push_back(Transform transform);
     public native void clear();
     public native boolean empty();
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

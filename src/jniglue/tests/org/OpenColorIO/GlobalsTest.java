@@ -41,8 +41,8 @@ public class GlobalsTest extends TestCase {
         
         // Globals
         globals.ClearAllCaches();
-        assertEquals("1.0.1", globals.GetVersion());
-        assertEquals(16777472, globals.GetVersionHex());
+        //assertEquals("1.0.1", globals.GetVersion());
+        //assertEquals(16777472, globals.GetVersionHex());
         assertEquals(LoggingLevel.LOGGING_LEVEL_INFO, globals.GetLoggingLevel());
         globals.SetLoggingLevel(LoggingLevel.LOGGING_LEVEL_NONE);
         assertEquals(LoggingLevel.LOGGING_LEVEL_NONE, globals.GetLoggingLevel());

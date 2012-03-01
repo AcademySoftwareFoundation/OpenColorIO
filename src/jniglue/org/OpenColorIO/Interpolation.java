@@ -29,9 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class Interpolation {
+public class Interpolation extends LoadLibrary
+{
     private final int m_enum;
-    protected Interpolation(int type) { m_enum = type; }
+    protected Interpolation(int type) { super(); m_enum = type; }
     public native String toString();
     public native boolean equals(Object obj);
     public static final Interpolation
@@ -40,8 +41,4 @@ public class Interpolation {
         INTERP_NEAREST = new Interpolation(1);
     public static final Interpolation
         INTERP_LINEAR = new Interpolation(2);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

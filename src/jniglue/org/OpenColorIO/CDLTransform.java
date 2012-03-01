@@ -31,7 +31,7 @@ import org.OpenColorIO.*;
 
 public class CDLTransform extends Transform
 {
-    public CDLTransform() { }
+    public CDLTransform() { super(); }
     protected CDLTransform(long impl) { super(impl); }
     public native CDLTransform Create();
     public native CDLTransform CreateFromFile(String src, String cccid);
@@ -53,8 +53,4 @@ public class CDLTransform extends Transform
     public native String getID();
     public native void setDescription(String desc);
     public native String getDescription();
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

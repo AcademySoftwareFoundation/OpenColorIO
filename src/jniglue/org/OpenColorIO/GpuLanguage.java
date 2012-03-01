@@ -29,9 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class GpuLanguage {
+public class GpuLanguage extends LoadLibrary
+{
     private final int m_enum;
-    protected GpuLanguage(int type) { m_enum = type; }
+    protected GpuLanguage(int type) { super(); m_enum = type; }
     public native String toString();
     public native boolean equals(Object obj);
     public static final GpuLanguage
@@ -42,8 +43,4 @@ public class GpuLanguage {
       GPU_LANGUAGE_GLSL_1_0 = new GpuLanguage(2);
     public static final GpuLanguage
       GPU_LANGUAGE_GLSL_1_3 = new GpuLanguage(3);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

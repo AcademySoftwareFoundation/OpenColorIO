@@ -31,15 +31,11 @@ import org.OpenColorIO.*;
 
 public class ColorSpaceTransform extends Transform
 {
-    public ColorSpaceTransform() { }
+    public ColorSpaceTransform() { super(); }
     protected ColorSpaceTransform(long impl) { super(impl); }
     public native ColorSpaceTransform Create();
     public native String getSrc();
     public native void setSrc(String src);
     public native String getDst();
     public native void setDst(String dst);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

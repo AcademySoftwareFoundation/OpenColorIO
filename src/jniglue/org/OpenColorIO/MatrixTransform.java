@@ -31,7 +31,7 @@ import org.OpenColorIO.*;
 
 public class MatrixTransform extends Transform
 {
-    public MatrixTransform() { }
+    public MatrixTransform() { super(); }
     protected MatrixTransform(long impl) { super(impl); }
     public native MatrixTransform Create();
     public native boolean equals(MatrixTransform obj);
@@ -51,8 +51,4 @@ public class MatrixTransform extends Transform
                              float[] scale4);
     public native void View(float[] m44, float[] offset4,
                             int[] channelHot4, float[] lumaCoef3);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

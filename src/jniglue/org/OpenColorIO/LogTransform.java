@@ -31,13 +31,9 @@ import org.OpenColorIO.*;
 
 public class LogTransform extends Transform
 {
-    public LogTransform() { }
+    public LogTransform() { super(); }
     protected LogTransform(long impl) { super(impl); }
     public native LogTransform Create();
     public native void setBase(float val);
     public native float getBase();
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

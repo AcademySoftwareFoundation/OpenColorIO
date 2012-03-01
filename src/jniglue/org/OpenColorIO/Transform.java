@@ -29,18 +29,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class Transform
+public class Transform extends LoadLibrary
 {
-    public Transform() { }
-    protected Transform(long impl) { m_impl = impl; }
+    public Transform() { super(); }
+    protected Transform(long impl) { super(impl); }
     public native void dispose();
     protected void finalize() { dispose(); }
     public native Transform createEditableCopy();
     public native TransformDirection getDirection();
     public native void setDirection(TransformDirection dir);
-    private long m_impl = 0;
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }
