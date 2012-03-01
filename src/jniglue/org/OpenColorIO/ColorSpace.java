@@ -29,10 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class ColorSpace
+public class ColorSpace extends LoadLibrary
 {
-    public ColorSpace() { }
-    protected ColorSpace(long impl) { m_impl = impl; }
+    public ColorSpace() { super(); }
+    protected ColorSpace(long impl) { super(impl); }
     public native void dispose();
     protected void finalize() { dispose(); }
     public native ColorSpace Create();
@@ -56,8 +56,4 @@ public class ColorSpace
     public native void setAllocationVars(int numvars, float[] vars);
     public native Transform getTransform(ColorSpaceDirection dir);
     public native void setTransform(Transform transform, ColorSpaceDirection dir);
-    private long m_impl = 0;
-    static {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

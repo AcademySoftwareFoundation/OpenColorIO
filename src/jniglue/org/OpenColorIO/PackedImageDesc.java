@@ -43,7 +43,7 @@ public class PackedImageDesc extends ImageDesc
         super();
         create(data, width, height, numChannels, chanStrideBytes, xStrideBytes, yStrideBytes);
     }
-    protected PackedImageDesc(long impl) { m_impl = impl; }
+    protected PackedImageDesc(long impl) { super(impl); }
     protected native void create(FloatBuffer data, long width, long height, long numChannels);
     protected native void create(FloatBuffer data, long width, long height, long numChannels,
                                  long chanStrideBytes, long xStrideBytes, long yStrideBytes);
@@ -56,9 +56,4 @@ public class PackedImageDesc extends ImageDesc
     public native long getChanStrideBytes();
     public native long getXStrideBytes();
     public native long getYStrideBytes();
-    private long m_impl = 0;
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 };

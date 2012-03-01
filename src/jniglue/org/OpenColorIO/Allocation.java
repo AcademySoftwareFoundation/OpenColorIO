@@ -29,9 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class Allocation {
+public class Allocation extends LoadLibrary
+{
     private final int m_enum;
-    protected Allocation(int type) { m_enum = type; }
+    protected Allocation(int type) { super(); m_enum = type; }
     public native String toString();
     public native boolean equals(Object obj);
     public static final Allocation
@@ -40,8 +41,4 @@ public class Allocation {
         ALLOCATION_UNIFORM = new Allocation(1);
     public static final Allocation
         ALLOCATION_LG2 = new Allocation(2);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

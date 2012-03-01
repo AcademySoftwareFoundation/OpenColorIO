@@ -29,12 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class ImageDesc
+public class ImageDesc extends LoadLibrary
 {
-    public ImageDesc() { }
-    private long m_impl = 0;
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
+    public ImageDesc() { super(); }
+    protected ImageDesc(long impl) { super(impl); }
 };

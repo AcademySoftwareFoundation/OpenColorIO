@@ -31,7 +31,7 @@ import org.OpenColorIO.*;
 
 public class DisplayTransform extends Transform
 {
-    public DisplayTransform() { }
+    public DisplayTransform() { super(); }
     protected DisplayTransform(long impl) { super(impl); }
     public native DisplayTransform Create();
     public native void setInputColorSpaceName(String name);
@@ -52,8 +52,4 @@ public class DisplayTransform extends Transform
     public native String getLooksOverride();
     public native void setLooksOverrideEnabled(boolean enabled);
     public native boolean getLooksOverrideEnabled();
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

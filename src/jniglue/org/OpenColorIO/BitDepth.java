@@ -29,9 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class BitDepth {
+public class BitDepth extends LoadLibrary
+{
     private final int m_enum;
-    protected BitDepth(int type) { m_enum = type; }
+    protected BitDepth(int type) { super(); m_enum = type; }
     public native String toString();
     public native boolean equals(Object obj);
     public static final BitDepth
@@ -52,8 +53,4 @@ public class BitDepth {
         BIT_DEPTH_F16 = new BitDepth(7);
     public static final BitDepth
         BIT_DEPTH_F32 = new BitDepth(8);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

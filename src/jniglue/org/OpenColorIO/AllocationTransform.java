@@ -31,7 +31,7 @@ import org.OpenColorIO.*;
 
 public class AllocationTransform extends Transform
 {
-    public AllocationTransform() { }
+    public AllocationTransform() { super(); }
     protected AllocationTransform(long impl) { super(impl); }
     public native AllocationTransform Create();
     public native Allocation getAllocation();
@@ -39,8 +39,4 @@ public class AllocationTransform extends Transform
     public native int getNumVars();
     public native void getVars(float[] vars);
     public native void setVars(int numvars, float[] vars);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

@@ -22,6 +22,7 @@ option(OCIO_BUILD_TESTS "Specify whether to build unittests" OFF)
 option(OCIO_BUILD_PYGLUE "Specify whether to build python bindings" ON)
 option(OCIO_LINK_PYGLUE "Set to OFF to disable the linking of PYGLUE to python itself" ON)
 option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
+option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" OFF)

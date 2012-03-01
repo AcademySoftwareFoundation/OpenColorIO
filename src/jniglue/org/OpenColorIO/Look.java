@@ -29,10 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class Look
+public class Look extends LoadLibrary
 {
-    public Look() { }
-    protected Look(long impl) { m_impl = impl; }
+    public Look() { super(); }
+    protected Look(long impl) { super(impl); }
     public native void dispose();
     protected void finalize() { dispose(); }
     public native Look Create();
@@ -44,10 +44,5 @@ public class Look
     public native void setTransform(Transform transform);
     public native Transform getInverseTransform();
     public native void setInverseTransform(Transform transform);
-    private long m_impl = 0;
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 };
 

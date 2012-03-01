@@ -29,10 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class Context
+public class Context extends LoadLibrary
 {
-    public Context() { }
-    protected Context(long impl) { m_impl = impl; }
+    public Context() { super(); }
+    protected Context(long impl) { super(impl); }
     public native void dispose();
     protected void finalize() { dispose(); }
     public native Context Create();
@@ -49,9 +49,4 @@ public class Context
     public native void loadEnvironment();
     public native String resolveStringVar(String val);
     public native String resolveFileLocation(String filename) throws ExceptionMissingFile;
-    private long m_impl = 0;
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

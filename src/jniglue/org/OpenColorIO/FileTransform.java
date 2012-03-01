@@ -31,7 +31,7 @@ import org.OpenColorIO.*;
 
 public class FileTransform extends Transform
 {
-    public FileTransform() { }
+    public FileTransform() { super(); }
     protected FileTransform(long impl) { super(impl); }
     public native FileTransform Create();
     public native String getSrc();
@@ -43,8 +43,4 @@ public class FileTransform extends Transform
     public native int getNumFormats();
     public native String getFormatNameByIndex(int index);
     public native String getFormatExtensionByIndex(int index);
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 }

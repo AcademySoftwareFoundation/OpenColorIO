@@ -29,10 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.OpenColorIO;
 import org.OpenColorIO.*;
 
-public class GpuShaderDesc
+public class GpuShaderDesc extends LoadLibrary
 {
-    public GpuShaderDesc() { create(); }
-    protected GpuShaderDesc(long impl) { m_impl = impl; }
+    public GpuShaderDesc() { super(); create(); }
+    protected GpuShaderDesc(long impl) { super(impl); }
     private native void create();
     public native void dispose();
     protected void finalize() { dispose(); }
@@ -43,9 +43,4 @@ public class GpuShaderDesc
     public native void setLut3DEdgeLen(int len);
     public native int getLut3DEdgeLen();
     public native String getCacheID();
-    private long m_impl = 0;
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 };

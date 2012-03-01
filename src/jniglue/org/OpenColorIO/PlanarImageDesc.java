@@ -45,7 +45,7 @@ public class PlanarImageDesc extends ImageDesc
         super();
         create(rData, gData, bData, aData, width, height, yStrideBytes);
     }
-    protected PlanarImageDesc(long impl) { m_impl = impl; }
+    protected PlanarImageDesc(long impl) { super(impl); }
     public native void dispose();
     protected void finalize() { dispose(); }
     protected native void create(FloatBuffer rData, FloatBuffer gData, FloatBuffer bData,
@@ -60,9 +60,4 @@ public class PlanarImageDesc extends ImageDesc
     public native long getWidth();
     public native long getHeight();
     public native long getYStrideBytes();
-    private long m_impl = 0;
-    static
-    {
-        System.loadLibrary("JNIOpenColorIO");
-    }
 };
