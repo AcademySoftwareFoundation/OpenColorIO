@@ -36,21 +36,60 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <OpenImageIO/typedesc.h>
 namespace OIIO = OIIO_NAMESPACE;
 
-const char * USAGE_TEXT = "\n"
-"ocioconvert inputimage inputcolorspace outputimage outputcolorspace\n";
 
-int main(int argc, char **argv)
+#include "argparse.h"
+
+// array of non openimageIO arguments
+static std::vector<std::string> args;
+
+
+// fill 'args' array with openimageIO arguments
+static int
+parse_end_args(int argc, const char *argv[])
 {
-    if(argc<5)
+  while(argc>0)
+  {
+    args.push_back(argv[0]);
+    argc--;
+    argv++;
+  }
+  
+  return 0;
+}
+
+
+int main(int argc, const char **argv)
+{
+     ArgParse ap;
+     
+     // arrays of float/int/string attributes
+     std::vector<std::string> oiio_attributes[3];
+     
+    ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
+               "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n\n",
+	       "%*", parse_end_args, "",
+	        "<SEPARATOR>", "OpenImageIO options",
+	        "--float-attribute %L",&oiio_attributes[0],"name=value pair defining OIIO float attribute",
+	        "--int-attribute %L",&oiio_attributes[1],"name=value pair defining OIIO int attribute",
+	        "--string-attribute %L",&oiio_attributes[2],"name=value pair defining OIIO string attribute",
+	       NULL
+	       );
+    if (ap.parse (argc, argv) < 0) {
+        std::cerr << ap.geterror() << std::endl;
+        ap.usage ();
+        exit(1);
+    }
+
+    if(args.size()!=4)
     {
-        std::cerr << USAGE_TEXT << std::endl;
-        exit(0);
+      ap.usage();
+      exit(1);
     }
     
-    const char * inputimage = argv[1];
-    const char * inputcolorspace = argv[2];
-    const char * outputimage = argv[3];
-    const char * outputcolorspace = argv[4];
+    const char * inputimage = args[0].c_str();
+    const char * inputcolorspace = args[1].c_str();
+    const char * outputimage = args[2].c_str();
+    const char * outputcolorspace = args[3].c_str();
     
     OIIO::ImageSpec spec;
     std::vector<float> img;
@@ -58,6 +97,7 @@ int main(int argc, char **argv)
     int imgheight = 0;
     int components = 0;
     
+
     // Load the image
     std::cerr << "Loading " << inputimage << std::endl;
     try
@@ -118,6 +158,46 @@ int main(int argc, char **argv)
     {
         std::cerr << "Unknown OCIO error encountered." << std::endl;
     }
+    
+    
+        
+    //
+    // set the provided OpenImageIO attributes
+    //
+
+    for(int i=0;i<3;i++)
+    {
+      
+        for(size_t a=0;a<oiio_attributes[i].size();a++)
+        {
+	        // split string into name=value 
+	        size_t pos = oiio_attributes[i][a].find('=');
+	        if(pos==std::string::npos)
+	        {
+	            std::cerr << " error: attribute string " << oiio_attributes[i][a] << " should be in the form name=value\n";
+	        }
+	        else
+	        {
+                std::string name = oiio_attributes[i][a].substr(0,pos);
+                std::string value = oiio_attributes[i][a].substr(pos+1);
+                
+                if(i==0)
+                {
+                    spec.attribute(name,float(atof(value.c_str())));
+                }
+                else if(i==1)
+                {
+                    spec.attribute(name,atoi(value.c_str()));
+                }
+                else
+                {
+                    spec.attribute(name,value);
+                }
+	        }
+	    }
+    }
+
+    
     
     // Write out the result
     try
