@@ -39,6 +39,9 @@ class OCIOLookTransform : public DD::Image::PixelIop {
         OCIO::ConstContextRcPtr getLocalContext();
         
         OCIO::ConstProcessorRcPtr m_processor;
+        
+        /*! Controlled by hidden "version" knob, incremented to redraw image */
+        int m_reload_version;
     public:
 
         OCIOLookTransform(Node *node);
@@ -110,8 +113,6 @@ class OCIOLookTransform : public DD::Image::PixelIop {
             DD::Image::ChannelMask outputChannels,
             DD::Image::Row& out);
 
-        virtual void append(DD::Image::Hash& hash);
-
     protected:
 
         /*!
@@ -120,6 +121,17 @@ class OCIOLookTransform : public DD::Image::PixelIop {
          * can do more analysis than just name matching.)
          */
         virtual void _validate(bool for_real);
+        
+        /*!
+         * Ensure Node hash is reflects all parameters
+         */
+        virtual void append(DD::Image::Hash& nodehash);
+
+        /*!
+         * Hide and show UI elements based on other parameters.
+         Also handles reload button
+         */
+        virtual int knob_changed(DD::Image::Knob* k);
 
 };
 

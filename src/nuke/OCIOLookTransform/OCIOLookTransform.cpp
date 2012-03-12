@@ -31,6 +31,7 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     m_lookIndex = 0;
     m_dirIndex = 0;
     m_ignoreErrors = false;
+    m_reload_version = 1;
     
     // Query the colorspace names from the current config
     // TODO (when to) re-grab the list of available colorspaces? How to save/load?
@@ -149,6 +150,14 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::Tooltip(f, "Specify the look transform direction. in/out colorspace handling is not affected.");
     DD::Image::ClearFlags(f, DD::Image::Knob::STARTLINE );
     
+    // Reload button, and hidden "version" knob to invalidate cache on reload
+    DD::Image::Spacer(f, 8);
+    
+    Button(f, "reload", "reload");
+    DD::Image::Tooltip(f, "Reloads specified files");
+    Int_knob(f, &m_reload_version, "version");
+    DD::Image::SetFlags(f, DD::Image::Knob::HIDDEN);
+    
 #ifdef OCIO_CASCADE
     DD::Image::CascadingEnumeration_knob(f,
         &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
@@ -163,6 +172,7 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::Tooltip(f, "If enabled, looks that cannot find the specified correction"
                           " are treated as a normal ColorSpace conversion instead of triggering a render error.");
     DD::Image::SetFlags(f, DD::Image::Knob::STARTLINE );
+    
 }
 
 OCIO::ConstContextRcPtr OCIOLookTransform::getLocalContext()
@@ -196,8 +206,11 @@ OCIO::ConstContextRcPtr OCIOLookTransform::getLocalContext()
     return context;
 }
 
-void OCIOLookTransform::append(DD::Image::Hash& localhash)
+void OCIOLookTransform::append(DD::Image::Hash& nodehash)
 {
+    // Incremented to force reloading after rereading the LUT file
+    nodehash.append(m_reload_version);
+    
     // TODO: Hang onto the context, what if getting it
     // (and querying getCacheID) is expensive?
     try
@@ -205,7 +218,7 @@ void OCIOLookTransform::append(DD::Image::Hash& localhash)
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         OCIO::ConstContextRcPtr context = getLocalContext();
         std::string configCacheID = config->getCacheID(context);
-        localhash.append(configCacheID);
+        nodehash.append(configCacheID);
     }
     catch(const OCIO::Exception &e)
     {
@@ -216,6 +229,22 @@ void OCIOLookTransform::append(DD::Image::Hash& localhash)
         error("OCIOLookTransform: Unknown exception during hash generation.");
     }
 }
+
+
+int OCIOLookTransform::knob_changed(DD::Image::Knob* k)
+{
+    if(k->is("reload"))
+    {
+        knob("version")->set_value(m_reload_version+1);
+        OCIO::ClearAllCaches();
+
+        return true; // ensure callback is triggered again
+    }
+
+    // Return zero to avoid callbacks for other knobs
+    return false;
+}
+
 
 void OCIOLookTransform::_validate(bool for_real)
 {
