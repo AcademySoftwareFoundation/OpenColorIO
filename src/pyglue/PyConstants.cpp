@@ -131,6 +131,8 @@ OCIO_NAMESPACE_ENTER
             const_cast<char*>(InterpolationToString(INTERP_LINEAR)));
         PyModule_AddStringConstant(m, "INTERP_TETRAHEDRAL",
             const_cast<char*>(InterpolationToString(INTERP_TETRAHEDRAL)));
+        PyModule_AddStringConstant(m, "INTERP_BEST",
+            const_cast<char*>(InterpolationToString(INTERP_BEST)));
         
         PyModule_AddStringConstant(m, "GPU_LANGUAGE_UNKNOWN",
             const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_UNKNOWN)));

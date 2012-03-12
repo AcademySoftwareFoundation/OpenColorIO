@@ -544,10 +544,27 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception("Cannot apply lut1d op, unspecified transform direction.");
             }
-            if(m_interpolation == INTERP_UNKNOWN)
+            
+            // Validate the requested interpolation type
+            switch(m_interpolation)
             {
-                throw Exception("Cannot apply lut1d op, unspecified interpolation.");
+                 // These are the allowed values.
+                case INTERP_NEAREST:
+                case INTERP_LINEAR:
+                    break;
+                case INTERP_BEST:
+                    m_interpolation = INTERP_LINEAR;
+                    break;
+                case INTERP_UNKNOWN:
+                    throw Exception("Cannot apply Lut1DOp, unspecified interpolation.");
+                    break;
+                case INTERP_TETRAHEDRAL:
+                    throw Exception("Cannot apply Lut1DOp, tetrahedral interpolation is not allowed for 1d luts.");
+                    break;
+                default:
+                    throw Exception("Cannot apply Lut1DOp, invalid interpolation specified.");
             }
+            
             if(m_lut->luts[0].empty() || m_lut->luts[1].empty() || m_lut->luts[2].empty())
             {
                 throw Exception("Cannot apply lut1d op, no lut data provided.");

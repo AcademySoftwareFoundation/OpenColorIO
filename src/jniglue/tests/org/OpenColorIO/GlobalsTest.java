@@ -119,6 +119,10 @@ public class GlobalsTest extends TestCase {
         assertEquals(globals.InterpolationFromString("nearest"), Interpolation.INTERP_NEAREST);
         assertEquals(globals.InterpolationToString(Interpolation.INTERP_LINEAR), "linear");
         assertEquals(globals.InterpolationFromString("linear"), Interpolation.INTERP_LINEAR);
+        assertEquals(globals.InterpolationToString(Interpolation.INTERP_TETRAHEDRAL), "tetrahedral");
+        assertEquals(globals.InterpolationFromString("tetrahedral"), Interpolation.INTERP_TETRAHEDRAL);
+        assertEquals(globals.InterpolationToString(Interpolation.INTERP_BEST), "best");
+        assertEquals(globals.InterpolationFromString("best"), Interpolation.INTERP_BEST);
         
         // GpuLanguage
         assertEquals(globals.GpuLanguageToString(GpuLanguage.GPU_LANGUAGE_UNKNOWN), "unknown");

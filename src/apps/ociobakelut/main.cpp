@@ -403,7 +403,7 @@ parse_luts(int argc, const char *argv[])
             
             OCIO::FileTransformRcPtr t = OCIO::FileTransform::Create();
             t->setSrc(argv[i+1]);
-            t->setInterpolation(OCIO::INTERP_LINEAR);
+            t->setInterpolation(OCIO::INTERP_BEST);
             groupTransform->push_back(t);
             
             i += 1;
@@ -417,7 +417,7 @@ parse_luts(int argc, const char *argv[])
             
             OCIO::FileTransformRcPtr t = OCIO::FileTransform::Create();
             t->setSrc(argv[i+1]);
-            t->setInterpolation(OCIO::INTERP_LINEAR);
+            t->setInterpolation(OCIO::INTERP_BEST);
             t->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
             groupTransform->push_back(t);
             
