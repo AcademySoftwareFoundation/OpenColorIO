@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -80,8 +81,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    
+    ///
     
     namespace
     {
@@ -98,15 +98,18 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_LookTransform_methods[] = {
-            {"getSrc", (PyCFunction) PyOCIO_LookTransform_getSrc, METH_NOARGS, "" },
-            {"setSrc", PyOCIO_LookTransform_setSrc, METH_VARARGS, "" },
-            
-            {"getDst", (PyCFunction) PyOCIO_LookTransform_getDst, METH_NOARGS, "" },
-            {"setDst", PyOCIO_LookTransform_setDst, METH_VARARGS, "" },
-            
-            {"getLooks", (PyCFunction) PyOCIO_LookTransform_getLooks, METH_NOARGS, "" },
-            {"setLooks", PyOCIO_LookTransform_setLooks, METH_VARARGS, "" },
-            
+            {"getSrc",
+            (PyCFunction) PyOCIO_LookTransform_getSrc, METH_NOARGS, LOOKTRANSFORM_GETSRC__DOC__ },
+            {"setSrc",
+            PyOCIO_LookTransform_setSrc, METH_VARARGS, LOOKTRANSFORM_SETSRC__DOC__ },
+            {"getDst",
+            (PyCFunction) PyOCIO_LookTransform_getDst, METH_NOARGS, LOOKTRANSFORM_GETDST__DOC__ },
+            {"setDst",
+            PyOCIO_LookTransform_setDst, METH_VARARGS, LOOKTRANSFORM_SETDST__DOC__ },
+            {"getLooks",
+            (PyCFunction) PyOCIO_LookTransform_getLooks, METH_NOARGS, LOOKTRANSFORM_GETLOOKS__DOC__ },
+            {"setLooks",
+            PyOCIO_LookTransform_setLooks, METH_VARARGS, LOOKTRANSFORM_SETLOOKS__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -136,7 +139,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "LookTransform",                      //tp_doc 
+        LOOKTRANSFORM__DOC__,                       //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -225,7 +228,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_LookTransform_getSrc( PyObject * self )
         {
@@ -262,7 +265,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_LookTransform_getDst( PyObject * self )
         {
@@ -299,7 +302,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_LookTransform_getLooks( PyObject * self )
         {

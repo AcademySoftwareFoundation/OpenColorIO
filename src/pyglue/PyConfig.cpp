@@ -34,98 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyColorSpace.h"
 #include "PyConfig.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 #include <sstream>
-
-
-/*+doc
-Python: Config
-==============
-
-Examples of Use
-^^^^^^^^^^^^^^^
-.. code-block:: python
-
-    import PyOpenColorIO as OCIO
-    
-    # Load an existing configuration from the environment.
-    # The resulting configuration is read-only. If $OCIO is set, it will use that.
-    # Otherwise it will use an internal default.
-    config = OCIO.GetCurrentConfig()
-    
-    # What color spaces exist?
-    colorSpaceNames = [ cs.getName() for cs in config.getColorSpaces() ]
-    
-    # Given a string, can we parse a color space name from it?
-    inputString = 'myname_linear.exr'
-    colorSpaceName = config.parseColorSpaceFromString(inputString)
-    if colorSpaceName:
-        print 'Found color space', colorSpaceName
-    else:
-        print 'Could not get color space from string', inputString
-    
-    # What is the name of scene-linear in the configuration?
-    colorSpace = config.getColorSpace(OCIO.Constants.ROLE_SCENE_LINEAR)
-    if colorSpace:
-        print colorSpace.getName()
-    else:
-        print 'The role of scene-linear is not defined in the configuration'
-    
-    # For examples of how to actually perform the color transform math,
-    # see 'Python: Processor' docs.
-    
-    # Create a new, empty, editable configuration
-    config = OCIO.Config()
-    
-    # Create a new color space, and add it
-    cs = OCIO.ColorSpace(...)
-    # (See ColorSpace for details)
-    config.addColorSpace(cs)
-    
-    # For additional examples of config manipulation, see
-    # https://github.com/imageworks/OpenColorIO-Configs/blob/master/nuke-default/make.py
-
-Description
-^^^^^^^^^^^
-A color configuration (:py:class:`Config`) defines all the color spaces to be available at runtime.
-
-(:py:class:`Config`)  is the main object for interacting with this library. 
-It encapsulates all the information necessary to use customized
-:py:class:`ColorSpaceTransform` and :py:class:`DisplayTransform` operations.
-
-See the :ref:`user-guide` for more information on selecting, creating, 
-and working with custom color configurations.
-
-For applications interested in using only one color configuration at
-a time (this is the vast majority of apps), their API would
-traditionally get the global configuration and use that, as
-opposed to creating a new one. This simplifies the use case
-for plugins and bindings, as it alleviates the need to pass
-around configuration handles.
-
-An example of an application where this would not be
-sufficient would be a multi-threaded image proxy server
-(daemon) that wants to handle multiple show configurations
-concurrently in a single process. This app would need to keep
-multiple configurations alive, and manage them appropriately.
-
-Roughly speaking, a novice user should select a default
-configuration that most closely approximates the use case
-(animation, visual effects, etc.), and set the :envvar:`OCIO`
-environment variable to point at the root of that configuration.
-
-.. note::
-   Initialization using environment variables is typically preferable
-   in a multi-app ecosystem, as it allows all applications to be consistently configured.
-
-.. note::
-   Paths to LUTs can be relative. The search paths are defined in :py:class:`Config`.
-
-See :ref:`developers-usageexamples`
-
-.. cpp:class:: Config
-*/
-
 
 OCIO_NAMESPACE_ENTER
 {
@@ -142,7 +53,6 @@ OCIO_NAMESPACE_ENTER
         
         return true;
     }
-    
     
     PyObject * BuildConstPyConfig(ConstConfigRcPtr config)
     {
@@ -181,7 +91,6 @@ OCIO_NAMESPACE_ENTER
         
         return ( PyObject * ) pyconfig;
     }
-    
     
     bool IsPyConfig(PyObject * pyobject)
     {
@@ -239,15 +148,6 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     ///
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     namespace
     {
@@ -308,53 +208,82 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_Config_methods[] = {
-            {"CreateFromEnv", (PyCFunction) PyOCIO_Config_CreateFromEnv, METH_NOARGS | METH_CLASS, "" },
-            {"CreateFromFile", PyOCIO_Config_CreateFromFile, METH_VARARGS | METH_CLASS, "" },
-            {"isEditable", (PyCFunction) PyOCIO_Config_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCIO_Config_createEditableCopy, METH_NOARGS, "" },
-            
-            {"sanityCheck", (PyCFunction) PyOCIO_Config_sanityCheck, METH_NOARGS, "" },
-            
-            {"getDescription", (PyCFunction) PyOCIO_Config_getDescription, METH_NOARGS, "" },
-            {"setDescription", PyOCIO_Config_setDescription, METH_VARARGS, "" },
-            {"serialize", (PyCFunction) PyOCIO_Config_serialize, METH_NOARGS, "" },
-            {"getCacheID", PyOCIO_Config_getCacheID, METH_VARARGS, "" },
-            
-            {"getSearchPath", (PyCFunction) PyOCIO_Config_getSearchPath, METH_NOARGS, "" },
-            {"setSearchPath", PyOCIO_Config_setSearchPath, METH_VARARGS, "" },
-            {"getWorkingDir", (PyCFunction) PyOCIO_Config_getWorkingDir, METH_NOARGS, "" },
-            {"setWorkingDir", PyOCIO_Config_setWorkingDir, METH_VARARGS, "" },
-            
-            {"getColorSpaces", (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, "" },
-            {"getColorSpace", PyOCIO_Config_getColorSpace, METH_VARARGS, "" },
-            {"addColorSpace", PyOCIO_Config_addColorSpace, METH_VARARGS, "" },
-            {"clearColorSpaces", (PyCFunction) PyOCIO_Config_clearColorSpaces, METH_NOARGS, "" },
-            {"parseColorSpaceFromString", PyOCIO_Config_parseColorSpaceFromString, METH_VARARGS, "" },
-            {"setRole", PyOCIO_Config_setRole, METH_VARARGS, "" },
-            
-            {"getDefaultDisplay", (PyCFunction) PyOCIO_Config_getDefaultDisplay, METH_NOARGS, "" },
-            {"getDisplays", (PyCFunction) PyOCIO_Config_getDisplays, METH_NOARGS, "" },
-            {"getDefaultView", PyOCIO_Config_getDefaultView, METH_VARARGS, "" },
-            {"getViews", PyOCIO_Config_getViews, METH_VARARGS, "" },
-            {"getDisplayColorSpaceName", PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, "" },
-            {"getDisplayLooks", PyOCIO_Config_getDisplayLooks, METH_VARARGS, "" },
-            {"addDisplay", (PyCFunction) PyOCIO_Config_addDisplay, METH_KEYWORDS, "" },
-            {"clearDisplays", (PyCFunction) PyOCIO_Config_clearDisplays, METH_NOARGS, "" },
-            {"setActiveDisplays", PyOCIO_Config_setActiveDisplays, METH_VARARGS, "" },
-            {"getActiveDisplays", (PyCFunction) PyOCIO_Config_getActiveDisplays, METH_NOARGS, "" },
-            {"setActiveViews", PyOCIO_Config_setActiveViews, METH_VARARGS, "" },
-            {"getActiveViews", (PyCFunction) PyOCIO_Config_getActiveViews, METH_NOARGS, "" },
-            
-            {"getDefaultLumaCoefs", (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, "" },
-            {"setDefaultLumaCoefs", PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, "" },
-            
-            {"getLook", PyOCIO_Config_getLook, METH_VARARGS, "" },
-            {"getLooks", (PyCFunction) PyOCIO_Config_getLooks, METH_NOARGS, "" },
-            {"addLook", PyOCIO_Config_addLook, METH_VARARGS, "" },
-            {"clearLook", (PyCFunction) PyOCIO_Config_clearLook, METH_NOARGS, "" },
-            
-            {"getProcessor", (PyCFunction) PyOCIO_Config_getProcessor, METH_KEYWORDS, "" },
-            
+            {"CreateFromEnv",
+            (PyCFunction) PyOCIO_Config_CreateFromEnv, METH_NOARGS | METH_CLASS, CONFIG_CREATEFROMENV__DOC__ },
+            {"CreateFromFile",
+            PyOCIO_Config_CreateFromFile, METH_VARARGS | METH_CLASS, CONFIG_CREATEFROMFILE__DOC__ },
+            {"isEditable",
+            (PyCFunction) PyOCIO_Config_isEditable, METH_NOARGS, CONFIG_ISEDITABLE__DOC__ },
+            {"createEditableCopy",
+            (PyCFunction) PyOCIO_Config_createEditableCopy, METH_NOARGS, CONFIG_CREATEEDITABLECOPY__DOC__ },
+            {"sanityCheck",
+            (PyCFunction) PyOCIO_Config_sanityCheck, METH_NOARGS, CONFIG_SANITYCHECK__DOC__ },
+            {"getDescription",
+            (PyCFunction) PyOCIO_Config_getDescription, METH_NOARGS, CONFIG_GETDESCRIPTION__DOC__ },
+            {"setDescription",
+            PyOCIO_Config_setDescription, METH_VARARGS, CONFIG_SETDESCRIPTION__DOC__ },
+            {"serialize",
+            (PyCFunction) PyOCIO_Config_serialize, METH_NOARGS, CONFIG_SERIALIZE__DOC__ },
+            {"getCacheID",
+            PyOCIO_Config_getCacheID, METH_VARARGS, CONFIG_GETCACHEID__DOC__ },
+            {"getSearchPath",
+            (PyCFunction) PyOCIO_Config_getSearchPath, METH_NOARGS, CONFIG_GETSEARCHPATH__DOC__ },
+            {"setSearchPath",
+            PyOCIO_Config_setSearchPath, METH_VARARGS, CONFIG_SETSEARCHPATH__DOC__ },
+            {"getWorkingDir",
+            (PyCFunction) PyOCIO_Config_getWorkingDir, METH_NOARGS, CONFIG_GETWORKINGDIR__DOC__ },
+            {"setWorkingDir",
+            PyOCIO_Config_setWorkingDir, METH_VARARGS, CONFIG_SETWORKINGDIR__DOC__ },
+            {"getColorSpaces",
+            (PyCFunction) PyOCIO_Config_getColorSpaces, METH_NOARGS, CONFIG_GETCOLORSPACES__DOC__ },
+            {"getColorSpace",
+            PyOCIO_Config_getColorSpace, METH_VARARGS, CONFIG_GETCOLORSPACE__DOC__ },
+            {"addColorSpace",
+            PyOCIO_Config_addColorSpace, METH_VARARGS, CONFIG_ADDCOLORSPACE__DOC__ },
+            {"clearColorSpaces",
+            (PyCFunction) PyOCIO_Config_clearColorSpaces, METH_NOARGS, CONFIG_CLEARCOLORSPACES__DOC__ },
+            {"parseColorSpaceFromString",
+            PyOCIO_Config_parseColorSpaceFromString, METH_VARARGS, CONFIG_PARSECOLORSPACEFROMSTRING__DOC__ },
+            {"setRole",
+            PyOCIO_Config_setRole, METH_VARARGS, CONFIG_SETROLE__DOC__ },
+            {"getDefaultDisplay",
+            (PyCFunction) PyOCIO_Config_getDefaultDisplay, METH_NOARGS, CONFIG_GETDEFAULTDISPLAY__DOC__ },
+            {"getDisplays",
+            (PyCFunction) PyOCIO_Config_getDisplays, METH_NOARGS, CONFIG_GETDISPLAYS__DOC__ },
+            {"getDefaultView",
+            PyOCIO_Config_getDefaultView, METH_VARARGS, CONFIG_GETDEFAULTVIEW__DOC__ },
+            {"getViews",
+            PyOCIO_Config_getViews, METH_VARARGS, CONFIG_GETVIEWS__DOC__ },
+            {"getDisplayColorSpaceName",
+            PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, CONFIG_GETDISPLAYCOLORSPACENAME__DOC__ },
+            {"getDisplayLooks",
+            PyOCIO_Config_getDisplayLooks, METH_VARARGS, CONFIG_GETDISPLAYLOOKS__DOC__ },
+            {"addDisplay",
+            (PyCFunction) PyOCIO_Config_addDisplay, METH_KEYWORDS, CONFIG_ADDDISPLAY__DOC__ },
+            {"clearDisplays",
+            (PyCFunction) PyOCIO_Config_clearDisplays, METH_NOARGS, CONFIG_CLEARDISPLAYS__DOC__ },
+            {"setActiveDisplays",
+            PyOCIO_Config_setActiveDisplays, METH_VARARGS, CONFIG_SETACTIVEDISPLAYS__DOC__ },
+            {"getActiveDisplays",
+            (PyCFunction) PyOCIO_Config_getActiveDisplays, METH_NOARGS, CONFIG_GETACTIVEDISPLAYS__DOC__ },
+            {"setActiveViews",
+            PyOCIO_Config_setActiveViews, METH_VARARGS, CONFIG_SETACTIVEVIEWS__DOC__ },
+            {"getActiveViews",
+            (PyCFunction) PyOCIO_Config_getActiveViews, METH_NOARGS, CONFIG_GETACTIVEVIEWS__DOC__ },
+            {"getDefaultLumaCoefs",
+            (PyCFunction) PyOCIO_Config_getDefaultLumaCoefs, METH_NOARGS, CONFIG_GETDEFAULTLUMACOEFS__DOC__ },
+            {"setDefaultLumaCoefs",
+            PyOCIO_Config_setDefaultLumaCoefs, METH_VARARGS, CONFIG_SETDEFAULTLUMACOEFS__DOC__ },
+            {"getLook",
+            PyOCIO_Config_getLook, METH_VARARGS, CONFIG_GETLOOK__DOC__ },
+            {"getLooks",
+            (PyCFunction) PyOCIO_Config_getLooks, METH_NOARGS, CONFIG_GETLOOKS__DOC__ },
+            {"addLook",
+            PyOCIO_Config_addLook, METH_VARARGS, CONFIG_ADDLOOK__DOC__ },
+            {"clearLook",
+            (PyCFunction) PyOCIO_Config_clearLook, METH_NOARGS, CONFIG_CLEARLOOK__DOC__ },
+            {"getProcessor",
+            (PyCFunction) PyOCIO_Config_getProcessor, METH_KEYWORDS, CONFIG_GETPROCESSOR__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -384,7 +313,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "Config",                                   //tp_doc 
+        CONFIG__DOC__,                              //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -420,15 +349,6 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        /*+doc
-        Functions
-        ^^^^^^^^^
-        .. py:function:: Config.CreateFromEnv()
-                     
-           Create a :py:class:`Config` object using the environment variable.
-                     
-           :returns: Config object
-        */
         PyObject * PyOCIO_Config_CreateFromEnv( PyObject * /*cls*/ )
         {
             try
@@ -442,15 +362,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:function:: Config.CreateFromFile(filename)
-                     
-           Create a :py:class:`Config` object using the information in a file.
-           
-           :param filename: name of file
-           :type filename: string
-           :return: Config object
-        */        
         PyObject * PyOCIO_Config_CreateFromFile( PyObject * /*cls*/, PyObject * args )
         {
             try
@@ -494,6 +405,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         void PyOCIO_Config_delete( PyOCIO_Config *self, PyObject * /*args*/ )
         {
@@ -504,39 +416,13 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        // method markup
-        /*+doc
-        Initialization Methods
-        ^^^^^^^^^^^^^^^^^^^^^^
-        
-        .. py:method:: Config.isEditable()
-                     
-           Returns whether Config is editable.
-           
-           The configurations returned from
-           :py:method:`getCurrentConfig()` are
-           not editable, and if you want to edit them you can
-           use :py:method:`createEditableCopy()`.
-           
-           If you attempt to call any of the set functions on
-           a noneditable Config, an exception will be thrown.
-           
-           :return: state of :py:class:`Config`'s editability
-           :rtype: bool
-        */           
+        ///
+       
         PyObject * PyOCIO_Config_isEditable( PyObject * self )
         {
             return PyBool_FromLong(IsPyConfigEditable(self));
         }
         
-        /*+doc
-        .. py:method:: Config.createEditableCopy()
-                     
-           Returns an editable copy of :py:class:`Config`.
-           
-           :return: editable copy of :py:class:`Config`
-           :rtype: Config object
-        */
         PyObject * PyOCIO_Config_createEditableCopy( PyObject * self )
         {
             try
@@ -552,13 +438,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.sanityCheck()
-                     
-           This will throw an exception if :py:class:`Config` is
-           malformed. The most common error occurs when
-           references are made to colorspaces that do not exist.
-        */        
         PyObject * PyOCIO_Config_sanityCheck( PyObject * self )
         {
             try
@@ -575,19 +454,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        Resource Methods
-        ^^^^^^^^^^^^^^^^
-        
-        .. py:method:: Config.getDescription()
-                     
-           Returns the stored description of
-           :py:class:`Config`.
-           
-           :return: stored description of :py:class:`Config`
-           :rtype: string
-        */
         PyObject * PyOCIO_Config_getDescription( PyObject * self )
         {
             try
@@ -602,14 +470,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.setDescription(desc)
-                     
-           Sets the description of :py:class:`Config`.
-           
-           :param desc: description of :py:class:`Config`
-           :type desc: string
-        */        
         PyObject * PyOCIO_Config_setDescription( PyObject * self, PyObject * args )
         {
             try
@@ -629,17 +489,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.serialize()
-                     
-           Returns the string representation of
-           :py:class:`Config`
-           in YAML text form. This is typically
-           stored on disk in a file with the .ocio extension.
-           
-           :return: :py:class:`Config` in YAML text form
-           :rtype: string
-        */        
         PyObject * PyOCIO_Config_serialize( PyObject * self )
         {
             try
@@ -660,26 +509,6 @@ OCIO_NAMESPACE_ENTER
         
         }
         
-        /*+doc
-        .. py:method:: Config.getCacheID([, pycontext])
-                     
-           This will produce a hash of the all colorspace definitions, etc.
-           
-           All external references, such as files used in FileTransforms, etc.,
-           will be incorporated into the cacheID. While the contents of
-           the files are not read, the file system is queried for relavent
-           information (mtime, inode) so that the ::py:class:`Config`'s cacheID will
-           change when the underlying luts are updated.
-           
-           If a context is not provided, the current Context will be used.
-           If a null context is provided, file references will not be taken into
-           account (this is essentially a hash of :py:method:`Config.serialize()`).
-           
-           :param pycontext: optional
-           :type pycontext: object
-           :return: hash of :py:class:`Config`
-           :rtype: string
-        */
         PyObject * PyOCIO_Config_getCacheID( PyObject * self, PyObject * args )
         {
             try
@@ -708,16 +537,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        ////////////////////////////////////////////////////////////////////////
-        /*+doc
-        .. py:method:: Config.getSearchPath()
-                     
-           Returns the search path.
-           
-           :return: search path
-           :rtype: string
-        */
         PyObject * PyOCIO_Config_getSearchPath( PyObject * self )
         {
             try
@@ -732,14 +551,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.setSearchPath(path)
-                     
-           Sets the search path.
-           
-           :param path: the search path
-           :type path: string
-        */
         PyObject * PyOCIO_Config_setSearchPath( PyObject * self, PyObject * args )
         {
             try
@@ -759,14 +570,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getWorkingDir()
-                     
-           Returns the working directory.
-           
-           :return: the working directory
-           :rtype path: string
-        */
         PyObject * PyOCIO_Config_getWorkingDir( PyObject * self )
         {
             try
@@ -781,14 +584,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.setWorkingDir()
-                     
-           Sets the working directory.
-           
-           :param path: the working directory
-           :type path: string
-        */
         PyObject * PyOCIO_Config_setWorkingDir( PyObject * self, PyObject * args )
         {
             try
@@ -808,20 +603,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        ////////////////////////////////////////////////////////////////////////
-        /*+doc
-        ColorSpace Methods
-        ^^^^^^^^^^^^^^^^^^
-        
-        .. py:method:: Config.getColorSpaces()
-                     
-           Returns all the ColorSpaces defined in
-           :py:class:`Config`.
-           
-           :return: ColorSpaces in :py:class:`Config`
-           :rtype: tuple
-        */
         PyObject * PyOCIO_Config_getColorSpaces( PyObject * self )
         {
             try
@@ -847,19 +628,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getColorSpace(name)
-                     
-           Returns the data for the specified color space in
-           :py:class:`Config`.
-           
-           This will return null if the specified name is not found.
-           
-           :param name: name of color space
-           :type name: string
-           :return: data for specified color space
-           :rtype: pyColorSpace object
-        */
         PyObject * PyOCIO_Config_getColorSpace( PyObject * self, PyObject * args )
         {
             try
@@ -880,18 +648,8 @@ OCIO_NAMESPACE_ENTER
         
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: Config.addColorSpace(pyColorSpace)
-                     
-           Add a specified color space to :py:class:`Config`.
-           
-           :param pyColorSpace: color space
-           :type pyColorSpace: object
-
-        .. note::
-           If another color space is already registered with the same name, this will overwrite it.
-        */
         PyObject * PyOCIO_Config_addColorSpace( PyObject * self, PyObject * args )
         {
             try
@@ -912,11 +670,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.clearColorSpaces()
-                     
-           Clear the color spaces in :py:class:`Config`.
-        */
         PyObject * PyOCIO_Config_clearColorSpaces( PyObject * self )
         {
             try
@@ -933,21 +686,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.parseColorSpaceFromString(str)
-                     
-           Parses out the color space from a string.
-           
-           Given the specified string, gets the longest, right-most color space substring.
-           * If strict parsing is enabled, and no color space is found, return an empty string.
-           * If strict parsing is disabled, return the default role, if defined.
-           * If the default role is not defined, return an empty string.
-
-           :param str: ColorSpace data
-           :type str: string
-           :return: parsed data
-           :rtype: string
-        */
         PyObject * PyOCIO_Config_parseColorSpaceFromString( PyObject * self, PyObject * args )
         {
             try
@@ -974,26 +712,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        Roles Methods
-        ^^^^^^^^^^^^^
-           
-           A role acts as an alias for a ColorSpace.
-           
-           You can query for the ColorSpace corresponding to a role using
-           :py:function:`getColorSpace()`.
-        
-        .. py:method:: Config.setRole(role, csname)
-                     
-           Set a role's ColorSpace.
-           
-           Setting the colorSpaceName name to a null string unsets it.
-
-           :param role: role whose ColorSpace will be set
-           :type role: string
-           :param csname: name of ColorSpace
-           :type csname: string
-        */
         PyObject * PyOCIO_Config_setRole( PyObject * self, PyObject * args )
         {
             try
@@ -1017,29 +735,9 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        
-        /*+doc
-        Display/View Registration Methods
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        
-        A display is a virtual or physical display device (e.g., DLP projector or sRGB monitor).
-        
-        A view further specifies what you're trying to see. I.e., display 
-        set to sRGB and view set to film_avid would be asking to see what 
-        film_avid on a movie screen would look like on your sRGB
-        monitor.
-        
-        .. py:method:: Config.getDefaultDisplay()
-                     
-           Returns the default display set in :py:class:`Config`.
-
-           :return: default display
-           :rtype: string 
-        */
         PyObject * PyOCIO_Config_getDefaultDisplay( PyObject * self )
         {
             try
@@ -1054,14 +752,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getDisplays()
-                     
-           Returns all the displays defined in :py:class:`Config`.
-
-           :return: displays in :py:class:`Config`
-           :rtype: list of strings
-        */
         PyObject * PyOCIO_Config_getDisplays( PyObject * self )
         {
             try
@@ -1085,16 +775,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getDefaultView(display)
-                     
-           Returns the default view of :py:class:`Config`.
-
-           :param display: default view
-           :type display: string
-           :return: view
-           :rtype: string
-        */
         PyObject * PyOCIO_Config_getDefaultView( PyObject * self, PyObject * args )
         {
             try
@@ -1113,16 +793,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getViews(display)
-                     
-           Returns all the views defined in :py:class:`Config`.
-
-           :param display: views in :py:class:`Config`
-           :type display: string
-           :return: views in :py:class:`Config`.
-           :rtype: list of strings
-        */
         PyObject * PyOCIO_Config_getViews( PyObject * self, PyObject * args )
         {
             try
@@ -1148,19 +818,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getDisplayColorSpaceName(display, view)
-                     
-           Returns the ColorSpace name corresponding to the display and
-           view combination in :py:class:`Config`.
-
-           :param display: display
-           :type display: string
-           :param view: view
-           :type view: string
-           :return: display color space name
-           :rtype: string
-        */
         PyObject * PyOCIO_Config_getDisplayColorSpaceName( PyObject * self, PyObject * args )
         {
             try
@@ -1180,19 +837,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getDisplayLooks(display, view)
-                     
-           Returns the looks corresponding to the display and
-           view combination in :py:class:`Config`.
-
-           :param display: display
-           :type display: string
-           :param view: view
-           :type view: string
-           :return: looks
-           :rtype: string
-        */  
         PyObject * PyOCIO_Config_getDisplayLooks( PyObject * self, PyObject * args )
         {
             try
@@ -1212,20 +856,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.addDisplay(display, view, colorSpaceName[, looks])
-                     
-           NEEDS WORK
-
-           :param display:
-           :type display: string
-           :param view: 
-           :type view: string
-           :param colorSpaceName: 
-           :type colorSpaceName: string
-           :param looks: optional
-           :type looks: string
-        */  
         PyObject * PyOCIO_Config_addDisplay( PyObject * self, PyObject * args, PyObject * kwargs)
         {
             try
@@ -1258,11 +888,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.clearDisplays()
-                     
-           
-        */  
         PyObject * PyOCIO_Config_clearDisplays( PyObject * self )
         {
             try
@@ -1279,14 +904,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.setActiveDisplays()
-                     
-           Sets the active displays in :py:class:`Config`.
-           
-           :param displays: active displays
-           :type displays: string
-        */  
         PyObject * PyOCIO_Config_setActiveDisplays( PyObject * self, PyObject * args )
         {
             try
@@ -1308,15 +925,7 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-         
-        /*+doc
-        .. py:method:: Config.getActiveDisplays()
-                     
-           Returns the active displays in :py:class:`Config`.
-           
-           :return: active displays
-           :rtype: string
-        */  
+        
         PyObject * PyOCIO_Config_getActiveDisplays( PyObject * self )
         {
             try
@@ -1331,14 +940,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.setActiveViews()
-                     
-           Sets the active views in :py:class:`Config`.
-           
-           :param displays: active views
-           :type displays: string
-        */  
         PyObject * PyOCIO_Config_setActiveViews( PyObject * self, PyObject * args )
         {
             try
@@ -1361,14 +962,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getActiveViews()
-                     
-           Returns the active views in :py:class:`Config`.
-           
-           :return: active views
-           :rtype: string
-        */  
         PyObject * PyOCIO_Config_getActiveViews( PyObject * self )
         {
             try
@@ -1383,37 +976,9 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
-        
-        
-        
-        
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        
-        
-        /*+doc
-        Luma Methods
-        ^^^^^^^^^^^^
-        
-        Manage the default coefficients for computing luma.
-        
-        .. note::
-           There is no one-size-fits-all set of luma coefficients. The values are typically
-           different for each ColorSpace, and the application of them may be nonsensical 
-           depending on the intensity coding. Thus, the right answer is to make these functions
-           on the :py:class:`Config` class. However, it's often useful to have a Config-wide
-           default, so here it is. We will add the ColorSpace specific luma call when another
-           client is interested in using it.
-        
-        .. py:method:: Config.setDefaultLumaCoefs()
-                     
-           Sets the default luma coefficients in :py:class:`Config`.
-           
-           :param pyCoef: luma coefficients
-           :type pyCoef: object
-        */  
         PyObject * PyOCIO_Config_setDefaultLumaCoefs( PyObject * self, PyObject * args )
         {
             try
@@ -1444,14 +1009,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getDefaultLumaCoefs()
-                     
-           Returns the default luma coefficients in :py:class:`Config`.
-           
-           :return: luma coefficients
-           :rtype: list of floats
-        */  
         PyObject * PyOCIO_Config_getDefaultLumaCoefs( PyObject * self )
         {
             try
@@ -1471,27 +1028,9 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        Look Methods
-        ^^^^^^^^^^^^
-        
-        Manage per-shot look settings.
-        
-        Looks is a comma- or colon-delimited list of lookNames, where optional '+' and '-' prefixes
-        denote forward and inverse look specifications, respectively. A forward look is assumed in
-        the absence of a prefix.
-
-        .. py:method:: Config.getLook()
-                     
-           Returns the information of a specified look in :py:class:`Config`.
-           
-           :param str: look
-           :type str: string
-           :return: specified look
-           :rtype: look object
-        */  
-         PyObject * PyOCIO_Config_getLook( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Config_getLook( PyObject * self, PyObject * args )
         {
             try
             {
@@ -1510,14 +1049,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.getLooks()
-                     
-           Returns a list of all the looks defined in :py:class:`Config`.
-           
-           :return: looks
-           :rtype: tuple of look objects
-        */  
         PyObject * PyOCIO_Config_getLooks( PyObject * self )
         {
             try
@@ -1543,14 +1074,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.addLook()
-                     
-           Adds a look to :py:class:`Config`.
-           
-           :param pylook: look
-           :type pylook: look object
-        */  
         PyObject * PyOCIO_Config_addLook( PyObject * self, PyObject * args )
         {
             try
@@ -1571,11 +1094,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Config.clearLook()
-                     
-           Clear look in :py:class:`Config`.
-        */  
         PyObject * PyOCIO_Config_clearLook( PyObject * self )
         {
             try
@@ -1592,55 +1110,9 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        Processor Methods
-        ^^^^^^^^^^^^^^^^^
-        
-        Used to convert from inputColorSpace to outputColorSpace.
-        
-        .. py:method:: Config.getProcessor(arg1[, arg2[, direction[, context]])
-           
-           Returns a processor for a specified transform.
-           
-           Although this is not often needed, it allows for the reuse of atomic 
-           OCIO functionality, such as applying an individual LUT file.
-           
-           There are two canonical ways of creating a
-           :py:class:`Processor`:
-           
-           #. Pass a transform into arg1, in which case arg2 will be ignored. 
-           #. Set arg1 as the source and arg2 as the destination. These can be ColorSpace names, objects, or roles.
-           
-           Both arguments, ``direction`` (of transform) and ``context``, are
-           optional and respected for both methods of :py:class:`Processor`
-           creation.
-           
-           This will fail if either the source or destination color space is null.
-           
-           See Python: Processor for more details.
-           
-           .. note::
-             This may provide higher fidelity than anticipated due to internal optimizations. 
-             For example, if inputColorSpace and outputColorSpace are members of the same family,
-             no conversion will be applied, even though, strictly speaking, quantization should be added.
-           
-             If you wish to test these calls for quantization characteristics, apply in two steps; 
-             the image must contain RGB triples (though arbitrary numbers of additional channels 
-             can be optionally supported using the pixelStrideBytes arg). ???
-        
-           :param arg1: 
-           :type arg1: object
-           :param arg2: ignored if arg1 is a transform
-           :type arg2: object
-           :param direction: optional
-           :type direction: string
-           :param context: optional
-           :type context: object
-         
-        */  
         PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args, PyObject * kwargs)
         {
             try

@@ -27,21 +27,28 @@ if(NOT WIN32)
     SET(PYTHON_INCLUDES ${PYTHON_INCLUDE_DIRS})
 endif()
 
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h
+                  COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/src/pyglue/buildPyDocH.py ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h
+                  COMMENT "Creating PyDoc.h")
+
 file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
 
-add_library(PyOpenColorIO MODULE ${pyglue_src_files} )
+add_library(PyOpenColorIO MODULE ${pyglue_src_files} ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h)
+
 if(OCIO_USE_BOOST_PTR)
     include_directories(
         ${PYTHON_INCLUDE}
         ${Boost_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/export/
         ${CMAKE_BINARY_DIR}/export/
+        ${CMAKE_CURRENT_BINARY_DIR}
     )
 else()
     include_directories(
         ${PYTHON_INCLUDE}
         ${CMAKE_SOURCE_DIR}/export/
         ${CMAKE_BINARY_DIR}/export/
+        ${CMAKE_CURRENT_BINARY_DIR}
     )
 endif()
 

@@ -33,25 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
-
-
-/*+doc
-Python: ColorSpaceTransform
-===========================
-
-   This class is meant so that ColorSpace conversions can be reused, referencing ColorSpaces that already exist.
-
-.. note::
-     Careless use of this may create infinite loops, so avoid referencing the colorspace you're in. 
-
-Examples of Use
-^^^^^^^^^^^^^^^
-.. code-block:: python
-
-    import PyOpenColorIO as OCIO
-    
-    transform = OCIO.ColorSpaceTransform()
-*/
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -99,8 +81,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    
+    ///
     
     namespace
     {
@@ -115,12 +96,14 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_ColorSpaceTransform_methods[] = {
-            {"getSrc", (PyCFunction) PyOCIO_ColorSpaceTransform_getSrc, METH_NOARGS, "" },
-            {"setSrc", PyOCIO_ColorSpaceTransform_setSrc, METH_VARARGS, "" },
-            
-            {"getDst", (PyCFunction) PyOCIO_ColorSpaceTransform_getDst, METH_NOARGS, "" },
-            {"setDst", PyOCIO_ColorSpaceTransform_setDst, METH_VARARGS, "" },
-            
+            {"getSrc",
+            (PyCFunction) PyOCIO_ColorSpaceTransform_getSrc, METH_NOARGS, COLORSPACETRANSFORM_GETSRC__DOC__ },
+            {"setSrc",
+            PyOCIO_ColorSpaceTransform_setSrc, METH_VARARGS, COLORSPACETRANSFORM_SETSRC__DOC__ },
+            {"getDst",
+            (PyCFunction) PyOCIO_ColorSpaceTransform_getDst, METH_NOARGS, COLORSPACETRANSFORM_GETDST__DOC__ },
+            {"setDst",
+            PyOCIO_ColorSpaceTransform_setDst, METH_VARARGS, COLORSPACETRANSFORM_SETDST__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -150,7 +133,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "ColorSpaceTransform",                      //tp_doc 
+        COLORSPACETRANSFORM__DOC__,                 //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -236,16 +219,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        
-        /*+doc
-        .. py:method:: ColorSpaceTransform.getSrc()
-        
-           Returns the name of the source ColorSpace in this transform.
-           
-           :return: ColorSpace
-           :rtype: string
-        */
         PyObject * PyOCIO_ColorSpaceTransform_getSrc( PyObject * self )
         {
             try
@@ -260,14 +235,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: ColorSpaceTransform.setSrc()
-        
-           Sets the source ColorSpace in this transform.
-           
-           :param str: source ColorSpace
-           :type str: string
-        */
         PyObject * PyOCIO_ColorSpaceTransform_setSrc( PyObject * self, PyObject * args )
         {
             try
@@ -288,14 +255,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: ColorSpaceTransform.getDst()
-        
-           Returns the name of the destination ColorSpace in this transform.
-           
-           :return: ColorSpace
-           :rtype: string
-        */
         PyObject * PyOCIO_ColorSpaceTransform_getDst( PyObject * self )
         {
             try
@@ -310,14 +269,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: ColorSpaceTransform.setDst()
-        
-           Sets the destination ColorSpace in this transform.
-           
-           :param str: destination ColorSpace
-           :type str: string
-        */
         PyObject * PyOCIO_ColorSpaceTransform_setDst( PyObject * self, PyObject * args )
         {
             try

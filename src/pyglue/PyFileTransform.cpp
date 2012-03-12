@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -82,8 +83,6 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    
-    
     namespace
     {
         int PyOCIO_FileTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
@@ -101,13 +100,18 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_FileTransform_methods[] = {
-            {"getSrc", (PyCFunction) PyOCIO_FileTransform_getSrc, METH_NOARGS, "" },
-            {"setSrc", PyOCIO_FileTransform_setSrc, METH_VARARGS, "" },
-            {"getCCCId", (PyCFunction) PyOCIO_FileTransform_getCCCId, METH_NOARGS, "" },
-            {"setCCCId", PyOCIO_FileTransform_setCCCId, METH_VARARGS, "" },
-            
-            {"getInterpolation", (PyCFunction) PyOCIO_FileTransform_getInterpolation, METH_NOARGS, "" },
-            {"setInterpolation", PyOCIO_FileTransform_setInterpolation, METH_VARARGS, "" },
+            {"getSrc",
+            (PyCFunction) PyOCIO_FileTransform_getSrc, METH_NOARGS, FILETRANSFORM_GETSRC__DOC__ },
+            {"setSrc",
+            PyOCIO_FileTransform_setSrc, METH_VARARGS, FILETRANSFORM_SETSRC__DOC__ },
+            {"getCCCId",
+            (PyCFunction) PyOCIO_FileTransform_getCCCId, METH_NOARGS, FILETRANSFORM_GETCCCID__DOC__ },
+            {"setCCCId",
+            PyOCIO_FileTransform_setCCCId, METH_VARARGS, FILETRANSFORM_SETCCCID__DOC__ },
+            {"getInterpolation",
+            (PyCFunction) PyOCIO_FileTransform_getInterpolation, METH_NOARGS, FILETRANSFORM_GETINTERPOLATION__DOC__ },
+            {"setInterpolation",
+            PyOCIO_FileTransform_setInterpolation, METH_VARARGS, FILETRANSFORM_SETINTERPOLATION__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -137,7 +141,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "FileTransform",                            //tp_doc 
+        FILETRANSFORM__DOC__,                       //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -226,7 +230,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_FileTransform_getSrc( PyObject * self )
         {
@@ -262,7 +266,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_FileTransform_getCCCId( PyObject * self )
         {
@@ -298,8 +302,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
-        
+        ///
         
         PyObject * PyOCIO_FileTransform_getInterpolation( PyObject * self )
         {

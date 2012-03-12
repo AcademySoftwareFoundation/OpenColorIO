@@ -33,23 +33,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 //Rarely used. could use a log transform instead. This can sample by log when doing the offset to make best use of the data.
-
-/*+doc
-Python: AllocationTransform
-===========================
-
-Examples of Use
-^^^^^^^^^^^^^^^
-.. code-block:: python
-
-    import PyOpenColorIO as OCIO
-    
-    transform = OCIO.AllocationTransform()
-    transform.setAllocation(OCIO.Constants.ALLOCATION)
-*/
-
 
 OCIO_NAMESPACE_ENTER
 {
@@ -99,8 +85,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    
+    ///
     
     namespace
     {
@@ -117,11 +102,14 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_AllocationTransform_methods[] = {
-            {"getAllocation", (PyCFunction) PyOCIO_AllocationTransform_getAllocation, METH_NOARGS, "" },
-            {"setAllocation", PyOCIO_AllocationTransform_setAllocation, METH_VARARGS, "" },
-            {"getVars", (PyCFunction) PyOCIO_AllocationTransform_getVars, METH_NOARGS, "" },
-            {"setVars", PyOCIO_AllocationTransform_setVars, METH_VARARGS, "" },
-            
+            {"getAllocation",
+            (PyCFunction) PyOCIO_AllocationTransform_getAllocation, METH_NOARGS, ALLOCATIONTRANSFORM_GETALLOCATION__DOC__ },
+            {"setAllocation",
+            PyOCIO_AllocationTransform_setAllocation, METH_VARARGS, ALLOCATIONTRANSFORM_SETALLOCATION__DOC__ },
+            {"getVars",
+            (PyCFunction) PyOCIO_AllocationTransform_getVars, METH_NOARGS, ALLOCATIONTRANSFORM_GETVARS__DOC__ },
+            {"setVars",
+            PyOCIO_AllocationTransform_setVars, METH_VARARGS, ALLOCATIONTRANSFORM_SETVARS__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -151,7 +139,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "AllocationTransform",                             //tp_doc 
+        ALLOCATIONTRANSFORM__DOC__,                 //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -185,19 +173,11 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
-        
-        /*+doc
-        .. py:class:: AllocationTransform()
-        
-           Respans the 'expanded' range into the specified (often compressed) range.
-           
-           Performs both squeeze (offset) and log transforms.
-        */
         
         int PyOCIO_AllocationTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
@@ -223,18 +203,9 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: AllocationTransform.getAllocation()
-           
-           Returns the allocation specified in the transform. Allocation is an enum, defined in
-           Constants.
-           
-           :return: Allocation
-           :rtype: string
-        */
         PyObject * PyOCIO_AllocationTransform_getAllocation( PyObject * self )
         {
             try
@@ -249,14 +220,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: AllocationTransform.setAllocation(&hwalloc)
-           
-           Sets the allocation of the transform.
-           
-           :param hwalloc: Allocation
-           :type hwalloc: object
-        */
         PyObject * PyOCIO_AllocationTransform_setAllocation( PyObject * self, PyObject * args )
         {
             try
@@ -277,17 +240,9 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: AllocationTransform.getVars()
-           
-           Returns the allocation values specified in the transform.
-           
-           :return: allocation values
-           :rtype: list of floats
-        */
         PyObject * PyOCIO_AllocationTransform_getVars( PyObject * self )
         {
             try
@@ -309,14 +264,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: AllocationTransform.setVars(&pyvars)
-           
-           Sets the allocation in the transform.
-           
-           :param pyvars: list of floats
-           :type pyvars: object
-        */
         PyObject * PyOCIO_AllocationTransform_setVars( PyObject * self, PyObject * args )
         {
             try

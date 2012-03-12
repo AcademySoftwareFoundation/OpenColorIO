@@ -34,23 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyColorSpace.h"
 #include "PyConstants.h"
 #include "PyUtil.h"
-
-
-/*+doc
-Python: Constants
-=================
-
-   This class exists to contain enums used in OCIO, and has several methods to help with administrative tasks.
-
-Examples of Use
-^^^^^^^^^^^^^^^
-.. code-block:: python
-
-    import PyOpenColorIO as OCIO
-    
-    # See if bit depth is a float.
-    OCIO.Constants.BitDepthIsFloat(...)
-*/
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -66,10 +50,14 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef LocalModuleMethods[] = {
-            {"GetInverseTransformDirection", PyOCIO_Constants_GetInverseTransformDirection, METH_VARARGS, "" },
-            {"CombineTransformDirections", PyOCIO_Constants_CombineTransformDirections, METH_VARARGS, "" },
-            {"BitDepthIsFloat", PyOCIO_Constants_BitDepthIsFloat, METH_VARARGS, "" },
-            {"BitDepthToInt", PyOCIO_Constants_BitDepthToInt, METH_VARARGS, "" },
+            {"GetInverseTransformDirection",
+            PyOCIO_Constants_GetInverseTransformDirection, METH_VARARGS, CONSTANTS_GETINVERSETRANSFORMDIRECTION__DOC__ },
+            {"CombineTransformDirections",
+            PyOCIO_Constants_CombineTransformDirections, METH_VARARGS, CONSTANTS_COMBINETRANSFORMDIRECTIONS__DOC__ },
+            {"BitDepthIsFloat",
+            PyOCIO_Constants_BitDepthIsFloat, METH_VARARGS, CONSTANTS_BITDEPTHISFLOAT__DOC__ },
+            {"BitDepthToInt",
+            PyOCIO_Constants_BitDepthToInt, METH_VARARGS, CONSTANTS_BITDEPTHTOINT__DOC__ },
             {NULL, NULL, 0, NULL}        /* Sentinel */
         };
     
@@ -82,7 +70,7 @@ OCIO_NAMESPACE_ENTER
         moduleName += ".Constants";
         
         PyObject * m = Py_InitModule3(const_cast<char*>(moduleName.c_str()),
-            LocalModuleMethods, "");
+            LocalModuleMethods, CONSTANTS__DOC__);
         Py_INCREF(m);
         
         // Add Module Constants
@@ -170,12 +158,7 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        /*+doc
-        .. py:method:: Constants.GetInverseTransformDirection(s)
         
-           :param s: 
-           :param type: string
-        */
         PyObject * PyOCIO_Constants_GetInverseTransformDirection( PyObject * /*module*/, PyObject * args )
         {
             try
@@ -194,14 +177,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Constants.CombineTransformDirections(s1, s2)
-        
-           :param s1: 
-           :param type: string
-           :param s2: 
-           :param type: string
-        */
         PyObject * PyOCIO_Constants_CombineTransformDirections( PyObject * /*module*/, PyObject * args )
         {
             try
@@ -223,12 +198,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Constants.BitDepthIsFloat(s)
-        
-           :param s: 
-           :param type: string
-        */
         PyObject * PyOCIO_Constants_BitDepthIsFloat( PyObject * /*module*/, PyObject * args )
         {
             try
@@ -246,12 +215,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Constants.BitDepthToInt(s)
-        
-           :param s: 
-           :param type: string
-        */
         PyObject * PyOCIO_Constants_BitDepthToInt( PyObject * /*module*/, PyObject * args )
         {
             try

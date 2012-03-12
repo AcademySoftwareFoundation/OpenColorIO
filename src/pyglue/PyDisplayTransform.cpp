@@ -33,17 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
-
-
-/*+doc
-Python: DisplayTransform
-========================
-.. code-block:: python
-
-    import PyOpenColorIO as OCIO
-    
-    transform = OCIO.DisplayTransform()
-*/
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -93,8 +83,6 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    
-    
     namespace
     {
         int PyOCIO_DisplayTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
@@ -129,32 +117,42 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_DisplayTransform_methods[] = {
-            {"getInputColorSpaceName", (PyCFunction) PyOCIO_DisplayTransform_getInputColorSpaceName, METH_NOARGS, "" },
-            {"setInputColorSpaceName", PyOCIO_DisplayTransform_setInputColorSpaceName, METH_VARARGS, "" },
-            
-            {"getLinearCC", (PyCFunction) PyOCIO_DisplayTransform_getLinearCC, METH_NOARGS, "" },
-            {"setLinearCC", PyOCIO_DisplayTransform_setLinearCC, METH_VARARGS, "" },
-            
-            {"getColorTimingCC", (PyCFunction) PyOCIO_DisplayTransform_getColorTimingCC, METH_NOARGS, "" },
-            {"setColorTimingCC", PyOCIO_DisplayTransform_setColorTimingCC, METH_VARARGS, "" },
-            
-            {"getChannelView", (PyCFunction) PyOCIO_DisplayTransform_getChannelView, METH_NOARGS, "" },
-            {"setChannelView", PyOCIO_DisplayTransform_setChannelView, METH_VARARGS, "" },
-            
-            {"getDisplay", (PyCFunction) PyOCIO_DisplayTransform_getDisplay, METH_NOARGS, "" },
-            {"setDisplay", PyOCIO_DisplayTransform_setDisplay, METH_VARARGS, "" },
-            
-            {"getView", (PyCFunction) PyOCIO_DisplayTransform_getView, METH_NOARGS, "" },
-            {"setView", PyOCIO_DisplayTransform_setView, METH_VARARGS, "" },
-            
-            {"getDisplayCC", (PyCFunction) PyOCIO_DisplayTransform_getDisplayCC, METH_NOARGS, "" },
-            {"setDisplayCC", PyOCIO_DisplayTransform_setDisplayCC, METH_VARARGS, "" },
-            
-            {"getLooksOverride", (PyCFunction) PyOCIO_DisplayTransform_getLooksOverride, METH_NOARGS, "" },
-            {"setLooksOverride", PyOCIO_DisplayTransform_setLooksOverride, METH_VARARGS, "" },
-            {"getLooksOverrideEnabled", (PyCFunction) PyOCIO_DisplayTransform_getLooksOverrideEnabled, METH_NOARGS, "" },
-            {"setLooksOverrideEnabled", PyOCIO_DisplayTransform_setLooksOverrideEnabled, METH_VARARGS, "" },
-            
+            {"getInputColorSpaceName",
+            (PyCFunction) PyOCIO_DisplayTransform_getInputColorSpaceName, METH_NOARGS, DISPLAYTRANSFORM_GETINPUTCOLORSPACENAME__DOC__ },
+            {"setInputColorSpaceName",
+            PyOCIO_DisplayTransform_setInputColorSpaceName, METH_VARARGS, DISPLAYTRANSFORM_SETINPUTCOLORSPACENAME__DOC__ },
+            {"getLinearCC",
+            (PyCFunction) PyOCIO_DisplayTransform_getLinearCC, METH_NOARGS, DISPLAYTRANSFORM_GETLINEARCC__DOC__ },
+            {"setLinearCC",
+            PyOCIO_DisplayTransform_setLinearCC, METH_VARARGS, DISPLAYTRANSFORM_SETLINEARCC__DOC__ },
+            {"getColorTimingCC",
+            (PyCFunction) PyOCIO_DisplayTransform_getColorTimingCC, METH_NOARGS, DISPLAYTRANSFORM_GETCOLORTIMINGCC__DOC__ },
+            {"setColorTimingCC",
+            PyOCIO_DisplayTransform_setColorTimingCC, METH_VARARGS, DISPLAYTRANSFORM_SETCOLORTIMINGCC__DOC__ },
+            {"getChannelView",
+            (PyCFunction) PyOCIO_DisplayTransform_getChannelView, METH_NOARGS, DISPLAYTRANSFORM_GETCHANNELVIEW__DOC__ },
+            {"setChannelView",
+            PyOCIO_DisplayTransform_setChannelView, METH_VARARGS, DISPLAYTRANSFORM_SETCHANNELVIEW__DOC__ },
+            {"getDisplay",
+            (PyCFunction) PyOCIO_DisplayTransform_getDisplay, METH_NOARGS, DISPLAYTRANSFORM_GETDISPLAY__DOC__ },
+            {"setDisplay",
+            PyOCIO_DisplayTransform_setDisplay, METH_VARARGS, DISPLAYTRANSFORM_SETDISPLAY__DOC__ },
+            {"getView",
+            (PyCFunction) PyOCIO_DisplayTransform_getView, METH_NOARGS, DISPLAYTRANSFORM_GETVIEW__DOC__ },
+            {"setView",
+            PyOCIO_DisplayTransform_setView, METH_VARARGS, DISPLAYTRANSFORM_SETVIEW__DOC__ },
+            {"getDisplayCC",
+            (PyCFunction) PyOCIO_DisplayTransform_getDisplayCC, METH_NOARGS, DISPLAYTRANSFORM_GETDISPLAYCC__DOC__ },
+            {"setDisplayCC",
+            PyOCIO_DisplayTransform_setDisplayCC, METH_VARARGS, DISPLAYTRANSFORM_SETDISPLAYCC__DOC__ },
+            {"getLooksOverride",
+            (PyCFunction) PyOCIO_DisplayTransform_getLooksOverride, METH_NOARGS, DISPLAYTRANSFORM_GETLOOKSOVERRIDE__DOC__ },
+            {"setLooksOverride",
+            PyOCIO_DisplayTransform_setLooksOverride, METH_VARARGS, DISPLAYTRANSFORM_SETLOOKSOVERRIDE__DOC__ },
+            {"getLooksOverrideEnabled",
+            (PyCFunction) PyOCIO_DisplayTransform_getLooksOverrideEnabled, METH_NOARGS, DISPLAYTRANSFORM_GETLOOKSOVERRIDEENABLED__DOC__ },
+            {"setLooksOverrideEnabled",
+            PyOCIO_DisplayTransform_setLooksOverrideEnabled, METH_VARARGS, DISPLAYTRANSFORM_SETLOOKSOVERRIDEENABLED__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -184,7 +182,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "DisplayTransform",                         //tp_doc 
+        DISPLAYTRANSFORM__DOC__,                    //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -222,11 +220,7 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        /*+doc
-        .. py:class:: DisplayTransform
         
-        Used to create transforms for displays.             
-        */        
         int PyOCIO_DisplayTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
@@ -252,14 +246,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: DisplayTransform.getInputColorSpaceName()
-                     
-           Returns the name of the input ColorSpace of :py:class:`DisplayTransform`.
-           :return: name of input ColorSpace
-           :rtype: string
-        */        
         PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName( PyObject * self )
         {
             try
@@ -274,13 +262,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.setInputColorSpaceName(name)
-                     
-           Sets the name of the input ColorSpace of :py:class:`DisplayTransform`.
-           :param name: name of input ColorSpace
-           :type name: string
-        */        
         PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName( PyObject * self, PyObject * args )
         {
             try
@@ -301,14 +282,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: DisplayTransform.getLinearCC()
-                     
-           Returns the linear CC transform of :py:class:`DisplayTransform`.
-           :return: linear CC transform
-           :rtype: object
-        */        
         PyObject * PyOCIO_DisplayTransform_getLinearCC( PyObject * self )
         {
             try
@@ -323,13 +298,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.setLinearCC(pyCC)
-                     
-           Sets the linear CC transform of :py:class:`DisplayTransform`.
-           :param pyCC: linear CC
-           :type pyCC: object
-        */
         PyObject * PyOCIO_DisplayTransform_setLinearCC( PyObject * self, PyObject * args )
         {
             try
@@ -352,14 +320,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: DisplayTransform.getColorTimingCC()
-                     
-           Returns the color timing CC transform of :py:class:`DisplayTransform`.
-           :return: color timing CC transform
-           :rtype: object
-        */        
         PyObject * PyOCIO_DisplayTransform_getColorTimingCC( PyObject * self )
         {
             try
@@ -374,13 +336,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.setColorTimingCC(pyCC)
-                     
-           Sets the color timing CC transform of :py:class:`DisplayTransform`.
-           :param pyCC: color timing CC
-           :type pyCC: object
-        */
         PyObject * PyOCIO_DisplayTransform_setColorTimingCC( PyObject * self, PyObject * args )
         {
             try
@@ -403,14 +358,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: DisplayTransform.getChannelView()
-                     
-           Returns the channel view of :py:class:`DisplayTransform`.
-           :return: channel view
-           :rtype: object
-        */        
         PyObject * PyOCIO_DisplayTransform_getChannelView( PyObject * self )
         {
             try
@@ -425,13 +374,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.setChannelView(pyCC)
-                     
-           Sets the channel view transform of :py:class:`DisplayTransform`.
-           :param pyCC: channel view transform
-           :type pyCC: object
-        */
         PyObject * PyOCIO_DisplayTransform_setChannelView( PyObject * self, PyObject * args )
         {
             try
@@ -454,14 +396,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: DisplayTransform.getDisplay()
-                     
-           Returns the display of :py:class:`DisplayTransform`.
-           :return: display
-           :rtype: string
-        */        
         PyObject * PyOCIO_DisplayTransform_getDisplay( PyObject * self )
         {
             try
@@ -476,13 +412,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.setChannelView(str)
-                     
-           Sets the display of :py:class:`DisplayTransform`.
-           :param str: display
-           :type str: string
-        */
         PyObject * PyOCIO_DisplayTransform_setDisplay( PyObject * self, PyObject * args )
         {
             try
@@ -502,13 +431,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.getView()
-                     
-           Returns the view of :py:class:`DisplayTransform`.
-           :return: view
-           :rtype: string
-        */        
         PyObject * PyOCIO_DisplayTransform_getView( PyObject * self )
         {
             try
@@ -523,13 +445,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.setView(str)
-                     
-           Sets the view of :py:class:`DisplayTransform`.
-           :param str: view
-           :type str: string
-        */
         PyObject * PyOCIO_DisplayTransform_setView( PyObject * self, PyObject * args )
         {
             try
@@ -550,14 +465,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: DisplayTransform.getDisplayCC()
-                     
-           Returns the display CC transform of :py:class:`DisplayTransform`.
-           :return: display CC
-           :rtype: object
-        */        
         PyObject * PyOCIO_DisplayTransform_getDisplayCC( PyObject * self )
         {
             try
@@ -572,13 +481,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.setDisplayCC(pyCC)
-                     
-           Sets the display CC transform of :py:class:`DisplayTransform`.
-           :param pyCC: display CC
-           :type pyCC: object
-        */
         PyObject * PyOCIO_DisplayTransform_setDisplayCC( PyObject * self, PyObject * args )
         {
             try
@@ -601,14 +503,8 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        /*+doc
-        .. py:method:: DisplayTransform.getLooksOverride()
-                     
-           Returns the looks in :py:class:`DisplayTransform` that's overriding :py:class:`Config`'s.
-           :return: looks override
-           :rtype: string
-        */        
         PyObject * PyOCIO_DisplayTransform_getLooksOverride( PyObject * self )
         {
             try
@@ -623,13 +519,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.setLooksOverride(str)
-                     
-           Sets the looks override of :py:class:`DisplayTransform`.
-           :param str: looks override
-           :type str: string
-        */
         PyObject * PyOCIO_DisplayTransform_setLooksOverride( PyObject * self, PyObject * args )
         {
             try
@@ -649,14 +538,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        /*+doc
-        .. py:method:: DisplayTransform.getLooksOverrideEnabled()
-                     
-           Returns whether the looks override of :py:class:`DisplayTransform` is enabled.
-           :return: looks override enabling
-           :rtype: bool
-        */        
         PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled( PyObject * self )
         {
             try
@@ -671,13 +552,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: DisplayTransform.setLooksOverrideEnabled(enabled)
-                     
-           Sets the looks override enabling of :py:class:`DisplayTransform`.
-           :param enabled: looks override enabling
-           :type enabled: object
-        */
         PyObject * PyOCIO_DisplayTransform_setLooksOverrideEnabled( PyObject * self, PyObject * args )
         {
             try

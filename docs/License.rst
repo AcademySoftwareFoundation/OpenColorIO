@@ -1,4 +1,4 @@
-.. license:
+.. _license:
 
 License
 =======

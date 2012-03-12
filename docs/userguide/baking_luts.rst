@@ -34,7 +34,7 @@ The config can either be specified by setting the OCIO environment variable::
 Alternatively the config can be specified as a command-line argument
 to the ociobakelut command, ``--iconfig ~/path/to/spi-vfx/config.ocio``
 
-These examples will use the `spi-vfx` config, specifically the
+These examples will use the :ref:`config-spivfx` config, specifically the
 following colorspaces
 
 * ``lnf`` - scene-referred linear light colorspace (reference colorspace)
@@ -115,7 +115,7 @@ correctly, you can omit the ``--shaperspace`` argument, and a prelut
 will be automatically created based on the allocation vars (see the
 linked page for more information)
 
-Since the colorspaces in the config we are using (``spi-vfx``) have
+Since the colorspaces in the config we are using (:ref:`config-spivfx`) have
 their allocation variables set correctly, we could simplify the
 ``lnf`` to ``srgb8`` bake command::
 
@@ -202,7 +202,7 @@ in comp)
 This is a facility-dependant workflow choice.
 
 For this example we will use the ``vd16`` colorspace, as described by
-the :ref:`spi-vfx description <spi-vfx>`
+the :ref:`config-spivfx`
 
 Creating display LUT
 ++++++++++++++++++++

@@ -24,8 +24,10 @@ ranges between 0.0 - 1.0 (after converting to float).  If you wanted to apply
 a 3d lut to this data, there is no danger in samplingthat space uniformly and
 clamping data outside (0,1).   So for this colorspace we would tag it:
 
-allocation: uniform
-allocationvars: [0.0, 1.0]
+.. code-block:: yaml
+
+    allocation: uniform
+    allocationvars: [0.0, 1.0]
 
 These are the defaults, so the tagging could also be skipped.
 
@@ -34,8 +36,10 @@ small undershoot and overshoot values were encountered? If you wanted OCIO to
 preserve this overshoot / undershoot pixel information, you would do so by
 modifying the allocation vars.
 
-allocation: uniform
-allocationvars: [-0.125, 1.125]
+.. code-block:: yaml
+
+    allocation: uniform
+    allocationvars: [-0.125, 1.125]
 
 This would mean that any image data originally within [-0.125, 1.125] will be
 preserved during GPU processing.  (Protip: Data outside this range *may*
@@ -68,12 +72,14 @@ unform allocation from 0-256\:
 
 So another allocation is defined, lg2
 
- - !<ColorSpace>
-   name: linear
-   description: |
-      Scene-linear, high dynamic range. Used for rendering and compositing.
-   allocation: lg2
-   allocationvars: [-8, 8]
+.. code-block:: yaml
+
+      - !<ColorSpace>
+        name: linear
+        description: |
+            Scene-linear, high dynamic range. Used for rendering and compositing.
+        allocation: lg2
+        allocationvars: [-8, 8]
 
 In this case, we're saying that the appropriate ways to sample the 3d lut are
 logarithmically, from 2^-8 stops to 2^8 stops.
@@ -97,9 +103,11 @@ offset.  If you need to preserve 0.0 values, and you have a high
 dynamic range space, you can specify a small offset.
 
 Example:
-allocation: lg2
-allocationvars: [-8, 8, 0.00390625]
 
+.. code-block:: yaml
+
+    allocation: lg2
+    allocationvars: [-8, 8, 0.00390625]
 
 The [-15.0, 6.0] values in spi-vfx come from the fact that all of the
 linearizations provided in that profile span the region from 2^-15
