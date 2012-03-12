@@ -31,7 +31,7 @@ OCIOFileTransform::~OCIOFileTransform()
 
 const char* OCIOFileTransform::dirs[] = { "forward", "inverse", 0 };
 
-const char* OCIOFileTransform::interp[] = { "nearest", "linear", "tetrahedral", 0 };
+const char* OCIOFileTransform::interp[] = { "nearest", "linear", "tetrahedral", "best", 0 };
 
 void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 {
@@ -81,6 +81,7 @@ void OCIOFileTransform::_validate(bool for_real)
         if(m_interpindex == 0) transform->setInterpolation(OCIO::INTERP_NEAREST);
         else if(m_interpindex == 1) transform->setInterpolation(OCIO::INTERP_LINEAR);
         else if(m_interpindex == 2) transform->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+        else if(m_interpindex == 3) transform->setInterpolation(OCIO::INTERP_BEST);
         else
         {
             // Should never happen

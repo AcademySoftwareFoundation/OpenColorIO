@@ -663,9 +663,22 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            if(m_interpolation == INTERP_UNKNOWN)
+            // Validate the requested interpolation type
+            switch(m_interpolation)
             {
-                throw Exception("Cannot apply Lut3DOp, unspecified interpolation.");
+                 // These are the allowed values.
+                case INTERP_NEAREST:
+                case INTERP_LINEAR:
+                case INTERP_TETRAHEDRAL:
+                    break;
+                case INTERP_BEST:
+                    m_interpolation = INTERP_LINEAR;
+                    break;
+                case INTERP_UNKNOWN:
+                    throw Exception("Cannot apply Lut3DOp, unspecified interpolation.");
+                    break;
+                default:
+                    throw Exception("Cannot apply Lut3DOp, invalid interpolation specified.");
             }
             
             for(int i=0; i<3; ++i)

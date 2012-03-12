@@ -41,4 +41,8 @@ public class Interpolation extends LoadLibrary
         INTERP_NEAREST = new Interpolation(1);
     public static final Interpolation
         INTERP_LINEAR = new Interpolation(2);
+    public static final Interpolation
+        INTERP_TETRAHEDRAL = new Interpolation(3);
+    public static final Interpolation
+        INTERP_BEST = new Interpolation(255);
 }
