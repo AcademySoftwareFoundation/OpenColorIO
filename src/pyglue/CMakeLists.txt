@@ -28,7 +28,7 @@ if(NOT WIN32)
 endif()
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h
-                  COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/src/pyglue/buildPyDocH.py ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h
+                  COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/src/pyglue/createPyDocH.py ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h
                   COMMENT "Creating PyDoc.h")
 
 file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
