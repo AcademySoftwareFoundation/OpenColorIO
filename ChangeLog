@@ -1,3 +1,7 @@
+**Version 1.0.6 (March 12 2012):**
+    * JNI (Java) updates
+    * ocioconvert arbitrary attr support
+
 **Version 1.0.5 (Feb 22 2012):**
     * Internal optimization framework added
     * SetLoggingLevel(..) bugfix
