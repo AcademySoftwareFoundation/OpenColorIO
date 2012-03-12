@@ -5,6 +5,9 @@
 
 import sys, os
 
+# -- Add PyOpenColorIO to sys.path
+sys.path.insert(0, "@CMAKE_BINARY_DIR@/src/pyglue")
+
 # -- General configuration -----------------------------------------------------
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.ifconfig']
 templates_path = ['templates']
@@ -47,7 +50,7 @@ html_static_path = []
 #html_use_smartypants = True
 #html_sidebars = {}
 #html_additional_pages = {}
-#html_domain_indices = True
+html_domain_indices = ['cpp-modindex', 'py-modindex']
 #html_use_index = True
 #html_split_index = False
 #html_show_sourcelink = True
@@ -62,15 +65,20 @@ htmlhelp_basename = 'OpenColorIOdoc'
 #latex_font_size = '10pt'
 latex_documents = [
   ('index', 'OpenColorIO.tex', u'OpenColorIO Documentation',
-   u'Sony Pictures Imageworks', 'manual'),
+   u'Sony Pictures Imageworks', 'manual', False),
 ]
+latex_elements = {
+  'preamble': '\setcounter{tocdepth}{2}',
+  'footer': 'test...123'
+}
+
 #latex_logo = None
 #latex_use_parts = False
 #latex_show_pagerefs = False
 #latex_show_urls = False
-#latex_preamble = ''
+#latex_preamble = '\setcounter{tocdepth}{2}'
 #latex_appendices = []
-latex_domain_indices = True
+latex_domain_indices = ['cpp-modindex', 'py-modindex']
 
 # -- Options for manual page output --------------------------------------------
 man_pages = [

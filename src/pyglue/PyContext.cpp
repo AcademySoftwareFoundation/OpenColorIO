@@ -34,26 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyContext.h"
 #include "PyTransform.h"
 #include "PyUtil.h"
-
-
-/*+doc
-Python: Context
-===============
-
-Examples of Use
-^^^^^^^^^^^^^^^
-.. code-block:: python
-
-    import PyOpenColorIO as OCIO
-
-Description
-^^^^^^^^^^^
-:py:class:`Context` is used to override parameters (as 
-opposed to the default of using the environment variable).
-
-The working directory is the location of :py:class:`Config`, 
-and search paths are relative to that.
-*/
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -164,19 +145,8 @@ OCIO_NAMESPACE_ENTER
         throw Exception("PyObject must be an editable OCIO.Context.");
     }
     
-    
-    
     ///////////////////////////////////////////////////////////////////////////
     ///
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     namespace
     {
@@ -198,27 +168,34 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Context_resolveStringVar( PyObject * self,  PyObject *args );
         PyObject * PyOCIO_Context_resolveFileLocation( PyObject * self,  PyObject *args );
         
-        
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_Context_methods[] = {
-            {"isEditable", (PyCFunction) PyOCIO_Context_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCIO_Context_createEditableCopy, METH_NOARGS, "" },
-            {"getCacheID", (PyCFunction) PyOCIO_Context_getCacheID, METH_NOARGS, "" },
-            
-            {"getSearchPath", (PyCFunction) PyOCIO_Context_getSearchPath, METH_NOARGS, "" },
-            {"setSearchPath", PyOCIO_Context_setSearchPath, METH_VARARGS, "" },
-            {"getWorkingDir", (PyCFunction) PyOCIO_Context_getWorkingDir, METH_NOARGS, "" },
-            {"setWorkingDir", PyOCIO_Context_setWorkingDir, METH_VARARGS, "" },
-            {"getStringVar", PyOCIO_Context_getStringVar, METH_VARARGS, "" },
-            {"setStringVar", PyOCIO_Context_setStringVar, METH_VARARGS, "" },
-            
-            {"loadEnvironment", (PyCFunction) PyOCIO_Context_loadEnvironment, METH_NOARGS, "" },
-            
-            {"resolveStringVar", PyOCIO_Context_resolveStringVar, METH_VARARGS, "" },
-            {"resolveFileLocation", PyOCIO_Context_resolveFileLocation, METH_VARARGS, "" },
-            
+            {"isEditable",
+            (PyCFunction) PyOCIO_Context_isEditable, METH_NOARGS, CONTEXT_ISEDITABLE__DOC__ },
+            {"createEditableCopy",
+            (PyCFunction) PyOCIO_Context_createEditableCopy, METH_NOARGS, CONTEXT_CREATEEDITABLECOPY__DOC__ },
+            {"getCacheID",
+            (PyCFunction) PyOCIO_Context_getCacheID, METH_NOARGS, CONTEXT_GETCACHEID__DOC__ },
+            {"getSearchPath",
+            (PyCFunction) PyOCIO_Context_getSearchPath, METH_NOARGS, CONTEXT_GETSEARCHPATH__DOC__ },
+            {"setSearchPath",
+            PyOCIO_Context_setSearchPath, METH_VARARGS, CONTEXT_SETSEARCHPATH__DOC__ },
+            {"getWorkingDir",
+            (PyCFunction) PyOCIO_Context_getWorkingDir, METH_NOARGS, CONTEXT_GETWORKINGDIR__DOC__ },
+            {"setWorkingDir",
+            PyOCIO_Context_setWorkingDir, METH_VARARGS, CONTEXT_SETWORKINGDIR__DOC__ },
+            {"getStringVar",
+            PyOCIO_Context_getStringVar, METH_VARARGS, CONTEXT_GETSTRINGVAR__DOC__ },
+            {"setStringVar",
+            PyOCIO_Context_setStringVar, METH_VARARGS, CONTEXT_SETSTRINGVAR__DOC__ },
+            {"loadEnvironment",
+            (PyCFunction) PyOCIO_Context_loadEnvironment, METH_NOARGS, CONTEXT_LOADENVIRONMENT__DOC__ },
+            {"resolveStringVar",
+            PyOCIO_Context_resolveStringVar, METH_VARARGS, CONTEXT_RESOLVESTRINGVAR__DOC__ },
+            {"resolveFileLocation",
+            PyOCIO_Context_resolveFileLocation, METH_VARARGS, CONTEXT_RESOLVEFILELOCATION__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -248,7 +225,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "Context",                                  //tp_doc 
+        CONTEXT__DOC__,                             //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -461,8 +438,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
         PyObject * PyOCIO_Context_loadEnvironment( PyObject * self )
         {
             try
@@ -478,7 +453,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
         
         PyObject * PyOCIO_Context_resolveStringVar( PyObject * self, PyObject * args )
         {

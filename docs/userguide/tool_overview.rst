@@ -8,7 +8,7 @@ This API can be used in applications and plugins
 
 Note that all these plugins use the same config file to define color spaces,
 roles and so on. For information on setting up configurations, see 
-:ref:`userguide-configuration`
+:ref:`configurations`
 
 The API
 *******
@@ -104,7 +104,7 @@ values outside 0.0-1.0 (being a Log space)::
 
     $ ociobakelut --inputspace lg10 --outputspace srgb8 --format flame flame__lg10_to_srgb.3dl
 
-See the :ref:`faq-lut-formats` section for a list of formats that
+See the :ref:`faq-supportedlut` section for a list of formats that
 support baking
 
 .. TODO: For more information on baking LUT's, see :ref:`userguide-bakelut`

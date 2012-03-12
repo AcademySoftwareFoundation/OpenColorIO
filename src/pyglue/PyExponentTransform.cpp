@@ -33,17 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
-
-
-/*+doc
-Python: ExponentTransform
-=========================
-.. code-block:: python
-
-    import PyOpenColorIO as OCIO
-    
-    transform = OCIO.ExponentTransform()
-*/
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -91,8 +81,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    
+    ///
     
     namespace
     {
@@ -105,9 +94,10 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_ExponentTransform_methods[] = {
-            {"getValue", (PyCFunction) PyOCIO_ExponentTransform_getValue, METH_NOARGS, "" },
-            {"setValue", PyOCIO_ExponentTransform_setValue, METH_VARARGS, "" },
-            
+            {"getValue",
+            (PyCFunction) PyOCIO_ExponentTransform_getValue, METH_NOARGS, EXPONENTTRANSFORM_GETVALUE__DOC__ },
+            {"setValue",
+            PyOCIO_ExponentTransform_setValue, METH_VARARGS, EXPONENTTRANSFORM_SETVALUE__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -137,7 +127,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "ExponentTransform",                        //tp_doc 
+        EXPONENTTRANSFORM__DOC__,                   //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -228,18 +218,9 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
         ////////////////////////////////////////////////////////////////////////
+        ///
         
-        
-        /*+doc
-        .. py:method:: ExponentTransform.getValue()
-                     
-           Returns the values in the exponent transform of :py:class:`ExponentTransform`.
-           :return: exponent transform values
-           :rtype: list of floats
-        */        
         PyObject * PyOCIO_ExponentTransform_getValue( PyObject * self )
         {
             try
@@ -256,13 +237,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: ExponentTransform.setValue()
-                     
-           Sets the values in the exponent transform of :py:class:`ExponentTransform`.
-           :param pyData: exponent transform values
-           :type pyData: list of 4 floats
-        */        
         PyObject * PyOCIO_ExponentTransform_setValue( PyObject * self, PyObject * args )
         {
             try
@@ -288,8 +262,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
         
     }
 

@@ -33,29 +33,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyProcessor.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 #include <sstream>
-
-/*+doc
-Python: Processor
-=================
-
-Usage
-^^^^^
-.. code-block:: python
-
-    import PyOpenColorIO as OCIO
-    
-    config = OCIO.Config()
-    processor = config.getProcessor()
-
-Description
-^^^^^^^^^^^
-The :py:class:`Processor` is the object used to actually perform image transformations.
-
-:py:class:`Processor` objects are not instantiated directly, but are created from the :py:class:`Config`
-object, as shown above.
-*/
 
 OCIO_NAMESPACE_ENTER
 {
@@ -116,15 +96,6 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
     namespace
     {
         int PyOCIO_Processor_init( PyOCIO_Processor * self, PyObject * args, PyObject * kwds );
@@ -141,22 +112,28 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Processor_getGpuLut3D( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Processor_getGpuLut3DCacheID( PyObject * self, PyObject * args );
         
-        
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_Processor_methods[] = {
-            {"isNoOp", (PyCFunction) PyOCIO_Processor_isNoOp, METH_NOARGS, "" },
-            {"hasChannelCrosstalk", (PyCFunction) PyOCIO_Processor_hasChannelCrosstalk, METH_NOARGS, "" },
-            {"applyRGB", PyOCIO_Processor_applyRGB, METH_VARARGS, "" },
-            {"applyRGBA", PyOCIO_Processor_applyRGBA, METH_VARARGS, "" },
-            {"getCpuCacheID", (PyCFunction) PyOCIO_Processor_getCpuCacheID, METH_NOARGS, "" },
-            
-            {"getGpuShaderText", PyOCIO_Processor_getGpuShaderText, METH_VARARGS, "" },
-            {"getGpuShaderTextCacheID", PyOCIO_Processor_getGpuShaderTextCacheID, METH_VARARGS, "" },
-            {"getGpuLut3D", PyOCIO_Processor_getGpuLut3D, METH_VARARGS, "" },
-            {"getGpuLut3DCacheID", PyOCIO_Processor_getGpuLut3DCacheID, METH_VARARGS, "" },
-            
+            {"isNoOp",
+            (PyCFunction) PyOCIO_Processor_isNoOp, METH_NOARGS, PROCESSOR_ISNOOP__DOC__ },
+            {"hasChannelCrosstalk",
+            (PyCFunction) PyOCIO_Processor_hasChannelCrosstalk, METH_NOARGS, PROCESSOR_HASCHANNELCROSSTALK__DOC__ },
+            {"applyRGB",
+            PyOCIO_Processor_applyRGB, METH_VARARGS, PROCESSOR_APPLYRGB__DOC__ },
+            {"applyRGBA",
+            PyOCIO_Processor_applyRGBA, METH_VARARGS, PROCESSOR_APPLYRGBA__DOC__ },
+            {"getCpuCacheID",
+            (PyCFunction) PyOCIO_Processor_getCpuCacheID, METH_NOARGS, PROCESSOR_GETCPUCACHEID__DOC__ },
+            {"getGpuShaderText",
+            PyOCIO_Processor_getGpuShaderText, METH_VARARGS, PROCESSOR_GETGPUSHADERTEXT__DOC__ },
+            {"getGpuShaderTextCacheID",
+            PyOCIO_Processor_getGpuShaderTextCacheID, METH_VARARGS, PROCESSOR_GETGPUSHADERTEXTCACHEID__DOC__ },
+            {"getGpuLut3D",
+            PyOCIO_Processor_getGpuLut3D, METH_VARARGS, PROCESSOR_GETGPULUT3D__DOC__ },
+            {"getGpuLut3DCacheID",
+            PyOCIO_Processor_getGpuLut3DCacheID, METH_VARARGS, PROCESSOR_GETGPULUT3DCACHEID__DOC__ },
             {NULL, NULL, 0, NULL}
         };
         
@@ -190,7 +167,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "Processor",                                   //tp_doc 
+        PROCESSOR__DOC__,                           //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -280,8 +257,6 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    
-    
     namespace
     {
         ///////////////////////////////////////////////////////////////////////
@@ -299,18 +274,6 @@ OCIO_NAMESPACE_ENTER
             self->ob_type->tp_free((PyObject*)self);
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        /*+doc
-        Functions
-        ^^^^^^^^^
-        
-        .. py:method:: Processor.isNoOp()
-                     
-           Returns whether the actual transformation represented by :py:class:`Processor` is a no-op.
-           
-           :return: whether transform is a no-op
-           :rtype: bool
-        */
         PyObject * PyOCIO_Processor_isNoOp( PyObject * self )
         {
             try
@@ -325,15 +288,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Processor.hasChannelCrosstalk()
-                     
-           Returns whether the transformation of :py:class:`Processor` introduces crosstalk between the image
-           channels.
-           
-           :return: whether there's crosstalk between channels
-           :rtype: bool
-        */
         PyObject * PyOCIO_Processor_hasChannelCrosstalk( PyObject * self )
         {
             try
@@ -348,19 +302,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        CPU Path Methods
-        ^^^^^^^^^^^^^^^^
-        
-        .. py:method:: Processor.applyRGB()
-                     
-           Apply the RGB part of the transform represented by :py:class:`Processor` to an image.
-           
-           :param pyData: 
-           :type pyData: object
-           :return: 
-           :rtype: list
-        */
         PyObject * PyOCIO_Processor_applyRGB( PyObject * self, PyObject * args )
         {
             try
@@ -397,16 +338,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Processor.applyRGBA()
-                     
-           Apply the RGB and alpha part of the transform represented by :py:class:`Processor` to an image.
-           
-           :param pyData:
-           :type pyData: object
-           :return: 
-           :rtype: list
-        */
         PyObject * PyOCIO_Processor_applyRGBA( PyObject * self, PyObject * args )
         {
             try
@@ -443,14 +374,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Processor.getCpuCacheID()
-                     
-           Returns the cache ID of the CPU that :py:class:`Processor` will run on.
-           
-           :return: CPU cache ID
-           :rtype: string
-        */
         PyObject * PyOCIO_Processor_getCpuCacheID( PyObject * self )
         {
             try
@@ -465,24 +388,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
-        ////////////////////////////////////////////////////////////////////////
-        
-        
-        /*+doc
-        GPU Path Methods
-        ^^^^^^^^^^^^^^^^
-        
-        .. py:method:: Processor.getGpuShaderText()
-                     
-           Returns the GPU shader text.
-           
-           :param pyData: two params
-           :type pyData: object
-           :return: GPU shader text
-           :rtype: string
-        */
         PyObject * PyOCIO_Processor_getGpuShaderText( PyObject * self, PyObject * args )
         {
             try
@@ -504,16 +409,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Processor.getGpuShaderTextCacheID()
-                     
-           Returns the GPU shader text cache ID.
-           
-           :param pyData: two params
-           :type pyData: object
-           :return: GPU shader text cache ID
-           :rtype: string
-        */
         PyObject * PyOCIO_Processor_getGpuShaderTextCacheID( PyObject * self, PyObject * args )
         {
             try
@@ -535,16 +430,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Processor.getGpuLut3D()
-                     
-           Returns the GPU LUT 3D.
-           
-           :param pyData: two params?
-           :type pyData: object
-           :return: GPU LUT 3D
-           :rtype: list
-        */
         PyObject * PyOCIO_Processor_getGpuLut3D( PyObject * self, PyObject * args )
         {
             try
@@ -571,16 +456,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        /*+doc
-        .. py:method:: Processor.getGpuLut3DCacheID()
-                     
-           Returns the GPU 3D LUT cache ID.
-           
-           :param pyData: two params
-           :type pyData: object
-           :return: GPU 3D LUT cache ID
-           :rtype: string
-        */
         PyObject * PyOCIO_Processor_getGpuLut3DCacheID( PyObject * self, PyObject * args )
         {
             try
@@ -603,7 +478,6 @@ OCIO_NAMESPACE_ENTER
         }
         
     }
-
-        
+    
 }
 OCIO_NAMESPACE_EXIT

@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 #include <sstream>
 
@@ -208,10 +209,8 @@ OCIO_NAMESPACE_ENTER
         throw Exception("PyObject must be a valid OCIO.Transform.");
     }
     
-    
-    
     ///////////////////////////////////////////////////////////////////////////
-    
+    ///
     
     bool AddTransformObjectToModule( PyObject* m )
     {
@@ -224,7 +223,6 @@ OCIO_NAMESPACE_ENTER
         
         return true;
     }
-    
     
     namespace
     {
@@ -240,11 +238,14 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_Transform_methods[] = {
-            {"isEditable", (PyCFunction) PyOCIO_Transform_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCIO_Transform_createEditableCopy, METH_NOARGS, "" },
-            {"getDirection", (PyCFunction) PyOCIO_Transform_getDirection, METH_NOARGS, "" },
-            {"setDirection", PyOCIO_Transform_setDirection, METH_VARARGS, "" },
-            
+            {"isEditable",
+            (PyCFunction) PyOCIO_Transform_isEditable, METH_NOARGS, TRANSFORM_ISEDITABLE__DOC__ },
+            {"createEditableCopy",
+            (PyCFunction) PyOCIO_Transform_createEditableCopy, METH_NOARGS, TRANSFORM_CREATEEDITABLECOPY__DOC__ },
+            {"getDirection",
+            (PyCFunction) PyOCIO_Transform_getDirection, METH_NOARGS, TRANSFORM_GETDIRECTION__DOC__ },
+            {"setDirection",
+            PyOCIO_Transform_setDirection, METH_VARARGS, TRANSFORM_SETDIRECTION__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -274,7 +275,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "Transform",                                //tp_doc 
+        TRANSFORM__DOC__,                           //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -327,6 +328,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         void PyOCIO_Transform_delete( PyOCIO_Transform *self, PyObject * /*args*/ )
         {
@@ -337,6 +339,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         PyObject * PyOCIO_Transform_isEditable( PyObject * self )
         {
@@ -366,7 +369,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_Transform_getDirection( PyObject * self )
         {

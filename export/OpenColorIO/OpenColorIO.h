@@ -70,6 +70,7 @@ C++ API
    {
        std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
    }
+
 */
 
 OCIO_NAMESPACE_ENTER
@@ -118,6 +119,10 @@ OCIO_NAMESPACE_ENTER
         ExceptionMissingFile(const ExceptionMissingFile&) throw();
     };
     
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst::
+    // Global
+    // ******
     
     //!cpp:function::
     // OpenColorIO, during normal usage, tends to cache certain information
@@ -151,7 +156,6 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function:: Set the global logging level.
     extern OCIOEXPORT void SetLoggingLevel(LoggingLevel level);
-    
     
     
     ///////////////////////////////////////////////////////////////////////////

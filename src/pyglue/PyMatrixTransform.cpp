@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -82,8 +83,6 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    
-    
     namespace
     {
         int PyOCIO_MatrixTransform_init( PyOCIO_Transform * self,
@@ -106,20 +105,28 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_MatrixTransform_methods[] = {
-            {"getValue", (PyCFunction) PyOCIO_MatrixTransform_getValue, METH_NOARGS, "" },
-            {"setValue", PyOCIO_MatrixTransform_setValue, METH_VARARGS, "" },
-            {"getMatrix", (PyCFunction) PyOCIO_MatrixTransform_getMatrix, METH_NOARGS, "" },
-            {"setMatrix", PyOCIO_MatrixTransform_setMatrix, METH_VARARGS, "" },
-            {"getOffset", (PyCFunction) PyOCIO_MatrixTransform_getOffset, METH_NOARGS, "" },
-            {"setOffset", PyOCIO_MatrixTransform_setOffset, METH_VARARGS, "" },
-            
-            {"Identity", (PyCFunction) PyOCIO_MatrixTransform_Identity,
-                METH_NOARGS | METH_CLASS, "" },
-            {"Fit", PyOCIO_MatrixTransform_Fit, METH_VARARGS | METH_CLASS, "" },
-            {"Sat", PyOCIO_MatrixTransform_Sat, METH_VARARGS | METH_CLASS, "" },
-            {"Scale", PyOCIO_MatrixTransform_Scale, METH_VARARGS | METH_CLASS, "" },
-            {"View", PyOCIO_MatrixTransform_View, METH_VARARGS | METH_CLASS, "" },
-            
+            {"getValue",
+            (PyCFunction) PyOCIO_MatrixTransform_getValue, METH_NOARGS, MATRIXTRANSFORM_GETVALUE__DOC__ },
+            {"setValue",
+            PyOCIO_MatrixTransform_setValue, METH_VARARGS, MATRIXTRANSFORM_SETVALUE__DOC__ },
+            {"getMatrix",
+            (PyCFunction) PyOCIO_MatrixTransform_getMatrix, METH_NOARGS, MATRIXTRANSFORM_GETMATRIX__DOC__ },
+            {"setMatrix",
+            PyOCIO_MatrixTransform_setMatrix, METH_VARARGS, MATRIXTRANSFORM_SETMATRIX__DOC__ },
+            {"getOffset",
+            (PyCFunction) PyOCIO_MatrixTransform_getOffset, METH_NOARGS, MATRIXTRANSFORM_GETOFFSET__DOC__ },
+            {"setOffset",
+            PyOCIO_MatrixTransform_setOffset, METH_VARARGS, MATRIXTRANSFORM_SETOFFSET__DOC__ },
+            {"Identity",
+            (PyCFunction) PyOCIO_MatrixTransform_Identity, METH_NOARGS | METH_CLASS, MATRIXTRANSFORM_IDENTITY__DOC__ },
+            {"Fit",
+            PyOCIO_MatrixTransform_Fit, METH_VARARGS | METH_CLASS, MATRIXTRANSFORM_FIT__DOC__ },
+            {"Sat",
+            PyOCIO_MatrixTransform_Sat, METH_VARARGS | METH_CLASS, MATRIXTRANSFORM_SAT__DOC__ },
+            {"Scale",
+            PyOCIO_MatrixTransform_Scale, METH_VARARGS | METH_CLASS, MATRIXTRANSFORM_SCALE__DOC__ },
+            {"View",
+            PyOCIO_MatrixTransform_View, METH_VARARGS | METH_CLASS, MATRIXTRANSFORM_VIEW__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -149,7 +156,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "MatrixTransform",                          //tp_doc 
+        MATRIXTRANSFORM__DOC__,                     //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -213,7 +220,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_MatrixTransform_getValue( PyObject * self )
         {
@@ -282,9 +289,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_MatrixTransform_getMatrix( PyObject * self )
         {
@@ -333,10 +339,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_MatrixTransform_getOffset( PyObject * self )
         {
@@ -385,10 +389,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
-        
-        
+        ///
         
         PyObject * PyOCIO_MatrixTransform_Identity( PyObject * /*cls*/ )
         {
@@ -414,8 +416,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
         
         PyObject * PyOCIO_MatrixTransform_Fit( PyObject * /*cls*/, PyObject * args )
         {
@@ -490,8 +490,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
         PyObject * PyOCIO_MatrixTransform_Sat( PyObject * /*cls*/, PyObject * args )
         {
             try
@@ -534,7 +532,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         PyObject * PyOCIO_MatrixTransform_Scale( PyObject * /*cls*/, PyObject * args )
         {
             try
@@ -575,8 +572,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
         
         PyObject * PyOCIO_MatrixTransform_View( PyObject * /*cls*/, PyObject * args )
         {
@@ -628,9 +623,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
-        
         
     }
 

@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyLook.h"
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -144,19 +145,8 @@ OCIO_NAMESPACE_ENTER
         throw Exception("PyObject must be an editable OCIO.Look.");
     }
     
-    
-    
     ///////////////////////////////////////////////////////////////////////////
     ///
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     namespace
     {
@@ -177,17 +167,22 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_Look_methods[] = {
-            {"isEditable", (PyCFunction) PyOCIO_Look_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCIO_Look_createEditableCopy, METH_NOARGS, "" },
-            
-            {"getName", (PyCFunction) PyOCIO_Look_getName, METH_NOARGS, "" },
-            {"setName", PyOCIO_Look_setName, METH_VARARGS, "" },
-            {"getProcessSpace", (PyCFunction) PyOCIO_Look_getProcessSpace, METH_NOARGS, "" },
-            {"setProcessSpace", PyOCIO_Look_setProcessSpace, METH_VARARGS, "" },
-            
-            {"getTransform", (PyCFunction) PyOCIO_Look_getTransform, METH_NOARGS, "" },
-            {"setTransform", PyOCIO_Look_setTransform, METH_VARARGS, "" },
-            
+            {"isEditable",
+            (PyCFunction) PyOCIO_Look_isEditable, METH_NOARGS, LOOK_ISEDITABLE__DOC__ },
+            {"createEditableCopy",
+            (PyCFunction) PyOCIO_Look_createEditableCopy, METH_NOARGS, LOOK_CREATEEDITABLECOPY__DOC__ },
+            {"getName",
+            (PyCFunction) PyOCIO_Look_getName, METH_NOARGS, LOOK_GETNAME__DOC__ },
+            {"setName",
+            PyOCIO_Look_setName, METH_VARARGS, LOOK_SETNAME__DOC__ },
+            {"getProcessSpace",
+            (PyCFunction) PyOCIO_Look_getProcessSpace, METH_NOARGS, LOOK_GETPROCESSSPACE__DOC__ },
+            {"setProcessSpace",
+            PyOCIO_Look_setProcessSpace, METH_VARARGS, LOOK_SETPROCESSSPACE__DOC__ },
+            {"getTransform",
+            (PyCFunction) PyOCIO_Look_getTransform, METH_NOARGS, LOOK_GETTRANSFORM__DOC__ },
+            {"setTransform",
+            PyOCIO_Look_setTransform, METH_VARARGS, LOOK_SETTRANSFORM__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -217,7 +212,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "Look",                                     //tp_doc 
+        LOOK__DOC__,                                //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -305,6 +300,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         void PyOCIO_Look_delete( PyOCIO_Look *self, PyObject * /*args*/ )
         {
@@ -315,6 +311,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         PyObject * PyOCIO_Look_isEditable( PyObject * self )
         {
@@ -337,6 +334,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         PyObject * PyOCIO_Look_getName( PyObject * self )
         {
@@ -372,6 +370,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         PyObject * PyOCIO_Look_getProcessSpace( PyObject * self )
         {
@@ -407,6 +406,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         PyObject * PyOCIO_Look_getTransform( PyObject * self )
         {

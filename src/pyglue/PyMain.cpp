@@ -39,6 +39,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "PyProcessor.h"
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 namespace
 {
@@ -137,29 +138,17 @@ namespace
         }
     }
     
-    
     PyMethodDef PyOCIO_methods[] = {
         {"ClearAllCaches",
-            (PyCFunction) PyOCIO_ClearAllCaches,
-            METH_NOARGS,
-            ""},
+        (PyCFunction) PyOCIO_ClearAllCaches, METH_NOARGS, OCIO::OPENCOLORIO_CLEARALLCACHES__DOC__ },
         {"GetLoggingLevel",
-            (PyCFunction) PyOCIO_GetLoggingLevel,
-            METH_NOARGS,
-            ""},
+        (PyCFunction) PyOCIO_GetLoggingLevel, METH_NOARGS, OCIO::OPENCOLORIO_GETLOGGINGLEVEL__DOC__ },
         {"SetLoggingLevel",
-            (PyCFunction) PyOCIO_SetLoggingLevel,
-            METH_VARARGS,
-            ""},
+        (PyCFunction) PyOCIO_SetLoggingLevel, METH_VARARGS, OCIO::OPENCOLORIO_SETLOGGINGLEVEL__DOC__ },
         {"GetCurrentConfig",
-            (PyCFunction) PyOCIO_GetCurrentConfig,
-            METH_NOARGS,
-            ""},
+        (PyCFunction) PyOCIO_GetCurrentConfig, METH_NOARGS, OCIO::OPENCOLORIO_GETCURRENTCONFIG__DOC__ },
         {"SetCurrentConfig",
-            (PyCFunction) PyOCIO_SetCurrentConfig,
-            METH_VARARGS,
-            ""},
-        
+        (PyCFunction) PyOCIO_SetCurrentConfig, METH_VARARGS, OCIO::OPENCOLORIO_SETCURRENTCONFIG__DOC__ },
         {NULL, NULL, 0, NULL} /* Sentinel */
     };
 }
@@ -202,17 +191,19 @@ PyMODINIT_FUNC
 initPyOpenColorIO(void)
 {
     PyObject * m;
-    m = Py_InitModule3("PyOpenColorIO", PyOCIO_methods, "OpenColorIO API");
+    m = Py_InitModule3("PyOpenColorIO", PyOCIO_methods, OCIO::OPENCOLORIO__DOC__);
     
     PyModule_AddStringConstant(m, "version", OCIO::GetVersion());
     PyModule_AddIntConstant(m, "hexversion", OCIO::GetVersionHex());
     
     // Create Exceptions, and add to the module
+    // TODO: add support for PyErr_NewExceptionWithDoc for python2.7+
     OCIO::SetExceptionPyType(
         PyErr_NewException(const_cast<char*>("PyOpenColorIO.Exception"),
-                                                  PyExc_RuntimeError, NULL));
+                                  PyExc_RuntimeError, NULL));
     PyModule_AddObject(m, "Exception", OCIO::GetExceptionPyType());
     
+    // TODO: add support for PyErr_NewExceptionWithDoc for python2.7+
     OCIO::SetExceptionMissingFilePyType(
         PyErr_NewException(const_cast<char*>("PyOpenColorIO.ExceptionMissingFile"),
                            OCIO::GetExceptionPyType(), NULL));
