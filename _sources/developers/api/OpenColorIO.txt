@@ -32,6 +32,7 @@ C++ API
    }
 
 
+
 Exceptions
 **********
 
@@ -75,6 +76,10 @@ Exceptions
 
 .. cpp:function:: ExceptionMissingFile::ExceptionMissingFile(const ExceptionMissingFile&)
    
+
+
+Global
+******
 
 .. cpp:function:: extern void ClearAllCaches()
    

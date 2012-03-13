@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.6',
+        VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,10 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.6 documentation" href="../index.html" />
-    <link rel="up" title="Configurations" href="index.html" />
-    <link rel="next" title="spi-vfx" href="spi_vfx.html" />
-    <link rel="prev" title="Configurations" href="index.html" /> 
+    <link rel="top" title="OpenColorIO v1.0.0 documentation" href="../index.html" /> 
   </head>
   <body>
     <div class="header"><h1 class="heading"><a href="../index.html">
@@ -39,7 +36,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.6 documentation
+      OpenColorIO v1.0.0 documentation
       </div>
       <div class="content">
         
@@ -47,17 +44,8 @@
         <tr>
         <td width="200">
             <div class="sidebar2">
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../CompatibleSoftware.html">Compatible Software</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">Configurations</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="">Sony Pictures Imageworks Color Pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spi_vfx.html">spi-vfx</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spi_anim.html">spi-anim</a></li>
-<li class="toctree-l2"><a class="reference internal" href="nuke_default.html">Nuke default</a></li>
-<li class="toctree-l2"><a class="reference internal" href="allocation_vars.html">How to Configure ColorSpace Allocation</a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developers/index.html">Developer guide</a></li>
@@ -67,23 +55,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
 </ul>
 
-<div id="searchbox" style="display: none">
-  <h3>Quick search</h3>
-    <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-
             </div>
         </td>
         <td width="100%" id="bodycontent">
         
-<div class="section" id="sony-pictures-imageworks-color-pipeline">
-<h1>Sony Pictures Imageworks Color Pipeline<a class="headerlink" href="#sony-pictures-imageworks-color-pipeline" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="sony-pictures-imageworks-color-pipeline-workflow">
+<h1>Sony Pictures Imageworks Color Pipeline Workflow<a class="headerlink" href="#sony-pictures-imageworks-color-pipeline-workflow" title="Permalink to this headline">¶</a></h1>
 <p>This document describes a high-level overview on how to emulate the current color management practice at Sony Imageworks. It applies equally to all profiles used at Imageworks, including both the VFX and Animation profiles.  It&#8217;s by no means a requirement to follow this workflow at your own facility, this is merely a guideline on how we choose to work.</p>
 <div class="section" id="general-pipeline-observations">
 <h2>General Pipeline Observations<a class="headerlink" href="#general-pipeline-observations" title="Permalink to this headline">¶</a></h2>

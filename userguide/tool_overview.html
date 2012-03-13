@@ -66,6 +66,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
 </ul>
 
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
             </div>
         </td>
         <td width="100%" id="bodycontent">
@@ -76,7 +87,7 @@
 This API can be used in applications and plugins</p>
 <p>Note that all these plugins use the same config file to define color spaces,
 roles and so on. For information on setting up configurations, see
-<em class="xref std std-ref">userguide-configuration</em></p>
+<a class="reference internal" href="../configurations/index.html#configurations"><em>Configurations</em></a></p>
 <div class="section" id="the-api">
 <h2>The API<a class="headerlink" href="#the-api" title="Permalink to this headline">¶</a></h2>
 <p>Most users will never directly interact with the C++ API. However the API is used by all the supplied applications (e.g <a class="reference internal" href="#overview-ocio2icc"><em>ocio2icc</em></a>) and plugins (e.g
@@ -153,7 +164,7 @@ shaperspace option is omitted, as the input colorspace does not have
 values outside 0.0-1.0 (being a Log space):</p>
 <div class="highlight-python"><pre>$ ociobakelut --inputspace lg10 --outputspace srgb8 --format flame flame__lg10_to_srgb.3dl</pre>
 </div>
-<p>See the <em class="xref std std-ref">faq-lut-formats</em> section for a list of formats that
+<p>See the <a class="reference internal" href="../FAQ.html#faq-supportedlut"><em>What LUT Formats are supported?</em></a> section for a list of formats that
 support baking</p>
 </div>
 <div class="section" id="ocio2icc">

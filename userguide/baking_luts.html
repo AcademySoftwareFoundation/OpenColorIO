@@ -66,6 +66,17 @@
 <li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
 </ul>
 
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
             </div>
         </td>
         <td width="100%" id="bodycontent">
@@ -95,7 +106,7 @@ LUT is correct.</p>
 </div>
 <p>Alternatively the config can be specified as a command-line argument
 to the ociobakelut command, <tt class="docutils literal"><span class="pre">--iconfig</span> <span class="pre">~/path/to/spi-vfx/config.ocio</span></tt></p>
-<p>These examples will use the <cite>spi-vfx</cite> config, specifically the
+<p>These examples will use the <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a> config, specifically the
 following colorspaces</p>
 <ul class="simple">
 <li><tt class="docutils literal"><span class="pre">lnf</span></tt> - scene-referred linear light colorspace (reference colorspace)</li>
@@ -159,7 +170,7 @@ course):</p>
 correctly, you can omit the <tt class="docutils literal"><span class="pre">--shaperspace</span></tt> argument, and a prelut
 will be automatically created based on the allocation vars (see the
 linked page for more information)</p>
-<p>Since the colorspaces in the config we are using (<tt class="docutils literal"><span class="pre">spi-vfx</span></tt>) have
+<p>Since the colorspaces in the config we are using (<a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a>) have
 their allocation variables set correctly, we could simplify the
 <tt class="docutils literal"><span class="pre">lnf</span></tt> to <tt class="docutils literal"><span class="pre">srgb8</span></tt> bake command:</p>
 <div class="highlight-python"><pre>bash$ ociobakelut --format houdini --inputspace lnf --outputspace srgb8 lin_to_display_allocbased.lut</pre>
@@ -228,7 +239,7 @@ other words, to paint values over 1.0 when converted to linear-light
 in comp)</p>
 <p>This is a facility-dependant workflow choice.</p>
 <p>For this example we will use the <tt class="docutils literal"><span class="pre">vd16</span></tt> colorspace, as described by
-the <em class="xref std std-ref">spi-vfx description</em></p>
+the <a class="reference internal" href="../configurations/spi_vfx.html#config-spivfx"><em>spi-vfx</em></a></p>
 </div>
 <div class="section" id="creating-display-lut">
 <h3>Creating display LUT<a class="headerlink" href="#creating-display-lut" title="Permalink to this headline">¶</a></h3>

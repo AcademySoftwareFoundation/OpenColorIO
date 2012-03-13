@@ -25,11 +25,13 @@ C++ API documentation:
 .. toctree::
     :maxdepth: 1
     
-    api/index_cpp
+    api/index
 
 Python API documentation:
 
 .. toctree::
     :maxdepth: 1
     
-    api/index_py
+    bindings/PythonAPI
+    bindings/PythonTransforms
+    bindings/PythonTypes

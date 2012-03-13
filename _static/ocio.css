@@ -385,6 +385,30 @@ div.imageBar {
     background-color: #DDDDDD;
 }
 
+div.tocBar {
+    
+    text-align: left;
+    padding: 10px;
+    margin-left: 15px;
+    margin-right: 10px;
+    margin-top: 10px;
+    border: 1px solid #000000;
+    background-color: #DDDDDD;
+}
+
+div.content div.tocBar ul > li.toctree-l1 {
+    width: 400;
+    font-family: Arial, sans-serif;
+    color: #0C3762;
+    font-size: 1.2em;
+    font-weight: normal;
+    margin: 0; /** reset the margins back to 0**/
+    padding: 2px 5px;
+    /**text-shadow: 1px 1px 0 white;**/
+    background: #ddd;
+    font-size: 1.1em;
+}
+
 p.caption {
     font-size:x-small;
     text-align: right;

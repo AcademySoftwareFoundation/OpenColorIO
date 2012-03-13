@@ -13,7 +13,7 @@ cmake \
 -D OCIO_BUILD_STATIC=NO \
 -D OCIO_BUILD_APPS=NO \
 -D OCIO_BUILD_TESTS=NO \
--D OCIO_BUILD_PYGLUE=NO \
+-D OCIO_BUILD_PYGLUE=YES \
 ../mastercopy
 
 # Build the docs

@@ -3,8 +3,10 @@ Home
 
 .. include:: README
 
+.. _mailing_lists:
+
 Mailing lists
-*************
+"""""""""""""
 
 There are two mailing lists associated with OpenColorIO:
 
@@ -16,7 +18,8 @@ There are two mailing lists associated with OpenColorIO:
     For developers interested OCIO APIs, code integration, compilation, etc.
 
 Using OpenColorIO
-*****************
+"""""""""""""""""
+
 Most users will likely want to use the OpenColorIO that comes precompiled with
 their applications.  See the :ref:`compatiblesoftware` for further details on
 each application.
@@ -36,9 +39,8 @@ Please be sure to select a profile that matches your color workflow (VFX work
 typically requires a different profile than animated features). If you need
 assistance picking a profile, email ocio-users.
 
-
 Downloading and building the code
-*********************************
+"""""""""""""""""""""""""""""""""
 
 Source code is available on Github at
 http://github.com/imageworks/OpenColorIO
@@ -53,19 +55,23 @@ questions.
 .. toctree::
     :hidden:
     :maxdepth: 2
-
+    
     self
     CompatibleSoftware
-
+    
     configurations/index
     installation
-
+    
     userguide/index
-
+    
     developers/index
-
+    
     FAQ
     downloads
     
     ChangeLog
     License
+
+:ref:`search`
+
+:ref:`genindex`
