@@ -154,7 +154,7 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::Spacer(f, 8);
     
     Button(f, "reload", "reload");
-    DD::Image::Tooltip(f, "Reloads specified files");
+    DD::Image::Tooltip(f, "Reload all files used in the underlying Look(s).");
     Int_knob(f, &m_reload_version, "version");
     DD::Image::SetFlags(f, DD::Image::Knob::HIDDEN);
     
