@@ -269,18 +269,17 @@ endif()
 if(OCIO_BUILD_APPS)
     # Try to find OpenImageIO (OIIO) and OpenGL stuff
     OCIOFindOpenImageIO()
-    OCIOFindOpenGL()
     
-    # ocioconvert: performs file format conversion and colorspace
-    # transforms (uses OpenImageIO)
     if(OIIO_FOUND)
         add_subdirectory(src/apps/ocioconvert)
+        add_subdirectory(src/apps/ociolutimage)
     else()
-        messageonce("Not building ocioconvert. Requirement(s) found: OIIO:${OIIO_FOUND}")
+        messageonce("Not building ocioconvert/ociolutimage. Requirement(s) found: OIIO:${OIIO_FOUND}")
     endif()
     
     # ociodisplay, displays color-transformed images (uses OpenImageIO,
     # and OpenGL)
+    OCIOFindOpenGL()
     if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND AND OIIO_FOUND)
         add_subdirectory(src/apps/ociodisplay)
     else()
