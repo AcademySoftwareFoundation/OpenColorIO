@@ -229,7 +229,7 @@ int main (int argc, const char* argv[])
                "--extract", &extract, "Extract a 3dlut from an input image",
                "<SEPARATOR>", "",
                "--cubesize %d", &cubesize, "Size of the cube (default: 32)",
-               "--maxwidth %s", &maxwidth, "Specify maximum width of the image (default: 2048)",
+               "--maxwidth %d", &maxwidth, "Specify maximum width of the image (default: 2048)",
                "--input %s", &inputfile, "Specify the input filename",
                "--output %s", &outputfile, "Specify the output filename",
                "<SEPARATOR>", "",
