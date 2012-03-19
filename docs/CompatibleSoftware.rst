@@ -25,8 +25,8 @@ Nuke
 
 `Compositor - The Foundry <http://www.thefoundry.co.uk/products/nuke>`__
 
-OCIO Nuke nodes currently require compiling by the user, but are expected to
-ship in a commercial Nuke release sometime soon.
+Nuke 6.3v7+ ships with native support for OpenColorIO. The OCIO configuration
+is selectable in the user preferences.
 
 OCIO Nodes: OCIOCDLTransform, OCIOColorSpace, OCIODisplay, OCIOFileTransform,
 OCIOLookConvert, OCIOLogConvert
@@ -39,6 +39,8 @@ The OCIO config "nuke-default" is provided, which matches the built-in Nuke
 color processing. This profile is useful for those who want to mirror the native
 nuke color processing in other applications.  (The underlying equations are
 also provided as python code in the config as well).
+
+A `video demonstration <http://vimeo.com/38773736>`__ of the Nuke OCIO workflow.
 
 Mari
 ****
