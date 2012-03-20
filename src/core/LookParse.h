@@ -27,27 +27,52 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_PRIVATE_TYPES_H
-#define INCLUDED_OCIO_PRIVATE_TYPES_H
+#ifndef INCLUDED_OCIO_PARSED_LOOK_H
+#define INCLUDED_OCIO_PARSED_LOOK_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <map>
-#include <set>
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-    // Stl types of OCIO classes
-    typedef std::map<std::string, std::string> StringMap;
-    typedef std::vector<std::string> StringVec;
-    typedef std::set<std::string> StringSet;
+    // Looks parse structures
+    // This is contains a list, where each option entry corresponds to
+    // an "or" separated looks token list.
+    // I.e, " +cc,-onset | +cc " parses to TWO options: (+cc,-onset), (+cc)
     
-    typedef std::vector<ConstTransformRcPtr> ConstTransformVec;
-    typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
-    typedef std::vector<LookRcPtr> LookVec;
+    class LookParseResult
+    {
+        public:
+        struct Token
+        {
+            std::string name;
+            TransformDirection dir;
+            
+            Token():
+                dir(TRANSFORM_DIR_FORWARD) {}
+            
+            void parse(const std::string & str);
+            void serialize(std::ostream & os) const;
+        };
+        
+        typedef std::vector<Token> Tokens;
+        
+        static void serialize(std::ostream & os, const Tokens & tokens);
+        
+        typedef std::vector<Tokens> Options;
+        
+        const Options & parse(const std::string & looksstr);
+        
+        const Options & getOptions() const;
+        bool empty() const;
+        
+        void reverse();
+        
+        private:
+        Options m_options;
+    };
     
-    typedef std::vector<TransformDirection> TransformDirectionVec;
 }
 OCIO_NAMESPACE_EXIT
 

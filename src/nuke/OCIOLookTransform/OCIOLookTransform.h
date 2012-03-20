@@ -22,13 +22,12 @@ class OCIOLookTransform : public DD::Image::PixelIop {
 
         bool m_hasColorSpaces; //!< Were colorspaces found for both input and output? If not, always error.
         
-        int m_lookIndex;
+        std::string m_look;
+        std::string m_lookhelp;
+        
         int m_dirIndex;
         int m_inputColorSpaceIndex;
         int m_outputColorSpaceIndex;
-        
-        std::vector<std::string> m_lookNames;
-        std::vector<const char*> m_lookCstrNames;
         
         std::vector<std::string> m_colorSpaceNames; //!< list of input and output colorspace names (memory for const char* s below)
         std::vector<const char*> m_inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)

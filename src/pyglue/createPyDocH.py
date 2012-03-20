@@ -63,6 +63,7 @@ if __name__ == "__main__":
     #fileh.write("%s\n" % GetDocStrings(Baker))
     fileh.write("%s\n" % GetDocStrings(ColorSpace))
     fileh.write("%s\n" % GetDocStrings(Processor))
+    fileh.write("%s\n" % GetDocStrings(ProcessorMetadata))
     fileh.write("%s\n" % GetDocStrings(Context))
     fileh.write("%s\n" % GetDocStrings(Look))
     fileh.write("%s\n" % GetDocStrings(Transform))

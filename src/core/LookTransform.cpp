@@ -30,6 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 
+#include "LookParse.h"
+#include "NoOps.h"
 #include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
@@ -152,8 +154,121 @@ OCIO_NAMESPACE_ENTER
         return os;
     }
     
+    ////////////////////////////////////////////////////////////////////////////
     
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    namespace
+    {
+    
+    void RunLookTokens(OpRcPtrVec & ops,
+                       ConstColorSpaceRcPtr & currentColorSpace,
+                       bool skipColorSpaceConversions,
+                       const Config& config,
+                       const ConstContextRcPtr & context,
+                       const LookParseResult::Tokens & lookTokens)
+    {
+        if(lookTokens.empty()) return;
+        
+        for(unsigned int i=0; i<lookTokens.size(); ++i)
+        {
+            const std::string & lookName = lookTokens[i].name;
+            
+            if(lookName.empty()) continue;
+            
+            ConstLookRcPtr look = config.getLook(lookName.c_str());
+            if(!look)
+            {
+                std::ostringstream os;
+                os << "RunLookTokens error. ";
+                os << "The specified look, '" << lookName;
+                os << "', cannot be found. ";
+                if(config.getNumLooks() == 0)
+                {
+                    os << " (No looks defined in config)";
+                }
+                else
+                {
+                    os << " (looks: ";
+                    for(int ii=0; ii<config.getNumLooks(); ++ii)
+                    {
+                        if(ii != 0) os << ", ";
+                        os << config.getLookNameByIndex(ii);
+                    }
+                    os << ")";
+                }
+                
+                throw Exception(os.str().c_str());
+            }
+            
+            // Put the new ops into a temp array, to see if it's a no-op
+            // If it is a no-op, dont bother doing the colorspace conversion.
+            OpRcPtrVec tmpOps;
+            
+            if(lookTokens[i].dir == TRANSFORM_DIR_FORWARD)
+            {
+                CreateLookNoOp(tmpOps, lookName);
+                if(look->getTransform())
+                {
+                    BuildOps(tmpOps, config, context, look->getTransform(), TRANSFORM_DIR_FORWARD);
+                }
+                else if(look->getInverseTransform())
+                {
+                    BuildOps(tmpOps, config, context, look->getInverseTransform(), TRANSFORM_DIR_INVERSE);
+                }
+            }
+            else if(lookTokens[i].dir == TRANSFORM_DIR_INVERSE)
+            {
+                CreateLookNoOp(tmpOps, std::string("-") + lookName);
+                if(look->getInverseTransform())
+                {
+                    BuildOps(tmpOps, config, context, look->getInverseTransform(), TRANSFORM_DIR_FORWARD);
+                }
+                else if(look->getTransform())
+                {
+                    BuildOps(tmpOps, config, context, look->getTransform(), TRANSFORM_DIR_INVERSE);
+                }
+            }
+            else
+            {
+                std::ostringstream os;
+                os << "BuildLookOps error. ";
+                os << "The specified look, '" << lookTokens[i].name;
+                os << "' has an ill-defined transform direction.";
+                throw Exception(os.str().c_str());
+            }
+            
+            if(!IsOpVecNoOp(tmpOps))
+            {
+                if(!skipColorSpaceConversions)
+                {
+                    ConstColorSpaceRcPtr processColorSpace = config.getColorSpace(look->getProcessSpace());
+                    if(!processColorSpace)
+                    {
+                        std::ostringstream os;
+                        os << "RunLookTokens error. ";
+                        os << "The specified look, '" << lookTokens[i].name;
+                        os << "', requires processing in the ColorSpace, '";
+                        os << look->getProcessSpace() << "' which is not defined.";
+                        throw Exception(os.str().c_str());
+                    }
+                    
+                    BuildColorSpaceOps(ops, config, context,
+                                       currentColorSpace,
+                                       processColorSpace);
+                    currentColorSpace = processColorSpace;
+                }
+                
+                std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
+            }
+        }
+    }
+    
+    } // anon namespace
+    
+    ////////////////////////////////////////////////////////////////////////////
+    
     
     void BuildLookOps(OpRcPtrVec & ops,
                       const Config& config,
@@ -183,10 +298,20 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
+        LookParseResult looks;
+        looks.parse(lookTransform.getLooks());
+        
         // We must handle the inverse src/dst colorspace transformation explicitly.
         if(dir == TRANSFORM_DIR_INVERSE)
         {
             std::swap(src, dst);
+            looks.reverse();
+        }
+        else if(dir == TRANSFORM_DIR_UNKNOWN)
+        {
+            std::ostringstream os;
+            os << "BuildLookOps error. A valid transform direction must be specified.";
+            throw Exception(os.str().c_str());
         }
         
         ConstColorSpaceRcPtr currentColorSpace = src;
@@ -195,8 +320,7 @@ OCIO_NAMESPACE_ENTER
                      false,
                      config,
                      context,
-                     lookTransform.getLooks(),
-                     dir);
+                     looks);
         
         BuildColorSpaceOps(ops, config, context,
                            currentColorSpace,
@@ -208,120 +332,71 @@ OCIO_NAMESPACE_ENTER
                       bool skipColorSpaceConversions,
                       const Config& config,
                       const ConstContextRcPtr & context,
-                      const std::string & looks,
-                      TransformDirection dir)
+                      const LookParseResult & looks)
     {
-        if(looks.empty()) return;
+        const LookParseResult::Options & options = looks.getOptions();
         
-        // Turn the look string into a set of ordered look operations
-        StringVec lookVec;
-        TransformDirectionVec directionVec;
-        SplitLooks(lookVec, directionVec, looks);
-        
-        // We account for application in the inverse direction
-        // by pre-reversing the order (and flipping direction) of
-        // the look vectors.
-        if(dir == TRANSFORM_DIR_INVERSE)
+        if(options.empty())
         {
-            std::reverse(lookVec.begin(), lookVec.end());
-            std::reverse(directionVec.begin(), directionVec.end());
-            for(unsigned int i=0; i<directionVec.size(); ++i)
-            {
-                directionVec[i] = GetInverseTransformDirection(directionVec[i]);
-            }
+            // Do nothing
         }
-        else if(dir == TRANSFORM_DIR_UNKNOWN)
+        else if(options.size() == 1)
         {
+            // As an optimization, if we only have a single look option,
+            // just push back onto the final location
+            RunLookTokens(ops,
+                          currentColorSpace,
+                          skipColorSpaceConversions,
+                          config,
+                          context,
+                          options[0]);
+        }
+        else
+        {
+            // If we have multiple look options, try each one in order,
+            // and if we can create the ops without a missing file exception,
+            // push back it's results and return
+            
+            bool success = false;
             std::ostringstream os;
-            os << "BuildLookOps error. A valid transform direction must be specified.";
-            throw Exception(os.str().c_str());
-        }
-        
-        for(unsigned int i=0; i<lookVec.size(); ++i)
-        {
-            ConstLookRcPtr look = config.getLook(lookVec[i].c_str());
-            if(!look)
-            {
-                std::ostringstream os;
-                os << "BuildLookOps error. ";
-                os << "The specified look, '" << lookVec[i];
-                os << "', cannot be found in this OCIO configuration.";
-                if(config.getNumLooks() == 0)
-                {
-                    os << " (No looks defined in config)";
-                }
-                else
-                {
-                    os << " (looks: ";
-                    for(int ii=0; ii<config.getNumLooks(); ++ii)
-                    {
-                        if(ii != 0) os << ", ";
-                        os << config.getLookNameByIndex(ii);
-                    }
-                    os << ")";
-                }
-                
-                throw Exception(os.str().c_str());
-            }
             
-            ConstColorSpaceRcPtr processColorSpace = config.getColorSpace(look->getProcessSpace());
-            if(!processColorSpace)
-            {
-                std::ostringstream os;
-                os << "BuildLookOps error. ";
-                os << "The specified look, '" << lookVec[i];
-                os << "', requires processing in the ColorSpace, '";
-                os << look->getProcessSpace() << "' which is not defined.";
-                throw Exception(os.str().c_str());
-            }
-            
-            // Put the new ops into a temp array, to see if it's a no-op
-            // If it is a no-op, dont bother doing the colorspace conversion.
             OpRcPtrVec tmpOps;
+            ConstColorSpaceRcPtr cs;
             
-            if(directionVec[i] == TRANSFORM_DIR_FORWARD)
+            for(unsigned int i=0; i<options.size(); ++i)
             {
-                if(look->getTransform())
+                cs = currentColorSpace;
+                tmpOps.clear();
+                
+                try
                 {
-                    BuildOps(tmpOps, config, context, look->getTransform(), TRANSFORM_DIR_FORWARD);
+                    RunLookTokens(tmpOps,
+                                  cs,
+                                  skipColorSpaceConversions,
+                                  config,
+                                  context,
+                                  options[i]);
+                    success = true;
+                    break;
                 }
-                else if(look->getInverseTransform())
+                catch(ExceptionMissingFile & e)
                 {
-                    BuildOps(tmpOps, config, context, look->getInverseTransform(), TRANSFORM_DIR_INVERSE);
+                    if(i != 0) os << "  ...  ";
+                    
+                    os << "(";
+                    LookParseResult::serialize(os, options[i]);
+                    os << ") " << e.what();
                 }
             }
-            else if(directionVec[i] == TRANSFORM_DIR_INVERSE)
+            
+            if(success)
             {
-                if(look->getInverseTransform())
-                {
-                    BuildOps(tmpOps, config, context, look->getInverseTransform(), TRANSFORM_DIR_FORWARD);
-                }
-                else if(look->getTransform())
-                {
-                    BuildOps(tmpOps, config, context, look->getTransform(), TRANSFORM_DIR_INVERSE);
-                }
+                currentColorSpace = cs;
+                std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
             }
             else
             {
-                std::ostringstream os;
-                os << "BuildLookOps error. ";
-                os << "The specified look, '" << lookVec[i];
-                os << "', processing in the ColorSpace, '";
-                os << look->getProcessSpace() << "' has an ill-defined transform direction.";
-                throw Exception(os.str().c_str());
-            }
-            
-            if(!IsOpVecNoOp(tmpOps))
-            {
-                if(!skipColorSpaceConversions)
-                {
-                    BuildColorSpaceOps(ops, config, context,
-                                       currentColorSpace,
-                                       processColorSpace);
-                    currentColorSpace = processColorSpace;
-                }
-                
-                std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
+                throw ExceptionMissingFile(os.str().c_str());
             }
         }
     }

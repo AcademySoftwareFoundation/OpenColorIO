@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HashUtils.h"
 #include "Logging.h"
+#include "LookParse.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
@@ -233,7 +234,6 @@ OCIO_NAMESPACE_ENTER
     
     typedef std::vector<View> ViewVec;
     typedef std::map<std::string, ViewVec> DisplayMap;  // (display name : ViewVec)
-    typedef std::set<std::string> StringSet;
     
     void operator >> (const YAML::Node& node, View& v)
     {
@@ -704,22 +704,29 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 // Confirm looks references exist
-                StringVec lookVec;
-                TransformDirectionVec directionVec;
-                SplitLooks(lookVec, directionVec, views[i].looks);
+                LookParseResult looks;
+                const LookParseResult::Options & options = looks.parse(views[i].looks);
                 
-                for(unsigned int lookindex=0; lookindex<lookVec.size(); ++lookindex)
+                for(unsigned int optionindex=0;
+                    optionindex<options.size();
+                    ++optionindex)
                 {
-                    if(!lookVec[lookindex].empty() &&
-                        !getLook(lookVec[lookindex].c_str()))
+                    for(unsigned int tokenindex=0;
+                        tokenindex<options[optionindex].size();
+                        ++tokenindex)
                     {
-                        std::ostringstream os;
-                        os << "Config failed sanitycheck. ";
-                        os << "The display '" << display << "' ";
-                        os << "refers to a look, '" << lookVec[lookindex] << "', ";
-                        os << "which is not defined.";
-                        getImpl()->sanitytext_ = os.str();
-                        throw Exception(getImpl()->sanitytext_.c_str());
+                        std::string look = options[optionindex][tokenindex].name;
+                        
+                        if(!look.empty() && !getLook(look.c_str()))
+                        {
+                            std::ostringstream os;
+                            os << "Config failed sanitycheck. ";
+                            os << "The display '" << display << "' ";
+                            os << "refers to a look, '" << look << "', ";
+                            os << "which is not defined.";
+                            getImpl()->sanitytext_ = os.str();
+                            throw Exception(getImpl()->sanitytext_.c_str());
+                        }
                     }
                 }
                 

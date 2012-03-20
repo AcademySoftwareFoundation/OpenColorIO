@@ -360,14 +360,14 @@ OCIO_NAMESPACE_ENTER
         }
         
         // Apply a look, if specified
-        std::string looks;
+        LookParseResult looks;
         if(displayTransform.getLooksOverrideEnabled())
         {
-            looks = displayTransform.getLooksOverride();
+            looks.parse(displayTransform.getLooksOverride());
         }
         else if(!skipColorSpaceConversions)
         {
-            looks = config.getDisplayLooks(display.c_str(), view.c_str());
+            looks.parse(config.getDisplayLooks(display.c_str(), view.c_str()));
         }
         
         if(!looks.empty())
@@ -377,8 +377,7 @@ OCIO_NAMESPACE_ENTER
                          skipColorSpaceConversions,
                          config,
                          context,
-                         looks,
-                         TRANSFORM_DIR_FORWARD);
+                         looks);
         }
         
         // Apply a channel view

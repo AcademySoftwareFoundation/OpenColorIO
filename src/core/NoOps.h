@@ -27,27 +27,40 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_PRIVATE_TYPES_H
-#define INCLUDED_OCIO_PRIVATE_TYPES_H
+#ifndef INCLUDED_OCIO_GPUALLOCATIONNOOP_H
+#define INCLUDED_OCIO_GPUALLOCATIONNOOP_H
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <map>
-#include <set>
+#include "Op.h"
+
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-    // Stl types of OCIO classes
-    typedef std::map<std::string, std::string> StringMap;
-    typedef std::vector<std::string> StringVec;
-    typedef std::set<std::string> StringSet;
+    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
+                                 const AllocationData & allocationData);
     
-    typedef std::vector<ConstTransformRcPtr> ConstTransformVec;
-    typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
-    typedef std::vector<LookRcPtr> LookVec;
     
-    typedef std::vector<TransformDirection> TransformDirectionVec;
+    // Partition an opvec into 3 segments for GPU Processing
+    //
+    // gpuLatticeOps need not support analytical gpu shader generation
+    // the pre and post ops must support analytical generation.
+    //
+    // Additional ops will optinally be inserted to take into account
+    // allocation transformations
+    
+    void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
+                         OpRcPtrVec & gpuLatticeOps,
+                         OpRcPtrVec & gpuPostOps,
+                         const OpRcPtrVec & ops);
+    
+    void CreateFileNoOp(OpRcPtrVec & ops,
+                        const std::string & fname);
+    
+    void CreateLookNoOp(OpRcPtrVec & ops,
+                        const std::string & lookName);
+    
 }
 OCIO_NAMESPACE_EXIT
 

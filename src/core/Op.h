@@ -88,6 +88,9 @@ OCIO_NAMESPACE_ENTER
             
             virtual bool hasChannelCrosstalk() const = 0;
             
+            virtual void dumpMetadata(ProcessorMetadataRcPtr & /*metadata*/) const
+            { }
+            
             // This is called a single time after construction.
             // Final pre-processing and safety checks should happen here,
             // rather than in the constructor.

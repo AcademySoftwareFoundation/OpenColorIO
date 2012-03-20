@@ -83,16 +83,6 @@ OCIO_NAMESPACE_ENTER
     
     int FindInStringVecCaseIgnore(const std::vector<std::string> & vec, const std::string & str);
     
-    
-    //////////////////////////////////////////////////////////////////////////
-    
-    // Split a looks string, example: "+cc, -di, onset"
-    // into vectors of looknames, directions.  The output vectors will be
-    // identical sizes
-    
-    void SplitLooks(StringVec & lookVec, TransformDirectionVec & directionVec,
-                    const std::string & looks);
-    
 }
 OCIO_NAMESPACE_EXIT
 

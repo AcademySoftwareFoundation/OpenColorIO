@@ -28,7 +28,6 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
 
     m_inputColorSpaceIndex = 0;
     m_outputColorSpaceIndex = 0;
-    m_lookIndex = 0;
     m_dirIndex = 0;
     m_ignoreErrors = false;
     m_reload_version = 1;
@@ -46,6 +45,47 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
         OCIO::ConstColorSpaceRcPtr linearcs = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
         if(!linearcs) throw std::runtime_error("ROLE_SCENE_LINEAR not defined.");
         linear = linearcs->getName();
+        
+        if(config->getNumLooks()>0)
+        {
+            m_look = config->getLookNameByIndex(0);
+        }
+        
+        std::ostringstream os;
+        os << "Specify the look(s) to apply, as predefined in the OpenColorIO ";
+        os << "configuration. This may be the name of a single look, or a ";
+        os << "combination of looks using the 'look syntax' (outlined below)\n\n";
+        
+        std::string firstlook = "a";
+        std::string secondlook = "b";
+        if(config->getNumLooks()>0)
+        {
+            os << "Looks: ";
+            for(int i = 0; i<config->getNumLooks(); ++i)
+            {
+                if(i!=0) os << ", ";
+                const char * lookname = config->getLookNameByIndex(i);
+                os << lookname;
+                if(i==0) firstlook = lookname;
+                if(i==1) secondlook = lookname;
+            }
+            os << "\n\n";
+        }
+        else
+        {
+            os << "NO LOOKS DEFINED -- ";
+            os << "This node cannot be used until looks are added to the OCIO Configuration. ";
+            os << "See opencolorio.org for examples.\n\n";
+        }
+        
+        os << "Look Syntax:\n";
+        os << "Multiple looks are combined with commas: '";
+        os << firstlook << ", " << secondlook << "'\n";
+        os << "Direction is specified with +/- prefixes: '";
+        os << "+" << firstlook << ", -" << secondlook << "'\n";
+        os << "Missing look 'fallbacks' specified with |: '";
+        os << firstlook << ", -" << secondlook << " | -" << secondlook << "'";
+        m_lookhelp = os.str();
     }
     catch (const OCIO::Exception& e)
     {
@@ -60,12 +100,6 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     {
         m_hasColorSpaces = false;
         return;
-    }
-    
-    // Step 1: Make the std::vectors
-    for(int i=0; i<config->getNumLooks(); ++i)
-    {
-        m_lookNames.push_back(config->getLookNameByIndex(i));
     }
     
     for(int i = 0; i < config->getNumColorSpaces(); i++)
@@ -92,12 +126,6 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     // Step 2: Create a cstr array for passing to Nuke
     // (This must be done in a second pass, lest the original strings be reallocated)
     
-    for(unsigned int i=0; i<m_lookNames.size(); ++i)
-    {
-        m_lookCstrNames.push_back(m_lookNames[i].c_str());
-    }
-    m_lookCstrNames.push_back(NULL);
-    
     for(unsigned int i=0; i<m_colorSpaceNames.size(); ++i)
     {
         m_inputColorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
@@ -106,10 +134,6 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     
     m_inputColorSpaceCstrNames.push_back(NULL);
     m_outputColorSpaceCstrNames.push_back(NULL);
-    
-    
-    
-    
     
     m_hasColorSpaces = (!m_colorSpaceNames.empty());
     
@@ -141,10 +165,9 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
     
-    
-    DD::Image::Enumeration_knob(f, &m_lookIndex, &m_lookCstrNames[0], "look", "look");
+    DD::Image::String_knob(f, &m_look, "look");
+    DD::Image::Tooltip(f, m_lookhelp.c_str());
     DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
-    DD::Image::Tooltip(f, "Specify the look to apply, as predefined in the OpenColorIO configuration.");
     
     DD::Image::Spacer(f, 8);
     
@@ -283,11 +306,7 @@ void OCIOLookTransform::_validate(bool for_real)
         const char * outputName = config->getColorSpaceNameByIndex(m_outputColorSpaceIndex);
         
         OCIO::LookTransformRcPtr transform = OCIO::LookTransform::Create();
-        const char * look = m_lookCstrNames[m_lookIndex];
-        if(look != NULL)
-        {
-            transform->setLooks(look);
-        }
+        transform->setLooks(m_look.c_str());
         
         OCIO::ConstContextRcPtr context = getLocalContext();
         OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_UNKNOWN;
@@ -441,8 +460,18 @@ const char* OCIOLookTransform::displayName() const
 
 const char* OCIOLookTransform::node_help() const
 {
-    // TODO more detailed help text
-    return "Use OpenColorIO to apply the specified Look Transform";
+    static const char * help = "OpenColorIO LookTransform\n\n"
+    "A 'look' is a named color transform, intended to modify the look of an "
+    "image in a 'creative' manner (as opposed to a colorspace definion which "
+    "tends to be technically/mathematically defined).\n\n"
+    "Examples of looks may be a neutral grade, to be applied to film scans "
+    "prior to VFX work, or a per-shot DI grade decided on by the director, "
+    "to be applied just before the viewing transform.\n\n"
+    "OCIOLooks must be predefined in the OpenColorIO configuration before usage, "
+    "and often reference per-shot/sequence LUTs/CCs.\n\n"
+    "See the look knob for further syntax details.\n\n"
+    "See opencolorio.org for look configuration customization examples.";
+    return help;
 }
 
 // This class is necessary in order to call knobsAtTheEnd(). Otherwise, the NukeWrapper knobs 

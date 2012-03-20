@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "AllocationOp.h"
+#include "NoOps.h"
 #include "OpBuilders.h"
 #include "Op.h"
 
@@ -41,64 +42,40 @@ OCIO_NAMESPACE_ENTER
         class AllocationNoOp : public Op
         {
         public:
-            AllocationNoOp(const AllocationData & allocationData);
-            virtual ~AllocationNoOp();
+            AllocationNoOp(const AllocationData & allocationData):
+                m_allocationData(allocationData) {}
+            virtual ~AllocationNoOp() {}
             
             virtual OpRcPtr clone() const;
             
-            virtual std::string getInfo() const;
-            virtual std::string getCacheID() const;
+            virtual std::string getInfo() const { return "<AllocationNoOp>"; }
+            virtual std::string getCacheID() const { return ""; }
             
-            virtual bool isNoOp() const;
+            virtual bool isNoOp() const { return true; }
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
-            virtual bool hasChannelCrosstalk() const;
-            virtual void finalize();
-            virtual void apply(float* rgbaBuffer, long numPixels) const;
+            virtual bool hasChannelCrosstalk() const { return false; }
+            virtual void finalize() { }
+            virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const { }
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
+            virtual bool supportsGpuShader() const { return true; }
+            virtual void writeGpuShader(std::ostream & /*shader*/,
+                                        const std::string & /*pixelName*/,
+                                        const GpuShaderDesc & /*shaderDesc*/) const
+            { }
         
             void getGpuAllocation(AllocationData & allocation) const;
             
         private:
             AllocationData m_allocationData;
-            
-            std::string m_cacheID;
         };
         
         typedef OCIO_SHARED_PTR<AllocationNoOp> AllocationNoOpRcPtr;
         
-        AllocationNoOp::AllocationNoOp(const AllocationData & allocationData) :
-                        m_allocationData(allocationData)
-        { }
-
         OpRcPtr AllocationNoOp::clone() const
         {
             OpRcPtr op = OpRcPtr(new AllocationNoOp(m_allocationData));
             return op;
-        }
-        
-        AllocationNoOp::~AllocationNoOp()
-        {
-
-        }
-
-        std::string AllocationNoOp::getInfo() const
-        {
-            return "<AllocationNoOp>";
-        }
-
-        std::string AllocationNoOp::getCacheID() const
-        {
-            return m_cacheID;
-        }
-
-        bool AllocationNoOp::isNoOp() const
-        {
-            return true;
         }
         
         bool AllocationNoOp::isSameType(const OpRcPtr & op) const
@@ -113,34 +90,6 @@ OCIO_NAMESPACE_ENTER
             if(!isSameType(op)) return false;
             return true;
         }
-         
-        bool AllocationNoOp::hasChannelCrosstalk() const
-        {
-            return false;
-        }
-        
-        void AllocationNoOp::finalize()
-        {
-            // Create the cacheID
-            std::ostringstream cacheIDStream;
-            cacheIDStream << "<AllocationOp ";
-            cacheIDStream << m_allocationData.getCacheID();
-            cacheIDStream << ">";
-            m_cacheID = cacheIDStream.str();
-        }
-
-        void AllocationNoOp::apply(float* /*rgbaBuffer*/, long /*numPixels*/) const
-        { }
-
-        bool AllocationNoOp::supportsGpuShader() const
-        {
-            return true;
-        }
-
-        void AllocationNoOp::writeGpuShader(std::ostream & /*shader*/,
-                                             const std::string & /*pixelName*/,
-                                             const GpuShaderDesc & /*shaderDesc*/) const
-        { }
         
         void AllocationNoOp::getGpuAllocation(AllocationData & allocation) const
         {
@@ -353,7 +302,143 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-                         
+    ////////////////////////////////////////////////////////////////////////////
+    
+    namespace
+    {
+        class FileNoOp : public Op
+        {
+        public:
+            FileNoOp(const std::string & fileReference):
+                m_fileReference(fileReference) {}
+            virtual ~FileNoOp() {}
+            
+            virtual OpRcPtr clone() const;
+            
+            virtual std::string getInfo() const { return "<FileNoOp>"; }
+            virtual std::string getCacheID() const { return ""; }
+            
+            virtual bool isNoOp() const { return true; }
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool hasChannelCrosstalk() const { return false; }
+            virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
+            
+            virtual void finalize() {}
+            virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
+            
+            virtual bool supportsGpuShader() const { return true; }
+            virtual void writeGpuShader(std::ostream & /*shader*/,
+                                        const std::string & /*pixelName*/,
+                                        const GpuShaderDesc & /*shaderDesc*/) const
+            { }
+            
+        private:
+            std::string m_fileReference;
+        };
+        
+        typedef OCIO_SHARED_PTR<FileNoOp> FileNoOpRcPtr;
+        
+        OpRcPtr FileNoOp::clone() const
+        {
+            OpRcPtr op = OpRcPtr(new FileNoOp(m_fileReference));
+            return op;
+        }
+        
+        bool FileNoOp::isSameType(const OpRcPtr & op) const
+        {
+            FileNoOpRcPtr typedRcPtr = DynamicPtrCast<FileNoOp>(op);
+            if(!typedRcPtr) return false;
+            return true;
+        }
+        
+        bool FileNoOp::isInverse(const OpRcPtr & op) const
+        {
+            return isSameType(op);
+        }
+        
+        void FileNoOp::dumpMetadata(ProcessorMetadataRcPtr & metadata) const
+        {
+            metadata->addFile(m_fileReference.c_str());
+        }
+    }
+    
+    void CreateFileNoOp(OpRcPtrVec & ops,
+                                 const std::string & fileReference)
+    {
+        ops.push_back( FileNoOpRcPtr(new FileNoOp(fileReference)) );
+    }
+    
+    
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    
+    namespace
+    {
+        class LookNoOp : public Op
+        {
+        public:
+            LookNoOp(const std::string & look):
+                m_look(look) {}
+            virtual ~LookNoOp() {}
+            
+            virtual OpRcPtr clone() const;
+            
+            virtual std::string getInfo() const { return "<LookNoOp>"; }
+            virtual std::string getCacheID() const { return ""; }
+            
+            virtual bool isNoOp() const { return true; }
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool hasChannelCrosstalk() const { return false; }
+            virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
+            
+            virtual void finalize() {}
+            virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
+            
+            virtual bool supportsGpuShader() const { return true; }
+            virtual void writeGpuShader(std::ostream & /*shader*/,
+                                        const std::string & /*pixelName*/,
+                                        const GpuShaderDesc & /*shaderDesc*/) const
+            { }
+            
+        private:
+            std::string m_look;
+        };
+        
+        typedef OCIO_SHARED_PTR<LookNoOp> LookNoOpRcPtr;
+        
+        OpRcPtr LookNoOp::clone() const
+        {
+            OpRcPtr op = OpRcPtr(new FileNoOp(m_look));
+            return op;
+        }
+        
+        bool LookNoOp::isSameType(const OpRcPtr & op) const
+        {
+            FileNoOpRcPtr typedRcPtr = DynamicPtrCast<FileNoOp>(op);
+            if(!typedRcPtr) return false;
+            return true;
+        }
+        
+        bool LookNoOp::isInverse(const OpRcPtr & op) const
+        {
+            return isSameType(op);
+        }
+        
+        void LookNoOp::dumpMetadata(ProcessorMetadataRcPtr & metadata) const
+        {
+            metadata->addLook(m_look.c_str());
+        }
+    }
+    
+    void CreateLookNoOp(OpRcPtrVec & ops,
+                        const std::string & look)
+    {
+        ops.push_back( LookNoOpRcPtr(new LookNoOp(look)) );
+    }
+    
 }
 OCIO_NAMESPACE_EXIT
 

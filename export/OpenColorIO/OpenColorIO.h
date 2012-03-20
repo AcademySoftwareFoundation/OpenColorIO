@@ -751,6 +751,9 @@ OCIO_NAMESPACE_ENTER
         //                introduces crosstalk between the image channels
         bool hasChannelCrosstalk() const;
         
+        //!cpp:function::
+        ConstProcessorMetadataRcPtr getMetadata() const;
+        
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // CPU Path
@@ -816,6 +819,48 @@ OCIO_NAMESPACE_ENTER
         Impl * getImpl() { return m_impl; }
         const Impl * getImpl() const { return m_impl; }
     };
+    
+    
+    //!cpp:class::
+    // This class contains meta information about the process that generated
+    // this processor.  The results of these functions do not
+    // impact the pixel processing.
+    
+    class OCIOEXPORT ProcessorMetadata
+    {
+    public:
+        //!cpp:function::
+        static ProcessorMetadataRcPtr Create();
+        
+        //!cpp:function::
+        int getNumFiles() const;
+        //!cpp:function::
+        const char * getFile(int index) const;
+        
+        //!cpp:function::
+        int getNumLooks() const;
+        //!cpp:function::
+        const char * getLook(int index) const;
+        
+        //!cpp:function::
+        void addFile(const char * fname);
+        //!cpp:function::
+        void addLook(const char * look);
+    private:
+        ProcessorMetadata();
+        ~ProcessorMetadata();
+        ProcessorMetadata(const ProcessorMetadata &);
+        ProcessorMetadata& operator= (const ProcessorMetadata &);
+        
+        static void deleter(ProcessorMetadata* c);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
     
     
     ///////////////////////////////////////////////////////////////////////////

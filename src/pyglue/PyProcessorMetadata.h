@@ -27,34 +27,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_GPUALLOCATIONNOOP_H
-#define INCLUDED_OCIO_GPUALLOCATIONNOOP_H
+#ifndef INCLUDED_PYOCIO_PYPROCESSORMETADATA_H
+#define INCLUDED_PYOCIO_PYPROCESSORMETADATA_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "Op.h"
-
-#include <vector>
+#include <PyOpenColorIO/PyOpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
-    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
-                                 const AllocationData & allocationData);
+    // TODO: Maybe put this in a pyinternal namespace?
     
+    typedef struct {
+        PyObject_HEAD
+        ConstProcessorMetadataRcPtr * constcppobj;
+    } PyOCIO_ProcessorMetadata;
     
-    // Partition an opvec into 3 segments for GPU Processing
-    //
-    // gpuLatticeOps need not support analytical gpu shader generation
-    // the pre and post ops must support analytical generation.
-    //
-    // Additional ops will optinally be inserted to take into account
-    // allocation transformations
+    extern PyTypeObject PyOCIO_ProcessorMetadataType;
     
-    void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
-                         OpRcPtrVec & gpuLatticeOps,
-                         OpRcPtrVec & gpuPostOps,
-                         const OpRcPtrVec & ops);
-    
+    bool AddProcessorMetadataObjectToModule( PyObject* m );
 }
 OCIO_NAMESPACE_EXIT
 

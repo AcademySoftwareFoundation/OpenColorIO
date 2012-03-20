@@ -36,10 +36,21 @@ class Processor:
         :rtype: bool
         """
         pass
+    
+    def getMetadata(self):
+        """
+        getMetadata()
         
+        Returns information about the process that generated this processor. 
+        
+        :return: processor metadata
+        :rtype: `PyOpenColorIO.ProcessorMetadata`
+        """
+        pass
+    
     def applyRGB(self, pixeldata):
         """
-        applyRGB(pyData)
+        applyRGB(pixeldata)
         
         Apply the RGB part of the transform represented by
         :py:class:`PyOpenColorIO.Processor` to an image.
@@ -53,7 +64,7 @@ class Processor:
         
     def applyRGBA(self, pixeldata):
         """
-        applyRGBA(pyData)
+        applyRGBA(pixeldata)
         
         Apply the RGB and alpha part of the transform represented by
         :py:class:`PyOpenColorIO.Processor` to an image.
