@@ -36,13 +36,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Mutex.h"
 #include "Op.h"
+#include "PrivateTypes.h"
 
 OCIO_NAMESPACE_ENTER
 {
-
     class Processor::Impl
     {
     private:
+        ProcessorMetadataRcPtr m_metadata;
+        
         OpRcPtrVec m_cpuOps;
         
         // These 3 op vecs represent the 3 stages in our gpu pipe.
@@ -72,6 +74,8 @@ OCIO_NAMESPACE_ENTER
         
         bool isNoOp() const;
         bool hasChannelCrosstalk() const;
+        
+        ConstProcessorMetadataRcPtr getMetadata() const;
         
         void apply(ImageDesc& img) const;
         

@@ -103,6 +103,7 @@ OCIO_NAMESPACE_ENTER
         
         PyObject * PyOCIO_Processor_isNoOp( PyObject * self );
         PyObject * PyOCIO_Processor_hasChannelCrosstalk( PyObject * self );
+        PyObject * PyOCIO_Processor_getMetadata( PyObject * self );
         PyObject * PyOCIO_Processor_applyRGB( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Processor_applyRGBA( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Processor_getCpuCacheID( PyObject * self );
@@ -120,6 +121,8 @@ OCIO_NAMESPACE_ENTER
             (PyCFunction) PyOCIO_Processor_isNoOp, METH_NOARGS, PROCESSOR_ISNOOP__DOC__ },
             {"hasChannelCrosstalk",
             (PyCFunction) PyOCIO_Processor_hasChannelCrosstalk, METH_NOARGS, PROCESSOR_HASCHANNELCROSSTALK__DOC__ },
+            {"getMetadata",
+            (PyCFunction) PyOCIO_Processor_getMetadata, METH_NOARGS, PROCESSOR_GETMETADATA__DOC__ },
             {"applyRGB",
             PyOCIO_Processor_applyRGB, METH_VARARGS, PROCESSOR_APPLYRGB__DOC__ },
             {"applyRGBA",
@@ -294,6 +297,20 @@ OCIO_NAMESPACE_ENTER
             {
                 ConstProcessorRcPtr processor = GetConstProcessor(self);
                 return PyBool_FromLong( processor->hasChannelCrosstalk() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Processor_getMetadata( PyObject * self )
+        {
+            try
+            {
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                return BuildConstPyProcessorMetadata( processor->getMetadata() );
             }
             catch(...)
             {

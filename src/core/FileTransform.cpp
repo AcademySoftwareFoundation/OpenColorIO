@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FileTransform.h"
 #include "Logging.h"
 #include "Mutex.h"
+#include "NoOps.h"
 #include "PathUtils.h"
 #include "pystring/pystring.h"
 
@@ -562,6 +563,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         std::string filepath = context->resolveFileLocation(src.c_str());
+        CreateFileNoOp(ops, filepath);
         
         FileCachePair cachePair = GetFile(filepath);
         FileFormat* format = cachePair.first;

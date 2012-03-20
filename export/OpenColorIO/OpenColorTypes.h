@@ -82,6 +82,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<Processor> ProcessorRcPtr;
     
+    class OCIOEXPORT ProcessorMetadata;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ProcessorMetadata> ConstProcessorMetadataRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ProcessorMetadata> ProcessorMetadataRcPtr;
+    
     class OCIOEXPORT Baker;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const Baker> ConstBakerRcPtr;

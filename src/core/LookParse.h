@@ -27,33 +27,46 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_GPUALLOCATIONNOOP_H
-#define INCLUDED_OCIO_GPUALLOCATIONNOOP_H
+#ifndef INCLUDED_OCIO_PARSED_LOOK_H
+#define INCLUDED_OCIO_PARSED_LOOK_H
 
 #include <OpenColorIO/OpenColorIO.h>
-
-#include "Op.h"
 
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-    void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
-                                 const AllocationData & allocationData);
+    // Looks parse structures
+    // This is contains a list, where each option entry corresponds to
+    // an "or" separated looks token list.
+    // I.e, " +cc,-onset | +cc " parses to TWO options: (+cc,-onset), (+cc)
     
-    
-    // Partition an opvec into 3 segments for GPU Processing
-    //
-    // gpuLatticeOps need not support analytical gpu shader generation
-    // the pre and post ops must support analytical generation.
-    //
-    // Additional ops will optinally be inserted to take into account
-    // allocation transformations
-    
-    void PartitionGPUOps(OpRcPtrVec & gpuPreOps,
-                         OpRcPtrVec & gpuLatticeOps,
-                         OpRcPtrVec & gpuPostOps,
-                         const OpRcPtrVec & ops);
+    class LookParseResult
+    {
+        public:
+        struct Token
+        {
+            std::string name;
+            TransformDirection dir;
+            
+            Token():
+                dir(TRANSFORM_DIR_FORWARD) {}
+            
+            void parse(const std::string & str);
+        };
+        typedef std::vector<Token> Tokens;
+        typedef std::vector<Tokens> Options;
+        
+        const Options & parse(const std::string & looksstr);
+        
+        const Options & getOptions() const;
+        bool empty() const;
+        
+        void reverse();
+        
+        private:
+        Options m_options;
+    };
     
 }
 OCIO_NAMESPACE_EXIT

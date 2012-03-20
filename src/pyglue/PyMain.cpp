@@ -37,6 +37,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "PyConstants.h"
 #include "PyLook.h"
 #include "PyProcessor.h"
+#include "PyProcessorMetadata.h"
 #include "PyTransform.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
@@ -217,6 +218,7 @@ initPyOpenColorIO(void)
     OCIO::AddContextObjectToModule( m );
     OCIO::AddLookObjectToModule( m );
     OCIO::AddProcessorObjectToModule( m );
+    OCIO::AddProcessorMetadataObjectToModule( m );
     
     OCIO::AddTransformObjectToModule( m );
     {

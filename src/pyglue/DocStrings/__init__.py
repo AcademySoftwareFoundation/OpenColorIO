@@ -6,6 +6,7 @@ from Constants import *
 from Config import *
 from ColorSpace import *
 from Processor import *
+from ProcessorMetadata import *
 from Context import *
 from Look import *
 from Transform import *

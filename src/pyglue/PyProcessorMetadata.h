@@ -27,27 +27,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_PRIVATE_TYPES_H
-#define INCLUDED_OCIO_PRIVATE_TYPES_H
+#ifndef INCLUDED_PYOCIO_PYPROCESSORMETADATA_H
+#define INCLUDED_PYOCIO_PYPROCESSORMETADATA_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include <map>
-#include <set>
-#include <vector>
+#include <PyOpenColorIO/PyOpenColorIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
-    // Stl types of OCIO classes
-    typedef std::map<std::string, std::string> StringMap;
-    typedef std::vector<std::string> StringVec;
-    typedef std::set<std::string> StringSet;
+    // TODO: Maybe put this in a pyinternal namespace?
     
-    typedef std::vector<ConstTransformRcPtr> ConstTransformVec;
-    typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
-    typedef std::vector<LookRcPtr> LookVec;
+    typedef struct {
+        PyObject_HEAD
+        ConstProcessorMetadataRcPtr * constcppobj;
+    } PyOCIO_ProcessorMetadata;
     
-    typedef std::vector<TransformDirection> TransformDirectionVec;
+    extern PyTypeObject PyOCIO_ProcessorMetadataType;
+    
+    bool AddProcessorMetadataObjectToModule( PyObject* m );
 }
 OCIO_NAMESPACE_EXIT
 

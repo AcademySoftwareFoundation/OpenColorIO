@@ -29,22 +29,108 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "AllocationOp.h"
-#include "GpuAllocationNoOp.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "Logging.h"
 #include "Lut3DOp.h"
+#include "NoOps.h"
 #include "OpBuilders.h"
 #include "Processor.h"
 #include "ScanlineHelper.h"
 
+#include <algorithm>
 #include <cstring>
 #include <sstream>
 
-#include <iostream>
-
 OCIO_NAMESPACE_ENTER
 {
+
+
+
+    //////////////////////////////////////////////////////////////////////////
+    
+    class ProcessorMetadata::Impl
+    {
+    public:
+        StringSet files;
+        StringVec looks;
+        
+        Impl()
+        { }
+        
+        ~Impl()
+        { }
+    };
+    
+    ProcessorMetadataRcPtr ProcessorMetadata::Create()
+    {
+        return ProcessorMetadataRcPtr(new ProcessorMetadata(), &deleter);
+    }
+    
+    ProcessorMetadata::ProcessorMetadata()
+        : m_impl(new ProcessorMetadata::Impl)
+    { }
+    
+    ProcessorMetadata::~ProcessorMetadata()
+    {
+        delete m_impl;
+        m_impl = NULL;
+    }
+    
+    void ProcessorMetadata::deleter(ProcessorMetadata* c)
+    {
+        delete c;
+    }
+    
+    int ProcessorMetadata::getNumFiles() const
+    {
+        return static_cast<int>(getImpl()->files.size());
+    }
+    
+    const char * ProcessorMetadata::getFile(int index) const
+    {
+        if(index < 0 ||
+           index >= (static_cast<int>(getImpl()->files.size())))
+        {
+            return "";
+        }
+        
+        StringSet::const_iterator iter = getImpl()->files.begin();
+        std::advance( iter, index );
+        
+        return iter->c_str();
+    }
+    
+    void ProcessorMetadata::addFile(const char * fname)
+    {
+        getImpl()->files.insert(fname);
+    }
+    
+    
+    
+    int ProcessorMetadata::getNumLooks() const
+    {
+        return static_cast<int>(getImpl()->looks.size());
+    }
+    
+    const char * ProcessorMetadata::getLook(int index) const
+    {
+        if(index < 0 ||
+           index >= (static_cast<int>(getImpl()->looks.size())))
+        {
+            return "";
+        }
+        
+        return getImpl()->looks[index].c_str();
+    }
+    
+    void ProcessorMetadata::addLook(const char * look)
+    {
+        getImpl()->looks.push_back(look);
+    }
+    
+    
+    
     //////////////////////////////////////////////////////////////////////////
     
     
@@ -77,6 +163,11 @@ OCIO_NAMESPACE_ENTER
     bool Processor::hasChannelCrosstalk() const
     {
         return getImpl()->hasChannelCrosstalk();
+    }
+    
+    ConstProcessorMetadataRcPtr Processor::getMetadata() const
+    {
+        return getImpl()->getMetadata();
     }
     
     void Processor::apply(ImageDesc& img) const
@@ -184,8 +275,10 @@ OCIO_NAMESPACE_ENTER
     //////////////////////////////////////////////////////////////////////////
     
     
-    Processor::Impl::Impl()
-    { }
+    Processor::Impl::Impl():
+        m_metadata(ProcessorMetadata::Create())
+    {
+    }
     
     Processor::Impl::~Impl()
     { }
@@ -203,6 +296,11 @@ OCIO_NAMESPACE_ENTER
         }
         
         return false;
+    }
+    
+    ConstProcessorMetadataRcPtr Processor::Impl::getMetadata() const
+    {
+        return m_metadata;
     }
     
     void Processor::Impl::apply(ImageDesc& img) const
@@ -463,7 +561,13 @@ OCIO_NAMESPACE_ENTER
     }
     
     void Processor::Impl::finalize()
-    { 
+    {
+        // Pull out metadata, before the no-ops are removed.
+        for(unsigned int i=0; i<m_cpuOps.size(); ++i)
+        {
+            m_cpuOps[i]->dumpMetadata(m_metadata);
+        }
+        
         // GPU Process setup
         //
         // Partition the original, raw opvec into 3 segments for GPU Processing
