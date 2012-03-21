@@ -81,6 +81,9 @@ float g_display_gamma = 1.0f;
 int g_channelHot[4] = { 1, 1, 1, 1 };  // show rgb
 
 
+#define TEST_LUT3D_EMULATION 1
+
+
 void UpdateOCIOGLState();
 
 static void InitImageTexture(const char * filename)
@@ -209,6 +212,16 @@ static void AllocateLut3D()
     
     glActiveTexture(GL_TEXTURE2);
     
+#if TEST_LUT3D_EMULATION
+    glBindTexture(GL_TEXTURE_2D, g_lut3dTexID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB,
+                 LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE,
+                 0, GL_RGB, GL_FLOAT, &g_lut3d[0]);
+#else
     glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -217,7 +230,8 @@ static void AllocateLut3D()
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB,
                  LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                 0, GL_RGB,GL_FLOAT, &g_lut3d[0]);
+                 0, GL_RGB, GL_FLOAT, &g_lut3d[0]);
+#endif
 }
 
 /*
@@ -451,6 +465,56 @@ LinkShaders(GLuint fragShader)
     return program;
 }
 
+
+#if TEST_LUT3D_EMULATION
+const char * g_fragShaderText = ""
+"vec4 OCIODisplayXXX(vec4 inPixel,\n"
+"                         sampler2D lut3d)\n"
+"{\n"
+"    vec4 out_pixel = inPixel;\n"
+"    float edgelen = 32.0;\n"
+"\n"
+"    vec2 lookup;\n"
+"    lookup.x = inPixel.r * (edgelen-1.0)/edgelen + 0.5/edgelen;\n"
+"\n"
+"    float greenLookup = (inPixel.g * (edgelen-1.0)/edgelen + 0.5/edgelen) / edgelen;\n"
+"\n"
+"    // faking 3d texture lookup (find lower and upper z tiles in y\n"
+"    // direction, and lerp between them)\n"
+"\n"
+"    //calc blueLerp: 0-1, based on distance between low and high blue sections\n"
+"    float blueLowStep = min(floor(inPixel.b*edgelen), (edgelen-1.0)) / (edgelen - 1.0);\n"
+"    float blueHighStep = (min(floor(inPixel.b*edgelen), (edgelen-1.0)) + 1.0) / (edgelen - 1.0);\n"
+"    float blueLerp = 0.0+(inPixel.b-blueLowStep)*(1.0-0.0)/(blueHighStep-blueLowStep);\n"
+"        ///// fit(inPixel.b, blueLowStep, blueHighStep, 0, 1)\n"
+"\n"
+"    // blue0Color\n"
+"    float blue0Offset = min(floor(inPixel.b*edgelen), (edgelen-1.0)) / edgelen;\n"
+"    lookup.y = greenLookup + blue0Offset;\n"
+"    vec3 blue0Color = texture2D(lut3d, lookup).rgb;\n"
+"\n"
+"    // blue1Color\n"
+"    float blue1Offset = min((min(floor(inPixel.b*edgelen), (edgelen-1.0)) + 1.0) / edgelen, (edgelen-1.0)/edgelen);\n"
+"    lookup.y = greenLookup + blue1Offset;\n"
+"    vec3 blue1Color = texture2D(lut3d, lookup).rgb;\n"
+"\n"
+"    out_pixel.rgb = mix(blue0Color, blue1Color, blueLerp);\n"
+"\n"
+"    return out_pixel;\n"
+"}\n"
+"\n"
+"\n"
+"uniform sampler2D tex1;\n"
+"uniform sampler2D tex2;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
+"    gl_FragColor = OCIODisplayXXX(col, tex2);\n"
+//"    gl_FragColor = col;\n"
+"}\n";
+
+#else
 const char * g_fragShaderText = ""
 "\n"
 "uniform sampler2D tex1;\n"
@@ -460,8 +524,9 @@ const char * g_fragShaderText = ""
 "{\n"
 "    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
 "    gl_FragColor = OCIODisplay(col, tex2);\n"
-"}\n";
 
+"}\n";
+#endif
 
 void UpdateOCIOGLState()
 {
@@ -536,12 +601,21 @@ void UpdateOCIOGLState()
         
         g_lut3dcacheid = lut3dCacheID;
         processor->getGpuLut3D(&g_lut3d[0], shaderDesc);
+
+        glActiveTexture(GL_TEXTURE2);
         
+#if TEST_LUT3D_EMULATION
+        glBindTexture(GL_TEXTURE_2D, g_lut3dTexID);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+                        LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE,
+                        GL_RGB, GL_FLOAT, &g_lut3d[0]);
+#else
         glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
         glTexSubImage3D(GL_TEXTURE_3D, 0,
                         0, 0, 0, 
                         LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                        GL_RGB,GL_FLOAT, &g_lut3d[0]);
+                        GL_RGB, GL_FLOAT, &g_lut3d[0]);
+#endif
     }
     
     // Step 3: Compute the Shader
@@ -555,7 +629,7 @@ void UpdateOCIOGLState()
         std::ostringstream os;
         os << processor->getGpuShaderText(shaderDesc) << "\n";
         os << g_fragShaderText;
-        //std::cerr << os.str() << std::endl;
+        std::cerr << os.str() << std::endl;
         
         if(g_fragShader) glDeleteShader(g_fragShader);
         g_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
