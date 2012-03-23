@@ -28,7 +28,6 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
 
     m_inputColorSpaceIndex = 0;
     m_outputColorSpaceIndex = 0;
-    m_lookIndex = 0;
     m_dirIndex = 0;
     m_ignoreErrors = false;
     m_reload_version = 1;
@@ -46,6 +45,43 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
         OCIO::ConstColorSpaceRcPtr linearcs = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
         if(!linearcs) throw std::runtime_error("ROLE_SCENE_LINEAR not defined.");
         linear = linearcs->getName();
+        
+        if(config->getNumLooks()>0)
+        {
+            m_look = config->getLookNameByIndex(0);
+        }
+        
+        std::ostringstream os;
+        os << "Specify the look(s) to apply, as predefined in the OpenColorIO configuration.\n";
+        std::string firstlook = "a";
+        std::string secondlook = "b";
+        if(config->getNumLooks()>0)
+        {
+            os << "\nValid looks: ";
+            for(int i = 0; i<config->getNumLooks(); ++i)
+            {
+                if(i!=0) os << ", ";
+                const char * lookname = config->getLookNameByIndex(i);
+                os << lookname;
+                if(i==0) firstlook = lookname;
+                if(i==1) secondlook = lookname;
+            }
+            os << "\n";
+        }
+        else
+        {
+            os << "\nNo looks defined.\n";
+        }
+        os << "\n";
+        os << "Syntax Examples:\n";
+        os << firstlook << ", " << secondlook;
+        os << "    (multiple looks)\n";
+        os << firstlook << ", -" << secondlook;
+        os << "    (foward / inverse directions)\n";
+        os << firstlook << "," << "-" << secondlook << "|-" << secondlook << "|";
+        os << "    (fallback for missing looks)";
+        
+        m_lookhelp = os.str();
     }
     catch (const OCIO::Exception& e)
     {
@@ -60,12 +96,6 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     {
         m_hasColorSpaces = false;
         return;
-    }
-    
-    // Step 1: Make the std::vectors
-    for(int i=0; i<config->getNumLooks(); ++i)
-    {
-        m_lookNames.push_back(config->getLookNameByIndex(i));
     }
     
     for(int i = 0; i < config->getNumColorSpaces(); i++)
@@ -92,12 +122,6 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     // Step 2: Create a cstr array for passing to Nuke
     // (This must be done in a second pass, lest the original strings be reallocated)
     
-    for(unsigned int i=0; i<m_lookNames.size(); ++i)
-    {
-        m_lookCstrNames.push_back(m_lookNames[i].c_str());
-    }
-    m_lookCstrNames.push_back(NULL);
-    
     for(unsigned int i=0; i<m_colorSpaceNames.size(); ++i)
     {
         m_inputColorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
@@ -106,10 +130,6 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
     
     m_inputColorSpaceCstrNames.push_back(NULL);
     m_outputColorSpaceCstrNames.push_back(NULL);
-    
-    
-    
-    
     
     m_hasColorSpaces = (!m_colorSpaceNames.empty());
     
@@ -141,10 +161,9 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
     
-    
-    DD::Image::Enumeration_knob(f, &m_lookIndex, &m_lookCstrNames[0], "look", "look");
+    DD::Image::String_knob(f, &m_look, "look");
+    DD::Image::Tooltip(f, m_lookhelp.c_str());
     DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
-    DD::Image::Tooltip(f, "Specify the look to apply, as predefined in the OpenColorIO configuration.");
     
     DD::Image::Spacer(f, 8);
     
@@ -283,11 +302,7 @@ void OCIOLookTransform::_validate(bool for_real)
         const char * outputName = config->getColorSpaceNameByIndex(m_outputColorSpaceIndex);
         
         OCIO::LookTransformRcPtr transform = OCIO::LookTransform::Create();
-        const char * look = m_lookCstrNames[m_lookIndex];
-        if(look != NULL)
-        {
-            transform->setLooks(look);
-        }
+        transform->setLooks(m_look.c_str());
         
         OCIO::ConstContextRcPtr context = getLocalContext();
         OCIO::TransformDirection direction = OCIO::TRANSFORM_DIR_UNKNOWN;
