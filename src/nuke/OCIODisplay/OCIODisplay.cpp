@@ -122,14 +122,17 @@ void OCIODisplay::knobs(DD::Image::Knob_Callback f)
     DD::Image::Enumeration_knob(f,
         &m_colorSpaceIndex, &m_colorSpaceCstrNames[0], "colorspace", "input colorspace");
 #endif
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
 
     m_displayKnob = DD::Image::Enumeration_knob(f,
         &m_displayIndex, &m_displayCstrNames[0], "display", "display device");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
     DD::Image::Tooltip(f, "Display device for output.");
 
     m_viewKnob = DD::Image::Enumeration_knob(f,
         &m_viewIndex, &m_viewCstrNames[0], "view", "view transform");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
     DD::Image::Tooltip(f, "Display transform for output.");
     
     DD::Image::Float_knob(f, &m_gain, DD::Image::IRange(1.0 / 64.0f, 64.0f), "gain");

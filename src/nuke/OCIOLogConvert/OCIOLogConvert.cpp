@@ -34,7 +34,7 @@ void OCIOLogConvert::knobs(DD::Image::Knob_Callback f)
 {
 
     Enumeration_knob(f, &modeindex, modes, "operation", "operation");
-    //DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 }
 
 void OCIOLogConvert::_validate(bool for_real)
