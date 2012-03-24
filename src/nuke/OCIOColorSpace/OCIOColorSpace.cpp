@@ -101,18 +101,22 @@ void OCIOColorSpace::knobs(DD::Image::Knob_Callback f)
     DD::Image::CascadingEnumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
     DD::Image::Tooltip(f, "Input data is taken to be in this color space.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 
     DD::Image::CascadingEnumeration_knob(f,
         &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
     DD::Image::Tooltip(f, "Image data is converted to this color space for output.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 #else
     DD::Image::Enumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
     DD::Image::Tooltip(f, "Input data is taken to be in this color space.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 
     DD::Image::Enumeration_knob(f,
         &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
     DD::Image::Tooltip(f, "Image data is converted to this color space for output.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 #endif
     
 }
