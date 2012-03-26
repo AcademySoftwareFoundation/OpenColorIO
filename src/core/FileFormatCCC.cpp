@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CDLTransform.h"
 #include "FileTransform.h"
 #include "OpBuilders.h"
+#include "ParseUtils.h"
 #include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
@@ -42,16 +43,14 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        typedef std::map<std::string,CDLTransformRcPtr> CDLMap;
-        
         class LocalCachedFile : public CachedFile
         {
         public:
             LocalCachedFile () {};
-            
             ~LocalCachedFile() {};
             
-            CDLMap transforms;
+            CDLTransformMap transformMap;
+            CDLTransformVec transformVec;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -110,32 +109,9 @@ OCIO_NAMESPACE_ENTER
             }
             
             TiXmlElement* rootElement = doc->RootElement();
-            if(!rootElement)
-            {
-                std::ostringstream os;
-                os << "Error loading xml. Null root element.";
-                throw Exception(os.str().c_str());
-            }
-            
-            if(std::string(rootElement->Value()) != "ColorCorrectionCollection")
-            {
-                std::ostringstream os;
-                os << "Error loading ccc xml. ";
-                os << "Root element is type '" << rootElement->Value() << "', ";
-                os << "ColorCorrectionCollection expected.";
-                throw Exception(os.str().c_str());
-            }
-            
-            GetCDLTransforms(cachedFile->transforms, rootElement);
-            
-            if(cachedFile->transforms.empty())
-            {
-                std::ostringstream os;
-                os << "Error loading ccc xml. ";
-                os << "No ColorCorrection elements found.";
-                throw Exception(os.str().c_str());
-            }
-            
+            GetCDLTransforms(cachedFile->transformMap,
+                             cachedFile->transformVec,
+                             rootElement);
             return cachedFile;
         }
         
@@ -167,22 +143,80 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
+            // Below this point, we should throw ExceptionMissingFile on
+            // errors rather than Exception
+            // This is because we've verified that the ccc file is valid,
+            // at now we're only querying whether the specified cccid can
+            // be found.
+            //
+            // Using ExceptionMissingFile enables the missing looks fallback
+            // mechanism to function properly.
+            // At the time ExceptionMissingFile was named, we errently assumed
+            // a 1:1 relationship between files and color corrections, which is
+            // not true for .ccc files.
+            //
+            // In a future OCIO release, it may be more appropriate to
+            // rename ExceptionMissingFile -> ExceptionMissingCorrection.
+            // But either way, it's what we should throw below.
+            
             std::string cccid = fileTransform.getCCCId();
             cccid = context->resolveStringVar(cccid.c_str());
             
-            CDLMap::const_iterator iter = cachedFile->transforms.find(cccid);
-            if(iter == cachedFile->transforms.end())
+            if(cccid.empty())
             {
                 std::ostringstream os;
-                os << "Cannot build ASC FileTransform, specified cccid '";
-                os << cccid << "' not found in " << fileTransform.getSrc();
-                throw Exception(os.str().c_str());
+                os << "You must specify which cccid to load from the ccc file";
+                os << " (either by name or index).";
+                throw ExceptionMissingFile(os.str().c_str());
             }
             
-            BuildCDLOps(ops,
-                        config,
-                        *(iter->second),
-                        newDir);
+            bool success=false;
+            
+            // Try to parse the cccid as a string id
+            CDLTransformMap::const_iterator iter = cachedFile->transformMap.find(cccid);
+            if(iter != cachedFile->transformMap.end())
+            {
+                success = true;
+                BuildCDLOps(ops,
+                            config,
+                            *(iter->second),
+                            newDir);
+            }
+            
+            // Try to parse the cccid as an integer index
+            // We want to be strict, so fail if leftover chars in the parse.
+            if(!success)
+            {
+                int cccindex=0;
+                if(StringToInt(&cccindex, cccid.c_str(), true))
+                {
+                    int maxindex = ((int)cachedFile->transformVec.size())-1;
+                    if(cccindex<0 || cccindex>maxindex)
+                    {
+                        std::ostringstream os;
+                        os << "The specified cccindex " << cccindex;
+                        os << " is outside the valid range for this file [0,";
+                        os << maxindex << "]";
+                        throw ExceptionMissingFile(os.str().c_str());
+                    }
+                    
+                    success = true;
+                    BuildCDLOps(ops,
+                                config,
+                                *cachedFile->transformVec[cccindex],
+                                newDir);
+                }
+            }
+            
+            if(!success)
+            {
+                std::ostringstream os;
+                os << "You must specify a valid cccid to load from the ccc file";
+                os << " (either by name or index). id='" << cccid << "' ";
+                os << "is not found in the file, and is not parsable as an ";
+                os << "integer index.";
+                throw ExceptionMissingFile(os.str().c_str());
+            }
         }
     }
     

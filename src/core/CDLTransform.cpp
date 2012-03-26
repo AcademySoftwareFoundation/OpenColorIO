@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <fstream>
+#include <sstream>
 #include <tinyxml.h>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -244,11 +245,18 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    
-    
-    void GetCDLTransforms(CDLTransformMap & transforms,
+    void GetCDLTransforms(CDLTransformMap & transformMap,
+                          CDLTransformVec & transformVec,
                           TiXmlElement * cccRootElement)
     {
+        if(!cccRootElement)
+        {
+            std::ostringstream os;
+            os << "GetCDLTransforms Error. ";
+            os << "Null cccRootElement.";
+            throw Exception(os.str().c_str());
+        }
+            
         if(std::string(cccRootElement->Value()) != "ColorCorrectionCollection")
         {
             std::ostringstream os;
@@ -264,26 +272,23 @@ OCIO_NAMESPACE_ENTER
             CDLTransformRcPtr transform = CDLTransform::Create();
             LoadCDL(transform.get(), child->ToElement());
             
+            transformVec.push_back(transform);
+            
             std::string id = transform->getID();
-            if(id.empty())
+            if(!id.empty())
             {
-                std::ostringstream os;
-                os << "Error loading ccc xml, ";
-                os << "All ASC ColorCorrections must specify an 'id' value.";
-                throw Exception(os.str().c_str());
+                CDLTransformMap::iterator iter = transformMap.find(id);
+                if(iter != transformMap.end())
+                {
+                    std::ostringstream os;
+                    os << "Error loading ccc xml. ";
+                    os << "Duplicate elements with '" << id << "' found. ";
+                    os << "If id is specified, it must be unique.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                transformMap[id] = transform;
             }
-            
-            CDLTransformMap::iterator iter = transforms.find(id);
-            if(iter != transforms.end())
-            {
-                std::ostringstream os;
-                os << "Error loading ccc xml. ";
-                os << "All ASC ColorCorrections must specify a unique 'id' value. ";
-                os << "Duplicate elements with '" << id << "' found.";
-                throw Exception(os.str().c_str());
-            }
-            
-            transforms[id] = transform;
             
             child = child->NextSibling("ColorCorrection");
         }
@@ -330,13 +335,23 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        std::string GetCDLLocalCacheKey(const std::string & src,
-            const std::string & cccid)
+        std::string GetCDLLocalCacheKey(const std::string & src, const std::string & cccid)
         {
-            return src + " : " + cccid;
+            std::ostringstream os;
+            os << src << " : " << cccid;
+            return os.str();
+        }
+        
+        std::string GetCDLLocalCacheKey(const char * src,
+                                        int cccindex)
+        {
+            std::ostringstream os;
+            os << src << " : " << cccindex;
+            return os.str();
         }
         
         CDLTransformMap g_cache;
+        StringBoolMap g_cacheSrcIsCC;
         Mutex g_cacheMutex;
     }
     
@@ -349,9 +364,9 @@ OCIO_NAMESPACE_ENTER
     // TODO: Expose functions for introspecting in ccc file
     // TODO: Share caching with normal cdl pathway
     
-    CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cccid)
+    CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cccid_)
     {
-        if(!src || (strlen(src) == 0) || !cccid)
+        if(!src || (strlen(src) == 0) )
         {
             std::ostringstream os;
             os << "Error loading CDL xml. ";
@@ -359,17 +374,51 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
+        std::string cccid;
+        if(cccid_) cccid = cccid_;
+        
         // Check cache
         AutoMutex lock(g_cacheMutex);
+        
+        // Use g_cacheSrcIsCC as a proxy for if we have loaded this source
+        // file already (in which case it must be in cache, or an error)
+        
+        StringBoolMap::iterator srcIsCCiter = g_cacheSrcIsCC.find(src);
+        if(srcIsCCiter != g_cacheSrcIsCC.end())
         {
+            // If the source file is known to be a pure ColorCorrection element,
+            // null out the cccid so its ignored.
+            if(srcIsCCiter->second) cccid = "";
+            
+            // Search for the cccid by name
             CDLTransformMap::iterator iter = 
-                g_cache.find(GetCDLLocalCacheKey(src,cccid));
+                g_cache.find(GetCDLLocalCacheKey(src, cccid));
             if(iter != g_cache.end())
             {
                 return iter->second;
             }
+            
+            // Search for cccid by index
+            int cccindex=0;
+            if(StringToInt(&cccindex, cccid.c_str(), true))
+            {
+                iter = g_cache.find(GetCDLLocalCacheKey(src, cccindex));
+                if(iter != g_cache.end())
+                {
+                    return iter->second;
+                }
+            }
+            
+            std::ostringstream os;
+            os << "The specified cccid/cccindex '" << cccid;
+            os << "' could not be loaded from the src file '";
+            os << src;
+            os << "'.";
+            throw Exception (os.str().c_str());
         }
         
+        
+        // Try to read all ccs from the file, into cache
         std::ifstream istream(src);
         if(istream.fail()) {
             std::ostringstream os;
@@ -422,18 +471,20 @@ OCIO_NAMESPACE_ENTER
             // Load a single ColorCorrection into the cache
             CDLTransformRcPtr cdl = CDLTransform::Create();
             LoadCDL(cdl.get(), doc.RootElement()->ToElement());
-            g_cache[GetCDLLocalCacheKey(src,cccid)] = cdl;
-            return cdl;
+            
+            cccid = "";
+            g_cacheSrcIsCC[src] = true;
+            g_cache[GetCDLLocalCacheKey(src, cccid)] = cdl;
         }
         else if(rootValue == "ColorCorrectionCollection")
         {
             // Load all CCs from the ColorCorrectionCollection
             // into the cache
+            CDLTransformMap transformMap;
+            CDLTransformVec transformVec;
+            GetCDLTransforms(transformMap, transformVec, doc.RootElement());
             
-            CDLTransformMap transforms;
-            GetCDLTransforms(transforms, doc.RootElement());
-            
-            if(transforms.empty())
+            if(transformVec.empty())
             {
                 std::ostringstream os;
                 os << "Error loading ccc xml. ";
@@ -442,33 +493,52 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            for(CDLTransformMap::iterator iter = transforms.begin();
-                iter != transforms.end();
+            g_cacheSrcIsCC[src] = false;
+            
+            // Add all by transforms to cache
+            // First by index, then by id
+            for(unsigned int i=0; i<transformVec.size(); ++i)
+            {
+                g_cache[GetCDLLocalCacheKey(src, i)] = transformVec[i];
+            }
+            
+            for(CDLTransformMap::iterator iter = transformMap.begin();
+                iter != transformMap.end();
                 ++iter)
             {
-                g_cache[GetCDLLocalCacheKey(src,iter->first)] = iter->second;
+                g_cache[GetCDLLocalCacheKey(src, iter->first)] = iter->second;
             }
-            
-            CDLTransformMap::iterator cciter = g_cache.find(GetCDLLocalCacheKey(src,cccid));
-            if(cciter == g_cache.end())
-            {
-                std::ostringstream os;
-                os << "Error loading ccc xml. ";
-                os << "The specified cccid '" << cccid << "' ";
-                os << "could not be found in file '";
-                os << src << "'.";
-                throw Exception(os.str().c_str());
-            }
-            
-            return cciter->second;
         }
         
-        std::ostringstream os;
-        os << "Error loading CDL xml from file '";
-        os << src << "'. ";
-        os << "Root xml element is type '" << rootValue << "', ";
-        os << "ColorCorrection or ColorCorrectionCollection expected.";
-        throw Exception(os.str().c_str());
+        // The all transforms should be in the cache.  Look it up, and try
+        // to return it.
+        {
+            // Search for the cccid by name
+            CDLTransformMap::iterator iter = 
+                g_cache.find(GetCDLLocalCacheKey(src, cccid));
+            if(iter != g_cache.end())
+            {
+                return iter->second;
+            }
+            
+            // Search for cccid by index
+            int cccindex=0;
+            if(StringToInt(&cccindex, cccid.c_str(), true))
+            {
+                iter = g_cache.find(GetCDLLocalCacheKey(src, cccindex));
+                if(iter != g_cache.end())
+                {
+                    return iter->second;
+                }
+            }
+            
+            std::ostringstream os;
+            os << "The specified cccid/cccindex '" << cccid;
+            os << "' could not be loaded from the src file '";
+            os << src;
+            os << "'.";
+            throw Exception (os.str().c_str());
+        }
     }
     
     void CDLTransform::deleter(CDLTransform* t)
