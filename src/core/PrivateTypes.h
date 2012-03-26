@@ -40,6 +40,7 @@ OCIO_NAMESPACE_ENTER
 {
     // Stl types of OCIO classes
     typedef std::map<std::string, std::string> StringMap;
+    typedef std::map<std::string, bool> StringBoolMap;
     typedef std::vector<std::string> StringVec;
     typedef std::set<std::string> StringSet;
     

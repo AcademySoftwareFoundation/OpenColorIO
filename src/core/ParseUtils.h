@@ -47,7 +47,7 @@ OCIO_NAMESPACE_ENTER
     std::string DoubleToString(double value);
     
     bool StringToFloat(float * fval, const char * str);
-    bool StringToInt(int * ival, const char * str);
+    bool StringToInt(int * ival, const char * str, bool failIfLeftoverChars=false);
     
     bool StringVecToFloatVec(std::vector<float> & floatArray,
                              const std::vector<std::string> & lineParts);
