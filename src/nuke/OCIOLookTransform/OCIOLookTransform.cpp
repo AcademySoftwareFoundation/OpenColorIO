@@ -52,12 +52,15 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
         }
         
         std::ostringstream os;
-        os << "Specify the look(s) to apply, as predefined in the OpenColorIO configuration.\n";
+        os << "Specify the look(s) to apply, as predefined in the OpenColorIO ";
+        os << "configuration. This may be the name of a single look, or a ";
+        os << "combination of looks using the 'look syntax' (outlined below)\n\n";
+        
         std::string firstlook = "a";
         std::string secondlook = "b";
         if(config->getNumLooks()>0)
         {
-            os << "\nValid looks: ";
+            os << "Looks: ";
             for(int i = 0; i<config->getNumLooks(); ++i)
             {
                 if(i!=0) os << ", ";
@@ -66,21 +69,22 @@ OCIOLookTransform::OCIOLookTransform(Node *n) : DD::Image::PixelIop(n)
                 if(i==0) firstlook = lookname;
                 if(i==1) secondlook = lookname;
             }
-            os << "\n";
+            os << "\n\n";
         }
         else
         {
-            os << "\nNo looks defined.\n";
+            os << "NO LOOKS DEFINED -- ";
+            os << "This node cannot be used until looks are added to the OCIO Configuration. ";
+            os << "See opencolorio.org for examples.\n\n";
         }
-        os << "\n";
-        os << "Syntax Examples:\n";
-        os << firstlook << ", " << secondlook;
-        os << "    (multiple looks)\n";
-        os << firstlook << ", -" << secondlook;
-        os << "    (foward / inverse directions)\n";
-        os << firstlook << "," << "-" << secondlook << "|-" << secondlook << "|";
-        os << "    (fallback for missing looks)";
         
+        os << "Look Syntax:\n";
+        os << "Multiple looks are combined with commas: '";
+        os << firstlook << ", " << secondlook << "'\n";
+        os << "Direction is specified with +/- prefixes: '";
+        os << "+" << firstlook << ", -" << secondlook << "'\n";
+        os << "Missing look 'fallbacks' specified with |: '";
+        os << firstlook << ", -" << secondlook << " | -" << secondlook << "'";
         m_lookhelp = os.str();
     }
     catch (const OCIO::Exception& e)
@@ -456,8 +460,18 @@ const char* OCIOLookTransform::displayName() const
 
 const char* OCIOLookTransform::node_help() const
 {
-    // TODO more detailed help text
-    return "Use OpenColorIO to apply the specified Look Transform";
+    static const char * help = "OpenColorIO LookTransform\n\n"
+    "A 'look' is a named color transform, intended to modify the look of an "
+    "image in a 'creative' manner (as opposed to a colorspace definion which "
+    "tends to be technically/mathematically defined).\n\n"
+    "Examples of looks may be a neutral grade, to be applied to film scans "
+    "prior to VFX work, or a per-shot DI grade decided on by the director, "
+    "to be applied just before the viewing transform.\n\n"
+    "OCIOLooks must be predefined in the OpenColorIO configuration before usage, "
+    "and often reference per-shot/sequence LUTs/CCs.\n\n"
+    "See the look knob for further syntax details.\n\n"
+    "See opencolorio.org for look configuration customization examples.";
+    return help;
 }
 
 // This class is necessary in order to call knobsAtTheEnd(). Otherwise, the NukeWrapper knobs 
