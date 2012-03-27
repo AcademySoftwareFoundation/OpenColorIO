@@ -200,7 +200,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getLook( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Config_getLooks( PyObject * self );
         PyObject * PyOCIO_Config_addLook( PyObject * self, PyObject * args );
-        PyObject * PyOCIO_Config_clearLook( PyObject * self );
+        PyObject * PyOCIO_Config_clearLooks( PyObject * self );
         
         PyObject * PyOCIO_Config_getProcessor( PyObject * self, PyObject * args, PyObject * kwargs );
         
@@ -280,8 +280,10 @@ OCIO_NAMESPACE_ENTER
             (PyCFunction) PyOCIO_Config_getLooks, METH_NOARGS, CONFIG_GETLOOKS__DOC__ },
             {"addLook",
             PyOCIO_Config_addLook, METH_VARARGS, CONFIG_ADDLOOK__DOC__ },
-            {"clearLook",
-            (PyCFunction) PyOCIO_Config_clearLook, METH_NOARGS, CONFIG_CLEARLOOK__DOC__ },
+            {"clearLook", // THIS SHOULD BE REMOVED IN THE NEXT BINARY INCOMPATIBLE VERSION
+            (PyCFunction) PyOCIO_Config_clearLooks, METH_NOARGS, CONFIG_CLEARLOOKS__DOC__ },
+            {"clearLooks",
+            (PyCFunction) PyOCIO_Config_clearLooks, METH_NOARGS, CONFIG_CLEARLOOKS__DOC__ },
             {"getProcessor",
             (PyCFunction) PyOCIO_Config_getProcessor, METH_KEYWORDS, CONFIG_GETPROCESSOR__DOC__ },
             {NULL, NULL, 0, NULL}
@@ -1094,7 +1096,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_Config_clearLook( PyObject * self )
+        PyObject * PyOCIO_Config_clearLooks( PyObject * self )
         {
             try
             {

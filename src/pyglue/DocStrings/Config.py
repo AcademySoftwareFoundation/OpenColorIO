@@ -459,9 +459,9 @@ class Config:
         """
         pass
 
-    def clearLook(self):
+    def clearLooks(self):
         """
-        clearLook()
+        clearLooks()
         
         Clear looks in :py:class:`PyOpenColorIO.Config`.
         """
