@@ -138,10 +138,12 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::Enumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
 #endif
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
     DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
     
     
     DD::Image::Enumeration_knob(f, &m_lookIndex, &m_lookCstrNames[0], "look", "look");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
     DD::Image::Tooltip(f, "Specify the look to apply, as predefined in the OpenColorIO configuration.");
     
     DD::Image::Spacer(f, 8);
@@ -165,6 +167,7 @@ void OCIOLookTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::Enumeration_knob(f,
         &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
 #endif
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
     DD::Image::Tooltip(f, "Image data is converted to this colorspace for output.");
     
     
