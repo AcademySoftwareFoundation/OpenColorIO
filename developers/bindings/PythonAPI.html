@@ -331,7 +331,7 @@ this will overwrite it.</p>
 <dt id="PyOpenColorIO.Config.clearLook">
 <tt class="descname">clearLook</tt><a class="headerlink" href="#PyOpenColorIO.Config.clearLook" title="Permalink to this definition">¶</a></dt>
 <dd><p>clearLook()</p>
-<p>Clear look in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<p>Clear looks in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1150,7 +1150,11 @@ the math to apply correctly.</p>
 <dl class="class">
 <dt id="PyOpenColorIO.Processor">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">Processor</tt><a class="headerlink" href="#PyOpenColorIO.Processor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Processor</p>
+<dd><p>Processor is the baked representation of a particular color transform.
+Once you have a process for a particular transform created, you can hang
+onto it to efficiently transform pixels.</p>
+<p>Processors can only be created from the <cite>PyOpenColorIO.Config</cite>
+getProcessor(...) call.</p>
 <dl class="attribute">
 <dt id="PyOpenColorIO.Processor.applyRGB">
 <tt class="descname">applyRGB</tt><a class="headerlink" href="#PyOpenColorIO.Processor.applyRGB" title="Permalink to this definition">¶</a></dt>
@@ -1162,11 +1166,11 @@ the math to apply correctly.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; </li>
+<li><strong>pixeldata</strong> (<em>object</em>) &#8211; rgbrgb... array (length % 3 == 0)</li>
 </ul>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">color converted pixeldata</p>
 </td>
 </tr>
 <tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
@@ -1187,11 +1191,11 @@ the math to apply correctly.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; </li>
+<li><strong>pixeldata</strong> (<em>object</em>) &#8211; rgbargba... array (length % 4 == 0)</li>
 </ul>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">color converted pixeldata</p>
 </td>
 </tr>
 <tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
@@ -1222,14 +1226,14 @@ will run on.</p>
 <dl class="attribute">
 <dt id="PyOpenColorIO.Processor.getGpuLut3D">
 <tt class="descname">getGpuLut3D</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuLut3D" title="Permalink to this definition">¶</a></dt>
-<dd><p>getGpuLut3D(pyData)</p>
+<dd><p>getGpuLut3D(shaderDesc)</p>
 <p>Returns the GPU LUT 3D.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; two params?</li>
+<li><strong>shaderDesc</strong> (<em>dict</em>) &#8211; define &#8216;language&#8217;,&#8217;functionName&#8217;,&#8217;lut3DEdgeLen&#8217;</li>
 </ul>
 </td>
 </tr>
@@ -1246,14 +1250,14 @@ will run on.</p>
 <dl class="attribute">
 <dt id="PyOpenColorIO.Processor.getGpuLut3DCacheID">
 <tt class="descname">getGpuLut3DCacheID</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuLut3DCacheID" title="Permalink to this definition">¶</a></dt>
-<dd><p>getGpuLut3DCacheID(pyData)</p>
+<dd><p>getGpuLut3DCacheID(shaderDesc)</p>
 <p>Returns the GPU 3D LUT cache ID.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; two params</li>
+<li><strong>shaderDesc</strong> (<em>dict</em>) &#8211; two params</li>
 </ul>
 </td>
 </tr>
@@ -1270,14 +1274,14 @@ will run on.</p>
 <dl class="attribute">
 <dt id="PyOpenColorIO.Processor.getGpuShaderText">
 <tt class="descname">getGpuShaderText</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuShaderText" title="Permalink to this definition">¶</a></dt>
-<dd><p>getGpuShaderText(pyData)</p>
+<dd><p>getGpuShaderText(shaderDesc)</p>
 <p>Returns the GPU shader text.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; two params</li>
+<li><strong>shaderDesc</strong> (<em>dict</em>) &#8211; define &#8216;language&#8217;,&#8217;functionName&#8217;,&#8217;lut3DEdgeLen&#8217;</li>
 </ul>
 </td>
 </tr>
@@ -1294,14 +1298,14 @@ will run on.</p>
 <dl class="attribute">
 <dt id="PyOpenColorIO.Processor.getGpuShaderTextCacheID">
 <tt class="descname">getGpuShaderTextCacheID</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuShaderTextCacheID" title="Permalink to this definition">¶</a></dt>
-<dd><p>getGpuShaderTextCacheID(pyData)</p>
+<dd><p>getGpuShaderTextCacheID(shaderDesc)</p>
 <p>Returns the GPU shader text cache ID.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; two params</li>
+<li><strong>shaderDesc</strong> (<em>dict</em>) &#8211; define &#8216;language&#8217;,&#8217;functionName&#8217;,&#8217;lut3DEdgeLen&#8217;</li>
 </ul>
 </td>
 </tr>

@@ -142,7 +142,7 @@ For a simple single-user setup, add the following to ``~/.bashrc``
 The only environment variable you must configure manually is
 :envvar:`OCIO`, which points to the configuration file you wish to
 use. For prebuilt config files, see the
-:ref:`download-color-configurations` download section
+:ref:`downloads` section
 
 To do this, you would add a line to ``~/.bashrc`` (or a per-project
 configuration script etc), for example::
