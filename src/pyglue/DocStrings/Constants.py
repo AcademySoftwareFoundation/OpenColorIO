@@ -4,18 +4,18 @@ class Constants:
     def __init__(self):
         pass
     
-    def GetInverseTransformDirection(self):
+    def GetInverseTransformDirection(self, direction):
         """
-        GetInverseTransformDirection(s)
+        GetInverseTransformDirection(direction)
         
         :param s:
         :param type: string
         """
         pass
     
-    def CombineTransformDirections(self):
+    def CombineTransformDirections(self, dir1, dir2):
         """
-        CombineTransformDirections(s1, s2)
+        CombineTransformDirections(dir1, dir2)
         
         :param s1:
         :param type: string
@@ -24,18 +24,18 @@ class Constants:
         """
         pass
         
-    def BitDepthIsFloat(self):
+    def BitDepthIsFloat(self, bitDepth):
         """
-        BitDepthIsFloat(s)
+        BitDepthIsFloat(bitDepth)
         
         :param s:
         :param type: string
         """
         pass
         
-    def BitDepthToInt(self):
+    def BitDepthToInt(self, bitDepth):
         """
-        BitDepthToInt(s)
+        BitDepthToInt(bitDepth)
         
         :param s:
         :param type: string

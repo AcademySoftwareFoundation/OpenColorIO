@@ -7,15 +7,15 @@ class MatrixTransform:
         pass
     def getValue(self):
         pass
-    def setValue(self):
+    def setValue(self, value):
         pass
     def getMatrix(self):
         pass
-    def setMatrix(self):
+    def setMatrix(self, matrix):
         pass
     def getOffset(self):
         pass
-    def setOffset(self):
+    def setOffset(self, offset):
         pass
     def Identity(self):
         pass

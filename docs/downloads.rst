@@ -12,7 +12,7 @@ Per-version updates: :ref:`changelog-main`.
 
 Build instructions: :ref:`building-from-source`.
 
-.. _download-color-configurations:
+.. _contributor-license-agreements:
 
 Contributor License Agreements
 ******************************

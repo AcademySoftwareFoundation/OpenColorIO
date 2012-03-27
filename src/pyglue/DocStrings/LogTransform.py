@@ -14,7 +14,7 @@ class LogTransform:
         """
         pass
     
-    def setBase(self):
+    def setBase(self, base):
         """
         setBase(base)
         

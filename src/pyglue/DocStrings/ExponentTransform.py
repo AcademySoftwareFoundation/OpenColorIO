@@ -18,7 +18,7 @@ class ExponentTransform:
         """
         pass
         
-    def setValue(self):
+    def setValue(self, value):
         """
         setValue()
         

@@ -80,7 +80,7 @@ class Config:
         """
         pass
 
-    def setDescription(self):
+    def setDescription(self, desc):
         """
         setDescription(desc)
         
@@ -104,7 +104,7 @@ class Config:
         """
         pass
 
-    def getCacheID(self):
+    def getCacheID(self, pycontext=None):
         """
         getCacheID([, pycontext])
         
@@ -138,7 +138,7 @@ class Config:
         """
         pass
 
-    def setSearchPath(self):
+    def setSearchPath(self, searchpath):
         """
         setSearchPath(path)
         
@@ -160,7 +160,7 @@ class Config:
         """
         pass
 
-    def setWorkingDir(self):
+    def setWorkingDir(self, dirname):
         """
         setWorkingDir(path)
         
@@ -182,7 +182,7 @@ class Config:
         """
         pass
 
-    def getColorSpace(self):
+    def getColorSpace(self, name):
         """
         getColorSpace(name)
         
@@ -197,7 +197,7 @@ class Config:
         """
         pass
 
-    def addColorSpace(self):
+    def addColorSpace(self, colorSpace):
         """
         addColorSpace(pyColorSpace)
         
@@ -220,7 +220,7 @@ class Config:
         """
         pass
 
-    def parseColorSpaceFromString(self):
+    def parseColorSpaceFromString(self, str):
         """
         parseColorSpaceFromString(str)
         
@@ -238,7 +238,7 @@ class Config:
         """
         pass
 
-    def setRole(self):
+    def setRole(self, role, csname):
         """
         setRole(role, csname)
         
@@ -275,7 +275,7 @@ class Config:
         """
         pass
 
-    def getDefaultView(self):
+    def getDefaultView(self, display):
         """
         getDefaultView(display)
         
@@ -288,7 +288,7 @@ class Config:
         """
         pass
 
-    def getViews(self):
+    def getViews(self, display):
         """
         getViews(display)
         
@@ -301,7 +301,7 @@ class Config:
         """
         pass
 
-    def getDisplayColorSpaceName(self):
+    def getDisplayColorSpaceName(self, display, view):
         """
         getDisplayColorSpaceName(display, view)
         
@@ -316,7 +316,8 @@ class Config:
         :rtype: string
         """
         pass
-    def getDisplayLooks(self):
+    
+    def getDisplayLooks(self, display, view):
         """
         getDisplayLooks(display, view)
         
@@ -331,7 +332,8 @@ class Config:
         :rtype: string
         """
         pass
-    def addDisplay(self):
+    
+    def addDisplay(self, display, view, csname, looks=None):
         """
         addDisplay(display, view, colorSpaceName[, looks])
         
@@ -354,7 +356,7 @@ class Config:
         """
         pass
 
-    def setActiveDisplays(self):
+    def setActiveDisplays(self, dislpays):
         """
         setActiveDisplays(displays)
         
@@ -376,7 +378,7 @@ class Config:
         """
         pass
 
-    def setActiveViews(self):
+    def setActiveViews(self, views):
         """
         setActiveViews(views)
         
@@ -409,7 +411,7 @@ class Config:
         """
         pass
 
-    def setDefaultLumaCoefs(self):
+    def setDefaultLumaCoefs(self, coefficients):
         """
         setDefaultLumaCoefs(pyCoef)
         
@@ -420,7 +422,7 @@ class Config:
         """
         pass
 
-    def getLook(self):
+    def getLook(self, lookname):
         """
         getLook(str)
         
@@ -446,7 +448,7 @@ class Config:
         """
         pass
 
-    def addLook(self):
+    def addLook(self, look):
         """
         addLook(pylook)
         
@@ -461,11 +463,11 @@ class Config:
         """
         clearLook()
         
-        Clear look in :py:class:`PyOpenColorIO.Config`.
+        Clear looks in :py:class:`PyOpenColorIO.Config`.
         """
         pass
 
-    def getProcessor(self):
+    def getProcessor(self, arg1, arg2=None, direction=None, context=None):
         """
         getProcessor(arg1[, arg2[, direction[, context]])
         

@@ -18,7 +18,7 @@ class DisplayTransform:
         """
         pass
         
-    def setInputColorSpaceName(self):
+    def setInputColorSpaceName(self, name):
         """
         setInputColorSpaceName(name)
         
@@ -42,7 +42,7 @@ class DisplayTransform:
         """
         pass
         
-    def setLinearCC(self):
+    def setLinearCC(self, transform):
         """
         setLinearCC(pyCC)
         
@@ -66,7 +66,7 @@ class DisplayTransform:
         """
         pass
         
-    def setColorTimingCC(self):
+    def setColorTimingCC(self, transform):
         """
         setColorTimingCC(pyCC)
         
@@ -90,7 +90,7 @@ class DisplayTransform:
         """
         pass
         
-    def setChannelView(self):
+    def setChannelView(self, transform):
         """
         setChannelView(pyCC)
         
@@ -114,7 +114,7 @@ class DisplayTransform:
         """
         pass
         
-    def setDisplay(self):
+    def setDisplay(self, displayName):
         """
         setDisplay(str)
         
@@ -138,7 +138,7 @@ class DisplayTransform:
         """
         pass
         
-    def setView(self):
+    def setView(self, viewName):
         """
         setView(str)
         
@@ -162,7 +162,7 @@ class DisplayTransform:
         """
         pass
         
-    def setDisplayCC(self):
+    def setDisplayCC(self, transform):
         """
         setDisplayCC(pyCC)
         
@@ -186,7 +186,7 @@ class DisplayTransform:
         """
         pass
         
-    def setLooksOverride(self):
+    def setLooksOverride(self, looksStr):
         """
         setLooksOverride(str)
         
@@ -209,7 +209,7 @@ class DisplayTransform:
         """
         pass
         
-    def setLooksOverrideEnabled(self):
+    def setLooksOverrideEnabled(self, enabled):
         """
         setLooksOverrideEnabled(enabled)
         

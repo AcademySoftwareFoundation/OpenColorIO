@@ -7,13 +7,13 @@ class FileTransform:
         pass
     def getSrc(self):
         pass
-    def setSrc(self):
+    def setSrc(self, src):
         pass
     def getCCCId(self):
         pass
-    def setCCCId(self):
+    def setCCCId(self, cccid):
         pass
     def getInterpolation(self):
         pass
-    def setInterpolation(self):
+    def setInterpolation(self, interp):
         pass

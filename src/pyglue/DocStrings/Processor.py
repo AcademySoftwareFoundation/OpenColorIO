@@ -1,8 +1,14 @@
 
 class Processor:
     """
-    Processor
+    Processor is the baked representation of a particular color transform.
+    Once you have a process for a particular transform created, you can hang
+    onto it to efficiently transform pixels.
+    
+    Processors can only be created from the `PyOpenColorIO.Config`
+    getProcessor(...) call.
     """
+    
     def __init__(self):
         pass
     
@@ -31,30 +37,30 @@ class Processor:
         """
         pass
         
-    def applyRGB(self):
+    def applyRGB(self, pixeldata):
         """
         applyRGB(pyData)
         
         Apply the RGB part of the transform represented by
         :py:class:`PyOpenColorIO.Processor` to an image.
         
-        :param pyData: 
-        :type pyData: object
-        :return: 
+        :param pixeldata: rgbrgb... array (length % 3 == 0)
+        :type pixeldata: object
+        :return: color converted pixeldata
         :rtype: list
         """
         pass
         
-    def applyRGBA(self):
+    def applyRGBA(self, pixeldata):
         """
         applyRGBA(pyData)
         
         Apply the RGB and alpha part of the transform represented by
         :py:class:`PyOpenColorIO.Processor` to an image.
         
-        :param pyData:
-        :type pyData: object
-        :return:
+        :param pixeldata: rgbargba... array (length % 4 == 0)
+        :type pixeldata: object
+        :return: color converted pixeldata
         :rtype: list
         """
         pass
@@ -71,53 +77,53 @@ class Processor:
         """
         pass
         
-    def getGpuShaderText(self):
+    def getGpuShaderText(self, shaderDesc):
         """
-        getGpuShaderText(pyData)
+        getGpuShaderText(shaderDesc)
         
         Returns the GPU shader text.
         
-        :param pyData: two params
-        :type pyData: object
+        :param shaderDesc: define 'language','functionName','lut3DEdgeLen'
+        :type shaderDesc: dict
         :return: GPU shader text
         :rtype: string
         """
         pass
         
-    def getGpuShaderTextCacheID(self):
+    def getGpuShaderTextCacheID(self, shaderDesc):
         """
-        getGpuShaderTextCacheID(pyData)
+        getGpuShaderTextCacheID(shaderDesc)
         
         Returns the GPU shader text cache ID.
         
-        :param pyData: two params
-        :type pyData: object
+        :param shaderDesc: define 'language','functionName','lut3DEdgeLen'
+        :type shaderDesc: dict
         :return: GPU shader text cache ID
         :rtype: string
         """
         pass
         
-    def getGpuLut3D(self):
+    def getGpuLut3D(self, shaderDesc):
         """
-        getGpuLut3D(pyData)
+        getGpuLut3D(shaderDesc)
         
         Returns the GPU LUT 3D.
         
-        :param pyData: two params?
-        :type pyData: object
+        :param shaderDesc: define 'language','functionName','lut3DEdgeLen'
+        :type shaderDesc: dict
         :return: GPU LUT 3D
         :rtype: list
         """
         pass
         
-    def getGpuLut3DCacheID(self):
+    def getGpuLut3DCacheID(self, shaderDesc):
         """
-        getGpuLut3DCacheID(pyData)
+        getGpuLut3DCacheID(shaderDesc)
         
         Returns the GPU 3D LUT cache ID.
         
-        :param pyData: two params
-        :type pyData: object
+        :param shaderDesc: two params
+        :type shaderDesc: dict
         :return: GPU 3D LUT cache ID
         :rtype: string
         """

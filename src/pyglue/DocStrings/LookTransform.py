@@ -7,13 +7,13 @@ class LookTransform:
         pass
     def getSrc(self):
         pass
-    def setSrc(self):
+    def setSrc(self, srcname):
         pass
     def getDst(self):
         pass
-    def setDst(self):
+    def setDst(self, dstname):
         pass
     def getLooks(self):
         pass
-    def setLooks(self):
+    def setLooks(self, looks):
         pass

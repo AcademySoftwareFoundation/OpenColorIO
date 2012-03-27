@@ -13,20 +13,20 @@ class Context:
         pass
     def getSearchPath(self):
         pass
-    def setSearchPath(self):
+    def setSearchPath(self, searchPath):
         pass
     def getWorkingDir(self):
         pass
-    def setWorkingDir(self):
+    def setWorkingDir(self, workingDir):
         pass
     def getStringVar(self):
         pass
-    def setStringVar(self):
+    def setStringVar(self, stringVar):
         pass
     def loadEnvironment(self):
         pass
-    def resolveStringVar(self):
+    def resolveStringVar(self, stringVar):
         pass
-    def resolveFileLocation(self):
+    def resolveFileLocation(self, fileLocation):
         pass
 

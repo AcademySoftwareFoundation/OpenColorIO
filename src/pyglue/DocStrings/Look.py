@@ -18,18 +18,18 @@ class Look:
     def getName(self):
         pass
         
-    def setName(self):
+    def setName(self, name):
         pass
         
     def getProcessSpace(self):
         pass
         
-    def setProcessSpace(self):
+    def setProcessSpace(self, csname):
         pass
         
     def getTransform(self):
         pass
         
-    def setTransform(self):
+    def setTransform(self, transform):
         pass
         

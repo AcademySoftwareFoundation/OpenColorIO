@@ -12,7 +12,7 @@ class CDLTransform:
     def getXML(self):
         pass
         
-    def setXML(self):
+    def setXML(self, xmltext):
         pass
         
     def getSlope(self):
@@ -30,7 +30,7 @@ class CDLTransform:
     def getSat(self):
         pass
         
-    def setSlope(self):
+    def setSlope(self, slope):
         """
         setSlope(pyData)
         
@@ -41,7 +41,7 @@ class CDLTransform:
         """
         pass
         
-    def setOffset(self):
+    def setOffset(self, offset):
         """
         setOffset(pyData)
         
@@ -52,7 +52,7 @@ class CDLTransform:
         """
         pass
         
-    def setPower(self):
+    def setPower(self, power):
         """
         setPower(pyData)
         
@@ -63,7 +63,7 @@ class CDLTransform:
         """
         pass
 
-    def setSOP(self):
+    def setSOP(self, sop):
         """
         setSOP(pyData)
         
@@ -74,7 +74,7 @@ class CDLTransform:
         """
         pass
         
-    def setSat(self):
+    def setSat(self, sat):
         """
         setSAT(pyData)
         
@@ -107,7 +107,7 @@ class CDLTransform:
         """
         pass
         
-    def setID(self):
+    def setID(self, id):
         """
         setID(str)
         
@@ -129,7 +129,7 @@ class CDLTransform:
         """
         pass
         
-    def setDescription(self):
+    def setDescription(self, desc):
         """
         setDescription(str)
         

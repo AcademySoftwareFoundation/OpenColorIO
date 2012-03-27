@@ -20,7 +20,7 @@ class AllocationTransform:
         """
         pass
         
-    def setAllocation(self):
+    def setAllocation(self, hwalloc):
         """
         setAllocation(hwalloc)
         
@@ -42,7 +42,7 @@ class AllocationTransform:
         """
         pass
         
-    def setVars(self):
+    def setVars(self, vars):
         """
         setVars(pyvars)
         

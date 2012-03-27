@@ -17,9 +17,9 @@ class ColorSpaceTransform:
         """
         pass
     
-    def setSrc(self):
+    def setSrc(self, srcname):
         """
-        setSrc()
+        setSrc(srcname)
         
         Sets the source ColorSpace in this transform.
         
@@ -39,9 +39,9 @@ class ColorSpaceTransform:
         """
         pass
     
-    def setDst(self):
+    def setDst(self, dstname):
         """
-        setDst()
+        setDst(dstname)
         
         Sets the destination ColorSpace in this transform.
         

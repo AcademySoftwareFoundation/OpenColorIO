@@ -35,31 +35,31 @@ class ColorSpace:
     def getName(self):
         pass
         
-    def setName(self):
+    def setName(self, name):
         pass
         
     def getFamily(self):
         pass
         
-    def setFamily(self):
+    def setFamily(self, family):
         pass
         
     def getEqualityGroup(self):
         pass
         
-    def setEqualityGroup(self):
+    def setEqualityGroup(self, equalityGroup):
         pass
         
     def getDescription(self):
         pass
         
-    def setDescription(self):
+    def setDescription(self, desc):
         pass
         
     def getBitDepth(self):
         pass
         
-    def setBitDepth(self):
+    def setBitDepth(self, bitDepth):
         pass
         
     def isData(self):
@@ -75,7 +75,7 @@ class ColorSpace:
         """
         pass
         
-    def setIsData(self):
+    def setIsData(self, isData):
         pass
         
     def getAllocation(self):
@@ -86,18 +86,18 @@ class ColorSpace:
         """
         pass
         
-    def setAllocation(self):
+    def setAllocation(self, allocation):
         pass
         
     def getAllocationVars(self):
         pass
         
-    def setAllocationVars(self):
+    def setAllocationVars(self, vars):
         pass
         
     def getTransform(self):
         pass
         
-    def setTransform(self):
+    def setTransform(self, transform, direction):
         pass
         

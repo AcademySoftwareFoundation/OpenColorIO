@@ -9,9 +9,9 @@ class OpenColorIO:
         pass
     def GetLoggingLevel(self):
         pass
-    def SetLoggingLevel(self):
+    def SetLoggingLevel(self, level):
         pass
     def GetCurrentConfig(self):
         pass
-    def SetCurrentConfig(self):
+    def SetCurrentConfig(self, config):
         pass
