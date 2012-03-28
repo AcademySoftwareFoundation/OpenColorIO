@@ -28,8 +28,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include <cstring>
 #include "MathUtils.h"
-
 
 OCIO_NAMESPACE_ENTER
 {
@@ -166,7 +166,6 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    
     bool GetM44Inverse(float* inverse_out, const float* m)
     {
         float d10_21 = m[4]*m[9] - m[5]*m[8];
@@ -228,7 +227,335 @@ OCIO_NAMESPACE_ENTER
         
         return true;
     }
+    
+    void GetM44M44Product(float* mout, const float* m1_, const float* m2_)
+    {
+        float m1[16];
+        float m2[16];
+        memcpy(m1, m1_, 16*sizeof(float));
+        memcpy(m2, m2_, 16*sizeof(float));
+        
+        mout[ 0] = m1[ 0]*m2[0] + m1[ 1]*m2[4] + m1[ 2]*m2[ 8] + m1[ 3]*m2[12];
+        mout[ 1] = m1[ 0]*m2[1] + m1[ 1]*m2[5] + m1[ 2]*m2[ 9] + m1[ 3]*m2[13];
+        mout[ 2] = m1[ 0]*m2[2] + m1[ 1]*m2[6] + m1[ 2]*m2[10] + m1[ 3]*m2[14];
+        mout[ 3] = m1[ 0]*m2[3] + m1[ 1]*m2[7] + m1[ 2]*m2[11] + m1[ 3]*m2[15];
+        mout[ 4] = m1[ 4]*m2[0] + m1[ 5]*m2[4] + m1[ 6]*m2[ 8] + m1[ 7]*m2[12];
+        mout[ 5] = m1[ 4]*m2[1] + m1[ 5]*m2[5] + m1[ 6]*m2[ 9] + m1[ 7]*m2[13];
+        mout[ 6] = m1[ 4]*m2[2] + m1[ 5]*m2[6] + m1[ 6]*m2[10] + m1[ 7]*m2[14];
+        mout[ 7] = m1[ 4]*m2[3] + m1[ 5]*m2[7] + m1[ 6]*m2[11] + m1[ 7]*m2[15];   
+        mout[ 8] = m1[ 8]*m2[0] + m1[ 9]*m2[4] + m1[10]*m2[ 8] + m1[11]*m2[12];
+        mout[ 9] = m1[ 8]*m2[1] + m1[ 9]*m2[5] + m1[10]*m2[ 9] + m1[11]*m2[13];
+        mout[10] = m1[ 8]*m2[2] + m1[ 9]*m2[6] + m1[10]*m2[10] + m1[11]*m2[14];
+        mout[11] = m1[ 8]*m2[3] + m1[ 9]*m2[7] + m1[10]*m2[11] + m1[11]*m2[15];
+        mout[12] = m1[12]*m2[0] + m1[13]*m2[4] + m1[14]*m2[ 8] + m1[15]*m2[12];
+        mout[13] = m1[12]*m2[1] + m1[13]*m2[5] + m1[14]*m2[ 9] + m1[15]*m2[13];
+        mout[14] = m1[12]*m2[2] + m1[13]*m2[6] + m1[14]*m2[10] + m1[15]*m2[14];
+        mout[15] = m1[12]*m2[3] + m1[13]*m2[7] + m1[14]*m2[11] + m1[15]*m2[15];
+    }
+    
+    namespace
+    {
+    
+    void GetM44V4Product(float* vout, const float* m, const float* v_)
+    {
+        float v[4];
+        memcpy(v, v_, 4*sizeof(float));
+        
+        vout[0] = m[ 0]*v[0] + m[ 1]*v[1] + m[ 2]*v[2] + m[ 3]*v[3];
+        vout[1] = m[ 4]*v[0] + m[ 5]*v[1] + m[ 6]*v[2] + m[ 7]*v[3];
+        vout[2] = m[ 8]*v[0] + m[ 9]*v[1] + m[10]*v[2] + m[11]*v[3];
+        vout[3] = m[12]*v[0] + m[13]*v[1] + m[14]*v[2] + m[15]*v[3];
+    }
+    
+    void GetV4Sum(float* vout, const float* v1, const float* v2)
+    {
+        for(int i=0; i<4; ++i)
+        {
+            vout[i] = v1[i] + v2[i];
+        }
+    }
+    
+    } // anon namespace
+    
+    // All m(s) are 4x4.  All v(s) are size 4 vectors.
+    // Return mout, vout, where mout*x+vout == m2*(m1*x+v1)+v2
+    // mout = m2*m1
+    // vout = m2*v1 + v2
+    void GetMxbCombine(float* mout, float* vout,
+                       const float* m1_, const float* v1_,
+                       const float* m2_, const float* v2_)
+    {
+        float m1[16];
+        float v1[4];
+        float m2[16];
+        float v2[4];
+        memcpy(m1, m1_, 16*sizeof(float));
+        memcpy(v1, v1_, 4*sizeof(float));
+        memcpy(m2, m2_, 16*sizeof(float));
+        memcpy(v2, v2_, 4*sizeof(float));
+        
+        GetM44M44Product(mout, m2, m1);
+        GetM44V4Product(vout, m2, v1);
+        GetV4Sum(vout, vout, v2);
+    }
+    
+    namespace
+    {
+    
+    void GetMxbResult(float* vout, float* m, float* x, float* v)
+    {
+        GetM44V4Product(vout, m, x);
+        GetV4Sum(vout, vout, v);
+    }
+    
+    } // anon namespace
+    
+    bool GetMxbInverse(float* mout, float* vout,
+                       const float* m_, const float* v_)
+    {
+        float m[16];
+        float v[4];
+        memcpy(m, m_, 16*sizeof(float));
+        memcpy(v, v_, 4*sizeof(float));
 
-
+        if(!GetM44Inverse(mout, m)) return false;
+        
+        for(int i=0; i<4; ++i)
+        {
+            v[i] = -v[i];
+        }
+        GetM44V4Product(vout, mout, v);
+        
+        return true;
+    }
+    
 }
+
 OCIO_NAMESPACE_EXIT
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+OCIO_NAMESPACE_USING
+
+#include "UnitTest.h"
+
+OIIO_ADD_TEST(MathUtils, M44_is_diagonal)
+{
+    {
+        float m44[] = { 1.0f, 0.0f, 0.0f, 0.0f,
+                        0.0f, 1.0f, 0.0f, 0.0f,
+                        0.0f, 0.0f, 1.0f, 0.0f,
+                        0.0f, 0.0f, 0.0f, 1.0f };
+        bool isdiag = IsM44Diagonal(m44);
+        OIIO_CHECK_EQUAL(isdiag, true);
+
+        m44[1] += 1e-8f;
+        isdiag = IsM44Diagonal(m44);
+        OIIO_CHECK_EQUAL(isdiag, false);
+    }
+}
+
+OIIO_ADD_TEST(MathUtils, M44_M44_product)
+{
+    {
+        float mout[16];
+        float m1[] = { 1.0f, 2.0f, 0.0f, 0.0f,
+                       0.0f, 1.0f, 1.0f, 0.0f,
+                       1.0f, 0.0f, 1.0f, 0.0f,
+                       0.0f, 1.0f, 3.0f, 1.0f };
+        float m2[] = { 1.0f, 1.0f, 0.0f, 0.0f,
+                       0.0f, 1.0f, 0.0f, 0.0f,
+                       0.0f, 0.0f, 1.0f, 0.0f,
+                       2.0f, 0.0f, 0.0f, 1.0f };
+        GetM44M44Product(mout, m1, m2);
+        
+        float mcorrect[] = { 1.0f, 3.0f, 0.0f, 0.0f,
+                       0.0f, 1.0f, 1.0f, 0.0f,
+                       1.0f, 1.0f, 1.0f, 0.0f,
+                       2.0f, 1.0f, 3.0f, 1.0f };
+        
+        for(int i=0; i<16; ++i)
+        {
+            OIIO_CHECK_EQUAL(mout[i], mcorrect[i]);
+        }
+    }
+}
+
+OIIO_ADD_TEST(MathUtils, M44_V4_product)
+{
+    {
+        float vout[4];
+        float m[] = { 1.0f, 2.0f, 0.0f, 0.0f,
+                      0.0f, 1.0f, 1.0f, 0.0f,
+                      1.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 1.0f, 3.0f, 1.0f };
+        float v[] = { 1.0f, 2.0f, 3.0f, 4.0f };
+        GetM44V4Product(vout, m, v);
+        
+        float vcorrect[] = { 5.0f, 5.0f, 4.0f, 15.0f };
+        
+        for(int i=0; i<4; ++i)
+        {
+            OIIO_CHECK_EQUAL(vout[i], vcorrect[i]);
+        }
+    }
+}
+
+OIIO_ADD_TEST(MathUtils, V4_add)
+{
+    {
+        float vout[4];
+        float v1[] = { 1.0f, 2.0f, 3.0f, 4.0f };
+        float v2[] = { 3.0f, 1.0f, 4.0f, 1.0f };
+        GetV4Sum(vout, v1, v2);
+        
+        float vcorrect[] = { 4.0f, 3.0f, 7.0f, 5.0f };
+        
+        for(int i=0; i<4; ++i)
+        {
+            OIIO_CHECK_EQUAL(vout[i], vcorrect[i]);
+        }
+    }
+}
+
+OIIO_ADD_TEST(MathUtils, mxb_eval)
+{
+    {
+        float vout[4];
+        float m[] = { 1.0f, 2.0f, 0.0f, 0.0f,
+                      0.0f, 1.0f, 1.0f, 0.0f,
+                      1.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 1.0f, 3.0f, 1.0f };
+        float x[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        float v[] = { 1.0f, 2.0f, 3.0f, 4.0f };
+        GetMxbResult(vout, m, x, v);
+        
+        float vcorrect[] = { 4.0f, 4.0f, 5.0f, 9.0f };
+        
+        for(int i=0; i<4; ++i)
+        {
+            OIIO_CHECK_EQUAL(vout[i], vcorrect[i]);
+        }
+    }
+}
+
+OIIO_ADD_TEST(MathUtils, Combine_two_mxb)
+{
+    float m1[] = { 1.0f, 0.0f, 2.0f, 0.0f,
+                   2.0f, 1.0f, 0.0f, 1.0f,
+                   0.0f, 1.0f, 2.0f, 0.0f,
+                   1.0f, 0.0f, 0.0f, 1.0f };
+    float v1[] = { 1.0f, 2.0f, 3.0f, 4.0f };
+    float m2[] = { 2.0f, 1.0f, 0.0f, 0.0f,
+                   0.0f, 1.0f, 0.0f, 0.0f,
+                   1.0f, 0.0f, 3.0f, 0.0f,
+                   1.0f,1.0f, 1.0f, 1.0f };
+    float v2[] = { 0.0f, 2.0f, 1.0f, 0.0f };
+    float tolerance = 1e-9f;
+
+    {
+        float x[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        float vout[4];
+
+        // Combine two mx+b operations, and apply to test point
+        float mout[16];
+        float vcombined[4];      
+        GetMxbCombine(mout, vout, m1, v1, m2, v2);
+        GetMxbResult(vcombined, mout, x, vout);
+        
+        // Sequentially apply the two mx+b operations.
+        GetMxbResult(vout, m1, x, v1);
+        GetMxbResult(vout, m2, vout, v2);
+        
+        // Compare outputs
+        for(int i=0; i<4; ++i)
+        {
+            OIIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
+        }
+    }
+    
+    {
+        float x[] = { 6.0f, 0.5f, -2.0f, -0.1f };
+        float vout[4];
+
+        float mout[16];
+        float vcombined[4];
+        GetMxbCombine(mout, vout, m1, v1, m2, v2);
+        GetMxbResult(vcombined, mout, x, vout);
+        
+        GetMxbResult(vout, m1, x, v1);
+        GetMxbResult(vout, m2, vout, v2);
+        
+        for(int i=0; i<4; ++i)
+        {
+            OIIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
+        }
+    }
+    
+    {
+        float x[] = { 26.0f, -0.5f, 0.005f, 12.1f };
+        float vout[4];
+
+        float mout[16];
+        float vcombined[4];
+        GetMxbCombine(mout, vout, m1, v1, m2, v2);
+        GetMxbResult(vcombined, mout, x, vout);
+        
+        GetMxbResult(vout, m1, x, v1);
+        GetMxbResult(vout, m2, vout, v2);
+        
+        for(int i=0; i<4; ++i)
+        {
+            OIIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
+        }
+    }
+}
+
+OIIO_ADD_TEST(MathUtils, mxb_invert)
+{
+    {
+        float m[] = { 1.0f, 2.0f, 0.0f, 0.0f,
+                      0.0f, 1.0f, 1.0f, 0.0f,
+                      1.0f, 0.0f, 1.0f, 0.0f,
+                      0.0f, 1.0f, 3.0f, 1.0f };
+        float x[] = { 1.0f, 0.5f, -1.0f, 60.0f };
+        float v[] = { 1.0f, 2.0f, 3.0f, 4.0f };
+        
+        float vresult[4];
+        float mout[16];
+        float vout[4];
+        
+        GetMxbResult(vresult, m, x, v);
+        bool invertsuccess = GetMxbInverse(mout, vout, m, v);
+        OIIO_CHECK_EQUAL(invertsuccess, true);
+        
+        GetMxbResult(vresult, mout, vresult, vout);
+        
+        float tolerance = 1e-9f;
+        for(int i=0; i<4; ++i)
+        {
+            OIIO_CHECK_CLOSE(vresult[i], x[i], tolerance);
+        }
+    }
+    
+    {
+        float m[] = { 0.3f, 0.3f, 0.3f, 0.0f,
+                      0.3f, 0.3f, 0.3f, 0.0f,
+                      0.3f, 0.3f, 0.3f, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f };
+        float v[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        
+        float mout[16];
+        float vout[4];
+        
+        bool invertsuccess = GetMxbInverse(mout, vout, m, v);
+        OIIO_CHECK_EQUAL(invertsuccess, false);
+    }
+}
+
+#endif
