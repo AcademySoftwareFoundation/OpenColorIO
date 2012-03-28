@@ -53,8 +53,13 @@ OCIO_NAMESPACE_ENTER
                 dir(TRANSFORM_DIR_FORWARD) {}
             
             void parse(const std::string & str);
+            void serialize(std::ostream & os) const;
         };
+        
         typedef std::vector<Token> Tokens;
+        
+        static void serialize(std::ostream & os, const Tokens & tokens);
+        
         typedef std::vector<Tokens> Options;
         
         const Options & parse(const std::string & looksstr);

@@ -46,7 +46,7 @@ OCIO_NAMESPACE_ENTER
             name = pystring::lstrip(str, "+");
             dir = TRANSFORM_DIR_FORWARD;
         }
-        // TODO: Handle --?
+        // TODO: Handle --
         else if(pystring::startswith(str, "-"))
         {
             name = pystring::lstrip(str, "-");
@@ -56,6 +56,31 @@ OCIO_NAMESPACE_ENTER
         {
             name = str;
             dir = TRANSFORM_DIR_FORWARD;
+        }
+    }
+    
+    void LookParseResult::Token::serialize(std::ostream & os) const
+    {
+        if(dir==TRANSFORM_DIR_FORWARD)
+        {
+            os << name;
+        }
+        else if(dir==TRANSFORM_DIR_INVERSE)
+        {
+            os << "-" << name;
+        }
+        else
+        {
+            os << "?" << name;
+        }
+    }
+    
+    void LookParseResult::serialize(std::ostream & os, const Tokens & tokens)
+    {
+        for(unsigned int i=0; i<tokens.size(); ++i)
+        {
+            if(i!=0) os << ", ";
+            tokens[i].serialize(os);
         }
     }
     

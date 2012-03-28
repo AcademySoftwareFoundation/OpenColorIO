@@ -358,7 +358,8 @@ OCIO_NAMESPACE_ENTER
             // push back it's results and return
             
             bool success = false;
-            std::string errorText;
+            std::ostringstream os;
+            
             OpRcPtrVec tmpOps;
             ConstColorSpaceRcPtr cs;
             
@@ -380,10 +381,11 @@ OCIO_NAMESPACE_ENTER
                 }
                 catch(ExceptionMissingFile & e)
                 {
-                    if(errorText.empty())
-                    {
-                        errorText = e.what();
-                    }
+                    if(i != 0) os << "  ...  ";
+                    
+                    os << "(";
+                    LookParseResult::serialize(os, options[i]);
+                    os << ") " << e.what();
                 }
             }
             
@@ -394,7 +396,7 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                throw ExceptionMissingFile(errorText.c_str());
+                throw ExceptionMissingFile(os.str().c_str());
             }
         }
     }
