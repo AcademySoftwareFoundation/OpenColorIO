@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Logging.h"
 #include "Op.h"
 
+#include <iterator>
 #include <sstream>
 
 OCIO_NAMESPACE_ENTER
@@ -108,30 +109,48 @@ OCIO_NAMESPACE_ENTER
             return count;
         }
         
-        /*
         int CombineOps(OpRcPtrVec & opVec)
         {
             int count = 0;
             int firstindex = 0; // this must be a signed int
+            
+            OpRcPtrVec tmpops;
             
             while(firstindex < static_cast<int>(opVec.size()-1))
             {
                 const OpRcPtr & first = opVec[firstindex];
                 const OpRcPtr & second = opVec[firstindex+1];
                 
-                if(IsExponentOp(first) && IsExponentOp(second))
+                if(first->canCombineWith(second))
                 {
-                    OpRcPtr newop = CreateCombinedExponentOp(first, second);
-                    if(!newop) throw Exception("Error combining ExponentOps.");
+                    tmpops.clear();
+                    first->combineWith(tmpops, second);
                     
-                    opVec[firstindex] = newop;
-                    opVec.erase(opVec.begin() + firstindex + 1);
+                    // tmpops may have any number of ops in it. (0, 1, 2, ...)
+                    // (size 0 would occur potentially iff the combination 
+                    // results in a no-op)
+                    //
+                    // No matter the number, we need to swap them in for the
+                    // original ops
                     
-                    ++firstindex;
+                    // Erase the initial two ops we've combined
+                    opVec.erase(opVec.begin() + firstindex,
+                        opVec.begin() + firstindex + 2);
+                    
+                    // Insert the new ops (which may be empty) at
+                    // this location
+                    std::copy(tmpops.begin(), tmpops.end(),
+                        std::inserter(opVec, opVec.begin() + firstindex));
+                    
+                    // Decrement firstindex by 1,
+                    // to backstep and reconsider the A, A' case.
+                    // See RemoveInverseOps for the full discussion of
+                    // why this is appropriate
+                    firstindex = std::max(0, firstindex-1);
+                    
+                    // We've done something so increment the count!
                     ++count;
                 }
-                
-                // TODO: Add matrix combining
                 else
                 {
                     ++firstindex;
@@ -140,7 +159,6 @@ OCIO_NAMESPACE_ENTER
             
             return count;
         }
-        */
     }
     
     void OptimizeOpVec(OpRcPtrVec & ops)
@@ -157,13 +175,16 @@ OCIO_NAMESPACE_ENTER
         OpRcPtrVec::size_type originalSize = ops.size();
         int total_noops = 0;
         int total_inverseops = 0;
+        int total_combines = 0;
         int passes = 0;
         
         while(passes<=MAX_OPTIMIZATION_PASSES)
         {
             int noops = RemoveNoOps(ops);
             int inverseops = RemoveInverseOps(ops);
-            if(noops == 0 && inverseops==0)
+            int combines = CombineOps(ops);
+            
+            if(noops == 0 && inverseops==0 && combines==0)
             {
                 // No optimization progress was made, so stop trying.
                 break;
@@ -171,6 +192,7 @@ OCIO_NAMESPACE_ENTER
             
             total_noops += noops;
             total_inverseops += inverseops;
+            total_combines += combines;
             
             ++passes;
         }
@@ -196,6 +218,7 @@ OCIO_NAMESPACE_ENTER
             os << passes << " passes, ";
             os << total_noops << " noops removed, ";
             os << total_inverseops << " inverse ops removed\n";
+            os << total_combines << " ops combines\n";
             os << SerializeOpVec(ops, 4);
             LogDebug(os.str());
         }
@@ -250,6 +273,92 @@ OIIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
     OIIO_CHECK_EQUAL(ops.size(), 5);
     OCIO::RemoveInverseOps(ops);
     OIIO_CHECK_EQUAL(ops.size(), 1);
+}
+
+
+OIIO_ADD_TEST(OpOptimizers, CombineOps)
+{
+    float m1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    float m2[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+    float m3[4] = { 0.6f, 0.6f, 0.6f, 1.0f };
+    float m4[4] = { 0.7f, 0.7f, 0.7f, 1.0f };
+    
+    float exp[4] = { 1.2f, 1.3f, 1.4f, 1.5f };
+    
+    {
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO::CombineOps(ops);
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    }
+    
+    {
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m3, OCIO::TRANSFORM_DIR_FORWARD);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO::CombineOps(ops);
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    }
+    
+    {
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m3, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m4, OCIO::TRANSFORM_DIR_FORWARD);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 3);
+    OCIO::CombineOps(ops);
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    }
+    
+    {
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m2, OCIO::TRANSFORM_DIR_FORWARD);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO::CombineOps(ops);
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+    }
+    
+    {
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_INVERSE);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OCIO::CombineOps(ops);
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+    }
+    
+    {
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 5);
+    OCIO::CombineOps(ops);
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    }
+    
+    {
+    OCIO::OpRcPtrVec ops;
+    OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m1, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateScaleOp(ops, m2, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateExponentOp(ops, exp, OCIO::TRANSFORM_DIR_INVERSE);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 4);
+    OCIO::CombineOps(ops);
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+    }
 }
 
 #endif // OCIO_UNIT_TEST

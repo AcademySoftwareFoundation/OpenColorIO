@@ -69,12 +69,6 @@ OCIO_NAMESPACE_ENTER
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);
-    
-    
-    ////////////////////////////////////////////////////////////////////////////
-    
-    
-    bool IsMatrixOp(const OpRcPtr & op);
 }
 OCIO_NAMESPACE_EXIT
 
