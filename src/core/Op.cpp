@@ -38,6 +38,20 @@ OCIO_NAMESPACE_ENTER
     Op::~Op()
     { }
     
+    bool Op::canCombineWith(const OpRcPtr & /*op*/) const
+    {
+        return false;
+    }
+    
+    void Op::combineWith(OpRcPtrVec & /*ops*/,
+                         const OpRcPtr & /*secondOp*/) const
+    {
+        std::ostringstream os;
+        os << "Op: " << getInfo() << " cannot be combined. ";
+        os << "A type-specific combining function is not defined.";
+        throw Exception(os.str().c_str());
+    }
+    
     std::ostream& operator<< (std::ostream & os, const Op & op)
     {
         os << op.getInfo();
