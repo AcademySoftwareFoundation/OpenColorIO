@@ -263,7 +263,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(ExponentOps, ValueCheck)
+OIIO_ADD_TEST(ExponentOps, Value)
 {
     float exp1[4] = { 1.2f, 1.3f, 1.4f, 1.5f };
     
@@ -300,7 +300,7 @@ OIIO_ADD_TEST(ExponentOps, ValueCheck)
     }
 }
 
-OIIO_ADD_TEST(ExponentOps, InverseComparisonCheck)
+OIIO_ADD_TEST(ExponentOps, Inverse)
 {
     float exp1[4] = { 2.0f, 1.02345f, 5.651321f, 0.12345678910f };
     float exp2[4] = { 2.0f, 2.0f, 2.0f, 2.0f };

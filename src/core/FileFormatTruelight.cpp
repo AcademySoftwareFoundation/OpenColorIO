@@ -361,7 +361,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(TruelightFileFormat, shaperAndLut3D)
+OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"
@@ -462,7 +462,7 @@ OIIO_ADD_TEST(TruelightFileFormat, shaperAndLut3D)
     }
 }
 
-OIIO_ADD_TEST(TruelightFileFormat, shaper)
+OIIO_ADD_TEST(FileFormatTruelight, Shaper)
 {
     const char * luttext = "# Truelight Cube v2.0\n"
        "# lutLength 11\n"
@@ -532,7 +532,7 @@ OIIO_ADD_TEST(TruelightFileFormat, shaper)
 }
 
 
-OIIO_ADD_TEST(TruelightFileFormat, Lut3D)
+OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"

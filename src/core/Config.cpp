@@ -1897,7 +1897,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "pystring/pystring.h"
 
 #if 0
-OIIO_ADD_TEST(Config_Unit_Tests, test_searchpath_filesystem)
+OIIO_ADD_TEST(Config, test_searchpath_filesystem)
 {
     
     OCIO::EnvMap env = OCIO::GetEnvMap();
@@ -1964,14 +1964,14 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_searchpath_filesystem)
 }
 #endif
 
-OIIO_ADD_TEST(Config_Unit_Tests, test_INTERNAL_RAW_PROFILE)
+OIIO_ADD_TEST(Config, InternalRawProfile)
 {
     std::istringstream is;
     is.str(OCIO::INTERNAL_RAW_PROFILE);
     OIIO_CHECK_NO_THOW(OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is));
 }
 
-OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
+OIIO_ADD_TEST(Config, SimpleConfig)
 {
     
     std::string SIMPLE_PROFILE =
@@ -2045,7 +2045,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
     OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
 }
 
-OIIO_ADD_TEST(Config_Unit_Tests, test_roleAccess)
+OIIO_ADD_TEST(Config, Roles)
 {
     
     std::string SIMPLE_PROFILE =
@@ -2083,7 +2083,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_roleAccess)
     
 }
 
-OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
+OIIO_ADD_TEST(Config, Serialize)
 {
     
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -2170,8 +2170,9 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
 }
 
 
-OIIO_ADD_TEST(Config_Unit_Tests, test_sanityCheckDuplicateSpaces)
+OIIO_ADD_TEST(Config, SanityCheck)
 {
+    {
     std::string SIMPLE_PROFILE =
     "ocio_profile_version: 1\n"
     "colorspaces:\n"
@@ -2193,10 +2194,9 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_sanityCheckDuplicateSpaces)
     OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
     
     OIIO_CHECK_THOW(config->sanityCheck(), OCIO::Exception);
-}
-
-OIIO_ADD_TEST(Config_Unit_Tests, test_sanityCheckNoDuplicateSpaces)
-{
+    }
+    
+    {
     std::string SIMPLE_PROFILE =
     "ocio_profile_version: 1\n"
     "colorspaces:\n"
@@ -2216,6 +2216,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_sanityCheckNoDuplicateSpaces)
     OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
     
     OIIO_CHECK_NO_THOW(config->sanityCheck());
+    }
 }
 
 

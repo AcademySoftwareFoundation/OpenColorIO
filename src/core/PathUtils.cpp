@@ -209,7 +209,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(PathUtils, envexpand)
+OIIO_ADD_TEST(PathUtils, EnvExpand)
 {
     // build env by hand for unit test
     OCIO::EnvMap env_map; // = OCIO::GetEnvMap();

@@ -867,7 +867,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(CSPFileFormat, simple1D)
+OIIO_ADD_TEST(FileFormatCSP, simple1D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"              << "\n";
@@ -931,7 +931,7 @@ OIIO_ADD_TEST(CSPFileFormat, simple1D)
     
 }
 
-OIIO_ADD_TEST(CSPFileFormat, simple3D)
+OIIO_ADD_TEST(FileFormatCSP, simple3D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"                                  << "\n";

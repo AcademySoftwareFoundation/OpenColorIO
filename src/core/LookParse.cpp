@@ -166,7 +166,7 @@ OCIO_NAMESPACE_USING
 
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(LookParse, parse)
+OIIO_ADD_TEST(LookParse, Parse)
 {
     LookParseResult r;
     
@@ -279,7 +279,7 @@ OIIO_ADD_TEST(LookParse, parse)
     }
 }
 
-OIIO_ADD_TEST(LookParse, reverse)
+OIIO_ADD_TEST(LookParse, Reverse)
 {
     LookParseResult r;
     

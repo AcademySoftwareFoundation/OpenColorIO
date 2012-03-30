@@ -383,7 +383,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(LogOps, LinToLog_Base10)
+OIIO_ADD_TEST(LogOps, LinToLog)
 {
     float k[3] = { 0.18f, 0.18f, 0.18f };
     float m[3] = { 2.0f, 2.0f, 2.0f };
@@ -421,7 +421,7 @@ OIIO_ADD_TEST(LogOps, LinToLog_Base10)
     }
 }
 
-OIIO_ADD_TEST(LogOps, LogToLin_Base10)
+OIIO_ADD_TEST(LogOps, LogToLin)
 {
     float k[3] = { 0.18f, 0.18f, 0.18f };
     float m[3] = { 2.0f, 2.0f, 2.0f };
@@ -458,7 +458,7 @@ OIIO_ADD_TEST(LogOps, LogToLin_Base10)
     }
 }
 
-OIIO_ADD_TEST(LogOps, InverseComparisonCheck)
+OIIO_ADD_TEST(LogOps, Inverse)
 {
     float k[3] = { 0.18f, 0.18f, 0.18f };
     float m[3] = { 2.0f, 2.0f, 2.0f };

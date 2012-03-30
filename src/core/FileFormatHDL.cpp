@@ -961,7 +961,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(HDLFileFormat, read_simple1D)
+OIIO_ADD_TEST(FileFormatHDL, Read1D)
 {
     std::ostringstream strebuf;
     strebuf << "Version\t\t1" << "\n";
@@ -1021,7 +1021,7 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple1D)
     }
 }
 
-OIIO_ADD_TEST(HDLFileFormat, bake_simple1D)
+OIIO_ADD_TEST(FileFormatHDL, Bake1D)
 {
     
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -1120,7 +1120,7 @@ OIIO_ADD_TEST(HDLFileFormat, bake_simple1D)
     
 }
 
-OIIO_ADD_TEST(HDLFileFormat, read_simple3D)
+OIIO_ADD_TEST(FileFormatHDL, Read3D)
 {
     std::ostringstream strebuf;
     strebuf << "Version         2" << "\n";
@@ -1181,7 +1181,7 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple3D)
     }
 }
 
-OIIO_ADD_TEST(HDLFileFormat, bake_simple3D)
+OIIO_ADD_TEST(FileFormatHDL, Bake3D)
 {
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     
@@ -1258,7 +1258,7 @@ OIIO_ADD_TEST(HDLFileFormat, bake_simple3D)
         OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
 }
 
-OIIO_ADD_TEST(HDLFileFormat, read_simple3D1D)
+OIIO_ADD_TEST(FileFormatHDL, Read3D1D)
 {
     std::ostringstream strebuf;
     strebuf << "Version         3" << "\n";
@@ -1344,7 +1344,8 @@ OIIO_ADD_TEST(HDLFileFormat, read_simple3D1D)
         OIIO_CHECK_EQUAL(cube[i], lut->lut3D->lut[i]);
     }
 }
-OIIO_ADD_TEST(HDLFileFormat, bake_simple3D1D)
+
+OIIO_ADD_TEST(FileFormatHDL, Bake3D1D)
 {
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();

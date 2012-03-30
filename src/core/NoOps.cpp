@@ -496,8 +496,9 @@ void CreateGenericLutOp(OpRcPtrVec & ops)
     CreateLut1DOp(ops, lut, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
 }
 
-OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps1a)
+OIIO_ADD_TEST(NoOps, PartitionGPUOps)
 {
+    {
     OpRcPtrVec ops;
     
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
@@ -510,10 +511,9 @@ OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps1a)
     OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
                                                  gpuLatticeOps,
                                                  gpuPostOps) );
-}
-
-OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps1b)
-{
+    }
+    
+    {
     OpRcPtrVec ops;
     CreateGenericAllocationOp(ops);
     
@@ -527,10 +527,9 @@ OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps1b)
     OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
                                                  gpuLatticeOps,
                                                  gpuPostOps) );
-}
-
-OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps2)
-{
+    }
+    
+    {
     OpRcPtrVec ops;
     
     CreateGenericAllocationOp(ops);
@@ -546,10 +545,9 @@ OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps2)
     OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
                                                  gpuLatticeOps,
                                                  gpuPostOps) );
-}
-
-OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps3)
-{
+    }
+    
+    {
     OpRcPtrVec ops;
     
     CreateGenericAllocationOp(ops);
@@ -566,10 +564,9 @@ OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps3)
     OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
                                                  gpuLatticeOps,
                                                  gpuPostOps) );
-}
-
-OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps4)
-{
+    }
+    
+    {
     OpRcPtrVec ops;
     
     CreateGenericLutOp(ops);
@@ -584,10 +581,9 @@ OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps4)
     OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
                                                  gpuLatticeOps,
                                                  gpuPostOps) );
-}
-
-OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps5)
-{
+    }
+    
+    {
     OpRcPtrVec ops;
     
     CreateGenericLutOp(ops);
@@ -607,10 +603,9 @@ OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps5)
     OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
                                                  gpuLatticeOps,
                                                  gpuPostOps) );
-}
-
-OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps6)
-{
+    }
+    
+    {
     OpRcPtrVec ops;
     
     CreateGenericAllocationOp(ops);
@@ -640,6 +635,7 @@ OIIO_ADD_TEST(GpuAllocationNoOp, PartitionGPUOps6)
     std::cerr << "gpuPostOps" << std::endl;
     std::cerr << SerializeOpVec(gpuPostOps, 4) << std::endl;
     */
-}
+    }
+} // PartitionGPUOps
 
 #endif // OCIO_UNIT_TEST

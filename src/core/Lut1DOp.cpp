@@ -664,7 +664,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(Lut1DOp, isNoOp)
+OIIO_ADD_TEST(Lut1DOp, NoOp)
 {
     // Make an identity lut
     OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
@@ -710,7 +710,7 @@ OIIO_ADD_TEST(Lut1DOp, isNoOp)
 }
 
 
-OIIO_ADD_TEST(Lut1DOp, FiniteValueCheck)
+OIIO_ADD_TEST(Lut1DOp, FiniteValue)
 {
     // Make a lut that squares the input
     OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
@@ -772,7 +772,7 @@ OIIO_ADD_TEST(Lut1DOp, FiniteValueCheck)
 }
 
 
-OIIO_ADD_TEST(Lut1DOp, InverseComparisonCheck)
+OIIO_ADD_TEST(Lut1DOp, Inverse)
 {
     // Make a lut that squares the input
     OCIO::Lut1DRcPtr lut_a = OCIO::Lut1D::Create();
@@ -932,7 +932,7 @@ OIIO_ADD_TEST(Lut1DOp, SSE)
 #endif
 
 
-OIIO_ADD_TEST(Lut1DOp, NanInfValueCheck)
+OIIO_ADD_TEST(Lut1DOp, NanInf)
 {
     // Make a lut that squares the input
     OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
