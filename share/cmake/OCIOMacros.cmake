@@ -179,14 +179,14 @@ MACRO(OCIOFindPython)
     endif()
 
     # Construct variant path - a path that sufficiently identifies the
-    # ABI-compatbility of the built library
+    # ABI-compatbility of the built library. See Github issue #236
     if(OCIO_PYGLUE_RESPECT_ABI)
         # Respect Python major/minor version, and UCS version (unicode
-        # content system). E.g install into "lib/python2.6/ucs4"
-        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/${PYTHON_UCS}")
+        # content system). E.g install into "lib/python2.6/ucs4/site-packages"
+        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/${PYTHON_UCS}/site-packages")
     else()
-        # Ignore ABI stuff and install into lib/ dir
-        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}")
+        # Ignore UCS value and install into lib/python2.6/site-packages dir
+        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/site-packages")
     endif()
 
 ENDMACRO()
