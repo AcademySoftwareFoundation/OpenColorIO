@@ -20,7 +20,7 @@ option(OCIO_BUILD_NUKE "Set to OFF to disable building nuke plugins" ON)
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" OFF)
 option(OCIO_BUILD_PYGLUE "Specify whether to build python bindings" ON)
-option(OCIO_LINK_PYGLUE "Set to OFF to disable the linking of PYGLUE to python itself" ON)
+option(OCIO_LINK_PYGLUE "Set to OFF to disable the linking of PYGLUE to python itself" OFF)
 option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
