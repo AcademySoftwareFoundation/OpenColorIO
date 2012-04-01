@@ -10,7 +10,7 @@ class LogTransform:
         """
         getBase()
         
-        Returns the base of :py:class:`PyOpenColorIO.LogTransform`.
+        Returns the base of :py:class:`PyOpenColourIO.LogTransform`.
         """
         pass
     
@@ -18,7 +18,7 @@ class LogTransform:
         """
         setBase(base)
         
-        Sets the base in :py:class:`PyOpenColorIO.LogTransform`.
+        Sets the base in :py:class:`PyOpenColourIO.LogTransform`.
         
         :param base: base of log transform
         :type base: float

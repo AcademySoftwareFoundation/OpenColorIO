@@ -30,22 +30,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <vector>
 
-#include "OpenColorIO/OpenColorIO.h"
-#include "OpenColorIOJNI.h"
+#include "OpenColourIO/OpenColourIO.h"
+#include "OpenColourIOJNI.h"
 #include "JNIUtil.h"
 OCIO_NAMESPACE_USING
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Processor_Create(JNIEnv * env, jobject self) {
+Java_org_OpenColourIO_Processor_Create(JNIEnv * env, jobject self) {
     OCIO_JNITRY_ENTER()
     jobject obj = BuildJConstObject<ConstProcessorRcPtr, ProcessorJNI>(env, self,
-        env->FindClass("org/OpenColorIO/Processor"), Processor::Create());
+        env->FindClass("org/OpenColourIO/Processor"), Processor::Create());
     return obj;
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_OpenColorIO_Processor_isNoOp(JNIEnv * env, jobject self) {
+Java_org_OpenColourIO_Processor_isNoOp(JNIEnv * env, jobject self) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     return (jboolean)ptr->isNoOp();
@@ -53,7 +53,7 @@ Java_org_OpenColorIO_Processor_isNoOp(JNIEnv * env, jobject self) {
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_OpenColorIO_Processor_hasChannelCrosstalk(JNIEnv * env, jobject self) {
+Java_org_OpenColourIO_Processor_hasChannelCrosstalk(JNIEnv * env, jobject self) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     return (jboolean)ptr->hasChannelCrosstalk();
@@ -61,7 +61,7 @@ Java_org_OpenColorIO_Processor_hasChannelCrosstalk(JNIEnv * env, jobject self) {
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Processor_apply(JNIEnv * env, jobject self, jobject img) {
+Java_org_OpenColourIO_Processor_apply(JNIEnv * env, jobject self, jobject img) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     ImageDescRcPtr _img = GetEditableJOCIO<ImageDescRcPtr, ImageDescJNI>(env, img);
@@ -70,7 +70,7 @@ Java_org_OpenColorIO_Processor_apply(JNIEnv * env, jobject self, jobject img) {
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Processor_applyRGB(JNIEnv * env, jobject self, jfloatArray pixel) {
+Java_org_OpenColourIO_Processor_applyRGB(JNIEnv * env, jobject self, jfloatArray pixel) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     ptr->applyRGB(GetJFloatArrayValue(env, pixel, "pixel", 3)());
@@ -78,7 +78,7 @@ Java_org_OpenColorIO_Processor_applyRGB(JNIEnv * env, jobject self, jfloatArray 
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Processor_applyRGBA(JNIEnv * env, jobject self, jfloatArray pixel) {
+Java_org_OpenColourIO_Processor_applyRGBA(JNIEnv * env, jobject self, jfloatArray pixel) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     ptr->applyRGBA(GetJFloatArrayValue(env, pixel, "pixel", 4)());
@@ -86,7 +86,7 @@ Java_org_OpenColorIO_Processor_applyRGBA(JNIEnv * env, jobject self, jfloatArray
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Processor_getCpuCacheID(JNIEnv * env, jobject self) {
+Java_org_OpenColourIO_Processor_getCpuCacheID(JNIEnv * env, jobject self) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     return env->NewStringUTF(ptr->getCpuCacheID());
@@ -94,7 +94,7 @@ Java_org_OpenColorIO_Processor_getCpuCacheID(JNIEnv * env, jobject self) {
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Processor_getGpuShaderText(JNIEnv * env, jobject self, jobject shaderDesc) {
+Java_org_OpenColourIO_Processor_getGpuShaderText(JNIEnv * env, jobject self, jobject shaderDesc) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     ConstGpuShaderDescRcPtr desc = GetConstJOCIO<ConstGpuShaderDescRcPtr, GpuShaderDescJNI>(env, shaderDesc);
@@ -103,7 +103,7 @@ Java_org_OpenColorIO_Processor_getGpuShaderText(JNIEnv * env, jobject self, jobj
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Processor_getGpuShaderTextCacheID(JNIEnv * env, jobject self, jobject shaderDesc) {
+Java_org_OpenColourIO_Processor_getGpuShaderTextCacheID(JNIEnv * env, jobject self, jobject shaderDesc) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     ConstGpuShaderDescRcPtr desc = GetConstJOCIO<ConstGpuShaderDescRcPtr, GpuShaderDescJNI>(env, shaderDesc);
@@ -112,7 +112,7 @@ Java_org_OpenColorIO_Processor_getGpuShaderTextCacheID(JNIEnv * env, jobject sel
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Processor_getGpuLut3D(JNIEnv * env, jobject self, jobject lut3d, jobject shaderDesc) {
+Java_org_OpenColourIO_Processor_getGpuLut3D(JNIEnv * env, jobject self, jobject lut3d, jobject shaderDesc) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     ConstGpuShaderDescRcPtr desc = GetConstJOCIO<ConstGpuShaderDescRcPtr, GpuShaderDescJNI>(env, shaderDesc);
@@ -124,7 +124,7 @@ Java_org_OpenColorIO_Processor_getGpuLut3D(JNIEnv * env, jobject self, jobject l
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Processor_getGpuLut3DCacheID(JNIEnv * env, jobject self, jobject shaderDesc) {
+Java_org_OpenColourIO_Processor_getGpuLut3DCacheID(JNIEnv * env, jobject self, jobject shaderDesc) {
     OCIO_JNITRY_ENTER()
     ConstProcessorRcPtr ptr = GetConstJOCIO<ConstProcessorRcPtr, ProcessorJNI>(env, self);
     ConstGpuShaderDescRcPtr desc = GetConstJOCIO<ConstGpuShaderDescRcPtr, GpuShaderDescJNI>(env, shaderDesc);

@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MatrixOps.h"
 #include "Op.h"
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 OCIO_NAMESPACE_ENTER
 {

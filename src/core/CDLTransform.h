@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <tinyxml.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 OCIO_NAMESPACE_ENTER
 {

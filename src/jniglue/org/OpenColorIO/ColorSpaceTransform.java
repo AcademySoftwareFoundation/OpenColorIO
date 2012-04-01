@@ -26,14 +26,14 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.OpenColorIO;
-import org.OpenColorIO.*;
+package org.OpenColourIO;
+import org.OpenColourIO.*;
 
-public class ColorSpaceTransform extends Transform
+public class ColourSpaceTransform extends Transform
 {
-    public ColorSpaceTransform() { super(); }
-    protected ColorSpaceTransform(long impl) { super(impl); }
-    public native ColorSpaceTransform Create();
+    public ColourSpaceTransform() { super(); }
+    protected ColourSpaceTransform(long impl) { super(impl); }
+    public native ColourSpaceTransform Create();
     public native String getSrc();
     public native void setSrc(String src);
     public native String getDst();

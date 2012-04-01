@@ -52,7 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <map>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "FileTransform.h"
 #include "Lut1DOp.h"
@@ -1028,16 +1028,16 @@ OIIO_ADD_TEST(FileFormatHDL, Bake1D)
     
     // Add lnf space
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("lnf");
         cs->setFamily("lnf");
-        config->addColorSpace(cs);
+        config->addColourSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
     
     // Add target space
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
@@ -1045,8 +1045,8 @@ OIIO_ADD_TEST(FileFormatHDL, Bake1D)
         float rgb[3] = {0.1f, 0.1f, 0.1f};
         transform1->setOffset(rgb);
         
-        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-        config->addColorSpace(cs);
+        cs->setTransform(transform1, OCIO::COLOURSPACE_DIR_FROM_REFERENCE);
+        config->addColourSpace(cs);
     }
         
     std::string bout =
@@ -1193,16 +1193,16 @@ OIIO_ADD_TEST(FileFormatHDL, Bake3D)
     
     // Add lnf space
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("lnf");
         cs->setFamily("lnf");
-        config->addColorSpace(cs);
+        config->addColourSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
     
     // Add target space
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
@@ -1210,8 +1210,8 @@ OIIO_ADD_TEST(FileFormatHDL, Bake3D)
         // Set saturation to cause channel crosstalk, making a 3D LUT
         transform1->setSat(0.5f);
 
-        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-        config->addColorSpace(cs);
+        cs->setTransform(transform1, OCIO::COLOURSPACE_DIR_FROM_REFERENCE);
+        config->addColourSpace(cs);
     }
         
     std::string bout = 
@@ -1358,28 +1358,28 @@ OIIO_ADD_TEST(FileFormatHDL, Bake3D1D)
 
     // Add lnf space
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("lnf");
         cs->setFamily("lnf");
-        config->addColorSpace(cs);
+        config->addColourSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
     
     // Add shaper space
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("shaper");
         cs->setFamily("shaper");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
         float test[4] = {2.6f, 2.6f, 2.6f, 1.0f};
         transform1->setValue(test);
-        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
-        config->addColorSpace(cs);
+        cs->setTransform(transform1, OCIO::COLOURSPACE_DIR_TO_REFERENCE);
+        config->addColourSpace(cs);
     }
     
     // Add target space
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
@@ -1387,8 +1387,8 @@ OIIO_ADD_TEST(FileFormatHDL, Bake3D1D)
         // Set saturation to cause channel crosstalk, making a 3D LUT
         transform1->setSat(0.5f);
 
-        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-        config->addColorSpace(cs);
+        cs->setTransform(transform1, OCIO::COLOURSPACE_DIR_FROM_REFERENCE);
+        config->addColourSpace(cs);
     }
     
     std::string bout = 

@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <vector>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "ocioicc.h"
 
@@ -138,12 +138,12 @@ void SaveICCProfileToFile(const std::string & outputfile,
     cmsHPROFILE hProfile = cmsCreateRGBProfileTHR(NULL, &whitePoint, NULL, NULL);
 
     if(verbose)
-        std::cout << "[OpenColorIO INFO]: Setting up Profile: " << outputfile << "\n";
+        std::cout << "[OpenColourIO INFO]: Setting up Profile: " << outputfile << "\n";
 
     // Added Header fields
     cmsSetProfileVersion(hProfile, 4.2);
     cmsSetDeviceClass(hProfile, cmsSigDisplayClass);
-    cmsSetColorSpace(hProfile, cmsSigRgbData);
+    cmsSetColourSpace(hProfile, cmsSigRgbData);
     cmsSetPCS(hProfile, cmsSigLabData);
     cmsSetHeaderRenderingIntent(hProfile, INTENT_PERCEPTUAL);
 
@@ -176,7 +176,7 @@ void SaveICCProfileToFile(const std::string & outputfile,
     //
     
     if(verbose)
-        std::cout << "[OpenColorIO INFO]: Adding AToB0Tag\n";
+        std::cout << "[OpenColourIO INFO]: Adding AToB0Tag\n";
     cmsPipeline* AToB0Tag = cmsPipelineAlloc(NULL, 3, 3);
 
     Add3GammaCurves(AToB0Tag, 1.f); // cmsSigCurveSetElemType
@@ -185,7 +185,7 @@ void SaveICCProfileToFile(const std::string & outputfile,
     cmsStage* AToB0Clut = cmsStageAllocCLut16bit(NULL, cubesize, 3, 3, NULL);
     
     if(verbose)
-        std::cout << "[OpenColorIO INFO]: Sampling AToB0 CLUT from Display to Lab\n";
+        std::cout << "[OpenColourIO INFO]: Sampling AToB0 CLUT from Display to Lab\n";
     cmsStageSampleCLut16bit(AToB0Clut, Display2PCS_Sampler16, &data, 0);
     cmsPipelineInsertStage(AToB0Tag, cmsAT_END, AToB0Clut);
 
@@ -207,7 +207,7 @@ void SaveICCProfileToFile(const std::string & outputfile,
     //    `- cmsSigCurveSetElemType
     //
     if(verbose)
-        std::cout << "[OpenColorIO INFO]: Adding BToA0Tag\n";
+        std::cout << "[OpenColourIO INFO]: Adding BToA0Tag\n";
     cmsPipeline* BToA0Tag = cmsPipelineAlloc(NULL, 3, 3);
 
     Add3GammaCurves(BToA0Tag, 1.f); // cmsSigCurveSetElemType
@@ -217,7 +217,7 @@ void SaveICCProfileToFile(const std::string & outputfile,
     // cmsSigCLutElemType
     cmsStage* BToA0Clut = cmsStageAllocCLut16bit(NULL, cubesize, 3, 3, NULL);
     if(verbose)
-        std::cout << "[OpenColorIO INFO]: Sampling BToA0 CLUT from Lab to Display\n";
+        std::cout << "[OpenColourIO INFO]: Sampling BToA0 CLUT from Lab to Display\n";
     cmsStageSampleCLut16bit(BToA0Clut, PCS2Display_Sampler16, &data, 0);
     cmsPipelineInsertStage(BToA0Tag, cmsAT_END, BToA0Clut);
 
@@ -239,12 +239,12 @@ void SaveICCProfileToFile(const std::string & outputfile,
     // Write
     //
     if(verbose)
-        std::cout << "[OpenColorIO INFO]: Writing " << outputfile << std::endl;
+        std::cout << "[OpenColourIO INFO]: Writing " << outputfile << std::endl;
     cmsSaveProfileToFile(hProfile, outputfile.c_str());
     cmsCloseProfile(hProfile);
     
     if(verbose)
-        std::cout << "[OpenColorIO INFO]: Finished\n";
+        std::cout << "[OpenColourIO INFO]: Finished\n";
 }
 
 }

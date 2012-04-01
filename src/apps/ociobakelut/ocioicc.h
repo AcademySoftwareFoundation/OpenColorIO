@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 OCIO_NAMESPACE_ENTER

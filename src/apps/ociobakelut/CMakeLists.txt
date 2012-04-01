@@ -41,6 +41,6 @@ endif()
 
 target_link_libraries(ociobakelut
                       ${LCMS_LIBRARIES}
-                      OpenColorIO)
+                      OpenColourIO)
 
 install(TARGETS ociobakelut DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)

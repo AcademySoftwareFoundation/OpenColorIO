@@ -34,7 +34,7 @@ class CDLTransform:
         """
         setSlope(pyData)
         
-        Sets the slope ('S' part of SOP) in :py:class:`PyOpenColorIO.CDLTransform`.
+        Sets the slope ('S' part of SOP) in :py:class:`PyOpenColourIO.CDLTransform`.
         
         :param pyData: 
         :type pyData: object
@@ -45,7 +45,7 @@ class CDLTransform:
         """
         setOffset(pyData)
         
-        Sets the offset ('O' part of SOP) in :py:class:`PyOpenColorIO.CDLTransform`.
+        Sets the offset ('O' part of SOP) in :py:class:`PyOpenColourIO.CDLTransform`.
         
         :param pyData: list of three floats
         :type pyData: object
@@ -56,7 +56,7 @@ class CDLTransform:
         """
         setPower(pyData)
         
-        Sets the power ('P' part of SOP) in :py:class:`PyOpenColorIO.CDLTransform`.
+        Sets the power ('P' part of SOP) in :py:class:`PyOpenColourIO.CDLTransform`.
         
         :param pyData: list of three floats
         :type pyData: object
@@ -67,7 +67,7 @@ class CDLTransform:
         """
         setSOP(pyData)
         
-        Sets SOP in :py:class:`PyOpenColorIO.CDLTransform`.
+        Sets SOP in :py:class:`PyOpenColourIO.CDLTransform`.
         
         :param pyData: list of nine floats
         :type pyData: object
@@ -78,7 +78,7 @@ class CDLTransform:
         """
         setSAT(pyData)
         
-        Sets SAT (saturation) in :py:class:`PyOpenColorIO.CDLTransform`.
+        Sets SAT (saturation) in :py:class:`PyOpenColourIO.CDLTransform`.
         
         :param pyData: saturation
         :type pyData: float
@@ -100,7 +100,7 @@ class CDLTransform:
         """
         getID()
         
-        Returns the ID from :py:class:`PyOpenColorIO.CDLTransform`.
+        Returns the ID from :py:class:`PyOpenColourIO.CDLTransform`.
         
         :return: ID
         :rtype: string
@@ -111,7 +111,7 @@ class CDLTransform:
         """
         setID(str)
         
-        Sets the ID in :py:class:`PyOpenColorIO.CDLTransform`.
+        Sets the ID in :py:class:`PyOpenColourIO.CDLTransform`.
         
         :param str: ID
         :type str: string
@@ -122,7 +122,7 @@ class CDLTransform:
         """
         getDescription()
         
-        Returns the description of :py:class:`PyOpenColorIO.CDLTransform`.
+        Returns the description of :py:class:`PyOpenColourIO.CDLTransform`.
         
         :return: description
         :rtype: string
@@ -133,7 +133,7 @@ class CDLTransform:
         """
         setDescription(str)
         
-        Sets the description of :py:class:`PyOpenColorIO.CDLTransform`.
+        Sets the description of :py:class:`PyOpenColourIO.CDLTransform`.
         
         :param str: description
         :type str: string

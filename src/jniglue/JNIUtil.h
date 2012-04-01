@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 #include <vector>
-#include "OpenColorIOJNI.h"
+#include "OpenColourIOJNI.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -57,7 +57,7 @@ typedef OCIO_SHARED_PTR<PlanarImageDesc> PlanarImageDescRcPtr;
 typedef JObject <ConstConfigRcPtr, ConfigRcPtr> ConfigJNI;
 typedef JObject <ConstContextRcPtr, ContextRcPtr> ContextJNI;
 typedef JObject <ConstProcessorRcPtr, ProcessorRcPtr> ProcessorJNI;
-typedef JObject <ConstColorSpaceRcPtr, ColorSpaceRcPtr> ColorSpaceJNI;
+typedef JObject <ConstColourSpaceRcPtr, ColourSpaceRcPtr> ColourSpaceJNI;
 typedef JObject <ConstLookRcPtr, LookRcPtr> LookJNI;
 typedef JObject <ConstBakerRcPtr, BakerRcPtr> BakerJNI;
 typedef JObject <ConstGpuShaderDescRcPtr, GpuShaderDescRcPtr> GpuShaderDescJNI;
@@ -65,7 +65,7 @@ typedef JObject <ConstImageDescRcPtr, ImageDescRcPtr> ImageDescJNI;
 typedef JObject <ConstTransformRcPtr, TransformRcPtr> TransformJNI;
 typedef JObject <ConstAllocationTransformRcPtr, AllocationTransformRcPtr> AllocationTransformJNI;
 typedef JObject <ConstCDLTransformRcPtr, CDLTransformRcPtr> CDLTransformJNI;
-typedef JObject <ConstColorSpaceTransformRcPtr, ColorSpaceTransformRcPtr> ColorSpaceTransformJNI;
+typedef JObject <ConstColourSpaceTransformRcPtr, ColourSpaceTransformRcPtr> ColourSpaceTransformJNI;
 typedef JObject <ConstDisplayTransformRcPtr, DisplayTransformRcPtr> DisplayTransformJNI;
 typedef JObject <ConstExponentTransformRcPtr, ExponentTransformRcPtr> ExponentTransformJNI;
 typedef JObject <ConstFileTransformRcPtr, FileTransformRcPtr> FileTransformJNI;

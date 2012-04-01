@@ -26,8 +26,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "OpenColorIO/OpenColorIO.h"
-#include "OpenColorIOJNI.h"
+#include "OpenColourIO/OpenColourIO.h"
+#include "OpenColourIOJNI.h"
 #include "JNIUtil.h"
 OCIO_NAMESPACE_USING
 
@@ -48,7 +48,7 @@ void ImageDesc_dispose(JNIEnv * env, jobject self)
 // PackedImageDesc
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_PackedImageDesc_create__Ljava_nio_FloatBuffer_2JJJ(JNIEnv * env,
+Java_org_OpenColourIO_PackedImageDesc_create__Ljava_nio_FloatBuffer_2JJJ(JNIEnv * env,
     jobject self, jobject data, jlong width, jlong height, jlong numChannels)
 {
     OCIO_JNITRY_ENTER()
@@ -68,7 +68,7 @@ Java_org_OpenColorIO_PackedImageDesc_create__Ljava_nio_FloatBuffer_2JJJ(JNIEnv *
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_PackedImageDesc_create__Ljava_nio_FloatBuffer_2JJJJJJ(JNIEnv * env,
+Java_org_OpenColourIO_PackedImageDesc_create__Ljava_nio_FloatBuffer_2JJJJJJ(JNIEnv * env,
     jobject self, jobject data, jlong width, jlong height, jlong numChannels,
     jlong chanStrideBytes, jlong xStrideBytes, jlong yStrideBytes)
 {
@@ -90,7 +90,7 @@ Java_org_OpenColorIO_PackedImageDesc_create__Ljava_nio_FloatBuffer_2JJJJJJ(JNIEn
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_PackedImageDesc_dispose(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PackedImageDesc_dispose(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ImageDesc_dispose(env, self);
@@ -98,7 +98,7 @@ Java_org_OpenColorIO_PackedImageDesc_dispose(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_PackedImageDesc_getData(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PackedImageDesc_getData(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -109,7 +109,7 @@ Java_org_OpenColorIO_PackedImageDesc_getData(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_OpenColorIO_PackedImageDesc_getWidth(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PackedImageDesc_getWidth(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -119,7 +119,7 @@ Java_org_OpenColorIO_PackedImageDesc_getWidth(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_OpenColorIO_PackedImageDesc_getHeight(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PackedImageDesc_getHeight(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -129,7 +129,7 @@ Java_org_OpenColorIO_PackedImageDesc_getHeight(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_OpenColorIO_PackedImageDesc_getNumChannels(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PackedImageDesc_getNumChannels(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -139,7 +139,7 @@ Java_org_OpenColorIO_PackedImageDesc_getNumChannels(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_OpenColorIO_PackedImageDesc_getChanStrideBytes(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PackedImageDesc_getChanStrideBytes(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -149,7 +149,7 @@ Java_org_OpenColorIO_PackedImageDesc_getChanStrideBytes(JNIEnv * env, jobject se
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_OpenColorIO_PackedImageDesc_getXStrideBytes(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PackedImageDesc_getXStrideBytes(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -159,7 +159,7 @@ Java_org_OpenColorIO_PackedImageDesc_getXStrideBytes(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_OpenColorIO_PackedImageDesc_getYStrideBytes(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PackedImageDesc_getYStrideBytes(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -171,7 +171,7 @@ Java_org_OpenColorIO_PackedImageDesc_getYStrideBytes(JNIEnv * env, jobject self)
 // PlanarImageDesc
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_PlanarImageDesc_dispose(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PlanarImageDesc_dispose(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ImageDesc_dispose(env, self);
@@ -179,7 +179,7 @@ Java_org_OpenColorIO_PlanarImageDesc_dispose(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_PlanarImageDesc_create__Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2JJ
+Java_org_OpenColourIO_PlanarImageDesc_create__Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2JJ
     (JNIEnv * env, jobject self, jobject rData, jobject gData, jobject bData,
     jobject aData, jlong width, jlong height)
 {
@@ -207,7 +207,7 @@ Java_org_OpenColorIO_PlanarImageDesc_create__Ljava_nio_FloatBuffer_2Ljava_nio_Fl
 }
 
 JNIEXPORT void
-JNICALL Java_org_OpenColorIO_PlanarImageDesc_create__Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2JJJ
+JNICALL Java_org_OpenColourIO_PlanarImageDesc_create__Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2Ljava_nio_FloatBuffer_2JJJ
     (JNIEnv * env, jobject self, jobject rData, jobject gData, jobject bData,
     jobject aData, jlong width, jlong height, jlong yStrideBytes)
 {
@@ -235,7 +235,7 @@ JNICALL Java_org_OpenColorIO_PlanarImageDesc_create__Ljava_nio_FloatBuffer_2Ljav
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_PlanarImageDesc_getRData(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PlanarImageDesc_getRData(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -246,7 +246,7 @@ Java_org_OpenColorIO_PlanarImageDesc_getRData(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_PlanarImageDesc_getGData(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PlanarImageDesc_getGData(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -257,7 +257,7 @@ Java_org_OpenColorIO_PlanarImageDesc_getGData(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_PlanarImageDesc_getBData(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PlanarImageDesc_getBData(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -268,7 +268,7 @@ Java_org_OpenColorIO_PlanarImageDesc_getBData(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_PlanarImageDesc_getAData(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PlanarImageDesc_getAData(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -279,7 +279,7 @@ Java_org_OpenColorIO_PlanarImageDesc_getAData(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_OpenColorIO_PlanarImageDesc_getWidth(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PlanarImageDesc_getWidth(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -289,7 +289,7 @@ Java_org_OpenColorIO_PlanarImageDesc_getWidth(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_OpenColorIO_PlanarImageDesc_getHeight(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PlanarImageDesc_getHeight(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);
@@ -299,7 +299,7 @@ Java_org_OpenColorIO_PlanarImageDesc_getHeight(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-Java_org_OpenColorIO_PlanarImageDesc_getYStrideBytes(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_PlanarImageDesc_getYStrideBytes(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstImageDescRcPtr img = GetConstJOCIO<ConstImageDescRcPtr, ImageDescJNI>(env, self);

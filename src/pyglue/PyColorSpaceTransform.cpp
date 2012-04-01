@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "PyTransform.h"
 #include "PyUtil.h"
@@ -40,42 +40,42 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    bool AddColorSpaceTransformObjectToModule( PyObject* m )
+    bool AddColourSpaceTransformObjectToModule( PyObject* m )
     {
-        PyOCIO_ColorSpaceTransformType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_ColorSpaceTransformType) < 0 ) return false;
+        PyOCIO_ColourSpaceTransformType.tp_new = PyType_GenericNew;
+        if ( PyType_Ready(&PyOCIO_ColourSpaceTransformType) < 0 ) return false;
         
-        Py_INCREF( &PyOCIO_ColorSpaceTransformType );
-        PyModule_AddObject(m, "ColorSpaceTransform",
-                (PyObject *)&PyOCIO_ColorSpaceTransformType);
+        Py_INCREF( &PyOCIO_ColourSpaceTransformType );
+        PyModule_AddObject(m, "ColourSpaceTransform",
+                (PyObject *)&PyOCIO_ColourSpaceTransformType);
         
         return true;
     }
     
-    bool IsPyColorSpaceTransform(PyObject * pyobject)
+    bool IsPyColourSpaceTransform(PyObject * pyobject)
     {
         if(!pyobject) return false;
-        return PyObject_TypeCheck(pyobject, &PyOCIO_ColorSpaceTransformType);
+        return PyObject_TypeCheck(pyobject, &PyOCIO_ColourSpaceTransformType);
     }
     
-    ConstColorSpaceTransformRcPtr GetConstColorSpaceTransform(PyObject * pyobject, bool allowCast)
+    ConstColourSpaceTransformRcPtr GetConstColourSpaceTransform(PyObject * pyobject, bool allowCast)
     {
-        ConstColorSpaceTransformRcPtr transform = \
-            DynamicPtrCast<const ColorSpaceTransform>(GetConstTransform(pyobject, allowCast));
+        ConstColourSpaceTransformRcPtr transform = \
+            DynamicPtrCast<const ColourSpaceTransform>(GetConstTransform(pyobject, allowCast));
         if(!transform)
         {
-            throw Exception("PyObject must be a valid OCIO.ColorSpaceTransform.");
+            throw Exception("PyObject must be a valid OCIO.ColourSpaceTransform.");
         }
         return transform;
     }
     
-    ColorSpaceTransformRcPtr GetEditableColorSpaceTransform(PyObject * pyobject)
+    ColourSpaceTransformRcPtr GetEditableColourSpaceTransform(PyObject * pyobject)
     {
-        ColorSpaceTransformRcPtr transform = \
-            DynamicPtrCast<ColorSpaceTransform>(GetEditableTransform(pyobject));
+        ColourSpaceTransformRcPtr transform = \
+            DynamicPtrCast<ColourSpaceTransform>(GetEditableTransform(pyobject));
         if(!transform)
         {
-            throw Exception("PyObject must be a valid OCIO.ColorSpaceTransform.");
+            throw Exception("PyObject must be a valid OCIO.ColourSpaceTransform.");
         }
         return transform;
     }
@@ -85,25 +85,25 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        int PyOCIO_ColorSpaceTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
+        int PyOCIO_ColourSpaceTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
-        PyObject * PyOCIO_ColorSpaceTransform_getSrc( PyObject * self );
-        PyObject * PyOCIO_ColorSpaceTransform_setSrc( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_ColorSpaceTransform_getDst( PyObject * self );
-        PyObject * PyOCIO_ColorSpaceTransform_setDst( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_ColourSpaceTransform_getSrc( PyObject * self );
+        PyObject * PyOCIO_ColourSpaceTransform_setSrc( PyObject * self,  PyObject *args );
+        PyObject * PyOCIO_ColourSpaceTransform_getDst( PyObject * self );
+        PyObject * PyOCIO_ColourSpaceTransform_setDst( PyObject * self,  PyObject *args );
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        PyMethodDef PyOCIO_ColorSpaceTransform_methods[] = {
+        PyMethodDef PyOCIO_ColourSpaceTransform_methods[] = {
             {"getSrc",
-            (PyCFunction) PyOCIO_ColorSpaceTransform_getSrc, METH_NOARGS, COLORSPACETRANSFORM_GETSRC__DOC__ },
+            (PyCFunction) PyOCIO_ColourSpaceTransform_getSrc, METH_NOARGS, COLOURSPACETRANSFORM_GETSRC__DOC__ },
             {"setSrc",
-            PyOCIO_ColorSpaceTransform_setSrc, METH_VARARGS, COLORSPACETRANSFORM_SETSRC__DOC__ },
+            PyOCIO_ColourSpaceTransform_setSrc, METH_VARARGS, COLOURSPACETRANSFORM_SETSRC__DOC__ },
             {"getDst",
-            (PyCFunction) PyOCIO_ColorSpaceTransform_getDst, METH_NOARGS, COLORSPACETRANSFORM_GETDST__DOC__ },
+            (PyCFunction) PyOCIO_ColourSpaceTransform_getDst, METH_NOARGS, COLOURSPACETRANSFORM_GETDST__DOC__ },
             {"setDst",
-            PyOCIO_ColorSpaceTransform_setDst, METH_VARARGS, COLORSPACETRANSFORM_SETDST__DOC__ },
+            PyOCIO_ColourSpaceTransform_setDst, METH_VARARGS, COLOURSPACETRANSFORM_SETDST__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -111,10 +111,10 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    PyTypeObject PyOCIO_ColorSpaceTransformType = {
+    PyTypeObject PyOCIO_ColourSpaceTransformType = {
         PyObject_HEAD_INIT(NULL)
         0,                                          //ob_size
-        "OCIO.ColorSpaceTransform",                 //tp_name
+        "OCIO.ColourSpaceTransform",                 //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
         0,                                          //tp_dealloc
@@ -133,14 +133,14 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        COLORSPACETRANSFORM__DOC__,                 //tp_doc 
+        COLOURSPACETRANSFORM__DOC__,                 //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
         0,                                          //tp_weaklistoffset 
         0,                                          //tp_iter 
         0,                                          //tp_iternext 
-        PyOCIO_ColorSpaceTransform_methods,         //tp_methods 
+        PyOCIO_ColourSpaceTransform_methods,         //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
         &PyOCIO_TransformType,                      //tp_base 
@@ -148,7 +148,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
         0,                                          //tp_dictoffset 
-        (initproc) PyOCIO_ColorSpaceTransform_init, //tp_init 
+        (initproc) PyOCIO_ColourSpaceTransform_init, //tp_init 
         0,                                          //tp_alloc 
         0,                                          //tp_new 
         0,                                          //tp_free
@@ -171,7 +171,7 @@ OCIO_NAMESPACE_ENTER
     {
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_ColorSpaceTransform_init( PyOCIO_Transform *self,
+        int PyOCIO_ColourSpaceTransform_init( PyOCIO_Transform *self,
             PyObject * args, PyObject * kwds )
         {
             ///////////////////////////////////////////////////////////////////
@@ -199,7 +199,7 @@ OCIO_NAMESPACE_ENTER
             
             try
             {
-                ColorSpaceTransformRcPtr transform = ColorSpaceTransform::Create();
+                ColourSpaceTransformRcPtr transform = ColourSpaceTransform::Create();
                 *self->cppobj = transform;
                 self->isconst = false;
                 
@@ -211,7 +211,7 @@ OCIO_NAMESPACE_ENTER
             }
             catch ( const std::exception & e )
             {
-                std::string message = "Cannot create ColorSpaceTransform: ";
+                std::string message = "Cannot create ColourSpaceTransform: ";
                 message += e.what();
                 PyErr_SetString( PyExc_RuntimeError, message.c_str() );
                 return -1;
@@ -221,11 +221,11 @@ OCIO_NAMESPACE_ENTER
         ////////////////////////////////////////////////////////////////////////
         ///
         
-        PyObject * PyOCIO_ColorSpaceTransform_getSrc( PyObject * self )
+        PyObject * PyOCIO_ColourSpaceTransform_getSrc( PyObject * self )
         {
             try
             {
-                ConstColorSpaceTransformRcPtr transform = GetConstColorSpaceTransform(self, true);
+                ConstColourSpaceTransformRcPtr transform = GetConstColourSpaceTransform(self, true);
                 return PyString_FromString( transform->getSrc() );
             }
             catch(...)
@@ -235,7 +235,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_ColorSpaceTransform_setSrc( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_ColourSpaceTransform_setSrc( PyObject * self, PyObject * args )
         {
             try
             {
@@ -243,7 +243,7 @@ OCIO_NAMESPACE_ENTER
                 if (!PyArg_ParseTuple(args,"s:setSrc",
                     &str)) return NULL;
                 
-                ColorSpaceTransformRcPtr transform = GetEditableColorSpaceTransform(self);
+                ColourSpaceTransformRcPtr transform = GetEditableColourSpaceTransform(self);
                 transform->setSrc( str );
                 
                 Py_RETURN_NONE;
@@ -255,11 +255,11 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_ColorSpaceTransform_getDst( PyObject * self )
+        PyObject * PyOCIO_ColourSpaceTransform_getDst( PyObject * self )
         {
             try
             {
-                ConstColorSpaceTransformRcPtr transform = GetConstColorSpaceTransform(self, true);
+                ConstColourSpaceTransformRcPtr transform = GetConstColourSpaceTransform(self, true);
                 return PyString_FromString( transform->getDst() );
             }
             catch(...)
@@ -269,7 +269,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        PyObject * PyOCIO_ColorSpaceTransform_setDst( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_ColourSpaceTransform_setDst( PyObject * self, PyObject * args )
         {
             try
             {
@@ -277,7 +277,7 @@ OCIO_NAMESPACE_ENTER
                 if (!PyArg_ParseTuple(args,"s:setDst",
                     &str)) return NULL;
                 
-                ColorSpaceTransformRcPtr transform = GetEditableColorSpaceTransform(self);
+                ColourSpaceTransformRcPtr transform = GetEditableColourSpaceTransform(self);
                 transform->setDst( str );
                 
                 Py_RETURN_NONE;

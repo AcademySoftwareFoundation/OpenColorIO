@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_PYOCIO_PYUTIL_H
 #define INCLUDED_PYOCIO_PYUTIL_H
 
-#include <PyOpenColorIO/PyOpenColorIO.h>
+#include <PyOpenColourIO/PyOpenColourIO.h>
 
 #include <vector>
 
@@ -45,7 +45,7 @@ OCIO_NAMESPACE_ENTER
     
     int ConvertPyObjectToTransformDirection(PyObject *object, void *valuePtr);
     
-    int ConvertPyObjectToColorSpaceDirection(PyObject *object, void *valuePtr);
+    int ConvertPyObjectToColourSpaceDirection(PyObject *object, void *valuePtr);
     
     int ConvertPyObjectToGpuLanguage(PyObject *object, void *valuePtr);
     

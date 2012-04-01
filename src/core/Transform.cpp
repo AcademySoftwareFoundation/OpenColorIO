@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "FileTransform.h"
 #include "OpBuilders.h"
@@ -60,10 +60,10 @@ OCIO_NAMESPACE_ENTER
         {
             BuildCDLOps(ops, config, *cdlTransform, dir);
         }
-        else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
-            DynamicPtrCast<const ColorSpaceTransform>(transform))
+        else if(ConstColourSpaceTransformRcPtr colourSpaceTransform = \
+            DynamicPtrCast<const ColourSpaceTransform>(transform))
         {
-            BuildColorSpaceOps(ops, config, context, *colorSpaceTransform, dir);
+            BuildColourSpaceOps(ops, config, context, *colourSpaceTransform, dir);
         }
         else if(ConstDisplayTransformRcPtr displayTransform = \
             DynamicPtrCast<const DisplayTransform>(transform))
@@ -127,10 +127,10 @@ OCIO_NAMESPACE_ENTER
         {
             os << *cdlTransform;
         }
-        else if(const ColorSpaceTransform * colorSpaceTransform = \
-            dynamic_cast<const ColorSpaceTransform*>(t))
+        else if(const ColourSpaceTransform * colourSpaceTransform = \
+            dynamic_cast<const ColourSpaceTransform*>(t))
         {
-            os << *colorSpaceTransform;
+            os << *colourSpaceTransform;
         }
         else if(const DisplayTransform * displayTransform = \
             dynamic_cast<const DisplayTransform*>(t))

@@ -33,7 +33,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h
 
 file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
 
-add_library(PyOpenColorIO MODULE ${pyglue_src_files} ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h)
+add_library(PyOpenColourIO MODULE ${pyglue_src_files} ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h)
 
 if(OCIO_USE_BOOST_PTR)
     include_directories(
@@ -54,34 +54,34 @@ endif()
 
 # Exclude the 'lib' prefix from the name.
 if(NOT PYTHON_INCLUDE_LIB_PREFIX)
-    set_property(TARGET PyOpenColorIO
+    set_property(TARGET PyOpenColourIO
         PROPERTY PREFIX ""
     )
 endif()
 
 if(WIN32)
     if(OCIO_LINK_PYGLUE)
-    target_link_libraries(PyOpenColorIO OpenColorIO
+    target_link_libraries(PyOpenColourIO OpenColourIO
         debug ${PYTHON_LIB}/python26_d.lib
         optimized ${PYTHON_LIB}/python26.lib)
     else()
-    target_link_libraries(PyOpenColorIO OpenColorIO)
+    target_link_libraries(PyOpenColourIO OpenColourIO)
     endif(OCIO_LINK_PYGLUE)
 else()
     if(OCIO_LINK_PYGLUE)
         message(STATUS "Linking python bindings against: ${PYTHON_LIBRARY}")
         message(STATUS "Python library dirs: ${PYTHON_LIBRARY_DIRS}")
         link_directories(${PYTHON_LIBRARY})
-        target_link_libraries(PyOpenColorIO OpenColorIO
+        target_link_libraries(PyOpenColourIO OpenColourIO
             ${PYTHON_LIBRARIES})
     else()
-        target_link_libraries(PyOpenColorIO OpenColorIO)
+        target_link_libraries(PyOpenColourIO OpenColourIO)
     endif(OCIO_LINK_PYGLUE)
 endif()
 
-# PyOpenColorIO so serves dual roles:
+# PyOpenColourIO so serves dual roles:
 # - First, to provide the C API function necessary to act as a cpython module, 
-#   (extern "C" PyMODINIT_FUNC initPyOpenColorIO(void)
+#   (extern "C" PyMODINIT_FUNC initPyOpenColourIO(void)
 # - Second, to act as a normal shared library, providing the C++ API functions 
 #   to convert between C++ and python representation of the OCIO object.
 #
@@ -90,11 +90,11 @@ endif()
 #
 # TODO: This wont let the normal shared library symbols work on OSX.
 # We should explore whether this should be built as a normal dylib, instead
-# of as a bundle. See https://github.com/imageworks/OpenColorIO/pull/175
+# of as a bundle. See https://github.com/imageworks/OpenColourIO/pull/175
 
 if(NOT APPLE)
     message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")
-    set_target_properties(PyOpenColorIO PROPERTIES
+    set_target_properties(PyOpenColourIO PROPERTIES
         VERSION ${OCIO_VERSION}
         SOVERSION ${SOVERSION}
     )
@@ -107,7 +107,7 @@ endif()
 
 message("PYTHON_VARIANT_PATH: ${PYTHON_VARIANT_PATH}")
 
-install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/${PYTHON_VARIANT_PATH})
+install(TARGETS PyOpenColourIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/${PYTHON_VARIANT_PATH})
 
-install(FILES ${CMAKE_SOURCE_DIR}/export/PyOpenColorIO/PyOpenColorIO.h
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/PyOpenColorIO/)
+install(FILES ${CMAKE_SOURCE_DIR}/export/PyOpenColourIO/PyOpenColourIO.h
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/PyOpenColourIO/)

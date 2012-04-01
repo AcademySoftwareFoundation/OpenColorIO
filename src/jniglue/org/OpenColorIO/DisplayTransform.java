@@ -26,20 +26,20 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.OpenColorIO;
-import org.OpenColorIO.*;
+package org.OpenColourIO;
+import org.OpenColourIO.*;
 
 public class DisplayTransform extends Transform
 {
     public DisplayTransform() { super(); }
     protected DisplayTransform(long impl) { super(impl); }
     public native DisplayTransform Create();
-    public native void setInputColorSpaceName(String name);
-    public native String getInputColorSpaceName();
+    public native void setInputColourSpaceName(String name);
+    public native String getInputColourSpaceName();
     public native void setLinearCC(Transform cc);
     public native Transform getLinearCC();
-    public native void setColorTimingCC(Transform cc);
-    public native Transform getColorTimingCC();
+    public native void setColourTimingCC(Transform cc);
+    public native Transform getColourTimingCC();
     public native void setChannelView(Transform transform);
     public native Transform getChannelView();
     public native void setDisplay(String display);

@@ -3,7 +3,7 @@ class Look:
     """
     The *Look* is an 'artistic' image modification, in a specified image state.
     
-    The processSpace defines the ColorSpace the image is required to be in, for
+    The processSpace defines the ColourSpace the image is required to be in, for
     the math to apply correctly.
     """
     def __init__(self):

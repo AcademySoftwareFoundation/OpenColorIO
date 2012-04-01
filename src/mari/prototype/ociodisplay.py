@@ -1,10 +1,10 @@
 """
-This script allows the use of OpenColorIO display transforms (3d luts) in
+This script allows the use of OpenColourIO display transforms (3d luts) in
 the Mari Viewer. Requires Mari 1.3v2+.
 
 This example is not represntative of the final Mari OCIO workflow, merely
 an API demonstration. This code is a work in progress, to demonstrate the
-integration of OpenColorIO and Mari. The APIs this code relies on are subject
+integration of OpenColourIO and Mari. The APIs this code relies on are subject
 to change at any time, and as such should not be relied on for production use
 (yet).
 
@@ -16,19 +16,19 @@ mkdir -p build_mari && cd build_mari
 cmake -D CMAKE_BUILD_TYPE=Release \
       -D CMAKE_INSTALL_PREFIX=../dist_mari \
       -D PYTHON=/usr/bin/python2.6 \
-      -D OCIO_NAMESPACE=OpenColorIO_Mari \
+      -D OCIO_NAMESPACE=OpenColourIO_Mari \
       ../
 make install -j8
 
-* Set $OCIO color environment
+* Set $OCIO colour environment
 setenv OCIO setenv OCIO <YOURDIR>/ocio.configs/spi-vfx/config.ocio
-(Profiles available for download from opencolorio.org)
+(Profiles available for download from opencolourio.org)
 
-* Run Mari with OpenColorIO added to the LD_LIBRARY_PATH, and Python
+* Run Mari with OpenColourIO added to the LD_LIBRARY_PATH, and Python
 env LD_LIBRARY_PATH=<YOURDIR>/dist_mari/lib/ PYTHONPATH=<YOURDIR>/dist_mari/lib/python2.6 mari
 
 * Source this script in the python console.
-Also - IMPORTANT - you must enable 'Use Color Correction' in the Color Manager.
+Also - IMPORTANT - you must enable 'Use Colour Correction' in the Colour Manager.
 
 """
 
@@ -37,17 +37,17 @@ QtGui = PythonQt.QtGui
 QtCore = PythonQt.QtCore
 
 try:
-    import PyOpenColorIO as OCIO
+    import PyOpenColourIO as OCIO
     mari.app.log("OCIODisplay: %s" % OCIO.__file__)
 except Exception,e:
     OCIO = None
-    mari.app.log("OCIODisplay: Error: Could not import OpenColorIO python bindings.")
-    mari.app.log("OCIODisplay: Please confirm PYTHONPATH has dir containing PyOpenColorIO.so")
+    mari.app.log("OCIODisplay: Error: Could not import OpenColourIO python bindings.")
+    mari.app.log("OCIODisplay: Please confirm PYTHONPATH has dir containing PyOpenColourIO.so")
 
 __all__ = [ 'OCIO', 'CreateOCIODisplayTransform', 'OCIODisplayUI']
 
 LUT3D_SIZE = 32
-WINDOW_NAME = "OpenColorIO Display Manager"
+WINDOW_NAME = "OpenColourIO Display Manager"
 CREATE_FLOATING = True
 
 
@@ -60,13 +60,13 @@ class OCIODisplayUI(QtGui.QWidget):
         
         config = OCIO.GetCurrentConfig()
         
-        self.__inputColorSpace = OCIO.Constants.ROLE_DEFAULT
-        inputColorSpaces = [ OCIO.Constants.ROLE_TEXTURE_PAINT,
+        self.__inputColourSpace = OCIO.Constants.ROLE_DEFAULT
+        inputColourSpaces = [ OCIO.Constants.ROLE_TEXTURE_PAINT,
                              'dt8',
                              OCIO.Constants.ROLE_SCENE_LINEAR ]
-        for cs in inputColorSpaces:
-            if config.getColorSpace(cs) is None: continue
-            self.__inputColorSpace = cs
+        for cs in inputColourSpaces:
+            if config.getColourSpace(cs) is None: continue
+            self.__inputColourSpace = cs
             break
         
         self.__fStopOffset = 0.0
@@ -84,13 +84,13 @@ class OCIODisplayUI(QtGui.QWidget):
     def __buildUI(self):
         config = OCIO.GetCurrentConfig()
         
-        self.layout().addWidget( QtGui.QLabel("Input Color Space", self), 0, 0)
+        self.layout().addWidget( QtGui.QLabel("Input Colour Space", self), 0, 0)
         csWidget = QtGui.QComboBox(self)
         self.layout().addWidget( csWidget, 0, 1)
         csIndex = None
-        for name in (cs.getName() for cs in config.getColorSpaces()):
+        for name in (cs.getName() for cs in config.getColourSpaces()):
             csWidget.addItem(name)
-            if name == self.__inputColorSpace:
+            if name == self.__inputColourSpace:
                 csIndex = csWidget.count - 1
         if csIndex is not None:
             csWidget.setCurrentIndex(csIndex)
@@ -113,15 +113,15 @@ class OCIODisplayUI(QtGui.QWidget):
     
     def __csChanged(self, text):
         text = str(text)
-        if text != self.__inputColorSpace:
-            self.__inputColorSpace = text
+        if text != self.__inputColourSpace:
+            self.__inputColourSpace = text
             self.__rebuildFilter()
     
     def __rebuildFilter(self):
         config = OCIO.GetCurrentConfig()
         display = config.getDefaultDisplay()
         view = config.getDefaultView(display)
-        transform = CreateOCIODisplayTransform(config, self.__inputColorSpace,
+        transform = CreateOCIODisplayTransform(config, self.__inputColourSpace,
                                                display, view,
                                                self.__swizzle,
                                                self.__fStopOffset, self.__viewGamma)
@@ -141,11 +141,11 @@ class OCIODisplayUI(QtGui.QWidget):
             desc += processor.getGpuShaderText(shaderDesc)
             body = "{ Out = display_ocio_$ID_(Out, lut3d_ocio_$ID_); }"
             
-            # Clear the existing color managment filter stack and create a new filter
+            # Clear the existing colour managment filter stack and create a new filter
             # HACK: Increment a counter by 1 each time to force a refresh
             #self.__counter_hack += 1
-            #name = "OCIO %s %s %s v%d" % (display, view, self.__inputColorSpace, self.__counter_hack)
-            name = "OCIO %s %s %s" % (display, view, self.__inputColorSpace)
+            #name = "OCIO %s %s %s v%d" % (display, view, self.__inputColourSpace, self.__counter_hack)
+            name = "OCIO %s %s %s" % (display, view, self.__inputColourSpace)
             
             self.__filter = None
             self.__texture3d_cacheID = None
@@ -176,16 +176,16 @@ class OCIODisplayUI(QtGui.QWidget):
 
 
 def CreateOCIODisplayTransform(config,
-                               inputColorSpace,
+                               inputColourSpace,
                                display, view,
                                swizzle,
                                fstopOffset, viewGamma):
     
     displayTransform = OCIO.DisplayTransform()
-    displayTransform.setInputColorSpaceName( inputColorSpace )
+    displayTransform.setInputColourSpaceName( inputColourSpace )
     
-    displayColorSpace = config.getDisplayColorSpaceName(display, view)
-    displayTransform.setDisplayColorSpaceName( displayColorSpace )
+    displayColourSpace = config.getDisplayColourSpaceName(display, view)
+    displayTransform.setDisplayColourSpaceName( displayColourSpace )
     
     # Add the channel sizzle
     lumacoef = config.getDefaultLumaCoefs()
@@ -211,7 +211,7 @@ def CreateOCIODisplayTransform(config,
     return displayTransform
 
 """
-SWIZZLE_COLOR = (True,  True,  True,  True)
+SWIZZLE_COLOUR = (True,  True,  True,  True)
 SWIZZLE_RED   = (True,  False, False, False)
 SWIZZLE_GREEN = (False, True,  False, False)
 SWIZZLE_BLUE  = (False, False, True,  False)

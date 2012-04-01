@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "Logging.h"
 #include "Op.h"
@@ -182,7 +182,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "The max number of passes, " << passes << ", ";
             os << "was reached during optimization. This is likely a sign ";
-            os << "that either the complexity of the color transform is ";
+            os << "that either the complexity of the colour transform is ";
             os << "very high, or that some internal optimizers are in conflict ";
             os << "(undo-ing / redo-ing the other's results).";
             LogDebug(os.str().c_str());

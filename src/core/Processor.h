@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "Mutex.h"
 #include "Op.h"
@@ -93,10 +93,10 @@ OCIO_NAMESPACE_ENTER
         //
         // Builder functions, Not exposed
         
-        void addColorSpaceConversion(const Config & config,
+        void addColourSpaceConversion(const Config & config,
                                      const ConstContextRcPtr & context,
-                                     const ConstColorSpaceRcPtr & srcColorSpace,
-                                     const ConstColorSpaceRcPtr & dstColorSpace);
+                                     const ConstColourSpaceRcPtr & srcColourSpace,
+                                     const ConstColourSpaceRcPtr & dstColourSpace);
         
         void addTransform(const Config & config,
                           const ConstContextRcPtr & context,
@@ -117,7 +117,7 @@ OCIO_NAMESPACE_ENTER
     
     // TODO: all of the build op functions shouldnt take a LocalProcessor class
     // Instead, they should take an abstract interface class that defines
-    // registerOp(OpRcPtr op), annotateColorSpace, finalizeOps, etc.
+    // registerOp(OpRcPtr op), annotateColourSpace, finalizeOps, etc.
     // of which LocalProcessor happens to be one example.
     // Then the only location in the codebase that knows of LocalProcessor is
     // in Config.cpp, which creates one.

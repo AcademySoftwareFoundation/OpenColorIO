@@ -29,9 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
-#include "PyColorSpace.h"
+#include "PyColourSpace.h"
 #include "PyConstants.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
@@ -90,12 +90,12 @@ OCIO_NAMESPACE_ENTER
         PyModule_AddStringConstant(m, "TRANSFORM_DIR_INVERSE",
             const_cast<char*>(TransformDirectionToString(TRANSFORM_DIR_INVERSE)));
         
-        PyModule_AddStringConstant(m, "COLORSPACE_DIR_UNKNOWN",
-            const_cast<char*>(ColorSpaceDirectionToString(COLORSPACE_DIR_UNKNOWN)));
-        PyModule_AddStringConstant(m, "COLORSPACE_DIR_TO_REFERENCE",
-            const_cast<char*>(ColorSpaceDirectionToString(COLORSPACE_DIR_TO_REFERENCE)));
-        PyModule_AddStringConstant(m, "COLORSPACE_DIR_FROM_REFERENCE",
-            const_cast<char*>(ColorSpaceDirectionToString(COLORSPACE_DIR_FROM_REFERENCE)));
+        PyModule_AddStringConstant(m, "COLOURSPACE_DIR_UNKNOWN",
+            const_cast<char*>(ColourSpaceDirectionToString(COLOURSPACE_DIR_UNKNOWN)));
+        PyModule_AddStringConstant(m, "COLOURSPACE_DIR_TO_REFERENCE",
+            const_cast<char*>(ColourSpaceDirectionToString(COLOURSPACE_DIR_TO_REFERENCE)));
+        PyModule_AddStringConstant(m, "COLOURSPACE_DIR_FROM_REFERENCE",
+            const_cast<char*>(ColourSpaceDirectionToString(COLOURSPACE_DIR_FROM_REFERENCE)));
         
         PyModule_AddStringConstant(m, "BIT_DEPTH_UNKNOWN",
             const_cast<char*>(BitDepthToString(BIT_DEPTH_UNKNOWN)));
@@ -146,10 +146,10 @@ OCIO_NAMESPACE_ENTER
         PyModule_AddStringConstant(m, "ROLE_DEFAULT", const_cast<char*>(ROLE_DEFAULT));
         PyModule_AddStringConstant(m, "ROLE_REFERENCE", const_cast<char*>(ROLE_REFERENCE));
         PyModule_AddStringConstant(m, "ROLE_DATA", const_cast<char*>(ROLE_DATA));
-        PyModule_AddStringConstant(m, "ROLE_COLOR_PICKING", const_cast<char*>(ROLE_COLOR_PICKING));
+        PyModule_AddStringConstant(m, "ROLE_COLOUR_PICKING", const_cast<char*>(ROLE_COLOUR_PICKING));
         PyModule_AddStringConstant(m, "ROLE_SCENE_LINEAR", const_cast<char*>(ROLE_SCENE_LINEAR));
         PyModule_AddStringConstant(m, "ROLE_COMPOSITING_LOG", const_cast<char*>(ROLE_COMPOSITING_LOG));
-        PyModule_AddStringConstant(m, "ROLE_COLOR_TIMING", const_cast<char*>(ROLE_COLOR_TIMING));
+        PyModule_AddStringConstant(m, "ROLE_COLOUR_TIMING", const_cast<char*>(ROLE_COLOUR_TIMING));
         PyModule_AddStringConstant(m, "ROLE_TEXTURE_PAINT", const_cast<char*>(ROLE_TEXTURE_PAINT));
         PyModule_AddStringConstant(m, "ROLE_MATTE_PAINT", const_cast<char*>(ROLE_MATTE_PAINT));
         

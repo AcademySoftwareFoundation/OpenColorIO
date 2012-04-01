@@ -1,7 +1,7 @@
 
-class OpenColorIO:
+class OpenColourIO:
     """
-    OpenColorIO API
+    OpenColourIO API
     """
     def __init__(self):
         pass

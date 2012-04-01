@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "PyTransform.h"
 #include "PyUtil.h"
@@ -62,11 +62,11 @@ OCIO_NAMESPACE_ENTER
                 pyobj = PyObject_New(PyOCIO_Transform,
                     (PyTypeObject * ) &PyOCIO_CDLTransformType);
             }
-            else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
-                DynamicPtrCast<const ColorSpaceTransform>(transform))
+            else if(ConstColourSpaceTransformRcPtr colourSpaceTransform = \
+                DynamicPtrCast<const ColourSpaceTransform>(transform))
             {
                 pyobj = PyObject_New(PyOCIO_Transform,
-                    (PyTypeObject * ) &PyOCIO_ColorSpaceTransformType);
+                    (PyTypeObject * ) &PyOCIO_ColourSpaceTransformType);
             }
             else if(ConstDisplayTransformRcPtr displayTransform = \
                 DynamicPtrCast<const DisplayTransform>(transform))

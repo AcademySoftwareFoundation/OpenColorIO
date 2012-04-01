@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "OpBuilders.h"
 #include "TruelightOp.h"
@@ -266,14 +266,14 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("log");
         cs->setFamily("log");
-        config->addColorSpace(cs);
+        config->addColourSpace(cs);
         config->setRole(OCIO::ROLE_COMPOSITING_LOG, cs->getName());
     }
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("sRGB");
         cs->setFamily("srgb");
         OCIO::TruelightTransformRcPtr transform1 = OCIO::TruelightTransform::Create();
@@ -282,8 +282,8 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
         //transform1->setInputDisplay("DCIrgb");
         transform1->setDisplay("sRGB");
         transform1->setCubeInput("log");
-        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-        config->addColorSpace(cs);
+        cs->setTransform(transform1, OCIO::COLOURSPACE_DIR_FROM_REFERENCE);
+        config->addColourSpace(cs);
     }
     
     // check the transform round trip
@@ -327,8 +327,8 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     "active_displays: []\n"
     "active_views: []\n"
     "\n"
-    "colorspaces:\n"
-    "  - !<ColorSpace>\n"
+    "colourspaces:\n"
+    "  - !<ColourSpace>\n"
     "    name: log\n"
     "    family: log\n"
     "    equalitygroup: \n"
@@ -336,7 +336,7 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     "    isdata: false\n"
     "    allocation: uniform\n"
     "\n"
-    "  - !<ColorSpace>\n"
+    "  - !<ColourSpace>\n"
     "    name: sRGB\n"
     "    family: srgb\n"
     "    equalitygroup: \n"

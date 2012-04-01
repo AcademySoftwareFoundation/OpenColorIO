@@ -26,19 +26,19 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.OpenColorIO;
-import org.OpenColorIO.*;
+package org.OpenColourIO;
+import org.OpenColourIO.*;
 
-public class ColorSpaceDirection extends LoadLibrary
+public class ColourSpaceDirection extends LoadLibrary
 {
     private final int m_enum;
-    protected ColorSpaceDirection(int type) { super(); m_enum = type; }
+    protected ColourSpaceDirection(int type) { super(); m_enum = type; }
     public native String toString();
     public native boolean equals(Object obj);
-    public static final ColorSpaceDirection
-      COLORSPACE_DIR_UNKNOWN = new ColorSpaceDirection(0);
-    public static final ColorSpaceDirection
-      COLORSPACE_DIR_TO_REFERENCE = new ColorSpaceDirection(1);
-    public static final ColorSpaceDirection
-      COLORSPACE_DIR_FROM_REFERENCE = new ColorSpaceDirection(2);
+    public static final ColourSpaceDirection
+      COLOURSPACE_DIR_UNKNOWN = new ColourSpaceDirection(0);
+    public static final ColourSpaceDirection
+      COLOURSPACE_DIR_TO_REFERENCE = new ColourSpaceDirection(1);
+    public static final ColourSpaceDirection
+      COLOURSPACE_DIR_FROM_REFERENCE = new ColourSpaceDirection(2);
 }

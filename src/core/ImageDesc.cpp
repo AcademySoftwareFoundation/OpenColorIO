@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include <cstdlib>
 #include <sstream>
@@ -177,7 +177,7 @@ OCIO_NAMESPACE_ENTER
             if(rData == NULL || gData == NULL || bData == NULL)
             {
                 std::ostringstream os;
-                os << "PlanarImageDesc Error: Valid ptrs must be passed for all 3 image rgb color channels.";
+                os << "PlanarImageDesc Error: Valid ptrs must be passed for all 3 image rgb colour channels.";
                 throw Exception(os.str().c_str());
             }
         }

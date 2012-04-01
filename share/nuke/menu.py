@@ -4,12 +4,12 @@ import ocionuke.cdl
 
 
 def ocio_populate_menu():
-    """Adds OCIO nodes to a menu in Color
+    """Adds OCIO nodes to a menu in Colour
     """
 
     m_nodes = nuke.toolbar('Nodes')
-    m_color = m_nodes.findItem("Color")
-    m_ocio = m_color.addMenu("OCIO", icon = "ocio_icon.png")
+    m_colour = m_nodes.findItem("Colour")
+    m_ocio = m_colour.addMenu("OCIO", icon = "ocio_icon.png")
 
     allplugs = nuke.plugins(nuke.ALL | nuke.NODIR, "OCIO*.so", "OCIO*.dylib", "OCIO*.dll")
 

@@ -27,17 +27,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_OPENCOLORIO_H
-#define INCLUDED_OCIO_OPENCOLORIO_H
+#ifndef INCLUDED_OCIO_OPENCOLOURIO_H
+#define INCLUDED_OCIO_OPENCOLOURIO_H
 
 #include <exception>
 #include <iosfwd>
 #include <string>
 #include <cstddef>
 
-#include "OpenColorABI.h"
-#include "OpenColorTypes.h"
-#include "OpenColorTransforms.h"
+#include "OpenColourABI.h"
+#include "OpenColourTypes.h"
+#include "OpenColourTransforms.h"
 
 /*!rst::
 C++ API
@@ -47,12 +47,12 @@ C++ API
 
 .. code-block:: cpp
    
-   #include <OpenColorIO/OpenColorIO.h>
+   #include <OpenColourIO/OpenColourIO.h>
    namespace OCIO = OCIO_NAMESPACE;
    
    try
    {
-       // Get the global OpenColorIO config
+       // Get the global OpenColourIO config
        // This will auto-initialize (using $OCIO) on first use
        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
        
@@ -63,12 +63,12 @@ C++ API
        // Wrap the image in a light-weight ImageDescription
        OCIO::PackedImageDesc img(imageData, w, h, 4);
        
-       // Apply the color transformation (in place)
+       // Apply the colour transformation (in place)
        processor->apply(img);
    }
    catch(OCIO::Exception & exception)
    {
-       std::cerr << "OpenColorIO Error: " << exception.what() << std::endl;
+       std::cerr << "OpenColourIO Error: " << exception.what() << std::endl;
    }
 
 */
@@ -125,7 +125,7 @@ OCIO_NAMESPACE_ENTER
     // ******
     
     //!cpp:function::
-    // OpenColorIO, during normal usage, tends to cache certain information
+    // OpenColourIO, during normal usage, tends to cache certain information
     // (such as the contents of LUTs on disk, intermediate results, etc.).
     // Calling this function will flush all such information.
     // Under normal usage, this is not necessary, but it can be helpful in particular instances,
@@ -163,17 +163,17 @@ OCIO_NAMESPACE_ENTER
     // Config
     // ******
     //
-    // A config defines all the color spaces to be available at runtime.
+    // A config defines all the colour spaces to be available at runtime.
     // 
-    // The color configuration (:cpp:class:`Config`) is the main object for
+    // The colour configuration (:cpp:class:`Config`) is the main object for
     // interacting with this library. It encapsulates all of the information
-    // necessary to use customized :cpp:class:`ColorSpaceTransform` and
+    // necessary to use customized :cpp:class:`ColourSpaceTransform` and
     // :cpp:class:`DisplayTransform` operations.
     // 
     // See the :ref:`user-guide` for more information on
-    // selecting, creating, and working with custom color configurations.
+    // selecting, creating, and working with custom colour configurations.
     // 
-    // For applications interested in using only one color config at
+    // For applications interested in using only one colour config at
     // a time (this is the vast majority of apps), their API would
     // traditionally get the global configuration and use that, as opposed to
     // creating a new one. This simplifies the use case for
@@ -231,7 +231,7 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         // This will throw an exception if the config is malformed. The most
-        // common error occurs when references are made to colorspaces that do not
+        // common error occurs when references are made to colourspaces that do not
         // exist.
         void sanityCheck() const;
         
@@ -246,7 +246,7 @@ OCIO_NAMESPACE_ENTER
         void serialize(std::ostream & os) const;
         
         //!cpp:function::
-        // This will produce a hash of the all colorspace definitions, etc.
+        // This will produce a hash of the all colourspace definitions, etc.
         // All external references, such as files used in FileTransforms, etc.,
         // will be incorporated into the cacheID. While the contents of
         // the files are not read, the file system is queried for relavent
@@ -278,44 +278,44 @@ OCIO_NAMESPACE_ENTER
         void setWorkingDir(const char * dirname);
         
         ///////////////////////////////////////////////////////////////////////////
-        //!rst:: .. _cfgcolorspaces_section:
+        //!rst:: .. _cfgcolourspaces_section:
         // 
-        // ColorSpaces
+        // ColourSpaces
         // ^^^^^^^^^^^
         
         //!cpp:function::
-        int getNumColorSpaces() const;
+        int getNumColourSpaces() const;
         //!cpp:function:: This will null if an invalid index is specified
-        const char * getColorSpaceNameByIndex(int index) const;
+        const char * getColourSpaceNameByIndex(int index) const;
         
         //!rst::
         // .. note::
-        //    These fcns all accept either a color space OR role name.
-        //    (Colorspace names take precedence over roles.)
+        //    These fcns all accept either a colour space OR role name.
+        //    (Colourspace names take precedence over roles.)
         
         //!cpp:function:: This will return null if the specified name is not
         // found.
-        ConstColorSpaceRcPtr getColorSpace(const char * name) const;
+        ConstColourSpaceRcPtr getColourSpace(const char * name) const;
         //!cpp:function::
-        int getIndexForColorSpace(const char * name) const;
+        int getIndexForColourSpace(const char * name) const;
         
         //!cpp:function::
         // .. note::
-        //    If another color space is already registered with the same name,
+        //    If another colour space is already registered with the same name,
         //    this will overwrite it. This stores a copy of the specified
-        //    color space.
-        void addColorSpace(const ConstColorSpaceRcPtr & cs);
+        //    colour space.
+        void addColourSpace(const ConstColourSpaceRcPtr & cs);
         //!cpp:function::
-        void clearColorSpaces();
+        void clearColourSpaces();
         
         //!cpp:function:: Given the specified string, get the longest,
-        // right-most, colorspace substring that appears.
+        // right-most, colourspace substring that appears.
         //
-        // * If strict parsing is enabled, and no color space is found, return
+        // * If strict parsing is enabled, and no colour space is found, return
         //   an empty string.
         // * If strict parsing is disabled, return ROLE_DEFAULT (if defined).
         // * If the default role is not defined, return an empty string.
-        const char * parseColorSpaceFromString(const char * str) const;
+        const char * parseColourSpaceFromString(const char * str) const;
         
         //!cpp:function::
         bool isStrictParsingEnabled() const;
@@ -327,13 +327,13 @@ OCIO_NAMESPACE_ENTER
         // 
         // Roles
         // ^^^^^
-        // A role is like an alias for a colorspace. You can query the colorspace
-        // corresponding to a role using the normal getColorSpace fcn.
+        // A role is like an alias for a colourspace. You can query the colourspace
+        // corresponding to a role using the normal getColourSpace fcn.
         
         //!cpp:function::
         // .. note::
-        //    Setting the ``colorSpaceName`` name to a null string unsets it.
-        void setRole(const char * role, const char * colorSpaceName);
+        //    Setting the ``colourSpaceName`` name to a null string unsets it.
+        void setRole(const char * role, const char * colourSpaceName);
         //!cpp:function::
         int getNumRoles() const;
         //!cpp:function:: Return true if the role has been defined.
@@ -370,16 +370,16 @@ OCIO_NAMESPACE_ENTER
         const char * getView(const char * display, int index) const;
         
         //!cpp:function::
-        const char * getDisplayColorSpaceName(const char * display, const char * view) const;
+        const char * getDisplayColourSpaceName(const char * display, const char * view) const;
         //!cpp:function::
         const char * getDisplayLooks(const char * display, const char * view) const;
         
         //!cpp:function:: For the (display,view) combination,
-        // specify which colorSpace and look to use.
+        // specify which colourSpace and look to use.
         // If a look is not desired, then just pass an empty string
         
         void addDisplay(const char * display, const char * view,
-                        const char * colorSpaceName, const char * looks);
+                        const char * colourSpaceName, const char * looks);
         
         //!cpp:function::
         void clearDisplays();
@@ -415,12 +415,12 @@ OCIO_NAMESPACE_ENTER
         //
         // .. note::
         //    There is no "1 size fits all" set of luma coefficients. (The
-        //    values are typically different for each colorspace, and the
+        //    values are typically different for each colourspace, and the
         //    application of them may be nonsensical depending on the
         //    intensity coding anyways). Thus, the 'right' answer is to make
         //    these functions on the :cpp:class:`Config` class. However, it's
         //    often useful to have a config-wide default so here it is. We will
-        //    add the colorspace specific luma call if/when another client is
+        //    add the colourspace specific luma call if/when another client is
         //    interesting in using it.
         
         //!cpp:function::
@@ -460,12 +460,12 @@ OCIO_NAMESPACE_ENTER
         // Processors
         // ^^^^^^^^^^
         //
-        // Convert from inputColorSpace to outputColorSpace
+        // Convert from inputColourSpace to outputColourSpace
         // 
         // .. note::
         //    This may provide higher fidelity than anticipated due to internal
-        //    optimizations. For example, if the inputcolorspace and the
-        //    outputColorSpace are members of the same family, no conversion
+        //    optimizations. For example, if the inputcolourspace and the
+        //    outputColourSpace are members of the same family, no conversion
         //    will be applied, even though strictly speaking quantization
         //    should be added.
         // 
@@ -476,15 +476,15 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         ConstProcessorRcPtr getProcessor(const ConstContextRcPtr & context,
-                                         const ConstColorSpaceRcPtr & srcColorSpace,
-                                         const ConstColorSpaceRcPtr & dstColorSpace) const;
+                                         const ConstColourSpaceRcPtr & srcColourSpace,
+                                         const ConstColourSpaceRcPtr & dstColourSpace) const;
         //!cpp:function::
-        ConstProcessorRcPtr getProcessor(const ConstColorSpaceRcPtr & srcColorSpace,
-                                         const ConstColorSpaceRcPtr & dstColorSpace) const;
+        ConstProcessorRcPtr getProcessor(const ConstColourSpaceRcPtr & srcColourSpace,
+                                         const ConstColourSpaceRcPtr & dstColourSpace) const;
         
             //!cpp:function::
         // .. note::
-        //    Names can be colorspace name, role name, or a combination of both.
+        //    Names can be colourspace name, role name, or a combination of both.
         ConstProcessorRcPtr getProcessor(const char * srcName,
                                          const char * dstName) const;
         //!cpp:function::
@@ -527,32 +527,32 @@ OCIO_NAMESPACE_ENTER
     
     
     ///////////////////////////////////////////////////////////////////////////
-    //!rst:: .. _colorspace_section:
+    //!rst:: .. _colourspace_section:
     // 
-    // ColorSpace
+    // ColourSpace
     // **********
-    // The *ColorSpace* is the state of an image with respect to colorimetry
-    // and color encoding. Transforming images between different
-    // *ColorSpaces* is the primary motivation for this library.
+    // The *ColourSpace* is the state of an image with respect to colourimetry
+    // and colour encoding. Transforming images between different
+    // *ColourSpaces* is the primary motivation for this library.
     //
-    // While a complete discussion of colorspaces is beyond the scope of
-    // header documentation, traditional uses would be to have *ColorSpaces*
+    // While a complete discussion of colourspaces is beyond the scope of
+    // header documentation, traditional uses would be to have *ColourSpaces*
     // corresponding to: physical capture devices (known cameras, scanners),
     // and internal 'convenience' spaces (such as scene linear, logarithmic).
     //
-    // *ColorSpaces* are specific to a particular image precision (float32,
-    // uint8, etc.), and the set of ColorSpaces that provide equivalent mappings
+    // *ColourSpaces* are specific to a particular image precision (float32,
+    // uint8, etc.), and the set of ColourSpaces that provide equivalent mappings
     // (at different precisions) are referred to as a 'family'.
     
     //!cpp:class::
-    class OCIOEXPORT ColorSpace
+    class OCIOEXPORT ColourSpace
     {
     public:
         //!cpp:function::
-        static ColorSpaceRcPtr Create();
+        static ColourSpaceRcPtr Create();
         
         //!cpp:function::
-        ColorSpaceRcPtr createEditableCopy() const;
+        ColourSpaceRcPtr createEditableCopy() const;
         
         //!cpp:function::
         const char * getName() const;
@@ -564,10 +564,10 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::Set the family, for use in user interfaces (optional)
         void setFamily(const char * family);
         
-        //!cpp:function::Get the ColorSpace group name (used for equality comparisons)
-        // This allows no-op transforms between different colorspaces.
+        //!cpp:function::Get the ColourSpace group name (used for equality comparisons)
+        // This allows no-op transforms between different colourspaces.
         // If an equalityGroup is not defined (an empty string), it will be considered
-        // unique (i.e., it will not compare as equal to other ColorSpaces with an
+        // unique (i.e., it will not compare as equal to other ColourSpaces with an
         // empty equality group).  This is often, though not always, set to the
         // same value as 'family'.
         const char * getEqualityGroup() const;
@@ -588,13 +588,13 @@ OCIO_NAMESPACE_ENTER
         //!rst::
         // Data
         // ^^^^
-        // ColorSpaces that are data are treated a bit special. Basically, any
-        // colorspace transforms you try to apply to them are ignored. (Think
+        // ColourSpaces that are data are treated a bit special. Basically, any
+        // colourspace transforms you try to apply to them are ignored. (Think
         // of applying a gamut mapping transform to an ID pass). Also, the
         // :cpp:class:`DisplayTransform` process obeys special 'data min' and
         // 'data max' args.
         //
-        // This is traditionally used for pixel data that represents non-color
+        // This is traditionally used for pixel data that represents non-colour
         // pixel data, such as normals, point positions, ID information, etc.
         
         //!cpp:function::
@@ -606,7 +606,7 @@ OCIO_NAMESPACE_ENTER
         //!rst::
         // Allocation
         // ^^^^^^^^^^
-        // If this colorspace needs to be transferred to a limited dynamic
+        // If this colourspace needs to be transferred to a limited dynamic
         // range coding space (such as during display with a GPU path), use this
         // allocation to maximize bit efficiency.
         
@@ -643,21 +643,21 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         // If a transform in the specified direction has been specified,
         // return it. Otherwise return a null ConstTransformRcPtr
-        ConstTransformRcPtr getTransform(ColorSpaceDirection dir) const;
+        ConstTransformRcPtr getTransform(ColourSpaceDirection dir) const;
         //!cpp:function::
         // Specify the transform for the appropriate direction.
         // Setting the transform to null will clear it.
         void setTransform(const ConstTransformRcPtr & transform,
-                          ColorSpaceDirection dir);
+                          ColourSpaceDirection dir);
     
     private:
-        ColorSpace();
-        ~ColorSpace();
+        ColourSpace();
+        ~ColourSpace();
         
-        ColorSpace(const ColorSpace &);
-        ColorSpace& operator= (const ColorSpace &);
+        ColourSpace(const ColourSpace &);
+        ColourSpace& operator= (const ColourSpace &);
         
-        static void deleter(ColorSpace* c);
+        static void deleter(ColourSpace* c);
         
         class Impl;
         friend class Impl;
@@ -666,7 +666,7 @@ OCIO_NAMESPACE_ENTER
         const Impl * getImpl() const { return m_impl; }
     };
     
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpace&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColourSpace&);
     
     
     
@@ -681,7 +681,7 @@ OCIO_NAMESPACE_ENTER
     // ****
     // The *Look* is an 'artistic' image modification, in a specified image
     // state.
-    // The processSpace defines the ColorSpace the image is required to be
+    // The processSpace defines the ColourSpace the image is required to be
     // in, for the math to apply correctly.
     
     //!cpp:class::
@@ -918,25 +918,25 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: get the meta data that has been set
         const char * getMetadata() const;
         
-        //!cpp:function:: set the input ColorSpace that the lut will be
+        //!cpp:function:: set the input ColourSpace that the lut will be
         // applied to
         void setInputSpace(const char * inputSpace);
-        //!cpp:function:: get the input ColorSpace that has been set
+        //!cpp:function:: get the input ColourSpace that has been set
         const char * getInputSpace() const;
         
-        //!cpp:function:: set an *optional* ColorSpace to be used to shape /
-        // transfer the input colorspace. This is mostly used to allocate
+        //!cpp:function:: set an *optional* ColourSpace to be used to shape /
+        // transfer the input colourspace. This is mostly used to allocate
         // an HDR luminance range into an LDR one. If a shaper space
         // is not explicitly specified, and the file format supports one,
-        // the ColorSpace Allocation will be used
+        // the ColourSpace Allocation will be used
         
         void setShaperSpace(const char * shaperSpace);
-        //!cpp:function:: get the shaper colorspace that has been set
+        //!cpp:function:: get the shaper colourspace that has been set
         const char * getShaperSpace() const;
         
-        //!cpp:function:: set the target device colorspace for the lut
+        //!cpp:function:: set the target device colourspace for the lut
         void setTargetSpace(const char * targetSpace);
-        //!cpp:function:: get the target colorspace that has been set
+        //!cpp:function:: get the target colourspace that has been set
         const char * getTargetSpace() const;
         
         //!cpp:function:: override the default the shaper sample size,
@@ -1227,4 +1227,4 @@ OCIO_NAMESPACE_ENTER
 }
 OCIO_NAMESPACE_EXIT
 
-#endif // INCLUDED_OCIO_OPENCOLORIO_H
+#endif // INCLUDED_OCIO_OPENCOLOURIO_H

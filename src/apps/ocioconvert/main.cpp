@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <vector>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 #include <OpenImageIO/imageio.h>
@@ -74,8 +74,8 @@ int main(int argc, const char **argv)
     std::vector<std::string> intAttrs;
     std::vector<std::string> stringAttrs;
      
-    ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
-               "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n\n",
+    ap.options("ocioconvert -- apply colourspace transform to an image \n\n"
+               "usage: ocioconvert [options]  inputimage inputcolourspace outputimage outputcolourspace\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "OpenImageIO options",
                "--float-attribute %L", &floatAttrs, "name=float pair defining OIIO float attribute",
@@ -96,9 +96,9 @@ int main(int argc, const char **argv)
     }
     
     const char * inputimage = args[0].c_str();
-    const char * inputcolorspace = args[1].c_str();
+    const char * inputcolourspace = args[1].c_str();
     const char * outputimage = args[2].c_str();
-    const char * outputcolorspace = args[3].c_str();
+    const char * outputcolourspace = args[3].c_str();
     
     OIIO::ImageSpec spec;
     std::vector<float> img;
@@ -151,12 +151,12 @@ int main(int argc, const char **argv)
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
         // Get the processor
-        OCIO::ConstProcessorRcPtr processor = config->getProcessor(inputcolorspace, outputcolorspace);
+        OCIO::ConstProcessorRcPtr processor = config->getProcessor(inputcolourspace, outputcolourspace);
         
         // Wrap the image in a light-weight ImageDescription
         OCIO::PackedImageDesc imageDesc(&img[0], imgwidth, imgheight, components);
         
-        // Apply the color transformation (in place)
+        // Apply the colour transformation (in place)
         processor->apply(imageDesc);
     }
     catch(OCIO::Exception & exception)

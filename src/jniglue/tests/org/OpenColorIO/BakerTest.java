@@ -1,6 +1,6 @@
 
 import junit.framework.TestCase;
-import org.OpenColorIO.*;
+import org.OpenColourIO.*;
 
 public class BakerTest extends TestCase {
     
@@ -9,15 +9,15 @@ public class BakerTest extends TestCase {
     + "\n"
     + "strictparsing: false\n"
     + "\n"
-    + "colorspaces:\n"
+    + "colourspaces:\n"
     + "\n"
-    + "  - !<ColorSpace>\n"
+    + "  - !<ColourSpace>\n"
     + "    name: lnh\n"
     + "    bitdepth: 16f\n"
     + "    isdata: false\n"
     + "    allocation: lg2\n"
     + "\n"
-    + "  - !<ColorSpace>\n"
+    + "  - !<ColourSpace>\n"
     + "    name: test\n"
     + "    bitdepth: 8ui\n"
     + "    isdata: false\n"

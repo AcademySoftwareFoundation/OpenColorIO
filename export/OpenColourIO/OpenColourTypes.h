@@ -27,13 +27,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_OPENCOLORTYPES_H
-#define INCLUDED_OCIO_OPENCOLORTYPES_H
+#ifndef INCLUDED_OCIO_OPENCOLOURTYPES_H
+#define INCLUDED_OCIO_OPENCOLOURTYPES_H
 
-#include "OpenColorABI.h"
+#include "OpenColourABI.h"
 
 #ifndef OCIO_NAMESPACE_ENTER
-#error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
+#error This header cannot be used directly. Use <OpenColourIO/OpenColourIO.h> instead.
 #endif
 
 #include <limits>
@@ -58,11 +58,11 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<Config> ConfigRcPtr;
     
-    class OCIOEXPORT ColorSpace;
+    class OCIOEXPORT ColourSpace;
     //!cpp:type::
-    typedef OCIO_SHARED_PTR<const ColorSpace> ConstColorSpaceRcPtr;
+    typedef OCIO_SHARED_PTR<const ColourSpace> ConstColourSpaceRcPtr;
     //!cpp:type::
-    typedef OCIO_SHARED_PTR<ColorSpace> ColorSpaceRcPtr;
+    typedef OCIO_SHARED_PTR<ColourSpace> ColourSpaceRcPtr;
     
     class OCIOEXPORT Look;
     //!cpp:type::
@@ -121,11 +121,11 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
     
-    class OCIOEXPORT ColorSpaceTransform;
+    class OCIOEXPORT ColourSpaceTransform;
     //!cpp:type::
-    typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
+    typedef OCIO_SHARED_PTR<const ColourSpaceTransform> ConstColourSpaceTransformRcPtr;
     //!cpp:type::
-    typedef OCIO_SHARED_PTR<ColorSpaceTransform> ColorSpaceTransformRcPtr;
+    typedef OCIO_SHARED_PTR<ColourSpaceTransform> ColourSpaceTransformRcPtr;
     
     class OCIOEXPORT DisplayTransform;
     //!cpp:type::
@@ -196,11 +196,11 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:type::
-    enum ColorSpaceDirection
+    enum ColourSpaceDirection
     {
-        COLORSPACE_DIR_UNKNOWN = 0,
-        COLORSPACE_DIR_TO_REFERENCE,
-        COLORSPACE_DIR_FROM_REFERENCE
+        COLOURSPACE_DIR_UNKNOWN = 0,
+        COLOURSPACE_DIR_TO_REFERENCE,
+        COLOURSPACE_DIR_FROM_REFERENCE
     };
     
     //!cpp:type::
@@ -293,9 +293,9 @@ OCIO_NAMESPACE_ENTER
                                                                     TransformDirection d2);
     
     //!cpp:function::
-    extern OCIOEXPORT const char * ColorSpaceDirectionToString(ColorSpaceDirection dir);
+    extern OCIOEXPORT const char * ColourSpaceDirectionToString(ColourSpaceDirection dir);
     //!cpp:function::
-    extern OCIOEXPORT ColorSpaceDirection ColorSpaceDirectionFromString(const char * s);
+    extern OCIOEXPORT ColourSpaceDirection ColourSpaceDirectionFromString(const char * s);
     
     //!cpp:function::
     extern OCIOEXPORT const char * BitDepthToString(BitDepth bitDepth);
@@ -326,18 +326,18 @@ OCIO_NAMESPACE_ENTER
     Roles
     *****
     
-    ColorSpace Roles are used so that plugins, in addition to this API can have
-    abstract ways of asking for common colorspaces, without referring to them
+    ColourSpace Roles are used so that plugins, in addition to this API can have
+    abstract ways of asking for common colourspaces, without referring to them
     by hardcoded names.
     
     Internal::
        
        GetGPUDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
-                                (ROLE_COLOR_TIMING (ASCColorCorrection))
+                                (ROLE_COLOUR_TIMING (ASCColourCorrection))
     
     External Plugins (currently known)::
        
-       Colorpicker UIs       - (ROLE_COLOR_PICKING)
+       Colourpicker UIs       - (ROLE_COLOUR_PICKING)
        Compositor LogConvert - (ROLE_SCENE_LINEAR, ROLE_COMPOSITING_LOG)
     
     */
@@ -358,10 +358,10 @@ OCIO_NAMESPACE_ENTER
     //    "data"
     extern OCIOEXPORT const char * ROLE_DATA;
     //!rst::
-    // .. c:var:: const char* ROLE_COLOR_PICKING
+    // .. c:var:: const char* ROLE_COLOUR_PICKING
     //    
-    //    "color_picking"
-    extern OCIOEXPORT const char * ROLE_COLOR_PICKING;
+    //    "colour_picking"
+    extern OCIOEXPORT const char * ROLE_COLOUR_PICKING;
     //!rst::
     // .. c:var:: const char* ROLE_SCENE_LINEAR
     //    
@@ -373,10 +373,10 @@ OCIO_NAMESPACE_ENTER
     //    "compositing_log"
     extern OCIOEXPORT const char * ROLE_COMPOSITING_LOG;
     //!rst::
-    // .. c:var:: const char* ROLE_COLOR_TIMING
+    // .. c:var:: const char* ROLE_COLOUR_TIMING
     //    
-    //    "color_timing"
-    extern OCIOEXPORT const char * ROLE_COLOR_TIMING;
+    //    "colour_timing"
+    extern OCIOEXPORT const char * ROLE_COLOUR_TIMING;
     //!rst::
     // .. c:var:: const char* ROLE_TEXTURE_PAINT
     //    

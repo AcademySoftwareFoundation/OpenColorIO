@@ -27,13 +27,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_OPENCOLORTRANSFORMS_H
-#define INCLUDED_OCIO_OPENCOLORTRANSFORMS_H
+#ifndef INCLUDED_OCIO_OPENCOLOURTRANSFORMS_H
+#define INCLUDED_OCIO_OPENCOLOURTRANSFORMS_H
 
-#include "OpenColorTypes.h"
+#include "OpenColourTypes.h"
 
 #ifndef OCIO_NAMESPACE_ENTER
-#error This header cannot be used directly. Use <OpenColorIO/OpenColorIO.h> instead.
+#error This header cannot be used directly. Use <OpenColourIO/OpenColourIO.h> instead.
 #endif
 
 /*!rst::
@@ -200,7 +200,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         const char * getID() const;
         
-        //!cpp:function:: Textual description of color correction
+        //!cpp:function:: Textual description of colour correction
         // (stored on the SOP)
         void setDescription(const char * desc);
         //!cpp:function::
@@ -229,11 +229,11 @@ OCIO_NAMESPACE_ENTER
     //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class::
-    class OCIOEXPORT ColorSpaceTransform : public Transform
+    class OCIOEXPORT ColourSpaceTransform : public Transform
     {
     public:
         //!cpp:function::
-        static ColorSpaceTransformRcPtr Create();
+        static ColourSpaceTransformRcPtr Create();
         
         //!cpp:function::
         virtual TransformRcPtr createEditableCopy() const;
@@ -254,13 +254,13 @@ OCIO_NAMESPACE_ENTER
         void setDst(const char * dst);
         
     private:
-        ColorSpaceTransform();
-        ColorSpaceTransform(const ColorSpaceTransform &);
-        virtual ~ColorSpaceTransform();
+        ColourSpaceTransform();
+        ColourSpaceTransform(const ColourSpaceTransform &);
+        virtual ~ColourSpaceTransform();
         
-        ColorSpaceTransform& operator= (const ColorSpaceTransform &);
+        ColourSpaceTransform& operator= (const ColourSpaceTransform &);
         
-        static void deleter(ColorSpaceTransform* t);
+        static void deleter(ColourSpaceTransform* t);
         
         class Impl;
         friend class Impl;
@@ -270,7 +270,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:function::
-    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&);
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ColourSpaceTransform&);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
@@ -293,20 +293,20 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        //!cpp:function:: Step 0. Specify the incoming color space
-        void setInputColorSpaceName(const char * name);
+        //!cpp:function:: Step 0. Specify the incoming colour space
+        void setInputColourSpaceName(const char * name);
         //!cpp:function::
-        const char * getInputColorSpaceName() const;
+        const char * getInputColourSpaceName() const;
         
-        //!cpp:function:: Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR
+        //!cpp:function:: Step 1: Apply a Colour Correction, in ROLE_SCENE_LINEAR
         void setLinearCC(const ConstTransformRcPtr & cc);
         //!cpp:function::
         ConstTransformRcPtr getLinearCC() const;
         
-        //!cpp:function:: Step 2: Apply a color correction, in ROLE_COLOR_TIMING
-        void setColorTimingCC(const ConstTransformRcPtr & cc);
+        //!cpp:function:: Step 2: Apply a colour correction, in ROLE_COLOUR_TIMING
+        void setColourTimingCC(const ConstTransformRcPtr & cc);
         //!cpp:function::
-        ConstTransformRcPtr getColorTimingCC() const;
+        ConstTransformRcPtr getColourTimingCC() const;
         
         //!cpp:function:: Step 3: Apply the Channel Viewing Swizzle (mtx)
         void setChannelView(const ConstTransformRcPtr & transform);
@@ -324,7 +324,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         const char * getView() const;
         
-        //!cpp:function:: Step 5: Apply a post display transform color correction
+        //!cpp:function:: Step 5: Apply a post display transform colour correction
         void setDisplayCC(const ConstTransformRcPtr & cc);
         //!cpp:function::
         ConstTransformRcPtr getDisplayCC() const;
@@ -378,9 +378,9 @@ OCIO_NAMESPACE_ENTER
     
     //!rst:: //////////////////////////////////////////////////////////////////
     
-    //!cpp:class:: Represents exponent transform: pow( clamp(color), value)
+    //!cpp:class:: Represents exponent transform: pow( clamp(colour), value)
     // 
-    // If the exponent is 1.0, this will not clamp. Otherwise, the input color
+    // If the exponent is 1.0, this will not clamp. Otherwise, the input colour
     // will be clamped between [0.0, inf]
     class OCIOEXPORT ExponentTransform : public Transform
     {
@@ -534,7 +534,7 @@ OCIO_NAMESPACE_ENTER
     
     //!rst:: //////////////////////////////////////////////////////////////////
     
-    //!cpp:class:: Represents log transform: log(color, base)
+    //!cpp:class:: Represents log transform: log(colour, base)
     // 
     // * The input will be clamped for negative numbers.
     // * Default base is 2.0

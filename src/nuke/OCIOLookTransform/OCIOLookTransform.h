@@ -1,5 +1,5 @@
-#ifndef INCLUDED_OCIO_NUKE_COLORSPACECONVERSION_H_
-#define INCLUDED_OCIO_NUKE_COLORSPACECONVERSION_H_
+#ifndef INCLUDED_OCIO_NUKE_COLOURSPACECONVERSION_H_
+#define INCLUDED_OCIO_NUKE_COLOURSPACECONVERSION_H_
 
 // Include these early, for Nuke's headers under gcc 4.4.2.
 #include <memory>
@@ -9,29 +9,29 @@
 #include <DDImage/Row.h>
 #include <DDImage/Knob.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 
 /*!
- * Iop that uses OpenColorIO to perform colorspace conversions
+ * Iop that uses OpenColourIO to perform colourspace conversions
  */
 class OCIOLookTransform : public DD::Image::PixelIop {
 
     protected:
 
-        bool m_hasColorSpaces; //!< Were colorspaces found for both input and output? If not, always error.
+        bool m_hasColourSpaces; //!< Were colourspaces found for both input and output? If not, always error.
         
         std::string m_look;
         std::string m_lookhelp;
         
         int m_dirIndex;
-        int m_inputColorSpaceIndex;
-        int m_outputColorSpaceIndex;
+        int m_inputColourSpaceIndex;
+        int m_outputColourSpaceIndex;
         
-        std::vector<std::string> m_colorSpaceNames; //!< list of input and output colorspace names (memory for const char* s below)
-        std::vector<const char*> m_inputColorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
-        std::vector<const char*> m_outputColorSpaceCstrNames;
+        std::vector<std::string> m_colourSpaceNames; //!< list of input and output colourspace names (memory for const char* s below)
+        std::vector<const char*> m_inputColourSpaceCstrNames; //!< list for the pulldown list knob (used raw)
+        std::vector<const char*> m_outputColourSpaceCstrNames;
         
         bool m_ignoreErrors;
         
@@ -93,7 +93,7 @@ class OCIOLookTransform : public DD::Image::PixelIop {
          * in mask by modifying mask in-place. (At least one channel in the
          * input is assumed.)
          *
-         * Since colorspace conversions can have channel cross-talk, any rgb
+         * Since colourspace conversions can have channel cross-talk, any rgb
          * output channel requires all its rgb bretheren. (Non-rgb
          * are passed through.)
          */
@@ -115,7 +115,7 @@ class OCIOLookTransform : public DD::Image::PixelIop {
     protected:
 
         /*!
-         * Check that colorspaces are available, and that the transform
+         * Check that colourspaces are available, and that the transform
          * is not a noop. (As OCIO whether a given transform is a noop, since it
          * can do more analysis than just name matching.)
          */
@@ -137,4 +137,4 @@ class OCIOLookTransform : public DD::Image::PixelIop {
 
 static DD::Image::Op* build(Node *node);
 
-#endif // INCLUDED_OCIO_NUKE_COLORSPACECONVERSION_H_
+#endif // INCLUDED_OCIO_NUKE_COLOURSPACECONVERSION_H_

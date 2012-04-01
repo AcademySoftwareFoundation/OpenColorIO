@@ -32,17 +32,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
-    // ColorSpace
-    PyObject * BuildConstPyColorSpace(ConstColorSpaceRcPtr colorSpace);
-    PyObject * BuildEditablePyColorSpace(ColorSpaceRcPtr colorSpace);
-    bool IsPyColorSpace(PyObject * pyobject);
-    bool IsPyColorSpaceEditable(PyObject * pyobject);
-    ConstColorSpaceRcPtr GetConstColorSpace(PyObject * pyobject, bool allowCast);
-    ColorSpaceRcPtr GetEditableColorSpace(PyObject * pyobject);
+    // ColourSpace
+    PyObject * BuildConstPyColourSpace(ConstColourSpaceRcPtr colourSpace);
+    PyObject * BuildEditablePyColourSpace(ColourSpaceRcPtr colourSpace);
+    bool IsPyColourSpace(PyObject * pyobject);
+    bool IsPyColourSpaceEditable(PyObject * pyobject);
+    ConstColourSpaceRcPtr GetConstColourSpace(PyObject * pyobject, bool allowCast);
+    ColourSpaceRcPtr GetEditableColourSpace(PyObject * pyobject);
     
     // Config
     PyObject * BuildConstPyConfig(ConstConfigRcPtr config);

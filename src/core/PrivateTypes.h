@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_PRIVATE_TYPES_H
 #define INCLUDED_OCIO_PRIVATE_TYPES_H
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include <map>
 #include <set>
@@ -44,7 +44,7 @@ OCIO_NAMESPACE_ENTER
     typedef std::set<std::string> StringSet;
     
     typedef std::vector<ConstTransformRcPtr> ConstTransformVec;
-    typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;
+    typedef std::vector<ColourSpaceRcPtr> ColourSpaceVec;
     typedef std::vector<LookRcPtr> LookVec;
     
     typedef std::vector<TransformDirection> TransformDirectionVec;

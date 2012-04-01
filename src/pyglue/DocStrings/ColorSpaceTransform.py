@@ -1,7 +1,7 @@
 
-class ColorSpaceTransform:
+class ColourSpaceTransform:
     """
-    ColorSpaceTransform
+    ColourSpaceTransform
     """
     def __init__(self):
         pass
@@ -10,9 +10,9 @@ class ColorSpaceTransform:
         """
         getSrc()
         
-        Returns the name of the source ColorSpace in this transform.
+        Returns the name of the source ColourSpace in this transform.
         
-        :return: ColorSpace
+        :return: ColourSpace
         :rtype: string
         """
         pass
@@ -21,9 +21,9 @@ class ColorSpaceTransform:
         """
         setSrc(srcname)
         
-        Sets the source ColorSpace in this transform.
+        Sets the source ColourSpace in this transform.
         
-        :param str: source ColorSpace
+        :param str: source ColourSpace
         :type str: string
         """
         pass
@@ -32,9 +32,9 @@ class ColorSpaceTransform:
         """
         getDst()
         
-        Returns the name of the destination ColorSpace in this transform.
+        Returns the name of the destination ColourSpace in this transform.
         
-        :return: ColorSpace
+        :return: ColourSpace
         :rtype: string
         """
         pass
@@ -43,9 +43,9 @@ class ColorSpaceTransform:
         """
         setDst(dstname)
         
-        Sets the destination ColorSpace in this transform.
+        Sets the destination ColourSpace in this transform.
         
-        :param str: destination ColorSpace
+        :param str: destination ColourSpace
         :type str: string
         """
         pass

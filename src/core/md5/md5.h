@@ -53,7 +53,7 @@
 #define INCLUDED_OCIO_md5_INCLUDED
 
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 OCIO_NAMESPACE_ENTER
 {

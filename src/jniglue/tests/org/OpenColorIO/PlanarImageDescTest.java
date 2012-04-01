@@ -1,6 +1,6 @@
 
 import junit.framework.TestCase;
-import org.OpenColorIO.*;
+import org.OpenColourIO.*;
 import java.nio.*;
 
 public class PlanarImageDescTest extends TestCase {

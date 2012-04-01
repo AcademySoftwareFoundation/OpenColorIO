@@ -2,7 +2,7 @@
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-public class OpenColorIOTestSuite {
+public class OpenColourIOTestSuite {
     
     public static Test suite() {
         
@@ -11,7 +11,7 @@ public class OpenColorIOTestSuite {
         // Core
         suite.addTestSuite(GlobalsTest.class);
         suite.addTestSuite(ConfigTest.class);
-        suite.addTestSuite(ColorSpaceTest.class);
+        suite.addTestSuite(ColourSpaceTest.class);
         suite.addTestSuite(LookTest.class);
         suite.addTestSuite(BakerTest.class);
         suite.addTestSuite(PackedImageDescTest.class);

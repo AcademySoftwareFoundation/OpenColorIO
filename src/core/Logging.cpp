@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <sstream>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "Logging.h"
 #include "Mutex.h"
@@ -64,7 +64,7 @@ OCIO_NAMESPACE_ENTER
                 
                 if(g_logginglevel == LOGGING_LEVEL_UNKNOWN)
                 {
-                    std::cerr << "[OpenColorIO Warning]: Invalid $OCIO_LOGGING_LEVEL specified. ";
+                    std::cerr << "[OpenColourIO Warning]: Invalid $OCIO_LOGGING_LEVEL specified. ";
                     std::cerr << "Options: none (0), warning (1), info (2), debug (3)" << std::endl;
                     g_logginglevel = OCIO_DEFAULT_LOGGING_LEVEL;
                 }
@@ -111,7 +111,7 @@ OCIO_NAMESPACE_ENTER
         
         for(unsigned int i=0; i<parts.size(); ++i)
         {
-            std::cerr << "[OpenColorIO Warning]: " << parts[i] << std::endl;
+            std::cerr << "[OpenColourIO Warning]: " << parts[i] << std::endl;
         }
     }
     
@@ -127,7 +127,7 @@ OCIO_NAMESPACE_ENTER
         
         for(unsigned int i=0; i<parts.size(); ++i)
         {
-            std::cerr << "[OpenColorIO Info]: " << parts[i] << std::endl;
+            std::cerr << "[OpenColourIO Info]: " << parts[i] << std::endl;
         }
     }
     
@@ -143,7 +143,7 @@ OCIO_NAMESPACE_ENTER
         
         for(unsigned int i=0; i<parts.size(); ++i)
         {
-            std::cerr << "[OpenColorIO Debug]: " << parts[i] << std::endl;
+            std::cerr << "[OpenColourIO Debug]: " << parts[i] << std::endl;
         }
     }
     

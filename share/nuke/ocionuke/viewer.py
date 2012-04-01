@@ -27,7 +27,7 @@ def register_viewers(also_remove = "default"):
     # Formats the display and transform, e.g "Film1D (sRGB)"
     DISPLAY_UI_FORMAT = "%(view)s (%(display)s)"
 
-    import PyOpenColorIO as OCIO
+    import PyOpenColourIO as OCIO
     config = OCIO.GetCurrentConfig()
 
     # For every display, loop over every view

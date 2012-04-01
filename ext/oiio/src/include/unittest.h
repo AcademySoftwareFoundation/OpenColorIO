@@ -28,8 +28,8 @@
   (This is the Modified BSD License)
 */
 
-#ifndef OPENCOLORIO_UNITTEST_H
-#define OPENCOLORIO_UNITTEST_H
+#ifndef OPENCOLOURIO_UNITTEST_H
+#define OPENCOLOURIO_UNITTEST_H
 
 #include <iostream>
 #include <cmath>
@@ -148,4 +148,4 @@ struct AddTest { AddTest(OIIOTest* test); };
         std::cerr << "\n" << unit_test_failures << " tests failed\n\n";   \
         return unit_test_failures; }
 
-#endif /* OPENCOLORIO_UNITTEST_H */
+#endif /* OPENCOLOURIO_UNITTEST_H */

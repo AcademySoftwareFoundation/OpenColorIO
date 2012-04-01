@@ -1,5 +1,5 @@
 /**
- * OpenColorIO FileTransform Iop.
+ * OpenColourIO FileTransform Iop.
  */
 
 #include "OCIOFileTransform.h"
@@ -45,8 +45,8 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::SetFlags(f, DD::Image::Knob::HIDDEN);
     
     String_knob(f, &m_cccid, "cccid");
-    const char * srchelp2 = "If the source file is an ASC CDL CCC (color correction collection), "
-    "this specifys the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
+    const char * srchelp2 = "If the source file is an ASC CDL CCC (colour correction collection), "
+    "this specifys the id to lookup. OpenColourIO::Contexts (envvars) are obeyed.";
     DD::Image::Tooltip(f, srchelp2);
     
     DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.select_cccid_for_filetransform(fileknob='file', cccidknob = 'cccid')", "select_cccid", "select cccid");
@@ -252,12 +252,12 @@ const char* OCIOFileTransform::node_help() const
     if(m_nodehelp.empty())
     {
         const char * helptext =
-        "Use OpenColorIO to apply a transform loaded from the given "
+        "Use OpenColourIO to apply a transform loaded from the given "
         "file.\n\n"
         "This is usually a 1D or 3D LUT file, but can be other file-based "
-        "transform, for example an ASC ColorCorrection XML file.\n\n"
+        "transform, for example an ASC ColourCorrection XML file.\n\n"
         "Note that the file's transform is applied with no special "
-        "input/output colorspace handling - so if the file expects "
+        "input/output colourspace handling - so if the file expects "
         "log-encoded pixels, but you apply the node to a linear "
         "image, you will get incorrect results.\n\n";
         

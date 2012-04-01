@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "OpBuilders.h"
 
@@ -50,9 +50,9 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         TransformDirection dir_;
-        std::string inputColorSpaceName_;
+        std::string inputColourSpaceName_;
         TransformRcPtr linearCC_;
-        TransformRcPtr colorTimingCC_;
+        TransformRcPtr colourTimingCC_;
         TransformRcPtr channelView_;
         std::string display_;
         std::string view_;
@@ -72,13 +72,13 @@ OCIO_NAMESPACE_ENTER
         Impl& operator= (const Impl & rhs)
         {
             dir_ = rhs.dir_;
-            inputColorSpaceName_ = rhs.inputColorSpaceName_;
+            inputColourSpaceName_ = rhs.inputColourSpaceName_;
             
             linearCC_ = rhs.linearCC_;
             if(linearCC_) linearCC_ = linearCC_->createEditableCopy();
             
-            colorTimingCC_ = rhs.colorTimingCC_;
-            if(colorTimingCC_) colorTimingCC_ = colorTimingCC_->createEditableCopy();
+            colourTimingCC_ = rhs.colourTimingCC_;
+            if(colourTimingCC_) colourTimingCC_ = colourTimingCC_->createEditableCopy();
             
             channelView_ = rhs.channelView_;
             if(channelView_) channelView_ = channelView_->createEditableCopy();
@@ -135,14 +135,14 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
-    void DisplayTransform::setInputColorSpaceName(const char * name)
+    void DisplayTransform::setInputColourSpaceName(const char * name)
     {
-        getImpl()->inputColorSpaceName_ = name;
+        getImpl()->inputColourSpaceName_ = name;
     }
     
-    const char * DisplayTransform::getInputColorSpaceName() const
+    const char * DisplayTransform::getInputColourSpaceName() const
     {
-        return getImpl()->inputColorSpaceName_.c_str();
+        return getImpl()->inputColourSpaceName_.c_str();
     }
     
     void DisplayTransform::setLinearCC(const ConstTransformRcPtr & cc)
@@ -155,14 +155,14 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->linearCC_;
     }
     
-    void DisplayTransform::setColorTimingCC(const ConstTransformRcPtr & cc)
+    void DisplayTransform::setColourTimingCC(const ConstTransformRcPtr & cc)
     {
-        getImpl()->colorTimingCC_ = cc->createEditableCopy();
+        getImpl()->colourTimingCC_ = cc->createEditableCopy();
     }
     
-    ConstTransformRcPtr DisplayTransform::getColorTimingCC() const
+    ConstTransformRcPtr DisplayTransform::getColourTimingCC() const
     {
-        return getImpl()->colorTimingCC_;
+        return getImpl()->colourTimingCC_;
     }
     
     void DisplayTransform::setChannelView(const ConstTransformRcPtr & transform)
@@ -229,7 +229,7 @@ OCIO_NAMESPACE_ENTER
     {
         os << "<DisplayTransform ";
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << "inputColorSpace=" << t.getInputColorSpaceName() << ", ";
+        os << "inputColourSpace=" << t.getInputColourSpaceName() << ", ";
         os << "display=" << t.getDisplay() << ", ";
         os << "view=" << t.getView() << ", ";
         os << ">\n";
@@ -256,36 +256,36 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        std::string inputColorSpaceName = displayTransform.getInputColorSpaceName();
-        ConstColorSpaceRcPtr inputColorSpace = config.getColorSpace(inputColorSpaceName.c_str());
-        if(!inputColorSpace)
+        std::string inputColourSpaceName = displayTransform.getInputColourSpaceName();
+        ConstColourSpaceRcPtr inputColourSpace = config.getColourSpace(inputColourSpaceName.c_str());
+        if(!inputColourSpace)
         {
             std::ostringstream os;
             os << "DisplayTransform error.";
-            if(inputColorSpaceName.empty()) os << " InputColorSpaceName is unspecified.";
-            else os <<  " Cannot find inputColorSpace, named '" << inputColorSpaceName << "'.";
+            if(inputColourSpaceName.empty()) os << " InputColourSpaceName is unspecified.";
+            else os <<  " Cannot find inputColourSpace, named '" << inputColourSpaceName << "'.";
             throw Exception(os.str().c_str());
         }
         
         std::string display = displayTransform.getDisplay();
         std::string view = displayTransform.getView();
         
-        std::string displayColorSpaceName = config.getDisplayColorSpaceName(display.c_str(), view.c_str());
-        ConstColorSpaceRcPtr displayColorspace = config.getColorSpace(displayColorSpaceName.c_str());
-        if(!displayColorspace)
+        std::string displayColourSpaceName = config.getDisplayColourSpaceName(display.c_str(), view.c_str());
+        ConstColourSpaceRcPtr displayColourspace = config.getColourSpace(displayColourSpaceName.c_str());
+        if(!displayColourspace)
         {
             std::ostringstream os;
             os << "DisplayTransform error.";
-            os <<  " Cannot find display colorspace,  '" << displayColorSpaceName << "'.";
+            os <<  " Cannot find display colourspace,  '" << displayColourSpaceName << "'.";
             throw Exception(os.str().c_str());
         }
         
-        bool skipColorSpaceConversions = (inputColorSpace->isData() || displayColorspace->isData());
+        bool skipColourSpaceConversions = (inputColourSpace->isData() || displayColourspace->isData());
         
-        // If we're viewing alpha, also skip all color space conversions.
+        // If we're viewing alpha, also skip all colour space conversions.
         // If the user does uses a different transform for the channel view,
         // in place of a simple matrix, they run the risk that when viewing alpha
-        // the colorspace transforms will not be skipped. (I.e., filmlook will be applied
+        // the colourspace transforms will not be skipped. (I.e., filmlook will be applied
         // to alpha.)  If this ever becomes an issue, additional engineering will be
         // added at that time.
         
@@ -298,13 +298,13 @@ OCIO_NAMESPACE_ENTER
             
             if((matrix44[3]>0.0f) || (matrix44[7]>0.0f) || (matrix44[11]>0.0f))
             {
-                skipColorSpaceConversions = true;
+                skipColourSpaceConversions = true;
             }
         }
         
         
         
-        ConstColorSpaceRcPtr currentColorSpace = inputColorSpace;
+        ConstColourSpaceRcPtr currentColourSpace = inputColourSpace;
         
         
         
@@ -313,20 +313,20 @@ OCIO_NAMESPACE_ENTER
         if(linearCC)
         {
             // Put the new ops into a temp array, to see if it's a no-op
-            // If it is a no-op, dont bother doing the colorspace conversion.
+            // If it is a no-op, dont bother doing the colourspace conversion.
             OpRcPtrVec tmpOps;
             BuildOps(tmpOps, config, context, linearCC, TRANSFORM_DIR_FORWARD);
             
             if(!IsOpVecNoOp(tmpOps))
             {
-                ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_SCENE_LINEAR);
+                ConstColourSpaceRcPtr targetColourSpace = config.getColourSpace(ROLE_SCENE_LINEAR);
                 
-                if(!skipColorSpaceConversions)
+                if(!skipColourSpaceConversions)
                 {
-                    BuildColorSpaceOps(ops, config, context,
-                                       currentColorSpace,
-                                       targetColorSpace);
-                    currentColorSpace = targetColorSpace;
+                    BuildColourSpaceOps(ops, config, context,
+                                       currentColourSpace,
+                                       targetColourSpace);
+                    currentColourSpace = targetColourSpace;
                 }
                 
                 std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
@@ -334,25 +334,25 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        // Apply a color correction, in ROLE_COLOR_TIMING
-        ConstTransformRcPtr colorTimingCC = displayTransform.getColorTimingCC();
-        if(colorTimingCC)
+        // Apply a colour correction, in ROLE_COLOUR_TIMING
+        ConstTransformRcPtr colourTimingCC = displayTransform.getColourTimingCC();
+        if(colourTimingCC)
         {
             // Put the new ops into a temp array, to see if it's a no-op
-            // If it is a no-op, dont bother doing the colorspace conversion.
+            // If it is a no-op, dont bother doing the colourspace conversion.
             OpRcPtrVec tmpOps;
-            BuildOps(tmpOps, config, context, colorTimingCC, TRANSFORM_DIR_FORWARD);
+            BuildOps(tmpOps, config, context, colourTimingCC, TRANSFORM_DIR_FORWARD);
             
             if(!IsOpVecNoOp(tmpOps))
             {
-                ConstColorSpaceRcPtr targetColorSpace = config.getColorSpace(ROLE_COLOR_TIMING);
+                ConstColourSpaceRcPtr targetColourSpace = config.getColourSpace(ROLE_COLOUR_TIMING);
                 
-                if(!skipColorSpaceConversions)
+                if(!skipColourSpaceConversions)
                 {
-                    BuildColorSpaceOps(ops, config, context,
-                                       currentColorSpace,
-                                       targetColorSpace);
-                    currentColorSpace = targetColorSpace;
+                    BuildColourSpaceOps(ops, config, context,
+                                       currentColourSpace,
+                                       targetColourSpace);
+                    currentColourSpace = targetColourSpace;
                 }
                 
                 std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
@@ -365,7 +365,7 @@ OCIO_NAMESPACE_ENTER
         {
             looks.parse(displayTransform.getLooksOverride());
         }
-        else if(!skipColorSpaceConversions)
+        else if(!skipColourSpaceConversions)
         {
             looks.parse(config.getDisplayLooks(display.c_str(), view.c_str()));
         }
@@ -373,8 +373,8 @@ OCIO_NAMESPACE_ENTER
         if(!looks.empty())
         {
             BuildLookOps(ops,
-                         currentColorSpace,
-                         skipColorSpaceConversions,
+                         currentColourSpace,
+                         skipColourSpaceConversions,
                          config,
                          context,
                          looks);
@@ -388,13 +388,13 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        // Apply the conversion to the display color space
-        if(!skipColorSpaceConversions)
+        // Apply the conversion to the display colour space
+        if(!skipColourSpaceConversions)
         {
-            BuildColorSpaceOps(ops, config, context,
-                               currentColorSpace,
-                               displayColorspace);
-            currentColorSpace = displayColorspace;
+            BuildColourSpaceOps(ops, config, context,
+                               currentColourSpace,
+                               displayColourspace);
+            currentColourSpace = displayColourspace;
         }
         
         

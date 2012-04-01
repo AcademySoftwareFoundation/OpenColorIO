@@ -1,6 +1,6 @@
 
 import junit.framework.TestCase;
-import org.OpenColorIO.*;
+import org.OpenColourIO.*;
 
 public class ContextTest extends TestCase {
     

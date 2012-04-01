@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_PYOCIO_PYTRANSFORM_H
 #define INCLUDED_PYOCIO_PYTRANSFORM_H
 
-#include <PyOpenColorIO/PyOpenColorIO.h>
+#include <PyOpenColourIO/PyOpenColourIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -52,8 +52,8 @@ OCIO_NAMESPACE_ENTER
     extern PyTypeObject PyOCIO_CDLTransformType;
     bool AddCDLTransformObjectToModule( PyObject* m );
     
-    extern PyTypeObject PyOCIO_ColorSpaceTransformType;
-    bool AddColorSpaceTransformObjectToModule( PyObject* m );
+    extern PyTypeObject PyOCIO_ColourSpaceTransformType;
+    bool AddColourSpaceTransformObjectToModule( PyObject* m );
     
     extern PyTypeObject PyOCIO_DisplayTransformType;
     bool AddDisplayTransformObjectToModule( PyObject* m );

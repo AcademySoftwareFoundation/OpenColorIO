@@ -29,13 +29,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <sstream>
 
-#include "OpenColorIO/OpenColorIO.h"
-#include "OpenColorIOJNI.h"
+#include "OpenColourIO/OpenColourIO.h"
+#include "OpenColourIOJNI.h"
 #include "JNIUtil.h"
 OCIO_NAMESPACE_USING
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_dispose(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_dispose(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     DisposeJOCIO<BakerJNI>(env, self);
@@ -43,26 +43,26 @@ Java_org_OpenColorIO_Baker_dispose(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Baker_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<BakerRcPtr, BakerJNI>(env, self,
-      env->FindClass("org/OpenColorIO/Baker"), Baker::Create());
+      env->FindClass("org/OpenColourIO/Baker"), Baker::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Baker_createEditableCopy(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_createEditableCopy(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
     return BuildJObject<BakerRcPtr, BakerJNI>(env, self,
-      env->FindClass("org/OpenColorIO/Baker"), bake->createEditableCopy());
+      env->FindClass("org/OpenColourIO/Baker"), bake->createEditableCopy());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_setConfig(JNIEnv * env, jobject self, jobject config)
+Java_org_OpenColourIO_Baker_setConfig(JNIEnv * env, jobject self, jobject config)
 {
     OCIO_JNITRY_ENTER()
     BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
@@ -72,17 +72,17 @@ Java_org_OpenColorIO_Baker_setConfig(JNIEnv * env, jobject self, jobject config)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Baker_getConfig(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getConfig(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
     return BuildJConstObject<ConstConfigRcPtr, ConfigJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Config"), bake->getConfig());
+             env->FindClass("org/OpenColourIO/Config"), bake->getConfig());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_setFormat(JNIEnv * env, jobject self, jstring formatName)
+Java_org_OpenColourIO_Baker_setFormat(JNIEnv * env, jobject self, jstring formatName)
 {
     OCIO_JNITRY_ENTER()
     BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
@@ -91,7 +91,7 @@ Java_org_OpenColorIO_Baker_setFormat(JNIEnv * env, jobject self, jstring formatN
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Baker_getFormat(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getFormat(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -100,7 +100,7 @@ Java_org_OpenColorIO_Baker_getFormat(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_setType(JNIEnv * env, jobject self, jstring type)
+Java_org_OpenColourIO_Baker_setType(JNIEnv * env, jobject self, jstring type)
 {
     OCIO_JNITRY_ENTER()
     BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
@@ -109,7 +109,7 @@ Java_org_OpenColorIO_Baker_setType(JNIEnv * env, jobject self, jstring type)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Baker_getType(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getType(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -118,7 +118,7 @@ Java_org_OpenColorIO_Baker_getType(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_setMetadata(JNIEnv * env, jobject self, jstring metadata)
+Java_org_OpenColourIO_Baker_setMetadata(JNIEnv * env, jobject self, jstring metadata)
 {
     OCIO_JNITRY_ENTER()
     BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
@@ -127,7 +127,7 @@ Java_org_OpenColorIO_Baker_setMetadata(JNIEnv * env, jobject self, jstring metad
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Baker_getMetadata(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getMetadata(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -136,7 +136,7 @@ Java_org_OpenColorIO_Baker_getMetadata(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_setInputSpace(JNIEnv * env, jobject self, jstring inputSpace)
+Java_org_OpenColourIO_Baker_setInputSpace(JNIEnv * env, jobject self, jstring inputSpace)
 {
     OCIO_JNITRY_ENTER()
     BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
@@ -145,7 +145,7 @@ Java_org_OpenColorIO_Baker_setInputSpace(JNIEnv * env, jobject self, jstring inp
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Baker_getInputSpace(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getInputSpace(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -154,7 +154,7 @@ Java_org_OpenColorIO_Baker_getInputSpace(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_setShaperSpace(JNIEnv * env, jobject self, jstring shaperSpace)
+Java_org_OpenColourIO_Baker_setShaperSpace(JNIEnv * env, jobject self, jstring shaperSpace)
 {
     OCIO_JNITRY_ENTER()
     BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
@@ -163,7 +163,7 @@ Java_org_OpenColorIO_Baker_setShaperSpace(JNIEnv * env, jobject self, jstring sh
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Baker_getShaperSpace(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getShaperSpace(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -172,7 +172,7 @@ Java_org_OpenColorIO_Baker_getShaperSpace(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_setTargetSpace(JNIEnv * env, jobject self, jstring targetSpace)
+Java_org_OpenColourIO_Baker_setTargetSpace(JNIEnv * env, jobject self, jstring targetSpace)
 {
     OCIO_JNITRY_ENTER()
     BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
@@ -181,7 +181,7 @@ Java_org_OpenColorIO_Baker_setTargetSpace(JNIEnv * env, jobject self, jstring ta
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Baker_getTargetSpace(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getTargetSpace(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -190,7 +190,7 @@ Java_org_OpenColorIO_Baker_getTargetSpace(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_setShaperSize(JNIEnv * env, jobject self, jint shapersize)
+Java_org_OpenColourIO_Baker_setShaperSize(JNIEnv * env, jobject self, jint shapersize)
 {
     OCIO_JNITRY_ENTER()
     BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
@@ -199,7 +199,7 @@ Java_org_OpenColorIO_Baker_setShaperSize(JNIEnv * env, jobject self, jint shaper
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Baker_getShaperSize(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getShaperSize(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -208,7 +208,7 @@ Java_org_OpenColorIO_Baker_getShaperSize(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Baker_setCubeSize(JNIEnv * env, jobject self, jint cubesize)
+Java_org_OpenColourIO_Baker_setCubeSize(JNIEnv * env, jobject self, jint cubesize)
 {
     OCIO_JNITRY_ENTER()
     BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
@@ -217,7 +217,7 @@ Java_org_OpenColorIO_Baker_setCubeSize(JNIEnv * env, jobject self, jint cubesize
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Baker_getCubeSize(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getCubeSize(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -226,7 +226,7 @@ Java_org_OpenColorIO_Baker_getCubeSize(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Baker_bake(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_bake(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -237,7 +237,7 @@ Java_org_OpenColorIO_Baker_bake(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Baker_getNumFormats(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Baker_getNumFormats(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -246,7 +246,7 @@ Java_org_OpenColorIO_Baker_getNumFormats(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Baker_getFormatNameByIndex(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_Baker_getFormatNameByIndex(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
@@ -255,7 +255,7 @@ Java_org_OpenColorIO_Baker_getFormatNameByIndex(JNIEnv * env, jobject self, jint
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Baker_getFormatExtensionByIndex(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_Baker_getFormatExtensionByIndex(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);

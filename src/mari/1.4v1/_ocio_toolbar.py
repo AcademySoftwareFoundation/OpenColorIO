@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Post processing (color management) related Mari scripts
+# Post processing (colour management) related Mari scripts
 # coding: utf-8
 # Copyright (c) 2011 The Foundry Visionmongers Ltd.  All Rights Reserved.
 #-------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ class OcioToolBar():
         self._config                   = ocio.config_default
         self._lut_file_list            = mari.FileList(ocio.lut_file_list_default)
         self._lut_extrapolate          = ocio.lut_extrapolate_default
-        self._color_space              = ocio.color_space_default
+        self._colour_space              = ocio.colour_space_default
         self._display                  = ocio.display_default
         self._view                     = ocio.view_default
         self._swizzle                  = ocio.swizzle_default
@@ -48,7 +48,7 @@ class OcioToolBar():
         self._display_sampler_name     = None
 
         self._lut_extrapolate_widget   = None
-        self._color_space_widget       = None
+        self._colour_space_widget       = None
         self._display_widget           = None
         self._view_widget              = None
         self._swizzle_widget           = None
@@ -62,23 +62,23 @@ class OcioToolBar():
         self._gamma_reset_widget       = None
 
         self._buildWidgets()
-        self._toggle_color_management_action.setEnabled(False)
+        self._toggle_colour_management_action.setEnabled(False)
         self._enableWidgets(False)
 
-        # Enable/disable color management.
-        mari.gl_render.setPostProcessingEnabled(self.isColorManagementEnabled())
+        # Enable/disable colour management.
+        mari.gl_render.setPostProcessingEnabled(self.isColourManagementEnabled())
 
-        # *** IMPORTANT *** The post filter collection used to be called 'OpenColorIO' but was renamed to hide the fact
-        # we use OpenColorIO from our users. So as a temporary workaround we need to check for the old filter collection
+        # *** IMPORTANT *** The post filter collection used to be called 'OpenColourIO' but was renamed to hide the fact
+        # we use OpenColourIO from our users. So as a temporary workaround we need to check for the old filter collection
         # on startup and remove it if found.
-        delete_filter_collection = mari.gl_render.findPostFilterCollection('OpenColorIO')
+        delete_filter_collection = mari.gl_render.findPostFilterCollection('OpenColourIO')
         if delete_filter_collection is not None:
             mari.gl_render.deletePostFilterCollection(delete_filter_collection)
 
         # Create the OCIO post filter collection if not present.
-        self._filter_collection = mari.gl_render.findPostFilterCollection('Color Space')
+        self._filter_collection = mari.gl_render.findPostFilterCollection('Colour Space')
         if self._filter_collection is None:
-            self._filter_collection = mari.gl_render.createPostFilterCollection('Color Space')
+            self._filter_collection = mari.gl_render.createPostFilterCollection('Colour Space')
         else:
             self._filter_collection.clear()
         self._filter_collection.setReadOnly(True)
@@ -92,7 +92,7 @@ class OcioToolBar():
 
         self._buildMetadata()
 
-        # Set the color management filter stack as the current.
+        # Set the colour management filter stack as the current.
         mari.gl_render.setPostFilterCollection(self._filter_collection)
 
         # Attach ourselves to the applications toolbar created signal so we can rebuild the toolbar when it's been
@@ -115,8 +115,8 @@ class OcioToolBar():
 
     #-----------------------------------------------------------------------------------------
 
-    def isColorManagementEnabled(self):
-        return self._toggle_color_management_action.isChecked()
+    def isColourManagementEnabled(self):
+        return self._toggle_colour_management_action.isChecked()
 
     #-----------------------------------------------------------------------------------------
 
@@ -241,24 +241,24 @@ class OcioToolBar():
 
     #-----------------------------------------------------------------------------------------
 
-    def setColorSpace(self, value, update_widget = True, update_metadata = True):
-        if value != self._color_space:
-            self._color_space = value
+    def setColourSpace(self, value, update_widget = True, update_metadata = True):
+        if value != self._colour_space:
+            self._colour_space = value
 
             if update_widget:
-                block = self._color_space_widget.blockSignals(True)
-                index = self._color_space_widget.findText(self._color_space)
-                self._color_space_widget.setCurrentIndex(index)
-                self._color_space_widget.blockSignals(block)
+                block = self._colour_space_widget.blockSignals(True)
+                index = self._colour_space_widget.findText(self._colour_space)
+                self._colour_space_widget.setCurrentIndex(index)
+                self._colour_space_widget.blockSignals(block)
 
             if update_metadata:
                 mari.utils.disconnect(self._display_filter.metadataValueChanged, displayMetadataValueChanged)
-                self._display_filter.setMetadata('InputColorSpace', self._color_space)
+                self._display_filter.setMetadata('InputColourSpace', self._colour_space)
                 mari.utils.connect(self._display_filter.metadataValueChanged, displayMetadataValueChanged)
 
             self._rebuildDisplayFilter()
 
-            ocio.printMessage(ocio.MessageType.DEBUG, 'Changed input color space to \'%s\'' % self._color_space)
+            ocio.printMessage(ocio.MessageType.DEBUG, 'Changed input colour space to \'%s\'' % self._colour_space)
 
     #-----------------------------------------------------------------------------------------
 
@@ -405,47 +405,47 @@ class OcioToolBar():
     def _buildWidgets(self):
         action_list = list()
 
-        self._toggle_color_management_action = self._addAction(
-            '/Mari/OpenColorIO/&Toggle Color Management',
-            'mari.system._ocio_toolbar.toolbar._toggleColorManagement()',
-            'ColorManager.png',
-            'Toggle on/off color management',
-            'Toggle color management')
-        self._toggle_color_management_action.setCheckable(True)
-        self._toggle_color_management_action.setChecked(ocio.enabled_default)
-        action_list.append('/Mari/OpenColorIO/&Toggle Color Management')
+        self._toggle_colour_management_action = self._addAction(
+            '/Mari/OpenColourIO/&Toggle Colour Management',
+            'mari.system._ocio_toolbar.toolbar._toggleColourManagement()',
+            'ColourManager.png',
+            'Toggle on/off colour management',
+            'Toggle colour management')
+        self._toggle_colour_management_action.setCheckable(True)
+        self._toggle_colour_management_action.setChecked(ocio.enabled_default)
+        action_list.append('/Mari/OpenColourIO/&Toggle Colour Management')
 
         self._select_config_action = self._addAction(
-            '/Mari/OpenColorIO/&Select Config',
+            '/Mari/OpenColourIO/&Select Config',
             'mari.system._ocio_toolbar.toolbar.selectConfig()',
-            'LoadColorConfig.png',
-            'Select color space configuration file',
+            'LoadColourConfig.png',
+            'Select colour space configuration file',
             'Select config')
-        action_list.append('/Mari/OpenColorIO/&Select Config')
+        action_list.append('/Mari/OpenColourIO/&Select Config')
 
         self._select_lut_action = self._addAction(
-            '/Mari/OpenColorIO/&Select LUT',
+            '/Mari/OpenColourIO/&Select LUT',
             'mari.system._ocio_toolbar.toolbar.selectLUT()',
             'LoadLookupTable.png',
             'Select LUT file',
             'Select LUT')
-        action_list.append('/Mari/OpenColorIO/&Select LUT')
+        action_list.append('/Mari/OpenColourIO/&Select LUT')
 
         self._clear_lut_action = self._addAction(
-            '/Mari/OpenColorIO/&Clear LUT',
+            '/Mari/OpenColourIO/&Clear LUT',
             'mari.system._ocio_toolbar.toolbar._clearLUT()',
             'ClearLookupTable.png',
             'Clear current LUT',
             'Clear LUT')
-        action_list.append('/Mari/OpenColorIO/&Clear LUT')
+        action_list.append('/Mari/OpenColourIO/&Clear LUT')
 
-        mari.app.deleteToolBar('Color Space')
-        self._toolbar = mari.app.createToolBar('Color Space', True)
+        mari.app.deleteToolBar('Colour Space')
+        self._toolbar = mari.app.createToolBar('Colour Space', True)
         self._toolbar.addActionList(action_list, False)
         self._toolbar.setLockedSlot(True)
         self._toolbar.setSpacing(TOOLBAR_SPACING)
 
-        self._toolbar.insertSeparator('/Mari/OpenColorIO/&Select LUT')
+        self._toolbar.insertSeparator('/Mari/OpenColourIO/&Select LUT')
 
         # Extrapolate:
         self._toolbar.addWidget(QtGui.QLabel('Extrapolate'))
@@ -459,16 +459,16 @@ class OcioToolBar():
 
         self._toolbar.addSeparator()
 
-        color_spaces = [color_space.getName() for color_space in self._config.getColorSpaces()]
+        colour_spaces = [colour_space.getName() for colour_space in self._config.getColourSpaces()]
 
-        # Color-Space:
-        self._color_space_widget = self._addComboBox(
-            'Input Color Space',
-            color_spaces,
-            self._color_space,
-            ocio.color_space_default,
-            lambda value: self.setColorSpace(value = value, update_widget = False, update_metadata = True))
-        self._color_space = self._color_space_widget.currentText
+        # Colour-Space:
+        self._colour_space_widget = self._addComboBox(
+            'Input Colour Space',
+            colour_spaces,
+            self._colour_space,
+            ocio.colour_space_default,
+            lambda value: self.setColourSpace(value = value, update_widget = False, update_metadata = True))
+        self._colour_space = self._colour_space_widget.currentText
 
         # Display:
         self._display_widget = self._addComboBox(
@@ -604,10 +604,10 @@ class OcioToolBar():
     #-----------------------------------------------------------------------------------------
 
     def _updateDisplayWidgets(self):
-        color_spaces = [color_space.getName() for color_space in self._config.getColorSpaces()]
+        colour_spaces = [colour_space.getName() for colour_space in self._config.getColourSpaces()]
 
-        self._updateComboBox(self._color_space_widget, color_spaces, self._color_space, ocio.color_space_default)
-        self._color_space = self._color_space_widget.currentText
+        self._updateComboBox(self._colour_space_widget, colour_spaces, self._colour_space, ocio.colour_space_default)
+        self._colour_space = self._colour_space_widget.currentText
 
         self._updateComboBox(self._display_widget, self._config.getDisplays(), self._display, ocio.display_default)
         self._display = self._display_widget.currentText
@@ -631,7 +631,7 @@ class OcioToolBar():
         self._clear_lut_action.setEnabled(lut_enable)
         self._lut_extrapolate_widget.setEnabled(lut_enable)
 
-        self._color_space_widget.setEnabled(enable)
+        self._colour_space_widget.setEnabled(enable)
         self._display_widget.setEnabled(enable)
         self._view_widget.setEnabled(enable)
         self._swizzle_widget.setEnabled(enable)
@@ -785,11 +785,11 @@ class OcioToolBar():
 
     #-----------------------------------------------------------------------------------------
 
-    def _toggleColorManagement(self):
-        enabled = self.isColorManagementEnabled()
+    def _toggleColourManagement(self):
+        enabled = self.isColourManagementEnabled()
         mari.gl_render.setPostProcessingEnabled(enabled)
         self._enableWidgets(enabled)
-        ocio.printMessage(ocio.MessageType.DEBUG, 'Toggled color management to \'%s\'' % ('on' if enabled else 'off'))
+        ocio.printMessage(ocio.MessageType.DEBUG, 'Toggled colour management to \'%s\'' % ('on' if enabled else 'off'))
 
     #-----------------------------------------------------------------------------------------
 
@@ -880,8 +880,8 @@ class OcioToolBar():
         flags = self._display_filter.METADATA_VISIBLE | self._display_filter.METADATA_EDITABLE
         self._display_filter.setMetadataFlags('ConfigPath', flags)
 
-        self._display_filter.setMetadataDisplayName('InputColorSpace', 'Input Color Space')
-        self._display_filter.setMetadataFlags('InputColorSpace', flags)
+        self._display_filter.setMetadataDisplayName('InputColourSpace', 'Input Colour Space')
+        self._display_filter.setMetadataFlags('InputColourSpace', flags)
 
         self._display_filter.setMetadataDisplayName('Display', 'Display Device')
         self._display_filter.setMetadataFlags('Display', flags)
@@ -920,10 +920,10 @@ class OcioToolBar():
 
         self._display_filter.setMetadata('ConfigPath', self._config_file_list)
 
-        color_spaces = [color_space.getName() for color_space in self._config.getColorSpaces()]
+        colour_spaces = [colour_space.getName() for colour_space in self._config.getColourSpaces()]
 
-        self._display_filter.setMetadata('InputColorSpace', self._color_space)
-        self._display_filter.setMetadataItemList('InputColorSpace', color_spaces)
+        self._display_filter.setMetadata('InputColourSpace', self._colour_space)
+        self._display_filter.setMetadataItemList('InputColourSpace', colour_spaces)
 
         self._display_filter.setMetadata('Display', self._display)
         self._display_filter.setMetadataItemList('Display', self._config.getDisplays())
@@ -953,23 +953,23 @@ class OcioToolBar():
         # General:
         # -------
 
-        self._toggle_color_management_action.setEnabled(True)
-        self._toggle_color_management_action.setChecked(project.metadata('ColorEnabled') if project.hasMetadata('ColorEnabled') else ocio.enabled_default)
+        self._toggle_colour_management_action.setEnabled(True)
+        self._toggle_colour_management_action.setChecked(project.metadata('ColourEnabled') if project.hasMetadata('ColourEnabled') else ocio.enabled_default)
 
-        # Enable/disable color management (MUST be done after modifications to 'self._toggle_color_management_action'.
-        mari.gl_render.setPostProcessingEnabled(self.isColorManagementEnabled())
+        # Enable/disable colour management (MUST be done after modifications to 'self._toggle_colour_management_action'.
+        mari.gl_render.setPostProcessingEnabled(self.isColourManagementEnabled())
 
         filter_collection = None
-        if project.hasMetadata('ColorProfile'):
-            # *** IMPORTANT *** The post filter collection used to be called 'OpenColorIO' but was renamed to hide the
-            # fact we use OpenColorIO from our users. So as a temporary workaround we need to check for the old filter
+        if project.hasMetadata('ColourProfile'):
+            # *** IMPORTANT *** The post filter collection used to be called 'OpenColourIO' but was renamed to hide the
+            # fact we use OpenColourIO from our users. So as a temporary workaround we need to check for the old filter
             # collection correct for it.
-            name = project.metadata('ColorProfile')
-            if name == 'OpenColorIO':
-                name = 'Color Space'
+            name = project.metadata('ColourProfile')
+            if name == 'OpenColourIO':
+                name = 'Colour Space'
             filter_collection = mari.gl_render.findPostFilterCollection(name)
 
-        # Default the color management filter stack if the working one doesn't exist.
+        # Default the colour management filter stack if the working one doesn't exist.
         if filter_collection is None:
             filter_collection = mari.gl_render.findPostFilterCollection(ocio.profile_default)
 
@@ -993,7 +993,7 @@ class OcioToolBar():
         # Display:
         # -------
 
-        self._color_space = project.metadata(  'OcioColorSpace') if project.hasMetadata('OcioColorSpace') else ocio.color_space_default
+        self._colour_space = project.metadata(  'OcioColourSpace') if project.hasMetadata('OcioColourSpace') else ocio.colour_space_default
         self._display     = project.metadata(     'OcioDisplay') if project.hasMetadata(   'OcioDisplay') else ocio.display_default
         self._view        = project.metadata(        'OcioView') if project.hasMetadata(      'OcioView') else ocio.view_default
         self._swizzle     = project.metadata(     'OcioSwizzle') if project.hasMetadata(   'OcioSwizzle') else ocio.swizzle_default
@@ -1023,7 +1023,7 @@ class OcioToolBar():
             self._updateDisplayWidgets()
             self._rebuildDisplayFilter()
 
-        self._enableWidgets(filter_collection.name() == 'Color Space' and self._toggle_color_management_action.isChecked())
+        self._enableWidgets(filter_collection.name() == 'Colour Space' and self._toggle_colour_management_action.isChecked())
         self._updateLUTMetadata()
         self._updateDisplayMetadata()
 
@@ -1035,15 +1035,15 @@ class OcioToolBar():
         ocio.printMessage(ocio.MessageType.DEBUG, 'Saving settings for project \'%s\'' % project.name())
 
         # Store the settings as metadata on the project.
-        project.setMetadata(      'ColorEnabled', self.isColorManagementEnabled())
+        project.setMetadata(      'ColourEnabled', self.isColourManagementEnabled())
         filter_collection = mari.gl_render.currentPostFilterCollection()
         if filter_collection is not None:
-            project.setMetadata(  'ColorProfile', filter_collection.name())
+            project.setMetadata(  'ColourProfile', filter_collection.name())
         project.setMetadata('OcioLutExtrapolate', self._lut_extrapolate)
         project.setMetadata(       'OcioLutPath', '' if self._lut_file_list.isEmpty() else ocio.buildSavePath(self._lut_file_list.at(0)))
         if os.getenv('OCIO') is None:
             project.setMetadata('OcioConfigPath', '' if self._config_file_list.isEmpty() else ocio.buildSavePath(self._config_file_list.at(0)))
-        project.setMetadata(    'OcioColorSpace', self._color_space)
+        project.setMetadata(    'OcioColourSpace', self._colour_space)
         project.setMetadata(       'OcioDisplay', self._display)
         project.setMetadata(          'OcioView', self._view)
         project.setMetadata(       'OcioSwizzle', self._swizzle)
@@ -1053,7 +1053,7 @@ class OcioToolBar():
     #-----------------------------------------------------------------------------------------
 
     def _closedProject(self):
-        self._toggle_color_management_action.setEnabled(False)
+        self._toggle_colour_management_action.setEnabled(False)
         self._enableWidgets(False)
 
     #-----------------------------------------------------------------------------------------
@@ -1061,7 +1061,7 @@ class OcioToolBar():
     def _toolBarsCreated(self):
         # Things like deleting Mari's configuration file and reseting the layout to the default will destroy the toolbar
         # so we need to detect if this is the case and rebuild it!
-        toolbar = mari.app.findToolBar('Color Space')
+        toolbar = mari.app.findToolBar('Colour Space')
         if toolbar is None:
             ocio.printMessage(ocio.MessageType.DEBUG, 'Rebuilding missing toolbar...')
             self._buildWidgets()
@@ -1069,7 +1069,7 @@ class OcioToolBar():
     #-----------------------------------------------------------------------------------------
 
     def _postProcessingEnabled(self, enabled):
-        self._toggle_color_management_action.setChecked(enabled)
+        self._toggle_colour_management_action.setChecked(enabled)
 
         # Only enable or disable UI if we have a current project.
         current_project = mari.projects.current()
@@ -1083,11 +1083,11 @@ class OcioToolBar():
         current_project = mari.projects.current()
         if current_project is not None:
             filter_collection = mari.gl_render.currentPostFilterCollection()
-            if filter_collection is None or filter_collection.name() != 'Color Space':
-                ocio.printMessage(ocio.MessageType.DEBUG, 'Disabling OpenColorIO')
+            if filter_collection is None or filter_collection.name() != 'Colour Space':
+                ocio.printMessage(ocio.MessageType.DEBUG, 'Disabling OpenColourIO')
                 self._enableWidgets(False)
             else:
-                ocio.printMessage(ocio.MessageType.DEBUG, 'Enabling OpenColorIO')
+                ocio.printMessage(ocio.MessageType.DEBUG, 'Enabling OpenColourIO')
                 self._enableWidgets(True)
 
     #-----------------------------------------------------------------------------------------
@@ -1122,7 +1122,7 @@ class OcioToolBar():
                 message = 'Failed to load LUT file \'%s\' due to \'%s\'' % (lut_path, e)
                 ocio.printMessage(ocio.MessageType.ERROR, '%s' % message)
                 if not mari.app.inTerminalMode():
-                    mari.utils.misc.message(message, 'Color Space', 1024, 2)
+                    mari.utils.misc.message(message, 'Colour Space', 1024, 2)
 
                 return False
 
@@ -1133,8 +1133,8 @@ class OcioToolBar():
     #-----------------------------------------------------------------------------------------
 
     def _rebuildDisplayFilter(self):
-        display_transform = ocio.PyOpenColorIO.DisplayTransform()
-        display_transform.setInputColorSpaceName(self._color_space)
+        display_transform = ocio.PyOpenColourIO.DisplayTransform()
+        display_transform.setInputColourSpaceName(self._colour_space)
 
         if hasattr(display_transform, 'setDisplay'):
             # OCIO 1.0+
@@ -1142,24 +1142,24 @@ class OcioToolBar():
             display_transform.setView(self._view)
         else:
             # OCIO 0.8.X
-            display_color_space = self._config.getDisplayColorSpaceName(self._display, self._view)
-            display_transform.setDisplayColorSpaceName(display_color_space)
+            display_colour_space = self._config.getDisplayColourSpaceName(self._display, self._view)
+            display_transform.setDisplayColourSpaceName(display_colour_space)
 
         # Add the channel sizzle.
         luma_coefs = self._config.getDefaultLumaCoefs()
-        mtx, offset = ocio.PyOpenColorIO.MatrixTransform.View(ocio.SWIZZLE_VALUES[self._swizzle], luma_coefs)
+        mtx, offset = ocio.PyOpenColourIO.MatrixTransform.View(ocio.SWIZZLE_VALUES[self._swizzle], luma_coefs)
 
-        transform = ocio.PyOpenColorIO.MatrixTransform()
+        transform = ocio.PyOpenColourIO.MatrixTransform()
         transform.setValue(mtx, offset)
         display_transform.setChannelView(transform)
 
         # Add the linear gain.
-        transform = ocio.PyOpenColorIO.CDLTransform()
+        transform = ocio.PyOpenColourIO.CDLTransform()
         transform.setSlope((self._gain, self._gain, self._gain))
         display_transform.setLinearCC(transform)
 
         # Add the post-display CC.
-        transform = ocio.PyOpenColorIO.ExponentTransform()
+        transform = ocio.PyOpenColourIO.ExponentTransform()
         transform.setValue([1.0 / max(1e-6, v) for v in (self._gamma, self._gamma, self._gamma, self._gamma)])
         display_transform.setDisplayCC(transform)
         
@@ -1197,8 +1197,8 @@ class OcioToolBar():
                                                                                                     ocio.lut_extrapolate_default))
         ocio.printMessage(    ocio.MessageType.INFO, ' Config Path: %s; Default: %s'             % ('' if self._config_file_list.isEmpty() else self._config_file_list.at(0),
                                                                                                     '' if ocio.config_file_list_default.isEmpty() else ocio.config_file_list_default.at(0)))
-        ocio.printMessage(    ocio.MessageType.INFO, ' Color Space: %s; Default: %s'             % (self._color_space,
-                                                                                                    ocio.color_space_default))
+        ocio.printMessage(    ocio.MessageType.INFO, ' Colour Space: %s; Default: %s'             % (self._colour_space,
+                                                                                                    ocio.colour_space_default))
         ocio.printMessage(    ocio.MessageType.INFO, '     Display: %s; Default: %s'             % (self._display,
                                                                                                     ocio.display_default))
         ocio.printMessage(    ocio.MessageType.INFO, '        View: %s; Default: %s'             % (self._view,
@@ -1241,8 +1241,8 @@ def displayMetadataValueChanged(name, value):
     if name == 'ConfigPath':
         toolbar.setConfigPath(value = '' if value.isEmpty() else value.at(0), update_metadata = False)
 
-    elif name == 'InputColorSpace':
-        toolbar.setColorSpace(value = value, update_widget = True, update_metadata = False)
+    elif name == 'InputColourSpace':
+        toolbar.setColourSpace(value = value, update_widget = True, update_metadata = False)
 
     elif name == 'Display':
         toolbar.setDisplay(value = value, update_widget = True, update_metadata = False)
@@ -1271,9 +1271,9 @@ if mari.app.isRunning():
 
         else:
             # Destroy the OCIO post filter collection if present to prevent the user trying to use it.
-            filter_collection = mari.gl_render.findPostFilterCollection('Color Space')
+            filter_collection = mari.gl_render.findPostFilterCollection('Colour Space')
             if filter_collection is not None:
                 mari.gl_render.deletePostFilterCollection(filter_collection)
 
             # Destroy the toolbar to prevent the user trying to use it.
-            mari.app.deleteToolBar('Color Space')
+            mari.app.deleteToolBar('Colour Space')

@@ -29,13 +29,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <sstream>
 
-#include "OpenColorIO/OpenColorIO.h"
-#include "OpenColorIOJNI.h"
+#include "OpenColourIO/OpenColourIO.h"
+#include "OpenColourIOJNI.h"
 #include "JNIUtil.h"
 OCIO_NAMESPACE_USING
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Context_dispose(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Context_dispose(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     DisposeJOCIO<ContextJNI>(env, self);
@@ -43,26 +43,26 @@ Java_org_OpenColorIO_Context_dispose(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Context_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Context_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<ContextRcPtr, ContextJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Context"), Context::Create());
+             env->FindClass("org/OpenColourIO/Context"), Context::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Context_createEditableCopy(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Context_createEditableCopy(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);
     return BuildJObject<ContextRcPtr, ContextJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Context"), con->createEditableCopy());
+             env->FindClass("org/OpenColourIO/Context"), con->createEditableCopy());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Context_getCacheID(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Context_getCacheID(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);
@@ -71,7 +71,7 @@ Java_org_OpenColorIO_Context_getCacheID(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Context_setSearchPath(JNIEnv * env, jobject self, jstring path)
+Java_org_OpenColourIO_Context_setSearchPath(JNIEnv * env, jobject self, jstring path)
 {
     OCIO_JNITRY_ENTER()
     ContextRcPtr con = GetEditableJOCIO<ContextRcPtr, ContextJNI>(env, self);
@@ -80,7 +80,7 @@ Java_org_OpenColorIO_Context_setSearchPath(JNIEnv * env, jobject self, jstring p
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Context_getSearchPath(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Context_getSearchPath(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);
@@ -89,7 +89,7 @@ Java_org_OpenColorIO_Context_getSearchPath(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Context_setWorkingDir(JNIEnv * env, jobject self, jstring dirname)
+Java_org_OpenColourIO_Context_setWorkingDir(JNIEnv * env, jobject self, jstring dirname)
 {
     OCIO_JNITRY_ENTER()
     ContextRcPtr con = GetEditableJOCIO<ContextRcPtr, ContextJNI>(env, self);
@@ -98,7 +98,7 @@ Java_org_OpenColorIO_Context_setWorkingDir(JNIEnv * env, jobject self, jstring d
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Context_getWorkingDir(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Context_getWorkingDir(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);
@@ -107,7 +107,7 @@ Java_org_OpenColorIO_Context_getWorkingDir(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Context_setStringVar(JNIEnv * env, jobject self, jstring name, jstring var)
+Java_org_OpenColourIO_Context_setStringVar(JNIEnv * env, jobject self, jstring name, jstring var)
 {
     OCIO_JNITRY_ENTER()
     ContextRcPtr con = GetEditableJOCIO<ContextRcPtr, ContextJNI>(env, self);
@@ -116,7 +116,7 @@ Java_org_OpenColorIO_Context_setStringVar(JNIEnv * env, jobject self, jstring na
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Context_getStringVar(JNIEnv * env, jobject self, jstring name)
+Java_org_OpenColourIO_Context_getStringVar(JNIEnv * env, jobject self, jstring name)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);
@@ -125,7 +125,7 @@ Java_org_OpenColorIO_Context_getStringVar(JNIEnv * env, jobject self, jstring na
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Context_getNumStringVars(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Context_getNumStringVars(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);
@@ -134,7 +134,7 @@ Java_org_OpenColorIO_Context_getNumStringVars(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Context_getStringVarNameByIndex(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_Context_getStringVarNameByIndex(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);
@@ -143,7 +143,7 @@ Java_org_OpenColorIO_Context_getStringVarNameByIndex(JNIEnv * env, jobject self,
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Context_loadEnvironment(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Context_loadEnvironment(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ContextRcPtr con = GetEditableJOCIO<ContextRcPtr, ContextJNI>(env, self);
@@ -152,7 +152,7 @@ Java_org_OpenColorIO_Context_loadEnvironment(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Context_resolveStringVar(JNIEnv * env, jobject self, jstring val)
+Java_org_OpenColourIO_Context_resolveStringVar(JNIEnv * env, jobject self, jstring val)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);
@@ -161,7 +161,7 @@ Java_org_OpenColorIO_Context_resolveStringVar(JNIEnv * env, jobject self, jstrin
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Context_resolveFileLocation(JNIEnv * env, jobject self, jstring filename)
+Java_org_OpenColourIO_Context_resolveFileLocation(JNIEnv * env, jobject self, jstring filename)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);

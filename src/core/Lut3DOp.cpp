@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "HashUtils.h"
 #include "Lut3DOp.h"
@@ -295,7 +295,7 @@ OCIO_NAMESPACE_ENTER
     {
         // Tetrahedral interoplation, as described by:
         // http://www.filmlight.ltd.uk/pdf/whitepapers/FL-TL-TN-0057-SoftwareLib.pdf
-        // http://blogs.mathworks.com/steve/2006/11/24/tetrahedral-interpolation-for-colorspace-conversion/
+        // http://blogs.mathworks.com/steve/2006/11/24/tetrahedral-interpolation-for-colourspace-conversion/
         // http://www.hpl.hp.com/techreports/98/HPL-98-95.html
 
         float maxIndex[3];
@@ -783,13 +783,13 @@ OIIO_ADD_TEST(Lut3DOp, NanInfValueCheck)
                                   std::numeric_limits<float>::quiet_NaN(),
                                   std::numeric_limits<float>::infinity(),
                                   -std::numeric_limits<float>::infinity() };
-    float color[4];
+    float colour[4];
     
-    memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut3D_Nearest(color, 1, *lut);
+    memcpy(colour, reference, 4*sizeof(float));
+    OCIO::Lut3D_Nearest(colour, 1, *lut);
     
-    memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut3D_Linear(color, 1, *lut);
+    memcpy(colour, reference, 4*sizeof(float));
+    OCIO::Lut3D_Linear(colour, 1, *lut);
 }
 
 
@@ -828,30 +828,30 @@ OIIO_ADD_TEST(Lut3DOp, ValueCheck)
                               0.01537752338f, 0.2087130845f, 0.9756000042f, 1.0f,
                               1.0f, 0.0f, 0.2512601018f, 1.0f
                             };
-    float color[12];
+    float colour[12];
     
     // Check nearest
-    memcpy(color, reference, 12*sizeof(float));
-    OCIO::Lut3D_Nearest(color, 3, *lut);
+    memcpy(colour, reference, 12*sizeof(float));
+    OCIO::Lut3D_Nearest(colour, 3, *lut);
     for(unsigned int i=0; i<12; ++i)
     {
-        OIIO_CHECK_CLOSE(color[i], nearest[i], 1e-8);
+        OIIO_CHECK_CLOSE(colour[i], nearest[i], 1e-8);
     }
     
     // Check linear
-    memcpy(color, reference, 12*sizeof(float));
-    OCIO::Lut3D_Linear(color, 3, *lut);
+    memcpy(colour, reference, 12*sizeof(float));
+    OCIO::Lut3D_Linear(colour, 3, *lut);
     for(unsigned int i=0; i<12; ++i)
     {
-        OIIO_CHECK_CLOSE(color[i], linear[i], 1e-8);
+        OIIO_CHECK_CLOSE(colour[i], linear[i], 1e-8);
     }
 
     // Check tetrahedral
-    memcpy(color, reference, 12*sizeof(float));
-    OCIO::Lut3D_Tetrahedral(color, 3, *lut);
+    memcpy(colour, reference, 12*sizeof(float));
+    OCIO::Lut3D_Tetrahedral(colour, 3, *lut);
     for(unsigned int i=0; i<12; ++i)
     {
-        OIIO_CHECK_CLOSE(color[i], linear[i], 1e-7); // Note, max delta lowered from 1e-8
+        OIIO_CHECK_CLOSE(colour[i], linear[i], 1e-7); // Note, max delta lowered from 1e-8
     }
 }
 

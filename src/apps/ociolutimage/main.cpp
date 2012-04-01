@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 OCIO_NAMESPACE_USING;
 
@@ -75,8 +75,8 @@ void GetLutImageSize(int & width, int & height,
 void Generate(int cubesize, int maxwidth,
               const std::string & outputfile,
               const std::string & configfile,
-              const std::string & incolorspace,
-              const std::string & outcolorspace)
+              const std::string & incolourspace,
+              const std::string & outcolourspace)
 {
     int width = 0;
     int height = 0;
@@ -88,7 +88,7 @@ void Generate(int cubesize, int maxwidth,
     
     GenerateIdentityLut3D(&img[0], cubesize, numchannels, LUT3DORDER_FAST_RED);
     
-    if(!incolorspace.empty() || !outcolorspace.empty())
+    if(!incolourspace.empty() || !outcolourspace.empty())
     {
         OCIO::ConstConfigRcPtr config = OCIO::Config::Create();
         if(!configfile.empty())
@@ -108,7 +108,7 @@ void Generate(int cubesize, int maxwidth,
         }
         
         OCIO::ConstProcessorRcPtr processor = 
-            config->getProcessor(incolorspace.c_str(), outcolorspace.c_str());
+            config->getProcessor(incolourspace.c_str(), outcolourspace.c_str());
        
         OCIO::PackedImageDesc imgdesc(&img[0], width, height, 3);
         processor->apply(imgdesc);
@@ -215,10 +215,10 @@ int main (int argc, const char* argv[])
     std::string inputfile;
     std::string outputfile;
     std::string config;
-    std::string incolorspace;
-    std::string outcolorspace;
+    std::string incolourspace;
+    std::string outcolourspace;
     
-    // TODO: Add optional allocation transform instead of colorconvert
+    // TODO: Add optional allocation transform instead of colourconvert
     ArgParse ap;
     ap.options("ociolutimage -- Convert a 3dlut to or from an image\n\n"
                "usage:  ociolutimage [options] <OUTPUTFILE.LUT>\n\n"
@@ -234,7 +234,7 @@ int main (int argc, const char* argv[])
                "--output %s", &outputfile, "Specify the output filename",
                "<SEPARATOR>", "",
                "--config %s", &config, ".ocio configuration file (default: $OCIO)",
-               "--colorconvert %s %s", &incolorspace, &outcolorspace, "Apply a color space conversion to the image.",
+               "--colourconvert %s %s", &incolourspace, &outcolourspace, "Apply a colour space conversion to the image.",
                NULL);
     
     if (ap.parse(argc, argv) < 0)
@@ -258,7 +258,7 @@ int main (int argc, const char* argv[])
         {
             Generate(cubesize, maxwidth,
                      outputfile,
-                     config, incolorspace, outcolorspace);
+                     config, incolourspace, outcolourspace);
         }
         catch(std::exception & e)
         {

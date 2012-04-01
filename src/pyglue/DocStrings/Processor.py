@@ -1,11 +1,11 @@
 
 class Processor:
     """
-    Processor is the baked representation of a particular color transform.
+    Processor is the baked representation of a particular colour transform.
     Once you have a process for a particular transform created, you can hang
     onto it to efficiently transform pixels.
     
-    Processors can only be created from the `PyOpenColorIO.Config`
+    Processors can only be created from the `PyOpenColourIO.Config`
     getProcessor(...) call.
     """
     
@@ -17,7 +17,7 @@ class Processor:
         isNoOp()
         
         Returns whether the actual transformation represented by
-        :py:class:`PyOpenColorIO.Processor` is a no-op.
+        :py:class:`PyOpenColourIO.Processor` is a no-op.
         
         :return: whether transform is a no-op
         :rtype: bool
@@ -29,7 +29,7 @@ class Processor:
         hasChannelCrosstalk()
         
         Returns whether the transformation of
-        :py:class:`PyOpenColorIO.Processor` introduces crosstalk between the
+        :py:class:`PyOpenColourIO.Processor` introduces crosstalk between the
         image channels.
         
         :return: whether there's crosstalk between channels
@@ -44,7 +44,7 @@ class Processor:
         Returns information about the process that generated this processor. 
         
         :return: processor metadata
-        :rtype: `PyOpenColorIO.ProcessorMetadata`
+        :rtype: `PyOpenColourIO.ProcessorMetadata`
         """
         pass
     
@@ -53,11 +53,11 @@ class Processor:
         applyRGB(pixeldata)
         
         Apply the RGB part of the transform represented by
-        :py:class:`PyOpenColorIO.Processor` to an image.
+        :py:class:`PyOpenColourIO.Processor` to an image.
         
         :param pixeldata: rgbrgb... array (length % 3 == 0)
         :type pixeldata: object
-        :return: color converted pixeldata
+        :return: colour converted pixeldata
         :rtype: list
         """
         pass
@@ -67,11 +67,11 @@ class Processor:
         applyRGBA(pixeldata)
         
         Apply the RGB and alpha part of the transform represented by
-        :py:class:`PyOpenColorIO.Processor` to an image.
+        :py:class:`PyOpenColourIO.Processor` to an image.
         
         :param pixeldata: rgbargba... array (length % 4 == 0)
         :type pixeldata: object
-        :return: color converted pixeldata
+        :return: colour converted pixeldata
         :rtype: list
         """
         pass
@@ -80,7 +80,7 @@ class Processor:
         """
         getCpuCacheID()
         
-        Returns the cache ID of the CPU that :py:class:`PyOpenColorIO.Processor`
+        Returns the cache ID of the CPU that :py:class:`PyOpenColourIO.Processor`
         will run on.
         
         :return: CPU cache ID

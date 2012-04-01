@@ -30,13 +30,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <vector>
 
-#include "OpenColorIO/OpenColorIO.h"
-#include "OpenColorIOJNI.h"
+#include "OpenColourIO/OpenColourIO.h"
+#include "OpenColourIOJNI.h"
 #include "JNIUtil.h"
 OCIO_NAMESPACE_USING
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Look_dispose(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Look_dispose(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     DisposeJOCIO<LookJNI>(env, self);
@@ -44,16 +44,16 @@ Java_org_OpenColorIO_Look_dispose(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Look_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Look_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<LookRcPtr, LookJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Look"), Look::Create());
+             env->FindClass("org/OpenColourIO/Look"), Look::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Look_getName(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Look_getName(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstLookRcPtr lok = GetConstJOCIO<ConstLookRcPtr, LookJNI>(env, self);
@@ -62,7 +62,7 @@ Java_org_OpenColorIO_Look_getName(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Look_setName(JNIEnv * env, jobject self, jstring name)
+Java_org_OpenColourIO_Look_setName(JNIEnv * env, jobject self, jstring name)
 {
     OCIO_JNITRY_ENTER()
     LookRcPtr lok = GetEditableJOCIO<LookRcPtr, LookJNI>(env, self);
@@ -71,7 +71,7 @@ Java_org_OpenColorIO_Look_setName(JNIEnv * env, jobject self, jstring name)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Look_getProcessSpace(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Look_getProcessSpace(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstLookRcPtr lok = GetConstJOCIO<ConstLookRcPtr, LookJNI>(env, self);
@@ -80,7 +80,7 @@ Java_org_OpenColorIO_Look_getProcessSpace(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Look_setProcessSpace(JNIEnv * env, jobject self, jstring processSpace)
+Java_org_OpenColourIO_Look_setProcessSpace(JNIEnv * env, jobject self, jstring processSpace)
 {
     OCIO_JNITRY_ENTER()
     LookRcPtr lok = GetEditableJOCIO<LookRcPtr, LookJNI>(env, self);
@@ -89,7 +89,7 @@ Java_org_OpenColorIO_Look_setProcessSpace(JNIEnv * env, jobject self, jstring pr
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Look_getTransform(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Look_getTransform(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstLookRcPtr lok = GetConstJOCIO<ConstLookRcPtr, LookJNI>(env, self);
@@ -100,7 +100,7 @@ Java_org_OpenColorIO_Look_getTransform(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Look_setTransform(JNIEnv * env, jobject self, jobject transform)
+Java_org_OpenColourIO_Look_setTransform(JNIEnv * env, jobject self, jobject transform)
 {
     OCIO_JNITRY_ENTER()
     LookRcPtr lok = GetEditableJOCIO<LookRcPtr, LookJNI>(env, self);
@@ -110,7 +110,7 @@ Java_org_OpenColorIO_Look_setTransform(JNIEnv * env, jobject self, jobject trans
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Look_getInverseTransform(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Look_getInverseTransform(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstLookRcPtr lok = GetConstJOCIO<ConstLookRcPtr, LookJNI>(env, self);
@@ -121,7 +121,7 @@ Java_org_OpenColorIO_Look_getInverseTransform(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Look_setInverseTransform(JNIEnv * env, jobject self, jobject transform)
+Java_org_OpenColourIO_Look_setInverseTransform(JNIEnv * env, jobject self, jobject transform)
 {
     OCIO_JNITRY_ENTER()
     LookRcPtr lok = GetEditableJOCIO<LookRcPtr, LookJNI>(env, self);

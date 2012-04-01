@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <iterator>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "FileTransform.h"
 #include "Lut1DOp.h"
@@ -166,7 +166,7 @@ OCIO_NAMESPACE_ENTER
                         if(!StringVecToFloatVec(tmpfloats, parts) || tmpfloats.size() != 3)
                         {
                             std::ostringstream os;
-                            os << "Malformed color triples specified in Iridas .itx lut:";
+                            os << "Malformed colour triples specified in Iridas .itx lut:";
                             os << "'" << line << "'.";
                             throw Exception(os.str().c_str());
                         }

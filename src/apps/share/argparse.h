@@ -34,16 +34,16 @@
 /// \brief Simple parsing of program command-line arguments.
 
 
-#ifndef OPENCOLORIO_ARGPARSE_H
-#define OPENCOLORIO_ARGPARSE_H
+#ifndef OPENCOLOURIO_ARGPARSE_H
+#define OPENCOLOURIO_ARGPARSE_H
 
 #include <vector>
 
-#ifndef OPENCOLORIO_PRINTF_ARGS  /* See comments in strutil.h */
+#ifndef OPENCOLOURIO_PRINTF_ARGS  /* See comments in strutil.h */
 #   ifndef __GNUC__
 #       define __attribute__(x)
 #   endif
-#   define OPENCOLORIO_PRINTF_ARGS(fmtarg_pos, vararg_pos) \
+#   define OPENCOLOURIO_PRINTF_ARGS(fmtarg_pos, vararg_pos) \
         __attribute__ ((format (printf, fmtarg_pos, vararg_pos) ))
 #endif
 
@@ -169,7 +169,7 @@ private:
     std::vector<ArgOption *> m_option;
 
     ArgOption *find_option(const char *name);
-    void error (const char *format, ...) OPENCOLORIO_PRINTF_ARGS(2,3);
+    void error (const char *format, ...) OPENCOLOURIO_PRINTF_ARGS(2,3);
     int found (const char *option);      // number of times option was parsed
 };
 
@@ -178,4 +178,4 @@ private:
 OIIO_NAMESPACE_EXIT
 */
 
-#endif // OPENCOLORIO_ARGPARSE_H
+#endif // OPENCOLOURIO_ARGPARSE_H

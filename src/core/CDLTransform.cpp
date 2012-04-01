@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <tinyxml.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "CDLTransform.h"
 #include "ExponentOps.h"
@@ -45,7 +45,7 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
         /*
-            "<ColorCorrection id=''>"
+            "<ColourCorrection id=''>"
             " <SOPNode>"
             "  <Description/> "
             "  <Slope>1 1 1</Slope> "
@@ -55,7 +55,7 @@ OCIO_NAMESPACE_ENTER
             " <SatNode>"
             "  <Saturation> 1 </Saturation> "
             " </SatNode> "
-            " </ColorCorrection>";
+            " </ColourCorrection>";
         
         */
         
@@ -86,7 +86,7 @@ OCIO_NAMESPACE_ENTER
             TiXmlDocument doc;
             
             // TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "", "" );
-            TiXmlElement * root = new TiXmlElement( "ColorCorrection" );
+            TiXmlElement * root = new TiXmlElement( "ColourCorrection" );
             doc.LinkEndChild( root );
             root->SetAttribute("id", cdl.getID());
             
@@ -141,12 +141,12 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        if(std::string(root->Value()) != "ColorCorrection")
+        if(std::string(root->Value()) != "ColourCorrection")
         {
             std::ostringstream os;
             os << "Error loading CDL xml. ";
             os << "Root element is type '" << root->Value() << "', ";
-            os << "ColorCorrection expected.";
+            os << "ColourCorrection expected.";
             throw Exception(os.str().c_str());
         }
         
@@ -249,16 +249,16 @@ OCIO_NAMESPACE_ENTER
     void GetCDLTransforms(CDLTransformMap & transforms,
                           TiXmlElement * cccRootElement)
     {
-        if(std::string(cccRootElement->Value()) != "ColorCorrectionCollection")
+        if(std::string(cccRootElement->Value()) != "ColourCorrectionCollection")
         {
             std::ostringstream os;
             os << "GetCDLTransforms Error. ";
             os << "Root element is type '" << cccRootElement->Value() << "', ";
-            os << "ColorCorrectionCollection expected.";
+            os << "ColourCorrectionCollection expected.";
             throw Exception(os.str().c_str());
         }
         
-        TiXmlNode * child = cccRootElement->FirstChild("ColorCorrection");
+        TiXmlNode * child = cccRootElement->FirstChild("ColourCorrection");
         while(child)
         {
             CDLTransformRcPtr transform = CDLTransform::Create();
@@ -269,7 +269,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Error loading ccc xml, ";
-                os << "All ASC ColorCorrections must specify an 'id' value.";
+                os << "All ASC ColourCorrections must specify an 'id' value.";
                 throw Exception(os.str().c_str());
             }
             
@@ -278,14 +278,14 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Error loading ccc xml. ";
-                os << "All ASC ColorCorrections must specify a unique 'id' value. ";
+                os << "All ASC ColourCorrections must specify a unique 'id' value. ";
                 os << "Duplicate elements with '" << id << "' found.";
                 throw Exception(os.str().c_str());
             }
             
             transforms[id] = transform;
             
-            child = child->NextSibling("ColorCorrection");
+            child = child->NextSibling("ColourCorrection");
         }
     }
     
@@ -417,17 +417,17 @@ OCIO_NAMESPACE_ENTER
         }
         
         std::string rootValue = doc.RootElement()->Value();
-        if(rootValue == "ColorCorrection")
+        if(rootValue == "ColourCorrection")
         {
-            // Load a single ColorCorrection into the cache
+            // Load a single ColourCorrection into the cache
             CDLTransformRcPtr cdl = CDLTransform::Create();
             LoadCDL(cdl.get(), doc.RootElement()->ToElement());
             g_cache[GetCDLLocalCacheKey(src,cccid)] = cdl;
             return cdl;
         }
-        else if(rootValue == "ColorCorrectionCollection")
+        else if(rootValue == "ColourCorrectionCollection")
         {
-            // Load all CCs from the ColorCorrectionCollection
+            // Load all CCs from the ColourCorrectionCollection
             // into the cache
             
             CDLTransformMap transforms;
@@ -437,7 +437,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Error loading ccc xml. ";
-                os << "No ColorCorrection elements found in file '";
+                os << "No ColourCorrection elements found in file '";
                 os << src << "'.";
                 throw Exception(os.str().c_str());
             }
@@ -467,7 +467,7 @@ OCIO_NAMESPACE_ENTER
         os << "Error loading CDL xml from file '";
         os << src << "'. ";
         os << "Root xml element is type '" << rootValue << "', ";
-        os << "ColorCorrection or ColorCorrectionCollection expected.";
+        os << "ColourCorrection or ColourCorrectionCollection expected.";
         throw Exception(os.str().c_str());
     }
     
