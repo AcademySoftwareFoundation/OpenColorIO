@@ -26,8 +26,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.OpenColorIO;
-import org.OpenColorIO.*;
+package org.OpenColourIO;
+import org.OpenColourIO.*;
 
 public class GpuLanguage extends LoadLibrary
 {

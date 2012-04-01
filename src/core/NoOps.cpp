@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "AllocationOp.h"
 #include "NoOps.h"
@@ -223,9 +223,9 @@ OCIO_NAMESPACE_ENTER
             // Get the GPU Allocation at the cross-over point
             // Create 2 symmetrically canceling allocation ops,
             // where the shader text moves to a nicely allocated LDR
-            // (low dynamic range color space), and the lattice processing
+            // (low dynamic range colour space), and the lattice processing
             // does the inverse (making the overall operation a no-op
-            // color-wise
+            // colour-wise
             
             AllocationData allocation;
             if(gpuLut3DOpStartIndex<0 || gpuLut3DOpStartIndex>=(int)ops.size())

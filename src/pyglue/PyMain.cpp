@@ -28,10 +28,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "PyColorSpace.h"
+#include "PyColourSpace.h"
 #include "PyConfig.h"
 #include "PyContext.h"
 #include "PyConstants.h"
@@ -141,15 +141,15 @@ namespace
     
     PyMethodDef PyOCIO_methods[] = {
         {"ClearAllCaches",
-        (PyCFunction) PyOCIO_ClearAllCaches, METH_NOARGS, OCIO::OPENCOLORIO_CLEARALLCACHES__DOC__ },
+        (PyCFunction) PyOCIO_ClearAllCaches, METH_NOARGS, OCIO::OPENCOLOURIO_CLEARALLCACHES__DOC__ },
         {"GetLoggingLevel",
-        (PyCFunction) PyOCIO_GetLoggingLevel, METH_NOARGS, OCIO::OPENCOLORIO_GETLOGGINGLEVEL__DOC__ },
+        (PyCFunction) PyOCIO_GetLoggingLevel, METH_NOARGS, OCIO::OPENCOLOURIO_GETLOGGINGLEVEL__DOC__ },
         {"SetLoggingLevel",
-        (PyCFunction) PyOCIO_SetLoggingLevel, METH_VARARGS, OCIO::OPENCOLORIO_SETLOGGINGLEVEL__DOC__ },
+        (PyCFunction) PyOCIO_SetLoggingLevel, METH_VARARGS, OCIO::OPENCOLOURIO_SETLOGGINGLEVEL__DOC__ },
         {"GetCurrentConfig",
-        (PyCFunction) PyOCIO_GetCurrentConfig, METH_NOARGS, OCIO::OPENCOLORIO_GETCURRENTCONFIG__DOC__ },
+        (PyCFunction) PyOCIO_GetCurrentConfig, METH_NOARGS, OCIO::OPENCOLOURIO_GETCURRENTCONFIG__DOC__ },
         {"SetCurrentConfig",
-        (PyCFunction) PyOCIO_SetCurrentConfig, METH_VARARGS, OCIO::OPENCOLORIO_SETCURRENTCONFIG__DOC__ },
+        (PyCFunction) PyOCIO_SetCurrentConfig, METH_VARARGS, OCIO::OPENCOLOURIO_SETCURRENTCONFIG__DOC__ },
         {NULL, NULL, 0, NULL} /* Sentinel */
     };
 }
@@ -189,10 +189,10 @@ OCIO_NAMESPACE_EXIT
 
 extern "C"
 PyMODINIT_FUNC
-initPyOpenColorIO(void)
+initPyOpenColourIO(void)
 {
     PyObject * m;
-    m = Py_InitModule3("PyOpenColorIO", PyOCIO_methods, OCIO::OPENCOLORIO__DOC__);
+    m = Py_InitModule3("PyOpenColourIO", PyOCIO_methods, OCIO::OPENCOLOURIO__DOC__);
     
     PyModule_AddStringConstant(m, "version", OCIO::GetVersion());
     PyModule_AddIntConstant(m, "hexversion", OCIO::GetVersionHex());
@@ -200,19 +200,19 @@ initPyOpenColorIO(void)
     // Create Exceptions, and add to the module
     // TODO: add support for PyErr_NewExceptionWithDoc for python2.7+
     OCIO::SetExceptionPyType(
-        PyErr_NewException(const_cast<char*>("PyOpenColorIO.Exception"),
+        PyErr_NewException(const_cast<char*>("PyOpenColourIO.Exception"),
                                   PyExc_RuntimeError, NULL));
     PyModule_AddObject(m, "Exception", OCIO::GetExceptionPyType());
     
     // TODO: add support for PyErr_NewExceptionWithDoc for python2.7+
     OCIO::SetExceptionMissingFilePyType(
-        PyErr_NewException(const_cast<char*>("PyOpenColorIO.ExceptionMissingFile"),
+        PyErr_NewException(const_cast<char*>("PyOpenColourIO.ExceptionMissingFile"),
                            OCIO::GetExceptionPyType(), NULL));
     PyModule_AddObject(m, "ExceptionMissingFile", OCIO::GetExceptionMissingFilePyType());
     
     // Register Classes
     
-    OCIO::AddColorSpaceObjectToModule( m );
+    OCIO::AddColourSpaceObjectToModule( m );
     OCIO::AddConfigObjectToModule( m );
     OCIO::AddConstantsModule( m );
     OCIO::AddContextObjectToModule( m );
@@ -224,7 +224,7 @@ initPyOpenColorIO(void)
     {
         OCIO::AddAllocationTransformObjectToModule( m );
         OCIO::AddCDLTransformObjectToModule( m );
-        OCIO::AddColorSpaceTransformObjectToModule( m );
+        OCIO::AddColourSpaceTransformObjectToModule( m );
         OCIO::AddDisplayTransformObjectToModule( m );
         OCIO::AddExponentTransformObjectToModule( m );
         OCIO::AddFileTransformObjectToModule( m );

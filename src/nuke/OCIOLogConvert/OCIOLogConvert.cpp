@@ -1,5 +1,5 @@
 /**
- * OpenColorIO LogConvert Iop.
+ * OpenColourIO LogConvert Iop.
  */
 
 #include "OCIOLogConvert.h"
@@ -167,7 +167,7 @@ const char* OCIOLogConvert::displayName() const
 const char* OCIOLogConvert::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorIO to convert from SCENE_LINEAR to COMPOSITING_LOG (or back).";
+    return "Use OpenColourIO to convert from SCENE_LINEAR to COMPOSITING_LOG (or back).";
 }
 
 

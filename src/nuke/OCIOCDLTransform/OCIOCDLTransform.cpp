@@ -1,5 +1,5 @@
 /**
- * OpenColorIO conversion Iop.
+ * OpenColourIO conversion Iop.
  */
 
 #include "OCIOCDLTransform.h"
@@ -51,9 +51,9 @@ OCIOCDLTransform::~OCIOCDLTransform()
 void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
 {
     // ASC CDL grade numbers
-    m_slopeKnob = DD::Image::Color_knob(f, m_slope, DD::Image::IRange(0, 4.0), "slope");
-    m_offsetKnob = DD::Image::Color_knob(f, m_offset, DD::Image::IRange(-0.2, 0.2), "offset");
-    m_powerKnob = DD::Image::Color_knob(f, m_power, DD::Image::IRange(0.0, 4.0), "power");
+    m_slopeKnob = DD::Image::Colour_knob(f, m_slope, DD::Image::IRange(0, 4.0), "slope");
+    m_offsetKnob = DD::Image::Colour_knob(f, m_offset, DD::Image::IRange(-0.2, 0.2), "offset");
+    m_powerKnob = DD::Image::Colour_knob(f, m_power, DD::Image::IRange(0.0, 4.0), "power");
     m_saturationKnob = DD::Image::Float_knob(f, &m_saturation, DD::Image::IRange(0, 4.0), "saturation");
     
     Enumeration_knob(f, &m_dirindex, dirs, "direction", "direction");
@@ -63,7 +63,7 @@ void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
     
     DD::Image::Bool_knob(f, &m_readFromFile, "read_from_file", "read from file");
     DD::Image::SetFlags(f, DD::Image::Knob::EARLY_STORE);
-    DD::Image::Tooltip(f, "Load color correction information from the .cc or .ccc file.");
+    DD::Image::Tooltip(f, "Load colour correction information from the .cc or .ccc file.");
     
     m_fileKnob = File_knob(f, &m_file, "file", "file");
     const char * filehelp = "Specify the src ASC CDL file, on disk, to use for this transform. "
@@ -79,8 +79,8 @@ void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
     DD::Image::SetFlags(f, DD::Image::Knob::ENDLINE);
     
     m_cccidKnob = String_knob(f, &m_cccid, "cccid");
-    const char * ccchelp = "If the source file is an ASC CDL CCC (color correction collection), "
-    "this specifies the id to lookup. OpenColorIO::Contexts (envvars) are obeyed.";
+    const char * ccchelp = "If the source file is an ASC CDL CCC (colour correction collection), "
+    "this specifies the id to lookup. OpenColourIO::Contexts (envvars) are obeyed.";
     DD::Image::Tooltip(f, ccchelp);
     
     /* TODO:
@@ -93,10 +93,10 @@ void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
     
     // Import/export buttons
     DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.export_as_cc()", "export_cc", "export grade as .cc");
-    DD::Image::Tooltip(f, "Export this grade as a ColorCorrection XML file, which can be loaded with the OCIOFileTransform, or using a FileTransform in an OCIO config");
+    DD::Image::Tooltip(f, "Export this grade as a ColourCorrection XML file, which can be loaded with the OCIOFileTransform, or using a FileTransform in an OCIO config");
 
     DD::Image::PyScript_knob(f, "import ocionuke.cdl; ocionuke.cdl.import_cc_from_xml()", "import_cc", "import from .cc");
-    DD::Image::Tooltip(f, "Import grade from a ColorCorrection XML file");
+    DD::Image::Tooltip(f, "Import grade from a ColourCorrection XML file");
     
     
     DD::Image::Divider(f);
@@ -373,7 +373,7 @@ const char* OCIOCDLTransform::displayName() const
 const char* OCIOCDLTransform::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorIO to apply an ASC CDL grade. Applied using:\n\n"\
+    return "Use OpenColourIO to apply an ASC CDL grade. Applied using:\n\n"\
         "out = (i * s + o)^p\n\nWhere i is the input value, s is slope, "\
         "o is offset and p is power";
 }

@@ -6,26 +6,26 @@ class DisplayTransform:
     def __init__(self):
         pass
 
-    def getInputColorSpaceName(self):
+    def getInputColourSpaceName(self):
         """
-        getInputColorSpaceName()
+        getInputColourSpaceName()
         
-        Returns the name of the input ColorSpace of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        Returns the name of the input ColourSpace of
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
-        :return: name of input ColorSpace
+        :return: name of input ColourSpace
         :rtype: string
         """
         pass
         
-    def setInputColorSpaceName(self, name):
+    def setInputColourSpaceName(self, name):
         """
-        setInputColorSpaceName(name)
+        setInputColourSpaceName(name)
         
-        Sets the name of the input ColorSpace of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        Sets the name of the input ColourSpace of
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
-        :param name: name of input ColorSpace
+        :param name: name of input ColourSpace
         :type name: string
         """
         pass
@@ -35,7 +35,7 @@ class DisplayTransform:
         getLinearCC()
         
         Returns the linear CC transform of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :return: linear CC transform
         :rtype: object
@@ -47,33 +47,33 @@ class DisplayTransform:
         setLinearCC(pyCC)
         
         Sets the linear CC transform of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :param pyCC: linear CC
         :type pyCC: object
         """
         pass
         
-    def getColorTimingCC(self):
+    def getColourTimingCC(self):
         """
-        getColorTimingCC()
+        getColourTimingCC()
         
-        Returns the color timing CC transform of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        Returns the colour timing CC transform of
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
-        :return: color timing CC transform
+        :return: colour timing CC transform
         :rtype: object
         """
         pass
         
-    def setColorTimingCC(self, transform):
+    def setColourTimingCC(self, transform):
         """
-        setColorTimingCC(pyCC)
+        setColourTimingCC(pyCC)
         
-        Sets the color timing CC transform of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        Sets the colour timing CC transform of
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
-        :param pyCC: color timing CC
+        :param pyCC: colour timing CC
         :type pyCC: object
         """
         pass
@@ -83,7 +83,7 @@ class DisplayTransform:
         getChannelView()
         
         Returns the channel view of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :return: channel view
         :rtype: object
@@ -95,7 +95,7 @@ class DisplayTransform:
         setChannelView(pyCC)
         
         Sets the channel view transform of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :param pyCC: channel view transform
         :type pyCC: object
@@ -107,7 +107,7 @@ class DisplayTransform:
         getDisplay()
         
         Returns the display of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :return: display
         :rtype: string
@@ -119,7 +119,7 @@ class DisplayTransform:
         setDisplay(str)
         
         Sets the display of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :param str: display
         :type str: string
@@ -131,7 +131,7 @@ class DisplayTransform:
         getView()
         
         Returns the view of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :return: view
         :rtype: string
@@ -143,7 +143,7 @@ class DisplayTransform:
         setView(str)
         
         Sets the view of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :param str: view
         :type str: string
@@ -155,7 +155,7 @@ class DisplayTransform:
         getDisplayCC()
         
         Returns the display CC transform of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :return: display CC
         :rtype: object
@@ -167,7 +167,7 @@ class DisplayTransform:
         setDisplayCC(pyCC)
         
         Sets the display CC transform of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :param pyCC: display CC
         :type pyCC: object
@@ -178,8 +178,8 @@ class DisplayTransform:
         """
         getLooksOverride()
         
-        Returns the looks in :py:class:`PyOpenColorIO.DisplayTransform` that's
-        overriding :py:class:`PyOpenColorIO.Config`'s.
+        Returns the looks in :py:class:`PyOpenColourIO.DisplayTransform` that's
+        overriding :py:class:`PyOpenColourIO.Config`'s.
         
         :return: looks override
         :rtype: string
@@ -190,7 +190,7 @@ class DisplayTransform:
         """
         setLooksOverride(str)
         
-        Sets the looks override of :py:class:`PyOpenColorIO.DisplayTransform`.
+        Sets the looks override of :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :param str: looks override
         :type str: string
@@ -202,7 +202,7 @@ class DisplayTransform:
         getLooksOverrideEnabled()
         
         Returns whether the looks override of
-        :py:class:`PyOpenColorIO.DisplayTransform` is enabled.
+        :py:class:`PyOpenColourIO.DisplayTransform` is enabled.
         
         :return: looks override enabling
         :rtype: bool
@@ -214,7 +214,7 @@ class DisplayTransform:
         setLooksOverrideEnabled(enabled)
         
         Sets the looks override enabling of
-        :py:class:`PyOpenColorIO.DisplayTransform`.
+        :py:class:`PyOpenColourIO.DisplayTransform`.
         
         :param enabled: looks override enabling
         :type enabled: object

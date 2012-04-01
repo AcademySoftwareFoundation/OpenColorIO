@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iterator>
 #include <sstream>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "FileTransform.h"
 #include "Lut1DOp.h"
@@ -698,27 +698,27 @@ OCIO_NAMESPACE_ENTER
                 // A shaper is not specified, let's fake one, using the input space allocation as
                 // our guide
                 
-                ConstColorSpaceRcPtr inputColorSpace = config->getColorSpace(baker.getInputSpace());
+                ConstColourSpaceRcPtr inputColourSpace = config->getColourSpace(baker.getInputSpace());
 
-                if(!inputColorSpace)
+                if(!inputColourSpace)
                 {
                     std::ostringstream os;
-                    os << "Could not find colorspace '" << baker.getInputSpace() << "'";
+                    os << "Could not find colourspace '" << baker.getInputSpace() << "'";
                     throw Exception(os.str().c_str());
                 }
 
-                // Let's make an allocation transform for this colorspace
+                // Let's make an allocation transform for this colourspace
                 AllocationTransformRcPtr allocationTransform = AllocationTransform::Create();
-                std::vector<float> vars(inputColorSpace->getAllocationNumVars());
-                inputColorSpace->getAllocationVars(&vars[0]);
-                allocationTransform->setAllocation(inputColorSpace->getAllocation());
+                std::vector<float> vars(inputColourSpace->getAllocationNumVars());
+                inputColourSpace->getAllocationVars(&vars[0]);
+                allocationTransform->setAllocation(inputColourSpace->getAllocation());
                 allocationTransform->setVars(static_cast<int>(vars.size()), &vars[0]);
                 
                 // What size shaper should we make?
                 int shaperSize = baker.getShaperSize();
                 if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
                 shaperSize = std::max(2, shaperSize);
-                if(inputColorSpace->getAllocation() == ALLOCATION_UNIFORM)
+                if(inputColourSpace->getAllocation() == ALLOCATION_UNIFORM)
                 {
                     // This is an awesome optimization.
                     // If we know it's a uniform scaling, only 2 points will suffice!
@@ -985,31 +985,31 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("lnf");
         cs->setFamily("lnf");
-        config->addColorSpace(cs);
+        config->addColourSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("shaper");
         cs->setFamily("shaper");
         OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
         float test[4] = {2.6f, 2.6f, 2.6f, 1.0f};
         transform1->setValue(test);
-        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
-        config->addColorSpace(cs);
+        cs->setTransform(transform1, OCIO::COLOURSPACE_DIR_TO_REFERENCE);
+        config->addColourSpace(cs);
     }
     {
-        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr cs = OCIO::ColourSpace::Create();
         cs->setName("target");
         cs->setFamily("target");
         OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
         float rgb[3] = {0.1f, 0.1f, 0.1f};
         transform1->setOffset(rgb);
-        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
-        config->addColorSpace(cs);
+        cs->setTransform(transform1, OCIO::COLOURSPACE_DIR_FROM_REFERENCE);
+        config->addColourSpace(cs);
     }
     
     /*

@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "JNIUtil.h"
 
@@ -62,28 +62,28 @@ float* GetJFloatBuffer(JNIEnv * env, jobject buffer, int32_t len) {
 
 const char* GetOCIOTClass(ConstTransformRcPtr tran) {
     if(ConstAllocationTransformRcPtr at = DynamicPtrCast<const AllocationTransform>(tran))
-        return "org/OpenColorIO/AllocationTransform";
+        return "org/OpenColourIO/AllocationTransform";
     else if(ConstCDLTransformRcPtr ct = DynamicPtrCast<const CDLTransform>(tran))
-        return "org/OpenColorIO/CDLTransform";
-    else if(ConstColorSpaceTransformRcPtr cst = DynamicPtrCast<const ColorSpaceTransform>(tran))
-        return "org/OpenColorIO/ColorSpaceTransform";
+        return "org/OpenColourIO/CDLTransform";
+    else if(ConstColourSpaceTransformRcPtr cst = DynamicPtrCast<const ColourSpaceTransform>(tran))
+        return "org/OpenColourIO/ColourSpaceTransform";
     else if(ConstDisplayTransformRcPtr dt = DynamicPtrCast<const DisplayTransform>(tran))
-        return "org/OpenColorIO/DisplayTransform";
+        return "org/OpenColourIO/DisplayTransform";
     else if(ConstExponentTransformRcPtr et = DynamicPtrCast<const ExponentTransform>(tran))
-        return "org/OpenColorIO/ExponentTransform";
+        return "org/OpenColourIO/ExponentTransform";
     else if(ConstFileTransformRcPtr ft = DynamicPtrCast<const FileTransform>(tran))
-        return "org/OpenColorIO/FileTransform";
+        return "org/OpenColourIO/FileTransform";
     else if(ConstGroupTransformRcPtr gt = DynamicPtrCast<const GroupTransform>(tran))
-        return "org/OpenColorIO/GroupTransform";
+        return "org/OpenColourIO/GroupTransform";
     else if(ConstLogTransformRcPtr lt = DynamicPtrCast<const LogTransform>(tran))
-        return "org/OpenColorIO/LogTransform";
+        return "org/OpenColourIO/LogTransform";
     else if(ConstLookTransformRcPtr lkt = DynamicPtrCast<const LookTransform>(tran))
-        return "org/OpenColorIO/LookTransform";
+        return "org/OpenColourIO/LookTransform";
     else if(ConstMatrixTransformRcPtr mt = DynamicPtrCast<const MatrixTransform>(tran))
-        return "org/OpenColorIO/MatrixTransform";
+        return "org/OpenColourIO/MatrixTransform";
     else if(ConstTruelightTransformRcPtr tt = DynamicPtrCast<const TruelightTransform>(tran))
-        return "org/OpenColorIO/TruelightTransform";
-    else return "org/OpenColorIO/Transform";
+        return "org/OpenColourIO/TruelightTransform";
+    else return "org/OpenColourIO/Transform";
 }
 
 void JNI_Handle_Exception(JNIEnv * env)
@@ -94,13 +94,13 @@ void JNI_Handle_Exception(JNIEnv * env)
     }
     catch (ExceptionMissingFile & e)
     {
-        jclass je = env->FindClass("org/OpenColorIO/ExceptionMissingFile");
+        jclass je = env->FindClass("org/OpenColourIO/ExceptionMissingFile");
         env->ThrowNew(je, e.what());
         env->DeleteLocalRef(je);
     }
     catch (Exception & e)
     {
-        jclass je = env->FindClass("org/OpenColorIO/ExceptionBase");
+        jclass je = env->FindClass("org/OpenColourIO/ExceptionBase");
         env->ThrowNew(je, e.what());
         env->DeleteLocalRef(je);
     }

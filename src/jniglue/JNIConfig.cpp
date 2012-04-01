@@ -30,13 +30,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <vector>
 
-#include "OpenColorIO/OpenColorIO.h"
-#include "OpenColorIOJNI.h"
+#include "OpenColourIO/OpenColourIO.h"
+#include "OpenColourIOJNI.h"
 #include "JNIUtil.h"
 OCIO_NAMESPACE_USING
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_dispose(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_dispose(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     DisposeJOCIO<ConfigJNI>(env, self);
@@ -44,56 +44,56 @@ Java_org_OpenColorIO_Config_dispose(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<ConfigRcPtr, ConfigJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Config"), Config::Create());
+             env->FindClass("org/OpenColourIO/Config"), Config::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_CreateFromEnv(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_CreateFromEnv(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJConstObject<ConstConfigRcPtr, ConfigJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Config"), Config::CreateFromEnv());
+             env->FindClass("org/OpenColourIO/Config"), Config::CreateFromEnv());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_CreateFromFile(JNIEnv * env, jobject self, jstring filename)
+Java_org_OpenColourIO_Config_CreateFromFile(JNIEnv * env, jobject self, jstring filename)
 {
     OCIO_JNITRY_ENTER()
     return BuildJConstObject<ConstConfigRcPtr, ConfigJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Config"),
+             env->FindClass("org/OpenColourIO/Config"),
              Config::CreateFromFile(GetJStringValue(env, filename)()));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_CreateFromStream(JNIEnv * env, jobject self, jstring istream)
+Java_org_OpenColourIO_Config_CreateFromStream(JNIEnv * env, jobject self, jstring istream)
 {
     OCIO_JNITRY_ENTER()
     std::istringstream is;
     is.str(std::string(GetJStringValue(env, istream)()));
     return BuildJConstObject<ConstConfigRcPtr, ConfigJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Config"), Config::CreateFromStream(is));
+             env->FindClass("org/OpenColourIO/Config"), Config::CreateFromStream(is));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_createEditableCopy(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_createEditableCopy(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
     return BuildJObject<ConfigRcPtr, ConfigJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Config"), cfg->createEditableCopy());
+             env->FindClass("org/OpenColourIO/Config"), cfg->createEditableCopy());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_sanityCheck(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_sanityCheck(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -102,7 +102,7 @@ Java_org_OpenColorIO_Config_sanityCheck(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getDescription(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getDescription(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -111,7 +111,7 @@ Java_org_OpenColorIO_Config_getDescription(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_setDescription(JNIEnv * env, jobject self, jstring description)
+Java_org_OpenColourIO_Config_setDescription(JNIEnv * env, jobject self, jstring description)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -120,7 +120,7 @@ Java_org_OpenColorIO_Config_setDescription(JNIEnv * env, jobject self, jstring d
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_serialize(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_serialize(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -131,7 +131,7 @@ Java_org_OpenColorIO_Config_serialize(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getCacheID__(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getCacheID__(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -140,7 +140,7 @@ Java_org_OpenColorIO_Config_getCacheID__(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getCacheID__Lorg_OpenColorIO_Context_2(JNIEnv * env, jobject self, jobject context)
+Java_org_OpenColourIO_Config_getCacheID__Lorg_OpenColourIO_Context_2(JNIEnv * env, jobject self, jobject context)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -150,17 +150,17 @@ Java_org_OpenColorIO_Config_getCacheID__Lorg_OpenColorIO_Context_2(JNIEnv * env,
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getCurrentContext(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getCurrentContext(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
     return BuildJConstObject<ConstContextRcPtr, ContextJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Context"), cfg->getCurrentContext());
+             env->FindClass("org/OpenColourIO/Context"), cfg->getCurrentContext());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getSearchPath(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getSearchPath(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -169,7 +169,7 @@ Java_org_OpenColorIO_Config_getSearchPath(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_setSearchPath(JNIEnv * env, jobject self, jstring path)
+Java_org_OpenColourIO_Config_setSearchPath(JNIEnv * env, jobject self, jstring path)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -178,7 +178,7 @@ Java_org_OpenColorIO_Config_setSearchPath(JNIEnv * env, jobject self, jstring pa
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getWorkingDir(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getWorkingDir(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -187,7 +187,7 @@ Java_org_OpenColorIO_Config_getWorkingDir(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_setWorkingDir(JNIEnv * env, jobject self, jstring dirname)
+Java_org_OpenColourIO_Config_setWorkingDir(JNIEnv * env, jobject self, jstring dirname)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -196,73 +196,73 @@ Java_org_OpenColorIO_Config_setWorkingDir(JNIEnv * env, jobject self, jstring di
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Config_getNumColorSpaces(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getNumColourSpaces(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    return (jint)cfg->getNumColorSpaces();
+    return (jint)cfg->getNumColourSpaces();
     OCIO_JNITRY_EXIT(0)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getColorSpaceNameByIndex(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_Config_getColourSpaceNameByIndex(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    return env->NewStringUTF(cfg->getColorSpaceNameByIndex((int)index));
+    return env->NewStringUTF(cfg->getColourSpaceNameByIndex((int)index));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getColorSpace(JNIEnv * env, jobject self, jstring name)
+Java_org_OpenColourIO_Config_getColourSpace(JNIEnv * env, jobject self, jstring name)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    return BuildJConstObject<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, self,
-             env->FindClass("org/OpenColorIO/ColorSpace"),
-             cfg->getColorSpace(GetJStringValue(env, name)()));
+    return BuildJConstObject<ConstColourSpaceRcPtr, ColourSpaceJNI>(env, self,
+             env->FindClass("org/OpenColourIO/ColourSpace"),
+             cfg->getColourSpace(GetJStringValue(env, name)()));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Config_getIndexForColorSpace(JNIEnv * env, jobject self, jstring name)
+Java_org_OpenColourIO_Config_getIndexForColourSpace(JNIEnv * env, jobject self, jstring name)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    return (jint)cfg->getIndexForColorSpace(GetJStringValue(env, name)());
+    return (jint)cfg->getIndexForColourSpace(GetJStringValue(env, name)());
     OCIO_JNITRY_EXIT(0)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_addColorSpace(JNIEnv * env, jobject self, jobject cs)
+Java_org_OpenColourIO_Config_addColourSpace(JNIEnv * env, jobject self, jobject cs)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
-    ConstColorSpaceRcPtr space = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, cs);
-    cfg->addColorSpace(space);
+    ConstColourSpaceRcPtr space = GetConstJOCIO<ConstColourSpaceRcPtr, ColourSpaceJNI>(env, cs);
+    cfg->addColourSpace(space);
     OCIO_JNITRY_EXIT()
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_clearColorSpaces(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_clearColourSpaces(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
-    cfg->clearColorSpaces();
+    cfg->clearColourSpaces();
     OCIO_JNITRY_EXIT()
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_parseColorSpaceFromString(JNIEnv * env, jobject self, jstring str)
+Java_org_OpenColourIO_Config_parseColourSpaceFromString(JNIEnv * env, jobject self, jstring str)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
-    return env->NewStringUTF(cfg->parseColorSpaceFromString(GetJStringValue(env, str)()));
+    return env->NewStringUTF(cfg->parseColourSpaceFromString(GetJStringValue(env, str)()));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_OpenColorIO_Config_isStrictParsingEnabled(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_isStrictParsingEnabled(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -271,7 +271,7 @@ Java_org_OpenColorIO_Config_isStrictParsingEnabled(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_setStrictParsingEnabled(JNIEnv * env, jobject self, jboolean enabled)
+Java_org_OpenColourIO_Config_setStrictParsingEnabled(JNIEnv * env, jobject self, jboolean enabled)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -280,16 +280,16 @@ Java_org_OpenColorIO_Config_setStrictParsingEnabled(JNIEnv * env, jobject self, 
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_setRole(JNIEnv * env, jobject self, jstring role, jstring colorSpaceName)
+Java_org_OpenColourIO_Config_setRole(JNIEnv * env, jobject self, jstring role, jstring colourSpaceName)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
-    cfg->setRole(GetJStringValue(env, role)(), GetJStringValue(env, colorSpaceName)());
+    cfg->setRole(GetJStringValue(env, role)(), GetJStringValue(env, colourSpaceName)());
     OCIO_JNITRY_EXIT()
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Config_getNumRoles(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getNumRoles(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -298,7 +298,7 @@ Java_org_OpenColorIO_Config_getNumRoles(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_OpenColorIO_Config_hasRole(JNIEnv * env, jobject self, jstring role)
+Java_org_OpenColourIO_Config_hasRole(JNIEnv * env, jobject self, jstring role)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -307,7 +307,7 @@ Java_org_OpenColorIO_Config_hasRole(JNIEnv * env, jobject self, jstring role)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getRoleName(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_Config_getRoleName(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -316,7 +316,7 @@ Java_org_OpenColorIO_Config_getRoleName(JNIEnv * env, jobject self, jint index)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getDefaultDisplay(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getDefaultDisplay(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -325,7 +325,7 @@ Java_org_OpenColorIO_Config_getDefaultDisplay(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Config_getNumDisplays(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getNumDisplays(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -334,7 +334,7 @@ Java_org_OpenColorIO_Config_getNumDisplays(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getDisplay(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_Config_getDisplay(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -343,7 +343,7 @@ Java_org_OpenColorIO_Config_getDisplay(JNIEnv * env, jobject self, jint index)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getDefaultView(JNIEnv * env, jobject self, jstring display)
+Java_org_OpenColourIO_Config_getDefaultView(JNIEnv * env, jobject self, jstring display)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -352,7 +352,7 @@ Java_org_OpenColorIO_Config_getDefaultView(JNIEnv * env, jobject self, jstring d
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Config_getNumViews(JNIEnv * env, jobject self, jstring display)
+Java_org_OpenColourIO_Config_getNumViews(JNIEnv * env, jobject self, jstring display)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -361,7 +361,7 @@ Java_org_OpenColorIO_Config_getNumViews(JNIEnv * env, jobject self, jstring disp
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getView(JNIEnv * env, jobject self, jstring display, jint index)
+Java_org_OpenColourIO_Config_getView(JNIEnv * env, jobject self, jstring display, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -370,17 +370,17 @@ Java_org_OpenColorIO_Config_getView(JNIEnv * env, jobject self, jstring display,
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getDisplayColorSpaceName(JNIEnv * env, jobject self, jstring display, jstring view)
+Java_org_OpenColourIO_Config_getDisplayColourSpaceName(JNIEnv * env, jobject self, jstring display, jstring view)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    return env->NewStringUTF(cfg->getDisplayColorSpaceName(GetJStringValue(env, display)(),
+    return env->NewStringUTF(cfg->getDisplayColourSpaceName(GetJStringValue(env, display)(),
                                                            GetJStringValue(env, view)()));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getDisplayLooks(JNIEnv * env, jobject self, jstring display, jstring view)
+Java_org_OpenColourIO_Config_getDisplayLooks(JNIEnv * env, jobject self, jstring display, jstring view)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -392,13 +392,13 @@ Java_org_OpenColorIO_Config_getDisplayLooks(JNIEnv * env, jobject self, jstring 
 // TODO: seems that 4 string params causes a memory error in the JNI layer?
 /*
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_addDisplay(JNIEnv * env, jobject self, jstring display, jstring view, jstring colorSpaceName, jstring looks)
+Java_org_OpenColourIO_Config_addDisplay(JNIEnv * env, jobject self, jstring display, jstring view, jstring colourSpaceName, jstring looks)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
     cfg->addDisplay(GetJStringValue(env, display)(),
                     GetJStringValue(env, view)(),
-                    GetJStringValue(env, colorSpaceName)(),
+                    GetJStringValue(env, colourSpaceName)(),
                     GetJStringValue(env, looks)());
     
     OCIO_JNITRY_EXIT()
@@ -406,7 +406,7 @@ Java_org_OpenColorIO_Config_addDisplay(JNIEnv * env, jobject self, jstring displ
 */
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_clearDisplays(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_clearDisplays(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -415,7 +415,7 @@ Java_org_OpenColorIO_Config_clearDisplays(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_setActiveDisplays(JNIEnv * env, jobject self, jstring displays)
+Java_org_OpenColourIO_Config_setActiveDisplays(JNIEnv * env, jobject self, jstring displays)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -424,7 +424,7 @@ Java_org_OpenColorIO_Config_setActiveDisplays(JNIEnv * env, jobject self, jstrin
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getActiveDisplays(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getActiveDisplays(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -433,7 +433,7 @@ Java_org_OpenColorIO_Config_getActiveDisplays(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_setActiveViews(JNIEnv * env, jobject self, jstring views)
+Java_org_OpenColourIO_Config_setActiveViews(JNIEnv * env, jobject self, jstring views)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -442,7 +442,7 @@ Java_org_OpenColorIO_Config_setActiveViews(JNIEnv * env, jobject self, jstring v
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getActiveViews(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getActiveViews(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -451,7 +451,7 @@ Java_org_OpenColorIO_Config_getActiveViews(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_getDefaultLumaCoefs(JNIEnv * env, jobject self, jfloatArray rgb)
+Java_org_OpenColourIO_Config_getDefaultLumaCoefs(JNIEnv * env, jobject self, jfloatArray rgb)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -460,7 +460,7 @@ Java_org_OpenColorIO_Config_getDefaultLumaCoefs(JNIEnv * env, jobject self, jflo
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_setDefaultLumaCoefs(JNIEnv * env, jobject self, jfloatArray rgb)
+Java_org_OpenColourIO_Config_setDefaultLumaCoefs(JNIEnv * env, jobject self, jfloatArray rgb)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -469,17 +469,17 @@ Java_org_OpenColorIO_Config_setDefaultLumaCoefs(JNIEnv * env, jobject self, jflo
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getLook(JNIEnv * env, jobject self, jstring name)
+Java_org_OpenColourIO_Config_getLook(JNIEnv * env, jobject self, jstring name)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
     return BuildJConstObject<ConstLookRcPtr, LookJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Look"), cfg->getLook(GetJStringValue(env, name)()));
+             env->FindClass("org/OpenColourIO/Look"), cfg->getLook(GetJStringValue(env, name)()));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_Config_getNumLooks(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_getNumLooks(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -488,7 +488,7 @@ Java_org_OpenColorIO_Config_getNumLooks(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_Config_getLookNameByIndex(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_Config_getLookNameByIndex(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
@@ -497,7 +497,7 @@ Java_org_OpenColorIO_Config_getLookNameByIndex(JNIEnv * env, jobject self, jint 
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_addLook(JNIEnv * env, jobject self, jobject look)
+Java_org_OpenColourIO_Config_addLook(JNIEnv * env, jobject self, jobject look)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -507,7 +507,7 @@ Java_org_OpenColorIO_Config_addLook(JNIEnv * env, jobject self, jobject look)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_clearLooks(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Config_clearLooks(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
@@ -516,71 +516,71 @@ Java_org_OpenColorIO_Config_clearLooks(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getProcessor__Lorg_OpenColorIO_Context_2Lorg_OpenColorIO_ColorSpace_2Lorg_OpenColorIO_ColorSpace_2
-  (JNIEnv * env, jobject self, jobject context, jobject srcColorSpace, jobject dstColorSpace)
+Java_org_OpenColourIO_Config_getProcessor__Lorg_OpenColourIO_Context_2Lorg_OpenColourIO_ColourSpace_2Lorg_OpenColourIO_ColourSpace_2
+  (JNIEnv * env, jobject self, jobject context, jobject srcColourSpace, jobject dstColourSpace)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, context);
-    ConstColorSpaceRcPtr src = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, srcColorSpace);
-    ConstColorSpaceRcPtr dst = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, dstColorSpace);
+    ConstColourSpaceRcPtr src = GetConstJOCIO<ConstColourSpaceRcPtr, ColourSpaceJNI>(env, srcColourSpace);
+    ConstColourSpaceRcPtr dst = GetConstJOCIO<ConstColourSpaceRcPtr, ColourSpaceJNI>(env, dstColourSpace);
     return BuildJConstObject<ConstProcessorRcPtr, ProcessorJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Processor"), cfg->getProcessor(con, src, dst));
+             env->FindClass("org/OpenColourIO/Processor"), cfg->getProcessor(con, src, dst));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getProcessor__Lorg_OpenColorIO_ColorSpace_2Lorg_OpenColorIO_ColorSpace_2
-  (JNIEnv * env, jobject self, jobject srcColorSpace, jobject dstColorSpace)
+Java_org_OpenColourIO_Config_getProcessor__Lorg_OpenColourIO_ColourSpace_2Lorg_OpenColourIO_ColourSpace_2
+  (JNIEnv * env, jobject self, jobject srcColourSpace, jobject dstColourSpace)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    ConstColorSpaceRcPtr src = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, srcColorSpace);
-    ConstColorSpaceRcPtr dst = GetConstJOCIO<ConstColorSpaceRcPtr, ColorSpaceJNI>(env, dstColorSpace);
+    ConstColourSpaceRcPtr src = GetConstJOCIO<ConstColourSpaceRcPtr, ColourSpaceJNI>(env, srcColourSpace);
+    ConstColourSpaceRcPtr dst = GetConstJOCIO<ConstColourSpaceRcPtr, ColourSpaceJNI>(env, dstColourSpace);
     return BuildJConstObject<ConstProcessorRcPtr, ProcessorJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Processor"), cfg->getProcessor(src, dst));
+             env->FindClass("org/OpenColourIO/Processor"), cfg->getProcessor(src, dst));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getProcessor__Ljava_lang_String_2Ljava_lang_String_2
+Java_org_OpenColourIO_Config_getProcessor__Ljava_lang_String_2Ljava_lang_String_2
   (JNIEnv * env, jobject self, jstring srcName, jstring dstName)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
     return BuildJConstObject<ConstProcessorRcPtr, ProcessorJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Processor"), cfg->getProcessor(
+             env->FindClass("org/OpenColourIO/Processor"), cfg->getProcessor(
                GetJStringValue(env, srcName)(), GetJStringValue(env, dstName)()));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getProcessor__Lorg_OpenColorIO_Context_2Ljava_lang_String_2Ljava_lang_String_2
+Java_org_OpenColourIO_Config_getProcessor__Lorg_OpenColourIO_Context_2Ljava_lang_String_2Ljava_lang_String_2
   (JNIEnv * env, jobject self, jobject context, jstring srcName, jstring dstName)
 {
     OCIO_JNITRY_ENTER()
     ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, context);
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
     return BuildJConstObject<ConstProcessorRcPtr, ProcessorJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Processor"), cfg->getProcessor(con,
+             env->FindClass("org/OpenColourIO/Processor"), cfg->getProcessor(con,
                GetJStringValue(env, srcName)(), GetJStringValue(env, dstName)()));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getProcessor__Lorg_OpenColorIO_Transform_2
+Java_org_OpenColourIO_Config_getProcessor__Lorg_OpenColourIO_Transform_2
   (JNIEnv * env, jobject self, jobject transform)
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
     ConstTransformRcPtr tran = GetConstJOCIO<ConstTransformRcPtr, TransformJNI>(env, transform);
     return BuildJConstObject<ConstProcessorRcPtr, ProcessorJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Processor"), cfg->getProcessor(tran));
+             env->FindClass("org/OpenColourIO/Processor"), cfg->getProcessor(tran));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getProcessor__Lorg_OpenColorIO_Transform_2Lorg_OpenColorIO_TransformDirection_2
+Java_org_OpenColourIO_Config_getProcessor__Lorg_OpenColourIO_Transform_2Lorg_OpenColourIO_TransformDirection_2
   (JNIEnv * env, jobject self, jobject transform, jobject direction)
 {
     OCIO_JNITRY_ENTER()
@@ -588,12 +588,12 @@ Java_org_OpenColorIO_Config_getProcessor__Lorg_OpenColorIO_Transform_2Lorg_OpenC
     ConstTransformRcPtr tran = GetConstJOCIO<ConstTransformRcPtr, TransformJNI>(env, transform);
     TransformDirection dir = GetJEnum<TransformDirection>(env, direction);
     return BuildJConstObject<ConstProcessorRcPtr, ProcessorJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Processor"), cfg->getProcessor(tran, dir));
+             env->FindClass("org/OpenColourIO/Processor"), cfg->getProcessor(tran, dir));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Config_getProcessor__Lorg_OpenColorIO_Context_2Lorg_OpenColorIO_Transform_2Lorg_OpenColorIO_TransformDirection_2
+Java_org_OpenColourIO_Config_getProcessor__Lorg_OpenColourIO_Context_2Lorg_OpenColourIO_Transform_2Lorg_OpenColourIO_TransformDirection_2
   (JNIEnv * env, jobject self, jobject context, jobject transform, jobject direction)
 {
     OCIO_JNITRY_ENTER()
@@ -602,6 +602,6 @@ Java_org_OpenColorIO_Config_getProcessor__Lorg_OpenColorIO_Context_2Lorg_OpenCol
     ConstTransformRcPtr tran = GetConstJOCIO<ConstTransformRcPtr, TransformJNI>(env, transform);
     TransformDirection dir = GetJEnum<TransformDirection>(env, direction);
     return BuildJConstObject<ConstProcessorRcPtr, ProcessorJNI>(env, self,
-             env->FindClass("org/OpenColorIO/Processor"), cfg->getProcessor(con, tran, dir));
+             env->FindClass("org/OpenColourIO/Processor"), cfg->getProcessor(con, tran, dir));
     OCIO_JNITRY_EXIT(NULL)
 }

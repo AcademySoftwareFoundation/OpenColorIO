@@ -1,6 +1,6 @@
 
 import junit.framework.TestCase;
-import org.OpenColorIO.*;
+import org.OpenColourIO.*;
 
 public class GlobalsTest extends TestCase {
     
@@ -16,19 +16,19 @@ public class GlobalsTest extends TestCase {
     + "\n"
     + "displays:\n"
     + "  sRGB:\n"
-    + "    - !<View> {name: Raw, colorspace: raw}\n"
+    + "    - !<View> {name: Raw, colourspace: raw}\n"
     + "\n"
     + "active_displays: []\n"
     + "active_views: []\n"
     + "\n"
-    + "colorspaces:\n"
-    + "  - !<ColorSpace>\n"
+    + "colourspaces:\n"
+    + "  - !<ColourSpace>\n"
     + "    name: raw\n"
     + "    family: raw\n"
     + "    equalitygroup: \n" 
     + "    bitdepth: 32f\n"
     + "    description: |\n"
-    + "      A raw color space. Conversions to and from this space are no-ops.\n"
+    + "      A raw colour space. Conversions to and from this space are no-ops.\n"
     + "    isdata: true\n"
     + "    allocation: uniform\n";
     
@@ -76,13 +76,13 @@ public class GlobalsTest extends TestCase {
         assertEquals(globals.GetInverseTransformDirection(TransformDirection.TRANSFORM_DIR_FORWARD), TransformDirection.TRANSFORM_DIR_INVERSE);
         assertEquals(globals.GetInverseTransformDirection(TransformDirection.TRANSFORM_DIR_INVERSE), TransformDirection.TRANSFORM_DIR_FORWARD);
         
-        // ColorSpaceDirection
-        assertEquals(globals.ColorSpaceDirectionToString(ColorSpaceDirection.COLORSPACE_DIR_UNKNOWN), "unknown");
-        assertEquals(globals.ColorSpaceDirectionFromString("unknown"), ColorSpaceDirection.COLORSPACE_DIR_UNKNOWN);
-        assertEquals(globals.ColorSpaceDirectionToString(ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE), "to_reference");
-        assertEquals(globals.ColorSpaceDirectionFromString("to_reference"), ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE);
-        assertEquals(globals.ColorSpaceDirectionToString(ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE), "from_reference");
-        assertEquals(globals.ColorSpaceDirectionFromString("from_reference"), ColorSpaceDirection.COLORSPACE_DIR_FROM_REFERENCE);
+        // ColourSpaceDirection
+        assertEquals(globals.ColourSpaceDirectionToString(ColourSpaceDirection.COLOURSPACE_DIR_UNKNOWN), "unknown");
+        assertEquals(globals.ColourSpaceDirectionFromString("unknown"), ColourSpaceDirection.COLOURSPACE_DIR_UNKNOWN);
+        assertEquals(globals.ColourSpaceDirectionToString(ColourSpaceDirection.COLOURSPACE_DIR_TO_REFERENCE), "to_reference");
+        assertEquals(globals.ColourSpaceDirectionFromString("to_reference"), ColourSpaceDirection.COLOURSPACE_DIR_TO_REFERENCE);
+        assertEquals(globals.ColourSpaceDirectionToString(ColourSpaceDirection.COLOURSPACE_DIR_FROM_REFERENCE), "from_reference");
+        assertEquals(globals.ColourSpaceDirectionFromString("from_reference"), ColourSpaceDirection.COLOURSPACE_DIR_FROM_REFERENCE);
         
         // BitDepth
         assertEquals(globals.BitDepthToString(BitDepth.BIT_DEPTH_UNKNOWN), "unknown");
@@ -138,10 +138,10 @@ public class GlobalsTest extends TestCase {
         assertEquals(globals.ROLE_DEFAULT, "default");
         assertEquals(globals.ROLE_REFERENCE, "reference");
         assertEquals(globals.ROLE_DATA, "data");
-        assertEquals(globals.ROLE_COLOR_PICKING, "color_picking");
+        assertEquals(globals.ROLE_COLOUR_PICKING, "colour_picking");
         assertEquals(globals.ROLE_SCENE_LINEAR, "scene_linear");
         assertEquals(globals.ROLE_COMPOSITING_LOG, "compositing_log");
-        assertEquals(globals.ROLE_COLOR_TIMING, "color_timing");
+        assertEquals(globals.ROLE_COLOUR_TIMING, "colour_timing");
         assertEquals(globals.ROLE_TEXTURE_PAINT, "texture_paint");
         assertEquals(globals.ROLE_MATTE_PAINT, "matte_paint");
         

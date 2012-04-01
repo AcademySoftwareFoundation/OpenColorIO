@@ -2,7 +2,7 @@
 ### JNI JUNIT TESTS ###
 
 
-file(GLOB _TESTS_FILES "org/OpenColorIO/*.java")
+file(GLOB _TESTS_FILES "org/OpenColourIO/*.java")
 set(_JCLASS_PATH "${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_BINARY_DIR}/..:${CMAKE_SOURCE_DIR}/ext/junit-4.9b4.jar")
 set(_JLIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/..")
 
@@ -11,7 +11,7 @@ add_custom_target(JNITests
                     -d ${CMAKE_CURRENT_BINARY_DIR} ${_TESTS_FILES}
                   COMMAND java -cp ${_JCLASS_PATH}
                     -Djava.library.path=${_JLIB_PATH} junit.textui.TestRunner
-                    OpenColorIOTestSuite
-                  DEPENDS OpenColorIO-JNI
+                    OpenColourIOTestSuite
+                  DEPENDS OpenColourIO-JNI
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   COMMENT "Setting Up and Running JNI OCIO JUNIT tests")

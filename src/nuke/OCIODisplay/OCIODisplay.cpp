@@ -1,5 +1,5 @@
 /**
- * OpenColorIO Display Iop.
+ * OpenColourIO Display Iop.
  */
 
 #include "OCIODisplay.h"
@@ -19,7 +19,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <DDImage/Enumeration_KnobI.h>
 #include <DDImage/ddImageVersionNumbers.h>
 
-// Should we use cascasing ColorSpace menus
+// Should we use cascasing ColourSpace menus
 #if defined kDDImageVersionInteger && (kDDImageVersionInteger>=62300)
 #define OCIO_CASCADE
 #endif
@@ -28,7 +28,7 @@ OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
 {
     m_layersToProcess = DD::Image::Mask_RGBA;
     m_hasLists = false;
-    m_colorSpaceIndex = m_displayIndex = m_viewIndex = 0;
+    m_colourSpaceIndex = m_displayIndex = m_viewIndex = 0;
     m_displayKnob = m_viewKnob = NULL;
     m_gain = 1.0;
     m_gamma = 1.0;
@@ -39,27 +39,27 @@ OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
-        OCIO::ConstColorSpaceRcPtr defaultcs = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
+        OCIO::ConstColourSpaceRcPtr defaultcs = config->getColourSpace(OCIO::ROLE_SCENE_LINEAR);
         if(!defaultcs) throw std::runtime_error("ROLE_SCENE_LINEAR not defined.");
-        std::string defaultColorSpaceName = defaultcs->getName();
+        std::string defaultColourSpaceName = defaultcs->getName();
         
-        for(int i=0; i<config->getNumColorSpaces(); ++i)
+        for(int i=0; i<config->getNumColourSpaces(); ++i)
         {
-            std::string csname = config->getColorSpaceNameByIndex(i);
+            std::string csname = config->getColourSpaceNameByIndex(i);
             
 #ifdef OCIO_CASCADE
-            std::string family = config->getColorSpace(csname.c_str())->getFamily();
+            std::string family = config->getColourSpace(csname.c_str())->getFamily();
             if(family.empty())
-                m_colorSpaceNames.push_back(csname.c_str());
+                m_colourSpaceNames.push_back(csname.c_str());
             else
-                m_colorSpaceNames.push_back(family + "/" + csname);
+                m_colourSpaceNames.push_back(family + "/" + csname);
 #else
-            m_colorSpaceNames.push_back(csname);
+            m_colourSpaceNames.push_back(csname);
 #endif
             
-            if(defaultColorSpaceName == csname)
+            if(defaultColourSpaceName == csname)
             {
-                m_colorSpaceIndex = i;
+                m_colourSpaceIndex = i;
             }
         }
         
@@ -86,11 +86,11 @@ OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
     }
     
     // Build the cstr vectors on our second pass
-    for(unsigned int i=0; i<m_colorSpaceNames.size(); ++i)
+    for(unsigned int i=0; i<m_colourSpaceNames.size(); ++i)
     {
-        m_colorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
+        m_colourSpaceCstrNames.push_back(m_colourSpaceNames[i].c_str());
     }
-    m_colorSpaceCstrNames.push_back(NULL);
+    m_colourSpaceCstrNames.push_back(NULL);
     
     for(unsigned int i=0; i<m_displayNames.size(); ++i)
     {
@@ -100,11 +100,11 @@ OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
     
     refreshDisplayTransforms();
     
-    m_hasLists = !(m_colorSpaceNames.empty() || m_displayNames.empty() || m_viewNames.empty());
+    m_hasLists = !(m_colourSpaceNames.empty() || m_displayNames.empty() || m_viewNames.empty());
     
     if(!m_hasLists)
     {
-        std::cerr << "OCIODisplay: Missing one or more of colorspaces, display devices, or display transforms." << std::endl;
+        std::cerr << "OCIODisplay: Missing one or more of colourspaces, display devices, or display transforms." << std::endl;
     }
 }
 
@@ -117,13 +117,13 @@ void OCIODisplay::knobs(DD::Image::Knob_Callback f)
 {
 #ifdef OCIO_CASCADE
     DD::Image::CascadingEnumeration_knob(f,
-        &m_colorSpaceIndex, &m_colorSpaceCstrNames[0], "colorspace", "input colorspace");
+        &m_colourSpaceIndex, &m_colourSpaceCstrNames[0], "colourspace", "input colourspace");
 #else
     DD::Image::Enumeration_knob(f,
-        &m_colorSpaceIndex, &m_colorSpaceCstrNames[0], "colorspace", "input colorspace");
+        &m_colourSpaceIndex, &m_colourSpaceCstrNames[0], "colourspace", "input colourspace");
 #endif
     DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
-    DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
+    DD::Image::Tooltip(f, "Input data is taken to be in this colourspace.");
 
     m_displayKnob = DD::Image::Enumeration_knob(f,
         &m_displayIndex, &m_displayCstrNames[0], "display", "display device");
@@ -246,15 +246,15 @@ void OCIODisplay::_validate(bool for_real)
 
     if(!m_hasLists)
     {
-        error("Missing one or more of colorspaces, display devices, or display transforms.");
+        error("Missing one or more of colourspaces, display devices, or display transforms.");
         return;
     }
 
-    int nColorSpaces = static_cast<int>(m_colorSpaceNames.size());
-    if(m_colorSpaceIndex < 0 || m_colorSpaceIndex >= nColorSpaces)
+    int nColourSpaces = static_cast<int>(m_colourSpaceNames.size());
+    if(m_colourSpaceIndex < 0 || m_colourSpaceIndex >= nColourSpaces)
     {
         std::ostringstream err;
-        err << "ColorSpace index (" << m_colorSpaceIndex << ") out of range.";
+        err << "ColourSpace index (" << m_colourSpaceIndex << ") out of range.";
         error(err.str().c_str());
         return;
     }
@@ -263,11 +263,11 @@ void OCIODisplay::_validate(bool for_real)
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
-        m_transform->setInputColorSpaceName(config->getColorSpaceNameByIndex(m_colorSpaceIndex));
+        m_transform->setInputColourSpaceName(config->getColourSpaceNameByIndex(m_colourSpaceIndex));
         m_transform->setDisplay(m_displayCstrNames[m_displayIndex]);
         m_transform->setView(m_viewCstrNames[m_viewIndex]);
         
-        // Specify an (optional) linear color correction
+        // Specify an (optional) linear colour correction
         {
             float m44[16];
             float offset4[4];
@@ -360,7 +360,7 @@ void OCIODisplay::_validate(bool for_real)
     DD::Image::PixelIop::_validate(for_real);
 }
 
-// Note: Same as OCIO ColorSpace::in_channels.
+// Note: Same as OCIO ColourSpace::in_channels.
 void OCIODisplay::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
@@ -374,7 +374,7 @@ void OCIODisplay::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) c
     mask += done;
 }
 
-// Note: Same as OCIO ColorSpace::pixel_engine.
+// Note: Same as OCIO ColourSpace::pixel_engine.
 void OCIODisplay::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
@@ -546,7 +546,7 @@ const char* OCIODisplay::displayName() const
 const char* OCIODisplay::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorIO to convert for a display device.";
+    return "Use OpenColourIO to convert for a display device.";
 }
 
 

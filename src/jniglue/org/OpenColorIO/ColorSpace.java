@@ -26,17 +26,17 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.OpenColorIO;
-import org.OpenColorIO.*;
+package org.OpenColourIO;
+import org.OpenColourIO.*;
 
-public class ColorSpace extends LoadLibrary
+public class ColourSpace extends LoadLibrary
 {
-    public ColorSpace() { super(); }
-    protected ColorSpace(long impl) { super(impl); }
+    public ColourSpace() { super(); }
+    protected ColourSpace(long impl) { super(impl); }
     public native void dispose();
     protected void finalize() { dispose(); }
-    public native ColorSpace Create();
-    public native ColorSpace createEditableCopy();
+    public native ColourSpace Create();
+    public native ColourSpace createEditableCopy();
     public native String getName();
     public native void setName(String name);
     public native String getFamily();
@@ -54,6 +54,6 @@ public class ColorSpace extends LoadLibrary
     public native int getAllocationNumVars();
     public native void getAllocationVars(float[] vars);
     public native void setAllocationVars(int numvars, float[] vars);
-    public native Transform getTransform(ColorSpaceDirection dir);
-    public native void setTransform(Transform transform, ColorSpaceDirection dir);
+    public native Transform getTransform(ColourSpaceDirection dir);
+    public native void setTransform(Transform transform, ColourSpaceDirection dir);
 }

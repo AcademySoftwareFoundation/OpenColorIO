@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <vector>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "argparse.h"
@@ -72,7 +72,7 @@ int main (int argc, const char* argv[])
     int whitepointtemp = 6505;
     std::string displayicc;
     std::string description;
-    std::string copyright = "OpenColorIO (Sony Imageworks)";
+    std::string copyright = "OpenColourIO (Sony Imageworks)";
     
     // What are the allowed baker output formats?
     std::ostringstream formats;
@@ -96,13 +96,13 @@ int main (int argc, const char* argv[])
                "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl\n"
                "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format flame display.3dl\n"
                "example:  ociobakelut --lut look.3dl --offset 0.01 -0.02 0.03 --lut display.3dl --format flame display_with_look.3dl\n"
-               "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColorSync/Profiles/test.icc\n"
-               "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColorSync/Profiles/test.icc\n\n",
+               "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format icc ~/Library/ColourSync/Profiles/test.icc\n"
+               "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format icc ~/Library/ColourSync/Profiles/test.icc\n\n",
                "%*", parse_end_args, "",
                "<SEPARATOR>", "Using Existing OCIO Configurations",
-               "--inputspace %s", &inputspace, "Input OCIO ColorSpace (or Role)",
-               "--outputspace %s", &outputspace, "Output OCIO ColorSpace (or Role)",
-               "--shaperspace %s", &shaperspace, "the OCIO ColorSpace or Role, for the shaper",
+               "--inputspace %s", &inputspace, "Input OCIO ColourSpace (or Role)",
+               "--outputspace %s", &outputspace, "Output OCIO ColourSpace (or Role)",
+               "--shaperspace %s", &shaperspace, "the OCIO ColourSpace or Role, for the shaper",
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)\n",
                "<SEPARATOR>", "Config-Free LUT Baking",
                "<SEPARATOR>", "    (all options can be specified multiple times, each is applied in order)",
@@ -181,7 +181,7 @@ int main (int argc, const char* argv[])
     }
     
     // If --luts have been specified, synthesize a new (temporary) configuration
-    // with the transformation embedded in a colorspace.
+    // with the transformation embedded in a colourspace.
     if(!groupTransform->empty())
     {
         if(!inputspace.empty())
@@ -205,26 +205,26 @@ int main (int argc, const char* argv[])
         
         OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
         
-        OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr inputColourSpace = OCIO::ColourSpace::Create();
         inputspace = "RawInput";
-        inputColorSpace->setName(inputspace.c_str());
-        editableConfig->addColorSpace(inputColorSpace);
+        inputColourSpace->setName(inputspace.c_str());
+        editableConfig->addColourSpace(inputColourSpace);
         
-        OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
+        OCIO::ColourSpaceRcPtr outputColourSpace = OCIO::ColourSpace::Create();
         outputspace = "ProcessedOutput";
-        outputColorSpace->setName(outputspace.c_str());
+        outputColourSpace->setName(outputspace.c_str());
         
-        outputColorSpace->setTransform(groupTransform,
-            OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        outputColourSpace->setTransform(groupTransform,
+            OCIO::COLOURSPACE_DIR_FROM_REFERENCE);
         
         if(verbose)
         {
-            std::cout << "[OpenColorIO DEBUG]: Specified Transform:";
+            std::cout << "[OpenColourIO DEBUG]: Specified Transform:";
             std::cout << *groupTransform;
             std::cout << "\n";
         }
         
-        editableConfig->addColorSpace(outputColorSpace);
+        editableConfig->addColourSpace(outputColourSpace);
         config = editableConfig;
     }
     else
@@ -254,13 +254,13 @@ int main (int argc, const char* argv[])
         if(!inputconfig.empty())
         {
             if(!usestdout && verbose)
-                std::cout << "[OpenColorIO INFO]: Loading " << inputconfig << std::endl;
+                std::cout << "[OpenColourIO INFO]: Loading " << inputconfig << std::endl;
             config = OCIO::Config::CreateFromFile(inputconfig.c_str());
         }
         else if(getenv("OCIO"))
         {
             if(!usestdout && verbose)
-                std::cout << "[OpenColorIO INFO]: Loading $OCIO " << getenv("OCIO") << std::endl;
+                std::cout << "[OpenColourIO INFO]: Loading $OCIO " << getenv("OCIO") << std::endl;
             config = OCIO::Config::CreateFromEnv();
         }
         else
@@ -336,7 +336,7 @@ int main (int argc, const char* argv[])
             std::ostringstream output;
             
             if(!usestdout && verbose)
-                std::cout << "[OpenColorIO INFO]: Baking '" << format << "' lut" << std::endl;
+                std::cout << "[OpenColourIO INFO]: Baking '" << format << "' lut" << std::endl;
             
             if(usestdout)
             {
@@ -347,7 +347,7 @@ int main (int argc, const char* argv[])
                 std::ofstream f(outputfile.c_str());
                 baker->bake(f);
                 if(verbose)
-                    std::cout << "[OpenColorIO INFO]: Wrote '" << outputfile << "'" << std::endl;
+                    std::cout << "[OpenColourIO INFO]: Wrote '" << outputfile << "'" << std::endl;
             }
         }
     }

@@ -9,23 +9,23 @@
 #include <DDImage/Row.h>
 #include <DDImage/Knob.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 
 /*!
- * Use OpenColorIO to convert for display output.
+ * Use OpenColourIO to convert for display output.
  */
 class OCIODisplay : public DD::Image::PixelIop {
     protected:
 
-        bool m_hasLists; //!< Were colorspaces, OCIODisplay devices, and transform names found? If not, always error.
+        bool m_hasLists; //!< Were colourspaces, OCIODisplay devices, and transform names found? If not, always error.
         DD::Image::ChannelSet m_layersToProcess; //!< layers (rgb channel groups) to process
-        int m_colorSpaceIndex; //!< index of colorspace selection from the pulldown list knob
+        int m_colourSpaceIndex; //!< index of colourspace selection from the pulldown list knob
         int m_displayIndex, m_viewIndex;
-        std::vector<std::string> m_colorSpaceNames; //!< list of colorspace names (memory for const char* s below)
+        std::vector<std::string> m_colourSpaceNames; //!< list of colourspace names (memory for const char* s below)
         std::vector<std::string> m_displayNames, m_viewNames;
-        std::vector<const char*> m_colorSpaceCstrNames; //!< list for the pulldown list knob (used raw)
+        std::vector<const char*> m_colourSpaceCstrNames; //!< list for the pulldown list knob (used raw)
         std::vector<const char*> m_displayCstrNames, m_viewCstrNames;
         float m_gain;
         float m_gamma;
@@ -88,7 +88,7 @@ class OCIODisplay : public DD::Image::PixelIop {
          * in mask by modifying mask in-place. (At least one channel in the
          * input is assumed.)
          *
-         * Since colorspace conversions can have channel cross-talk, any rgb
+         * Since colourspace conversions can have channel cross-talk, any rgb
          * output channel requires all its rgb bretheren. (Non-rgb
          * are passed through.)
          */
@@ -119,7 +119,7 @@ class OCIODisplay : public DD::Image::PixelIop {
     protected:
 
         /*!
-         * Check that colorspaces are available, and that the transform
+         * Check that colourspaces are available, and that the transform
          * is not a noop. (As OCIO whether a given transform is a noop, since it
          * can do more analysis than just name matching.)
          */

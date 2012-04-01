@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "HashUtils.h"
 #include "Lut1DOp.h"
@@ -970,66 +970,66 @@ OIIO_ADD_TEST(Lut1DOp, NanInf)
                         1.0f,
                         -std::numeric_limits<float>::infinity()  };
     */
-    float color[4];
+    float colour[4];
     
-    memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut1D_Linear(color, 1, *lut);
+    memcpy(colour, reference, 4*sizeof(float));
+    OCIO::Lut1D_Linear(colour, 1, *lut);
     /*
     for(int i=0; i<4; ++i)
     {
-        if(isnan(color[i]))
+        if(isnan(colour[i]))
         {
-            std::cerr << color[i] << " " << output[i] << std::endl;
-            OIIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
+            std::cerr << colour[i] << " " << output[i] << std::endl;
+            OIIO_CHECK_EQUAL(isnan(colour[i]), isnan(output[i]));
         }
         else
         {
-            OIIO_CHECK_EQUAL(color[i], output[i]);
+            OIIO_CHECK_EQUAL(colour[i], output[i]);
         }
     }
     */
-    memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut1D_Nearest(color, 1, *lut);
+    memcpy(colour, reference, 4*sizeof(float));
+    OCIO::Lut1D_Nearest(colour, 1, *lut);
     /*
     for(int i=0; i <4; ++i)
     {
-        if(isnan(color[i]))
+        if(isnan(colour[i]))
         {
-            OIIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
+            OIIO_CHECK_EQUAL(isnan(colour[i]), isnan(output[i]));
         }
         else
         {
-            OIIO_CHECK_EQUAL(color[i], output[i]);
+            OIIO_CHECK_EQUAL(colour[i], output[i]);
         }
     }
     */
-    memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut1D_LinearInverse(color, 1, *lut);
+    memcpy(colour, reference, 4*sizeof(float));
+    OCIO::Lut1D_LinearInverse(colour, 1, *lut);
     /*
     for(int i=0; i <4; ++i)
     {
-        if(isnan(color[i]))
+        if(isnan(colour[i]))
         {
-            OIIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
+            OIIO_CHECK_EQUAL(isnan(colour[i]), isnan(output[i]));
         }
         else
         {
-            OIIO_CHECK_EQUAL(color[i], output[i]);
+            OIIO_CHECK_EQUAL(colour[i], output[i]);
         }
     }
     */
-    memcpy(color, reference, 4*sizeof(float));
-    OCIO::Lut1D_NearestInverse(color, 1, *lut);
+    memcpy(colour, reference, 4*sizeof(float));
+    OCIO::Lut1D_NearestInverse(colour, 1, *lut);
     /*
     for(int i=0; i <4; ++i)
     {
-        if(isnan(color[i]))
+        if(isnan(colour[i]))
         {
-            OIIO_CHECK_EQUAL(isnan(color[i]), isnan(output[i]));
+            OIIO_CHECK_EQUAL(isnan(colour[i]), isnan(output[i]));
         }
         else
         {
-            OIIO_CHECK_EQUAL(color[i], output[i]);
+            OIIO_CHECK_EQUAL(colour[i], output[i]);
         }
     }
     */

@@ -27,10 +27,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_PYOCIO_PYCOLORSPACE_H
-#define INCLUDED_PYOCIO_PYCOLORSPACE_H
+#ifndef INCLUDED_PYOCIO_PYCOLOURSPACE_H
+#define INCLUDED_PYOCIO_PYCOLOURSPACE_H
 
-#include <PyOpenColorIO/PyOpenColorIO.h>
+#include <PyOpenColourIO/PyOpenColourIO.h>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -38,14 +38,14 @@ OCIO_NAMESPACE_ENTER
     
     typedef struct {
         PyObject_HEAD
-        ConstColorSpaceRcPtr * constcppobj;
-        ColorSpaceRcPtr * cppobj;
+        ConstColourSpaceRcPtr * constcppobj;
+        ColourSpaceRcPtr * cppobj;
         bool isconst;
-    } PyOCIO_ColorSpace;
+    } PyOCIO_ColourSpace;
     
-    extern PyTypeObject PyOCIO_ColorSpaceType;
+    extern PyTypeObject PyOCIO_ColourSpaceType;
     
-    bool AddColorSpaceObjectToModule( PyObject* m );
+    bool AddColourSpaceObjectToModule( PyObject* m );
 }
 OCIO_NAMESPACE_EXIT
 

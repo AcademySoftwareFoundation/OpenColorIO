@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# OpenColorIO (color management) related Mari scripts
+# OpenColourIO (colour management) related Mari scripts
 # coding: utf-8
 # Copyright (c) 2011 The Foundry Visionmongers Ltd.  All Rights Reserved.
 #-------------------------------------------------------------------------------
@@ -21,26 +21,26 @@ class MessageType:
 def printMessage(type, message):
     if type == MessageType.DEBUG:
         if VERBOSE_ENABLED:
-            mari.app.log('[ OpenColorIO ] %s' % message)
+            mari.app.log('[ OpenColourIO ] %s' % message)
     elif type == MessageType.INFO:
-        mari.app.log('[ OpenColorIO ] %s' % message)
+        mari.app.log('[ OpenColourIO ] %s' % message)
     elif type == MessageType.WARNING:
-        mari.app.log('[ OpenColorIO ] [ WARNING ] %s' % message)
+        mari.app.log('[ OpenColourIO ] [ WARNING ] %s' % message)
     elif type == MessageType.ERROR:
-        mari.app.log('[ OpenColorIO ] [ ERROR ] %s' % message)
+        mari.app.log('[ OpenColourIO ] [ ERROR ] %s' % message)
 
 ##############################################################################################
 
 def configFileFilter():
-    return 'OpenColorIO Configuration (*.ocio)'
+    return 'OpenColourIO Configuration (*.ocio)'
 
 #---------------------------------------------------------------------------------------------
 
 def lutFileFilter():
     result  = 'All LUT Files (*.3dl *.ccc *.cc *.csp *.cub *.cube *.hdl *.m3d *.mga *.spi1d *.spi3d *.spimtx *.vf);;'
     result += 'Autodesk LUT (*.3dl);;'
-    result += 'ASC CDL Color Correction Collection LUT (*.ccc);;'
-    result += 'ASC CDL Color Correction LUT (*.cc);;'
+    result += 'ASC CDL Colour Correction Collection LUT (*.ccc);;'
+    result += 'ASC CDL Colour Correction LUT (*.cc);;'
     result += 'Cinespace LUT (*.csp);;'
     result += 'Truelight LUT (*.cub);;'
     result += 'Iridas LUT (*.cube);;'
@@ -52,12 +52,12 @@ def lutFileFilter():
 
 ##############################################################################################
 
-# Make sure the OpenColorIO python bindings are okay.
+# Make sure the OpenColourIO python bindings are okay.
 try:
-    import PyOpenColorIO
-    printMessage(MessageType.INFO, 'Loaded Python bindings \'%s\' successfully' % PyOpenColorIO.__file__)
+    import PyOpenColourIO
+    printMessage(MessageType.INFO, 'Loaded Python bindings \'%s\' successfully' % PyOpenColourIO.__file__)
 except ImportError, e:
-    PyOpenColorIO = None
+    PyOpenColourIO = None
     printMessage(MessageType.ERROR, 'Failed to load Python bindings \'%s\'' % e)
 
 LUT_FILE_LIST_RESET = mari.FileList(mari.FileList.TYPE_SINGLE_FILE)
@@ -66,9 +66,9 @@ LUT_FILE_LIST_RESET.setFilter(lutFileFilter())
 
 CONFIG_FILE_LIST_RESET = mari.FileList(mari.FileList.TYPE_SINGLE_FILE)
 if mari.app.isRunning():
-    CONFIG_FILE_LIST_RESET.append(mari.resources.path(mari.resources.COLOR) + '/OpenColorIO/nuke-default/config.ocio')
+    CONFIG_FILE_LIST_RESET.append(mari.resources.path(mari.resources.COLOUR) + '/OpenColourIO/nuke-default/config.ocio')
 else:
-    CONFIG_FILE_LIST_RESET.append('/OpenColorIO/nuke-default/config.ocio')
+    CONFIG_FILE_LIST_RESET.append('/OpenColourIO/nuke-default/config.ocio')
 CONFIG_FILE_LIST_RESET.setPickedFile(CONFIG_FILE_LIST_RESET.at(0))
 CONFIG_FILE_LIST_RESET.setAcceptNonExisting(True)
 CONFIG_FILE_LIST_RESET.setFilter(configFileFilter())
@@ -80,9 +80,9 @@ LUT_SIZE_VALUES          = {'Small': 16,
                             'Large': 64}
 LUT_SIZE_RESET           = LUT_SIZE_TYPES[1]
 ENABLED_RESET            = True
-PROFILE_RESET            = 'Color Space'
+PROFILE_RESET            = 'Colour Space'
 LUT_EXTRAPOLATE_RESET    = True
-COLOR_SPACE_RESET        = 'sRGB'
+COLOUR_SPACE_RESET        = 'sRGB'
 DISPLAY_RESET            = 'default'
 VIEW_RESET               = 'sRGB'
 SWIZZLE_TYPES            = ['Luminance', 'RGB', 'R', 'G', 'B', 'A']
@@ -118,7 +118,7 @@ profile_default          = PROFILE_RESET
 lut_file_list_default    = mari.FileList(LUT_FILE_LIST_RESET)
 lut_extrapolate_default  = LUT_EXTRAPOLATE_RESET
 config_file_list_default = mari.FileList(CONFIG_FILE_LIST_RESET)
-color_space_default      = COLOR_SPACE_RESET
+colour_space_default      = COLOUR_SPACE_RESET
 display_default          = DISPLAY_RESET
 view_default             = VIEW_RESET
 swizzle_default          = SWIZZLE_RESET
@@ -148,50 +148,50 @@ def registerFStopCenterChanged(function):
 
 def _enabledDefaultChanged():
     global enabled_default
-    enabled_default = mari.prefs.get('/Color/Color Management Defaults/colorEnabledDefault')
+    enabled_default = mari.prefs.get('/Colour/Colour Management Defaults/colourEnabledDefault')
     _savePreferences()
 
 #---------------------------------------------------------------------------------------------
 
 def _profileDefaultChanged():
     global profile_default
-    profile_default = mari.prefs.get('/Color/Color Management Defaults/colorProfileDefault')
+    profile_default = mari.prefs.get('/Colour/Colour Management Defaults/colourProfileDefault')
     _savePreferences()
 
 #---------------------------------------------------------------------------------------------
 
 def _postFilterCollectionAdded(filter_collection):
-    mari.prefs.setItemList('/Color/Color Management Defaults/colorProfileDefault', mari.gl_render.postFilterCollectionNames())
+    mari.prefs.setItemList('/Colour/Colour Management Defaults/colourProfileDefault', mari.gl_render.postFilterCollectionNames())
 
 #---------------------------------------------------------------------------------------------
 
 def _postFilterCollectionRemoved(name):
     collection_names = mari.gl_render.postFilterCollectionNames()
-    mari.prefs.setItemList('/Color/Color Management Defaults/colorProfileDefault', collection_names)
+    mari.prefs.setItemList('/Colour/Colour Management Defaults/colourProfileDefault', collection_names)
 
     global PROFILE_RESET
     if name == PROFILE_RESET:
         PROFILE_RESET = collection_names[0]
-        mari.prefs.setDefault('/Color/Color Management Defaults/colorProfileDefault', PROFILE_RESET)
+        mari.prefs.setDefault('/Colour/Colour Management Defaults/colourProfileDefault', PROFILE_RESET)
 
     global profile_default
     if name == profile_default:
         profile_default = PROFILE_RESET
-        mari.prefs.set('/Color/Color Management Defaults/colorProfileDefault', profile_default)
+        mari.prefs.set('/Colour/Colour Management Defaults/colourProfileDefault', profile_default)
         _savePreferences()
 
 #---------------------------------------------------------------------------------------------
 
 def _lutPathDefaultChanged():
     global lut_file_list_default
-    lut_file_list_default = mari.FileList(mari.prefs.get('/Color/LUT Defaults/lutPathDefault'))
+    lut_file_list_default = mari.FileList(mari.prefs.get('/Colour/LUT Defaults/lutPathDefault'))
     _savePreferences()
 
 #---------------------------------------------------------------------------------------------
 
 def _lutExtrapolateDefaultChanged():
     global lut_extrapolate_default
-    lut_extrapolate_default = mari.prefs.get('/Color/LUT Defaults/lutExtrapolateDefault')
+    lut_extrapolate_default = mari.prefs.get('/Colour/LUT Defaults/lutExtrapolateDefault')
     _savePreferences()
 
 #---------------------------------------------------------------------------------------------
@@ -200,7 +200,7 @@ def _configPathDefaultChanged():
     global config_file_list_default
 
     # Only replace the existing configuration file if the new one is valid!
-    config_file_list = mari.FileList(mari.prefs.get('/Color/Display Defaults/displayConfigPathDefault'))
+    config_file_list = mari.FileList(mari.prefs.get('/Colour/Display Defaults/displayConfigPathDefault'))
 
     if not config_file_list.isEmpty():
         config = loadConfig(config_file_list.at(0), True)
@@ -210,7 +210,7 @@ def _configPathDefaultChanged():
             global config_default
             config_default = config
 
-            _updateColorSpaceDefault()
+            _updateColourSpaceDefault()
             _updateDisplayDefault()
             _updateViewDefault()
 
@@ -218,16 +218,16 @@ def _configPathDefaultChanged():
 
         else:
             # Put back the existing configuration file that works...
-            mari.prefs.set('/Color/Display Defaults/displayConfigPathDefault', config_file_list_default)
+            mari.prefs.set('/Colour/Display Defaults/displayConfigPathDefault', config_file_list_default)
     else:
         # Put back the existing configuration file that works...
-        mari.prefs.set('/Color/Display Defaults/displayConfigPathDefault', config_file_list_default)
+        mari.prefs.set('/Colour/Display Defaults/displayConfigPathDefault', config_file_list_default)
 
 #---------------------------------------------------------------------------------------------
 
-def _colorSpaceDefaultChanged():
-    global color_space_default
-    color_space_default = mari.prefs.get('/Color/Display Defaults/displayColorSpaceDefault')
+def _colourSpaceDefaultChanged():
+    global colour_space_default
+    colour_space_default = mari.prefs.get('/Colour/Display Defaults/displayColourSpaceDefault')
     _updateDisplayDefault()
     _updateViewDefault()
     _savePreferences()
@@ -236,7 +236,7 @@ def _colorSpaceDefaultChanged():
 
 def _displayDefaultChanged():
     global display_default
-    display_default = mari.prefs.get('/Color/Display Defaults/displayDisplayDefault')
+    display_default = mari.prefs.get('/Colour/Display Defaults/displayDisplayDefault')
     _updateViewDefault()
     _savePreferences()
 
@@ -244,28 +244,28 @@ def _displayDefaultChanged():
 
 def _viewDefaultChanged():
     global view_default
-    view_default = mari.prefs.get('/Color/Display Defaults/displayViewDefault')
+    view_default = mari.prefs.get('/Colour/Display Defaults/displayViewDefault')
     _savePreferences()
 
 #---------------------------------------------------------------------------------------------
 
 def _swizzleDefaultChanged():
     global swizzle_default
-    swizzle_default = mari.prefs.get('/Color/Display Defaults/displaySwizzleDefault')
+    swizzle_default = mari.prefs.get('/Colour/Display Defaults/displaySwizzleDefault')
     _savePreferences()
 
 #---------------------------------------------------------------------------------------------
 
 def _gainDefaultChanged():
     global gain_default
-    gain_default = mari.prefs.get('/Color/Display Defaults/displayGainDefault')
+    gain_default = mari.prefs.get('/Colour/Display Defaults/displayGainDefault')
     _savePreferences()
 
 #---------------------------------------------------------------------------------------------
 
 def _gammaDefaultChanged():
     global gamma_default
-    gamma_default = mari.prefs.get('/Color/Display Defaults/displayGammaDefault')
+    gamma_default = mari.prefs.get('/Colour/Display Defaults/displayGammaDefault')
     _savePreferences()
 
 #---------------------------------------------------------------------------------------------
@@ -273,7 +273,7 @@ def _gammaDefaultChanged():
 def _lutSizeChanged():
     global lut_size
     global lut_size_functions
-    lut_size = mari.prefs.get('/Color/Display General/displayLutSize')
+    lut_size = mari.prefs.get('/Colour/Display General/displayLutSize')
     _savePreferences()
     for function in lut_size_functions:
         function()
@@ -283,7 +283,7 @@ def _lutSizeChanged():
 def _fstopCenterChanged():
     global fstop_center
     global fstop_center_functions
-    fstop_center = mari.prefs.get('/Color/Display General/displayFStopCenter')
+    fstop_center = mari.prefs.get('/Colour/Display General/displayFStopCenter')
     _savePreferences()
     for function in fstop_center_functions:
         function()
@@ -292,17 +292,17 @@ def _fstopCenterChanged():
 
 def _registerPreferences():
     global enabled_default
-    mari.prefs.set('/Color/Color Management Defaults/colorEnabledDefault', enabled_default)
-    mari.prefs.setChangedScript('/Color/Color Management Defaults/colorEnabledDefault', 'mari.utils.ocio._enabledDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/Color Management Defaults/colorEnabledDefault', 'Enabled')
-    mari.prefs.setDefault('/Color/Color Management Defaults/colorEnabledDefault', ENABLED_RESET)
+    mari.prefs.set('/Colour/Colour Management Defaults/colourEnabledDefault', enabled_default)
+    mari.prefs.setChangedScript('/Colour/Colour Management Defaults/colourEnabledDefault', 'mari.utils.ocio._enabledDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/Colour Management Defaults/colourEnabledDefault', 'Enabled')
+    mari.prefs.setDefault('/Colour/Colour Management Defaults/colourEnabledDefault', ENABLED_RESET)
 
     global profile_default
-    mari.prefs.set('/Color/Color Management Defaults/colorProfileDefault', profile_default)
-    mari.prefs.setChangedScript('/Color/Color Management Defaults/colorProfileDefault', 'mari.utils.ocio._profileDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/Color Management Defaults/colorProfileDefault', 'Color Profile')
-    mari.prefs.setDefault('/Color/Color Management Defaults/colorProfileDefault', PROFILE_RESET)
-    mari.prefs.setItemList('/Color/Color Management Defaults/colorProfileDefault', mari.gl_render.postFilterCollectionNames())
+    mari.prefs.set('/Colour/Colour Management Defaults/colourProfileDefault', profile_default)
+    mari.prefs.setChangedScript('/Colour/Colour Management Defaults/colourProfileDefault', 'mari.utils.ocio._profileDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/Colour Management Defaults/colourProfileDefault', 'Colour Profile')
+    mari.prefs.setDefault('/Colour/Colour Management Defaults/colourProfileDefault', PROFILE_RESET)
+    mari.prefs.setItemList('/Colour/Colour Management Defaults/colourProfileDefault', mari.gl_render.postFilterCollectionNames())
 
     global lut_file_list_default
     if not lut_file_list_default.isEmpty() and not os.path.isfile(lut_file_list_default.at(0)):
@@ -310,16 +310,16 @@ def _registerPreferences():
         printMessage(MessageType.ERROR, '%s' % message)
         lut_file_list_default = mari.FileList(LUT_FILE_LIST_RESET)
 
-    mari.prefs.set('/Color/LUT Defaults/lutPathDefault', lut_file_list_default)
-    mari.prefs.setChangedScript('/Color/LUT Defaults/lutPathDefault', 'mari.utils.ocio._lutPathDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/LUT Defaults/lutPathDefault', 'File')
-    mari.prefs.setDefault('/Color/LUT Defaults/lutPathDefault', LUT_FILE_LIST_RESET)
+    mari.prefs.set('/Colour/LUT Defaults/lutPathDefault', lut_file_list_default)
+    mari.prefs.setChangedScript('/Colour/LUT Defaults/lutPathDefault', 'mari.utils.ocio._lutPathDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/LUT Defaults/lutPathDefault', 'File')
+    mari.prefs.setDefault('/Colour/LUT Defaults/lutPathDefault', LUT_FILE_LIST_RESET)
 
     global lut_extrapolate_default
-    mari.prefs.set('/Color/LUT Defaults/lutExtrapolateDefault', lut_extrapolate_default)
-    mari.prefs.setChangedScript('/Color/LUT Defaults/lutExtrapolateDefault', 'mari.utils.ocio._lutExtrapolateDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/LUT Defaults/lutExtrapolateDefault', 'Extrapolate')
-    mari.prefs.setDefault('/Color/LUT Defaults/lutExtrapolateDefault', LUT_EXTRAPOLATE_RESET)
+    mari.prefs.set('/Colour/LUT Defaults/lutExtrapolateDefault', lut_extrapolate_default)
+    mari.prefs.setChangedScript('/Colour/LUT Defaults/lutExtrapolateDefault', 'mari.utils.ocio._lutExtrapolateDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/LUT Defaults/lutExtrapolateDefault', 'Extrapolate')
+    mari.prefs.setDefault('/Colour/LUT Defaults/lutExtrapolateDefault', LUT_EXTRAPOLATE_RESET)
 
     global config_file_list_default
     global config_default
@@ -332,26 +332,26 @@ def _registerPreferences():
     else:
         config_file_list_default = mari.FileList(CONFIG_FILE_LIST_RESET)
 
-    mari.prefs.set('/Color/Display Defaults/displayConfigPathDefault', config_file_list_default)
-    mari.prefs.setChangedScript('/Color/Display Defaults/displayConfigPathDefault', 'mari.utils.ocio._configPathDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/Display Defaults/displayConfigPathDefault', 'Configuration File')
-    mari.prefs.setDefault('/Color/Display Defaults/displayConfigPathDefault', CONFIG_FILE_LIST_RESET)
+    mari.prefs.set('/Colour/Display Defaults/displayConfigPathDefault', config_file_list_default)
+    mari.prefs.setChangedScript('/Colour/Display Defaults/displayConfigPathDefault', 'mari.utils.ocio._configPathDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/Display Defaults/displayConfigPathDefault', 'Configuration File')
+    mari.prefs.setDefault('/Colour/Display Defaults/displayConfigPathDefault', CONFIG_FILE_LIST_RESET)
 
-    color_spaces = [color_space.getName() for color_space in config_default.getColorSpaces()]
+    colour_spaces = [colour_space.getName() for colour_space in config_default.getColourSpaces()]
 
-    color_space_reset = COLOR_SPACE_RESET
-    if color_spaces.count(color_space_reset) == 0:
-        color_space_reset = color_spaces[0]
+    colour_space_reset = COLOUR_SPACE_RESET
+    if colour_spaces.count(colour_space_reset) == 0:
+        colour_space_reset = colour_spaces[0]
 
-    global color_space_default
-    if color_spaces.count(color_space_default) == 0:
-        color_space_default = color_space_reset
+    global colour_space_default
+    if colour_spaces.count(colour_space_default) == 0:
+        colour_space_default = colour_space_reset
 
-    mari.prefs.set('/Color/Display Defaults/displayColorSpaceDefault', color_space_default)
-    mari.prefs.setChangedScript('/Color/Display Defaults/displayColorSpaceDefault', 'mari.utils.ocio._colorSpaceDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/Display Defaults/displayColorSpaceDefault', 'Input Color Space')
-    mari.prefs.setDefault('/Color/Display Defaults/displayColorSpaceDefault', color_space_reset)
-    mari.prefs.setItemList('/Color/Display Defaults/displayColorSpaceDefault', color_spaces)
+    mari.prefs.set('/Colour/Display Defaults/displayColourSpaceDefault', colour_space_default)
+    mari.prefs.setChangedScript('/Colour/Display Defaults/displayColourSpaceDefault', 'mari.utils.ocio._colourSpaceDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/Display Defaults/displayColourSpaceDefault', 'Input Colour Space')
+    mari.prefs.setDefault('/Colour/Display Defaults/displayColourSpaceDefault', colour_space_reset)
+    mari.prefs.setItemList('/Colour/Display Defaults/displayColourSpaceDefault', colour_spaces)
 
     displays = config_default.getDisplays()
 
@@ -363,11 +363,11 @@ def _registerPreferences():
     if displays.count(display_default) == 0:
         display_default = display_reset
 
-    mari.prefs.set('/Color/Display Defaults/displayDisplayDefault', display_default)
-    mari.prefs.setChangedScript('/Color/Display Defaults/displayDisplayDefault', 'mari.utils.ocio._displayDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/Display Defaults/displayDisplayDefault', 'Display')
-    mari.prefs.setDefault('/Color/Display Defaults/displayDisplayDefault', display_reset)
-    mari.prefs.setItemList('/Color/Display Defaults/displayDisplayDefault', displays)
+    mari.prefs.set('/Colour/Display Defaults/displayDisplayDefault', display_default)
+    mari.prefs.setChangedScript('/Colour/Display Defaults/displayDisplayDefault', 'mari.utils.ocio._displayDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/Display Defaults/displayDisplayDefault', 'Display')
+    mari.prefs.setDefault('/Colour/Display Defaults/displayDisplayDefault', display_reset)
+    mari.prefs.setItemList('/Colour/Display Defaults/displayDisplayDefault', displays)
 
     views = config_default.getViews(display_default)
 
@@ -379,52 +379,52 @@ def _registerPreferences():
     if views.count(view_default) == 0:
         view_default = view_reset
 
-    mari.prefs.set('/Color/Display Defaults/displayViewDefault', view_default)
-    mari.prefs.setChangedScript('/Color/Display Defaults/displayViewDefault', 'mari.utils.ocio._viewDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/Display Defaults/displayViewDefault', 'View')
-    mari.prefs.setDefault('/Color/Display Defaults/displayViewDefault', view_reset)
-    mari.prefs.setItemList('/Color/Display Defaults/displayViewDefault', views)
+    mari.prefs.set('/Colour/Display Defaults/displayViewDefault', view_default)
+    mari.prefs.setChangedScript('/Colour/Display Defaults/displayViewDefault', 'mari.utils.ocio._viewDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/Display Defaults/displayViewDefault', 'View')
+    mari.prefs.setDefault('/Colour/Display Defaults/displayViewDefault', view_reset)
+    mari.prefs.setItemList('/Colour/Display Defaults/displayViewDefault', views)
 
     global swizzle_default
     if SWIZZLE_TYPES.count(swizzle_default) == 0:
         swizzle_default = SWIZZLE_RESET
 
-    mari.prefs.set('/Color/Display Defaults/displaySwizzleDefault', swizzle_default)
-    mari.prefs.setChangedScript('/Color/Display Defaults/displaySwizzleDefault', 'mari.utils.ocio._swizzleDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/Display Defaults/displaySwizzleDefault', 'Component')
-    mari.prefs.setDefault('/Color/Display Defaults/displaySwizzleDefault', SWIZZLE_RESET)
-    mari.prefs.setItemList('/Color/Display Defaults/displaySwizzleDefault', SWIZZLE_TYPES)
+    mari.prefs.set('/Colour/Display Defaults/displaySwizzleDefault', swizzle_default)
+    mari.prefs.setChangedScript('/Colour/Display Defaults/displaySwizzleDefault', 'mari.utils.ocio._swizzleDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/Display Defaults/displaySwizzleDefault', 'Component')
+    mari.prefs.setDefault('/Colour/Display Defaults/displaySwizzleDefault', SWIZZLE_RESET)
+    mari.prefs.setItemList('/Colour/Display Defaults/displaySwizzleDefault', SWIZZLE_TYPES)
 
     global gain_default
-    mari.prefs.set('/Color/Display Defaults/displayGainDefault', gain_default)
-    mari.prefs.setChangedScript('/Color/Display Defaults/displayGainDefault', 'mari.utils.ocio._gainDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/Display Defaults/displayGainDefault', 'Gain')
-    mari.prefs.setDefault('/Color/Display Defaults/displayGainDefault', GAIN_RESET)
-    mari.prefs.setRange('/Color/Display Defaults/displayGainDefault', GAIN_MIN, GAIN_MAX)
-    mari.prefs.setStep('/Color/Display Defaults/displayGainDefault', GAIN_STEP_SIZE)
+    mari.prefs.set('/Colour/Display Defaults/displayGainDefault', gain_default)
+    mari.prefs.setChangedScript('/Colour/Display Defaults/displayGainDefault', 'mari.utils.ocio._gainDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/Display Defaults/displayGainDefault', 'Gain')
+    mari.prefs.setDefault('/Colour/Display Defaults/displayGainDefault', GAIN_RESET)
+    mari.prefs.setRange('/Colour/Display Defaults/displayGainDefault', GAIN_MIN, GAIN_MAX)
+    mari.prefs.setStep('/Colour/Display Defaults/displayGainDefault', GAIN_STEP_SIZE)
 
     global gamma_default
-    mari.prefs.set('/Color/Display Defaults/displayGammaDefault', gamma_default)
-    mari.prefs.setChangedScript('/Color/Display Defaults/displayGammaDefault', 'mari.utils.ocio._gammaDefaultChanged()')
-    mari.prefs.setDisplayName('/Color/Display Defaults/displayGammaDefault', 'Gamma')
-    mari.prefs.setDefault('/Color/Display Defaults/displayGammaDefault', GAMMA_RESET)
-    mari.prefs.setRange('/Color/Display Defaults/displayGammaDefault', GAMMA_MIN, GAMMA_MAX)
-    mari.prefs.setStep('/Color/Display Defaults/displayGammaDefault', GAMMA_STEP_SIZE)
+    mari.prefs.set('/Colour/Display Defaults/displayGammaDefault', gamma_default)
+    mari.prefs.setChangedScript('/Colour/Display Defaults/displayGammaDefault', 'mari.utils.ocio._gammaDefaultChanged()')
+    mari.prefs.setDisplayName('/Colour/Display Defaults/displayGammaDefault', 'Gamma')
+    mari.prefs.setDefault('/Colour/Display Defaults/displayGammaDefault', GAMMA_RESET)
+    mari.prefs.setRange('/Colour/Display Defaults/displayGammaDefault', GAMMA_MIN, GAMMA_MAX)
+    mari.prefs.setStep('/Colour/Display Defaults/displayGammaDefault', GAMMA_STEP_SIZE)
 
     global lut_size
-    mari.prefs.set('/Color/Display General/displayLutSize', lut_size)
-    mari.prefs.setChangedScript('/Color/Display General/displayLutSize', 'mari.utils.ocio._lutSizeChanged()')
-    mari.prefs.setDisplayName('/Color/Display General/displayLutSize', 'LUT Size')
-    mari.prefs.setDefault('/Color/Display General/displayLutSize', LUT_SIZE_RESET)
-    mari.prefs.setItemList('/Color/Display General/displayLutSize', LUT_SIZE_TYPES)
+    mari.prefs.set('/Colour/Display General/displayLutSize', lut_size)
+    mari.prefs.setChangedScript('/Colour/Display General/displayLutSize', 'mari.utils.ocio._lutSizeChanged()')
+    mari.prefs.setDisplayName('/Colour/Display General/displayLutSize', 'LUT Size')
+    mari.prefs.setDefault('/Colour/Display General/displayLutSize', LUT_SIZE_RESET)
+    mari.prefs.setItemList('/Colour/Display General/displayLutSize', LUT_SIZE_TYPES)
 
     global fstop_center
-    mari.prefs.set('/Color/Display General/displayFStopCenter', fstop_center)
-    mari.prefs.setChangedScript('/Color/Display General/displayFStopCenter', 'mari.utils.ocio._fstopCenterChanged()')
-    mari.prefs.setDisplayName('/Color/Display General/displayFStopCenter', 'Center F-Stop')
-    mari.prefs.setDefault('/Color/Display General/displayFStopCenter', FSTOP_CENTER_RESET)
-    mari.prefs.setRange('/Color/Display General/displayFStopCenter', FSTOP_CENTER_MIN, FSTOP_CENTER_MAX)
-    mari.prefs.setStep('/Color/Display General/displayFStopCenter', FSTOP_CENTER_STEP_SIZE)
+    mari.prefs.set('/Colour/Display General/displayFStopCenter', fstop_center)
+    mari.prefs.setChangedScript('/Colour/Display General/displayFStopCenter', 'mari.utils.ocio._fstopCenterChanged()')
+    mari.prefs.setDisplayName('/Colour/Display General/displayFStopCenter', 'Center F-Stop')
+    mari.prefs.setDefault('/Colour/Display General/displayFStopCenter', FSTOP_CENTER_RESET)
+    mari.prefs.setRange('/Colour/Display General/displayFStopCenter', FSTOP_CENTER_MIN, FSTOP_CENTER_MAX)
+    mari.prefs.setStep('/Colour/Display General/displayFStopCenter', FSTOP_CENTER_STEP_SIZE)
 
     # Attach ourselves to the appropriate project signals so we can update widgets.
     PythonQt.QtCore.QObject.connect(mari.gl_render.postFilterCollectionAdded.__self__,
@@ -436,22 +436,22 @@ def _registerPreferences():
 
 #---------------------------------------------------------------------------------------------
 
-def _updateColorSpaceDefault():
+def _updateColourSpaceDefault():
     global config_default
-    global color_space_default
+    global colour_space_default
 
-    color_spaces = [color_space.getName() for color_space in config_default.getColorSpaces()]
+    colour_spaces = [colour_space.getName() for colour_space in config_default.getColourSpaces()]
 
-    color_space_reset = COLOR_SPACE_RESET
-    if color_spaces.count(color_space_reset) == 0:
-        color_space_reset = color_spaces[0]
+    colour_space_reset = COLOUR_SPACE_RESET
+    if colour_spaces.count(colour_space_reset) == 0:
+        colour_space_reset = colour_spaces[0]
 
-    if color_spaces.count(color_space_default) == 0:
-        color_space_default = color_space_reset
+    if colour_spaces.count(colour_space_default) == 0:
+        colour_space_default = colour_space_reset
 
-    mari.prefs.setItemList('/Color/Display Defaults/displayColorSpaceDefault', color_spaces)
-    mari.prefs.set('/Color/Display Defaults/displayColorSpaceDefault', color_space_default)
-    mari.prefs.setDefault('/Color/Display Defaults/displayColorSpaceDefault', color_space_reset)
+    mari.prefs.setItemList('/Colour/Display Defaults/displayColourSpaceDefault', colour_spaces)
+    mari.prefs.set('/Colour/Display Defaults/displayColourSpaceDefault', colour_space_default)
+    mari.prefs.setDefault('/Colour/Display Defaults/displayColourSpaceDefault', colour_space_reset)
 
 
 #---------------------------------------------------------------------------------------------
@@ -469,9 +469,9 @@ def _updateDisplayDefault():
     if displays.count(display_default) == 0:
         display_default = display_reset
 
-    mari.prefs.setItemList('/Color/Display Defaults/displayDisplayDefault', displays)
-    mari.prefs.set('/Color/Display Defaults/displayDisplayDefault', display_default)
-    mari.prefs.setDefault('/Color/Display Defaults/displayDisplayDefault', display_reset)
+    mari.prefs.setItemList('/Colour/Display Defaults/displayDisplayDefault', displays)
+    mari.prefs.set('/Colour/Display Defaults/displayDisplayDefault', display_default)
+    mari.prefs.setDefault('/Colour/Display Defaults/displayDisplayDefault', display_reset)
 
 #---------------------------------------------------------------------------------------------
 
@@ -489,15 +489,15 @@ def _updateViewDefault():
     if views.count(view_default) == 0:
         view_default = view_reset
 
-    mari.prefs.setItemList('/Color/Display Defaults/displayViewDefault', views)
-    mari.prefs.set('/Color/Display Defaults/displayViewDefault', view_default)
-    mari.prefs.setDefault('/Color/Display Defaults/displayViewDefault', view_reset)
+    mari.prefs.setItemList('/Colour/Display Defaults/displayViewDefault', views)
+    mari.prefs.set('/Colour/Display Defaults/displayViewDefault', view_default)
+    mari.prefs.setDefault('/Colour/Display Defaults/displayViewDefault', view_reset)
 
 #---------------------------------------------------------------------------------------------
 
 def _loadPreferences():
     settings = mari.Settings()
-    settings.beginGroup('OpenColorIO')
+    settings.beginGroup('OpenColourIO')
 
     try:
         global enabled_default
@@ -505,7 +505,7 @@ def _loadPreferences():
         global lut_file_list_default
         global lut_extrapolate_default
         global config_file_list_default
-        global color_space_default
+        global colour_space_default
         global display_default
         global view_default
         global swizzle_default
@@ -519,7 +519,7 @@ def _loadPreferences():
         lut_path                =    buildLoadPath(str(settings.value('lutPathDefault', '' if LUT_FILE_LIST_RESET.isEmpty() else LUT_FILE_LIST_RESET.at(0))))
         lut_extrapolate_default =  False if int(settings.value('lutExtrapolateDefault', LUT_EXTRAPOLATE_RESET)) == 0 else True
         config_path             = buildLoadPath(str(settings.value('configPathDefault', '' if CONFIG_FILE_LIST_RESET.isEmpty() else CONFIG_FILE_LIST_RESET.at(0))))
-        color_space_default     =               str(settings.value('colorSpaceDefault', COLOR_SPACE_RESET))
+        colour_space_default     =               str(settings.value('colourSpaceDefault', COLOUR_SPACE_RESET))
         display_default         =                  str(settings.value('displayDefault', DISPLAY_RESET))
         view_default            =                     str(settings.value('viewDefault', VIEW_RESET))
         swizzle_default         =                  str(settings.value('swizzleDefault', SWIZZLE_RESET))
@@ -549,14 +549,14 @@ def _loadPreferences():
 
 def _savePreferences():
     settings = mari.Settings()
-    settings.beginGroup('OpenColorIO')
+    settings.beginGroup('OpenColourIO')
 
     global enabled_default
     global profile_default
     global lut_file_list_default
     global lut_extrapolate_default
     global config_file_list_default
-    global color_space_default
+    global colour_space_default
     global display_default
     global view_default
     global swizzle_default
@@ -570,7 +570,7 @@ def _savePreferences():
     settings.setValue(       'lutPathDefault', '' if lut_file_list_default.isEmpty() else buildSavePath(lut_file_list_default.at(0)))
     settings.setValue('lutExtrapolateDefault', 1 if lut_extrapolate_default else 0)
     settings.setValue(    'configPathDefault', '' if config_file_list_default.isEmpty() else buildSavePath(config_file_list_default.at(0)))
-    settings.setValue(    'colorSpaceDefault', color_space_default)
+    settings.setValue(    'colourSpaceDefault', colour_space_default)
     settings.setValue(       'displayDefault', display_default)
     settings.setValue(          'viewDefault', view_default)
     settings.setValue(       'swizzleDefault', swizzle_default)
@@ -591,7 +591,7 @@ def _printPreferences(type, title):
     global lut_file_list_default
     global lut_extrapolate_default
     global config_file_list_default
-    global color_space_default
+    global colour_space_default
     global display_default
     global view_default
     global swizzle_default
@@ -608,7 +608,7 @@ def _printPreferences(type, title):
     printMessage(type, '    LUT Path: %s'             % '' if lut_file_list_default.isEmpty() else lut_file_list_default.at(0))
     printMessage(type, ' Extrapolate: %s'             % lut_extrapolate_default)
     printMessage(type, ' Config Path: %s'             % '' if config_file_list_default.isEmpty() else config_file_list_default.at(0))
-    printMessage(type, ' Color Space: %s'             % color_space_default)
+    printMessage(type, ' Colour Space: %s'             % colour_space_default)
     printMessage(type, '     Display: %s'             % display_default)
     printMessage(type, '        View: %s'             % view_default)
     printMessage(type, '     Swizzle: %s'             % swizzle_default)
@@ -653,7 +653,7 @@ def buildProcessorFilter(processor, filter, filter_cache_id, texture_cache_id, e
     function_name = 'ocio_' + name + '_$ID_'
 
     global lut_size
-    shader_desc = {    'language': PyOpenColorIO.Constants.GPU_LANGUAGE_GLSL_1_3,
+    shader_desc = {    'language': PyOpenColourIO.Constants.GPU_LANGUAGE_GLSL_1_3,
                    'functionName': function_name,
                    'lut3DEdgeLen': LUT_SIZE_VALUES[lut_size]}
 
@@ -667,7 +667,7 @@ def buildProcessorFilter(processor, filter, filter_cache_id, texture_cache_id, e
         body  = ''
         if extrapolate:
             # The following code was taken from Nuke's 'LUT3D::Extrapolate' functionality. It attempts to estimate what
-            # the corresponding color value would be when the incoming color value is outside the normal range of [0-1],
+            # the corresponding colour value would be when the incoming colour value is outside the normal range of [0-1],
             # such as the case with HDR images.
             rcp_lut_edge_length = 1.0 / float(LUT_SIZE_VALUES[lut_size])
 
@@ -727,7 +727,7 @@ def buildProcessorFilter(processor, filter, filter_cache_id, texture_cache_id, e
 #---------------------------------------------------------------------------------------------
 
 def buildLUTFilter(config, path, filter, filter_cache_id, texture_cache_id, extrapolate, force_shader_build = False):
-    file_transform = PyOpenColorIO.FileTransform()
+    file_transform = PyOpenColourIO.FileTransform()
     file_transform.setSrc(path)
     file_transform.setInterpolation('linear')
 
@@ -739,14 +739,14 @@ def buildLUTFilter(config, path, filter, filter_cache_id, texture_cache_id, extr
 
 def loadConfig(path, display_message_box = True):
     try:
-        config = PyOpenColorIO.Config.CreateFromFile(path)
+        config = PyOpenColourIO.Config.CreateFromFile(path)
         return config
 
     except Exception, e:
         message = 'Failed to load configuration file \'%s\' due to \'%s\'' % (path, e)
         printMessage(MessageType.ERROR, '%s' % message)
         if display_message_box and not mari.app.inTerminalMode():
-            mari.utils.misc.message(message, 'Color Space', 1024, 2)
+            mari.utils.misc.message(message, 'Colour Space', 1024, 2)
 
         return None
 
@@ -754,20 +754,20 @@ def loadConfig(path, display_message_box = True):
 
 # This converts a path into a form which can be shared among different platforms and installations.
 def buildSavePath(path):
-    result = path.replace(mari.resources.path(mari.resources.COLOR), '$MARI_COLOR_PATH', 1)
+    result = path.replace(mari.resources.path(mari.resources.COLOUR), '$MARI_COLOUR_PATH', 1)
     return result
 
 #---------------------------------------------------------------------------------------------
 
 # This converts a path saved out to disk back into a form which can used by the application.
 def buildLoadPath(path):
-    result = path.replace('$MARI_COLOR_PATH', mari.resources.path(mari.resources.COLOR), 1)
+    result = path.replace('$MARI_COLOUR_PATH', mari.resources.path(mari.resources.COLOUR), 1)
     return result
 
 ##############################################################################################
 
 if mari.app.isRunning():
-    if PyOpenColorIO is not None:
+    if PyOpenColourIO is not None:
         # Attempt to load the default configuration file... without it we can't do nothing!
         config_file_lists = [config_file_list_default, CONFIG_FILE_LIST_RESET]
         for config_file_list in config_file_lists:
@@ -783,7 +783,7 @@ if mari.app.isRunning():
             _savePreferences()
 
         else:
-            message = 'Failed to find a working configuration file. OpenColorIO will be disabled!'
+            message = 'Failed to find a working configuration file. OpenColourIO will be disabled!'
             printMessage(MessageType.ERROR, message)
             if not mari.app.inTerminalMode():
-                mari.utils.misc.message(message, 'OpenColorIO', 1024, 3)
+                mari.utils.misc.message(message, 'OpenColourIO', 1024, 3)

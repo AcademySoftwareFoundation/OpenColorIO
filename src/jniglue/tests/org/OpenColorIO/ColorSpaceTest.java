@@ -1,8 +1,8 @@
 
 import junit.framework.TestCase;
-import org.OpenColorIO.*;
+import org.OpenColourIO.*;
 
-public class ColorSpaceTest extends TestCase {
+public class ColourSpaceTest extends TestCase {
     
     protected void setUp() {
     }
@@ -11,7 +11,7 @@ public class ColorSpaceTest extends TestCase {
     }
     
     public void test_interface() {
-        ColorSpace cs = new ColorSpace().Create();
+        ColourSpace cs = new ColourSpace().Create();
         cs.setName("mynewcolspace");
         assertEquals("mynewcolspace", cs.getName());
         cs.setFamily("fam1");
@@ -33,8 +33,8 @@ public class ColorSpaceTest extends TestCase {
         cs.getAllocationVars(out);
         LogTransform lt = new LogTransform().Create();
         lt.setBase(10.f);
-        cs.setTransform(lt, ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE);
-        LogTransform ott = (LogTransform)cs.getTransform(ColorSpaceDirection.COLORSPACE_DIR_TO_REFERENCE);
+        cs.setTransform(lt, ColourSpaceDirection.COLOURSPACE_DIR_TO_REFERENCE);
+        LogTransform ott = (LogTransform)cs.getTransform(ColourSpaceDirection.COLOURSPACE_DIR_TO_REFERENCE);
         assertEquals(10.f, ott.getBase());
     }
     

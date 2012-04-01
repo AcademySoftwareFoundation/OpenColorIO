@@ -9,12 +9,12 @@
 #include <DDImage/Row.h>
 #include <DDImage/Knob.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 
 /*!
- * Iop that uses OpenColorIO to perform colorspace conversions
+ * Iop that uses OpenColourIO to perform colourspace conversions
  */
 class OCIOLogConvert : public DD::Image::PixelIop {
 
@@ -87,7 +87,7 @@ class OCIOLogConvert : public DD::Image::PixelIop {
     protected:
 
         /*!
-         * Check that colorspaces are available, and that the transform
+         * Check that colourspaces are available, and that the transform
          * is not a noop. (As OCIO whether a given transform is a noop, since it
          * can do more analysis than just name matching.)
          */

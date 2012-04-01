@@ -3,16 +3,16 @@
 
 import nuke
 import nukescripts
-import PyOpenColorIO as OCIO
+import PyOpenColourIO as OCIO
 import xml.etree.ElementTree as ET
 
 
 def _node_to_cdltransform(node):
-    """From an OCIOCDLTransform node, returns a PyOpenColorIO
+    """From an OCIOCDLTransform node, returns a PyOpenColourIO
     CDLTransform object, which could be used to write XML
     """
 
-    # Color_Knob.value returns single float if control is not
+    # Colour_Knob.value returns single float if control is not
     # expanded, so use value(index=...) to always get three values
     slope = [node['slope'].value(x) for x in range(3)]
     offset = [node['offset'].value(x) for x in range(3)]
@@ -47,7 +47,7 @@ def _cdltransform_to_node(cdl, node):
 
 def _xml_to_cdltransforms(xml):
     """Given some XML as a string, returns a list of CDLTransform
-    objects for each ColorCorrection (returns a one-item list for a
+    objects for each ColourCorrection (returns a one-item list for a
     .cc file)
     """
 
@@ -60,16 +60,16 @@ def _xml_to_cdltransforms(xml):
 
     filetype = tree.tag
 
-    if filetype == "ColorCorrection":
+    if filetype == "ColourCorrection":
         ccxml = ET.tostring(tree)
         cdl = OCIO.CDLTransform()
         cdl.setXML(ccxml)
         return [cdl]
 
-    elif filetype == "ColorCorrectionCollection":
+    elif filetype == "ColourCorrectionCollection":
         allcdl = []
         for cc in tree.getchildren():
-            if cc.tag != "ColorCorrection": continue
+            if cc.tag != "ColourCorrection": continue
             ccxml = ET.tostring(cc)
             cdl = OCIO.CDLTransform()
             cdl.setXML(ccxml)
@@ -79,14 +79,14 @@ def _xml_to_cdltransforms(xml):
     else:
         raise RuntimeError(
             "The supplied file did not have the correct root element, expected"
-            " 'ColorCorrection' or 'ColorCorrectionCollection', got %r" % (filetype))
+            " 'ColourCorrection' or 'ColourCorrectionCollection', got %r" % (filetype))
 
 
 def _cdltransforms_to_xml(allcc):
     """Given a list of CDLTransform objects, returns an XML string
     """
 
-    root = ET.Element("ColorCorrectionCollection")
+    root = ET.Element("ColourCorrectionCollection")
     root.attrib['xmlns'] = 'urn:ASC:CDL:v1.2'
 
     for cc in allcc:
@@ -114,9 +114,9 @@ class SelectCCCIDPanel(nukescripts.PythonPanel):
 
         self.addKnob(nuke.Enumeration_Knob("cccid", "cccid", self.available.keys()))
         self.addKnob(nuke.Text_Knob("divider"))
-        self.addKnob(nuke.Color_Knob("slope"))
-        self.addKnob(nuke.Color_Knob("offset"))
-        self.addKnob(nuke.Color_Knob("power"))
+        self.addKnob(nuke.Colour_Knob("slope"))
+        self.addKnob(nuke.Colour_Knob("offset"))
+        self.addKnob(nuke.Colour_Knob("power"))
         self.addKnob(nuke.Double_Knob("saturation"))
 
     def selected(self):
@@ -133,7 +133,7 @@ class SelectCCCIDPanel(nukescripts.PythonPanel):
 
 
 def export_as_cc(node = None, filename = None):
-    """Export a OCIOCDLTransform node as a ColorCorrection XML file
+    """Export a OCIOCDLTransform node as a ColourCorrection XML file
     (.cc)
 
     If node is None, "nuke.thisNode()" will be used. If filename is
@@ -146,7 +146,7 @@ def export_as_cc(node = None, filename = None):
     cdl = _node_to_cdltransform(node)
 
     if filename is None:
-        ccfilename = nuke.getFilename("Color Correction filename", pattern = "*.cc")
+        ccfilename = nuke.getFilename("Colour Correction filename", pattern = "*.cc")
         if ccfilename is None:
             # User clicked cancel
             return
@@ -157,7 +157,7 @@ def export_as_cc(node = None, filename = None):
 
 
 def import_cc_from_xml(node = None, filename = None):
-    """Import a ColorCorrection XML (.cc) into a OCIOCDLTransform node.
+    """Import a ColourCorrection XML (.cc) into a OCIOCDLTransform node.
 
     If node is None, "nuke.thisNode()" will be used. If filename is
     not specified, the user will be prompted.
@@ -167,7 +167,7 @@ def import_cc_from_xml(node = None, filename = None):
         node = nuke.thisNode()
 
     if filename is None:
-        ccfilename = nuke.getFilename("Color Correction filename", pattern = "*.cc *.ccc")
+        ccfilename = nuke.getFilename("Colour Correction filename", pattern = "*.cc *.ccc")
         if ccfilename is None:
             # User clicked cancel
             return
@@ -180,7 +180,7 @@ def import_cc_from_xml(node = None, filename = None):
         _cdltransform_to_node(allcc[0], node)
     elif len(allcc) > 1:
         do_selectcccid = nuke.ask(
-            "Selected a ColorCorrectionCollection, do you wish to select a ColorCorrection from this file?")
+            "Selected a ColourCorrectionCollection, do you wish to select a ColourCorrection from this file?")
         if do_selectcccid:
             sel = SelectCCCIDPanel(allcc)
             okayed = sel.showModalDialog()
@@ -190,17 +190,17 @@ def import_cc_from_xml(node = None, filename = None):
         else:
             return
     else:
-        nuke.message("The supplied file (%r) contained no ColorCorrection's" % ccfilename)
+        nuke.message("The supplied file (%r) contained no ColourCorrection's" % ccfilename)
         return
 
 
 def export_multiple_to_ccc(filename = None):
     """Exported all selected OCIOCDLTransform nodes to a
-    ColorCorrectionCollection XML file (.ccc)
+    ColourCorrectionCollection XML file (.ccc)
     """
 
     if filename is None:
-        filename = nuke.getFilename("Color Correction XML file", pattern = "*.cc *.ccc")
+        filename = nuke.getFilename("Colour Correction XML file", pattern = "*.cc *.ccc")
         if filename is None:
             # User clicked cancel
             return
@@ -215,12 +215,12 @@ def export_multiple_to_ccc(filename = None):
 
 
 def import_multiple_from_ccc(filename = None):
-    """Import a ColorCorrectionCollection file (.ccc) into multiple
+    """Import a ColourCorrectionCollection file (.ccc) into multiple
     OCIOCDLTransform nodes. Also creates a single node for a .cc file
     """
 
     if filename is None:
-        filename = nuke.getFilename("Color Correction XML file", pattern = "*.cc *.ccc")
+        filename = nuke.getFilename("Colour Correction XML file", pattern = "*.cc *.ccc")
         if filename is None:
             # User clicked cancel
             return
@@ -237,7 +237,7 @@ def import_multiple_from_ccc(filename = None):
         for cc in allcc:
             _make_node(cc)
     else:
-        nuke.message("The supplied file (%r) contained no ColorCorrection's" % filename)
+        nuke.message("The supplied file (%r) contained no ColourCorrection's" % filename)
 
 
 def select_cccid_for_filetransform(node = None, fileknob = 'file', cccidknob = 'cccid'):
@@ -260,7 +260,7 @@ def select_cccid_for_filetransform(node = None, fileknob = 'file', cccidknob = '
     allcc = _xml_to_cdltransforms(xml)
 
     if len(allcc) == 0:
-        nuke.message("The file (%r) contains no ColorCorrection's")
+        nuke.message("The file (%r) contains no ColourCorrection's")
         return
 
     sel = SelectCCCIDPanel(allcc)

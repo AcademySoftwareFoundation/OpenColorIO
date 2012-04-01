@@ -34,7 +34,7 @@
 #ifndef INCLUDED_OCIO_PYSTRING_H
 #define INCLUDED_OCIO_PYSTRING_H
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include <string>
 #include <vector>

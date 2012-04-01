@@ -7,5 +7,5 @@ include_directories(
 )
 add_executable(ociodisplay main.cpp)
 # set_target_properties(ociodisplay PROPERTIES INSTALL_RPATH ${OIIO_LIBRARIES} )
-target_link_libraries(ociodisplay ${GLEW_LIBRARIES} ${GLUT_LIBRARY} ${OPENGL_LIBRARY} ${OIIO_LIBRARIES} OpenColorIO)
+target_link_libraries(ociodisplay ${GLEW_LIBRARIES} ${GLUT_LIBRARY} ${OPENGL_LIBRARY} ${OIIO_LIBRARIES} OpenColourIO)
 install(TARGETS ociodisplay DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)

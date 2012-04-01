@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "Platform.h"
 
@@ -43,7 +43,7 @@ namespace YAML {
     class InvalidScalar;
     class KeyNotFound;
     template <typename T> class TypedKeyNotFound;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpace>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ColourSpace>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::Config>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::Exception>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::GpuShaderDesc>;
@@ -54,7 +54,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::Transform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::AllocationTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::CDLTransform>;
-    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpaceTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ColourSpaceTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::DisplayTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
@@ -77,8 +77,8 @@ OCIO_NAMESPACE_ENTER
 {
     
     // Core
-    OCIOHIDDEN void operator >> (const YAML::Node& node, ColorSpaceRcPtr& cs);
-    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceRcPtr cs);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, ColourSpaceRcPtr& cs);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ColourSpaceRcPtr cs);
     OCIOHIDDEN void operator >> (const YAML::Node& node, GroupTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstGroupTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, TransformRcPtr& t);
@@ -91,8 +91,8 @@ OCIO_NAMESPACE_ENTER
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstAllocationTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, CDLTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstCDLTransformRcPtr t);
-    OCIOHIDDEN void operator >> (const YAML::Node& node, ColorSpaceTransformRcPtr& t);
-    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstColorSpaceTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, ColourSpaceTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstColourSpaceTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, ExponentTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstExponentTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, FileTransformRcPtr& t);
@@ -111,8 +111,8 @@ OCIO_NAMESPACE_ENTER
     OCIOHIDDEN void operator >> (const YAML::Node& node, BitDepth& depth);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, Allocation alloc);
     OCIOHIDDEN void operator >> (const YAML::Node& node, Allocation& alloc);
-    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceDirection dir);
-    OCIOHIDDEN void operator >> (const YAML::Node& node, ColorSpaceDirection& dir);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ColourSpaceDirection dir);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, ColourSpaceDirection& dir);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, TransformDirection dir);
     OCIOHIDDEN void operator >> (const YAML::Node& node, TransformDirection& dir);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, Interpolation iterp);

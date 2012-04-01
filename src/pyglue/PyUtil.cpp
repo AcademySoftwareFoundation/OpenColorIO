@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "PyUtil.h"
 
@@ -111,9 +111,9 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    int ConvertPyObjectToColorSpaceDirection(PyObject *object, void *valuePtr)
+    int ConvertPyObjectToColourSpaceDirection(PyObject *object, void *valuePtr)
     {
-        ColorSpaceDirection* dirPtr = static_cast<ColorSpaceDirection*>(valuePtr);
+        ColourSpaceDirection* dirPtr = static_cast<ColourSpaceDirection*>(valuePtr);
         
         if(!PyString_Check(object))
         {
@@ -121,7 +121,7 @@ OCIO_NAMESPACE_ENTER
             return 0;
         }
         
-        *dirPtr = ColorSpaceDirectionFromString(PyString_AsString( object ));
+        *dirPtr = ColourSpaceDirectionFromString(PyString_AsString( object ));
         
         return 1;
     }

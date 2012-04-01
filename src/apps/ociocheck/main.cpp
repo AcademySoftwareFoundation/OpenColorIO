@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <set>
 #include <vector>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "argparse.h"
@@ -40,7 +40,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 const char * DESC_STRING = "\n\n"
 "ociocheck is useful to validate that the specified .ocio configuration\n"
-"is valid, and that all the color transforms are defined.\n"
+"is valid, and that all the colour transforms are defined.\n"
 "For example, it is possible that the configuration may reference\n"
 "lookup tables that do not exist. ociocheck will find these cases.\n\n"
 "ociocheck can also be used to clean up formatting on an existing profile\n"
@@ -54,7 +54,7 @@ int main(int argc, const char **argv)
     std::string outputconfig;
     
     ArgParse ap;
-    ap.options("ociocheck -- validate an OpenColorIO configuration\n\n"
+    ap.options("ociocheck -- validate an OpenColourIO configuration\n\n"
                "usage:  ociocheck [options]\n",
                "--help", &help, "Print help message",
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)",
@@ -81,8 +81,8 @@ int main(int argc, const char **argv)
         OCIO::ConstConfigRcPtr config;
         
         std::cout << std::endl;
-        std::cout << "OpenColorIO Library Version: " << OCIO::GetVersion() << std::endl;
-        std::cout << "OpenColorIO Library VersionHex: " << OCIO::GetVersionHex() << std::endl;
+        std::cout << "OpenColourIO Library Version: " << OCIO::GetVersion() << std::endl;
+        std::cout << "OpenColourIO Library VersionHex: " << OCIO::GetVersionHex() << std::endl;
         
         if(!inputconfig.empty())
         {
@@ -119,8 +119,8 @@ int main(int argc, const char **argv)
             std::set<std::string> usedroles;
             const char * allroles[] = { OCIO::ROLE_DEFAULT, OCIO::ROLE_SCENE_LINEAR,
                                         OCIO::ROLE_DATA, OCIO::ROLE_REFERENCE,
-                                        OCIO::ROLE_COMPOSITING_LOG, OCIO::ROLE_COLOR_TIMING,
-                                        OCIO::ROLE_COLOR_PICKING,
+                                        OCIO::ROLE_COMPOSITING_LOG, OCIO::ROLE_COLOUR_TIMING,
+                                        OCIO::ROLE_COLOUR_PICKING,
                                         OCIO::ROLE_TEXTURE_PAINT, OCIO::ROLE_MATTE_PAINT,
                                         NULL };
             int MAXROLES=256;
@@ -130,7 +130,7 @@ int main(int argc, const char **argv)
                 if(!role) break;
                 usedroles.insert(role);
                 
-                OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(role);
+                OCIO::ConstColourSpaceRcPtr cs = config->getColourSpace(role);
                 if(cs)
                 {
                     std::cout << cs->getName() << " (" << role << ")" << std::endl;
@@ -147,7 +147,7 @@ int main(int argc, const char **argv)
                 const char * role = config->getRoleName(i);
                 if(usedroles.find(role) != usedroles.end()) continue;
                 
-                OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(role);
+                OCIO::ConstColourSpaceRcPtr cs = config->getColourSpace(role);
                 if(cs)
                 {
                     std::cout << cs->getName() << " (" << role << ": user)" << std::endl;
@@ -162,8 +162,8 @@ int main(int argc, const char **argv)
         }
         
         std::cout << std::endl;
-        std::cout << "** ColorSpaces **" << std::endl;
-        OCIO::ConstColorSpaceRcPtr lin = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
+        std::cout << "** ColourSpaces **" << std::endl;
+        OCIO::ConstColourSpaceRcPtr lin = config->getColourSpace(OCIO::ROLE_SCENE_LINEAR);
         if(!lin)
         {
             std::cout << "Error: scene_linear role must be defined." << std::endl;
@@ -171,9 +171,9 @@ int main(int argc, const char **argv)
         }
         else
         {
-            for(int i=0; i<config->getNumColorSpaces(); ++i)
+            for(int i=0; i<config->getNumColourSpaces(); ++i)
             {
-                OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(config->getColorSpaceNameByIndex(i));
+                OCIO::ConstColourSpaceRcPtr cs = config->getColourSpace(config->getColourSpaceNameByIndex(i));
                 
                 bool convertsToLinear = true;
                 std::string convertsToLinearErrorText;

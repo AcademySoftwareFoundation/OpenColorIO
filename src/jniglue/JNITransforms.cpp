@@ -26,15 +26,15 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "OpenColorIO/OpenColorIO.h"
-#include "OpenColorIOJNI.h"
+#include "OpenColourIO/OpenColourIO.h"
+#include "OpenColourIOJNI.h"
 #include "JNIUtil.h"
 OCIO_NAMESPACE_USING
 
 // Transform
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Transform_dispose(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Transform_dispose(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     DisposeJOCIO<TransformJNI>(env, self);
@@ -42,7 +42,7 @@ Java_org_OpenColorIO_Transform_dispose(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Transform_createEditableCopy(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Transform_createEditableCopy(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTransformRcPtr ctran = GetConstJOCIO<ConstTransformRcPtr, TransformJNI>(env, self);
@@ -52,16 +52,16 @@ Java_org_OpenColorIO_Transform_createEditableCopy(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_Transform_getDirection(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_Transform_getDirection(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTransformRcPtr ptr = GetConstJOCIO<ConstTransformRcPtr, TransformJNI>(env, self);
-    return BuildJEnum(env, "org/OpenColorIO/TransformDirection", ptr->getDirection());
+    return BuildJEnum(env, "org/OpenColourIO/TransformDirection", ptr->getDirection());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Transform_setDirection(JNIEnv * env, jobject self, jobject dir)
+Java_org_OpenColourIO_Transform_setDirection(JNIEnv * env, jobject self, jobject dir)
 {
     OCIO_JNITRY_ENTER()
     TransformRcPtr ptr = GetEditableJOCIO<TransformRcPtr, TransformJNI>(env, self);
@@ -72,25 +72,25 @@ Java_org_OpenColorIO_Transform_setDirection(JNIEnv * env, jobject self, jobject 
 // AllocationTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_AllocationTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_AllocationTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<AllocationTransformRcPtr, AllocationTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/AllocationTransform"), AllocationTransform::Create());
+             env->FindClass("org/OpenColourIO/AllocationTransform"), AllocationTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_AllocationTransform_getAllocation(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_AllocationTransform_getAllocation(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstAllocationTransformRcPtr alctran = GetConstJOCIO<ConstAllocationTransformRcPtr, AllocationTransformJNI>(env, self);
-    return BuildJEnum(env, "org/OpenColorIO/Allocation", alctran->getAllocation());
+    return BuildJEnum(env, "org/OpenColourIO/Allocation", alctran->getAllocation());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_AllocationTransform_setAllocation(JNIEnv * env, jobject self, jobject allocation)
+Java_org_OpenColourIO_AllocationTransform_setAllocation(JNIEnv * env, jobject self, jobject allocation)
 {
     OCIO_JNITRY_ENTER()
     AllocationTransformRcPtr alctran = GetEditableJOCIO<AllocationTransformRcPtr, AllocationTransformJNI>(env, self);
@@ -99,7 +99,7 @@ Java_org_OpenColorIO_AllocationTransform_setAllocation(JNIEnv * env, jobject sel
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_AllocationTransform_getNumVars(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_AllocationTransform_getNumVars(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstAllocationTransformRcPtr alctran = GetConstJOCIO<ConstAllocationTransformRcPtr, AllocationTransformJNI>(env, self);
@@ -108,7 +108,7 @@ Java_org_OpenColorIO_AllocationTransform_getNumVars(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_AllocationTransform_getVars(JNIEnv * env, jobject self, jfloatArray vars)
+Java_org_OpenColourIO_AllocationTransform_getVars(JNIEnv * env, jobject self, jfloatArray vars)
 {
     OCIO_JNITRY_ENTER()
     ConstAllocationTransformRcPtr alctran = GetConstJOCIO<ConstAllocationTransformRcPtr, AllocationTransformJNI>(env, self);
@@ -117,7 +117,7 @@ Java_org_OpenColorIO_AllocationTransform_getVars(JNIEnv * env, jobject self, jfl
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_AllocationTransform_setVars(JNIEnv * env, jobject self, jint numvars, jfloatArray vars)
+Java_org_OpenColourIO_AllocationTransform_setVars(JNIEnv * env, jobject self, jint numvars, jfloatArray vars)
 {
     OCIO_JNITRY_ENTER()
     AllocationTransformRcPtr alctran = GetEditableJOCIO<AllocationTransformRcPtr, AllocationTransformJNI>(env, self);
@@ -128,26 +128,26 @@ Java_org_OpenColorIO_AllocationTransform_setVars(JNIEnv * env, jobject self, jin
 // CDLTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_CDLTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_CDLTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<CDLTransformRcPtr, CDLTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/CDLTransform"), CDLTransform::Create());
+             env->FindClass("org/OpenColourIO/CDLTransform"), CDLTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_CDLTransform_CreateFromFile(JNIEnv * env, jobject self, jstring src, jstring cccid)
+Java_org_OpenColourIO_CDLTransform_CreateFromFile(JNIEnv * env, jobject self, jstring src, jstring cccid)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<CDLTransformRcPtr, CDLTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/CDLTransform"),
+             env->FindClass("org/OpenColourIO/CDLTransform"),
              CDLTransform::CreateFromFile(GetJStringValue(env, src)(), GetJStringValue(env, cccid)()));
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_OpenColorIO_CDLTransform_equals(JNIEnv * env, jobject self, jobject obj)
+Java_org_OpenColourIO_CDLTransform_equals(JNIEnv * env, jobject self, jobject obj)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr left = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -157,7 +157,7 @@ Java_org_OpenColorIO_CDLTransform_equals(JNIEnv * env, jobject self, jobject obj
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_CDLTransform_getXML(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_CDLTransform_getXML(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr cdltran = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -166,7 +166,7 @@ Java_org_OpenColorIO_CDLTransform_getXML(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_setXML(JNIEnv * env, jobject self, jstring xml)
+Java_org_OpenColourIO_CDLTransform_setXML(JNIEnv * env, jobject self, jstring xml)
 {
     OCIO_JNITRY_ENTER()
     CDLTransformRcPtr cdltran = GetEditableJOCIO<CDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -175,7 +175,7 @@ Java_org_OpenColorIO_CDLTransform_setXML(JNIEnv * env, jobject self, jstring xml
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_setSlope(JNIEnv * env, jobject self, jfloatArray rgb)
+Java_org_OpenColourIO_CDLTransform_setSlope(JNIEnv * env, jobject self, jfloatArray rgb)
 {
     OCIO_JNITRY_ENTER()
     CDLTransformRcPtr cdltran = GetEditableJOCIO<CDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -184,7 +184,7 @@ Java_org_OpenColorIO_CDLTransform_setSlope(JNIEnv * env, jobject self, jfloatArr
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_getSlope(JNIEnv * env, jobject self, jfloatArray rgb)
+Java_org_OpenColourIO_CDLTransform_getSlope(JNIEnv * env, jobject self, jfloatArray rgb)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr cdltran = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -193,7 +193,7 @@ Java_org_OpenColorIO_CDLTransform_getSlope(JNIEnv * env, jobject self, jfloatArr
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_setOffset(JNIEnv * env, jobject self, jfloatArray rgb)
+Java_org_OpenColourIO_CDLTransform_setOffset(JNIEnv * env, jobject self, jfloatArray rgb)
 {
     OCIO_JNITRY_ENTER()
     CDLTransformRcPtr cdltran = GetEditableJOCIO<CDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -202,7 +202,7 @@ Java_org_OpenColorIO_CDLTransform_setOffset(JNIEnv * env, jobject self, jfloatAr
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_getOffset(JNIEnv * env, jobject self, jfloatArray rgb)
+Java_org_OpenColourIO_CDLTransform_getOffset(JNIEnv * env, jobject self, jfloatArray rgb)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr cdltran = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -211,7 +211,7 @@ Java_org_OpenColorIO_CDLTransform_getOffset(JNIEnv * env, jobject self, jfloatAr
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_setPower(JNIEnv * env, jobject self, jfloatArray rgb)
+Java_org_OpenColourIO_CDLTransform_setPower(JNIEnv * env, jobject self, jfloatArray rgb)
 {
     OCIO_JNITRY_ENTER()
     CDLTransformRcPtr cdltran = GetEditableJOCIO<CDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -220,7 +220,7 @@ Java_org_OpenColorIO_CDLTransform_setPower(JNIEnv * env, jobject self, jfloatArr
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_getPower(JNIEnv * env, jobject self, jfloatArray rgb)
+Java_org_OpenColourIO_CDLTransform_getPower(JNIEnv * env, jobject self, jfloatArray rgb)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr cdltran = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -229,7 +229,7 @@ Java_org_OpenColorIO_CDLTransform_getPower(JNIEnv * env, jobject self, jfloatArr
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_setSOP(JNIEnv * env, jobject self, jfloatArray vec9)
+Java_org_OpenColourIO_CDLTransform_setSOP(JNIEnv * env, jobject self, jfloatArray vec9)
 {
     OCIO_JNITRY_ENTER()
     CDLTransformRcPtr cdltran = GetEditableJOCIO<CDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -238,7 +238,7 @@ Java_org_OpenColorIO_CDLTransform_setSOP(JNIEnv * env, jobject self, jfloatArray
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_getSOP(JNIEnv * env, jobject self, jfloatArray vec9)
+Java_org_OpenColourIO_CDLTransform_getSOP(JNIEnv * env, jobject self, jfloatArray vec9)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr cdltran = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -247,7 +247,7 @@ Java_org_OpenColorIO_CDLTransform_getSOP(JNIEnv * env, jobject self, jfloatArray
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_setSat(JNIEnv * env, jobject self, jfloat sat)
+Java_org_OpenColourIO_CDLTransform_setSat(JNIEnv * env, jobject self, jfloat sat)
 {
     OCIO_JNITRY_ENTER()
     CDLTransformRcPtr cdltran = GetEditableJOCIO<CDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -256,7 +256,7 @@ Java_org_OpenColorIO_CDLTransform_setSat(JNIEnv * env, jobject self, jfloat sat)
 }
 
 JNIEXPORT jfloat JNICALL
-Java_org_OpenColorIO_CDLTransform_getSat(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_CDLTransform_getSat(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr cdltran = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -265,7 +265,7 @@ Java_org_OpenColorIO_CDLTransform_getSat(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_getSatLumaCoefs(JNIEnv * env, jobject self, jfloatArray rgb)
+Java_org_OpenColourIO_CDLTransform_getSatLumaCoefs(JNIEnv * env, jobject self, jfloatArray rgb)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr cdltran = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -274,7 +274,7 @@ Java_org_OpenColorIO_CDLTransform_getSatLumaCoefs(JNIEnv * env, jobject self, jf
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_setID(JNIEnv * env, jobject self, jstring id)
+Java_org_OpenColourIO_CDLTransform_setID(JNIEnv * env, jobject self, jstring id)
 {
     OCIO_JNITRY_ENTER()
     CDLTransformRcPtr cdltran = GetEditableJOCIO<CDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -283,7 +283,7 @@ Java_org_OpenColorIO_CDLTransform_setID(JNIEnv * env, jobject self, jstring id)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_CDLTransform_getID(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_CDLTransform_getID(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr cdltran = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -292,7 +292,7 @@ Java_org_OpenColorIO_CDLTransform_getID(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_CDLTransform_setDescription(JNIEnv * env, jobject self, jstring desc)
+Java_org_OpenColourIO_CDLTransform_setDescription(JNIEnv * env, jobject self, jstring desc)
 {
     OCIO_JNITRY_ENTER()
     CDLTransformRcPtr cdltran = GetEditableJOCIO<CDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -301,7 +301,7 @@ Java_org_OpenColorIO_CDLTransform_setDescription(JNIEnv * env, jobject self, jst
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_CDLTransform_getDescription(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_CDLTransform_getDescription(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstCDLTransformRcPtr cdltran = GetConstJOCIO<ConstCDLTransformRcPtr, CDLTransformJNI>(env, self);
@@ -309,49 +309,49 @@ Java_org_OpenColorIO_CDLTransform_getDescription(JNIEnv * env, jobject self)
     OCIO_JNITRY_EXIT(NULL)
 }
 
-// ColorSpaceTransform
+// ColourSpaceTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_ColorSpaceTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_ColourSpaceTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
-    return BuildJObject<ColorSpaceTransformRcPtr, ColorSpaceTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/ColorSpaceTransform"), ColorSpaceTransform::Create());
+    return BuildJObject<ColourSpaceTransformRcPtr, ColourSpaceTransformJNI>(env, self,
+             env->FindClass("org/OpenColourIO/ColourSpaceTransform"), ColourSpaceTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_ColorSpaceTransform_getSrc(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_ColourSpaceTransform_getSrc(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
-    ConstColorSpaceTransformRcPtr coltran = GetConstJOCIO<ConstColorSpaceTransformRcPtr, ColorSpaceTransformJNI>(env, self);
+    ConstColourSpaceTransformRcPtr coltran = GetConstJOCIO<ConstColourSpaceTransformRcPtr, ColourSpaceTransformJNI>(env, self);
     return env->NewStringUTF(coltran->getSrc());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_ColorSpaceTransform_setSrc(JNIEnv * env, jobject self, jstring src)
+Java_org_OpenColourIO_ColourSpaceTransform_setSrc(JNIEnv * env, jobject self, jstring src)
 {
     OCIO_JNITRY_ENTER()
-    ColorSpaceTransformRcPtr coltran = GetEditableJOCIO<ColorSpaceTransformRcPtr, ColorSpaceTransformJNI>(env, self);
+    ColourSpaceTransformRcPtr coltran = GetEditableJOCIO<ColourSpaceTransformRcPtr, ColourSpaceTransformJNI>(env, self);
     coltran->setSrc(GetJStringValue(env, src)());
     OCIO_JNITRY_EXIT()
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_ColorSpaceTransform_getDst(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_ColourSpaceTransform_getDst(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
-    ConstColorSpaceTransformRcPtr coltran = GetConstJOCIO<ConstColorSpaceTransformRcPtr, ColorSpaceTransformJNI>(env, self);
+    ConstColourSpaceTransformRcPtr coltran = GetConstJOCIO<ConstColourSpaceTransformRcPtr, ColourSpaceTransformJNI>(env, self);
     return env->NewStringUTF(coltran->getDst());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_ColorSpaceTransform_setDst(JNIEnv * env, jobject self, jstring dst)
+Java_org_OpenColourIO_ColourSpaceTransform_setDst(JNIEnv * env, jobject self, jstring dst)
 {
     OCIO_JNITRY_ENTER()
-    ColorSpaceTransformRcPtr coltran = GetEditableJOCIO<ColorSpaceTransformRcPtr, ColorSpaceTransformJNI>(env, self);
+    ColourSpaceTransformRcPtr coltran = GetEditableJOCIO<ColourSpaceTransformRcPtr, ColourSpaceTransformJNI>(env, self);
     coltran->setDst(GetJStringValue(env, dst)());
     OCIO_JNITRY_EXIT()
 }
@@ -359,34 +359,34 @@ Java_org_OpenColorIO_ColorSpaceTransform_setDst(JNIEnv * env, jobject self, jstr
 // DisplayTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_DisplayTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<DisplayTransformRcPtr, DisplayTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/DisplayTransform"), DisplayTransform::Create());
+             env->FindClass("org/OpenColourIO/DisplayTransform"), DisplayTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_DisplayTransform_setInputColorSpaceName(JNIEnv * env, jobject self, jstring name)
+Java_org_OpenColourIO_DisplayTransform_setInputColourSpaceName(JNIEnv * env, jobject self, jstring name)
 {
     OCIO_JNITRY_ENTER()
     DisplayTransformRcPtr dtran = GetEditableJOCIO<DisplayTransformRcPtr, DisplayTransformJNI>(env, self);
-    dtran->setInputColorSpaceName(GetJStringValue(env, name)());
+    dtran->setInputColourSpaceName(GetJStringValue(env, name)());
     OCIO_JNITRY_EXIT()
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_DisplayTransform_getInputColorSpaceName(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_getInputColourSpaceName(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstDisplayTransformRcPtr dtran = GetConstJOCIO<ConstDisplayTransformRcPtr, DisplayTransformJNI>(env, self);
-    return env->NewStringUTF(dtran->getInputColorSpaceName());
+    return env->NewStringUTF(dtran->getInputColourSpaceName());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_DisplayTransform_setLinearCC(JNIEnv * env, jobject self, jobject cc)
+Java_org_OpenColourIO_DisplayTransform_setLinearCC(JNIEnv * env, jobject self, jobject cc)
 {
     OCIO_JNITRY_ENTER()
     DisplayTransformRcPtr dtran = GetEditableJOCIO<DisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -396,7 +396,7 @@ Java_org_OpenColorIO_DisplayTransform_setLinearCC(JNIEnv * env, jobject self, jo
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_DisplayTransform_getLinearCC(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_getLinearCC(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstDisplayTransformRcPtr dtran = GetConstJOCIO<ConstDisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -407,28 +407,28 @@ Java_org_OpenColorIO_DisplayTransform_getLinearCC(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_DisplayTransform_setColorTimingCC(JNIEnv * env, jobject self, jobject cc)
+Java_org_OpenColourIO_DisplayTransform_setColourTimingCC(JNIEnv * env, jobject self, jobject cc)
 {
     OCIO_JNITRY_ENTER()
     DisplayTransformRcPtr dtran = GetEditableJOCIO<DisplayTransformRcPtr, DisplayTransformJNI>(env, self);
     ConstTransformRcPtr ptr = GetConstJOCIO<ConstTransformRcPtr, TransformJNI>(env, cc);
-    dtran->setColorTimingCC(ptr);
+    dtran->setColourTimingCC(ptr);
     OCIO_JNITRY_EXIT()
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_DisplayTransform_getColorTimingCC(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_getColourTimingCC(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstDisplayTransformRcPtr dtran = GetConstJOCIO<ConstDisplayTransformRcPtr, DisplayTransformJNI>(env, self);
-    ConstTransformRcPtr cctran = dtran->getColorTimingCC();
+    ConstTransformRcPtr cctran = dtran->getColourTimingCC();
     return BuildJObject<TransformRcPtr, TransformJNI>(env, self,
              env->FindClass(GetOCIOTClass(cctran)), cctran->createEditableCopy());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_DisplayTransform_setChannelView(JNIEnv * env, jobject self, jobject transform)
+Java_org_OpenColourIO_DisplayTransform_setChannelView(JNIEnv * env, jobject self, jobject transform)
 {
     OCIO_JNITRY_ENTER()
     DisplayTransformRcPtr dtran = GetEditableJOCIO<DisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -438,7 +438,7 @@ Java_org_OpenColorIO_DisplayTransform_setChannelView(JNIEnv * env, jobject self,
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_DisplayTransform_getChannelView(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_getChannelView(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstDisplayTransformRcPtr dtran = GetConstJOCIO<ConstDisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -449,7 +449,7 @@ Java_org_OpenColorIO_DisplayTransform_getChannelView(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_DisplayTransform_setDisplay(JNIEnv * env, jobject self, jstring display)
+Java_org_OpenColourIO_DisplayTransform_setDisplay(JNIEnv * env, jobject self, jstring display)
 {
     OCIO_JNITRY_ENTER()
     DisplayTransformRcPtr dtran = GetEditableJOCIO<DisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -458,7 +458,7 @@ Java_org_OpenColorIO_DisplayTransform_setDisplay(JNIEnv * env, jobject self, jst
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_DisplayTransform_getDisplay(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_getDisplay(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstDisplayTransformRcPtr dtran = GetConstJOCIO<ConstDisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -467,7 +467,7 @@ Java_org_OpenColorIO_DisplayTransform_getDisplay(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_DisplayTransform_setView(JNIEnv * env, jobject self, jstring view)
+Java_org_OpenColourIO_DisplayTransform_setView(JNIEnv * env, jobject self, jstring view)
 {
     OCIO_JNITRY_ENTER()
     DisplayTransformRcPtr dtran = GetEditableJOCIO<DisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -476,7 +476,7 @@ Java_org_OpenColorIO_DisplayTransform_setView(JNIEnv * env, jobject self, jstrin
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_DisplayTransform_getView(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_getView(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstDisplayTransformRcPtr dtran = GetConstJOCIO<ConstDisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -485,7 +485,7 @@ Java_org_OpenColorIO_DisplayTransform_getView(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_DisplayTransform_setDisplayCC(JNIEnv * env, jobject self, jobject cc)
+Java_org_OpenColourIO_DisplayTransform_setDisplayCC(JNIEnv * env, jobject self, jobject cc)
 {
     OCIO_JNITRY_ENTER()
     DisplayTransformRcPtr dtran = GetEditableJOCIO<DisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -495,7 +495,7 @@ Java_org_OpenColorIO_DisplayTransform_setDisplayCC(JNIEnv * env, jobject self, j
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_DisplayTransform_getDisplayCC(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_getDisplayCC(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstDisplayTransformRcPtr dtran = GetConstJOCIO<ConstDisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -506,7 +506,7 @@ Java_org_OpenColorIO_DisplayTransform_getDisplayCC(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_DisplayTransform_setLooksOverride(JNIEnv * env, jobject self, jstring looks)
+Java_org_OpenColourIO_DisplayTransform_setLooksOverride(JNIEnv * env, jobject self, jstring looks)
 {
     OCIO_JNITRY_ENTER()
     DisplayTransformRcPtr dtran = GetEditableJOCIO<DisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -515,7 +515,7 @@ Java_org_OpenColorIO_DisplayTransform_setLooksOverride(JNIEnv * env, jobject sel
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_DisplayTransform_getLooksOverride(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_getLooksOverride(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstDisplayTransformRcPtr dtran = GetConstJOCIO<ConstDisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -524,7 +524,7 @@ Java_org_OpenColorIO_DisplayTransform_getLooksOverride(JNIEnv * env, jobject sel
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_DisplayTransform_setLooksOverrideEnabled(JNIEnv * env, jobject self, jboolean enabled)
+Java_org_OpenColourIO_DisplayTransform_setLooksOverrideEnabled(JNIEnv * env, jobject self, jboolean enabled)
 {
     OCIO_JNITRY_ENTER()
     DisplayTransformRcPtr dtran = GetEditableJOCIO<DisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -533,7 +533,7 @@ Java_org_OpenColorIO_DisplayTransform_setLooksOverrideEnabled(JNIEnv * env, jobj
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_OpenColorIO_DisplayTransform_getLooksOverrideEnabled(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_DisplayTransform_getLooksOverrideEnabled(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstDisplayTransformRcPtr dtran = GetConstJOCIO<ConstDisplayTransformRcPtr, DisplayTransformJNI>(env, self);
@@ -544,16 +544,16 @@ Java_org_OpenColorIO_DisplayTransform_getLooksOverrideEnabled(JNIEnv * env, jobj
 // ExponentTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_ExponentTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_ExponentTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<TransformRcPtr, TransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/ExponentTransform"), ExponentTransform::Create());
+             env->FindClass("org/OpenColourIO/ExponentTransform"), ExponentTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_ExponentTransform_setValue(JNIEnv * env, jobject self, jfloatArray vec4)
+Java_org_OpenColourIO_ExponentTransform_setValue(JNIEnv * env, jobject self, jfloatArray vec4)
 {
     OCIO_JNITRY_ENTER()
     ExponentTransformRcPtr exptran = GetEditableJOCIO<ExponentTransformRcPtr, ExponentTransformJNI>(env, self);
@@ -562,7 +562,7 @@ Java_org_OpenColorIO_ExponentTransform_setValue(JNIEnv * env, jobject self, jflo
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_ExponentTransform_getValue(JNIEnv * env, jobject self, jfloatArray vec4)
+Java_org_OpenColourIO_ExponentTransform_getValue(JNIEnv * env, jobject self, jfloatArray vec4)
 {
     OCIO_JNITRY_ENTER()
     ConstExponentTransformRcPtr exptran = GetConstJOCIO<ConstExponentTransformRcPtr, ExponentTransformJNI>(env, self);
@@ -573,16 +573,16 @@ Java_org_OpenColorIO_ExponentTransform_getValue(JNIEnv * env, jobject self, jflo
 // FileTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_FileTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_FileTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<FileTransformRcPtr, FileTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/FileTransform"), FileTransform::Create());
+             env->FindClass("org/OpenColourIO/FileTransform"), FileTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_FileTransform_getSrc(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_FileTransform_getSrc(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstFileTransformRcPtr filetran = GetConstJOCIO<ConstFileTransformRcPtr, FileTransformJNI>(env, self);
@@ -591,7 +591,7 @@ Java_org_OpenColorIO_FileTransform_getSrc(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_FileTransform_setSrc(JNIEnv * env, jobject self, jstring src)
+Java_org_OpenColourIO_FileTransform_setSrc(JNIEnv * env, jobject self, jstring src)
 {
     OCIO_JNITRY_ENTER()
     FileTransformRcPtr filetran = GetEditableJOCIO<FileTransformRcPtr, FileTransformJNI>(env, self);
@@ -600,7 +600,7 @@ Java_org_OpenColorIO_FileTransform_setSrc(JNIEnv * env, jobject self, jstring sr
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_FileTransform_getCCCId(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_FileTransform_getCCCId(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstFileTransformRcPtr filetran = GetConstJOCIO<ConstFileTransformRcPtr, FileTransformJNI>(env, self);
@@ -609,7 +609,7 @@ Java_org_OpenColorIO_FileTransform_getCCCId(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_FileTransform_setCCCId(JNIEnv * env, jobject self, jstring id)
+Java_org_OpenColourIO_FileTransform_setCCCId(JNIEnv * env, jobject self, jstring id)
 {
     OCIO_JNITRY_ENTER()
     FileTransformRcPtr filetran = GetEditableJOCIO<FileTransformRcPtr, FileTransformJNI>(env, self);
@@ -618,16 +618,16 @@ Java_org_OpenColorIO_FileTransform_setCCCId(JNIEnv * env, jobject self, jstring 
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_FileTransform_getInterpolation(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_FileTransform_getInterpolation(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstFileTransformRcPtr filetran = GetConstJOCIO<ConstFileTransformRcPtr, FileTransformJNI>(env, self);
-    return BuildJEnum(env, "org/OpenColorIO/Interpolation", filetran->getInterpolation());
+    return BuildJEnum(env, "org/OpenColourIO/Interpolation", filetran->getInterpolation());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_FileTransform_setInterpolation(JNIEnv * env, jobject self, jobject interp)
+Java_org_OpenColourIO_FileTransform_setInterpolation(JNIEnv * env, jobject self, jobject interp)
 {
     OCIO_JNITRY_ENTER()
     FileTransformRcPtr filetran = GetEditableJOCIO<FileTransformRcPtr, FileTransformJNI>(env, self);
@@ -636,7 +636,7 @@ Java_org_OpenColorIO_FileTransform_setInterpolation(JNIEnv * env, jobject self, 
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_FileTransform_getNumFormats(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_FileTransform_getNumFormats(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstFileTransformRcPtr filetran = GetConstJOCIO<ConstFileTransformRcPtr, FileTransformJNI>(env, self);
@@ -645,7 +645,7 @@ Java_org_OpenColorIO_FileTransform_getNumFormats(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_FileTransform_getFormatNameByIndex(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_FileTransform_getFormatNameByIndex(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstFileTransformRcPtr filetran = GetConstJOCIO<ConstFileTransformRcPtr, FileTransformJNI>(env, self);
@@ -654,7 +654,7 @@ Java_org_OpenColorIO_FileTransform_getFormatNameByIndex(JNIEnv * env, jobject se
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_FileTransform_getFormatExtensionByIndex(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_FileTransform_getFormatExtensionByIndex(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstFileTransformRcPtr filetran = GetConstJOCIO<ConstFileTransformRcPtr, FileTransformJNI>(env, self);
@@ -665,16 +665,16 @@ Java_org_OpenColorIO_FileTransform_getFormatExtensionByIndex(JNIEnv * env, jobje
 // GroupTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_GroupTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_GroupTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<GroupTransformRcPtr, GroupTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/GroupTransform"), GroupTransform::Create());
+             env->FindClass("org/OpenColourIO/GroupTransform"), GroupTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_GroupTransform_getTransform(JNIEnv * env, jobject self, jint index)
+Java_org_OpenColourIO_GroupTransform_getTransform(JNIEnv * env, jobject self, jint index)
 {
     OCIO_JNITRY_ENTER()
     ConstGroupTransformRcPtr gtran = GetConstJOCIO<ConstGroupTransformRcPtr, GroupTransformJNI>(env, self);
@@ -685,7 +685,7 @@ Java_org_OpenColorIO_GroupTransform_getTransform(JNIEnv * env, jobject self, jin
 }
 
 JNIEXPORT jint JNICALL
-Java_org_OpenColorIO_GroupTransform_size(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_GroupTransform_size(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstGroupTransformRcPtr gtran = GetConstJOCIO<ConstGroupTransformRcPtr, GroupTransformJNI>(env, self);
@@ -694,7 +694,7 @@ Java_org_OpenColorIO_GroupTransform_size(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_GroupTransform_push_1back(JNIEnv * env, jobject self, jobject transform)
+Java_org_OpenColourIO_GroupTransform_push_1back(JNIEnv * env, jobject self, jobject transform)
 {
     OCIO_JNITRY_ENTER()
     GroupTransformRcPtr gtran = GetEditableJOCIO<GroupTransformRcPtr, GroupTransformJNI>(env, self);
@@ -704,7 +704,7 @@ Java_org_OpenColorIO_GroupTransform_push_1back(JNIEnv * env, jobject self, jobje
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_GroupTransform_clear(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_GroupTransform_clear(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     GroupTransformRcPtr gtran = GetEditableJOCIO<GroupTransformRcPtr, GroupTransformJNI>(env, self);
@@ -713,7 +713,7 @@ Java_org_OpenColorIO_GroupTransform_clear(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_OpenColorIO_GroupTransform_empty(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_GroupTransform_empty(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstGroupTransformRcPtr gtran = GetConstJOCIO<ConstGroupTransformRcPtr, GroupTransformJNI>(env, self);
@@ -724,16 +724,16 @@ Java_org_OpenColorIO_GroupTransform_empty(JNIEnv * env, jobject self)
 // LogTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_LogTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_LogTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<LogTransformRcPtr, LogTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/LogTransform"), LogTransform::Create());
+             env->FindClass("org/OpenColourIO/LogTransform"), LogTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_LogTransform_setBase(JNIEnv * env, jobject self, jfloat val)
+Java_org_OpenColourIO_LogTransform_setBase(JNIEnv * env, jobject self, jfloat val)
 {
     OCIO_JNITRY_ENTER()
     LogTransformRcPtr ltran = GetEditableJOCIO<LogTransformRcPtr, LogTransformJNI>(env, self);
@@ -742,7 +742,7 @@ Java_org_OpenColorIO_LogTransform_setBase(JNIEnv * env, jobject self, jfloat val
 }
 
 JNIEXPORT jfloat JNICALL
-Java_org_OpenColorIO_LogTransform_getBase(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_LogTransform_getBase(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstLogTransformRcPtr ltran = GetConstJOCIO<ConstLogTransformRcPtr, LogTransformJNI>(env, self);
@@ -753,16 +753,16 @@ Java_org_OpenColorIO_LogTransform_getBase(JNIEnv * env, jobject self)
 // LookTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_LookTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_LookTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<LookTransformRcPtr, LookTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/LookTransform"), LookTransform::Create());
+             env->FindClass("org/OpenColourIO/LookTransform"), LookTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_LookTransform_getSrc(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_LookTransform_getSrc(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstLookTransformRcPtr lktran = GetConstJOCIO<ConstLookTransformRcPtr, LookTransformJNI>(env, self);
@@ -771,7 +771,7 @@ Java_org_OpenColorIO_LookTransform_getSrc(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_LookTransform_setSrc(JNIEnv * env, jobject self, jstring src)
+Java_org_OpenColourIO_LookTransform_setSrc(JNIEnv * env, jobject self, jstring src)
 {
     OCIO_JNITRY_ENTER()
     LookTransformRcPtr lktran = GetEditableJOCIO<LookTransformRcPtr, LookTransformJNI>(env, self);
@@ -780,7 +780,7 @@ Java_org_OpenColorIO_LookTransform_setSrc(JNIEnv * env, jobject self, jstring sr
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_LookTransform_getDst(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_LookTransform_getDst(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstLookTransformRcPtr lktran = GetConstJOCIO<ConstLookTransformRcPtr, LookTransformJNI>(env, self);
@@ -789,7 +789,7 @@ Java_org_OpenColorIO_LookTransform_getDst(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_LookTransform_setDst(JNIEnv * env, jobject self, jstring dst)
+Java_org_OpenColourIO_LookTransform_setDst(JNIEnv * env, jobject self, jstring dst)
 {
     OCIO_JNITRY_ENTER()
     LookTransformRcPtr lktran = GetEditableJOCIO<LookTransformRcPtr, LookTransformJNI>(env, self);
@@ -798,7 +798,7 @@ Java_org_OpenColorIO_LookTransform_setDst(JNIEnv * env, jobject self, jstring ds
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_LookTransform_setLooks(JNIEnv * env, jobject self, jstring looks)
+Java_org_OpenColourIO_LookTransform_setLooks(JNIEnv * env, jobject self, jstring looks)
 {
     OCIO_JNITRY_ENTER()
     LookTransformRcPtr lktran = GetEditableJOCIO<LookTransformRcPtr, LookTransformJNI>(env, self);
@@ -807,7 +807,7 @@ Java_org_OpenColorIO_LookTransform_setLooks(JNIEnv * env, jobject self, jstring 
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_LookTransform_getLooks(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_LookTransform_getLooks(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstLookTransformRcPtr lktran = GetConstJOCIO<ConstLookTransformRcPtr, LookTransformJNI>(env, self);
@@ -818,16 +818,16 @@ Java_org_OpenColorIO_LookTransform_getLooks(JNIEnv * env, jobject self)
 // MatrixTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_MatrixTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_MatrixTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<MatrixTransformRcPtr, MatrixTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/MatrixTransform"), MatrixTransform::Create());
+             env->FindClass("org/OpenColourIO/MatrixTransform"), MatrixTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT jboolean JNICALL
-Java_org_OpenColorIO_MatrixTransform_equals(JNIEnv * env, jobject self, jobject obj)
+Java_org_OpenColourIO_MatrixTransform_equals(JNIEnv * env, jobject self, jobject obj)
 {
     OCIO_JNITRY_ENTER()
     ConstMatrixTransformRcPtr left = GetConstJOCIO<ConstMatrixTransformRcPtr, MatrixTransformJNI>(env, self);
@@ -837,7 +837,7 @@ Java_org_OpenColorIO_MatrixTransform_equals(JNIEnv * env, jobject self, jobject 
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_setValue(JNIEnv * env, jobject self, jfloatArray m44, jfloatArray offset4)
+Java_org_OpenColourIO_MatrixTransform_setValue(JNIEnv * env, jobject self, jfloatArray m44, jfloatArray offset4)
 {
     OCIO_JNITRY_ENTER()
     MatrixTransformRcPtr mtran = GetEditableJOCIO<MatrixTransformRcPtr, MatrixTransformJNI>(env, self);
@@ -847,7 +847,7 @@ Java_org_OpenColorIO_MatrixTransform_setValue(JNIEnv * env, jobject self, jfloat
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_getValue(JNIEnv * env, jobject self, jfloatArray m44, jfloatArray offset4)
+Java_org_OpenColourIO_MatrixTransform_getValue(JNIEnv * env, jobject self, jfloatArray m44, jfloatArray offset4)
 {
     OCIO_JNITRY_ENTER()
     ConstMatrixTransformRcPtr mtran = GetConstJOCIO<ConstMatrixTransformRcPtr, MatrixTransformJNI>(env, self);
@@ -857,7 +857,7 @@ Java_org_OpenColorIO_MatrixTransform_getValue(JNIEnv * env, jobject self, jfloat
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_setMatrix(JNIEnv * env, jobject self, jfloatArray m44)
+Java_org_OpenColourIO_MatrixTransform_setMatrix(JNIEnv * env, jobject self, jfloatArray m44)
 {
     OCIO_JNITRY_ENTER()
     MatrixTransformRcPtr mtran = GetEditableJOCIO<MatrixTransformRcPtr, MatrixTransformJNI>(env, self);
@@ -866,7 +866,7 @@ Java_org_OpenColorIO_MatrixTransform_setMatrix(JNIEnv * env, jobject self, jfloa
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_getMatrix(JNIEnv * env, jobject self, jfloatArray m44)
+Java_org_OpenColourIO_MatrixTransform_getMatrix(JNIEnv * env, jobject self, jfloatArray m44)
 {
     OCIO_JNITRY_ENTER()
     ConstMatrixTransformRcPtr mtran = GetConstJOCIO<ConstMatrixTransformRcPtr, MatrixTransformJNI>(env, self);
@@ -875,7 +875,7 @@ Java_org_OpenColorIO_MatrixTransform_getMatrix(JNIEnv * env, jobject self, jfloa
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_setOffset(JNIEnv * env, jobject self, jfloatArray offset4)
+Java_org_OpenColourIO_MatrixTransform_setOffset(JNIEnv * env, jobject self, jfloatArray offset4)
 {
     OCIO_JNITRY_ENTER()
     MatrixTransformRcPtr mtran = GetEditableJOCIO<MatrixTransformRcPtr, MatrixTransformJNI>(env, self);
@@ -884,7 +884,7 @@ Java_org_OpenColorIO_MatrixTransform_setOffset(JNIEnv * env, jobject self, jfloa
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_getOffset(JNIEnv * env, jobject self, jfloatArray offset4)
+Java_org_OpenColourIO_MatrixTransform_getOffset(JNIEnv * env, jobject self, jfloatArray offset4)
 {
     OCIO_JNITRY_ENTER()
     ConstMatrixTransformRcPtr mtran = GetConstJOCIO<ConstMatrixTransformRcPtr, MatrixTransformJNI>(env, self);
@@ -893,7 +893,7 @@ Java_org_OpenColorIO_MatrixTransform_getOffset(JNIEnv * env, jobject self, jfloa
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_Fit(JNIEnv * env, jobject self,
+Java_org_OpenColourIO_MatrixTransform_Fit(JNIEnv * env, jobject self,
     jfloatArray m44, jfloatArray offset4, jfloatArray oldmin4,
     jfloatArray oldmax4, jfloatArray newmin4, jfloatArray newmax4)
 {
@@ -909,7 +909,7 @@ Java_org_OpenColorIO_MatrixTransform_Fit(JNIEnv * env, jobject self,
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_Identity(JNIEnv * env, jobject self,
+Java_org_OpenColourIO_MatrixTransform_Identity(JNIEnv * env, jobject self,
     jfloatArray m44, jfloatArray offset4)
 {
     OCIO_JNITRY_ENTER()
@@ -920,7 +920,7 @@ Java_org_OpenColorIO_MatrixTransform_Identity(JNIEnv * env, jobject self,
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_Sat(JNIEnv * env, jobject self,
+Java_org_OpenColourIO_MatrixTransform_Sat(JNIEnv * env, jobject self,
     jfloatArray m44, jfloatArray offset4, jfloat sat,
     jfloatArray lumaCoef3)
 {
@@ -934,7 +934,7 @@ Java_org_OpenColorIO_MatrixTransform_Sat(JNIEnv * env, jobject self,
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_Scale(JNIEnv * env, jobject self,
+Java_org_OpenColourIO_MatrixTransform_Scale(JNIEnv * env, jobject self,
     jfloatArray m44, jfloatArray offset4, jfloatArray scale4)
 {
     OCIO_JNITRY_ENTER()
@@ -946,7 +946,7 @@ Java_org_OpenColorIO_MatrixTransform_Scale(JNIEnv * env, jobject self,
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_MatrixTransform_View(JNIEnv * env, jobject self,
+Java_org_OpenColourIO_MatrixTransform_View(JNIEnv * env, jobject self,
     jfloatArray m44, jfloatArray offset4, jintArray channelHot4,
     jfloatArray lumaCoef3)
 {
@@ -962,16 +962,16 @@ Java_org_OpenColorIO_MatrixTransform_View(JNIEnv * env, jobject self,
 // TruelightTransform
 
 JNIEXPORT jobject JNICALL
-Java_org_OpenColorIO_TruelightTransform_Create(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_Create(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     return BuildJObject<TruelightTransformRcPtr, TruelightTransformJNI>(env, self,
-             env->FindClass("org/OpenColorIO/TruelightTransform"), TruelightTransform::Create());
+             env->FindClass("org/OpenColourIO/TruelightTransform"), TruelightTransform::Create());
     OCIO_JNITRY_EXIT(NULL)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setConfigRoot(JNIEnv * env, jobject self, jstring configroot)
+Java_org_OpenColourIO_TruelightTransform_setConfigRoot(JNIEnv * env, jobject self, jstring configroot)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -980,7 +980,7 @@ Java_org_OpenColorIO_TruelightTransform_setConfigRoot(JNIEnv * env, jobject self
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getConfigRoot(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getConfigRoot(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -989,7 +989,7 @@ Java_org_OpenColorIO_TruelightTransform_getConfigRoot(JNIEnv * env, jobject self
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setProfile(JNIEnv * env, jobject self, jstring profile)
+Java_org_OpenColourIO_TruelightTransform_setProfile(JNIEnv * env, jobject self, jstring profile)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -998,7 +998,7 @@ Java_org_OpenColorIO_TruelightTransform_setProfile(JNIEnv * env, jobject self, j
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getProfile(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getProfile(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1007,7 +1007,7 @@ Java_org_OpenColorIO_TruelightTransform_getProfile(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setCamera(JNIEnv * env, jobject self, jstring camera)
+Java_org_OpenColourIO_TruelightTransform_setCamera(JNIEnv * env, jobject self, jstring camera)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1016,7 +1016,7 @@ Java_org_OpenColorIO_TruelightTransform_setCamera(JNIEnv * env, jobject self, js
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getCamera(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getCamera(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1025,7 +1025,7 @@ Java_org_OpenColorIO_TruelightTransform_getCamera(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setInputDisplay(JNIEnv * env, jobject self, jstring display)
+Java_org_OpenColourIO_TruelightTransform_setInputDisplay(JNIEnv * env, jobject self, jstring display)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1034,7 +1034,7 @@ Java_org_OpenColorIO_TruelightTransform_setInputDisplay(JNIEnv * env, jobject se
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getInputDisplay(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getInputDisplay(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1043,7 +1043,7 @@ Java_org_OpenColorIO_TruelightTransform_getInputDisplay(JNIEnv * env, jobject se
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setRecorder(JNIEnv * env, jobject self, jstring recorder)
+Java_org_OpenColourIO_TruelightTransform_setRecorder(JNIEnv * env, jobject self, jstring recorder)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1052,7 +1052,7 @@ Java_org_OpenColorIO_TruelightTransform_setRecorder(JNIEnv * env, jobject self, 
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getRecorder(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getRecorder(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1061,7 +1061,7 @@ Java_org_OpenColorIO_TruelightTransform_getRecorder(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setPrint(JNIEnv * env, jobject self, jstring print)
+Java_org_OpenColourIO_TruelightTransform_setPrint(JNIEnv * env, jobject self, jstring print)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1070,7 +1070,7 @@ Java_org_OpenColorIO_TruelightTransform_setPrint(JNIEnv * env, jobject self, jst
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getPrint(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getPrint(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1079,7 +1079,7 @@ Java_org_OpenColorIO_TruelightTransform_getPrint(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setLamp(JNIEnv * env, jobject self, jstring lamp)
+Java_org_OpenColourIO_TruelightTransform_setLamp(JNIEnv * env, jobject self, jstring lamp)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1088,7 +1088,7 @@ Java_org_OpenColorIO_TruelightTransform_setLamp(JNIEnv * env, jobject self, jstr
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getLamp(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getLamp(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1097,7 +1097,7 @@ Java_org_OpenColorIO_TruelightTransform_getLamp(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setOutputCamera(JNIEnv * env, jobject self, jstring camera)
+Java_org_OpenColourIO_TruelightTransform_setOutputCamera(JNIEnv * env, jobject self, jstring camera)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1106,7 +1106,7 @@ Java_org_OpenColorIO_TruelightTransform_setOutputCamera(JNIEnv * env, jobject se
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getOutputCamera(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getOutputCamera(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1115,7 +1115,7 @@ Java_org_OpenColorIO_TruelightTransform_getOutputCamera(JNIEnv * env, jobject se
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setDisplay(JNIEnv * env, jobject self, jstring display)
+Java_org_OpenColourIO_TruelightTransform_setDisplay(JNIEnv * env, jobject self, jstring display)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1124,7 +1124,7 @@ Java_org_OpenColorIO_TruelightTransform_setDisplay(JNIEnv * env, jobject self, j
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getDisplay(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getDisplay(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1133,7 +1133,7 @@ Java_org_OpenColorIO_TruelightTransform_getDisplay(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_TruelightTransform_setCubeInput(JNIEnv * env, jobject self, jstring type)
+Java_org_OpenColourIO_TruelightTransform_setCubeInput(JNIEnv * env, jobject self, jstring type)
 {
     OCIO_JNITRY_ENTER()
     TruelightTransformRcPtr ttran = GetEditableJOCIO<TruelightTransformRcPtr, TruelightTransformJNI>(env, self);
@@ -1142,7 +1142,7 @@ Java_org_OpenColorIO_TruelightTransform_setCubeInput(JNIEnv * env, jobject self,
 }
 
 JNIEXPORT jstring JNICALL
-Java_org_OpenColorIO_TruelightTransform_getCubeInput(JNIEnv * env, jobject self)
+Java_org_OpenColourIO_TruelightTransform_getCubeInput(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()
     ConstTruelightTransformRcPtr ttran = GetConstJOCIO<ConstTruelightTransformRcPtr, TruelightTransformJNI>(env, self);

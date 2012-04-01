@@ -8,43 +8,43 @@ include_directories(
 
 set(JNIOCIO_CLASSES
   # Core
-  org.OpenColorIO.ExceptionBase
-  org.OpenColorIO.ExceptionMissingFile
-  org.OpenColorIO.Globals
-  org.OpenColorIO.Config
-  org.OpenColorIO.ColorSpace
-  org.OpenColorIO.Processor
-  org.OpenColorIO.GpuShaderDesc
-  org.OpenColorIO.Context
-  org.OpenColorIO.Look
-  org.OpenColorIO.ImageDesc
-  org.OpenColorIO.Transform
-  org.OpenColorIO.PackedImageDesc
-  org.OpenColorIO.PlanarImageDesc
-  org.OpenColorIO.Baker
+  org.OpenColourIO.ExceptionBase
+  org.OpenColourIO.ExceptionMissingFile
+  org.OpenColourIO.Globals
+  org.OpenColourIO.Config
+  org.OpenColourIO.ColourSpace
+  org.OpenColourIO.Processor
+  org.OpenColourIO.GpuShaderDesc
+  org.OpenColourIO.Context
+  org.OpenColourIO.Look
+  org.OpenColourIO.ImageDesc
+  org.OpenColourIO.Transform
+  org.OpenColourIO.PackedImageDesc
+  org.OpenColourIO.PlanarImageDesc
+  org.OpenColourIO.Baker
   # Enums
-  org.OpenColorIO.LoggingLevel
-  org.OpenColorIO.ColorSpaceDirection
-  org.OpenColorIO.TransformDirection
-  org.OpenColorIO.Interpolation
-  org.OpenColorIO.BitDepth
-  org.OpenColorIO.Allocation
-  org.OpenColorIO.GpuLanguage
+  org.OpenColourIO.LoggingLevel
+  org.OpenColourIO.ColourSpaceDirection
+  org.OpenColourIO.TransformDirection
+  org.OpenColourIO.Interpolation
+  org.OpenColourIO.BitDepth
+  org.OpenColourIO.Allocation
+  org.OpenColourIO.GpuLanguage
   # Transforms
-  org.OpenColorIO.AllocationTransform
-  org.OpenColorIO.CDLTransform
-  org.OpenColorIO.ColorSpaceTransform
-  org.OpenColorIO.DisplayTransform
-  org.OpenColorIO.ExponentTransform
-  org.OpenColorIO.FileTransform
-  org.OpenColorIO.GroupTransform
-  org.OpenColorIO.LogTransform
-  org.OpenColorIO.LookTransform
-  org.OpenColorIO.MatrixTransform
-  org.OpenColorIO.TruelightTransform
+  org.OpenColourIO.AllocationTransform
+  org.OpenColourIO.CDLTransform
+  org.OpenColourIO.ColourSpaceTransform
+  org.OpenColourIO.DisplayTransform
+  org.OpenColourIO.ExponentTransform
+  org.OpenColourIO.FileTransform
+  org.OpenColourIO.GroupTransform
+  org.OpenColourIO.LogTransform
+  org.OpenColourIO.LookTransform
+  org.OpenColourIO.MatrixTransform
+  org.OpenColourIO.TruelightTransform
 )
 
-file(GLOB JNIOCIO_JAVAS "org/OpenColorIO/*.java")
+file(GLOB JNIOCIO_JAVAS "org/OpenColourIO/*.java")
 
 message(STATUS "Creating Jar Manifest.txt")
 configure_file(${CMAKE_SOURCE_DIR}/src/jniglue/Manifest.txt.in
@@ -63,12 +63,12 @@ foreach(_CLASS ${JNIOCIO_CLASSES})
   set(JNIOCIO_HEADERS ${JNIOCIO_HEADERS} "${_CLASS_H}")
   set(JNIOCIO_H_INCLUDE "${JNIOCIO_H_INCLUDE}#include \"${_CLASS_H}\"\n")
 endforeach()
-message(STATUS "Creating OpenColorIOJNI.h that includes all the ocio jni headers")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/OpenColorIOJNI.h" "${JNIOCIO_H_INCLUDE}")
+message(STATUS "Creating OpenColourIOJNI.h that includes all the ocio jni headers")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/OpenColourIOJNI.h" "${JNIOCIO_H_INCLUDE}")
 
-set(JNIOCIO_JAR "${CMAKE_CURRENT_BINARY_DIR}/OpenColorIO-${OCIO_VERSION}.jar")
+set(JNIOCIO_JAR "${CMAKE_CURRENT_BINARY_DIR}/OpenColourIO-${OCIO_VERSION}.jar")
 add_custom_command(OUTPUT ${JNIOCIO_HEADERS}
-                   COMMAND cmake -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/org/OpenColorIO
+                   COMMAND cmake -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/org/OpenColourIO
                    COMMAND ${Java_JAVAC_EXECUTABLE} -cp ${CMAKE_CURRENT_BINARY_DIR} -d ${CMAKE_CURRENT_BINARY_DIR} ${JNIOCIO_JAVAS}
                    COMMAND ${Java_JAVAH_EXECUTABLE} -jni -force ${JNIOCIO_CLASSES}
                    COMMAND ${Java_JAR_EXECUTABLE} vcfm ${JNIOCIO_JAR} Manifest.txt org
@@ -76,17 +76,17 @@ add_custom_command(OUTPUT ${JNIOCIO_HEADERS}
                    COMMENT "Compiling .java files, packaged .jar and creating jni C headers")
 
 file(GLOB JNIOCIO_SRC "*.cpp")
-add_library(OpenColorIO-JNI SHARED ${JNIOCIO_SRC} ${JNIOCIO_HEADERS})
-set_target_properties(OpenColorIO-JNI PROPERTIES
+add_library(OpenColourIO-JNI SHARED ${JNIOCIO_SRC} ${JNIOCIO_HEADERS})
+set_target_properties(OpenColourIO-JNI PROPERTIES
                       VERSION ${OCIO_VERSION}
                       SOVERSION ${SOVERSION})
 if(OCIO_STATIC_JNIGLUE)
-  target_link_libraries(OpenColorIO-JNI OpenColorIO_STATIC)
+  target_link_libraries(OpenColourIO-JNI OpenColourIO_STATIC)
 else()
-  target_link_libraries(OpenColorIO-JNI OpenColorIO)
+  target_link_libraries(OpenColourIO-JNI OpenColourIO)
 endif()
 
 add_subdirectory(tests)
 
-install(TARGETS OpenColorIO-JNI DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX})
+install(TARGETS OpenColourIO-JNI DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX})
 install(FILES ${JNIOCIO_JAR} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/ocio/)

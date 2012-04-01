@@ -1,8 +1,8 @@
 /**
- * OpenColorIO ColorSpace Iop.
+ * OpenColourIO ColourSpace Iop.
  */
 
-#include "OCIOColorSpace.h"
+#include "OCIOColourSpace.h"
 
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -17,111 +17,111 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <DDImage/Knobs.h>
 #include <DDImage/ddImageVersionNumbers.h>
 
-// Should we use cascasing ColorSpace menus
+// Should we use cascasing ColourSpace menus
 #if defined kDDImageVersionInteger && (kDDImageVersionInteger>=62300)
 #define OCIO_CASCADE
 #endif
 
-OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
+OCIOColourSpace::OCIOColourSpace(Node *n) : DD::Image::PixelIop(n)
 {
-    m_hasColorSpaces = false;
+    m_hasColourSpaces = false;
 
-    m_inputColorSpaceIndex = 0;
-    m_outputColorSpaceIndex = 0;
+    m_inputColourSpaceIndex = 0;
+    m_outputColourSpaceIndex = 0;
     
-    // Query the color space names from the current config
-    // TODO (when to) re-grab the list of available color spaces? How to save/load?
+    // Query the colour space names from the current config
+    // TODO (when to) re-grab the list of available colour spaces? How to save/load?
     
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
-        OCIO::ConstColorSpaceRcPtr defaultcs = config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
+        OCIO::ConstColourSpaceRcPtr defaultcs = config->getColourSpace(OCIO::ROLE_SCENE_LINEAR);
         if(!defaultcs) throw std::runtime_error("ROLE_SCENE_LINEAR not defined.");
-        std::string defaultColorSpaceName = defaultcs->getName();
+        std::string defaultColourSpaceName = defaultcs->getName();
         
-        for(int i = 0; i < config->getNumColorSpaces(); i++)
+        for(int i = 0; i < config->getNumColourSpaces(); i++)
         {
-            std::string csname = config->getColorSpaceNameByIndex(i);
+            std::string csname = config->getColourSpaceNameByIndex(i);
             
 #ifdef OCIO_CASCADE
-            std::string family = config->getColorSpace(csname.c_str())->getFamily();
+            std::string family = config->getColourSpace(csname.c_str())->getFamily();
             if(family.empty())
-                m_colorSpaceNames.push_back(csname.c_str());
+                m_colourSpaceNames.push_back(csname.c_str());
             else
-                m_colorSpaceNames.push_back(family + "/" + csname);
+                m_colourSpaceNames.push_back(family + "/" + csname);
 #else
-            m_colorSpaceNames.push_back(csname);
+            m_colourSpaceNames.push_back(csname);
 #endif
             
-            if(csname == defaultColorSpaceName)
+            if(csname == defaultColourSpaceName)
             {
-                m_inputColorSpaceIndex = i;
-                m_outputColorSpaceIndex = i;
+                m_inputColourSpaceIndex = i;
+                m_outputColourSpaceIndex = i;
             }
         }
     }
     catch (OCIO::Exception& e)
     {
-        std::cerr << "OCIOColorSpace: " << e.what() << std::endl;
+        std::cerr << "OCIOColourSpace: " << e.what() << std::endl;
     }
     catch (...)
     {
-        std::cerr << "OCIOColorSpace: Unknown exception during OCIO setup." << std::endl;
+        std::cerr << "OCIOColourSpace: Unknown exception during OCIO setup." << std::endl;
     }
     
     // Then, create a cstr array for passing to Nuke
-    // This must be done in a second pass, lest the original m_colorSpaceNames
+    // This must be done in a second pass, lest the original m_colourSpaceNames
     // std::string be reallocated in the interim
-    for(unsigned int i=0; i<m_colorSpaceNames.size(); ++i)
+    for(unsigned int i=0; i<m_colourSpaceNames.size(); ++i)
     {
-        m_inputColorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
-        m_outputColorSpaceCstrNames.push_back(m_colorSpaceNames[i].c_str());
+        m_inputColourSpaceCstrNames.push_back(m_colourSpaceNames[i].c_str());
+        m_outputColourSpaceCstrNames.push_back(m_colourSpaceNames[i].c_str());
     }
     
-    m_inputColorSpaceCstrNames.push_back(NULL);
-    m_outputColorSpaceCstrNames.push_back(NULL);
+    m_inputColourSpaceCstrNames.push_back(NULL);
+    m_outputColourSpaceCstrNames.push_back(NULL);
     
-    m_hasColorSpaces = (!m_colorSpaceNames.empty());
+    m_hasColourSpaces = (!m_colourSpaceNames.empty());
     
-    if(!m_hasColorSpaces)
+    if(!m_hasColourSpaces)
     {
-        std::cerr << "OCIOColorSpace: No color spaces available for input and/or output." << std::endl;
+        std::cerr << "OCIOColourSpace: No colour spaces available for input and/or output." << std::endl;
     }
 }
 
-OCIOColorSpace::~OCIOColorSpace()
+OCIOColourSpace::~OCIOColourSpace()
 {
 
 }
 
-void OCIOColorSpace::knobs(DD::Image::Knob_Callback f)
+void OCIOColourSpace::knobs(DD::Image::Knob_Callback f)
 {
 #ifdef OCIO_CASCADE
     DD::Image::CascadingEnumeration_knob(f,
-        &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
-    DD::Image::Tooltip(f, "Input data is taken to be in this color space.");
+        &m_inputColourSpaceIndex, &m_inputColourSpaceCstrNames[0], "in_colourspace", "in");
+    DD::Image::Tooltip(f, "Input data is taken to be in this colour space.");
     DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 
     DD::Image::CascadingEnumeration_knob(f,
-        &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
-    DD::Image::Tooltip(f, "Image data is converted to this color space for output.");
+        &m_outputColourSpaceIndex, &m_outputColourSpaceCstrNames[0], "out_colourspace", "out");
+    DD::Image::Tooltip(f, "Image data is converted to this colour space for output.");
     DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 #else
     DD::Image::Enumeration_knob(f,
-        &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
-    DD::Image::Tooltip(f, "Input data is taken to be in this color space.");
+        &m_inputColourSpaceIndex, &m_inputColourSpaceCstrNames[0], "in_colourspace", "in");
+    DD::Image::Tooltip(f, "Input data is taken to be in this colour space.");
     DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 
     DD::Image::Enumeration_knob(f,
-        &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
-    DD::Image::Tooltip(f, "Image data is converted to this color space for output.");
+        &m_outputColourSpaceIndex, &m_outputColourSpaceCstrNames[0], "out_colourspace", "out");
+    DD::Image::Tooltip(f, "Image data is converted to this colour space for output.");
     DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 #endif
     
 }
 
-OCIO::ConstContextRcPtr OCIOColorSpace::getLocalContext()
+OCIO::ConstContextRcPtr OCIOColourSpace::getLocalContext()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     OCIO::ConstContextRcPtr context = config->getCurrentContext();
@@ -152,7 +152,7 @@ OCIO::ConstContextRcPtr OCIOColorSpace::getLocalContext()
     return context;
 }
 
-void OCIOColorSpace::append(DD::Image::Hash& localhash)
+void OCIOColourSpace::append(DD::Image::Hash& localhash)
 {
     // TODO: Hang onto the context, what if getting it
     // (and querying getCacheID) is expensive?
@@ -170,28 +170,28 @@ void OCIOColorSpace::append(DD::Image::Hash& localhash)
     }
 }
 
-void OCIOColorSpace::_validate(bool for_real)
+void OCIOColourSpace::_validate(bool for_real)
 {
-    if(!m_hasColorSpaces)
+    if(!m_hasColourSpaces)
     {
-        error("No color spaces available for input and/or output.");
+        error("No colour spaces available for input and/or output.");
         return;
     }
 
-    int inputColorSpaceCount = static_cast<int>(m_inputColorSpaceCstrNames.size()) - 1;
-    if(m_inputColorSpaceIndex < 0 || m_inputColorSpaceIndex >= inputColorSpaceCount)
+    int inputColourSpaceCount = static_cast<int>(m_inputColourSpaceCstrNames.size()) - 1;
+    if(m_inputColourSpaceIndex < 0 || m_inputColourSpaceIndex >= inputColourSpaceCount)
     {
         std::ostringstream err;
-        err << "Input color space index (" << m_inputColorSpaceIndex << ") out of range.";
+        err << "Input colour space index (" << m_inputColourSpaceIndex << ") out of range.";
         error(err.str().c_str());
         return;
     }
 
-    int outputColorSpaceCount = static_cast<int>(m_outputColorSpaceCstrNames.size()) - 1;
-    if(m_outputColorSpaceIndex < 0 || m_outputColorSpaceIndex >= outputColorSpaceCount)
+    int outputColourSpaceCount = static_cast<int>(m_outputColourSpaceCstrNames.size()) - 1;
+    if(m_outputColourSpaceIndex < 0 || m_outputColourSpaceIndex >= outputColourSpaceCount)
     {
         std::ostringstream err;
-        err << "Output color space index (" << m_outputColorSpaceIndex << ") out of range.";
+        err << "Output colour space index (" << m_outputColourSpaceIndex << ") out of range.";
         error(err.str().c_str());
         return;
     }
@@ -200,8 +200,8 @@ void OCIOColorSpace::_validate(bool for_real)
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
         
-        const char * inputName = config->getColorSpaceNameByIndex(m_inputColorSpaceIndex);
-        const char * outputName = config->getColorSpaceNameByIndex(m_outputColorSpaceIndex);
+        const char * inputName = config->getColourSpaceNameByIndex(m_inputColourSpaceIndex);
+        const char * outputName = config->getColourSpaceNameByIndex(m_outputColourSpaceIndex);
         
         OCIO::ConstContextRcPtr context = getLocalContext();
         m_processor = config->getProcessor(context, inputName, outputName);
@@ -223,7 +223,7 @@ void OCIOColorSpace::_validate(bool for_real)
 }
 
 // Note that this is copied by others (OCIODisplay)
-void OCIOColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
+void OCIOColourSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask) const
 {
     DD::Image::ChannelSet done;
     foreach(c, mask)
@@ -238,7 +238,7 @@ void OCIOColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask
 
 // See Saturation::pixel_engine for a well-commented example.
 // Note that this is copied by others (OCIODisplay)
-void OCIOColorSpace::pixel_engine(
+void OCIOColourSpace::pixel_engine(
     const DD::Image::Row& in,
     int /* rowY unused */, int rowX, int rowXBound,
     DD::Image::ChannelMask outputChannels,
@@ -299,30 +299,30 @@ void OCIOColorSpace::pixel_engine(
     }
 }
 
-const DD::Image::Op::Description OCIOColorSpace::description("OCIOColorSpace", build);
+const DD::Image::Op::Description OCIOColourSpace::description("OCIOColourSpace", build);
 
-const char* OCIOColorSpace::Class() const
+const char* OCIOColourSpace::Class() const
 {
     return description.name;
 }
 
-const char* OCIOColorSpace::displayName() const
+const char* OCIOColourSpace::displayName() const
 {
     return description.name;
 }
 
-const char* OCIOColorSpace::node_help() const
+const char* OCIOColourSpace::node_help() const
 {
     // TODO more detailed help text
-    return "Use OpenColorIO to convert from one color space to another.";
+    return "Use OpenColourIO to convert from one colour space to another.";
 }
 
 // This class is necessary in order to call knobsAtTheEnd(). Otherwise, the NukeWrapper knobs 
 // will be added to the Context tab instead of the primary tab.
-class OCIOColorSpaceNukeWrapper : public DD::Image::NukeWrapper
+class OCIOColourSpaceNukeWrapper : public DD::Image::NukeWrapper
 {
 public:
-    OCIOColorSpaceNukeWrapper(DD::Image::PixelIop* op) : DD::Image::NukeWrapper(op)
+    OCIOColourSpaceNukeWrapper(DD::Image::PixelIop* op) : DD::Image::NukeWrapper(op)
     {
     }
     
@@ -338,7 +338,7 @@ public:
     
     virtual void knobs(DD::Image::Knob_Callback f)
     {
-        OCIOColorSpace* csIop = dynamic_cast<OCIOColorSpace*>(wrapped_iop());
+        OCIOColourSpace* csIop = dynamic_cast<OCIOColourSpace*>(wrapped_iop());
         if(!csIop) return;
         
         DD::Image::NukeWrapper::knobs(f);
@@ -370,7 +370,7 @@ public:
 
 static DD::Image::Op* build(Node *node)
 {
-    DD::Image::NukeWrapper *op = (new OCIOColorSpaceNukeWrapper(new OCIOColorSpace(node)));
+    DD::Image::NukeWrapper *op = (new OCIOColourSpaceNukeWrapper(new OCIOColourSpace(node)));
     op->channels(DD::Image::Mask_RGB);
     return op;
 }

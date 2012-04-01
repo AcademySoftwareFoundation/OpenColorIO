@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include <algorithm>
 
@@ -163,8 +163,8 @@ OCIO_NAMESPACE_ENTER
     {
     
     void RunLookTokens(OpRcPtrVec & ops,
-                       ConstColorSpaceRcPtr & currentColorSpace,
-                       bool skipColorSpaceConversions,
+                       ConstColourSpaceRcPtr & currentColourSpace,
+                       bool skipColourSpaceConversions,
                        const Config& config,
                        const ConstContextRcPtr & context,
                        const LookParseResult::Tokens & lookTokens)
@@ -203,7 +203,7 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Put the new ops into a temp array, to see if it's a no-op
-            // If it is a no-op, dont bother doing the colorspace conversion.
+            // If it is a no-op, dont bother doing the colourspace conversion.
             OpRcPtrVec tmpOps;
             
             if(lookTokens[i].dir == TRANSFORM_DIR_FORWARD)
@@ -241,23 +241,23 @@ OCIO_NAMESPACE_ENTER
             
             if(!IsOpVecNoOp(tmpOps))
             {
-                if(!skipColorSpaceConversions)
+                if(!skipColourSpaceConversions)
                 {
-                    ConstColorSpaceRcPtr processColorSpace = config.getColorSpace(look->getProcessSpace());
-                    if(!processColorSpace)
+                    ConstColourSpaceRcPtr processColourSpace = config.getColourSpace(look->getProcessSpace());
+                    if(!processColourSpace)
                     {
                         std::ostringstream os;
                         os << "RunLookTokens error. ";
                         os << "The specified look, '" << lookTokens[i].name;
-                        os << "', requires processing in the ColorSpace, '";
+                        os << "', requires processing in the ColourSpace, '";
                         os << look->getProcessSpace() << "' which is not defined.";
                         throw Exception(os.str().c_str());
                     }
                     
-                    BuildColorSpaceOps(ops, config, context,
-                                       currentColorSpace,
-                                       processColorSpace);
-                    currentColorSpace = processColorSpace;
+                    BuildColourSpaceOps(ops, config, context,
+                                       currentColourSpace,
+                                       processColourSpace);
+                    currentColourSpace = processColourSpace;
                 }
                 
                 std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
@@ -276,15 +276,15 @@ OCIO_NAMESPACE_ENTER
                       const LookTransform & lookTransform,
                       TransformDirection dir)
     {
-        ConstColorSpaceRcPtr src, dst;
-        src = config.getColorSpace( lookTransform.getSrc() );
-        dst = config.getColorSpace( lookTransform.getDst() );
+        ConstColourSpaceRcPtr src, dst;
+        src = config.getColourSpace( lookTransform.getSrc() );
+        dst = config.getColourSpace( lookTransform.getDst() );
         
         if(!src)
         {
             std::ostringstream os;
             os << "BuildLookOps error.";
-            os << "The specified lookTransform specifies a src colorspace, '";
+            os << "The specified lookTransform specifies a src colourspace, '";
             os <<  lookTransform.getSrc() << "', which is not defined.";
             throw Exception(os.str().c_str());
         }
@@ -293,7 +293,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "BuildLookOps error.";
-            os << "The specified lookTransform specifies a dst colorspace, '";
+            os << "The specified lookTransform specifies a dst colourspace, '";
             os <<  lookTransform.getDst() << "', which is not defined.";
             throw Exception(os.str().c_str());
         }
@@ -301,7 +301,7 @@ OCIO_NAMESPACE_ENTER
         LookParseResult looks;
         looks.parse(lookTransform.getLooks());
         
-        // We must handle the inverse src/dst colorspace transformation explicitly.
+        // We must handle the inverse src/dst colourspace transformation explicitly.
         if(dir == TRANSFORM_DIR_INVERSE)
         {
             std::swap(src, dst);
@@ -314,22 +314,22 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        ConstColorSpaceRcPtr currentColorSpace = src;
+        ConstColourSpaceRcPtr currentColourSpace = src;
         BuildLookOps(ops,
-                     currentColorSpace,
+                     currentColourSpace,
                      false,
                      config,
                      context,
                      looks);
         
-        BuildColorSpaceOps(ops, config, context,
-                           currentColorSpace,
+        BuildColourSpaceOps(ops, config, context,
+                           currentColourSpace,
                            dst);
     }
     
     void BuildLookOps(OpRcPtrVec & ops,
-                      ConstColorSpaceRcPtr & currentColorSpace,
-                      bool skipColorSpaceConversions,
+                      ConstColourSpaceRcPtr & currentColourSpace,
+                      bool skipColourSpaceConversions,
                       const Config& config,
                       const ConstContextRcPtr & context,
                       const LookParseResult & looks)
@@ -345,8 +345,8 @@ OCIO_NAMESPACE_ENTER
             // As an optimization, if we only have a single look option,
             // just push back onto the final location
             RunLookTokens(ops,
-                          currentColorSpace,
-                          skipColorSpaceConversions,
+                          currentColourSpace,
+                          skipColourSpaceConversions,
                           config,
                           context,
                           options[0]);
@@ -361,18 +361,18 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             
             OpRcPtrVec tmpOps;
-            ConstColorSpaceRcPtr cs;
+            ConstColourSpaceRcPtr cs;
             
             for(unsigned int i=0; i<options.size(); ++i)
             {
-                cs = currentColorSpace;
+                cs = currentColourSpace;
                 tmpOps.clear();
                 
                 try
                 {
                     RunLookTokens(tmpOps,
                                   cs,
-                                  skipColorSpaceConversions,
+                                  skipColourSpaceConversions,
                                   config,
                                   context,
                                   options[i]);
@@ -391,7 +391,7 @@ OCIO_NAMESPACE_ENTER
             
             if(success)
             {
-                currentColorSpace = cs;
+                currentColourSpace = cs;
                 std::copy(tmpOps.begin(), tmpOps.end(), std::back_inserter(ops));
             }
             else

@@ -26,8 +26,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package org.OpenColorIO;
-import org.OpenColorIO.*;
+package org.OpenColourIO;
+import org.OpenColourIO.*;
 
 public class Globals extends LoadLibrary
 {
@@ -48,8 +48,8 @@ public class Globals extends LoadLibrary
     public native TransformDirection TransformDirectionFromString(String s);
     public native TransformDirection GetInverseTransformDirection(TransformDirection dir);
     public native TransformDirection CombineTransformDirections(TransformDirection d1, TransformDirection d2);
-    public native String ColorSpaceDirectionToString(ColorSpaceDirection dir);
-    public native ColorSpaceDirection ColorSpaceDirectionFromString(String s);
+    public native String ColourSpaceDirectionToString(ColourSpaceDirection dir);
+    public native ColourSpaceDirection ColourSpaceDirectionFromString(String s);
     public native String BitDepthToString(BitDepth bitDepth);
     public native BitDepth BitDepthFromString(String s);
     public native boolean BitDepthIsFloat(BitDepth bitDepth);
@@ -65,10 +65,10 @@ public class Globals extends LoadLibrary
     public String ROLE_DEFAULT;
     public String ROLE_REFERENCE;
     public String ROLE_DATA;
-    public String ROLE_COLOR_PICKING;
+    public String ROLE_COLOUR_PICKING;
     public String ROLE_SCENE_LINEAR;
     public String ROLE_COMPOSITING_LOG;
-    public String ROLE_COLOR_TIMING;
+    public String ROLE_COLOUR_TIMING;
     public String ROLE_TEXTURE_PAINT;
     public String ROLE_MATTE_PAINT;
     

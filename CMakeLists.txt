@@ -1,4 +1,4 @@
-project(OpenColorIO)
+project(OpenColourIO)
 set(OCIO_VERSION_MAJOR 1)
 set(OCIO_VERSION_MINOR 0)
 set(OCIO_VERSION_PATCH 6)
@@ -71,8 +71,8 @@ endif()
 
 # Set the default namespace
 if(NOT OCIO_NAMESPACE)
-  set(OCIO_NAMESPACE OpenColorIO CACHE STRING
-      "Specify the master OCIO C++ namespace: Options include OpenColorIO OpenColorIO_<YOURFACILITY> etc."
+  set(OCIO_NAMESPACE OpenColourIO CACHE STRING
+      "Specify the master OCIO C++ namespace: Options include OpenColourIO OpenColourIO_<YOURFACILITY> etc."
       FORCE)
 endif(NOT OCIO_NAMESPACE)
 messageonce("Setting Namespace to: ${OCIO_NAMESPACE}")
@@ -277,7 +277,7 @@ if(OCIO_BUILD_APPS)
         messageonce("Not building ocioconvert/ociolutimage. Requirement(s) found: OIIO:${OIIO_FOUND}")
     endif()
     
-    # ociodisplay, displays color-transformed images (uses OpenImageIO,
+    # ociodisplay, displays colour-transformed images (uses OpenImageIO,
     # and OpenGL)
     OCIOFindOpenGL()
     if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND AND OIIO_FOUND)

@@ -11,7 +11,7 @@ add_executable(ociocheck
     ${share_src_files})
 
 target_link_libraries(ociocheck
-    OpenColorIO
+    OpenColourIO
     )
 
 install(TARGETS ociocheck DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)

@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstring>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "Logging.h"
 #include "MathUtils.h"
@@ -52,10 +52,10 @@ OCIO_NAMESPACE_ENTER
         LogWarning(os.str());
     }
     
-    void operator >> (const YAML::Node& node, ColorSpaceRcPtr& cs)
+    void operator >> (const YAML::Node& node, ColourSpaceRcPtr& cs)
     {
-        if(node.Tag() != "ColorSpace")
-            return; // not a !<ColorSpace> tag
+        if(node.Tag() != "ColourSpace")
+            return; // not a !<ColourSpace> tag
         
         std::string key, stringval;
         bool boolval;
@@ -127,14 +127,14 @@ OCIO_NAMESPACE_ENTER
                 TransformRcPtr val;
                 if (iter.second().Type() != YAML::NodeType::Null && 
                     iter.second().Read<TransformRcPtr>(val))
-                  cs->setTransform(val, COLORSPACE_DIR_TO_REFERENCE);
+                  cs->setTransform(val, COLOURSPACE_DIR_TO_REFERENCE);
             }
             else if(key == "from_reference")
             {
                 TransformRcPtr val;
                 if (iter.second().Type() != YAML::NodeType::Null && 
                     iter.second().Read<TransformRcPtr>(val))
-                  cs->setTransform(val, COLORSPACE_DIR_FROM_REFERENCE);
+                  cs->setTransform(val, COLOURSPACE_DIR_FROM_REFERENCE);
             }
             else
             {
@@ -143,9 +143,9 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceRcPtr cs)
+    YAML::Emitter& operator << (YAML::Emitter& out, ColourSpaceRcPtr cs)
     {
-        out << YAML::VerbatimTag("ColorSpace");
+        out << YAML::VerbatimTag("ColourSpace");
         out << YAML::BeginMap;
         
         out << YAML::Key << "name" << YAML::Value << cs->getName();
@@ -169,12 +169,12 @@ OCIO_NAMESPACE_ENTER
         }
         
         ConstTransformRcPtr toref = \
-            cs->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+            cs->getTransform(COLOURSPACE_DIR_TO_REFERENCE);
         if(toref)
             out << YAML::Key << "to_reference" << YAML::Value << toref;
         
         ConstTransformRcPtr fromref = \
-            cs->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+            cs->getTransform(COLOURSPACE_DIR_FROM_REFERENCE);
         if(fromref)
             out << YAML::Key << "from_reference" << YAML::Value << fromref;
         
@@ -302,9 +302,9 @@ OCIO_NAMESPACE_ENTER
             node.Read<CDLTransformRcPtr>(temp);
             t = temp;
         }
-        else if(type == "ColorSpaceTransform")  {
-            ColorSpaceTransformRcPtr temp;
-            node.Read<ColorSpaceTransformRcPtr>(temp);
+        else if(type == "ColourSpaceTransform")  {
+            ColourSpaceTransformRcPtr temp;
+            node.Read<ColourSpaceTransformRcPtr>(temp);
             t = temp;
         }
         // TODO: DisplayTransform
@@ -372,9 +372,9 @@ OCIO_NAMESPACE_ENTER
         else if(ConstCDLTransformRcPtr CDL_tran = \
             DynamicPtrCast<const CDLTransform>(t))
             out << CDL_tran;
-        else if(ConstColorSpaceTransformRcPtr ColorSpace_tran = \
-            DynamicPtrCast<const ColorSpaceTransform>(t))
-            out << ColorSpace_tran;
+        else if(ConstColourSpaceTransformRcPtr ColourSpace_tran = \
+            DynamicPtrCast<const ColourSpaceTransform>(t))
+            out << ColourSpace_tran;
         else if(ConstExponentTransformRcPtr Exponent_tran = \
             DynamicPtrCast<const ExponentTransform>(t))
             out << Exponent_tran;
@@ -536,9 +536,9 @@ OCIO_NAMESPACE_ENTER
         return out;
     }
     
-    void operator >> (const YAML::Node& node, ColorSpaceTransformRcPtr& t)
+    void operator >> (const YAML::Node& node, ColourSpaceTransformRcPtr& t)
     {
-        t = ColorSpaceTransform::Create();
+        t = ColourSpaceTransform::Create();
         
         std::string key, stringval;
         
@@ -574,9 +574,9 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    YAML::Emitter& operator << (YAML::Emitter& out, ConstColorSpaceTransformRcPtr t)
+    YAML::Emitter& operator << (YAML::Emitter& out, ConstColourSpaceTransformRcPtr t)
     {
-        out << YAML::VerbatimTag("ColorSpaceTransform");
+        out << YAML::VerbatimTag("ColourSpaceTransform");
         out << YAML::Flow << YAML::BeginMap;
         out << YAML::Key << "src" << YAML::Value << t->getSrc();
         out << YAML::Key << "dst" << YAML::Value << t->getDst();
@@ -1181,15 +1181,15 @@ OCIO_NAMESPACE_ENTER
         alloc = AllocationFromString(str.c_str());
     }
     
-    YAML::Emitter& operator << (YAML::Emitter& out, ColorSpaceDirection dir) {
-        out << ColorSpaceDirectionToString(dir);
+    YAML::Emitter& operator << (YAML::Emitter& out, ColourSpaceDirection dir) {
+        out << ColourSpaceDirectionToString(dir);
         return out;
     }
     
-    void operator >> (const YAML::Node& node, ColorSpaceDirection& dir) {
+    void operator >> (const YAML::Node& node, ColourSpaceDirection& dir) {
         std::string str;
         node.Read<std::string>(str);
-        dir = ColorSpaceDirectionFromString(str.c_str());
+        dir = ColourSpaceDirectionFromString(str.c_str());
     }
     
     YAML::Emitter& operator << (YAML::Emitter& out, TransformDirection dir) {

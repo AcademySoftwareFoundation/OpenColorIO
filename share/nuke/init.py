@@ -4,12 +4,12 @@ EBANNER = "OCIO Error: "
 OCIO = None
 
 def load_ocio_plugins():
-    """Loads the PyOpenColorIO module and the OCIO-prefixed nodes
+    """Loads the PyOpenColourIO module and the OCIO-prefixed nodes
     """
     
     global OCIO
     try:
-        import PyOpenColorIO as OCIO
+        import PyOpenColourIO as OCIO
     except Exception, e:
         print '%s%s\n%s' % (EBANNER, 'Loading OCIO python module', e)
 

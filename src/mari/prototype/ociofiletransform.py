@@ -4,7 +4,7 @@ the Mari Viewer. Requires Mari 1.3v2+.
 
 This example is not represntative of the final Mari OCIO workflow, merely
 an API demonstration. This code is a work in progress, to demonstrate the
-integration of OpenColorIO and Mari. The APIs this code relies on are subject
+integration of OpenColourIO and Mari. The APIs this code relies on are subject
 to change at any time, and as such should not be relied on for production use
 (yet).
 
@@ -16,17 +16,17 @@ mkdir -p build_mari && cd build_mari
 cmake -D CMAKE_BUILD_TYPE=Release \
       -D CMAKE_INSTALL_PREFIX=../dist_mari \
       -D PYTHON=/usr/bin/python2.6 \
-      -D OCIO_NAMESPACE=OpenColorIO_Mari \
+      -D OCIO_NAMESPACE=OpenColourIO_Mari \
       ../
 make install -j8
 
 * Edit this file to point to use viewer lut you want to use
 
-* Run Mari with OpenColorIO added to the LD_LIBRARY_PATH, and Python
+* Run Mari with OpenColourIO added to the LD_LIBRARY_PATH, and Python
 env LD_LIBRARY_PATH=<YOURDIR>/dist_mari/lib/ PYTHONPATH=<YOURDIR>/dist_mari/lib/python2.6 mari
 
 * Source this script in the python console.
-Also - IMPORTANT - you must enable 'Use Color Correction' in the Color Manager.
+Also - IMPORTANT - you must enable 'Use Colour Correction' in the Colour Manager.
 
 """
 
@@ -37,11 +37,11 @@ LUT3D_SIZE = 32
 import mari, time, os
 
 try:
-    import PyOpenColorIO as OCIO
+    import PyOpenColourIO as OCIO
     print OCIO.__file__
 except Exception,e:
-    print "Error: Could not import OpenColorIO python bindings."
-    print "Please confirm PYTHONPATH has dir containing PyOpenColorIO.so"
+    print "Error: Could not import OpenColourIO python bindings."
+    print "Please confirm PYTHONPATH has dir containing PyOpenColourIO.so"
 
 def RegisterOCIOLut():
     if not hasattr(mari.gl_render,"createPostFilter"):
@@ -61,7 +61,7 @@ def RegisterOCIOLut():
     
     lut3d = processor.getGpuLut3D(shaderDesc)
     
-    # Clear the existing color managment filter stack
+    # Clear the existing colour managment filter stack
     mari.gl_render.clearPostFilterStack()
     
     # Create variable pre-declarations

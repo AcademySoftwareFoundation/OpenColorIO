@@ -11,7 +11,7 @@ class ExponentTransform:
         getValue()
         
         Returns the values in the exponent transform of
-        :py:class:`PyOpenColorIO.ExponentTransform`.
+        :py:class:`PyOpenColourIO.ExponentTransform`.
         
         :return: exponent transform values
         :rtype: list of floats
@@ -23,7 +23,7 @@ class ExponentTransform:
         setValue()
         
         Sets the values in the exponent transform of
-        :py:class:`PyOpenColorIO.ExponentTransform`.
+        :py:class:`PyOpenColourIO.ExponentTransform`.
         
         :param pyData: exponent transform values
         :type pyData: list of 4 floats

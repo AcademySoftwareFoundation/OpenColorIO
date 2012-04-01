@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OPBUILDERS_H
 #define INCLUDED_OCIO_OPBUILDERS_H
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "Op.h"
 #include "LookParse.h"
@@ -57,17 +57,17 @@ OCIO_NAMESPACE_ENTER
                      const CDLTransform & transform,
                      TransformDirection dir);
     
-    void BuildColorSpaceOps(OpRcPtrVec & ops,
+    void BuildColourSpaceOps(OpRcPtrVec & ops,
                             const Config& config,
                             const ConstContextRcPtr & context,
-                            const ColorSpaceTransform & transform,
+                            const ColourSpaceTransform & transform,
                             TransformDirection dir);
     
-    void BuildColorSpaceOps(OpRcPtrVec & ops,
+    void BuildColourSpaceOps(OpRcPtrVec & ops,
                             const Config & config,
                             const ConstContextRcPtr & context,
-                            const ConstColorSpaceRcPtr & srcColorSpace,
-                            const ConstColorSpaceRcPtr & dstColorSpace);
+                            const ConstColourSpaceRcPtr & srcColourSpace,
+                            const ConstColourSpaceRcPtr & dstColourSpace);
     
     void BuildDisplayOps(OpRcPtrVec & ops,
                          const Config & config,
@@ -104,8 +104,8 @@ OCIO_NAMESPACE_ENTER
                       TransformDirection dir);
     
     void BuildLookOps(OpRcPtrVec & ops,
-                      ConstColorSpaceRcPtr & currentColorSpace,
-                      bool skipColorSpaceConversions,
+                      ConstColourSpaceRcPtr & currentColourSpace,
+                      bool skipColourSpaceConversions,
                       const Config& config,
                       const ConstContextRcPtr & context,
                       const LookParseResult & looks);

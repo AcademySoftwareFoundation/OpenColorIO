@@ -1,6 +1,6 @@
 
 import junit.framework.TestCase;
-import org.OpenColorIO.*;
+import org.OpenColourIO.*;
 
 public class TransformsTest extends TestCase {
     
@@ -33,7 +33,7 @@ public class TransformsTest extends TestCase {
         //// CDLTransform ////
         CDLTransform cdl = new CDLTransform().Create();
         String CC = ""
-        +"<ColorCorrection id=\"foo\">"
+        +"<ColourCorrection id=\"foo\">"
         +"<SOPNode>"
         +"<Description>this is a descipt</Description>"
         +"<Slope>1.1 1.2 1.3</Slope>"
@@ -41,9 +41,9 @@ public class TransformsTest extends TestCase {
         +"<Power>3.1 3.2 3.3</Power>"
         +"</SOPNode>"
         +"<SatNode><Saturation>0.7</Saturation></SatNode>"
-        +"</ColorCorrection>";
+        +"</ColourCorrection>";
         // Don't want to deal with getting the correct path so this runs
-        //CDLTransform cdlfile = new CDLTransform().CreateFromFile("../OpenColorIO/src/jniglue/tests/org/OpenColorIO/test.cc", "foo");
+        //CDLTransform cdlfile = new CDLTransform().CreateFromFile("../OpenColourIO/src/jniglue/tests/org/OpenColourIO/test.cc", "foo");
         //assertEquals(CC, cdlfile.getXML());
         cdl.setXML(CC);
         assertEquals(CC, cdl.getXML());
@@ -56,7 +56,7 @@ public class TransformsTest extends TestCase {
         cdl.setPower(new float[]{2.1f, 2.2f, 2.3f});
         cdl.setSat(0.5f);
         String CC2 = ""
-        +"<ColorCorrection id=\"foo\">"
+        +"<ColourCorrection id=\"foo\">"
         +"<SOPNode>"
         +"<Description>this is a descipt</Description>"
         +"<Slope>0.1 0.2 0.3</Slope>"
@@ -64,7 +64,7 @@ public class TransformsTest extends TestCase {
         +"<Power>2.1 2.2 2.3</Power>"
         +"</SOPNode>"
         +"<SatNode><Saturation>0.5</Saturation></SatNode>"
-        +"</ColorCorrection>";
+        +"</ColourCorrection>";
         assertEquals(CC2, cdl.getXML());
         cdl.setSOP(new float[]{1.1f, 1.2f, 1.3f, 1.4f, 1.5f, 1.6f, 1.7f, 1.8f, 1.9f});
         float newsop[] = new float[9];
@@ -90,8 +90,8 @@ public class TransformsTest extends TestCase {
         cdl.setDescription("bar");
         assertEquals("bar", cdl.getDescription());
         
-        //// ColorSpaceTransform ////
-        ColorSpaceTransform ct = new ColorSpaceTransform().Create();
+        //// ColourSpaceTransform ////
+        ColourSpaceTransform ct = new ColourSpaceTransform().Create();
         ct.setSrc("foo");
         assertEquals("foo", ct.getSrc());
         ct.setDst("bar");
@@ -99,12 +99,12 @@ public class TransformsTest extends TestCase {
         
         //// DisplayTransform ////
         DisplayTransform dt = new DisplayTransform().Create();
-        dt.setInputColorSpaceName("lin18");
-        assertEquals("lin18", dt.getInputColorSpaceName());
+        dt.setInputColourSpaceName("lin18");
+        assertEquals("lin18", dt.getInputColourSpaceName());
         //public native void setLinearCC(Transform cc);
         //public native Transform getLinearCC();
-        //public native void setColorTimingCC(Transform cc);
-        //public native Transform getColorTimingCC();
+        //public native void setColourTimingCC(Transform cc);
+        //public native Transform getColourTimingCC();
         //public native void setChannelView(Transform transform);
         //public native Transform getChannelView();
         dt.setDisplay("sRGB");

@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TL_INPUT_VID 2
 #endif // OCIO_TRUELIGHT_SUPPORT
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "TruelightOp.h"
 #include "pystring/pystring.h"

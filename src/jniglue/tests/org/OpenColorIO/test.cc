@@ -1,4 +1,4 @@
-<ColorCorrection id="foo">
+<ColourCorrection id="foo">
   <SOPNode>
     <Description>this is a descipt</Description>
     <Slope>1.1 1.2 1.3</Slope>
@@ -8,4 +8,4 @@
   <SatNode>
     <Saturation>0.7</Saturation>
   </SatNode>
-</ColorCorrection>
+</ColourCorrection>

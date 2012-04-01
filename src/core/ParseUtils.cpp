@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <set>
 #include <sstream>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
@@ -107,19 +107,19 @@ OCIO_NAMESPACE_ENTER
         return TRANSFORM_DIR_UNKNOWN;
     }
     
-    const char * ColorSpaceDirectionToString(ColorSpaceDirection dir)
+    const char * ColourSpaceDirectionToString(ColourSpaceDirection dir)
     {
-        if(dir == COLORSPACE_DIR_TO_REFERENCE) return "to_reference";
-        else if(dir == COLORSPACE_DIR_FROM_REFERENCE) return "from_reference";
+        if(dir == COLOURSPACE_DIR_TO_REFERENCE) return "to_reference";
+        else if(dir == COLOURSPACE_DIR_FROM_REFERENCE) return "from_reference";
         return "unknown";
     }
     
-    ColorSpaceDirection ColorSpaceDirectionFromString(const char * s)
+    ColourSpaceDirection ColourSpaceDirectionFromString(const char * s)
     {
         std::string str = pystring::lower(s);
-        if(str == "to_reference") return COLORSPACE_DIR_TO_REFERENCE;
-        else if(str == "from_reference") return COLORSPACE_DIR_FROM_REFERENCE;
-        return COLORSPACE_DIR_UNKNOWN;
+        if(str == "to_reference") return COLOURSPACE_DIR_TO_REFERENCE;
+        else if(str == "from_reference") return COLOURSPACE_DIR_FROM_REFERENCE;
+        return COLOURSPACE_DIR_UNKNOWN;
     }
     
     const char * BitDepthToString(BitDepth bitDepth)
@@ -223,10 +223,10 @@ OCIO_NAMESPACE_ENTER
     const char * ROLE_DEFAULT = "default";
     const char * ROLE_REFERENCE = "reference";
     const char * ROLE_DATA = "data";
-    const char * ROLE_COLOR_PICKING = "color_picking";
+    const char * ROLE_COLOUR_PICKING = "colour_picking";
     const char * ROLE_SCENE_LINEAR = "scene_linear";
     const char * ROLE_COMPOSITING_LOG = "compositing_log";
-    const char * ROLE_COLOR_TIMING = "color_timing";
+    const char * ROLE_COLOUR_TIMING = "colour_timing";
     const char * ROLE_TEXTURE_PAINT = "texture_paint";
     const char * ROLE_MATTE_PAINT = "matte_paint";
     

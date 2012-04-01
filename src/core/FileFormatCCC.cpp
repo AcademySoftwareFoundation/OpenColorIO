@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <tinyxml.h>
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "CDLTransform.h"
 #include "FileTransform.h"
@@ -80,7 +80,7 @@ OCIO_NAMESPACE_ENTER
         void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
-            info.name = "ColorCorrectionCollection";
+            info.name = "ColourCorrectionCollection";
             info.extension = "ccc";
             info.capabilities = FORMAT_CAPABILITY_READ;
             formatInfoVec.push_back(info);
@@ -117,12 +117,12 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            if(std::string(rootElement->Value()) != "ColorCorrectionCollection")
+            if(std::string(rootElement->Value()) != "ColourCorrectionCollection")
             {
                 std::ostringstream os;
                 os << "Error loading ccc xml. ";
                 os << "Root element is type '" << rootElement->Value() << "', ";
-                os << "ColorCorrectionCollection expected.";
+                os << "ColourCorrectionCollection expected.";
                 throw Exception(os.str().c_str());
             }
             
@@ -132,7 +132,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Error loading ccc xml. ";
-                os << "No ColorCorrection elements found.";
+                os << "No ColourCorrection elements found.";
                 throw Exception(os.str().c_str());
             }
             

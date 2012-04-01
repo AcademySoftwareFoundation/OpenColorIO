@@ -26,7 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 
 #include "FileTransform.h"
 #include "OpBuilders.h"
@@ -75,7 +75,7 @@ OCIO_NAMESPACE_ENTER
         void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
-            info.name = "ColorCorrection";
+            info.name = "ColourCorrection";
             info.extension = "cc";
             info.capabilities = FORMAT_CAPABILITY_READ;
             formatInfoVec.push_back(info);

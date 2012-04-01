@@ -48,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <GL/glut.h>
 #endif
 
-#include <OpenColorIO/OpenColorIO.h>
+#include <OpenColourIO/OpenColourIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
 #include <OpenImageIO/imageio.h>
@@ -71,7 +71,7 @@ std::vector<float> g_lut3d;
 std::string g_lut3dcacheid;
 std::string g_shadercacheid;
 
-std::string g_inputColorSpace;
+std::string g_inputColourSpace;
 std::string g_display;
 std::string g_transformName;
 
@@ -182,18 +182,18 @@ void InitOCIO(const char * filename)
     g_display = config->getDefaultDisplay();
     g_transformName = config->getDefaultView(g_display.c_str());
     
-    g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
+    g_inputColourSpace = OCIO::ROLE_SCENE_LINEAR;
     if(filename)
     {
-        std::string cs = config->parseColorSpaceFromString(filename);
+        std::string cs = config->parseColourSpaceFromString(filename);
         if(!cs.empty())
         {
-            g_inputColorSpace = cs;
-            std::cout << "colorspace: " << cs << std::endl;
+            g_inputColourSpace = cs;
+            std::cout << "colourspace: " << cs << std::endl;
         }
         else
         {
-            std::cout << "colorspace: " << g_inputColorSpace << " \t(could not determine from filename, using default)" << std::endl;
+            std::cout << "colourspace: " << g_inputColourSpace << " \t(could not determine from filename, using default)" << std::endl;
         }
     }
 }
@@ -255,9 +255,9 @@ void Redisplay(void)
     }
     
     glEnable(GL_TEXTURE_2D);
-    glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glColor3f(1, 1, 1);
+    glClearColour(0.1f, 0.1f, 0.1f, 0.0f);
+    glClear(GL_COLOUR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glColour3f(1, 1, 1);
     
     glPushMatrix();
     glBegin(GL_QUADS);
@@ -458,7 +458,7 @@ const char * g_fragShaderText = ""
 "void main()\n"
 "{\n"
 "    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
-"    gl_FragColor = OCIODisplay(col, tex2);\n"
+"    gl_FragColour = OCIODisplay(col, tex2);\n"
 "}\n";
 
 
@@ -468,7 +468,7 @@ void UpdateOCIOGLState()
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
     OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
-    transform->setInputColorSpaceName( g_inputColorSpace.c_str() );
+    transform->setInputColourSpaceName( g_inputColourSpace.c_str() );
     transform->setDisplay( g_display.c_str() );
     transform->setView( g_transformName.c_str() );
     
@@ -572,13 +572,13 @@ void menuCallback(int /*id*/)
     glutPostRedisplay();
 }
 
-void imageColorSpace_CB(int id)
+void imageColourSpace_CB(int id)
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-    const char * name = config->getColorSpaceNameByIndex(id);
+    const char * name = config->getColourSpaceNameByIndex(id);
     if(!name) return;
     
-    g_inputColorSpace = name;
+    g_inputColourSpace = name;
     
     UpdateOCIOGLState();
     glutPostRedisplay();
@@ -592,7 +592,7 @@ void displayDevice_CB(int id)
     
     g_display = display;
     
-    const char * csname = config->getDisplayColorSpaceName(g_display.c_str(), g_transformName.c_str());
+    const char * csname = config->getDisplayColourSpaceName(g_display.c_str(), g_transformName.c_str());
     if(!csname)
     {
         g_transformName = config->getDefaultView(g_display.c_str());
@@ -620,10 +620,10 @@ static void PopulateOCIOMenus()
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
     
-    int csMenuID = glutCreateMenu(imageColorSpace_CB);
-    for(int i=0; i<config->getNumColorSpaces(); ++i)
+    int csMenuID = glutCreateMenu(imageColourSpace_CB);
+    for(int i=0; i<config->getNumColourSpaces(); ++i)
     {
-        glutAddMenuEntry(config->getColorSpaceNameByIndex(i), i);
+        glutAddMenuEntry(config->getColourSpaceNameByIndex(i), i);
     }
     
     int deviceMenuID = glutCreateMenu(displayDevice_CB);
@@ -640,7 +640,7 @@ static void PopulateOCIOMenus()
     }
     
     glutCreateMenu(menuCallback);
-    glutAddSubMenu("Image ColorSpace", csMenuID);
+    glutAddSubMenu("Image ColourSpace", csMenuID);
     glutAddSubMenu("Transform", transformMenuID);
     glutAddSubMenu("Device", deviceMenuID);
     
@@ -657,14 +657,14 @@ const char * USAGE_TEXT = "\n"
 "\tAlt+Down:  Gamma down (post display transform)\n"
 "\tAlt+Home:  Reset Exposure + Gamma\n"
 "\n"
-"\tC:   View Color\n"
+"\tC:   View Colour\n"
 "\tR:   View Red  \n"
 "\tG:   View Green\n"
 "\tB:   View Blue\n"
 "\tA:   View Alpha\n"
 "\tL:   View Luma\n"
 "\n"
-"\tRight-Mouse Button:   Configure Display / Transform / ColorSpace\n"
+"\tRight-Mouse Button:   Configure Display / Transform / ColourSpace\n"
 "\n"
 "\tEsc: Quit\n";
 

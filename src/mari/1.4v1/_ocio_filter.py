@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Post processing (color management) related Mari scripts
+# Post processing (colour management) related Mari scripts
 # coding: utf-8
 # Copyright (c) 2011 The Foundry Visionmongers Ltd.  All Rights Reserved.
 #-------------------------------------------------------------------------------
@@ -19,9 +19,9 @@ class OcioFilter():
         # Default all members...
         self._config_file_list   = mari.FileList(ocio.config_file_list_default)
         self._config             = ocio.config_default
-        self._input_color_space  = ocio.color_space_default
-        self._output_color_space = ocio.color_space_default
-        self._filter             = mari.gl_render.createQuickApplyGLSL('Color Correction', '', '', 'ColorManager.png')
+        self._input_colour_space  = ocio.colour_space_default
+        self._output_colour_space = ocio.colour_space_default
+        self._filter             = mari.gl_render.createQuickApplyGLSL('Colour Correction', '', '', 'ColourManager.png')
         self._filter_cache_id    = None
         self._texture_cache_id   = None
         self._sampler_name       = None
@@ -31,23 +31,23 @@ class OcioFilter():
         self._filter.setMetadataDefault('ConfigPath', ocio.CONFIG_FILE_LIST_RESET)
         self._filter.setMetadataFlags('ConfigPath', self._filter.METADATA_VISIBLE | self._filter.METADATA_EDITABLE)
 
-        color_spaces = [color_space.getName() for color_space in self._config.getColorSpaces()]
+        colour_spaces = [colour_space.getName() for colour_space in self._config.getColourSpaces()]
 
-        color_space_reset = ocio.COLOR_SPACE_RESET
-        if color_spaces.count(color_space_reset) == 0:
-            color_space_reset = color_spaces[0]
+        colour_space_reset = ocio.COLOUR_SPACE_RESET
+        if colour_spaces.count(colour_space_reset) == 0:
+            colour_space_reset = colour_spaces[0]
 
-        self._filter.setMetadata('InputColorSpace', self._input_color_space)
-        self._filter.setMetadataDisplayName('InputColorSpace', 'Input Color Space')
-        self._filter.setMetadataDefault('InputColorSpace', color_space_reset)
-        self._filter.setMetadataItemList('InputColorSpace', color_spaces)
-        self._filter.setMetadataFlags('InputColorSpace', self._filter.METADATA_VISIBLE | self._filter.METADATA_EDITABLE)
+        self._filter.setMetadata('InputColourSpace', self._input_colour_space)
+        self._filter.setMetadataDisplayName('InputColourSpace', 'Input Colour Space')
+        self._filter.setMetadataDefault('InputColourSpace', colour_space_reset)
+        self._filter.setMetadataItemList('InputColourSpace', colour_spaces)
+        self._filter.setMetadataFlags('InputColourSpace', self._filter.METADATA_VISIBLE | self._filter.METADATA_EDITABLE)
 
-        self._filter.setMetadata('OutputColorSpace', self._output_color_space)
-        self._filter.setMetadataDisplayName('OutputColorSpace', 'Output Color Space')
-        self._filter.setMetadataDefault('OutputColorSpace', color_space_reset)
-        self._filter.setMetadataItemList('OutputColorSpace', color_spaces)
-        self._filter.setMetadataFlags('OutputColorSpace', self._filter.METADATA_VISIBLE | self._filter.METADATA_EDITABLE)
+        self._filter.setMetadata('OutputColourSpace', self._output_colour_space)
+        self._filter.setMetadataDisplayName('OutputColourSpace', 'Output Colour Space')
+        self._filter.setMetadataDefault('OutputColourSpace', colour_space_reset)
+        self._filter.setMetadataItemList('OutputColourSpace', colour_spaces)
+        self._filter.setMetadataFlags('OutputColourSpace', self._filter.METADATA_VISIBLE | self._filter.METADATA_EDITABLE)
 
         mari.utils.connect(self._filter.metadataValueChanged, self._metadataValueChanged)
 
@@ -64,34 +64,34 @@ class OcioFilter():
             self._config_file_list = mari.FileList(value)
             self._config           = ocio.loadConfig(self._config_file_list.at(0), False)
 
-            color_spaces = [color_space.getName() for color_space in self._config.getColorSpaces()]
+            colour_spaces = [colour_space.getName() for colour_space in self._config.getColourSpaces()]
 
-            color_space_reset = ocio.COLOR_SPACE_RESET
-            if color_spaces.count(color_space_reset) == 0:
-                color_space_reset = color_spaces[0]
+            colour_space_reset = ocio.COLOUR_SPACE_RESET
+            if colour_spaces.count(colour_space_reset) == 0:
+                colour_space_reset = colour_spaces[0]
 
-            if color_spaces.count(self._input_color_space) == 0:
-                self._input_color_space = color_space_reset
+            if colour_spaces.count(self._input_colour_space) == 0:
+                self._input_colour_space = colour_space_reset
 
-            if color_spaces.count(self._output_color_space) == 0:
-                self._output_color_space = color_space_reset
+            if colour_spaces.count(self._output_colour_space) == 0:
+                self._output_colour_space = colour_space_reset
 
-            self._filter.setMetadataItemList('InputColorSpace',  color_spaces)
-            self._filter.setMetadataItemList('OutputColorSpace', color_spaces)
-            self._filter.setMetadataDefault('InputColorSpace',  color_space_reset)
-            self._filter.setMetadataDefault('OutputColorSpace', color_space_reset)
-            self._filter.setMetadata('InputColorSpace',  self._input_color_space )
-            self._filter.setMetadata('OutputColorSpace', self._output_color_space)
+            self._filter.setMetadataItemList('InputColourSpace',  colour_spaces)
+            self._filter.setMetadataItemList('OutputColourSpace', colour_spaces)
+            self._filter.setMetadataDefault('InputColourSpace',  colour_space_reset)
+            self._filter.setMetadataDefault('OutputColourSpace', colour_space_reset)
+            self._filter.setMetadata('InputColourSpace',  self._input_colour_space )
+            self._filter.setMetadata('OutputColourSpace', self._output_colour_space)
 
-        elif name == 'InputColorSpace':
-            if value == self._input_color_space:
+        elif name == 'InputColourSpace':
+            if value == self._input_colour_space:
                 return
-            self._input_color_space = value
+            self._input_colour_space = value
 
-        elif name == 'OutputColorSpace':
-            if value == self._output_color_space:
+        elif name == 'OutputColourSpace':
+            if value == self._output_colour_space:
                 return
-            self._output_color_space = value
+            self._output_colour_space = value
 
         else:
             return
@@ -101,11 +101,11 @@ class OcioFilter():
     #-----------------------------------------------------------------------------------------
 
     def _rebuildFilter(self):
-        input_color_space = self._config.getColorSpace(self._input_color_space)
-        if input_color_space is not None:
-            output_color_space = self._config.getColorSpace(self._output_color_space)
-            if output_color_space is not None:
-                processor = self._config.getProcessor(input_color_space, output_color_space)
+        input_colour_space = self._config.getColourSpace(self._input_colour_space)
+        if input_colour_space is not None:
+            output_colour_space = self._config.getColourSpace(self._output_colour_space)
+            if output_colour_space is not None:
+                processor = self._config.getProcessor(input_colour_space, output_colour_space)
 
                 self._filter_cache_id, self._texture_cache_id, self._sampler_name = ocio.buildProcessorFilter(
                     processor,

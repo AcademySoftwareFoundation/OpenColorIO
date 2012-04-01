@@ -2,7 +2,7 @@ import time
 import itertools
 import contextlib
 
-import PyOpenColorIO as OCIO
+import PyOpenColourIO as OCIO
 
 import rv
 from rv.commands import setStringProperty, setIntProperty, setFloatProperty
@@ -17,7 +17,7 @@ def timer(msg):
 
 
 def set_lut(proc, nodename):
-    """Given an PyOpenColorIO.Processor instance, create a LUT and
+    """Given an PyOpenColourIO.Processor instance, create a LUT and
     sets it for the specified node
     """
 
@@ -147,7 +147,7 @@ class PyMyStuffMode(rv.rvtypes.MinorMode):
         self._config_source(src = src, srcpath = srcpath)
 
     def _config_source(self, src, srcpath):
-        filelut_node = rv.extra_commands.associatedNode("RVColor", src)
+        filelut_node = rv.extra_commands.associatedNode("RVColour", src)
         looklut_node = rv.extra_commands.associatedNode("RVLookLUT", src)
 
         # Set 3D LUT, and activate
@@ -155,10 +155,10 @@ class PyMyStuffMode(rv.rvtypes.MinorMode):
 
         # FIXME: Need a way to customise this per-facility without
         # modifying this file (try: import ociorv_custom_stuff ?)
-        inspace = cfg.parseColorSpaceFromString(srcpath)
+        inspace = cfg.parseColourSpaceFromString(srcpath)
 
         test_transform = OCIO.DisplayTransform()
-        test_transform.setInputColorSpaceName(inspace)
+        test_transform.setInputColourSpaceName(inspace)
         display, view = self.active_view
         test_transform.setDisplay(display)
         test_transform.setView(view)
@@ -198,7 +198,7 @@ class PyMyStuffMode(rv.rvtypes.MinorMode):
         transform.setDisplay(self.active_view[0])
         transform.setView(self.active_view[1])
 
-        transform.setInputColorSpaceName(OCIO.Constants.ROLE_SCENE_LINEAR)
+        transform.setInputColourSpaceName(OCIO.Constants.ROLE_SCENE_LINEAR)
 
         try:
             output_proc = cfg.getProcessor(transform)
