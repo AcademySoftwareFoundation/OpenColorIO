@@ -651,6 +651,9 @@ Processor
    does the processor represent an image transformation that
                   introduces crosstalk between the image channels
 
+.. cpp:function:: ConstProcessorMetadataRcPtr Processor::getMetadata() const
+   
+
 
 CPU Path
 ^^^^^^^^
@@ -699,6 +702,33 @@ return 0 if unknown
    
 
 .. cpp:function:: const char * Processor::getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const
+   
+
+.. cpp:class:: ProcessorMetadata
+   
+   This class contains meta information about the process that generated
+   this processor.  The results of these functions do not
+   impact the pixel processing.
+
+.. cpp:function:: static ProcessorMetadataRcPtr ProcessorMetadata::Create()
+   
+
+.. cpp:function:: int ProcessorMetadata::getNumFiles() const
+   
+
+.. cpp:function:: const char * ProcessorMetadata::getFile(int index) const
+   
+
+.. cpp:function:: int ProcessorMetadata::getNumLooks() const
+   
+
+.. cpp:function:: const char * ProcessorMetadata::getLook(int index) const
+   
+
+.. cpp:function:: void ProcessorMetadata::addFile(const char * fname)
+   
+
+.. cpp:function:: void ProcessorMetadata::addLook(const char * look)
    
 
 

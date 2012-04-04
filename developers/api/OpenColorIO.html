@@ -916,6 +916,11 @@ bool <tt class="descclassname">Processor::</tt><tt class="descname">hasChannelCr
 </dl>
 </dd></dl>
 
+<dl class="function">
+<dt id="Processor::getMetadataC">
+<a class="reference internal" href="OpenColorTypes.html#ConstProcessorMetadataRcPtr" title="ConstProcessorMetadataRcPtr">ConstProcessorMetadataRcPtr</a> <tt class="descclassname">Processor::</tt><tt class="descname">getMetadata</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::getMetadataC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <div class="section" id="cpu-path">
 <h3>CPU Path<a class="headerlink" href="#cpu-path" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
@@ -974,6 +979,49 @@ void <tt class="descclassname">Processor::</tt><tt class="descname">getGpuLut3D<
 <dl class="function">
 <dt id="Processor::getGpuLut3DCacheID__GpuShaderDescCRC">
 const char* <tt class="descclassname">Processor::</tt><tt class="descname">getGpuLut3DCacheID</tt><big>(</big>const GpuShaderDesc&amp; <em>shaderDesc</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Processor::getGpuLut3DCacheID__GpuShaderDescCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="ProcessorMetadata">
+<em class="property">class </em><tt class="descname">ProcessorMetadata</tt><a class="headerlink" href="#ProcessorMetadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class contains meta information about the process that generated
+this processor.  The results of these functions do not
+impact the pixel processing.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ProcessorMetadata::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ProcessorMetadataRcPtr" title="ProcessorMetadataRcPtr">ProcessorMetadataRcPtr</a> <tt class="descclassname">ProcessorMetadata::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#ProcessorMetadata::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ProcessorMetadata::getNumFilesC">
+int <tt class="descclassname">ProcessorMetadata::</tt><tt class="descname">getNumFiles</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ProcessorMetadata::getNumFilesC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ProcessorMetadata::getFile__iC">
+const char* <tt class="descclassname">ProcessorMetadata::</tt><tt class="descname">getFile</tt><big>(</big>int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ProcessorMetadata::getFile__iC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ProcessorMetadata::getNumLooksC">
+int <tt class="descclassname">ProcessorMetadata::</tt><tt class="descname">getNumLooks</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ProcessorMetadata::getNumLooksC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ProcessorMetadata::getLook__iC">
+const char* <tt class="descclassname">ProcessorMetadata::</tt><tt class="descname">getLook</tt><big>(</big>int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ProcessorMetadata::getLook__iC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ProcessorMetadata::addFile__cCP">
+void <tt class="descclassname">ProcessorMetadata::</tt><tt class="descname">addFile</tt><big>(</big>const char* <em>fname</em><big>)</big><a class="headerlink" href="#ProcessorMetadata::addFile__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ProcessorMetadata::addLook__cCP">
+void <tt class="descclassname">ProcessorMetadata::</tt><tt class="descname">addLook</tt><big>(</big>const char* <em>look</em><big>)</big><a class="headerlink" href="#ProcessorMetadata::addLook__cCP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>

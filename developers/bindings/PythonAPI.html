@@ -330,7 +330,14 @@ this will overwrite it.</p>
 <dl class="attribute">
 <dt id="PyOpenColorIO.Config.clearLook">
 <tt class="descname">clearLook</tt><a class="headerlink" href="#PyOpenColorIO.Config.clearLook" title="Permalink to this definition">¶</a></dt>
-<dd><p>clearLook()</p>
+<dd><p>clearLooks()</p>
+<p>Clear looks in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="PyOpenColorIO.Config.clearLooks">
+<tt class="descname">clearLooks</tt><a class="headerlink" href="#PyOpenColorIO.Config.clearLooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>clearLooks()</p>
 <p>Clear looks in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 </dd></dl>
 
@@ -1158,7 +1165,7 @@ getProcessor(...) call.</p>
 <dl class="attribute">
 <dt id="PyOpenColorIO.Processor.applyRGB">
 <tt class="descname">applyRGB</tt><a class="headerlink" href="#PyOpenColorIO.Processor.applyRGB" title="Permalink to this definition">¶</a></dt>
-<dd><p>applyRGB(pyData)</p>
+<dd><p>applyRGB(pixeldata)</p>
 <p>Apply the RGB part of the transform represented by
 <a class="reference internal" href="#PyOpenColorIO.Processor" title="PyOpenColorIO.Processor"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Processor</span></tt></a> to an image.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1183,7 +1190,7 @@ getProcessor(...) call.</p>
 <dl class="attribute">
 <dt id="PyOpenColorIO.Processor.applyRGBA">
 <tt class="descname">applyRGBA</tt><a class="headerlink" href="#PyOpenColorIO.Processor.applyRGBA" title="Permalink to this definition">¶</a></dt>
-<dd><p>applyRGBA(pyData)</p>
+<dd><p>applyRGBA(pixeldata)</p>
 <p>Apply the RGB and alpha part of the transform represented by
 <a class="reference internal" href="#PyOpenColorIO.Processor" title="PyOpenColorIO.Processor"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Processor</span></tt></a> to an image.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1314,6 +1321,23 @@ will run on.</p>
 </tr>
 <tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="PyOpenColorIO.Processor.getMetadata">
+<tt class="descname">getMetadata</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getMetadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>getMetadata()</p>
+<p>Returns information about the process that generated this processor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns:</th><td class="field-body">processor metadata</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><cite>PyOpenColorIO.ProcessorMetadata</cite></td>
 </tr>
 </tbody>
 </table>

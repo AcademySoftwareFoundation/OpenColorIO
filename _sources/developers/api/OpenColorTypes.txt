@@ -37,6 +37,12 @@ Core
 .. cpp:type:: ProcessorRcPtr
    
 
+.. cpp:type:: ConstProcessorMetadataRcPtr
+   
+
+.. cpp:type:: ProcessorMetadataRcPtr
+   
+
 .. cpp:type:: ConstBakerRcPtr
    
 

@@ -165,6 +165,7 @@
     <dt><a href="developers/bindings/PythonAPI.html#PyOpenColorIO.Config.clearColorSpaces">clearColorSpaces (PyOpenColorIO.Config attribute)</a></dt>
     <dt><a href="developers/bindings/PythonAPI.html#PyOpenColorIO.Config.clearDisplays">clearDisplays (PyOpenColorIO.Config attribute)</a></dt>
     <dt><a href="developers/bindings/PythonAPI.html#PyOpenColorIO.Config.clearLook">clearLook (PyOpenColorIO.Config attribute)</a></dt>
+    <dt><a href="developers/bindings/PythonAPI.html#PyOpenColorIO.Config.clearLooks">clearLooks (PyOpenColorIO.Config attribute)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#ColorSpace">ColorSpace (C++ class)</a></dt>
     <dd><dl>
       <dt><a href="developers/bindings/PythonAPI.html#PyOpenColorIO.ColorSpace">(class in PyOpenColorIO)</a></dt>
@@ -279,6 +280,7 @@
     <dt><a href="developers/api/OpenColorTypes.html#ConstLookRcPtr">ConstLookRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstLookTransformRcPtr">ConstLookTransformRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstMatrixTransformRcPtr">ConstMatrixTransformRcPtr (C++ type)</a></dt>
+    <dt><a href="developers/api/OpenColorTypes.html#ConstProcessorMetadataRcPtr">ConstProcessorMetadataRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstProcessorRcPtr">ConstProcessorRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstTransformRcPtr">ConstTransformRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ConstTruelightTransformRcPtr">ConstTruelightTransformRcPtr (C++ type)</a></dt>
@@ -511,6 +513,9 @@
     <dt><a href="developers/bindings/PythonTransforms.html#PyOpenColorIO.DisplayTransform.getLooksOverrideEnabled">getLooksOverrideEnabled (PyOpenColorIO.DisplayTransform attribute)</a></dt>
     <dt><a href="developers/bindings/PythonTransforms.html#PyOpenColorIO.MatrixTransform.getMatrix">getMatrix (PyOpenColorIO.MatrixTransform attribute)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#getMetadata">getMetadata (C++ function)</a></dt>
+    <dd><dl>
+      <dt><a href="developers/bindings/PythonAPI.html#PyOpenColorIO.Processor.getMetadata">(PyOpenColorIO.Processor attribute)</a></dt>
+  </dl></dd>
 </dl></td>
   <td width="33%" valign="top"><dl>
     <dt><a href="developers/bindings/PythonAPI.html#PyOpenColorIO.ColorSpace.getName">getName (PyOpenColorIO.ColorSpace attribute)</a></dt>
@@ -753,8 +758,6 @@
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getHeight">PlanarImageDesc::getHeight (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getRData">PlanarImageDesc::getRData (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getWidth">PlanarImageDesc::getWidth (C++ function)</a></dt>
-</dl></td>
-  <td width="33%" valign="top"><dl>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::getYStrideBytes">PlanarImageDesc::getYStrideBytes (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::PlanarImageDesc">PlanarImageDesc::PlanarImageDesc (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#PlanarImageDesc::~PlanarImageDesc">PlanarImageDesc::~PlanarImageDesc (C++ function)</a></dt>
@@ -763,6 +766,8 @@
       <dt><a href="developers/bindings/PythonAPI.html#PyOpenColorIO.Processor">(class in PyOpenColorIO)</a></dt>
   </dl></dd>
     <dt><a href="developers/api/OpenColorIO.html#Processor::apply">Processor::apply (C++ function)</a></dt>
+</dl></td>
+  <td width="33%" valign="top"><dl>
     <dt><a href="developers/api/OpenColorIO.html#Processor::applyRGB">Processor::applyRGB (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Processor::applyRGBA">Processor::applyRGBA (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Processor::Create">Processor::Create (C++ function)</a></dt>
@@ -771,8 +776,18 @@
     <dt><a href="developers/api/OpenColorIO.html#Processor::getGpuLut3DCacheID">Processor::getGpuLut3DCacheID (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Processor::getGpuShaderText">Processor::getGpuShaderText (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Processor::getGpuShaderTextCacheID">Processor::getGpuShaderTextCacheID (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#Processor::getMetadata">Processor::getMetadata (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Processor::hasChannelCrosstalk">Processor::hasChannelCrosstalk (C++ function)</a></dt>
     <dt><a href="developers/api/OpenColorIO.html#Processor::isNoOp">Processor::isNoOp (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ProcessorMetadata">ProcessorMetadata (C++ class)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ProcessorMetadata::addFile">ProcessorMetadata::addFile (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ProcessorMetadata::addLook">ProcessorMetadata::addLook (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ProcessorMetadata::Create">ProcessorMetadata::Create (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ProcessorMetadata::getFile">ProcessorMetadata::getFile (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ProcessorMetadata::getLook">ProcessorMetadata::getLook (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ProcessorMetadata::getNumFiles">ProcessorMetadata::getNumFiles (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorIO.html#ProcessorMetadata::getNumLooks">ProcessorMetadata::getNumLooks (C++ function)</a></dt>
+    <dt><a href="developers/api/OpenColorTypes.html#ProcessorMetadataRcPtr">ProcessorMetadataRcPtr (C++ type)</a></dt>
     <dt><a href="developers/api/OpenColorTypes.html#ProcessorRcPtr">ProcessorRcPtr (C++ type)</a></dt>
     <dt><a href="developers/bindings/PythonTransforms.html#PyOpenColorIO.GroupTransform.push_back">push_back (PyOpenColorIO.GroupTransform attribute)</a></dt>
     <dt><a href="developers/bindings/PythonTypes.html#module-PyOpenColorIO.Constants">PyOpenColorIO.Constants (module)</a></dt>

@@ -73,6 +73,18 @@ It comes with “nuke-default” OCIO config by default, so the Hiero viewer
 matches when sending files to Nuke for rendering.
 
 
+CryEngine3
+**********
+
+`Game Engine - Crytek (Cinema Sandbox) <http://mycryengine.com/index.php?conid=59>`__
+
+CryENGINE is a real-time game engine, targeting applications in the
+motion-picture market. While we don't know many details about the CryEngine
+OpenColorIO integration, we're looking forward to learning more as information
+becomes available.
+
+
+
 OpenImageIO
 ***********
 
@@ -99,7 +111,7 @@ in the codebase.
 
 
 Apps w/icc or luts
-**************************************************
+******************
 flame (.3dl), lustre (.3dl), cinespace (.csp), houdini (.lut), iridas_itx (.itx)
 photoshop (.icc)
 
@@ -163,9 +175,8 @@ display. If the transform was approved on a different monitor, then maybe you
 should choose its profile instead.
 
 
-
 RV (Beta)
-*********************************
+*********
 
 `Playback Tool - Tweak Software <http://www.tweaksoftware.com>`__
 
@@ -180,7 +191,7 @@ relied upon for critical production work.
 
 
 After Effects (Beta)
-*********************************
+********************
 
 `Compositor - Adobe <http://www.adobe.com/products/aftereffects.html>`__
 
@@ -197,7 +208,7 @@ relied upon for critical production work.
 
 
 Java (Beta)
-************************
+***********
 The OpenColorIO API is available for use in Java. See the `jniglue directory
 <http://github.com/imageworks/OpenColorIO/tree/master/src/jniglue>`__
 in the codebase.
@@ -209,7 +220,7 @@ java.com
 
 
 Blender (Beta)
-***************************
+**************
 `Open Source 3D Application <http://www.blender.org/>`__
 
 Xaview Thomas has begun the `Blender OCIO integration <http://github.com/thmxv/blender-ocio>`__ .
@@ -222,7 +233,7 @@ Currently undergoing development.
 <http://www.youtube.com/watch?v=O43ItUVvcks>`__
 
 Ramen (Beta)
-*************************
+************
 `Open Source Compositor <http://ramencomp.blogspot.com>`__
 
 Under development, with native OCIO color managment.
