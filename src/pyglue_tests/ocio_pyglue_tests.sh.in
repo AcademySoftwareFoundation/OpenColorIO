@@ -1,0 +1,14 @@
+set -o nounset
+set -o errexit
+
+# DYLD for OS X, LD for linux
+#export DYLD_LIBRARY_PATH="@OpenColorIO_BINARY_DIR@/src/core:${DYLD_LIBRARY_PATH}"
+#export LD_LIBRARY_PATH="@OpenColorIO_BINARY_DIR@/src/core:${LD_LIBRARY_PATH}"
+# TODO: Why don't these need set? Confusing
+
+# Add pyglue dir for PyOpenColorIO module, and EXTDIST for nosetest
+export PYTHONPATH="@EXTDIST_PYTHONPATH@:${PYTHONPATH}"
+export PYTHONPATH="@OpenColorIO_BINARY_DIR@/src/pyglue:${PYTHONPATH}"
+
+# Run command
+@EXTDIST_BINPATH@/nosetests @CMAKE_CURRENT_SOURCE_DIR@/tests --verbose
