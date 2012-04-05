@@ -28,6 +28,11 @@ option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations
 option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" OFF)
 
 option(OCIO_PYGLUE_RESPECT_ABI "If ON, the Python module install path includes Python UCS version" OFF)
+if(UNIX AND NOT APPLE)
+    option(USE_EXTERNAL_YAML "Use system installed yaml-cpp library." OFF)
+    option(USE_EXTERNAL_TINYXML "Use system installed tinyxml library." OFF)
+    option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
+endif()
 
 # This does not include the SOVERSION override, on purpose, so that the
 # OCIO_VERSION value will be an accurate reflection of the underlying library version.
@@ -138,47 +143,83 @@ messageonce("Setting EXTDIST_PYTHONPATH: ${EXTDIST_PYTHONPATH}")
 ###############################################################################
 ### tinyxml ###
 
-set(TINYXML_VERSION 2_6_1)
-set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist)
-if(CMAKE_TOOLCHAIN_FILE)
-    set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-endif()
-ExternalProject_Add(tinyxml
-    URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
-    PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
-    BINARY_DIR ext/build/tinyxml
-    INSTALL_DIR ext/dist
-    CMAKE_ARGS ${TINYXML_CMAKE_ARGS}
-)
-if(WIN32)
-    set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml.lib)
-else()
-    set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
-endif()
+if(USE_EXTERNAL_TINYXML)
+    set(TINYXML_VERSION_MIN "2.6.1")
+    find_package(TinyXML)
+    if(TINYXML_FOUND)
+        if(TINYXML_VERSION VERSION_EQUAL ${TINYXML_VERSION_MIN} OR
+           TINYXML_VERSION VERSION_GREATER ${TINYXML_VERSION_MIN})
+            message(STATUS "External TinyXML will be used.")
+        else()
+            message(FATAL_ERROR "ERROR: ${TINYXML_VERSION} found, but ${TINYXML_VERSION_MIN} or newer is required.")
+        endif()
+    else(TINYXML_FOUND)
+        message(STATUS "TinyXML was not found. Perhaps you forgot to install the development package?")
+    endif(TINYXML_FOUND)
 
+else(USE_EXTERNAL_TINYXML)
+    set(TINYXML_VERSION 2_6_1)
+    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist)
+    if(CMAKE_TOOLCHAIN_FILE)
+        set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+    endif()
+    ExternalProject_Add(tinyxml
+        URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
+        PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
+        BINARY_DIR ext/build/tinyxml
+        INSTALL_DIR ext/dist
+        CMAKE_ARGS ${TINYXML_CMAKE_ARGS}
+    )
+    if(WIN32)
+        set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml.lib)
+    else()
+        set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
+    endif()
+endif(USE_EXTERNAL_TINYXML)
+    
 ###############################################################################
 ### YAML ###
 
-set(YAML_CPP_VERSION 0.3.0)
-set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE)
-if(CMAKE_TOOLCHAIN_FILE)
-    set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-endif()
-ExternalProject_Add(YAML_CPP_LOCAL
-    URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
-    BINARY_DIR ext/build/yaml-cpp
-    PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
-    INSTALL_DIR ext/dist
-    CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS}
-)
-set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
-set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
-if(WIN32)
-    set(YAML_CPP_STATIC_DEBUG_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmdd.lib)
-    set(YAML_CPP_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmd.lib)
-else()
-    set(YAML_CPP_STATIC_GENERAL_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
-endif()
+if(USE_EXTERNAL_YAML)
+    # Set minimum yaml version for non-patched sources.
+    set(YAML_VERSION_MIN "0.3.0")
+    include(FindPkgConfig)
+    pkg_check_modules(YAML_CPP yaml-cpp)
+    if(YAML_CPP_FOUND)
+        if(YAML_CPP_VERSION VERSION_EQUAL ${YAML_VERSION_MIN} OR
+           YAML_CPP_VERSION VERSION_GREATER ${YAML_VERSION_MIN})
+            message(STATUS "System yaml-cpp library will be used.")
+            include_directories(BEFORE ${YAML_CPP_INCLUDE_DIRS})
+        else()
+            message(FATAL_ERROR "ERROR: yaml-cpp ${YAML_VERSION_MIN} or greater is required.")
+        endif()
+    else(YAML_CPP_FOUND)
+        message(FATAL_ERROR "ERROR: System yaml-cpp library was not found. Make sure the library is installed and the pkg-config file exists.")
+    endif(YAML_CPP_FOUND)
+else(USE_EXTERNAL_YAML)
+    set(YAML_CPP_VERSION 0.3.0)
+    set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE)
+    if(CMAKE_TOOLCHAIN_FILE)
+        set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+    endif()
+    ExternalProject_Add(YAML_CPP_LOCAL
+        URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
+        BINARY_DIR ext/build/yaml-cpp
+        PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
+        INSTALL_DIR ext/dist
+        CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS}
+    )
+    set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
+    set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
+    if(WIN32)
+        set(YAML_CPP_STATIC_DEBUG_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmdd.lib)
+        set(YAML_CPP_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmd.lib)
+    else()
+        set(YAML_CPP_STATIC_GENERAL_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
+    endif()
+endif(USE_EXTERNAL_YAML)
+
+
 
 ###############################################################################
 ### Externals ###
