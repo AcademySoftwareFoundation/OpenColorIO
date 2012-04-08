@@ -44,6 +44,8 @@ hdl        Houdini. 1D Lut, 3D lut, 1D shaper   Only 'C' type is supported.
            Lut                                  Need to add R G B A RGB RGBA ALL.
                                                 No support for Sampling tag.
                                                 Header fields must be in strict order.
+look       IRIDAS .look                         Read baked 3D LUT embedded in file.
+                                                No mask support.
 mga/m3d    Pandora 3D lut                       Full read support.
 spi1d      1D format. Imageworks native 1D      Full read support.
            lut format.  HDR friendly, supports

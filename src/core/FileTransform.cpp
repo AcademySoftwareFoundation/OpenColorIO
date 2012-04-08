@@ -209,6 +209,7 @@ OCIO_NAMESPACE_ENTER
         registerFileFormat(CreateFileFormatHDL());
         registerFileFormat(CreateFileFormatIridasItx());
         registerFileFormat(CreateFileFormatIridasCube());
+        registerFileFormat(CreateFileFormatIridasLook());
         registerFileFormat(CreateFileFormatPandora());
         registerFileFormat(CreateFileFormatSpi1D());
         registerFileFormat(CreateFileFormatSpi3D());
