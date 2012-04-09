@@ -261,31 +261,27 @@ OCIO_NAMESPACE_ENTER
                 end_pos = std::remove(what.begin(), end_pos, '\n');
                 what.erase(end_pos, what.end());
 
-                // Code could potentially be tidied up based on http://stackoverflow.com/q/10054314/745
+                // Endianess-indepedant float reading code from
+                // http://stackoverflow.com/a/10055577/745
                 std::stringstream ss;
-                ss << std::hex << what;
+                ss << what;
+
+                size_t const datasize = sizeof(float);
+                size_t const hexoctetlen = 2;
 
                 for(int i = 0; i < 3*(size_3d*size_3d*size_3d); ++i)
                 {
-                    char rawhex[8];
 
-#ifdef BIG_ENDIAN
-                    // Floats are little-endian ordered, so read them
-                    // in reverse order on big-endian'd machines
-                    rawhex[6] = ss.get();
-                    rawhex[7] = ss.get();
+                    char rawhex[datasize * hexoctetlen + 1];
 
-                    rawhex[4] = ss.get();
-                    rawhex[5] = ss.get();
+                    // read little endian string into memory array
+                    for (unsigned int j=datasize; (j > 0) && ss.good(); --j)
+                    {
+                        ss.read(rawhex + ((j-1) * hexoctetlen), hexoctetlen);
+                    }
 
-                    rawhex[2] = ss.get();
-                    rawhex[3] = ss.get();
-
-                    rawhex[0] = ss.get();
-                    rawhex[1] = ss.get();
-#else
-                    ss.read(rawhex, sizeof(rawhex);
-#endif
+                    // terminate the string (needed for safe conversion)
+                    rawhex[datasize * hexoctetlen] = 0;
 
                     if(ss.good())
                     {
