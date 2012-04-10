@@ -253,58 +253,58 @@ typedef int Py_ssize_t;
     ///
     std::string do_strip( const std::string & str, int striptype, const std::string & chars  )
     {
-        std::string::size_type len = str.size(), i, j, charslen = chars.size();
+        std::string::size_type len = str.size(), i = 0, j = 0, charslen = chars.size();
 
-        if ( charslen == 0 )
+        if ( len > 0 )
         {
-            i = 0;
-            if ( striptype != RIGHTSTRIP )
+            if ( charslen == 0 )
             {
-                while ( i < len && ::isspace( str[i] ) )
+                if ( striptype != RIGHTSTRIP )
                 {
-                    i++;
+                    while ( i < len && ::isspace( str[i] ) )
+                    {
+                        i++;
+                    }
                 }
-            }
 
-            j = len;
-            if ( striptype != LEFTSTRIP )
+                j = len;
+                if ( striptype != LEFTSTRIP )
+                {
+                    do
+                    {
+                        j--;
+                    }
+                    while (j >= i && ::isspace(str[j]));
+
+                    j++;
+                }
+
+
+            }
+            else
             {
-                do
+                const char * sep = chars.c_str();
+
+                if ( striptype != RIGHTSTRIP )
                 {
-                    j--;
+                    while ( i < len && memchr(sep, str[i], charslen) )
+                    {
+                        i++;
+                    }
                 }
-                while (j >= i && ::isspace(str[j]));
 
-                j++;
-            }
-
-
-        }
-        else
-        {
-            const char * sep = chars.c_str();
-
-            i = 0;
-            if ( striptype != RIGHTSTRIP )
-            {
-                while ( i < len && memchr(sep, str[i], charslen) )
+                j = len;
+                if (striptype != LEFTSTRIP)
                 {
-                    i++;
+                    do
+                    {
+                        j--;
+                    }
+                    while (j >= i &&  memchr(sep, str[j], charslen)  );
+                    j++;
                 }
+
             }
-
-            j = len;
-            if (striptype != LEFTSTRIP)
-            {
-                do
-                {
-                    j--;
-                }
-                while (j >= i &&  memchr(sep, str[j], charslen)  );
-                j++;
-            }
-
-
         }
 
         if ( i == 0 && j == len )
