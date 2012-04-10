@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO v1.0.6 documentation" href="../index.html" />
+    <link rel="up" title="Developer guide" href="index.html" />
+    <link rel="next" title="FAQ" href="../FAQ.html" />
+    <link rel="prev" title="Python Types" href="bindings/PythonTypes.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO v1.0.6 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="submitting_changes.html">Submitting Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="issues.html">Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_examples.html">Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorIO.html">C++ API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTransforms.html">C++ Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTypes.html">C++ Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonAPI.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTransforms.html">Python Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTypes.html">Python Types</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Internal Architecture Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="internal-architecture-overview">
+<h1>Internal Architecture Overview<a class="headerlink" href="#internal-architecture-overview" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="external-api">
+<h2>External API<a class="headerlink" href="#external-api" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="configs">
+<h3>Configs<a class="headerlink" href="#configs" title="Permalink to this headline">¶</a></h3>
+<p>At the highest level, we have OCIO::Configs. This represents the entirety of the
+current color &#8220;universe&#8221;.  Configs are serialized as .ocio files, read at runtime,
+and are often used in a &#8216;read-only&#8217; context.</p>
+<p>Config are loaded at runtime to allow for customized color handling in a show-
+dependent manner.</p>
+<p>Example Configs:</p>
+<ul class="simple">
+<li>ACES (Acacdemy&#8217;s standard color workflow)</li>
+<li>spi-vfx (Used on some Imageworks VFX shows such as spiderman, etc).</li>
+<li>and others</li>
+</ul>
+</div>
+<div class="section" id="colorspaces">
+<h3>ColorSpaces<a class="headerlink" href="#colorspaces" title="Permalink to this headline">¶</a></h3>
+<p>The meat of an OCIO::Config is a list of named ColorSpaces. ColorSpace often
+correspond to input image states, output image states, or image states used for
+internal processing.</p>
+<p>Example ColorSpaces (from ACES configuration):</p>
+<ul class="simple">
+<li>aces (HDR, scene-linear)</li>
+<li>adx10 (log-like density encoding space)</li>
+<li>slogf35 (sony F35 slog camera encoding)</li>
+<li>rrt_srgb (baked in display transform, suitable for srgb display)</li>
+<li>rrt_p3dci (baked in display transform, suitable for dcip3 display)</li>
+</ul>
+</div>
+<div class="section" id="transforms">
+<h3>Transforms<a class="headerlink" href="#transforms" title="Permalink to this headline">¶</a></h3>
+<p>ColorSpaces contain an ordered list of transforms, which define the conversion
+to and from the Config&#8217;s &#8220;reference&#8221; space.</p>
+<p>Transforms are the atomic units available to the designer in order to specify a
+color conversion.</p>
+<p>Examples of OCIO::Transforms are:</p>
+<ul class="simple">
+<li>File-based transforms (1d lut, 3d lut, mtx... anything, really.)</li>
+<li>Math functions (gamma, log, mtx)</li>
+<li>The &#8216;meta&#8217; GroupTransform, which contains itself an ordered lists of transforms</li>
+<li>The &#8216;meta&#8217; LookTransform, which contains an ordered lists of transforms</li>
+</ul>
+<p>For example, the adx10 ColorSpace (in one particular ACES configuration)
+-Transform FROM adx, to our reference ColorSpace:</p>
+<ol class="arabic simple">
+<li>Apply FileTransform adx_adx10_to_cdd.spimtx</li>
+<li>Apply FileTransform adx_cdd_to_cid.spimtx</li>
+<li>Apply FileTransform adx_cid_to_rle.spi1d</li>
+<li>Apply LogTransform base 10 (inverse)</li>
+<li>Apply FileTransform adx_exp_to_aces.spimtx</li>
+</ol>
+<p>If we have an image in the reference ColorSpace (unnamed), we can convert TO
+adx by applying each in the inverse direction:</p>
+<ol class="arabic simple">
+<li>Apply FileTransform adx_exp_to_aces.spimtx (inverse)</li>
+<li>Apply LogTransform base 10 (forward)</li>
+<li>Apply FileTransform adx_cid_to_rle.spi1d (inverse)</li>
+<li>Apply FileTransform adx_cdd_to_cid.spimtx (inverse)</li>
+<li>Apply FileTransform adx_adx10_to_cdd.spimtx (inverse)</li>
+</ol>
+<p>Note that this isn&#8217;t possible in all cases (what if a lut or matrix is not
+invertible?), but conceptually it&#8217;s a simple way to think about the design.</p>
+</div>
+<div class="section" id="summary">
+<h3>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h3>
+<p>Configs and ColorSpaces are just a bookkeeping device used to get and ordered
+lists of Transforms corresponding to image color transformation.</p>
+<p>Transforms are visible to the person AUTHORING the OCIO config, but are
+NOT visible to the client applications. Client apps need only concern themselves
+with Configs and Processors.</p>
+</div>
+<div class="section" id="ocio-processors">
+<h3>OCIO::Processors<a class="headerlink" href="#ocio-processors" title="Permalink to this headline">¶</a></h3>
+<p>A processor corresponds to a &#8216;baked&#8217; color transformation. You specify two arguments
+when querying a processor: the <a class="reference internal" href="api/OpenColorIO.html#colorspace-section"><em>ColorSpace</em></a> you are coming from,
+and the <a class="reference internal" href="api/OpenColorIO.html#colorspace-section"><em>ColorSpace</em></a> you are going to.</p>
+<p>Once you have the processor, you can apply the color transformation using the
+&#8220;apply&#8221; function.  For the CPU veseion, first wrap your image in an
+ImageDesc class, and then call apply to process in place.</p>
+<p>Example:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &lt;OpenColorIO/OpenColorIO.h&gt;</span>
+<span class="k">namespace</span> <span class="n">OCIO</span> <span class="o">=</span> <span class="n">OCIO_NAMESPACE</span><span class="p">;</span>
+
+<span class="k">try</span>
+<span class="p">{</span>
+   <span class="c1">// Get the global OpenColorIO config</span>
+   <span class="c1">// This will auto-initialize (using $OCIO) on first use</span>
+   <span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">GetCurrentConfig</span><span class="p">();</span>
+
+   <span class="c1">// Get the processor corresponding to this transform.</span>
+   <span class="c1">// These strings, in this example, are specific to the above</span>
+   <span class="c1">// example. ColorSpace names should NEVER be hard-coded into client</span>
+   <span class="c1">// software, but should be dynamically queried at runtime from the library</span>
+   <span class="n">OCIO</span><span class="o">::</span><span class="n">ConstProcessorRcPtr</span> <span class="n">processor</span> <span class="o">=</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">getProcessor</span><span class="p">(</span><span class="s">&quot;adx10&quot;</span><span class="p">,</span> <span class="s">&quot;aces&quot;</span><span class="p">);</span>
+
+   <span class="c1">// Wrap the image in a light-weight ImageDescription</span>
+   <span class="n">OCIO</span><span class="o">::</span><span class="n">PackedImageDesc</span> <span class="n">img</span><span class="p">(</span><span class="n">imageData</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+   <span class="c1">// Apply the color transformation (in place)</span>
+   <span class="n">processor</span><span class="o">-&gt;</span><span class="n">apply</span><span class="p">(</span><span class="n">img</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="k">catch</span><span class="p">(</span><span class="n">OCIO</span><span class="o">::</span><span class="n">Exception</span> <span class="o">&amp;</span> <span class="n">exception</span><span class="p">)</span>
+<span class="p">{</span>
+   <span class="n">std</span><span class="o">::</span><span class="n">cerr</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;OpenColorIO Error: &quot;</span> <span class="o">&lt;&lt;</span> <span class="n">exception</span><span class="p">.</span><span class="n">what</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The GPU code path is similar.  You get the processor from the config, and then
+query the shaderText and the lut3d.  The client loads these to the GPU themselves,
+and then makes the appropriate calls to the newly defined function.</p>
+<p>See <cite>src/apps/ociodisplay</cite> for an example.</p>
+</div>
+</div>
+<div class="section" id="internal-api">
+<h2>Internal API<a class="headerlink" href="#internal-api" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="the-op-abstraction">
+<h3>The Op Abstraction<a class="headerlink" href="#the-op-abstraction" title="Permalink to this headline">¶</a></h3>
+<p>It is a useful abstraction, both for code-reuse and optimization, to not relying
+on the transforms to do pixel processing themselves.</p>
+<p>Consider that the FileTransform represents a wide-range of image processing
+operations (basically all of em), many of which are really complex.  For example,
+the houdini lut format in a single file may contain a log convert, a 1d lut, and
+then a 3d lut; all of which need to be applied in a row!  If we dont want the
+FileTransform to know how to process all possible pixel operations, it&#8217;s much
+simpler to make light-weight processing operations, which the transforms can
+create to do the dirty work as needed.</p>
+<p>All image processing operations (ops) are a class that present the same
+interface, and it&#8217;s rather simple:
+(src/core/Op.h)</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="k">virtual</span> <span class="kt">void</span> <span class="n">apply</span><span class="p">(</span><span class="kt">float</span><span class="o">*</span> <span class="n">rgbaBuffer</span><span class="p">,</span> <span class="kt">long</span> <span class="n">numPixels</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Basically, given a packed float array with the specified number of pixels, process em.</p>
+<p>Examples of ops include Lut1DOp, Lut3DOp, MtxOffsetOp, LogOp, etc.</p>
+<p>Thus, the job of a transform becomes much simpler and they&#8217;re only responsible
+for converting themselves to a list of ops.  A simple FileTransform that only has
+a single 1D lut internally may just generate a single Lut1DOp, but a
+FileTransform that references a more complex format (such as the houdini lut case
+referenced above) may generate a few ops:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">void</span> <span class="n">FileFormatHDL</span><span class="o">::</span><span class="n">BuildFileOps</span><span class="p">(</span><span class="n">OpRcPtrVec</span> <span class="o">&amp;</span> <span class="n">ops</span><span class="p">,</span>
+                         <span class="k">const</span> <span class="n">Config</span><span class="o">&amp;</span> <span class="cm">/*config*/</span><span class="p">,</span>
+                         <span class="k">const</span> <span class="n">ConstContextRcPtr</span> <span class="o">&amp;</span> <span class="cm">/*context*/</span><span class="p">,</span>
+                         <span class="n">CachedFileRcPtr</span> <span class="n">untypedCachedFile</span><span class="p">,</span>
+                         <span class="k">const</span> <span class="n">FileTransform</span><span class="o">&amp;</span> <span class="n">fileTransform</span><span class="p">,</span>
+                         <span class="n">TransformDirection</span> <span class="n">dir</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+
+<span class="c1">// Code omitted which loads the lut file into the file cache...</span>
+
+<span class="n">CreateLut1DOp</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="n">cachedFile</span><span class="o">-&gt;</span><span class="n">lut1D</span><span class="p">,</span>
+                   <span class="n">fileTransform</span><span class="p">.</span><span class="n">getInterpolation</span><span class="p">(),</span> <span class="n">dir</span><span class="p">);</span>
+<span class="n">CreateLut3DOp</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="n">cachedFile</span><span class="o">-&gt;</span><span class="n">lut3D</span><span class="p">,</span>
+                   <span class="n">fileTransform</span><span class="p">.</span><span class="n">getInterpolation</span><span class="p">(),</span> <span class="n">dir</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>See (src/core/<a href="#id1"><span class="problematic" id="id2">*</span></a>Ops.h) for the available ops.</p>
+<p>Note that while compositors often have complex, branching trees of image processing
+operations, we just have a linear list of ops, lending itself very well to
+optimization.</p>
+<p>Before the ops are run, they are optimized. (Collapsed with appropriate neighbors, etc).</p>
+</div>
+<div class="section" id="an-example">
+<h3>An Example<a class="headerlink" href="#an-example" title="Permalink to this headline">¶</a></h3>
+<p>Let us consider the internal steps when getProcessor() is called to convert
+from ColorSpace &#8216;adx10&#8217; to ColorSpace &#8216;aces&#8217;.</p>
+<ul class="simple">
+<li>The first step is to turn this ColorSpace conversion into an ordered list of</li>
+</ul>
+<p>transforms.  We do this by creating a single of the conversions from &#8216;adx10&#8217;
+to reference, and then adding the transforms required to go from reference to
+&#8216;aces&#8217;.</p>
+<ul class="simple">
+<li>The Transform list is then converted into a list of ops.  It is during this</li>
+</ul>
+<p>stage luts, are loaded, etc.</p>
+</div>
+<div class="section" id="cpu-code-path">
+<h3>CPU CODE PATH<a class="headerlink" href="#cpu-code-path" title="Permalink to this headline">¶</a></h3>
+<p>The master list of ops is then optimized, and stored internally in the processor.</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">FinalizeOpVec</span><span class="p">(</span><span class="n">m_cpuOps</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>During Processor::apply(...), a subunit of pixels in the image are formatted into a sequential rgba block.  (Block size is optimized for computational (SSE) simplicity and performance, and is typically similar in size to an image scanline)</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">float</span> <span class="o">*</span> <span class="n">rgbaBuffer</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">long</span> <span class="n">numPixels</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
+   <span class="n">scanlineHelper</span><span class="p">.</span><span class="n">prepRGBAScanline</span><span class="p">(</span><span class="o">&amp;</span><span class="n">rgbaBuffer</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">numPixels</span><span class="p">);</span>
+   <span class="p">...</span>
+</pre></div>
+</div>
+<p>Then for each op, op-&gt;apply is called in-place.</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="k">for</span><span class="p">(</span><span class="n">OpRcPtrVec</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="n">m_cpuOps</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">size</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="p">{</span>
+   <span class="n">m_cpuOps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">apply</span><span class="p">(</span><span class="n">rgbaBuffer</span><span class="p">,</span> <span class="n">numPixels</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>After all ops have been applied, the results are copied back to the source</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span class="n">scanlineHelper</span><span class="p">.</span><span class="n">finishRGBAScanline</span><span class="p">();</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="gpu-code-path">
+<h3>GPU CODE PATH<a class="headerlink" href="#gpu-code-path" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>The master list of ops is partitioned into 3 ordered lists:</li>
+</ol>
+<ul class="simple">
+<li>As many ops as possible from the BEGINNING of the op-list that can be done
+analytically in shader text. (called gpu-preops)</li>
+<li>As many ops as possible from the END of the op-list that can be done
+analytically in shader text. (called gpu-postops)</li>
+<li>The left-over ops in the middle that cannot support shader text, and thus
+will be baked into a 3dlut. (called gpu-lattice)</li>
+</ul>
+<p>#. Between the first an the second lists (gpu-preops, and gpu-latticeops), we
+anaylze the op-stream metadata and determine the appropriate allocation to use.
+(to minimize clamping, quantization, etc). This is accounted for here by
+interserting a forward allocation to the end of the pre-ops, and the inverse
+allocation to the start of the lattice ops.</p>
+<p>See <a class="reference external" href="https://github.com/imageworks/OpenColorIO/blob/master/src/core/NoOps.cpp#L183">https://github.com/imageworks/OpenColorIO/blob/master/src/core/NoOps.cpp#L183</a></p>
+<p>#. The 3 lists of ops are then optimized individually, and stored on the processor.
+The Lut3d is computed by applying the gpu-lattice ops, on the CPU, to a lut3d
+image.</p>
+<p>The shader text is computed by calculating the shader for the gpu-preops, adding
+a sampling function of the 3d lut, and then calculating the shader for the gpu
+post ops.</p>
+</div>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+    </div>
+  </body>
+</html>

@@ -35,3 +35,11 @@ Python API documentation:
     bindings/PythonAPI
     bindings/PythonTransforms
     bindings/PythonTypes
+
+Internal Architecture:
+
+.. toctree::
+    :maxdepth: 1
+
+    internal_architecture
+
