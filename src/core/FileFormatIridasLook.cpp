@@ -26,8 +26,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
- //#include <stdlib.h>
-
 #include <cstdio>
 #include <cstring>
 #include <iterator>
@@ -223,11 +221,11 @@ OCIO_NAMESPACE_ENTER
                 std::string size_clean = pystring::strip(size_raw, "'\" "); // strip quotes and space
 
                 char* endptr = 0;
-                size_3d = strtol(size_clean.c_str(), &endptr, 10);
+                size_3d = static_cast<int>(strtol(size_clean.c_str(), &endptr, 10));
 
                 if(*endptr)
                 {
-                    // strtoi didn't consume entire string, there was
+                    // strtol didn't consume entire string, there was
                     // remaining data, thus did not contain a single interger
                     std::ostringstream os;
                     os << "Invalid LUT size value: '" << size_raw;
@@ -254,12 +252,10 @@ OCIO_NAMESPACE_ENTER
                 std::string what = dataelem->ToElement()->GetText();
 
                 // Remove spaces, quotes and newlines
-                std::string::iterator end_pos;
-                end_pos = std::remove(what.begin(), what.end(), ' ');
-                end_pos = std::remove(what.begin(), end_pos, '"');
-                end_pos = std::remove(what.begin(), end_pos, '\'');
-                end_pos = std::remove(what.begin(), end_pos, '\n');
-                what.erase(end_pos, what.end());
+                what = pystring::replace(what, " ", "");
+                what = pystring::replace(what, "\"", "");
+                what = pystring::replace(what, "'", "");
+                what = pystring::replace(what, "\n", "");
 
                 // Endianess-indepedant float reading code from
                 // http://stackoverflow.com/a/10055577/745
@@ -292,10 +288,9 @@ OCIO_NAMESPACE_ENTER
                         int32_t val;
                         convert >> val;
 
-                        //std::cerr << rawhex << " == " << (*(float*)(&val)) << "\n";
-
                         // Cast integer to float
-                        raw.push_back(*(float*)(&val));
+                        float* val_float = reinterpret_cast<float*>(&val);
+                        raw.push_back(*val_float);
                     }
                     else
                     {
@@ -358,16 +353,8 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
 
-            if(newDir == TRANSFORM_DIR_FORWARD)
-            {
-                CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
-            }
-            else if(newDir == TRANSFORM_DIR_INVERSE)
-            {
-                CreateLut3DOp(ops, cachedFile->lut3D,
-                                  fileTransform.getInterpolation(), newDir);
-            }
+            CreateLut3DOp(ops, cachedFile->lut3D,
+                          fileTransform.getInterpolation(), newDir);
         }
     }
 
@@ -624,7 +611,7 @@ OIIO_ADD_TEST(FileFormatIridasLook, simple3d)
     // Check LUT values
     OIIO_CHECK_EQUAL(looklut->lut3D->lut.size(), 8*8*8*3);
 
-    float cube[8 * 8 * 8 * 3] = {
+    double cube[8 * 8 * 8 * 3] = {
         -0.00000, -0.00000, -0.00000,
         0.04271, 0.04271, 0.04271,
         0.08543, 0.08543, 0.08543,
