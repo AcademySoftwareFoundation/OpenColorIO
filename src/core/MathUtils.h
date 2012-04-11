@@ -146,15 +146,39 @@ OCIO_NAMESPACE_ENTER
     float GetSafeScalarInverse(float v, float defaultValue = 1.0);
     
     
-    // This take the 4x4 inverse.
-    // Return whether the inverse has succeeded.
-    bool GetM44Inverse(float* out44, const float* m44);
+    // All matrix / vector operations use the following sizing...
+    //
+    // m : 4x4 matrix
+    // v : 4 column vector
     
-    bool IsM44Identity(const float* m44);
+    // Return the 4x4 inverse, and whether the inverse has succeeded.
+    // Supports in-place operations
+    bool GetM44Inverse(float* mout, const float* m);
     
-    bool IsM44Diagonal(const float* m44);
-    void GetM44Diagonal(float* out4, const float* m44);
+    // Is an identity matrix? (with fltmin tolerance)
+    bool IsM44Identity(const float* m);
     
+    // Is this a purely diagonal matrix?
+    bool IsM44Diagonal(const float* m);
+    
+    // Extract the diagonal
+    void GetM44Diagonal(float* vout, const float* m);
+    
+    // Get the product, out = m1*m2
+    // Supports in-place operations
+    void GetM44Product(float* mout, const float* m1, const float* m2);
+    
+    // Combine two transforms in the mx+b form, into a single transform
+    // mout*x+vout == m2*(m1*x+v1)+v2
+    // Supports in-place operations
+    void GetMxbCombine(float* mout, float* vout,
+                       const float* m1, const float* v1,
+                       const float* m2, const float* v2);
+    
+    // Supports in-place operations
+    bool GetMxbInverse(float* mout, float* vout,
+                       const float* m, const float* v);
+
 }
 OCIO_NAMESPACE_EXIT
 

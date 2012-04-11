@@ -41,8 +41,8 @@
 
 OCIO_NAMESPACE_ENTER
 {
-// Copied from http://github.com/imageworks/pystring
-// 235bcf5ddff7c75b7714c7341858d9b8d57401a7
+// Version 1.1.1
+// https://github.com/imageworks/pystring/tarball/v1.1.1
 
 namespace pystring
 {
@@ -305,6 +305,23 @@ namespace os
 {
 namespace path
 {
+    // All of the function below have three versions.
+    // Example:
+    //   join(...)
+    //   join_nt(...)
+    //   join_posix(...)
+    //
+    // The regular function dispatches to the other versions - based on the OS
+    // at compile time - to match the result you'd get from the python
+    // interepreter on the same operating system
+    // 
+    // Should you want to 'lock off' to a particular version of the string
+    // manipulation across *all* operating systems, use the version with the
+    // _OS you are interested in.  I.e., you can use posix style path joining,
+    // even on Windows, with join_posix.
+    //
+    // The naming, (nt, posix) matches the cpython source implementation.
+    
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// @defgroup functions pystring::os::path
     /// @{
@@ -316,12 +333,16 @@ namespace path
     /// empty string ('').
     
     std::string basename(const std::string & path);
+    std::string basename_nt(const std::string & path);
+    std::string basename_posix(const std::string & path);
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Return the directory name of pathname path. This is the first half of the pair
     /// returned by split(path).
     
     std::string dirname(const std::string & path);
+    std::string dirname_nt(const std::string & path);
+    std::string dirname_posix(const std::string & path);
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Return True if path is an absolute pathname. On Unix, that means it begins with a
@@ -329,6 +350,19 @@ namespace path
     /// letter.
 
     bool isabs(const std::string & path);
+    bool isabs_nt(const std::string & path);
+    bool isabs_posix(const std::string & s);
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    /// @brief Return a normalized absolutized version of the pathname path.
+    /// 
+    /// NOTE: This differs from the interface of the python equivalent in that it requires you
+    /// to pass in the current working directory as an argument.
+    
+    std::string abspath(const std::string & path, const std::string & cwd);
+    std::string abspath_nt(const std::string & path, const std::string & cwd);
+    std::string abspath_posix(const std::string & path, const std::string & cwd);
+    
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Join one or more path components intelligently. If any component is an absolute
@@ -339,8 +373,14 @@ namespace path
     /// directory for each drive, os.path.join("c:", "foo") represents a path relative to the
     /// current directory on drive C: (c:foo), not c:\foo.
     
+    /// This dispatches based on the compilation OS
     std::string join(const std::string & path1, const std::string & path2);
-    // std::string join(const std::vector< std::string > & paths);
+    std::string join_nt(const std::string & path1, const std::string & path2);
+    std::string join_posix(const std::string & path1, const std::string & path2);
+    
+    std::string join(const std::vector< std::string > & paths);
+    std::string join_nt(const std::vector< std::string > & paths);
+    std::string join_posix(const std::vector< std::string > & paths);
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Normalize a pathname. This collapses redundant separators and up-level references
@@ -350,6 +390,8 @@ namespace path
     /// symbolic links!
 
     std::string normpath(const std::string & path);
+    std::string normpath_nt(const std::string & path);
+    std::string normpath_posix(const std::string & path);
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Split the pathname path into a pair, (head, tail) where tail is the last pathname
@@ -361,21 +403,27 @@ namespace path
     /// differ).
 
     void split(std::string & head, std::string & tail, const std::string & path);
+    void split_nt(std::string & head, std::string & tail, const std::string & path);
+    void split_posix(std::string & head, std::string & tail, const std::string & path);
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Split the pathname path into a pair (drive, tail) where drive is either a drive
     /// specification or the empty string. On systems which do not use drive specifications,
     /// drive will always be the empty string. In all cases, drive + tail will be the same as
     /// path.
-
+    
     void splitdrive(std::string & drivespec, std::string & pathspec, const std::string & path);
-
+    void splitdrive_nt(std::string & drivespec, std::string & pathspec, const std::string & p);
+    void splitdrive_posix(std::string & drivespec, std::string & pathspec, const std::string & path);
+    
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// @brief Split the pathname path into a pair (root, ext) such that root + ext == path, and
     /// ext is empty or begins with a period and contains at most one period. Leading periods on
     /// the basename are ignored; splitext('.cshrc') returns ('.cshrc', '').
 
     void splitext(std::string & root, std::string & ext, const std::string & path);
+    void splitext_nt(std::string & root, std::string & ext, const std::string & path);
+    void splitext_posix(std::string & root, std::string & ext, const std::string & path);
     
     ///
     /// @ }
