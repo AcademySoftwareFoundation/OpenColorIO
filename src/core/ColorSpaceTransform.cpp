@@ -199,7 +199,10 @@ OCIO_NAMESPACE_ENTER
         AllocationData srcAllocation;
         srcAllocation.allocation = srcColorSpace->getAllocation();
         srcAllocation.vars.resize( srcColorSpace->getAllocationNumVars());
-        srcColorSpace->getAllocationVars(&srcAllocation.vars[0]);
+        if(srcAllocation.vars.size() > 0)
+        {
+            srcColorSpace->getAllocationVars(&srcAllocation.vars[0]);
+        }
         
         CreateGpuAllocationNoOp(ops, srcAllocation);
         
@@ -232,7 +235,10 @@ OCIO_NAMESPACE_ENTER
         AllocationData dstAllocation;
         dstAllocation.allocation = dstColorSpace->getAllocation();
         dstAllocation.vars.resize( dstColorSpace->getAllocationNumVars());
-        dstColorSpace->getAllocationVars(&dstAllocation.vars[0]);
+        if(dstAllocation.vars.size() > 0)
+        {
+            dstColorSpace->getAllocationVars(&dstAllocation.vars[0]);
+        }
         
         CreateGpuAllocationNoOp(ops, dstAllocation);
     }
