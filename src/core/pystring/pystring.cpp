@@ -41,17 +41,21 @@
 #include <iostream>
 #include <sstream>
 
-OCIO_NAMESPACE_ENTER
-{
-
-namespace pystring
-{
-
 #if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
 #ifndef WINDOWS
 #define WINDOWS
 #endif
 #endif
+
+#ifdef WINDOWS
+#include "BaseTsd.h"
+#endif
+
+OCIO_NAMESPACE_ENTER
+{
+
+namespace pystring
+{
 
 // This definition codes from configure.in in the python src.
 // Strictly speaking this limits us to str sizes of 2**31.
@@ -61,6 +65,10 @@ namespace pystring
 // This must also equal the size used in the end = MAX_32BIT_INT default arg.
 
 typedef int Py_ssize_t;
+
+#ifdef WINDOWS
+typedef SSIZE_T ssize_t;
+#endif
 
 /* helper macro to fixup start/end slice values */
 #define ADJUST_INDICES(start, end, len)         \

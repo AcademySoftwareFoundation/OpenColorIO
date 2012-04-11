@@ -33,6 +33,9 @@ if(UNIX AND NOT APPLE)
     option(USE_EXTERNAL_TINYXML "Use system installed tinyxml library." OFF)
     option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
 endif()
+if(NOT UNIX)
+	set(OCIO_USE_BOOST_PTR ON CACHE BOOL "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)")
+endif()
 
 # This does not include the SOVERSION override, on purpose, so that the
 # OCIO_VERSION value will be an accurate reflection of the underlying library version.
@@ -91,7 +94,7 @@ endif()
 
 messageonce("Use Boost Ptr: ${OCIO_USE_BOOST_PTR}")
 if(OCIO_USE_BOOST_PTR)
-    set(Boost_ADDITIONAL_VERSIONS "1.45" "1.44" "1.43" "1.43.0" "1.42"
+    set(Boost_ADDITIONAL_VERSIONS "1.49" "1.45" "1.44" "1.43" "1.43.0" "1.42"
                                   "1.42.0" "1.41" "1.41.0" "1.40"
                                   "1.40.0" "1.39" "1.39.0" "1.38"
                                   "1.38.0" "1.37" "1.37.0" "1.34.1"
