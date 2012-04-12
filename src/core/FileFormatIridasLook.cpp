@@ -89,6 +89,70 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
+        // convert hex ascii to int
+        // return true on success, false on failure
+        bool hexasciitoint(char& ival, char character)
+        {
+            if(character>=48 && character<=57) // [0-9]
+            {
+                ival = static_cast<char>(character-48);
+                return true;
+            }
+            else if(character>=65 && character<=70) // [A-F]
+            {
+                ival = static_cast<char>(10+character-65);
+                return true;
+            }
+            else if(character>=97 && character<=102) // [a-f]
+            {
+                ival = static_cast<char>(10+character-97);
+                return true;
+            }
+            
+            ival = 0;
+            return false;
+        }
+        
+        // convert array of 8 hex ascii to f32
+        // The input hexascii is required to be a little-endian representation
+        // as used in the iridas file format
+        // "AD10753F" -> 0.9572857022285461f on ALL architectures
+        
+        bool hexasciitofloat(float& fval, const char * ascii)
+        {
+            // Convert all ASCII numbers to their numerical representations
+            char asciinums[8];
+            for(unsigned int i=0; i<8; ++i)
+            {
+                if(!hexasciitoint(asciinums[i], ascii[i]))
+                {
+                    return false;
+                }
+            }
+            
+            unsigned char * fvalbytes = reinterpret_cast<unsigned char *>(&fval);
+            
+#if OCIO_LITTLE_ENDIAN
+            // Since incoming values are little endian, and we're on little endian
+            // preserve the byte order
+            fvalbytes[0] = (unsigned char) (asciinums[1] | (asciinums[0] << 4));
+            fvalbytes[1] = (unsigned char) (asciinums[3] | (asciinums[2] << 4));
+            fvalbytes[2] = (unsigned char) (asciinums[5] | (asciinums[4] << 4));
+            fvalbytes[3] = (unsigned char) (asciinums[7] | (asciinums[6] << 4));
+#else
+            // Since incoming values are little endian, and we're on big endian
+            // flip the byte order
+            fvalbytes[3] = (unsigned char) (asciinums[1] | (asciinums[0] << 4));
+            fvalbytes[2] = (unsigned char) (asciinums[3] | (asciinums[2] << 4));
+            fvalbytes[1] = (unsigned char) (asciinums[5] | (asciinums[4] << 4));
+            fvalbytes[0] = (unsigned char) (asciinums[7] | (asciinums[6] << 4));
+#endif
+            return true;
+        }
+    }
+    
+    namespace
+    {
         class LocalCachedFile : public CachedFile
         {
         public:
@@ -236,7 +300,6 @@ OCIO_NAMESPACE_ENTER
 
             // Grab raw 3D data
             std::vector<float> raw;
-
             {
                 TiXmlNode* dataelem = lutsection->FirstChild("data");
                 if(!dataelem)
@@ -256,49 +319,29 @@ OCIO_NAMESPACE_ENTER
                 what = pystring::replace(what, "\"", "");
                 what = pystring::replace(what, "'", "");
                 what = pystring::replace(what, "\n", "");
-
-                // Endianess-indepedant float reading code from
-                // http://stackoverflow.com/a/10055577/745
-                std::stringstream ss;
-                ss << what;
-
-                size_t const datasize = sizeof(float);
-                size_t const hexoctetlen = 2;
-
-                for(int i = 0; i < 3*(size_3d*size_3d*size_3d); ++i)
+                
+                if(what.size() % 8 != 0)
                 {
-
-                    char rawhex[datasize * hexoctetlen + 1];
-
-                    // read little endian string into memory array
-                    for (unsigned int j=datasize; (j > 0) && ss.good(); --j)
-                    {
-                        ss.read(rawhex + ((j-1) * hexoctetlen), hexoctetlen);
-                    }
-
-                    // terminate the string (needed for safe conversion)
-                    rawhex[datasize * hexoctetlen] = 0;
-
-                    if(ss.good())
-                    {
-                        // Convert hex to 32-bit integer
-                        std::stringstream convert;
-                        convert << std::hex << rawhex;
-
-                        int32_t val;
-                        convert >> val;
-
-                        // Cast integer to float
-                        float* val_float = reinterpret_cast<float*>(&val);
-                        raw.push_back(*val_float);
-                    }
-                    else
+                    std::ostringstream os;
+                    os << "Error loading .look LUT. ";
+                    os << "The 'data' but be a size multiple of 8. ";
+                    os << what.size() << " elements found.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                const char * ascii = what.c_str();
+                float fval = 0.0f;
+                for(unsigned int i=0; i<what.size()/8; ++i)
+                {
+                    if(!hexasciitofloat(fval, &ascii[8*i]))
                     {
                         std::ostringstream os;
-                        os << "Not enough values in LUT data. Found " << i;
-                        os << ". Expected " << 3*(size_3d*size_3d*size_3d);
+                        os << "Error loading .look LUT. ";
+                        os << "Non-hex characters found in 'data' block ";
+                        os << "at index '" << (8*i) << "'.";
                         throw Exception(os.str().c_str());
                     }
+                    raw.push_back(fval);
                 }
             }
 
@@ -370,8 +413,107 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+
+OCIO_NAMESPACE_USING
+
+
+
+OIIO_ADD_TEST(FileFormatIridasLook, hexasciitoint)
+{
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, 'a');
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 10);
+    }
+    
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, 'A');
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 10);
+    }
+    
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, 'f');
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 15);
+    }
+    
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, 'F');
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 15);
+    }
+    
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, '0');
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 0);
+    }
+    
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, '0');
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 0);
+    }
+    
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, '9');
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(ival, 9);
+    }
+    
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, '\n');
+    OIIO_CHECK_EQUAL(success, false);
+    }
+    
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, 'j');
+    OIIO_CHECK_EQUAL(success, false);
+    }
+    
+    {
+    char ival = 0;
+    bool success = hexasciitoint(ival, 'x');
+    OIIO_CHECK_EQUAL(success, false);
+    }
+}
+
+
+OIIO_ADD_TEST(FileFormatIridasLook, hexasciitofloat)
+{
+    //>>> import binascii, struct
+    //>> struct.unpack("<f", binascii.unhexlify("AD10753F"))[0]
+    //0.9572857022285461
+    
+    {
+    float fval = 0.0f;
+    bool success = hexasciitofloat(fval, "0000003F");
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(fval, 0.5f);
+    }
+    
+    {
+    float fval = 0.0f;
+    bool success = hexasciitofloat(fval, "0000803F");
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(fval, 1.0f);
+    }
+    
+    {
+    float fval = 0.0f;
+    bool success = hexasciitofloat(fval, "AD10753F");
+    OIIO_CHECK_EQUAL(success, true); OIIO_CHECK_EQUAL(fval, 0.9572857022285461f);
+    }
+    
+    {
+    float fval = 0.0f;
+    bool success = hexasciitofloat(fval, "AD10X53F");
+    OIIO_CHECK_EQUAL(success, false);
+    }
+}
+
 
 OIIO_ADD_TEST(FileFormatIridasLook, simple3d)
 {
@@ -599,9 +741,9 @@ OIIO_ADD_TEST(FileFormatIridasLook, simple3d)
     simple1D.str(strebuf.str());
 
     // Read file
-    OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple1D);
-    OCIO::LocalCachedFileRcPtr looklut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    LocalFileFormat tester;
+    CachedFileRcPtr cachedFile = tester.Read(simple1D);
+    LocalCachedFileRcPtr looklut = DynamicPtrCast<LocalCachedFile>(cachedFile);
 
     // Check LUT size is correct
     OIIO_CHECK_EQUAL(looklut->lut3D->size[0], 8);
@@ -1196,13 +1338,13 @@ OIIO_ADD_TEST(FileFormatIridasLook, fail_on_mask)
     infile.str(strebuf.str());
 
     // Read file
-    OCIO::LocalFileFormat tester;
+    LocalFileFormat tester;
     try
     {
-        OCIO::CachedFileRcPtr cachedFile = tester.Read(infile);
-        OIIO_CHECK_ASSERT(false); // Fail test if previous line doesn't throw OCIO::Exception
+        CachedFileRcPtr cachedFile = tester.Read(infile);
+        OIIO_CHECK_ASSERT(false); // Fail test if previous line doesn't throw Exception
     }
-    catch(OCIO::Exception& e)
+    catch(Exception& e)
     {
         // Check exception message is correct error (not something
         // like "cannot parse LUT data")

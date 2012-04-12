@@ -119,6 +119,11 @@ typedef off_t FilePos;
 
 OCIO_NAMESPACE_ENTER
 {
+
+// TODO: Add proper endian detection using architecture / compiler mojo
+//       In the meantime, hardcode to x86
+#define OCIO_LITTLE_ENDIAN 1  // This is correct on x86
+
     /*
      * Mutex/SpinLock classes
      */
