@@ -41,8 +41,8 @@
 
 OCIO_NAMESPACE_ENTER
 {
-// Version 1.1.1
-// https://github.com/imageworks/pystring/tarball/v1.1.1
+// Version 1.1.2
+// https://github.com/imageworks/pystring/tarball/v1.1.2
 
 namespace pystring
 {

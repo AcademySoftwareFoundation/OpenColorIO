@@ -254,7 +254,7 @@ typedef int Py_ssize_t;
     ///
     std::string do_strip( const std::string & str, int striptype, const std::string & chars  )
     {
-        ssize_t len = (ssize_t) str.size(), i, j, charslen = (ssize_t) chars.size();
+        Py_ssize_t len = (Py_ssize_t) str.size(), i, j, charslen = (Py_ssize_t) chars.size();
 
         if ( charslen == 0 )
         {
