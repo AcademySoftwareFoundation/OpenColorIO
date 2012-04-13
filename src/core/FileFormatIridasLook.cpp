@@ -324,7 +324,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Error loading .look LUT. ";
-                    os << "The 'data' but be a size multiple of 8. ";
+                    os << "Number of characters in 'data' must be multiple of 8. ";
                     os << what.size() << " elements found.";
                     throw Exception(os.str().c_str());
                 }
