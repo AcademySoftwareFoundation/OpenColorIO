@@ -1,0 +1,23 @@
+# travis-ci.org build file
+
+# As CMake is not officially supported we use erlang VMs
+language: erlang
+
+# Settings to try
+env:
+  - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=yes"
+
+# Make sure CMake is installed
+install:
+ - sudo apt-get install cmake
+
+# Run the Build script
+script:
+ - mkdir _build
+ - cd _build
+ - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
+ - cmake --build . --target install
+
+# Run Tests
+after_script:
+ - ctest --output-on-failure .
