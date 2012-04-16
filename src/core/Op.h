@@ -79,12 +79,23 @@ OCIO_NAMESPACE_ENTER
             
             //! Is the processing a noop? I.e, does apply do nothing.
             //! (Even no-ops may define Allocation though.)
-            
+            //! This must be implmented in a manner where its valid to call
+            //! *prior* to finalize. (Optimizers may make use of it)
             virtual bool isNoOp() const = 0;
             
             virtual bool isSameType(const OpRcPtr & op) const = 0;
             
             virtual bool isInverse(const OpRcPtr & op) const = 0;
+            
+            virtual bool canCombineWith(const OpRcPtr & op) const;
+            
+            // Return a vector of result ops, which correspond to
+            // THIS combinedWith secondOp.
+            //
+            // If the result is a noOp, it is valid for the resulting opsVec
+            // to be empty.
+            
+            virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
             
             virtual bool hasChannelCrosstalk() const = 0;
             

@@ -123,6 +123,9 @@ OCIO_NAMESPACE_ENTER
             virtual bool isNoOp() const;
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool canCombineWith(const OpRcPtr & op) const;
+            virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+            
             virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
@@ -133,6 +136,7 @@ OCIO_NAMESPACE_ENTER
                                         const GpuShaderDesc & shaderDesc) const;
         
         private:
+            bool m_isNoOp;
             float m_m44[16];
             float m_offset4[4];
             TransformDirection m_direction;
@@ -153,6 +157,7 @@ OCIO_NAMESPACE_ENTER
                                        const float * offset4,
                                        TransformDirection direction):
                                        Op(),
+                                       m_isNoOp(false),
                                        m_direction(direction),
                                        m_m44IsIdentity(false),
                                        m_offset4IsIdentity(false)
@@ -166,6 +171,11 @@ OCIO_NAMESPACE_ENTER
             memcpy(m_offset4, offset4, 4*sizeof(float));
             
             memset(m_m44_inv, 0, 16*sizeof(float));
+            
+            // This Op will be a NoOp if and old if both the offset and matrix
+            // are identity. This hold true no matter what the direction is,
+            // so we can compute this ahead of time.
+            m_isNoOp = (IsVecEqualToZero(m_offset4, 4) && IsM44Identity(m_m44));
         }
         
         OpRcPtr MatrixOffsetOp::clone() const
@@ -189,7 +199,7 @@ OCIO_NAMESPACE_ENTER
         
         bool MatrixOffsetOp::isNoOp() const
         {
-            return (m_m44IsIdentity && m_offset4IsIdentity);
+            return m_isNoOp;
         }
         
         bool MatrixOffsetOp::isSameType(const OpRcPtr & op) const
@@ -215,7 +225,132 @@ OCIO_NAMESPACE_ENTER
             
             return true;
         }
+        
+        bool MatrixOffsetOp::canCombineWith(const OpRcPtr & op) const
+        {
+            return isSameType(op);
+        }
+        
+        void MatrixOffsetOp::combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const
+        {
+            MatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<MatrixOffsetOp>(secondOp);
+            if(!typedRcPtr)
+            {
+                std::ostringstream os;
+                os << "MatrixOffsetOp can only be combined with other ";
+                os << "MatrixOffsetOps.  secondOp:" << secondOp->getInfo();
+                throw Exception(os.str().c_str());
+            }
             
+            float mout[16];
+            float vout[4];
+            
+            if(m_direction == TRANSFORM_DIR_FORWARD &&
+                typedRcPtr->m_direction == TRANSFORM_DIR_FORWARD)
+            {
+                GetMxbCombine(mout, vout,
+                              m_m44, m_offset4,
+                              typedRcPtr->m_m44, typedRcPtr->m_offset4);
+            }
+            else if(m_direction == TRANSFORM_DIR_FORWARD &&
+                    typedRcPtr->m_direction == TRANSFORM_DIR_INVERSE)
+            {
+                float minv2[16];
+                float vinv2[4];
+                
+                if(!GetMxbInverse(minv2, vinv2, typedRcPtr->m_m44, typedRcPtr->m_offset4))
+                {
+                    std::ostringstream os;
+                    os << "Cannot invert second MatrixOffsetOp op. ";
+                    os << "Matrix inverse does not exist for (";
+                    for(int i=0; i<16; ++i)
+                    {
+                        os << typedRcPtr->m_m44[i] << " ";
+                    }
+                    os << ").";
+                    throw Exception(os.str().c_str());
+                }
+                
+                GetMxbCombine(mout, vout,
+                              m_m44, m_offset4,
+                              minv2, vinv2);
+            }
+            else if(m_direction == TRANSFORM_DIR_INVERSE &&
+                    typedRcPtr->m_direction == TRANSFORM_DIR_FORWARD)
+            {
+                float minv1[16];
+                float vinv1[4];
+                
+                if(!GetMxbInverse(minv1, vinv1, m_m44, m_offset4))
+                {
+                    std::ostringstream os;
+                    os << "Cannot invert primary MatrixOffsetOp op. ";
+                    os << "Matrix inverse does not exist for (";
+                    for(int i=0; i<16; ++i)
+                    {
+                        os << m_m44[i] << " ";
+                    }
+                    os << ").";
+                    throw Exception(os.str().c_str());
+                }
+                
+                GetMxbCombine(mout, vout,
+                              minv1, vinv1,
+                              typedRcPtr->m_m44, typedRcPtr->m_offset4);
+                
+            }
+            else if(m_direction == TRANSFORM_DIR_INVERSE &&
+                    typedRcPtr->m_direction == TRANSFORM_DIR_INVERSE)
+            {
+                float minv1[16];
+                float vinv1[4];
+                float minv2[16];
+                float vinv2[4];
+                
+                if(!GetMxbInverse(minv1, vinv1, m_m44, m_offset4))
+                {
+                    std::ostringstream os;
+                    os << "Cannot invert primary MatrixOffsetOp op. ";
+                    os << "Matrix inverse does not exist for (";
+                    for(int i=0; i<16; ++i)
+                    {
+                        os << m_m44[i] << " ";
+                    }
+                    os << ").";
+                    throw Exception(os.str().c_str());
+                }
+                
+                if(!GetMxbInverse(minv2, vinv2, typedRcPtr->m_m44, typedRcPtr->m_offset4))
+                {
+                    std::ostringstream os;
+                    os << "Cannot invert second MatrixOffsetOp op. ";
+                    os << "Matrix inverse does not exist for (";
+                    for(int i=0; i<16; ++i)
+                    {
+                        os << typedRcPtr->m_m44[i] << " ";
+                    }
+                    os << ").";
+                    throw Exception(os.str().c_str());
+                }
+                
+                GetMxbCombine(mout, vout,
+                              minv1, vinv1,
+                              minv2, vinv2);
+            }
+            else
+            {
+                std::ostringstream os;
+                os << "MatrixOffsetOp cannot combine ops with unspecified ";
+                os << "directions. First op: " << m_direction << " ";
+                os << "secondOp:" << typedRcPtr->m_direction;
+                throw Exception(os.str().c_str());
+            }
+            
+            CreateMatrixOffsetOp(ops,
+                                 mout, vout,
+                                 TRANSFORM_DIR_FORWARD);
+        }
+        
         bool MatrixOffsetOp::hasChannelCrosstalk() const
         {
             return (!m_m44IsDiagonal);
@@ -224,7 +359,6 @@ OCIO_NAMESPACE_ENTER
         void MatrixOffsetOp::finalize()
         {
             m_offset4IsIdentity = IsVecEqualToZero(m_offset4, 4);
-            
             m_m44IsIdentity = IsM44Identity(m_m44);
             m_m44IsDiagonal = IsM44Diagonal(m_m44);
             
@@ -242,14 +376,12 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Create the cacheID
-            
             md5_state_t state;
             md5_byte_t digest[16];
             md5_init(&state);
             md5_append(&state, (const md5_byte_t *)m_m44, 16*sizeof(float));
             md5_append(&state, (const md5_byte_t *)m_offset4, 4*sizeof(float));
             md5_finish(&state, digest);
-            
             
             std::ostringstream cacheIDStream;
             cacheIDStream << "<MatrixOffsetOp ";
@@ -259,9 +391,6 @@ OCIO_NAMESPACE_ENTER
             
             m_cacheID = cacheIDStream.str();
         }
-        
-        // TODO: Add bool processAlpha, which can be obeyed or not?
-        // TODO: Or call the version with alpha handling
         
         void MatrixOffsetOp::apply(float* rgbaBuffer, long numPixels) const
         {
@@ -494,13 +623,166 @@ OCIO_NAMESPACE_ENTER
         CreateMatrixOffsetOp(ops, matrix, offset, direction);
     }
     
-    
-    bool IsMatrixOp(const OpRcPtr & op)
-    {
-        MatrixOffsetOpRcPtr typedRcPtr = DynamicPtrCast<MatrixOffsetOp>(op);
-        if(!typedRcPtr) return false;
-        return true;
-    }
-    
 }
 OCIO_NAMESPACE_EXIT
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+OCIO_NAMESPACE_USING
+
+OIIO_ADD_TEST(MatrixOps, Combining)
+{
+    float m1[16] = { 0.1f, 0.2f, 0.3f, 0.4f,
+                     0.5f, 0.6f, 0.7f, 0.8f,
+                     0.9f, 1.0f, 1.1f, 1.2f,
+                     1.3f, 1.4f, 1.5f, 1.6f };
+                   
+    float v1[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+    
+    float m2[16] = { 1.1f, -0.1f, -0.1f, 0.0f,
+                     0.1f, 0.9f, -0.2f, 0.0f,
+                     0.05f, 0.0f, 1.1f, 0.0f,
+                     0.0f, 0.0f, 0.0f, 1.0f };
+    float v2[4] = { -0.2f, -0.1f, -0.1f, -0.2f };
+    
+    const float source[] = { 0.1f, 0.2f, 0.3f, 0.4f,
+                             -0.1f, -0.2f, 50.0f, 123.4f,
+                             1.0f, 1.0f, 1.0f, 1.0f };
+    float error = 1e-4f;
+    
+    {
+        OpRcPtrVec ops;
+        CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD);
+        CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_FORWARD);
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        ops[0]->finalize();
+        ops[1]->finalize();
+        
+        OpRcPtrVec combined;
+        ops[0]->combineWith(combined, ops[1]);
+        OIIO_CHECK_EQUAL(combined.size(), 1);
+        combined[0]->finalize();
+        
+        for(int test=0; test<3; ++test)
+        {
+            float tmp[4];
+            memcpy(tmp, &source[4*test], 4*sizeof(float));
+            ops[0]->apply(tmp, 1);
+            ops[1]->apply(tmp, 1);
+            
+            float tmp2[4];
+            memcpy(tmp2, &source[4*test], 4*sizeof(float));
+            combined[0]->apply(tmp2, 1);
+            
+            for(unsigned int i=0; i<4; ++i)
+            {
+                OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+            }
+        }
+    }
+    
+    
+    {
+        OpRcPtrVec ops;
+        CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD);
+        CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_INVERSE);
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        ops[0]->finalize();
+        ops[1]->finalize();
+        
+        OpRcPtrVec combined;
+        ops[0]->combineWith(combined, ops[1]);
+        OIIO_CHECK_EQUAL(combined.size(), 1);
+        combined[0]->finalize();
+        
+        
+        for(int test=0; test<3; ++test)
+        {
+            float tmp[4];
+            memcpy(tmp, &source[4*test], 4*sizeof(float));
+            ops[0]->apply(tmp, 1);
+            ops[1]->apply(tmp, 1);
+            
+            float tmp2[4];
+            memcpy(tmp2, &source[4*test], 4*sizeof(float));
+            combined[0]->apply(tmp2, 1);
+            
+            for(unsigned int i=0; i<4; ++i)
+            {
+                OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+            }
+        }
+    }
+    
+    {
+        OpRcPtrVec ops;
+        CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_INVERSE);
+        CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_FORWARD);
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        ops[0]->finalize();
+        ops[1]->finalize();
+        
+        OpRcPtrVec combined;
+        ops[0]->combineWith(combined, ops[1]);
+        OIIO_CHECK_EQUAL(combined.size(), 1);
+        combined[0]->finalize();
+        
+        for(int test=0; test<3; ++test)
+        {
+            float tmp[4];
+            memcpy(tmp, &source[4*test], 4*sizeof(float));
+            ops[0]->apply(tmp, 1);
+            ops[1]->apply(tmp, 1);
+            
+            float tmp2[4];
+            memcpy(tmp2, &source[4*test], 4*sizeof(float));
+            combined[0]->apply(tmp2, 1);
+            
+            for(unsigned int i=0; i<4; ++i)
+            {
+                OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+            }
+        }
+    }
+    
+    {
+        OpRcPtrVec ops;
+        CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_INVERSE);
+        CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_INVERSE);
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        ops[0]->finalize();
+        ops[1]->finalize();
+        
+        OpRcPtrVec combined;
+        ops[0]->combineWith(combined, ops[1]);
+        OIIO_CHECK_EQUAL(combined.size(), 1);
+        combined[0]->finalize();
+        
+        for(int test=0; test<3; ++test)
+        {
+            float tmp[4];
+            memcpy(tmp, &source[4*test], 4*sizeof(float));
+            ops[0]->apply(tmp, 1);
+            ops[1]->apply(tmp, 1);
+            
+            float tmp2[4];
+            memcpy(tmp2, &source[4*test], 4*sizeof(float));
+            combined[0]->apply(tmp2, 1);
+            
+            for(unsigned int i=0; i<4; ++i)
+            {
+                OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+            }
+        }
+    }
+}
+
+#endif
