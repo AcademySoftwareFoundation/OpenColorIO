@@ -162,7 +162,7 @@ void GetStdConfigs(ConfigVec &configs)
 }
 
 
-string GetStdConfigPath(const string name)
+string GetStdConfigPath(const string &name)
 {
 	const char *ocio_dir = "/Library/Application Support/OpenColorIO/";
 	
