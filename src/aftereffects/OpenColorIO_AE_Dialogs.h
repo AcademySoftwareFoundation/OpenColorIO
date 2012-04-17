@@ -27,7 +27,7 @@ typedef std::vector<std::string> ConfigVec;
 
 void GetStdConfigs(ConfigVec &configs);
 
-std::string GetStdConfigPath(const std::string name);
+std::string GetStdConfigPath(const std::string &name);
 
 
 typedef std::vector<std::string> MenuVec;

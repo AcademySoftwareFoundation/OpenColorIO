@@ -10,6 +10,7 @@
 #include "OpenColorIO_AE_Dialogs.h"
 
 #include <Windows.h>
+#include <Shlobj.h>
 #include <Icm.h>
 
 #include <list>
@@ -373,9 +374,35 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 	{
 		for(int i=0; i < menu_items.size(); i++)
 		{
+			string label = menu_items[i];
+
 			UINT flags = (i == selected_index ? (MF_STRING | MF_CHECKED) : MF_STRING);
 
-			AppendMenu(menu, flags, i + 1, menu_items[i].c_str());
+			if(label == "(-")
+			{
+				flags |= MF_SEPARATOR;
+			}
+			else if(label == "$OCIO")
+			{
+				char *file = std::getenv("OCIO");
+
+				if(file == NULL)
+					flags |= MF_GRAYED;
+			}
+			else if(label == "(nada)")
+			{
+				flags |= MF_GRAYED;
+
+				char appdata_path[MAX_PATH];
+				HRESULT result = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdata_path);
+
+				if(result == S_OK)
+				{
+					label = "No configs in " + string(appdata_path) + "\\OpenColorIO\\";
+				}
+			}
+
+			AppendMenu(menu, flags, i + 1, label.c_str());
 		}
 
 		POINT pos;
@@ -395,6 +422,91 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 	}
 	else
 		return selected_index;
+}
+
+
+void GetStdConfigs(ConfigVec &configs)
+{
+	char appdata_path[MAX_PATH];
+
+	HRESULT result = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdata_path);
+
+	if(result == S_OK)
+	{
+		string dir_path = string(appdata_path) + "\\OpenColorIO\\";
+
+		string search_path = dir_path + "*";
+
+		WIN32_FIND_DATA find_data;
+
+		HANDLE searchH = FindFirstFile(search_path.c_str(), &find_data);
+
+		if(searchH != INVALID_HANDLE_VALUE)
+		{
+			if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			{
+				string config_path = dir_path + find_data.cFileName + "\\config.ocio";
+
+				WIN32_FIND_DATA find_data_temp;
+
+				HANDLE fileH = FindFirstFile(config_path.c_str(), &find_data_temp);
+
+				if(fileH != INVALID_HANDLE_VALUE)
+				{
+					configs.push_back(find_data.cFileName);
+
+					FindClose(fileH);
+				}
+			}
+
+			while( FindNextFile(searchH, &find_data) )
+			{
+				if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				{
+					string config_path = dir_path + find_data.cFileName + "\\config.ocio";
+
+					WIN32_FIND_DATA find_data_temp;
+
+					HANDLE fileH = FindFirstFile(config_path.c_str(), &find_data_temp);
+
+					if(fileH != INVALID_HANDLE_VALUE)
+					{
+						configs.push_back(find_data.cFileName);
+
+						FindClose(fileH);
+					}
+				}
+			}
+
+			FindClose(searchH);
+		}
+	}
+}
+
+
+string GetStdConfigPath(const string &name)
+{
+	char appdata_path[MAX_PATH];
+
+	HRESULT result = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdata_path);
+
+	if(result == S_OK)
+	{
+		string config_path = string(appdata_path) + "\\OpenColorIO\\" + name + "\\config.ocio";
+
+		WIN32_FIND_DATA find_data;
+
+		HANDLE searchH = FindFirstFile(config_path.c_str(), &find_data);
+
+		if(searchH != INVALID_HANDLE_VALUE)
+		{
+			FindClose(searchH);
+
+			return config_path;
+		}
+	}
+
+	return "";
 }
 
 
