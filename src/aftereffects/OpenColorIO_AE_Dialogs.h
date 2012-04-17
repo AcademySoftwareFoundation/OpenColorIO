@@ -23,16 +23,19 @@ bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
 bool GetMonitorProfile(char *path, int buf_len, const void *hwnd);
 
 
+typedef std::vector<std::string> ConfigVec;
+
+void GetStdConfigs(ConfigVec &configs);
+
+std::string GetStdConfigPath(const std::string name);
+
+
 typedef std::vector<std::string> MenuVec;
 
 int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd);
 
 
 void ErrorMessage(const char *message, const void *hwnd);
-
-#ifdef __APPLE__
-void SetMickeyCursor();
-#endif
 
 
 #endif // _OPENCOLORIC_AE_DIALOG_H_

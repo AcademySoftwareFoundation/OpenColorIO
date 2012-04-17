@@ -12,10 +12,14 @@
 
 #include "OpenColorIO_AE_Context.h"
 
+#include "OpenColorIO_AE_Dialogs.h"
+
 #include "AEGP_SuiteHandler.h"
 
+using namespace std;
+
 // this lives in OpenColorIO_AE_UI.cpp
-std::string GetProjectDir(PF_InData *in_data);
+string GetProjectDir(PF_InData *in_data);
 
 
 static PF_Err 
@@ -604,21 +608,15 @@ DoRender(
 		
 		try
 		{
+			seq_data->status = STATUS_OK;
+		
+			string dir = GetProjectDir(in_data);
+
 			// must always verify that our context lines up with the parameters
 			// things like undo can change them without notice
 			if(seq_data->context != NULL)
 			{
-				bool verified = false;
-				
-				if(seq_data->status = STATUS_USING_ABSOLUTE)
-				{
-					verified = seq_data->context->Verify(arb_data);
-				}
-				else if(seq_data->status = STATUS_USING_RELATIVE)
-				{
-					// try with dir for relative path
-					verified = seq_data->context->Verify(arb_data, GetProjectDir(in_data));
-				}
+				bool verified = seq_data->context->Verify(arb_data, dir);
 				
 				if(!verified)
 				{
@@ -630,54 +628,78 @@ DoRender(
 			}
 		
 		
-			if(arb_data->type == OCIO_TYPE_NONE)
+			if(arb_data->action == OCIO_ACTION_NONE)
 			{
 				seq_data->status = STATUS_NO_FILE;
 			}
 			else if(seq_data->context == NULL)
 			{
-				std::string dir = GetProjectDir(in_data);
-			
-				Path absolute_path(arb_data->path, dir);
-				Path relative_path(arb_data->relative_path, dir);
-				Path seq_absolute_path(seq_data->path, dir);
-				Path seq_relative_path(seq_data->relative_path, dir);
+				seq_data->source = arb_data->source;
 				
-				if( absolute_path.exists() )
+				if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
 				{
-					seq_data->status = STATUS_USING_ABSOLUTE;
+					char *file = std::getenv("OCIO");
 					
-					strncpy(seq_data->path, absolute_path.full_path().c_str(), ARB_PATH_LEN);
-					strncpy(seq_data->relative_path, absolute_path.relative_path().c_str(), ARB_PATH_LEN);
+					if(file == NULL)
+						seq_data->status = STATUS_FILE_MISSING;
 				}
-				else if( relative_path.exists() )
+				else if(arb_data->source == OCIO_SOURCE_STANDARD)
 				{
-					seq_data->status = STATUS_USING_RELATIVE;
+					string path = GetStdConfigPath(arb_data->path);
 					
-					strncpy(seq_data->path, relative_path.full_path().c_str(), ARB_PATH_LEN);
-					strncpy(seq_data->relative_path, relative_path.relative_path().c_str(), ARB_PATH_LEN);
+					if( path.empty() )
+					{
+						seq_data->status = STATUS_FILE_MISSING;
+					}
+					else
+					{
+						strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN);
+						strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN);
+					}
 				}
-				else if( seq_absolute_path.exists() )
+				else if(arb_data->source == OCIO_SOURCE_CUSTOM)
 				{
-					// In some cases, we may have a good path in sequence options but not in
-					// the arbitrary parameter.  An alert will not be provided because it is the
-					// sequence options that get checked.  Therefore, we have to use the sequence
-					// options as a last resort.  We copy the path back to arb data, but the change
-					// should not stick.
-					seq_data->status = STATUS_USING_ABSOLUTE;
+					Path absolute_path(arb_data->path, dir);
+					Path relative_path(arb_data->relative_path, dir);
+					Path seq_absolute_path(seq_data->path, dir);
+					Path seq_relative_path(seq_data->relative_path, dir);
 					
-					strncpy(arb_data->path, seq_absolute_path.full_path().c_str(), ARB_PATH_LEN);
-					strncpy(arb_data->relative_path, seq_absolute_path.relative_path().c_str(), ARB_PATH_LEN);
+					if( absolute_path.exists() )
+					{
+						seq_data->status = STATUS_USING_ABSOLUTE;
+						
+						strncpy(seq_data->path, absolute_path.full_path().c_str(), ARB_PATH_LEN);
+						strncpy(seq_data->relative_path, absolute_path.relative_path().c_str(), ARB_PATH_LEN);
+					}
+					else if( relative_path.exists() )
+					{
+						seq_data->status = STATUS_USING_RELATIVE;
+						
+						strncpy(seq_data->path, relative_path.full_path().c_str(), ARB_PATH_LEN);
+						strncpy(seq_data->relative_path, relative_path.relative_path().c_str(), ARB_PATH_LEN);
+					}
+					else if( seq_absolute_path.exists() )
+					{
+						// In some cases, we may have a good path in sequence options but not in
+						// the arbitrary parameter.  An alert will not be provided because it is the
+						// sequence options that get checked.  Therefore, we have to use the sequence
+						// options as a last resort.  We copy the path back to arb data, but the change
+						// should not stick.
+						seq_data->status = STATUS_USING_ABSOLUTE;
+						
+						strncpy(arb_data->path, seq_absolute_path.full_path().c_str(), ARB_PATH_LEN);
+						strncpy(arb_data->relative_path, seq_absolute_path.relative_path().c_str(), ARB_PATH_LEN);
+					}
+					else if( seq_relative_path.exists() )
+					{
+						seq_data->status = STATUS_USING_RELATIVE;
+						
+						strncpy(arb_data->path, seq_relative_path.full_path().c_str(), ARB_PATH_LEN);
+						strncpy(arb_data->relative_path, seq_relative_path.relative_path().c_str(), ARB_PATH_LEN);
+					}
+					else
+						seq_data->status = STATUS_FILE_MISSING;
 				}
-				else if( seq_relative_path.exists() )
-				{
-					seq_data->status = STATUS_USING_RELATIVE;
-					
-					strncpy(arb_data->path, seq_relative_path.full_path().c_str(), ARB_PATH_LEN);
-					strncpy(arb_data->relative_path, seq_relative_path.relative_path().c_str(), ARB_PATH_LEN);
-				}
-				else
-					seq_data->status = STATUS_FILE_MISSING;
 			
 			
 				if(seq_data->status != STATUS_FILE_MISSING)
@@ -956,40 +978,69 @@ GetExternalDependencies(
 		return PF_Err_BAD_CALLBACK_PARAM;
 	
 
-	if(seq_data->path[0] != '\0')
+	string dependency;
+	
+	if(seq_data->source == OCIO_SOURCE_ENVIRONMENT)
 	{
-		std::string dir = GetProjectDir(in_data);
+		if(extra->check_type == PF_DepCheckType_ALL_DEPENDENCIES)
+		{
+			dependency = "$OCIO environment variable";
+		}
+		else if(extra->check_type == PF_DepCheckType_MISSING_DEPENDENCIES)
+		{
+			char *file = std::getenv("OCIO");
+			
+			if(!file)
+				dependency = "$OCIO environment variable";
+		}
+	}
+	else if(seq_data->source == OCIO_SOURCE_STANDARD)
+	{
+		if(extra->check_type == PF_DepCheckType_ALL_DEPENDENCIES)
+		{
+			dependency = "OCIO configuration " + string(seq_data->path);
+		}
+		else if(extra->check_type == PF_DepCheckType_MISSING_DEPENDENCIES)
+		{
+			string path = GetStdConfigPath(seq_data->path);
+			
+			if( path.empty() )
+				dependency = "OCIO configuration " + string(seq_data->path);
+		}
+	}
+	else if(seq_data->source == OCIO_SOURCE_CUSTOM && seq_data->path[0] != '\0')
+	{
+		string dir = GetProjectDir(in_data);
 			
 		Path absolute_path(seq_data->path);
 		Path relative_path(seq_data->relative_path, dir);
 	
-		std::string path;
-		
 		if(extra->check_type == PF_DepCheckType_ALL_DEPENDENCIES)
 		{
 			if( !absolute_path.exists() && relative_path.exists() )
 			{
-				path = relative_path.full_path();
+				dependency = relative_path.full_path();
 			}
 			else
-				path = absolute_path.full_path();
+				dependency = absolute_path.full_path();
 		}
 		else if(extra->check_type == PF_DepCheckType_MISSING_DEPENDENCIES &&
 					!absolute_path.exists() && !relative_path.exists() )
 		{
-			path = absolute_path.full_path();
-		}
-		
-		
-		if( !path.empty() )
-		{
-			extra->dependencies_strH = PF_NEW_HANDLE(sizeof(char) * (path.size() + 1));
-			
-			char *p = (char *)PF_LOCK_HANDLE(extra->dependencies_strH);
-			
-			strcpy(p, path.c_str());
+			dependency = absolute_path.full_path();
 		}
 	}
+	
+	
+	if( !dependency.empty() )
+	{
+		extra->dependencies_strH = PF_NEW_HANDLE(sizeof(char) * (dependency.size() + 1));
+		
+		char *p = (char *)PF_LOCK_HANDLE(extra->dependencies_strH);
+		
+		strcpy(p, dependency.c_str());
+	}
+	
 	
 	PF_UNLOCK_HANDLE(in_data->sequence_data);
 	

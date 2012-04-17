@@ -42,7 +42,7 @@ using namespace std;
 
 #define BUTTON_TEXT_INDENT_V 2
 
-#define MENUS_INDENT_H		20
+#define MENUS_INDENT_H		0
 
 #define MENUS_GAP_V			20
 
@@ -71,6 +71,7 @@ using namespace std;
 
 typedef enum {
 	REGION_NONE=0,
+	REGION_CONFIG_MENU,
 	REGION_PATH,
 	REGION_CONVERT_BUTTON,
 	REGION_DISPLAY_BUTTON,
@@ -89,10 +90,20 @@ WhichRegion(PF_Point ui_point, bool menus, bool third_menu)
 	
 	if(ui_point.v >= field_top && ui_point.v <= field_bottom)
 	{
-		int field_left = LEFT_MARGIN + FILE_LABEL_WIDTH;
+		int menu_left = LEFT_MARGIN + MENUS_INDENT_H + MENU_LABEL_WIDTH;
+		int menu_right = menu_left + MENU_WIDTH;
 		
-		if(ui_point.h >= field_left)
-			return REGION_PATH;
+		if(ui_point.h >= menu_left && ui_point.h <= menu_right)
+		{
+			return REGION_CONFIG_MENU;
+		}
+		else
+		{
+			int field_left = MENUS_INDENT_H + MENU_LABEL_WIDTH + MENU_LABEL_SPACE + MENU_WIDTH + FIELD_TEXT_INDENT_H;
+			
+			if(ui_point.h >= field_left)
+				return REGION_PATH;
+		}
 	}
 	else
 	{
@@ -276,52 +287,83 @@ DrawEvent(
 				bot.PaintRect(panel_width, panel_height);
 			}
 			
-			// path text field
-			bot.MoveTo(panel_left + LEFT_MARGIN + FILE_LABEL_WIDTH, panel_top + TOP_MARGIN);
 			
-			DRAWBOT_PointF32 field_corner = bot.Pos();
+			// configuration menu
+			bot.MoveTo(panel_left + MENUS_INDENT_H, panel_top + TOP_MARGIN);
 			
-			int field_width = panel_width - panel_left - LEFT_MARGIN - RIGHT_MARGIN;
+			string config_menu_text = arb_data->path;
 			
-			bot.SetColor(PF_App_Color_SHADOW);
-			bot.PaintRect(field_width, FIELD_HEIGHT);
-			bot.SetColor(PF_App_Color_BLACK);
-			bot.DrawRect(field_width, FIELD_HEIGHT);
+			if(arb_data->source == OCIO_SOURCE_NONE)
+			{
+				config_menu_text = "(none)";
+			}
+			if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
+			{
+				config_menu_text = "$OCIO";
+			}
+			else if(arb_data->source == OCIO_SOURCE_CUSTOM)
+			{
+				config_menu_text = "Custom";
+			}
+			
+			DrawMenu(bot, "Configuration:", config_menu_text.c_str());
+			
+			
+			if(arb_data->source == OCIO_SOURCE_CUSTOM || arb_data->source == OCIO_SOURCE_ENVIRONMENT)
+			{
+				// path text field
+				int field_left = panel_left + MENUS_INDENT_H + MENU_LABEL_WIDTH + MENU_LABEL_SPACE + MENU_WIDTH + FIELD_TEXT_INDENT_H;
+				
+				bot.MoveTo(field_left, panel_top + TOP_MARGIN);
+				
+				int field_width = MAX(panel_width - field_left + panel_left - RIGHT_MARGIN, 60);
+				
+				bot.SetColor(PF_App_Color_SHADOW);
+				bot.PaintRect(field_width, FIELD_HEIGHT);
+				bot.SetColor(PF_App_Color_BLACK);
+				bot.DrawRect(field_width, FIELD_HEIGHT);
 
-			bot.Move(-FIELD_TEXT_INDENT_H, FIELD_TEXT_INDENT_V + text_height);
-			bot.SetColor(TEXT_COLOR);
-			bot.DrawString("File:", kDRAWBOT_TextAlignment_Right);
-			
-			bot.Move(2 * FIELD_TEXT_INDENT_H);
-			bot.SetColor(TEXT_COLOR);
-			
-			bool have_file = (arb_data->path[0] != '\0');
-			
-			if(have_file)
-			{	
-				char *display_string = (seq_data->status == STATUS_USING_RELATIVE ? arb_data->relative_path : arb_data->path);
-			
-				bot.DrawString(display_string,
+				bot.Move(FIELD_TEXT_INDENT_H, FIELD_TEXT_INDENT_V + text_height);
+				
+				bot.SetColor(TEXT_COLOR);
+				
+				string file_string = "(none)";
+				
+				if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
+				{
+					char *file = std::getenv("OCIO");
+					
+					if(file)
+						file_string = file;
+				}
+				else
+				{
+					file_string = (seq_data->status == STATUS_USING_RELATIVE ? arb_data->relative_path : arb_data->path);
+				}
+				
+									
+				bot.DrawString(file_string.c_str(),
 								kDRAWBOT_TextAlignment_Default,
 								kDRAWBOT_TextTruncation_PathEllipsis,
 								field_width - (2 * FIELD_TEXT_INDENT_H));
-			}
-			else
-			{
-				bot.DrawString("(none)");
 			}
 			
 			
 			if(seq_data->status == STATUS_FILE_MISSING)
 			{
-				bot.Move(25, 50);
+				bot.MoveTo(panel_left + MENU_LABEL_WIDTH + MENU_LABEL_SPACE,
+							panel_top + MENU_HEIGHT + BUTTONS_GAP_V + BUTTON_HEIGHT + BUTTONS_GAP_V);
 				
 				bot.SetColor(PF_App_Color_RED);
 				bot.PaintRect(200, 50);
 				
 				bot.Move(100, 25 + (bot.FontSize() / 2));
 				bot.SetColor(PF_App_Color_WHITE);
-				bot.DrawString("FILE MISSING", kDRAWBOT_TextAlignment_Center);
+				
+				if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
+					bot.DrawString("$OCIO NOT SET", kDRAWBOT_TextAlignment_Center);
+				else
+					bot.DrawString("FILE MISSING", kDRAWBOT_TextAlignment_Center);
 			}
 			else
 			{
@@ -332,7 +374,7 @@ DrawEvent(
 				// GPU alert
 				if(seq_data->gpu_err != GPU_ERR_NONE)
 				{
-					bot.MoveTo(field_corner.x, field_bottom + bot.FontSize() + BUTTON_TEXT_INDENT_V);
+					bot.MoveTo(panel_left + MENU_LABEL_WIDTH + MENU_LABEL_SPACE, field_bottom + bot.FontSize() + BUTTON_TEXT_INDENT_V);
 					
 					if(seq_data->gpu_err == GPU_ERR_INSUFFICIENT)
 					{
@@ -348,7 +390,7 @@ DrawEvent(
 				// Premiere color space (only for debugging purposes)
 				if(in_data->appl_id == 'PrMr' && seq_data->prem_status != PREMIERE_UNKNOWN)
 				{
-					bot.MoveTo(field_corner.x + 200, field_bottom + bot.FontSize() + BUTTON_TEXT_INDENT_V);
+					bot.MoveTo(panel_left + MENU_LABEL_WIDTH + MENU_LABEL_SPACE + 200, field_bottom + bot.FontSize() + BUTTON_TEXT_INDENT_V);
 					
 					bot.SetColor(PF_App_Color_WHITE);
 					
@@ -364,30 +406,30 @@ DrawEvent(
 			#endif
 				
 				// Export button
-				if(arb_data->type != OCIO_TYPE_NONE)
+				if(arb_data->action != OCIO_ACTION_NONE)
 				{
 					bot.MoveTo(panel_left + BUTTONS_INDENT_H + (2 * (BUTTON_WIDTH + BUTTONS_GAP_H)), buttons_top);
 					
 					DrawButton(bot, "Export...", BUTTON_WIDTH, false);
 				}
 				
-				if(arb_data->type == OCIO_TYPE_LUT)
+				if(arb_data->action == OCIO_ACTION_LUT)
 				{
 					// Invert button
 					bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
 					
 					DrawButton(bot, "Invert", BUTTON_WIDTH, arb_data->invert);
 				}
-				else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
+				else if(arb_data->action == OCIO_ACTION_CONVERT || arb_data->action == OCIO_ACTION_DISPLAY)
 				{
 					// Convert/Display buttons
 					bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
 					
-					DrawButton(bot, "Convert", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_CONVERT);
+					DrawButton(bot, "Convert", BUTTON_WIDTH, arb_data->action == OCIO_ACTION_CONVERT);
 					
 					bot.Move(BUTTON_WIDTH + BUTTONS_GAP_H);
 					
-					DrawButton(bot, "Display", BUTTON_WIDTH, arb_data->type == OCIO_TYPE_DISPLAY);
+					DrawButton(bot, "Display", BUTTON_WIDTH, arb_data->action == OCIO_ACTION_DISPLAY);
 					
 					
 					// menus
@@ -395,7 +437,7 @@ DrawEvent(
 					
 					bot.MoveTo(panel_left + MENUS_INDENT_H, buttons_bottom + MENUS_GAP_V);
 					
-					if(arb_data->type == OCIO_TYPE_CONVERT)
+					if(arb_data->action == OCIO_ACTION_CONVERT)
 					{
 						DrawMenu(bot, "Input Space:", arb_data->input);
 						
@@ -403,7 +445,7 @@ DrawEvent(
 						
 						DrawMenu(bot, "Output Space:", arb_data->output);
 					}
-					else if(arb_data->type == OCIO_TYPE_DISPLAY)
+					else if(arb_data->action == OCIO_ACTION_DISPLAY)
 					{
 						// color space transformations
 						DrawMenu(bot, "Input Space:", arb_data->input);
@@ -508,8 +550,7 @@ DoClickPath(
 	PF_LayerDef		*output,
 	PF_EventExtra	*event_extra,
 	ArbitraryData	*arb_data,
-	SequenceData	*seq_data,
-	UIRegion		reg )
+	SequenceData	*seq_data)
 {
 	ExtensionMap extensions;
 	
@@ -539,7 +580,7 @@ DoClickPath(
 	{
 		Path path(c_path, GetProjectDir(in_data));
 		
-		OpenColorIO_AE_Context *new_context = new OpenColorIO_AE_Context( path.full_path() );
+		OpenColorIO_AE_Context *new_context = new OpenColorIO_AE_Context(path.full_path(), OCIO_SOURCE_CUSTOM);
 		
 		if(new_context == NULL)
 			throw OCIO::Exception("WTF?");
@@ -552,27 +593,28 @@ DoClickPath(
 		
 		seq_data->context = new_context;
 		
+		arb_data->source = seq_data->source = OCIO_SOURCE_CUSTOM;
 		
 		strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN);
 		strncpy(arb_data->relative_path, path.relative_path().c_str(), ARB_PATH_LEN);
 		
-		strncpy(seq_data->path, path.full_path().c_str(), ARB_PATH_LEN);
-		strncpy(seq_data->relative_path, path.relative_path().c_str(), ARB_PATH_LEN);
+		strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN);
+		strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN);
 		
 		
 		// try to retain settings if it looks like the same situation,
 		// possibly fixing a moved path
-		if(	(OCIO_TYPE_LUT == new_context->getType() && OCIO_TYPE_LUT != arb_data->type) ||
-			(OCIO_TYPE_LUT != new_context->getType() && OCIO_TYPE_LUT == arb_data->type) ||
+		if(	(OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
+			(OCIO_ACTION_LUT != new_context->getAction() && OCIO_ACTION_LUT == arb_data->action) ||
 			-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
 			-1 == FindInVec(new_context->getInputs(), arb_data->output) ||
 			-1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
 			-1 == FindInVec(new_context->getDevices(), arb_data->device) )
 		{
 			// Configuration is different, so initialize defaults
-			arb_data->type = seq_data->context->getType();
+			arb_data->action = seq_data->context->getAction();
 			
-			if(arb_data->type != OCIO_TYPE_LUT)
+			if(arb_data->action != OCIO_ACTION_LUT)
 			{
 				strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
 				strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
@@ -583,18 +625,18 @@ DoClickPath(
 		else
 		{
 			// Configuration is the same, retain current settings
-			if(arb_data->type == OCIO_TYPE_LUT)
+			if(arb_data->action == OCIO_ACTION_LUT)
 			{
 				if(arb_data->invert)
 				{
 					seq_data->context->setupLUT(arb_data->invert);
 				}
 			}
-			else if(arb_data->type == OCIO_TYPE_CONVERT)
+			else if(arb_data->action == OCIO_ACTION_CONVERT)
 			{
 				seq_data->context->setupConvert(arb_data->input, arb_data->output);
 			}
-			else if(arb_data->type == OCIO_TYPE_DISPLAY)
+			else if(arb_data->action == OCIO_ACTION_DISPLAY)
 			{
 				seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
 			}
@@ -605,6 +647,174 @@ DoClickPath(
 		seq_data->status = STATUS_USING_ABSOLUTE;
 	}
 }
+
+
+static void
+DoClickConfig(
+	PF_InData		*in_data,
+	PF_OutData		*out_data,
+	PF_ParamDef		*params[],
+	PF_LayerDef		*output,
+	PF_EventExtra	*event_extra,
+	ArbitraryData	*arb_data,
+	SequenceData	*seq_data)
+{
+	void *hwndOwner = NULL;
+
+#ifdef WIN_ENV
+	PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
+#endif
+
+	ConfigVec configs;
+	
+	GetStdConfigs(configs);
+	
+	
+	if(configs.size() == 0)
+		configs.push_back("(nada)");
+	
+	
+	MenuVec menu_items;
+	int selected = 0;
+	
+	menu_items.push_back("$OCIO");
+	
+	menu_items.push_back("(-");
+	
+	for(ConfigVec::const_iterator i = configs.begin(); i != configs.end(); ++i)
+	{
+		menu_items.push_back( *i );
+		
+		if(arb_data->source == OCIO_SOURCE_STANDARD && arb_data->path == *i)
+		{
+			selected = menu_items.size() - 1;
+		}
+	}
+	
+	menu_items.push_back("(-");
+	
+	menu_items.push_back("Custom...");
+	
+	int custom_choice = menu_items.size() - 1;
+	
+	if(arb_data->source == OCIO_SOURCE_CUSTOM)
+	{
+		selected = custom_choice;
+	}
+	
+	
+	int choice = PopUpMenu(menu_items, selected, hwndOwner);
+	
+	
+	if(choice == custom_choice)
+	{
+		// custom is the same as clicking the path
+		DoClickPath(in_data, out_data, params, output, event_extra, arb_data, seq_data);
+	}
+	else if(choice != selected)
+	{
+		OpenColorIO_AE_Context *new_context = NULL;
+		
+		if(choice == 0)
+		{
+			// $OCIO
+			char *file = std::getenv("OCIO");
+			
+			if(file)
+			{
+				Path path(file, GetProjectDir(in_data));
+				
+				new_context = new OpenColorIO_AE_Context(path.full_path(), OCIO_SOURCE_ENVIRONMENT);
+				
+				arb_data->source = seq_data->source = OCIO_SOURCE_ENVIRONMENT;
+				
+				strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN);
+				strncpy(arb_data->relative_path, path.relative_path().c_str(), ARB_PATH_LEN);
+			}
+			else
+				throw OCIO::Exception("No $OCIO environment variable defined."); 
+		}
+		else
+		{
+			// standard configs
+			string config = configs[choice - 2];
+			
+			string path = GetStdConfigPath(config);
+			
+			if( !path.empty() )
+			{
+				new_context = new OpenColorIO_AE_Context(config, OCIO_SOURCE_STANDARD);
+				
+				arb_data->source = seq_data->source = OCIO_SOURCE_STANDARD;
+				
+				strncpy(arb_data->path, config.c_str(), ARB_PATH_LEN);
+				strncpy(arb_data->relative_path, path.c_str(), ARB_PATH_LEN);
+			}
+			else
+				throw OCIO::Exception("Problem loading OCIO configuration."); 
+		}
+		
+		
+		if(new_context)
+		{
+			if(seq_data->context)
+			{
+				delete seq_data->context;
+			}
+			
+			seq_data->context = new_context;
+			
+			
+			strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN);
+			strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN);
+			
+			// try to retain settings if it looks like the same situation,
+			// possibly fixing a moved path
+			if(	(OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
+				(OCIO_ACTION_LUT != new_context->getAction() && OCIO_ACTION_LUT == arb_data->action) ||
+				-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
+				-1 == FindInVec(new_context->getInputs(), arb_data->output) ||
+				-1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
+				-1 == FindInVec(new_context->getDevices(), arb_data->device) )
+			{
+				// Configuration is different, so initialize defaults
+				arb_data->action = seq_data->context->getAction();
+				
+				if(arb_data->action != OCIO_ACTION_LUT)
+				{
+					strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
+					strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
+					strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
+					strncpy(arb_data->device, seq_data->context->getDevice().c_str(), ARB_SPACE_LEN);
+				}
+			}
+			else
+			{
+				// Configuration is the same, retain current settings
+				if(arb_data->action == OCIO_ACTION_LUT)
+				{
+					if(arb_data->invert)
+					{
+						seq_data->context->setupLUT(arb_data->invert);
+					}
+				}
+				else if(arb_data->action == OCIO_ACTION_CONVERT)
+				{
+					seq_data->context->setupConvert(arb_data->input, arb_data->output);
+				}
+				else if(arb_data->action == OCIO_ACTION_DISPLAY)
+				{
+					seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+				}
+			}
+			
+			params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+			
+			seq_data->status = STATUS_OK;
+		}
+	}
+}
+
 
 static void
 DoClickConvertDisplay(
@@ -617,7 +827,7 @@ DoClickConvertDisplay(
 	SequenceData	*seq_data,
 	UIRegion		reg )
 {
-	if(arb_data->type == OCIO_TYPE_LUT)
+	if(arb_data->action == OCIO_ACTION_LUT)
 	{
 		if(reg == REGION_CONVERT_BUTTON) // i.e. Invert
 		{
@@ -631,19 +841,19 @@ DoClickConvertDisplay(
 			params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
 		}
 	}
-	else if(arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY)
+	else if(arb_data->action == OCIO_ACTION_CONVERT || arb_data->action == OCIO_ACTION_DISPLAY)
 	{
-		if(reg == REGION_CONVERT_BUTTON && arb_data->type != OCIO_TYPE_CONVERT)
+		if(reg == REGION_CONVERT_BUTTON && arb_data->action != OCIO_ACTION_CONVERT)
 		{
-			arb_data->type = OCIO_TYPE_CONVERT;
+			arb_data->action = OCIO_ACTION_CONVERT;
 			
 			seq_data->context->setupConvert(arb_data->input, arb_data->output);
 		
 			params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
 		}
-		else if(reg == REGION_DISPLAY_BUTTON && arb_data->type != OCIO_TYPE_DISPLAY)
+		else if(reg == REGION_DISPLAY_BUTTON && arb_data->action != OCIO_ACTION_DISPLAY)
 		{
-			arb_data->type = OCIO_TYPE_DISPLAY;
+			arb_data->action = OCIO_ACTION_DISPLAY;
 			
 			seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
 			
@@ -724,12 +934,12 @@ DoClickMenus(
 	SequenceData	*seq_data,
 	UIRegion		reg )
 {
-	if(seq_data->context != NULL && arb_data->type == seq_data->context->getType())
+	if(seq_data->context != NULL && arb_data->action == seq_data->context->getAction())
 	{
 		MenuVec menu_items;
 		int selected_item;
 		
-		if(arb_data->type == OCIO_TYPE_CONVERT)
+		if(arb_data->action == OCIO_ACTION_CONVERT)
 		{
 			menu_items = seq_data->context->getInputs();
 			
@@ -742,7 +952,7 @@ DoClickMenus(
 				selected_item = FindInVec(menu_items, arb_data->output);
 			}
 		}
-		else if(arb_data->type == OCIO_TYPE_DISPLAY)
+		else if(arb_data->action == OCIO_ACTION_DISPLAY)
 		{
 			if(reg == REGION_MENU1)
 			{
@@ -779,7 +989,7 @@ DoClickMenus(
 		{
 			string color_space = menu_items[ result ];
 			
-			if(arb_data->type == OCIO_TYPE_CONVERT)
+			if(arb_data->action == OCIO_ACTION_CONVERT)
 			{
 				if(reg == REGION_MENU1)
 				{
@@ -794,7 +1004,7 @@ DoClickMenus(
 				
 				params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
 			}
-			else if(arb_data->type == OCIO_TYPE_DISPLAY)
+			else if(arb_data->action == OCIO_ACTION_DISPLAY)
 			{
 				if(reg == REGION_MENU1)
 				{
@@ -834,8 +1044,8 @@ DoClick(
 	
 	if(event_extra->effect_win.area == PF_EA_CONTROL)
 	{
-		bool menus_visible = (arb_data->type == OCIO_TYPE_CONVERT || arb_data->type == OCIO_TYPE_DISPLAY);
-		bool third_menu = (arb_data->type == OCIO_TYPE_DISPLAY);
+		bool menus_visible = (arb_data->action == OCIO_ACTION_CONVERT || arb_data->action == OCIO_ACTION_DISPLAY);
+		bool third_menu = (arb_data->action == OCIO_ACTION_DISPLAY);
 		
 		PF_Point local_point;
 		
@@ -848,11 +1058,18 @@ DoClick(
 		{
 			try
 			{
-				if(reg == REGION_PATH)
+				if(reg == REGION_CONFIG_MENU)
 				{
-					DoClickPath(in_data, out_data, params, output, event_extra, arb_data, seq_data, reg);
+					DoClickConfig(in_data, out_data, params, output, event_extra, arb_data, seq_data);
 				}
-				else if(arb_data->type != OCIO_TYPE_NONE && seq_data->status != STATUS_FILE_MISSING)
+				else if(reg == REGION_PATH)
+				{
+					if(arb_data->source == OCIO_SOURCE_CUSTOM)
+					{
+						DoClickPath(in_data, out_data, params, output, event_extra, arb_data, seq_data);
+					}
+				}
+				else if(arb_data->action != OCIO_ACTION_NONE && seq_data->status != STATUS_FILE_MISSING)
 				{
 					if(seq_data->context == NULL)
 					{
@@ -911,46 +1128,6 @@ DoClick(
 }
 
 
-static PF_Err
-DoAdjustCursor( 
-	PF_InData		*in_data,
-	PF_OutData		*out_data,
-	PF_ParamDef		*params[],
-	PF_LayerDef		*output,
-	PF_EventExtra	*event_extra )
-{
-	PF_Err		err		= PF_Err_NONE;
-	
-	if(event_extra->effect_win.area == PF_EA_CONTROL)
-	{
-		PF_Point local_point;
-		
-		local_point.h = event_extra->u.adjust_cursor.screen_point.h - event_extra->effect_win.current_frame.left;
-		local_point.v = event_extra->u.adjust_cursor.screen_point.v - event_extra->effect_win.current_frame.top;
-
-		UIRegion reg = WhichRegion(local_point, false, false);
-		
-		if(reg == REGION_PATH)
-		{
-		#ifdef MAC_ENV
-			#if PF_AE_PLUG_IN_VERSION >= PF_AE100_PLUG_IN_VERSION
-			SetMickeyCursor(); // the cute mickey mouse hand
-			#else
-			SetThemeCursor(kThemePointingHandCursor);
-			#endif
-			event_extra->u.adjust_cursor.set_cursor = PF_Cursor_CUSTOM;
-		#else
-			event_extra->u.adjust_cursor.set_cursor = PF_Cursor_FINGER_POINTER;
-		#endif
-		}
-	}
-	
-	event_extra->evt_out_flags = PF_EO_HANDLED_EVENT;
-	
-	return err;
-}
-
-
 PF_Err
 HandleEvent ( 
 	PF_InData		*in_data,
@@ -965,18 +1142,14 @@ HandleEvent (
 	
 	if(!err) 
 	{
-		switch (extra->e_type) 
+		switch(extra->e_type) 
 		{
 			case PF_Event_DRAW:
-				err =	DrawEvent(in_data, out_data, params, output, extra);
+				err = DrawEvent(in_data, out_data, params, output, extra);
 				break;
 			
 			case PF_Event_DO_CLICK:
 				err = DoClick(in_data, out_data, params, output, extra);
-				break;
-				
-			case PF_Event_ADJUST_CURSOR:
-				DoAdjustCursor(in_data, out_data, params, output, extra);
 				break;
 		}
 	}

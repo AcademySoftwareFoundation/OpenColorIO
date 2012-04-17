@@ -39,14 +39,32 @@
 	
 	for(i=0; i < [menu_items count]; i++)
 	{
-		NSMenuItem *item = [menu addItemWithTitle:[menu_items objectAtIndex:i]
-								action:@selector(menuItemAction:)
-								keyEquivalent:@""];
-		
-		[item setTag:i];
-		
-		if(i == chosen_item)
-			[item setState:NSOnState];
+		if( [[menu_items objectAtIndex:i] isEqualToString:@"(-"] )
+		{
+			[menu addItem:[NSMenuItem separatorItem]];
+		}
+		else
+		{
+			NSMenuItem *item = [menu addItemWithTitle:[menu_items objectAtIndex:i]
+									action:@selector(menuItemAction:)
+									keyEquivalent:@""];
+			
+			[item setTag:i];
+			
+			if(i == chosen_item)
+				[item setState:NSOnState];
+				
+			if([[menu_items objectAtIndex:i] isEqualToString:@"$OCIO"] && NULL == getenv("OCIO"))
+			{
+				[item setEnabled:FALSE];
+				[item setState:NSOffState];
+			}
+			else if([[menu_items objectAtIndex:i] isEqualToString:@"(nada)"])
+			{
+				[item setTitle:@"No configs in /Library/Application Support/OpenColorIO/"];
+				[item setEnabled:FALSE];
+			}
+		}
 	}
 	
 	

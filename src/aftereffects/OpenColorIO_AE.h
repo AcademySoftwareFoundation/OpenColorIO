@@ -64,12 +64,12 @@ enum {
 #define ARB_SPACE_LEN	63
 
 enum {
-	OCIO_TYPE_NONE = 0,
-	OCIO_TYPE_LUT,
-	OCIO_TYPE_CONVERT,
-	OCIO_TYPE_DISPLAY
+	OCIO_ACTION_NONE = 0,
+	OCIO_ACTION_LUT,
+	OCIO_ACTION_CONVERT,
+	OCIO_ACTION_DISPLAY
 };
-typedef A_u_char OCIO_Type;
+typedef A_u_char OCIO_Action;
 
 enum {
 	OCIO_STORAGE_NONE = 0,
@@ -77,20 +77,29 @@ enum {
 };
 typedef A_u_char OCIO_Storage;
 
+enum {
+	OCIO_SOURCE_NONE = 0,
+	OCIO_SOURCE_ENVIRONMENT,
+	OCIO_SOURCE_STANDARD,
+	OCIO_SOURCE_CUSTOM
+};
+typedef A_u_char OCIO_Source;
+
 typedef struct {
 	A_u_char		version; // version of this data structure
-	OCIO_Type		type;
+	OCIO_Action		action;
 	A_Boolean		invert; // only used for LUTs
 	OCIO_Storage	storage; // storage not used...yet
 	A_u_long		storage_size;
-	A_u_char		reserved[56]; // 64 pre-path bytes
+	OCIO_Source		source;
+	A_u_char		reserved[55]; // 64 pre-path bytes
 	char			path[ARB_PATH_LEN+1];
 	char			relative_path[ARB_PATH_LEN+1];
 	char			input[ARB_SPACE_LEN+1];
 	char			output[ARB_SPACE_LEN+1];
 	char			transform[ARB_SPACE_LEN+1];
 	char			device[ARB_SPACE_LEN+1];
-	char			look[ARB_SPACE_LEN+1];
+	char			look[ARB_SPACE_LEN+1]; // not used currently
 	A_u_char		storage_buf[1];
 } ArbitraryData;
 
@@ -101,6 +110,7 @@ class OpenColorIO_AE_Context;
 
 enum {
 	STATUS_UNKNOWN = 0,
+	STATUS_OK,
 	STATUS_NO_FILE,
 	STATUS_USING_ABSOLUTE,
 	STATUS_USING_RELATIVE,
@@ -127,7 +137,7 @@ typedef struct {
 	FileStatus				status;
 	GPUErr					gpu_err;
 	PremiereStatus			prem_status;
-	A_u_char				reserved[1];
+	OCIO_Source				source;
 	OpenColorIO_AE_Context	*context;
 	char					path[ARB_PATH_LEN+1];
 	char					relative_path[ARB_PATH_LEN+1];

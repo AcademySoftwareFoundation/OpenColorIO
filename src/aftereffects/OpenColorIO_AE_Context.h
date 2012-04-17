@@ -26,8 +26,8 @@ namespace OCIO = OCIO_NAMESPACE;
 class Path
 {
   public:
-	Path(const std::string path, const std::string dir = "");
-	Path(const Path & path);
+	Path(const std::string &path, const std::string &dir = "");
+	Path(const Path &path);
 	~Path() {}
 	
 	std::string full_path() const;
@@ -55,11 +55,11 @@ class Path
 class OpenColorIO_AE_Context
 {
   public:
-	OpenColorIO_AE_Context(const std::string path);
-	OpenColorIO_AE_Context(const ArbitraryData *arb_data, const std::string dir = "");
+	OpenColorIO_AE_Context(const std::string &path, OCIO_Source source);
+	OpenColorIO_AE_Context(const ArbitraryData *arb_data, const std::string &dir = "");
 	~OpenColorIO_AE_Context();
 	
-	bool Verify(const ArbitraryData *arb_data, const std::string dir = "");
+	bool Verify(const ArbitraryData *arb_data, const std::string &dir = "");
 	
 	void setupConvert(const char *input, const char *output);
 	void setupDisplay(const char *input, const char *transform, const char *device);
@@ -67,7 +67,7 @@ class OpenColorIO_AE_Context
   
 	typedef std::vector<std::string> SpaceVec;
 
-	OCIO_Type getType() const { return _type; }
+	OCIO_Action getAction() const { return _action; }
 	const std::string & getInput() const { return _input; }
 	const std::string & getOutput() const { return _output; }
 	const std::string & getTransform() const { return _transform; }
@@ -78,14 +78,16 @@ class OpenColorIO_AE_Context
 	
 	const OCIO::ConstProcessorRcPtr & processor() const { return _processor; }
 	
-	bool ExportLUT(const std::string path, const std::string display_icc_path = "");
+	bool ExportLUT(const std::string &path, const std::string &display_icc_path = "");
 	
 	bool ProcessWorldGL(PF_EffectWorld *float_world);
 
   private:
 	std::string _path;
+	OCIO_Source _source;
+	std::string _config_name;
   
-	OCIO_Type _type;
+	OCIO_Action _action;
 	
 	std::string _input;
 	std::string _output;

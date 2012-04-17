@@ -10,6 +10,8 @@
 
 #include "OpenColorIO_AE_Context.h"
 
+#include "OpenColorIO_AE_Dialogs.h"
+
 #include "lcms2.h"
 
 #include <map>
@@ -32,7 +34,7 @@ static const char delimiter = mac_delimiter;
 static const int LUT3D_EDGE_SIZE = 32;
 
 
-Path::Path(const std::string path, const std::string dir) :
+Path::Path(const string &path, const string &dir) :
 	_path(path),
 	_dir(dir)
 {
@@ -40,7 +42,7 @@ Path::Path(const std::string path, const std::string dir) :
 }
 
 
-Path::Path(const Path & path)
+Path::Path(const Path &path)
 {
 	_path = path._path;
 	_dir  = path._dir;
@@ -292,12 +294,39 @@ Path::components(string path)
 #pragma mark-
 
 
-OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string path) :
+OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string &path, OCIO_Source source) :
 	_gl_init(false)
 {
-	_type = OCIO_TYPE_NONE;
+	_action = OCIO_ACTION_NONE;
 	
-	_path = path;
+	
+	_source = source;
+	
+	if(_source == OCIO_SOURCE_ENVIRONMENT)
+	{
+		char *file = getenv("OCIO");
+		
+		if(file)
+		{
+			_path = file;
+		}
+		else
+			throw Exception("No $OCIO environment variable.");
+	}
+	else if(_source == OCIO_SOURCE_STANDARD)
+	{
+		_config_name = path;
+		
+		_path = GetStdConfigPath(_config_name);
+		
+		if( _path.empty() )
+			throw Exception("Error getting config.");
+	}
+	else
+	{
+		_path = path;
+	}
+	
 	
 	if(!_path.empty())
 	{
@@ -351,22 +380,47 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string path) :
 }
 
 
-OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, const string dir) :
+OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, const string &dir) :
 	_gl_init(false)
 {
-	_type = OCIO_TYPE_NONE;
+	_action = OCIO_ACTION_NONE;
 	
 	
-	Path absolute_path(arb_data->path);
-	Path relative_path(arb_data->relative_path, dir);
+	_source = arb_data->source;
 	
-	if( absolute_path.exists() )
+	if(_source == OCIO_SOURCE_ENVIRONMENT)
 	{
-		_path = absolute_path.full_path();
+		char *file = getenv("OCIO");
+		
+		if(file)
+		{
+			_path = file;
+		}
+		else
+			throw Exception("No $OCIO environment variable.");
+	}
+	else if(_source == OCIO_SOURCE_STANDARD)
+	{
+		_config_name = arb_data->path;
+		
+		_path = GetStdConfigPath(_config_name);
+		
+		if( _path.empty() )
+			throw Exception("Error getting config.");
 	}
 	else
 	{
-		_path = relative_path.full_path();
+		Path absolute_path(arb_data->path);
+		Path relative_path(arb_data->relative_path, dir);
+		
+		if( absolute_path.exists() )
+		{
+			_path = absolute_path.full_path();
+		}
+		else
+		{
+			_path = relative_path.full_path();
+		}
 	}
 	
 
@@ -400,7 +454,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
 			}
 			
 			
-			if(arb_data->type == OCIO_TYPE_CONVERT)
+			if(arb_data->action == OCIO_ACTION_CONVERT)
 			{
 				setupConvert(arb_data->input, arb_data->output);
 				
@@ -441,46 +495,57 @@ OpenColorIO_AE_Context::~OpenColorIO_AE_Context()
 
 
 bool
-OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const string dir)
+OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const string &dir)
 {
-	// comparing the paths, cheking relative path only if necessary
-	if(_path != arb_data->path)
+	if(_source != arb_data->source)
+		return false;
+	
+	if(_source == OCIO_SOURCE_STANDARD)
 	{
-		string rel_path(arb_data->relative_path);
-		
-		if( !dir.empty() && !rel_path.empty() )
+		if(_config_name != arb_data->path)
+			return false;
+	}
+	else if(_source == OCIO_SOURCE_CUSTOM)
+	{
+		// comparing the paths, cheking relative path only if necessary
+		if(_path != arb_data->path)
 		{
-			Path relative_path(rel_path, dir);
+			string rel_path(arb_data->relative_path);
 			
-			if( _path != relative_path.full_path() )
+			if( !dir.empty() && !rel_path.empty() )
+			{
+				Path relative_path(rel_path, dir);
+				
+				if( _path != relative_path.full_path() )
+					return false;
+			}
+			else
 				return false;
 		}
-		else
-			return false;
 	}
 	
 	// we can switch between Convert and Display, but not LUT and non-LUT
-	if((arb_data->type == OCIO_TYPE_NONE) ||
-		(_type == OCIO_TYPE_LUT && arb_data->type != OCIO_TYPE_LUT) ||
-		(_type != OCIO_TYPE_LUT && arb_data->type == OCIO_TYPE_LUT) )
+	if((arb_data->action == OCIO_ACTION_NONE) ||
+		(_action == OCIO_ACTION_LUT && arb_data->action != OCIO_ACTION_LUT) ||
+		(_action != OCIO_ACTION_LUT && arb_data->action == OCIO_ACTION_LUT) )
 	{
 		return false;
 	}
 	
-	bool force_reset = (_type != arb_data->type);	
+	bool force_reset = (_action != arb_data->action);	
 	
 	
 	// If the type and path are compatible, we can patch up
 	// differences here and return true.
 	// Returning false means the context will be deleted and rebuilt.
-	if(arb_data->type == OCIO_TYPE_LUT)
+	if(arb_data->action == OCIO_ACTION_LUT)
 	{
 		if(_invert != (bool)arb_data->invert || force_reset)
 		{
 			setupLUT(arb_data->invert);
 		}
 	}
-	else if(arb_data->type == OCIO_TYPE_CONVERT)
+	else if(arb_data->action == OCIO_ACTION_CONVERT)
 	{
 		if(_input != arb_data->input ||
 			_output != arb_data->output ||
@@ -489,7 +554,7 @@ OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const string dir)
 			setupConvert(arb_data->input, arb_data->output);
 		}
 	}
-	else if(arb_data->type == OCIO_TYPE_DISPLAY)
+	else if(arb_data->action == OCIO_ACTION_DISPLAY)
 	{
 		if(_input != arb_data->input ||
 			_transform != arb_data->transform ||
@@ -521,7 +586,7 @@ OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
 	
 	_processor = _config->getProcessor(transform);
 	
-	_type = OCIO_TYPE_CONVERT;
+	_action = OCIO_ACTION_CONVERT;
 	
 	UpdateOCIOGLState();
 }
@@ -543,7 +608,7 @@ OpenColorIO_AE_Context::setupDisplay(const char *input, const char *xform, const
 
 	_processor = _config->getProcessor(transform);
 	
-	_type = OCIO_TYPE_DISPLAY;
+	_action = OCIO_ACTION_DISPLAY;
 	
 	UpdateOCIOGLState();
 }
@@ -563,7 +628,7 @@ OpenColorIO_AE_Context::setupLUT(bool invert)
 	
 	_invert = invert;
 	
-	_type = OCIO_TYPE_LUT;
+	_action = OCIO_ACTION_LUT;
 	
 	UpdateOCIOGLState();
 }
@@ -630,7 +695,7 @@ static cmsInt32Number PCS2Display_Sampler16(const cmsUInt16Number in[], cmsUInt1
 }
 
 bool
-OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_path)
+OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display_icc_path)
 {
 	string the_extension = path.substr( path.find_last_of('.') + 1 );
 	
@@ -789,7 +854,7 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 		
 		baker->setFormat(format.c_str());
 		
-		if(_type == OCIO_TYPE_CONVERT)
+		if(_action == OCIO_ACTION_CONVERT)
 		{
 			baker->setConfig(_config);
 			baker->setInputSpace(_input.c_str());
@@ -798,7 +863,7 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 			ofstream f(path.c_str());
 			baker->bake(f);
 		}
-		else if(_type == OCIO_TYPE_DISPLAY)
+		else if(_action == OCIO_ACTION_DISPLAY)
 		{
 			OCIO::ConfigRcPtr editableConfig = _config->createEditableCopy();
 			
@@ -830,7 +895,7 @@ OpenColorIO_AE_Context::ExportLUT(const string path, const string display_icc_pa
 			ofstream f(path.c_str());
 			baker->bake(f);
 		}
-		else if(_type == OCIO_TYPE_LUT)
+		else if(_action == OCIO_ACTION_LUT)
 		{
 			OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
 
@@ -987,7 +1052,7 @@ OpenColorIO_AE_Context::UpdateOCIOGLState()
 		shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
 		
 		// Step 2: Compute the 3D LUT
-		std::string lut3dCacheID = _processor->getGpuLut3DCacheID(shaderDesc);
+		string lut3dCacheID = _processor->getGpuLut3DCacheID(shaderDesc);
 		if(lut3dCacheID != _lut3dcacheid)
 		{
 			//std::cerr << "Computing 3DLut " << g_lut3dcacheid << std::endl;
@@ -997,14 +1062,14 @@ OpenColorIO_AE_Context::UpdateOCIOGLState()
 		}
 		
 		// Step 3: Compute the Shader
-		std::string shaderCacheID = _processor->getGpuShaderTextCacheID(shaderDesc);
+		string shaderCacheID = _processor->getGpuShaderTextCacheID(shaderDesc);
 		if(_program == 0 || shaderCacheID != _shadercacheid)
 		{
 			//std::cerr << "Computing Shader " << g_shadercacheid << std::endl;
 			
 			_shadercacheid = shaderCacheID;
 			
-			std::ostringstream os;
+			ostringstream os;
 			os << _processor->getGpuShaderText(shaderDesc) << "\n";
 			os << g_fragShaderText;
 			//std::cerr << os.str() << std::endl;

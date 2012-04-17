@@ -13,6 +13,8 @@
 
 #import "OpenColorIO_AE_Menu.h"
 
+using namespace std;
+
 
 bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd)
 {
@@ -22,7 +24,7 @@ bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
 	
 	
 	NSMutableArray *extension_array = [[NSMutableArray alloc] init];
-	std::string message = "Formats: ";
+	string message = "Formats: ";
 	bool first_one = true;
 	
 	for(ExtensionMap::const_iterator i = extensions.begin(); i != extensions.end(); i++)
@@ -63,7 +65,7 @@ bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
 	
 	
 	NSMutableArray *extension_array = [[NSMutableArray alloc] init];
-	std::string message = "Formats: ";
+	string message = "Formats: ";
 	bool first_one = true;
 	
 	for(ExtensionMap::const_iterator i = extensions.begin(); i != extensions.end(); i++)
@@ -134,6 +136,49 @@ bool GetMonitorProfile(char *path, int buf_len, const void *hwnd)
 }
 
 
+void GetStdConfigs(ConfigVec &configs)
+{
+	const char *ocio_dir = "/Library/Application Support/OpenColorIO/";
+
+	NSFileManager *man = [NSFileManager defaultManager];
+
+	NSDirectoryEnumerator *enumerator = [man enumeratorAtPath:[NSString stringWithUTF8String:ocio_dir]];
+	
+	for(NSString *file in enumerator)
+	{
+		string config_path(ocio_dir);
+		
+		config_path += [file UTF8String];
+		
+		config_path += "/config.ocio";
+				
+		[enumerator skipDescendents];
+	
+		if([man fileExistsAtPath:[NSString stringWithUTF8String:config_path.c_str()]])
+		{
+			configs.push_back( [file UTF8String] );
+		}
+	}
+}
+
+
+string GetStdConfigPath(const string name)
+{
+	const char *ocio_dir = "/Library/Application Support/OpenColorIO/";
+	
+	string config_path = ocio_dir + name + "/config.ocio";
+	
+	if( [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithUTF8String:config_path.c_str()]] )
+	{
+		return config_path;
+	}
+	else
+	{
+		return "";
+	}
+}
+
+
 int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 {
 	NSMutableArray *item_array = [[NSMutableArray alloc] init];
@@ -168,8 +213,3 @@ void ErrorMessage(const char *message, const void *hwnd)
 	[alert release];
 }
 
-
-void SetMickeyCursor()
-{
-	[[NSCursor pointingHandCursor] set];
-}

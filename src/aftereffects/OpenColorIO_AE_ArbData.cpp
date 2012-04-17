@@ -35,11 +35,12 @@ ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
 			// set up defaults
 			arb_data->version			= CURRENT_ARB_VERSION;
 			
-			arb_data->type				= OCIO_TYPE_NONE;
+			arb_data->action			= OCIO_ACTION_NONE;
 			arb_data->invert			= FALSE;
 			
 			arb_data->storage			= OCIO_STORAGE_NONE;
 			arb_data->storage_size		= 0;
+			arb_data->source			= OCIO_SOURCE_NONE;
 			
 			arb_data->path[0]			= '\0';
 			arb_data->relative_path[0]	= '\0';
@@ -58,13 +59,14 @@ ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
 			{
 				try
 				{
-					OpenColorIO_AE_Context context(file);
+					OpenColorIO_AE_Context context(file, OCIO_SOURCE_ENVIRONMENT);
 					
 					strncpy(arb_data->path, file, ARB_PATH_LEN);
 					
-					arb_data->type = context.getType();
+					arb_data->action = context.getAction();
+					arb_data->source = OCIO_SOURCE_ENVIRONMENT;
 					
-					if(arb_data->type != OCIO_TYPE_LUT)
+					if(arb_data->action != OCIO_ACTION_LUT)
 					{
 						strncpy(arb_data->input, context.getInput().c_str(), ARB_SPACE_LEN);
 						strncpy(arb_data->output, context.getOutput().c_str(), ARB_SPACE_LEN);
@@ -102,12 +104,14 @@ CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
 	// copy contents
 	out_arb_data->version = in_arb_data->version;
 	
-	out_arb_data->type = in_arb_data->type;
+	out_arb_data->action = in_arb_data->action;
 	
 	out_arb_data->invert = in_arb_data->invert;
 	
 	out_arb_data->storage = in_arb_data->storage;
 	out_arb_data->storage_size = in_arb_data->storage_size;
+	
+	out_arb_data->source = in_arb_data->source;
 	
 	strcpy(out_arb_data->path, in_arb_data->path);
 	strcpy(out_arb_data->relative_path, in_arb_data->relative_path);
@@ -285,8 +289,9 @@ ArbCompare(PF_InData *in_data, PF_OutData *out_data,
 		
 		
 		if( a_data->version == b_data->version &&
-			a_data->type == b_data->type &&
+			a_data->action == b_data->action &&
 			a_data->invert == b_data->invert &&
+			a_data->source == b_data->source &&
 			!strcmp(a_data->path, b_data->path) &&
 			!strcmp(a_data->input, b_data->input) &&
 			!strcmp(a_data->output, b_data->output) &&
