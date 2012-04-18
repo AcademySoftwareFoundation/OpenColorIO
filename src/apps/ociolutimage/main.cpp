@@ -32,7 +32,6 @@ OCIO_NAMESPACE_USING;
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
-namespace OIIO = OIIO_NAMESPACE;
 
 #include "argparse.h"
 
