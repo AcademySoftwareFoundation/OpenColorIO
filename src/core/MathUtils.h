@@ -106,7 +106,8 @@ OCIO_NAMESPACE_ENTER
     // across all platforms. (Windows defines the function above).
     using std::isnan;
 #endif
-
+    
+    // Checks within fltmin tolerance
     bool IsScalarEqualToZero(float v);
     bool IsScalarEqualToOne(float v);
     
