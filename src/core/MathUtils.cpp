@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include <cstring>
+
 #include "MathUtils.h"
 
 OCIO_NAMESPACE_ENTER
@@ -166,64 +167,72 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    bool GetM44Inverse(float* inverse_out, const float* m)
+    // We use an intermediate double representation to make sure
+    // there is minimal float precision error on the determinant's computation
+    // (We have seen IsScalarEqualToZero sensitivities here on 32-bit
+    // virtual machines)
+    
+    bool GetM44Inverse(float* inverse_out, const float* m_)
     {
-        float d10_21 = m[4]*m[9] - m[5]*m[8];
-        float d10_22 = m[4]*m[10] - m[6]*m[8];
-        float d10_23 = m[4]*m[11] - m[7]*m[8];
-        float d11_22 = m[5]*m[10] - m[6]*m[9];
-        float d11_23 = m[5]*m[11] - m[7]*m[9];
-        float d12_23 = m[6]*m[11] - m[7]*m[10];
+        double m[16];
+        for(unsigned int i=0; i<16; ++i) m[i] = (double)m_[i];
         
-        float a00 = m[13]*d12_23 - m[14]*d11_23 + m[15]*d11_22;
-        float a10 = m[14]*d10_23 - m[15]*d10_22 - m[12]*d12_23;
-        float a20 = m[12]*d11_23 - m[13]*d10_23 + m[15]*d10_21;
-        float a30 = m[13]*d10_22 - m[14]*d10_21 - m[12]*d11_22;
+        double d10_21 = m[4]*m[9] - m[5]*m[8];
+        double d10_22 = m[4]*m[10] - m[6]*m[8];
+        double d10_23 = m[4]*m[11] - m[7]*m[8];
+        double d11_22 = m[5]*m[10] - m[6]*m[9];
+        double d11_23 = m[5]*m[11] - m[7]*m[9];
+        double d12_23 = m[6]*m[11] - m[7]*m[10];
         
-        float det = a00*m[0] + a10*m[1] + a20*m[2] + a30*m[3];
+        double a00 = m[13]*d12_23 - m[14]*d11_23 + m[15]*d11_22;
+        double a10 = m[14]*d10_23 - m[15]*d10_22 - m[12]*d12_23;
+        double a20 = m[12]*d11_23 - m[13]*d10_23 + m[15]*d10_21;
+        double a30 = m[13]*d10_22 - m[14]*d10_21 - m[12]*d11_22;
         
-        if(equalWithAbsError(0.0, det, FLTMIN)) return false;
+        double det = a00*m[0] + a10*m[1] + a20*m[2] + a30*m[3];
         
-        det = 1.0f/det;
+        if(IsScalarEqualToZero((float)det)) return false;
         
-        float d00_31 = m[0]*m[13] - m[1]*m[12];
-        float d00_32 = m[0]*m[14] - m[2]*m[12];
-        float d00_33 = m[0]*m[15] - m[3]*m[12];
-        float d01_32 = m[1]*m[14] - m[2]*m[13];
-        float d01_33 = m[1]*m[15] - m[3]*m[13];
-        float d02_33 = m[2]*m[15] - m[3]*m[14];
+        det = 1.0/det;
         
-        float a01 = m[9]*d02_33 - m[10]*d01_33 + m[11]*d01_32;
-        float a11 = m[10]*d00_33 - m[11]*d00_32 - m[8]*d02_33;
-        float a21 = m[8]*d01_33 - m[9]*d00_33 + m[11]*d00_31;
-        float a31 = m[9]*d00_32 - m[10]*d00_31 - m[8]*d01_32;
+        double d00_31 = m[0]*m[13] - m[1]*m[12];
+        double d00_32 = m[0]*m[14] - m[2]*m[12];
+        double d00_33 = m[0]*m[15] - m[3]*m[12];
+        double d01_32 = m[1]*m[14] - m[2]*m[13];
+        double d01_33 = m[1]*m[15] - m[3]*m[13];
+        double d02_33 = m[2]*m[15] - m[3]*m[14];
         
-        float a02 = m[6]*d01_33 - m[7]*d01_32 - m[5]*d02_33;
-        float a12 = m[4]*d02_33 - m[6]*d00_33 + m[7]*d00_32;
-        float a22 = m[5]*d00_33 - m[7]*d00_31 - m[4]*d01_33;
-        float a32 = m[4]*d01_32 - m[5]*d00_32 + m[6]*d00_31;
+        double a01 = m[9]*d02_33 - m[10]*d01_33 + m[11]*d01_32;
+        double a11 = m[10]*d00_33 - m[11]*d00_32 - m[8]*d02_33;
+        double a21 = m[8]*d01_33 - m[9]*d00_33 + m[11]*d00_31;
+        double a31 = m[9]*d00_32 - m[10]*d00_31 - m[8]*d01_32;
         
-        float a03 = m[2]*d11_23 - m[3]*d11_22 - m[1]*d12_23;
-        float a13 = m[0]*d12_23 - m[2]*d10_23 + m[3]*d10_22;
-        float a23 = m[1]*d10_23 - m[3]*d10_21 - m[0]*d11_23;
-        float a33 = m[0]*d11_22 - m[1]*d10_22 + m[2]*d10_21;
+        double a02 = m[6]*d01_33 - m[7]*d01_32 - m[5]*d02_33;
+        double a12 = m[4]*d02_33 - m[6]*d00_33 + m[7]*d00_32;
+        double a22 = m[5]*d00_33 - m[7]*d00_31 - m[4]*d01_33;
+        double a32 = m[4]*d01_32 - m[5]*d00_32 + m[6]*d00_31;
         
-        inverse_out[0] = a00*det;
-        inverse_out[1] = a01*det;
-        inverse_out[2] = a02*det;
-        inverse_out[3] = a03*det;
-        inverse_out[4] = a10*det;
-        inverse_out[5] = a11*det;
-        inverse_out[6] = a12*det;
-        inverse_out[7] = a13*det;
-        inverse_out[8] = a20*det;
-        inverse_out[9] = a21*det;
-        inverse_out[10] = a22*det;
-        inverse_out[11] = a23*det;
-        inverse_out[12] = a30*det;
-        inverse_out[13] = a31*det;
-        inverse_out[14] = a32*det;
-        inverse_out[15] = a33*det;
+        double a03 = m[2]*d11_23 - m[3]*d11_22 - m[1]*d12_23;
+        double a13 = m[0]*d12_23 - m[2]*d10_23 + m[3]*d10_22;
+        double a23 = m[1]*d10_23 - m[3]*d10_21 - m[0]*d11_23;
+        double a33 = m[0]*d11_22 - m[1]*d10_22 + m[2]*d10_21;
+        
+        inverse_out[0] = (float) (a00*det);
+        inverse_out[1] = (float) (a01*det);
+        inverse_out[2] = (float) (a02*det);
+        inverse_out[3] = (float) (a03*det);
+        inverse_out[4] = (float) (a10*det);
+        inverse_out[5] = (float) (a11*det);
+        inverse_out[6] = (float) (a12*det);
+        inverse_out[7] = (float) (a13*det);
+        inverse_out[8] = (float) (a20*det);
+        inverse_out[9] = (float) (a21*det);
+        inverse_out[10] = (float) (a22*det);
+        inverse_out[11] = (float) (a23*det);
+        inverse_out[12] = (float) (a30*det);
+        inverse_out[13] = (float) (a31*det);
+        inverse_out[14] = (float) (a32*det);
+        inverse_out[15] = (float) (a33*det);
         
         return true;
     }
@@ -359,6 +368,36 @@ OIIO_ADD_TEST(MathUtils, M44_is_diagonal)
         OIIO_CHECK_EQUAL(isdiag, false);
     }
 }
+
+
+OIIO_ADD_TEST(MathUtils, IsScalarEqualToZero)
+{
+        OIIO_CHECK_EQUAL(IsScalarEqualToZero(0.0f), true);
+        OIIO_CHECK_EQUAL(IsScalarEqualToZero(-0.0f), true);
+        
+        OIIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-09f), false);
+        OIIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-09f), false);
+        
+        OIIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-03f), false);
+        OIIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-03f), false);
+        
+        OIIO_CHECK_EQUAL(IsScalarEqualToZero(-1.072883670794056e-01f), false);
+        OIIO_CHECK_EQUAL(IsScalarEqualToZero(1.072883670794056e-01f), false);
+}
+
+OIIO_ADD_TEST(MathUtils, GetM44Inverse)
+{
+        // This is a degenerate matrix, and shouldnt be invertible.
+        float m[] = { 0.3f, 0.3f, 0.3f, 0.0f,
+                      0.3f, 0.3f, 0.3f, 0.0f,
+                      0.3f, 0.3f, 0.3f, 0.0f,
+                      0.0f, 0.0f, 0.0f, 1.0f };
+        
+        float mout[16];
+        bool invertsuccess = GetM44Inverse(mout, m);
+        OIIO_CHECK_EQUAL(invertsuccess, false);
+}
+
 
 OIIO_ADD_TEST(MathUtils, M44_M44_product)
 {
@@ -509,9 +548,11 @@ OIIO_ADD_TEST(MathUtils, Combine_two_mxb)
         GetMxbResult(vout, m1, x, v1);
         GetMxbResult(vout, m2, vout, v2);
         
+        // We pick a not so small tolerance, as we're dealing with
+        // large numbers, and the error for CHECK_CLOSE is absolute.
         for(int i=0; i<4; ++i)
         {
-            OIIO_CHECK_CLOSE(vcombined[i], vout[i], tolerance);
+            OIIO_CHECK_CLOSE(vcombined[i], vout[i], 1e-3);
         }
     }
 }
@@ -559,3 +600,4 @@ OIIO_ADD_TEST(MathUtils, mxb_invert)
 }
 
 #endif
+
