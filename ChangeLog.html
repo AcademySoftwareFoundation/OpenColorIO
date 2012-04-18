@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.0.6',
+        VERSION:     '1.0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.6 documentation" href="index.html" />
+    <link rel="top" title="OpenColorIO v1.0.7 documentation" href="index.html" />
     <link rel="next" title="License" href="License.html" />
     <link rel="prev" title="Downloads" href="downloads.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.6 documentation
+      OpenColorIO v1.0.7 documentation
       </div>
       <div class="content">
         
@@ -77,6 +77,22 @@
 <div class="section" id="changelog">
 <span id="changelog-main"></span><h1>ChangeLog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <dl class="docutils">
+<dt><strong>Version 1.0.7 (April 17 2012):</strong></dt>
+<dd><ul class="first last simple">
+<li>IRIDAS .look support</li>
+<li>ociolutimage utility added (handles image &lt;-&gt; 3dlut)</li>
+<li>CMake build allows optional reliance on system libraries</li>
+<li>CMake layout changes for python and nuke installs</li>
+<li>Bumped internals to yaml 0.3.0, pystring 1.1.2</li>
+<li>Optimized internal handling of Matrix / Exponent Ops</li>
+<li>Added INTERP_BEST interpolation option</li>
+<li>Python config.clearLooks() added</li>
+<li>Python docs revamp</li>
+<li>Nuke config-dependent knob values now baked into .nk scripts</li>
+<li>Nuke OCIOLookTransform gets reload button</li>
+<li>Nuke nodes get updated help text</li>
+</ul>
+</dd>
 <dt><strong>Version 1.0.6 (March 12 2012):</strong></dt>
 <dd><ul class="first last simple">
 <li>JNI (Java) updates</li>
