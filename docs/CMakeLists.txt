@@ -99,7 +99,8 @@ add_dependencies(doc Sphinx)
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-html/
         DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/html
-        PATTERN .git EXCLUDE)
+        PATTERN .* EXCLUDE
+)
 
 find_package(LATEX)
 if(PDFLATEX_COMPILER)
