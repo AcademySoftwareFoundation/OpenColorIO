@@ -20,14 +20,17 @@ option(OCIO_BUILD_NUKE "Set to OFF to disable building nuke plugins" ON)
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" OFF)
 option(OCIO_BUILD_PYGLUE "Specify whether to build python bindings" ON)
-option(OCIO_LINK_PYGLUE "Set to OFF to disable the linking of PYGLUE to python itself" OFF)
 option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" OFF)
 
+option(OCIO_PYGLUE_LINK "If ON, link the Python module to the core shared library" OFF)
 option(OCIO_PYGLUE_RESPECT_ABI "If ON, the Python module install path includes Python UCS version" OFF)
+option(OCIO_PYGLUE_SONAME "If ON, soname/soversion will be set for Python module library" OFF)
+option(OCIO_PYGLUE_LIB_PREFIX "If ON, prefix the Python module with 'lib'" OFF)
+
 if(UNIX AND NOT APPLE)
     option(USE_EXTERNAL_YAML "Use system installed yaml-cpp library." OFF)
     option(USE_EXTERNAL_TINYXML "Use system installed tinyxml library." OFF)

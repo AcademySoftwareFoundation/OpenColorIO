@@ -1,12 +1,5 @@
-# Set the default built type
-if(NOT PYTHON_INCLUDE_LIB_PREFIX)
-  set(PYTHON_INCLUDE_LIB_PREFIX NO CACHE BOOL
-      "Specify whether the python library should be prefixed with 'lib'."
-      FORCE)
-endif(NOT PYTHON_INCLUDE_LIB_PREFIX)
-
 if(CMAKE_FIRST_RUN)
-    message(STATUS "Python library to include 'lib' prefix: ${PYTHON_INCLUDE_LIB_PREFIX}")
+    message(STATUS "Python library to include 'lib' prefix: ${OCIO_PYGLUE_LIB_PREFIX}")
 endif()
 
 if(CMAKE_FIRST_RUN)
@@ -53,22 +46,22 @@ else()
 endif()
 
 # Exclude the 'lib' prefix from the name.
-if(NOT PYTHON_INCLUDE_LIB_PREFIX)
+if(NOT OCIO_PYGLUE_LIB_PREFIX)
     set_property(TARGET PyOpenColorIO
         PROPERTY PREFIX ""
     )
 endif()
 
 if(WIN32)
-    if(OCIO_LINK_PYGLUE)
+    if(OCIO_PYGLUE_LINK)
     target_link_libraries(PyOpenColorIO OpenColorIO
         debug ${PYTHON_LIB}/python26_d.lib
         optimized ${PYTHON_LIB}/python26.lib)
     else()
     target_link_libraries(PyOpenColorIO OpenColorIO)
-    endif(OCIO_LINK_PYGLUE)
+    endif(OCIO_PYGLUE_LINK)
 else()
-    if(OCIO_LINK_PYGLUE)
+    if(OCIO_PYGLUE_LINK)
         message(STATUS "Linking python bindings against: ${PYTHON_LIBRARY}")
         message(STATUS "Python library dirs: ${PYTHON_LIBRARY_DIRS}")
         link_directories(${PYTHON_LIBRARY})
@@ -76,7 +69,7 @@ else()
             ${PYTHON_LIBRARIES})
     else()
         target_link_libraries(PyOpenColorIO OpenColorIO)
-    endif(OCIO_LINK_PYGLUE)
+    endif(OCIO_PYGLUE_LINK)
 endif()
 
 # PyOpenColorIO so serves dual roles:
@@ -92,7 +85,7 @@ endif()
 # We should explore whether this should be built as a normal dylib, instead
 # of as a bundle. See https://github.com/imageworks/OpenColorIO/pull/175
 
-if(NOT APPLE)
+if(OCIO_PYGLUE_SONAME)
     message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")
     set_target_properties(PyOpenColorIO PROPERTIES
         VERSION ${OCIO_VERSION}
