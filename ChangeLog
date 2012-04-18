@@ -1,3 +1,17 @@
+**Version 1.0.7 (April 17 2012):**
+    * IRIDAS .look support
+    * ociolutimage utility added (handles image <-> 3dlut)
+    * CMake build allows optional reliance on system libraries
+    * CMake layout changes for python and nuke installs
+    * Bumped internals to yaml 0.3.0, pystring 1.1.2
+    * Optimized internal handling of Matrix / Exponent Ops
+    * Added INTERP_BEST interpolation option
+    * Python config.clearLooks() added
+    * Python docs revamp
+    * Nuke config-dependent knob values now baked into .nk scripts
+    * Nuke OCIOLookTransform gets reload button
+    * Nuke nodes get updated help text
+
 **Version 1.0.6 (March 12 2012):**
     * JNI (Java) updates
     * ocioconvert arbitrary attr support
