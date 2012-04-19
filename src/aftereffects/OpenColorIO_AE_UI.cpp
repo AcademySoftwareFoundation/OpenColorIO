@@ -666,20 +666,18 @@ DoClickConfig(
 #endif
 
 	ConfigVec configs;
-	
 	GetStdConfigs(configs);
 	
-	
 	if(configs.size() == 0)
-		configs.push_back("(nada)");
+		configs.push_back("(nada)"); // this tells the menu to make a gray entry that says "No configs in $PATH"
 	
 	
 	MenuVec menu_items;
 	int selected = 0;
 	
-	menu_items.push_back("$OCIO");
+	menu_items.push_back("$OCIO"); // menu will gray this out if $OCIO is not defined
 	
-	menu_items.push_back("(-");
+	menu_items.push_back("(-"); // this tells the menu to make a seperator
 	
 	for(ConfigVec::const_iterator i = configs.begin(); i != configs.end(); ++i)
 	{
@@ -699,7 +697,7 @@ DoClickConfig(
 	
 	if(arb_data->source == OCIO_SOURCE_CUSTOM)
 	{
-		selected = custom_choice;
+		selected = -1;
 	}
 	
 	
