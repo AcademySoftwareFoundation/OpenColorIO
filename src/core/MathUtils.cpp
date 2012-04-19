@@ -30,9 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstring>
 
-    #include <iostream>
-    #include <sstream>
-    
 #include "MathUtils.h"
 
 OCIO_NAMESPACE_ENTER
