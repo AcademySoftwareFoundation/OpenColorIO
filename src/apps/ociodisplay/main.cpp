@@ -53,7 +53,6 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
-namespace OIIO = OIIO_NAMESPACE;
 
 GLint g_win = 0;
 int g_winWidth = 0;
