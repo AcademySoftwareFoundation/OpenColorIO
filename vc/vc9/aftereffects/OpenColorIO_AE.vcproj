@@ -364,7 +364,7 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 			>
 			<File
-				RelativePath=".\OpenColorIO.rc"
+				RelativePath="..\..\..\src\aftereffects\win\OpenColorIO.rc"
 				>
 			</File>
 			<File
@@ -431,7 +431,7 @@
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_Dialogs_Win.cpp"
+			RelativePath="..\..\..\src\aftereffects\win\OpenColorIO_AE_Dialogs_Win.cpp"
 			>
 		</File>
 		<File
