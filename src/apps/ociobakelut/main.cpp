@@ -65,6 +65,7 @@ int main (int argc, const char* argv[])
     std::string inputconfig;
     std::string inputspace;
     std::string shaperspace;
+    std::string look;
     std::string outputspace;
     bool usestdout = false;
     bool verbose = false;
@@ -103,6 +104,7 @@ int main (int argc, const char* argv[])
                "--inputspace %s", &inputspace, "Input OCIO ColorSpace (or Role)",
                "--outputspace %s", &outputspace, "Output OCIO ColorSpace (or Role)",
                "--shaperspace %s", &shaperspace, "the OCIO ColorSpace or Role, for the shaper",
+               "--look %s", &look, "the OCIO look transform to apply",
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)\n",
                "<SEPARATOR>", "Config-Free LUT Baking",
                "<SEPARATOR>", "    (all options can be specified multiple times, each is applied in order)",
@@ -193,6 +195,12 @@ int main (int argc, const char* argv[])
         if(!outputspace.empty())
         {
             std::cerr << "\nERROR: --outputspace is not allowed when using --lut\n\n";
+            std::cerr << "See --help for more info." << std::endl;
+            return 1;
+        }
+        if(!look.empty())
+        {
+            std::cerr << "\nERROR: --look is not allowed when using --lut\n\n";
             std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
@@ -328,6 +336,7 @@ int main (int argc, const char* argv[])
             baker->setFormat(format.c_str());
             baker->setInputSpace(inputspace.c_str());
             baker->setShaperSpace(shaperspace.c_str());
+            baker->setLook(look.c_str());
             baker->setTargetSpace(outputspace.c_str());
             if(shapersize!=-1) baker->setShaperSize(shapersize);
             if(cubesize!=-1) baker->setCubeSize(cubesize);

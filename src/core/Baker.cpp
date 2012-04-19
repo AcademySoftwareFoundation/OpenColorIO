@@ -58,6 +58,7 @@ OCIO_NAMESPACE_ENTER
         std::string metadata_;
         std::string inputSpace_;
         std::string shaperSpace_;
+        std::string look_;
         std::string targetSpace_;
         int shapersize_;
         int cubesize_;
@@ -78,6 +79,7 @@ OCIO_NAMESPACE_ENTER
             formatName_  = rhs.formatName_;
             inputSpace_  = rhs.inputSpace_;
             shaperSpace_ = rhs.shaperSpace_;
+            look_        = rhs.look_;
             targetSpace_ = rhs.targetSpace_;
             shapersize_  = rhs.shapersize_;
             cubesize_    = rhs.cubesize_;
@@ -177,7 +179,17 @@ OCIO_NAMESPACE_ENTER
     {
         return getImpl()->shaperSpace_.c_str();
     }
+
+    void Baker::setLook(const char * look)
+    {
+        getImpl()->look_ = look;
+    }
     
+    const char * Baker::getLook() const
+    {
+        return getImpl()->look_.c_str();
+    }
+
     void Baker::setTargetSpace(const char * targetSpace)
     {
         getImpl()->targetSpace_ = targetSpace;

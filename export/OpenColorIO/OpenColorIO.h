@@ -933,6 +933,11 @@ OCIO_NAMESPACE_ENTER
         void setShaperSpace(const char * shaperSpace);
         //!cpp:function:: get the shaper colorspace that has been set
         const char * getShaperSpace() const;
+
+        //!cpp:function:: set the look transform for the lut
+        void setLook(const char * look);
+        //!cpp:function:: get the look transform for the lut
+        const char * getLook() const;
         
         //!cpp:function:: set the target device colorspace for the lut
         void setTargetSpace(const char * targetSpace);

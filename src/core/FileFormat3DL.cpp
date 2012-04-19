@@ -459,8 +459,22 @@ OCIO_NAMESPACE_ENTER
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
             
             // Apply our conversion from the input space to the output space.
-            ConstProcessorRcPtr inputToTarget = config->getProcessor(baker.getInputSpace(),
-                baker.getTargetSpace());
+            ConstProcessorRcPtr inputToTarget;
+            std::string look = baker.getLook();
+            if (!look.empty())
+            {
+                LookTransformRcPtr transform = LookTransform::Create();
+                transform->setLooks(baker.getLook());
+                transform->setSrc(baker.getInputSpace());
+                transform->setDst(baker.getTargetSpace());
+                inputToTarget = config->getProcessor(transform,
+                    TRANSFORM_DIR_FORWARD);
+            }
+            else
+            {
+              inputToTarget = config->getProcessor(baker.getInputSpace(),
+                  baker.getTargetSpace());
+            }
             inputToTarget->apply(cubeImg);
             
             // Write out the file.
