@@ -464,7 +464,7 @@ OCIO_NAMESPACE_ENTER
             if (!look.empty())
             {
                 LookTransformRcPtr transform = LookTransform::Create();
-                transform->setLooks(baker.getLook());
+                transform->setLooks(look.c_str());
                 transform->setSrc(baker.getInputSpace());
                 transform->setDst(baker.getTargetSpace());
                 inputToTarget = config->getProcessor(transform,
