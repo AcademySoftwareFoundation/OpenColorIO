@@ -92,14 +92,6 @@ endif()
 # We should explore whether this should be built as a normal dylib, instead
 # of as a bundle. See https://github.com/imageworks/OpenColorIO/pull/175
 
-if(NOT APPLE)
-    message(STATUS "Setting PyOCIO SOVERSION to: ${SOVERSION}")
-    set_target_properties(PyOpenColorIO PROPERTIES
-        VERSION ${OCIO_VERSION}
-        SOVERSION ${SOVERSION}
-    )
-endif()
-
 if(APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
