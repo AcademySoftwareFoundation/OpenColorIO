@@ -28,6 +28,7 @@ option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations
 option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" OFF)
 
 option(OCIO_PYGLUE_RESPECT_ABI "If ON, the Python module install path includes Python UCS version" OFF)
+option(OCIO_PYGLUE_SONAME "If ON, soname/soversion will be set for Python module libraries." OFF)
 
 # This does not include the SOVERSION override, on purpose, so that the
 # OCIO_VERSION value will be an accurate reflection of the underlying library version.
