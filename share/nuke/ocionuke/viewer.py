@@ -38,7 +38,7 @@ def register_viewers(also_remove = "default"):
                 name = DISPLAY_UI_FORMAT % {'view': view, "display": display},
                 call = nuke.nodes.OCIODisplay,
                 args = (),
-                kwargs = {"display": display, "view": view})
+                kwargs = {"display": display, "view": view, "layer": "all"})
 
 
     # Get the default display and view, set it as the default used on Nuke startup
