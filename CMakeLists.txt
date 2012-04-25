@@ -24,7 +24,10 @@ option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
-option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" OFF)
+
+# Use boost's shared_ptr by default on Windows (as <VS2010 doesn't have it),
+# Use std::tr1::shared_ptr by default on other platforms
+option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" WIN32)
 
 option(OCIO_PYGLUE_LINK "If ON, link the Python module to the core shared library" OFF)
 option(OCIO_PYGLUE_RESPECT_ABI "If ON, the Python module install path includes Python UCS version" OFF)
