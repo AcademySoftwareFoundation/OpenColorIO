@@ -1,11 +1,30 @@
+/*
+Copyright (c) 2003-2012 Sony Pictures Imageworks Inc., et al.
+All Rights Reserved.
 
-//
-// OpenColorIO AE
-//
-// After Effects implementation of OpenColorIO
-//
-// OpenColorIO.org
-//
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of Sony Pictures Imageworks nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 #pragma once
 
@@ -27,33 +46,33 @@
 
 
 #ifdef MSWindows
-	#include <Windows.h>
+    #include <Windows.h>
 #else 
-	#ifndef __MACH__
-		#include "string.h"
-	#endif
-#endif	
+    #ifndef __MACH__
+        #include "string.h"
+    #endif
+#endif  
 
 
 // Versioning information 
-#define	MAJOR_VERSION		1
-#define	MINOR_VERSION		0
-#define	BUG_VERSION			0
-#define	STAGE_VERSION		PF_Stage_RELEASE
-#define	BUILD_VERSION		0
+#define MAJOR_VERSION       1
+#define MINOR_VERSION       0
+#define BUG_VERSION         0
+#define STAGE_VERSION       PF_Stage_RELEASE
+#define BUILD_VERSION       0
 
 // Paramater constants
 enum {
-	OCIO_INPUT = 0,
-	OCIO_DATA,
-	OCIO_GPU,
-	
-	OCIO_NUM_PARAMS
+    OCIO_INPUT = 0,
+    OCIO_DATA,
+    OCIO_GPU,
+    
+    OCIO_NUM_PARAMS
 };
 
 enum {
-	OCIO_DATA_ID = 1,
-	OCIO_GPU_ID
+    OCIO_DATA_ID = 1,
+    OCIO_GPU_ID
 };
 
 
@@ -61,46 +80,46 @@ enum {
 
 #define CURRENT_ARB_VERSION 1
 #define ARB_PATH_LEN 255
-#define ARB_SPACE_LEN	63
+#define ARB_SPACE_LEN   63
 
 enum {
-	OCIO_ACTION_NONE = 0,
-	OCIO_ACTION_LUT,
-	OCIO_ACTION_CONVERT,
-	OCIO_ACTION_DISPLAY
+    OCIO_ACTION_NONE = 0,
+    OCIO_ACTION_LUT,
+    OCIO_ACTION_CONVERT,
+    OCIO_ACTION_DISPLAY
 };
 typedef A_u_char OCIO_Action;
 
 enum {
-	OCIO_STORAGE_NONE = 0,
-	OCIO_STORAGE_ZIP_FILE
+    OCIO_STORAGE_NONE = 0,
+    OCIO_STORAGE_ZIP_FILE
 };
 typedef A_u_char OCIO_Storage;
 
 enum {
-	OCIO_SOURCE_NONE = 0,
-	OCIO_SOURCE_ENVIRONMENT,
-	OCIO_SOURCE_STANDARD,
-	OCIO_SOURCE_CUSTOM
+    OCIO_SOURCE_NONE = 0,
+    OCIO_SOURCE_ENVIRONMENT,
+    OCIO_SOURCE_STANDARD,
+    OCIO_SOURCE_CUSTOM
 };
 typedef A_u_char OCIO_Source;
 
 typedef struct {
-	A_u_char		version; // version of this data structure
-	OCIO_Action		action;
-	A_Boolean		invert; // only used for LUTs
-	OCIO_Storage	storage; // storage not used...yet
-	A_u_long		storage_size;
-	OCIO_Source		source;
-	A_u_char		reserved[55]; // 64 pre-path bytes
-	char			path[ARB_PATH_LEN+1];
-	char			relative_path[ARB_PATH_LEN+1];
-	char			input[ARB_SPACE_LEN+1];
-	char			output[ARB_SPACE_LEN+1];
-	char			transform[ARB_SPACE_LEN+1];
-	char			device[ARB_SPACE_LEN+1];
-	char			look[ARB_SPACE_LEN+1]; // not used currently
-	A_u_char		storage_buf[1];
+    A_u_char        version; // version of this data structure
+    OCIO_Action     action;
+    A_Boolean       invert; // only used for LUTs
+    OCIO_Storage    storage; // storage not used...yet
+    A_u_long        storage_size;
+    OCIO_Source     source;
+    A_u_char        reserved[55]; // 64 pre-path bytes
+    char            path[ARB_PATH_LEN+1];
+    char            relative_path[ARB_PATH_LEN+1];
+    char            input[ARB_SPACE_LEN+1];
+    char            output[ARB_SPACE_LEN+1];
+    char            transform[ARB_SPACE_LEN+1];
+    char            device[ARB_SPACE_LEN+1];
+    char            look[ARB_SPACE_LEN+1]; // not used currently
+    A_u_char        storage_buf[1];
 } ArbitraryData;
 
 
@@ -109,92 +128,88 @@ typedef struct {
 class OpenColorIO_AE_Context;
 
 enum {
-	STATUS_UNKNOWN = 0,
-	STATUS_OK,
-	STATUS_NO_FILE,
-	STATUS_USING_ABSOLUTE,
-	STATUS_USING_RELATIVE,
-	STATUS_FILE_MISSING,
-	STATUS_OCIO_ERROR
+    STATUS_UNKNOWN = 0,
+    STATUS_OK,
+    STATUS_NO_FILE,
+    STATUS_USING_ABSOLUTE,
+    STATUS_USING_RELATIVE,
+    STATUS_FILE_MISSING,
+    STATUS_OCIO_ERROR
 };
 typedef A_u_char FileStatus;
 
 enum {
-	GPU_ERR_NONE = 0,
-	GPU_ERR_INSUFFICIENT,
-	GPU_ERR_RENDER_ERR
+    GPU_ERR_NONE = 0,
+    GPU_ERR_INSUFFICIENT,
+    GPU_ERR_RENDER_ERR
 };
 typedef A_u_char GPUErr;
 
 enum {
-	PREMIERE_UNKNOWN = 0,
-	PREMIERE_LINEAR,
-	PREMIERE_NON_LINEAR
+    PREMIERE_UNKNOWN = 0,
+    PREMIERE_LINEAR,
+    PREMIERE_NON_LINEAR
 };
 typedef A_u_char PremiereStatus;
 
 typedef struct {
-	FileStatus				status;
-	GPUErr					gpu_err;
-	PremiereStatus			prem_status;
-	OCIO_Source				source;
-	OpenColorIO_AE_Context	*context;
-	char					path[ARB_PATH_LEN+1];
-	char					relative_path[ARB_PATH_LEN+1];
+    FileStatus              status;
+    GPUErr                  gpu_err;
+    PremiereStatus          prem_status;
+    OCIO_Source             source;
+    OpenColorIO_AE_Context  *context;
+    char                    path[ARB_PATH_LEN+1];
+    char                    relative_path[ARB_PATH_LEN+1];
 } SequenceData;
 
 #endif
 
 
 
-#define UI_CONTROL_HEIGHT	200
-#define UI_CONTROL_WIDTH	500
+#define UI_CONTROL_HEIGHT   200
+#define UI_CONTROL_WIDTH    500
 
 
 #ifdef __cplusplus
-	extern "C" {
+    extern "C" {
 #endif
 
 
 // Prototypes
 
-DllExport	PF_Err 
-PluginMain (	
-	PF_Cmd			cmd,
-	PF_InData		*in_data,
-	PF_OutData		*out_data,
-	PF_ParamDef		*params[],
-	PF_LayerDef		*output,
-	void			*extra) ;
+DllExport PF_Err PluginMain(
+    PF_Cmd          cmd,
+    PF_InData       *in_data,
+    PF_OutData      *out_data,
+    PF_ParamDef     *params[],
+    PF_LayerDef     *output,
+    void            *extra) ;
 
 
-PF_Err
-HandleEvent ( 
-	PF_InData		*in_data,
-	PF_OutData		*out_data,
-	PF_ParamDef		*params[],
-	PF_LayerDef		*output,
-	PF_EventExtra	*extra );
+PF_Err HandleEvent(
+    PF_InData       *in_data,
+    PF_OutData      *out_data,
+    PF_ParamDef     *params[],
+    PF_LayerDef     *output,
+    PF_EventExtra   *extra );
 
 
-PF_Err
-ArbNewDefault( // needed by ParamSetup()
-	PF_InData			*in_data,
-	PF_OutData			*out_data,
-	void				*refconPV,
-	PF_ArbitraryH		*arbPH);
+PF_Err ArbNewDefault( // needed by ParamSetup()
+    PF_InData           *in_data,
+    PF_OutData          *out_data,
+    void                *refconPV,
+    PF_ArbitraryH       *arbPH);
 
-PF_Err 
-HandleArbitrary(
-	PF_InData			*in_data,
-	PF_OutData			*out_data,
-	PF_ParamDef			*params[],
-	PF_LayerDef			*output,
-	PF_ArbParamsExtra	*extra);
+PF_Err HandleArbitrary(
+    PF_InData           *in_data,
+    PF_OutData          *out_data,
+    PF_ParamDef         *params[],
+    PF_LayerDef         *output,
+    PF_ArbParamsExtra   *extra);
 
 
 #ifdef __cplusplus
-	}
+    }
 #endif
 
 
