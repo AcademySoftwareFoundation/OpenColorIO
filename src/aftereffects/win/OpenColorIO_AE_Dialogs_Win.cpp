@@ -29,16 +29,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "OpenColorIO_AE_Dialogs.h"
 
+#include <list>
+
 #include <Windows.h>
 #include <Shlobj.h>
 #include <Icm.h>
 
-#include <list>
 
 #include "lcms2.h"
 
-
-using namespace std;
 
 HINSTANCE hDllInstance = NULL;
 
@@ -94,12 +93,12 @@ static void MakeFilterText(char *filter_text,
 
     for(ExtensionMap::const_iterator i = extensions.begin(); i != extensions.end(); i++)
     {
-        string extension = i->first;
-        string format = i->second;
+		std::string extension = i->first;
+        std::string format = i->second;
 
-        string format_part = format + " (*." + extension + ")";
-        string extension_part = "*." + extension;
-        string combined_part = extension_part + ";";
+        std::string format_part = format + " (*." + extension + ")";
+        std::string extension_part = "*." + extension;
+        std::string combined_part = extension_part + ";";
 
         AppendString(seperate_entries, seperate_length, format_part.c_str(), format_part.size());
         AppendNull(seperate_entries, seperate_length);
@@ -217,7 +216,7 @@ enum {
 };
 
 
-static vector<string> *g_profile_vec = NULL;
+static std::vector<std::string> *g_profile_vec = NULL;
 static int g_selected_item = DLOG_noUI;
 
 static WORD g_item_clicked = 0;
@@ -275,8 +274,8 @@ static BOOL CALLBACK DialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARA
 
 bool GetMonitorProfile(char *path, int buf_len, const void *hwnd)
 {
-    list<string> profile_descriptions;
-    map<string, string> profile_paths;
+    std::list<std::string> profile_descriptions;
+    std::map<std::string, std::string> profile_paths;
 
     // path to the monitor's profile
     char monitor_profile_path[256] = { '\0' };
@@ -317,8 +316,8 @@ bool GetMonitorProfile(char *path, int buf_len, const void *hwnd)
 
             for(int i=0; i < num_profiles; i++)
             {
-                string prof = prof_name;
-                string prof_path = string(profile_directory) + "\\" + prof_name;
+                std::string prof = prof_name;
+                std::string prof_path = std::string(profile_directory) + "\\" + prof_name;
 
                 cmsHPROFILE hProfile = cmsOpenProfileFromFile(prof_path.c_str(), "r");
 
@@ -358,10 +357,10 @@ bool GetMonitorProfile(char *path, int buf_len, const void *hwnd)
         profile_descriptions.sort();
         profile_descriptions.unique();
 
-        vector<string> profile_vec;
+        std::vector<std::string> profile_vec;
         int selected = 0;
 
-        for(list<string>::const_iterator i = profile_descriptions.begin(); i != profile_descriptions.end(); i++)
+        for(std::list<std::string>::const_iterator i = profile_descriptions.begin(); i != profile_descriptions.end(); i++)
         {
             profile_vec.push_back( *i );
 
@@ -408,7 +407,7 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
     {
         for(int i=0; i < menu_items.size(); i++)
         {
-            string label = menu_items[i];
+            std::string label = menu_items[i];
 
             UINT flags = (i == selected_index ? (MF_STRING | MF_CHECKED) : MF_STRING);
 
@@ -433,7 +432,7 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 
                 if(result == S_OK)
                 {
-                    label = "No configs in " + string(appdata_path) + "\\OpenColorIO\\";
+                    label = "No configs in " + std::string(appdata_path) + "\\OpenColorIO\\";
                 }
             }
 
@@ -471,9 +470,9 @@ void GetStdConfigs(ConfigVec &configs)
 
     if(result == S_OK)
     {
-        string dir_path = string(appdata_path) + "\\OpenColorIO\\";
+        std::string dir_path = std::string(appdata_path) + "\\OpenColorIO\\";
 
-        string search_path = dir_path + "*";
+        std::string search_path = dir_path + "*";
 
         WIN32_FIND_DATA find_data;
 
@@ -483,7 +482,7 @@ void GetStdConfigs(ConfigVec &configs)
         {
             if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
             {
-                string config_path = dir_path + find_data.cFileName + "\\config.ocio";
+                std::string config_path = dir_path + find_data.cFileName + "\\config.ocio";
 
                 WIN32_FIND_DATA find_data_temp;
 
@@ -501,7 +500,7 @@ void GetStdConfigs(ConfigVec &configs)
             {
                 if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
-                    string config_path = dir_path + find_data.cFileName + "\\config.ocio";
+                    std::string config_path = dir_path + find_data.cFileName + "\\config.ocio";
 
                     WIN32_FIND_DATA find_data_temp;
 
@@ -522,7 +521,7 @@ void GetStdConfigs(ConfigVec &configs)
 }
 
 
-string GetStdConfigPath(const string &name)
+std::string GetStdConfigPath(const std::string &name)
 {
     char appdata_path[MAX_PATH];
 
@@ -531,7 +530,7 @@ string GetStdConfigPath(const string &name)
 
     if(result == S_OK)
     {
-        string config_path = string(appdata_path) + "\\OpenColorIO\\" +
+        std::string config_path = std::string(appdata_path) + "\\OpenColorIO\\" +
                                 name + "\\config.ocio";
 
         WIN32_FIND_DATA find_data;
