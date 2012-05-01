@@ -30,15 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OpenColorIO_AE.h"
 
 #include "OpenColorIO_AE_Context.h"
-
 #include "OpenColorIO_AE_Dialogs.h"
 
 #include "AEGP_SuiteHandler.h"
 
-using namespace std;
-
 // this lives in OpenColorIO_AE_UI.cpp
-string GetProjectDir(PF_InData *in_data);
+std::string GetProjectDir(PF_InData *in_data);
 
 
 static PF_Err About(  
@@ -609,7 +606,7 @@ static PF_Err DoRender(
         {
             seq_data->status = STATUS_OK;
         
-            string dir = GetProjectDir(in_data);
+            std::string dir = GetProjectDir(in_data);
 
             // must always verify that our context lines up with the parameters
             // things like undo can change them without notice
@@ -644,7 +641,7 @@ static PF_Err DoRender(
                 }
                 else if(arb_data->source == OCIO_SOURCE_STANDARD)
                 {
-                    string path = GetStdConfigPath(arb_data->path);
+                    std::string path = GetStdConfigPath(arb_data->path);
                     
                     if( path.empty() )
                     {
@@ -668,14 +665,14 @@ static PF_Err DoRender(
                         seq_data->status = STATUS_USING_ABSOLUTE;
                         
                         strncpy(seq_data->path, absolute_path.full_path().c_str(), ARB_PATH_LEN);
-                        strncpy(seq_data->relative_path, absolute_path.relative_path().c_str(), ARB_PATH_LEN);
+                        strncpy(seq_data->relative_path, absolute_path.relative_path(false).c_str(), ARB_PATH_LEN);
                     }
                     else if( relative_path.exists() )
                     {
                         seq_data->status = STATUS_USING_RELATIVE;
                         
                         strncpy(seq_data->path, relative_path.full_path().c_str(), ARB_PATH_LEN);
-                        strncpy(seq_data->relative_path, relative_path.relative_path().c_str(), ARB_PATH_LEN);
+                        strncpy(seq_data->relative_path, relative_path.relative_path(false).c_str(), ARB_PATH_LEN);
                     }
                     else if( seq_absolute_path.exists() )
                     {
@@ -687,14 +684,14 @@ static PF_Err DoRender(
                         seq_data->status = STATUS_USING_ABSOLUTE;
                         
                         strncpy(arb_data->path, seq_absolute_path.full_path().c_str(), ARB_PATH_LEN);
-                        strncpy(arb_data->relative_path, seq_absolute_path.relative_path().c_str(), ARB_PATH_LEN);
+                        strncpy(arb_data->relative_path, seq_absolute_path.relative_path(false).c_str(), ARB_PATH_LEN);
                     }
                     else if( seq_relative_path.exists() )
                     {
                         seq_data->status = STATUS_USING_RELATIVE;
                         
                         strncpy(arb_data->path, seq_relative_path.full_path().c_str(), ARB_PATH_LEN);
-                        strncpy(arb_data->relative_path, seq_relative_path.relative_path().c_str(), ARB_PATH_LEN);
+                        strncpy(arb_data->relative_path, seq_relative_path.relative_path(false).c_str(), ARB_PATH_LEN);
                     }
                     else
                         seq_data->status = STATUS_FILE_MISSING;
@@ -924,7 +921,7 @@ static PF_Err DoRender(
 }
 
 
-static PF_ErrSmartRender(
+static PF_Err SmartRender(
     PF_InData               *in_data,
     PF_OutData              *out_data,
     PF_SmartRenderExtra     *extra)
@@ -1005,7 +1002,7 @@ static PF_Err GetExternalDependencies(
         return PF_Err_BAD_CALLBACK_PARAM;
     
 
-    string dependency;
+    std::string dependency;
     
     if(seq_data->source == OCIO_SOURCE_ENVIRONMENT)
     {
@@ -1025,21 +1022,21 @@ static PF_Err GetExternalDependencies(
     {
         if(extra->check_type == PF_DepCheckType_ALL_DEPENDENCIES)
         {
-            dependency = "OCIO configuration " + string(seq_data->path);
+            dependency = "OCIO configuration " + std::string(seq_data->path);
         }
         else if(extra->check_type == PF_DepCheckType_MISSING_DEPENDENCIES)
         {
-            string path = GetStdConfigPath(seq_data->path);
+            std::string path = GetStdConfigPath(seq_data->path);
             
             if( path.empty() )
-                dependency = "OCIO configuration " + string(seq_data->path);
+                dependency = "OCIO configuration " + std::string(seq_data->path);
         }
     }
     else if(seq_data->source == OCIO_SOURCE_CUSTOM && seq_data->path[0] != '\0')
     {
-        string dir = GetProjectDir(in_data);
+        std::string dir = GetProjectDir(in_data);
             
-        Path absolute_path(seq_data->path);
+        Path absolute_path(seq_data->path, "");
         Path relative_path(seq_data->relative_path, dir);
     
         if(extra->check_type == PF_DepCheckType_ALL_DEPENDENCIES)

@@ -35,8 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "DrawbotBot.h"
 
 
-using namespace std;
-
 
 // UI drawing constants
 
@@ -310,7 +308,7 @@ static PF_Err DrawEvent(
             // configuration menu
             bot.MoveTo(panel_left + MENUS_INDENT_H, panel_top + TOP_MARGIN);
             
-            string config_menu_text = arb_data->path;
+            std::string config_menu_text = arb_data->path;
             
             if(arb_data->source == OCIO_SOURCE_NONE)
             {
@@ -348,7 +346,7 @@ static PF_Err DrawEvent(
                 
                 bot.SetColor(TEXT_COLOR);
                 
-                string file_string = "(none)";
+                std::string file_string = "(none)";
                 
                 if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
                 {
@@ -500,10 +498,10 @@ static PF_Err DrawEvent(
 }
 
 
-string GetProjectDir(PF_InData *in_data)
+std::string GetProjectDir(PF_InData *in_data)
 {
     if(in_data->appl_id == 'PrMr')
-        return string("");
+        return std::string("");
     
     AEGP_SuiteHandler suites(in_data->pica_basicP);
 
@@ -515,7 +513,7 @@ string GetProjectDir(PF_InData *in_data)
 
     if(pathH)
     {
-        string proj_dir;
+        std::string proj_dir;
         
         A_UTF16Char *path = NULL;
         suites.MemorySuite1()->AEGP_LockMemHandle(pathH, (void **)&path);
@@ -538,9 +536,9 @@ string GetProjectDir(PF_InData *in_data)
 #define PATH_DELIMITER  '/'
 #endif
 
-            string proj_path(c_path);
+            std::string proj_path(c_path);
             
-            if(proj_path.find_last_of(PATH_DELIMITER) != string::npos)
+            if(proj_path.find_last_of(PATH_DELIMITER) != std::string::npos)
             {
                 proj_dir = proj_path.substr(0, proj_path.find_last_of(PATH_DELIMITER));
             }
@@ -551,11 +549,11 @@ string GetProjectDir(PF_InData *in_data)
         return proj_dir;
     }
 
-    return string("");
+    return std::string("");
 }
 
 
-static int FindInVec(const vector<string> &vec, const string val)
+static int FindInVec(const std::vector<std::string> &vec, const std::string val)
 {
     for(int i=0; i < vec.size(); i++)
     {
@@ -621,7 +619,7 @@ static void DoClickPath(
         arb_data->source = seq_data->source = OCIO_SOURCE_CUSTOM;
         
         strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN);
-        strncpy(arb_data->relative_path, path.relative_path().c_str(), ARB_PATH_LEN);
+        strncpy(arb_data->relative_path, path.relative_path(false).c_str(), ARB_PATH_LEN);
         
         strncpy(seq_data->path, arb_data->path, ARB_PATH_LEN);
         strncpy(seq_data->relative_path, arb_data->relative_path, ARB_PATH_LEN);
@@ -752,7 +750,7 @@ static void DoClickConfig(
                 arb_data->source = seq_data->source = OCIO_SOURCE_ENVIRONMENT;
                 
                 strncpy(arb_data->path, path.full_path().c_str(), ARB_PATH_LEN);
-                strncpy(arb_data->relative_path, path.relative_path().c_str(), ARB_PATH_LEN);
+                strncpy(arb_data->relative_path, path.relative_path(false).c_str(), ARB_PATH_LEN);
             }
             else
                 throw OCIO::Exception("No $OCIO environment variable defined."); 
@@ -760,9 +758,9 @@ static void DoClickConfig(
         else
         {
             // standard configs
-            string config = configs[choice - 2];
+            std::string config = configs[choice - 2];
             
-            string path = GetStdConfigPath(config);
+            std::string path = GetStdConfigPath(config);
             
             if( !path.empty() )
             {
@@ -921,12 +919,12 @@ static void DoClickExport(
     
     if(result)
     {
-        string the_path(path);
-        string the_extension = the_path.substr( the_path.find_last_of('.') + 1 );
+        std::string the_path(path);
+        std::string the_extension = the_path.substr( the_path.find_last_of('.') + 1 );
         
         bool do_export = true;
         
-        string monitor_icc_path;
+        std::string monitor_icc_path;
         
         if(the_extension == "icc")
         {
@@ -1007,7 +1005,7 @@ static void DoClickMenus(
         
         if(result != selected_item)
         {
-            string color_space = menu_items[ result ];
+            std::string color_space = menu_items[ result ];
             
             if(arb_data->action == OCIO_ACTION_CONVERT)
             {
@@ -1117,7 +1115,7 @@ static PF_Err DoClick(
                     }
                 }
             }
-            catch(exception &e)
+            catch(std::exception &e)
             {
                 if(in_data->appl_id == 'FXTC')
                 {

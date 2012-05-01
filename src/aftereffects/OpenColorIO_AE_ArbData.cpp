@@ -31,9 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "OpenColorIO_AE_Context.h"
 
-#ifndef __MACH__
 #include <assert.h>
-#endif
 
 
 PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,

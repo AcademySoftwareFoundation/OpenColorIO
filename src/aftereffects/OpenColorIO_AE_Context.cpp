@@ -29,16 +29,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "OpenColorIO_AE_Context.h"
 
-#include "OpenColorIO_AE_Dialogs.h"
+#include <fstream>
+#include <map>
+#include <sstream>
 
 #include "lcms2.h"
 
-#include <map>
-#include <fstream>
-#include <sstream>
+#include "OpenColorIO_AE_Dialogs.h"
 
-using namespace OCIO;
-using namespace std;
+
 
 
 static const char mac_delimiter = '/';
@@ -53,7 +52,7 @@ static const char delimiter = mac_delimiter;
 static const int LUT3D_EDGE_SIZE = 32;
 
 
-Path::Path(const string &path, const string &dir) :
+Path::Path(const std::string &path, const std::string &dir) :
     _path(path),
     _dir(dir)
 {
@@ -68,12 +67,12 @@ Path::Path(const Path &path)
 }
 
 
-string Path::full_path() const
+std::string Path::full_path() const
 {
     if( is_relative(_path) && !_dir.empty() )
     {
-        vector<string> path_vec = components( convert_delimiters(_path) );
-        vector<string> dir_vec = components(_dir);
+        std::vector<std::string> path_vec = components( convert_delimiters(_path) );
+        std::vector<std::string> dir_vec = components(_dir);
         
         int up_dirs = 0;
         int down_dirs = 0;
@@ -88,7 +87,7 @@ string Path::full_path() const
         }
         
         
-        string path;
+        std::string path;
         
         if(path_type(_dir) == TYPE_MAC)
             path += mac_delimiter;
@@ -114,7 +113,7 @@ string Path::full_path() const
 }
 
 
-string Path::relative_path(bool force) const
+std::string Path::relative_path(bool force) const
 {
     if( is_relative(_path) || _dir.empty() || _path.empty() )
     {
@@ -122,8 +121,8 @@ string Path::relative_path(bool force) const
     }
     else
     {
-        vector<string> path_vec = components(_path);
-        vector<string> dir_vec = components(_dir);
+        std::vector<std::string> path_vec = components(_path);
+        std::vector<std::string> dir_vec = components(_dir);
         
         int match_idx = 0;
         
@@ -138,22 +137,22 @@ string Path::relative_path(bool force) const
             if(force)
                 return _path;
             else
-                return string("");
+                return "";
         }
         else
         {
-            string rel_path;
+            std::string rel_path;
             
             // is the file in a folder below or actually inside the dir?
             if(match_idx == dir_vec.size())
             {
-                rel_path += string(".") + delimiter;
+                rel_path += std::string(".") + delimiter;
             }
             else
             {
                 for(int i = match_idx; i < dir_vec.size(); i++)
                 {
-                    rel_path += string("..") + delimiter;
+                    rel_path += std::string("..") + delimiter;
                 }
             }
                 
@@ -172,18 +171,18 @@ string Path::relative_path(bool force) const
 
 bool Path::exists() const
 {
-    string path = full_path();
+    std::string path = full_path();
     
     if(path.empty())
         return false;
     
-    ifstream f( path.c_str() );
+    std::ifstream f( path.c_str() );
     
     return !!f;
 }
 
 
-Path::PathType Path::path_type(string path)
+Path::PathType Path::path_type(std::string path)
 {
     if( path.empty() )
     {
@@ -206,15 +205,15 @@ Path::PathType Path::path_type(string path)
         size_t mac_pos = path.find(mac_delimiter);
         size_t win_pos = path.find(win_delimiter);
         
-        if(mac_pos != string::npos && win_pos == string::npos)
+        if(mac_pos != std::string::npos && win_pos == std::string::npos)
         {
             return TYPE_MAC;
         }
-        else if(mac_pos == string::npos && win_pos != string::npos)
+        else if(mac_pos == std::string::npos && win_pos != std::string::npos)
         {
             return TYPE_WIN;
         }
-        else if(mac_pos == string::npos && win_pos == string::npos)
+        else if(mac_pos == std::string::npos && win_pos == std::string::npos)
         {
             return TYPE_UNKNOWN;
         }
@@ -229,7 +228,7 @@ Path::PathType Path::path_type(string path)
 }
 
 
-bool Path::is_relative(string path)
+bool Path::is_relative(std::string path)
 {
     Path::PathType type = path_type(path);
     
@@ -255,7 +254,7 @@ bool Path::is_relative(string path)
 }
 
 
-string Path::convert_delimiters(string path)
+std::string Path::convert_delimiters(std::string path)
 {
 #ifdef WIN_ENV
     char search = mac_delimiter;
@@ -275,9 +274,9 @@ string Path::convert_delimiters(string path)
 }
 
 
-vector<string> Path::components(string path)
+std::vector<std::string> Path::components(std::string path)
 {
-    vector<string> vec;
+    std::vector<std::string> vec;
     
     size_t pos = 0;
     size_t len = path.size();
@@ -309,7 +308,7 @@ vector<string> Path::components(string path)
 #pragma mark-
 
 
-OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string &path, OCIO_Source source) :
+OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Source source) :
     _gl_init(false)
 {
     _action = OCIO_ACTION_NONE;
@@ -326,7 +325,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string &path, OCIO_Source s
             _path = file;
         }
         else
-            throw Exception("No $OCIO environment variable.");
+            throw OCIO::Exception("No $OCIO environment variable.");
     }
     else if(_source == OCIO_SOURCE_STANDARD)
     {
@@ -335,7 +334,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string &path, OCIO_Source s
         _path = GetStdConfigPath(_config_name);
         
         if( _path.empty() )
-            throw Exception("Error getting config.");
+            throw OCIO::Exception("Error getting config.");
     }
     else
     {
@@ -345,11 +344,11 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string &path, OCIO_Source s
     
     if(!_path.empty())
     {
-        string the_extension = _path.substr( _path.find_last_of('.') + 1 );
+        std::string the_extension = _path.substr( _path.find_last_of('.') + 1 );
         
         if(the_extension == "ocio")
         {
-            _config = Config::CreateFromFile( _path.c_str() );
+            _config = OCIO::Config::CreateFromFile( _path.c_str() );
             
             _config->sanityCheck();
             
@@ -373,9 +372,9 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string &path, OCIO_Source s
             }
             
             
-            ConstColorSpaceRcPtr defaultInput = _config->getColorSpace(ROLE_SCENE_LINEAR);
+            OCIO::ConstColorSpaceRcPtr defaultInput = _config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
             
-            const char *defaultInputName = (defaultInput ? defaultInput->getName() : ROLE_SCENE_LINEAR);
+            const char *defaultInputName = (defaultInput ? defaultInput->getName() : OCIO::ROLE_SCENE_LINEAR);
             
             
             setupConvert(defaultInputName, defaultInputName);
@@ -385,17 +384,17 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const string &path, OCIO_Source s
         }
         else
         {
-            _config = Config::Create();
+            _config = OCIO::Config::Create();
             
             setupLUT();
         }
     }
     else
-        throw Exception("Got nothin");
+        throw OCIO::Exception("Got nothin");
 }
 
 
-OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, const string &dir) :
+OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, const std::string &dir) :
     _gl_init(false)
 {
     _action = OCIO_ACTION_NONE;
@@ -412,7 +411,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
             _path = file;
         }
         else
-            throw Exception("No $OCIO environment variable.");
+            throw OCIO::Exception("No $OCIO environment variable.");
     }
     else if(_source == OCIO_SOURCE_STANDARD)
     {
@@ -421,11 +420,11 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
         _path = GetStdConfigPath(_config_name);
         
         if( _path.empty() )
-            throw Exception("Error getting config.");
+            throw OCIO::Exception("Error getting config.");
     }
     else
     {
-        Path absolute_path(arb_data->path);
+        Path absolute_path(arb_data->path, dir);
         Path relative_path(arb_data->relative_path, dir);
         
         if( absolute_path.exists() )
@@ -441,11 +440,11 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
 
     if(!_path.empty())
     {
-        string the_extension = _path.substr( _path.find_last_of('.') + 1 );
+        std::string the_extension = _path.substr( _path.find_last_of('.') + 1 );
         
         if(the_extension == "ocio")
         {
-            _config = Config::CreateFromFile( _path.c_str() );
+            _config = OCIO::Config::CreateFromFile( _path.c_str() );
             
             _config->sanityCheck();
             
@@ -485,13 +484,13 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
         }
         else
         {
-            _config = Config::Create();
+            _config = OCIO::Config::Create();
             
             setupLUT(arb_data->invert);
         }
     }
     else
-        throw Exception("Got nothin");
+        throw OCIO::Exception("Got nothin");
 }
 
 
@@ -509,7 +508,7 @@ OpenColorIO_AE_Context::~OpenColorIO_AE_Context()
 }
 
 
-bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const string &dir)
+bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::string &dir)
 {
     if(_source != arb_data->source)
         return false;
@@ -524,7 +523,7 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const string 
         // comparing the paths, cheking relative path only if necessary
         if(_path != arb_data->path)
         {
-            string rel_path(arb_data->relative_path);
+            std::string rel_path(arb_data->relative_path);
             
             if( !dir.empty() && !rel_path.empty() )
             {
@@ -579,7 +578,7 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const string 
         }
     }
     else
-        throw Exception("Bad OCIO type");
+        throw OCIO::Exception("Bad OCIO type");
     
     
     return true;
@@ -588,11 +587,11 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const string 
 
 void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
 {
-    ColorSpaceTransformRcPtr transform = ColorSpaceTransform::Create();
+    OCIO::ColorSpaceTransformRcPtr transform = OCIO::ColorSpaceTransform::Create();
     
     transform->setSrc(input);
     transform->setDst(output);
-    transform->setDirection(TRANSFORM_DIR_FORWARD);
+    transform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
     
     _input = input;
     _output = output;
@@ -607,7 +606,7 @@ void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
 
 void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *xform, const char *device)
 {
-    DisplayTransformRcPtr transform = DisplayTransform::Create();
+    OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
     
     transform->setInputColorSpaceName(input);
     transform->setView(xform);
@@ -628,12 +627,11 @@ void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *xform, 
 
 void OpenColorIO_AE_Context::setupLUT(bool invert)
 {
-    FileTransformRcPtr transform = FileTransform::Create();
+    OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
     
-    transform = FileTransform::Create();
     transform->setSrc( _path.c_str() );
-    transform->setInterpolation(INTERP_LINEAR);
-    transform->setDirection(invert ? TRANSFORM_DIR_INVERSE : TRANSFORM_DIR_FORWARD);
+    transform->setInterpolation(OCIO::INTERP_LINEAR);
+    transform->setDirection(invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
     
     _processor = _config->getProcessor(transform);
     
@@ -648,7 +646,7 @@ void OpenColorIO_AE_Context::setupLUT(bool invert)
 // these functions ripped out of ocio2icc
 static void ErrorHandler(cmsContext /*ContextID*/, cmsUInt32Number err, const char *Text)
 {
-    throw Exception("lcms error");
+    throw OCIO::Exception("lcms error");
 }
 
 typedef struct
@@ -706,9 +704,9 @@ static cmsInt32Number PCS2Display_Sampler16(const cmsUInt16Number in[],
     return 1;
 }
 
-bool OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display_icc_path)
+bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::string &display_icc_path)
 {
-    string the_extension = path.substr( path.find_last_of('.') + 1 );
+    std::string the_extension = path.substr( path.find_last_of('.') + 1 );
     
     try{
     
@@ -716,13 +714,13 @@ bool OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display
     {
         int cubesize = 32;
         int whitepointtemp = 6505;
-        string copyright = "OpenColorIO, Sony Imageworks";
+        std::string copyright = "OpenColorIO, Sony Imageworks";
         
         // create a description tag from the filename
         size_t filename_start = path.find_last_of(delimiter) + 1;
         size_t filename_end = path.find_last_of('.') - 1;
         
-        string description = path.substr(path.find_last_of(delimiter) + 1,
+        std::string description = path.substr(path.find_last_of(delimiter) + 1,
                                             1 + filename_end - filename_start);
         
         
@@ -851,7 +849,7 @@ bool OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display
         // this code lovingly pulled from ociobakelut
         
         // need an extension->format map (yes, just did this one call up)
-        map<string, string> extensions;
+        std::map<std::string, std::string> extensions;
         
         for(int i=0; i < OCIO::Baker::getNumFormats(); ++i)
         {
@@ -861,7 +859,7 @@ bool OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display
             extensions[ extension ] = format;
         }
         
-        string format = extensions[ the_extension ];
+        std::string format = extensions[ the_extension ];
         
         
         OCIO::BakerRcPtr baker = OCIO::Baker::Create();
@@ -874,7 +872,7 @@ bool OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display
             baker->setInputSpace(_input.c_str());
             baker->setTargetSpace(_output.c_str());
         
-            ofstream f(path.c_str());
+            std::ofstream f(path.c_str());
             baker->bake(f);
         }
         else if(_action == OCIO_ACTION_DISPLAY)
@@ -882,16 +880,16 @@ bool OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display
             OCIO::ConfigRcPtr editableConfig = _config->createEditableCopy();
             
             OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
-            string inputspace = "RawInput";
+            std::string inputspace = "RawInput";
             inputColorSpace->setName(inputspace.c_str());
             editableConfig->addColorSpace(inputColorSpace);
             
             
             OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
-            string outputspace = "ProcessedOutput";
+            std::string outputspace = "ProcessedOutput";
             outputColorSpace->setName(outputspace.c_str());
             
-            DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
+            OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
             
             transform->setInputColorSpaceName(_input.c_str());
             transform->setView(_transform.c_str());
@@ -906,7 +904,7 @@ bool OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display
             baker->setInputSpace(inputspace.c_str());
             baker->setTargetSpace(outputspace.c_str());
             
-            ofstream f(path.c_str());
+            std::ofstream f(path.c_str());
             baker->bake(f);
         }
         else if(_action == OCIO_ACTION_LUT)
@@ -914,21 +912,21 @@ bool OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display
             OCIO::ConfigRcPtr editableConfig = OCIO::Config::Create();
 
             OCIO::ColorSpaceRcPtr inputColorSpace = OCIO::ColorSpace::Create();
-            string inputspace = "RawInput";
+            std::string inputspace = "RawInput";
             inputColorSpace->setName(inputspace.c_str());
             editableConfig->addColorSpace(inputColorSpace);
             
             
             OCIO::ColorSpaceRcPtr outputColorSpace = OCIO::ColorSpace::Create();
-            string outputspace = "ProcessedOutput";
+            std::string outputspace = "ProcessedOutput";
             outputColorSpace->setName(outputspace.c_str());
             
             OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
             
             transform = OCIO::FileTransform::Create();
             transform->setSrc(_path.c_str());
-            transform->setInterpolation(INTERP_LINEAR);
-            transform->setDirection(_invert ? TRANSFORM_DIR_INVERSE : TRANSFORM_DIR_FORWARD);
+            transform->setInterpolation(OCIO::INTERP_LINEAR);
+            transform->setDirection(_invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
             
             outputColorSpace->setTransform(transform, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
             
@@ -939,7 +937,7 @@ bool OpenColorIO_AE_Context::ExportLUT(const string &path, const string &display
             baker->setInputSpace(inputspace.c_str());
             baker->setTargetSpace(outputspace.c_str());
             
-            ofstream f(path.c_str());
+            std::ofstream f(path.c_str());
             baker->bake(f);
         }
     }
@@ -1061,7 +1059,7 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
         shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
         
         // Step 2: Compute the 3D LUT
-        string lut3dCacheID = _processor->getGpuLut3DCacheID(shaderDesc);
+        std::string lut3dCacheID = _processor->getGpuLut3DCacheID(shaderDesc);
         if(lut3dCacheID != _lut3dcacheid)
         {
             _lut3dcacheid = lut3dCacheID;
@@ -1069,12 +1067,12 @@ void OpenColorIO_AE_Context::UpdateOCIOGLState()
         }
         
         // Step 3: Compute the Shader
-        string shaderCacheID = _processor->getGpuShaderTextCacheID(shaderDesc);
+        std::string shaderCacheID = _processor->getGpuShaderTextCacheID(shaderDesc);
         if(_program == 0 || shaderCacheID != _shadercacheid)
         {
             _shadercacheid = shaderCacheID;
             
-            ostringstream os;
+            std::ostringstream os;
             os << _processor->getGpuShaderText(shaderDesc) << "\n";
             os << g_fragShaderText;
             

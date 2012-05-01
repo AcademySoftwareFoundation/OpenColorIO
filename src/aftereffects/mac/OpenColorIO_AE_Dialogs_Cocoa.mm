@@ -32,8 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #import "OpenColorIO_AE_Menu.h"
 
-using namespace std;
-
 
 bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd)
 {
@@ -43,7 +41,7 @@ bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
     
     
     NSMutableArray *extension_array = [[NSMutableArray alloc] init];
-    string message = "Formats: ";
+    std::string message = "Formats: ";
     bool first_one = true;
     
     for(ExtensionMap::const_iterator i = extensions.begin(); i != extensions.end(); i++)
@@ -86,7 +84,7 @@ bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
     
     
     NSMutableArray *extension_array = [[NSMutableArray alloc] init];
-    string message = "Formats: ";
+    std::string message = "Formats: ";
     bool first_one = true;
     
     for(ExtensionMap::const_iterator i = extensions.begin(); i != extensions.end(); i++)
@@ -169,7 +167,7 @@ void GetStdConfigs(ConfigVec &configs)
     
     for(NSString *file in enumerator)
     {
-        string config_path(ocio_dir);
+        std::string config_path(ocio_dir);
         
         config_path += [file UTF8String];
         
@@ -185,11 +183,11 @@ void GetStdConfigs(ConfigVec &configs)
 }
 
 
-string GetStdConfigPath(const string &name)
+std::string GetStdConfigPath(const std::string &name)
 {
     const char *ocio_dir = "/Library/Application Support/OpenColorIO/";
     
-    string config_path = ocio_dir + name + "/config.ocio";
+    std::string config_path = ocio_dir + name + "/config.ocio";
     
     if( [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithUTF8String:config_path.c_str()]] )
     {

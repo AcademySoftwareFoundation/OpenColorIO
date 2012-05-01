@@ -30,6 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _OPENCOLORIO_AE_CONTEXT_H_
 #define _OPENCOLORIO_AE_CONTEXT_H_
 
+#include <string>
+#include <vector>
+
 #include "OpenColorIO_AE.h"
 #include "OpenColorIO_AE_GL.h"
 
@@ -37,20 +40,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace OCIO = OCIO_NAMESPACE;
 
 
-#include <string>
-#include <vector>
-
 
 // yeah, this probably could/should go in a seperate file
 class Path
 {
   public:
-    Path(const std::string &path, const std::string &dir = "");
+    Path(const std::string &path, const std::string &dir);
     Path(const Path &path);
     ~Path() {}
     
     std::string full_path() const;
-    std::string relative_path(bool force = false) const;
+    std::string relative_path(bool force) const;
     
     bool exists() const;
     
@@ -75,10 +75,10 @@ class OpenColorIO_AE_Context
 {
   public:
     OpenColorIO_AE_Context(const std::string &path, OCIO_Source source);
-    OpenColorIO_AE_Context(const ArbitraryData *arb_data, const std::string &dir = "");
+    OpenColorIO_AE_Context(const ArbitraryData *arb_data, const std::string &dir);
     ~OpenColorIO_AE_Context();
     
-    bool Verify(const ArbitraryData *arb_data, const std::string &dir = "");
+    bool Verify(const ArbitraryData *arb_data, const std::string &dir);
     
     void setupConvert(const char *input, const char *output);
     void setupDisplay(const char *input, const char *transform, const char *device);
@@ -97,7 +97,7 @@ class OpenColorIO_AE_Context
     
     const OCIO::ConstProcessorRcPtr & processor() const { return _processor; }
     
-    bool ExportLUT(const std::string &path, const std::string &display_icc_path = "");
+    bool ExportLUT(const std::string &path, const std::string &display_icc_path);
     
     bool ProcessWorldGL(PF_EffectWorld *float_world);
 
