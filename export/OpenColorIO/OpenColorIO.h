@@ -933,6 +933,14 @@ OCIO_NAMESPACE_ENTER
         void setShaperSpace(const char * shaperSpace);
         //!cpp:function:: get the shaper colorspace that has been set
         const char * getShaperSpace() const;
+
+        //!cpp:function:: set the looks to be applied during baking
+        // Looks is a potentially comma (or colon) delimited list of lookNames,
+        // Where +/- prefixes are optionally allowed to denote forward/inverse
+        // look specification. (And forward is assumed in the absense of either)
+        void setLooks(const char * looks);
+        //!cpp:function:: get the looks to be applied during baking
+        const char * getLooks() const;
         
         //!cpp:function:: set the target device colorspace for the lut
         void setTargetSpace(const char * targetSpace);

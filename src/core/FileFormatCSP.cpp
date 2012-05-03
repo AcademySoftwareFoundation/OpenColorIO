@@ -652,6 +652,8 @@ OCIO_NAMESPACE_ENTER
             cubeData.resize(cubeSize*cubeSize*cubeSize*3);
             GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+
+            std::string looks = baker.getLooks();
             
             std::vector<float> shaperInData;
             std::vector<float> shaperOutData;
@@ -689,8 +691,22 @@ OCIO_NAMESPACE_ENTER
                 }
                 PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
                 shaperToInput->apply(shaperInImg);
-                
-                ConstProcessorRcPtr shaperToTarget = config->getProcessor(baker.getShaperSpace(), baker.getTargetSpace());
+
+                ConstProcessorRcPtr shaperToTarget;
+                if (!looks.empty())
+                {
+                    LookTransformRcPtr transform = LookTransform::Create();
+                    transform->setLooks(looks.c_str());
+                    transform->setSrc(baker.getShaperSpace());
+                    transform->setDst(baker.getTargetSpace());
+                    shaperToTarget = config->getProcessor(transform,
+                        TRANSFORM_DIR_FORWARD);
+                }
+                else
+                {
+                  shaperToTarget = config->getProcessor(baker.getShaperSpace(),
+                      baker.getTargetSpace());
+                }
                 shaperToTarget->apply(cubeImg);
             }
             else
@@ -746,7 +762,20 @@ OCIO_NAMESPACE_ENTER
                 shaperToInput->apply(cubeImg);
                 
                 // Apply the 3d lut to the remainder (from the input to the output)
-                ConstProcessorRcPtr inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+                ConstProcessorRcPtr inputToTarget;
+                if (!looks.empty())
+                {
+                    LookTransformRcPtr transform = LookTransform::Create();
+                    transform->setLooks(looks.c_str());
+                    transform->setSrc(baker.getInputSpace());
+                    transform->setDst(baker.getTargetSpace());
+                    inputToTarget = config->getProcessor(transform,
+                        TRANSFORM_DIR_FORWARD);
+                }
+                else
+                {
+                    inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+                }
                 inputToTarget->apply(cubeImg);
             }
             
