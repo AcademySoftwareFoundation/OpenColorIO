@@ -709,10 +709,20 @@ OCIO_NAMESPACE_ENTER
 
                 // Let's make an allocation transform for this colorspace
                 AllocationTransformRcPtr allocationTransform = AllocationTransform::Create();
-                std::vector<float> vars(inputColorSpace->getAllocationNumVars());
-                inputColorSpace->getAllocationVars(&vars[0]);
                 allocationTransform->setAllocation(inputColorSpace->getAllocation());
-                allocationTransform->setVars(static_cast<int>(vars.size()), &vars[0]);
+                
+                // numVars may be '0'
+                int numVars = inputColorSpace->getAllocationNumVars();
+                if(numVars>0)
+                {
+                    std::vector<float> vars(numVars);
+                    inputColorSpace->getAllocationVars(&vars[0]);
+                    allocationTransform->setVars(numVars, &vars[0]);
+                }
+                else
+                {
+                    allocationTransform->setVars(0, NULL);
+                }
                 
                 // What size shaper should we make?
                 int shaperSize = baker.getShaperSize();
