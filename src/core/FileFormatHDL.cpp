@@ -645,12 +645,26 @@ OCIO_NAMESPACE_ENTER
             const std::string shaperSpace = baker.getShaperSpace();
             const std::string inputSpace = baker.getInputSpace();
             const std::string targetSpace = baker.getTargetSpace();
-            
+            const std::string look = baker.getLook();
+
             // Determine required LUT type
-            ConstProcessorRcPtr inputToTargetProc = config->getProcessor(
-                inputSpace.c_str(),
-                targetSpace.c_str());
-            
+            ConstProcessorRcPtr inputToTargetProc;
+            if (!look.empty())
+            {
+                LookTransformRcPtr transform = LookTransform::Create();
+                transform->setLooks(look.c_str());
+                transform->setSrc(inputSpace.c_str());
+                transform->setDst(targetSpace.c_str());
+                inputToTargetProc = config->getProcessor(transform,
+                    TRANSFORM_DIR_FORWARD);
+            }
+            else
+            {
+                inputToTargetProc = config->getProcessor(
+                    inputSpace.c_str(),
+                    targetSpace.c_str());
+            }
+
             int required_lut = -1;
             
             if(inputToTargetProc->hasChannelCrosstalk())
@@ -760,14 +774,25 @@ OCIO_NAMESPACE_ENTER
                 if(required_lut == HDL_3D1D)
                 {
                     // Prelut goes from input-to-shaper, so cube goes from shaper-to-target
-                    cubeProc = config->getProcessor(shaperSpace.c_str(),
-                                                    targetSpace.c_str());
+                    if (!look.empty())
+                    {
+                        LookTransformRcPtr transform = LookTransform::Create();
+                        transform->setLooks(look.c_str());
+                        transform->setSrc(inputSpace.c_str());
+                        transform->setDst(targetSpace.c_str());
+                        cubeProc = config->getProcessor(transform,
+                            TRANSFORM_DIR_FORWARD);
+                    }
+                    else
+                    {
+                        cubeProc = config->getProcessor(shaperSpace.c_str(),
+                                                        targetSpace.c_str());
+                    }
                 }
                 else
                 {
                     // No prelut, so cube goes from input-to-target
-                    cubeProc = config->getProcessor(inputSpace.c_str(),
-                                                    targetSpace.c_str());
+                  cubeProc = inputToTargetProc;
                 }
 
                 
