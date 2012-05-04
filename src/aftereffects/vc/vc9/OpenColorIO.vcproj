@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\export;..\..\src\core;..\..\ext\boost_1_48_0;..\..\ext\tinyxml;&quot;..\..\ext\yaml-cpp-r482\include&quot;;.\"
+				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp\include&quot;;.\"
 				PreprocessorDefinitions="TIXML_USE_STL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\export;..\..\src\core;..\..\ext\boost_1_48_0;..\..\ext\tinyxml;&quot;..\..\ext\yaml-cpp-r482\include&quot;;.\"
+				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp\include&quot;;.\"
 				PreprocessorDefinitions="TIXML_USE_STL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -171,7 +171,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\export;..\..\src\core;..\..\ext\boost_1_48_0;..\..\ext\tinyxml;&quot;..\..\ext\yaml-cpp-r482\include&quot;;.\"
+				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp\include&quot;;.\"
 				PreprocessorDefinitions="NDEBUG;TIXML_USE_STL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -235,7 +235,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\export;..\..\src\core;..\..\ext\boost_1_48_0;..\..\ext\tinyxml;&quot;..\..\ext\yaml-cpp-r482\include&quot;;.\"
+				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp\include&quot;;.\"
 				PreprocessorDefinitions="NDEBUG;TIXML_USE_STL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -281,227 +281,239 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\core\AllocationOp.cpp"
+				RelativePath="..\..\..\..\src\core\AllocationOp.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\AllocationTransform.cpp"
+				RelativePath="..\..\..\..\src\core\AllocationTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Baker.cpp"
+				RelativePath="..\..\..\..\src\core\Baker.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Caching.cpp"
+				RelativePath="..\..\..\..\src\core\Caching.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\CDLTransform.cpp"
+				RelativePath="..\..\..\..\src\core\CDLTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ColorSpace.cpp"
+				RelativePath="..\..\..\..\src\core\ColorSpace.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ColorSpaceTransform.cpp"
+				RelativePath="..\..\..\..\src\core\ColorSpaceTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Config.cpp"
+				RelativePath="..\..\..\..\src\core\Config.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Context.cpp"
+				RelativePath="..\..\..\..\src\core\Context.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\DisplayTransform.cpp"
+				RelativePath="..\..\..\..\src\core\DisplayTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Exception.cpp"
+				RelativePath="..\..\..\..\src\core\Exception.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ExponentOps.cpp"
+				RelativePath="..\..\..\..\src\core\ExponentOps.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ExponentTransform.cpp"
+				RelativePath="..\..\..\..\src\core\ExponentTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormat3DL.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormat3DL.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatCC.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatCC.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatCCC.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatCCC.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatCSP.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatCSP.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatHDL.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatHDL.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatIridasCube.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatIridasCube.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatIridasItx.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatIridasItx.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatPandora.cpp"
+				RelativePath="..\..\..\core\FileFormatIridasLook.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatSpi1D.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatPandora.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatSpi3D.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatSpi1D.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatSpiMtx.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatSpi3D.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatTruelight.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatSpiMtx.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileFormatVF.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatTruelight.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileTransform.cpp"
+				RelativePath="..\..\..\..\src\core\FileFormatVF.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\GpuAllocationNoOp.cpp"
+				RelativePath="..\..\..\..\src\core\FileTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\GpuShaderDesc.cpp"
+				RelativePath="..\..\..\..\src\core\GpuShaderDesc.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\GpuShaderUtils.cpp"
+				RelativePath="..\..\..\..\src\core\GpuShaderUtils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\GroupTransform.cpp"
+				RelativePath="..\..\..\..\src\core\GroupTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\HashUtils.cpp"
+				RelativePath="..\..\..\..\src\core\HashUtils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ImageDesc.cpp"
+				RelativePath="..\..\..\..\src\core\ImageDesc.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ImagePacking.cpp"
+				RelativePath="..\..\..\..\src\core\ImagePacking.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Logging.cpp"
+				RelativePath="..\..\..\..\src\core\Logging.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\LogOps.cpp"
+				RelativePath="..\..\..\..\src\core\LogOps.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\LogTransform.cpp"
+				RelativePath="..\..\..\..\src\core\LogTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Look.cpp"
+				RelativePath="..\..\..\..\src\core\Look.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\LookTransform.cpp"
+				RelativePath="..\..\..\core\LookParse.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Lut1DOp.cpp"
+				RelativePath="..\..\..\..\src\core\LookTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Lut3DOp.cpp"
+				RelativePath="..\..\..\..\src\core\Lut1DOp.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\MathUtils.cpp"
+				RelativePath="..\..\..\..\src\core\Lut3DOp.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\MatrixOps.cpp"
+				RelativePath="..\..\..\..\src\core\MathUtils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\MatrixTransform.cpp"
+				RelativePath="..\..\..\..\src\core\MatrixOps.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\md5\md5.cpp"
+				RelativePath="..\..\..\..\src\core\MatrixTransform.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\OCIOYaml.cpp"
+				RelativePath="..\..\..\..\src\core\md5\md5.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Op.cpp"
+				RelativePath="..\..\..\core\NoOps.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ParseUtils.cpp"
+				RelativePath="..\..\..\..\src\core\OCIOYaml.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\PathUtils.cpp"
+				RelativePath="..\..\..\..\src\core\Op.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Processor.cpp"
+				RelativePath="..\..\..\core\OpOptimizers.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\pystring\pystring.cpp"
+				RelativePath="..\..\..\..\src\core\ParseUtils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ScanlineHelper.cpp"
+				RelativePath="..\..\..\..\src\core\PathUtils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Transform.cpp"
+				RelativePath="..\..\..\..\src\core\Processor.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\TruelightOp.cpp"
+				RelativePath="..\..\..\..\src\core\pystring\pystring.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\TruelightTransform.cpp"
+				RelativePath="..\..\..\..\src\core\ScanlineHelper.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\UnitTest.cpp"
+				RelativePath="..\..\..\..\src\core\Transform.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\src\core\TruelightOp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\src\core\TruelightTransform.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\src\core\UnitTest.cpp"
 				>
 			</File>
 		</Filter>
@@ -511,127 +523,135 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\src\core\AllocationOp.h"
+				RelativePath="..\..\..\..\src\core\AllocationOp.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\CDLTransform.h"
+				RelativePath="..\..\..\..\src\core\CDLTransform.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ExponentOps.h"
+				RelativePath="..\..\..\..\src\core\ExponentOps.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\FileTransform.h"
+				RelativePath="..\..\..\..\src\core\FileTransform.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\GpuShaderUtils.h"
+				RelativePath="..\..\..\..\src\core\GpuShaderUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\HashUtils.h"
+				RelativePath="..\..\..\..\src\core\HashUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ImagePacking.h"
+				RelativePath="..\..\..\..\src\core\ImagePacking.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Logging.h"
+				RelativePath="..\..\..\..\src\core\Logging.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\LogOps.h"
+				RelativePath="..\..\..\..\src\core\LogOps.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Lut1DOp.h"
+				RelativePath="..\..\..\core\LookParse.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Lut3DOp.h"
+				RelativePath="..\..\..\..\src\core\Lut1DOp.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\MathUtils.h"
+				RelativePath="..\..\..\..\src\core\Lut3DOp.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\MatrixOps.h"
+				RelativePath="..\..\..\..\src\core\MathUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\md5\md5.h"
+				RelativePath="..\..\..\..\src\core\MatrixOps.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Mutex.h"
+				RelativePath="..\..\..\..\src\core\md5\md5.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\OCIOYaml.h"
+				RelativePath="..\..\..\..\src\core\Mutex.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Op.h"
+				RelativePath="..\..\..\core\NoOps.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\OpBuilders.h"
+				RelativePath="..\..\..\..\src\core\OCIOYaml.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\export\OpenColorIO\OpenColorIO.h"
+				RelativePath="..\..\..\..\src\core\Op.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\export\OpenColorIO\OpenColorTransforms.h"
+				RelativePath="..\..\..\..\src\core\OpBuilders.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\export\OpenColorIO\OpenColorTypes.h"
+				RelativePath="..\..\..\..\export\OpenColorIO\OpenColorIO.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ParseUtils.h"
+				RelativePath="..\..\..\..\export\OpenColorIO\OpenColorTransforms.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\PathUtils.h"
+				RelativePath="..\..\..\..\export\OpenColorIO\OpenColorTypes.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Platform.h"
+				RelativePath="..\..\..\..\src\core\ParseUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\PrivateTypes.h"
+				RelativePath="..\..\..\..\src\core\PathUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\Processor.h"
+				RelativePath="..\..\..\..\src\core\Platform.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\pystring\pystring.h"
+				RelativePath="..\..\..\..\src\core\PrivateTypes.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\ScanlineHelper.h"
+				RelativePath="..\..\..\..\src\core\Processor.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\SSE.h"
+				RelativePath="..\..\..\..\src\core\pystring\pystring.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\TruelightOp.h"
+				RelativePath="..\..\..\..\src\core\ScanlineHelper.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\core\UnitTest.h"
+				RelativePath="..\..\..\..\src\core\SSE.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\src\core\TruelightOp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\src\core\UnitTest.h"
 				>
 			</File>
 		</Filter>
