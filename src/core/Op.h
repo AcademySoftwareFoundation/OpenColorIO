@@ -49,14 +49,18 @@ OCIO_NAMESPACE_ENTER
         std::string getCacheID() const;
     };
     
+    std::ostream& operator<< (std::ostream&, const AllocationData&);
+    
     class Op;
     typedef OCIO_SHARED_PTR<Op> OpRcPtr;
     typedef std::vector<OpRcPtr> OpRcPtrVec;
     
-    std::string GetOpVecInfo(const OpRcPtrVec & ops);
+    std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
     bool IsOpVecNoOp(const OpRcPtrVec & ops);
     
-    void FinalizeOpVec(OpRcPtrVec & opVec);
+    void FinalizeOpVec(OpRcPtrVec & opVec, bool optimize=true);
+    
+    void OptimizeOpVec(OpRcPtrVec & result);
     
     class Op
     {
@@ -75,10 +79,28 @@ OCIO_NAMESPACE_ENTER
             
             //! Is the processing a noop? I.e, does apply do nothing.
             //! (Even no-ops may define Allocation though.)
-            
+            //! This must be implmented in a manner where its valid to call
+            //! *prior* to finalize. (Optimizers may make use of it)
             virtual bool isNoOp() const = 0;
             
+            virtual bool isSameType(const OpRcPtr & op) const = 0;
+            
+            virtual bool isInverse(const OpRcPtr & op) const = 0;
+            
+            virtual bool canCombineWith(const OpRcPtr & op) const;
+            
+            // Return a vector of result ops, which correspond to
+            // THIS combinedWith secondOp.
+            //
+            // If the result is a noOp, it is valid for the resulting opsVec
+            // to be empty.
+            
+            virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+            
             virtual bool hasChannelCrosstalk() const = 0;
+            
+            virtual void dumpMetadata(ProcessorMetadataRcPtr & /*metadata*/) const
+            { }
             
             // This is called a single time after construction.
             // Final pre-processing and safety checks should happen here,
@@ -102,10 +124,6 @@ OCIO_NAMESPACE_ENTER
             virtual void writeGpuShader(std::ostream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const = 0;
-            
-            
-            virtual bool definesAllocation() const = 0;
-            virtual AllocationData getAllocation() const = 0;
             
         private:
             Op& operator= (const Op &);

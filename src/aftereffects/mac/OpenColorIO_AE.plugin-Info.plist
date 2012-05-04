@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>org.OpenColorIO.AfterEffects</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>OpenColorIO</string>
+	<key>CFBundleExecutable</key>
+	<string>OpenColorIO</string>
+	<key>CFBundlePackageType</key>
+	<string>eFKT</string>
+	<key>CFBundleSignature</key>
+	<string>FXTC</string>
+	<key>NSAppleScriptEnabled</key>
+	<string>No</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2011 OpenColorIO</string>
+	<key>LSRequiresCarbon</key>
+	<true/>
+</dict>
+</plist>

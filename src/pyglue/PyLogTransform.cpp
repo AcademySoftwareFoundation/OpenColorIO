@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -80,8 +81,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    
+    ///
     
     namespace
     {
@@ -94,9 +94,10 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_LogTransform_methods[] = {
-            {"getBase", (PyCFunction) PyOCIO_LogTransform_getBase, METH_NOARGS, "" },
-            {"setBase", PyOCIO_LogTransform_setBase, METH_VARARGS, "" },
-            
+            {"getBase",
+            (PyCFunction) PyOCIO_LogTransform_getBase, METH_NOARGS, LOGTRANSFORM_GETBASE__DOC__ },
+            {"setBase",
+            PyOCIO_LogTransform_setBase, METH_VARARGS, LOGTRANSFORM_SETBASE__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -126,7 +127,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "LogTransform",                             //tp_doc 
+        LOGTRANSFORM__DOC__,                        //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -208,10 +209,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_LogTransform_getBase( PyObject * self )
         {
@@ -226,7 +225,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
         
         PyObject * PyOCIO_LogTransform_setBase( PyObject * self, PyObject * args )
         {
@@ -246,8 +244,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
         
     }
 

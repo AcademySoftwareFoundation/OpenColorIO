@@ -60,11 +60,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile()
             {
-                lut = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                lut = Lut3D::Create();
             };
             ~LocalCachedFile() {};
             
-            OCIO_SHARED_PTR<Lut3D> lut;
+            Lut3DRcPtr lut;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -105,7 +105,7 @@ OCIO_NAMESPACE_ENTER
             const int MAX_LINE_SIZE = 4096;
             char lineBuffer[MAX_LINE_SIZE];
 
-            Lut3DRcPtr lut3d(new Lut3D());
+            Lut3DRcPtr lut3d = Lut3D::Create();
 
             // Read header information
             istream.getline(lineBuffer, MAX_LINE_SIZE);
@@ -169,8 +169,6 @@ OCIO_NAMESPACE_ENTER
             // Have we fully populated the table?
             if (entriesRemaining>0) 
                 throw Exception("Not enough entries found.");
-
-            lut3d->generateCacheID();
 
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             cachedFile->lut = lut3d;

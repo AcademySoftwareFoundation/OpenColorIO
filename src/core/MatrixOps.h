@@ -39,8 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
     // Use whichever is most convenient; they are equally efficient
-    //
-    // NOTE: These currently do not affect alpha
     
     void CreateScaleOp(OpRcPtrVec & ops,
                        const float * scale4,
@@ -71,8 +69,6 @@ OCIO_NAMESPACE_ENTER
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);
-    
-    // TODO: hue rotation Matrix Op
 }
 OCIO_NAMESPACE_EXIT
 

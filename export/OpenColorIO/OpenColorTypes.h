@@ -82,6 +82,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<Processor> ProcessorRcPtr;
     
+    class OCIOEXPORT ProcessorMetadata;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ProcessorMetadata> ConstProcessorMetadataRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ProcessorMetadata> ProcessorMetadataRcPtr;
+    
     class OCIOEXPORT Baker;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const Baker> ConstBakerRcPtr;
@@ -206,11 +212,29 @@ OCIO_NAMESPACE_ENTER
     };
     
     //!cpp:type::
+    //
+    // Specify the interpolation type to use
+    // If the specified interpolation type is not supported in the requested
+    // context (for example, using tetrahedral interpolationon 1D luts)
+    // an exception will be throw.
+    //
+    // INTERP_BEST will choose the best interpolation type for the requested
+    // context:
+    //
+    // Lut1D INTERP_BEST: LINEAR
+    // Lut3D INTERP_BEST: LINEAR
+    //
+    // Note: INTERP_BEST is subject to change in minor releases, so if you
+    // care about locking off on a specific interpolation type, we'd recommend
+    // directly specifying it.
+    
     enum Interpolation
     {
         INTERP_UNKNOWN = 0,
-        INTERP_NEAREST, //! nearest neighbor in all dimensions
-        INTERP_LINEAR   //! linear interpolation in all dimensions
+        INTERP_NEAREST = 1,     //! nearest neighbor in all dimensions
+        INTERP_LINEAR = 2,      //! linear interpolation in all dimensions
+        INTERP_TETRAHEDRAL = 3, //! tetrahedral interpolation in all directions
+        INTERP_BEST = 255       //! the 'best' suitable interpolation type
     };
     
     //!cpp:type::

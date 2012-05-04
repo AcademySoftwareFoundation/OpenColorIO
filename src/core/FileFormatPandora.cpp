@@ -47,11 +47,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile ()
             {
-                lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                lut3D = Lut3D::Create();
             };
             ~LocalCachedFile() {};
             
-            OCIO_SHARED_PTR<Lut3D> lut3D;
+            Lut3DRcPtr lut3D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -233,8 +233,6 @@ OCIO_NAMESPACE_ENTER
                     }
                 }
             }
-            
-            cachedFile->lut3D->generateCacheID();
             
             return cachedFile;
         }

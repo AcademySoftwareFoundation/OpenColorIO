@@ -1,3 +1,47 @@
+**Version 1.0.7 (April 17 2012):**
+    * IRIDAS .look support
+    * ociolutimage utility added (handles image <-> 3dlut)
+    * CMake build allows optional reliance on system libraries
+    * CMake layout changes for python and nuke installs
+    * Bumped internals to yaml 0.3.0, pystring 1.1.2
+    * Optimized internal handling of Matrix / Exponent Ops
+    * Added INTERP_BEST interpolation option
+    * Python config.clearLooks() added
+    * Python docs revamp
+    * Nuke config-dependent knob values now baked into .nk scripts
+    * Nuke OCIOLookTransform gets reload button
+    * Nuke nodes get updated help text
+
+**Version 1.0.6 (March 12 2012):**
+    * JNI (Java) updates
+    * ocioconvert arbitrary attr support
+
+**Version 1.0.5 (Feb 22 2012):**
+    * Internal optimization framework added
+    * SetLoggingLevel(..) bugfix
+    * Python API Documentation / website updates
+    * Clang compilation fix
+
+**Version 1.0.4 (Jan 25 2012):**
+    * ocio2icc deprecated (functionality merged into ociobakelut)
+    * rv integration (beta)
+    * nuke: updated channel handling
+    * Documentation / website updates
+
+**Version 1.0.3 (Dec 21 2011):**
+    * Tetrahedral 3dlut interpolation (CPU only)
+    * ociocheck and Config.sanityCheck() have improved validation
+    * Mari: updated examples
+    * Makefile: misc updates to match distro library conventions
+
+**Version 1.0.2 (Nov 30 2011):**
+    * 3D lut processing (cpu) is resiliant to nans
+    * Nuke OCIOFileTransform gains Reload buttons
+    * Installation on multi-lib *nix systems improved
+    * Installation handling of soversion for C++/python improved
+    * ociobakelut improvements
+    * Initial version of Java bindings (alpha)
+
 **Version 1.0.1 (Oct 31 2011):**
     * Luts with incorrect extension are properly loaded
     * ocio2icc / ociobakelut get --lut option (no longer requires ocio config)

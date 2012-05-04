@@ -22,7 +22,6 @@ OCIOFileTransform::OCIOFileTransform(Node *n) : DD::Image::PixelIop(n)
     m_dirindex = 0;
     m_interpindex = 1;
     m_reload_version = 1;
-    m_layersToProcess = DD::Image::Mask_RGBA;
 }
 
 OCIOFileTransform::~OCIOFileTransform()
@@ -32,14 +31,14 @@ OCIOFileTransform::~OCIOFileTransform()
 
 const char* OCIOFileTransform::dirs[] = { "forward", "inverse", 0 };
 
-const char* OCIOFileTransform::interp[] = { "nearest", "linear", 0 };
+const char* OCIOFileTransform::interp[] = { "nearest", "linear", "tetrahedral", "best", 0 };
 
 void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 {
     File_knob(f, &m_file, "file", "file");
     DD::Image::Tooltip(f, "Specify the file, on disk, to use for this transform. See the node help for the list of supported formats.");
 
-    // Reload button button, and hidden "version" knob to cause redrawing
+    // Reload button, and hidden "version" knob to invalidate cache on reload
     Button(f, "reload", "reload");
     DD::Image::Tooltip(f, "Reloads specified files");
     Int_knob(f, &m_reload_version, "version");
@@ -61,8 +60,6 @@ void OCIOFileTransform::knobs(DD::Image::Knob_Callback f)
 
 void OCIOFileTransform::_validate(bool for_real)
 {
-    input0().validate(for_real);
-    
     if(!m_file)
     {
         error("The source file must be specified.");
@@ -72,7 +69,6 @@ void OCIOFileTransform::_validate(bool for_real)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        config->sanityCheck();
         
         OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
         transform->setSrc(m_file);
@@ -83,7 +79,15 @@ void OCIOFileTransform::_validate(bool for_real)
         else transform->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
         
         if(m_interpindex == 0) transform->setInterpolation(OCIO::INTERP_NEAREST);
-        else transform->setInterpolation(OCIO::INTERP_LINEAR);
+        else if(m_interpindex == 1) transform->setInterpolation(OCIO::INTERP_LINEAR);
+        else if(m_interpindex == 2) transform->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+        else if(m_interpindex == 3) transform->setInterpolation(OCIO::INTERP_BEST);
+        else
+        {
+            // Should never happen
+            error("Interpolation value out of bounds");
+            return;
+        }
         
         m_processor = config->getProcessor(transform, OCIO::TRANSFORM_DIR_FORWARD);
     }
@@ -95,13 +99,10 @@ void OCIOFileTransform::_validate(bool for_real)
     
     if(m_processor->isNoOp())
     {
-        // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
-        copy_info();
-        return;
+    } else {    
+        set_out_channels(DD::Image::Mask_All);
     }
-    
-    set_out_channels(DD::Image::Mask_All);
 
     DD::Image::PixelIop::_validate(for_real);
 }
@@ -112,7 +113,7 @@ void OCIOFileTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& m
     DD::Image::ChannelSet done;
     foreach(c, mask)
     {
-        if ((m_layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        if (DD::Image::colourIndex(c) < 3 && !(done & c))
         {
             done.addBrothers(c, 3);
         }
@@ -156,7 +157,7 @@ int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
         }
 
         // Ensure this callback is always triggered (for src knob)
-        return 1;
+        return true;
     }
 
     if(k->is("reload"))
@@ -164,11 +165,11 @@ int OCIOFileTransform::knob_changed(DD::Image::Knob* k)
         knob("version")->set_value(m_reload_version+1);
         OCIO::ClearAllCaches();
 
-        return 1; // ensure callback is triggered again
+        return true; // ensure callback is triggered again
     }
 
     // Return zero to avoid callbacks for other knobs
-    return 0;
+    return false;
 }
 
 // See Saturation::pixel_engine for a well-commented example.
@@ -192,7 +193,7 @@ void OCIOFileTransform::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(m_layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        if (colourIndex(requestedChannel) >= 3)
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;
@@ -215,9 +216,12 @@ void OCIOFileTransform::pixel_engine(
         float *bOut = out.writable(bChannel) + rowX;
 
         // OCIO modifies in-place
-        memcpy(rOut, rIn, sizeof(float)*rowWidth);
-        memcpy(gOut, gIn, sizeof(float)*rowWidth);
-        memcpy(bOut, bIn, sizeof(float)*rowWidth);
+        // Note: xOut can equal xIn in some circumstances, such as when the
+        // 'Black' (throwaway) scanline is uses. We thus must guard memcpy,
+        // which does not allow for overlapping regions.
+        if (rOut != rIn) memcpy(rOut, rIn, sizeof(float)*rowWidth);
+        if (gOut != gIn) memcpy(gOut, gIn, sizeof(float)*rowWidth);
+        if (bOut != bIn) memcpy(bOut, bIn, sizeof(float)*rowWidth);
 
         try
         {

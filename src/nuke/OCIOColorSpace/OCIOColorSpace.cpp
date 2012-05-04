@@ -28,9 +28,6 @@ OCIOColorSpace::OCIOColorSpace(Node *n) : DD::Image::PixelIop(n)
 
     m_inputColorSpaceIndex = 0;
     m_outputColorSpaceIndex = 0;
-
-    m_layersToProcess = DD::Image::Mask_RGBA;
-
     
     // Query the color space names from the current config
     // TODO (when to) re-grab the list of available color spaces? How to save/load?
@@ -104,18 +101,22 @@ void OCIOColorSpace::knobs(DD::Image::Knob_Callback f)
     DD::Image::CascadingEnumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
     DD::Image::Tooltip(f, "Input data is taken to be in this color space.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 
     DD::Image::CascadingEnumeration_knob(f,
         &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
     DD::Image::Tooltip(f, "Image data is converted to this color space for output.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 #else
     DD::Image::Enumeration_knob(f,
         &m_inputColorSpaceIndex, &m_inputColorSpaceCstrNames[0], "in_colorspace", "in");
     DD::Image::Tooltip(f, "Input data is taken to be in this color space.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 
     DD::Image::Enumeration_knob(f,
         &m_outputColorSpaceIndex, &m_outputColorSpaceCstrNames[0], "out_colorspace", "out");
     DD::Image::Tooltip(f, "Image data is converted to this color space for output.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 #endif
     
 }
@@ -171,8 +172,6 @@ void OCIOColorSpace::append(DD::Image::Hash& localhash)
 
 void OCIOColorSpace::_validate(bool for_real)
 {
-    input0().validate(for_real);
-
     if(!m_hasColorSpaces)
     {
         error("No color spaces available for input and/or output.");
@@ -200,7 +199,6 @@ void OCIOColorSpace::_validate(bool for_real)
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        config->sanityCheck();
         
         const char * inputName = config->getColorSpaceNameByIndex(m_inputColorSpaceIndex);
         const char * outputName = config->getColorSpaceNameByIndex(m_outputColorSpaceIndex);
@@ -216,13 +214,10 @@ void OCIOColorSpace::_validate(bool for_real)
     
     if(m_processor->isNoOp())
     {
-        // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
-        copy_info();
-        return;
+    } else {    
+        set_out_channels(DD::Image::Mask_All);
     }
-    
-    set_out_channels(DD::Image::Mask_All);
 
     DD::Image::PixelIop::_validate(for_real);
 }
@@ -233,7 +228,7 @@ void OCIOColorSpace::in_channels(int /* n unused */, DD::Image::ChannelSet& mask
     DD::Image::ChannelSet done;
     foreach(c, mask)
     {
-        if ((m_layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        if (DD::Image::colourIndex(c) < 3 && !(done & c))
         {
             done.addBrothers(c, 3);
         }
@@ -262,7 +257,7 @@ void OCIOColorSpace::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(m_layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        if (colourIndex(requestedChannel) >= 3)
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;
@@ -285,9 +280,12 @@ void OCIOColorSpace::pixel_engine(
         float *bOut = out.writable(bChannel) + rowX;
 
         // OCIO modifies in-place
-        memcpy(rOut, rIn, sizeof(float)*rowWidth);
-        memcpy(gOut, gIn, sizeof(float)*rowWidth);
-        memcpy(bOut, bIn, sizeof(float)*rowWidth);
+        // Note: xOut can equal xIn in some circumstances, such as when the
+        // 'Black' (throwaway) scanline is uses. We thus must guard memcpy,
+        // which does not allow for overlapping regions.
+        if (rOut != rIn) memcpy(rOut, rIn, sizeof(float)*rowWidth);
+        if (gOut != gIn) memcpy(gOut, gIn, sizeof(float)*rowWidth);
+        if (bOut != bIn) memcpy(bOut, bIn, sizeof(float)*rowWidth);
 
         try
         {

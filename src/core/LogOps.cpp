@@ -128,6 +128,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
@@ -137,9 +139,6 @@ OCIO_NAMESPACE_ENTER
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
             
-            virtual bool definesAllocation() const;
-            virtual AllocationData getAllocation() const;
-        
         private:
             float m_k[3];
             float m_m[3];
@@ -150,6 +149,8 @@ OCIO_NAMESPACE_ENTER
             
             std::string m_cacheID;
         };
+        
+        typedef OCIO_SHARED_PTR<LogOp> LogOpRcPtr;
         
         LogOp::LogOp(const float * k,
                      const float * m,
@@ -194,6 +195,36 @@ OCIO_NAMESPACE_ENTER
         bool LogOp::isNoOp() const
         {
             return false;
+        }
+        
+        bool LogOp::isSameType(const OpRcPtr & op) const
+        {
+            LogOpRcPtr typedRcPtr = DynamicPtrCast<LogOp>(op);
+            if(!typedRcPtr) return false;
+            return true;
+        }
+        
+        bool LogOp::isInverse(const OpRcPtr & op) const
+        {
+            LogOpRcPtr typedRcPtr = DynamicPtrCast<LogOp>(op);
+            if(!typedRcPtr) return false;
+            
+            if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
+                return false;
+            
+            float error = std::numeric_limits<float>::min();
+            if(!VecsEqualWithRelError(m_k, 3, typedRcPtr->m_k, 3, error))
+                return false;
+            if(!VecsEqualWithRelError(m_m, 3, typedRcPtr->m_m, 3, error))
+                return false;
+            if(!VecsEqualWithRelError(m_b, 3, typedRcPtr->m_b, 3, error))
+                return false;
+            if(!VecsEqualWithRelError(m_base, 3, typedRcPtr->m_base, 3, error))
+                return false;
+            if(!VecsEqualWithRelError(m_kb, 3, typedRcPtr->m_kb, 3, error))
+                return false;
+            
+            return true;
         }
         
         bool LogOp::hasChannelCrosstalk() const
@@ -327,37 +358,9 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        bool LogOp::definesAllocation() const
-        {
-            return false;
-        }
-        
-        AllocationData LogOp::getAllocation() const
-        {
-            throw Exception("LogOp does not define an allocation.");
-        }
-        
     }  // Anon namespace
     
-    
-    
-    
-    
-    
     ///////////////////////////////////////////////////////////////////////////
-    
-    
-    void CreateLog2Op(OpRcPtrVec & ops,
-                      TransformDirection direction)
-    {
-        float k[3] = { 1.0f, 1.0f, 1.0f };
-        float m[3] = { 1.0f, 1.0f, 1.0f };
-        float b[3] = { 0.0f, 0.0f, 0.0f };
-        float base[3] = { 2.0f, 2.0f, 2.0f };
-        float kb[3] = { 0.0f, 0.0f, 0.0f };
-        
-        ops.push_back( OpRcPtr(new LogOp(k, m, b, base, kb, direction)) );
-    }
     
     void CreateLogOp(OpRcPtrVec & ops,
                      const float * k,
@@ -367,7 +370,7 @@ OCIO_NAMESPACE_ENTER
                      const float * kb,
                      TransformDirection direction)
     {
-        ops.push_back( OpRcPtr(new LogOp(k, m, b, base, kb, direction)) );
+        ops.push_back( LogOpRcPtr(new LogOp(k, m, b, base, kb, direction)) );
     }
 }
 OCIO_NAMESPACE_EXIT
@@ -380,57 +383,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(LogOps, LinToLog_Base2)
-{
-    float data[8] = { 4.0f, 2.0f, 1.0f, 1.0f,
-                      0.5f, 0.25f, 0.001f, 1.0f, };
-    
-    float result[8] = { 2.0f, 1.0f, 0.0f, 1.0f,
-                        -1.0f, -2.0f, -9.965784284662087f, 1.0f, };
-    
-    OCIO::OpRcPtrVec ops;
-    CreateLog2Op(ops, OCIO::TRANSFORM_DIR_FORWARD);
-    
-    FinalizeOpVec(ops);
-    
-    // Apply the result
-    for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
-    {
-        ops[i]->apply(data, 2);
-    }
-    
-    for(int i=0; i<8; ++i)
-    {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
-    }
-}
-
-OIIO_ADD_TEST(LogOps, LogToLin_Base2)
-{
-    float data[8] = { 2.0f, 1.0f, 0.0f, 1.0f,
-                      -1.0f, -2.0f, -9.965784284662087f, 1.0f, };
-    
-    float result[8] = { 4.0f, 2.0f, 1.0f, 1.0f,
-                      0.5f, 0.25f, 0.001f, 1.0f, };
-    
-    OCIO::OpRcPtrVec ops;
-    CreateLog2Op(ops, OCIO::TRANSFORM_DIR_INVERSE);
-    
-    FinalizeOpVec(ops);
-    
-    // Apply the result
-    for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
-    {
-        ops[i]->apply(data, 2);
-    }
-    
-    for(int i=0; i<8; ++i)
-    {
-        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
-    }
-}
-
-OIIO_ADD_TEST(LogOps, LinToLog_Base10)
+OIIO_ADD_TEST(LogOps, LinToLog)
 {
     float k[3] = { 0.18f, 0.18f, 0.18f };
     float m[3] = { 2.0f, 2.0f, 2.0f };
@@ -468,7 +421,7 @@ OIIO_ADD_TEST(LogOps, LinToLog_Base10)
     }
 }
 
-OIIO_ADD_TEST(LogOps, LogToLin_Base10)
+OIIO_ADD_TEST(LogOps, LogToLin)
 {
     float k[3] = { 0.18f, 0.18f, 0.18f };
     float m[3] = { 2.0f, 2.0f, 2.0f };
@@ -503,6 +456,44 @@ OIIO_ADD_TEST(LogOps, LogToLin_Base10)
     {
         OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
     }
+}
+
+OIIO_ADD_TEST(LogOps, Inverse)
+{
+    float k[3] = { 0.18f, 0.18f, 0.18f };
+    float m[3] = { 2.0f, 2.0f, 2.0f };
+    float b[3] = { 0.1f, 0.1f, 0.1f };
+    float base[3] = { 10.0f, 10.0f, 10.0f };
+    float kb[3] = { 1.0f, 1.0f, 1.0f };
+    
+    OCIO::OpRcPtrVec ops;
+    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD);
+    
+    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE);
+    
+    base[0] += 1e-5f;
+    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE);
+    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD);
+    
+    OIIO_CHECK_EQUAL(ops.size(), 4);
+    
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[2]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]->clone()));
+    
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[0]), false);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[1]), true);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[2]), false);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[3]), false);
+    
+    OIIO_CHECK_EQUAL(ops[1]->isInverse(ops[0]), true);
+    OIIO_CHECK_EQUAL(ops[1]->isInverse(ops[2]), false);
+    OIIO_CHECK_EQUAL(ops[1]->isInverse(ops[3]), false);
+    
+    OIIO_CHECK_EQUAL(ops[2]->isInverse(ops[2]), false);
+    OIIO_CHECK_EQUAL(ops[2]->isInverse(ops[3]), true);
+    
+    OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[3]), false);
 }
 
 #endif // OCIO_UNIT_TEST

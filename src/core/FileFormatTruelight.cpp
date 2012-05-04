@@ -65,15 +65,15 @@ OCIO_NAMESPACE_ENTER
                 has1D(false),
                 has3D(false)
             {
-                lut1D = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
-                lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                lut1D = Lut1D::Create();
+                lut3D = Lut3D::Create();
             };
             ~LocalCachedFile() {};
             
             bool has1D;
             bool has3D;
-            OCIO_SHARED_PTR<Lut1D> lut1D;
-            OCIO_SHARED_PTR<Lut3D> lut3D;
+            Lut1DRcPtr lut1D;
+            Lut3DRcPtr lut3D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -272,7 +272,8 @@ OCIO_NAMESPACE_ENTER
                 // 0.0
                 // 0.000001 not equal
                 
-                cachedFile->lut1D->finalize(1e-5f, ERROR_RELATIVE);
+                cachedFile->lut1D->maxerror = 1e-5f;
+                cachedFile->lut1D->errortype = ERROR_RELATIVE;
             }
             
             // Reformat 3D data
@@ -282,7 +283,6 @@ OCIO_NAMESPACE_ENTER
                 cachedFile->lut3D->size[1] = size3d[1];
                 cachedFile->lut3D->size[2] = size3d[2];
                 cachedFile->lut3D->lut = raw3d;
-                cachedFile->lut3D->generateCacheID();
             }
             
             return cachedFile;
@@ -361,7 +361,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(TruelightFileFormat, shaperAndLut3D)
+OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"
@@ -462,7 +462,7 @@ OIIO_ADD_TEST(TruelightFileFormat, shaperAndLut3D)
     }
 }
 
-OIIO_ADD_TEST(TruelightFileFormat, shaper)
+OIIO_ADD_TEST(FileFormatTruelight, Shaper)
 {
     const char * luttext = "# Truelight Cube v2.0\n"
        "# lutLength 11\n"
@@ -532,7 +532,7 @@ OIIO_ADD_TEST(TruelightFileFormat, shaper)
 }
 
 
-OIIO_ADD_TEST(TruelightFileFormat, Lut3D)
+OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
 {
     // This lowers the red channel by 0.5, other channels are unaffected.
     const char * luttext = "# Truelight Cube v2.0\n"

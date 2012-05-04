@@ -72,6 +72,11 @@ OCIO_NAMESPACE_ENTER
     bool IsPyProcessor(PyObject * pyobject);
     ConstProcessorRcPtr GetConstProcessor(PyObject * pyobject);
     
+    // ProcessorMetadata
+    PyObject * BuildConstPyProcessorMetadata(ConstProcessorMetadataRcPtr metadata);
+    bool IsPyProcessorMetadata(PyObject * pyobject);
+    ConstProcessorMetadataRcPtr GetConstProcessorMetadata(PyObject * pyobject);
+    
     // Transform
     PyObject * BuildConstPyTransform(ConstTransformRcPtr transform);
     PyObject * BuildEditablePyTransform(TransformRcPtr transform);

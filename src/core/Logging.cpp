@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Logging.h"
 #include "Mutex.h"
+#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -46,14 +47,13 @@ OCIO_NAMESPACE_ENTER
         LoggingLevel g_logginglevel = LOGGING_LEVEL_UNKNOWN;
         bool g_initialized = false;
         bool g_loggingOverride = false;
-    }
-    
-    LoggingLevel GetLoggingLevel()
-    {
-        AutoMutex lock(g_logmutex);
         
-        if(g_initialized == false)
+        // You must manually acquire the logging mutex before calling this.
+        // This will set g_logginglevel, g_initialized, g_loggingOverride
+        void InitLogging()
         {
+            if(g_initialized) return;
+            
             g_initialized = true;
             
             char* levelstr = std::getenv(OCIO_LOGGING_LEVEL_ENVVAR);
@@ -74,6 +74,12 @@ OCIO_NAMESPACE_ENTER
                 g_logginglevel = OCIO_DEFAULT_LOGGING_LEVEL;
             }
         }
+    }
+    
+    LoggingLevel GetLoggingLevel()
+    {
+        AutoMutex lock(g_logmutex);
+        InitLogging();
         
         return g_logginglevel;
     }
@@ -81,6 +87,12 @@ OCIO_NAMESPACE_ENTER
     void SetLoggingLevel(LoggingLevel level)
     {
         AutoMutex lock(g_logmutex);
+        InitLogging();
+        
+        // Calls to SetLoggingLevel are ignored if OCIO_LOGGING_LEVEL_ENVVAR
+        // is specified.  This is to allow users to optionally debug OCIO at
+        // runtime even in applications that disable logging.
+        
         if(!g_loggingOverride)
         {
             g_logginglevel = level;
@@ -89,34 +101,49 @@ OCIO_NAMESPACE_ENTER
     
     void LogWarning(const std::string & text)
     {
-        LoggingLevel level = GetLoggingLevel();
-        
         AutoMutex lock(g_logmutex);
-        if (level>=LOGGING_LEVEL_WARNING)
+        InitLogging();
+        
+        if(g_logginglevel<LOGGING_LEVEL_WARNING) return;
+        
+        std::vector<std::string> parts;
+        pystring::split( pystring::rstrip(text), parts, "\n");
+        
+        for(unsigned int i=0; i<parts.size(); ++i)
         {
-            std::cerr << "[OpenColorIO Warning]: " << text << std::endl;
+            std::cerr << "[OpenColorIO Warning]: " << parts[i] << std::endl;
         }
     }
     
     void LogInfo(const std::string & text)
     {
-        LoggingLevel level = GetLoggingLevel();
-        
         AutoMutex lock(g_logmutex);
-        if (level>=LOGGING_LEVEL_INFO)
+        InitLogging();
+        
+        if(g_logginglevel<LOGGING_LEVEL_INFO) return;
+        
+        std::vector<std::string> parts;
+        pystring::split( pystring::rstrip(text), parts, "\n");
+        
+        for(unsigned int i=0; i<parts.size(); ++i)
         {
-            std::cerr << "[OpenColorIO Info]: " << text << std::endl;
+            std::cerr << "[OpenColorIO Info]: " << parts[i] << std::endl;
         }
     }
     
     void LogDebug(const std::string & text)
     {
-        LoggingLevel level = GetLoggingLevel();
-        
         AutoMutex lock(g_logmutex);
-        if (level>=LOGGING_LEVEL_DEBUG)
+        InitLogging();
+        
+        if(g_logginglevel<LOGGING_LEVEL_DEBUG) return;
+        
+        std::vector<std::string> parts;
+        pystring::split( pystring::rstrip(text), parts, "\n");
+        
+        for(unsigned int i=0; i<parts.size(); ++i)
         {
-            std::cerr << "[OpenColorIO Debug]: " << text << std::endl;
+            std::cerr << "[OpenColorIO Debug]: " << parts[i] << std::endl;
         }
     }
     

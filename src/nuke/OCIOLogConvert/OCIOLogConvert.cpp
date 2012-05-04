@@ -23,8 +23,6 @@ const char* OCIOLogConvert::modes[] = {
 OCIOLogConvert::OCIOLogConvert(Node *n) : DD::Image::PixelIop(n)
 {
     modeindex = 0;
-    layersToProcess = DD::Image::Mask_RGBA;
-
 }
 
 OCIOLogConvert::~OCIOLogConvert()
@@ -36,17 +34,14 @@ void OCIOLogConvert::knobs(DD::Image::Knob_Callback f)
 {
 
     Enumeration_knob(f, &modeindex, modes, "operation", "operation");
-    //DD::Image::Tooltip(f, "Input data is taken to be in this colorspace.");
+    DD::Image::SetFlags(f, DD::Image::Knob::ALWAYS_SAVE);
 }
 
 void OCIOLogConvert::_validate(bool for_real)
 {
-    input0().validate(for_real);
-    
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        config->sanityCheck();
         
         const char * src = 0;
         const char * dst = 0;
@@ -72,13 +67,10 @@ void OCIOLogConvert::_validate(bool for_real)
     
     if(processor->isNoOp())
     {
-        // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
-        copy_info();
-        return;
+    } else {    
+        set_out_channels(DD::Image::Mask_All);
     }
-    
-    set_out_channels(DD::Image::Mask_All);
 
     DD::Image::PixelIop::_validate(for_real);
 }
@@ -89,7 +81,7 @@ void OCIOLogConvert::in_channels(int /* n unused */, DD::Image::ChannelSet& mask
     DD::Image::ChannelSet done;
     foreach(c, mask)
     {
-        if ((layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        if (DD::Image::colourIndex(c) < 3 && !(done & c))
         {
             done.addBrothers(c, 3);
         }
@@ -118,7 +110,7 @@ void OCIOLogConvert::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        if (colourIndex(requestedChannel) >= 3)
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;
@@ -141,9 +133,12 @@ void OCIOLogConvert::pixel_engine(
         float *bOut = out.writable(bChannel) + rowX;
 
         // OCIO modifies in-place
-        memcpy(rOut, rIn, sizeof(float)*rowWidth);
-        memcpy(gOut, gIn, sizeof(float)*rowWidth);
-        memcpy(bOut, bIn, sizeof(float)*rowWidth);
+        // Note: xOut can equal xIn in some circumstances, such as when the
+        // 'Black' (throwaway) scanline is uses. We thus must guard memcpy,
+        // which does not allow for overlapping regions.
+        if (rOut != rIn) memcpy(rOut, rIn, sizeof(float)*rowWidth);
+        if (gOut != gIn) memcpy(gOut, gIn, sizeof(float)*rowWidth);
+        if (bOut != bIn) memcpy(bOut, bIn, sizeof(float)*rowWidth);
 
         try
         {

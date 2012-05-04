@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include <map>
+#include <set>
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
@@ -40,6 +41,7 @@ OCIO_NAMESPACE_ENTER
     // Stl types of OCIO classes
     typedef std::map<std::string, std::string> StringMap;
     typedef std::vector<std::string> StringVec;
+    typedef std::set<std::string> StringSet;
     
     typedef std::vector<ConstTransformRcPtr> ConstTransformVec;
     typedef std::vector<ColorSpaceRcPtr> ColorSpaceVec;

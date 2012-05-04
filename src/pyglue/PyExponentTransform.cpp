@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -80,8 +81,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    
+    ///
     
     namespace
     {
@@ -94,9 +94,10 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_ExponentTransform_methods[] = {
-            {"getValue", (PyCFunction) PyOCIO_ExponentTransform_getValue, METH_NOARGS, "" },
-            {"setValue", PyOCIO_ExponentTransform_setValue, METH_VARARGS, "" },
-            
+            {"getValue",
+            (PyCFunction) PyOCIO_ExponentTransform_getValue, METH_NOARGS, EXPONENTTRANSFORM_GETVALUE__DOC__ },
+            {"setValue",
+            PyOCIO_ExponentTransform_setValue, METH_VARARGS, EXPONENTTRANSFORM_SETVALUE__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -126,7 +127,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "ExponentTransform",                        //tp_doc 
+        EXPONENTTRANSFORM__DOC__,                   //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -217,10 +218,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_ExponentTransform_getValue( PyObject * self )
         {
@@ -237,7 +236,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
         
         PyObject * PyOCIO_ExponentTransform_setValue( PyObject * self, PyObject * args )
         {
@@ -264,8 +262,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
         
     }
 

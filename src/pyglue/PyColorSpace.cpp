@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyColorSpace.h"
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -144,19 +145,8 @@ OCIO_NAMESPACE_ENTER
         throw Exception("PyObject must be an editable OCIO.ColorSpace.");
     }
     
-    
-    
     ///////////////////////////////////////////////////////////////////////////
     ///
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
     namespace
     {
@@ -190,30 +180,46 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_ColorSpace_methods[] = {
-            {"isEditable", (PyCFunction) PyOCIO_ColorSpace_isEditable, METH_NOARGS, "" },
-            {"createEditableCopy", (PyCFunction) PyOCIO_ColorSpace_createEditableCopy, METH_NOARGS, "" },
-            
-            {"getName", (PyCFunction) PyOCIO_ColorSpace_getName, METH_NOARGS, "" },
-            {"setName", PyOCIO_ColorSpace_setName, METH_VARARGS, "" },
-            {"getFamily", (PyCFunction) PyOCIO_ColorSpace_getFamily, METH_NOARGS, "" },
-            {"setFamily", PyOCIO_ColorSpace_setFamily, METH_VARARGS, "" },
-            {"getEqualityGroup", (PyCFunction) PyOCIO_ColorSpace_getEqualityGroup, METH_NOARGS, "" },
-            {"setEqualityGroup", PyOCIO_ColorSpace_setEqualityGroup, METH_VARARGS, "" },
-            {"getDescription", (PyCFunction) PyOCIO_ColorSpace_getDescription, METH_NOARGS, "" },
-            {"setDescription", PyOCIO_ColorSpace_setDescription, METH_VARARGS, "" },
-            
-            {"getBitDepth", (PyCFunction) PyOCIO_ColorSpace_getBitDepth, METH_NOARGS, "" },
-            {"setBitDepth", PyOCIO_ColorSpace_setBitDepth, METH_VARARGS, "" },
-            {"isData", (PyCFunction) PyOCIO_ColorSpace_isData, METH_NOARGS, "" },
-            {"setIsData", PyOCIO_ColorSpace_setIsData, METH_VARARGS, "" },
-            {"getAllocation", (PyCFunction) PyOCIO_ColorSpace_getAllocation, METH_NOARGS, "" },
-            {"setAllocation", PyOCIO_ColorSpace_setAllocation, METH_VARARGS, "" },
-            {"getAllocationVars", (PyCFunction) PyOCIO_ColorSpace_getAllocationVars, METH_NOARGS, "" },
-            {"setAllocationVars", PyOCIO_ColorSpace_setAllocationVars, METH_VARARGS, "" },
-            
-            {"getTransform", PyOCIO_ColorSpace_getTransform, METH_VARARGS, "" },
-            {"setTransform", PyOCIO_ColorSpace_setTransform, METH_VARARGS, "" },
-            
+            {"isEditable",
+            (PyCFunction) PyOCIO_ColorSpace_isEditable, METH_NOARGS, COLORSPACE_ISEDITABLE__DOC__ },
+            {"createEditableCopy",
+            (PyCFunction) PyOCIO_ColorSpace_createEditableCopy, METH_NOARGS, COLORSPACE_CREATEEDITABLECOPY__DOC__ },
+            {"getName",
+            (PyCFunction) PyOCIO_ColorSpace_getName, METH_NOARGS, COLORSPACE_GETNAME__DOC__ },
+            {"setName",
+            PyOCIO_ColorSpace_setName, METH_VARARGS, COLORSPACE_SETNAME__DOC__ },
+            {"getFamily",
+            (PyCFunction) PyOCIO_ColorSpace_getFamily, METH_NOARGS, COLORSPACE_GETFAMILY__DOC__ },
+            {"setFamily",
+            PyOCIO_ColorSpace_setFamily, METH_VARARGS, COLORSPACE_SETFAMILY__DOC__ },
+            {"getEqualityGroup",
+            (PyCFunction) PyOCIO_ColorSpace_getEqualityGroup, METH_NOARGS, COLORSPACE_GETEQUALITYGROUP__DOC__ },
+            {"setEqualityGroup",
+            PyOCIO_ColorSpace_setEqualityGroup, METH_VARARGS, COLORSPACE_SETEQUALITYGROUP__DOC__ },
+            {"getDescription",
+            (PyCFunction) PyOCIO_ColorSpace_getDescription, METH_NOARGS, COLORSPACE_GETDESCRIPTION__DOC__ },
+            {"setDescription",
+            PyOCIO_ColorSpace_setDescription, METH_VARARGS, COLORSPACE_SETDESCRIPTION__DOC__ },
+            {"getBitDepth",
+            (PyCFunction) PyOCIO_ColorSpace_getBitDepth, METH_NOARGS, COLORSPACE_GETBITDEPTH__DOC__ },
+            {"setBitDepth",
+            PyOCIO_ColorSpace_setBitDepth, METH_VARARGS, COLORSPACE_SETBITDEPTH__DOC__ },
+            {"isData",
+            (PyCFunction) PyOCIO_ColorSpace_isData, METH_NOARGS, COLORSPACE_ISDATA__DOC__ },
+            {"setIsData",
+            PyOCIO_ColorSpace_setIsData, METH_VARARGS, COLORSPACE_SETISDATA__DOC__ },
+            {"getAllocation",
+            (PyCFunction) PyOCIO_ColorSpace_getAllocation, METH_NOARGS, COLORSPACE_GETALLOCATION__DOC__ },
+            {"setAllocation",
+            PyOCIO_ColorSpace_setAllocation, METH_VARARGS, COLORSPACE_SETALLOCATION__DOC__ },
+            {"getAllocationVars",
+            (PyCFunction) PyOCIO_ColorSpace_getAllocationVars, METH_NOARGS, COLORSPACE_GETALLOCATIONVARS__DOC__ },
+            {"setAllocationVars",
+            PyOCIO_ColorSpace_setAllocationVars, METH_VARARGS, COLORSPACE_SETALLOCATIONVARS__DOC__ },
+            {"getTransform",
+            PyOCIO_ColorSpace_getTransform, METH_VARARGS, COLORSPACE_GETTRANSFORM__DOC__ },
+            {"setTransform",
+            PyOCIO_ColorSpace_setTransform, METH_VARARGS, COLORSPACE_SETTRANSFORM__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -243,7 +249,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "ColorSpace",                               //tp_doc 
+        COLORSPACE__DOC__,                          //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 

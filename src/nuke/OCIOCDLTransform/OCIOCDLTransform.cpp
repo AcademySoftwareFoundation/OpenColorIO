@@ -21,8 +21,6 @@ const char* OCIOCDLTransform::dirs[] = { "forward", "inverse", 0 };
 
 OCIOCDLTransform::OCIOCDLTransform(Node *n) : DD::Image::PixelIop(n)
 {
-    layersToProcess = DD::Image::Mask_RGBA;
-
     for (int i = 0; i < 3; i++){
         m_slope[i] = 1.0;
         m_offset[i] = 0.0;
@@ -33,6 +31,7 @@ OCIOCDLTransform::OCIOCDLTransform(Node *n) : DD::Image::PixelIop(n)
     m_readFromFile = false;
     m_dirindex = 0;
     m_file = NULL;
+    m_reload_version = 1;
     
     m_slopeKnob = NULL;
     m_offsetKnob = NULL;
@@ -70,6 +69,13 @@ void OCIOCDLTransform::knobs(DD::Image::Knob_Callback f)
     const char * filehelp = "Specify the src ASC CDL file, on disk, to use for this transform. "
     "This can be either a .cc or .ccc file. If .ccc is specified, the cccid is required.";
     DD::Image::Tooltip(f, filehelp);
+
+    // Reload button, and hidden "version" knob to invalidate cache on reload
+    Button(f, "reload", "reload");
+    DD::Image::Tooltip(f, "Reloads specified files");
+    Int_knob(f, &m_reload_version, "version");
+    DD::Image::SetFlags(f, DD::Image::Knob::HIDDEN);
+
     DD::Image::SetFlags(f, DD::Image::Knob::ENDLINE);
     
     m_cccidKnob = String_knob(f, &m_cccid, "cccid");
@@ -138,6 +144,16 @@ void OCIOCDLTransform::refreshKnobEnabledState()
     }
 }
 
+void OCIOCDLTransform::append(DD::Image::Hash& nodehash)
+{
+    // There is a bug where in Nuke <6.3 the String_knob (used for
+    // cccid) is not included in the node's hash. Include it manually
+    // so the node correctly redraws. Appears fixed in in 6.3
+    nodehash.append(m_cccid.c_str());
+
+    // Incremented to force reloading after rereading the LUT file
+    nodehash.append(m_reload_version);
+}
 
 int OCIOCDLTransform::knob_changed(DD::Image::Knob* k)
 {
@@ -162,7 +178,16 @@ int OCIOCDLTransform::knob_changed(DD::Image::Knob* k)
         }
         return true;
     }
-    
+
+    else if(knobname == "reload")
+    {
+        knob("version")->set_value(m_reload_version+1);
+        OCIO::ClearAllCaches();
+        m_firstLoad = true;
+
+        return true; // ensure callback is triggered again
+    }
+
     return false;
 }
 
@@ -225,12 +250,9 @@ void OCIOCDLTransform::_validate(bool for_real)
     
     refreshKnobEnabledState();
     
-    input0().validate(for_real);
-    
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        config->sanityCheck();
 
         OCIO::CDLTransformRcPtr cc = OCIO::CDLTransform::Create();
         cc->setSlope(m_slope);
@@ -251,13 +273,10 @@ void OCIOCDLTransform::_validate(bool for_real)
     
     if(m_processor->isNoOp())
     {
-        // TODO or call disable() ?
         set_out_channels(DD::Image::Mask_None); // prevents engine() from being called
-        copy_info();
-        return;
+    } else {    
+        set_out_channels(DD::Image::Mask_All);
     }
-    
-    set_out_channels(DD::Image::Mask_All);
 
     DD::Image::PixelIop::_validate(for_real);
 }
@@ -268,7 +287,7 @@ void OCIOCDLTransform::in_channels(int /* n unused */, DD::Image::ChannelSet& ma
     DD::Image::ChannelSet done;
     foreach(c, mask)
     {
-        if ((layersToProcess & c) && DD::Image::colourIndex(c) < 3 && !(done & c))
+        if (DD::Image::colourIndex(c) < 3 && !(done & c))
         {
             done.addBrothers(c, 3);
         }
@@ -297,7 +316,7 @@ void OCIOCDLTransform::pixel_engine(
 
         // Pass through channels which are not selected for processing
         // and non-rgb channels.
-        if (!(layersToProcess & requestedChannel) || colourIndex(requestedChannel) >= 3)
+        if (colourIndex(requestedChannel) >= 3)
         {
             out.copy(in, requestedChannel, rowX, rowXBound);
             continue;
@@ -320,9 +339,12 @@ void OCIOCDLTransform::pixel_engine(
         float *bOut = out.writable(bChannel) + rowX;
 
         // OCIO modifies in-place
-        memcpy(rOut, rIn, sizeof(float)*rowWidth);
-        memcpy(gOut, gIn, sizeof(float)*rowWidth);
-        memcpy(bOut, bIn, sizeof(float)*rowWidth);
+        // Note: xOut can equal xIn in some circumstances, such as when the
+        // 'Black' (throwaway) scanline is uses. We thus must guard memcpy,
+        // which does not allow for overlapping regions.
+        if (rOut != rIn) memcpy(rOut, rIn, sizeof(float)*rowWidth);
+        if (gOut != gIn) memcpy(gOut, gIn, sizeof(float)*rowWidth);
+        if (bOut != bIn) memcpy(bOut, bIn, sizeof(float)*rowWidth);
 
         try
         {

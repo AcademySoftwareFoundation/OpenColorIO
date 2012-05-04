@@ -67,6 +67,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
             
             virtual void finalize();
@@ -76,9 +78,6 @@ OCIO_NAMESPACE_ENTER
             virtual void writeGpuShader(std::ostream & shader,
                                         const std::string & pixelName,
                                         const GpuShaderDesc & shaderDesc) const;
-            
-            virtual bool definesAllocation() const;
-            virtual AllocationData getAllocation() const;
         
         private:
             TransformDirection m_direction;
@@ -213,6 +212,17 @@ OCIO_NAMESPACE_ENTER
         
         bool TruelightOp::isNoOp() const
         {
+            return false;
+        }
+        bool TruelightOp::isSameType(const OpRcPtr & /*op*/) const
+        {
+            // TODO: TruelightOp::isSameType
+            return false;
+        }
+        
+        bool TruelightOp::isInverse(const OpRcPtr & /*op*/) const
+        {
+            // TODO: TruelightOp::isInverse
             return false;
         }
         
@@ -361,16 +371,6 @@ OCIO_NAMESPACE_ENTER
                                             const GpuShaderDesc & /*shaderDesc*/) const
         {
             throw Exception("TruelightOp does not define an gpu shader.");
-        }
-        
-        bool TruelightOp::definesAllocation() const
-        {
-            return false;
-        }
-        
-        AllocationData TruelightOp::getAllocation() const
-        {
-            throw Exception("TruelightOp does not define an allocation.");
         }
         
     }  // anonymous namespace

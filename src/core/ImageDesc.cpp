@@ -106,12 +106,13 @@ OCIO_NAMESPACE_ENTER
             xStrideBytes = packedImg->getXStrideBytes();
             yStrideBytes = packedImg->getYStrideBytes();
             
-            if(chanStrideBytes == AutoStride)
-                chanStrideBytes = sizeof(float);
-            if(xStrideBytes == AutoStride)
-                xStrideBytes = sizeof(float)*numChannels;
-            if(yStrideBytes == AutoStride)
-                yStrideBytes = sizeof(float)*width*numChannels;
+            // AutoStrides will already be resolved by here, in the constructor of the ImageDesc
+            if(chanStrideBytes == AutoStride ||
+                xStrideBytes == AutoStride ||
+                yStrideBytes == AutoStride)
+            {
+                throw Exception("Malformed PackedImageDesc: Unresolved AutoStride.");
+            }
             
             rData = packedImg->getData();
             gData = reinterpret_cast<float*>( reinterpret_cast<char*>(rData)
@@ -153,7 +154,12 @@ OCIO_NAMESPACE_ENTER
             height = planarImg->getHeight();
             xStrideBytes = sizeof(float);
             yStrideBytes = planarImg->getYStrideBytes();
-            if(yStrideBytes == AutoStride) yStrideBytes = sizeof(float)*width;
+            
+            // AutoStrides will already be resolved by here, in the constructor of the ImageDesc
+            if(yStrideBytes == AutoStride)
+            {
+                throw Exception("Malformed PlanarImageDesc: Unresolved AutoStride.");
+            }
             
             rData = planarImg->getRData();
             gData = planarImg->getGData();
@@ -246,9 +252,12 @@ OCIO_NAMESPACE_ENTER
         getImpl()->width_ = width;
         getImpl()->height_ = height;
         getImpl()->numChannels_ = numChannels;
-        getImpl()->chanStrideBytes_ = chanStrideBytes;
-        getImpl()->xStrideBytes_ = xStrideBytes;
-        getImpl()->yStrideBytes_ = yStrideBytes;
+        getImpl()->chanStrideBytes_ = (chanStrideBytes == AutoStride)
+            ? sizeof(float) : chanStrideBytes;
+        getImpl()->xStrideBytes_ = (xStrideBytes == AutoStride)
+            ? sizeof(float)*numChannels : xStrideBytes;
+        getImpl()->yStrideBytes_ = (yStrideBytes == AutoStride)
+            ? sizeof(float)*width*numChannels : yStrideBytes;
     }
     
     PackedImageDesc::~PackedImageDesc()
@@ -334,7 +343,8 @@ OCIO_NAMESPACE_ENTER
         getImpl()->aData_ = aData;
         getImpl()->width_ = width;
         getImpl()->height_ = height;
-        getImpl()->yStrideBytes_ = yStrideBytes;
+        getImpl()->yStrideBytes_ = (yStrideBytes == AutoStride)
+            ? sizeof(float)*width : yStrideBytes;
     }
     
     PlanarImageDesc::~PlanarImageDesc()

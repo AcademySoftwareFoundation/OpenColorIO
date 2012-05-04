@@ -3,7 +3,7 @@
 Developer guide
 ===============
 
-First, some information on contributing to OCIO:
+Some information on contributing to OCIO:
 
 .. toctree::
     :maxdepth: 1
@@ -13,16 +13,33 @@ First, some information on contributing to OCIO:
     submitting_changes
     issues
 
-Next, instructions on using OCIO:
+Instructions on using OCIO:
 
 .. toctree::
     :maxdepth: 1
 
     usage_examples
 
-Finally, the C++ API documentation:
+C++ API documentation:
 
 .. toctree::
     :maxdepth: 1
     
     api/index
+
+Python API documentation:
+
+.. toctree::
+    :maxdepth: 1
+    
+    bindings/PythonAPI
+    bindings/PythonTransforms
+    bindings/PythonTypes
+
+Internal Architecture:
+
+.. toctree::
+    :maxdepth: 1
+
+    internal_architecture
+

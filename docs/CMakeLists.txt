@@ -76,14 +76,15 @@ list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/share/nuke/ocionuke/viewer.py)
 CopyFiles(RSTDOC ${DOCFILES})
 
 message(STATUS "Extracting .rst files from C++ headers")
-ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h developers/api/OpenColorIO.rst)
-ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h developers/api/OpenColorTransforms.rst)
-ExtractRst(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h developers/api/OpenColorTypes.rst)
+ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h developers/api/OpenColorIO.rst)
+ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h developers/api/OpenColorTransforms.rst)
+ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h developers/api/OpenColorTypes.rst)
 
 add_custom_target(doc ALL
     COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_BINPATH}/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
     DEPENDS
         OpenColorIO
+        PyOpenColorIO
         ${CMAKE_BINARY_DIR}/docs/conf.py
         developers/api/OpenColorIO.rst
         developers/api/OpenColorTransforms.rst
@@ -97,8 +98,9 @@ add_custom_target(doc ALL
 add_dependencies(doc Sphinx) 
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-html/
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/docs/html
-        PATTERN .git EXCLUDE)
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/html
+        PATTERN .* EXCLUDE
+)
 
 find_package(LATEX)
 if(PDFLATEX_COMPILER)
@@ -124,6 +126,6 @@ if(PDFLATEX_COMPILER)
     add_dependencies(pdf latex)
     
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/build-latex/OpenColorIO.pdf
-            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/OpenColorIO/docs/)
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/OpenColorIO/)
     
 endif()

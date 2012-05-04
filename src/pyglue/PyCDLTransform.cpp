@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -80,8 +81,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    
+    ///
     
     namespace
     {
@@ -115,30 +115,42 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_CDLTransform_methods[] = {
-            {"equals", PyOCIO_CDLTransform_equals, METH_VARARGS, "" },
-            
-            {"getXML", (PyCFunction) PyOCIO_CDLTransform_getXML, METH_NOARGS, "" },
-            {"setXML", PyOCIO_CDLTransform_setXML, METH_VARARGS, "" },
-            
-            {"getSlope", (PyCFunction) PyOCIO_CDLTransform_getSlope, METH_NOARGS, "" },
-            {"getOffset", (PyCFunction) PyOCIO_CDLTransform_getOffset, METH_NOARGS, "" },
-            {"getPower", (PyCFunction) PyOCIO_CDLTransform_getPower, METH_NOARGS, "" },
-            {"getSOP", (PyCFunction) PyOCIO_CDLTransform_getSOP, METH_NOARGS, "" },
-            {"getSat", (PyCFunction) PyOCIO_CDLTransform_getSat, METH_NOARGS, "" },
-            
-            {"setSlope", PyOCIO_CDLTransform_setSlope, METH_VARARGS, "" },
-            {"setOffset", PyOCIO_CDLTransform_setOffset, METH_VARARGS, "" },
-            {"setPower", PyOCIO_CDLTransform_setPower, METH_VARARGS, "" },
-            {"setSOP", PyOCIO_CDLTransform_setSOP, METH_VARARGS, "" },
-            {"setSat", PyOCIO_CDLTransform_setSat, METH_VARARGS, "" },
-            
-            {"getSatLumaCoefs", (PyCFunction) PyOCIO_CDLTransform_getSatLumaCoefs, METH_NOARGS, "" },
-            
-            {"getID", (PyCFunction) PyOCIO_CDLTransform_getID, METH_NOARGS, "" },
-            {"setID", PyOCIO_CDLTransform_setID, METH_VARARGS, "" },
-            {"getDescription", (PyCFunction) PyOCIO_CDLTransform_getDescription, METH_NOARGS, "" },
-            {"setDescription", PyOCIO_CDLTransform_setDescription, METH_VARARGS, "" },
-            
+            {"equals",
+            PyOCIO_CDLTransform_equals, METH_VARARGS, CDLTRANSFORM_EQUALS__DOC__ },
+            {"getXML",
+            (PyCFunction) PyOCIO_CDLTransform_getXML, METH_NOARGS, CDLTRANSFORM_GETXML__DOC__ },
+            {"setXML",
+            PyOCIO_CDLTransform_setXML, METH_VARARGS, CDLTRANSFORM_SETXML__DOC__ },
+            {"getSlope",
+            (PyCFunction) PyOCIO_CDLTransform_getSlope, METH_NOARGS, CDLTRANSFORM_GETSLOPE__DOC__ },
+            {"getOffset",
+            (PyCFunction) PyOCIO_CDLTransform_getOffset, METH_NOARGS, CDLTRANSFORM_GETOFFSET__DOC__ },
+            {"getPower",
+            (PyCFunction) PyOCIO_CDLTransform_getPower, METH_NOARGS, CDLTRANSFORM_GETPOWER__DOC__ },
+            {"getSOP",
+            (PyCFunction) PyOCIO_CDLTransform_getSOP, METH_NOARGS, CDLTRANSFORM_GETSOP__DOC__ },
+            {"getSat",
+            (PyCFunction) PyOCIO_CDLTransform_getSat, METH_NOARGS, CDLTRANSFORM_GETSAT__DOC__ },
+            {"setSlope",
+            PyOCIO_CDLTransform_setSlope, METH_VARARGS, CDLTRANSFORM_SETSLOPE__DOC__ },
+            {"setOffset",
+            PyOCIO_CDLTransform_setOffset, METH_VARARGS, CDLTRANSFORM_SETOFFSET__DOC__ },
+            {"setPower",
+            PyOCIO_CDLTransform_setPower, METH_VARARGS, CDLTRANSFORM_SETPOWER__DOC__ },
+            {"setSOP",
+            PyOCIO_CDLTransform_setSOP, METH_VARARGS, CDLTRANSFORM_SETSOP__DOC__ },
+            {"setSat",
+            PyOCIO_CDLTransform_setSat, METH_VARARGS, CDLTRANSFORM_SETSAT__DOC__ },
+            {"getSatLumaCoefs",
+            (PyCFunction) PyOCIO_CDLTransform_getSatLumaCoefs, METH_NOARGS, CDLTRANSFORM_GETSATLUMACOEFS__DOC__ },
+            {"getID",
+            (PyCFunction) PyOCIO_CDLTransform_getID, METH_NOARGS, CDLTRANSFORM_GETID__DOC__ },
+            {"setID",
+            PyOCIO_CDLTransform_setID, METH_VARARGS, CDLTRANSFORM_SETID__DOC__ },
+            {"getDescription",
+            (PyCFunction) PyOCIO_CDLTransform_getDescription, METH_NOARGS, CDLTRANSFORM_GETDESCRIPTION__DOC__ },
+            {"setDescription",
+            PyOCIO_CDLTransform_setDescription, METH_VARARGS, CDLTRANSFORM_SETDESCRIPTION__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -168,7 +180,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "CDLTransform",                             //tp_doc 
+        CDLTRANSFORM__DOC__,                        //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -230,8 +242,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         PyObject * PyOCIO_CDLTransform_equals( PyObject * self, PyObject * args )
         {
@@ -259,9 +271,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_CDLTransform_getXML( PyObject * self )
         {
@@ -297,9 +308,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_CDLTransform_getSlope( PyObject * self )
         {
@@ -381,7 +391,7 @@ OCIO_NAMESPACE_ENTER
         
         
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_CDLTransform_setSlope( PyObject * self, PyObject * args )
         {
@@ -506,10 +516,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
-        
-        
+        ///
         
         PyObject * PyOCIO_CDLTransform_getSatLumaCoefs( PyObject * self )
         {
@@ -528,7 +536,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
+        //
         
         PyObject * PyOCIO_CDLTransform_getID( PyObject * self )
         {

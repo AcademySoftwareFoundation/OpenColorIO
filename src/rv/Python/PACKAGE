@@ -1,0 +1,12 @@
+package: OpenColorIO
+version: 1.0
+rv: 3.12
+requires: ''
+
+modes: 
+  - file: ociorv.py
+    load: immediate
+
+description: |
+
+    Integrates OCIO, and that's about it

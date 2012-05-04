@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyProcessor.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 #include <sstream>
 
@@ -52,7 +53,6 @@ OCIO_NAMESPACE_ENTER
         
         return true;
     }
-    
     
     PyObject * BuildConstPyProcessor(ConstProcessorRcPtr processor)
     {
@@ -96,21 +96,14 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
     namespace
     {
         int PyOCIO_Processor_init( PyOCIO_Processor * self, PyObject * args, PyObject * kwds );
         void PyOCIO_Processor_delete( PyOCIO_Processor * self, PyObject * args );
         
         PyObject * PyOCIO_Processor_isNoOp( PyObject * self );
+        PyObject * PyOCIO_Processor_hasChannelCrosstalk( PyObject * self );
+        PyObject * PyOCIO_Processor_getMetadata( PyObject * self );
         PyObject * PyOCIO_Processor_applyRGB( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Processor_applyRGBA( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Processor_getCpuCacheID( PyObject * self );
@@ -120,21 +113,30 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Processor_getGpuLut3D( PyObject * self, PyObject * args );
         PyObject * PyOCIO_Processor_getGpuLut3DCacheID( PyObject * self, PyObject * args );
         
-        
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_Processor_methods[] = {
-            {"isNoOp", (PyCFunction) PyOCIO_Processor_isNoOp, METH_NOARGS, "" },
-            {"applyRGB", PyOCIO_Processor_applyRGB, METH_VARARGS, "" },
-            {"applyRGBA", PyOCIO_Processor_applyRGBA, METH_VARARGS, "" },
-            {"getCpuCacheID", (PyCFunction) PyOCIO_Processor_getCpuCacheID, METH_NOARGS, "" },
-            
-            {"getGpuShaderText", PyOCIO_Processor_getGpuShaderText, METH_VARARGS, "" },
-            {"getGpuShaderTextCacheID", PyOCIO_Processor_getGpuShaderTextCacheID, METH_VARARGS, "" },
-            {"getGpuLut3D", PyOCIO_Processor_getGpuLut3D, METH_VARARGS, "" },
-            {"getGpuLut3DCacheID", PyOCIO_Processor_getGpuLut3DCacheID, METH_VARARGS, "" },
-            
+            {"isNoOp",
+            (PyCFunction) PyOCIO_Processor_isNoOp, METH_NOARGS, PROCESSOR_ISNOOP__DOC__ },
+            {"hasChannelCrosstalk",
+            (PyCFunction) PyOCIO_Processor_hasChannelCrosstalk, METH_NOARGS, PROCESSOR_HASCHANNELCROSSTALK__DOC__ },
+            {"getMetadata",
+            (PyCFunction) PyOCIO_Processor_getMetadata, METH_NOARGS, PROCESSOR_GETMETADATA__DOC__ },
+            {"applyRGB",
+            PyOCIO_Processor_applyRGB, METH_VARARGS, PROCESSOR_APPLYRGB__DOC__ },
+            {"applyRGBA",
+            PyOCIO_Processor_applyRGBA, METH_VARARGS, PROCESSOR_APPLYRGBA__DOC__ },
+            {"getCpuCacheID",
+            (PyCFunction) PyOCIO_Processor_getCpuCacheID, METH_NOARGS, PROCESSOR_GETCPUCACHEID__DOC__ },
+            {"getGpuShaderText",
+            PyOCIO_Processor_getGpuShaderText, METH_VARARGS, PROCESSOR_GETGPUSHADERTEXT__DOC__ },
+            {"getGpuShaderTextCacheID",
+            PyOCIO_Processor_getGpuShaderTextCacheID, METH_VARARGS, PROCESSOR_GETGPUSHADERTEXTCACHEID__DOC__ },
+            {"getGpuLut3D",
+            PyOCIO_Processor_getGpuLut3D, METH_VARARGS, PROCESSOR_GETGPULUT3D__DOC__ },
+            {"getGpuLut3DCacheID",
+            PyOCIO_Processor_getGpuLut3DCacheID, METH_VARARGS, PROCESSOR_GETGPULUT3DCACHEID__DOC__ },
             {NULL, NULL, 0, NULL}
         };
         
@@ -168,7 +170,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "Processor",                                   //tp_doc 
+        PROCESSOR__DOC__,                           //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -258,8 +260,6 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    
-    
     namespace
     {
         ///////////////////////////////////////////////////////////////////////
@@ -277,8 +277,6 @@ OCIO_NAMESPACE_ENTER
             self->ob_type->tp_free((PyObject*)self);
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        
         PyObject * PyOCIO_Processor_isNoOp( PyObject * self )
         {
             try
@@ -293,6 +291,33 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
+        PyObject * PyOCIO_Processor_hasChannelCrosstalk( PyObject * self )
+        {
+            try
+            {
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                return PyBool_FromLong( processor->hasChannelCrosstalk() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Processor_getMetadata( PyObject * self )
+        {
+            try
+            {
+                ConstProcessorRcPtr processor = GetConstProcessor(self);
+                return BuildConstPyProcessorMetadata( processor->getMetadata() );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
         
         PyObject * PyOCIO_Processor_applyRGB( PyObject * self, PyObject * args )
         {
@@ -366,7 +391,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         PyObject * PyOCIO_Processor_getCpuCacheID( PyObject * self )
         {
             try
@@ -380,11 +404,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
-        
-        ////////////////////////////////////////////////////////////////////////
-        
         
         PyObject * PyOCIO_Processor_getGpuShaderText( PyObject * self, PyObject * args )
         {
@@ -476,7 +495,6 @@ OCIO_NAMESPACE_ENTER
         }
         
     }
-
-        
+    
 }
 OCIO_NAMESPACE_EXIT

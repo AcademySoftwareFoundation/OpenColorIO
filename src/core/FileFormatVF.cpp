@@ -49,12 +49,12 @@ OCIO_NAMESPACE_ENTER
             LocalCachedFile () :
                 useMatrix(false)
             {
-                lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                lut3D = Lut3D::Create();
                 memset(m44, 0, 16*sizeof(float));
             };
             ~LocalCachedFile() {};
             
-            OCIO_SHARED_PTR<Lut3D> lut3D;
+            Lut3DRcPtr lut3D;
             float m44[16];
             bool useMatrix;
         };
@@ -229,8 +229,6 @@ OCIO_NAMESPACE_ENTER
                     }
                 }
             }
-            
-            cachedFile->lut3D->generateCacheID();
             
             return cachedFile;
         }

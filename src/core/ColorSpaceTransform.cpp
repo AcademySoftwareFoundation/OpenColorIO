@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "NoOps.h"
 #include "OpBuilders.h"
 
 
@@ -198,9 +199,12 @@ OCIO_NAMESPACE_ENTER
         AllocationData srcAllocation;
         srcAllocation.allocation = srcColorSpace->getAllocation();
         srcAllocation.vars.resize( srcColorSpace->getAllocationNumVars());
-        srcColorSpace->getAllocationVars(srcColorSpace->getAllocationNumVars() ? &srcAllocation.vars[0] : NULL);
+        if(srcAllocation.vars.size() > 0)
+        {
+            srcColorSpace->getAllocationVars(&srcAllocation.vars[0]);
+        }
         
-        CreateAllocationNoOp(ops, srcAllocation);
+        CreateGpuAllocationNoOp(ops, srcAllocation);
         
         // Go to the reference space, either by using
         // * cs->ref in the forward direction
@@ -231,9 +235,12 @@ OCIO_NAMESPACE_ENTER
         AllocationData dstAllocation;
         dstAllocation.allocation = dstColorSpace->getAllocation();
         dstAllocation.vars.resize( dstColorSpace->getAllocationNumVars());
-        dstColorSpace->getAllocationVars(dstColorSpace->getAllocationNumVars() ? &dstAllocation.vars[0] : NULL);
+        if(dstAllocation.vars.size() > 0)
+        {
+            dstColorSpace->getAllocationVars(&dstAllocation.vars[0]);
+        }
         
-        CreateAllocationNoOp(ops, dstAllocation);
+        CreateGpuAllocationNoOp(ops, dstAllocation);
     }
 }
 OCIO_NAMESPACE_EXIT

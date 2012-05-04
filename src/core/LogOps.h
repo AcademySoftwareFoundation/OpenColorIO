@@ -38,13 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // output = log(x, 2.0)
-    // This does not affect alpha
-    // In the forward direction this is lin->log
-    
-    void CreateLog2Op(OpRcPtrVec & ops,
-                      TransformDirection direction);
-    
     // output = k * log(mx+b, base) + kb
     // This does not affect alpha
     // In the forward direction this is lin->log
@@ -57,6 +50,7 @@ OCIO_NAMESPACE_ENTER
                      const float * base,
                      const float * kb,
                      TransformDirection direction);
+    
 }
 OCIO_NAMESPACE_EXIT
 

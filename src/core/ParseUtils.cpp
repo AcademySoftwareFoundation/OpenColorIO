@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ParseUtils.h"
 #include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
@@ -186,6 +187,8 @@ OCIO_NAMESPACE_ENTER
     {
         if(interp == INTERP_NEAREST) return "nearest";
         else if(interp == INTERP_LINEAR) return "linear";
+        else if(interp == INTERP_TETRAHEDRAL) return "tetrahedral";
+        else if(interp == INTERP_BEST) return "best";
         return "unknown";
     }
     
@@ -194,6 +197,8 @@ OCIO_NAMESPACE_ENTER
         std::string str = pystring::lower(s);
         if(str == "nearest") return INTERP_NEAREST;
         else if(str == "linear") return INTERP_LINEAR;
+        else if(str == "tetrahedral") return INTERP_TETRAHEDRAL;
+        else if(str == "best") return INTERP_BEST;
         return INTERP_UNKNOWN;
     }
     
@@ -429,6 +434,5 @@ OCIO_NAMESPACE_ENTER
         
         return -1;
     }
-    
 }
 OCIO_NAMESPACE_EXIT

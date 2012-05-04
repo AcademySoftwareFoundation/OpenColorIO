@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -82,8 +83,6 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     ///
     
-    
-    
     namespace
     {
         int PyOCIO_GroupTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
@@ -104,16 +103,20 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_GroupTransform_methods[] = {
-            {"getTransform", PyOCIO_GroupTransform_getTransform, METH_VARARGS, "" },
-            
-            {"getTransforms", (PyCFunction) PyOCIO_GroupTransform_getTransforms, METH_NOARGS, "" },
-            {"setTransforms", PyOCIO_GroupTransform_setTransforms, METH_VARARGS, "" },
-            
-            {"size", (PyCFunction) PyOCIO_GroupTransform_size, METH_NOARGS, "" },
-            {"push_back", PyOCIO_GroupTransform_push_back, METH_VARARGS, "" },
-            {"clear", (PyCFunction) PyOCIO_GroupTransform_clear, METH_NOARGS, "" },
-            {"empty", (PyCFunction) PyOCIO_GroupTransform_empty, METH_NOARGS, "" },
-            
+            {"getTransform",
+            PyOCIO_GroupTransform_getTransform, METH_VARARGS, GROUPTRANSFORM_GETTRANSFORM__DOC__ },
+            {"getTransforms",
+            (PyCFunction) PyOCIO_GroupTransform_getTransforms, METH_NOARGS, GROUPTRANSFORM_GETTRANSFORMS__DOC__ },
+            {"setTransforms",
+            PyOCIO_GroupTransform_setTransforms, METH_VARARGS, GROUPTRANSFORM_SETTRANSFORMS__DOC__ },
+            {"size",
+            (PyCFunction) PyOCIO_GroupTransform_size, METH_NOARGS, GROUPTRANSFORM_SIZE__DOC__ },
+            {"push_back",
+            PyOCIO_GroupTransform_push_back, METH_VARARGS, GROUPTRANSFORM_PUSH_BACK__DOC__ },
+            {"clear",
+            (PyCFunction) PyOCIO_GroupTransform_clear, METH_NOARGS, GROUPTRANSFORM_CLEAR__DOC__ },
+            {"empty",
+            (PyCFunction) PyOCIO_GroupTransform_empty, METH_NOARGS, GROUPTRANSFORM_EMPTY__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -143,7 +146,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "GroupTransform",                           //tp_doc 
+        GROUPTRANSFORM__DOC__,                      //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -240,7 +243,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_GroupTransform_getTransform( PyObject * self, PyObject * args )
         {
@@ -262,7 +265,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         PyObject * PyOCIO_GroupTransform_getTransforms( PyObject * self)
         {
             try
@@ -283,8 +285,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
-        
         
         PyObject * PyOCIO_GroupTransform_setTransforms( PyObject * self,  PyObject *args )
         {
@@ -319,11 +319,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
-        
-        
         ////////////////////////////////////////////////////////////////////////
-        
+        ///
         
         PyObject * PyOCIO_GroupTransform_size( PyObject * self )
         {
@@ -338,7 +335,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
         
         PyObject * PyOCIO_GroupTransform_push_back( PyObject * self,  PyObject *args )
         {
@@ -366,7 +362,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         PyObject * PyOCIO_GroupTransform_clear( PyObject * self )
         {
             try
@@ -382,7 +377,6 @@ OCIO_NAMESPACE_ENTER
                 return NULL;
             }
         }
-        
         
         PyObject * PyOCIO_GroupTransform_empty( PyObject * self )
         {

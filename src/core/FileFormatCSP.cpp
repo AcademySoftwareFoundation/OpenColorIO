@@ -315,18 +315,18 @@ OCIO_NAMESPACE_ENTER
                 csptype("unknown"),
                 metadata("none")
             {
-                prelut = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
-                lut1D = OCIO_SHARED_PTR<Lut1D>(new Lut1D());
-                lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                prelut = Lut1D::Create();
+                lut1D = Lut1D::Create();
+                lut3D = Lut3D::Create();
             };
             ~CachedFileCSP() {};
             
             bool hasprelut;
             std::string csptype;
             std::string metadata;
-            OCIO_SHARED_PTR<Lut1D> prelut;
-            OCIO_SHARED_PTR<Lut1D> lut1D;
-            OCIO_SHARED_PTR<Lut3D> lut3D;
+            Lut1DRcPtr prelut;
+            Lut1DRcPtr lut1D;
+            Lut3DRcPtr lut3D;
         };
         typedef OCIO_SHARED_PTR<CachedFileCSP> CachedFileCSPRcPtr;
         
@@ -384,9 +384,9 @@ OCIO_NAMESPACE_ENTER
                 throw Exception ("file stream empty when trying to read csp lut");
             }
             
-            Lut1DRcPtr prelut_ptr(new Lut1D());
-            Lut1DRcPtr lut1d_ptr(new Lut1D());
-            Lut3DRcPtr lut3d_ptr(new Lut3D());
+            Lut1DRcPtr prelut_ptr = Lut1D::Create();
+            Lut1DRcPtr lut1d_ptr = Lut1D::Create();
+            Lut3DRcPtr lut3d_ptr = Lut3D::Create();
 
             // try and read the lut header
             std::string line;
@@ -614,18 +614,20 @@ OCIO_NAMESPACE_ENTER
                     rsr_Interpolator1D_destroy(interpolater);
                 }
                 
-                prelut_ptr->finalize(1e-6f, ERROR_RELATIVE);
+                prelut_ptr->maxerror = 1e-6f;
+                prelut_ptr->errortype = ERROR_RELATIVE;
+                
                 cachedFile->prelut = prelut_ptr;
             }
             
             if(csptype == "1D")
             {
-                lut1d_ptr->finalize(0.0, ERROR_RELATIVE);
+                lut1d_ptr->maxerror = 0.0f;
+                lut1d_ptr->errortype = ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
             else if (csptype == "3D")
             {
-                lut3d_ptr->generateCacheID ();
                 cachedFile->lut3D = lut3d_ptr;
             }
             
@@ -650,6 +652,8 @@ OCIO_NAMESPACE_ENTER
             cubeData.resize(cubeSize*cubeSize*cubeSize*3);
             GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+
+            std::string looks = baker.getLooks();
             
             std::vector<float> shaperInData;
             std::vector<float> shaperOutData;
@@ -687,8 +691,22 @@ OCIO_NAMESPACE_ENTER
                 }
                 PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
                 shaperToInput->apply(shaperInImg);
-                
-                ConstProcessorRcPtr shaperToTarget = config->getProcessor(baker.getShaperSpace(), baker.getTargetSpace());
+
+                ConstProcessorRcPtr shaperToTarget;
+                if (!looks.empty())
+                {
+                    LookTransformRcPtr transform = LookTransform::Create();
+                    transform->setLooks(looks.c_str());
+                    transform->setSrc(baker.getShaperSpace());
+                    transform->setDst(baker.getTargetSpace());
+                    shaperToTarget = config->getProcessor(transform,
+                        TRANSFORM_DIR_FORWARD);
+                }
+                else
+                {
+                  shaperToTarget = config->getProcessor(baker.getShaperSpace(),
+                      baker.getTargetSpace());
+                }
                 shaperToTarget->apply(cubeImg);
             }
             else
@@ -707,11 +725,20 @@ OCIO_NAMESPACE_ENTER
 
                 // Let's make an allocation transform for this colorspace
                 AllocationTransformRcPtr allocationTransform = AllocationTransform::Create();
-                int num_vars = inputColorSpace->getAllocationNumVars();
-                std::vector<float> vars(num_vars);
-				inputColorSpace->getAllocationVars(num_vars ? &vars[0] : NULL);
                 allocationTransform->setAllocation(inputColorSpace->getAllocation());
-				allocationTransform->setVars(num_vars, num_vars ? &vars[0] : NULL);
+                
+                // numVars may be '0'
+                int numVars = inputColorSpace->getAllocationNumVars();
+                if(numVars>0)
+                {
+                    std::vector<float> vars(numVars);
+                    inputColorSpace->getAllocationVars(&vars[0]);
+                    allocationTransform->setVars(numVars, &vars[0]);
+                }
+                else
+                {
+                    allocationTransform->setVars(0, NULL);
+                }
                 
                 // What size shaper should we make?
                 int shaperSize = baker.getShaperSize();
@@ -735,7 +762,20 @@ OCIO_NAMESPACE_ENTER
                 shaperToInput->apply(cubeImg);
                 
                 // Apply the 3d lut to the remainder (from the input to the output)
-                ConstProcessorRcPtr inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+                ConstProcessorRcPtr inputToTarget;
+                if (!looks.empty())
+                {
+                    LookTransformRcPtr transform = LookTransform::Create();
+                    transform->setLooks(looks.c_str());
+                    transform->setSrc(baker.getInputSpace());
+                    transform->setDst(baker.getTargetSpace());
+                    inputToTarget = config->getProcessor(transform,
+                        TRANSFORM_DIR_FORWARD);
+                }
+                else
+                {
+                    inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+                }
                 inputToTarget->apply(cubeImg);
             }
             
@@ -866,7 +906,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(CSPFileFormat, simple1D)
+OIIO_ADD_TEST(FileFormatCSP, simple1D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"              << "\n";
@@ -930,7 +970,7 @@ OIIO_ADD_TEST(CSPFileFormat, simple1D)
     
 }
 
-OIIO_ADD_TEST(CSPFileFormat, simple3D)
+OIIO_ADD_TEST(FileFormatCSP, simple3D)
 {
     std::ostringstream strebuf;
     strebuf << "CSPLUTV100"                                  << "\n";

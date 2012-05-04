@@ -33,6 +33,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PyTransform.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
+
+//Rarely used. could use a log transform instead. This can sample by log when doing the offset to make best use of the data.
 
 OCIO_NAMESPACE_ENTER
 {
@@ -82,8 +85,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    
+    ///
     
     namespace
     {
@@ -100,11 +102,14 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_AllocationTransform_methods[] = {
-            {"getAllocation", (PyCFunction) PyOCIO_AllocationTransform_getAllocation, METH_NOARGS, "" },
-            {"setAllocation", PyOCIO_AllocationTransform_setAllocation, METH_VARARGS, "" },
-            {"getVars", (PyCFunction) PyOCIO_AllocationTransform_getVars, METH_NOARGS, "" },
-            {"setVars", PyOCIO_AllocationTransform_setVars, METH_VARARGS, "" },
-            
+            {"getAllocation",
+            (PyCFunction) PyOCIO_AllocationTransform_getAllocation, METH_NOARGS, ALLOCATIONTRANSFORM_GETALLOCATION__DOC__ },
+            {"setAllocation",
+            PyOCIO_AllocationTransform_setAllocation, METH_VARARGS, ALLOCATIONTRANSFORM_SETALLOCATION__DOC__ },
+            {"getVars",
+            (PyCFunction) PyOCIO_AllocationTransform_getVars, METH_NOARGS, ALLOCATIONTRANSFORM_GETVARS__DOC__ },
+            {"setVars",
+            PyOCIO_AllocationTransform_setVars, METH_VARARGS, ALLOCATIONTRANSFORM_SETVARS__DOC__ },
             {NULL, NULL, 0, NULL}
         };
     }
@@ -134,7 +139,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   //tp_flags
-        "AllocationTransform",                             //tp_doc 
+        ALLOCATIONTRANSFORM__DOC__,                 //tp_doc 
         0,                                          //tp_traverse 
         0,                                          //tp_clear 
         0,                                          //tp_richcompare 
@@ -170,8 +175,10 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
+        
         int PyOCIO_AllocationTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
         {
             ///////////////////////////////////////////////////////////////////
@@ -196,8 +203,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         PyObject * PyOCIO_AllocationTransform_getAllocation( PyObject * self )
         {
@@ -233,8 +240,8 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        
         ////////////////////////////////////////////////////////////////////////
+        ///
         
         PyObject * PyOCIO_AllocationTransform_getVars( PyObject * self )
         {

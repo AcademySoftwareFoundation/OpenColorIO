@@ -36,13 +36,13 @@ MACRO(OCIOFindOpenGL)
         DOC "The directory where GL/glew.h resides")
     FIND_LIBRARY(GLEW_LIBRARIES
         NAMES GLEW glew
-        PATHS
         /usr/lib64
         /usr/lib
         /usr/local/lib64
         /usr/local/lib
         /sw/lib
         /opt/local/lib
+        PATHS
         DOC "The GLEW library")
     if(GLEW_INCLUDES AND GLEW_LIBRARIES)
         set(GLEW_FOUND TRUE)
@@ -106,46 +106,204 @@ MACRO(OCIOFindPython)
     if(CMAKE_FIRST_RUN)
         message(STATUS "Setting python bin to: ${PYTHON}")
     endif()
-    
+
+    set(PYTHON_OK YES) # OK until something goes wrong
+
+    # Get Python version
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_version()"
+        OUTPUT_VARIABLE PYTHON_VERSION
+        RESULT_VARIABLE PYTHON_RETURNVALUE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(${PYTHON_RETURNVALUE} EQUAL 0)
+        # Everything is fine
+    else()
+        # TODO: These error strings clobber previous values
+        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine version number.")
+        set(PYTHON_OK NO)
+    endif()
+
+
+    # Determine Python UCS version
+    execute_process(COMMAND ${PYTHON} -c "import sys; print sys.maxunicode > 65536 and 'ucs4' or 'ucs2'"
+        OUTPUT_VARIABLE PYTHON_UCS
+        RESULT_VARIABLE PYTHON_RETURNVALUE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(${PYTHON_RETURNVALUE} EQUAL 0)
+        # Hurray
+    else()
+        set(PYTHON_OK NO)
+        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine UCS version.")
+    endif()
+
+
+    # Locate headers
     execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print ':'.join(set(sysconfig.get_config_var('INCLDIRSTOMAKE').split()))"
         OUTPUT_VARIABLE PYTHON_INCLUDE_RAW
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    set(PYTHON_OK NO)
-    
+
+    # Handle errors, and process include path
     if(${PYTHON_RETURNVALUE} EQUAL 0)
         file(TO_CMAKE_PATH "${PYTHON_INCLUDE_RAW}" PYTHON_INCLUDE)
-        execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_version()"
-            OUTPUT_VARIABLE PYTHON_VERSION
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        set(PYTHON_OK YES)
-        execute_process(COMMAND ${PYTHON} -c "import sys; print sys.maxunicode > 65536 and 'ucs4' or 'ucs2'"
-            OUTPUT_VARIABLE PYTHON_UCS
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-    elseif(${PYTHON_RETURNVALUE} GREATER 0)
-        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine header location.")
     else()
-        set(PYTHON_ERR "${PYTHON}: ${PYTHON_RETURNVALUE}.")
+        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine header location.")
+        set(PYTHON_OK NO)
     endif()
 
-    if(PYTHON_RESPECT_UCS)
-        # Respect Python UCS (unicode content system) version, and install
-        # into "lib/python2.6/ucs4" or similar.
-        set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}/${PYTHON_UCS}")
+
+    # Locate Python library
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print ':'.join(set(sysconfig.get_config_var('LIBPL').split()))"
+        OUTPUT_VARIABLE PYTHON_LIBRARY_DIRS_RAW
+        RESULT_VARIABLE PYTHON_RETURNVALUE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    # Handle errors, and process include path
+    if(${PYTHON_RETURNVALUE} EQUAL 0)
+        file(TO_CMAKE_PATH "${PYTHON_LIBRARY_DIRS_RAW}" PYTHON_LIBRARY_DIRS)
+
+        FIND_LIBRARY(PYTHON_LIBRARY
+            NAMES "python${PYTHON_VERSION}"
+            PATHS ${PYTHON_LIBRARY_DIRS}
+            NO_DEFAULT_PATH # Don't be "helpful" and randomly grab library from /usr/lib etc
+        )
+        message("Python library: ${PYTHON_LIBRARY}")
     else()
-        # Ignore UCS version and install into lib/python2.6
-        set(PYTHON_VARIANT_PATH "python${PYTHON_VERSION}")
+        set(PYTHON_ERR "${PYTHON} returned ${PYTHON_RETURNVALUE} trying to determine library path.")
+        set(PYTHON_OK NO)
+    endif()
+
+    # Construct variant path - a path that sufficiently identifies the
+    # ABI-compatbility of the built library. See Github issue #236
+    if(OCIO_PYGLUE_RESPECT_ABI)
+        # Respect Python major/minor version, and UCS version (unicode
+        # content system). E.g install into "lib/python2.6/ucs4/site-packages"
+        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/${PYTHON_UCS}/site-packages")
+    else()
+        # Ignore UCS value and install into lib/python2.6/site-packages dir
+        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/site-packages")
     endif()
 
 ENDMACRO()
 
-MACRO(ExtractRst INFILE OUTFILE)
+MACRO(OCIOFindJava)
+    if(APPLE)
+      
+      SET(_JAVA_HINTS $ENV{JAVA_HOME}/bin)
+      SET(_JAVA_PATHS /System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands)
+      
+      FIND_PROGRAM(Java_JAVA_EXECUTABLE
+        NAMES java
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      IF(Java_JAVA_EXECUTABLE)
+          EXECUTE_PROCESS(COMMAND ${Java_JAVA_EXECUTABLE} -version
+            RESULT_VARIABLE res
+            OUTPUT_VARIABLE var
+            ERROR_VARIABLE var # sun-java output to stderr
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_STRIP_TRAILING_WHITESPACE)
+          IF( res )
+            IF(${Java_FIND_REQUIRED})
+              MESSAGE( FATAL_ERROR "Error executing java -version" )
+            ELSE()
+              MESSAGE( STATUS "Warning, could not run java --version")
+            ENDIF()
+          ELSE()
+            # extract major/minor version and patch level from "java -version" output
+            # Tested on linux using 
+            # 1. Sun / Sun OEM
+            # 2. OpenJDK 1.6
+            # 3. GCJ 1.5
+            # 4. Kaffe 1.4.2
+            IF(var MATCHES "java version \"[0-9]+\\.[0-9]+\\.[0-9_.]+[oem-]*\".*")
+              # This is most likely Sun / OpenJDK, or maybe GCJ-java compat layer
+              STRING( REGEX REPLACE ".* version \"([0-9]+\\.[0-9]+\\.[0-9_.]+)[oem-]*\".*"
+                      "\\1" Java_VERSION_STRING "${var}" )
+            ELSEIF(var MATCHES "java full version \"kaffe-[0-9]+\\.[0-9]+\\.[0-9_]+\".*")
+              # Kaffe style
+              STRING( REGEX REPLACE "java full version \"kaffe-([0-9]+\\.[0-9]+\\.[0-9_]+).*"
+                      "\\1" Java_VERSION_STRING "${var}" )
+            ELSE()
+              IF(NOT Java_FIND_QUIETLY)
+                message(WARNING "regex not supported: ${var}. Please report")
+              ENDIF(NOT Java_FIND_QUIETLY)
+            ENDIF()
+            STRING( REGEX REPLACE "([0-9]+).*" "\\1" Java_VERSION_MAJOR "${Java_VERSION_STRING}" )
+            STRING( REGEX REPLACE "[0-9]+\\.([0-9]+).*" "\\1" Java_VERSION_MINOR "${Java_VERSION_STRING}" )
+            STRING( REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" Java_VERSION_PATCH "${Java_VERSION_STRING}" )
+            # warning tweak version can be empty:
+            STRING( REGEX REPLACE "[0-9]+\\.[0-9]+\\.[0-9]+\\_?\\.?([0-9]*)$" "\\1" Java_VERSION_TWEAK "${Java_VERSION_STRING}" )
+            if( Java_VERSION_TWEAK STREQUAL "" ) # check case where tweak is not defined
+              set(Java_VERSION ${Java_VERSION_MAJOR}.${Java_VERSION_MINOR}.${Java_VERSION_PATCH})
+            else( )
+              set(Java_VERSION ${Java_VERSION_MAJOR}.${Java_VERSION_MINOR}.${Java_VERSION_PATCH}.${Java_VERSION_TWEAK})
+            endif( )
+          ENDIF()
+      ENDIF(Java_JAVA_EXECUTABLE)
+      
+      FIND_PROGRAM(Java_JAR_EXECUTABLE
+        NAMES jar
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      FIND_PROGRAM(Java_JAVAC_EXECUTABLE
+        NAMES javac
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      FIND_PROGRAM(Java_JAVAH_EXECUTABLE
+        NAMES javah
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      FIND_PROGRAM(Java_JAVADOC_EXECUTABLE
+        NAMES javadoc
+        HINTS ${_JAVA_HINTS}
+        PATHS ${_JAVA_PATHS}
+      )
+      
+      # Check for everything
+      include(FindPackageHandleStandardArgs)
+      find_package_handle_standard_args(Java
+        REQUIRED_VARS Java_JAVA_EXECUTABLE Java_JAR_EXECUTABLE Java_JAVAC_EXECUTABLE
+                      Java_JAVAH_EXECUTABLE Java_JAVADOC_EXECUTABLE Java_VERSION)
+      set(Java_FOUND TRUE)
+      
+      find_package(JNI)
+      
+    else()
+      
+      find_package(Java)
+      find_package(JNI)
+      
+    endif()
+    
+ENDMACRO()
+
+MACRO(ExtractRstCPP INFILE OUTFILE)
    add_custom_command(
       OUTPUT ${OUTFILE}
-      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSource.py ${INFILE} ${OUTFILE}
+      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py ${INFILE} ${OUTFILE}
+      DEPENDS ${INFILE}
+      COMMENT "Extracting reStructuredText from ${INFILE} (using old process)"
+   )
+ENDMACRO()
+
+MACRO(ExtractRstSimple INFILE OUTFILE)
+   add_custom_command(
+      OUTPUT ${OUTFILE}
+      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceSimple.py ${INFILE} ${OUTFILE}
       DEPENDS ${INFILE}
       COMMENT "Extracting reStructuredText from ${INFILE}"
    )

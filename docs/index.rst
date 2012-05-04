@@ -3,46 +3,75 @@ Home
 
 .. include:: README
 
-See the :ref:`userguide-tooloverview` for a brief explanation of the various parts of OpenColorIO, and how it could be used.
+.. _mailing_lists:
 
 Mailing lists
-*************
+"""""""""""""
 
 There are two mailing lists associated with OpenColorIO:
 
-ocio-users_\ ``@googlegroups.com``
-    For end-users (artists, often) of OCIO who have questions related to OCIO profile design, management, and workflow questions.
+`ocio-users <http://groups.google.com/group/ocio-users>`__\ ``@googlegroups.com``
+    For end users (artists, often) interested in OCIO profile design,
+    facility color management, and workflow.
 
-ocio-dev_\ ``@googlegroups.com``
-    For users of OCIO tools, APIs, or people integrating OpenColorIO into other applications.  http://groups.google.com/group/ocio-dev
+`ocio-dev <http://groups.google.com/group/ocio-dev>`__\ ``@googlegroups.com``
+    For developers interested OCIO APIs, code integration, compilation, etc.
 
+Using OpenColorIO
+"""""""""""""""""
+
+Most users will likely want to use the OpenColorIO that comes precompiled with
+their applications.  See the :ref:`compatiblesoftware` for further details on
+each application.
+
+Note that OCIO configurations aren't required to do any 'real' work, and are
+available separately on the :ref:`downloads` section of this site. Example
+images are also available. For assistance customizing .ocio configurations,
+contact the ocio-users email alias.
+
+- Step 1:  set the OCIO environment-variable to /path/to/your/profile.ocio
+- Step 2:  Launch supported application.
+
+If you are on a platform that is not envvar friendly, most applications also
+provide a menu option to select a different OCIO configuration after launch.
+
+Please be sure to select a profile that matches your color workflow (VFX work
+typically requires a different profile than animated features). If you need
+assistance picking a profile, email ocio-users.
 
 Downloading and building the code
-*********************************
+"""""""""""""""""""""""""""""""""
 
-At present, there is not a separate precompiled or binary-only distribution of OpenColorIO (though we hope to eventually have one). For now, you'll have to check out and build the code yourself. 
+Source code is available on Github at
+http://github.com/imageworks/OpenColorIO
 
-Source code is available on Github at http://github.com/imageworks/OpenColorIO
+Download a `.zip <http://github.com/imageworks/OpenColorIO/zipball/master>`_ or
+`.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/master>`_ of the
+current state of the repository.
 
-Download a `.zip <http://github.com/imageworks/OpenColorIO/zipball/master>`_ or `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/master>`_ of the current state of the repository.
-
-Note that OCIO profiles are required to do any 'real' work, and are available from the Downloads section of this site. Example images are also available.
+Please see the :ref:`developer-guide` for more info, and contact ocio-dev with any
+questions.
 
 .. toctree::
     :hidden:
     :maxdepth: 2
-
+    
     self
-
+    CompatibleSoftware
+    
     configurations/index
     installation
-
+    
     userguide/index
-
+    
     developers/index
-
+    
     FAQ
     downloads
     
     ChangeLog
     License
+
+:ref:`search`
+
+:ref:`genindex`

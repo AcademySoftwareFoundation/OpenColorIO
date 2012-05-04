@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "HashUtils.h"
 #include "Logging.h"
+#include "LookParse.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
@@ -588,6 +589,7 @@ OCIO_NAMESPACE_ENTER
         
         
         ///// COLORSPACES
+        StringSet existingColorSpaces;
         
         // Confirm all ColorSpaces are valid
         for(unsigned int i=0; i<getImpl()->colorspaces_.size(); ++i)
@@ -610,6 +612,20 @@ OCIO_NAMESPACE_ENTER
                 getImpl()->sanitytext_ = os.str();
                 throw Exception(getImpl()->sanitytext_.c_str());
             }
+            
+            std::string namelower = pystring::lower(name);
+            StringSet::const_iterator it = existingColorSpaces.find(namelower);
+            if(it != existingColorSpaces.end())
+            {
+                std::ostringstream os;
+                os << "Config failed sanitycheck. ";
+                os << "Two colorspaces are defined with the same name, '";
+                os << namelower << "'.";
+                getImpl()->sanitytext_ = os.str();
+                throw Exception(getImpl()->sanitytext_.c_str());
+            }
+            
+            existingColorSpaces.insert(namelower);
         }
         
         // Confirm all roles are valid
@@ -688,22 +704,29 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 // Confirm looks references exist
-                StringVec lookVec;
-                TransformDirectionVec directionVec;
-                SplitLooks(lookVec, directionVec, views[i].looks);
+                LookParseResult looks;
+                const LookParseResult::Options & options = looks.parse(views[i].looks);
                 
-                for(unsigned int lookindex=0; lookindex<lookVec.size(); ++lookindex)
+                for(unsigned int optionindex=0;
+                    optionindex<options.size();
+                    ++optionindex)
                 {
-                    if(!lookVec[lookindex].empty() &&
-                        !getLook(lookVec[lookindex].c_str()))
+                    for(unsigned int tokenindex=0;
+                        tokenindex<options[optionindex].size();
+                        ++tokenindex)
                     {
-                        std::ostringstream os;
-                        os << "Config failed sanitycheck. ";
-                        os << "The display '" << display << "' ";
-                        os << "refers to a look, '" << lookVec[lookindex] << "', ";
-                        os << "which is not defined.";
-                        getImpl()->sanitytext_ = os.str();
-                        throw Exception(getImpl()->sanitytext_.c_str());
+                        std::string look = options[optionindex][tokenindex].name;
+                        
+                        if(!look.empty() && !getLook(look.c_str()))
+                        {
+                            std::ostringstream os;
+                            os << "Config failed sanitycheck. ";
+                            os << "The display '" << display << "' ";
+                            os << "refers to a look, '" << look << "', ";
+                            os << "which is not defined.";
+                            getImpl()->sanitytext_ = os.str();
+                            throw Exception(getImpl()->sanitytext_.c_str());
+                        }
                     }
                 }
                 
@@ -1874,7 +1897,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "pystring/pystring.h"
 
 #if 0
-OIIO_ADD_TEST(Config_Unit_Tests, test_searchpath_filesystem)
+OIIO_ADD_TEST(Config, test_searchpath_filesystem)
 {
     
     OCIO::EnvMap env = OCIO::GetEnvMap();
@@ -1941,14 +1964,14 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_searchpath_filesystem)
 }
 #endif
 
-OIIO_ADD_TEST(Config_Unit_Tests, test_INTERNAL_RAW_PROFILE)
+OIIO_ADD_TEST(Config, InternalRawProfile)
 {
     std::istringstream is;
     is.str(OCIO::INTERNAL_RAW_PROFILE);
     OIIO_CHECK_NO_THOW(OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is));
 }
 
-OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
+OIIO_ADD_TEST(Config, SimpleConfig)
 {
     
     std::string SIMPLE_PROFILE =
@@ -2022,7 +2045,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_simpleConfig)
     OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
 }
 
-OIIO_ADD_TEST(Config_Unit_Tests, test_roleAccess)
+OIIO_ADD_TEST(Config, Roles)
 {
     
     std::string SIMPLE_PROFILE =
@@ -2060,7 +2083,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_roleAccess)
     
 }
 
-OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
+OIIO_ADD_TEST(Config, Serialize)
 {
     
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
@@ -2100,7 +2123,7 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     std::string PROFILE_OUT =
     "ocio_profile_version: 1\n"
     "\n"
-    "search_path: \n"
+    "search_path: \"\"\n"
     "strictparsing: true\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
     "\n"
@@ -2117,18 +2140,18 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     "  - !<ColorSpace>\n"
     "    name: testing\n"
     "    family: test\n"
-    "    equalitygroup: \n"
+    "    equalitygroup: \"\"\n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    allocation: uniform\n"
     "    to_reference: !<GroupTransform>\n"
     "      children:\n"
-    "        - !<FileTransform> {src: , interpolation: unknown}\n"
+    "        - !<FileTransform> {src: \"\", interpolation: unknown}\n"
     "\n"
     "  - !<ColorSpace>\n"
     "    name: testing2\n"
     "    family: test\n"
-    "    equalitygroup: \n"
+    "    equalitygroup: \"\"\n"
     "    bitdepth: unknown\n"
     "    isdata: false\n"
     "    allocation: uniform\n"
@@ -2145,5 +2168,56 @@ OIIO_ADD_TEST(Config_Unit_Tests, test_ser)
     for(unsigned int i = 0; i < PROFILE_OUTvec.size(); ++i)
         OIIO_CHECK_EQUAL(osvec[i], PROFILE_OUTvec[i]);
 }
+
+
+OIIO_ADD_TEST(Config, SanityCheck)
+{
+    {
+    std::string SIMPLE_PROFILE =
+    "ocio_profile_version: 1\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "strictparsing: false\n"
+    "roles:\n"
+    "  default: raw\n"
+    "displays:\n"
+    "  sRGB:\n"
+    "  - !<View> {name: Raw, colorspace: raw}\n"
+    "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
+    
+    OIIO_CHECK_THOW(config->sanityCheck(), OCIO::Exception);
+    }
+    
+    {
+    std::string SIMPLE_PROFILE =
+    "ocio_profile_version: 1\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "strictparsing: false\n"
+    "roles:\n"
+    "  default: raw\n"
+    "displays:\n"
+    "  sRGB:\n"
+    "  - !<View> {name: Raw, colorspace: raw}\n"
+    "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
+    
+    OIIO_CHECK_NO_THOW(config->sanityCheck());
+    }
+}
+
 
 #endif // OCIO_UNIT_TEST

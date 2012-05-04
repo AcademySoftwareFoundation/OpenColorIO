@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PyColorSpace.h"
 #include "PyConstants.h"
 #include "PyUtil.h"
+#include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -49,10 +50,14 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef LocalModuleMethods[] = {
-            {"GetInverseTransformDirection", PyOCIO_Constants_GetInverseTransformDirection, METH_VARARGS, "" },
-            {"CombineTransformDirections", PyOCIO_Constants_CombineTransformDirections, METH_VARARGS, "" },
-            {"BitDepthIsFloat", PyOCIO_Constants_BitDepthIsFloat, METH_VARARGS, "" },
-            {"BitDepthToInt", PyOCIO_Constants_BitDepthToInt, METH_VARARGS, "" },
+            {"GetInverseTransformDirection",
+            PyOCIO_Constants_GetInverseTransformDirection, METH_VARARGS, CONSTANTS_GETINVERSETRANSFORMDIRECTION__DOC__ },
+            {"CombineTransformDirections",
+            PyOCIO_Constants_CombineTransformDirections, METH_VARARGS, CONSTANTS_COMBINETRANSFORMDIRECTIONS__DOC__ },
+            {"BitDepthIsFloat",
+            PyOCIO_Constants_BitDepthIsFloat, METH_VARARGS, CONSTANTS_BITDEPTHISFLOAT__DOC__ },
+            {"BitDepthToInt",
+            PyOCIO_Constants_BitDepthToInt, METH_VARARGS, CONSTANTS_BITDEPTHTOINT__DOC__ },
             {NULL, NULL, 0, NULL}        /* Sentinel */
         };
     
@@ -65,7 +70,7 @@ OCIO_NAMESPACE_ENTER
         moduleName += ".Constants";
         
         PyObject * m = Py_InitModule3(const_cast<char*>(moduleName.c_str()),
-            LocalModuleMethods, "");
+            LocalModuleMethods, CONSTANTS__DOC__);
         Py_INCREF(m);
         
         // Add Module Constants
@@ -124,6 +129,10 @@ OCIO_NAMESPACE_ENTER
             const_cast<char*>(InterpolationToString(INTERP_NEAREST)));
         PyModule_AddStringConstant(m, "INTERP_LINEAR",
             const_cast<char*>(InterpolationToString(INTERP_LINEAR)));
+        PyModule_AddStringConstant(m, "INTERP_TETRAHEDRAL",
+            const_cast<char*>(InterpolationToString(INTERP_TETRAHEDRAL)));
+        PyModule_AddStringConstant(m, "INTERP_BEST",
+            const_cast<char*>(InterpolationToString(INTERP_BEST)));
         
         PyModule_AddStringConstant(m, "GPU_LANGUAGE_UNKNOWN",
             const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_UNKNOWN)));
@@ -151,12 +160,13 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
+        
         PyObject * PyOCIO_Constants_GetInverseTransformDirection( PyObject * /*module*/, PyObject * args )
         {
             try
             {
                 char * s = 0;
-                if (!PyArg_ParseTuple(args,"s:GetInverseTransformDirection", &s)) return NULL;
+                if (!PyArg_ParseTuple(args,"s:GetInverseTransformDirection", s)) return NULL;
                 
                 TransformDirection dir = TransformDirectionFromString(s);
                 dir = GetInverseTransformDirection(dir);

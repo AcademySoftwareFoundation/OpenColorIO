@@ -73,11 +73,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile ()
             {
-                lut3D = OCIO_SHARED_PTR<Lut3D>(new Lut3D());
+                lut3D = Lut3D::Create();
             };
             ~LocalCachedFile() {};
             
-            OCIO_SHARED_PTR<Lut3D> lut3D;
+            Lut3DRcPtr lut3D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -199,7 +199,6 @@ OCIO_NAMESPACE_ENTER
                 cachedFile->lut3D->size[1] = size3d[1];
                 cachedFile->lut3D->size[2] = size3d[2];
                 cachedFile->lut3D->lut = raw;
-                cachedFile->lut3D->generateCacheID();
             }
             else
             {
@@ -238,8 +237,22 @@ OCIO_NAMESPACE_ENTER
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
             
             // Apply our conversion from the input space to the output space.
-            ConstProcessorRcPtr inputToTarget = config->getProcessor(baker.getInputSpace(),
-                baker.getTargetSpace());
+            ConstProcessorRcPtr inputToTarget;
+            std::string looks = baker.getLooks();
+            if (!looks.empty())
+            {
+                LookTransformRcPtr transform = LookTransform::Create();
+                transform->setLooks(looks.c_str());
+                transform->setSrc(baker.getInputSpace());
+                transform->setDst(baker.getTargetSpace());
+                inputToTarget = config->getProcessor(transform,
+                    TRANSFORM_DIR_FORWARD);
+            }
+            else
+            {
+                inputToTarget = config->getProcessor(baker.getInputSpace(),
+                    baker.getTargetSpace());
+            }
             inputToTarget->apply(cubeImg);
             
             // Write out the file.

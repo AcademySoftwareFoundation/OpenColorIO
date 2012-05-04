@@ -46,6 +46,7 @@ OCIO_NAMESPACE_ENTER
 
 namespace pystring
 {
+
 #if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
 #ifndef WINDOWS
 #define WINDOWS
@@ -253,7 +254,7 @@ typedef int Py_ssize_t;
     ///
     std::string do_strip( const std::string & str, int striptype, const std::string & chars  )
     {
-        std::string::size_type len = str.size(), i, j, charslen = chars.size();
+        Py_ssize_t len = (Py_ssize_t) str.size(), i, j, charslen = (Py_ssize_t) chars.size();
 
         if ( charslen == 0 )
         {
@@ -1135,87 +1136,131 @@ namespace path
     //////////////////////////////////////////////////////////////////////////////////////////////
     ///
     ///
-
-    // Join two or more pathname components, inserting "\\" as needed.
-    std::string join_nt(const std::string & a, const std::string & b)
+    
+    std::string abspath_nt(const std::string & path, const std::string & cwd)
     {
-        std::string path = a;
+        std::string p = path;
+        if(!isabs_nt(p)) p = join_nt(cwd, p);
+        return normpath_nt(p);
+    }
+    
+    std::string abspath_posix(const std::string & path, const std::string & cwd)
+    {
+        std::string p = path;
+        if(!isabs_posix(p)) p = join_posix(cwd, p);
+        return normpath_posix(p);
+    }
+    
+    std::string abspath(const std::string & path, const std::string & cwd)
+    {
+#ifdef WINDOWS
+        return abspath_nt(path, cwd);
+#else
+        return abspath_posix(path, cwd);
+#endif
+    }
+    
 
-        bool b_nts = false;
-        if(path.empty())
-        {
-            b_nts = true;
-        }
-        else if(isabs_nt(b))
-        {
-            // This probably wipes out path so far.  However, it's more
-            // complicated if path begins with a drive letter:
-            //     1. join('c:', '/a') == 'c:/a'
-            //     2. join('c:/', '/a') == 'c:/a'
-            // But
-            //     3. join('c:/a', '/b') == '/b'
-            //     4. join('c:', 'd:/') = 'd:/'
-            //     5. join('c:/', 'd:/') = 'd:/'
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    ///
 
-            if( (pystring::slice(path, 1, 2) != ":") ||
-                (pystring::slice(b, 1, 2) == ":") )
+    std::string join_nt(const std::vector< std::string > & paths)
+    {
+        if(paths.empty()) return "";
+        if(paths.size() == 1) return paths[0];
+        
+        std::string path = paths[0];
+        
+        for(unsigned int i=1; i<paths.size(); ++i)
+        {
+            std::string b = paths[i];
+            
+            bool b_nts = false;
+            if(path.empty())
             {
-                // Path doesnt start with a drive letter
                 b_nts = true;
             }
-            // Else path has a drive letter, and b doesn't but is absolute.
-            else if((path.size()>3) || 
-                    ((path.size()==3) && !pystring::endswith(path, "/") && !pystring::endswith(path, "\\")))
+            else if(isabs_nt(b))
             {
-                b_nts = true;
-            }
-        }
-
-        if(b_nts)
-        {
-            path = b;
-        }
-        else
-        {
-            // Join, and ensure there's a separator.
-            // assert len(path) > 0
-            if( pystring::endswith(path, "/") || pystring::endswith(path, "\\"))
-            {
-                if(pystring::startswith(b,"/") || pystring::startswith(b,"\\"))
+                // This probably wipes out path so far.  However, it's more
+                // complicated if path begins with a drive letter:
+                //     1. join('c:', '/a') == 'c:/a'
+                //     2. join('c:/', '/a') == 'c:/a'
+                // But
+                //     3. join('c:/a', '/b') == '/b'
+                //     4. join('c:', 'd:/') = 'd:/'
+                //     5. join('c:/', 'd:/') = 'd:/'
+                
+                if( (pystring::slice(path, 1, 2) != ":") ||
+                    (pystring::slice(b, 1, 2) == ":") )
                 {
-                    path += pystring::slice(b, 1);
+                    // Path doesnt start with a drive letter
+                    b_nts = true;
                 }
-                else
+                // Else path has a drive letter, and b doesn't but is absolute.
+                else if((path.size()>3) || 
+                        ((path.size()==3) && !pystring::endswith(path, "/") && !pystring::endswith(path, "\\")))
                 {
-                    path += b;
+                    b_nts = true;
                 }
             }
-            else if(pystring::endswith(path, ":"))
+            
+            if(b_nts)
             {
-                path += b;
-            }
-            else if(!b.empty())
-            {
-                if(pystring::startswith(b,"/") || pystring::startswith(b,"\\"))
-                {
-                    path += b;
-                }
-                else
-                {
-                    path += "\\" + b;
-                }
+                path = b;
             }
             else
             {
-                // path is not empty and does not end with a backslash,
-                // but b is empty; since, e.g., split('a/') produces
-                // ('a', ''), it's best if join() adds a backslash in
-                // this case.
-                path += "\\";
+                // Join, and ensure there's a separator.
+                // assert len(path) > 0
+                if( pystring::endswith(path, "/") || pystring::endswith(path, "\\"))
+                {
+                    if(pystring::startswith(b,"/") || pystring::startswith(b,"\\"))
+                    {
+                        path += pystring::slice(b, 1);
+                    }
+                    else
+                    {
+                        path += b;
+                    }
+                }
+                else if(pystring::endswith(path, ":"))
+                {
+                    path += b;
+                }
+                else if(!b.empty())
+                {
+                    if(pystring::startswith(b,"/") || pystring::startswith(b,"\\"))
+                    {
+                        path += b;
+                    }
+                    else
+                    {
+                        path += "\\" + b;
+                    }
+                }
+                else
+                {
+                    // path is not empty and does not end with a backslash,
+                    // but b is empty; since, e.g., split('a/') produces
+                    // ('a', ''), it's best if join() adds a backslash in
+                    // this case.
+                    path += "\\";
+                }
             }
         }
-
+        
         return path;
+    }
+    
+    // Join two or more pathname components, inserting "\\" as needed.
+    std::string join_nt(const std::string & a, const std::string & b)
+    {
+        std::vector< std::string > paths(2);
+        paths[0] = a;
+        paths[1] = b;
+        return join_nt(paths);
     }
 
     // Join pathnames.
@@ -1224,26 +1269,41 @@ namespace path
     // Ignore the previous parts if a part is absolute.
     // Insert a '/' unless the first part is empty or already ends in '/'.
 
-    std::string join_posix(const std::string & a, const std::string & b)
+    std::string join_posix(const std::vector< std::string > & paths)
     {
-        std::string path = a;
-
-        if(pystring::startswith(b, "/"))
+        if(paths.empty()) return "";
+        if(paths.size() == 1) return paths[0];
+        
+        std::string path = paths[0];
+        
+        for(unsigned int i=1; i<paths.size(); ++i)
         {
-            path = b;
+            std::string b = paths[i];
+            if(pystring::startswith(b, "/"))
+            {
+                path = b;
+            }
+            else if(path.empty() || pystring::endswith(path, "/"))
+            {
+                path += b;
+            }
+            else
+            {
+                path += "/" + b;
+            }
         }
-        else if(path.empty() || pystring::endswith(path, "/"))
-        {
-            path += b;
-        }
-        else
-        {
-            path += "/" + b;
-        }
-
+        
         return path;
     }
 
+    std::string join_posix(const std::string & a, const std::string & b)
+    {
+        std::vector< std::string > paths(2);
+        paths[0] = a;
+        paths[1] = b;
+        return join_posix(paths);
+    }
+    
     std::string join(const std::string & path1, const std::string & path2)
     {
 #ifdef WINDOWS
@@ -1254,6 +1314,15 @@ namespace path
     }
 
 
+    std::string join(const std::vector< std::string > & paths)
+    {
+#ifdef WINDOWS
+        return join_nt(paths);
+#else
+        return join_posix(paths);
+#endif
+    }
+    
     //////////////////////////////////////////////////////////////////////////////////////////////
     ///
     ///
@@ -1324,18 +1393,50 @@ namespace path
     ///
     ///
 
-    std::string basename(const std::string & path)
+    std::string basename_nt(const std::string & path)
     {
         std::string head, tail;
-        split(head, tail, path);
+        split_nt(head, tail, path);
         return tail;
     }
 
-    std::string dirname(const std::string & path)
+    std::string basename_posix(const std::string & path)
     {
         std::string head, tail;
-        split(head, tail, path);
+        split_posix(head, tail, path);
+        return tail;
+    }
+
+    std::string basename(const std::string & path)
+    {
+#ifdef WINDOWS
+        return basename_nt(path);
+#else
+        return basename_posix(path);
+#endif
+    }
+
+    std::string dirname_nt(const std::string & path)
+    {
+        std::string head, tail;
+        split_nt(head, tail, path);
         return head;
+    }
+    
+    std::string dirname_posix(const std::string & path)
+    {
+        std::string head, tail;
+        split_posix(head, tail, path);
+        return head;
+    }
+    
+    std::string dirname(const std::string & path)
+    {
+#ifdef WINDOWS
+        return dirname_nt(path);
+#else
+        return dirname_posix(path);
+#endif
     }
 
 
@@ -1553,128 +1654,5 @@ namespace path
 
 }//namespace pystring
 
-
-#ifdef PYSTRING_UNITTEST
-
-#include "unittest.h"
-
-PYSTRING_ADD_TEST(pystring_os_path, splitdrive)
-{
-    using namespace pystring::os::path;
-    
-    std::string drivespec, pathspec;
-    splitdrive_posix(drivespec, pathspec, "/Users/test"); PYSTRING_CHECK_EQUAL(drivespec, ""); PYSTRING_CHECK_EQUAL(pathspec, "/Users/test");
-    splitdrive_nt(drivespec, pathspec, "C:\\Users\\test"); PYSTRING_CHECK_EQUAL(drivespec, "C:" ); PYSTRING_CHECK_EQUAL(pathspec, "\\Users\\test" );
-    splitdrive_nt(drivespec, pathspec, "\\Users\\test"); PYSTRING_CHECK_EQUAL(drivespec, "" ); PYSTRING_CHECK_EQUAL(pathspec, "\\Users\\test" );
-}
-
-PYSTRING_ADD_TEST(pystring_os_path, isabs)
-{
-    using namespace pystring::os::path;
-    
-    PYSTRING_CHECK_EQUAL(isabs_posix("/Users/test"), true );
-    PYSTRING_CHECK_EQUAL(isabs_posix("\\Users\\test"), false);
-    PYSTRING_CHECK_EQUAL(isabs_posix("../Users"), false);
-    PYSTRING_CHECK_EQUAL(isabs_posix("Users"), false);
-    
-    PYSTRING_CHECK_EQUAL(isabs_nt("C:\\Users\\test"), true);
-    PYSTRING_CHECK_EQUAL(isabs_nt("C:/Users"), true);
-    PYSTRING_CHECK_EQUAL(isabs_nt("/Users"), true);
-    PYSTRING_CHECK_EQUAL(isabs_nt("../Users"), false);
-    PYSTRING_CHECK_EQUAL(isabs_nt("..\\Users"), false);
-}
-
-PYSTRING_ADD_TEST(pystring_os_path, join)
-{
-    using namespace pystring::os::path;
-    
-    PYSTRING_CHECK_EQUAL(join_posix("a","b"), "a/b" );
-    PYSTRING_CHECK_EQUAL(join_posix("/a","b"), "/a/b" );
-    PYSTRING_CHECK_EQUAL(join_posix("/a","/b"), "/b" );
-    PYSTRING_CHECK_EQUAL(join_posix("a","/b"), "/b" );
-    PYSTRING_CHECK_EQUAL(join_posix("//a","b"), "//a/b" );
-    PYSTRING_CHECK_EQUAL(join_posix("//a","b//"), "//a/b//" );
-    PYSTRING_CHECK_EQUAL(join_posix("../a","/b"), "/b" );
-    PYSTRING_CHECK_EQUAL(join_posix("../a","b"), "../a/b" );
-    
-    PYSTRING_CHECK_EQUAL(join_nt("c:","/a"), "c:/a" );
-    PYSTRING_CHECK_EQUAL(join_nt("c:/","/a"), "c:/a" );
-    PYSTRING_CHECK_EQUAL(join_nt("c:/a","/b"), "/b" );
-    PYSTRING_CHECK_EQUAL(join_nt("c:","d:/"), "d:/" );
-    PYSTRING_CHECK_EQUAL(join_nt("c:/","d:/"), "d:/" );
-    PYSTRING_CHECK_EQUAL(join_nt("a","b"), "a\\b" );
-    PYSTRING_CHECK_EQUAL(join_nt("\\a","b"), "\\a\\b" );
-    PYSTRING_CHECK_EQUAL(join_nt("c:\\a","b"), "c:\\a\\b" );
-    PYSTRING_CHECK_EQUAL(join_nt("c:\\a","c:\\b"), "c:\\b" );
-    PYSTRING_CHECK_EQUAL(join_nt("..\\a","b"), "..\\a\\b" );
-}
-
-PYSTRING_ADD_TEST(pystring_os_path, normpath)
-{
-    using namespace pystring::os::path;
-    
-    PYSTRING_CHECK_EQUAL(normpath_posix("A//B"), "A/B" );
-    PYSTRING_CHECK_EQUAL(normpath_posix("A/./B"), "A/B" );
-    PYSTRING_CHECK_EQUAL(normpath_posix("A/foo/../B"), "A/B" );
-    PYSTRING_CHECK_EQUAL(normpath_posix("/A//B"), "/A/B" );
-    PYSTRING_CHECK_EQUAL(normpath_posix("//A//B"), "//A/B" );
-    PYSTRING_CHECK_EQUAL(normpath_posix("///A//B"), "/A/B" );
-    PYSTRING_CHECK_EQUAL(normpath_posix("../A"), "../A" );
-    PYSTRING_CHECK_EQUAL(normpath_posix("../A../"), "../A.." );
-    PYSTRING_CHECK_EQUAL(normpath_posix("FOO/../A../././B"), "A../B" );
-    
-    PYSTRING_CHECK_EQUAL(normpath_nt(""), "." );
-    PYSTRING_CHECK_EQUAL(normpath_nt("A"), "A" );
-    PYSTRING_CHECK_EQUAL(normpath_nt("A./B"), "A.\\B" );
-    PYSTRING_CHECK_EQUAL(normpath_nt("C:\\"), "C:\\" );
-    PYSTRING_CHECK_EQUAL(normpath_nt("C:\\A"), "C:\\A" );
-    PYSTRING_CHECK_EQUAL(normpath_nt("C:/A"), "C:\\A" );
-    PYSTRING_CHECK_EQUAL(normpath_nt("C:/A..\\"), "C:\\A.." );
-    PYSTRING_CHECK_EQUAL(normpath_nt("C:/A..\\..\\"), "C:\\" );
-    PYSTRING_CHECK_EQUAL(normpath_nt("C:\\\\A"), "C:\\A" );
-    PYSTRING_CHECK_EQUAL(normpath_nt("C:\\\\\\A\\\\B"), "C:\\A\\B" );
-}
-
-PYSTRING_ADD_TEST(pystring_os_path, split)
-{
-    using namespace pystring::os::path;
-    
-    std::string head, tail;
-    split_posix(head, tail, "");  PYSTRING_CHECK_EQUAL(head, "" );  PYSTRING_CHECK_EQUAL(tail, "" );
-    split_posix(head, tail, "/");  PYSTRING_CHECK_EQUAL(head, "/" );  PYSTRING_CHECK_EQUAL(tail, "" );
-    split_posix(head, tail, "a");  PYSTRING_CHECK_EQUAL(head, "" );  PYSTRING_CHECK_EQUAL(tail, "a" );
-    split_posix(head, tail, "a/");  PYSTRING_CHECK_EQUAL(head, "a" );  PYSTRING_CHECK_EQUAL(tail, "" );
-    split_posix(head, tail, "/a");  PYSTRING_CHECK_EQUAL(head, "/" );  PYSTRING_CHECK_EQUAL(tail, "a" );
-    split_posix(head, tail, "/a/b/");  PYSTRING_CHECK_EQUAL(head, "/a/b" );  PYSTRING_CHECK_EQUAL(tail, "" );
-    split_posix(head, tail, "/a/b");  PYSTRING_CHECK_EQUAL(head, "/a" );  PYSTRING_CHECK_EQUAL(tail, "b" );
-    
-    split_nt(head, tail, "");  PYSTRING_CHECK_EQUAL(head, "" );  PYSTRING_CHECK_EQUAL(tail, "" );
-    split_nt(head, tail, "\\");  PYSTRING_CHECK_EQUAL(head, "\\" );  PYSTRING_CHECK_EQUAL(tail, "" );
-    split_nt(head, tail, "a");  PYSTRING_CHECK_EQUAL(head, "" );  PYSTRING_CHECK_EQUAL(tail, "a" );
-    split_nt(head, tail, "a\\");  PYSTRING_CHECK_EQUAL(head, "a" );  PYSTRING_CHECK_EQUAL(tail, "" );
-    split_nt(head, tail, "c:\\a");  PYSTRING_CHECK_EQUAL(head, "c:\\" );  PYSTRING_CHECK_EQUAL(tail, "a" );
-    split_nt(head, tail, "c:\\a\\b");  PYSTRING_CHECK_EQUAL(head, "c:\\a" );  PYSTRING_CHECK_EQUAL(tail, "b" );
-    split_nt(head, tail, "c:\\a\\b\\");  PYSTRING_CHECK_EQUAL(head, "c:\\a\\b" );  PYSTRING_CHECK_EQUAL(tail, "" );
-}
-
-PYSTRING_ADD_TEST(pystring_os_path, splitext)
-{
-    using namespace pystring::os::path;
-    
-    std::string root, ext;
-    splitext_nt(root, ext, ""); PYSTRING_CHECK_EQUAL(root, ""); PYSTRING_CHECK_EQUAL(ext, "");
-    splitext_nt(root, ext, "."); PYSTRING_CHECK_EQUAL(root, "."); PYSTRING_CHECK_EQUAL(ext, "");
-    splitext_nt(root, ext, ".foo"); PYSTRING_CHECK_EQUAL(root, ".foo"); PYSTRING_CHECK_EQUAL(ext, "");
-    splitext_nt(root, ext, ".foo."); PYSTRING_CHECK_EQUAL(root, ".foo"); PYSTRING_CHECK_EQUAL(ext, ".");
-    splitext_nt(root, ext, ".foo.e"); PYSTRING_CHECK_EQUAL(root, ".foo"); PYSTRING_CHECK_EQUAL(ext, ".e");
-    splitext_nt(root, ext, "c"); PYSTRING_CHECK_EQUAL(root, "c"); PYSTRING_CHECK_EQUAL(ext, "");
-    splitext_nt(root, ext, "a_b.c"); PYSTRING_CHECK_EQUAL(root, "a_b"); PYSTRING_CHECK_EQUAL(ext, ".c");
-    splitext_nt(root, ext, "c:\\a.b.c"); PYSTRING_CHECK_EQUAL(root, "c:\\a.b"); PYSTRING_CHECK_EQUAL(ext, ".c");
-    splitext_nt(root, ext, "c:\\a_b.c"); PYSTRING_CHECK_EQUAL(root, "c:\\a_b"); PYSTRING_CHECK_EQUAL(ext, ".c");
-}
-
-#endif
-
 }
 OCIO_NAMESPACE_EXIT
-
