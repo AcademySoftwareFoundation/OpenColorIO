@@ -387,7 +387,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2ACF559F1477692B00991ED5 /* Build configuration list for PBXNativeTarget "yaml" */;
 			buildPhases = (
-				2AF56976147991F700F9968C /* ShellScript */,
+				2AF56976147991F700F9968C /* Unpack yaml */,
 				2ACF55981477692300991ED5 /* Headers */,
 				2ACF55991477692300991ED5 /* Sources */,
 				2ACF559A1477692300991ED5 /* Frameworks */,
@@ -427,17 +427,18 @@
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2AF56976147991F700F9968C /* ShellScript */ = {
+		2AF56976147991F700F9968C /* Unpack yaml */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/../../ext/yaml-cpp-r482.tar.gz",
-				"$(SRCROOT)/../../ext/yaml-cpp-r482.patch",
+				"$(SRCROOT)/../../../../ext/yaml-cpp-0.3.0.tar.gz",
+				"$(SRCROOT)/../../../../ext/yaml-cpp-0.3.0.patch",
 			);
+			name = "Unpack yaml";
 			outputPaths = (
-				"$(SRCROOT)/../../ext/yaml-cpp-r482",
+				"$(SRCROOT)/../../../../ext/yaml-cpp",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

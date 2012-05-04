@@ -132,12 +132,12 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/../../ext/tinyxml_2_6_1.tar.gz",
-				"$(SRCROOT)/../../ext/tinyxml_2_6_1.patch",
+				"$(SRCROOT)/../../../../ext/tinyxml_2_6_1.tar.gz",
+				"$(SRCROOT)/../../../../ext/tinyxml_2_6_1.patch",
 			);
 			name = "Unpack tinyxml";
 			outputPaths = (
-				"$(SRCROOT)/../../ext/tinyxml",
+				"$(SRCROOT)/../../../../ext/tinyxml",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

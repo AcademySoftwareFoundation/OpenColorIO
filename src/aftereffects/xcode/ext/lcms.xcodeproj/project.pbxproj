@@ -212,11 +212,11 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/../../ext/lcms2-2.1.tar.gz",
+				"$(SRCROOT)/../../../../ext/lcms2-2.1.tar.gz",
 			);
 			name = "Unpack lcms2";
 			outputPaths = (
-				"$(SRCROOT)/../../ext/lcms2-2.1",
+				"$(SRCROOT)/../../../../ext/lcms2-2.1",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
