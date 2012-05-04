@@ -102,7 +102,7 @@
 				2ACF9ECD1478251500991ED5 /* src */,
 			);
 			name = "lcms2-2.1";
-			path = "../../ext/lcms2-2.1";
+			path = "../../../../ext/lcms2-2.1";
 			sourceTree = SOURCE_ROOT;
 		};
 		2ACF9E6C1478251500991ED5 /* include */ = {
@@ -220,7 +220,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd $SRCROOT/../../ext\n\nif [ ! -d lcms2-2.1 ]\nthen\n\ttar -xzf lcms2-2.1.tar.gz\nfi\n";
+			shellScript = "cd $SRCROOT/../../../../ext\n\nif [ ! -d lcms2-2.1 ]\nthen\n\ttar -xzf lcms2-2.1.tar.gz\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
