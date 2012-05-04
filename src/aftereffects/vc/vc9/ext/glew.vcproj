@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\ext\glew-1.7.0\include"
+				AdditionalIncludeDirectories="..\..\..\..\..\ext\glew-1.7.0\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;GLEW_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -108,7 +108,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\ext\glew-1.7.0\include"
+				AdditionalIncludeDirectories="..\..\..\..\..\ext\glew-1.7.0\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;GLEW_STATIC"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -170,7 +170,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\ext\glew-1.7.0\include"
+				AdditionalIncludeDirectories="..\..\..\..\..\ext\glew-1.7.0\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;GLEW_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -235,7 +235,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\ext\glew-1.7.0\include"
+				AdditionalIncludeDirectories="..\..\..\..\..\ext\glew-1.7.0\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;GLEW_STATIC"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -281,11 +281,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\ext\glew-1.7.0\src\glew.c"
+				RelativePath="..\..\..\..\..\ext\glew-1.7.0\src\glew.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\glew-1.7.0\src\glewinfo.c"
+				RelativePath="..\..\..\..\..\ext\glew-1.7.0\src\glewinfo.c"
 				>
 			</File>
 		</Filter>
@@ -295,15 +295,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\ext\glew-1.7.0\include\GL\glew.h"
+				RelativePath="..\..\..\..\..\ext\glew-1.7.0\include\GL\glew.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\glew-1.7.0\include\GL\glxew.h"
+				RelativePath="..\..\..\..\..\ext\glew-1.7.0\include\GL\glxew.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\glew-1.7.0\include\GL\wglew.h"
+				RelativePath="..\..\..\..\..\ext\glew-1.7.0\include\GL\wglew.h"
 				>
 			</File>
 		</Filter>

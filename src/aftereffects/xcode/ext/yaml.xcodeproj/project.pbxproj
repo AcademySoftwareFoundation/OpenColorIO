@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2AB6B01315538484007C3547 /* binary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AB6B01215538484007C3547 /* binary.cpp */; };
 		2ACF55F21477693B00991ED5 /* aliasmanager.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF55A31477693B00991ED5 /* aliasmanager.h */; };
 		2ACF55F31477693B00991ED5 /* anchor.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF55A41477693B00991ED5 /* anchor.h */; };
 		2ACF55F41477693B00991ED5 /* anchordict.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF55A61477693B00991ED5 /* anchordict.h */; };
@@ -86,6 +87,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2AB6B01215538484007C3547 /* binary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = binary.cpp; sourceTree = "<group>"; };
 		2ACF559C1477692300991ED5 /* libyaml.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libyaml.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		2ACF55A31477693B00991ED5 /* aliasmanager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aliasmanager.h; sourceTree = "<group>"; };
 		2ACF55A41477693B00991ED5 /* anchor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = anchor.h; sourceTree = "<group>"; };
@@ -187,20 +189,20 @@
 		0867D691FE84028FC02AAC07 /* yaml */ = {
 			isa = PBXGroup;
 			children = (
-				2ACF55A01477693B00991ED5 /* yaml-cpp-r482 */,
+				2ACF55A01477693B00991ED5 /* yaml-cpp */,
 				034768DDFF38A45A11DB9C8B /* Products */,
 			);
 			name = yaml;
 			sourceTree = "<group>";
 		};
-		2ACF55A01477693B00991ED5 /* yaml-cpp-r482 */ = {
+		2ACF55A01477693B00991ED5 /* yaml-cpp */ = {
 			isa = PBXGroup;
 			children = (
 				2ACF55A11477693B00991ED5 /* include */,
 				2ACF55BE1477693B00991ED5 /* src */,
 			);
-			name = "yaml-cpp-r482";
-			path = "../../ext/yaml-cpp-r482";
+			name = "yaml-cpp";
+			path = "../../../../ext/yaml-cpp";
 			sourceTree = SOURCE_ROOT;
 		};
 		2ACF55A11477693B00991ED5 /* include */ = {
@@ -256,6 +258,7 @@
 			isa = PBXGroup;
 			children = (
 				2ACF55BF1477693B00991ED5 /* aliasmanager.cpp */,
+				2AB6B01215538484007C3547 /* binary.cpp */,
 				2ACF55C01477693B00991ED5 /* collectionstack.h */,
 				2ACF55C11477693B00991ED5 /* contrib */,
 				2ACF55C51477693B00991ED5 /* conversion.cpp */,
@@ -384,7 +387,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2ACF559F1477692B00991ED5 /* Build configuration list for PBXNativeTarget "yaml" */;
 			buildPhases = (
-				2AF56976147991F700F9968C /* ShellScript */,
+				2AF56976147991F700F9968C /* Unpack yaml */,
 				2ACF55981477692300991ED5 /* Headers */,
 				2ACF55991477692300991ED5 /* Sources */,
 				2ACF559A1477692300991ED5 /* Frameworks */,
@@ -424,21 +427,22 @@
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2AF56976147991F700F9968C /* ShellScript */ = {
+		2AF56976147991F700F9968C /* Unpack yaml */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/../../ext/yaml-cpp-r482.tar.gz",
-				"$(SRCROOT)/../../ext/yaml-cpp-r482.patch",
+				"$(SRCROOT)/../../../../ext/yaml-cpp-0.3.0.tar.gz",
+				"$(SRCROOT)/../../../../ext/yaml-cpp-0.3.0.patch",
 			);
+			name = "Unpack yaml";
 			outputPaths = (
-				"$(SRCROOT)/../../ext/yaml-cpp-r482",
+				"$(SRCROOT)/../../../../ext/yaml-cpp",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd $SRCROOT/../../ext\n\nif [ ! -d yaml-cpp-r482 ]\nthen\n\ttar -xzf yaml-cpp-r482.tar.gz\n\tpatch -p0 < yaml-cpp-r482.patch\nfi\n";
+			shellScript = "cd $SRCROOT/../../../../ext\n\nif [ ! -d yaml-cpp ]\nthen\n\ttar -xzf yaml-cpp-0.3.0.tar.gz\n\tpatch -p0 < yaml-cpp-0.3.0.patch\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -474,6 +478,7 @@
 				2ACF56351477693B00991ED5 /* singledocparser.cpp in Sources */,
 				2ACF56371477693B00991ED5 /* stream.cpp in Sources */,
 				2ACF563B1477693B00991ED5 /* tag.cpp in Sources */,
+				2AB6B01315538484007C3547 /* binary.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -488,7 +493,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "../../ext/yaml-cpp-r482/include";
+				HEADER_SEARCH_PATHS = "../../../../ext/yaml-cpp/include";
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
@@ -503,7 +508,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "../../ext/yaml-cpp-r482/include";
+				HEADER_SEARCH_PATHS = "../../../../ext/yaml-cpp/include";
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
 			};

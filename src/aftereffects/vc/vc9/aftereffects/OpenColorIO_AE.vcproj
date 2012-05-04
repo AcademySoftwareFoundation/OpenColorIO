@@ -48,7 +48,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\src\aftereffects;..\..\..\export;..\..\..\ext\boost_1_48_0;&quot;..\..\..\ext\lcms2-2.1\include&quot;;..\;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\SP&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\Win&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util&quot;;&quot;..\..\..\ext\glew-1.7.0\include&quot;"
+				AdditionalIncludeDirectories="..\;..\..\..;..\..\..\..\..\export;..\..\..\..\..\ext\boost_1_48_0;&quot;..\..\..\..\..\ext\lcms2-2.1\include&quot;;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot;;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\SP&quot;;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\Win&quot;;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources&quot;;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util&quot;;&quot;..\..\..\..\..\ext\glew-1.7.0\include&quot;"
 				PreprocessorDefinitions="MSWindows;WIN32;_DEBUG;_WINDOWS;GLEW_STATIC"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -147,7 +147,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="..\..\..\src\aftereffects;..\..\..\export;..\..\..\ext\boost_1_48_0;&quot;..\..\..\ext\lcms2-2.1\include&quot;;..\;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\SP&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\Win&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources&quot;;&quot;..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util&quot;;&quot;..\..\..\ext\glew-1.7.0\include&quot;"
+				AdditionalIncludeDirectories="..;..\..\..;..\..\..\..\..\export;..\..\..\..\..\ext\boost_1_48_0;&quot;..\..\..\..\..\ext\lcms2-2.1\include&quot;;..\;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot;;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\SP&quot;;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers\Win&quot;;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources&quot;;&quot;..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util&quot;;&quot;..\..\..\..\..\ext\glew-1.7.0\include&quot;"
 				PreprocessorDefinitions="MSWindows;WIN32;NDEBUG;_WINDOWS;GLEW_STATIC"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -222,11 +222,11 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 			>
 			<File
-				RelativePath="..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util\AEGP_SuiteHandler.cpp"
+				RelativePath="..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util\AEGP_SuiteHandler.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util\MissingSuiteError.cpp"
+				RelativePath="..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util\MissingSuiteError.cpp"
 				>
 			</File>
 		</Filter>
@@ -235,11 +235,11 @@
 			Filter="h;hpp;hxx;hm;inl;fi;fd"
 			>
 			<File
-				RelativePath="..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util\AEGP_SuiteHandler.h"
+				RelativePath="..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Util\AEGP_SuiteHandler.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\aftereffects\DrawbotBot.h"
+				RelativePath="..\..\..\DrawbotBot.h"
 				>
 			</File>
 			<File
@@ -247,27 +247,27 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE.h"
+				RelativePath="..\..\..\OpenColorIO_AE.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_Context.h"
+				RelativePath="..\..\..\OpenColorIO_AE_Context.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_Dialogs.h"
+				RelativePath="..\..\..\OpenColorIO_AE_Dialogs.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_GL.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\After Effects 8.0\OpenEXR\win\resource.h"
+				RelativePath="..\..\..\OpenColorIO_AE_GL.h"
 				>
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\After Effects 8.0\OpenEXR\win\resource.h"
 				>
 			</File>
 			<Filter
@@ -364,11 +364,11 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 			>
 			<File
-				RelativePath="..\..\..\src\aftereffects\win\OpenColorIO.rc"
+				RelativePath="..\..\..\win\OpenColorIO.rc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_PiPL.r"
+				RelativePath="..\..\..\OpenColorIO_AE_PiPL.r"
 				>
 				<FileConfiguration
 					Name="Debug|x64"
@@ -376,7 +376,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Compiling the PiPL"
-						CommandLine="cl /I &quot;$(ProjectDir)..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot; /D USE_AE_EFFECT_VERS /EP &quot;..\..\..\src\aftereffects\$(InputName).r&quot; &gt; &quot;$(IntDir)&quot;\\&quot;$(InputName).rr&quot;&#x0D;&#x0A;&quot;$(ProjectDir)..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources\PiPLTool&quot; &quot;$(IntDir)\$(InputName).rr&quot; &quot;$(IntDir)\$(InputName).rrc&quot;&#x0D;&#x0A;cl /D &quot;MSWindows&quot; /EP $(IntDir)\$(InputName).rrc &gt;               &quot;$(ProjectDir)&quot;\\&quot;$(InputName)&quot;.rc&#x0D;&#x0A;"
+						CommandLine="cl /I &quot;$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot; /D USE_AE_EFFECT_VERS /EP &quot;..\..\..\$(InputName).r&quot; &gt; &quot;$(IntDir)&quot;\\&quot;$(InputName).rr&quot;&#x0D;&#x0A;&quot;$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources\PiPLTool&quot; &quot;$(IntDir)\$(InputName).rr&quot; &quot;$(IntDir)\$(InputName).rrc&quot;&#x0D;&#x0A;cl /D &quot;MSWindows&quot; /EP $(IntDir)\$(InputName).rrc &gt;               &quot;$(ProjectDir)&quot;\\&quot;$(InputName)&quot;.rc&#x0D;&#x0A;"
 						Outputs="$(ProjectDir)\$(InputName).rc"
 					/>
 				</FileConfiguration>
@@ -386,7 +386,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Compiling the PiPL"
-						CommandLine="cl /I &quot;$(ProjectDir)..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot; /D USE_AE_EFFECT_VERS /EP &quot;..\..\..\src\aftereffects\$(InputName).r&quot; &gt; &quot;$(IntDir)&quot;\\&quot;$(InputName).rr&quot;&#x0D;&#x0A;&quot;$(ProjectDir)..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources\PiPLTool&quot; &quot;$(IntDir)\$(InputName).rr&quot; &quot;$(IntDir)\$(InputName).rrc&quot;&#x0D;&#x0A;cl /D &quot;MSWindows&quot; /EP $(IntDir)\$(InputName).rrc &gt;               &quot;$(ProjectDir)&quot;\\&quot;$(InputName)&quot;.rc&#x0D;&#x0A;"
+						CommandLine="cl /I &quot;$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Headers&quot; /D USE_AE_EFFECT_VERS /EP &quot;..\..\..\$(InputName).r&quot; &gt; &quot;$(IntDir)&quot;\\&quot;$(InputName).rr&quot;&#x0D;&#x0A;&quot;$(ProjectDir)..\..\..\..\..\ext\Adobe After Effects CS5 SDK\Examples\Resources\PiPLTool&quot; &quot;$(IntDir)\$(InputName).rr&quot; &quot;$(IntDir)\$(InputName).rrc&quot;&#x0D;&#x0A;cl /D &quot;MSWindows&quot; /EP $(IntDir)\$(InputName).rrc &gt;               &quot;$(ProjectDir)&quot;\\&quot;$(InputName)&quot;.rc&#x0D;&#x0A;"
 						Outputs="$(ProjectDir)\$(InputName).rc"
 					/>
 				</FileConfiguration>
@@ -415,31 +415,31 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\..\src\aftereffects\DrawbotBot.cpp"
+			RelativePath="..\..\..\DrawbotBot.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE.cpp"
+			RelativePath="..\..\..\OpenColorIO_AE.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_ArbData.cpp"
+			RelativePath="..\..\..\OpenColorIO_AE_ArbData.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_Context.cpp"
+			RelativePath="..\..\..\OpenColorIO_AE_Context.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\src\aftereffects\win\OpenColorIO_AE_Dialogs_Win.cpp"
+			RelativePath="..\..\..\win\OpenColorIO_AE_Dialogs_Win.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\src\aftereffects\win\OpenColorIO_AE_GL_Win.cpp"
+			RelativePath="..\..\..\win\OpenColorIO_AE_GL_Win.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\..\..\src\aftereffects\OpenColorIO_AE_UI.cpp"
+			RelativePath="..\..\..\OpenColorIO_AE_UI.cpp"
 			>
 		</File>
 	</Files>

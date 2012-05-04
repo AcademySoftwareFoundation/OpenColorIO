@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\ext\tinyxml"
+				AdditionalIncludeDirectories="..\..\..\..\..\ext\tinyxml"
 				PreprocessorDefinitions="TIXML_USE_STL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\ext\tinyxml"
+				AdditionalIncludeDirectories="..\..\..\..\..\ext\tinyxml"
 				PreprocessorDefinitions="TIXML_USE_STL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -171,7 +171,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\ext\tinyxml"
+				AdditionalIncludeDirectories="..\..\..\..\..\ext\tinyxml"
 				PreprocessorDefinitions="NDEBUG;TIXML_USE_STL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -235,7 +235,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\ext\tinyxml"
+				AdditionalIncludeDirectories="..\..\..\..\..\ext\tinyxml"
 				PreprocessorDefinitions="NDEBUG;TIXML_USE_STL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -281,19 +281,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\ext\tinyxml\tinystr.cpp"
+				RelativePath="..\..\..\..\..\ext\tinyxml\tinystr.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\tinyxml\tinyxml.cpp"
+				RelativePath="..\..\..\..\..\ext\tinyxml\tinyxml.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\tinyxml\tinyxmlerror.cpp"
+				RelativePath="..\..\..\..\..\ext\tinyxml\tinyxmlerror.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\tinyxml\tinyxmlparser.cpp"
+				RelativePath="..\..\..\..\..\ext\tinyxml\tinyxmlparser.cpp"
 				>
 			</File>
 		</Filter>
@@ -303,11 +303,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\ext\tinyxml\tinystr.h"
+				RelativePath="..\..\..\..\..\ext\tinyxml\tinystr.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\tinyxml\tinyxml.h"
+				RelativePath="..\..\..\..\..\ext\tinyxml\tinyxml.h"
 				>
 			</File>
 		</Filter>

@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2A7CACBB15536CD700F52C98 /* FileFormatIridasLook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A7CACB515536CD700F52C98 /* FileFormatIridasLook.cpp */; };
+		2A7CACBC15536CD700F52C98 /* LookParse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A7CACB615536CD700F52C98 /* LookParse.cpp */; };
+		2A7CACBD15536CD700F52C98 /* LookParse.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A7CACB715536CD700F52C98 /* LookParse.h */; };
+		2A7CACBE15536CD700F52C98 /* NoOps.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A7CACB815536CD700F52C98 /* NoOps.cpp */; };
+		2A7CACBF15536CD700F52C98 /* NoOps.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A7CACB915536CD700F52C98 /* NoOps.h */; };
+		2A7CACC015536CD700F52C98 /* OpOptimizers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A7CACBA15536CD700F52C98 /* OpOptimizers.cpp */; };
 		2ACF56CC14776A1E00991ED5 /* AllocationOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF567614776A1E00991ED5 /* AllocationOp.cpp */; };
 		2ACF56CD14776A1E00991ED5 /* AllocationOp.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF567714776A1E00991ED5 /* AllocationOp.h */; };
 		2ACF56CE14776A1E00991ED5 /* AllocationTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF567814776A1E00991ED5 /* AllocationTransform.cpp */; };
@@ -38,7 +44,6 @@
 		2ACF56E814776A1E00991ED5 /* FileFormatVF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF569214776A1E00991ED5 /* FileFormatVF.cpp */; };
 		2ACF56E914776A1E00991ED5 /* FileTransform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF569314776A1E00991ED5 /* FileTransform.cpp */; };
 		2ACF56EA14776A1E00991ED5 /* FileTransform.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF569414776A1E00991ED5 /* FileTransform.h */; };
-		2ACF56EB14776A1E00991ED5 /* GpuAllocationNoOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF569514776A1E00991ED5 /* GpuAllocationNoOp.cpp */; };
 		2ACF56EC14776A1E00991ED5 /* GpuShaderDesc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF569614776A1E00991ED5 /* GpuShaderDesc.cpp */; };
 		2ACF56ED14776A1E00991ED5 /* GpuShaderUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF569714776A1E00991ED5 /* GpuShaderUtils.cpp */; };
 		2ACF56EE14776A1E00991ED5 /* GpuShaderUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACF569814776A1E00991ED5 /* GpuShaderUtils.h */; };
@@ -95,6 +100,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2A7CACB515536CD700F52C98 /* FileFormatIridasLook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileFormatIridasLook.cpp; sourceTree = "<group>"; };
+		2A7CACB615536CD700F52C98 /* LookParse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LookParse.cpp; sourceTree = "<group>"; };
+		2A7CACB715536CD700F52C98 /* LookParse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LookParse.h; sourceTree = "<group>"; };
+		2A7CACB815536CD700F52C98 /* NoOps.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NoOps.cpp; sourceTree = "<group>"; };
+		2A7CACB915536CD700F52C98 /* NoOps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NoOps.h; sourceTree = "<group>"; };
+		2A7CACBA15536CD700F52C98 /* OpOptimizers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpOptimizers.cpp; sourceTree = "<group>"; };
 		2ACF567114776A0A00991ED5 /* libOpenColorIO.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenColorIO.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		2ACF567614776A1E00991ED5 /* AllocationOp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AllocationOp.cpp; sourceTree = "<group>"; };
 		2ACF567714776A1E00991ED5 /* AllocationOp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AllocationOp.h; sourceTree = "<group>"; };
@@ -127,7 +138,6 @@
 		2ACF569214776A1E00991ED5 /* FileFormatVF.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileFormatVF.cpp; sourceTree = "<group>"; };
 		2ACF569314776A1E00991ED5 /* FileTransform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileTransform.cpp; sourceTree = "<group>"; };
 		2ACF569414776A1E00991ED5 /* FileTransform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileTransform.h; sourceTree = "<group>"; };
-		2ACF569514776A1E00991ED5 /* GpuAllocationNoOp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GpuAllocationNoOp.cpp; sourceTree = "<group>"; };
 		2ACF569614776A1E00991ED5 /* GpuShaderDesc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GpuShaderDesc.cpp; sourceTree = "<group>"; };
 		2ACF569714776A1E00991ED5 /* GpuShaderUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GpuShaderUtils.cpp; sourceTree = "<group>"; };
 		2ACF569814776A1E00991ED5 /* GpuShaderUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GpuShaderUtils.h; sourceTree = "<group>"; };
@@ -238,6 +248,7 @@
 				2ACF568A14776A1E00991ED5 /* FileFormatHDL.cpp */,
 				2ACF568B14776A1E00991ED5 /* FileFormatIridasCube.cpp */,
 				2ACF568C14776A1E00991ED5 /* FileFormatIridasItx.cpp */,
+				2A7CACB515536CD700F52C98 /* FileFormatIridasLook.cpp */,
 				2ACF568D14776A1E00991ED5 /* FileFormatPandora.cpp */,
 				2ACF568E14776A1E00991ED5 /* FileFormatSpi1D.cpp */,
 				2ACF568F14776A1E00991ED5 /* FileFormatSpi3D.cpp */,
@@ -246,7 +257,6 @@
 				2ACF569214776A1E00991ED5 /* FileFormatVF.cpp */,
 				2ACF569314776A1E00991ED5 /* FileTransform.cpp */,
 				2ACF569414776A1E00991ED5 /* FileTransform.h */,
-				2ACF569514776A1E00991ED5 /* GpuAllocationNoOp.cpp */,
 				2ACF569614776A1E00991ED5 /* GpuShaderDesc.cpp */,
 				2ACF569714776A1E00991ED5 /* GpuShaderUtils.cpp */,
 				2ACF569814776A1E00991ED5 /* GpuShaderUtils.h */,
@@ -260,6 +270,8 @@
 				2ACF56A014776A1E00991ED5 /* Logging.h */,
 				2ACF56A114776A1E00991ED5 /* LogOps.cpp */,
 				2ACF56A214776A1E00991ED5 /* LogOps.h */,
+				2A7CACB615536CD700F52C98 /* LookParse.cpp */,
+				2A7CACB715536CD700F52C98 /* LookParse.h */,
 				2ACF56A314776A1E00991ED5 /* LogTransform.cpp */,
 				2ACF56A414776A1E00991ED5 /* Look.cpp */,
 				2ACF56A514776A1E00991ED5 /* LookTransform.cpp */,
@@ -274,11 +286,14 @@
 				2ACF56AE14776A1E00991ED5 /* MatrixTransform.cpp */,
 				2ACF56AF14776A1E00991ED5 /* md5 */,
 				2ACF56B214776A1E00991ED5 /* Mutex.h */,
+				2A7CACB815536CD700F52C98 /* NoOps.cpp */,
+				2A7CACB915536CD700F52C98 /* NoOps.h */,
 				2ACF56B314776A1E00991ED5 /* OCIOYaml.cpp */,
 				2ACF56B414776A1E00991ED5 /* OCIOYaml.h */,
 				2ACF56B514776A1E00991ED5 /* Op.cpp */,
 				2ACF56B614776A1E00991ED5 /* Op.h */,
 				2ACF56B714776A1E00991ED5 /* OpBuilders.h */,
+				2A7CACBA15536CD700F52C98 /* OpOptimizers.cpp */,
 				2ACF56B814776A1E00991ED5 /* ParseUtils.cpp */,
 				2ACF56B914776A1E00991ED5 /* ParseUtils.h */,
 				2ACF56BA14776A1E00991ED5 /* PathUtils.cpp */,
@@ -299,7 +314,7 @@
 				2ACF56CB14776A1E00991ED5 /* UnitTest.h */,
 			);
 			name = core;
-			path = ../src/core;
+			path = ../../core;
 			sourceTree = SOURCE_ROOT;
 		};
 		2ACF56AF14776A1E00991ED5 /* md5 */ = {
@@ -356,6 +371,8 @@
 				2ACF571C14776A1E00991ED5 /* TruelightOp.h in Headers */,
 				2ACF571F14776A1E00991ED5 /* UnitTest.h in Headers */,
 				2ACF573F14776B7000991ED5 /* OpenColorABI.h in Headers */,
+				2A7CACBD15536CD700F52C98 /* LookParse.h in Headers */,
+				2A7CACBF15536CD700F52C98 /* NoOps.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -436,7 +453,6 @@
 				2ACF56E714776A1E00991ED5 /* FileFormatTruelight.cpp in Sources */,
 				2ACF56E814776A1E00991ED5 /* FileFormatVF.cpp in Sources */,
 				2ACF56E914776A1E00991ED5 /* FileTransform.cpp in Sources */,
-				2ACF56EB14776A1E00991ED5 /* GpuAllocationNoOp.cpp in Sources */,
 				2ACF56EC14776A1E00991ED5 /* GpuShaderDesc.cpp in Sources */,
 				2ACF56ED14776A1E00991ED5 /* GpuShaderUtils.cpp in Sources */,
 				2ACF56EF14776A1E00991ED5 /* GroupTransform.cpp in Sources */,
@@ -465,6 +481,10 @@
 				2ACF571B14776A1E00991ED5 /* TruelightOp.cpp in Sources */,
 				2ACF571D14776A1E00991ED5 /* TruelightTransform.cpp in Sources */,
 				2ACF571E14776A1E00991ED5 /* UnitTest.cpp in Sources */,
+				2A7CACBB15536CD700F52C98 /* FileFormatIridasLook.cpp in Sources */,
+				2A7CACBC15536CD700F52C98 /* LookParse.cpp in Sources */,
+				2A7CACBE15536CD700F52C98 /* NoOps.cpp in Sources */,
+				2A7CACC015536CD700F52C98 /* OpOptimizers.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -481,9 +501,9 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					../export,
-					../ext/tinyxml,
-					"../ext/yaml-cpp-r482/include",
+					../../../export,
+					../../../ext/tinyxml,
+					"../../../ext/yaml-cpp/include",
 				);
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
@@ -503,9 +523,9 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					../export,
-					../ext/tinyxml,
-					"../ext/yaml-cpp-r482/include",
+					../../../export,
+					../../../ext/tinyxml,
+					"../../../ext/yaml-cpp/include",
 				);
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;

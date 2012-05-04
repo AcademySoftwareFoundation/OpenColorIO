@@ -64,7 +64,7 @@
 				2ACF554F1477685000991ED5 /* tinyxmlparser.cpp */,
 			);
 			name = tinyxml;
-			path = ../../ext/tinyxml;
+			path = ../../../../ext/tinyxml;
 			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
@@ -132,16 +132,16 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/../../ext/tinyxml_2_6_1.tar.gz",
-				"$(SRCROOT)/../../ext/tinyxml_2_6_1.patch",
+				"$(SRCROOT)/../../../../ext/tinyxml_2_6_1.tar.gz",
+				"$(SRCROOT)/../../../../ext/tinyxml_2_6_1.patch",
 			);
 			name = "Unpack tinyxml";
 			outputPaths = (
-				"$(SRCROOT)/../../ext/tinyxml",
+				"$(SRCROOT)/../../../../ext/tinyxml",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd $SRCROOT/../../ext\n\nif [ ! -d tinyxml ]\nthen\n\ttar -xzf tinyxml_2_6_1.tar.gz\n\tpatch -p0 < tinyxml_2_6_1.patch\nfi\n";
+			shellScript = "cd $SRCROOT/../../../../ext\n\nif [ ! -d tinyxml ]\nthen\n\ttar -xzf tinyxml_2_6_1.tar.gz\n\tpatch -p0 < tinyxml_2_6_1.patch\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

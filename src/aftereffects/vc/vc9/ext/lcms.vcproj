@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\ext\lcms2-2.1\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\lcms2-2.1\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -108,7 +108,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\..\ext\lcms2-2.1\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\lcms2-2.1\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -170,7 +170,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\ext\lcms2-2.1\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\lcms2-2.1\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -235,7 +235,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\..\ext\lcms2-2.1\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\lcms2-2.1\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -281,99 +281,99 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmscam02.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmscam02.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmscgats.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmscgats.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmscnvrt.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmscnvrt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmserr.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmserr.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsgamma.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsgamma.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsgmt.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsgmt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsintrp.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsintrp.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsio0.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsio0.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsio1.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsio1.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmslut.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmslut.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsmd5.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsmd5.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsmtrx.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsmtrx.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsnamed.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsnamed.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsopt.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsopt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmspack.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmspack.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmspcs.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmspcs.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsplugin.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsplugin.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsps2.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsps2.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmssamp.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmssamp.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmssm.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmssm.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmstypes.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmstypes.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsvirt.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsvirt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmswtpnt.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmswtpnt.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\cmsxform.c"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\cmsxform.c"
 				>
 			</File>
 		</Filter>
@@ -383,15 +383,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\include\lcms2.h"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\include\lcms2.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\src\lcms2_internal.h"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\src\lcms2_internal.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\ext\lcms2-2.1\include\lcms2_plugin.h"
+				RelativePath="..\..\..\..\..\ext\lcms2-2.1\include\lcms2_plugin.h"
 				>
 			</File>
 		</Filter>

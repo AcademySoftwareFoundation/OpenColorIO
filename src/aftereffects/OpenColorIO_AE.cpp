@@ -48,7 +48,7 @@ static PF_Err About(
                 "OpenColorIO\r\r"
                 "opencolorio.org\r"
                 "version %s",
-                OCIO_VERSION);
+                OCIO::GetVersion() );
                 
     return PF_Err_NONE;
 }
