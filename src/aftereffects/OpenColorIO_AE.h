@@ -104,6 +104,15 @@ enum {
 };
 typedef A_u_char OCIO_Source;
 
+enum {
+    OCIO_INTERP_UNKNOWN = 0,
+    OCIO_INTERP_NEAREST = 1,
+    OCIO_INTERP_LINEAR = 2,
+    OCIO_INTERP_TETRAHEDRAL = 3,
+    OCIO_INTERP_BEST = 255
+};
+typedef A_u_char OCIO_Interp;
+
 typedef struct {
     A_u_char        version; // version of this data structure
     OCIO_Action     action;
@@ -111,7 +120,8 @@ typedef struct {
     OCIO_Storage    storage; // storage not used...yet
     A_u_long        storage_size;
     OCIO_Source     source;
-    A_u_char        reserved[55]; // 64 pre-path bytes
+    OCIO_Interp     interpolation;
+    A_u_char        reserved[54]; // 64 pre-path bytes
     char            path[ARB_PATH_LEN+1];
     char            relative_path[ARB_PATH_LEN+1];
     char            input[ARB_SPACE_LEN+1];
