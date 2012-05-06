@@ -447,7 +447,7 @@ static PF_Err DrawEvent(
                     
                     bot.MoveTo(panel_left + MENUS_INDENT_H, buttons_bottom + MENUS_GAP_V);
                     
-                    const char *txt =   arb_data->interpolation == OCIO_INTERP_NEAREST ? "Nearest" :
+                    const char *txt =   arb_data->interpolation == OCIO_INTERP_NEAREST ? "Nearest Neighbor" :
                                         arb_data->interpolation == OCIO_INTERP_LINEAR ? "Linear" :
                                         arb_data->interpolation == OCIO_INTERP_TETRAHEDRAL ? "Tetrahedral" :
                                         arb_data->interpolation == OCIO_INTERP_BEST ? "Best" :
@@ -640,17 +640,24 @@ static void DoClickPath(
         
         // try to retain settings if it looks like the same situation,
         // possibly fixing a moved path
-        if( (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
+        if(OCIO_ACTION_NONE == arb_data->action ||
+            (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
             (OCIO_ACTION_LUT != new_context->getAction() && OCIO_ACTION_LUT == arb_data->action) ||
-            -1 == FindInVec(new_context->getInputs(), arb_data->input) ||
-            -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-            -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
-            -1 == FindInVec(new_context->getDevices(), arb_data->device) )
+            (OCIO_ACTION_LUT != new_context->getAction() &&
+               (-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
+                -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
+                -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
+                -1 == FindInVec(new_context->getDevices(), arb_data->device) ) ) )
         {
             // Configuration is different, so initialize defaults
             arb_data->action = seq_data->context->getAction();
             
-            if(arb_data->action != OCIO_ACTION_LUT)
+            if(arb_data->action == OCIO_ACTION_LUT)
+            {
+                arb_data->invert = FALSE;
+                arb_data->interpolation = OCIO_INTERP_LINEAR;
+            }
+            else
             {
                 strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
                 strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
@@ -663,10 +670,7 @@ static void DoClickPath(
             // Configuration is the same, retain current settings
             if(arb_data->action == OCIO_ACTION_LUT)
             {
-                if(arb_data->invert)
-                {
-                    seq_data->context->setupLUT(arb_data->invert, arb_data->interpolation);
-                }
+                seq_data->context->setupLUT(arb_data->invert, arb_data->interpolation);
             }
             else if(arb_data->action == OCIO_ACTION_CONVERT)
             {
@@ -805,12 +809,13 @@ static void DoClickConfig(
             // try to retain settings if it looks like the same situation,
             // possibly fixing a moved path
             if(OCIO_ACTION_NONE == arb_data->action ||
-				(OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
+                (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
                 (OCIO_ACTION_LUT != new_context->getAction() && OCIO_ACTION_LUT == arb_data->action) ||
-                -1 == FindInVec(new_context->getInputs(), arb_data->input) ||
-                -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-                -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
-                -1 == FindInVec(new_context->getDevices(), arb_data->device) )
+                (OCIO_ACTION_LUT != new_context->getAction() &&
+                   (-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
+                    -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
+                    -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
+                    -1 == FindInVec(new_context->getDevices(), arb_data->device) ) ) )
             {
                 // Configuration is different, so initialize defaults
                 arb_data->action = seq_data->context->getAction();
@@ -977,7 +982,7 @@ static void DoClickMenus(
         {
             if(reg == REGION_MENU1)
             {
-                menu_items.push_back("Nearest");
+                menu_items.push_back("Nearest Neighbor");
                 menu_items.push_back("Linear");
                 menu_items.push_back("Tetrahedral");
                 menu_items.push_back("(-");
