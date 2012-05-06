@@ -804,7 +804,8 @@ static void DoClickConfig(
             
             // try to retain settings if it looks like the same situation,
             // possibly fixing a moved path
-            if( (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
+            if(OCIO_ACTION_NONE == arb_data->action ||
+				(OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
                 (OCIO_ACTION_LUT != new_context->getAction() && OCIO_ACTION_LUT == arb_data->action) ||
                 -1 == FindInVec(new_context->getInputs(), arb_data->input) ||
                 -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
@@ -814,7 +815,7 @@ static void DoClickConfig(
                 // Configuration is different, so initialize defaults
                 arb_data->action = seq_data->context->getAction();
                 
-                if(arb_data->action != OCIO_ACTION_LUT)
+                if(arb_data->action == OCIO_ACTION_LUT)
                 {
                     arb_data->invert = FALSE;
                     arb_data->interpolation = OCIO_INTERP_LINEAR;
