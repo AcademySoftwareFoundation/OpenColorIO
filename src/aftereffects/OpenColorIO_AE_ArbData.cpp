@@ -57,6 +57,7 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
             arb_data->storage           = OCIO_STORAGE_NONE;
             arb_data->storage_size      = 0;
             arb_data->source            = OCIO_SOURCE_NONE;
+            arb_data->interpolation     = OCIO_INTERP_LINEAR;
             
             arb_data->path[0]           = '\0';
             arb_data->relative_path[0]  = '\0';
@@ -126,6 +127,8 @@ static void CopyArbData(ArbitraryData *out_arb_data, ArbitraryData *in_arb_data)
     out_arb_data->storage_size = in_arb_data->storage_size;
     
     out_arb_data->source = in_arb_data->source;
+    
+    out_arb_data->interpolation = in_arb_data->interpolation;
     
     strcpy(out_arb_data->path, in_arb_data->path);
     strcpy(out_arb_data->relative_path, in_arb_data->relative_path);
@@ -299,6 +302,7 @@ static PF_Err ArbCompare(PF_InData *in_data, PF_OutData *out_data,
             a_data->action == b_data->action &&
             a_data->invert == b_data->invert &&
             a_data->source == b_data->source &&
+            a_data->interpolation == b_data->interpolation &&
             !strcmp(a_data->path, b_data->path) &&
             !strcmp(a_data->input, b_data->input) &&
             !strcmp(a_data->output, b_data->output) &&

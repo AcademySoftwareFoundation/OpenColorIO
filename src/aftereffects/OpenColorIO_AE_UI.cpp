@@ -320,7 +320,7 @@ static PF_Err DrawEvent(
             }
             else if(arb_data->source == OCIO_SOURCE_CUSTOM)
             {
-                config_menu_text = "Custom";
+                config_menu_text = (arb_data->action == OCIO_ACTION_LUT ? "LUT" : "Custom");
             }
             
             DrawMenu(bot, "Configuration:", config_menu_text.c_str());
@@ -441,6 +441,19 @@ static PF_Err DrawEvent(
                     bot.MoveTo(panel_left + BUTTONS_INDENT_H, buttons_top);
                     
                     DrawButton(bot, "Invert", BUTTON_WIDTH, arb_data->invert);
+                    
+                    // interpolation menu
+                    int buttons_bottom = buttons_top + BUTTON_HEIGHT;
+                    
+                    bot.MoveTo(panel_left + MENUS_INDENT_H, buttons_bottom + MENUS_GAP_V);
+                    
+                    const char *txt =   arb_data->interpolation == OCIO_INTERP_NEAREST ? "Nearest Neighbor" :
+                                        arb_data->interpolation == OCIO_INTERP_LINEAR ? "Linear" :
+                                        arb_data->interpolation == OCIO_INTERP_TETRAHEDRAL ? "Tetrahedral" :
+                                        arb_data->interpolation == OCIO_INTERP_BEST ? "Best" :
+                                        "Unknown";
+                    
+                    DrawMenu(bot, "Interpolation:", txt);
                 }
                 else if(arb_data->action == OCIO_ACTION_CONVERT ||
                         arb_data->action == OCIO_ACTION_DISPLAY)
@@ -627,17 +640,24 @@ static void DoClickPath(
         
         // try to retain settings if it looks like the same situation,
         // possibly fixing a moved path
-        if( (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
+        if(OCIO_ACTION_NONE == arb_data->action ||
+            (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
             (OCIO_ACTION_LUT != new_context->getAction() && OCIO_ACTION_LUT == arb_data->action) ||
-            -1 == FindInVec(new_context->getInputs(), arb_data->input) ||
-            -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-            -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
-            -1 == FindInVec(new_context->getDevices(), arb_data->device) )
+            (OCIO_ACTION_LUT != new_context->getAction() &&
+               (-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
+                -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
+                -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
+                -1 == FindInVec(new_context->getDevices(), arb_data->device) ) ) )
         {
             // Configuration is different, so initialize defaults
             arb_data->action = seq_data->context->getAction();
             
-            if(arb_data->action != OCIO_ACTION_LUT)
+            if(arb_data->action == OCIO_ACTION_LUT)
+            {
+                arb_data->invert = FALSE;
+                arb_data->interpolation = OCIO_INTERP_LINEAR;
+            }
+            else
             {
                 strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
                 strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
@@ -650,10 +670,7 @@ static void DoClickPath(
             // Configuration is the same, retain current settings
             if(arb_data->action == OCIO_ACTION_LUT)
             {
-                if(arb_data->invert)
-                {
-                    seq_data->context->setupLUT(arb_data->invert);
-                }
+                seq_data->context->setupLUT(arb_data->invert, arb_data->interpolation);
             }
             else if(arb_data->action == OCIO_ACTION_CONVERT)
             {
@@ -791,17 +808,24 @@ static void DoClickConfig(
             
             // try to retain settings if it looks like the same situation,
             // possibly fixing a moved path
-            if( (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
+            if(OCIO_ACTION_NONE == arb_data->action ||
+                (OCIO_ACTION_LUT == new_context->getAction() && OCIO_ACTION_LUT != arb_data->action) ||
                 (OCIO_ACTION_LUT != new_context->getAction() && OCIO_ACTION_LUT == arb_data->action) ||
-                -1 == FindInVec(new_context->getInputs(), arb_data->input) ||
-                -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
-                -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
-                -1 == FindInVec(new_context->getDevices(), arb_data->device) )
+                (OCIO_ACTION_LUT != new_context->getAction() &&
+                   (-1 == FindInVec(new_context->getInputs(), arb_data->input) ||
+                    -1 == FindInVec(new_context->getInputs(), arb_data->output) ||
+                    -1 == FindInVec(new_context->getTransforms(), arb_data->transform) ||
+                    -1 == FindInVec(new_context->getDevices(), arb_data->device) ) ) )
             {
                 // Configuration is different, so initialize defaults
                 arb_data->action = seq_data->context->getAction();
                 
-                if(arb_data->action != OCIO_ACTION_LUT)
+                if(arb_data->action == OCIO_ACTION_LUT)
+                {
+                    arb_data->invert = FALSE;
+                    arb_data->interpolation = OCIO_INTERP_LINEAR;
+                }
+                else
                 {
                     strncpy(arb_data->input, seq_data->context->getInput().c_str(), ARB_SPACE_LEN);
                     strncpy(arb_data->output, seq_data->context->getOutput().c_str(), ARB_SPACE_LEN);
@@ -814,10 +838,7 @@ static void DoClickConfig(
                 // Configuration is the same, retain current settings
                 if(arb_data->action == OCIO_ACTION_LUT)
                 {
-                    if(arb_data->invert)
-                    {
-                        seq_data->context->setupLUT(arb_data->invert);
-                    }
+                    seq_data->context->setupLUT(arb_data->invert, arb_data->interpolation);
                 }
                 else if(arb_data->action == OCIO_ACTION_CONVERT)
                 {
@@ -854,7 +875,7 @@ static void DoClickConvertDisplay(
             // doing it this way so that any exceptions thrown by setupLUT
             // because the LUT can't be inverted are thrown before
             // I actually chenge the ArbData setting
-            seq_data->context->setupLUT(!arb_data->invert);
+            seq_data->context->setupLUT(!arb_data->invert, arb_data->interpolation);
             
             arb_data->invert = !arb_data->invert;
         
@@ -957,7 +978,24 @@ static void DoClickMenus(
         MenuVec menu_items;
         int selected_item;
         
-        if(arb_data->action == OCIO_ACTION_CONVERT)
+        if(arb_data->action == OCIO_ACTION_LUT)
+        {
+            if(reg == REGION_MENU1)
+            {
+                menu_items.push_back("Nearest Neighbor");
+                menu_items.push_back("Linear");
+                menu_items.push_back("Tetrahedral");
+                menu_items.push_back("(-");
+                menu_items.push_back("Best");
+                
+                selected_item = arb_data->interpolation == OCIO_INTERP_NEAREST ? 0 :
+                                arb_data->interpolation == OCIO_INTERP_LINEAR ? 1 :
+                                arb_data->interpolation == OCIO_INTERP_TETRAHEDRAL ? 2 :
+                                arb_data->interpolation == OCIO_INTERP_BEST ? 4 :
+                                -1;
+            }
+        }
+        else if(arb_data->action == OCIO_ACTION_CONVERT)
         {
             menu_items = seq_data->context->getInputs();
             
@@ -1007,7 +1045,19 @@ static void DoClickMenus(
         {
             std::string color_space = menu_items[ result ];
             
-            if(arb_data->action == OCIO_ACTION_CONVERT)
+            if(arb_data->action == OCIO_ACTION_LUT)
+            {
+                if(reg == REGION_MENU1)
+                {
+                    arb_data->interpolation =   result == 0 ? OCIO_INTERP_NEAREST :
+                                                result == 2 ? OCIO_INTERP_TETRAHEDRAL :
+                                                result == 4 ? OCIO_INTERP_BEST :
+                                                OCIO_INTERP_LINEAR;
+                                            
+                    seq_data->context->setupLUT(arb_data->invert, arb_data->interpolation);
+                }
+            }
+            else if(arb_data->action == OCIO_ACTION_CONVERT)
             {
                 if(reg == REGION_MENU1)
                 {
@@ -1019,8 +1069,6 @@ static void DoClickMenus(
                 }
                 
                 seq_data->context->setupConvert(arb_data->input, arb_data->output);
-                
-                params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
             }
             else if(arb_data->action == OCIO_ACTION_DISPLAY)
             {
@@ -1038,9 +1086,9 @@ static void DoClickMenus(
                 }
                 
                 seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
-                
-                params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
             }
+                    
+            params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
         }
     }
 }
@@ -1061,8 +1109,7 @@ static PF_Err DoClick(
     
     if(event_extra->effect_win.area == PF_EA_CONTROL)
     {
-        bool menus_visible = (arb_data->action == OCIO_ACTION_CONVERT ||
-                                arb_data->action == OCIO_ACTION_DISPLAY);
+        bool menus_visible = (arb_data->action != OCIO_ACTION_NONE);
         bool third_menu = (arb_data->action == OCIO_ACTION_DISPLAY);
         
         PF_Point local_point;

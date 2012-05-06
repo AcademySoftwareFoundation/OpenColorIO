@@ -10,6 +10,7 @@
 		2A180A6914801EB90000D11A /* OpenColorIO_AE_MonitorProfileChooser.xib in Resources */ = {isa = PBXBuildFile; fileRef = 2A180A6814801EB90000D11A /* OpenColorIO_AE_MonitorProfileChooser.xib */; };
 		2A180A6D14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.m in Sources */ = {isa = PBXBuildFile; fileRef = 2A180A6B14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.m */; };
 		2A3BAA7110C0F40600AD32F2 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A3BAA7010C0F40600AD32F2 /* Cocoa.framework */; };
+		2A4A0AF61554679400D5AEB7 /* ocioicc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A4A0AF41554679400D5AEB7 /* ocioicc.cpp */; };
 		2A60CADB1491A51C009D6DBF /* OpenColorIO_AE_GL_Cocoa.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2A60CADA1491A51C009D6DBF /* OpenColorIO_AE_GL_Cocoa.mm */; };
 		2A60CB091491A9FF009D6DBF /* AGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A60CB081491A9FF009D6DBF /* AGL.framework */; };
 		2A60CB0B1491A9FF009D6DBF /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A60CB0A1491A9FF009D6DBF /* OpenGL.framework */; };
@@ -93,6 +94,8 @@
 		2A180A6B14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OpenColorIO_AE_MonitorProfileChooser_Controller.m; path = ../../mac/OpenColorIO_AE_MonitorProfileChooser_Controller.m; sourceTree = "<group>"; usesTabs = 0; };
 		2A180A6C14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE_MonitorProfileChooser_Controller.h; path = ../../mac/OpenColorIO_AE_MonitorProfileChooser_Controller.h; sourceTree = "<group>"; usesTabs = 0; };
 		2A3BAA7010C0F40600AD32F2 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		2A4A0AF41554679400D5AEB7 /* ocioicc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ocioicc.cpp; path = ../../../apps/ociobakelut/ocioicc.cpp; sourceTree = SOURCE_ROOT; };
+		2A4A0AF51554679400D5AEB7 /* ocioicc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ocioicc.h; path = ../../../apps/ociobakelut/ocioicc.h; sourceTree = SOURCE_ROOT; };
 		2A60CAD91491A506009D6DBF /* OpenColorIO_AE_GL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OpenColorIO_AE_GL.h; path = ../../OpenColorIO_AE_GL.h; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2A60CADA1491A51C009D6DBF /* OpenColorIO_AE_GL_Cocoa.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OpenColorIO_AE_GL_Cocoa.mm; path = ../../mac/OpenColorIO_AE_GL_Cocoa.mm; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 		2A60CB081491A9FF009D6DBF /* AGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AGL.framework; path = System/Library/Frameworks/AGL.framework; sourceTree = SDKROOT; };
@@ -191,6 +194,8 @@
 				2AF56B9F147A458800F9968C /* MissingSuiteError.cpp */,
 				2AF56D05147AB5C900F9968C /* DrawbotBot.h */,
 				2AF56D04147AB5C900F9968C /* DrawbotBot.cpp */,
+				2A4A0AF51554679400D5AEB7 /* ocioicc.h */,
+				2A4A0AF41554679400D5AEB7 /* ocioicc.cpp */,
 				2A180A6814801EB90000D11A /* OpenColorIO_AE_MonitorProfileChooser.xib */,
 				2A180A6C14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.h */,
 				2A180A6B14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.m */,
@@ -351,6 +356,7 @@
 				2AF57D20147C994100F9968C /* OpenColorIO_AE_Context.cpp in Sources */,
 				2A180A6D14801FFA0000D11A /* OpenColorIO_AE_MonitorProfileChooser_Controller.m in Sources */,
 				2A60CADB1491A51C009D6DBF /* OpenColorIO_AE_GL_Cocoa.mm in Sources */,
+				2A4A0AF61554679400D5AEB7 /* ocioicc.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <sstream>
 
-#include "lcms2.h"
+#include "ocioicc.h"
 
 #include "OpenColorIO_AE_Dialogs.h"
 
@@ -386,7 +386,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
         {
             _config = OCIO::Config::Create();
             
-            setupLUT();
+            setupLUT(false, OCIO_INTERP_LINEAR);
         }
     }
     else
@@ -486,7 +486,7 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
         {
             _config = OCIO::Config::Create();
             
-            setupLUT(arb_data->invert);
+            setupLUT(arb_data->invert, arb_data->interpolation);
         }
     }
     else
@@ -553,9 +553,11 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
     // Returning false means the context will be deleted and rebuilt.
     if(arb_data->action == OCIO_ACTION_LUT)
     {
-        if(_invert != (bool)arb_data->invert || force_reset)
+        if(_invert != (bool)arb_data->invert ||
+            _interpolation != arb_data->interpolation ||
+            force_reset)
         {
-            setupLUT(arb_data->invert);
+            setupLUT(arb_data->invert, arb_data->interpolation);
         }
     }
     else if(arb_data->action == OCIO_ACTION_CONVERT)
@@ -625,84 +627,30 @@ void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *xform, 
 }
 
 
-void OpenColorIO_AE_Context::setupLUT(bool invert)
+void OpenColorIO_AE_Context::setupLUT(bool invert, OCIO_Interp interpolation)
 {
     OCIO::FileTransformRcPtr transform = OCIO::FileTransform::Create();
     
+    if(interpolation != OCIO_INTERP_NEAREST && interpolation != OCIO_INTERP_LINEAR &&
+        interpolation != OCIO_INTERP_TETRAHEDRAL && interpolation != OCIO_INTERP_BEST)
+    {
+        interpolation = OCIO_INTERP_LINEAR;
+    }
+    
     transform->setSrc( _path.c_str() );
-    transform->setInterpolation(OCIO::INTERP_LINEAR);
+    transform->setInterpolation(static_cast<OCIO::Interpolation>(interpolation));
     transform->setDirection(invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
     
     _processor = _config->getProcessor(transform);
     
     _invert = invert;
+    _interpolation = interpolation;
     
     _action = OCIO_ACTION_LUT;
     
     UpdateOCIOGLState();
 }
 
-
-// these functions ripped out of ocio2icc
-static void ErrorHandler(cmsContext /*ContextID*/, cmsUInt32Number err, const char *Text)
-{
-    throw OCIO::Exception("lcms error");
-}
-
-typedef struct
-{
-    cmsHTRANSFORM to_PCS16;
-    cmsHTRANSFORM from_PCS16;
-    //OCIO::ConstProcessorRcPtr shaper_processor;
-    OCIO::ConstProcessorRcPtr processor;
-} SamplerData;
-
-static void Add3GammaCurves(cmsPipeline* lut, cmsFloat64Number Curve)
-{
-    cmsToneCurve* id = cmsBuildGamma(NULL, Curve);
-    cmsToneCurve* id3[3];
-    id3[0] = id;
-    id3[1] = id;
-    id3[2] = id;
-    cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocToneCurves(NULL, 3, id3));
-    cmsFreeToneCurve(id);
-}
-
-static void AddIdentityMatrix(cmsPipeline* lut)
-{
-    const cmsFloat64Number Identity[] = {
-        1, 0, 0,
-        0, 1, 0, 
-        0, 0, 1, 
-        0, 0, 0 };
-    cmsPipelineInsertStage(lut, cmsAT_END, cmsStageAllocMatrix(NULL, 3, 3, Identity, NULL));
-}
-
-static cmsInt32Number Display2PCS_Sampler16(const cmsUInt16Number in[],
-                                            cmsUInt16Number out[], void* userdata)
-{
-    //std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
-    SamplerData* data = (SamplerData*) userdata;
-    cmsFloat32Number pix[3] = { static_cast<float>(in[0])/65535.f,
-                                static_cast<float>(in[1])/65535.f,
-                                static_cast<float>(in[2])/65535.f};
-    data->processor->applyRGB(pix);
-    out[0] = (cmsUInt16Number)std::max(std::min(pix[0] * 65535.f, 65535.f), 0.f);
-    out[1] = (cmsUInt16Number)std::max(std::min(pix[1] * 65535.f, 65535.f), 0.f);
-    out[2] = (cmsUInt16Number)std::max(std::min(pix[2] * 65535.f, 65535.f), 0.f);
-    cmsDoTransform(data->to_PCS16, out, out, 1);
-    return 1;
-}
-
-static cmsInt32Number PCS2Display_Sampler16(const cmsUInt16Number in[],
-                                            cmsUInt16Number out[], void* userdata)
-{
-    //std::cout << "r" << in[0] << " g" << in[1] << " b" << in[2] << "\n";
-    SamplerData* data = (SamplerData*) userdata;
-    cmsDoTransform(data->from_PCS16, in, out, 1);
-    // we don't have a reverse Lab -> Display transform
-    return 1;
-}
 
 bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::string &display_icc_path)
 {
@@ -723,126 +671,8 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
         std::string description = path.substr(path.find_last_of(delimiter) + 1,
                                             1 + filename_end - filename_start);
         
-        
-        // Create the ICC Profile
-
-        // Setup the Error Handler
-        cmsSetLogErrorHandler(ErrorHandler);
-
-        // D65 white point
-        cmsCIExyY whitePoint;
-        cmsWhitePointFromTemp(&whitePoint, whitepointtemp);
-
-        // LAB PCS
-        cmsHPROFILE labProfile = cmsCreateLab4ProfileTHR(NULL, &whitePoint);
-
-        // Display (OCIO sRGB cube -> LAB)
-        cmsHPROFILE DisplayProfile;
-        if(display_icc_path != "")
-            DisplayProfile = cmsOpenProfileFromFile(display_icc_path.c_str(), "r");
-        else
-            DisplayProfile = cmsCreate_sRGBProfileTHR(NULL);
-
-        // Create an empty RGB Profile
-        cmsHPROFILE hProfile = cmsCreateRGBProfileTHR(NULL, &whitePoint, NULL, NULL);
-
-        //std::cout << "[OpenColorIO INFO]: Setting up Profile: " << outputfile << "\n";
-
-        // Added Header fields
-        cmsSetProfileVersion(hProfile, 4.2);
-        cmsSetDeviceClass(hProfile, cmsSigDisplayClass);
-        cmsSetColorSpace(hProfile, cmsSigRgbData);
-        cmsSetPCS(hProfile, cmsSigLabData);
-        cmsSetHeaderRenderingIntent(hProfile, INTENT_PERCEPTUAL);
-
-        //
-        cmsMLU* DescriptionMLU = cmsMLUalloc(NULL, 1);
-        cmsMLU* CopyrightMLU = cmsMLUalloc(NULL, 1);
-        cmsMLUsetASCII(DescriptionMLU, "en", "US", description.c_str());
-        cmsMLUsetASCII(CopyrightMLU, "en", "US", copyright.c_str());
-        cmsWriteTag(hProfile, cmsSigProfileDescriptionTag, DescriptionMLU);
-        cmsWriteTag(hProfile, cmsSigCopyrightTag, CopyrightMLU);
-
-        //
-        SamplerData data;
-        data.processor = _processor;
-
-        // 16Bit
-        data.to_PCS16 = cmsCreateTransform(DisplayProfile, TYPE_RGB_16, labProfile, TYPE_LabV2_16,
-                                           INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
-        data.from_PCS16 = cmsCreateTransform(labProfile, TYPE_LabV2_16, DisplayProfile, TYPE_RGB_16,
-                                             INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
-
-        //
-        // AToB0Tag - Device to PCS (16-bit) intent of 0 (perceptual)
-        //
-        // cmsSigCurveSetElemType
-        // `- cmsSigCLutElemType
-        //  `- cmsSigCurveSetElemType
-        //   `- cmsSigMatrixElemType
-        //    `- cmsSigCurveSetElemType
-        //
-        //std::cout << "[OpenColorIO INFO]: Adding AToB0Tag\n";
-        cmsPipeline* AToB0Tag = cmsPipelineAlloc(NULL, 3, 3);
-
-        Add3GammaCurves(AToB0Tag, 1.f); // cmsSigCurveSetElemType
-
-        // cmsSigCLutElemType
-        cmsStage* AToB0Clut = cmsStageAllocCLut16bit(NULL, cubesize, 3, 3, NULL);
-        //std::cout << "[OpenColorIO INFO]: Sampling AToB0 CLUT from Display to Lab\n";
-        cmsStageSampleCLut16bit(AToB0Clut, Display2PCS_Sampler16, &data, 0);
-        cmsPipelineInsertStage(AToB0Tag, cmsAT_END, AToB0Clut);
-
-        Add3GammaCurves(AToB0Tag, 1.f); // cmsSigCurveSetElemType
-        AddIdentityMatrix(AToB0Tag);    // cmsSigMatrixElemType
-        Add3GammaCurves(AToB0Tag, 1.f); // cmsSigCurveSetElemType
-
-        // Add AToB0Tag
-        cmsWriteTag(hProfile, cmsSigAToB0Tag, AToB0Tag);
-        cmsPipelineFree(AToB0Tag);
-
-        //
-        // BToA0Tag - PCS to Device space (16-bit) intent of 0 (perceptual)
-        //
-        // cmsSigCurveSetElemType
-        // `- cmsSigMatrixElemType
-        //  `- cmsSigCurveSetElemType
-        //   `- cmsSigCLutElemType 
-        //    `- cmsSigCurveSetElemType
-        //
-        //std::cout << "[OpenColorIO INFO]: Adding BToA0Tag\n";
-        cmsPipeline* BToA0Tag = cmsPipelineAlloc(NULL, 3, 3);
-
-        Add3GammaCurves(BToA0Tag, 1.f); // cmsSigCurveSetElemType
-        AddIdentityMatrix(BToA0Tag);    // cmsSigMatrixElemType
-        Add3GammaCurves(BToA0Tag, 1.f); // cmsSigCurveSetElemType
-
-        // cmsSigCLutElemType
-        cmsStage* BToA0Clut = cmsStageAllocCLut16bit(NULL, cubesize, 3, 3, NULL);
-        //std::cout << "[OpenColorIO INFO]: Sampling BToA0 CLUT from Lab to Display\n";
-        cmsStageSampleCLut16bit(BToA0Clut, PCS2Display_Sampler16, &data, 0);
-        cmsPipelineInsertStage(BToA0Tag, cmsAT_END, BToA0Clut);
-
-        Add3GammaCurves(BToA0Tag, 1.f); // cmsSigCurveSetElemType
-
-        // Add BToA0Tag
-        cmsWriteTag(hProfile, cmsSigBToA0Tag, BToA0Tag);
-        cmsPipelineFree(BToA0Tag);
-
-        //
-        // D2Bx - Device to PCS (float) (Not Yet Impl)
-        //
-
-        //
-        // B2Dx - PCS to Device (float) (Not Yet Impl)
-        //
-
-        //
-        // Write
-        //
-        //std::cout << "[OpenColorIO INFO]: Writing " << outputfile << std::endl;
-        cmsSaveProfileToFile(hProfile, path.c_str());
-        cmsCloseProfile(hProfile);
+        SaveICCProfileToFile(path, _processor, cubesize, whitepointtemp,
+                                display_icc_path, description, copyright, false);
     }
     else
     {
@@ -925,7 +755,7 @@ bool OpenColorIO_AE_Context::ExportLUT(const std::string &path, const std::strin
             
             transform = OCIO::FileTransform::Create();
             transform->setSrc(_path.c_str());
-            transform->setInterpolation(OCIO::INTERP_LINEAR);
+            transform->setInterpolation(static_cast<OCIO::Interpolation>(_interpolation));
             transform->setDirection(_invert ? OCIO::TRANSFORM_DIR_INVERSE : OCIO::TRANSFORM_DIR_FORWARD);
             
             outputColorSpace->setTransform(transform, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
