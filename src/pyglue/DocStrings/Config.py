@@ -127,6 +127,19 @@ class Config:
         """
         pass
 
+    def getCurrentContext(self):
+        """
+        getCurrentContext()
+        
+        Return the current context, which is essentially a record of all
+        the environment variables that are available for use in file path
+        lookups.
+        
+        :return: context
+        :rtype: pycontext
+        """
+        pass
+
     def getSearchPath(self):
         """
         getSearchPath()

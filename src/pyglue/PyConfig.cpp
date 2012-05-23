@@ -168,6 +168,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_serialize( PyObject * self );
         PyObject * PyOCIO_Config_getCacheID( PyObject * self,  PyObject *args );
         
+        PyObject * PyOCIO_Config_getCurrentContext( PyObject * self );
+        
         PyObject * PyOCIO_Config_getSearchPath( PyObject * self );
         PyObject * PyOCIO_Config_setSearchPath( PyObject * self,  PyObject *args );
         
@@ -226,6 +228,8 @@ OCIO_NAMESPACE_ENTER
             (PyCFunction) PyOCIO_Config_serialize, METH_NOARGS, CONFIG_SERIALIZE__DOC__ },
             {"getCacheID",
             PyOCIO_Config_getCacheID, METH_VARARGS, CONFIG_GETCACHEID__DOC__ },
+            {"getCurrentContext",
+            (PyCFunction) PyOCIO_Config_getCurrentContext, METH_NOARGS, CONFIG_GETCURRENTCONTEXT__DOC__ },
             {"getSearchPath",
             (PyCFunction) PyOCIO_Config_getSearchPath, METH_NOARGS, CONFIG_GETSEARCHPATH__DOC__ },
             {"setSearchPath",
@@ -531,6 +535,21 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 return PyString_FromString( config->getCacheID(context) );
+            }
+            catch(...)
+            {
+                Python_Handle_Exception();
+                return NULL;
+            }
+        }
+        
+        PyObject * PyOCIO_Config_getCurrentContext( PyObject * self )
+        {
+            try
+            {
+                ConstConfigRcPtr config = GetConstConfig(self, true);
+                
+                return BuildConstPyContext(config->getCurrentContext());
             }
             catch(...)
             {
