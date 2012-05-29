@@ -594,7 +594,8 @@ static void DoClickPath(
         const char *extension = OCIO::FileTransform::getFormatExtensionByIndex(i);
         const char *format = OCIO::FileTransform::getFormatNameByIndex(i);
     
-        extensions[ extension ] = format;
+        if(extension != std::string("ccc")) // .ccc files require an ID parameter
+            extensions[ extension ] = format;
     }
     
     extensions[ "ocio" ] = "OCIO Format";

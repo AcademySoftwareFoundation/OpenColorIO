@@ -94,7 +94,7 @@ static PF_Err GlobalSetup(
             pfS->ClearSupportedPixelFormats(in_data->effect_ref);
             
             pfS->AddSupportedPixelFormat(in_data->effect_ref,
-                                            PrPixelFormat_BGRA_4444_32f_Linear);
+                                            PrPixelFormat_BGRA_4444_32f);
             
             in_data->pica_basicP->ReleaseSuite(kPFPixelFormatSuite,
                                                 kPFPixelFormatSuiteVersion1);
