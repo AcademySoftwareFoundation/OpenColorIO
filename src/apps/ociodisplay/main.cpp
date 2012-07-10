@@ -80,9 +80,8 @@ float g_exposure_fstop = 0.0f;
 float g_display_gamma = 1.0f;
 int g_channelHot[4] = { 1, 1, 1, 1 };  // show rgb
 
-
-#define TEST_LUT3D_EMULATION 1
-
+bool g_shaderLut3DEmulation = false;
+bool g_shaderLut3DPreferred = false;
 
 void UpdateOCIOGLState();
 
@@ -202,36 +201,55 @@ void InitOCIO(const char * filename)
     }
 }
 
-static void AllocateLut3D()
+static void AllocateLut3D(OCIO::GpuShaderDesc &shaderDesc)
 {
-    glGenTextures(1, &g_lut3dTexID);
+    static bool allocated = false;
+    static bool emulationLast = false;
+
+    // allocate once
+    if (!allocated)
+    {
+        glGenTextures(1, &g_lut3dTexID);
     
-    int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
-    g_lut3d.resize(num3Dentries);
-    memset(&g_lut3d[0], 0, sizeof(float)*num3Dentries);
-    
+        int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
+        g_lut3d.resize(num3Dentries);
+        memset(&g_lut3d[0], 0, sizeof(float)*num3Dentries);
+    }
+
+    // if previously allocated and emulation mode hasn't changed, we don't need to update
+    if (allocated && emulationLast == shaderDesc.isLut3DEmulationEnabled())
+    {
+        return;
+    }
+
     glActiveTexture(GL_TEXTURE2);
     
-#if TEST_LUT3D_EMULATION
-    glBindTexture(GL_TEXTURE_2D, g_lut3dTexID);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB,
-                 LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE,
-                 0, GL_RGB, GL_FLOAT, &g_lut3d[0]);
-#else
-    glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB,
-                 LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                 0, GL_RGB, GL_FLOAT, &g_lut3d[0]);
-#endif
+    if (shaderDesc.isLut3DEmulationEnabled())
+    {
+        glBindTexture(GL_TEXTURE_2D, g_lut3dTexID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB,
+                LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE,
+                0, GL_RGB, GL_FLOAT, &g_lut3d[0]);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB,
+                LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
+                0, GL_RGB, GL_FLOAT, &g_lut3d[0]);
+    }
+
+    allocated = true;
+    emulationLast = shaderDesc.isLut3DEmulationEnabled();
 }
 
 /*
@@ -465,60 +483,14 @@ LinkShaders(GLuint fragShader)
     return program;
 }
 
+const char * g_fragShaderTextBefore = ""
+"\n"
+"uniform sampler2D tex1;\n";
 
-#if TEST_LUT3D_EMULATION
-const char * g_fragShaderText = ""
-"vec4 OCIODisplayXXX(vec4 inPixel,\n"
-"                         sampler2D lut3d)\n"
-"{\n"
-"    vec4 out_pixel = inPixel;\n"
-"    float edgelen = 32.0;\n"
-"\n"
-"    vec2 lookup;\n"
-"    lookup.x = inPixel.r * (edgelen-1.0)/edgelen + 0.5/edgelen;\n"
-"\n"
-"    float greenLookup = (inPixel.g * (edgelen-1.0)/edgelen + 0.5/edgelen) / edgelen;\n"
-"\n"
-"    // faking 3d texture lookup (find lower and upper z tiles in y\n"
-"    // direction, and lerp between them)\n"
-"\n"
-"    //calc blueLerp: 0-1, based on distance between low and high blue sections\n"
-"    float blueLowStep = min(floor(inPixel.b*edgelen), (edgelen-1.0)) / (edgelen - 1.0);\n"
-"    float blueHighStep = (min(floor(inPixel.b*edgelen), (edgelen-1.0)) + 1.0) / (edgelen - 1.0);\n"
-"    float blueLerp = 0.0+(inPixel.b-blueLowStep)*(1.0-0.0)/(blueHighStep-blueLowStep);\n"
-"        ///// fit(inPixel.b, blueLowStep, blueHighStep, 0, 1)\n"
-"\n"
-"    // blue0Color\n"
-"    float blue0Offset = min(floor(inPixel.b*edgelen), (edgelen-1.0)) / edgelen;\n"
-"    lookup.y = greenLookup + blue0Offset;\n"
-"    vec3 blue0Color = texture2D(lut3d, lookup).rgb;\n"
-"\n"
-"    // blue1Color\n"
-"    float blue1Offset = min((min(floor(inPixel.b*edgelen), (edgelen-1.0)) + 1.0) / edgelen, (edgelen-1.0)/edgelen);\n"
-"    lookup.y = greenLookup + blue1Offset;\n"
-"    vec3 blue1Color = texture2D(lut3d, lookup).rgb;\n"
-"\n"
-"    out_pixel.rgb = mix(blue0Color, blue1Color, blueLerp);\n"
-"\n"
-"    return out_pixel;\n"
-"}\n"
-"\n"
-"\n"
-"uniform sampler2D tex1;\n"
-"uniform sampler2D tex2;\n"
-"\n"
-"void main()\n"
-"{\n"
-"    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
-"    gl_FragColor = OCIODisplayXXX(col, tex2);\n"
-//"    gl_FragColor = col;\n"
-"}\n";
+const char * g_fragShaderTextSampler2D = "uniform sampler2D tex2;\n";
+const char * g_fragShaderTextSampler3D = "uniform sampler3D tex2;\n";
 
-#else
-const char * g_fragShaderText = ""
-"\n"
-"uniform sampler2D tex1;\n"
-"uniform sampler3D tex2;\n"
+const char * g_fragShaderTextAfter = ""
 "\n"
 "void main()\n"
 "{\n"
@@ -526,7 +498,6 @@ const char * g_fragShaderText = ""
 "    gl_FragColor = OCIODisplay(col, tex2);\n"
 
 "}\n";
-#endif
 
 void UpdateOCIOGLState()
 {
@@ -592,6 +563,9 @@ void UpdateOCIOGLState()
     shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
     shaderDesc.setFunctionName("OCIODisplay");
     shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
+    shaderDesc.setLut3DEmulationEnabled(g_shaderLut3DEmulation);
+    shaderDesc.setLut3DPreferred(g_shaderLut3DPreferred);
+    AllocateLut3D(shaderDesc);
     
     // Step 2: Compute the 3D LUT
     std::string lut3dCacheID = processor->getGpuLut3DCacheID(shaderDesc);
@@ -603,19 +577,22 @@ void UpdateOCIOGLState()
         processor->getGpuLut3D(&g_lut3d[0], shaderDesc);
 
         glActiveTexture(GL_TEXTURE2);
-        
-#if TEST_LUT3D_EMULATION
-        glBindTexture(GL_TEXTURE_2D, g_lut3dTexID);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-                        LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE,
-                        GL_RGB, GL_FLOAT, &g_lut3d[0]);
-#else
-        glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
-        glTexSubImage3D(GL_TEXTURE_3D, 0,
-                        0, 0, 0, 
-                        LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                        GL_RGB, GL_FLOAT, &g_lut3d[0]);
-#endif
+
+        if (shaderDesc.isLut3DEmulationEnabled())
+        {
+            glBindTexture(GL_TEXTURE_2D, g_lut3dTexID);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+                            LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE,
+                            GL_RGB, GL_FLOAT, &g_lut3d[0]);
+        }
+        else
+        {
+            glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
+            glTexSubImage3D(GL_TEXTURE_3D, 0,
+                            0, 0, 0, 
+                            LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
+                            GL_RGB, GL_FLOAT, &g_lut3d[0]);
+        }
     }
     
     // Step 3: Compute the Shader
@@ -628,7 +605,16 @@ void UpdateOCIOGLState()
         
         std::ostringstream os;
         os << processor->getGpuShaderText(shaderDesc) << "\n";
-        os << g_fragShaderText;
+        os << g_fragShaderTextBefore;
+        if (shaderDesc.isLut3DEmulationEnabled())
+        {
+            os << g_fragShaderTextSampler2D;
+        }
+        else
+        {
+            os << g_fragShaderTextSampler3D;
+        }
+        os << g_fragShaderTextAfter;
         std::cerr << os.str() << std::endl;
         
         if(g_fragShader) glDeleteShader(g_fragShader);
@@ -690,6 +676,22 @@ void transform_CB(int id)
     glutPostRedisplay();
 }
 
+void shaderOptions_CB(int id)
+{
+    switch(id)
+    {
+    case 0:
+        g_shaderLut3DEmulation = !g_shaderLut3DEmulation;
+        break;
+    case 1:
+        g_shaderLut3DPreferred = !g_shaderLut3DPreferred;
+        break;
+    }
+
+    UpdateOCIOGLState();
+    glutPostRedisplay();
+}
+
 static void PopulateOCIOMenus()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
@@ -713,11 +715,16 @@ static void PopulateOCIOMenus()
     {
         glutAddMenuEntry(config->getView(defaultDisplay, i), i);
     }
+
+    int shaderOptionsMenuID = glutCreateMenu(shaderOptions_CB);
+    glutAddMenuEntry("Toggle Lut3D Emulation", 0);
+    glutAddMenuEntry("Toggle Lut3D Preferred", 1);
     
     glutCreateMenu(menuCallback);
     glutAddSubMenu("Image ColorSpace", csMenuID);
     glutAddSubMenu("Transform", transformMenuID);
     glutAddSubMenu("Device", deviceMenuID);
+    glutAddSubMenu("Shader Options", shaderOptionsMenuID);
     
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -771,10 +778,6 @@ int main(int argc, char **argv)
     if(argc>1) filename = argv[1];
     
     std::cout << USAGE_TEXT << std::endl;
-    
-    // TODO: switch profiles based on shading language
-    // std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-    AllocateLut3D();
     
     InitImageTexture(filename);
     try
