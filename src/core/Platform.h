@@ -196,6 +196,20 @@ OCIO_NAMESPACE_ENTER
 #endif // __APPLE__
 #endif // WINDOWS
 
+
+// Default GpuShaderDesc settings
+#if __APPLE__
+#include "TargetConditionals.h"
+#endif // __APPLE__
+
+#if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
+#define DEFAULT_GPU_LUT3D_EMULATION true
+#define DEFAULT_GPU_LUT3D_PREFERRED true
+#else
+#define DEFAULT_GPU_LUT3D_EMULATION false
+#define DEFAULT_GPU_LUT3D_PREFERRED false
+#endif // TARGET_OS_IPHONE
+
 }
 OCIO_NAMESPACE_EXIT
 

@@ -40,13 +40,17 @@ OCIO_NAMESPACE_ENTER
         GpuLanguage language_;
         std::string functionName_;
         int lut3DEdgeLen_;
+        bool lut3DPreferred_;
+        bool lut3DEmulationEnabled_;
         
         mutable std::string cacheID_;
         mutable Mutex cacheIDMutex_;
         
         Impl() :
             language_(GPU_LANGUAGE_UNKNOWN),
-            lut3DEdgeLen_(0)
+            lut3DEdgeLen_(0),
+            lut3DPreferred_(DEFAULT_GPU_LUT3D_PREFERRED),
+            lut3DEmulationEnabled_(DEFAULT_GPU_LUT3D_EMULATION)
         {
         }
         
@@ -58,6 +62,8 @@ OCIO_NAMESPACE_ENTER
             language_ = rhs.language_;
             functionName_ = rhs.functionName_;
             lut3DEdgeLen_ = rhs.lut3DEdgeLen_;
+            lut3DPreferred_ = rhs.lut3DPreferred_;
+            lut3DEmulationEnabled_ = rhs.lut3DEmulationEnabled_;
             cacheID_ = rhs.cacheID_;
             return *this;
         }
@@ -111,6 +117,30 @@ OCIO_NAMESPACE_ENTER
     {
         return getImpl()->lut3DEdgeLen_;
     }
+
+    void GpuShaderDesc::setLut3DPreferred(bool preferred)
+    {
+        AutoMutex lock(getImpl()->cacheIDMutex_);
+        getImpl()->lut3DPreferred_ = preferred;
+        getImpl()->cacheID_ = "";
+    }
+
+    bool GpuShaderDesc::isLut3DPreferred() const
+    {
+        return getImpl()->lut3DPreferred_;
+    }
+
+    void GpuShaderDesc::setLut3DEmulationEnabled(bool enabled)
+    {
+        AutoMutex lock(getImpl()->cacheIDMutex_);
+        getImpl()->lut3DEmulationEnabled_ = enabled;
+        getImpl()->cacheID_ = "";
+    }
+
+    bool GpuShaderDesc::isLut3DEmulationEnabled() const
+    {
+        return getImpl()->lut3DEmulationEnabled_;
+    }
     
     const char * GpuShaderDesc::getCacheID() const
     {
@@ -122,6 +152,8 @@ OCIO_NAMESPACE_ENTER
             os << GpuLanguageToString(getImpl()->language_) << " ";
             os << getImpl()->functionName_ << " ";
             os << getImpl()->lut3DEdgeLen_;
+            os << getImpl()->lut3DPreferred_;
+            os << getImpl()->lut3DEmulationEnabled_;
             getImpl()->cacheID_ = os.str();
         }
         
