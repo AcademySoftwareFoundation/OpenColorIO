@@ -396,18 +396,16 @@ OCIO_NAMESPACE_ENTER
     
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    bool Processor::Impl::hasLatticeOps(const GpuShaderDesc & shaderDesc) const
+
+    const OpRcPtrVec & Processor::Impl::getCpuLatticeOps(const GpuShaderDesc & shaderDesc) const
     {
         if (shaderDesc.isLut3DPreferred())
         {
-            return !(m_gpuOpsHwPreProcess.empty() &&
-                     m_gpuOpsCpuLatticeProcess.empty() &&
-                     m_gpuOpsHwPostProcess.empty());
+            return m_cpuOps;
         }
         else
         {
-            return !m_gpuOpsCpuLatticeProcess.empty();
+            return m_gpuOpsCpuLatticeProcess;
         }
     }
     
@@ -484,30 +482,17 @@ OCIO_NAMESPACE_ENTER
         
         if(m_lut3DCacheID.empty())
         {
-            if(!hasLatticeOps(shaderDesc))
+            const OpRcPtrVec &cpuLatticeOps = getCpuLatticeOps(shaderDesc);
+            if(cpuLatticeOps.empty())
             {
                 m_lut3DCacheID = "<NULL>";
             }
             else
             {
                 std::ostringstream cacheid;
-                if (shaderDesc.isLut3DPreferred())
+                for(OpRcPtrVec::size_type i=0, size = cpuLatticeOps.size(); i<size; ++i)
                 {
-                    for(OpRcPtrVec::size_type i=0, size = m_gpuOpsHwPreProcess.size(); i<size; ++i)
-                    {
-                        cacheid << m_gpuOpsHwPreProcess[i]->getCacheID() << " ";
-                    }
-                }
-                for(OpRcPtrVec::size_type i=0, size = m_gpuOpsCpuLatticeProcess.size(); i<size; ++i)
-                {
-                    cacheid << m_gpuOpsCpuLatticeProcess[i]->getCacheID() << " ";
-                }
-                if (shaderDesc.isLut3DPreferred())
-                {
-                    for(OpRcPtrVec::size_type i=0, size = m_gpuOpsHwPostProcess.size(); i<size; ++i)
-                    {
-                        cacheid << m_gpuOpsHwPostProcess[i]->getCacheID() << " ";
-                    }
+                    cacheid << cpuLatticeOps[i]->getCacheID() << " ";
                 }
                 // Also, add a hash of the shader description
                 cacheid << shaderDesc.getCacheID();
@@ -537,11 +522,13 @@ OCIO_NAMESPACE_ENTER
         int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
         int lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
 
+        const OpRcPtrVec &cpuLatticeOps = getCpuLatticeOps(shaderDesc);
+
         // Can we write the entire shader using only shader text?
         // If so, the lut3D is not needed so clear it.
         // This is preferable to identity, as it lets people notice if
         // it's accidentally being used.
-        if(!hasLatticeOps(shaderDesc))
+        if(cpuLatticeOps.empty())
         {
             memset(lut3d, 0, sizeof(float) * 3 * lut3DNumPixels);
             return;
@@ -553,30 +540,12 @@ OCIO_NAMESPACE_ENTER
             m_lut3D.resize(lut3DNumPixels*4);
             GenerateIdentityLut3D(&m_lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_RED);
 
-            // If lut3D is preferred, prepend hw preprocess ops to lattice
-            if (shaderDesc.isLut3DPreferred())
-            {
-                for(int i=0; i<(int)m_gpuOpsHwPreProcess.size(); ++i)
-                {
-                    m_gpuOpsHwPreProcess[i]->apply(&m_lut3D[0], lut3DNumPixels);
-                }
-            }
-            
             // Apply the lattice ops to it
-            for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
+            for(int i=0; i<(int)cpuLatticeOps.size(); ++i)
             {
-                m_gpuOpsCpuLatticeProcess[i]->apply(&m_lut3D[0], lut3DNumPixels);
+                cpuLatticeOps[i]->apply(&m_lut3D[0], lut3DNumPixels);
             }
 
-            // If lut3D is preferred, append hw postprocess ops to lattice
-            if (shaderDesc.isLut3DPreferred())
-            {
-                for(int i=0; i<(int)m_gpuOpsHwPostProcess.size(); ++i)
-                {
-                    m_gpuOpsHwPostProcess[i]->apply(&m_lut3D[0], lut3DNumPixels);
-                }
-            }
-            
             // Convert the RGBA image to an RGB image, in place.
             // Of course, this only works because we're doing it from left to right
             // so old pixels are read before they're written over
@@ -669,7 +638,9 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        if(hasLatticeOps(shaderDesc))
+        const OpRcPtrVec &cpuLatticeOps = getCpuLatticeOps(shaderDesc);
+
+        if(!cpuLatticeOps.empty())
         {
             // Sample the 3D LUT.
             std::string outputVariableName = pixelName;

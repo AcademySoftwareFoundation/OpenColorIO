@@ -86,7 +86,7 @@ OCIO_NAMESPACE_ENTER
         const char * getGpuShaderText(const GpuShaderDesc & gpuDesc) const;
         const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const;
         
-        bool hasLatticeOps(const GpuShaderDesc & shaderDesc) const;
+        const OpRcPtrVec & getCpuLatticeOps(const GpuShaderDesc & shaderDesc) const;
         
         void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
         const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const;
