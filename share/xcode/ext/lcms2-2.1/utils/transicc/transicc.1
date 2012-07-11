@@ -1,0 +1,61 @@
+.\"Shiju P. Nair September 30, 2004
+.TH ICCTRANS 1 "September 30, 2004"
+.SH NAME
+icctrans - little cms ColorSpace conversion calculator.
+.SH SYNOPSIS
+.B icctrans
+.RI [ options ]
+.SH DESCRIPTION
+lcms is a standalone CMM engine, which deals with the color management.
+It implements a fast transformation between ICC profiles.
+.B icctrans 
+is lcms ColorSpace conversion calculator.
+.SH OPTIONS
+.TP
+.B \-%
+use percent % of ink.
+.TP
+.B \-b 
+Black point compensation.
+.TP
+.B \-c <0,1,2,3>
+Precalculates transform. (0=Off, 1=Normal, 2=Hi-res, 3=LoRes) [defaults to 1]
+.TP
+.BI \-i\  profile
+Input profile (defaults to sRGB).
+.TP
+.B \-l
+Transform by device-link profile.
+.TP
+.B \-n
+Terse output, intended for pipe usage.
+.TP
+.BI \-o\  profile
+.p
+Output profile (defaults to sRGB).
+.TP
+.B \-t <0,1,2,3>
+Intent (0=Perceptual, 1=Colorimetric, 2=Saturation, 3=Absolute).
+.TP
+.B \-v
+Verbose.
+.TP
+.B \-w
+Use 16 bits.
+.TP
+.B \-x
+Hexadecimal.
+.TP
+You can use '*Lab' and '*xyz' as built-in profiles.
+.SH NOTES
+For suggestions, comments, bug reports etc. send mail to
+info@littlecms.com.
+.SH SEE ALSO
+.BR jpegicc (1),
+.BR tifficc (1),
+.BR icc2ps (1),
+.BR icclink (1),
+.BR wtpt (1)
+.SH AUTHOR
+This manual page was written by Shiju p. Nair <shiju.p@gmail.com>,
+for the Debian project.

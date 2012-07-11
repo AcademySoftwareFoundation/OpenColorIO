@@ -1,0 +1,41 @@
+.\"Shiju P. Nair September 30, 2004
+.TH ICC2PS 1 "September 30, 2004"
+.SH NAME
+icc2ps - little cms PostScript converter.
+.SH SYNOPSIS
+.B icc2ps
+.RI [ options ]
+.SH DESCRIPTION
+lcms is a standalone CMM engine, which deals with the color management.
+It implements a fast transformation between ICC profiles.
+.B icc2ps 
+is little cms PostScript converter.
+.SH OPTIONS
+.TP
+.B \-b 
+Black point compensation (CRD only).
+.TP
+.BI \-i\  profile
+Input profile: Generates Color Space Array (CSA).
+.TP
+.BI \-o\  profile
+.p
+Output profile: Generates Color Rendering Dictionary(CRD).
+.TP
+.B \-t <0,1,2,3>
+Intent (0=Perceptual, 1=Colorimetric, 2=Saturation, 3=Absolute).
+.TP
+.B \-u 
+Do NOT generate resource name on CRD.
+.SH NOTES
+For suggestions, comments, bug reports etc. send mail to
+info@littlecms.com.
+.SH SEE ALSO
+.BR jpegicc (1),
+.BR tifficc (1),
+.BR icclink (1),
+.BR icctrans (1),
+.BR wtpt (1)
+.SH AUTHOR
+This manual page was written by Shiju p. Nair <shiju.p@gmail.com>,
+for the Debian project.
