@@ -25,41 +25,33 @@ enum
 };
 GLint uniforms[NUM_UNIFORMS];
 
-GLfloat gVertexData[20] = 
+@interface ViewController ()
 {
-    // Data layout for each line below is:
-    // positionX, positionY, positionZ,     texCoordX, texCoordY,
-    0.0f, 0.0f, -1.0f,                       0.0f, 1.0f,
-    0.0f, 1.0f, -1.0f,                       0.0f, 0.0f,
-    1.0f, 1.0f, -1.0f,                       1.0f, 0.0f,
-    1.0f, 0.0f, -1.0f,                       1.0f, 1.0f,
-};
-
-@interface ViewController () {
     GLuint _program;
     
     GLKMatrix4 _modelViewProjectionMatrix;
 
     GLuint _vertexArray;
     GLuint _vertexBuffer;
-    
+    GLfloat _vertexData[20];
+        
     GLuint _imageTexName;
     GLuint _lutTexName;
     
-    CGSize _imageSize;
     GLuint _imageTexWidth;
     GLuint _imageTexHeight;
     GLubyte *_imageTexData;
-    BOOL _imageTexLoaded;
     
-    BOOL _rawDisplay;
-    
-    float _exposure;
+    BOOL _needRefreshTexture;
+    BOOL _needRefreshVertexData;
     
     float *_lut3d;
     unsigned char *_lut3dchar;
     
     NSString *_OCIOText;
+    
+    BOOL _rawDisplay;
+    float _exposure;    
 }
 @property (strong, nonatomic) EAGLContext *context;
 
@@ -99,7 +91,9 @@ GLfloat gVertexData[20] =
     _imageTexWidth = 0;
     _imageTexHeight = 0;
     _imageTexData = 0x0;
-    _imageTexLoaded = FALSE;
+    
+    _needRefreshTexture = TRUE;
+    _needRefreshVertexData = TRUE;
     
     _exposure = 0.0f;
     _rawDisplay = NO;
@@ -122,7 +116,6 @@ GLfloat gVertexData[20] =
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    // Release any cached data, images, etc. that aren't in use.
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
@@ -141,6 +134,8 @@ GLfloat gVertexData[20] =
     _lut3dchar = new unsigned char[lutEntries];
     memset(_lut3dchar, 0, sizeof(unsigned char)*lutEntries);
     
+    _modelViewProjectionMatrix = GLKMatrix4MakeOrtho(0.0f, 1.0f, 0.0f, 1.0f, 0.01f, 10.0f);
+    
     glEnable(GL_TEXTURE);
 
     glGenTextures(1, &_imageTexName);
@@ -156,7 +151,7 @@ GLfloat gVertexData[20] =
     
     glGenBuffers(1, &_vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(gVertexData), gVertexData, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(_vertexData), _vertexData, GL_STATIC_DRAW);
     
     glEnableVertexAttribArray(GLKVertexAttribPosition);
     glVertexAttribPointer(GLKVertexAttribPosition, 3, GL_FLOAT, GL_FALSE, 20, BUFFER_OFFSET(0));
@@ -175,7 +170,7 @@ GLfloat gVertexData[20] =
     glDeleteBuffers(1, &_vertexBuffer);
     glDeleteVertexArraysOES(1, &_vertexArray);
     
-    //glDeleteTextures(1, &_imageTexName);
+    glDeleteTextures(1, &_imageTexName);
     glDeleteTextures(1, &_lutTexName);
     
     if (_lut3d) {
@@ -189,50 +184,8 @@ GLfloat gVertexData[20] =
     }
 }
 
-#pragma mark - GLKView and GLKViewController delegate methods
 
-- (void)update
-{
-    _modelViewProjectionMatrix = GLKMatrix4MakeOrtho(0.0f, 1.0f, 0.0f, 1.0f, 0.01f, 10.0f); 
-}
-
-- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
-{
-    if (!_imageTexLoaded && _imageTexData && _imageTexWidth && _imageTexHeight) {
-        glBindTexture(GL_TEXTURE_2D, _imageTexName);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _imageTexWidth, _imageTexHeight,
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, _imageTexData);
-        _imageTexLoaded = TRUE;
-    }
-    
-    // draw
-    glClearColor(0.65f, 0.65f, 0.65f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
-    glBindVertexArrayOES(_vertexArray);
-    
-    // Render the object again with ES2
-    glUseProgram(_program);
-    
-    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix.m);
-    
-    glActiveTexture(GL_TEXTURE0); 
-    glBindTexture(GL_TEXTURE_2D, _imageTexName);
-    glUniform1i(uniforms[UNIFORM_IMAGE_SAMPLER], 0);
-    
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, _lutTexName);
-    glUniform1i(uniforms[UNIFORM_LUT_SAMPLER], 1);
-    
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-}
-
-#pragma mark -  OpenGL ES 2 shader compilation
-
+#pragma mark - OCIO and image texture setup
 - (BOOL)loadOCIO
 {
     try
@@ -275,7 +228,6 @@ GLfloat gVertexData[20] =
         
         {
             float exposure = _exposure;
-            if (exposure == 0.0) exposure = 0.001f; // TODO: this is a workaround to make sure we don't collapse to nothing in raw mode
             
             // Add an fstop exposure control (in SCENE_LINEAR)
             float gain = powf(2.0f, exposure);
@@ -295,10 +247,10 @@ GLfloat gVertexData[20] =
         shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLES_2_0);
         shaderDesc.setFunctionName("OCIODisplay");
         shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
-
+        
         _OCIOText = [NSString stringWithCString:processor->getGpuShaderText(shaderDesc)
                                        encoding:NSUTF8StringEncoding];
-
+        
         processor->getGpuLut3D(&_lut3d[0], shaderDesc);   
         
         for (unsigned i=0; i<LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*3; ++i)
@@ -316,10 +268,119 @@ GLfloat gVertexData[20] =
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE, 0, GL_RGB, GL_UNSIGNED_BYTE, _lut3dchar);
-
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE,
+                 0, GL_RGB, GL_UNSIGNED_BYTE, _lut3dchar);
+    
     return TRUE;
 }
+
+
+- (void)loadImage: (NSString *)imageName
+{
+    CGImageRef spriteImage = [UIImage imageNamed:imageName].CGImage;
+    if (!spriteImage) {
+        NSLog(@"Failed to load image %@", imageName);
+    } else {
+        size_t width = CGImageGetWidth(spriteImage);
+        size_t height = CGImageGetHeight(spriteImage);
+        size_t pow2width=1, pow2height=1;
+        while (pow2width<width) pow2width <<= 1;
+        while (pow2height<height) pow2height <<= 1;
+        
+        if (_imageTexData==0x0 || pow2width!=_imageTexWidth || pow2height!=_imageTexHeight) {
+            
+            if (_imageTexData) {
+                free(_imageTexData);
+            }
+            
+            _imageTexData = (GLubyte *) calloc(pow2width*pow2height*4, sizeof(GLubyte));
+            _imageTexWidth = pow2width;
+            _imageTexHeight = pow2height;
+        }
+        
+        // calculate coordinates and uvs based on image size
+        GLfloat edgeST[2] = {(GLfloat)width/_imageTexWidth, (GLfloat)height/_imageTexHeight};
+        
+        GLfloat viewAspect = self.view.frame.size.width / self.view.frame.size.height;
+        GLfloat imageAspect = (GLfloat)width/(GLfloat)height;
+        GLfloat inset[2] = {0.0f, 0.0f};
+        if (imageAspect>viewAspect) {
+            GLfloat imageHeight = viewAspect/imageAspect;
+            inset[1] = (1.0-imageHeight)/2.0f;
+        } else {
+            GLfloat imageWidth = imageAspect/viewAspect;
+            inset[0] = (1.0-imageWidth)/2.0f;
+        }
+        
+        GLfloat vertexData[20] = 
+        {
+            //          X,             Y,     Z,                S,              T,
+                 inset[0],      inset[1], -1.0f,             0.0f,           1.0f,
+                 inset[0], 1.0f-inset[1], -1.0f,             0.0f, 1.0f-edgeST[1],
+            1.0f-inset[0], 1.0f-inset[1], -1.0f,        edgeST[0], 1.0f-edgeST[1],
+            1.0f-inset[0],      inset[1], -1.0f,        edgeST[0],           1.0f,
+        };
+        memcpy(_vertexData, vertexData, sizeof(vertexData));
+        _needRefreshVertexData = TRUE;
+        
+        // load image data
+        CGContextRef spriteContext = CGBitmapContextCreate(_imageTexData, _imageTexWidth, _imageTexHeight,
+                                                           8, _imageTexWidth*4, 
+                                                           CGImageGetColorSpace(spriteImage), 
+                                                           kCGImageAlphaPremultipliedLast);
+        CGContextDrawImage(spriteContext, CGRectMake(0, 0, width, height), spriteImage);
+        CGContextRelease(spriteContext);
+        
+        _needRefreshTexture = TRUE;
+    }
+}
+
+#pragma mark - GLKView and GLKViewController delegate methods
+
+- (void)glkView:(GLKView *)view drawInRect:(CGRect)rect
+{
+    if (_needRefreshTexture && _imageTexData && _imageTexWidth && _imageTexHeight) {
+        glBindTexture(GL_TEXTURE_2D, _imageTexName);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _imageTexWidth, _imageTexHeight,
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, _imageTexData);
+        _needRefreshTexture = FALSE;
+    }
+    
+
+    if (_needRefreshVertexData) {
+        glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(_vertexData), _vertexData, GL_STATIC_DRAW);
+        _needRefreshVertexData = FALSE;
+    }
+    
+    // draw
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glBindVertexArrayOES(_vertexArray);
+    
+    // Render the object again with ES2
+    glUseProgram(_program);
+    
+    glUniformMatrix4fv(uniforms[UNIFORM_MODELVIEWPROJECTION_MATRIX], 1, 0, _modelViewProjectionMatrix.m);
+    
+    glActiveTexture(GL_TEXTURE0); 
+    glBindTexture(GL_TEXTURE_2D, _imageTexName);
+    glUniform1i(uniforms[UNIFORM_IMAGE_SAMPLER], 0);
+    
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, _lutTexName);
+    glUniform1i(uniforms[UNIFORM_LUT_SAMPLER], 1);
+    
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+
+#pragma mark -  OpenGL ES 2 shader compilation
 
 - (BOOL)loadShaders
 {
@@ -530,41 +591,5 @@ GLfloat gVertexData[20] =
     }
 }
 #endif
-
-- (void)loadImage: (NSString *)imageName
-{
-    NSDate *before = [NSDate date];
-
-    CGImageRef spriteImage = [UIImage imageNamed:imageName].CGImage;
-    if (!spriteImage) {
-        NSLog(@"Failed to load image %@", imageName);
-    } else {
-        size_t width = CGImageGetWidth(spriteImage);
-        size_t height = CGImageGetHeight(spriteImage);
-        size_t pow2width=1, pow2height=1;
-        while (pow2width<width) pow2width <<= 1;
-        while (pow2height<height) pow2height <<= 1;
-        if (_imageTexData==0x0 || pow2width!=_imageTexWidth || pow2height!=_imageTexHeight) {
-            if (_imageTexData) {
-                free(_imageTexData);
-            }
-            
-            _imageTexData = (GLubyte *) calloc(pow2width*pow2height*4, sizeof(GLubyte));
-            _imageTexWidth = pow2width;
-            _imageTexHeight = pow2height;
-        }
-        CGContextRef spriteContext = CGBitmapContextCreate(_imageTexData, _imageTexWidth, _imageTexHeight,
-                                                           8, _imageTexWidth*4, 
-                                                           CGImageGetColorSpace(spriteImage), 
-                                                           kCGImageAlphaPremultipliedLast);
-        CGContextDrawImage(spriteContext, CGRectMake(0, 0, width, height), spriteImage);
-        CGContextRelease(spriteContext);
-        
-        _imageTexLoaded = FALSE;
-    }
-    
-	NSDate *after = [NSDate date];
-    NSLog(@"time to load image: %f ms", [after timeIntervalSinceDate:before]*1000.0);
-}
 
 @end
