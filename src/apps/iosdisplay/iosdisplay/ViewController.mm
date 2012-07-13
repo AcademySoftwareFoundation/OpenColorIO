@@ -50,8 +50,8 @@ GLint uniforms[NUM_UNIFORMS];
     
     NSString *_OCIOText;
     
-    BOOL _rawDisplay;
-    float _exposure;    
+    BOOL _enableOCIO;
+    float _exposure;
 }
 @property (strong, nonatomic) EAGLContext *context;
 
@@ -88,15 +88,19 @@ GLint uniforms[NUM_UNIFORMS];
     view.context = self.context;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     
+    _overlayViewController = [[OverlayViewController alloc] initWithNibName:@"OverlayViewController" bundle:nil];
+    _overlayViewController.view.frame = CGRectMake(10, 10, view.frame.size.width-20, _overlayViewController.view.frame.size.height);
+    _overlayViewController.delegate = self;
+    _exposure = _overlayViewController.exposure;
+    _enableOCIO = _overlayViewController.enableOCIO;
+    [self.view addSubview:_overlayViewController.view];
+
     _imageTexWidth = 0;
     _imageTexHeight = 0;
     _imageTexData = 0x0;
     
     _needRefreshTexture = TRUE;
     _needRefreshVertexData = TRUE;
-    
-    _exposure = 0.0f;
-    _rawDisplay = NO;
     
     [self setupGL];
 }
@@ -404,10 +408,10 @@ GLint uniforms[NUM_UNIFORMS];
     }
     
     // Create and compile fragment shader.       
-    if (_rawDisplay) {
-        fragShaderPathname = [[NSBundle mainBundle] pathForResource:@"NoOCIO" ofType:@"fsh"];
-    } else {
+    if (_enableOCIO) {
         fragShaderPathname = [[NSBundle mainBundle] pathForResource:@"Shader" ofType:@"fsh"];
+    } else {
+        fragShaderPathname = [[NSBundle mainBundle] pathForResource:@"NoOCIO" ofType:@"fsh"];
     }
     NSString *fragShaderText = [NSString stringWithContentsOfFile:fragShaderPathname
                                                          encoding:NSUTF8StringEncoding 
@@ -558,38 +562,18 @@ GLint uniforms[NUM_UNIFORMS];
     return YES;
 }
 
-#if 0
-- (void)rawSwitchValueChanged:(id)sender
+- (void)overlayViewControllerChanged:(OverlayViewController *)overlayViewController
 {
     [EAGLContext setCurrentContext:self.context];
-    [self loadShaders];
-    [self createOCIOTextureAndShader];
-}
 
-
-- (void)exposureValueChanged:(id)sender
-{
-    switch (_exposureButtons.selectedSegmentIndex) {
-        case 0: _exposure += 1.0f; break;
-        case 1: _exposure -= 1.0f; break;
-        case 2: _exposure = 0.0f; break;
-    }
-    [self setExposureLabel];
-    [self createOCIOTextureAndShader];
-}
-
-- (void)imageModeValueChanged:(id)sender
-{
-    _imageMode = _imageModeButtons.selectedSegmentIndex;
-    _imageChanged = YES;
-    _loadedTexHeight = 0;
-    [self createOCIOTextureAndShader];
+    _exposure = overlayViewController.exposure;
     
-    if (_imageMode == 2 && !_avStarted) { // mov
-        [_avAssetReader startReading];
-        _avStarted = TRUE;
+    if (_enableOCIO != overlayViewController.enableOCIO) {
+        _enableOCIO = overlayViewController.enableOCIO;
+        [self loadShaders];
     }
+    
+    [self createOCIOTextureAndShader];
 }
-#endif
 
 @end

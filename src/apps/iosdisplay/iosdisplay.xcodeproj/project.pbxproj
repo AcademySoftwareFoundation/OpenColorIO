@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D313DA5415AFDFC6009BAB72 /* OverlayViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D313DA5215AFDFC6009BAB72 /* OverlayViewController.m */; };
+		D313DA5515AFDFC6009BAB72 /* OverlayViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = D313DA5315AFDFC6009BAB72 /* OverlayViewController.xib */; };
 		D38968C215AD36EA00539408 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D38968C115AD36EA00539408 /* UIKit.framework */; };
 		D38968C415AD36EA00539408 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D38968C315AD36EA00539408 /* Foundation.framework */; };
 		D38968C615AD36EA00539408 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D38968C515AD36EA00539408 /* CoreGraphics.framework */; };
@@ -35,6 +37,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D313DA5115AFDFC6009BAB72 /* OverlayViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OverlayViewController.h; sourceTree = "<group>"; };
+		D313DA5215AFDFC6009BAB72 /* OverlayViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OverlayViewController.m; sourceTree = "<group>"; };
+		D313DA5315AFDFC6009BAB72 /* OverlayViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = OverlayViewController.xib; sourceTree = "<group>"; };
 		D38968BD15AD36EA00539408 /* iosdisplay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosdisplay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D38968C115AD36EA00539408 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		D38968C315AD36EA00539408 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -111,6 +116,8 @@
 				D38968D115AD36EA00539408 /* AppDelegate.m */,
 				D389690315AD3DDA00539408 /* ViewController.h */,
 				D389690415AD3DDA00539408 /* ViewController.mm */,
+				D313DA5115AFDFC6009BAB72 /* OverlayViewController.h */,
+				D313DA5215AFDFC6009BAB72 /* OverlayViewController.m */,
 				D389691215AD433F00539408 /* Images */,
 				D389691515AD437200539408 /* Shaders */,
 				D389690E15AD433100539408 /* OpenColorIOConfigs */,
@@ -126,6 +133,7 @@
 				D38968CA15AD36EA00539408 /* InfoPlist.strings */,
 				D38968CD15AD36EA00539408 /* main.m */,
 				D38968CF15AD36EA00539408 /* iosdisplay-Prefix.pch */,
+				D313DA5315AFDFC6009BAB72 /* OverlayViewController.xib */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -229,6 +237,7 @@
 				D389691D15AD43B500539408 /* Shader.fsh in Resources */,
 				D389691E15AD43B700539408 /* Shader.vsh in Resources */,
 				D389692215AD48CA00539408 /* marci_512_lg8.png in Resources */,
+				D313DA5515AFDFC6009BAB72 /* OverlayViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,6 +251,7 @@
 				D38968CE15AD36EA00539408 /* main.m in Sources */,
 				D38968D215AD36EA00539408 /* AppDelegate.m in Sources */,
 				D389690515AD3DDA00539408 /* ViewController.mm in Sources */,
+				D313DA5415AFDFC6009BAB72 /* OverlayViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -318,7 +328,7 @@
 					../../../share/xcode,
 				);
 				INFOPLIST_FILE = "iosdisplay/iosdisplay-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -334,7 +344,7 @@
 					../../../share/xcode,
 				);
 				INFOPLIST_FILE = "iosdisplay/iosdisplay-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};

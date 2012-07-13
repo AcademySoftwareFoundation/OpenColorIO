@@ -9,8 +9,11 @@
 #import <UIKit/UIKit.h>
 #import <GLKit/GLKit.h>
 
-@interface ViewController : GLKViewController
+#import "OverlayViewController.h"
+
+@interface ViewController : GLKViewController <OverlayViewControllerDelegate>
 {
+    OverlayViewController *_overlayViewController;
 }
 
 @end
