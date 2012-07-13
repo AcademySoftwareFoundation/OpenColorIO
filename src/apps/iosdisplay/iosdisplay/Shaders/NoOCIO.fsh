@@ -13,5 +13,5 @@ uniform sampler2D lutSampler;
 
 void main()
 {
-    gl_FragColor = texture2D(imageSampler, texCoord); // raw marci
+    gl_FragColor = texture2D(imageSampler, texCoord);
 }
