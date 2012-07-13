@@ -19,6 +19,7 @@
 
     ViewController *viewContoller= [[ViewController alloc] init];
     [self.window addSubview:viewContoller.view];
+    _viewController = viewContoller;
     
     [self.window makeKeyAndVisible];
     return YES;
