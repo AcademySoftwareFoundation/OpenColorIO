@@ -28,7 +28,13 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.view.backgroundColor = [UIColor clearColor];
+    
+    // eat taps in overlay
+    UITapGestureRecognizer *singleTap = 
+    [[UITapGestureRecognizer alloc] initWithTarget:self 
+                                            action:nil];
+    singleTap.cancelsTouchesInView = NO; // allow "Reset" button to be tapped
+    [self.view addGestureRecognizer:singleTap];
 }
 
 - (void)viewDidUnload

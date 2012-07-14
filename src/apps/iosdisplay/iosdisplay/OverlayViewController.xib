@@ -36,12 +36,12 @@
 			</object>
 			<object class="IBUIView" id="191373211">
 				<reference key="NSNextResponder"/>
-				<int key="NSvFlags">274</int>
+				<int key="NSvFlags">290</int>
 				<array class="NSMutableArray" key="NSSubviews">
 					<object class="IBUILabel" id="389719268">
 						<reference key="NSNextResponder" ref="191373211"/>
 						<int key="NSvFlags">292</int>
-						<string key="NSFrame">{{20, 23}, {121, 21}}</string>
+						<string key="NSFrame">{{10, 13}, {121, 21}}</string>
 						<reference key="NSSuperview" ref="191373211"/>
 						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="73545745"/>
@@ -72,7 +72,7 @@
 					<object class="IBUILabel" id="73545745">
 						<reference key="NSNextResponder" ref="191373211"/>
 						<int key="NSvFlags">289</int>
-						<string key="NSFrame">{{169, 23}, {44, 21}}</string>
+						<string key="NSFrame">{{179, 13}, {44, 21}}</string>
 						<reference key="NSSuperview" ref="191373211"/>
 						<reference key="NSWindow"/>
 						<reference key="NSNextKeyView" ref="80645483"/>
@@ -93,10 +93,9 @@
 					<object class="IBUISlider" id="316899406">
 						<reference key="NSNextResponder" ref="191373211"/>
 						<int key="NSvFlags">290</int>
-						<string key="NSFrame">{{18, 71}, {197, 23}}</string>
+						<string key="NSFrame">{{8, 49}, {217, 23}}</string>
 						<reference key="NSSuperview" ref="191373211"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView" ref="413052994"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<bool key="IBUIOpaque">NO</bool>
 						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
@@ -108,10 +107,10 @@
 					<object class="IBUIButton" id="413052994">
 						<reference key="NSNextResponder" ref="191373211"/>
 						<int key="NSvFlags">289</int>
-						<string key="NSFrame">{{221, 63}, {79, 37}}</string>
+						<string key="NSFrame">{{231, 45}, {79, 27}}</string>
 						<reference key="NSSuperview" ref="191373211"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView"/>
+						<reference key="NSNextKeyView" ref="316899406"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<bool key="IBUIOpaque">NO</bool>
 						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
@@ -141,10 +140,10 @@
 					<object class="IBUISwitch" id="80645483">
 						<reference key="NSNextResponder" ref="191373211"/>
 						<int key="NSvFlags">289</int>
-						<string key="NSFrame">{{206, 20}, {94, 27}}</string>
+						<string key="NSFrame">{{216, 10}, {94, 27}}</string>
 						<reference key="NSSuperview" ref="191373211"/>
 						<reference key="NSWindow"/>
-						<reference key="NSNextKeyView" ref="316899406"/>
+						<reference key="NSNextKeyView" ref="413052994"/>
 						<string key="NSReuseIdentifierKey">_NS:9</string>
 						<bool key="IBUIOpaque">NO</bool>
 						<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
@@ -153,15 +152,17 @@
 						<bool key="IBUIOn">YES</bool>
 					</object>
 				</array>
-				<string key="NSFrameSize">{320, 120}</string>
+				<string key="NSFrameSize">{320, 82}</string>
 				<reference key="NSSuperview"/>
 				<reference key="NSWindow"/>
 				<reference key="NSNextKeyView" ref="389719268"/>
 				<object class="NSColor" key="IBUIBackgroundColor">
 					<int key="NSColorSpace">3</int>
-					<bytes key="NSWhite">MAA</bytes>
+					<bytes key="NSWhite">MCAwLjUAA</bytes>
 				</object>
-				<bool key="IBUIOpaque">NO</bool>
+				<object class="IBUIAccessibilityConfiguration" key="IBUIAccessibilityConfiguration">
+					<integer value="256" key="IBUIAccessibilityTraits"/>
+				</object>
 				<string key="targetRuntimeIdentifier">IBCocoaTouchFramework</string>
 			</object>
 		</array>
@@ -249,9 +250,9 @@
 						<array class="NSMutableArray" key="children">
 							<reference ref="316899406"/>
 							<reference ref="413052994"/>
-							<reference ref="80645483"/>
 							<reference ref="73545745"/>
 							<reference ref="389719268"/>
+							<reference ref="80645483"/>
 						</array>
 						<reference key="parent" ref="0"/>
 					</object>

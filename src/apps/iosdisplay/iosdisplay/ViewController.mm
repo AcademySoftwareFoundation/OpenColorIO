@@ -38,6 +38,8 @@ GLint uniforms[NUM_UNIFORMS];
     GLuint _imageTexName;
     GLuint _lutTexName;
     
+    GLuint _imageWidth;
+    GLuint _imageHeight;
     GLuint _imageTexWidth;
     GLuint _imageTexHeight;
     GLubyte *_imageTexData;
@@ -65,6 +67,7 @@ GLint uniforms[NUM_UNIFORMS];
 - (BOOL)compileShader:(GLuint *)shader type:(GLenum)type shaderText:(NSString *)shaderText;
 - (BOOL)linkProgram:(GLuint)prog;
 - (BOOL)validateProgram:(GLuint)prog;
+- (void)calculateVertexDataWithOrientation: (UIInterfaceOrientation)interfaceOrientation;
 - (void)loadImage: (NSString *)imageName;
 @end
 
@@ -87,9 +90,14 @@ GLint uniforms[NUM_UNIFORMS];
     GLKView *view = (GLKView *)self.view;
     view.context = self.context;
     view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    
+
+    UITapGestureRecognizer *singleTap = 
+    [[UITapGestureRecognizer alloc] initWithTarget:self 
+                                            action:@selector(handleSingleTap:)];
+    [self.view addGestureRecognizer:singleTap];
+        
     _overlayViewController = [[OverlayViewController alloc] initWithNibName:@"OverlayViewController" bundle:nil];
-    _overlayViewController.view.frame = CGRectMake(10, 10, view.frame.size.width-20, _overlayViewController.view.frame.size.height);
+    _overlayViewController.view.frame = CGRectMake(0, 0, view.frame.size.width, _overlayViewController.view.frame.size.height);
     _overlayViewController.delegate = self;
     _exposure = _overlayViewController.exposure;
     _enableOCIO = _overlayViewController.enableOCIO;
@@ -124,7 +132,26 @@ GLint uniforms[NUM_UNIFORMS];
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    return NO;
+    return YES;
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
+{
+    [self calculateVertexDataWithOrientation:self.interfaceOrientation];
+}
+
+- (void)handleSingleTap:(UITapGestureRecognizer *)recognizer
+{
+    CGFloat overlayAlpha = 1.0f;
+    if (_overlayViewController.view.alpha) {
+        overlayAlpha = 0.0f;
+    }
+    
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationDuration:0.25];
+    [UIView  setAnimationDelegate:nil];
+    _overlayViewController.view.alpha = overlayAlpha;
+    [UIView commitAnimations];
 }
 
 - (void)setupGL
@@ -279,6 +306,39 @@ GLint uniforms[NUM_UNIFORMS];
     return TRUE;
 }
 
+- (void)calculateVertexDataWithOrientation: (UIInterfaceOrientation)interfaceOrientation
+{
+    // calculate coordinates and uvs based on image size
+    GLfloat edgeST[2] = {(GLfloat)_imageWidth/_imageTexWidth, (GLfloat)_imageHeight/_imageTexHeight};
+    
+    GLfloat viewAspect = self.view.frame.size.width / self.view.frame.size.height;
+    if (interfaceOrientation==UIInterfaceOrientationLandscapeLeft ||
+        interfaceOrientation==UIInterfaceOrientationLandscapeRight)
+    {
+        viewAspect = self.view.frame.size.height / self.view.frame.size.width;
+    }
+
+    GLfloat imageAspect = (GLfloat)_imageWidth/(GLfloat)_imageHeight;
+    GLfloat inset[2] = {0.0f, 0.0f};
+    if (imageAspect>viewAspect) {
+        GLfloat imageHeight = viewAspect/imageAspect;
+        inset[1] = (1.0-imageHeight)/2.0f;
+    } else {
+        GLfloat imageWidth = imageAspect/viewAspect;
+        inset[0] = (1.0-imageWidth)/2.0f;
+    }
+
+    GLfloat vertexData[20] = 
+    {
+        //          X,             Y,     Z,                S,              T,
+        inset[0],      inset[1], -1.0f,             0.0f,           1.0f,
+        inset[0], 1.0f-inset[1], -1.0f,             0.0f, 1.0f-edgeST[1],
+        1.0f-inset[0], 1.0f-inset[1], -1.0f,        edgeST[0], 1.0f-edgeST[1],
+        1.0f-inset[0],      inset[1], -1.0f,        edgeST[0],           1.0f,
+    };
+    memcpy(_vertexData, vertexData, sizeof(vertexData));
+    _needRefreshVertexData = TRUE;
+}
 
 - (void)loadImage: (NSString *)imageName
 {
@@ -292,6 +352,9 @@ GLint uniforms[NUM_UNIFORMS];
         while (pow2width<width) pow2width <<= 1;
         while (pow2height<height) pow2height <<= 1;
         
+        _imageWidth = width;
+        _imageHeight = height;
+        
         if (_imageTexData==0x0 || pow2width!=_imageTexWidth || pow2height!=_imageTexHeight) {
             
             if (_imageTexData) {
@@ -303,30 +366,7 @@ GLint uniforms[NUM_UNIFORMS];
             _imageTexHeight = pow2height;
         }
         
-        // calculate coordinates and uvs based on image size
-        GLfloat edgeST[2] = {(GLfloat)width/_imageTexWidth, (GLfloat)height/_imageTexHeight};
-        
-        GLfloat viewAspect = self.view.frame.size.width / self.view.frame.size.height;
-        GLfloat imageAspect = (GLfloat)width/(GLfloat)height;
-        GLfloat inset[2] = {0.0f, 0.0f};
-        if (imageAspect>viewAspect) {
-            GLfloat imageHeight = viewAspect/imageAspect;
-            inset[1] = (1.0-imageHeight)/2.0f;
-        } else {
-            GLfloat imageWidth = imageAspect/viewAspect;
-            inset[0] = (1.0-imageWidth)/2.0f;
-        }
-        
-        GLfloat vertexData[20] = 
-        {
-            //          X,             Y,     Z,                S,              T,
-                 inset[0],      inset[1], -1.0f,             0.0f,           1.0f,
-                 inset[0], 1.0f-inset[1], -1.0f,             0.0f, 1.0f-edgeST[1],
-            1.0f-inset[0], 1.0f-inset[1], -1.0f,        edgeST[0], 1.0f-edgeST[1],
-            1.0f-inset[0],      inset[1], -1.0f,        edgeST[0],           1.0f,
-        };
-        memcpy(_vertexData, vertexData, sizeof(vertexData));
-        _needRefreshVertexData = TRUE;
+        [self calculateVertexDataWithOrientation:self.interfaceOrientation];
         
         // load image data
         CGContextRef spriteContext = CGBitmapContextCreate(_imageTexData, _imageTexWidth, _imageTexHeight,
@@ -355,7 +395,6 @@ GLint uniforms[NUM_UNIFORMS];
         _needRefreshTexture = FALSE;
     }
     
-
     if (_needRefreshVertexData) {
         glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
         glBufferData(GL_ARRAY_BUFFER, sizeof(_vertexData), _vertexData, GL_STATIC_DRAW);
