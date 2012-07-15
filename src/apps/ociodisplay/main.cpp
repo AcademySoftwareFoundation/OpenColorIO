@@ -81,7 +81,7 @@ float g_display_gamma = 1.0f;
 int g_channelHot[4] = { 1, 1, 1, 1 };  // show rgb
 
 bool g_shaderLut3DEmulation = false;
-bool g_shaderLut3DPreferred = false;
+bool g_shaderLut3DPreferredOverGpuShaderText = false;
 
 void UpdateOCIOGLState();
 
@@ -564,7 +564,7 @@ void UpdateOCIOGLState()
     shaderDesc.setFunctionName("OCIODisplay");
     shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
     shaderDesc.setLut3DEmulationEnabled(g_shaderLut3DEmulation);
-    shaderDesc.setLut3DPreferred(g_shaderLut3DPreferred);
+    shaderDesc.setLut3DPreferredOverGpuShaderText(g_shaderLut3DPreferredOverGpuShaderText);
     AllocateLut3D(shaderDesc);
     
     // Step 2: Compute the 3D LUT
@@ -684,7 +684,7 @@ void shaderOptions_CB(int id)
         g_shaderLut3DEmulation = !g_shaderLut3DEmulation;
         break;
     case 1:
-        g_shaderLut3DPreferred = !g_shaderLut3DPreferred;
+        g_shaderLut3DPreferredOverGpuShaderText = !g_shaderLut3DPreferredOverGpuShaderText;
         break;
     }
 
@@ -718,7 +718,7 @@ static void PopulateOCIOMenus()
 
     int shaderOptionsMenuID = glutCreateMenu(shaderOptions_CB);
     glutAddMenuEntry("Toggle Lut3D Emulation", 0);
-    glutAddMenuEntry("Toggle Lut3D Preferred", 1);
+    glutAddMenuEntry("Toggle Lut3D Preferred Over Gpu Shader Text", 1);
     
     glutCreateMenu(menuCallback);
     glutAddSubMenu("Image ColorSpace", csMenuID);

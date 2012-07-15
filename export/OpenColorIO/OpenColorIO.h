@@ -1154,8 +1154,8 @@ OCIO_NAMESPACE_ENTER
         // In general, this will default to 'True' on mobile devices, and
         // false everywhere else.
         
-        void setLut3DPreferred(bool preferred);
-        bool isLut3DPreferred() const;
+        void setLut3DPreferredOverGpuShaderText(bool preferred);
+        bool isLut3DPreferredOverGpuShaderText() const;
         
         //!cpp::function
         // Certain platforms (such as mobile devices) do not support 3D LUTs,

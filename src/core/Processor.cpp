@@ -399,7 +399,7 @@ OCIO_NAMESPACE_ENTER
 
     const OpRcPtrVec & Processor::Impl::getCpuLatticeOps(const GpuShaderDesc & shaderDesc) const
     {
-        if (shaderDesc.isLut3DPreferred())
+        if (shaderDesc.isLut3DPreferredOverGpuShaderText())
         {
             return m_cpuOps;
         }
@@ -630,7 +630,7 @@ OCIO_NAMESPACE_ENTER
         WriteShaderHeader(shader, pixelName, shaderDesc);
         
         // Don't write gpu shader text if gpu ops have been baked into 3D lut.
-        if (!shaderDesc.isLut3DPreferred())
+        if (!shaderDesc.isLut3DPreferredOverGpuShaderText())
         {
             for(unsigned int i=0; i<m_gpuOpsHwPreProcess.size(); ++i)
             {
@@ -662,7 +662,7 @@ OCIO_NAMESPACE_ENTER
         }
 #endif // __APPLE__
         // Don't write gpu shader text if gpu ops have been baked into 3D lut.
-        if (!shaderDesc.isLut3DPreferred())
+        if (!shaderDesc.isLut3DPreferredOverGpuShaderText())
         {
             for(unsigned int i=0; i<m_gpuOpsHwPostProcess.size(); ++i)
             {
