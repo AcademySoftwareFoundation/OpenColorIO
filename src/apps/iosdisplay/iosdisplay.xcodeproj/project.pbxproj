@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		D313DA5415AFDFC6009BAB72 /* OverlayViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D313DA5215AFDFC6009BAB72 /* OverlayViewController.m */; };
 		D313DA5515AFDFC6009BAB72 /* OverlayViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = D313DA5315AFDFC6009BAB72 /* OverlayViewController.xib */; };
+		D332DA5415B2816C00B05391 /* Icon-57.png in Resources */ = {isa = PBXBuildFile; fileRef = D332DA5315B2816C00B05391 /* Icon-57.png */; };
+		D332DA5615B2817F00B05391 /* Icon-114.png in Resources */ = {isa = PBXBuildFile; fileRef = D332DA5515B2817F00B05391 /* Icon-114.png */; };
+		D332DA5815B2819400B05391 /* Icon-72.png in Resources */ = {isa = PBXBuildFile; fileRef = D332DA5715B2819400B05391 /* Icon-72.png */; };
+		D332DA5A15B2819800B05391 /* Icon-144.png in Resources */ = {isa = PBXBuildFile; fileRef = D332DA5915B2819800B05391 /* Icon-144.png */; };
 		D38968C215AD36EA00539408 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D38968C115AD36EA00539408 /* UIKit.framework */; };
 		D38968C415AD36EA00539408 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D38968C315AD36EA00539408 /* Foundation.framework */; };
 		D38968C615AD36EA00539408 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D38968C515AD36EA00539408 /* CoreGraphics.framework */; };
@@ -40,6 +44,10 @@
 		D313DA5115AFDFC6009BAB72 /* OverlayViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OverlayViewController.h; sourceTree = "<group>"; };
 		D313DA5215AFDFC6009BAB72 /* OverlayViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OverlayViewController.m; sourceTree = "<group>"; };
 		D313DA5315AFDFC6009BAB72 /* OverlayViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = OverlayViewController.xib; sourceTree = "<group>"; };
+		D332DA5315B2816C00B05391 /* Icon-57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-57.png"; sourceTree = "<group>"; };
+		D332DA5515B2817F00B05391 /* Icon-114.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-114.png"; sourceTree = "<group>"; };
+		D332DA5715B2819400B05391 /* Icon-72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-72.png"; sourceTree = "<group>"; };
+		D332DA5915B2819800B05391 /* Icon-144.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-144.png"; sourceTree = "<group>"; };
 		D38968BD15AD36EA00539408 /* iosdisplay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosdisplay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D38968C115AD36EA00539408 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		D38968C315AD36EA00539408 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -79,6 +87,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D332DA4A15B2814A00B05391 /* Icons */ = {
+			isa = PBXGroup;
+			children = (
+				D332DA5315B2816C00B05391 /* Icon-57.png */,
+				D332DA5515B2817F00B05391 /* Icon-114.png */,
+				D332DA5715B2819400B05391 /* Icon-72.png */,
+				D332DA5915B2819800B05391 /* Icon-144.png */,
+			);
+			path = Icons;
+			sourceTree = "<group>";
+		};
 		D38968B215AD36E900539408 = {
 			isa = PBXGroup;
 			children = (
@@ -134,6 +153,7 @@
 				D38968CD15AD36EA00539408 /* main.m */,
 				D38968CF15AD36EA00539408 /* iosdisplay-Prefix.pch */,
 				D313DA5315AFDFC6009BAB72 /* OverlayViewController.xib */,
+				D332DA4A15B2814A00B05391 /* Icons */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -238,6 +258,10 @@
 				D389691E15AD43B700539408 /* Shader.vsh in Resources */,
 				D389692215AD48CA00539408 /* marci_512_lg8.png in Resources */,
 				D313DA5515AFDFC6009BAB72 /* OverlayViewController.xib in Resources */,
+				D332DA5415B2816C00B05391 /* Icon-57.png in Resources */,
+				D332DA5615B2817F00B05391 /* Icon-114.png in Resources */,
+				D332DA5815B2819400B05391 /* Icon-72.png in Resources */,
+				D332DA5A15B2819800B05391 /* Icon-144.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
