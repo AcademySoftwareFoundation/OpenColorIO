@@ -11,6 +11,36 @@ here, please contact the ocio-dev mailing list.
 If you are a developer and would like assistance integration OCIO into your
 application, please contant ocio-dev as well.
 
+
+After Effects
+*************
+
+`Compositor - Adobe <http://www.adobe.com/products/aftereffects.html>`__
+
+OpenColorIO nodes are available for use in After Effects.
+
+See `src/aftereffects
+<http://github.com/imageworks/OpenColorIO/tree/master/src/aftereffects>`__
+if you are interested in building your own OCIO plugins.
+
+Pre-built binaries are also available for `download
+<http://www.fnordware.com/OpenColorIO>`__, courtesy of `fnordware
+http://www.fnordware.com`__.
+
+
+Krita
+*****
+
+`2D Paint - Open Source <http://www.krita.org/>`__
+
+Krita now support OpenColorIO for image viewing, allowing for the accurate
+painting of float32/OpenEXR imagery.
+
+See `krita.org 
+<http://www.krita.org/item/113-krita-starts-supporting-opencolorio>`__
+for details.
+
+
 Silhouette
 **********
 
@@ -19,6 +49,8 @@ Silhouette
 OCIO is natively integrated in
 `4.5+ <http://www.silhouettefx.com/silhouette/silhouette-4.5-WhatsNew.pdf>`__
 Full support is provide for both image import/export, as well as image display.
+
+
 
 Nuke
 ****
@@ -73,16 +105,13 @@ It comes with “nuke-default” OCIO config by default, so the Hiero viewer
 matches when sending files to Nuke for rendering.
 
 
-CryEngine3
-**********
-
-`Game Engine - Crytek (Cinema Sandbox) <http://mycryengine.com/index.php?conid=59>`__
-
-CryENGINE is a real-time game engine, targeting applications in the
-motion-picture market. While we don't know many details about the CryEngine
-OpenColorIO integration, we're looking forward to learning more as information
-becomes available.
-
+Photoshop
+*********
+OpenColorIO display luts can be exported as ICC profiles for use in photoshop.
+See the ociobakelut details below for additional info.  The core idea is to
+create an .icc profile, with a valid description, and then to save it to the
+proper OS icc directory. (On OSX, ~/Library/ColorSync/Profiles/) Upon a
+Photoshop relaunch, Edit->Assign Profile, and then select your new OCIO lut.
 
 
 OpenImageIO
@@ -190,23 +219,6 @@ This integration is currently considered a work in progress, and should not be
 relied upon for critical production work.
 
 
-After Effects (Beta)
-********************
-
-`Compositor - Adobe <http://www.adobe.com/products/aftereffects.html>`__
-
-OCIO support through `this plugin <http://www.fnordware.com/OpenColorIO>`__.
-
-This code has not yet been rolled into the OCIO source tree, though we hope to
-add support in the near future.
-
-See this `email thread <http://groups.google.com/group/ocio-dev/browse_thread/thread/5b37c04e2d743759>`__
-for additional details.
-
-This plugin is currently considered a work in progress, and should not be
-relied upon for critical production work.
-
-
 Java (Beta)
 ***********
 The OpenColorIO API is available for use in Java. See the `jniglue directory
@@ -223,6 +235,10 @@ Blender (Beta)
 **************
 `Open Source 3D Application <http://www.blender.org/>`__
 
+Blender currently has `limited support
+<http://wiki.blender.org/index.php/Dev:Source/Image/OpenColorIO#OpenColorIO_Integration>`__
+for OCIO.
+
 Xaview Thomas has begun the `Blender OCIO integration <http://github.com/thmxv/blender-ocio>`__ .
 Currently undergoing development.
 
@@ -232,9 +248,21 @@ Currently undergoing development.
 `YouTube Blender Example
 <http://www.youtube.com/watch?v=O43ItUVvcks>`__
 
+
 Ramen (Beta)
 ************
 `Open Source Compositor <http://ramencomp.blogspot.com>`__
 
 Under development, with native OCIO color managment.
+
+
+CryEngine3 (Beta)
+*****************
+
+`Game Engine - Crytek (Cinema Sandbox) <http://mycryengine.com/index.php?conid=59>`__
+
+CryENGINE is a real-time game engine, targeting applications in the
+motion-picture market. While we don't know many details about the CryEngine
+OpenColorIO integration, we're looking forward to learning more as information
+becomes available.
 
