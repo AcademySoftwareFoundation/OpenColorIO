@@ -1136,6 +1136,21 @@ const char* <tt class="descname">getShaperSpace</tt><big>(</big><big>)</big><tt 
 </dd></dl>
 
 <dl class="function">
+<dt id="setLooks__cCP">
+void <tt class="descname">setLooks</tt><big>(</big>const char* <em>looks</em><big>)</big><a class="headerlink" href="#setLooks__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the looks to be applied during baking
+Looks is a potentially comma (or colon) delimited list of lookNames,
+Where +/- prefixes are optionally allowed to denote forward/inverse
+look specification. (And forward is assumed in the absense of either)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="getLooksC">
+const char* <tt class="descname">getLooks</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#getLooksC" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the looks to be applied during baking</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="setTargetSpace__cCP">
 void <tt class="descname">setTargetSpace</tt><big>(</big>const char* <em>targetSpace</em><big>)</big><a class="headerlink" href="#setTargetSpace__cCP" title="Permalink to this definition">¶</a></dt>
 <dd><p>set the target device colorspace for the lut</p>

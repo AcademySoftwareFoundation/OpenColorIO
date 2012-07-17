@@ -49,21 +49,23 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Compatible Software</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#after-effects">After Effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#krita">Krita</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#silhouette">Silhouette</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#nuke">Nuke</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#mari">Mari</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#katana">Katana</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hiero">Hiero</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cryengine3">CryEngine3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#photoshop">Photoshop</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#openimageio">OpenImageIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#c">C++</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#apps-w-icc-or-luts">Apps w/icc or luts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rv-beta">RV (Beta)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#after-effects-beta">After Effects (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#java-beta">Java (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#blender-beta">Blender (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ramen-beta">Ramen (Beta)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cryengine3-beta">CryEngine3 (Beta)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="configurations/index.html">Configurations</a></li>
@@ -98,6 +100,23 @@
 here, please contact the ocio-dev mailing list.</p>
 <p>If you are a developer and would like assistance integration OCIO into your
 application, please contant ocio-dev as well.</p>
+<div class="section" id="after-effects">
+<h2>After Effects<a class="headerlink" href="#after-effects" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.adobe.com/products/aftereffects.html">Compositor - Adobe</a></p>
+<p>OpenColorIO nodes are available for use in After Effects.</p>
+<p>See <a class="reference external" href="http://github.com/imageworks/OpenColorIO/tree/master/src/aftereffects">src/aftereffects</a>
+if you are interested in building your own OCIO plugins.</p>
+<p>Pre-built binaries are also available for <a class="reference external" href="http://www.fnordware.com/OpenColorIO">download</a>, courtesy of <a href="#id1"><span class="problematic" id="id2">`fnordware
+http://www.fnordware.com`__</span></a>.</p>
+</div>
+<div class="section" id="krita">
+<h2>Krita<a class="headerlink" href="#krita" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.krita.org/">2D Paint - Open Source</a></p>
+<p>Krita now support OpenColorIO for image viewing, allowing for the accurate
+painting of float32/OpenEXR imagery.</p>
+<p>See <a class="reference external" href="http://www.krita.org/item/113-krita-starts-supporting-opencolorio">krita.org</a>
+for details.</p>
+</div>
 <div class="section" id="silhouette">
 <h2>Silhouette<a class="headerlink" href="#silhouette" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://www.silhouettefx.com/silhouette">Roto, Paint, Keying - SilhouetteFX</a></p>
@@ -142,13 +161,13 @@ equivalent of Nuke&#8217;s OCIOColorSpace in the Read nodes.</p>
 <p>It comes with “nuke-default” OCIO config by default, so the Hiero viewer
 matches when sending files to Nuke for rendering.</p>
 </div>
-<div class="section" id="cryengine3">
-<h2>CryEngine3<a class="headerlink" href="#cryengine3" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://mycryengine.com/index.php?conid=59">Game Engine - Crytek (Cinema Sandbox)</a></p>
-<p>CryENGINE is a real-time game engine, targeting applications in the
-motion-picture market. While we don&#8217;t know many details about the CryEngine
-OpenColorIO integration, we&#8217;re looking forward to learning more as information
-becomes available.</p>
+<div class="section" id="photoshop">
+<h2>Photoshop<a class="headerlink" href="#photoshop" title="Permalink to this headline">¶</a></h2>
+<p>OpenColorIO display luts can be exported as ICC profiles for use in photoshop.
+See the ociobakelut details below for additional info.  The core idea is to
+create an .icc profile, with a valid description, and then to save it to the
+proper OS icc directory. (On OSX, ~/Library/ColorSync/Profiles/) Upon a
+Photoshop relaunch, Edit-&gt;Assign Profile, and then select your new OCIO lut.</p>
 </div>
 <div class="section" id="openimageio">
 <h2>OpenImageIO<a class="headerlink" href="#openimageio" title="Permalink to this headline">¶</a></h2>
@@ -238,17 +257,6 @@ for additional details.</p>
 <p>This integration is currently considered a work in progress, and should not be
 relied upon for critical production work.</p>
 </div>
-<div class="section" id="after-effects-beta">
-<h2>After Effects (Beta)<a class="headerlink" href="#after-effects-beta" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.adobe.com/products/aftereffects.html">Compositor - Adobe</a></p>
-<p>OCIO support through <a class="reference external" href="http://www.fnordware.com/OpenColorIO">this plugin</a>.</p>
-<p>This code has not yet been rolled into the OCIO source tree, though we hope to
-add support in the near future.</p>
-<p>See this <a class="reference external" href="http://groups.google.com/group/ocio-dev/browse_thread/thread/5b37c04e2d743759">email thread</a>
-for additional details.</p>
-<p>This plugin is currently considered a work in progress, and should not be
-relied upon for critical production work.</p>
-</div>
 <div class="section" id="java-beta">
 <h2>Java (Beta)<a class="headerlink" href="#java-beta" title="Permalink to this headline">¶</a></h2>
 <p>The OpenColorIO API is available for use in Java. See the <a class="reference external" href="http://github.com/imageworks/OpenColorIO/tree/master/src/jniglue">jniglue directory</a>
@@ -260,6 +268,8 @@ relied upon for critical production work.</p>
 <div class="section" id="blender-beta">
 <h2>Blender (Beta)<a class="headerlink" href="#blender-beta" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://www.blender.org/">Open Source 3D Application</a></p>
+<p>Blender currently has <a class="reference external" href="http://wiki.blender.org/index.php/Dev:Source/Image/OpenColorIO#OpenColorIO_Integration">limited support</a>
+for OCIO.</p>
 <p>Xaview Thomas has begun the <a class="reference external" href="http://github.com/thmxv/blender-ocio">Blender OCIO integration</a> .
 Currently undergoing development.</p>
 <p><a class="reference external" href="http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011">Blender Developers Meeting Notes July 31, 2011</a></p>
@@ -269,6 +279,14 @@ Currently undergoing development.</p>
 <h2>Ramen (Beta)<a class="headerlink" href="#ramen-beta" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://ramencomp.blogspot.com">Open Source Compositor</a></p>
 <p>Under development, with native OCIO color managment.</p>
+</div>
+<div class="section" id="cryengine3-beta">
+<h2>CryEngine3 (Beta)<a class="headerlink" href="#cryengine3-beta" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://mycryengine.com/index.php?conid=59">Game Engine - Crytek (Cinema Sandbox)</a></p>
+<p>CryENGINE is a real-time game engine, targeting applications in the
+motion-picture market. While we don&#8217;t know many details about the CryEngine
+OpenColorIO integration, we&#8217;re looking forward to learning more as information
+becomes available.</p>
 </div>
 </div>
 
