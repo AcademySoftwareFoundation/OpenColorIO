@@ -24,8 +24,8 @@ See `src/aftereffects
 if you are interested in building your own OCIO plugins.
 
 Pre-built binaries are also available for `download
-<http://www.fnordware.com/OpenColorIO>`__, courtesy of `fnordware
-http://www.fnordware.com`__.
+<http://www.fnordware.com/OpenColorIO>`__, courtesy of 
+`fnordware <http://www.fnordware.com>`__.
 
 
 Krita
