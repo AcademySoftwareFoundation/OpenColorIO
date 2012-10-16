@@ -160,18 +160,10 @@ int OCIOCDLTransform::knob_changed(DD::Image::Knob* k)
     // return true if you want to continue to receive changes for this knob
     std::string knobname = k->name();
     
-    if(knobname == "read_from_file")
+    if(knobname == "read_from_file" || knobname == "file" || knobname == "cccid")
     {
         refreshKnobEnabledState();
         
-        if(m_readFromFile)
-        {
-            loadCDLFromFile();
-        }
-        return true;
-    }
-    else if(knobname == "file")
-    {
         if(m_readFromFile)
         {
             loadCDLFromFile();
