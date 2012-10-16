@@ -454,7 +454,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Error loading ccc xml. ";
-                os << "The specified cccid " << cccid << " ";
+                os << "The specified cccid '" << cccid << "' ";
                 os << "could not be found in file '";
                 os << src << "'.";
                 throw Exception(os.str().c_str());
