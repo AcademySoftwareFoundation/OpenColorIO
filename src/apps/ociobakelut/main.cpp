@@ -126,7 +126,7 @@ int main (int argc, const char* argv[])
                //"--cubesize %d", &cubesize, "size of the icc CLUT cube (default: 32)",
                "--whitepoint %d", &whitepointtemp, "whitepoint for the profile (default: 6505)",
                "--displayicc %s", &displayicc , "an icc profile which matches the OCIO profiles target display",
-               "--description %s", &description , "a meaningful description, this will show up in UI like photoshop",
+               "--description %s", &description , "a meaningful description, this will show up in UI like photoshop (defaults to \"filename.icc\")",
                "--copyright %s", &copyright , "a copyright field\n",
                // TODO: add --metadata option
                NULL);
@@ -291,6 +291,11 @@ int main (int argc, const char* argv[])
     {
         if(format == "icc")
         {
+            if(description.empty())
+            {
+                description = outputfile;
+            }
+            
             if(usestdout)
             {
                 std::cerr << "\nERROR: --stdout not supported when writing icc profiles.\n\n";
