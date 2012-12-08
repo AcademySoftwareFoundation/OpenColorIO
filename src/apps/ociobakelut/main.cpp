@@ -294,6 +294,8 @@ int main (int argc, const char* argv[])
             if(description.empty())
             {
                 description = outputfile;
+                if(verbose)
+                    std::cout << "[OpenColorIO INFO]: \"--description\" set to default value of filename.icc: " << outputfile << "" << std::endl;
             }
             
             if(usestdout)
