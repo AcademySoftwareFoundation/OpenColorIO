@@ -57,8 +57,15 @@ the colorspace used for ``compositing_log`` is not incorrect::
 
     Tests complete.
 
-It cannot verify the defined color transforms are "correct", only that the
-config file can be loaded by OCIO without error.
+It cannot verify the defined color transforms are "correct", only that
+the config file can be loaded by OCIO without error. Some of the
+problems it will detect are:
+
+* Duplicate colorspace names
+* References to undefined colorspaces
+* Required roles being undefined
+* At least one display device is defined
+
 
 As with all the OCIO command line tools, you can use the `--help` argument to
 read a description and see the other arguments accepted::
@@ -76,7 +83,7 @@ read a description and see the other arguments accepted::
 .. _overview-ociobakelut:
 
 ociobakelut
-************
+***********
 
 A command line tool which bakes a color transform into various color
 lookup file formats ("a LUT")

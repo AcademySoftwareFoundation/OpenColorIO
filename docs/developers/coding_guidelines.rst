@@ -103,7 +103,7 @@ Bottom Line
 When in doubt, look elsewhere in the code base for examples of similar structures and try to format your code in the same manner.
 
 
-Portions of this document have been blatantly lifted from OpenImageIO, and Google.
-
-http://openimageio.org/wiki/index.php?title=Coding_Style_Guide
-http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
+Portions of this document have been blatantly lifted from `OpenImageIO
+<http://openimageio.org/wiki/index.php?title=Coding_Style_Guide>`__,
+and `Google
+<http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml>`__.

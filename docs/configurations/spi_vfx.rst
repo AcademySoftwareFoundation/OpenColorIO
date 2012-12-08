@@ -29,19 +29,19 @@ Caveot 2: We are not distributing the code that generates the luts from their un
 
 
 Invertibility
-+++++++++++++
+*************
 
 Elements often need to be transferred back and forth many times between different colorspaces. Since it’s impossible to know in advance how many times an image may be transferred between colorspaces it is essential for the majority of transformations to be lossless invertible transformations. By the end of the color pipeline even a 1 value difference in a 10bit transformation can become a significant issue. Invertible transformations can be taken from the source space, to linear and back with no change to the data. A higher value is placed on transformations being predictable and invertible than absolutely correct. All 1-d luts allow for forward and inverse transformations with no loss. Unless specified all channels are equally affected. The luts are 1 bit wider than stated, so lg8 actually defines 9 bits worth of entries.  This allows the rounding in the inverse direction to be applied unambiguously (lossless).
 
 Non-invertible transforms contain 3d lookups. 3D transformations can not be inverted due to gamut mapping issues. Non-invertible transformations are only used for final output media (such as QuickTimes) and for display purposes.
 
 Film Emulation Inversion
-++++++++++++++++++++++++
+************************
 
 Inverse film emulation luts aren’t supported in a default configuration. Imageworks does not use a film emulation inversion lut for texture or matte paintings. In its place a film emulation preview lut, commonly as an ICC profile, is used. Although most film emulation luts are similar they do differ significantly. The DI facility creating final color is often chosen long after significant vfx work has been begun. The film luts the film will be finished on are not made until weeks, or days, before DI begins. So the ‘true’ lut that will be used for the finishing is not available until very late in the production, from a VFX perspective. There are many color gamut mapping issues that arise when inverting film to video lut. Using a film inversion lut at this stage would bake in a look that isn't quite right and is very difficult to fully un-bake. It is safer to work with images in a non-constrained way and apply a visualization that can be toggled on and off. 
 
 Scene Linear
-************
+++++++++++++
 
 **lnf, lnh, ln16**
 
@@ -61,7 +61,7 @@ ln16 is a 16 bit integer representation of the [0,1] range of lnf. This is no lo
 
 
 Film Log
-********
+++++++++
 
 **lg8, lg10, lg16, lgf**
 
@@ -88,7 +88,7 @@ lgf is identical on the range from 0-1 to the standard lg luts. It specifies an 
 
 
 Panalog (Genesis)
-*****************
++++++++++++++++++
 
 **gn8, gn10, gn16, gnf**
 
@@ -110,7 +110,7 @@ gnf specifies 14.5 stops above the gn10 max and 18 of stops below the gn10 min. 
 
 
 Reference Art
-*************
++++++++++++++
 
 **vd8, vd16, vdf, hd10**
 
@@ -132,14 +132,14 @@ HD10 is a vd based space that is used for importing and exporting REC709 range b
 Structurally the conversion is a matrix operation that scales the data then adds an offset to limit the range from 64-940. From there the standard vd transformation is applied.
 
 Texture Painting
-****************
+++++++++++++++++
 
 **dt8, dt16**
 
 DT 8,16 - Diffuse texture colorspaces. These colorspaces are used for the conversion of textures painted in video space into a range limited linear space for use in rendering. The Color space is based on the vd transformation but limits the conversion into linear space so that no values above diffuse white can be created. This ensures that textures do not add light to a render. This is achieved by using a matrix transformation to limit the mapping of vd to the linear value of diffuse white.
 
 Data
-****
+++++
 
 **nc8, nc10, nc16, ncf**
 
@@ -147,7 +147,7 @@ Non-Color (NC) spaces are used to hold any data that needs to be processed thoug
 
 
 Display Transforms
-******************
+++++++++++++++++++
 
 **srgb8, p3dci8, xyz16**
 
@@ -177,7 +177,7 @@ DCIP3 Film : dlpqt8
 
 
 Display Calibration
-*******************
++++++++++++++++++++
 
 **sRGB** is the supported desktop display specification, calibrated to the sRGB standard and viewed in a dim office environment. As Imageworks switched from crt based display devices to LCD based devices a number of possible colorspaces were explored. It was a long decision but sRGB was chosen for a few reasons. An important one was that almost every display manufacturer can implement sRGB, reasonable well. This becomes a boon when we work needs to be done outside of our main facilities. Even a consumer display with calibration can come close to matching the sRGB standard. Since so many monitor manufacturers can hit sRGB calibration we are not tied to purchasing from a specific vendor. It becomes unnecessary to specify a specific display to with productions or external vendors. It also reduces the amount of studio specific color requirements that need to be communicated when working with other facilities. 80 cd/m^2, D65 white point, srgb gamma function (approx 2.4)
 
