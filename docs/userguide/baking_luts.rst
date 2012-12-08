@@ -172,6 +172,8 @@ it out for Lustre::
     bash$ ociobakelut --format lustre --slope 2.0 1.5 0.4 --lut mylut.csp output.3dl
 
 
+.. _userguide-bakelut-photoshop:
+
 ICC profiles (Photoshop)
 ************************
 

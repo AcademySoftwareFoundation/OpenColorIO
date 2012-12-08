@@ -1,3 +1,5 @@
+.. _userguide-looks:
+
 Looks
 =====
 

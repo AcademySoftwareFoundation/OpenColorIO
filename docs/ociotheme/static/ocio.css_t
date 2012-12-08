@@ -102,7 +102,7 @@ a.headerlink:hover {
 div.content {
     margin-top: 20px;
     margin-left: 0px;
-    margin-right: 0px;
+    margin-right: 20px;
     margin-bottom: 50px;
     font-size: 0.9em;
 }

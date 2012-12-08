@@ -65,7 +65,11 @@ configure_file(${CMAKE_SOURCE_DIR}/docs/conf.py.in
     ${CMAKE_BINARY_DIR}/docs/conf.py @ONLY)
 
 message(STATUS "Copying doc to staging area")
-file(COPY ${CMAKE_SOURCE_DIR}/docs/ DESTINATION ${CMAKE_BINARY_DIR}/docs)
+file(
+    COPY ${CMAKE_SOURCE_DIR}/docs/
+    DESTINATION ${CMAKE_BINARY_DIR}/docs
+    PATTERN ".#*" EXCLUDE # Ignore emacs temporary ".#somefile.rst" which break Sphinx
+    )
 
 message(STATUS "Copy extra doc files to staging area")
 list(APPEND DOCFILES ${CMAKE_SOURCE_DIR}/README)
