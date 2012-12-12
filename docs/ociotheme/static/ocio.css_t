@@ -245,7 +245,7 @@ div.seealso {
 
 /* More layout and styles */
 h1 {
-    font-size: 1.3em;
+    font-size: 1.7em;
     font-weight: bold;
     color: {{ theme_headingcolor }};
     border-bottom: dotted thin #e0e0e0;
@@ -253,7 +253,7 @@ h1 {
 }
 
 h2 {
-    font-size: 1.2em;
+    font-size: 1.6em;
     font-weight: normal;
     color: {{ theme_headingcolor }};
     border-bottom: dotted thin #e0e0e0;
@@ -261,14 +261,14 @@ h2 {
 }
 
 h3 {
-    font-size: 1.1em;
+    font-size: 1.4em;
     font-weight: normal;
     color: {{ theme_headingcolor }};
     margin-top: 30px;
 }
 
 h4 {
-    font-size: 1.0em;
+    font-size: 1.3em;
     font-weight: normal;
     color: {{ theme_headingcolor }};
     margin-top: 30px;
