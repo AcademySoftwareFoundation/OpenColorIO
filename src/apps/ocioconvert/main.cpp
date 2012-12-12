@@ -75,6 +75,8 @@ int main(int argc, const char **argv)
     std::vector<std::string> floatAttrs;
     std::vector<std::string> intAttrs;
     std::vector<std::string> stringAttrs;
+    int nchannels = -1;
+    bool croptofull = false;
      
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
                "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n\n",
@@ -83,6 +85,8 @@ int main(int argc, const char **argv)
                "--float-attribute %L", &floatAttrs, "name=float pair defining OIIO float attribute",
                "--int-attribute %L", &intAttrs, "name=int pair defining OIIO int attribute",
                "--string-attribute %L", &stringAttrs, "name=string pair defining OIIO string attribute",
+               "--croptofull", &croptofull, "name=Crop or pad to make pixel data region match the \"full\" region",
+               "--keepchannels %d", &nchannels, "name=keep only the first n channels",
                NULL
                );
     if (ap.parse (argc, argv) < 0) {
@@ -138,6 +142,62 @@ int main(int argc, const char **argv)
         
         f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
         delete f;
+        
+        // if nchannels not set
+        if (nchannels == -1)
+        {
+            nchannels = spec.nchannels;
+        }
+        if (croptofull)
+        {
+            imgwidth = spec.full_width;
+            imgheight = spec.full_height;
+            std::cerr << "cropping to " << imgwidth;
+            std::cerr << "x" << imgheight << std::endl;
+        }
+        
+        if (croptofull || nchannels < spec.nchannels)
+        {
+            // crop down bounding box and ditch all but n channels
+            // img is a flattened 3 dimensional matrix heightxwidthxchannels
+            // fill croppedimg with only the needed pixels
+            std::vector<float> croppedimg;
+            croppedimg.resize(imgwidth*imgheight*nchannels);
+            for (int y=0 ; y < spec.height ; y++)
+            {
+                for (int x=0 ; x < spec.width; x++)
+                {
+                    for (int channel=0; channel < components; channel++)
+                    {
+                        int current_pixel_y = y + spec.y;
+                        int current_pixel_x = x + spec.x;
+                        
+                        if (current_pixel_y >= 0 &&
+                            current_pixel_x >= 0 &&
+                            current_pixel_y < imgheight &&
+                            current_pixel_x < imgwidth &&
+                            channel < nchannels)
+                        {
+                            // get the value at the desired pixel
+                            float current_pixel = img[(y*spec.width*components)
+                                                      + (x*components)+channel];
+                            // put in croppedimg.
+                            croppedimg[(current_pixel_y*imgwidth*nchannels)
+                                       + (current_pixel_x*nchannels)
+                                       + channel] = current_pixel;
+                        }
+                    }
+                }
+            }
+            // redefine the spec so it matches the new bounding box
+            spec.x = 0;
+            spec.y = 0;
+            spec.height = imgheight;
+            spec.width = imgwidth;
+            spec.nchannels = nchannels;
+            components = nchannels;
+            img = croppedimg;
+        }
     
     }
     catch(...)
