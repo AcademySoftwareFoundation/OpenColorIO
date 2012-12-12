@@ -68,7 +68,10 @@ message(STATUS "Copying doc to staging area")
 file(
     COPY ${CMAKE_SOURCE_DIR}/docs/
     DESTINATION ${CMAKE_BINARY_DIR}/docs
-    PATTERN ".#*" EXCLUDE # Ignore emacs temporary ".#somefile.rst" which break Sphinx
+
+    # Ignore dot files like emacs' temporary .#somefile.rst which
+    # break Sphinx (and must be manually removed from the destination)
+    PATTERN ".*" EXCLUDE
     )
 
 message(STATUS "Copy extra doc files to staging area")
