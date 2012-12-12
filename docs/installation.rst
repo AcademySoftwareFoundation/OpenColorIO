@@ -3,6 +3,36 @@ Installation
 
 .. _building-from-source:
 
+The easy way
+************
+
+While prebuilt binaries are not yet available for all paltforms, OCIO
+is available via several platform's package managers.
+
+Fedora and RHEL
++++++++++++++++
+
+In Fedora Core 15 and above, the following command will install OpenColorIO::
+
+    yum install OpenColorIO
+
+This also works in RedHat Enterprise Linux, providing you are using the `Fedora EPEL repository <http://fedoraproject.org/wiki/EPEL>`__ (see the `FAQ for instructions <http://fedoraproject.org/wiki/EPEL/FAQ#Using_EPEL>`__)
+
+OS X using Homebrew
++++++++++++++++++++
+
+You can use the Homebrew package manager to install OpenColorIO on OS X.
+
+First install Homebrew as per the instructions on the `Homebrew
+homepage <http://mxcl.github.com/homebrew/>`__ (or see the `Homebrew wiki
+<https://github.com/mxcl/homebrew/wiki/Installation>`__ for more
+detailed instructions)
+
+Then simply run the following command to install::
+
+    brew install opencolorio
+
+
 Building from source
 ********************
 
