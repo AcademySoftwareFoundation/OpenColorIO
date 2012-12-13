@@ -63,9 +63,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <tr1/memory>
 #define OCIO_SHARED_PTR std::tr1::shared_ptr
 #define OCIO_DYNAMIC_POINTER_CAST std::tr1::dynamic_pointer_cast
+#elif _MSC_VER >= 1600
+#include <memory>
+#define OCIO_SHARED_PTR std::shared_ptr
+#define OCIO_DYNAMIC_POINTER_CAST std::dynamic_pointer_cast
 #else
-#error OCIO needs gcc 4 or later to get access to <tr1/memory> (or specify USE_BOOST_PTR instead)
+#error OCIO needs at least gcc 4 or vc 2010 to get access to <tr1/memory> or <memory>, respectively (or specify USE_BOOST_PTR instead)
 #endif
+
 
 // If supported, define OCIOEXPORT, OCIOHIDDEN
 // (used to choose which symbols to export from OpenColorIO)
@@ -77,7 +82,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         #define OCIOEXPORT
         #define OCIOHIDDEN
     #endif
-#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+#elif defined(OCIO_BUILD_STATIC) && (defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER))
     // Windows requires you to export from the main library and then import in any others
     #if defined OpenColorIO_EXPORTS
         #define OCIOEXPORT __declspec(dllexport)
