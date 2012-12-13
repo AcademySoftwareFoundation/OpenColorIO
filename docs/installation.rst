@@ -16,7 +16,11 @@ In Fedora Core 15 and above, the following command will install OpenColorIO::
 
     yum install OpenColorIO
 
-This also works in RedHat Enterprise Linux, providing you are using the `Fedora EPEL repository <http://fedoraproject.org/wiki/EPEL>`__ (see the `FAQ for instructions <http://fedoraproject.org/wiki/EPEL/FAQ#Using_EPEL>`__)
+Providing you are using the `Fedora EPEL repository
+<http://fedoraproject.org/wiki/EPEL>`__ (see the `FAQ for instructions
+<http://fedoraproject.org/wiki/EPEL/FAQ#Using_EPEL>`__), this same
+command will work for RedHat Enterprise Linux 6 and higher (including
+RHEL derivatives such as CentOS 6 and Scientific Linux 6)
 
 OS X using Homebrew
 +++++++++++++++++++
