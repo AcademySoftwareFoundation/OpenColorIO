@@ -34,7 +34,7 @@ option(OCIO_PYGLUE_RESPECT_ABI "If ON, the Python module install path includes P
 option(OCIO_PYGLUE_SONAME "If ON, soname/soversion will be set for Python module library" OFF)
 option(OCIO_PYGLUE_LIB_PREFIX "If ON, prefix the Python module with 'lib'" OFF)
 
-if(UNIX AND NOT APPLE)
+if((UNIX AND NOT APPLE) OR WIN32)
     option(USE_EXTERNAL_YAML "Use system installed yaml-cpp library." OFF)
     option(USE_EXTERNAL_TINYXML "Use system installed tinyxml library." OFF)
     option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
