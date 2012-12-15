@@ -126,8 +126,8 @@ int main (int argc, const char* argv[])
                //"--cubesize %d", &cubesize, "size of the icc CLUT cube (default: 32)",
                "--whitepoint %d", &whitepointtemp, "whitepoint for the profile (default: 6505)",
                "--displayicc %s", &displayicc , "an icc profile which matches the OCIO profiles target display",
-               "--description %s", &description , "a meaningful description, this will show up in UI like photoshop",
-               "--copyright %s", &copyright , "a copyright field\n",
+               "--description %s", &description , "a meaningful description, this will show up in UI like photoshop (defaults to \"filename.icc\")",
+               "--copyright %s", &copyright , "a copyright field (default: \"OpenColorIO (Sony Imageworks)\"\n",
                // TODO: add --metadata option
                NULL);
     
@@ -291,6 +291,13 @@ int main (int argc, const char* argv[])
     {
         if(format == "icc")
         {
+            if(description.empty())
+            {
+                description = outputfile;
+                if(verbose)
+                    std::cout << "[OpenColorIO INFO]: \"--description\" set to default value of filename.icc: " << outputfile << "" << std::endl;
+            }
+            
             if(usestdout)
             {
                 std::cerr << "\nERROR: --stdout not supported when writing icc profiles.\n\n";
@@ -301,13 +308,6 @@ int main (int argc, const char* argv[])
             if(outputfile.empty())
             {
                 std::cerr << "ERROR: you need to specify a output icc path\n";
-                std::cerr << "See --help for more info." << std::endl;
-                return 1;
-            }
-            
-            if(copyright.empty())
-            {
-                std::cerr << "ERROR: need to specify a --copyright to embed in the icc profile\n";
                 std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
