@@ -1,7 +1,7 @@
+.. _installation:
+
 Installation
 ============
-
-.. _building-from-source:
 
 The easy way
 ************
@@ -36,6 +36,8 @@ Then simply run the following command to install::
 
     brew install opencolorio
 
+
+.. _building-from-source:
 
 Building from source
 ********************
