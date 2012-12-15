@@ -209,8 +209,8 @@ int main(int argc, const char **argv)
             spec.y = 0;
             spec.height = imgheight;
             spec.width = imgwidth;
-            spec.nchannels = kchannels.size();
-            components = kchannels.size();
+            spec.nchannels = (int)(kchannels.size());
+            components = (int)(kchannels.size());
             img = croppedimg;
         }
     
