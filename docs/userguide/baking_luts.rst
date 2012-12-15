@@ -324,7 +324,7 @@ When active, the profile name is shown in the window title (e.g
 profile name, "RGB/16" indicates the current image mode)
 
 Other color settings
-+++++++++++++++++++++
+++++++++++++++++++++
 
 (note this guide is based on Photoshop CS5, and written while checking
 the OS X version, although most of these apply similarly on Windows 7)

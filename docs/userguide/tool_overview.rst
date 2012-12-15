@@ -83,7 +83,7 @@ read a description and see the other arguments accepted::
 .. _overview-ociobakelut:
 
 ociobakelut
-************
+***********
 
 A command line tool which bakes a color transform into various color
 lookup file formats ("a LUT")

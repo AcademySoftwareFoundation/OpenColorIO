@@ -1,8 +1,7 @@
 .. _userguide-configsyntax:
 
-===============
- Config syntax
-===============
+Config syntax
+=============
 
 OpenColorIO is primarily controlled by a central configuration file,
 usually named ``config.ocio``. This page will only describe how to
@@ -14,7 +13,7 @@ the :ref:`configurations` section for examples of complete, practical
 configs, and discussion of how they fit within a facitilies workflow.
 
 YAML basics
-===========
+***********
 
 This config file is a YAML document, so it is important to have some
 basic knowledge of this format.
@@ -28,7 +27,7 @@ existing configs is probably the quickest way to familiarise yourself
 
 
 Checking for errors
-===================
+*******************
 
 Use the ``ociocheck`` command line tool to validate your config. It
 will inform you of YAML-syntax errors, but more importantly it
@@ -37,10 +36,10 @@ performs various OCIO-specific "sanity checks".
 For more information, see the overview of :ref:`overview-ociocheck`
 
 Config sections
-===============
+***************
 
 ``ocio_profile_version``
-------------------------
+++++++++++++++++++++++++
 
 Required.
 
@@ -58,7 +57,7 @@ always ``1`` (one)
 
 
 ``search_path``
----------------
++++++++++++++++
 
 Optional. Default is an empty search path.
 
@@ -107,7 +106,7 @@ fallbacks to a default. For more information, see the examples in
 
 
 ``strictparsing``
------------------
++++++++++++++++++
 
 Optional. Valid values are ``true`` and ``false``. Default is ``true``
 (assuming a config is present):
@@ -141,7 +140,7 @@ essentially falls back to "non-color managed".
 
 
 ``luma``
---------
+++++++++
 
 Deprecated. Optional. Default is the Rec.709 primaries specified by the ASC:
 
@@ -165,7 +164,7 @@ image-viewer when displaying a single channel)
 
 
 ``roles``
----------
++++++++++
 
 Required.
 
@@ -244,7 +243,7 @@ use these differently.
 
 
 ``displays``
-------------
+++++++++++++
 
 Required.
 
@@ -286,7 +285,7 @@ defined, the first display and first view will be the default.
 
 
 ``active_displays``
--------------------
++++++++++++++++++++
 
 Optional. Default is for all displays to be visible, and to respect
 order of items in ``displays`` section.
@@ -328,7 +327,7 @@ Or specify multiple active displays, by separating each with a colon::
 
 
 ``active_views``
-----------------
+++++++++++++++++
 
 Optional. Default is for all views to be visible, and to respect order
 of the views under the display.
@@ -342,7 +341,7 @@ Overridden by the ``OCIO_ACTIVE_VIEWS`` env-var::
 
 
 ``looks``
----------
++++++++++
 
 Optional.
 
