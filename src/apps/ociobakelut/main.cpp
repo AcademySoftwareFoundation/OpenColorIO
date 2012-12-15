@@ -73,7 +73,7 @@ int main (int argc, const char* argv[])
     int whitepointtemp = 6505;
     std::string displayicc;
     std::string description;
-    std::string copyright = "OpenColorIO (Sony Imageworks)";
+    std::string copyright = "No copyright. Use freely.";
     
     // What are the allowed baker output formats?
     std::ostringstream formats;
@@ -127,7 +127,7 @@ int main (int argc, const char* argv[])
                "--whitepoint %d", &whitepointtemp, "whitepoint for the profile (default: 6505)",
                "--displayicc %s", &displayicc , "an icc profile which matches the OCIO profiles target display",
                "--description %s", &description , "a meaningful description, this will show up in UI like photoshop (defaults to \"filename.icc\")",
-               "--copyright %s", &copyright , "a copyright field (default: \"OpenColorIO (Sony Imageworks)\"\n",
+               "--copyright %s", &copyright , "a copyright field (default: \"No copyright. Use freely.\"\n",
                // TODO: add --metadata option
                NULL);
     
