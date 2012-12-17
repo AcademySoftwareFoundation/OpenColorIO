@@ -1,3 +1,5 @@
+.. _config-spipipeline:
+
 Sony Pictures Imageworks Color Pipeline
 =======================================
 
@@ -48,6 +50,8 @@ Rendering
 
 * Render outputs are always viewed with an OCIO compatible image viewer.   Thus, for typical color imagery the lnf display transform will be applied.  In Nuke, this can be emulated using the OCIODisplay node.  A standalone image viewer, ociodisplay, is also included with  OpenColorIO src/example.
 
+
+.. _config-spipipeline-texture:
 
 Texture Painting / Matte Painting
 *********************************

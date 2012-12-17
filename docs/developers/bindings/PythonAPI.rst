@@ -1,9 +1,8 @@
-##########
 Python API
-##########
+==========
 
 Description
-===========
+***********
 
 A color configuration (:py:class:`Config`) defines all the color spaces to be
 available at runtime.
@@ -44,7 +43,7 @@ environment variable to point at the root of that configuration.
 See :ref:`developers-usageexamples`
 
 Examples of Use
----------------
++++++++++++++++
 
 .. code-block:: python
 
@@ -88,7 +87,7 @@ Examples of Use
     # https://github.com/imageworks/OpenColorIO-Configs/blob/master/nuke-default/make.py
 
 Exceptions
-==========
+**********
 
 .. autoclass:: PyOpenColorIO.Exception
     :members:
@@ -99,7 +98,7 @@ Exceptions
     :undoc-members:
 
 Global
-======
+******
 
 .. autofunction:: PyOpenColorIO.ClearAllCaches
 
@@ -112,35 +111,35 @@ Global
 .. autofunction:: PyOpenColorIO.SetLoggingLevel
 
 Config
-======
+******
 
 .. autoclass:: PyOpenColorIO.Config
     :members:
     :undoc-members:
 
 ColorSpace
-==========
+**********
 
 .. autoclass:: PyOpenColorIO.ColorSpace
     :members:
     :undoc-members:
 
 Look
-====
+****
 
 .. autoclass:: PyOpenColorIO.Look
     :members:
     :undoc-members:
 
 Processor
-=========
+*********
 
 .. autoclass:: PyOpenColorIO.Processor
     :members:
     :undoc-members:
 
 Context
-=======
+*******
 
 .. autoclass:: PyOpenColorIO.Context
     :members:

@@ -6,7 +6,7 @@ External API
 
 
 Configs
-~~~~~~~
++++++++
 
 At the highest level, we have OCIO::Configs. This represents the entirety of the
 current color "universe".  Configs are serialized as .ocio files, read at runtime,
@@ -17,13 +17,13 @@ dependent manner.
 
 Example Configs:
 
-* ACES (Acacdemy's standard color workflow)
-* spi-vfx (Used on some Imageworks VFX shows such as spiderman, etc).
-* and others
+  * ACES (Acacdemy's standard color workflow)
+  * spi-vfx (Used on some Imageworks VFX shows such as spiderman, etc).
+  * and others
 
 
 ColorSpaces
-~~~~~~~~~~~
++++++++++++
 
 The meat of an OCIO::Config is a list of named ColorSpaces. ColorSpace often
 correspond to input image states, output image states, or image states used for
@@ -40,7 +40,7 @@ Example ColorSpaces (from ACES configuration):
 
 
 Transforms
-~~~~~~~~~~
+++++++++++
 
 ColorSpaces contain an ordered list of transforms, which define the conversion
 to and from the Config's "reference" space.
@@ -79,7 +79,7 @@ invertible?), but conceptually it's a simple way to think about the design.
 
 
 Summary
-~~~~~~~
++++++++
 
 Configs and ColorSpaces are just a bookkeeping device used to get and ordered
 lists of Transforms corresponding to image color transformation.
@@ -92,7 +92,7 @@ with Configs and Processors.
 
 
 OCIO::Processors
-~~~~~~~~~~~~~~~~
+++++++++++++++++
 
 A processor corresponds to a 'baked' color transformation. You specify two arguments
 when querying a processor: the :ref:`colorspace_section` you are coming from,
@@ -146,7 +146,7 @@ Internal API
 
 
 The Op Abstraction
-~~~~~~~~~~~~~~~~~~
+++++++++++++++++++
 
 It is a useful abstraction, both for code-reuse and optimization, to not relying
 on the transforms to do pixel processing themselves.
@@ -193,7 +193,7 @@ referenced above) may generate a few ops:
    CreateLut3DOp(ops, cachedFile->lut3D,
                       fileTransform.getInterpolation(), dir);
 
-See (src/core/*Ops.h) for the available ops.
+See (``src/core/*Ops.h``) for the available ops.
 
 Note that while compositors often have complex, branching trees of image processing
 operations, we just have a linear list of ops, lending itself very well to
@@ -203,23 +203,22 @@ Before the ops are run, they are optimized. (Collapsed with appropriate neighbor
 
 
 An Example
-~~~~~~~~~~
+++++++++++
 
-Let us consider the internal steps when getProcessor() is called to convert
-from ColorSpace 'adx10' to ColorSpace 'aces'.
+Let us consider the internal steps when getProcessor() is called to
+convert from ColorSpace 'adx10' to ColorSpace 'aces'.
 
-* The first step is to turn this ColorSpace conversion into an ordered list of
-transforms.  We do this by creating a single of the conversions from 'adx10'
-to reference, and then adding the transforms required to go from reference to
-'aces'.
-
-* The Transform list is then converted into a list of ops.  It is during this
-stage luts, are loaded, etc.
+  * The first step is to turn this ColorSpace conversion into an
+  ordered list of transforms.  We do this by creating a single of the
+  conversions from 'adx10' to reference, and then adding the
+  transforms required to go from reference to 'aces'.
+  * The Transform list is then converted into a list of ops.  It is
+  during this stage luts, are loaded, etc.
 
 
 
 CPU CODE PATH
-~~~~~~~~~~~~~
++++++++++++++
 
 The master list of ops is then optimized, and stored internally in the processor.
 
@@ -255,7 +254,7 @@ After all ops have been applied, the results are copied back to the source
 
 
 GPU CODE PATH
-~~~~~~~~~~~~~
++++++++++++++
 
 #. The master list of ops is partitioned into 3 ordered lists:
 

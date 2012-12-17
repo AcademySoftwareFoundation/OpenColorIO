@@ -10,6 +10,7 @@ Some information on contributing to OCIO:
 
     getting_started
     coding_guidelines
+    documentation_guidelines
     submitting_changes
     issues
 

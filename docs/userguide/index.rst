@@ -13,3 +13,4 @@ For a "broader picture" expiation of how to use OCIO, see the :ref:`configuratio
     baking_luts
     contexts
     looks
+    config_syntax
