@@ -261,7 +261,7 @@ device. Examples of common views are:
 * "Raw" when assigned a colorspace with ``raw: yes`` set will show the
   unaltered image, useful for tech-checking images
 
-An example of the ``displays`` section from the :ref:`spi-vfx` config:
+An example of the ``displays`` section from the :ref:`config-spi-vfx` config:
 
 .. code-block:: yaml
 
@@ -440,10 +440,10 @@ applications.
 
 
 ``to_reference`` and ``from_reference``
---------------------
+---------------------------------------
 
 Here is a example of a very simple ``colorspaces`` section, modified
-from the :ref:`spi-vfx` example config::
+from the :ref:`config-spi-vfx` example config:
 
 .. code-block:: yaml
 
@@ -638,6 +638,7 @@ stands for floating point.
 Example:
 
 .. code-block:: yaml
+
     - !<ColorSpace>
       name: srgb8
       bitdepth: 8ui
@@ -646,7 +647,7 @@ Example:
 
 
 ``isdata:``
-----------
+-----------
 
 Optional. Default: false. Boolean.
 
@@ -706,8 +707,8 @@ potential clamping caused by a LUT)
   option.
 
 
-``family:`
-----------
+``family:``
+-----------
 
 Optional.
 
