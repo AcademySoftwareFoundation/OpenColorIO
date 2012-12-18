@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.7',
+        VERSION:     '1.0.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.7 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
     <link rel="up" title="Configurations" href="index.html" />
     <link rel="next" title="spi-vfx" href="spi_vfx.html" />
     <link rel="prev" title="Configurations" href="index.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.7 documentation
+      OpenColorIO v1.0.8 documentation
       </div>
       <div class="content">
         
@@ -83,7 +83,7 @@
         <td width="100%" id="bodycontent">
         
 <div class="section" id="sony-pictures-imageworks-color-pipeline">
-<h1>Sony Pictures Imageworks Color Pipeline<a class="headerlink" href="#sony-pictures-imageworks-color-pipeline" title="Permalink to this headline">¶</a></h1>
+<span id="config-spipipeline"></span><h1>Sony Pictures Imageworks Color Pipeline<a class="headerlink" href="#sony-pictures-imageworks-color-pipeline" title="Permalink to this headline">¶</a></h1>
 <p>This document describes a high-level overview on how to emulate the current color management practice at Sony Imageworks. It applies equally to all profiles used at Imageworks, including both the VFX and Animation profiles.  It&#8217;s by no means a requirement to follow this workflow at your own facility, this is merely a guideline on how we choose to work.</p>
 <div class="section" id="general-pipeline-observations">
 <h2>General Pipeline Observations<a class="headerlink" href="#general-pipeline-observations" title="Permalink to this headline">¶</a></h2>
@@ -130,7 +130,7 @@ texture_dt8.tif: dt8</pre>
 </ul>
 </div>
 <div class="section" id="texture-painting-matte-painting">
-<h2>Texture Painting / Matte Painting<a class="headerlink" href="#texture-painting-matte-painting" title="Permalink to this headline">¶</a></h2>
+<span id="config-spipipeline-texture"></span><h2>Texture Painting / Matte Painting<a class="headerlink" href="#texture-painting-matte-painting" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Textures are painted in non-OCIO color-managed environment. (Photoshop, etc).</li>
 <li>At texture publish time, before mipmaps are generated, all color processing is applied.  Internally at SPI we use a modified version of OpenImageIO&#8217;s maketx that also links to OpenColorIO.  We intend to make this code available as soon as possible.  In the meantime, the OpenColorIO &#8216;ocioconvert&#8217; script included in examples can be relied upon.  Color processing (linearization) is applied before mipmap generation in order to assure energy preservation in the render.  If the opposite processing order were used, (mipmap in the original space, color convert in the shader), the apparent intensity of texture values would change as the object approached to receeded to the camera.</li>

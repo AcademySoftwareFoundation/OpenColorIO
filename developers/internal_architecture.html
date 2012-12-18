@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.7',
+        VERSION:     '1.0.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.7 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
     <link rel="up" title="Developer guide" href="index.html" />
     <link rel="next" title="FAQ" href="../FAQ.html" />
     <link rel="prev" title="Python Types" href="bindings/PythonTypes.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.7 documentation
+      OpenColorIO v1.0.8 documentation
       </div>
       <div class="content">
         
@@ -56,6 +56,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation_guidelines.html">Documentation guidelines</a></li>
 <li class="toctree-l2"><a class="reference internal" href="submitting_changes.html">Submitting Changes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="issues.html">Issues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage_examples.html">Usage Examples</a></li>
@@ -101,11 +102,13 @@ and are often used in a &#8216;read-only&#8217; context.</p>
 <p>Config are loaded at runtime to allow for customized color handling in a show-
 dependent manner.</p>
 <p>Example Configs:</p>
+<blockquote>
 <ul class="simple">
 <li>ACES (Acacdemy&#8217;s standard color workflow)</li>
 <li>spi-vfx (Used on some Imageworks VFX shows such as spiderman, etc).</li>
 <li>and others</li>
 </ul>
+</blockquote>
 </div>
 <div class="section" id="colorspaces">
 <h3>ColorSpaces<a class="headerlink" href="#colorspaces" title="Permalink to this headline">¶</a></h3>
@@ -246,7 +249,7 @@ referenced above) may generate a few ops:</p>
                    <span class="n">fileTransform</span><span class="p">.</span><span class="n">getInterpolation</span><span class="p">(),</span> <span class="n">dir</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>See (src/core/<a href="#id1"><span class="problematic" id="id2">*</span></a>Ops.h) for the available ops.</p>
+<p>See (<tt class="docutils literal"><span class="pre">src/core/*Ops.h</span></tt>) for the available ops.</p>
 <p>Note that while compositors often have complex, branching trees of image processing
 operations, we just have a linear list of ops, lending itself very well to
 optimization.</p>
@@ -254,18 +257,18 @@ optimization.</p>
 </div>
 <div class="section" id="an-example">
 <h3>An Example<a class="headerlink" href="#an-example" title="Permalink to this headline">¶</a></h3>
-<p>Let us consider the internal steps when getProcessor() is called to convert
-from ColorSpace &#8216;adx10&#8217; to ColorSpace &#8216;aces&#8217;.</p>
+<p>Let us consider the internal steps when getProcessor() is called to
+convert from ColorSpace &#8216;adx10&#8217; to ColorSpace &#8216;aces&#8217;.</p>
+<blockquote>
 <ul class="simple">
-<li>The first step is to turn this ColorSpace conversion into an ordered list of</li>
+<li>The first step is to turn this ColorSpace conversion into an</li>
 </ul>
-<p>transforms.  We do this by creating a single of the conversions from &#8216;adx10&#8217;
-to reference, and then adding the transforms required to go from reference to
-&#8216;aces&#8217;.</p>
-<ul class="simple">
-<li>The Transform list is then converted into a list of ops.  It is during this</li>
-</ul>
-<p>stage luts, are loaded, etc.</p>
+<p>ordered list of transforms.  We do this by creating a single of the
+conversions from &#8216;adx10&#8217; to reference, and then adding the
+transforms required to go from reference to &#8216;aces&#8217;.
+* The Transform list is then converted into a list of ops.  It is
+during this stage luts, are loaded, etc.</p>
+</blockquote>
 </div>
 <div class="section" id="cpu-code-path">
 <h3>CPU CODE PATH<a class="headerlink" href="#cpu-code-path" title="Permalink to this headline">¶</a></h3>

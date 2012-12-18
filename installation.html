@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.0.7',
+        VERSION:     '1.0.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.7 documentation" href="index.html" />
+    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="index.html" />
     <link rel="next" title="User Guide" href="userguide/index.html" />
     <link rel="prev" title="How to Configure ColorSpace Allocation" href="configurations/allocation_vars.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.7 documentation
+      OpenColorIO v1.0.8 documentation
       </div>
       <div class="content">
         
@@ -51,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="CompatibleSoftware.html">Compatible Software</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configurations/index.html">Configurations</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-easy-way">The easy way</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#building-from-source">Building from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#quick-environment-configuration">Quick environment configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#nuke-configuration">Nuke Configuration</a></li>
@@ -81,9 +82,33 @@
         <td width="100%" id="bodycontent">
         
 <div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-easy-way">
+<h2>The easy way<a class="headerlink" href="#the-easy-way" title="Permalink to this headline">¶</a></h2>
+<p>While prebuilt binaries are not yet available for all paltforms, OCIO
+is available via several platform&#8217;s package managers.</p>
+<div class="section" id="fedora-and-rhel">
+<h3>Fedora and RHEL<a class="headerlink" href="#fedora-and-rhel" title="Permalink to this headline">¶</a></h3>
+<p>In Fedora Core 15 and above, the following command will install OpenColorIO:</p>
+<div class="highlight-python"><pre>yum install OpenColorIO</pre>
+</div>
+<p>Providing you are using the <a class="reference external" href="http://fedoraproject.org/wiki/EPEL">Fedora EPEL repository</a> (see the <a class="reference external" href="http://fedoraproject.org/wiki/EPEL/FAQ#Using_EPEL">FAQ for instructions</a>), this same
+command will work for RedHat Enterprise Linux 6 and higher (including
+RHEL derivatives such as CentOS 6 and Scientific Linux 6)</p>
+</div>
+<div class="section" id="os-x-using-homebrew">
+<h3>OS X using Homebrew<a class="headerlink" href="#os-x-using-homebrew" title="Permalink to this headline">¶</a></h3>
+<p>You can use the Homebrew package manager to install OpenColorIO on OS X.</p>
+<p>First install Homebrew as per the instructions on the <a class="reference external" href="http://mxcl.github.com/homebrew/">Homebrew
+homepage</a> (or see the <a class="reference external" href="https://github.com/mxcl/homebrew/wiki/Installation">Homebrew wiki</a> for more
+detailed instructions)</p>
+<p>Then simply run the following command to install:</p>
+<div class="highlight-python"><pre>brew install opencolorio</pre>
+</div>
+</div>
+</div>
 <div class="section" id="building-from-source">
-<span id="id1"></span><h2>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this headline">¶</a></h2>
 <p>While there is a huge range of possible setups, the following steps
 should work on OS X and most Linux distros.</p>
 <p>The basic requirements are:</p>
@@ -142,7 +167,7 @@ $ ls lib/
 libOpenColorIO.a      libOpenColorIO.dylib</pre>
 </div>
 <div class="section" id="enabling-optional-components">
-<span id="id2"></span><h3>Enabling optional components<a class="headerlink" href="#enabling-optional-components" title="Permalink to this headline">¶</a></h3>
+<span id="id3"></span><h3>Enabling optional components<a class="headerlink" href="#enabling-optional-components" title="Permalink to this headline">¶</a></h3>
 <p>The OpenColorIO library is probably not all you want - the Python
 libraries bindings, the Nuke nodes and several applications are only
 built if their dependencies are found.</p>
@@ -202,7 +227,7 @@ configuration script etc), for example:</p>
 </div>
 </div>
 <div class="section" id="nuke-configuration">
-<span id="id3"></span><h2>Nuke Configuration<a class="headerlink" href="#nuke-configuration" title="Permalink to this headline">¶</a></h2>
+<span id="id4"></span><h2>Nuke Configuration<a class="headerlink" href="#nuke-configuration" title="Permalink to this headline">¶</a></h2>
 <p>If you specified the <tt class="docutils literal"><span class="pre">NUKE_INSTALL_PATH</span></tt> option when running cmake,
 you should have a <tt class="docutils literal"><span class="pre">/software/ocio/lib/nuke6.2</span></tt> directory containing
 various files.</p>

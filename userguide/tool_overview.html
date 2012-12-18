@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.7',
+        VERSION:     '1.0.8',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.7 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
     <link rel="up" title="User Guide" href="index.html" />
     <link rel="next" title="Baking LUT’s" href="baking_luts.html" />
     <link rel="prev" title="User Guide" href="index.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.7 documentation
+      OpenColorIO v1.0.8 documentation
       </div>
       <div class="content">
         
@@ -57,6 +57,7 @@
 <li class="toctree-l2"><a class="reference internal" href="baking_luts.html">Baking LUT&#8217;s</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contexts.html">Contexts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="looks.html">Looks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_syntax.html">Config syntax</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../developers/index.html">Developer guide</a></li>
@@ -128,8 +129,15 @@ ERROR: Config failed sanitycheck. The role 'compositing_log' refers to a colorsp
 
 Tests complete.</pre>
 </div>
-<p>It cannot verify the defined color transforms are &#8220;correct&#8221;, only that the
-config file can be loaded by OCIO without error.</p>
+<p>It cannot verify the defined color transforms are &#8220;correct&#8221;, only that
+the config file can be loaded by OCIO without error. Some of the
+problems it will detect are:</p>
+<ul class="simple">
+<li>Duplicate colorspace names</li>
+<li>References to undefined colorspaces</li>
+<li>Required roles being undefined</li>
+<li>At least one display device is defined</li>
+</ul>
 <p>As with all the OCIO command line tools, you can use the <cite>&#8211;help</cite> argument to
 read a description and see the other arguments accepted:</p>
 <div class="highlight-python"><pre>$ ociocheck --help

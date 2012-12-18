@@ -102,7 +102,7 @@ a.headerlink:hover {
 div.content {
     margin-top: 20px;
     margin-left: 0px;
-    margin-right: 0px;
+    margin-right: 20px;
     margin-bottom: 50px;
     font-size: 0.9em;
 }
@@ -245,7 +245,7 @@ div.seealso {
 
 /* More layout and styles */
 h1 {
-    font-size: 1.3em;
+    font-size: 1.7em;
     font-weight: bold;
     color: #0c3762;
     border-bottom: dotted thin #e0e0e0;
@@ -253,7 +253,7 @@ h1 {
 }
 
 h2 {
-    font-size: 1.2em;
+    font-size: 1.6em;
     font-weight: normal;
     color: #0c3762;
     border-bottom: dotted thin #e0e0e0;
@@ -261,16 +261,18 @@ h2 {
 }
 
 h3 {
-    font-size: 1.1em;
+    font-size: 1.4em;
     font-weight: normal;
     color: #0c3762;
+    border-bottom: dotted thin #e0e0e0;
     margin-top: 30px;
 }
 
 h4 {
-    font-size: 1.0em;
+    font-size: 1.2em;
     font-weight: normal;
     color: #0c3762;
+    border-bottom: dotted thin #e0e0e0;
     margin-top: 30px;
 }
 
