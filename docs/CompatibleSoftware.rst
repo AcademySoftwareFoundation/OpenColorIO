@@ -231,22 +231,15 @@ relied upon for critical production work.
 java.com
 
 
-Blender (Beta)
+Blender
 **************
 `Open Source 3D Application <http://www.blender.org/>`__
 
-Blender currently has `limited support
-<http://wiki.blender.org/index.php/Dev:Source/Image/OpenColorIO#OpenColorIO_Integration>`__
-for OCIO.
-
-Xaview Thomas has begun the `Blender OCIO integration <http://github.com/thmxv/blender-ocio>`__ .
-Currently undergoing development.
-
-`Blender Developers Meeting Notes July 31, 2011
-<http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011>`__
-
-`YouTube Blender Example
-<http://www.youtube.com/watch?v=O43ItUVvcks>`__
+In `version 2.64
+<http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64>`__,
+Blender has integrated OCIO as part it's redesigned `color management
+system
+<http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64/Color_Management>`__.
 
 
 Ramen (Beta)
