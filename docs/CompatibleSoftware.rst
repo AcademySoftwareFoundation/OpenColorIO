@@ -17,7 +17,7 @@ After Effects
 
 `Compositor - Adobe <http://www.adobe.com/products/aftereffects.html>`__
 
-OpenColorIO nodes are available for use in After Effects.
+An OpenColorIO plugin is available for use in After Effects.
 
 See `src/aftereffects
 <http://github.com/imageworks/OpenColorIO/tree/master/src/aftereffects>`__
@@ -26,6 +26,17 @@ if you are interested in building your own OCIO plugins.
 Pre-built binaries are also available for `download
 <http://www.fnordware.com/OpenColorIO>`__, courtesy of 
 `fnordware <http://www.fnordware.com>`__.
+
+
+Blender
+*******
+`Open Source 3D Application <http://www.blender.org/>`__
+
+In `version 2.64
+<http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64>`__,
+Blender has integrated OCIO as part it's redesigned `color management
+system
+<http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64/Color_Management>`__.
 
 
 Krita
@@ -101,18 +112,21 @@ Hiero
 Hiero 1.0 will ship with native support for OCIO in the display and the
 equivalent of Nuke's OCIOColorSpace in the Read nodes.
 
-It comes with “nuke-default” OCIO config by default, so the Hiero viewer
+It comes with "nuke-default" OCIO config by default, so the Hiero viewer
 matches when sending files to Nuke for rendering.
 
 
 Photoshop
 *********
-OpenColorIO display luts can be exported as ICC profiles for use in photoshop.
-See the ociobakelut details below for additional info.  The core idea is to
-create an .icc profile, with a valid description, and then to save it to the
-proper OS icc directory. (On OSX, ~/Library/ColorSync/Profiles/) Upon a
-Photoshop relaunch, Edit->Assign Profile, and then select your new OCIO lut.
 
+OpenColorIO display luts can be exported as ICC profiles for use in
+photoshop.  The core idea is to create an .icc profile, with a valid
+description, and then to save it to the proper OS icc directory. (On
+OSX, ``~/Library/ColorSync/Profiles/``). Upon a Photoshop relaunch,
+Edit->Assign Profile, and then select your new OCIO lut.
+
+See the the OCIO user guide `for details on baking ICC profiles for Photoshop
+<userguide-bakelut-photoshop>`__
 
 OpenImageIO
 ***********
@@ -128,16 +142,37 @@ Remaining integration tasks include
 
 C++
 ***
-The core OpenColorIO API is avaiable for use in C++. See the `export directory
+
+The core OpenColorIO API is avaiable for use in C++. See the `export
+directory
 <http://github.com/imageworks/OpenColorIO/tree/master/export/OpenColorIO>`__
-for the C++ API headers.  Minimal code examples are also available in the source
-code distribution. Of particular note are apps/ocioconvert and apps/ociodisplay.
+for the C++ API headers.  Minimal code examples are also available in
+the source code distribution. Of particular note are
+`src/apps/ocioconvert/
+<https://github.com/imageworks/OpenColorIO/tree/master/src/apps/ocioconvert>`__
+and `src/apps/ociodisplay/
+<https://github.com/imageworks/OpenColorIO/tree/master/src/apps/ociodisplay>`__
+
+Also see the :ref:`developer-guide`
 
 Python
 ******
+
 The OpenColorIO API is available for use in python. See the "pyglue" directory
 in the codebase.
 
+See the devleoper guide for `usage examples
+<developers-usageexamples>`__ and API documentation on the PYthon
+bindings
+
+Vegas Pro
+*********
+
+`Video editing - Sony <http://www.sonycreativesoftware.com/vegaspro>`__
+
+
+Vegas Pro 12 uses OpenColorIO, supporting workflows such as S-log
+footage via the ACES colorspace.
 
 Apps w/icc or luts
 ******************
@@ -227,26 +262,6 @@ in the codebase.
 
 This integration is currently considered a work in progress, and should not be
 relied upon for critical production work.
-
-java.com
-
-
-Blender (Beta)
-**************
-`Open Source 3D Application <http://www.blender.org/>`__
-
-Blender currently has `limited support
-<http://wiki.blender.org/index.php/Dev:Source/Image/OpenColorIO#OpenColorIO_Integration>`__
-for OCIO.
-
-Xaview Thomas has begun the `Blender OCIO integration <http://github.com/thmxv/blender-ocio>`__ .
-Currently undergoing development.
-
-`Blender Developers Meeting Notes July 31, 2011
-<http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011>`__
-
-`YouTube Blender Example
-<http://www.youtube.com/watch?v=O43ItUVvcks>`__
 
 
 Ramen (Beta)
