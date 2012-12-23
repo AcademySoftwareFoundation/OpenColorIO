@@ -49,6 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if defined(__APPLE__) && !defined(__IPHONE__)
 #include <crt_externs.h> // _NSGetEnviron()
 #elif !defined(WINDOWS)
+#include <unistd.h>
 extern char **environ;
 #endif
 
