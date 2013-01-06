@@ -2,7 +2,7 @@ Python Types
 ============
 
 Constants
----------
+*********
 
 .. automodule:: PyOpenColorIO.Constants
     :members:

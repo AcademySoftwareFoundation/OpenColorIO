@@ -68,6 +68,8 @@ bool StringToFloat(float * fval, const char * str);
 
 bool StringToInt(int * ival, const char * str);
 
+bool StringToVector(std::vector<int> * ivector, const char * str);
+
 int main(int argc, const char **argv)
 {
     ArgParse ap;
@@ -75,6 +77,8 @@ int main(int argc, const char **argv)
     std::vector<std::string> floatAttrs;
     std::vector<std::string> intAttrs;
     std::vector<std::string> stringAttrs;
+    std::string keepChannels;
+    bool croptofull = false;
      
     ap.options("ocioconvert -- apply colorspace transform to an image \n\n"
                "usage: ocioconvert [options]  inputimage inputcolorspace outputimage outputcolorspace\n\n",
@@ -83,6 +87,8 @@ int main(int argc, const char **argv)
                "--float-attribute %L", &floatAttrs, "name=float pair defining OIIO float attribute",
                "--int-attribute %L", &intAttrs, "name=int pair defining OIIO int attribute",
                "--string-attribute %L", &stringAttrs, "name=string pair defining OIIO string attribute",
+               "--croptofull", &croptofull, "name=Crop or pad to make pixel data region match the \"full\" region",
+               "--ch %s", &keepChannels, "name=Select channels (e.g., \"2,3,4\")",
                NULL
                );
     if (ap.parse (argc, argv) < 0) {
@@ -138,6 +144,75 @@ int main(int argc, const char **argv)
         
         f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
         delete f;
+        
+        std::vector<int> kchannels;
+        //parse --ch argument
+        if (keepChannels != "" && !StringToVector(&kchannels,keepChannels.c_str()))
+        {
+            std::cerr << "Error: --ch: '" << keepChannels << "' should be comma-seperated integers\n";
+            exit(1);
+        }
+        
+        //if kchannels not specified, then keep all channels
+        if (kchannels.size() == 0)
+        {
+            kchannels.resize(components);
+            for (int channel=0; channel < components; channel++)
+            {
+                kchannels[channel] = channel;
+            }
+        }
+        
+        if (croptofull)
+        {
+            imgwidth = spec.full_width;
+            imgheight = spec.full_height;
+            std::cerr << "cropping to " << imgwidth;
+            std::cerr << "x" << imgheight << std::endl;
+        }
+        
+        if (croptofull || (int)kchannels.size() < spec.nchannels)
+        {
+            // crop down bounding box and ditch all but n channels
+            // img is a flattened 3 dimensional matrix heightxwidthxchannels
+            // fill croppedimg with only the needed pixels
+            std::vector<float> croppedimg;
+            croppedimg.resize(imgwidth*imgheight*kchannels.size());
+            for (int y=0 ; y < spec.height ; y++)
+            {
+                for (int x=0 ; x < spec.width; x++)
+                {
+                    for (int k=0; k < (int)kchannels.size(); k++)
+                    {
+                        int channel = kchannels[k];
+                        int current_pixel_y = y + spec.y;
+                        int current_pixel_x = x + spec.x;
+                        
+                        if (current_pixel_y >= 0 &&
+                            current_pixel_x >= 0 &&
+                            current_pixel_y < imgheight &&
+                            current_pixel_x < imgwidth)
+                        {
+                            // get the value at the desired pixel
+                            float current_pixel = img[(y*spec.width*components)
+                                                      + (x*components)+channel];
+                            // put in croppedimg.
+                            croppedimg[(current_pixel_y*imgwidth*kchannels.size())
+                                       + (current_pixel_x*kchannels.size())
+                                       + channel] = current_pixel;
+                        }
+                    }
+                }
+            }
+            // redefine the spec so it matches the new bounding box
+            spec.x = 0;
+            spec.y = 0;
+            spec.height = imgheight;
+            spec.width = imgwidth;
+            spec.nchannels = (int)(kchannels.size());
+            components = (int)(kchannels.size());
+            img = croppedimg;
+        }
     
     }
     catch(...)
@@ -302,6 +377,21 @@ bool StringToInt(int * ival, const char * str)
     
     if(ival) *ival = x;
     return true;
+}
+
+bool StringToVector(std::vector<int> * ivector, const char * str)
+{
+    std::stringstream ss(str);
+    int i;
+    while (ss >> i)
+    {
+        ivector->push_back(i);
+        if (ss.peek() == ',')
+        {
+          ss.ignore();
+        }
+    }
+    return ivector->size() != 0;
 }
 
 

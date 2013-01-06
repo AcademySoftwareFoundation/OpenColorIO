@@ -12,6 +12,8 @@ You are welcome to include the OpenColorIO in commercial, or open source
 applications. See the :ref:`license` for further details.
 
 
+.. _faq-terminology:
+
 Terminology
 ***********
 
@@ -20,8 +22,8 @@ Terminology
 - Colorspace - a meaningful space that can be transferred to and from the reference space
 - Display - a virtual or physical display device (e.g an sRGB display device)
 - View - a meaningful view of the reference space on a Display (e.g a film emulation view on an sRGB display device)
-- Role - abstract colorspace naming (e.g specify the "lnh" colorspace as the scene_linear role)
-
+- Role - abstract colorspace naming (e.g specify the "lnh" colorspace as the scene_linear role, or the color-picker UI uses color_picking role)
+- Look - a color transform which applies a creative look (for example a per-shot netural grade to remove color-casts from a sequence of film scans, or a DI look)
 
 .. _faq-supportedlut:
 

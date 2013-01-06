@@ -1,3 +1,16 @@
+**Version 1.0.8 (Dec 11 2012):**
+    * After Effects plugin
+    * Core increased precision for matrix inversion
+    * Core md5 symbols no longer leaked
+    * CMake compatibility with OIIO 1.0 namespacing
+    * Cmake option to control python soname
+    * Nuke register_viewers defaults OCIODisplay to "all"
+    * Nuke ColorLookup <-> spi1d lut examples
+    * Windows uses boost shared_ptr by default
+    * Windows fixed csp writing
+    * Windows build fixes
+    * ociobakelut supports looks
+
 **Version 1.0.7 (April 17 2012):**
     * IRIDAS .look support
     * ociolutimage utility added (handles image <-> 3dlut)
