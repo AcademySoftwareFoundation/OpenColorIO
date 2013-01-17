@@ -165,6 +165,14 @@ See the devleoper guide for `usage examples
 <developers-usageexamples>`__ and API documentation on the PYthon
 bindings
 
+Vegas Pro
+*********
+
+`Video editing - Sony <http://www.sonycreativesoftware.com/vegaspro>`__
+
+
+Vegas Pro 12 uses OpenColorIO, supporting workflows such as S-log
+footage via the ACES colorspace.
 
 Apps w/icc or luts
 ******************
