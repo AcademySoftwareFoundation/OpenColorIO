@@ -390,8 +390,11 @@ OCIO_NAMESPACE_ENTER
 
             // try and read the lut header
             std::string line;
+            std::vector<std::string> readparts;
+            
             nextline (istream, line);
-            if (line != "CSPLUTV100")
+            pystring::split(pystring::strip(line), readparts);
+            if (pystring::upper(readparts[0]) != "CSPLUTV100") 
             {
                 std::ostringstream os;
                 os << "Lut doesn't seem to be a csp file, expected 'CSPLUTV100'.";
@@ -401,7 +404,8 @@ OCIO_NAMESPACE_ENTER
 
             // next line tells us if we are reading a 1D or 3D lut
             nextline (istream, line);
-            if (line != "1D" && line != "3D")
+            pystring::split(pystring::strip(line), readparts);
+            if (pystring::upper(readparts[0]) != "1D" && pystring::upper(readparts[0]) != "3D")
             {
                 std::ostringstream os;
                 os << "Unsupported CSP lut type. Require 1D or 3D. ";
@@ -414,13 +418,14 @@ OCIO_NAMESPACE_ENTER
             std::string metadata;
             std::streampos curr_pos = istream.tellg ();
             nextline (istream, line);
-            if (line == "BEGIN METADATA")
+            pystring::split(pystring::strip(line), readparts);
+            if (pystring::upper(readparts[0]) == "BEGIN METADATA")
             {
-                while (line != "END METADATA" || !istream)
+                while (pystring::upper(readparts[0]) != "END METADATA" || !istream)
                 {
                     nextline (istream, line);
-                    if (line != "END METADATA")
-                        metadata += line + "\n";
+                    if (pystring::upper(readparts[0]) != "END METADATA")
+                        metadata += pystring::upper(readparts[0]) + "\n";
                 }
             }
             else
