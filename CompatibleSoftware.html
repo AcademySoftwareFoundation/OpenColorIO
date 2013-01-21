@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Compatible Software</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#after-effects">After Effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#blender">Blender</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#krita">Krita</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#silhouette">Silhouette</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#nuke">Nuke</a></li>
@@ -60,10 +61,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#openimageio">OpenImageIO</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#c">C++</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#python">Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#vegas-pro">Vegas Pro</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#apps-w-icc-or-luts">Apps w/icc or luts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rv-beta">RV (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#java-beta">Java (Beta)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#blender-beta">Blender (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ramen-beta">Ramen (Beta)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cryengine3-beta">CryEngine3 (Beta)</a></li>
 </ul>
@@ -103,11 +104,18 @@ application, please contant ocio-dev as well.</p>
 <div class="section" id="after-effects">
 <h2>After Effects<a class="headerlink" href="#after-effects" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="http://www.adobe.com/products/aftereffects.html">Compositor - Adobe</a></p>
-<p>OpenColorIO nodes are available for use in After Effects.</p>
+<p>An OpenColorIO plugin is available for use in After Effects.</p>
 <p>See <a class="reference external" href="http://github.com/imageworks/OpenColorIO/tree/master/src/aftereffects">src/aftereffects</a>
 if you are interested in building your own OCIO plugins.</p>
 <p>Pre-built binaries are also available for <a class="reference external" href="http://www.fnordware.com/OpenColorIO">download</a>, courtesy of
 <a class="reference external" href="http://www.fnordware.com">fnordware</a>.</p>
+</div>
+<div class="section" id="blender">
+<h2>Blender<a class="headerlink" href="#blender" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.blender.org/">Open Source 3D Application</a></p>
+<p>In <a class="reference external" href="http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64">version 2.64</a>,
+Blender has integrated OCIO as part it&#8217;s redesigned <a class="reference external" href="http://wiki.blender.org/index.php/Dev:Ref/Release_Notes/2.64/Color_Management">color management
+system</a>.</p>
 </div>
 <div class="section" id="krita">
 <h2>Krita<a class="headerlink" href="#krita" title="Permalink to this headline">¶</a></h2>
@@ -158,16 +166,17 @@ Monitor Panel: Full OCIO Support</p>
 <p><a class="reference external" href="http://www.thefoundry.co.uk/products/hiero">Conform &amp; Review - The Foundry</a></p>
 <p>Hiero 1.0 will ship with native support for OCIO in the display and the
 equivalent of Nuke&#8217;s OCIOColorSpace in the Read nodes.</p>
-<p>It comes with “nuke-default” OCIO config by default, so the Hiero viewer
+<p>It comes with &#8220;nuke-default&#8221; OCIO config by default, so the Hiero viewer
 matches when sending files to Nuke for rendering.</p>
 </div>
 <div class="section" id="photoshop">
 <h2>Photoshop<a class="headerlink" href="#photoshop" title="Permalink to this headline">¶</a></h2>
-<p>OpenColorIO display luts can be exported as ICC profiles for use in photoshop.
-See the ociobakelut details below for additional info.  The core idea is to
-create an .icc profile, with a valid description, and then to save it to the
-proper OS icc directory. (On OSX, ~/Library/ColorSync/Profiles/) Upon a
-Photoshop relaunch, Edit-&gt;Assign Profile, and then select your new OCIO lut.</p>
+<p>OpenColorIO display luts can be exported as ICC profiles for use in
+photoshop.  The core idea is to create an .icc profile, with a valid
+description, and then to save it to the proper OS icc directory. (On
+OSX, <tt class="docutils literal"><span class="pre">~/Library/ColorSync/Profiles/</span></tt>). Upon a Photoshop relaunch,
+Edit-&gt;Assign Profile, and then select your new OCIO lut.</p>
+<p>See the the OCIO user guide <a class="reference external" href="userguide-bakelut-photoshop">for details on baking ICC profiles for Photoshop</a></p>
 </div>
 <div class="section" id="openimageio">
 <h2>OpenImageIO<a class="headerlink" href="#openimageio" title="Permalink to this headline">¶</a></h2>
@@ -180,14 +189,26 @@ public header <a class="reference external" href="http://github.com/OpenImageIO/
 </div>
 <div class="section" id="c">
 <h2>C++<a class="headerlink" href="#c" title="Permalink to this headline">¶</a></h2>
-<p>The core OpenColorIO API is avaiable for use in C++. See the <a class="reference external" href="http://github.com/imageworks/OpenColorIO/tree/master/export/OpenColorIO">export directory</a>
-for the C++ API headers.  Minimal code examples are also available in the source
-code distribution. Of particular note are apps/ocioconvert and apps/ociodisplay.</p>
+<p>The core OpenColorIO API is avaiable for use in C++. See the <a class="reference external" href="http://github.com/imageworks/OpenColorIO/tree/master/export/OpenColorIO">export
+directory</a>
+for the C++ API headers.  Minimal code examples are also available in
+the source code distribution. Of particular note are
+<a class="reference external" href="https://github.com/imageworks/OpenColorIO/tree/master/src/apps/ocioconvert">src/apps/ocioconvert/</a>
+and <a class="reference external" href="https://github.com/imageworks/OpenColorIO/tree/master/src/apps/ociodisplay">src/apps/ociodisplay/</a></p>
+<p>Also see the <a class="reference internal" href="developers/index.html#developer-guide"><em>Developer guide</em></a></p>
 </div>
 <div class="section" id="python">
 <h2>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
 <p>The OpenColorIO API is available for use in python. See the &#8220;pyglue&#8221; directory
 in the codebase.</p>
+<p>See the devleoper guide for <a class="reference external" href="developers-usageexamples">usage examples</a> and API documentation on the PYthon
+bindings</p>
+</div>
+<div class="section" id="vegas-pro">
+<h2>Vegas Pro<a class="headerlink" href="#vegas-pro" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.sonycreativesoftware.com/vegaspro">Video editing - Sony</a></p>
+<p>Vegas Pro 12 uses OpenColorIO, supporting workflows such as S-log
+footage via the ACES colorspace.</p>
 </div>
 <div class="section" id="apps-w-icc-or-luts">
 <h2>Apps w/icc or luts<a class="headerlink" href="#apps-w-icc-or-luts" title="Permalink to this headline">¶</a></h2>
@@ -263,17 +284,6 @@ relied upon for critical production work.</p>
 in the codebase.</p>
 <p>This integration is currently considered a work in progress, and should not be
 relied upon for critical production work.</p>
-<p>java.com</p>
-</div>
-<div class="section" id="blender-beta">
-<h2>Blender (Beta)<a class="headerlink" href="#blender-beta" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="http://www.blender.org/">Open Source 3D Application</a></p>
-<p>Blender currently has <a class="reference external" href="http://wiki.blender.org/index.php/Dev:Source/Image/OpenColorIO#OpenColorIO_Integration">limited support</a>
-for OCIO.</p>
-<p>Xaview Thomas has begun the <a class="reference external" href="http://github.com/thmxv/blender-ocio">Blender OCIO integration</a> .
-Currently undergoing development.</p>
-<p><a class="reference external" href="http://www.blendernation.com/2011/08/01/blender-developers-meeting-notes-july-31-2011">Blender Developers Meeting Notes July 31, 2011</a></p>
-<p><a class="reference external" href="http://www.youtube.com/watch?v=O43ItUVvcks">YouTube Blender Example</a></p>
 </div>
 <div class="section" id="ramen-beta">
 <h2>Ramen (Beta)<a class="headerlink" href="#ramen-beta" title="Permalink to this headline">¶</a></h2>
