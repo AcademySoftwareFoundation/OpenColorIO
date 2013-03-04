@@ -394,27 +394,13 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        typedef std::pair<FileFormat*, CachedFileRcPtr> FileCachePair;
-        typedef std::map<std::string, FileCachePair> FileCacheMap;
-        
-        FileCacheMap g_fileCache;
-        Mutex g_fileCacheLock;
-        
-        // Get the FileFormat, CachedFilePtr
-        // or throw an exception.
-        
-        FileCachePair GetFile(const std::string & filepath)
+    
+        void LoadFileUncached(FileFormat * & returnFormat,
+            CachedFileRcPtr & returnCachedFile,
+            const std::string & filepath)
         {
-            // Acquire fileCache mutex
-            AutoMutex lock(g_fileCacheLock);
+            returnFormat = NULL;
             
-            FileCacheMap::iterator iter = g_fileCache.find(filepath);
-            if(iter != g_fileCache.end())
-            {
-                return iter->second;
-            }
-            
-            // We did not find the file in the cache; let's read it.
             {
                 std::ostringstream os;
                 os << "Opening " << filepath;
@@ -434,24 +420,21 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            
             // Try the initial format.
             std::string primaryErrorText;
             std::string root, extension;
             pystring::os::path::splitext(root, extension, filepath);
             extension = pystring::replace(extension,".","",1); // remove the leading '.'
             
-            FileFormat * primaryFormat = FormatRegistry::GetInstance().getFileFormatForExtension(extension);
+            FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
             
+            FileFormat * primaryFormat = 
+                formatRegistry.getFileFormatForExtension(extension);
             if(primaryFormat)
             {
                 try
                 {
                     CachedFileRcPtr cachedFile = primaryFormat->Read(filestream);
-                    
-                    // Add the result to our cache, return it.
-                    FileCachePair pair = std::make_pair(primaryFormat, cachedFile);
-                    g_fileCache[filepath] = pair;
                     
                     if(IsDebugLoggingEnabled())
                     {
@@ -461,13 +444,13 @@ OCIO_NAMESPACE_ENTER
                         LogDebug(os.str());
                     }
                     
-                    return pair;
+                    returnFormat = primaryFormat;
+                    returnCachedFile = cachedFile;
+                    return;
                 }
                 catch(std::exception & e)
                 {
                     primaryErrorText = e.what();
-                    filestream.clear();
-                    filestream.seekg( std::ifstream::beg );
                     
                     if(IsDebugLoggingEnabled())
                     {
@@ -480,22 +463,25 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             
+            filestream.clear();
+            filestream.seekg( std::ifstream::beg );
+            
             // If this fails, try all other formats
-            FormatRegistry & formats = FormatRegistry::GetInstance();
-            for(int findex = 0; findex<formats.getNumRawFormats(); ++findex)
+            CachedFileRcPtr cachedFile;
+            FileFormat * altFormat = NULL;
+            
+            for(int findex = 0;
+                findex<formatRegistry.getNumRawFormats();
+                ++findex)
             {
-                FileFormat * altFormat = formats.getRawFormatByIndex(findex);
+                altFormat = formatRegistry.getRawFormatByIndex(findex);
                 
                 // Dont bother trying the primaryFormat twice.
                 if(altFormat == primaryFormat) continue;
                 
                 try
                 {
-                    CachedFileRcPtr cachedFile = altFormat->Read(filestream);
-                    
-                    // Add the result to our cache, return it.
-                    FileCachePair pair = std::make_pair(altFormat, cachedFile);
-                    g_fileCache[filepath] = pair;
+                    cachedFile = altFormat->Read(filestream);
                     
                     if(IsDebugLoggingEnabled())
                     {
@@ -505,13 +491,12 @@ OCIO_NAMESPACE_ENTER
                         LogDebug(os.str());
                     }
                     
-                    return pair;
+                    returnFormat = altFormat;
+                    returnCachedFile = cachedFile;
+                    return;
                 }
                 catch(std::exception & e)
                 {
-                    filestream.clear();
-                    filestream.seekg( std::ifstream::beg );
-                    
                     if(IsDebugLoggingEnabled())
                     {
                         std::ostringstream os;
@@ -521,6 +506,9 @@ OCIO_NAMESPACE_ENTER
                         LogDebug(os.str());
                     }
                 }
+                
+                filestream.clear();
+                filestream.seekg( std::ifstream::beg );
             }
             
             // No formats succeeded. Error out with a sensible message.
@@ -541,7 +529,94 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
         }
-    }
+        
+        // We mutex both the main map and each item individually, so that
+        // the potentially slow file access wont block other lookups to already
+        // existing items. (Loads of the *same* file will mutually block though)
+        
+        struct FileCacheResult
+        {
+            Mutex mutex;
+            FileFormat * format;
+            bool ready;
+            bool error;
+            CachedFileRcPtr cachedFile;
+            std::string exceptionText;
+            
+            FileCacheResult():
+                format(NULL),
+                ready(false),
+                error(false)
+            {}
+        };
+        
+        typedef OCIO_SHARED_PTR<FileCacheResult> FileCacheResultPtr;
+        typedef std::map<std::string, FileCacheResultPtr> FileCacheMap;
+        
+        FileCacheMap g_fileCache;
+        Mutex g_fileCacheLock;
+        
+        void GetCachedFileAndFormat(
+            FileFormat * & format, CachedFileRcPtr & cachedFile,
+            const std::string & filepath)
+        {
+            // Load the file cache ptr from the global map
+            FileCacheResultPtr result;
+            {
+                AutoMutex lock(g_fileCacheLock);
+                FileCacheMap::iterator iter = g_fileCache.find(filepath);
+                if(iter != g_fileCache.end())
+                {
+                    result = iter->second;
+                }
+                else
+                {
+                    result = FileCacheResultPtr(new FileCacheResult);
+                    g_fileCache[filepath] = result;
+                }
+            }
+            
+            // If this file has already been loaded, return
+            // the result immediately
+            
+            AutoMutex lock(result->mutex);
+            if(!result->ready)
+            {
+                result->ready = true;
+                result->error = false;
+                
+                try
+                {
+                    LoadFileUncached(result->format,
+                                     result->cachedFile,
+                                     filepath);
+                }
+                catch(std::exception & e)
+                {
+                    result->error = true;
+                    result->exceptionText = e.what();
+                }
+                catch(...)
+                {
+                    result->error = true;
+                    std::ostringstream os;
+                    os << "An unknown error occurred in LoadFileUncached, ";
+                    os << filepath;
+                    result->exceptionText = os.str();
+                }
+            }
+            
+            if(result->error)
+            {
+                throw Exception(result->exceptionText.c_str());
+            }
+            else
+            {
+                format = result->format;
+                cachedFile = result->cachedFile;
+            }
+        }
+    } // namespace
     
     void ClearFileTransformCaches()
     {
@@ -566,9 +641,27 @@ OCIO_NAMESPACE_ENTER
         std::string filepath = context->resolveFileLocation(src.c_str());
         CreateFileNoOp(ops, filepath);
         
-        FileCachePair cachePair = GetFile(filepath);
-        FileFormat* format = cachePair.first;
-        CachedFileRcPtr cachedFile = cachePair.second;
+        FileFormat* format = NULL;
+        CachedFileRcPtr cachedFile;
+        
+        GetCachedFileAndFormat(format, cachedFile, filepath);
+        if(!format)
+        {
+            std::ostringstream os;
+            os << "The specified file load ";
+            os << filepath << " appeared to succeed, but no format ";
+            os << "was returned.";
+            throw Exception(os.str().c_str());
+        }
+        
+        if(!cachedFile.get())
+        {
+            std::ostringstream os;
+            os << "The specified file load ";
+            os << filepath << " appeared to succeed, but no cachedFile ";
+            os << "was returned.";
+            throw Exception(os.str().c_str());
+        }
         
         format->BuildFileOps(ops,
                              config, context,

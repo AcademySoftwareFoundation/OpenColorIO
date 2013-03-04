@@ -57,11 +57,6 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        typedef std::map<std::string, std::string> StringMap;
-        
-        StringMap g_fastFileHashCache;
-        Mutex g_fastFileHashCache_mutex;
-        
         std::string ComputeHash(const std::string & filename)
         {
             struct stat results;
@@ -76,20 +71,58 @@ OCIO_NAMESPACE_ENTER
             
             return "";
         }
+        
+        // We mutex both the main map and each item individually, so that
+        // the potentially slow stat calls dont block other lookups to already
+        // existing items. (The stat calls will block other lookups on the
+        // *same* file though).
+        
+        struct FileHashResult
+        {
+            Mutex mutex;
+            std::string hash;
+            bool ready;
+            
+            FileHashResult():
+                ready(false)
+            {}
+        };
+        
+        typedef OCIO_SHARED_PTR<FileHashResult> FileHashResultPtr;
+        typedef std::map<std::string, FileHashResultPtr> FileCacheMap;
+        
+        FileCacheMap g_fastFileHashCache;
+        Mutex g_fastFileHashCache_mutex;
     }
     
     std::string GetFastFileHash(const std::string & filename)
     {
-        AutoMutex lock(g_fastFileHashCache_mutex);
-        
-        StringMap::iterator iter = g_fastFileHashCache.find(filename);
-        if(iter != g_fastFileHashCache.end())
+        FileHashResultPtr fileHashResultPtr;
         {
-            return iter->second;
+            AutoMutex lock(g_fastFileHashCache_mutex);
+            FileCacheMap::iterator iter = g_fastFileHashCache.find(filename);
+            if(iter != g_fastFileHashCache.end())
+            {
+                fileHashResultPtr = iter->second;
+            }
+            else
+            {
+                fileHashResultPtr = FileHashResultPtr(new FileHashResult);
+                g_fastFileHashCache[filename] = fileHashResultPtr;
+            }
         }
         
-        std::string hash = ComputeHash(filename);
-        g_fastFileHashCache[filename] = hash;
+        std::string hash;
+        {
+            AutoMutex lock(fileHashResultPtr->mutex);
+            if(!fileHashResultPtr->ready)
+            {
+                fileHashResultPtr->ready = true;
+                fileHashResultPtr->hash = ComputeHash(filename);
+            }
+            
+            hash = fileHashResultPtr->hash;
+        }
         
         return hash;
     }
