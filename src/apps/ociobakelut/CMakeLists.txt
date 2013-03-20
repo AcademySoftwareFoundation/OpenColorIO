@@ -88,6 +88,7 @@ endif(USE_EXTERNAL_YAML)
 
 # OCIO
 if(OCIO_BUILD_STATIC)
+    add_definitions(-DOCIO_BUILD_STATIC)
     target_link_libraries(ociobakelut OpenColorIO_STATIC)
 else(OCIO_BUILD_STATIC)
     target_link_libraries(ociobakelut OpenColorIO)
