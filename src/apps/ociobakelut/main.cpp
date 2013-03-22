@@ -108,6 +108,7 @@ int main (int argc, const char* argv[])
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)\n",
                "<SEPARATOR>", "Config-Free LUT Baking",
                "<SEPARATOR>", "    (all options can be specified multiple times, each is applied in order)",
+               "--cccid %s", &dummystr, "Specify a CCCId for any following luts",
                "--lut %s", &dummystr, "Specify a LUT (forward direction)",
                "--invlut %s", &dummystr, "Specify a LUT (inverse direction)",
                "--slope %f %f %f", &dummyf1, &dummyf2, &dummyf3, "slope",
@@ -412,6 +413,9 @@ OCIO::GroupTransformRcPtr
 parse_luts(int argc, const char *argv[])
 {
     OCIO::GroupTransformRcPtr groupTransform = OCIO::GroupTransform::Create();
+    const char *lastCCCId = NULL; // Ugly to use this but using GroupTransform::getTransform()
+                                  // returns a const object so we must set this
+                                  // prior to using --lut for now.
     
     for(int i=0; i<argc; ++i)
     {
@@ -427,7 +431,22 @@ parse_luts(int argc, const char *argv[])
             OCIO::FileTransformRcPtr t = OCIO::FileTransform::Create();
             t->setSrc(argv[i+1]);
             t->setInterpolation(OCIO::INTERP_BEST);
+            if (lastCCCId)
+            {
+                t->setCCCId(lastCCCId);
+            }
             groupTransform->push_back(t);
+            
+            i += 1;
+        }
+        else if(arg == "--cccid" || arg == "-cccid")
+        {
+            if(i+1>=argc)
+            {
+                throw OCIO::Exception("Error parsing --cccid. Invalid num args");
+            }
+            
+            lastCCCId = argv[i+1];
             
             i += 1;
         }
