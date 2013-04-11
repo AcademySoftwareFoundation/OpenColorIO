@@ -149,8 +149,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_ProcessorType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)
         "OCIO.Processor",                               //tp_name
         sizeof(PyOCIO_Processor),                       //tp_basicsize
         0,                                          //tp_itemsize
@@ -274,7 +273,7 @@ OCIO_NAMESPACE_ENTER
         void PyOCIO_Processor_delete( PyOCIO_Processor *self, PyObject * /*args*/ )
         {
             delete self->constcppobj;
-            self->ob_type->tp_free((PyObject*)self);
+            Py_TYPE(self)->tp_free((PyObject*)self);
         }
         
         PyObject * PyOCIO_Processor_isNoOp( PyObject * self )

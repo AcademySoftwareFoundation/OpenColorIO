@@ -254,8 +254,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_TransformType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)
         "OCIO.Transform",                           //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
@@ -335,7 +334,7 @@ OCIO_NAMESPACE_ENTER
             delete self->constcppobj;
             delete self->cppobj;
             
-            self->ob_type->tp_free((PyObject*)self);
+            Py_TYPE(self)->tp_free((PyObject*)self);
         }
         
         ////////////////////////////////////////////////////////////////////////

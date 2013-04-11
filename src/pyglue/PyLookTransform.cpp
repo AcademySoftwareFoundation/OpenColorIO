@@ -118,8 +118,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_LookTransformType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)
         "OCIO.LookTransform",                 //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize

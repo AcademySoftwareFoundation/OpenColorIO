@@ -34,6 +34,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 
+
+#if PY_MAJOR_VERSION >= 3
+#define PyString_FromString PyUnicode_FromString
+#define PyString_AsString   PyUnicode_AsUTF8
+#define PyString_AS_STRING  PyUnicode_AsUTF8
+#define PyString_Check      PyUnicode_Check
+#define PyInt_Check         PyLong_Check
+#define PyInt_AS_LONG       PyLong_AS_LONG
+#define PyInt_FromLong      PyLong_FromLong
+#define PyNumber_Int        PyNumber_Long
+#endif
+
+#ifndef PyVarObject_HEAD_INIT
+    #define PyVarObject_HEAD_INIT(type, size) \
+        PyObject_HEAD_INIT(type) size,
+#endif
+
+#ifndef Py_TYPE
+    #define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
+#endif
+
 OCIO_NAMESPACE_ENTER
 {
     

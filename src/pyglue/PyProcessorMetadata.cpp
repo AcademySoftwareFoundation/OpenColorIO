@@ -126,8 +126,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_ProcessorMetadataType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)
         "OCIO.ProcessorMetadata",                   //tp_name
         sizeof(PyOCIO_ProcessorMetadata),           //tp_basicsize
         0,                                          //tp_itemsize
@@ -195,7 +194,7 @@ OCIO_NAMESPACE_ENTER
         void PyOCIO_ProcessorMetadata_delete( PyOCIO_ProcessorMetadata *self, PyObject * /*args*/ )
         {
             delete self->constcppobj;
-            self->ob_type->tp_free((PyObject*)self);
+            Py_TYPE(self)->tp_free((PyObject*)self);
         }
         
         PyObject * PyOCIO_ProcessorMetadata_getFiles( PyObject * self )
