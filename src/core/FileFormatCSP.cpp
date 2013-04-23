@@ -412,7 +412,7 @@ OCIO_NAMESPACE_ENTER
 
             // read meta data block
             std::string metadata;
-            std::streampos curr_pos = istream.tellg ();
+            bool lineUpdateNeeded = false;
             nextline (istream, line);
             if (line == "BEGIN METADATA")
             {
@@ -422,11 +422,9 @@ OCIO_NAMESPACE_ENTER
                     if (line != "END METADATA")
                         metadata += line + "\n";
                 }
-            }
-            else
-            {
-                istream.seekg (curr_pos);
-            }
+                lineUpdateNeeded = true;
+            }// else line update not needed
+            
             
             // Make 3 vectors of prelut inputs + output values
             std::vector<float> prelut_in[3];
@@ -437,7 +435,9 @@ OCIO_NAMESPACE_ENTER
             for (int c = 0; c < 3; ++c)
             {
                 // how many points do we have for this channel
-                nextline (istream, line);
+                if (lineUpdateNeeded)
+                    nextline (istream, line);
+
                 int cpoints = 0;
                 
                 if(!StringToInt(&cpoints, line.c_str()) || cpoints<0)
@@ -493,6 +493,7 @@ OCIO_NAMESPACE_ENTER
                     prelut_out[c].push_back(1.0f);
                     useprelut[c] = false;
                 }
+                lineUpdateNeeded = true;
             }
 
             if (csptype == "1D")
