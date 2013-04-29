@@ -188,25 +188,11 @@ OCIO_NAMESPACE_ENTER
 OCIO_NAMESPACE_EXIT
 
 extern "C"
-PyMODINIT_FUNC
-initPyOpenColorIO(void)
+MOD_INIT(PyOpenColorIO)
 {
-#if PY_MAJOR_VERSION >= 3
-    static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        "PyOpenColorIO",            /* m_name */
-        OCIO::OPENCOLORIO__DOC__,   /* m_doc */
-        -1,                         /* m_size */
-        PyOCIO_methods,             /* m_methods */
-        NULL,                       /* m_reload */
-        NULL,                       /* m_traverse */
-        NULL,                       /* m_clear */
-        NULL,                       /* m_free */
-    };
-    PyObject * m = PyModule_Create(&moduledef);
-#else
-    PyObject * m = Py_InitModule3("PyOpenColorIO", PyOCIO_methods, OCIO::OPENCOLORIO__DOC__);
-#endif
+
+    PyObject * m;
+    MOD_DEF(m, "PyOpenColorIO", OCIO::OPENCOLORIO__DOC__, PyOCIO_methods);
     
     PyModule_AddStringConstant(m, "version", OCIO::GetVersion());
     PyModule_AddIntConstant(m, "hexversion", OCIO::GetVersionHex());
@@ -247,4 +233,6 @@ initPyOpenColorIO(void)
         OCIO::AddLookTransformObjectToModule( m );
         OCIO::AddMatrixTransformObjectToModule( m );
     }
+
+    return MOD_SUCCESS_VAL(m);
 }

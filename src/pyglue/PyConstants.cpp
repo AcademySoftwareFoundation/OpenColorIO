@@ -69,23 +69,11 @@ OCIO_NAMESPACE_ENTER
         std::string moduleName = PyModule_GetName(enclosingModule);
         moduleName += ".Constants";
         
-#if PY_MAJOR_VERSION >= 3
-        static struct PyModuleDef moduledef = {
-            PyModuleDef_HEAD_INIT,
-            const_cast<char*>(moduleName.c_str()),  /* m_name */
-            CONSTANTS__DOC__,                       /* m_doc */
-            -1,                                     /* m_size */
-            LocalModuleMethods,                     /* m_methods */
-            NULL,                                   /* m_reload */
-            NULL,                                   /* m_traverse */
-            NULL,                                   /* m_clear */
-            NULL,                                   /* m_free */
-        };
-        PyObject * m = PyModule_Create(&moduledef);
-#else
-        PyObject * m = Py_InitModule3(const_cast<char*>(moduleName.c_str()),
-            LocalModuleMethods, CONSTANTS__DOC__);
-#endif
+
+        PyObject * m;
+        MOD_DEF(m, const_cast<char*>(moduleName.c_str()),
+            CONSTANTS__DOC__, LocalModuleMethods);
+
 
         Py_INCREF(m);
         
