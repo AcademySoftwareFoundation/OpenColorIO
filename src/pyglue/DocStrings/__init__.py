@@ -9,6 +9,8 @@ from Processor import *
 from ProcessorMetadata import *
 from Context import *
 from Look import *
+from GpuShaderDesc import *
+from Baker import *
 from Transform import *
 
 from AllocationTransform import *

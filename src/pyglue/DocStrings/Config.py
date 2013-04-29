@@ -17,7 +17,7 @@ class Config:
         """
         pass
 
-    def CreateFromFile(self):
+    def CreateFromFile(self, filename):
         """
         CreateFromFile(filename)
         
@@ -28,7 +28,10 @@ class Config:
         :return: Config object
         """
         pass
-
+    
+    def CreateFromStream(self, istream):
+        pass
+    
     def isEditable(self):
         """
         isEditable()
@@ -184,6 +187,12 @@ class Config:
         """
         pass
 
+    def getNumColorSpaces(self):
+        pass
+
+    def getColorSpaceNameByIndex(self, index):
+        pass
+
     def getColorSpaces(self):
         """
         getColorSpaces()
@@ -208,6 +217,9 @@ class Config:
         :return: data for specified color space
         :rtype: pyColorSpace object
         """
+        pass
+
+    def getIndexForColorSpace(self, name):
         pass
 
     def addColorSpace(self, colorSpace):
@@ -251,6 +263,12 @@ class Config:
         """
         pass
 
+    def isStrictParsingEnabled(self):
+        pass
+
+    def setStrictParsingEnabled(self, enable):
+        pass
+
     def setRole(self, role, csname):
         """
         setRole(role, csname)
@@ -265,7 +283,16 @@ class Config:
         :type csname: string
         """
         pass
-        
+    
+    def getNumRoles(self):
+        pass
+    
+    def hasRole(self, role):
+        pass
+    
+    def getRoleName(self, index):
+        pass
+    
     def getDefaultDisplay(self):
         """
         getDefaultDisplay()
@@ -275,6 +302,12 @@ class Config:
         :return: default display
         :rtype: string 
         """
+        pass
+
+    def getNumDisplays(self):
+        pass
+        
+    def getDisplay(self, index):
         pass
 
     def getDisplays(self):
@@ -300,7 +333,13 @@ class Config:
         :rtype: string
         """
         pass
-
+    
+    def getNumViews(self, display):
+        pass
+        
+    def getView(self, display, index):
+        pass
+    
     def getViews(self, display):
         """
         getViews(display)
@@ -447,6 +486,12 @@ class Config:
         :return: specified look
         :rtype: look object
         """
+        pass
+
+    def getNumLooks(self):
+        pass
+        
+    def getLookNameByIndex(self, index):
         pass
 
     def getLooks(self):

@@ -135,7 +135,7 @@ public class TransformsTest extends TestCase {
         assertEquals("foobar", ft.getCCCId());
         ft.setInterpolation(Interpolation.INTERP_NEAREST);
         assertEquals(Interpolation.INTERP_NEAREST, ft.getInterpolation());
-        assertEquals(15, ft.getNumFormats());
+        assertEquals(16, ft.getNumFormats());
         assertEquals("flame", ft.getFormatNameByIndex(0));
         assertEquals("3dl", ft.getFormatExtensionByIndex(0));
         
@@ -203,7 +203,7 @@ public class TransformsTest extends TestCase {
         assertEquals(0.3576f, m44_2[1]);
         mt.Scale(m44_2, offset_2, new float[]{0.9f, 0.8f, 0.7f, 1.f});
         assertEquals(0.9f, m44_2[0]);
-        mt.View(m44_2, null, new int[]{1, 1, 1, 0}, new float[]{0.2126f, 0.7152f, 0.0722f});
+        mt.View(m44_2, offset_2, new int[]{1, 1, 1, 0}, new float[]{0.2126f, 0.7152f, 0.0722f});
         assertEquals(0.0722f, m44_2[2]);
         
         //// TruelightTransform ////
