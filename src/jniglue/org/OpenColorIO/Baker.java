@@ -49,6 +49,8 @@ public class Baker extends LoadLibrary
     public native String getInputSpace();
     public native void setShaperSpace(String shaperSpace);
     public native String getShaperSpace();
+    public native void setLooks(String looks);
+    public native String getLooks();
     public native void setTargetSpace(String targetSpace);
     public native String getTargetSpace();
     public native void setShaperSize(int shapersize);

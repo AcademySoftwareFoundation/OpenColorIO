@@ -5,7 +5,10 @@ class CDLTransform:
     """
     def __init__(self):
         pass
-        
+    
+    def CreateFromFile(self, src, cccid):
+        pass
+    
     def equals(self):
         pass
         

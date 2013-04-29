@@ -33,3 +33,9 @@ class Look:
     def setTransform(self, transform):
         pass
         
+    def getInverseTransform(self):
+        pass
+    
+    def setInverseTransform(self, transform):
+        pass
+    

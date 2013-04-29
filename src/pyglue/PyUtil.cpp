@@ -26,22 +26,17 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
+#include <sstream>
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "PyUtil.h"
 
-#include <sstream>
-
 OCIO_NAMESPACE_ENTER
 {
-
-
+    
     ///////////////////////////////////////////////////////////////////////////
-
-
+    
     // http://docs.python.org/c-api/object.html#PyObject_IsTrue
     int ConvertPyObjectToBool(PyObject *object, void *valuePtr)
     {
@@ -738,5 +733,6 @@ OCIO_NAMESPACE_ENTER
             PyErr_SetString(PyExc_RuntimeError, "Unknown C++ exception caught.");
         }
     }
+    
 }
 OCIO_NAMESPACE_EXIT
