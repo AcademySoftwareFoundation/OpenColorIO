@@ -47,5 +47,9 @@ message(STATUS "Create ocio_core_tests.sh.in from ocio_core_tests.sh")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ocio_core_tests.sh.in
     ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.sh @ONLY)
 
-add_test(NAME ocio_core_tests
-    COMMAND /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.sh)
+add_custom_target(MainTests
+                  COMMAND /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.sh
+                  DEPENDS ocio_core_tests
+                  COMMENT "Setting Up and Running OCIO UNIT tests")
+
+add_test(ocio_core_tests "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target MainTests)

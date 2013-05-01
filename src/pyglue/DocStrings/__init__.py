@@ -10,6 +10,8 @@ from .Processor import Processor
 from .ProcessorMetadata import ProcessorMetadata
 from .Context import Context
 from .Look import Look
+from .GpuShaderDesc import GpuShaderDesc
+from .Baker import Baker
 from .Transform import Transform
 
 from .AllocationTransform import AllocationTransform
