@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyConfig.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
