@@ -116,7 +116,18 @@ else()
     set(OCIO_USE_BOOST_PTR 0)
 endif()
 
+# Passed to YAML/TinyXML and other externals to indicate whether
+# to compile with -fvisibility-inlines-hidden
+set(OCIO_DISABLE_HIDDEN_INLINES FALSE)
+
 if(CMAKE_COMPILER_IS_GNUCXX)
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+                    OUTPUT_VARIABLE GCC_VERSION)
+    if (GCC_VERSION VERSION_LESS 4.2)
+        message(STATUS "GCC Version < 4.2 - hidden inlines disabled")
+        set(OCIO_DISABLE_HIDDEN_INLINES TRUE)
+    endif()
+
     # Enable a bunch of compiler warnings...
     # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
@@ -165,7 +176,7 @@ if(USE_EXTERNAL_TINYXML)
 
 else(USE_EXTERNAL_TINYXML)
     set(TINYXML_VERSION 2_6_1)
-    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist)
+    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DOCIO_DISABLE_HIDDEN_INLINES:BOOL=${OCIO_DISABLE_HIDDEN_INLINES})
     if(CMAKE_TOOLCHAIN_FILE)
         set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
@@ -204,7 +215,7 @@ if(USE_EXTERNAL_YAML)
     endif(YAML_CPP_FOUND)
 else(USE_EXTERNAL_YAML)
     set(YAML_CPP_VERSION 0.3.0)
-    set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE)
+    set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE -DOCIO_DISABLE_HIDDEN_INLINES:BOOL=${OCIO_DISABLE_HIDDEN_INLINES})
     if(CMAKE_TOOLCHAIN_FILE)
         set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
@@ -233,17 +244,10 @@ endif(USE_EXTERNAL_YAML)
 set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
 set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL")
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-    
-    execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-                    OUTPUT_VARIABLE GCC_VERSION)
-                    
-    if (GCC_VERSION VERSION_LESS 4.2)
-        message(STATUS "GCC Version < 4.2 - symbol visibility hiding disabled")
-        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC")
-    else()
-        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
-    endif()
+if(OCIO_DISABLE_HIDDEN_INLINES)
+    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
+else()
+    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
 endif()
 
 set(EXTERNAL_LINK_FLAGS "")
