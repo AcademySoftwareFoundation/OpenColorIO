@@ -216,7 +216,7 @@ OCIO_NAMESPACE_ENTER
             { "getDisplayLooks",
             PyOCIO_Config_getDisplayLooks, METH_VARARGS, CONFIG_GETDISPLAYLOOKS__DOC__ },
             { "addDisplay",
-            (PyCFunction) PyOCIO_Config_addDisplay, METH_KEYWORDS, CONFIG_ADDDISPLAY__DOC__ },
+            (PyCFunction) PyOCIO_Config_addDisplay, METH_VARARGS|METH_KEYWORDS, CONFIG_ADDDISPLAY__DOC__ },
             { "clearDisplays",
             (PyCFunction) PyOCIO_Config_clearDisplays, METH_NOARGS, CONFIG_CLEARDISPLAYS__DOC__ },
             { "setActiveDisplays",
@@ -246,7 +246,7 @@ OCIO_NAMESPACE_ENTER
             { "clearLooks",
             (PyCFunction) PyOCIO_Config_clearLooks, METH_NOARGS, CONFIG_CLEARLOOKS__DOC__ },
             { "getProcessor",
-            (PyCFunction) PyOCIO_Config_getProcessor, METH_KEYWORDS, CONFIG_GETPROCESSOR__DOC__ },
+            (PyCFunction) PyOCIO_Config_getProcessor, METH_VARARGS|METH_KEYWORDS, CONFIG_GETPROCESSOR__DOC__ },
             { NULL, NULL, 0, NULL }
         };
         
@@ -256,8 +256,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_ConfigType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)              //obsize
         "OCIO.Config",                              //tp_name
         sizeof(PyOCIO_Config),                      //tp_basicsize
         0,                                          //tp_itemsize

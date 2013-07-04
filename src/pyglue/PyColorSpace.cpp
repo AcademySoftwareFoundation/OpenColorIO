@@ -150,8 +150,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_ColorSpaceType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size 
         "OCIO.ColorSpace",                          //tp_name
         sizeof(PyOCIO_ColorSpace),                  //tp_basicsize
         0,                                          //tp_itemsize

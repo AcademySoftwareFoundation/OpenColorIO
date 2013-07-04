@@ -133,8 +133,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_ContextType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
         "OCIO.Context",                             //tp_name
         sizeof(PyOCIO_Context),                     //tp_basicsize
         0,                                          //tp_itemsize

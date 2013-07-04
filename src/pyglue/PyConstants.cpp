@@ -69,8 +69,12 @@ OCIO_NAMESPACE_ENTER
         std::string moduleName = PyModule_GetName(enclosingModule);
         moduleName += ".Constants";
         
-        PyObject * m = Py_InitModule3(const_cast<char*>(moduleName.c_str()),
-            LocalModuleMethods, CONSTANTS__DOC__);
+
+        PyObject * m;
+        MOD_DEF(m, const_cast<char*>(moduleName.c_str()),
+            CONSTANTS__DOC__, LocalModuleMethods);
+
+
         Py_INCREF(m);
         
         // Add Module Constants

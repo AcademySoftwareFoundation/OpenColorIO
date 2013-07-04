@@ -36,6 +36,43 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OCIO_PYTRY_ENTER() try {
 #define OCIO_PYTRY_EXIT(ret) } catch(...) { OpenColorIO::Python_Handle_Exception(); return ret; }
 
+// Some utilities macros for python 2.5 to 3.3 compatibility
+#if PY_MAJOR_VERSION >= 3
+#define PyString_FromString PyUnicode_FromString
+#define PyString_AsString   PyUnicode_AsUTF8
+#define PyString_AS_STRING  PyUnicode_AsUTF8
+#define PyString_Check      PyUnicode_Check
+#define PyInt_Check         PyLong_Check
+#define PyInt_AS_LONG       PyLong_AS_LONG
+#define PyInt_FromLong      PyLong_FromLong
+#define PyNumber_Int        PyNumber_Long
+#endif
+
+#if PY_MAJOR_VERSION >= 3
+  #define MOD_ERROR_VAL NULL
+  #define MOD_SUCCESS_VAL(val) val
+  #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+  #define MOD_DEF(ob, name, doc, methods) \
+          static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, NULL, NULL, NULL, NULL}; \
+          ob = PyModule_Create(&moduledef);
+#else
+  #define MOD_ERROR_VAL
+  #define MOD_SUCCESS_VAL(val)
+  #define MOD_INIT(name) PyMODINIT_FUNC init##name(void)
+  #define MOD_DEF(ob, name, doc, methods) \
+          ob = Py_InitModule3(name, methods, doc);
+#endif
+
+#ifndef PyVarObject_HEAD_INIT
+    #define PyVarObject_HEAD_INIT(type, size) \
+        PyObject_HEAD_INIT(type) size,
+#endif
+
+#ifndef Py_TYPE
+    #define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
+#endif
+
 OCIO_NAMESPACE_ENTER
 {
     
@@ -156,7 +193,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(self->constcppobj != NULL) delete self->constcppobj;
         if(self->cppobj != NULL) delete self->cppobj;
-        self->ob_type->tp_free((PyObject*)self);
+        Py_TYPE(self)->tp_free((PyObject*)self);
     }
     
     inline bool IsPyOCIOType(PyObject* pyobject, PyTypeObject& type)

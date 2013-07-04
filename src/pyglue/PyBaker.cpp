@@ -153,8 +153,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_BakerType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
         "OCIO.Baker",                               //tp_name
         sizeof(PyOCIO_Baker),                       //tp_basicsize
         0,                                          //tp_itemsize

@@ -109,8 +109,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_ProcessorType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
         "OCIO.Processor",                           //tp_name
         sizeof(PyOCIO_Processor),                   //tp_basicsize
         0,                                          //tp_itemsize

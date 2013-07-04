@@ -210,12 +210,11 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_TransformType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
         "OCIO.Transform",                           //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor) PyOCIO_Transform_delete,        //tp_dealloc
+        (destructor) PyOCIO_Transform_delete,       //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
