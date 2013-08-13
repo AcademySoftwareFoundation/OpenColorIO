@@ -2,6 +2,7 @@
 ### CORE UNIT TESTS ###
 
 add_definitions("-DOCIO_UNIT_TEST")
+add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/export/

@@ -271,15 +271,14 @@ namespace
         }
         
         // Load an absolute file reference
-        if(pystring::os::path::isabs(filename))
+        std::string expandedfullpath = EnvExpand(filename, getImpl()->envMap_);
+        if(pystring::os::path::isabs(expandedfullpath))
         {
-            std::string expandedfullpath = EnvExpand(filename, getImpl()->envMap_);
             if(FileExists(expandedfullpath))
             {
                 getImpl()->resultsCache_[filename] = expandedfullpath;
                 return getImpl()->resultsCache_[filename].c_str();
             }
-            
             std::ostringstream errortext;
             errortext << "The specified absolute file reference ";
             errortext << "'" << expandedfullpath << "' could not be located. ";
@@ -362,3 +361,38 @@ namespace
 
 }
 OCIO_NAMESPACE_EXIT
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+#ifdef OCIO_SOURCE_DIR
+
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
+OIIO_ADD_TEST(Context, ABSPath)
+{
+    
+    OCIO::ContextRcPtr con = OCIO::Context::Create();
+    con->setSearchPath(STR(OCIO_SOURCE_DIR));
+    
+    con->setStringVar("non_abs", "src/core/Context.cpp");
+    con->setStringVar("is_abs", STR(OCIO_SOURCE_DIR) "/src/core/Context.cpp");
+    
+    OIIO_CHECK_NO_THOW(con->resolveFileLocation("${non_abs}"));
+    OIIO_CHECK_ASSERT(strcmp(con->resolveFileLocation("${non_abs}"),
+        STR(OCIO_SOURCE_DIR) "/src/core/Context.cpp") == 0);
+    
+    OIIO_CHECK_NO_THOW(con->resolveFileLocation("${is_abs}"));
+    OIIO_CHECK_ASSERT(strcmp(con->resolveFileLocation("${is_abs}"),
+        STR(OCIO_SOURCE_DIR) "/src/core/Context.cpp") == 0);
+    
+}
+
+#endif // OCIO_BINARY_DIR
+
+#endif // OCIO_UNIT_TEST
