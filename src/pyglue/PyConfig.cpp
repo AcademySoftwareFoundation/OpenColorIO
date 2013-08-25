@@ -89,6 +89,12 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_serialize(PyObject * self);
         PyObject * PyOCIO_Config_getCacheID(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getCurrentContext(PyObject * self);
+        PyObject * PyOCIO_Config_addEnvironmentVar(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_getNumEnvironmentVars(PyObject * self);
+        PyObject * PyOCIO_Config_getEnvironmentVarNameByIndex(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_getEnvironmentVarDefault(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_getEnvironmentVarDefaults(PyObject * self);
+        PyObject * PyOCIO_Config_clearEnvironmentVars(PyObject * self);
         PyObject * PyOCIO_Config_getSearchPath(PyObject * self);
         PyObject * PyOCIO_Config_setSearchPath(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getWorkingDir(PyObject * self);
@@ -159,6 +165,18 @@ OCIO_NAMESPACE_ENTER
             PyOCIO_Config_getCacheID, METH_VARARGS, CONFIG_GETCACHEID__DOC__ },
             { "getCurrentContext",
             (PyCFunction) PyOCIO_Config_getCurrentContext, METH_NOARGS, CONFIG_GETCURRENTCONTEXT__DOC__ },
+            { "addEnvironmentVar",
+            PyOCIO_Config_addEnvironmentVar, METH_VARARGS, CONFIG_ADDENVIRONMENTVAR__DOC__ },
+            { "getNumEnvironmentVars",
+            (PyCFunction)PyOCIO_Config_getNumEnvironmentVars, METH_NOARGS, CONFIG_GETNUMENVIRONMENTVARS__DOC__ },
+            { "getEnvironmentVarNameByIndex",
+            PyOCIO_Config_getEnvironmentVarNameByIndex, METH_VARARGS, CONFIG_GETENVIRONMENTVARNAMEBYINDEX__DOC__ },
+            { "getEnvironmentVarDefault",
+            PyOCIO_Config_getEnvironmentVarDefault, METH_VARARGS, CONFIG_GETENVIRONMENTVARDEFAULT__DOC__ },
+            { "getEnvironmentVarDefaults",
+            (PyCFunction)PyOCIO_Config_getEnvironmentVarDefaults, METH_NOARGS, CONFIG_GETENVIRONMENTVARDEFAULTS__DOC__ },
+            { "clearEnvironmentVars",
+            (PyCFunction)PyOCIO_Config_clearEnvironmentVars, METH_NOARGS, CONFIG_CLEARENVIRONMENTVARS__DOC__ },
             { "getSearchPath",
             (PyCFunction) PyOCIO_Config_getSearchPath, METH_NOARGS, CONFIG_GETSEARCHPATH__DOC__ },
             { "setSearchPath",
@@ -415,6 +433,72 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
             return BuildConstPyContext(config->getCurrentContext());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_addEnvironmentVar(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* name = 0;
+            char* value = 0;
+            if (!PyArg_ParseTuple(args, "ss:addEnvironmentVar",
+                &name, &value)) return NULL;
+            ConfigRcPtr config = GetEditableConfig(self);
+            config->addEnvironmentVar(name, value);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_getNumEnvironmentVars(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyInt_FromLong(config->getNumEnvironmentVars());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_getEnvironmentVarNameByIndex(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args,"i:getEnvironmentVarNameByIndex",
+                &index)) return NULL;
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyString_FromString(config->getEnvironmentVarNameByIndex(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_getEnvironmentVarDefault(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* name = 0;
+            if (!PyArg_ParseTuple(args, "s:getEnvironmentVarDefault",
+                &name)) return NULL;
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyString_FromString(config->getEnvironmentVarDefault(name));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_getEnvironmentVarDefaults(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            std::map<std::string, std::string> data;
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            for(int i = 0; i < config->getNumEnvironmentVars(); ++i) {
+                const char* name = config->getEnvironmentVarNameByIndex(i);
+                const char* value = config->getEnvironmentVarDefault(name);
+                data.insert(std::pair<std::string, std::string>(name, value));
+            }
+            return CreatePyDictFromStringMap(data);
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_clearEnvironmentVars(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConfigRcPtr config = GetEditableConfig(self);
+            config->clearEnvironmentVars();
+            Py_RETURN_NONE;
             OCIO_PYTRY_EXIT(NULL)
         }
         

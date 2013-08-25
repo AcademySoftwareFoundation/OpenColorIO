@@ -88,6 +88,9 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Context_setStringVar(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_getNumStringVars(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_getStringVarNameByIndex(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_clearStringVars(PyObject * self);
+        PyObject * PyOCIO_Context_setEnvironmentMode(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_getEnvironmentMode(PyObject * self);
         PyObject * PyOCIO_Context_loadEnvironment(PyObject * self);
         PyObject * PyOCIO_Context_resolveStringVar(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_resolveFileLocation(PyObject * self, PyObject * args);
@@ -118,6 +121,12 @@ OCIO_NAMESPACE_ENTER
             PyOCIO_Context_getNumStringVars, METH_VARARGS, CONTEXT_GETNUMSTRINGVARS__DOC__ },
             { "getStringVarNameByIndex",
             PyOCIO_Context_getStringVarNameByIndex, METH_VARARGS, CONTEXT_GETSTRINGVARNAMEBYINDEX__DOC__ },
+            { "clearStringVars",
+            (PyCFunction) PyOCIO_Context_clearStringVars, METH_NOARGS, CONTEXT_CLEARSTRINGVARS__DOC__ },
+            { "setEnvironmentMode",
+            PyOCIO_Context_setEnvironmentMode, METH_VARARGS, CONTEXT_SETENVIRONMENTMODE__DOC__ },
+            { "getEnvironmentMode",
+            (PyCFunction) PyOCIO_Context_getEnvironmentMode, METH_NOARGS, CONTEXT_GETENVIRONMENTMODE__DOC__ },
             { "loadEnvironment",
             (PyCFunction) PyOCIO_Context_loadEnvironment, METH_NOARGS, CONTEXT_LOADENVIRONMENT__DOC__ },
             { "resolveStringVar",
@@ -295,6 +304,36 @@ OCIO_NAMESPACE_ENTER
                 &index)) return NULL;
             ConstContextRcPtr context = GetConstContext(self, true);
             return PyString_FromString(context->getStringVarNameByIndex(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Context_clearStringVars(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ContextRcPtr context = GetEditableContext(self);
+            context->clearStringVars();
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Context_setEnvironmentMode(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            EnvironmentMode mode;
+            if (!PyArg_ParseTuple(args, "O&:setEnvironmentMode",
+                ConvertPyObjectToEnvironmentMode, &mode)) return NULL;
+            ContextRcPtr context = GetEditableContext(self);
+            context->setEnvironmentMode(mode);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Context_getEnvironmentMode(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            EnvironmentMode mode = context->getEnvironmentMode();
+            return PyString_FromString(EnvironmentModeToString(mode));
             OCIO_PYTRY_EXIT(NULL)
         }
         

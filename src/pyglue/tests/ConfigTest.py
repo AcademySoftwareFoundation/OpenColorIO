@@ -85,10 +85,35 @@ return out_pixel;
 
 """
     
+    def test_is_editable(self):
+        
+        cfg = OCIO.Config().CreateFromStream(self.SIMPLE_PROFILE)
+        self.assertEqual(cfg.isEditable(), False)
+        cfg = cfg.createEditableCopy()
+        self.assertEqual(cfg.isEditable(), True)
+        ctx = cfg.getCurrentContext()
+        self.assertEqual(ctx.isEditable(), False)
+        ctx = ctx.createEditableCopy()
+        self.assertEqual(ctx.isEditable(), True)
+        ctx.setEnvironmentMode(OCIO.Constants.ENV_ENVIRONMENT_LOAD_ALL)
+    
     def test_interface(self):
         
         _cfg = OCIO.Config().CreateFromStream(self.SIMPLE_PROFILE)
         _cfge = _cfg.createEditableCopy()
+        _cfge.clearEnvironmentVars()
+        self.assertEqual(0, _cfge.getNumEnvironmentVars())
+        _cfge.addEnvironmentVar("FOO", "test1")
+        _cfge.addEnvironmentVar("FOO2", "test2${FOO}")
+        self.assertEqual(2, _cfge.getNumEnvironmentVars())
+        self.assertEqual("FOO", _cfge.getEnvironmentVarNameByIndex(0))
+        self.assertEqual("FOO2", _cfge.getEnvironmentVarNameByIndex(1))
+        self.assertEqual("test1", _cfge.getEnvironmentVarDefault("FOO"))
+        self.assertEqual("test2${FOO}", _cfge.getEnvironmentVarDefault("FOO2"))
+        self.assertEqual("test2test1", _cfge.getCurrentContext().resolveStringVar("${FOO2}"))
+        self.assertEqual({'FOO': 'test1', 'FOO2': 'test2${FOO}'}, _cfge.getEnvironmentVarDefaults())
+        _cfge.clearEnvironmentVars()
+        self.assertEqual(0, _cfge.getNumEnvironmentVars())
         self.assertEqual("luts", _cfge.getSearchPath())
         _cfge.setSearchPath("otherdir")
         self.assertEqual("otherdir", _cfge.getSearchPath())

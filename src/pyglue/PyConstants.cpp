@@ -149,6 +149,13 @@ OCIO_NAMESPACE_ENTER
         PyModule_AddStringConstant(m, "GPU_LANGUAGE_GLSL_1_3",
             const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_GLSL_1_3)));
         
+        PyModule_AddStringConstant(m, "ENV_ENVIRONMENT_UNKNOWN",
+            const_cast<char*>(EnvironmentModeToString(ENV_ENVIRONMENT_UNKNOWN)));
+        PyModule_AddStringConstant(m, "ENV_ENVIRONMENT_LOAD_PREDEFINED",
+            const_cast<char*>(EnvironmentModeToString(ENV_ENVIRONMENT_LOAD_PREDEFINED)));
+        PyModule_AddStringConstant(m, "ENV_ENVIRONMENT_LOAD_ALL",
+            const_cast<char*>(EnvironmentModeToString(ENV_ENVIRONMENT_LOAD_ALL)));
+        
         PyModule_AddStringConstant(m, "ROLE_DEFAULT", const_cast<char*>(ROLE_DEFAULT));
         PyModule_AddStringConstant(m, "ROLE_REFERENCE", const_cast<char*>(ROLE_REFERENCE));
         PyModule_AddStringConstant(m, "ROLE_DATA", const_cast<char*>(ROLE_DATA));

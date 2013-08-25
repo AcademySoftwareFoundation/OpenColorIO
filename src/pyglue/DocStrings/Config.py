@@ -142,7 +142,37 @@ class Config:
         :rtype: pycontext
         """
         pass
-
+    
+    def addEnvironmentVar(self, name, defaultValue):
+        """
+        """
+        pass
+        
+    def getNumEnvironmentVars(self):
+        """
+        """
+        pass
+        
+    def getEnvironmentVarNameByIndex(self, index):
+        """
+        """
+        pass
+        
+    def getEnvironmentVarDefault(self, name):
+        """
+        """
+        pass
+    
+    def getEnvironmentVarDefaults(self):
+        """
+        """
+        pass
+    
+    def clearEnvironmentVars(self):
+        """
+        """
+        pass
+    
     def getSearchPath(self):
         """
         getSearchPath()

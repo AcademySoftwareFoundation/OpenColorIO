@@ -55,13 +55,15 @@ namespace
     public:
         std::string searchPath_;
         std::string workingDir_;
+        EnvironmentMode envmode_;
         EnvMap envMap_;
         
         mutable std::string cacheID_;
         mutable StringMap resultsCache_;
         mutable Mutex resultsCacheMutex_;
         
-        Impl()
+        Impl() :
+            envmode_(ENV_ENVIRONMENT_LOAD_PREDEFINED)
         {
         }
         
@@ -130,6 +132,7 @@ namespace
             std::ostringstream cacheid;
             cacheid << "Search Path " << getImpl()->searchPath_ << " ";
             cacheid << "Working Dir " << getImpl()->workingDir_ << " ";
+            cacheid << "Environment Mode " << getImpl()->envmode_ << " ";
             
             for (EnvMap::const_iterator iter = getImpl()->envMap_.begin(),
                  end = getImpl()->envMap_.end();
@@ -173,9 +176,29 @@ namespace
         return getImpl()->workingDir_.c_str();
     }
     
+    void Context::setEnvironmentMode(EnvironmentMode mode)
+    {
+        AutoMutex lock(getImpl()->resultsCacheMutex_);
+        
+        getImpl()->envmode_ = mode;
+        
+        getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
+    }
+    
+    EnvironmentMode Context::getEnvironmentMode() const
+    {
+        return getImpl()->envmode_;
+    }
+    
     void Context::loadEnvironment()
     {
-        LoadEnvironment(getImpl()->envMap_);
+        bool update = (getImpl()->envmode_ == ENV_ENVIRONMENT_LOAD_ALL) ? false : true;
+        LoadEnvironment(getImpl()->envMap_, update);
+        
+        AutoMutex lock(getImpl()->resultsCacheMutex_);
+        getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
     }
     
     void Context::setStringVar(const char * name, const char * value)
@@ -183,8 +206,6 @@ namespace
         if(!name) return;
         
         AutoMutex lock(getImpl()->resultsCacheMutex_);
-        getImpl()->resultsCache_.clear();
-        getImpl()->cacheID_ = "";
         
         // Set the value if specified
         if(value)
@@ -200,6 +221,9 @@ namespace
                 getImpl()->envMap_.erase(iter);
             }
         }
+        
+        getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
     }
     
     const char * Context::getStringVar(const char * name) const
@@ -231,6 +255,11 @@ namespace
         return iter->first.c_str();
     }
     
+    void Context::clearStringVars()
+    {
+        getImpl()->envMap_.clear();
+    }
+    
     const char * Context::resolveStringVar(const char * val) const
     {
         AutoMutex lock(getImpl()->resultsCacheMutex_);
@@ -245,7 +274,6 @@ namespace
         {
             return iter->second.c_str();
         }
-        
         
         std::string resolvedval = EnvExpand(val, getImpl()->envMap_);
         

@@ -59,6 +59,11 @@ class ConstantsTest(unittest.TestCase):
         self.assertEqual(OCIO.Constants.GPU_LANGUAGE_GLSL_1_0, "glsl_1.0")
         self.assertEqual(OCIO.Constants.GPU_LANGUAGE_GLSL_1_3, "glsl_1.3")
         
+        # EnvironmentMode
+        self.assertEqual(OCIO.Constants.ENV_ENVIRONMENT_UNKNOWN, "unknown")
+        self.assertEqual(OCIO.Constants.ENV_ENVIRONMENT_LOAD_PREDEFINED, "loadpredefined")
+        self.assertEqual(OCIO.Constants.ENV_ENVIRONMENT_LOAD_ALL, "loadall")
+        
         # Roles
         self.assertEqual(OCIO.Constants.ROLE_DEFAULT, "default")
         self.assertEqual(OCIO.Constants.ROLE_REFERENCE, "reference")
