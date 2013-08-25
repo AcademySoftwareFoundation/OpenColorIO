@@ -30,6 +30,7 @@ set(JNIOCIO_CLASSES
   org.OpenColorIO.BitDepth
   org.OpenColorIO.Allocation
   org.OpenColorIO.GpuLanguage
+  org.OpenColorIO.EnvironmentMode
   # Transforms
   org.OpenColorIO.AllocationTransform
   org.OpenColorIO.CDLTransform

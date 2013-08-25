@@ -23,6 +23,7 @@ def suite():
     suite.addTest(MainTest("test_interface"))
     suite.addTest(ConstantsTest("test_interface"))
     suite.addTest(ConfigTest("test_interface"))
+    suite.addTest(ConfigTest("test_is_editable"))
     suite.addTest(ContextTest("test_interface"))
     suite.addTest(LookTest("test_interface"))
     suite.addTest(ColorSpaceTest("test_interface"))
@@ -38,7 +39,8 @@ def suite():
 if __name__ == '__main__':
     runner = unittest.TextTestRunner()
     test_suite = suite()
-    runner.run(test_suite)
-
-print "hello world"
+    result = runner.run(test_suite)
+    if result.wasSuccessful() == False:
+        sys.exit(1)
+    sys.exit(0)
 

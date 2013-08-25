@@ -220,6 +220,21 @@ OCIO_NAMESPACE_ENTER
     }
     
     
+    const char * EnvironmentModeToString(EnvironmentMode mode)
+    {
+        if(mode == ENV_ENVIRONMENT_LOAD_PREDEFINED) return "loadpredefined";
+        else if(mode == ENV_ENVIRONMENT_LOAD_ALL) return "loadall";
+        return "unknown";
+    }
+    
+    EnvironmentMode EnvironmentModeFromString(const char * s)
+    {
+        std::string str = pystring::lower(s);
+        if(str == "loadpredefined") return ENV_ENVIRONMENT_LOAD_PREDEFINED;
+        else if(str == "loadall") return ENV_ENVIRONMENT_LOAD_ALL;
+        return ENV_ENVIRONMENT_UNKNOWN;
+    }
+    
     const char * ROLE_DEFAULT = "default";
     const char * ROLE_REFERENCE = "reference";
     const char * ROLE_DATA = "data";

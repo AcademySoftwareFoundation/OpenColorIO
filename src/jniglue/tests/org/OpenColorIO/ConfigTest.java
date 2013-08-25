@@ -91,6 +91,19 @@ public class ConfigTest extends TestCase {
         
         Config _cfg = new Config().CreateFromStream(SIMPLE_PROFILE);
         Config _cfge = _cfg.createEditableCopy();
+        _cfge.clearEnvironmentVars();
+        assertEquals(0, _cfge.getNumEnvironmentVars());
+        _cfge.addEnvironmentVar("FOO", "test1");
+        _cfge.addEnvironmentVar("FOO2", "test2${FOO}");
+        assertEquals(2, _cfge.getNumEnvironmentVars());
+        assertEquals("FOO", _cfge.getEnvironmentVarNameByIndex(0));
+        assertEquals("FOO2", _cfge.getEnvironmentVarNameByIndex(1));
+        assertEquals("test1", _cfge.getEnvironmentVarDefault("FOO"));
+        assertEquals("test2${FOO}", _cfge.getEnvironmentVarDefault("FOO2"));
+        assertEquals("test2test1", _cfge.getCurrentContext().resolveStringVar("${FOO2}"));
+        //self.assertEqual({'FOO': 'test1', 'FOO2': 'test2${FOO}'}, _cfge.getEnvironmentVarDefaults())
+        _cfge.clearEnvironmentVars();
+        assertEquals(0, _cfge.getNumEnvironmentVars());
         assertEquals("luts", _cfge.getSearchPath());
         _cfge.setSearchPath("otherdir");
         assertEquals("otherdir", _cfge.getSearchPath());

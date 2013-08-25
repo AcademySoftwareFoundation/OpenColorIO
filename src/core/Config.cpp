@@ -130,6 +130,14 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
     
+    // Environment
+    std::string LookupEnvironment(const StringMap & env, const std::string & name)
+    {
+        StringMap::const_iterator iter = env.find(name);
+        if(iter == env.end()) return "";
+        return iter->second;
+    }
+    
     // Roles
     // (lower case role name: colorspace name)
     std::string LookupRole(const StringMap & roles, const std::string & rolename)
@@ -395,6 +403,7 @@ OCIO_NAMESPACE_ENTER
     class Config::Impl
     {
     public:
+        StringMap env_;
         ContextRcPtr context_;
         std::string description_;
         ColorSpaceVec colorspaces_;
@@ -427,8 +436,6 @@ OCIO_NAMESPACE_ENTER
             strictParsing_(true),
             sanity_(SANITY_UNKNOWN)
         {
-            context_->loadEnvironment();
-            
             char* activeDisplays = std::getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR);
             SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays);
             
@@ -448,6 +455,7 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
+            env_ = rhs.env_;
             context_ = rhs.context_->createEditableCopy();
             description_ = rhs.description_;
             
@@ -839,6 +847,50 @@ OCIO_NAMESPACE_ENTER
     ConstContextRcPtr Config::getCurrentContext() const
     {
         return getImpl()->context_;
+    }
+    
+    void Config::addEnvironmentVar(const char * name, const char * defaultValue)
+    {
+        if(defaultValue)
+        {
+            getImpl()->env_[std::string(name)] = std::string(defaultValue);
+            getImpl()->context_->setStringVar(name, defaultValue);
+        }
+        else
+        {
+            StringMap::iterator iter = getImpl()->env_.find(std::string(name));
+            if(iter != getImpl()->env_.end()) getImpl()->env_.erase(iter);
+        }
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
+    }
+    
+    int Config::getNumEnvironmentVars() const
+    {
+        return static_cast<int>(getImpl()->env_.size());
+    }
+    
+    const char * Config::getEnvironmentVarNameByIndex(int index) const
+    {
+        if(index < 0 || index >= (int)getImpl()->env_.size()) return "";
+        StringMap::const_iterator iter = getImpl()->env_.begin();
+        for(int i = 0; i < index; ++i) ++iter;
+        return iter->first.c_str();
+    }
+    
+    const char * Config::getEnvironmentVarDefault(const char * name) const
+    {
+        return LookupEnvironment(getImpl()->env_, name).c_str();
+    }
+    
+    void Config::clearEnvironmentVars()
+    {
+        getImpl()->env_.clear();
+        getImpl()->context_->clearStringVars();
+        
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
     }
     
     const char * Config::getSearchPath() const
@@ -1600,7 +1652,11 @@ OCIO_NAMESPACE_ENTER
             out << YAML::BeginMap;
             out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
             out << YAML::Newline;
-            
+            if(getImpl()->env_.size() > 0) {
+                out << YAML::Key << "environment";
+                out << YAML::Value << getImpl()->env_;
+                out << YAML::Newline;
+            }
             out << YAML::Key << "search_path" << YAML::Value << getImpl()->context_->getSearchPath();
             out << YAML::Key << "strictparsing" << YAML::Value << getImpl()->strictParsing_;
             out << YAML::Key << "luma" << YAML::Value << YAML::Flow << getImpl()->defaultLumaCoefs_;
@@ -1692,6 +1748,7 @@ OCIO_NAMESPACE_ENTER
             
             std::string key, stringval;
             bool boolval = false;
+            EnvironmentMode mode = ENV_ENVIRONMENT_LOAD_ALL;
             
             for (YAML::Iterator iter = node.begin();
                  iter != node.end();
@@ -1700,6 +1757,26 @@ OCIO_NAMESPACE_ENTER
                 iter.first() >> key;
                 
                 if(key == "ocio_profile_version") { } // Already handled above.
+                else if(key == "environment")
+                {
+                    mode = ENV_ENVIRONMENT_LOAD_PREDEFINED;
+                    const YAML::Node& environment = iter.second();
+                    if(environment.Type() != YAML::NodeType::Map)
+                    {
+                        std::ostringstream os;
+                        os << "'environment' field needs to be a (name: key) map.";
+                        throw Exception(os.str().c_str());
+                    }
+                    for (YAML::Iterator it  = environment.begin();
+                                        it != environment.end(); ++it)
+                    {
+                        std::string k, v;
+                        it.first() >> k;
+                        it.second() >> v;
+                        env_[k] = v;
+                        context_->setStringVar(k.c_str(), v.c_str());
+                    }
+                }
                 else if(key == "search_path" || key == "resource_path")
                 {
                     if (iter.second().Type() != YAML::NodeType::Null && 
@@ -1843,6 +1920,25 @@ OCIO_NAMESPACE_ENTER
                 std::string configrootdir = pystring::os::path::dirname(realfilename);
                 context_->setWorkingDir(configrootdir.c_str());
             }
+            
+            context_->setEnvironmentMode(mode);
+            context_->loadEnvironment();
+            
+            if(mode == ENV_ENVIRONMENT_LOAD_ALL)
+            {
+                std::ostringstream os;
+                os << "This .ocio config ";
+                if(filename && *filename)
+                {
+                    os << " '" << filename << "' ";
+                }
+                os << "has no environment section defined. The default behaviour is to ";
+                os << "load all environment variables (" << context_->getNumStringVars() << ")";
+                os << ", which reduces the efficiency of OCIO's caching. Considering ";
+                os << "predefining the environment variables used.";
+                LogDebug(os.str());
+            }
+            
         }
         catch( const std::exception & e)
         {
@@ -2219,5 +2315,95 @@ OIIO_ADD_TEST(Config, SanityCheck)
     }
 }
 
+
+OIIO_ADD_TEST(Config, EnvCheck)
+{
+    {
+    std::string SIMPLE_PROFILE =
+    "ocio_profile_version: 1\n"
+    "environment:\n"
+    "  SHOW: super\n"
+    "  SHOT: test\n"
+    "  SEQ: foo\n"
+    "  test: bar${cheese}\n"
+    "  cheese: chedder\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "strictparsing: false\n"
+    "roles:\n"
+    "  default: raw\n"
+    "displays:\n"
+    "  sRGB:\n"
+    "  - !<View> {name: Raw, colorspace: raw}\n"
+    "\n";
+    
+    std::string SIMPLE_PROFILE2 =
+    "ocio_profile_version: 1\n"
+    "colorspaces:\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "  - !<ColorSpace>\n"
+    "      name: raw\n"
+    "strictparsing: false\n"
+    "roles:\n"
+    "  default: raw\n"
+    "displays:\n"
+    "  sRGB:\n"
+    "  - !<View> {name: Raw, colorspace: raw}\n"
+    "\n";
+    
+    
+    std::string test("SHOW=bar");
+    putenv((char *)test.c_str());
+    std::string test2("TASK=lighting");
+    putenv((char *)test2.c_str());
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_NO_THOW(config = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_EQUAL(config->getNumEnvironmentVars(), 5);
+    OIIO_CHECK_ASSERT(strcmp(config->getCurrentContext()->resolveStringVar("test${test}"),
+        "testbarchedder") == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->getCurrentContext()->resolveStringVar("${SHOW}"),
+        "bar") == 0);
+    OIIO_CHECK_THOW(config->sanityCheck(), OCIO::Exception);
+    OIIO_CHECK_ASSERT(strcmp(config->getEnvironmentVarDefault("SHOW"), "super") == 0);
+    
+    OCIO::ConfigRcPtr edit = config->createEditableCopy();
+    edit->clearEnvironmentVars();
+    OIIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 0);
+    
+    edit->addEnvironmentVar("testing", "dupvar");
+    edit->addEnvironmentVar("testing", "dupvar");
+    edit->addEnvironmentVar("foobar", "testing");
+    edit->addEnvironmentVar("blank", "");
+    edit->addEnvironmentVar("dontadd", NULL);
+    OIIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 3);
+    edit->addEnvironmentVar("foobar", NULL); // remove
+    OIIO_CHECK_EQUAL(edit->getNumEnvironmentVars(), 2);
+    edit->clearEnvironmentVars();
+    
+    edit->addEnvironmentVar("SHOW", "super");
+    edit->addEnvironmentVar("SHOT", "test");
+    edit->addEnvironmentVar("SEQ", "foo");
+    edit->addEnvironmentVar("test", "bar${cheese}");
+    edit->addEnvironmentVar("cheese", "chedder");
+    
+    //Test
+    OCIO::LoggingLevel loglevel = OCIO::GetLoggingLevel();
+    OCIO::SetLoggingLevel(OCIO::LOGGING_LEVEL_DEBUG);
+    is.str(SIMPLE_PROFILE2);
+    OCIO::ConstConfigRcPtr noenv;
+    OIIO_CHECK_NO_THOW(noenv = OCIO::Config::CreateFromStream(is));
+    OIIO_CHECK_ASSERT(strcmp(noenv->getCurrentContext()->resolveStringVar("${TASK}"),
+        "lighting") == 0);
+    OCIO::SetLoggingLevel(loglevel);
+    
+    }
+}
 
 #endif // OCIO_UNIT_TEST

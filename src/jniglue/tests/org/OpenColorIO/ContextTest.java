@@ -14,7 +14,7 @@ public class ContextTest extends TestCase {
         Context cont = new Context().Create();
         cont.setSearchPath("testing123");
         cont.setWorkingDir("/dir/123");
-        assertEquals("$af84c0ff921e48843d711a761e05b80f", cont.getCacheID());
+        assertEquals("$4c2d66a612fc25ddd509591e1dead57b", cont.getCacheID());
         assertEquals("testing123", cont.getSearchPath());
         assertEquals("/dir/123", cont.getWorkingDir());
         cont.setStringVar("TeSt", "foobar");
@@ -25,7 +25,12 @@ public class ContextTest extends TestCase {
         assertNotSame(0, cont.getNumStringVars());
         cont.setStringVar("TEST1", "foobar");
         assertEquals("/foo/foobar/bar",
-                     cont.resolveStringVar("/foo/${TEST1}/bar"));
+                cont.resolveStringVar("/foo/${TEST1}/bar"));
+        cont.clearStringVars();
+        assertEquals(0, cont.getNumStringVars());
+        assertEquals(EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED, cont.getEnvironmentMode());
+        cont.setEnvironmentMode(EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL);
+        assertEquals(EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL, cont.getEnvironmentMode());
         try {
             cont.setSearchPath("testing123");
             String foo = cont.resolveFileLocation("test.lut");
