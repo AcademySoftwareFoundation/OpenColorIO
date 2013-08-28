@@ -174,7 +174,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        PyObject * PyOCIO_CDLTransform_CreateFromFile(PyObject * self, PyObject * args)
+        PyObject * PyOCIO_CDLTransform_CreateFromFile(PyObject * /*self*/, PyObject * args)
         {
             OCIO_PYTRY_ENTER()
             const char * src = 0;
