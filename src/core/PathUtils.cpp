@@ -204,12 +204,8 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                // load the entire env
-                std::string env_str = (char*)*env;
-                int pos = static_cast<int>(env_str.find_first_of('='));
                 map.insert(EnvMap::value_type(name, value));
             }
-            
         }
     }
     

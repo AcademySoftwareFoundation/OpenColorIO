@@ -260,7 +260,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getFormat(PyObject * self, PyObject * args)
+        PyObject * PyOCIO_Baker_getFormat(PyObject * self, PyObject * /*args*/)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);

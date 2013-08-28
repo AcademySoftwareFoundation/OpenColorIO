@@ -298,7 +298,8 @@ namespace
             return iter->second.c_str();
         }
         
-        // Load an absolute file reference
+        // Attempt to load an absolute file reference
+        {
         std::string expandedfullpath = EnvExpand(filename, getImpl()->envMap_);
         if(pystring::os::path::isabs(expandedfullpath))
         {
@@ -311,6 +312,7 @@ namespace
             errortext << "The specified absolute file reference ";
             errortext << "'" << expandedfullpath << "' could not be located. ";
             throw Exception(errortext.str().c_str());
+        }
         }
         
         // Load a relative file reference

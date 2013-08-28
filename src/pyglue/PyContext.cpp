@@ -288,7 +288,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_getNumStringVars(PyObject * self, PyObject * args)
+        PyObject * PyOCIO_Context_getNumStringVars(PyObject * self, PyObject * /*args*/)
         {
             OCIO_PYTRY_ENTER()
             ConstContextRcPtr context = GetConstContext(self, true);

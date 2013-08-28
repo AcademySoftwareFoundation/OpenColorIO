@@ -173,7 +173,7 @@ OCIO_NAMESPACE_ENTER
         {
             OCIO_PYTRY_ENTER()
             LookRcPtr ptr = Look::Create();
-            int ret = BuildPyObject<PyOCIO_Look, ConstLookRcPtr, LookRcPtr>(self, ptr);
+            /*int ret =*/ BuildPyObject<PyOCIO_Look, ConstLookRcPtr, LookRcPtr>(self, ptr);
             char* name = NULL;
             char* processSpace = NULL;
             PyObject* pytransform = NULL;

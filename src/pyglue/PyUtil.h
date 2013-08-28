@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 
 #define OCIO_PYTRY_ENTER() try {
-#define OCIO_PYTRY_EXIT(ret) } catch(...) { OpenColorIO::Python_Handle_Exception(); return ret; }
+#define OCIO_PYTRY_EXIT(ret) } catch(...) { OCIO_NAMESPACE::Python_Handle_Exception(); return ret; }
 
 // Some utilities macros for python 2.5 to 3.3 compatibility
 #if PY_MAJOR_VERSION >= 3
