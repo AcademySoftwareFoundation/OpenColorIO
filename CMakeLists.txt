@@ -24,7 +24,7 @@ option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
-option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" OFF)
+option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ON)
 
 # Use boost's shared_ptr by default on Windows (as <VS2010 doesn't have it),
 # Use std::tr1::shared_ptr by default on other platforms
