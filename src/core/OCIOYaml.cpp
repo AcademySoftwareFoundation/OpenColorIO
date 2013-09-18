@@ -313,6 +313,11 @@ OCIO_NAMESPACE_ENTER
             node.Read<ExponentTransformRcPtr>(temp);
             t = temp;
         }
+        else if(type == "ExpressionTransform")  {
+            ExpressionTransformRcPtr temp;
+            node.Read<ExpressionTransformRcPtr>(temp);
+            t = temp;
+        }
         else if(type == "FileTransform")  {
             FileTransformRcPtr temp;
             node.Read<FileTransformRcPtr>(temp);
@@ -378,6 +383,9 @@ OCIO_NAMESPACE_ENTER
         else if(ConstExponentTransformRcPtr Exponent_tran = \
             DynamicPtrCast<const ExponentTransform>(t))
             out << Exponent_tran;
+        else if(ConstExpressionTransformRcPtr Expression_tran = \
+            DynamicPtrCast<const ExpressionTransform>(t))
+            out << Expression_tran;
         else if(ConstFileTransformRcPtr File_tran = \
             DynamicPtrCast<const FileTransform>(t))
             out << File_tran;
@@ -696,7 +704,93 @@ OCIO_NAMESPACE_ENTER
         out << YAML::EndMap;
         return out;
     }
-    
+
+    void operator >> (const YAML::Node& node, ExpressionTransformRcPtr& t)
+    {
+        t = ExpressionTransform::Create();
+
+        std::string key;
+
+        for (YAML::Iterator iter = node.begin();
+             iter != node.end();
+             ++iter)
+        {
+            iter.first() >> key;
+
+            if(key == "value" || key == "valueR")
+            {
+                std::string val;
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> val;
+                    t->setExpressionR(val.c_str());
+
+                    if(key == "valueR")
+                    {
+                        t->setIs3d(true);
+                    }
+                }
+            }
+            else if(key == "valueG")
+            {
+                std::string val;
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> val;
+                    t->setExpressionG(val.c_str());
+                    t->setIs3d(true);
+                }
+            }
+            else if(key == "valueB")
+            {
+                std::string val;
+                if (iter.second().Type() != YAML::NodeType::Null)
+                {
+                    iter.second() >> val;
+                    t->setExpressionB(val.c_str());
+                    t->setIs3d(true);
+                }
+            }
+            else if(key == "direction")
+            {
+                TransformDirection val;
+                if (iter.second().Type() != YAML::NodeType::Null &&
+                    iter.second().Read<TransformDirection>(val))
+                  t->setDirection(val);
+            }
+            else
+            {
+                LogUnknownKeyWarning(node.Tag(), iter.first());
+            }
+        }
+    }
+
+    YAML::Emitter& operator << (YAML::Emitter& out, ConstExpressionTransformRcPtr t)
+    {
+        out << YAML::VerbatimTag("ExpressionTransform");
+        out << YAML::Flow << YAML::BeginMap;
+
+        if (t->is3d())
+        {
+            out << YAML::Key << "valueR";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionR();
+            out << YAML::Key << "valueG";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionG();
+            out << YAML::Key << "valueB";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionB();
+
+        }
+        else
+        {
+            out << YAML::Key << "value";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionR();
+        }
+
+        EmitBaseTransformKeyValues(out, t);
+        out << YAML::EndMap;
+        return out;
+    }
+
     void operator >> (const YAML::Node& node, LogTransformRcPtr& t)
     {
         t = LogTransform::Create();

@@ -423,6 +423,70 @@ OCIO_NAMESPACE_ENTER
     
     //!rst:: //////////////////////////////////////////////////////////////////
     
+    //!cpp:class:: Represents expression transform: color = expression()
+    // 
+    // Available operations:
+    // Mathematical operations: + - / * ^ %
+    // Functions: min() max() ceil() floor() log() log2() log10()
+    // Trigonometry: sin() cos() tan()
+    // Equalities: == != < <= > >=
+    // Logical: && ||
+    // Ternary: ? :
+    class OCIOEXPORT ExpressionTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static ExpressionTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+        
+        //!cpp:function::
+        const char * getExpressionR() const;
+        //!cpp:function::
+        const char * getExpressionG() const;
+        //!cpp:function::
+        const char * getExpressionB() const;
+        
+        //!cpp:function::
+        void setExpressionR(const char * expressionR);
+        //!cpp:function::
+        void setExpressionG(const char * expressionG);
+        //!cpp:function::
+        void setExpressionB(const char * expressionB);
+        
+        //!cpp:function::
+        void setIs3d(const bool is3d);
+        //!cpp:function::
+        bool is3d() const;
+        
+    private:
+        ExpressionTransform();
+        ExpressionTransform(const ExpressionTransform &);
+        virtual ~ExpressionTransform();
+        
+        ExpressionTransform& operator= (const ExpressionTransform &);
+        
+        static void deleter(ExpressionTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExpressionTransform&);
+    
+    
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
     //!cpp:class::
     class OCIOEXPORT FileTransform : public Transform
     {

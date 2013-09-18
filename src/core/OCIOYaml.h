@@ -57,6 +57,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpaceTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::DisplayTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExpressionTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
@@ -95,6 +96,8 @@ OCIO_NAMESPACE_ENTER
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstColorSpaceTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, ExponentTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstExponentTransformRcPtr t);
+    OCIOHIDDEN void operator >> (const YAML::Node& node, ExpressionTransformRcPtr& t);
+    OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstExpressionTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, FileTransformRcPtr& t);
     OCIOHIDDEN YAML::Emitter& operator << (YAML::Emitter& out, ConstFileTransformRcPtr t);
     OCIOHIDDEN void operator >> (const YAML::Node& node, LogTransformRcPtr& t);
