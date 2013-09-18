@@ -182,7 +182,17 @@ else(USE_EXTERNAL_TINYXML)
         set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
     endif()
 endif(USE_EXTERNAL_TINYXML)
-    
+
+###############################################################################
+### expressions ###
+set(expressions_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist)
+ExternalProject_Add(expressions
+        URL ${CMAKE_SOURCE_DIR}/ext/expressions.tar.gz
+		PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/expressions.patch
+		INSTALL_DIR ext/dist
+		CMAKE_ARGS ${expressions_CMAKE_ARGS}
+    )
+
 ###############################################################################
 ### YAML ###
 
