@@ -619,6 +619,86 @@ OCIO_NAMESPACE_ENTER
             out << YAML::EndMap;
         }
         
+        // ExpressionTransform
+        
+        inline void load(const YAML::Node& node, ExpressionTransformRcPtr& t)
+        {
+            t = ExpressionTransform::Create();
+            
+            std::string key;
+            std::map < char, std::string> channels;
+            
+            for (Iterator iter = node.begin();
+                 iter != node.end();
+                 ++iter)
+            {
+                const YAML::Node& first = get_first(iter);
+                const YAML::Node& second = get_second(iter);
+
+                load(first, key);
+
+                if (second.Type() == YAML::NodeType::Null) continue;
+
+                if(key == "direction")
+                {
+                    TransformDirection val;
+                    load(second, val);
+                    t->setDirection(val);
+                }
+                else if (key.find("r") != std::string::npos ||
+                         key.find("g") != std::string::npos ||
+                         key.find("b") != std::string::npos ||
+                         key.find("a") != std::string::npos )
+                {
+                    char chan[] = {'r','g','b','a'};
+                    for (int i=0; i<4; i++)
+                    {
+                        char c = chan[i];
+                        if (key.find(c) != std::string::npos)
+                        {
+                            std::string val;
+                            load(second, val);
+
+                            if(channels.count(c))
+                            {
+                                std::stringstream ss;
+                                ss << "ExpressionTransform parse error, multiple definitions for \"" << c << "\" channel.";
+                                throw Exception(ss.str().c_str());
+                            }
+                            channels[c] = val;
+                        }
+                    }
+                }
+                else
+                {
+                    LogUnknownKeyWarning(node.Tag(), first);
+                }
+            }
+
+            channels.count('r') ? t->setExpressionR(channels['r'].c_str()) : t->setExpressionR("");
+            channels.count('g') ? t->setExpressionG(channels['g'].c_str()) : t->setExpressionG("");
+            channels.count('b') ? t->setExpressionB(channels['b'].c_str()) : t->setExpressionB("");
+            channels.count('a') ? t->setExpressionA(channels['a'].c_str()) : t->setExpressionA("");
+        }
+        
+        inline void save(YAML::Emitter& out, ConstExpressionTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("ExpressionTransform");
+            out << YAML::Flow << YAML::BeginMap;
+
+            out << YAML::Key << "r";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionR();
+            out << YAML::Key << "g";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionG();
+            out << YAML::Key << "b";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionB();
+            out << YAML::Key << "a";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionA();
+
+            EmitBaseTransformKeyValues(out, t); 
+            out << YAML::EndMap;
+        }
+        
         // FileTransform
         
         inline void load(const YAML::Node& node, FileTransformRcPtr& t)

@@ -139,6 +139,13 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<ExponentTransform> ExponentTransformRcPtr;
     
+    class OCIOEXPORT ExpressionTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ExpressionTransform> ConstExpressionTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ExpressionTransform> ExpressionTransformRcPtr;
+    
+    class OCIOEXPORT FileTransform;
     class OCIOEXPORT FileTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;
