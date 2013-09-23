@@ -1,3 +1,14 @@
+**Version 1.0.9 (Sep 2 2013):**
+    * CDL cccid supports both named id and index lookups
+    * ociobakelut / ocioconvert updates
+    * FreeBSD compile dixes
+    * FileTransform disk cache allows concurrent disk lookups
+    * CSP windows fix
+    * Python 3 support
+    * Fix envvar abs/relative path testing
+    * Can explicitly declare config envvars
+    * gcc44 compile warning fixes
+
 **Version 1.0.8 (Dec 11 2012):**
     * After Effects plugin
     * Core increased precision for matrix inversion
