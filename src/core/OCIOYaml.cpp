@@ -632,43 +632,48 @@ OCIO_NAMESPACE_ENTER
                  iter != node.end();
                  ++iter)
             {
-                const YAML::Node& first = get_first(iter);
-                const YAML::Node& second = get_second(iter);
+				iter.first() >> key;
 
                 load(first, key);
 
-                if (second.Type() == YAML::NodeType::Null) continue;
+				if(key == "direction")
+				{
+					TransformDirection val;
+					if (iter.second().Type() != YAML::NodeType::Null &&
+						iter.second().Read<TransformDirection>(val))
+					{
+						t->setDirection(val);
+					}
+				}
+				else if (key.find("r") != std::string::npos ||
+						 key.find("g") != std::string::npos ||
+						 key.find("b") != std::string::npos ||
+						 key.find("a") != std::string::npos )
+				{
+					char chan[] = {'r','g','b','a'};
+					for (int i=0; i<4; i++)
+					{
+						char c = chan[i];
 
-                if(key == "direction")
-                {
-                    TransformDirection val;
-                    load(second, val);
-                    t->setDirection(val);
-                }
-                else if (key.find("r") != std::string::npos ||
-                         key.find("g") != std::string::npos ||
-                         key.find("b") != std::string::npos ||
-                         key.find("a") != std::string::npos )
-                {
-                    char chan[] = {'r','g','b','a'};
-                    for (int i=0; i<4; i++)
-                    {
-                        char c = chan[i];
-                        if (key.find(c) != std::string::npos)
-                        {
-                            std::string val;
-                            load(second, val);
+						if (key.find(c) != std::string::npos)
+						{
+							if (iter.second().Type() != YAML::NodeType::Null)
+							{
+								std::string val;
+								iter.second() >> val;
 
-                            if(channels.count(c))
-                            {
-                                std::stringstream ss;
-                                ss << "ExpressionTransform parse error, multiple definitions for \"" << c << "\" channel.";
-                                throw Exception(ss.str().c_str());
-                            }
-                            channels[c] = val;
-                        }
-                    }
-                }
+								if(channels.count(c))
+								{
+									std::stringstream ss;
+									ss << "ExpressionTransform parse error, multiple definitions for \"" << c << "\" channel.";
+									throw Exception(ss.str().c_str());
+								}
+								channels[c] = val;
+							}
+						}
+					}
+				}
+
                 else
                 {
                     LogUnknownKeyWarning(node.Tag(), first);
@@ -1202,6 +1207,11 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
+            else if(type == "ExpressionTransform")  {
+                ExpressionTransformRcPtr temp;
+                load(node, temp);
+                t = temp;
+            }
             else if(type == "FileTransform")  {
                 FileTransformRcPtr temp;
                 load(node, temp);
@@ -1264,6 +1274,9 @@ OCIO_NAMESPACE_ENTER
             else if(ConstExponentTransformRcPtr Exponent_tran = \
                 DynamicPtrCast<const ExponentTransform>(t))
                 save(out, Exponent_tran);
+            else if(ConstExpressionTransformRcPtr Expression_tran = \
+                DynamicPtrCast<const ExpressionTransform>(t))
+                save(out, Expression_tran);
             else if(ConstFileTransformRcPtr File_tran = \
                 DynamicPtrCast<const FileTransform>(t))
                 save(out, File_tran);

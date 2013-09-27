@@ -452,6 +452,8 @@ OCIO_NAMESPACE_ENTER
         const char * getExpressionG() const;
         //!cpp:function::
         const char * getExpressionB() const;
+        //!cpp:function::
+        const char * getExpressionA() const;
         
         //!cpp:function::
         void setExpressionR(const char * expressionR);
@@ -459,11 +461,9 @@ OCIO_NAMESPACE_ENTER
         void setExpressionG(const char * expressionG);
         //!cpp:function::
         void setExpressionB(const char * expressionB);
+        //!cpp:function::
+        void setExpressionA(const char * expressionA);
         
-        //!cpp:function::
-        void setIs3d(const bool is3d);
-        //!cpp:function::
-        bool is3d() const;
         
     private:
         ExpressionTransform();
