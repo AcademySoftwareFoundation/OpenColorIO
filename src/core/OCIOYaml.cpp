@@ -710,6 +710,7 @@ OCIO_NAMESPACE_ENTER
         t = ExpressionTransform::Create();
 
         std::string key;
+        std::map < char, std::string> channels;
 
         for (YAML::Iterator iter = node.begin();
              iter != node.end();
@@ -717,52 +718,52 @@ OCIO_NAMESPACE_ENTER
         {
             iter.first() >> key;
 
-            if(key == "value" || key == "valueR")
-            {
-                std::string val;
-                if (iter.second().Type() != YAML::NodeType::Null)
-                {
-                    iter.second() >> val;
-                    t->setExpressionR(val.c_str());
-
-                    if(key == "valueR")
-                    {
-                        t->setIs3d(true);
-                    }
-                }
-            }
-            else if(key == "valueG")
-            {
-                std::string val;
-                if (iter.second().Type() != YAML::NodeType::Null)
-                {
-                    iter.second() >> val;
-                    t->setExpressionG(val.c_str());
-                    t->setIs3d(true);
-                }
-            }
-            else if(key == "valueB")
-            {
-                std::string val;
-                if (iter.second().Type() != YAML::NodeType::Null)
-                {
-                    iter.second() >> val;
-                    t->setExpressionB(val.c_str());
-                    t->setIs3d(true);
-                }
-            }
-            else if(key == "direction")
+            if(key == "direction")
             {
                 TransformDirection val;
                 if (iter.second().Type() != YAML::NodeType::Null &&
                     iter.second().Read<TransformDirection>(val))
-                  t->setDirection(val);
+                {
+                    t->setDirection(val);
+                }
+            }
+            else if (key.find("r") != std::string::npos ||
+                     key.find("g") != std::string::npos ||
+                     key.find("b") != std::string::npos ||
+                     key.find("a") != std::string::npos )
+            {
+                char chan[] = {'r','g','b','a'};
+                for (int i=0; i<4; i++)
+                {
+                    char c = chan[i];
+
+                    if (key.find(c) != std::string::npos)
+                    {
+                        if (iter.second().Type() != YAML::NodeType::Null)
+                        {
+                            std::string val;
+                            iter.second() >> val;
+
+                            if(channels.count(c))
+                            {
+                                std::stringstream ss;
+                                ss << "ExpressionTransform parse error, multiple definitions for \"" << c << "\" channel.";
+                                throw Exception(ss.str().c_str());
+                            }
+                            channels[c] = val;
+                        }
+                    }
+                }
             }
             else
             {
                 LogUnknownKeyWarning(node.Tag(), iter.first());
             }
         }
+        channels.count('r') ? t->setExpressionR(channels['r'].c_str()) : t->setExpressionR("");
+        channels.count('g') ? t->setExpressionG(channels['g'].c_str()) : t->setExpressionG("");
+        channels.count('b') ? t->setExpressionB(channels['b'].c_str()) : t->setExpressionB("");
+        channels.count('a') ? t->setExpressionA(channels['a'].c_str()) : t->setExpressionA("");
     }
 
     YAML::Emitter& operator << (YAML::Emitter& out, ConstExpressionTransformRcPtr t)
@@ -770,21 +771,14 @@ OCIO_NAMESPACE_ENTER
         out << YAML::VerbatimTag("ExpressionTransform");
         out << YAML::Flow << YAML::BeginMap;
 
-        if (t->is3d())
-        {
-            out << YAML::Key << "valueR";
-            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionR();
-            out << YAML::Key << "valueG";
-            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionG();
-            out << YAML::Key << "valueB";
-            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionB();
-
-        }
-        else
-        {
-            out << YAML::Key << "value";
-            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionR();
-        }
+        out << YAML::Key << "r";
+        out << YAML::Value << YAML::DoubleQuoted << t->getExpressionR();
+        out << YAML::Key << "g";
+        out << YAML::Value << YAML::DoubleQuoted << t->getExpressionG();
+        out << YAML::Key << "b";
+        out << YAML::Value << YAML::DoubleQuoted << t->getExpressionB();
+        out << YAML::Key << "a";
+        out << YAML::Value << YAML::DoubleQuoted << t->getExpressionA();
 
         EmitBaseTransformKeyValues(out, t);
         out << YAML::EndMap;

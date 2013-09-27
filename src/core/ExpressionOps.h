@@ -39,13 +39,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
     void CreateExpressionOp(OpRcPtrVec & ops,
-                          const std::string expression,
-                          TransformDirection direction);
-
-    void CreateExpressionOp(OpRcPtrVec & ops,
                           const std::string expressionR,
                           const std::string expressionG,
                           const std::string expressionB,
+                          const std::string expressionA,
                           TransformDirection direction);
 }
 OCIO_NAMESPACE_EXIT

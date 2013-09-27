@@ -47,14 +47,13 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         TransformDirection dir_;
-        bool is3d_;
         std::string expressionR_;
         std::string expressionG_;
         std::string expressionB_;
+        std::string expressionA_;
 
         Impl() :
-            dir_(TRANSFORM_DIR_FORWARD),
-            is3d_(false)
+            dir_(TRANSFORM_DIR_FORWARD)
         { }
 
         ~Impl()
@@ -66,7 +65,7 @@ OCIO_NAMESPACE_ENTER
             expressionR_ = rhs.expressionR_;
             expressionG_ = rhs.expressionG_;
             expressionB_ = rhs.expressionB_;
-            is3d_        = rhs.is3d_;
+            expressionA_ = rhs.expressionA_;
             return *this;
         }
     };
@@ -122,14 +121,9 @@ OCIO_NAMESPACE_ENTER
         getImpl()->expressionB_ = expressionB;
     }
 
-    void ExpressionTransform::setIs3d(const bool is3dExpression)
+    void ExpressionTransform::setExpressionA(const char * expressionA)
     {
-        getImpl()->is3d_ = is3dExpression;
-    }
-
-    bool ExpressionTransform::is3d() const
-    {
-        return getImpl()->is3d_;
+        getImpl()->expressionA_ = expressionA;
     }
 
     const char * ExpressionTransform::getExpressionR() const
@@ -147,6 +141,10 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->expressionB_.c_str();
     }
 
+    const char * ExpressionTransform::getExpressionA() const
+    {
+        return getImpl()->expressionA_.c_str();
+    }
 
     std::ostream& operator<< (std::ostream& os, const ExpressionTransform& t)
     {
@@ -168,19 +166,11 @@ OCIO_NAMESPACE_ENTER
         TransformDirection combinedDir = CombineTransformDirections(dir,
             transform.getDirection());
 
-        if (transform.is3d())
-        {
-
-            std::string expressionR = transform.getExpressionR();
-            std::string expressionG = transform.getExpressionG();
-            std::string expressionB = transform.getExpressionB();
-            CreateExpressionOp(ops, expressionR, expressionG, expressionB, combinedDir);
-        }
-        else
-        {
-            std::string expression = transform.getExpressionR();
-            CreateExpressionOp(ops, expression, combinedDir);
-        }
+        std::string expressionR = transform.getExpressionR();
+        std::string expressionG = transform.getExpressionG();
+        std::string expressionB = transform.getExpressionB();
+        std::string expressionA = transform.getExpressionA();
+        CreateExpressionOp(ops, expressionR, expressionG, expressionB, expressionA, combinedDir);
     }
 
 }
