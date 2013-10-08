@@ -92,7 +92,7 @@ class CDLTransform:
         """
         getSatLumaCoefs(pyData)
         
-        Returns the SAT (saturation) and luma coefficients in :py:class:`CDLTransform`.
+        Returns the SAT (saturation) and luma coefficients in :py:class:`PyOpenColorIO.CDLTransform`.
         
         :return: saturation and luma coefficients
         :rtype: list of floats
