@@ -174,9 +174,24 @@ OCIO_NAMESPACE_ENTER
             expr::ASTNode* m_astB;
             expr::ASTNode* m_astA;
 
-            mutable expr::Parser<float>::VariableMap m_vm;
+
+#ifdef USE_LLVM
+            typedef expr::LLVMEvaluator Evaluator;
+            typedef expr::LLVMEvaluator::VariableMap VariableMap;
+#else
+            typedef expr::Evaluator<float> Evaluator;
+            typedef expr::Evaluator<float>::VariableMap VariableMap;
+#endif
+
+            mutable VariableMap m_vm;
 
             // Set in finalize
+
+            Evaluator* m_evaluatorR;
+            Evaluator* m_evaluatorG;
+            Evaluator* m_evaluatorB;
+            Evaluator* m_evaluatorA;
+
             std::string m_cacheID;
         };
 
@@ -200,7 +215,12 @@ OCIO_NAMESPACE_ENTER
             }
 
             // Add some default variables to the variablemap
-            m_vm["pi"] = 3.14159f;
+            m_vm["pi"] = 3.14159265359f;
+            m_vm["r"] = 0.0f;
+            m_vm["g"] = 0.0f;
+            m_vm["b"] = 0.0f;
+            m_vm["a"] = 0.0f;
+            m_vm["v"] = 0.0f;
 
             // Construct the AST's for each of the expressions
 
@@ -208,10 +228,10 @@ OCIO_NAMESPACE_ENTER
 
             try
             {
-                m_astR = parser.parse(expressionR.c_str(), &m_vm);
-                m_astG = parser.parse(expressionG.c_str(), &m_vm);
-                m_astB = parser.parse(expressionB.c_str(), &m_vm);
-                m_astA = parser.parse(expressionA.c_str(), &m_vm);
+                m_astR = parser.parse(expressionR.c_str());
+                m_astG = parser.parse(expressionG.c_str());
+                m_astB = parser.parse(expressionB.c_str());
+                m_astA = parser.parse(expressionA.c_str());
             }
             catch (expr::ParserException &e)
             {
@@ -294,29 +314,51 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream << m_expressionA << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
+
+            // Build the evaluators
+            m_evaluatorR = m_astR ? new Evaluator(m_astR, &m_vm) : NULL;
+            m_evaluatorG = m_astG ? new Evaluator(m_astG, &m_vm) : NULL;
+            m_evaluatorB = m_astB ? new Evaluator(m_astB, &m_vm) : NULL;
+            m_evaluatorA = m_astA ? new Evaluator(m_astA, &m_vm) : NULL;
         }
 
         void ExpressionOp::apply(float*rgbaBuffer, long numPixels) const
         {
             if (!rgbaBuffer) return;
 
-            expr::Evaluator<float> evaluator;
+            float &r = m_vm["r"];
+            float &g = m_vm["g"];
+            float &b = m_vm["b"];
+            float &a = m_vm["a"];
+            float &v = m_vm["v"];
 
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                float r = rgbaBuffer[0]; m_vm["r"] = r;
-                float g = rgbaBuffer[1]; m_vm["g"] = g;
-                float b = rgbaBuffer[2]; m_vm["b"] = b;
-                float a = rgbaBuffer[3]; m_vm["a"] = a;
+                r = rgbaBuffer[0];
+                g = rgbaBuffer[1];
+                b = rgbaBuffer[2];
+                a = rgbaBuffer[3];
 
                 try
                 {
                     // Set v to the current channel before evaluation
                     // just in case people are using the v style expression
-                    m_vm["v"] = r; rgbaBuffer[0] = m_astR ? evaluator.evaluate(m_astR) : r;
-                    m_vm["v"] = g; rgbaBuffer[1] = m_astG ? evaluator.evaluate(m_astG) : g;
-                    m_vm["v"] = b; rgbaBuffer[2] = m_astB ? evaluator.evaluate(m_astB) : b;
-                    m_vm["v"] = a; rgbaBuffer[3] = m_astA ? evaluator.evaluate(m_astA) : a;
+                    if (m_evaluatorR)
+                    {
+                        v = r; rgbaBuffer[0] = m_evaluatorR->evaluate();
+                    }
+                    if (m_evaluatorG)
+                    {
+                        v = g; rgbaBuffer[1] = m_evaluatorG->evaluate();
+                    }
+                    if (m_evaluatorB)
+                    {
+                        v = b; rgbaBuffer[2] = m_evaluatorB->evaluate();
+                    }
+                    if (m_evaluatorA)
+                    {
+                        v = a; rgbaBuffer[3] = m_evaluatorA->evaluate();
+                    }
                 }
                 catch (expr::EvaluatorException &e)
                 {
