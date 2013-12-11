@@ -233,11 +233,11 @@ endif(USE_EXTERNAL_YAML)
 set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
 set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL")
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-    
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
                     OUTPUT_VARIABLE GCC_VERSION)
-                    
     if (GCC_VERSION VERSION_LESS 4.2)
         message(STATUS "GCC Version < 4.2 - symbol visibility hiding disabled")
         set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC")
