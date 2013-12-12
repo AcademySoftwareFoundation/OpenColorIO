@@ -340,20 +340,20 @@ OCIO_NAMESPACE_ENTER
             for (int i=0; i < shaperSize-1; i++)
             {
                 v = ((float)i / (float)(shaperSize-1)) * (float)(cubeSize-1);
-                ostream << v << "\t" << v << "\t" << v << "\n";
+                ostream << v << " " << v << " " << v << "\n";
             }
             v = (float) (cubeSize-1);
-            ostream << v << "\t" << v << "\t" << v << "\n"; // ensure that the last value is spot on
+            ostream << v << " " << v << " " << v << "\n"; // ensure that the last value is spot on
             ostream << "\n";
 
             // Write the cube
             ostream << "# Cube\n";
             for (int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
             {
-                ostream << cubeData[3*i+0] << "\t" << cubeData[3*i+1] << "\t" << cubeData[3*i+2] << "\n";
+                ostream << cubeData[3*i+0] << " " << cubeData[3*i+1] << " " << cubeData[3*i+2] << "\n";
             }
             
-            ostream << "# end";
+            ostream << "# end\n";
         }
         
         void
