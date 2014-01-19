@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_CDLTRANSFORM_H
 
 #include <map>
+#include <vector>
 #include <tinyxml.h>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -38,14 +39,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
     typedef std::map<std::string,CDLTransformRcPtr> CDLTransformMap;
+    typedef std::vector<CDLTransformRcPtr> CDLTransformVec;
     
     void ClearCDLTransformFileCache();
     
     void LoadCDL(CDLTransform * cdl, const char * xml);
     void LoadCDL(CDLTransform * cdl, TiXmlElement * root);
     
-    // Get a map of transform cccid : cdl transform
-    void GetCDLTransforms(CDLTransformMap & transforms,
+    void GetCDLTransforms(CDLTransformMap & transformMap,
+                          CDLTransformVec & transformVec,
                           TiXmlElement * cccroot);
 }
 OCIO_NAMESPACE_EXIT

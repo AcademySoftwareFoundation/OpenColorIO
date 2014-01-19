@@ -220,6 +220,21 @@ OCIO_NAMESPACE_ENTER
     }
     
     
+    const char * EnvironmentModeToString(EnvironmentMode mode)
+    {
+        if(mode == ENV_ENVIRONMENT_LOAD_PREDEFINED) return "loadpredefined";
+        else if(mode == ENV_ENVIRONMENT_LOAD_ALL) return "loadall";
+        return "unknown";
+    }
+    
+    EnvironmentMode EnvironmentModeFromString(const char * s)
+    {
+        std::string str = pystring::lower(s);
+        if(str == "loadpredefined") return ENV_ENVIRONMENT_LOAD_PREDEFINED;
+        else if(str == "loadall") return ENV_ENVIRONMENT_LOAD_ALL;
+        return ENV_ENVIRONMENT_UNKNOWN;
+    }
+    
     const char * ROLE_DEFAULT = "default";
     const char * ROLE_REFERENCE = "reference";
     const char * ROLE_DATA = "data";
@@ -274,18 +289,14 @@ OCIO_NAMESPACE_ENTER
         return true;
     }
     
-    bool StringToInt(int * ival, const char * str)
+    bool StringToInt(int * ival, const char * str, bool failIfLeftoverChars)
     {
         if(!str) return false;
+        if(!ival) return false;
         
-        std::istringstream inputStringstream(str);
-        int x;
-        if(!(inputStringstream >> x))
-        {
-            return false;
-        }
-        
-        if(ival) *ival = x;
+        std::istringstream i(str);
+        char c=0;
+        if (!(i >> *ival) || (failIfLeftoverChars && i.get(c))) return false;
         return true;
     }
     
@@ -436,3 +447,60 @@ OCIO_NAMESPACE_ENTER
     }
 }
 OCIO_NAMESPACE_EXIT
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+OCIO_NAMESPACE_USING
+
+#include "UnitTest.h"
+
+OIIO_ADD_TEST(ParseUtils, StringToInt)
+{
+    int ival = 0;
+    bool success = false;
+    
+    success = StringToInt(&ival, "", false);
+    OIIO_CHECK_EQUAL(success, false);
+    
+    success = StringToInt(&ival, "9", false);
+    OIIO_CHECK_EQUAL(success, true);
+    OIIO_CHECK_EQUAL(ival, 9);
+    
+    success = StringToInt(&ival, " 10 ", false);
+    OIIO_CHECK_EQUAL(success, true);
+    OIIO_CHECK_EQUAL(ival, 10);
+    
+    success = StringToInt(&ival, " 101", true);
+    OIIO_CHECK_EQUAL(success, true);
+    OIIO_CHECK_EQUAL(ival, 101);
+    
+    success = StringToInt(&ival, " 11x ", false);
+    OIIO_CHECK_EQUAL(success, true);
+    OIIO_CHECK_EQUAL(ival, 11);
+    
+    success = StringToInt(&ival, " 12x ", true);
+    OIIO_CHECK_EQUAL(success, false);
+    
+    success = StringToInt(&ival, "13", true);
+    OIIO_CHECK_EQUAL(success, true);
+    OIIO_CHECK_EQUAL(ival, 13);
+    
+    success = StringToInt(&ival, "-14", true);
+    OIIO_CHECK_EQUAL(success, true);
+    OIIO_CHECK_EQUAL(ival, -14);
+    
+    success = StringToInt(&ival, "x-15", false);
+    OIIO_CHECK_EQUAL(success, false);
+    
+    success = StringToInt(&ival, "x-16", false);
+    OIIO_CHECK_EQUAL(success, false);
+    
+    
+}
+
+
+#endif // OCIO_UNIT_TEST

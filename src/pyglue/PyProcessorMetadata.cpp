@@ -26,108 +26,65 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyProcessorMetadata.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
-#include <sstream>
-
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    bool AddProcessorMetadataObjectToModule( PyObject* m )
-    {
-        PyOCIO_ProcessorMetadataType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_ProcessorMetadataType) < 0 ) return false;
-        
-        Py_INCREF( &PyOCIO_ProcessorMetadataType );
-        PyModule_AddObject(m, "ProcessorMetadata",
-                (PyObject *)&PyOCIO_ProcessorMetadataType);
-        
-        return true;
-    }
     
     PyObject * BuildConstPyProcessorMetadata(ConstProcessorMetadataRcPtr metadata)
     {
-        if (!metadata)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_ProcessorMetadata * pyMetadata = PyObject_New(
-                PyOCIO_ProcessorMetadata, (PyTypeObject * ) &PyOCIO_ProcessorMetadataType);
-        
-        pyMetadata->constcppobj = new ConstProcessorMetadataRcPtr();
-        *pyMetadata->constcppobj = metadata;
-        
-        return ( PyObject * ) pyMetadata;
+        return BuildConstPyOCIO<PyOCIO_ProcessorMetadata, ProcessorMetadataRcPtr,
+            ConstProcessorMetadataRcPtr>(metadata, PyOCIO_ProcessorMetadataType);
     }
     
     bool IsPyProcessorMetadata(PyObject * pyobject)
     {
-        if(!pyobject) return false;
-        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCIO_ProcessorMetadataType));
+        return IsPyOCIOType(pyobject, PyOCIO_ProcessorMetadataType);
     }
     
     ConstProcessorMetadataRcPtr GetConstProcessorMetadata(PyObject * pyobject)
     {
-        if(!IsPyProcessorMetadata(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO.ProcessorMetadata.");
-        }
-        
-        PyOCIO_ProcessorMetadata * pyMetadata = reinterpret_cast<PyOCIO_ProcessorMetadata *> (pyobject);
-        if(pyMetadata->constcppobj)
-        {
-            return *pyMetadata->constcppobj;
-        }
-        
-        throw Exception("PyObject must be a valid OCIO.ProcessorMetadata.");
+        return GetConstPyOCIO<PyOCIO_ProcessorMetadata,
+            ConstProcessorMetadataRcPtr>(pyobject, PyOCIO_ProcessorMetadataType);
     }
-    
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
-        int PyOCIO_ProcessorMetadata_init( PyOCIO_ProcessorMetadata * self, PyObject * args, PyObject * kwds );
-        void PyOCIO_ProcessorMetadata_delete( PyOCIO_ProcessorMetadata * self, PyObject * args );
         
-        PyObject * PyOCIO_ProcessorMetadata_getFiles( PyObject * self );
-        PyObject * PyOCIO_ProcessorMetadata_getLooks( PyObject * self );
+        ///////////////////////////////////////////////////////////////////////
+        ///
+        
+        int PyOCIO_ProcessorMetadata_init(PyOCIO_ProcessorMetadata * self, PyObject * args, PyObject * kwds);
+        void PyOCIO_ProcessorMetadata_delete(PyOCIO_ProcessorMetadata * self, PyObject * args);
+        PyObject * PyOCIO_ProcessorMetadata_getFiles(PyObject * self);
+        PyObject * PyOCIO_ProcessorMetadata_getLooks(PyObject * self);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_ProcessorMetadata_methods[] = {
-            {"getFiles",
-                (PyCFunction) PyOCIO_ProcessorMetadata_getFiles, METH_NOARGS,
-                PROCESSORMETADATA_GETFILES__DOC__ },
-            {"getLooks",
-                (PyCFunction) PyOCIO_ProcessorMetadata_getLooks, METH_NOARGS,
-                PROCESSORMETADATA_GETLOOKS__DOC__ },
-            {NULL, NULL, 0, NULL}
+            { "getFiles",
+            (PyCFunction) PyOCIO_ProcessorMetadata_getFiles, METH_NOARGS, PROCESSORMETADATA_GETFILES__DOC__ },
+            { "getLooks",
+            (PyCFunction) PyOCIO_ProcessorMetadata_getLooks, METH_NOARGS, PROCESSORMETADATA_GETLOOKS__DOC__ },
+            { NULL, NULL, 0, NULL }
         };
         
         const char initMessage[] =
             "ProcessorMetadata objects cannot be instantiated directly. "
             "Please use processor.getMetadata() instead.";
+        
     }
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     PyTypeObject PyOCIO_ProcessorMetadataType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
         "OCIO.ProcessorMetadata",                   //tp_name
         sizeof(PyOCIO_ProcessorMetadata),           //tp_basicsize
         0,                                          //tp_itemsize
@@ -167,78 +124,47 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
-        0,                                          //tp_bases
-        0,                                          //tp_mro
-        0,                                          //tp_cache
-        0,                                          //tp_subclasses
-        0,                                          //tp_weaklist
-        0,                                          //tp_del
-        #if PY_VERSION_HEX > 0x02060000
-        0,                                          //tp_version_tag
-        #endif
     };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_ProcessorMetadata_init( PyOCIO_ProcessorMetadata */*self*/,
-            PyObject * /*args*/, PyObject * /*kwds*/ )
+        
+        int PyOCIO_ProcessorMetadata_init(PyOCIO_ProcessorMetadata * /*self*/, PyObject * /*args*/, PyObject * /*kwds*/)
         {
             PyErr_SetString( PyExc_RuntimeError, initMessage);
             return -1;
         }
         
-        void PyOCIO_ProcessorMetadata_delete( PyOCIO_ProcessorMetadata *self, PyObject * /*args*/ )
+        void PyOCIO_ProcessorMetadata_delete(PyOCIO_ProcessorMetadata *self, PyObject * /*args*/)
         {
-            delete self->constcppobj;
-            self->ob_type->tp_free((PyObject*)self);
+            DeletePyObject<PyOCIO_ProcessorMetadata>(self);
         }
         
-        PyObject * PyOCIO_ProcessorMetadata_getFiles( PyObject * self )
+        PyObject * PyOCIO_ProcessorMetadata_getFiles(PyObject * self)
         {
-            try
-            {
-                ConstProcessorMetadataRcPtr metadata = GetConstProcessorMetadata(self);
-                
-                std::vector<std::string> data;
-                for(int i=0; i<metadata->getNumFiles(); ++i)
-                {
-                    data.push_back(metadata->getFile(i));
-                }
-                
-                return CreatePyListFromStringVector(data);
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstProcessorMetadataRcPtr metadata = GetConstProcessorMetadata(self);
+            std::vector<std::string> data;
+            for(int i = 0; i < metadata->getNumFiles(); ++i)
+                data.push_back(metadata->getFile(i));
+            return CreatePyListFromStringVector(data);
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ProcessorMetadata_getLooks( PyObject * self )
+        PyObject * PyOCIO_ProcessorMetadata_getLooks(PyObject * self)
         {
-            try
-            {
-                ConstProcessorMetadataRcPtr metadata = GetConstProcessorMetadata(self);
-                
-                std::vector<std::string> data;
-                for(int i=0; i<metadata->getNumLooks(); ++i)
-                {
-                    data.push_back(metadata->getLook(i));
-                }
-                
-                return CreatePyListFromStringVector(data);
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstProcessorMetadataRcPtr metadata = GetConstProcessorMetadata(self);
+            std::vector<std::string> data;
+            for(int i = 0; i < metadata->getNumLooks(); ++i)
+                data.push_back(metadata->getLook(i));
+            return CreatePyListFromStringVector(data);
+            OCIO_PYTRY_EXIT(NULL)
         }
+        
     } // anon namespace
     
 }

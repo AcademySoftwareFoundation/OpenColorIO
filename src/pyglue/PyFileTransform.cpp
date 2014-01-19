@@ -26,102 +26,72 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyTransform.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
+#define GetConstFileTransform(pyobject) GetConstPyOCIO<PyOCIO_Transform, \
+    ConstFileTransformRcPtr, FileTransform>(pyobject, \
+    PyOCIO_FileTransformType)
+
+#define GetEditableFileTransform(pyobject) GetEditablePyOCIO<PyOCIO_Transform, \
+    FileTransformRcPtr, FileTransform>(pyobject, \
+    PyOCIO_FileTransformType);
+
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    bool AddFileTransformObjectToModule( PyObject* m )
-    {
-        PyOCIO_FileTransformType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_FileTransformType) < 0 ) return false;
-        
-        Py_INCREF( &PyOCIO_FileTransformType );
-        PyModule_AddObject(m, "FileTransform",
-                (PyObject *)&PyOCIO_FileTransformType);
-        
-        return true;
-    }
-    
-    bool IsPyFileTransform(PyObject * pyobject)
-    {
-        if(!pyobject) return false;
-        return PyObject_TypeCheck(pyobject, &PyOCIO_FileTransformType);
-    }
-    
-    ConstFileTransformRcPtr GetConstFileTransform(PyObject * pyobject, bool allowCast)
-    {
-        ConstFileTransformRcPtr transform = \
-            DynamicPtrCast<const FileTransform>(GetConstTransform(pyobject, allowCast));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.FileTransform.");
-        }
-        return transform;
-    }
-    
-    FileTransformRcPtr GetEditableFileTransform(PyObject * pyobject)
-    {
-        FileTransformRcPtr transform = \
-            DynamicPtrCast<FileTransform>(GetEditableTransform(pyobject));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.FileTransform.");
-        }
-        return transform;
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
-        int PyOCIO_FileTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
-        PyObject * PyOCIO_FileTransform_getSrc( PyObject * self );
-        PyObject * PyOCIO_FileTransform_setSrc( PyObject * self,  PyObject *args );
+        ///////////////////////////////////////////////////////////////////////
+        ///
         
-        PyObject * PyOCIO_FileTransform_getCCCId( PyObject * self );
-        PyObject * PyOCIO_FileTransform_setCCCId( PyObject * self,  PyObject *args );
-        
-        PyObject * PyOCIO_FileTransform_getInterpolation( PyObject * self );
-        PyObject * PyOCIO_FileTransform_setInterpolation( PyObject * self,  PyObject *args );
+        int PyOCIO_FileTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
+        PyObject * PyOCIO_FileTransform_getSrc(PyObject * self);
+        PyObject * PyOCIO_FileTransform_setSrc(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_FileTransform_getCCCId(PyObject * self);
+        PyObject * PyOCIO_FileTransform_setCCCId(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_FileTransform_getInterpolation(PyObject * self);
+        PyObject * PyOCIO_FileTransform_setInterpolation(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_FileTransform_getNumFormats(PyObject * self);
+        PyObject * PyOCIO_FileTransform_getFormatNameByIndex(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_FileTransform_getFormatExtensionByIndex(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_FileTransform_methods[] = {
-            {"getSrc",
+            { "getSrc",
             (PyCFunction) PyOCIO_FileTransform_getSrc, METH_NOARGS, FILETRANSFORM_GETSRC__DOC__ },
-            {"setSrc",
+            { "setSrc",
             PyOCIO_FileTransform_setSrc, METH_VARARGS, FILETRANSFORM_SETSRC__DOC__ },
-            {"getCCCId",
+            { "getCCCId",
             (PyCFunction) PyOCIO_FileTransform_getCCCId, METH_NOARGS, FILETRANSFORM_GETCCCID__DOC__ },
-            {"setCCCId",
+            { "setCCCId",
             PyOCIO_FileTransform_setCCCId, METH_VARARGS, FILETRANSFORM_SETCCCID__DOC__ },
-            {"getInterpolation",
+            { "getInterpolation",
             (PyCFunction) PyOCIO_FileTransform_getInterpolation, METH_NOARGS, FILETRANSFORM_GETINTERPOLATION__DOC__ },
-            {"setInterpolation",
+            { "setInterpolation",
             PyOCIO_FileTransform_setInterpolation, METH_VARARGS, FILETRANSFORM_SETINTERPOLATION__DOC__ },
-            {NULL, NULL, 0, NULL}
+            { "getNumFormats",
+            (PyCFunction) PyOCIO_FileTransform_getNumFormats, METH_VARARGS, FILETRANSFORM_GETNUMFORMATS__DOC__ },
+            { "getFormatNameByIndex",
+            PyOCIO_FileTransform_getFormatNameByIndex, METH_VARARGS, FILETRANSFORM_GETFORMATNAMEBYINDEX__DOC__ },
+            { "getFormatExtensionByIndex",
+            PyOCIO_FileTransform_getFormatExtensionByIndex, METH_VARARGS, FILETRANSFORM_GETFORMATEXTENSIONBYINDEX__DOC__ },
+            { NULL, NULL, 0, NULL }
         };
+        
     }
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     PyTypeObject PyOCIO_FileTransformType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)
         "OCIO.FileTransform",                       //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
@@ -161,183 +131,127 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
-        0,                                          //tp_bases
-        0,                                          //tp_mro
-        0,                                          //tp_cache
-        0,                                          //tp_subclasses
-        0,                                          //tp_weaklist
-        0,                                          //tp_del
-        #if PY_VERSION_HEX > 0x02060000
-        0,                                          //tp_version_tag
-        #endif
     };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_FileTransform_init( PyOCIO_Transform *self,
-            PyObject * args, PyObject * kwds )
+        
+        int PyOCIO_FileTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds)
         {
-            ///////////////////////////////////////////////////////////////////
-            /// init pyobject fields
-            
-            self->constcppobj = new ConstTransformRcPtr();
-            self->cppobj = new TransformRcPtr();
-            self->isconst = true;
-            
-            // Parse optional kwargs
-            char * src = NULL;
-            char * cccid = NULL;
-            char * interpolation = NULL;
-            char * direction = NULL;
-            
-            static const char *kwlist[] = {
-                "src",
-                "cccid",
-                "interpolation",
-                "direction",
-                NULL
-            };
-            
+            OCIO_PYTRY_ENTER()
+            FileTransformRcPtr ptr = FileTransform::Create();
+            int ret = BuildPyTransformObject<FileTransformRcPtr>(self, ptr);
+            char* src = NULL;
+            char* cccid = NULL;
+            char* interpolation = NULL;
+            char* direction = NULL;
+            static const char *kwlist[] = { "src", "cccid", "interpolation",
+                "direction", NULL };
             if(!PyArg_ParseTupleAndKeywords(args, kwds, "|ssss",
                 const_cast<char **>(kwlist),
-                &src, &cccid, &interpolation, &direction )) return -1;
-            
-            try
-            {
-                FileTransformRcPtr transform = FileTransform::Create();
-                *self->cppobj = transform;
-                self->isconst = false;
-                
-                if(src) transform->setSrc(src);
-                if(cccid) transform->setCCCId(cccid);
-                if(interpolation) transform->setInterpolation(InterpolationFromString(interpolation));
-                if(direction) transform->setDirection(TransformDirectionFromString(direction));
-                
-                return 0;
-            }
-            catch ( const std::exception & e )
-            {
-                std::string message = "Cannot create FileTransform: ";
-                message += e.what();
-                PyErr_SetString( PyExc_RuntimeError, message.c_str() );
-                return -1;
-            }
+                &src, &cccid, &interpolation, &direction)) return -1;
+            if(src) ptr->setSrc(src);
+            if(cccid) ptr->setCCCId(cccid);
+            if(interpolation) ptr->setInterpolation(InterpolationFromString(interpolation));
+            if(direction) ptr->setDirection(TransformDirectionFromString(direction));
+            return ret;
+            OCIO_PYTRY_EXIT(-1)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_FileTransform_getSrc( PyObject * self )
+        PyObject * PyOCIO_FileTransform_getSrc(PyObject * self)
         {
-            try
-            {
-                ConstFileTransformRcPtr transform = GetConstFileTransform(self, true);
-                return PyString_FromString( transform->getSrc() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstFileTransformRcPtr transform = GetConstFileTransform(self);
+            return PyString_FromString(transform->getSrc());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_FileTransform_setSrc( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_FileTransform_setSrc(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * src = 0;
-                if (!PyArg_ParseTuple(args,"s:setSrc", &src)) return NULL;
-                
-                FileTransformRcPtr transform = GetEditableFileTransform(self);
-                transform->setSrc( src );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* src = 0;
+            if (!PyArg_ParseTuple(args, "s:setSrc",
+                &src)) return NULL;
+            FileTransformRcPtr transform = GetEditableFileTransform(self);
+            transform->setSrc(src);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_FileTransform_getCCCId( PyObject * self )
+        PyObject * PyOCIO_FileTransform_getCCCId(PyObject * self)
         {
-            try
-            {
-                ConstFileTransformRcPtr transform = GetConstFileTransform(self, true);
-                return PyString_FromString( transform->getCCCId() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstFileTransformRcPtr transform = GetConstFileTransform(self);
+            return PyString_FromString(transform->getCCCId());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_FileTransform_setCCCId( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_FileTransform_setCCCId(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * id = 0;
-                if (!PyArg_ParseTuple(args,"s:setCCCId", &id)) return NULL;
-                
-                FileTransformRcPtr transform = GetEditableFileTransform(self);
-                transform->setCCCId( id );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* id = 0;
+            if (!PyArg_ParseTuple(args,"s:setCCCId",
+                &id)) return NULL;
+            FileTransformRcPtr transform = GetEditableFileTransform(self);
+            transform->setCCCId(id);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_FileTransform_getInterpolation( PyObject * self )
+        PyObject * PyOCIO_FileTransform_getInterpolation(PyObject * self)
         {
-            try
-            {
-                ConstFileTransformRcPtr transform = GetConstFileTransform(self, true);
-                Interpolation interp = transform->getInterpolation();
-                return PyString_FromString( InterpolationToString( interp ) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstFileTransformRcPtr transform = GetConstFileTransform(self);
+            Interpolation interp = transform->getInterpolation();
+            return PyString_FromString(InterpolationToString(interp));
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_FileTransform_setInterpolation( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_FileTransform_setInterpolation(PyObject * self, PyObject * args)
         {
-            try
-            {
-                Interpolation interp;
-                if (!PyArg_ParseTuple(args,"O&:setInterpolation",
-                    ConvertPyObjectToInterpolation, &interp)) return NULL;
-                
-                FileTransformRcPtr transform = GetEditableFileTransform(self);
-                transform->setInterpolation(interp);
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            Interpolation interp;
+            if (!PyArg_ParseTuple(args,"O&:setInterpolation",
+                 ConvertPyObjectToInterpolation, &interp)) return NULL;
+            FileTransformRcPtr transform = GetEditableFileTransform(self);
+            transform->setInterpolation(interp);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
+        
+        PyObject * PyOCIO_FileTransform_getNumFormats(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstFileTransformRcPtr transform = GetConstFileTransform(self);
+            return PyInt_FromLong(transform->getNumFormats());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_FileTransform_getFormatNameByIndex(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args,"i:getFormatNameByIndex",
+                &index)) return NULL;
+            ConstFileTransformRcPtr transform = GetConstFileTransform(self);
+            return PyString_FromString(transform->getFormatNameByIndex(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_FileTransform_getFormatExtensionByIndex(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args,"i:getFormatExtensionByIndex",
+                &index)) return NULL;
+            ConstFileTransformRcPtr transform = GetConstFileTransform(self);
+            return PyString_FromString(transform->getFormatExtensionByIndex(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
     }
 
 }

@@ -110,11 +110,14 @@ OCIO_NAMESPACE_ENTER
     // Checks within fltmin tolerance
     bool IsScalarEqualToZero(float v);
     bool IsScalarEqualToOne(float v);
-    
+    bool IsScalarEqualToZeroFlt(double v);
+    bool IsScalarEqualToOneFlt(double v);
+
     // Are all the vector components the specified value?
     bool IsVecEqualToZero(const float* v, int size);
     bool IsVecEqualToOne(const float* v, int size);
-    
+    bool IsVecEqualToOneFlt(const double* v, int size);
+
     // Is at least one of the specified components equal to 0?
     bool VecContainsZero(const float* v, int size);
     bool VecContainsOne(const float* v, int size);

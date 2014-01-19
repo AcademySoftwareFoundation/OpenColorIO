@@ -147,7 +147,7 @@ int main(int argc, const char **argv)
         
         std::vector<int> kchannels;
         //parse --ch argument
-        if (!StringToVector(&kchannels,keepChannels.c_str()))
+        if (keepChannels != "" && !StringToVector(&kchannels,keepChannels.c_str()))
         {
             std::cerr << "Error: --ch: '" << keepChannels << "' should be comma-seperated integers\n";
             exit(1);

@@ -26,134 +26,90 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyTransform.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
+#define GetConstDisplayTransform(pyobject) GetConstPyOCIO<PyOCIO_Transform, \
+    ConstDisplayTransformRcPtr, DisplayTransform>(pyobject, \
+    PyOCIO_DisplayTransformType)
+
+#define GetEditableDisplayTransform(pyobject) GetEditablePyOCIO<PyOCIO_Transform, \
+    DisplayTransformRcPtr, DisplayTransform>(pyobject, \
+    PyOCIO_DisplayTransformType)
+
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    bool AddDisplayTransformObjectToModule( PyObject* m )
-    {
-        PyOCIO_DisplayTransformType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_DisplayTransformType) < 0 ) return false;
-        
-        Py_INCREF( &PyOCIO_DisplayTransformType );
-        PyModule_AddObject(m, "DisplayTransform",
-                (PyObject *)&PyOCIO_DisplayTransformType);
-        
-        return true;
-    }
-    
-    bool IsPyDisplayTransform(PyObject * pyobject)
-    {
-        if(!pyobject) return false;
-        return PyObject_TypeCheck(pyobject, &PyOCIO_DisplayTransformType);
-    }
-    
-    ConstDisplayTransformRcPtr GetConstDisplayTransform(PyObject * pyobject, bool allowCast)
-    {
-        ConstDisplayTransformRcPtr transform = \
-            DynamicPtrCast<const DisplayTransform>(GetConstTransform(pyobject, allowCast));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.DisplayTransform.");
-        }
-        return transform;
-    }
-    
-    DisplayTransformRcPtr GetEditableDisplayTransform(PyObject * pyobject)
-    {
-        DisplayTransformRcPtr transform = \
-            DynamicPtrCast<DisplayTransform>(GetEditableTransform(pyobject));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.DisplayTransform.");
-        }
-        return transform;
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
-        int PyOCIO_DisplayTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
-        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName( PyObject * self,  PyObject *args );
+        ///////////////////////////////////////////////////////////////////////
+        ///
         
-        PyObject * PyOCIO_DisplayTransform_getLinearCC( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setLinearCC( PyObject * self,  PyObject *args );
-        
-        PyObject * PyOCIO_DisplayTransform_getColorTimingCC( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setColorTimingCC( PyObject * self,  PyObject *args );
-        
-        PyObject * PyOCIO_DisplayTransform_getChannelView( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setChannelView( PyObject * self,  PyObject *args );
-        
-        PyObject * PyOCIO_DisplayTransform_getDisplay( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setDisplay( PyObject * self,  PyObject *args );
-        
-        PyObject * PyOCIO_DisplayTransform_getView( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setView( PyObject * self,  PyObject *args );
-        
-        PyObject * PyOCIO_DisplayTransform_getDisplayCC( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setDisplayCC( PyObject * self,  PyObject *args );
-        
-        PyObject * PyOCIO_DisplayTransform_getLooksOverride( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setLooksOverride( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled( PyObject * self );
-        PyObject * PyOCIO_DisplayTransform_setLooksOverrideEnabled( PyObject * self,  PyObject *args );
+        int PyOCIO_DisplayTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
+        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_DisplayTransform_getLinearCC(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_setLinearCC(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_DisplayTransform_getColorTimingCC(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_setColorTimingCC(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_DisplayTransform_getChannelView(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_setChannelView(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_DisplayTransform_getDisplay(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_setDisplay(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_DisplayTransform_getView(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_setView(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_DisplayTransform_getDisplayCC(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_setDisplayCC(PyObject * self, PyObject * args );
+        PyObject * PyOCIO_DisplayTransform_getLooksOverride(PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setLooksOverride(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled(PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_setLooksOverrideEnabled(PyObject * self,  PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_DisplayTransform_methods[] = {
-            {"getInputColorSpaceName",
+            { "getInputColorSpaceName",
             (PyCFunction) PyOCIO_DisplayTransform_getInputColorSpaceName, METH_NOARGS, DISPLAYTRANSFORM_GETINPUTCOLORSPACENAME__DOC__ },
-            {"setInputColorSpaceName",
+            { "setInputColorSpaceName",
             PyOCIO_DisplayTransform_setInputColorSpaceName, METH_VARARGS, DISPLAYTRANSFORM_SETINPUTCOLORSPACENAME__DOC__ },
-            {"getLinearCC",
+            { "getLinearCC",
             (PyCFunction) PyOCIO_DisplayTransform_getLinearCC, METH_NOARGS, DISPLAYTRANSFORM_GETLINEARCC__DOC__ },
-            {"setLinearCC",
+            { "setLinearCC",
             PyOCIO_DisplayTransform_setLinearCC, METH_VARARGS, DISPLAYTRANSFORM_SETLINEARCC__DOC__ },
-            {"getColorTimingCC",
+            { "getColorTimingCC",
             (PyCFunction) PyOCIO_DisplayTransform_getColorTimingCC, METH_NOARGS, DISPLAYTRANSFORM_GETCOLORTIMINGCC__DOC__ },
-            {"setColorTimingCC",
+            { "setColorTimingCC",
             PyOCIO_DisplayTransform_setColorTimingCC, METH_VARARGS, DISPLAYTRANSFORM_SETCOLORTIMINGCC__DOC__ },
-            {"getChannelView",
+            { "getChannelView",
             (PyCFunction) PyOCIO_DisplayTransform_getChannelView, METH_NOARGS, DISPLAYTRANSFORM_GETCHANNELVIEW__DOC__ },
-            {"setChannelView",
+            { "setChannelView",
             PyOCIO_DisplayTransform_setChannelView, METH_VARARGS, DISPLAYTRANSFORM_SETCHANNELVIEW__DOC__ },
-            {"getDisplay",
+            { "getDisplay",
             (PyCFunction) PyOCIO_DisplayTransform_getDisplay, METH_NOARGS, DISPLAYTRANSFORM_GETDISPLAY__DOC__ },
-            {"setDisplay",
+            { "setDisplay",
             PyOCIO_DisplayTransform_setDisplay, METH_VARARGS, DISPLAYTRANSFORM_SETDISPLAY__DOC__ },
-            {"getView",
+            { "getView",
             (PyCFunction) PyOCIO_DisplayTransform_getView, METH_NOARGS, DISPLAYTRANSFORM_GETVIEW__DOC__ },
-            {"setView",
+            { "setView",
             PyOCIO_DisplayTransform_setView, METH_VARARGS, DISPLAYTRANSFORM_SETVIEW__DOC__ },
-            {"getDisplayCC",
+            { "getDisplayCC",
             (PyCFunction) PyOCIO_DisplayTransform_getDisplayCC, METH_NOARGS, DISPLAYTRANSFORM_GETDISPLAYCC__DOC__ },
-            {"setDisplayCC",
+            { "setDisplayCC",
             PyOCIO_DisplayTransform_setDisplayCC, METH_VARARGS, DISPLAYTRANSFORM_SETDISPLAYCC__DOC__ },
-            {"getLooksOverride",
+            { "getLooksOverride",
             (PyCFunction) PyOCIO_DisplayTransform_getLooksOverride, METH_NOARGS, DISPLAYTRANSFORM_GETLOOKSOVERRIDE__DOC__ },
-            {"setLooksOverride",
+            { "setLooksOverride",
             PyOCIO_DisplayTransform_setLooksOverride, METH_VARARGS, DISPLAYTRANSFORM_SETLOOKSOVERRIDE__DOC__ },
-            {"getLooksOverrideEnabled",
+            { "getLooksOverrideEnabled",
             (PyCFunction) PyOCIO_DisplayTransform_getLooksOverrideEnabled, METH_NOARGS, DISPLAYTRANSFORM_GETLOOKSOVERRIDEENABLED__DOC__ },
-            {"setLooksOverrideEnabled",
+            { "setLooksOverrideEnabled",
             PyOCIO_DisplayTransform_setLooksOverrideEnabled, METH_VARARGS, DISPLAYTRANSFORM_SETLOOKSOVERRIDEENABLED__DOC__ },
-            {NULL, NULL, 0, NULL}
+            { NULL, NULL, 0, NULL }
         };
     }
     
@@ -161,8 +117,7 @@ OCIO_NAMESPACE_ENTER
     ///
     
     PyTypeObject PyOCIO_DisplayTransformType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)
         "OCIO.DisplayTransform",                    //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
@@ -202,375 +157,205 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
-        0,                                          //tp_bases
-        0,                                          //tp_mro
-        0,                                          //tp_cache
-        0,                                          //tp_subclasses
-        0,                                          //tp_weaklist
-        0,                                          //tp_del
-        #if PY_VERSION_HEX > 0x02060000
-        0,                                          //tp_version_tag
-        #endif
     };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        int PyOCIO_DisplayTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_DisplayTransform_init(PyOCIO_Transform * self, PyObject * /*args*/, PyObject * /*kwds*/)
         {
-            ///////////////////////////////////////////////////////////////////
-            /// init pyobject fields
-            
-            self->constcppobj = new ConstTransformRcPtr();
-            self->cppobj = new TransformRcPtr();
-            self->isconst = true;
-            
-            try
-            {
-                *self->cppobj = DisplayTransform::Create();
-                self->isconst = false;
-                return 0;
-            }
-            catch ( const std::exception & e )
-            {
-                std::string message = "Cannot create DisplayTransform: ";
-                message += e.what();
-                PyErr_SetString( PyExc_RuntimeError, message.c_str() );
-                return -1;
-            }
+            OCIO_PYTRY_ENTER()
+            return BuildPyTransformObject<DisplayTransformRcPtr>(self, DisplayTransform::Create());
+            OCIO_PYTRY_EXIT(-1)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName(PyObject * self)
         {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return PyString_FromString( transform->getInputColorSpaceName() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
+            return PyString_FromString(transform->getInputColorSpaceName());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * name = 0;
-                if (!PyArg_ParseTuple(args,"s:setInputColorSpaceName", &name)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                transform->setInputColorSpaceName( name );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* name = 0;
+            if (!PyArg_ParseTuple(args, "s:setInputColorSpaceName",
+                &name)) return NULL;
+            DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+            transform->setInputColorSpaceName(name);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_DisplayTransform_getLinearCC( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getLinearCC(PyObject * self)
         {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return BuildConstPyTransform(transform->getLinearCC());
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
+            return BuildConstPyTransform(transform->getLinearCC());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_setLinearCC( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setLinearCC(PyObject * self, PyObject * args)
         {
-            try
-            {
-                PyObject * pyCC = 0;
-                if (!PyArg_ParseTuple(args,"O:setLinearCC", &pyCC)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                
-                ConstTransformRcPtr cc = GetConstTransform(pyCC, true);
-                transform->setLinearCC(cc);
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            PyObject * pyCC = 0;
+            if (!PyArg_ParseTuple(args, "O:setLinearCC",
+                &pyCC)) return NULL;
+            DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+            ConstTransformRcPtr cc = GetConstTransform(pyCC, true);
+            transform->setLinearCC(cc);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_DisplayTransform_getColorTimingCC( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getColorTimingCC(PyObject * self)
         {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return BuildConstPyTransform(transform->getColorTimingCC());
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
+            return BuildConstPyTransform(transform->getColorTimingCC());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_setColorTimingCC( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setColorTimingCC(PyObject * self, PyObject * args)
         {
-            try
-            {
-                PyObject * pyCC = 0;
-                if (!PyArg_ParseTuple(args,"O:setColorTimingCC", &pyCC)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                
-                ConstTransformRcPtr cc = GetConstTransform(pyCC, true);
-                transform->setColorTimingCC(cc);
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            PyObject* pyCC = 0;
+            if (!PyArg_ParseTuple(args, "O:setColorTimingCC",
+                &pyCC)) return NULL;
+            DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+            ConstTransformRcPtr cc = GetConstTransform(pyCC, true);
+            transform->setColorTimingCC(cc);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_DisplayTransform_getChannelView( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getChannelView(PyObject * self)
         {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return BuildConstPyTransform(transform->getChannelView());
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
+            return BuildConstPyTransform(transform->getChannelView());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_setChannelView( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setChannelView(PyObject * self, PyObject * args)
         {
-            try
-            {
-                PyObject * pyCC = 0;
-                if (!PyArg_ParseTuple(args,"O:setChannelView", &pyCC)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                
-                ConstTransformRcPtr t = GetConstTransform(pyCC, true);
-                transform->setChannelView(t);
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            PyObject* pyCC = 0;
+            if (!PyArg_ParseTuple(args, "O:setChannelView",
+                &pyCC)) return NULL;
+            DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+            ConstTransformRcPtr t = GetConstTransform(pyCC, true);
+            transform->setChannelView(t);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_DisplayTransform_getDisplay( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getDisplay(PyObject * self)
         {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return PyString_FromString( transform->getDisplay() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
+            return PyString_FromString(transform->getDisplay());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_setDisplay( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setDisplay(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * str = 0;
-                if (!PyArg_ParseTuple(args,"s:setDisplay", &str)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                transform->setDisplay( str );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* str = 0;
+            if (!PyArg_ParseTuple(args, "s:setDisplay",
+                &str)) return NULL;
+            DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+            transform->setDisplay(str);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getView( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getView(PyObject * self)
         {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return PyString_FromString( transform->getView() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
+            return PyString_FromString(transform->getView());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_setView( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setView(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * str = 0;
-                if (!PyArg_ParseTuple(args,"s:setView", &str)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                transform->setView( str );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* str = 0;
+            if (!PyArg_ParseTuple(args, "s:setView",
+                &str)) return NULL;
+            DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+            transform->setView(str);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_DisplayTransform_getDisplayCC( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getDisplayCC(PyObject * self)
         {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return BuildConstPyTransform(transform->getDisplayCC());
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
+            return BuildConstPyTransform(transform->getDisplayCC());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_setDisplayCC( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setDisplayCC(PyObject * self, PyObject * args)
         {
-            try
-            {
-                PyObject * pyCC = 0;
-                if (!PyArg_ParseTuple(args,"O:setDisplayCC", &pyCC)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                
-                ConstTransformRcPtr cc = GetConstTransform(pyCC, true);
-                transform->setDisplayCC(cc);
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            PyObject* pyCC = 0;
+            if (!PyArg_ParseTuple(args,"O:setDisplayCC",
+                &pyCC)) return NULL;
+            DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+            ConstTransformRcPtr cc = GetConstTransform(pyCC, true);
+            transform->setDisplayCC(cc);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_DisplayTransform_getLooksOverride( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getLooksOverride(PyObject * self)
         {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return PyString_FromString( transform->getLooksOverride() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
+            return PyString_FromString(transform->getLooksOverride());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_setLooksOverride( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setLooksOverride(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * str = 0;
-                if (!PyArg_ParseTuple(args,"s:setLooksOverride", &str)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                transform->setLooksOverride( str );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* str = 0;
+            if (!PyArg_ParseTuple(args,"s:setLooksOverride",
+                &str)) return NULL;
+            DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+            transform->setLooksOverride(str);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled( PyObject * self )
+        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled(PyObject * self)
         {
-            try
-            {
-                ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self, true);
-                return PyBool_FromLong( transform->getLooksOverrideEnabled() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
+            return PyBool_FromLong(transform->getLooksOverrideEnabled());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_setLooksOverrideEnabled( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_DisplayTransform_setLooksOverrideEnabled(PyObject * self, PyObject * args)
         {
-            try
-            {
-                bool enabled = false;
-                if (!PyArg_ParseTuple(args,"O&:setLooksOverrideEnabled",
-                    ConvertPyObjectToBool, &enabled)) return NULL;
-                
-                DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
-                transform->setLooksOverrideEnabled( enabled );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            bool enabled = false;
+            if (!PyArg_ParseTuple(args, "O&:setLooksOverrideEnabled",
+                ConvertPyObjectToBool, &enabled)) return NULL;
+            DisplayTransformRcPtr transform = GetEditableDisplayTransform(self);
+            transform->setLooksOverrideEnabled(enabled);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
+        
     }
 
 }

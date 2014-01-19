@@ -172,6 +172,24 @@ Java_org_OpenColorIO_Baker_getShaperSpace(JNIEnv * env, jobject self)
 }
 
 JNIEXPORT void JNICALL
+Java_org_OpenColorIO_Baker_setLooks(JNIEnv * env, jobject self, jstring looks)
+{
+    OCIO_JNITRY_ENTER()
+    BakerRcPtr bake = GetEditableJOCIO<BakerRcPtr, BakerJNI>(env, self);
+    bake->setLooks(GetJStringValue(env, looks)());
+    OCIO_JNITRY_EXIT()
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Baker_getLooks(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ConstBakerRcPtr bake = GetConstJOCIO<ConstBakerRcPtr, BakerJNI>(env, self);
+    return env->NewStringUTF(bake->getLooks());
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT void JNICALL
 Java_org_OpenColorIO_Baker_setTargetSpace(JNIEnv * env, jobject self, jstring targetSpace)
 {
     OCIO_JNITRY_ENTER()

@@ -1,14 +1,13 @@
-##########
 Python API
-##########
+==========
 
 Description
-===========
+***********
 
-A color configuration (:py:class:`Config`) defines all the color spaces to be
+A color configuration (:py:class:`PyOpenColorIO.Config`) defines all the color spaces to be
 available at runtime.
 
-(:py:class:`Config`)  is the main object for interacting with this library. 
+(:py:class:`PyOpenColorIO.Config`)  is the main object for interacting with this library. 
 It encapsulates all the information necessary to use customized
 :py:class:`PyOpenColorIO.ColorSpaceTransform` and
 :py:class:`PyOpenColorIO.DisplayTransform` operations.
@@ -39,12 +38,12 @@ environment variable to point at the root of that configuration.
    in a multi-app ecosystem, as it allows all applications to be consistently configured.
 
 .. note::
-   Paths to LUTs can be relative. The search paths are defined in :py:class:`Config`.
+   Paths to LUTs can be relative. The search paths are defined in :py:class:`PyOpenColorIO.Config`.
 
 See :ref:`developers-usageexamples`
 
 Examples of Use
----------------
++++++++++++++++
 
 .. code-block:: python
 
@@ -88,7 +87,7 @@ Examples of Use
     # https://github.com/imageworks/OpenColorIO-Configs/blob/master/nuke-default/make.py
 
 Exceptions
-==========
+**********
 
 .. autoclass:: PyOpenColorIO.Exception
     :members:
@@ -99,7 +98,7 @@ Exceptions
     :undoc-members:
 
 Global
-======
+******
 
 .. autofunction:: PyOpenColorIO.ClearAllCaches
 
@@ -112,35 +111,35 @@ Global
 .. autofunction:: PyOpenColorIO.SetLoggingLevel
 
 Config
-======
+******
 
 .. autoclass:: PyOpenColorIO.Config
     :members:
     :undoc-members:
 
 ColorSpace
-==========
+**********
 
 .. autoclass:: PyOpenColorIO.ColorSpace
     :members:
     :undoc-members:
 
 Look
-====
+****
 
 .. autoclass:: PyOpenColorIO.Look
     :members:
     :undoc-members:
 
 Processor
-=========
+*********
 
 .. autoclass:: PyOpenColorIO.Processor
     :members:
     :undoc-members:
 
 Context
-=======
+*******
 
 .. autoclass:: PyOpenColorIO.Context
     :members:

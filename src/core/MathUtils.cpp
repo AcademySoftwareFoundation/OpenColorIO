@@ -43,12 +43,22 @@ OCIO_NAMESPACE_ENTER
     {
         return equalWithAbsError(v, 0.0f, FLTMIN);
     }
-    
+
+    bool IsScalarEqualToZeroFlt(double v)
+    {
+        return equalWithAbsError(float(v), 0.0f, FLTMIN);
+    }
+
     bool IsScalarEqualToOne(float v)
     {
         return equalWithAbsError(v, 1.0f, FLTMIN);
     }
     
+    bool IsScalarEqualToOneFlt(double v)
+    {
+        return equalWithAbsError(float(v), 1.0f, FLTMIN);
+    }
+
     float GetSafeScalarInverse(float v, float defaultValue)
     {
         if(IsScalarEqualToZero(v)) return defaultValue;
@@ -72,7 +82,16 @@ OCIO_NAMESPACE_ENTER
         }
         return true;
     }
-    
+
+    bool IsVecEqualToOneFlt(const double* v, int size)
+    {
+        for(int i=0; i<size; ++i)
+        {
+            if(!IsScalarEqualToOneFlt(v[i])) return false;
+        }
+        return true;
+    }
+
     bool VecContainsZero(const float* v, int size)
     {
         for(int i=0; i<size; ++i)

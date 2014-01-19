@@ -4,9 +4,8 @@ Internal Architecture Overview
 External API
 ************
 
-
 Configs
-~~~~~~~
++++++++
 
 At the highest level, we have OCIO::Configs. This represents the entirety of the
 current color "universe".  Configs are serialized as .ocio files, read at runtime,
@@ -23,7 +22,7 @@ Example Configs:
 
 
 ColorSpaces
-~~~~~~~~~~~
++++++++++++
 
 The meat of an OCIO::Config is a list of named ColorSpaces. ColorSpace often
 correspond to input image states, output image states, or image states used for
@@ -38,9 +37,8 @@ Example ColorSpaces (from ACES configuration):
 * rrt_p3dci (baked in display transform, suitable for dcip3 display)
 
 
-
 Transforms
-~~~~~~~~~~
+++++++++++
 
 ColorSpaces contain an ordered list of transforms, which define the conversion
 to and from the Config's "reference" space.
@@ -55,6 +53,7 @@ Examples of OCIO::Transforms are:
 * The 'meta' GroupTransform, which contains itself an ordered lists of transforms
 * The 'meta' LookTransform, which contains an ordered lists of transforms
 
+
 For example, the adx10 ColorSpace (in one particular ACES configuration)
 -Transform FROM adx, to our reference ColorSpace:
 
@@ -63,6 +62,7 @@ For example, the adx10 ColorSpace (in one particular ACES configuration)
 #. Apply FileTransform adx_cid_to_rle.spi1d
 #. Apply LogTransform base 10 (inverse)
 #. Apply FileTransform adx_exp_to_aces.spimtx
+
 
 If we have an image in the reference ColorSpace (unnamed), we can convert TO
 adx by applying each in the inverse direction:
@@ -73,13 +73,13 @@ adx by applying each in the inverse direction:
 #. Apply FileTransform adx_cdd_to_cid.spimtx (inverse)
 #. Apply FileTransform adx_adx10_to_cdd.spimtx (inverse)
 
+
 Note that this isn't possible in all cases (what if a lut or matrix is not 
 invertible?), but conceptually it's a simple way to think about the design.
 
 
-
 Summary
-~~~~~~~
++++++++
 
 Configs and ColorSpaces are just a bookkeeping device used to get and ordered
 lists of Transforms corresponding to image color transformation.
@@ -89,10 +89,8 @@ NOT visible to the client applications. Client apps need only concern themselves
 with Configs and Processors.
 
 
-
-
 OCIO::Processors
-~~~~~~~~~~~~~~~~
+++++++++++++++++
 
 A processor corresponds to a 'baked' color transformation. You specify two arguments
 when querying a processor: the :ref:`colorspace_section` you are coming from,
@@ -140,13 +138,12 @@ and then makes the appropriate calls to the newly defined function.
 See `src/apps/ociodisplay` for an example.
 
 
-
 Internal API
 ************
 
 
 The Op Abstraction
-~~~~~~~~~~~~~~~~~~
+++++++++++++++++++
 
 It is a useful abstraction, both for code-reuse and optimization, to not relying
 on the transforms to do pixel processing themselves.
@@ -161,7 +158,6 @@ create to do the dirty work as needed.
 
 All image processing operations (ops) are a class that present the same
 interface, and it's rather simple:
-(src/core/Op.h)
 
 .. code-block:: cpp
 
@@ -193,7 +189,7 @@ referenced above) may generate a few ops:
    CreateLut3DOp(ops, cachedFile->lut3D,
                       fileTransform.getInterpolation(), dir);
 
-See (src/core/*Ops.h) for the available ops.
+See (``src/core/*Ops.h``) for the available ops.
 
 Note that while compositors often have complex, branching trees of image processing
 operations, we just have a linear list of ops, lending itself very well to
@@ -203,29 +199,27 @@ Before the ops are run, they are optimized. (Collapsed with appropriate neighbor
 
 
 An Example
-~~~~~~~~~~
+++++++++++
 
-Let us consider the internal steps when getProcessor() is called to convert
-from ColorSpace 'adx10' to ColorSpace 'aces'.
+Let us consider the internal steps when getProcessor() is called to convert from ColorSpace
+'adx10' to ColorSpace 'aces':
 
-* The first step is to turn this ColorSpace conversion into an ordered list of
-transforms.  We do this by creating a single of the conversions from 'adx10'
-to reference, and then adding the transforms required to go from reference to
-'aces'.
-
-* The Transform list is then converted into a list of ops.  It is during this
-stage luts, are loaded, etc.
-
+* The first step is to turn this ColorSpace conversion into an ordered list of transforms.
+We do this by creating a single of the conversions from 'adx10' to reference, and then
+adding the transforms required to go from reference to 'aces'.
+* The Transform list is then converted into a list of ops.  It is during this stage luts,
+are loaded, etc.
 
 
 CPU CODE PATH
-~~~~~~~~~~~~~
++++++++++++++
 
 The master list of ops is then optimized, and stored internally in the processor.
 
 .. code-block:: cpp
 
    FinalizeOpVec(m_cpuOps);
+
 
 During Processor::apply(...), a subunit of pixels in the image are formatted into a sequential rgba block.  (Block size is optimized for computational (SSE) simplicity and performance, and is typically similar in size to an image scanline)
 
@@ -237,6 +231,7 @@ During Processor::apply(...), a subunit of pixels in the image are formatted int
       scanlineHelper.prepRGBAScanline(&rgbaBuffer, &numPixels);
       ...
 
+
 Then for each op, op->apply is called in-place.
 
 .. code-block:: cpp
@@ -244,7 +239,8 @@ Then for each op, op->apply is called in-place.
    for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
    {
       m_cpuOps[i]->apply(rgbaBuffer, numPixels);
-   }         
+   }
+
 
 After all ops have been applied, the results are copied back to the source
 
@@ -253,9 +249,8 @@ After all ops have been applied, the results are copied back to the source
    scanlineHelper.finishRGBAScanline();
 
 
-
 GPU CODE PATH
-~~~~~~~~~~~~~
++++++++++++++
 
 #. The master list of ops is partitioned into 3 ordered lists:
 
@@ -265,6 +260,7 @@ GPU CODE PATH
   analytically in shader text. (called gpu-postops)
 - The left-over ops in the middle that cannot support shader text, and thus
   will be baked into a 3dlut. (called gpu-lattice)
+
 
 #. Between the first an the second lists (gpu-preops, and gpu-latticeops), we
 anaylze the op-stream metadata and determine the appropriate allocation to use.
@@ -281,7 +277,4 @@ image.
 The shader text is computed by calculating the shader for the gpu-preops, adding
 a sampling function of the 3d lut, and then calculating the shader for the gpu
 post ops.
-
-
-
 
