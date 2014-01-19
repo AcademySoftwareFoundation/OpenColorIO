@@ -47,6 +47,11 @@ public class Config extends LoadLibrary
     public native String getCacheID();
     public native String getCacheID(Context context);
     public native Context getCurrentContext();
+    public native void addEnvironmentVar(String name, String defaultValue);
+    public native int getNumEnvironmentVars();
+    public native String getEnvironmentVarNameByIndex(int index);
+    public native String getEnvironmentVarDefault(String name);
+    public native void clearEnvironmentVars();
     public native String getSearchPath();
     public native void setSearchPath(String path);
     public native String getWorkingDir();

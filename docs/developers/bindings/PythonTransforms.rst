@@ -2,14 +2,14 @@ Python Transforms
 =================
 
 Transform
----------
+*********
 
 .. autoclass:: PyOpenColorIO.Transform
     :members:
     :undoc-members:
 
 AllocationTransform
--------------------
+*******************
 
 .. code-block:: python
     
@@ -23,7 +23,7 @@ AllocationTransform
     :inherited-members:
 
 CDLTransform
-------------
+************
 
 .. code-block:: python
     
@@ -41,7 +41,7 @@ CDLTransform
     :inherited-members:
 
 ColorSpaceTransform
--------------------
+*******************
 
 This class is meant so that ColorSpace conversions can be reused, referencing ColorSpaces that already exist.
 
@@ -59,7 +59,7 @@ This class is meant so that ColorSpace conversions can be reused, referencing Co
     :inherited-members:
 
 DisplayTransform
-----------------
+****************
 
 .. code-block:: python
     
@@ -72,7 +72,7 @@ DisplayTransform
     :inherited-members:
 
 ExponentTransform
------------------
+*****************
 
 .. code-block:: python
     
@@ -85,7 +85,7 @@ ExponentTransform
     :inherited-members:
 
 FileTransform
--------------
+*************
 
 .. autoclass:: PyOpenColorIO.FileTransform
     :members:
@@ -93,7 +93,7 @@ FileTransform
     :inherited-members:
 
 GroupTransform
---------------
+**************
 
 .. autoclass:: PyOpenColorIO.GroupTransform
     :members:
@@ -101,13 +101,13 @@ GroupTransform
     :inherited-members:
 
 LogTransform
-------------
+************
 
 .. code-block:: python
     
     import PyOpenColorIO as OCIO
 
-:py:class:`LogTransform` is used to define a log transform. The direction of
+:py:class:`PyOpenColorIO.LogTransform` is used to define a log transform. The direction of
 the transform and its numerical base can be specified.
 
 .. autoclass:: PyOpenColorIO.LogTransform
@@ -116,7 +116,7 @@ the transform and its numerical base can be specified.
     :inherited-members:
 
 LookTransform
--------------
+*************
 
 .. autoclass:: PyOpenColorIO.LookTransform
     :members:
@@ -124,7 +124,7 @@ LookTransform
     :inherited-members:
 
 MatrixTransform
----------------
+***************
 
 .. autoclass:: PyOpenColorIO.MatrixTransform
     :members:

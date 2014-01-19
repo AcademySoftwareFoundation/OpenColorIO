@@ -61,7 +61,7 @@ OCIO_NAMESPACE_ENTER
             
             float knew[3] = { k[0] / logf(base[0]),
                               k[1] / logf(base[1]),
-                              k[2] / logf(base[0]) };
+                              k[2] / logf(base[2]) };
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
@@ -460,10 +460,10 @@ OIIO_ADD_TEST(LogOps, LogToLin)
 
 OIIO_ADD_TEST(LogOps, Inverse)
 {
-    float k[3] = { 0.18f, 0.18f, 0.18f };
-    float m[3] = { 2.0f, 2.0f, 2.0f };
+    float k[3] = { 0.18f, 0.5f, 0.3f };
+    float m[3] = { 2.0f, 4.0f, 8.0f };
     float b[3] = { 0.1f, 0.1f, 0.1f };
-    float base[3] = { 10.0f, 10.0f, 10.0f };
+    float base[3] = { 10.0f, 5.0f, 2.0f };
     float kb[3] = { 1.0f, 1.0f, 1.0f };
     
     OCIO::OpRcPtrVec ops;
@@ -494,6 +494,35 @@ OIIO_ADD_TEST(LogOps, Inverse)
     OIIO_CHECK_EQUAL(ops[2]->isInverse(ops[3]), true);
     
     OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[3]), false);
+
+    float result[12] = { 0.01f, 0.1f, 1.0f, 1.0f,
+                        1.0f, 10.0f, 100.0f, 1.0f,
+                        1000.0f, 1.0f, 0.5f, 1.0f
+                      };
+    float data[12];
+
+    for(int i=0; i<12; ++i)
+    {
+        data[i] = result[i];
+    }
+     
+    ops[0]->apply(data, 3);
+    // Note: Skip testing alpha channels.
+    OIIO_CHECK_NE( data[0], result[0] );
+    OIIO_CHECK_NE( data[1], result[1] );
+    OIIO_CHECK_NE( data[2], result[2] );
+    OIIO_CHECK_NE( data[4], result[4] );
+    OIIO_CHECK_NE( data[5], result[5] );
+    OIIO_CHECK_NE( data[6], result[6] );
+    OIIO_CHECK_NE( data[8], result[8] );
+    OIIO_CHECK_NE( data[9], result[9] );
+    OIIO_CHECK_NE( data[10], result[10] );
+
+    ops[1]->apply(data, 3);
+    for(int i=0; i<12; ++i)
+    {
+        OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
+    }
 }
 
 #endif // OCIO_UNIT_TEST

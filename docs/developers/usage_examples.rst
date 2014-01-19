@@ -49,7 +49,7 @@ steps internally.
 .. _usage_applybasic_cpp:
 
 C++
----
++++
 
 .. code-block:: cpp
    
@@ -73,7 +73,7 @@ C++
 .. _usage_applybasic_python:
 
 Python
-------
+++++++
 
 .. code-block:: py
    
@@ -114,7 +114,7 @@ transform name.
    See :ref:`usage_applybasic` for details.
 
 C++
----
++++
 
 .. code-block:: cpp
    
@@ -135,7 +135,7 @@ C++
    processor->apply(img);
 
 Python
-------
+++++++
 
 .. code-block:: python
 
@@ -191,7 +191,7 @@ plugins, the OCIODisplay node performs these steps internally.
    See :ref:`usage_applybasic` for details.
 
 C++
----
++++
 
 .. code-block:: cpp
    
@@ -244,7 +244,7 @@ C++
    processor->apply(img);
 
 Python
-------
+++++++
 
 .. code-block:: python
 
@@ -313,7 +313,7 @@ and a custom 3D Lookup Table (3DLUT).
 #. **Draw your image.**
 
 C++
----
++++
 
 This example is available as a working app in the OCIO source: src/apps/ociodisplay.
 

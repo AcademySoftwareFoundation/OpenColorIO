@@ -26,101 +26,65 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyTransform.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
-//Rarely used. could use a log transform instead. This can sample by log when doing the offset to make best use of the data.
+// Rarely used. could use a log transform instead. This can sample by log when
+// doing the offset to make best use of the data.
+
+#define GetConstAllocationTransform(pyobject) GetConstPyOCIO<PyOCIO_Transform, \
+    ConstAllocationTransformRcPtr, AllocationTransform>(pyobject, \
+    PyOCIO_AllocationTransformType)
+
+#define GetEditableAllocationTransform(pyobject) GetEditablePyOCIO<PyOCIO_Transform, \
+    AllocationTransformRcPtr, AllocationTransform>(pyobject, \
+    PyOCIO_AllocationTransformType)
 
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    bool AddAllocationTransformObjectToModule( PyObject* m )
-    {
-        PyOCIO_AllocationTransformType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_AllocationTransformType) < 0 ) return false;
-        
-        Py_INCREF( &PyOCIO_AllocationTransformType );
-        PyModule_AddObject(m, "AllocationTransform",
-                (PyObject *)&PyOCIO_AllocationTransformType);
-        
-        return true;
-    }
-    
-    /*
-    bool IsPyAllocationTransform(PyObject * pyobject)
-    {
-        if(!pyobject) return false;
-        return PyObject_TypeCheck(pyobject, &PyOCIO_AllocationTransformType);
-    }
-    */
-    
-    ConstAllocationTransformRcPtr GetConstAllocationTransform(PyObject * pyobject, bool allowCast)
-    {
-        ConstAllocationTransformRcPtr transform = \
-            DynamicPtrCast<const AllocationTransform>(GetConstTransform(pyobject, allowCast));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.AllocationTransform.");
-        }
-        return transform;
-    }
-    
-    AllocationTransformRcPtr GetEditableAllocationTransform(PyObject * pyobject)
-    {
-        AllocationTransformRcPtr transform = \
-            DynamicPtrCast<AllocationTransform>(GetEditableTransform(pyobject));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.AllocationTransform.");
-        }
-        return transform;
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
-        int PyOCIO_AllocationTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
-        PyObject * PyOCIO_AllocationTransform_equals( PyObject * self,  PyObject *args );
+        ///////////////////////////////////////////////////////////////////////
+        ///
         
-        PyObject * PyOCIO_AllocationTransform_getAllocation( PyObject * self );
-        PyObject * PyOCIO_AllocationTransform_setAllocation( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_AllocationTransform_getVars( PyObject * self );
-        PyObject * PyOCIO_AllocationTransform_setVars( PyObject * self,  PyObject *args );
+        int PyOCIO_AllocationTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
+        PyObject * PyOCIO_AllocationTransform_equals(PyObject * self,  PyObject * args);
+        PyObject * PyOCIO_AllocationTransform_getAllocation(PyObject * self);
+        PyObject * PyOCIO_AllocationTransform_setAllocation(PyObject * self,  PyObject * args);
+        PyObject * PyOCIO_AllocationTransform_getNumVars(PyObject * self);
+        PyObject * PyOCIO_AllocationTransform_getVars(PyObject * self);
+        PyObject * PyOCIO_AllocationTransform_setVars(PyObject * self,  PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_AllocationTransform_methods[] = {
-            {"getAllocation",
+            { "getAllocation",
             (PyCFunction) PyOCIO_AllocationTransform_getAllocation, METH_NOARGS, ALLOCATIONTRANSFORM_GETALLOCATION__DOC__ },
-            {"setAllocation",
+            { "setAllocation",
             PyOCIO_AllocationTransform_setAllocation, METH_VARARGS, ALLOCATIONTRANSFORM_SETALLOCATION__DOC__ },
-            {"getVars",
+            { "getNumVars",
+            (PyCFunction) PyOCIO_AllocationTransform_getNumVars, METH_VARARGS, ALLOCATIONTRANSFORM_GETNUMVARS__DOC__ },
+            { "getVars",
             (PyCFunction) PyOCIO_AllocationTransform_getVars, METH_NOARGS, ALLOCATIONTRANSFORM_GETVARS__DOC__ },
-            {"setVars",
+            { "setVars",
             PyOCIO_AllocationTransform_setVars, METH_VARARGS, ALLOCATIONTRANSFORM_SETVARS__DOC__ },
-            {NULL, NULL, 0, NULL}
+            { NULL, NULL, 0, NULL }
         };
+        
     }
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     PyTypeObject PyOCIO_AllocationTransformType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
-        "OCIO.AllocationTransform",                        //tp_name
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
+        "OCIO.AllocationTransform",                 //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
         0,                                          //tp_dealloc
@@ -146,7 +110,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_weaklistoffset 
         0,                                          //tp_iter 
         0,                                          //tp_iternext 
-        PyOCIO_AllocationTransform_methods,                //tp_methods 
+        PyOCIO_AllocationTransform_methods,         //tp_methods 
         0,                                          //tp_members 
         0,                                          //tp_getset 
         &PyOCIO_TransformType,                      //tp_base 
@@ -154,24 +118,12 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_descr_get 
         0,                                          //tp_descr_set 
         0,                                          //tp_dictoffset 
-        (initproc) PyOCIO_AllocationTransform_init,        //tp_init 
+        (initproc) PyOCIO_AllocationTransform_init, //tp_init 
         0,                                          //tp_alloc 
         0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
-        0,                                          //tp_bases
-        0,                                          //tp_mro
-        0,                                          //tp_cache
-        0,                                          //tp_subclasses
-        0,                                          //tp_weaklist
-        0,                                          //tp_del
-        #if PY_VERSION_HEX > 0x02060000
-        0,                                          //tp_version_tag
-        #endif
     };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
@@ -179,119 +131,66 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        int PyOCIO_AllocationTransform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        int PyOCIO_AllocationTransform_init(PyOCIO_Transform * self, PyObject * /*args*/, PyObject * /*kwds*/)
         {
-            ///////////////////////////////////////////////////////////////////
-            /// init pyobject fields
-            
-            self->constcppobj = new ConstTransformRcPtr();
-            self->cppobj = new TransformRcPtr();
-            self->isconst = true;
-            
-            try
+            OCIO_PYTRY_ENTER()
+            return BuildPyTransformObject<AllocationTransformRcPtr>(self, AllocationTransform::Create());
+            OCIO_PYTRY_EXIT(-1)
+        }
+        
+        PyObject * PyOCIO_AllocationTransform_getAllocation(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self);
+            return PyString_FromString( AllocationToString( transform->getAllocation()) );
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_AllocationTransform_setAllocation(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            Allocation hwalloc;
+            if (!PyArg_ParseTuple(args,"O&:setAllocation",
+                ConvertPyObjectToAllocation, &hwalloc)) return NULL;
+            AllocationTransformRcPtr transform = GetEditableAllocationTransform(self);
+            transform->setAllocation(hwalloc);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_AllocationTransform_getNumVars(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self);
+            return PyInt_FromLong(transform->getNumVars());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_AllocationTransform_getVars(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self);
+            std::vector<float> vars(transform->getNumVars());
+            if(!vars.empty()) transform->getVars(&vars[0]);
+            return CreatePyListFromFloatVector(vars);
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_AllocationTransform_setVars(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            PyObject * pyvars = 0;
+            if (!PyArg_ParseTuple(args,"O:setVars", &pyvars)) return NULL;
+            std::vector<float> vars;
+            if(!FillFloatVectorFromPySequence(pyvars, vars))
             {
-                *self->cppobj = AllocationTransform::Create();
-                self->isconst = false;
+                PyErr_SetString(PyExc_TypeError, "First argument must be a float array.");
                 return 0;
             }
-            catch ( const std::exception & e )
-            {
-                std::string message = "Cannot create AllocationTransform: ";
-                message += e.what();
-                PyErr_SetString( PyExc_RuntimeError, message.c_str() );
-                return -1;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_AllocationTransform_getAllocation( PyObject * self )
-        {
-            try
-            {
-                ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self, true);
-                return PyString_FromString( AllocationToString( transform->getAllocation()) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_AllocationTransform_setAllocation( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                Allocation hwalloc;
-                if (!PyArg_ParseTuple(args,"O&:setAllocation",
-                    ConvertPyObjectToAllocation, &hwalloc)) return NULL;
-                
-                AllocationTransformRcPtr transform = GetEditableAllocationTransform(self);
-                transform->setAllocation( hwalloc );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_AllocationTransform_getVars( PyObject * self )
-        {
-            try
-            {
-                ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self, true);
-                
-                std::vector<float> vars(transform->getNumVars());
-                if(!vars.empty())
-                {
-                    transform->getVars(&vars[0]);
-                }
-                
-                return CreatePyListFromFloatVector(vars);
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_AllocationTransform_setVars( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                PyObject * pyvars = 0;
-                if (!PyArg_ParseTuple(args,"O:setVars", &pyvars)) return NULL;
-                
-                std::vector<float> vars;
-                if(!FillFloatVectorFromPySequence(pyvars, vars))
-                {
-                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array.");
-                    return 0;
-                }
-                
-                AllocationTransformRcPtr transform = GetEditableAllocationTransform(self);
-                if(!vars.empty())
-                {
-                    transform->setVars(static_cast<int>(vars.size()), &vars[0]);
-                }
-                
-                Py_RETURN_NONE;
-                
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            AllocationTransformRcPtr transform = GetEditableAllocationTransform(self);
+            if(!vars.empty()) transform->setVars(static_cast<int>(vars.size()), &vars[0]);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
     }

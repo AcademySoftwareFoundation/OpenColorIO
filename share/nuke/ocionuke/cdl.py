@@ -2,7 +2,6 @@
 """
 
 import nuke
-import nukescripts
 import PyOpenColorIO as OCIO
 import xml.etree.ElementTree as ET
 
@@ -101,35 +100,44 @@ def _cdltransforms_to_xml(allcc):
     return ET.tostring(root)
 
 
-class SelectCCCIDPanel(nukescripts.PythonPanel):
-    """Allows the user to select from a list of CDLTransform
-    objects
-    """
+def SelectCCCIDPanel(*args, **kwargs):
+    # Wrap class definition in a function, so nukescripts.PythonPanel
+    # is only accessed when ``SelectCCCIDPanel()`` is called,
+    # https://github.com/imageworks/OpenColorIO/issues/277
 
-    def __init__(self, allcdl):
-        super(SelectCCCIDPanel, self).__init__()
-        self.available = {}
-        for cur in allcdl:
-            self.available[cur.getID()] = cur
+    import nukescripts
 
-        self.addKnob(nuke.Enumeration_Knob("cccid", "cccid", self.available.keys()))
-        self.addKnob(nuke.Text_Knob("divider"))
-        self.addKnob(nuke.Color_Knob("slope"))
-        self.addKnob(nuke.Color_Knob("offset"))
-        self.addKnob(nuke.Color_Knob("power"))
-        self.addKnob(nuke.Double_Knob("saturation"))
-
-    def selected(self):
-        return self.available[self.knobs()['cccid'].value()]
-
-    def knobChanged(self, knob):
-        """When the user selects a cccid, a grade-preview knobs are set.
-
-        This method is triggered when any knob is changed, which has the
-        useful side-effect of preventing changing the preview values, while
-        keeping them selectable for copy-and-paste.
+    class _SelectCCCIDPanel(nukescripts.PythonPanel):
+        """Allows the user to select from a list of CDLTransform
+        objects
         """
-        _cdltransform_to_node(self.selected(), self.knobs())
+
+        def __init__(self, allcdl):
+            super(_SelectCCCIDPanel, self).__init__()
+            self.available = {}
+            for cur in allcdl:
+                self.available[cur.getID()] = cur
+
+            self.addKnob(nuke.Enumeration_Knob("cccid", "cccid", self.available.keys()))
+            self.addKnob(nuke.Text_Knob("divider"))
+            self.addKnob(nuke.Color_Knob("slope"))
+            self.addKnob(nuke.Color_Knob("offset"))
+            self.addKnob(nuke.Color_Knob("power"))
+            self.addKnob(nuke.Double_Knob("saturation"))
+
+        def selected(self):
+            return self.available[self.knobs()['cccid'].value()]
+
+        def knobChanged(self, knob):
+            """When the user selects a cccid, a grade-preview knobs are set.
+
+            This method is triggered when any knob is changed, which has the
+            useful side-effect of preventing changing the preview values, while
+            keeping them selectable for copy-and-paste.
+            """
+            _cdltransform_to_node(self.selected(), self.knobs())
+
+    return _SelectCCCIDPanel(*args, **kwargs)
 
 
 def export_as_cc(node = None, filename = None):

@@ -26,88 +26,51 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyTransform.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
+#define GetConstLogTransform(pyobject) GetConstPyOCIO<PyOCIO_Transform, \
+    ConstLogTransformRcPtr, LogTransform>(pyobject, \
+    PyOCIO_LogTransformType)
+
+#define GetEditableLogTransform(pyobject) GetEditablePyOCIO<PyOCIO_Transform, \
+    LogTransformRcPtr, LogTransform>(pyobject, \
+    PyOCIO_LogTransformType)
+
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    bool AddLogTransformObjectToModule( PyObject* m )
-    {
-        PyOCIO_LogTransformType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_LogTransformType) < 0 ) return false;
-        
-        Py_INCREF( &PyOCIO_LogTransformType );
-        PyModule_AddObject(m, "LogTransform",
-                (PyObject *)&PyOCIO_LogTransformType);
-        
-        return true;
-    }
-    
-    bool IsPyLogTransform(PyObject * pyobject)
-    {
-        if(!pyobject) return false;
-        return PyObject_TypeCheck(pyobject, &PyOCIO_LogTransformType);
-    }
-    
-    ConstLogTransformRcPtr GetConstLogTransform(PyObject * pyobject, bool allowCast)
-    {
-        ConstLogTransformRcPtr transform = \
-            DynamicPtrCast<const LogTransform>(GetConstTransform(pyobject, allowCast));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.LogTransform.");
-        }
-        return transform;
-    }
-    
-    LogTransformRcPtr GetEditableLogTransform(PyObject * pyobject)
-    {
-        LogTransformRcPtr transform = \
-            DynamicPtrCast<LogTransform>(GetEditableTransform(pyobject));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.LogTransform.");
-        }
-        return transform;
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
-        int PyOCIO_LogTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
-        PyObject * PyOCIO_LogTransform_getBase( PyObject * self );
-        PyObject * PyOCIO_LogTransform_setBase( PyObject * self,  PyObject *args );
+        ///////////////////////////////////////////////////////////////////////
+        ///
+        
+        int PyOCIO_LogTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
+        PyObject * PyOCIO_LogTransform_getBase(PyObject * self);
+        PyObject * PyOCIO_LogTransform_setBase(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_LogTransform_methods[] = {
-            {"getBase",
+            { "getBase",
             (PyCFunction) PyOCIO_LogTransform_getBase, METH_NOARGS, LOGTRANSFORM_GETBASE__DOC__ },
-            {"setBase",
+            { "setBase",
             PyOCIO_LogTransform_setBase, METH_VARARGS, LOGTRANSFORM_SETBASE__DOC__ },
-            {NULL, NULL, 0, NULL}
+            { NULL, NULL, 0, NULL }
         };
+        
     }
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     PyTypeObject PyOCIO_LogTransformType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)
         "OCIO.LogTransform",                        //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
@@ -147,102 +110,51 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
-        0,                                          //tp_bases
-        0,                                          //tp_mro
-        0,                                          //tp_cache
-        0,                                          //tp_subclasses
-        0,                                          //tp_weaklist
-        0,                                          //tp_del
-        #if PY_VERSION_HEX > 0x02060000
-        0,                                          //tp_version_tag
-        #endif
     };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_LogTransform_init( PyOCIO_Transform *self,
-            PyObject * args, PyObject * kwds )
+        
+        int PyOCIO_LogTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds)
         {
-            ///////////////////////////////////////////////////////////////////
-            /// init pyobject fields
-            
-            self->constcppobj = new ConstTransformRcPtr();
-            self->cppobj = new TransformRcPtr();
-            self->isconst = true;
-            
-            // Parse optional kwargs
+            OCIO_PYTRY_ENTER()
+            static const char *kwlist[] = { "base", "direction", NULL };
             float base = -1.0f; // -1.0 is an illegal value for log transform base
-            char * direction = NULL;
-            
-            static const char *kwlist[] = {
-                "base",
-                "direction",
-                NULL
-            };
-            
+            char* direction = NULL;
             if(!PyArg_ParseTupleAndKeywords(args, kwds, "|fs",
                 const_cast<char **>(kwlist),
                 &base, &direction )) return -1;
-            
-            try
-            {
-                LogTransformRcPtr transform = LogTransform::Create();
-                *self->cppobj = transform;
-                self->isconst = false;
-                
-                if(base != -1.0f) transform->setBase(base);
-                if(direction) transform->setDirection(TransformDirectionFromString(direction));
-                
-                return 0;
-            }
-            catch ( const std::exception & e )
-            {
-                std::string message = "Cannot create LogTransform: ";
-                message += e.what();
-                PyErr_SetString( PyExc_RuntimeError, message.c_str() );
-                return -1;
-            }
+            LogTransformRcPtr ptr = LogTransform::Create();
+            int ret = BuildPyTransformObject<LogTransformRcPtr>(self, ptr);
+            if(base != -1.0f)
+                ptr->setBase(base);
+            if(direction)
+                ptr->setDirection(TransformDirectionFromString(direction));
+            return ret;
+            OCIO_PYTRY_EXIT(-1)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_LogTransform_getBase( PyObject * self )
+        PyObject * PyOCIO_LogTransform_getBase(PyObject * self)
         {
-            try
-            {
-                ConstLogTransformRcPtr transform = GetConstLogTransform(self, true);
-                return PyFloat_FromDouble(transform->getBase());
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstLogTransformRcPtr transform = GetConstLogTransform(self);
+            return PyFloat_FromDouble(transform->getBase());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_LogTransform_setBase( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_LogTransform_setBase(PyObject * self, PyObject * args)
         {
-            try
-            {
-                float base;
-                if (!PyArg_ParseTuple(args,"f:setBase", &base)) return NULL;
-                LogTransformRcPtr transform = GetEditableLogTransform(self);
-                
-                transform->setBase( base );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            float base;
+            if (!PyArg_ParseTuple(args, "f:setBase",
+                &base)) return NULL;
+            LogTransformRcPtr transform = GetEditableLogTransform(self);
+            transform->setBase(base);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
     }

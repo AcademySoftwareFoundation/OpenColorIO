@@ -110,7 +110,7 @@ MACRO(OCIOFindPython)
     set(PYTHON_OK YES) # OK until something goes wrong
 
     # Get Python version
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print sysconfig.get_python_version()"
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(sysconfig.get_python_version())"
         OUTPUT_VARIABLE PYTHON_VERSION
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -126,7 +126,7 @@ MACRO(OCIOFindPython)
 
 
     # Determine Python UCS version
-    execute_process(COMMAND ${PYTHON} -c "import sys; print sys.maxunicode > 65536 and 'ucs4' or 'ucs2'"
+    execute_process(COMMAND ${PYTHON} -c "import sys; print(sys.maxunicode > 65536 and 'ucs4' or 'ucs2')"
         OUTPUT_VARIABLE PYTHON_UCS
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -141,7 +141,7 @@ MACRO(OCIOFindPython)
 
 
     # Locate headers
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print ':'.join(set(sysconfig.get_config_var('INCLDIRSTOMAKE').split()))"
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('INCLDIRSTOMAKE').split())))"
         OUTPUT_VARIABLE PYTHON_INCLUDE_RAW
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -157,7 +157,7 @@ MACRO(OCIOFindPython)
 
 
     # Locate Python library
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print ':'.join(set(sysconfig.get_config_var('LIBPL').split()))"
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('LIBPL').split())))"
         OUTPUT_VARIABLE PYTHON_LIBRARY_DIRS_RAW
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE

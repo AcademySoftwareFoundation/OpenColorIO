@@ -1,0 +1,62 @@
+diff -Naur Sphinx-1.2b3/sphinx/domains/cpp.py Sphinx-1.2b3-ocio/sphinx/domains/cpp.py
+--- Sphinx-1.2b3/sphinx/domains/cpp.py	2013-09-16 07:24:36.000000000 +0100
++++ Sphinx-1.2b3-ocio/sphinx/domains/cpp.py	2013-10-08 21:36:30.000000000 +0100
+@@ -447,11 +447,13 @@
+ 
+ class FuncDefExpr(NamedDefExpr):
+ 
+-    def __init__(self, name, visibility, static, explicit, constexpr, rv,
++    def __init__(self, name, visibility, static, extern, virtual, explicit, constexpr, rv,
+                  signature, **kwargs):
+         NamedDefExpr.__init__(self, name, visibility, static)
+         self.rv = rv
+         self.signature = signature
++        self.extern = extern
++        self.virtual = virtual
+         self.explicit = explicit
+         self.constexpr = constexpr
+         self.const = kwargs.get('const', False)
+@@ -475,6 +477,10 @@
+ 
+     def __unicode__(self):
+         buf = self.get_modifiers()
++        if self.extern:
++            buf.append(u'extern')
++        if self.virtual:
++            buf.append(u'virtual')
+         if self.explicit:
+             buf.append(u'explicit')
+         if self.constexpr:
+@@ -932,6 +938,8 @@
+ 
+     def parse_function(self):
+         visibility, static = self._parse_visibility_static()
++        extern = self.skip_word_and_ws('extern')
++        virtual = self.skip_word_and_ws('virtual')
+         explicit = self.skip_word_and_ws('explicit')
+         constexpr = self.skip_word_and_ws('constexpr')
+ 
+@@ -943,7 +951,7 @@
+             rv = None
+         else:
+             name = self._parse_type()
+-        return FuncDefExpr(name, visibility, static, explicit, constexpr, rv,
++        return FuncDefExpr(name, visibility, static, extern, virtual, explicit, constexpr, rv,
+                            **self._parse_signature())
+ 
+     def parse_class(self):
+diff -Naur Sphinx-1.2b3/tests/test_cpp_domain.py Sphinx-1.2b3-ocio/tests/test_cpp_domain.py
+--- Sphinx-1.2b3/tests/test_cpp_domain.py	2013-09-16 07:24:36.000000000 +0100
++++ Sphinx-1.2b3-ocio/tests/test_cpp_domain.py	2013-10-08 21:34:22.000000000 +0100
+@@ -124,6 +124,11 @@
+     x = 'int foo(D d=x(a'
+     raises(DefinitionError, parse, 'function', x)
+ 
++    x = 'virtual void myclass::foo(Bar& wee) const = 0'
++    assert unicode(parse('function', x)) == x
++
++    x = 'extern void somefunc(const aPointer& thing)'
++    assert unicode(parse('function', x)) == x
+ 
+ def test_bases():
+     x = 'A'
