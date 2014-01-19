@@ -52,7 +52,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern char **environ;
 #endif
 
+#ifndef WINDOWS
 #include <unistd.h>
+#endif
+
 #if defined(__clang__)
 #include <unistd.h>
 #endif
