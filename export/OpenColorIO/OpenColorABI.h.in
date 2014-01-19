@@ -55,11 +55,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/shared_ptr.hpp>
 #define OCIO_SHARED_PTR boost::shared_ptr
 #define OCIO_DYNAMIC_POINTER_CAST boost::dynamic_pointer_cast
-<<<<<<< HEAD
-#elif __clang__
-=======
 #elif defined(_LIBCPP_VERSION)
->>>>>>> upstream/master
 #include <memory>
 #define OCIO_SHARED_PTR std::shared_ptr
 #define OCIO_DYNAMIC_POINTER_CAST std::dynamic_pointer_cast
