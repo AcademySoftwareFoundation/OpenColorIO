@@ -225,13 +225,15 @@ else(USE_EXTERNAL_YAML)
     endif()
 endif(USE_EXTERNAL_YAML)
 
-
+if(YAML_CPP_VERSION VERSION_LESS "0.5.0")
+    set(YAML_CPP_COMPILE_FLAGS "-DOLDYAML")
+endif()
 
 ###############################################################################
 ### Externals ###
 
 set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
-set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL")
+set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL ${YAML_CPP_COMPILE_FLAGS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     
