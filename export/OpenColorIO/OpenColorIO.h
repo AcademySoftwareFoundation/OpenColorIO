@@ -279,6 +279,12 @@ OCIO_NAMESPACE_ENTER
         const char * getEnvironmentVarDefault(const char * name) const;
         //!cpp:function::
         void clearEnvironmentVars();
+        //!cpp:function::
+        void setEnvironmentMode(EnvironmentMode mode);
+        //!cpp:function::
+        EnvironmentMode getEnvironmentMode() const;
+        //!cpp:function::
+        void loadEnvironment();
         
         //!cpp:function::
         const char * getSearchPath() const;
