@@ -24,6 +24,7 @@ option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ON)
 
 # Use boost's shared_ptr by default on Windows (as <VS2010 doesn't have it),
 # Use std::tr1::shared_ptr by default on other platforms
@@ -116,7 +117,17 @@ else()
     set(OCIO_USE_BOOST_PTR 0)
 endif()
 
+
 if(CMAKE_COMPILER_IS_GNUCXX)
+    if(OCIO_INLINES_HIDDEN)
+        execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+                        OUTPUT_VARIABLE GCC_VERSION)
+        if (GCC_VERSION VERSION_LESS 4.2)
+            message(STATUS "WARNING: GCC Version < 4.2 - disabling hidden inlines")
+            set(OCIO_INLINES_HIDDEN OFF)
+        endif()
+    endif()
+
     # Enable a bunch of compiler warnings...
     # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
@@ -165,7 +176,7 @@ if(USE_EXTERNAL_TINYXML)
 
 else(USE_EXTERNAL_TINYXML)
     set(TINYXML_VERSION 2_6_1)
-    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist)
+    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
     if(CMAKE_TOOLCHAIN_FILE)
         set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
@@ -204,7 +215,7 @@ if(USE_EXTERNAL_YAML)
     endif(YAML_CPP_FOUND)
 else(USE_EXTERNAL_YAML)
     set(YAML_CPP_VERSION 0.3.0)
-    set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE)
+    set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
     if(CMAKE_TOOLCHAIN_FILE)
         set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
@@ -231,19 +242,10 @@ endif(USE_EXTERNAL_YAML)
 ### Externals ###
 
 set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
-set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL")
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-    
-    execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-                    OUTPUT_VARIABLE GCC_VERSION)
-                    
-    if (GCC_VERSION VERSION_LESS 4.2)
-        message(STATUS "GCC Version < 4.2 - symbol visibility hiding disabled")
-        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC")
-    else()
-        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
-    endif()
+set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL -fPIC -fvisibility=hidden")
+if(OCIO_INLINES_HIDDEN)
+    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fvisibility-inlines-hidden")
 endif()
 
 set(EXTERNAL_LINK_FLAGS "")
