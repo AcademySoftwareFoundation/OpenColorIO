@@ -74,7 +74,7 @@ OCIO_NAMESPACE_ENTER
         
         bool isNoOp() const;
         bool hasChannelCrosstalk() const;
-        
+
         ConstProcessorMetadataRcPtr getMetadata() const;
         
         void apply(ImageDesc& img) const;
@@ -82,9 +82,11 @@ OCIO_NAMESPACE_ENTER
         void applyRGB(float * pixel) const;
         void applyRGBA(float * pixel) const;
         const char * getCpuCacheID() const;
-        
+
         const char * getGpuShaderText(const GpuShaderDesc & gpuDesc) const;
         const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const;
+        
+        const OpRcPtrVec & getCpuLatticeOps(const GpuShaderDesc & shaderDesc) const;
         
         void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
         const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const;

@@ -46,8 +46,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MAXPATHLEN 4096
 #endif
 
-#if defined(__APPLE__) && !defined(__IPHONE__)
+
+#if defined(__APPLE__)
+
+#include "TargetConditionals.h"
+
+#if !TARGET_OS_IPHONE
 #include <crt_externs.h> // _NSGetEnviron()
+#endif
+
 #elif !defined(WINDOWS)
 #include <unistd.h>
 extern char **environ;
@@ -172,11 +179,13 @@ OCIO_NAMESPACE_ENTER
     {
         inline char** GetEnviron()
         {
-#if __IPHONE__
+#if __APPLE__
+#if TARGET_OS_IPHONE
             // TODO: fix this
             return NULL;
-#elif __APPLE__
+#else
             return (*_NSGetEnviron());
+#endif
 #else
             return environ;
 #endif
@@ -187,7 +196,10 @@ OCIO_NAMESPACE_ENTER
     
     void LoadEnvironment(EnvMap & map, bool update)
     {
-        for (char **env = GetEnviron(); *env != NULL; ++env)
+        char **env = GetEnviron();
+        if (!env) return;
+
+        for (; *env != NULL; ++env)
         {
             
             // split environment up into std::map[name] = value

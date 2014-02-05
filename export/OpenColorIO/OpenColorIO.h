@@ -1165,6 +1165,30 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         int getLut3DEdgeLen() const;
         
+        //!cpp::function
+        // When enabled, collapse as much of the color processing as possible
+        // into the 3D LUT.  This is useful for devices with lesser GPU performance,
+        // or when one wishes to recompile the shadertext with the least frequency.
+        //
+        // In general, this will default to 'True' on mobile devices, and
+        // false everywhere else.
+        
+        void setLut3DPreferredOverGpuShaderText(bool preferred);
+        bool isLut3DPreferredOverGpuShaderText() const;
+        
+        //!cpp::function
+        // Certain platforms (such as mobile devices) do not support 3D LUTs,
+        // but do support 2D Textures. When enabled, this option will
+        // assume the usage of a sampler2D instead of a sampler3D across the board.
+        //
+        // The texture should be allocated using GL_TEXTURE_2D, with 
+        // width = lut3DEdgeLen
+        // heigh = lut3DEdgeLen*lut3DEdgeLen
+        
+        void setLut3DEmulationEnabled(bool enabled);
+        bool isLut3DEmulationEnabled() const;
+        
+        
         //!cpp:function:: 
         const char * getCacheID() const;
         

@@ -230,21 +230,32 @@ OCIO_NAMESPACE_ENTER
             GpuLanguage lang = shaderDesc.getLanguage();
             
             std::string fcnName = shaderDesc.getFunctionName();
+
+            std::string samplerType = "sampler3D";
+            if (shaderDesc.isLut3DEmulationEnabled())
+            {
+                samplerType = "sampler2D";
+            }
             
             if(lang == GPU_LANGUAGE_CG)
             {
                 shader << "half4 " << fcnName << "(in half4 inPixel," << "\n";
-                shader << "    const uniform sampler3D " << lut3dName << ") \n";
+                shader << "    const uniform " << samplerType << " " << lut3dName << ") \n";
             }
             else if(lang == GPU_LANGUAGE_GLSL_1_0)
             {
                 shader << "vec4 " << fcnName << "(vec4 inPixel, \n";
-                shader << "    sampler3D " << lut3dName << ") \n";
+                shader << "    " << samplerType << " " << lut3dName << ") \n";
             }
             else if(lang == GPU_LANGUAGE_GLSL_1_3)
             {
                 shader << "vec4 " << fcnName << "(in vec4 inPixel, \n";
-                shader << "    const sampler3D " << lut3dName << ") \n";
+                shader << "    const " << samplerType << " " << lut3dName << ") \n";
+            }
+            else if(lang == GPU_LANGUAGE_GLES_2_0)
+            {
+                shader << "mediump vec4 " << fcnName << "(in mediump vec4 inPixel, \n";
+                shader << "    " << samplerType << " " << lut3dName << ") \n";
             }
             else throw Exception("Unsupported shader language.");
             
@@ -257,6 +268,10 @@ OCIO_NAMESPACE_ENTER
             else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
             {
                 shader << "vec4 " << pixelName << " = inPixel; \n";
+            }
+            else if(lang == GPU_LANGUAGE_GLES_2_0)
+            {
+                shader << "mediump vec4 " << pixelName << " = inPixel; \n";
             }
             else throw Exception("Unsupported shader language.");
         }
@@ -381,9 +396,18 @@ OCIO_NAMESPACE_ENTER
     
     
     ///////////////////////////////////////////////////////////////////////////
-    
-    
-    
+
+    const OpRcPtrVec & Processor::Impl::getCpuLatticeOps(const GpuShaderDesc & shaderDesc) const
+    {
+        if (shaderDesc.isLut3DPreferredOverGpuShaderText())
+        {
+            return m_cpuOps;
+        }
+        else
+        {
+            return m_gpuOpsCpuLatticeProcess;
+        }
+    }
     
     const char * Processor::Impl::getGpuShaderText(const GpuShaderDesc & shaderDesc) const
     {
@@ -458,16 +482,17 @@ OCIO_NAMESPACE_ENTER
         
         if(m_lut3DCacheID.empty())
         {
-            if(m_gpuOpsCpuLatticeProcess.empty())
+            const OpRcPtrVec &cpuLatticeOps = getCpuLatticeOps(shaderDesc);
+            if(cpuLatticeOps.empty())
             {
                 m_lut3DCacheID = "<NULL>";
             }
             else
             {
                 std::ostringstream cacheid;
-                for(OpRcPtrVec::size_type i=0, size = m_gpuOpsCpuLatticeProcess.size(); i<size; ++i)
+                for(OpRcPtrVec::size_type i=0, size = cpuLatticeOps.size(); i<size; ++i)
                 {
-                    cacheid << m_gpuOpsCpuLatticeProcess[i]->getCacheID() << " ";
+                    cacheid << cpuLatticeOps[i]->getCacheID() << " ";
                 }
                 // Also, add a hash of the shader description
                 cacheid << shaderDesc.getCacheID();
@@ -496,12 +521,14 @@ OCIO_NAMESPACE_ENTER
         
         int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
         int lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
-        
+
+        const OpRcPtrVec &cpuLatticeOps = getCpuLatticeOps(shaderDesc);
+
         // Can we write the entire shader using only shader text?
         // If so, the lut3D is not needed so clear it.
         // This is preferable to identity, as it lets people notice if
         // it's accidentally being used.
-        if(m_gpuOpsCpuLatticeProcess.empty())
+        if(cpuLatticeOps.empty())
         {
             memset(lut3d, 0, sizeof(float) * 3 * lut3DNumPixels);
             return;
@@ -512,13 +539,13 @@ OCIO_NAMESPACE_ENTER
             // Allocate 3dlut image, RGBA
             m_lut3D.resize(lut3DNumPixels*4);
             GenerateIdentityLut3D(&m_lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_RED);
-            
+
             // Apply the lattice ops to it
-            for(int i=0; i<(int)m_gpuOpsCpuLatticeProcess.size(); ++i)
+            for(int i=0; i<(int)cpuLatticeOps.size(); ++i)
             {
-                m_gpuOpsCpuLatticeProcess[i]->apply(&m_lut3D[0], lut3DNumPixels);
+                cpuLatticeOps[i]->apply(&m_lut3D[0], lut3DNumPixels);
             }
-            
+
             // Convert the RGBA image to an RGB image, in place.
             // Of course, this only works because we're doing it from left to right
             // so old pixels are read before they're written over
@@ -602,36 +629,47 @@ OCIO_NAMESPACE_ENTER
         
         WriteShaderHeader(shader, pixelName, shaderDesc);
         
-        
-        for(unsigned int i=0; i<m_gpuOpsHwPreProcess.size(); ++i)
+        // Don't write gpu shader text if gpu ops have been baked into 3D lut.
+        if (!shaderDesc.isLut3DPreferredOverGpuShaderText())
         {
-            m_gpuOpsHwPreProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+            for(unsigned int i=0; i<m_gpuOpsHwPreProcess.size(); ++i)
+            {
+                m_gpuOpsHwPreProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+            }
         }
         
-        if(!m_gpuOpsCpuLatticeProcess.empty())
+        const OpRcPtrVec &cpuLatticeOps = getCpuLatticeOps(shaderDesc);
+
+        if(!cpuLatticeOps.empty())
         {
             // Sample the 3D LUT.
-            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
-            shader << pixelName << ".rgb = ";
-            Write_sampleLut3D_rgb(shader, pixelName,
-                                  lut3dName, lut3DEdgeLen,
-                                  shaderDesc.getLanguage());
+            std::string outputVariableName = pixelName;
+            Write_sampleLut3D_rgb(shader, pixelName, outputVariableName,
+                                  lut3dName, shaderDesc.getLut3DEdgeLen(),
+                                  shaderDesc.getLanguage(),
+                                  shaderDesc.isLut3DEmulationEnabled());
         }
 #ifdef __APPLE__
         else
         {
             // Force a no-op sampling of the 3d lut on OSX to work around a segfault.
-            int lut3DEdgeLen = shaderDesc.getLut3DEdgeLen();
             shader << "// OSX segfault work-around: Force a no-op sampling of the 3d lut.\n";
-            Write_sampleLut3D_rgb(shader, pixelName,
-                                  lut3dName, lut3DEdgeLen,
-                                  shaderDesc.getLanguage());
+            std::string outputVariableName;  // intentionally empty
+            Write_sampleLut3D_rgb(shader, pixelName, outputVariableName,
+                                  lut3dName, shaderDesc.getLut3DEdgeLen(),
+                                  shaderDesc.getLanguage(),
+                                  shaderDesc.isLut3DEmulationEnabled());
         }
 #endif // __APPLE__
-        for(unsigned int i=0; i<m_gpuOpsHwPostProcess.size(); ++i)
+        // Don't write gpu shader text if gpu ops have been baked into 3D lut.
+        if (!shaderDesc.isLut3DPreferredOverGpuShaderText())
         {
-            m_gpuOpsHwPostProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+            for(unsigned int i=0; i<m_gpuOpsHwPostProcess.size(); ++i)
+            {
+                m_gpuOpsHwPostProcess[i]->writeGpuShader(shader, pixelName, shaderDesc);
+            }
         }
+
         
         WriteShaderFooter(shader, pixelName, shaderDesc);
     }

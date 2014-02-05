@@ -48,10 +48,11 @@ OCIO_NAMESPACE_ENTER
     void Write_half4(std::ostream & os, const float * v4,  GpuLanguage lang);
     void Write_half3(std::ostream & os, const float * v3,  GpuLanguage lang);
     
-    // returns vec3
-    void Write_sampleLut3D_rgb(std::ostream & os, const std::string & variableName,
+    void Write_sampleLut3D_rgb(std::ostream & os,
+                               const std::string & inputVariableName,
+                               const std::string & outputVariableName,
                                const std::string & lutName, int lut3DEdgeLen,
-                               GpuLanguage lang);
+                               GpuLanguage lang, bool lut3DEmulation);
 }
 OCIO_NAMESPACE_EXIT
 
