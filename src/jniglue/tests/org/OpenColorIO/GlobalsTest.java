@@ -7,7 +7,7 @@ public class GlobalsTest extends TestCase {
     String FOO = ""
     + "ocio_profile_version: 1\n"
     + "\n"
-    + "search_path: \n"
+    + "search_path: \"\"\n"
     + "strictparsing: false\n"
     + "luma: [0.2126, 0.7152, 0.0722]\n"
     + "\n"
@@ -25,7 +25,7 @@ public class GlobalsTest extends TestCase {
     + "  - !<ColorSpace>\n"
     + "    name: raw\n"
     + "    family: raw\n"
-    + "    equalitygroup: \n" 
+    + "    equalitygroup: \"\"\n" 
     + "    bitdepth: 32f\n"
     + "    description: |\n"
     + "      A raw color space. Conversions to and from this space are no-ops.\n"
@@ -133,6 +133,14 @@ public class GlobalsTest extends TestCase {
         assertEquals(globals.GpuLanguageFromString("glsl_1.0"), GpuLanguage.GPU_LANGUAGE_GLSL_1_0);
         assertEquals(globals.GpuLanguageToString(GpuLanguage.GPU_LANGUAGE_GLSL_1_3), "glsl_1.3");
         assertEquals(globals.GpuLanguageFromString("glsl_1.3"), GpuLanguage.GPU_LANGUAGE_GLSL_1_3);
+        
+        // EnvironmentMode
+        assertEquals(globals.EnvironmentModeToString(EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN), "unknown");
+        assertEquals(globals.EnvironmentModeFromString("unknown"), EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN);
+        assertEquals(globals.EnvironmentModeToString(EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED), "loadpredefined");
+        assertEquals(globals.EnvironmentModeFromString("loadpredefined"), EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED);
+        assertEquals(globals.EnvironmentModeToString(EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL), "loadall");
+        assertEquals(globals.EnvironmentModeFromString("loadall"), EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL);
         
         // Roles
         assertEquals(globals.ROLE_DEFAULT, "default");

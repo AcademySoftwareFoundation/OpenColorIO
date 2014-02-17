@@ -415,3 +415,37 @@ Java_org_OpenColorIO_Globals_GpuLanguageFromString(JNIEnv * env, jobject, jstrin
              GpuLanguageFromString(GetJStringValue(env, s)()));
     OCIO_JNITRY_EXIT(NULL)
 }
+
+// EnvironmentMode
+
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_EnvironmentMode_toString(JNIEnv * env, jobject self) {
+    OCIO_JNITRY_ENTER()
+    return env->NewStringUTF(
+      EnvironmentModeToString(GetJEnum<EnvironmentMode>(env, self)));
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_OpenColorIO_EnvironmentMode_equals(JNIEnv * env, jobject self, jobject obj) {
+    OCIO_JNITRY_ENTER()
+    return GetJEnum<EnvironmentMode>(env, self)
+        == GetJEnum<EnvironmentMode>(env, obj);
+    OCIO_JNITRY_EXIT(false)
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Globals_EnvironmentModeToString(JNIEnv * env, jobject, jobject mode) {
+    OCIO_JNITRY_ENTER()
+    return env->NewStringUTF(
+      EnvironmentModeToString(GetJEnum<EnvironmentMode>(env, mode)));
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_OpenColorIO_Globals_EnvironmentModeFromString(JNIEnv * env, jobject, jstring s) {
+    OCIO_JNITRY_ENTER()
+    return BuildJEnum(env, "org/OpenColorIO/EnvironmentMode",
+             EnvironmentModeFromString(GetJStringValue(env, s)()));
+    OCIO_JNITRY_EXIT(NULL)
+}

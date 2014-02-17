@@ -26,51 +26,55 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyColorSpace.h"
-#include "PyConstants.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
-
+    
     namespace
     {
-        PyObject * PyOCIO_Constants_GetInverseTransformDirection( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_Constants_CombineTransformDirections( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_Constants_BitDepthIsFloat( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_Constants_BitDepthToInt( PyObject * self,  PyObject *args );
+        
+        ///////////////////////////////////////////////////////////////////////
+        ///
+        
+        PyObject * PyOCIO_Constants_GetInverseTransformDirection(PyObject * self,  PyObject * args);
+        PyObject * PyOCIO_Constants_CombineTransformDirections(PyObject * self,  PyObject * args);
+        PyObject * PyOCIO_Constants_BitDepthIsFloat(PyObject * self,  PyObject * args);
+        PyObject * PyOCIO_Constants_BitDepthToInt(PyObject * self,  PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef LocalModuleMethods[] = {
-            {"GetInverseTransformDirection",
+            { "GetInverseTransformDirection",
             PyOCIO_Constants_GetInverseTransformDirection, METH_VARARGS, CONSTANTS_GETINVERSETRANSFORMDIRECTION__DOC__ },
-            {"CombineTransformDirections",
+            { "CombineTransformDirections",
             PyOCIO_Constants_CombineTransformDirections, METH_VARARGS, CONSTANTS_COMBINETRANSFORMDIRECTIONS__DOC__ },
-            {"BitDepthIsFloat",
+            { "BitDepthIsFloat",
             PyOCIO_Constants_BitDepthIsFloat, METH_VARARGS, CONSTANTS_BITDEPTHISFLOAT__DOC__ },
-            {"BitDepthToInt",
+            { "BitDepthToInt",
             PyOCIO_Constants_BitDepthToInt, METH_VARARGS, CONSTANTS_BITDEPTHTOINT__DOC__ },
-            {NULL, NULL, 0, NULL}        /* Sentinel */
+            { NULL, NULL, 0, NULL } /* Sentinel */
         };
     
     }
     
-    void AddConstantsModule(PyObject *enclosingModule)
+    void AddConstantsModule(PyObject * enclosingModule)
     {
         // Add sub-module
         std::string moduleName = PyModule_GetName(enclosingModule);
         moduleName += ".Constants";
         
-        PyObject * m = Py_InitModule3(const_cast<char*>(moduleName.c_str()),
-            LocalModuleMethods, CONSTANTS__DOC__);
+
+        PyObject * m;
+        MOD_DEF(m, const_cast<char*>(moduleName.c_str()),
+            CONSTANTS__DOC__, LocalModuleMethods);
+
+
         Py_INCREF(m);
         
         // Add Module Constants
@@ -80,6 +84,8 @@ OCIO_NAMESPACE_ENTER
             const_cast<char*>(LoggingLevelToString(LOGGING_LEVEL_WARNING)));
         PyModule_AddStringConstant(m, "LOGGING_LEVEL_INFO",
             const_cast<char*>(LoggingLevelToString(LOGGING_LEVEL_INFO)));
+        PyModule_AddStringConstant(m, "LOGGING_LEVEL_DEBUG",
+            const_cast<char*>(LoggingLevelToString(LOGGING_LEVEL_DEBUG)));
         PyModule_AddStringConstant(m, "LOGGING_LEVEL_UNKNOWN",
             const_cast<char*>(LoggingLevelToString(LOGGING_LEVEL_UNKNOWN)));
         
@@ -143,6 +149,13 @@ OCIO_NAMESPACE_ENTER
         PyModule_AddStringConstant(m, "GPU_LANGUAGE_GLSL_1_3",
             const_cast<char*>(GpuLanguageToString(GPU_LANGUAGE_GLSL_1_3)));
         
+        PyModule_AddStringConstant(m, "ENV_ENVIRONMENT_UNKNOWN",
+            const_cast<char*>(EnvironmentModeToString(ENV_ENVIRONMENT_UNKNOWN)));
+        PyModule_AddStringConstant(m, "ENV_ENVIRONMENT_LOAD_PREDEFINED",
+            const_cast<char*>(EnvironmentModeToString(ENV_ENVIRONMENT_LOAD_PREDEFINED)));
+        PyModule_AddStringConstant(m, "ENV_ENVIRONMENT_LOAD_ALL",
+            const_cast<char*>(EnvironmentModeToString(ENV_ENVIRONMENT_LOAD_ALL)));
+        
         PyModule_AddStringConstant(m, "ROLE_DEFAULT", const_cast<char*>(ROLE_DEFAULT));
         PyModule_AddStringConstant(m, "ROLE_REFERENCE", const_cast<char*>(ROLE_REFERENCE));
         PyModule_AddStringConstant(m, "ROLE_DATA", const_cast<char*>(ROLE_DATA));
@@ -155,84 +168,60 @@ OCIO_NAMESPACE_ENTER
         
         // Add the module
         PyModule_AddObject(enclosingModule, "Constants", m);
+        
     }
-    
     
     namespace
     {
         
-        PyObject * PyOCIO_Constants_GetInverseTransformDirection( PyObject * /*module*/, PyObject * args )
+        PyObject * PyOCIO_Constants_GetInverseTransformDirection(PyObject * /*module*/, PyObject * args)
         {
-            try
-            {
-                char * s = 0;
-                if (!PyArg_ParseTuple(args,"s:GetInverseTransformDirection", s)) return NULL;
-                
-                TransformDirection dir = TransformDirectionFromString(s);
-                dir = GetInverseTransformDirection(dir);
-                return PyString_FromString( TransformDirectionToString(dir) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* s = 0;
+            if (!PyArg_ParseTuple(args, "s:GetInverseTransformDirection",
+                &s)) return NULL;
+            TransformDirection dir = TransformDirectionFromString(s);
+            dir = GetInverseTransformDirection(dir);
+            return PyString_FromString(TransformDirectionToString(dir));
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Constants_CombineTransformDirections( PyObject * /*module*/, PyObject * args )
+        PyObject * PyOCIO_Constants_CombineTransformDirections(PyObject * /*module*/, PyObject * args)
         {
-            try
-            {
-                char * s1 = 0;
-                char * s2 = 0;
-                if (!PyArg_ParseTuple(args,"ss:CombineTransformDirections", &s1, &s2)) return NULL;
-                
-                TransformDirection dir1 = TransformDirectionFromString(s1);
-                TransformDirection dir2 = TransformDirectionFromString(s2);
-                
-                TransformDirection dir = CombineTransformDirections(dir1, dir2);
-                return PyString_FromString( TransformDirectionToString(dir) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* s1 = 0;
+            char* s2 = 0;
+            if (!PyArg_ParseTuple(args, "ss:CombineTransformDirections",
+                &s1, &s2)) return NULL;
+            TransformDirection dir1 = TransformDirectionFromString(s1);
+            TransformDirection dir2 = TransformDirectionFromString(s2);
+            TransformDirection dir = CombineTransformDirections(dir1, dir2);
+            return PyString_FromString(TransformDirectionToString(dir));
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Constants_BitDepthIsFloat( PyObject * /*module*/, PyObject * args )
+        PyObject * PyOCIO_Constants_BitDepthIsFloat(PyObject * /*module*/, PyObject * args)
         {
-            try
-            {
-                char * s = 0;
-                if (!PyArg_ParseTuple(args,"s:BitDepthIsFloat", &s)) return NULL;
-                
-                BitDepth bitdepth = BitDepthFromString(s);
-                return PyBool_FromLong( BitDepthIsFloat(bitdepth) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* s = 0;
+            if (!PyArg_ParseTuple(args, "s:BitDepthIsFloat",
+                &s)) return NULL;
+            BitDepth bitdepth = BitDepthFromString(s);
+            return PyBool_FromLong(BitDepthIsFloat(bitdepth));
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Constants_BitDepthToInt( PyObject * /*module*/, PyObject * args )
+        PyObject * PyOCIO_Constants_BitDepthToInt(PyObject * /*module*/, PyObject * args)
         {
-            try
-            {
-                char * s = 0;
-                if (!PyArg_ParseTuple(args,"s:BitDepthToInt", &s)) return NULL;
-                
-                BitDepth bitdepth = BitDepthFromString(s);
-                return PyInt_FromLong( BitDepthToInt(bitdepth) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* s = 0;
+            if (!PyArg_ParseTuple(args, "s:BitDepthToInt",
+                &s)) return NULL;
+            BitDepth bitdepth = BitDepthFromString(s);
+            return PyInt_FromLong(BitDepthToInt(bitdepth));
+            OCIO_PYTRY_EXIT(NULL)
         }
+        
     }
 
 }

@@ -1,7 +1,7 @@
 project(OpenColorIO)
 set(OCIO_VERSION_MAJOR 1)
 set(OCIO_VERSION_MINOR 0)
-set(OCIO_VERSION_PATCH 8)
+set(OCIO_VERSION_PATCH 9)
 
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
@@ -225,13 +225,15 @@ else(USE_EXTERNAL_YAML)
     endif()
 endif(USE_EXTERNAL_YAML)
 
-
+if(YAML_CPP_VERSION VERSION_LESS "0.5.0")
+    set(YAML_CPP_COMPILE_FLAGS "-DOLDYAML")
+endif()
 
 ###############################################################################
 ### Externals ###
 
 set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
-set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL")
+set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL ${YAML_CPP_COMPILE_FLAGS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     

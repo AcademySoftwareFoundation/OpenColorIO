@@ -61,8 +61,18 @@ public class BakerTest extends TestCase {
     public void test_interface() {
         Baker bake = new Baker().Create();
         Baker bakee = bake.createEditableCopy();
-        Config cfg = new Config().CreateFromStream(SIMPLE_PROFILE);
+        Config _cfg = new Config().CreateFromStream(SIMPLE_PROFILE);
+        Config cfg = _cfg.createEditableCopy();
+        assertEquals(2, cfg.getNumColorSpaces());
+        Look foo = new Look().Create();
+        foo.setName("foo");
+        cfg.addLook(foo);
+        Look bar = new Look().Create();
+        bar.setName("bar");
+        cfg.addLook(bar);
         bakee.setConfig(cfg);
+        cfg = bakee.getConfig();
+        assertEquals(2, cfg.getNumColorSpaces());
         bakee.setFormat("cinespace");
         assertEquals("cinespace", bakee.getFormat());
         bakee.setType("3D");
@@ -71,6 +81,8 @@ public class BakerTest extends TestCase {
         assertEquals("this is some metadata!", bakee.getMetadata());
         bakee.setInputSpace("lnh");
         assertEquals("lnh", bakee.getInputSpace());
+        bakee.setLooks("foo, -bar");
+        assertEquals("foo, -bar", bakee.getLooks());
         bakee.setTargetSpace("test");
         assertEquals("test", bakee.getTargetSpace());
         bakee.setShaperSize(4);
@@ -79,6 +91,9 @@ public class BakerTest extends TestCase {
         assertEquals(2, bakee.getCubeSize());
         String output = bakee.bake();
         assertEquals(EXPECTED_LUT, output);
+        assertEquals(5, bakee.getNumFormats());
+        assertEquals("cinespace", bakee.getFormatNameByIndex(2));
+        assertEquals("3dl", bakee.getFormatExtensionByIndex(1));
     }
     
 }

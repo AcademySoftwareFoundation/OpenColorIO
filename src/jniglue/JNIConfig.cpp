@@ -159,6 +159,51 @@ Java_org_OpenColorIO_Config_getCurrentContext(JNIEnv * env, jobject self)
     OCIO_JNITRY_EXIT(NULL)
 }
 
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_Config_addEnvironmentVar(JNIEnv * env, jobject self, jstring name, jstring defaultValue)
+{
+    OCIO_JNITRY_ENTER()
+    ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
+    cfg->addEnvironmentVar(GetJStringValue(env, name)(), GetJStringValue(env, defaultValue)());
+    OCIO_JNITRY_EXIT()
+}
+
+JNIEXPORT jint JNICALL
+Java_org_OpenColorIO_Config_getNumEnvironmentVars(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return (jint)cfg->getNumEnvironmentVars();
+    OCIO_JNITRY_EXIT(0)
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Config_getEnvironmentVarNameByIndex(JNIEnv * env, jobject self, jint index)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return env->NewStringUTF(cfg->getEnvironmentVarNameByIndex((int)index));
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Config_getEnvironmentVarDefault(JNIEnv * env, jobject self, jstring name)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return env->NewStringUTF(cfg->getEnvironmentVarDefault(GetJStringValue(env, name)()));
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_Config_clearEnvironmentVars(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
+    cfg->clearEnvironmentVars();
+    OCIO_JNITRY_EXIT()
+}
+
 JNIEXPORT jstring JNICALL
 Java_org_OpenColorIO_Config_getSearchPath(JNIEnv * env, jobject self)
 {

@@ -23,6 +23,16 @@ class Context:
         pass
     def setStringVar(self, stringVar):
         pass
+    def getNumStringVars(self):
+        pass
+    def getStringVarNameByIndex(self, index):
+        pass
+    def clearStringVars():
+        pass
+    def setEnvironmentMode(self, mode):
+        pass
+    def getEnvironmentMode():
+        pass
     def loadEnvironment(self):
         pass
     def resolveStringVar(self, stringVar):

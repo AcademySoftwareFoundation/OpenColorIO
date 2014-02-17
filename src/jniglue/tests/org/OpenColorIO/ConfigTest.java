@@ -76,7 +76,7 @@ public class ConfigTest extends TestCase {
     + "out_pixel = vec4(-0.1, -0.3, -0.4, -0) + out_pixel;\n"
     + "out_pixel = pow(max(out_pixel, vec4(0, 0, 0, 0)), vec4(0.454545, 0.454545, 0.454545, 1));\n"
     + "// OSX segfault work-around: Force a no-op sampling of the 3d lut.\n"
-    + "texture3D(lut3d, -inf * out_pixel.rgb + inf).rgb;\n"
+    + "texture3D(lut3d, 0.96875 * out_pixel.rgb + 0.015625).rgb;\n"
     + "return out_pixel;\n"
     + "}\n"
     + "\n";
@@ -91,6 +91,19 @@ public class ConfigTest extends TestCase {
         
         Config _cfg = new Config().CreateFromStream(SIMPLE_PROFILE);
         Config _cfge = _cfg.createEditableCopy();
+        _cfge.clearEnvironmentVars();
+        assertEquals(0, _cfge.getNumEnvironmentVars());
+        _cfge.addEnvironmentVar("FOO", "test1");
+        _cfge.addEnvironmentVar("FOO2", "test2${FOO}");
+        assertEquals(2, _cfge.getNumEnvironmentVars());
+        assertEquals("FOO", _cfge.getEnvironmentVarNameByIndex(0));
+        assertEquals("FOO2", _cfge.getEnvironmentVarNameByIndex(1));
+        assertEquals("test1", _cfge.getEnvironmentVarDefault("FOO"));
+        assertEquals("test2${FOO}", _cfge.getEnvironmentVarDefault("FOO2"));
+        assertEquals("test2test1", _cfge.getCurrentContext().resolveStringVar("${FOO2}"));
+        //self.assertEqual({'FOO': 'test1', 'FOO2': 'test2${FOO}'}, _cfge.getEnvironmentVarDefaults())
+        _cfge.clearEnvironmentVars();
+        assertEquals(0, _cfge.getNumEnvironmentVars());
         assertEquals("luts", _cfge.getSearchPath());
         _cfge.setSearchPath("otherdir");
         assertEquals("otherdir", _cfge.getSearchPath());

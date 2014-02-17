@@ -26,177 +26,106 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyLook.h"
-#include "PyTransform.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    bool AddLookObjectToModule( PyObject* m )
-    {
-        PyOCIO_LookType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_LookType) < 0 ) return false;
-        
-        Py_INCREF( &PyOCIO_LookType );
-        PyModule_AddObject(m, "Look",
-                (PyObject *)&PyOCIO_LookType);
-        
-        return true;
-    }
     
     PyObject * BuildConstPyLook(ConstLookRcPtr look)
     {
-        if (!look)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_Look * pyLook = PyObject_New(
-                PyOCIO_Look, (PyTypeObject * ) &PyOCIO_LookType);
-        
-        pyLook->constcppobj = new ConstLookRcPtr();
-        *pyLook->constcppobj = look;
-        
-        pyLook->cppobj = new LookRcPtr();
-        pyLook->isconst = true;
-        
-        return ( PyObject * ) pyLook;
+        return BuildConstPyOCIO<PyOCIO_Look, LookRcPtr,
+            ConstLookRcPtr>(look, PyOCIO_LookType);
     }
     
     PyObject * BuildEditablePyLook(LookRcPtr look)
     {
-        if (!look)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_Look * pyLook = PyObject_New(
-                PyOCIO_Look, (PyTypeObject * ) &PyOCIO_LookType);
-        
-        pyLook->constcppobj = new ConstLookRcPtr();
-        pyLook->cppobj = new LookRcPtr();
-        *pyLook->cppobj = look;
-        
-        pyLook->isconst = false;
-        
-        return ( PyObject * ) pyLook;
+        return BuildEditablePyOCIO<PyOCIO_Look, LookRcPtr,
+            ConstLookRcPtr>(look, PyOCIO_LookType);
     }
     
     bool IsPyLook(PyObject * pyobject)
     {
-        if(!pyobject) return false;
-        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCIO_LookType));
+        return IsPyOCIOType(pyobject, PyOCIO_LookType);
     }
     
     bool IsPyLookEditable(PyObject * pyobject)
     {
-        if(!IsPyLook(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO.Look.");
-        }
-        
-        PyOCIO_Look * pyLook = reinterpret_cast<PyOCIO_Look *> (pyobject);
-        return (!pyLook->isconst);
+        return IsPyEditable<PyOCIO_Look>(pyobject, PyOCIO_LookType);
     }
     
     ConstLookRcPtr GetConstLook(PyObject * pyobject, bool allowCast)
     {
-        if(!IsPyLook(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO.Look.");
-        }
-        
-        PyOCIO_Look * pylook = reinterpret_cast<PyOCIO_Look *> (pyobject);
-        if(pylook->isconst && pylook->constcppobj)
-        {
-            return *pylook->constcppobj;
-        }
-        
-        if(allowCast && !pylook->isconst && pylook->cppobj)
-        {
-            return *pylook->cppobj;
-        }
-        
-        throw Exception("PyObject must be a valid OCIO.Look.");
+        return GetConstPyOCIO<PyOCIO_Look, ConstLookRcPtr>(pyobject,
+            PyOCIO_LookType, allowCast);
     }
     
     LookRcPtr GetEditableLook(PyObject * pyobject)
     {
-        if(!IsPyLook(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO.Look.");
-        }
-        
-        PyOCIO_Look * pylook = reinterpret_cast<PyOCIO_Look *> (pyobject);
-        if(!pylook->isconst && pylook->cppobj)
-        {
-            return *pylook->cppobj;
-        }
-        
-        throw Exception("PyObject must be an editable OCIO.Look.");
+        return GetEditablePyOCIO<PyOCIO_Look, LookRcPtr>(pyobject,
+            PyOCIO_LookType);
     }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
-        int PyOCIO_Look_init( PyOCIO_Look * self, PyObject * args, PyObject * kwds );
-        void PyOCIO_Look_delete( PyOCIO_Look * self, PyObject * args );
-        PyObject * PyOCIO_Look_isEditable( PyObject * self );
-        PyObject * PyOCIO_Look_createEditableCopy( PyObject * self );
         
-        PyObject * PyOCIO_Look_getName( PyObject * self );
-        PyObject * PyOCIO_Look_setName( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_Look_getProcessSpace( PyObject * self );
-        PyObject * PyOCIO_Look_setProcessSpace( PyObject * self,  PyObject *args );
+        ///////////////////////////////////////////////////////////////////////
+        ///
         
-        PyObject * PyOCIO_Look_getTransform( PyObject * self );
-        PyObject * PyOCIO_Look_setTransform( PyObject * self,  PyObject *args );
+        int PyOCIO_Look_init(PyOCIO_Look * self, PyObject * args, PyObject * kwds);
+        void PyOCIO_Look_delete(PyOCIO_Look * self, PyObject * args);
+        PyObject * PyOCIO_Look_isEditable(PyObject * self);
+        PyObject * PyOCIO_Look_createEditableCopy(PyObject * self);
+        PyObject * PyOCIO_Look_getName(PyObject * self);
+        PyObject * PyOCIO_Look_setName(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Look_getProcessSpace(PyObject * self);
+        PyObject * PyOCIO_Look_setProcessSpace(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Look_getTransform(PyObject * self);
+        PyObject * PyOCIO_Look_setTransform(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Look_getInverseTransform(PyObject * self);
+        PyObject * PyOCIO_Look_setInverseTransform(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_Look_methods[] = {
-            {"isEditable",
+            { "isEditable",
             (PyCFunction) PyOCIO_Look_isEditable, METH_NOARGS, LOOK_ISEDITABLE__DOC__ },
-            {"createEditableCopy",
+            { "createEditableCopy",
             (PyCFunction) PyOCIO_Look_createEditableCopy, METH_NOARGS, LOOK_CREATEEDITABLECOPY__DOC__ },
-            {"getName",
+            { "getName",
             (PyCFunction) PyOCIO_Look_getName, METH_NOARGS, LOOK_GETNAME__DOC__ },
-            {"setName",
+            { "setName",
             PyOCIO_Look_setName, METH_VARARGS, LOOK_SETNAME__DOC__ },
-            {"getProcessSpace",
+            { "getProcessSpace",
             (PyCFunction) PyOCIO_Look_getProcessSpace, METH_NOARGS, LOOK_GETPROCESSSPACE__DOC__ },
-            {"setProcessSpace",
+            { "setProcessSpace",
             PyOCIO_Look_setProcessSpace, METH_VARARGS, LOOK_SETPROCESSSPACE__DOC__ },
-            {"getTransform",
+            { "getTransform",
             (PyCFunction) PyOCIO_Look_getTransform, METH_NOARGS, LOOK_GETTRANSFORM__DOC__ },
-            {"setTransform",
+            { "setTransform",
             PyOCIO_Look_setTransform, METH_VARARGS, LOOK_SETTRANSFORM__DOC__ },
-            {NULL, NULL, 0, NULL}
+            { "getInverseTransform",
+            (PyCFunction) PyOCIO_Look_getInverseTransform, METH_VARARGS, LOOK_GETINVERSETRANSFORM__DOC__ },
+            { "setInverseTransform",
+            PyOCIO_Look_setInverseTransform, METH_VARARGS, LOOK_SETINVERSETRANSFORM__DOC__ },
+            { NULL, NULL, 0, NULL }
         };
+        
     }
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     PyTypeObject PyOCIO_LookType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
-        "OCIO.Look",                           //tp_name
-        sizeof(PyOCIO_Look),                   //tp_basicsize
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
+        "OCIO.Look",                                //tp_name
+        sizeof(PyOCIO_Look),                        //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor)PyOCIO_Look_delete,        //tp_dealloc
+        (destructor)PyOCIO_Look_delete,             //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -232,216 +161,140 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
-        0,                                          //tp_bases
-        0,                                          //tp_mro
-        0,                                          //tp_cache
-        0,                                          //tp_subclasses
-        0,                                          //tp_weaklist
-        0,                                          //tp_del
-        #if PY_VERSION_HEX > 0x02060000
-        0,                                          //tp_version_tag
-        #endif
     };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_Look_init( PyOCIO_Look *self, PyObject * args, PyObject * kwds )
+        
+        int PyOCIO_Look_init(PyOCIO_Look *self, PyObject * args, PyObject * kwds)
         {
-            ///////////////////////////////////////////////////////////////////
-            /// init pyobject fields
-            
-            self->constcppobj = new ConstLookRcPtr();
-            self->cppobj = new LookRcPtr();
-            self->isconst = true;
-            
-            // Parse optional kwargs
-            char * name = NULL;
-            char * processSpace = NULL;
-            PyObject * pytransform = NULL;
-            
-            const char *kwlist[] = {
-                "name", "processSpace", "transform",
-                NULL
-            };
-            
+            OCIO_PYTRY_ENTER()
+            LookRcPtr ptr = Look::Create();
+            /*int ret =*/ BuildPyObject<PyOCIO_Look, ConstLookRcPtr, LookRcPtr>(self, ptr);
+            char* name = NULL;
+            char* processSpace = NULL;
+            PyObject* pytransform = NULL;
+            const char* kwlist[] = { "name", "processSpace", "transform", NULL };
             if(!PyArg_ParseTupleAndKeywords(args, kwds, "|ssO",
                 const_cast<char **>(kwlist),
                 &name, &processSpace, &pytransform)) return -1;
-            
-            try
+            if(name) ptr->setName(name);
+            if(processSpace) ptr->setProcessSpace(processSpace);
+            if(pytransform)
             {
-                LookRcPtr look = Look::Create();
-                *self->cppobj = look;
-                self->isconst = false;
-                
-                if(name) look->setName(name);
-                if(processSpace) look->setProcessSpace(processSpace);
-                
-                if(pytransform)
-                {
-                    ConstTransformRcPtr transform = GetConstTransform(pytransform, true);
-                    look->setTransform(transform);
-                }
-                
-                return 0;
+                ConstTransformRcPtr transform = GetConstTransform(pytransform, true);
+                ptr->setTransform(transform);
             }
-            catch ( const std::exception & e )
-            {
-                std::string message = "Cannot create look: ";
-                message += e.what();
-                PyErr_SetString( PyExc_RuntimeError, message.c_str() );
-                return -1;
-            }
+            return 0;
+            OCIO_PYTRY_EXIT(-1)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        void PyOCIO_Look_delete( PyOCIO_Look *self, PyObject * /*args*/ )
+        void PyOCIO_Look_delete(PyOCIO_Look *self, PyObject * /*args*/)
         {
-            delete self->constcppobj;
-            delete self->cppobj;
-            
-            self->ob_type->tp_free((PyObject*)self);
+            DeletePyObject<PyOCIO_Look>(self);
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_Look_isEditable( PyObject * self )
+        PyObject * PyOCIO_Look_isEditable(PyObject * self)
         {
             return PyBool_FromLong(IsPyLookEditable(self));
         }
         
-        PyObject * PyOCIO_Look_createEditableCopy( PyObject * self )
+        PyObject * PyOCIO_Look_createEditableCopy(PyObject * self)
         {
-            try
-            {
-                ConstLookRcPtr look = GetConstLook(self, true);
-                LookRcPtr copy = look->createEditableCopy();
-                return BuildEditablePyLook( copy );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstLookRcPtr look = GetConstLook(self, true);
+            LookRcPtr copy = look->createEditableCopy();
+            return BuildEditablePyLook(copy);
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_Look_getName( PyObject * self )
+        PyObject * PyOCIO_Look_getName(PyObject * self)
         {
-            try
-            {
-                ConstLookRcPtr look = GetConstLook(self, true);
-                return PyString_FromString( look->getName() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstLookRcPtr look = GetConstLook(self, true);
+            return PyString_FromString(look->getName());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Look_setName( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Look_setName(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * name = 0;
-                if (!PyArg_ParseTuple(args,"s:setName", &name)) return NULL;
-                
-                LookRcPtr look = GetEditableLook(self);
-                look->setName( name );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* name = 0;
+            if (!PyArg_ParseTuple(args, "s:setName",
+                &name)) return NULL;
+            LookRcPtr look = GetEditableLook(self);
+            look->setName(name);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_Look_getProcessSpace( PyObject * self )
+        PyObject * PyOCIO_Look_getProcessSpace(PyObject * self)
         {
-            try
-            {
-                ConstLookRcPtr look = GetConstLook(self, true);
-                return PyString_FromString( look->getProcessSpace() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstLookRcPtr look = GetConstLook(self, true);
+            return PyString_FromString(look->getProcessSpace());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Look_setProcessSpace( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Look_setProcessSpace(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * processSpace = 0;
-                if (!PyArg_ParseTuple(args,"s:setProcessSpace", &processSpace)) return NULL;
-                
-                LookRcPtr look = GetEditableLook(self);
-                look->setProcessSpace( processSpace );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* processSpace = 0;
+            if (!PyArg_ParseTuple(args,"s:setProcessSpace",
+                &processSpace)) return NULL;
+            LookRcPtr look = GetEditableLook(self);
+            look->setProcessSpace(processSpace);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_Look_getTransform( PyObject * self )
+        PyObject * PyOCIO_Look_getTransform(PyObject * self)
         {
-            try
-            {
-                ConstLookRcPtr look = GetConstLook(self, true);
-                ConstTransformRcPtr transform = look->getTransform();
-                return BuildConstPyTransform(transform);
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstLookRcPtr look = GetConstLook(self, true);
+            ConstTransformRcPtr transform = look->getTransform();
+            return BuildConstPyTransform(transform);
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Look_setTransform( PyObject * self,  PyObject *args )
+        PyObject * PyOCIO_Look_setTransform(PyObject * self, PyObject * args)
         {
-            try
-            {
-                PyObject * pytransform = 0;
-                if (!PyArg_ParseTuple(args,"O:setTransform", &pytransform))
-                    return NULL;
-                
-                ConstTransformRcPtr transform = GetConstTransform(pytransform, true);
-                LookRcPtr look = GetEditableLook(self);
-                look->setTransform(transform);
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
+            OCIO_PYTRY_ENTER()
+            PyObject* pytransform = 0;
+            if (!PyArg_ParseTuple(args, "O:setTransform",
+                &pytransform))
                 return NULL;
-            }
+            ConstTransformRcPtr transform = GetConstTransform(pytransform, true);
+            LookRcPtr look = GetEditableLook(self);
+            look->setTransform(transform);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Look_getInverseTransform(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstLookRcPtr look = GetConstLook(self, true);
+            ConstTransformRcPtr transform = look->getInverseTransform();
+            return BuildConstPyTransform(transform);
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Look_setInverseTransform(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            PyObject* pytransform = 0;
+            if (!PyArg_ParseTuple(args, "O:setTransform",
+                &pytransform))
+                return NULL;
+            ConstTransformRcPtr transform = GetConstTransform(pytransform, true);
+            LookRcPtr look = GetEditableLook(self);
+            look->setInverseTransform(transform);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
     }

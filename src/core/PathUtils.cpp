@@ -185,17 +185,27 @@ OCIO_NAMESPACE_ENTER
         const int MAX_PATH_LENGTH = 4096;
     }
     
-    void LoadEnvironment(EnvMap & map)
+    void LoadEnvironment(EnvMap & map, bool update)
     {
         for (char **env = GetEnviron(); *env != NULL; ++env)
         {
+            
             // split environment up into std::map[name] = value
             std::string env_str = (char*)*env;
             int pos = static_cast<int>(env_str.find_first_of('='));
-            map.insert(
-                EnvMap::value_type(env_str.substr(0, pos),
-                env_str.substr(pos+1, env_str.length()))
-            );
+            std::string name = env_str.substr(0, pos);
+            std::string value = env_str.substr(pos+1, env_str.length());
+            
+            if(update)
+            {
+                // update existing key:values that match
+                EnvMap::iterator iter = map.find(name);
+                if(iter != map.end()) iter->second = value;
+            }
+            else
+            {
+                map.insert(EnvMap::value_type(name, value));
+            }
         }
     }
     

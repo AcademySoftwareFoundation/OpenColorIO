@@ -270,11 +270,30 @@ OCIO_NAMESPACE_ENTER
         ConstContextRcPtr getCurrentContext() const;
         
         //!cpp:function::
+        void addEnvironmentVar(const char * name, const char * defaultValue);
+        //!cpp:function::
+        int getNumEnvironmentVars() const;
+        //!cpp:function::
+        const char * getEnvironmentVarNameByIndex(int index) const;
+        //!cpp:function::
+        const char * getEnvironmentVarDefault(const char * name) const;
+        //!cpp:function::
+        void clearEnvironmentVars();
+        //!cpp:function::
+        void setEnvironmentMode(EnvironmentMode mode);
+        //!cpp:function::
+        EnvironmentMode getEnvironmentMode() const;
+        //!cpp:function::
+        void loadEnvironment();
+        
+        //!cpp:function::
         const char * getSearchPath() const;
+        //!cpp:function::
         void setSearchPath(const char * path);
         
         //!cpp:function::
         const char * getWorkingDir() const;
+        //!cpp:function::
         void setWorkingDir(const char * dirname);
         
         ///////////////////////////////////////////////////////////////////////////
@@ -1195,8 +1214,19 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         const char * getStringVar(const char * name) const;
         
+        //!cpp:function::
         int getNumStringVars() const;
+        //!cpp:function::
         const char * getStringVarNameByIndex(int index) const;
+        
+        //!cpp:function::
+        void clearStringVars();
+        
+        //!cpp:function::
+        void setEnvironmentMode(EnvironmentMode mode);
+        
+        //!cpp:function::
+        EnvironmentMode getEnvironmentMode() const;
         
         //!cpp:function:: Seed all string vars with the current environment.
         void loadEnvironment();

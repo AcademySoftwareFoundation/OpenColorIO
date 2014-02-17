@@ -17,7 +17,7 @@ class Config:
         """
         pass
 
-    def CreateFromFile(self):
+    def CreateFromFile(self, filename):
         """
         CreateFromFile(filename)
         
@@ -28,7 +28,10 @@ class Config:
         :return: Config object
         """
         pass
-
+    
+    def CreateFromStream(self, istream):
+        pass
+    
     def isEditable(self):
         """
         isEditable()
@@ -36,9 +39,9 @@ class Config:
         Returns whether Config is editable.
         
         The configurations returned from
-        :py:function:`PyOpenColorIO.GetCurrentConfig` are not editable, and if
+        :py:func:`PyOpenColorIO.GetCurrentConfig` are not editable, and if
         you want to edit them you can use
-        :py:method:`PyOpenColorIO.Config.createEditableCopy`.
+        :py:meth:`PyOpenColorIO.Config.createEditableCopy`.
            
         If you attempt to call any of the set functions on a noneditable
         Config, an exception will be thrown.
@@ -118,7 +121,7 @@ class Config:
         
         If a context is not provided, the current Context will be used. If a
         null context is provided, file references will not be taken into
-        account (this is essentially a hash of :py:method:`PyOpenColorIO.Config.serialize`).
+        account (this is essentially a hash of :py:meth:`PyOpenColorIO.Config.serialize`).
            
         :param pycontext: optional
         :type pycontext: object
@@ -139,7 +142,37 @@ class Config:
         :rtype: pycontext
         """
         pass
-
+    
+    def addEnvironmentVar(self, name, defaultValue):
+        """
+        """
+        pass
+        
+    def getNumEnvironmentVars(self):
+        """
+        """
+        pass
+        
+    def getEnvironmentVarNameByIndex(self, index):
+        """
+        """
+        pass
+        
+    def getEnvironmentVarDefault(self, name):
+        """
+        """
+        pass
+    
+    def getEnvironmentVarDefaults(self):
+        """
+        """
+        pass
+    
+    def clearEnvironmentVars(self):
+        """
+        """
+        pass
+    
     def getSearchPath(self):
         """
         getSearchPath()
@@ -184,11 +217,17 @@ class Config:
         """
         pass
 
+    def getNumColorSpaces(self):
+        pass
+
+    def getColorSpaceNameByIndex(self, index):
+        pass
+
     def getColorSpaces(self):
         """
         getColorSpaces()
         
-        Returns all the ColorSpaces defined in :py:class:`Config`.
+        Returns all the ColorSpaces defined in :py:class:`PyOpenColorIO.Config`.
            
         :return: ColorSpaces in :py:class:`PyOpenColorIO.Config`
         :rtype: tuple
@@ -199,7 +238,7 @@ class Config:
         """
         getColorSpace(name)
         
-        Returns the data for the specified color space in :py:class:`Config`.
+        Returns the data for the specified color space in :py:class:`PyOpenColorIO.Config`.
         
         This will return null if the specified name is not found.
         
@@ -208,6 +247,9 @@ class Config:
         :return: data for specified color space
         :rtype: pyColorSpace object
         """
+        pass
+
+    def getIndexForColorSpace(self, name):
         pass
 
     def addColorSpace(self, colorSpace):
@@ -251,6 +293,12 @@ class Config:
         """
         pass
 
+    def isStrictParsingEnabled(self):
+        pass
+
+    def setStrictParsingEnabled(self, enable):
+        pass
+
     def setRole(self, role, csname):
         """
         setRole(role, csname)
@@ -265,7 +313,16 @@ class Config:
         :type csname: string
         """
         pass
-        
+    
+    def getNumRoles(self):
+        pass
+    
+    def hasRole(self, role):
+        pass
+    
+    def getRoleName(self, index):
+        pass
+    
     def getDefaultDisplay(self):
         """
         getDefaultDisplay()
@@ -277,13 +334,19 @@ class Config:
         """
         pass
 
+    def getNumDisplays(self):
+        pass
+        
+    def getDisplay(self, index):
+        pass
+
     def getDisplays(self):
         """
         getDisplays()
         
         Returns all the displays defined in :py:class:`PyOpenColorIO.Config`.
         
-        :return: displays in :py:class:`Config`
+        :return: displays in :py:class:`PyOpenColorIO.Config`
         :rtype: list of strings
         """
         pass
@@ -300,16 +363,22 @@ class Config:
         :rtype: string
         """
         pass
-
+    
+    def getNumViews(self, display):
+        pass
+        
+    def getView(self, display, index):
+        pass
+    
     def getViews(self, display):
         """
         getViews(display)
         
         Returns all the views defined in :py:class:`PyOpenColorIO.Config`.
         
-        :param display: views in :py:class:`Config`
+        :param display: views in :py:class:`PyOpenColorIO.Config`
         :type display: string
-        :return: views in :py:class:`Config`.
+        :return: views in :py:class:`PyOpenColorIO.Config`.
         :rtype: list of strings
         """
         pass
@@ -447,6 +516,12 @@ class Config:
         :return: specified look
         :rtype: look object
         """
+        pass
+
+    def getNumLooks(self):
+        pass
+        
+    def getLookNameByIndex(self, index):
         pass
 
     def getLooks(self):

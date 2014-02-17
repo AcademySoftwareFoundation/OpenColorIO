@@ -46,6 +46,9 @@ public class Context extends LoadLibrary
     public native String getStringVar(String name);
     public native int getNumStringVars();
     public native String getStringVarNameByIndex(int index);
+    public native void clearStringVars();
+    public native void setEnvironmentMode(EnvironmentMode mode);
+    public native EnvironmentMode getEnvironmentMode();
     public native void loadEnvironment();
     public native String resolveStringVar(String val);
     public native String resolveFileLocation(String filename) throws ExceptionMissingFile;

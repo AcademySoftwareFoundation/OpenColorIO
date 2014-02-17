@@ -143,6 +143,32 @@ Java_org_OpenColorIO_Context_getStringVarNameByIndex(JNIEnv * env, jobject self,
 }
 
 JNIEXPORT void JNICALL
+Java_org_OpenColorIO_Context_clearStringVars(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ContextRcPtr con = GetEditableJOCIO<ContextRcPtr, ContextJNI>(env, self);
+    con->clearStringVars();
+    OCIO_JNITRY_EXIT()
+}
+
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_Context_setEnvironmentMode(JNIEnv * env, jobject self, jobject mode) {
+    OCIO_JNITRY_ENTER()
+    ContextRcPtr con = GetEditableJOCIO<ContextRcPtr, ContextJNI>(env, self);
+    con->setEnvironmentMode(GetJEnum<EnvironmentMode>(env, mode));
+    OCIO_JNITRY_EXIT()
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_OpenColorIO_Context_getEnvironmentMode(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ConstContextRcPtr con = GetConstJOCIO<ConstContextRcPtr, ContextJNI>(env, self);
+    return BuildJEnum(env, "org/OpenColorIO/EnvironmentMode", con->getEnvironmentMode());
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT void JNICALL
 Java_org_OpenColorIO_Context_loadEnvironment(JNIEnv * env, jobject self)
 {
     OCIO_JNITRY_ENTER()

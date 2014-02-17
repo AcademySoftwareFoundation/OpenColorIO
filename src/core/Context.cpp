@@ -55,13 +55,15 @@ namespace
     public:
         std::string searchPath_;
         std::string workingDir_;
+        EnvironmentMode envmode_;
         EnvMap envMap_;
         
         mutable std::string cacheID_;
         mutable StringMap resultsCache_;
         mutable Mutex resultsCacheMutex_;
         
-        Impl()
+        Impl() :
+            envmode_(ENV_ENVIRONMENT_LOAD_PREDEFINED)
         {
         }
         
@@ -130,6 +132,7 @@ namespace
             std::ostringstream cacheid;
             cacheid << "Search Path " << getImpl()->searchPath_ << " ";
             cacheid << "Working Dir " << getImpl()->workingDir_ << " ";
+            cacheid << "Environment Mode " << getImpl()->envmode_ << " ";
             
             for (EnvMap::const_iterator iter = getImpl()->envMap_.begin(),
                  end = getImpl()->envMap_.end();
@@ -173,9 +176,29 @@ namespace
         return getImpl()->workingDir_.c_str();
     }
     
+    void Context::setEnvironmentMode(EnvironmentMode mode)
+    {
+        AutoMutex lock(getImpl()->resultsCacheMutex_);
+        
+        getImpl()->envmode_ = mode;
+        
+        getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
+    }
+    
+    EnvironmentMode Context::getEnvironmentMode() const
+    {
+        return getImpl()->envmode_;
+    }
+    
     void Context::loadEnvironment()
     {
-        LoadEnvironment(getImpl()->envMap_);
+        bool update = (getImpl()->envmode_ == ENV_ENVIRONMENT_LOAD_ALL) ? false : true;
+        LoadEnvironment(getImpl()->envMap_, update);
+        
+        AutoMutex lock(getImpl()->resultsCacheMutex_);
+        getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
     }
     
     void Context::setStringVar(const char * name, const char * value)
@@ -183,8 +206,6 @@ namespace
         if(!name) return;
         
         AutoMutex lock(getImpl()->resultsCacheMutex_);
-        getImpl()->resultsCache_.clear();
-        getImpl()->cacheID_ = "";
         
         // Set the value if specified
         if(value)
@@ -200,6 +221,9 @@ namespace
                 getImpl()->envMap_.erase(iter);
             }
         }
+        
+        getImpl()->resultsCache_.clear();
+        getImpl()->cacheID_ = "";
     }
     
     const char * Context::getStringVar(const char * name) const
@@ -231,6 +255,11 @@ namespace
         return iter->first.c_str();
     }
     
+    void Context::clearStringVars()
+    {
+        getImpl()->envMap_.clear();
+    }
+    
     const char * Context::resolveStringVar(const char * val) const
     {
         AutoMutex lock(getImpl()->resultsCacheMutex_);
@@ -245,7 +274,6 @@ namespace
         {
             return iter->second.c_str();
         }
-        
         
         std::string resolvedval = EnvExpand(val, getImpl()->envMap_);
         
@@ -270,20 +298,21 @@ namespace
             return iter->second.c_str();
         }
         
-        // Load an absolute file reference
-        if(pystring::os::path::isabs(filename))
+        // Attempt to load an absolute file reference
         {
-            std::string expandedfullpath = EnvExpand(filename, getImpl()->envMap_);
+        std::string expandedfullpath = EnvExpand(filename, getImpl()->envMap_);
+        if(pystring::os::path::isabs(expandedfullpath))
+        {
             if(FileExists(expandedfullpath))
             {
                 getImpl()->resultsCache_[filename] = expandedfullpath;
                 return getImpl()->resultsCache_[filename].c_str();
             }
-            
             std::ostringstream errortext;
             errortext << "The specified absolute file reference ";
             errortext << "'" << expandedfullpath << "' could not be located. ";
             throw Exception(errortext.str().c_str());
+        }
         }
         
         // Load a relative file reference
@@ -362,3 +391,38 @@ namespace
 
 }
 OCIO_NAMESPACE_EXIT
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+#ifdef OCIO_SOURCE_DIR
+
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
+OIIO_ADD_TEST(Context, ABSPath)
+{
+    
+    OCIO::ContextRcPtr con = OCIO::Context::Create();
+    con->setSearchPath(STR(OCIO_SOURCE_DIR));
+    
+    con->setStringVar("non_abs", "src/core/Context.cpp");
+    con->setStringVar("is_abs", STR(OCIO_SOURCE_DIR) "/src/core/Context.cpp");
+    
+    OIIO_CHECK_NO_THOW(con->resolveFileLocation("${non_abs}"));
+    OIIO_CHECK_ASSERT(strcmp(con->resolveFileLocation("${non_abs}"),
+        STR(OCIO_SOURCE_DIR) "/src/core/Context.cpp") == 0);
+    
+    OIIO_CHECK_NO_THOW(con->resolveFileLocation("${is_abs}"));
+    OIIO_CHECK_ASSERT(strcmp(con->resolveFileLocation("${is_abs}"),
+        STR(OCIO_SOURCE_DIR) "/src/core/Context.cpp") == 0);
+    
+}
+
+#endif // OCIO_BINARY_DIR
+
+#endif // OCIO_UNIT_TEST

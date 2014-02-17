@@ -5,6 +5,8 @@ class MatrixTransform:
     """
     def __init__(self):
         pass
+    def equals(self, matrix):
+        pass
     def getValue(self):
         pass
     def setValue(self, value):
