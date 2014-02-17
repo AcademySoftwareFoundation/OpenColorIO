@@ -137,6 +137,7 @@ OCIO_NAMESPACE_ENTER
     // Registry Builders
     FileFormat * CreateFileFormat3DL();
     FileFormat * CreateFileFormatCCC();
+    FileFormat * CreateFileFormatCDL();
     FileFormat * CreateFileFormatCC();
     FileFormat * CreateFileFormatCSP();
     FileFormat * CreateFileFormatHDL();
