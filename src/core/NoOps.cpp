@@ -411,13 +411,13 @@ OCIO_NAMESPACE_ENTER
         
         OpRcPtr LookNoOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new FileNoOp(m_look));
+            OpRcPtr op = OpRcPtr(new LookNoOp(m_look));
             return op;
         }
         
         bool LookNoOp::isSameType(const OpRcPtr & op) const
         {
-            FileNoOpRcPtr typedRcPtr = DynamicPtrCast<FileNoOp>(op);
+            LookNoOpRcPtr typedRcPtr = DynamicPtrCast<LookNoOp>(op);
             if(!typedRcPtr) return false;
             return true;
         }
