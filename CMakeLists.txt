@@ -117,8 +117,7 @@ else()
     set(OCIO_USE_BOOST_PTR 0)
 endif()
 
-
-if(CMAKE_COMPILER_IS_GNUCXX)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     if(OCIO_INLINES_HIDDEN)
         execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
                         OUTPUT_VARIABLE GCC_VERSION)
@@ -127,7 +126,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
             set(OCIO_INLINES_HIDDEN OFF)
         endif()
     endif()
+endif()
 
+if(CMAKE_COMPILER_IS_GNUCXX)
     # Enable a bunch of compiler warnings...
     # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -Wconversion -Wcast-qual -Wformat=2")
