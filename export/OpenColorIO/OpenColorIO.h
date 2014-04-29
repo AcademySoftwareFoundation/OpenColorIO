@@ -732,6 +732,11 @@ OCIO_NAMESPACE_ENTER
         ConstTransformRcPtr getInverseTransform() const;
         //!cpp:function:: Setting a transform to a non-null call makes it allowed.
         void setInverseTransform(const ConstTransformRcPtr & transform);
+
+        //!cpp:function::
+        const char * getDescription() const;
+        //!cpp:function::
+        void setDescription(const char * description);
     private:
         Look();
         ~Look();

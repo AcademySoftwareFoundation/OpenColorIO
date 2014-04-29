@@ -83,6 +83,8 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Look_setName(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Look_getProcessSpace(PyObject * self);
         PyObject * PyOCIO_Look_setProcessSpace(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Look_getDescription(PyObject * self);
+        PyObject * PyOCIO_Look_setDescription(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Look_getTransform(PyObject * self);
         PyObject * PyOCIO_Look_setTransform(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Look_getInverseTransform(PyObject * self);
@@ -104,6 +106,10 @@ OCIO_NAMESPACE_ENTER
             (PyCFunction) PyOCIO_Look_getProcessSpace, METH_NOARGS, LOOK_GETPROCESSSPACE__DOC__ },
             { "setProcessSpace",
             PyOCIO_Look_setProcessSpace, METH_VARARGS, LOOK_SETPROCESSSPACE__DOC__ },
+            { "getDescription",
+            (PyCFunction) PyOCIO_Look_getDescription, METH_NOARGS, LOOK_GETDESCRIPTION__DOC__ },
+            { "setDescription",
+            PyOCIO_Look_setDescription, METH_VARARGS, LOOK_SETDESCRIPTION__DOC__ },
             { "getTransform",
             (PyCFunction) PyOCIO_Look_getTransform, METH_NOARGS, LOOK_GETTRANSFORM__DOC__ },
             { "setTransform",
@@ -176,11 +182,12 @@ OCIO_NAMESPACE_ENTER
             /*int ret =*/ BuildPyObject<PyOCIO_Look, ConstLookRcPtr, LookRcPtr>(self, ptr);
             char* name = NULL;
             char* processSpace = NULL;
+            char* description = NULL;
             PyObject* pytransform = NULL;
-            const char* kwlist[] = { "name", "processSpace", "transform", NULL };
-            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|ssO",
+            const char* kwlist[] = { "name", "processSpace", "transform", "description", NULL };
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|ssOs",
                 const_cast<char **>(kwlist),
-                &name, &processSpace, &pytransform)) return -1;
+                &name, &processSpace, &pytransform, &description)) return -1;
             if(name) ptr->setName(name);
             if(processSpace) ptr->setProcessSpace(processSpace);
             if(pytransform)
@@ -188,6 +195,7 @@ OCIO_NAMESPACE_ENTER
                 ConstTransformRcPtr transform = GetConstTransform(pytransform, true);
                 ptr->setTransform(transform);
             }
+            if(description) ptr->setDescription(description);
             return 0;
             OCIO_PYTRY_EXIT(-1)
         }
@@ -247,6 +255,25 @@ OCIO_NAMESPACE_ENTER
                 &processSpace)) return NULL;
             LookRcPtr look = GetEditableLook(self);
             look->setProcessSpace(processSpace);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Look_getDescription(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstLookRcPtr look = GetConstLook(self, true);
+            return PyString_FromString(look->getDescription());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Look_setDescription(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* description = 0;
+            if (!PyArg_ParseTuple(args, "s:setDescription", &description)) return NULL;
+            LookRcPtr look = GetEditableLook(self);
+            look->setDescription(description);
             Py_RETURN_NONE;
             OCIO_PYTRY_EXIT(NULL)
         }
