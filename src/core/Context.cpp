@@ -47,7 +47,8 @@ namespace
     
     void GetAbsoluteSearchPaths(std::vector<std::string> & searchpaths,
                                 const std::string & pathString,
-                                const std::string & configRootDir);
+                                const std::string & configRootDir,
+                                const EnvMap & map);
 }
     
     class Context::Impl
@@ -321,7 +322,8 @@ namespace
         std::vector<std::string> searchpaths;
         GetAbsoluteSearchPaths(searchpaths,
                                getImpl()->searchPath_,
-                               getImpl()->workingDir_);
+                               getImpl()->workingDir_,
+                               getImpl()->envMap_);
         
         // Loop over each path, and try to find the file
         std::ostringstream errortext;
@@ -362,7 +364,8 @@ namespace
 {
     void GetAbsoluteSearchPaths(std::vector<std::string> & searchpaths,
                                 const std::string & pathString,
-                                const std::string & workingDir)
+                                const std::string & workingDir,
+                                const EnvMap & map)
     {
         if(pathString.empty())
         {
@@ -375,8 +378,11 @@ namespace
         
         for (unsigned int i = 0; i < parts.size(); ++i)
         {
+            // Expand variables incase the expansion adds slashes
+            std::string expanded = EnvExpand(parts[i], map);
+
             // Remove trailing "/", and spaces
-            std::string dirname = pystring::rstrip(pystring::strip(parts[i]), "/");
+            std::string dirname = pystring::rstrip(pystring::strip(expanded), "/");
             
             if(!pystring::os::path::isabs(dirname))
             {
