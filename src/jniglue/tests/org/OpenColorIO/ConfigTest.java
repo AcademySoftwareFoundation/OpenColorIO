@@ -18,7 +18,7 @@ public class ConfigTest extends TestCase {
     + "\n"
     + "displays:\n"
     + "  sRGB:\n"
-    + "    - !<View> {name: Film1D, colorspace: vd8}\n"
+    + "    - !<View> {name: Film1D, colorspace: vd8, description: \"sRGB->vd8\"}\n"
     + "    - !<View> {name: Raw, colorspace: raw}\n"
     + "\n"
     + "active_displays: []\n"
@@ -143,6 +143,7 @@ public class ConfigTest extends TestCase {
         assertEquals("Raw", _cfge.getView("sRGB", 1));
         assertEquals("vd8", _cfge.getDisplayColorSpaceName("sRGB", "Film1D"));
         assertEquals("", _cfg.getDisplayLooks("sRGB", "Film1D"));
+        assertEquals("sRGB->vd8", _cfg.getDisplayDescription("sRGB", "Film1D"));
         
         // TODO: seems that 4 string params causes a memory error in the JNI layer?
         //_cfge.addDisplay("foo", "bar", "foo", 0);
