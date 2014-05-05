@@ -276,7 +276,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_ConfigType = {
         PyVarObject_HEAD_INIT(NULL, 0)              //obsize
-        "OCIO.Config",                              //tp_name
+        OCIO_PYTHON_NAMESPACE(Config),              //tp_name
         sizeof(PyOCIO_Config),                      //tp_basicsize
         0,                                          //tp_itemsize
         (destructor)PyOCIO_Config_delete,           //tp_dealloc
