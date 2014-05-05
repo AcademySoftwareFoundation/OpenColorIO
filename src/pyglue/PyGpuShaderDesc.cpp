@@ -91,7 +91,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_GpuShaderDescType = {
         PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
-        "OCIO.GpuShaderDesc",                       //tp_name
+        OCIO_PYTHON_NAMESPACE(GpuShaderDesc),       //tp_name
         sizeof(PyOCIO_GpuShaderDesc),               //tp_basicsize
         0,                                          //tp_itemsize
         (destructor)PyOCIO_GpuShaderDesc_delete,    //tp_dealloc

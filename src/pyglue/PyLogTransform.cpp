@@ -71,7 +71,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_LogTransformType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        "OCIO.LogTransform",                        //tp_name
+        OCIO_PYTHON_NAMESPACE(LogTransform),        //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
         0,                                          //tp_dealloc
