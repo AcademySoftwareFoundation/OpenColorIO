@@ -11,7 +11,7 @@ else()
     ExternalProject_Add(LCMS
         URL ${CMAKE_SOURCE_DIR}/ext/lcms2-${LCMS_VERSION}.tar.gz
         BUILD_IN_SOURCE 1
-        CONFIGURE_COMMAND ./configure --prefix=${PROJECT_BINARY_DIR}/ext/dist --without-jpeg --without-tiff --without-zlib
+        CONFIGURE_COMMAND ./configure --prefix=${PROJECT_BINARY_DIR}/ext/dist --disable-dependency-tracking --without-jpeg --without-tiff --without-zlib "CFLAGS=${OCIO_ARCH_FLAGS}"
         BUILD_COMMAND make
         INSTALL_COMMAND make install
     )
