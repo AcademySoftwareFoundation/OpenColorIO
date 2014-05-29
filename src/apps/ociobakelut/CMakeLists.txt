@@ -1,13 +1,4 @@
 # LCMS
-function (PREFIX_LIST_ITEMS _PREFIX _LIST_NAME OUTPUT_VAR)
-  set(PREFIXED_LIST)
-  foreach(ITEM ${${_LIST_NAME}})
-    set(PREFIXED_LIST "${PREFIXED_LIST} ${_PREFIX}${ITEM}")
-  endforeach()
-  string(STRIP ${PREFIXED_LIST} PREFIXED_LIST)
-  set(${OUTPUT_VAR} "${PREFIXED_LIST}" PARENT_SCOPE)
-endfunction()
-
 include(FindPkgConfig FindPackageMessage)
 pkg_check_modules(LCMS QUIET lcms2)
 if(LCMS_FOUND AND (LCMS_VERSION VERSION_EQUAL 2.1 OR LCMS_VERSION VERSION_GREATER 2.1))
@@ -17,16 +8,10 @@ else()
     message(STATUS "Using bundled lcms.")
     set(LCMS_VERSION 2.1)
     set(LCMS_BUNDLED TRUE)
-    if(APPLE OR IPHONE)
-        PREFIX_LIST_ITEMS("-arch " CMAKE_OSX_ARCHITECTURES LCMS_ARCH_FLAGS)
-        set(LCMS_ARCH_CFLAGS "CFLAGS=${LCMS_ARCH_FLAGS}")
-    endif()
-    # TODO: Better handling of CFLAGS for LCMS.  It should really also look
-    # TODO: at the cmake LCMS_CFLAGS veriable also.
     ExternalProject_Add(LCMS
         URL ${CMAKE_SOURCE_DIR}/ext/lcms2-${LCMS_VERSION}.tar.gz
         BUILD_IN_SOURCE 1
-        CONFIGURE_COMMAND ./configure --prefix=${PROJECT_BINARY_DIR}/ext/dist --disable-dependency-tracking --without-jpeg --without-tiff --without-zlib ${LCMS_ARCH_CFLAGS}
+        CONFIGURE_COMMAND ./configure --prefix=${PROJECT_BINARY_DIR}/ext/dist --disable-dependency-tracking --without-jpeg --without-tiff --without-zlib "CFLAGS=${OCIO_ARCH_FLAGS}"
         BUILD_COMMAND make
         INSTALL_COMMAND make install
     )

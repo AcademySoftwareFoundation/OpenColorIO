@@ -53,6 +53,7 @@ endif()
 
 include(ParseArguments)
 include(OCIOMacros)
+include(OCIOFunctions)
 include(ExternalProject)
 
 enable_language(CXX)
@@ -69,9 +70,11 @@ if(APPLE OR IPHONE)
         message(STATUS "Setting OSX Architectures to: ${CMAKE_OSX_ARCHITECTURES}")
     endif()
     # Because of the way quoting works with CMAKE_ARGS I need to convert the ";"
-    # separated list into a string with another seperator and use the LIST_SEPARATOR
-    # option on ExternalProject_Add
-    string (REPLACE ";" "^^" CMAKE_OSX_ARCHITECTURES_STR "${CMAKE_OSX_ARCHITECTURES}")
+    # separated list into a string with another seperator and use the
+    # LIST_SEPARATOR option on ExternalProject_Add
+    string(REPLACE ";" "^^" CMAKE_OSX_ARCHITECTURES_STR "${CMAKE_OSX_ARCHITECTURES}")
+    
+    OCIOPrefixListItems("-arch " CMAKE_OSX_ARCHITECTURES OCIO_ARCH_FLAGS)
 endif()
 
 # Set the default built type

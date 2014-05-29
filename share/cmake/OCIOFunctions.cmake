@@ -1,0 +1,8 @@
+function (OCIOPrefixListItems _PREFIX _LIST_NAME OUTPUT_VAR)
+  set(PREFIXED_LIST)
+  foreach(ITEM ${${_LIST_NAME}})
+    set(PREFIXED_LIST "${PREFIXED_LIST} ${_PREFIX}${ITEM}")
+  endforeach()
+  string(STRIP ${PREFIXED_LIST} PREFIXED_LIST)
+  set(${OUTPUT_VAR} "${PREFIXED_LIST}" PARENT_SCOPE)
+endfunction()
