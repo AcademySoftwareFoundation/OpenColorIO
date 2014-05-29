@@ -21,6 +21,8 @@ else()
         PREFIX_LIST_ITEMS("-arch " CMAKE_OSX_ARCHITECTURES LCMS_ARCH_FLAGS)
         set(LCMS_ARCH_CFLAGS "CFLAGS=${LCMS_ARCH_FLAGS}")
     endif()
+    # TODO: Better handling of CFLAGS for LCMS.  It should really also look
+    # TODO: at the cmake LCMS_CFLAGS veriable also.
     ExternalProject_Add(LCMS
         URL ${CMAKE_SOURCE_DIR}/ext/lcms2-${LCMS_VERSION}.tar.gz
         BUILD_IN_SOURCE 1
