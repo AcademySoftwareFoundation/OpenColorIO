@@ -114,9 +114,13 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_hasRole(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getRoleName(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getDefaultDisplay(PyObject * self);
-        PyObject * PyOCIO_Config_getNumDisplays(PyObject * self);
         PyObject * PyOCIO_Config_getDisplay(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getDisplays(PyObject * self);
+        PyObject * PyOCIO_Config_getNumDisplaysActive(PyObject * self);
+        PyObject * PyOCIO_Config_getDisplayActive(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_getDisplaysActive(PyObject * self);
+        PyObject * PyOCIO_Config_getNumDisplaysAll(PyObject * self);
+        PyObject * PyOCIO_Config_getDisplayAll(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_getDisplaysAll(PyObject * self);
         PyObject * PyOCIO_Config_getDefaultView(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getNumViews(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getView(PyObject * self, PyObject * args);
@@ -216,11 +220,23 @@ OCIO_NAMESPACE_ENTER
             { "getDefaultDisplay",
             (PyCFunction) PyOCIO_Config_getDefaultDisplay, METH_NOARGS, CONFIG_GETDEFAULTDISPLAY__DOC__ },
             { "getNumDisplays",
-            (PyCFunction) PyOCIO_Config_getNumDisplays, METH_NOARGS, CONFIG_GETNUMDISPLAYS__DOC__ },
+            (PyCFunction) PyOCIO_Config_getNumDisplaysActive, METH_NOARGS, CONFIG_GETNUMDISPLAYS__DOC__ },
             { "getDisplay",
-            PyOCIO_Config_getDisplay, METH_VARARGS, CONFIG_GETDISPLAY__DOC__ },
+            (PyCFunction) PyOCIO_Config_getDisplay, METH_VARARGS, CONFIG_GETDISPLAY__DOC__ },
             { "getDisplays",
-            (PyCFunction) PyOCIO_Config_getDisplays, METH_NOARGS, CONFIG_GETDISPLAYS__DOC__ },
+            (PyCFunction) PyOCIO_Config_getDisplaysActive, METH_NOARGS, CONFIG_GETDISPLAYS__DOC__ },
+            { "getNumDisplaysActive",
+            (PyCFunction) PyOCIO_Config_getNumDisplaysActive, METH_NOARGS, CONFIG_GETNUMDISPLAYSACTIVE__DOC__ },
+            { "getDisplayActive",
+            (PyCFunction) PyOCIO_Config_getDisplayActive, METH_VARARGS, CONFIG_GETDISPLAYACTIVE__DOC__ },
+            { "getDisplaysActive",
+            (PyCFunction) PyOCIO_Config_getDisplaysActive, METH_NOARGS, CONFIG_GETDISPLAYSACTIVE__DOC__ },
+            { "getNumDisplaysAll",
+            (PyCFunction) PyOCIO_Config_getNumDisplaysAll, METH_NOARGS, CONFIG_GETNUMDISPLAYSALL__DOC__ },
+            { "getDisplayAll",
+            (PyCFunction) PyOCIO_Config_getDisplayAll, METH_VARARGS, CONFIG_GETDISPLAYALL__DOC__ },
+            { "getDisplaysAll",
+            (PyCFunction) PyOCIO_Config_getDisplaysAll, METH_NOARGS, CONFIG_GETDISPLAYSALL__DOC__ },
             { "getDefaultView",
             PyOCIO_Config_getDefaultView, METH_VARARGS, CONFIG_GETDEFAULTVIEW__DOC__ },
             { "getNumViews",
@@ -705,11 +721,11 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getNumDisplays(PyObject * self)
+        PyObject * PyOCIO_Config_getNumDisplaysActive(PyObject * self)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
-            return PyInt_FromLong(config->getNumDisplays());
+            return PyInt_FromLong(config->getNumDisplaysActive());
             OCIO_PYTRY_EXIT(NULL)
         }
         
@@ -720,18 +736,60 @@ OCIO_NAMESPACE_ENTER
             if (!PyArg_ParseTuple(args,"i:getDisplay",
                 &index)) return NULL;
             ConstConfigRcPtr config = GetConstConfig(self, true);
-            return PyString_FromString(config->getDisplay(index));
+            return PyString_FromString(config->getDisplayActive(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_Config_getDisplayActive(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args,"i:getDisplayActive",
+                &index)) return NULL;
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyString_FromString(config->getDisplayActive(index));
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getDisplays(PyObject * self)
+        PyObject * PyOCIO_Config_getDisplaysActive(PyObject * self)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
             std::vector<std::string> data;
-            int numDevices = config->getNumDisplays();
+            int numDevices = config->getNumDisplaysActive();
             for(int i = 0; i < numDevices; ++i)
-                data.push_back(config->getDisplay(i));
+                data.push_back(config->getDisplayActive(i));
+            return CreatePyListFromStringVector(data);
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_getNumDisplaysAll(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyInt_FromLong(config->getNumDisplaysAll());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_getDisplayAll(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args,"i:getDisplayAll",
+                &index)) return NULL;
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyString_FromString(config->getDisplayAll(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_getDisplaysAll(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            std::vector<std::string> data;
+            int numDevices = config->getNumDisplaysAll();
+            for(int i = 0; i < numDevices; ++i)
+                data.push_back(config->getDisplayAll(i));
             return CreatePyListFromStringVector(data);
             OCIO_PYTRY_EXIT(NULL)
         }

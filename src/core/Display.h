@@ -69,6 +69,7 @@ OCIO_NAMESPACE_ENTER
     int find_view(const ViewVec & vec, const std::string & name);
     
     void AddDisplay(DisplayMap & displays,
+                    StringVec & displayNames,
                     const std::string & display,
                     const std::string & view,
                     const std::string & colorspace,

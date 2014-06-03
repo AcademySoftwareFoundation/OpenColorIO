@@ -335,14 +335,60 @@ class Config:
         pass
 
     def getNumDisplays(self):
+        """
+        getNumDisplays()
+
+        DEPRECATED - use :py:meth:`getNumDisplaysActive` instead.
+        """
         pass
         
     def getDisplay(self, index):
+        """
+        getDisplay()
+
+        DEPRECATED - use :py:meth:`getDisplayActive` instead.
+        """
         pass
 
     def getDisplays(self):
         """
-        getDisplays()
+        getDisplay()
+
+        DEPRECATED - use :py:meth:`getDisplaysActive` instead.
+        
+        :return: displays in :py:class:`PyOpenColorIO.Config`
+        :rtype: list of strings
+        """
+        pass
+
+    def getNumDisplaysActive(self):
+        pass
+        
+    def getDisplayActive(self, index):
+        pass
+
+    def getDisplaysActive(self):
+        """
+        getDisplaysActive()
+        
+        Returns the displays that intersect the active displays defined in
+        :py:class:`PyOpenColorIO.Config`.  If no active displays are defined
+        return all the displays.
+        
+        :return: displays in :py:class:`PyOpenColorIO.Config`
+        :rtype: list of strings
+        """
+        pass
+
+    def getNumDisplaysAll(self):
+        pass
+        
+    def getDisplayAll(self, index):
+        pass
+
+    def getDisplaysAll(self):
+        """
+        getDisplaysAll()
         
         Returns all the displays defined in :py:class:`PyOpenColorIO.Config`.
         

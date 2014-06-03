@@ -372,18 +372,48 @@ Java_org_OpenColorIO_Config_getDefaultDisplay(JNIEnv * env, jobject self)
 JNIEXPORT jint JNICALL
 Java_org_OpenColorIO_Config_getNumDisplays(JNIEnv * env, jobject self)
 {
-    OCIO_JNITRY_ENTER()
-    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    return (jint)cfg->getNumDisplays();
-    OCIO_JNITRY_EXIT(0)
+    return Java_org_OpenColorIO_Config_getNumDisplaysActive(env, self);
 }
 
 JNIEXPORT jstring JNICALL
 Java_org_OpenColorIO_Config_getDisplay(JNIEnv * env, jobject self, jint index)
 {
+    return Java_org_OpenColorIO_Config_getDisplayActive(env, self, index);
+}
+
+JNIEXPORT jint JNICALL
+Java_org_OpenColorIO_Config_getNumDisplaysActive(JNIEnv * env, jobject self)
+{
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    return env->NewStringUTF(cfg->getDisplay((int)index));
+    return (jint)cfg->getNumDisplaysActive();
+    OCIO_JNITRY_EXIT(0)
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Config_getDisplayActive(JNIEnv * env, jobject self, jint index)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return env->NewStringUTF(cfg->getDisplayActive((int)index));
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT jint JNICALL
+Java_org_OpenColorIO_Config_getNumDisplaysAll(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return (jint)cfg->getNumDisplaysAll();
+    OCIO_JNITRY_EXIT(0)
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Config_getDisplayAll(JNIEnv * env, jobject self, jint index)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return env->NewStringUTF(cfg->getDisplayAll((int)index));
     OCIO_JNITRY_EXIT(NULL)
 }
 

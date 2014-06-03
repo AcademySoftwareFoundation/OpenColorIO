@@ -17,11 +17,13 @@ public class ConfigTest extends TestCase {
     + "  scene_linear: lnh\n"
     + "\n"
     + "displays:\n"
+    + "  r709:\n"
+    + "    - !<View> {name: Raw, colorspace: raw}\n"
     + "  sRGB:\n"
     + "    - !<View> {name: Film1D, colorspace: vd8}\n"
     + "    - !<View> {name: Raw, colorspace: raw}\n"
     + "\n"
-    + "active_displays: []\n"
+    + "active_displays: [sRGB]\n"
     + "active_views: []\n"
     + "\n"
     + "colorspaces:\n"
@@ -138,6 +140,11 @@ public class ConfigTest extends TestCase {
         assertEquals("sRGB", _cfge.getDefaultDisplay());
         assertEquals(1, _cfge.getNumDisplays());
         assertEquals("sRGB", _cfge.getDisplay(0));
+        assertEquals(1, _cfge.getNumDisplaysActive());
+        assertEquals("sRGB", _cfge.getDisplayActive(0));
+        assertEquals(2, _cfge.getNumDisplaysAll());
+        assertEquals("r709", _cfge.getDisplayAll(0));
+        assertEquals("sRGB", _cfge.getDisplayAll(1));
         assertEquals("Film1D", _cfge.getDefaultView("sRGB"));
         assertEquals(2, _cfge.getNumViews("sRGB"));
         assertEquals("Raw", _cfge.getView("sRGB", 1));

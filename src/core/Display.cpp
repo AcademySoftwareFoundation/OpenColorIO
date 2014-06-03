@@ -68,6 +68,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     void AddDisplay(DisplayMap & displays,
+                    StringVec & displayNames,
                     const std::string & display,
                     const std::string & view,
                     const std::string & colorspace,
@@ -79,6 +80,7 @@ OCIO_NAMESPACE_ENTER
             ViewVec views;
             views.push_back( View(view, colorspace, looks) );
             displays[display] = views;
+            displayNames.push_back(display);
         }
         else
         {
