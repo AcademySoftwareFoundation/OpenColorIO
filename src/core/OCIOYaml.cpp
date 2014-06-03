@@ -1711,9 +1711,9 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Newline;
             out << YAML::Key << "displays";
             out << YAML::Value << YAML::BeginMap;
-            for(unsigned i = 0; i < c->getNumActualDisplays(); ++i)
+            for(unsigned i = 0; i < c->getNumConfigDisplays(); ++i)
             {
-                const char* display = c->getActualDisplay(i);
+                const char* display = c->getConfigDisplay(i);
                 out << YAML::Key << display;
                 out << YAML::Value << YAML::BeginSeq;
                 for(unsigned v = 0; v < c->getNumViews(display); ++v)

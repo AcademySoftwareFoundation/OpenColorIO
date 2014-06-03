@@ -1038,12 +1038,12 @@ OCIO_NAMESPACE_ENTER
         return "";
     }
     
-    int Config::getNumActualDisplays() const
+    int Config::getNumConfigDisplays() const
     {
         return static_cast<int>(getImpl()->displayNames_.size());
     }
 
-    const char * Config::getActualDisplay(int index) const
+    const char * Config::getConfigDisplay(int index) const
     {
         if(index>=0 || index < static_cast<int>(getImpl()->displayNames_.size()))
         {

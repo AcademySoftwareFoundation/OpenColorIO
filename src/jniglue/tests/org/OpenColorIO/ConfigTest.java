@@ -140,9 +140,9 @@ public class ConfigTest extends TestCase {
         assertEquals("sRGB", _cfge.getDefaultDisplay());
         assertEquals(1, _cfge.getNumDisplays());
         assertEquals("sRGB", _cfge.getDisplay(0));
-        assertEquals(2, _cfge.getNumActualDisplays());
-        assertEquals("r709", _cfge.getActualDisplay(0));
-        assertEquals("sRGB", _cfge.getActualDisplay(1));
+        assertEquals(2, _cfge.getNumConfigDisplays());
+        assertEquals("r709", _cfge.getConfigDisplay(0));
+        assertEquals("sRGB", _cfge.getConfigDisplay(1));
         assertEquals("Film1D", _cfge.getDefaultView("sRGB"));
         assertEquals(2, _cfge.getNumViews("sRGB"));
         assertEquals("Raw", _cfge.getView("sRGB", 1));

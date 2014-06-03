@@ -72,8 +72,8 @@ public class Config extends LoadLibrary
     public native String getDefaultDisplay();
     public native int getNumDisplays();
     public native String getDisplay(int index);
-    public native int getNumActualDisplays();
-    public native String getActualDisplay(int index);
+    public native int getNumConfigDisplays();
+    public native String getConfigDisplay(int index);
     public native String getDefaultView(String display);
     public native int getNumViews(String display);
     public native String getView(String display, int index);

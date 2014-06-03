@@ -381,9 +381,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Displays filtered by active displays
         const char * getDisplay(int index) const;
         //!cpp:function:: All displays in the configuration
-        int getNumActualDisplays() const;
+        int getNumConfigDisplays() const;
         //!cpp:function:: All displays in the configuration
-        const char * getActualDisplay(int index) const;
+        const char * getConfigDisplay(int index) const;
         
         //!cpp:function::
         const char * getDefaultView(const char * display) const;

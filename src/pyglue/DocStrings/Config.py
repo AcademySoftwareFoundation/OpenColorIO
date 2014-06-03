@@ -353,15 +353,15 @@ class Config:
         """
         pass
 
-    def getNumActualDisplays(self):
+    def getNumConfigDisplays(self):
         pass
         
-    def getActualDisplay(self, index):
+    def getConfigDisplay(self, index):
         pass
 
-    def getActualDisplays(self):
+    def getConfigDisplays(self):
         """
-        getActualDisplays()
+        getConfigDisplays()
         
         Returns all the displays defined in :py:class:`PyOpenColorIO.Config`.
         
