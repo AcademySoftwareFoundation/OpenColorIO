@@ -387,6 +387,24 @@ Java_org_OpenColorIO_Config_getDisplay(JNIEnv * env, jobject self, jint index)
     OCIO_JNITRY_EXIT(NULL)
 }
 
+JNIEXPORT jint JNICALL
+Java_org_OpenColorIO_Config_getNumActualDisplays(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return (jint)cfg->getNumActualDisplays();
+    OCIO_JNITRY_EXIT(0)
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Config_getActualDisplay(JNIEnv * env, jobject self, jint index)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return env->NewStringUTF(cfg->getActualDisplay((int)index));
+    OCIO_JNITRY_EXIT(NULL)
+}
+
 JNIEXPORT jstring JNICALL
 Java_org_OpenColorIO_Config_getDefaultView(JNIEnv * env, jobject self, jstring display)
 {

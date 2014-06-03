@@ -234,6 +234,7 @@ OCIO_NAMESPACE_ENTER
         LookVec looksList_;
         
         DisplayMap displays_;
+	StringVec displayNames_;
         StringVec activeDisplays_;
         StringVec activeDisplaysEnvOverride_;
         StringVec activeViews_;
@@ -304,6 +305,7 @@ OCIO_NAMESPACE_ENTER
             roles_ = rhs.roles_;
             
             displays_ = rhs.displays_;
+	    displayNames_ = rhs.displayNames_;
             activeDisplays_ = rhs.activeDisplays_;
             activeViews_ = rhs.activeViews_;
             activeViewsEnvOverride_ = rhs.activeViewsEnvOverride_;
@@ -330,6 +332,8 @@ OCIO_NAMESPACE_ENTER
         // Get all internal transforms (to generate cacheIDs, validation, etc).
         // This currently crawls colorspaces + looks
         void getAllIntenalTransforms(ConstTransformVec & transformVec) const;
+
+        void updateDisplayCache() const;
     };
     
     
@@ -979,13 +983,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * Config::getDefaultDisplay() const
     {
-        if(getImpl()->displayCache_.empty())
-        {
-            ComputeDisplays(getImpl()->displayCache_,
-                            getImpl()->displays_,
-                            getImpl()->activeDisplays_,
-                            getImpl()->activeDisplaysEnvOverride_);
-        }
+        getImpl()->updateDisplayCache();
         
         int index = -1;
         
@@ -1021,29 +1019,16 @@ OCIO_NAMESPACE_ENTER
         return "";
     }
 
-
     int Config::getNumDisplays() const
     {
-        if(getImpl()->displayCache_.empty())
-        {
-            ComputeDisplays(getImpl()->displayCache_,
-                            getImpl()->displays_,
-                            getImpl()->activeDisplays_,
-                            getImpl()->activeDisplaysEnvOverride_);
-        }
+        getImpl()->updateDisplayCache();
         
         return static_cast<int>(getImpl()->displayCache_.size());
     }
 
     const char * Config::getDisplay(int index) const
     {
-        if(getImpl()->displayCache_.empty())
-        {
-            ComputeDisplays(getImpl()->displayCache_,
-                            getImpl()->displays_,
-                            getImpl()->activeDisplays_,
-                            getImpl()->activeDisplaysEnvOverride_);
-        }
+        getImpl()->updateDisplayCache();
         
         if(index>=0 || index < static_cast<int>(getImpl()->displayCache_.size()))
         {
@@ -1053,16 +1038,23 @@ OCIO_NAMESPACE_ENTER
         return "";
     }
     
-    const char * Config::getDefaultView(const char * display) const
+    int Config::getNumActualDisplays() const
     {
-        if(getImpl()->displayCache_.empty())
+        return static_cast<int>(getImpl()->displayNames_.size());
+    }
+
+    const char * Config::getActualDisplay(int index) const
+    {
+        if(index>=0 || index < static_cast<int>(getImpl()->displayNames_.size()))
         {
-            ComputeDisplays(getImpl()->displayCache_,
-                            getImpl()->displays_,
-                            getImpl()->activeDisplays_,
-                            getImpl()->activeDisplaysEnvOverride_);
+            return getImpl()->displayNames_[index].c_str();
         }
         
+        return "";
+    }
+
+    const char * Config::getDefaultView(const char * display) const
+    {
         if(!display) return "";
         
         DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
@@ -1112,14 +1104,6 @@ OCIO_NAMESPACE_ENTER
 
     int Config::getNumViews(const char * display) const
     {
-        if(getImpl()->displayCache_.empty())
-        {
-            ComputeDisplays(getImpl()->displayCache_,
-                            getImpl()->displays_,
-                            getImpl()->activeDisplays_,
-                            getImpl()->activeDisplaysEnvOverride_);
-        }
-        
         if(!display) return 0;
         
         DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
@@ -1131,14 +1115,6 @@ OCIO_NAMESPACE_ENTER
 
     const char * Config::getView(const char * display, int index) const
     {
-        if(getImpl()->displayCache_.empty())
-        {
-            ComputeDisplays(getImpl()->displayCache_,
-                            getImpl()->displays_,
-                            getImpl()->activeDisplays_,
-                            getImpl()->activeDisplaysEnvOverride_);
-        }
-        
         if(!display) return "";
         
         DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
@@ -1182,7 +1158,7 @@ OCIO_NAMESPACE_ENTER
         
         if(!display || !view || !colorSpaceName || !lookName) return;
         
-        AddDisplay(getImpl()->displays_,
+        AddDisplay(getImpl()->displays_, getImpl()->displayNames_,
                    display, view, colorSpaceName, lookName);
         getImpl()->displayCache_.clear();
         
@@ -1193,6 +1169,7 @@ OCIO_NAMESPACE_ENTER
     void Config::clearDisplays()
     {
         getImpl()->displays_.clear();
+	getImpl()->displayNames_.clear();
         getImpl()->displayCache_.clear();
         
         AutoMutex lock(getImpl()->cacheidMutex_);
@@ -1529,6 +1506,15 @@ OCIO_NAMESPACE_ENTER
                 transformVec.push_back(looksList_[i]->getInverseTransform());
         }
     
+    }
+
+    void Config::Impl::updateDisplayCache() const
+    {
+      if (displayCache_.empty())
+      {
+          ComputeDisplays(displayCache_, displays_, activeDisplays_,
+                          activeDisplaysEnvOverride_);
+      }
     }
 }
 OCIO_NAMESPACE_EXIT
