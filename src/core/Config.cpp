@@ -234,7 +234,7 @@ OCIO_NAMESPACE_ENTER
         LookVec looksList_;
         
         DisplayMap displays_;
-	StringVec displayNames_;
+        StringVec displayNames_;
         StringVec activeDisplays_;
         StringVec activeDisplaysEnvOverride_;
         StringVec activeViews_;
@@ -305,7 +305,7 @@ OCIO_NAMESPACE_ENTER
             roles_ = rhs.roles_;
             
             displays_ = rhs.displays_;
-	    displayNames_ = rhs.displayNames_;
+            displayNames_ = rhs.displayNames_;
             activeDisplays_ = rhs.activeDisplays_;
             activeViews_ = rhs.activeViews_;
             activeViewsEnvOverride_ = rhs.activeViewsEnvOverride_;
@@ -1169,7 +1169,7 @@ OCIO_NAMESPACE_ENTER
     void Config::clearDisplays()
     {
         getImpl()->displays_.clear();
-	getImpl()->displayNames_.clear();
+        getImpl()->displayNames_.clear();
         getImpl()->displayCache_.clear();
         
         AutoMutex lock(getImpl()->cacheidMutex_);
