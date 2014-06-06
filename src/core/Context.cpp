@@ -429,6 +429,19 @@ OIIO_ADD_TEST(Context, ABSPath)
     
 }
 
-#endif // OCIO_BINARY_DIR
+OIIO_ADD_TEST(Context, VarSearchPath)
+{
+    OCIO::ContextRcPtr context = OCIO::Context::Create();
+
+    context->setStringVar("SOURCE_DIR", STR(OCIO_SOURCE_DIR));
+    context->setSearchPath("${SOURCE_DIR}/src/core");
+
+    OIIO_CHECK_NO_THOW(context->resolveFileLocation("Context.cpp"));
+    OIIO_CHECK_ASSERT(strcmp(context->resolveFileLocation("Context.cpp"),
+                             STR(OCIO_SOURCE_DIR) "/src/core/Context.cpp") == 0);
+
+}
+
+#endif // OCIO_SOURCE_DIR
 
 #endif // OCIO_UNIT_TEST
