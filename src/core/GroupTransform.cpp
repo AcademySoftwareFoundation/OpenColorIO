@@ -152,12 +152,17 @@ OCIO_NAMESPACE_ENTER
     
     std::ostream& operator<< (std::ostream& os, const GroupTransform& groupTransform)
     {
+        os << "<GroupTransform ";
+        os << "direction=" << TransformDirectionToString(groupTransform.getDirection()) << ", ";
+        os << "transforms=";
+        TransformDirection dir_;
         for(int i=0; i<groupTransform.size(); ++i)
         {
             if(i!=groupTransform.size()-1) os << "\n";
             ConstTransformRcPtr transform = groupTransform.getTransform(i);
             os << "\t" << *transform;
         }
+        os << ">\n";
         return os;
     }
     

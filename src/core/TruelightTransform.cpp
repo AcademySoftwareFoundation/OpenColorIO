@@ -235,6 +235,16 @@ OCIO_NAMESPACE_ENTER
     {
         os << "<TruelightTransform ";
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
+        os << "configroot=" << t.getConfigRoot() << ", ";
+        os << "profile=" << t.getProfile() << ", ";
+        os << "camera=" << t.getCamera() << ", ";
+        os << "inputdisplay=" << t.getInputDisplay() << ", ";
+        os << "recorder=" << t.getRecorder() << ", ";
+        os << "print=" << t.getPrint() << ", ";
+        os << "lamp=" << t.getLamp() << ", ";
+        os << "outputcamera=" << t.getOutputCamera() << ", ";
+        os << "display=" << t.getDisplay() << ", ";
+        os << "cubeinput=" << t.getCubeInput();
         os << ">\n";
         return os;
     }
