@@ -150,20 +150,20 @@ OCIO_NAMESPACE_ENTER
 
     std::ostream& operator<< (std::ostream& os, const Look& look)
     {
-        os << "<Look ";
-        os << "name=" << look.getName() << ", ";
-        os << "processSpace=" << look.getProcessSpace() << ", ";
+        os << "<Look";
+        os << " name=" << look.getName();
+        os << ", processSpace=" << look.getProcessSpace();
         
         if(look.getTransform())
         {
-            os << "\tTransform: ";
-            os << *look.getTransform();
+            os << ",\n    transform=";
+            os << "\n\t" << *look.getTransform();
         }
         
         if(look.getInverseTransform())
         {
-            os << "\tInverseTransform: ";
-            os << *look.getInverseTransform();
+            os << ",\n    inverseTransform=";
+            os << "\n\t" << *look.getInverseTransform();
         }
         
         os << ">";

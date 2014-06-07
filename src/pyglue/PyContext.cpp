@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 #include <OpenColorIO/OpenColorIO.h>
+#include <sstream>
 
 #include "PyUtil.h"
 #include "PyDoc.h"
@@ -77,6 +78,7 @@ OCIO_NAMESPACE_ENTER
         
         int PyOCIO_Context_init(PyOCIO_Context * self, PyObject * args, PyObject * kwds);
         void PyOCIO_Context_delete(PyOCIO_Context * self, PyObject * args);
+        PyObject * PyOCIO_Context_str(PyObject * self);
         PyObject * PyOCIO_Context_isEditable(PyObject * self);
         PyObject * PyOCIO_Context_createEditableCopy(PyObject * self);
         PyObject * PyOCIO_Context_getCacheID(PyObject * self);
@@ -157,7 +159,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_as_mapping
         0,                                          //tp_hash 
         0,                                          //tp_call
-        0,                                          //tp_str
+        PyOCIO_Context_str,                         //tp_str
         0,                                          //tp_getattro
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
@@ -202,6 +204,16 @@ OCIO_NAMESPACE_ENTER
             DeletePyObject<PyOCIO_Context>(self);
         }
         
+        PyObject * PyOCIO_Context_str(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            std::ostringstream out;
+            out << *context;
+            return PyString_FromString(out.str().c_str());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
         PyObject * PyOCIO_Context_isEditable(PyObject * self)
         {
             return PyBool_FromLong(IsPyContextEditable(self));

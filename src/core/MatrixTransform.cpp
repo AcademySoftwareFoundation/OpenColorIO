@@ -356,11 +356,30 @@ OCIO_NAMESPACE_ENTER
     
     std::ostream& operator<< (std::ostream& os, const MatrixTransform& t)
     {
+        float matrix[16], offset[4];
+
+        t.getMatrix(matrix);
+        t.getOffset(offset);
+
         os << "<MatrixTransform ";
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << ">\n";
+        os << "matrix=" << matrix[0];
+        for (int i = 1; i < 16; ++i)
+        {
+            os << " " << matrix[i];
+        }
+        os << ", offset=" << offset[0];
+        for (int i = 1; i < 4; ++i)
+        {
+            os << " " << offset[i];
+        }
+        os << ">";
         return os;
     }
+        TransformDirection dir_;
+        float matrix_[16];
+        float offset_[4];
+        
     
     
     ///////////////////////////////////////////////////////////////////////////
