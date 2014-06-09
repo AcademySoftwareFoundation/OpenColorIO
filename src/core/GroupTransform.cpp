@@ -158,11 +158,10 @@ OCIO_NAMESPACE_ENTER
         TransformDirection dir_;
         for(int i=0; i<groupTransform.size(); ++i)
         {
-            if(i!=groupTransform.size()-1) os << "\n";
             ConstTransformRcPtr transform = groupTransform.getTransform(i);
-            os << "\t" << *transform;
+            os << "\n\t" << *transform;
         }
-        os << ">\n";
+        os << ">";
         return os;
     }
     

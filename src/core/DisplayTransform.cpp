@@ -256,7 +256,7 @@ OCIO_NAMESPACE_ENTER
         {
             os << ", displayCC: " << *transform;
         }
-        os << ">\n";
+        os << ">";
         return os;
     }
     

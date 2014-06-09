@@ -152,6 +152,16 @@ OCIO_NAMESPACE_ENTER
         {
             os << *groupTransform;
         }
+        else if(const LogTransform * logTransform = \
+            dynamic_cast<const LogTransform*>(t))
+        {
+            os << *logTransform;
+        }
+        else if(const LookTransform * lookTransform = \
+            dynamic_cast<const LookTransform*>(t))
+        {
+            os << *lookTransform;
+        }
         else if(const MatrixTransform * matrixTransform = \
             dynamic_cast<const MatrixTransform*>(t))
         {

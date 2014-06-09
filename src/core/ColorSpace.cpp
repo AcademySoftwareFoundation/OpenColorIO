@@ -258,23 +258,23 @@ OCIO_NAMESPACE_ENTER
         {
             os << ", allocation=" << AllocationToString(cs.getAllocation()) << ", ";
             os << "vars=" << vars[0];
-            for (int i = 0; i < numVars; ++i)
+            for (int i = 1; i < numVars; ++i)
             {
                 os << " " << vars[i];
             }
         }
-        os << ">\n";
+        os << ">";
         
         if(cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
         {
-            os << "\t" << cs.getName() << " --> Reference\n";
-            os << cs.getTransform(COLORSPACE_DIR_TO_REFERENCE);
+            os << "\n    " << cs.getName() << " --> Reference";
+            os << "\n\t" << *cs.getTransform(COLORSPACE_DIR_TO_REFERENCE);
         }
         
         if(cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE))
         {
-            os << "\tReference --> " << cs.getName() << "\n";
-            os << cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+            os << "\n    Reference --> " << cs.getName();
+            os << "\n\t" << *cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         }
         return os;
     }

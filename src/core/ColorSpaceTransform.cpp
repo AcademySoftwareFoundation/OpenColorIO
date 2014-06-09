@@ -132,7 +132,7 @@ OCIO_NAMESPACE_ENTER
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
         os << "src=" << t.getSrc() << ", ";
         os << "dst=" << t.getDst();
-        os << ">\n";
+        os << ">";
         return os;
     }
     

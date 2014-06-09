@@ -160,12 +160,12 @@ OCIO_NAMESPACE_ENTER
         {
             os << ", allocation=" << AllocationToString(allocation) << ", ";
             os << "vars=" << vars[0];
-            for (int i = 0; i < numVars; ++i)
+            for (int i = 1; i < numVars; ++i)
             {
                 os << " " << vars[i];
             }
         }
-        os << ">\n";
+        os << ">";
         
         return os;
     }

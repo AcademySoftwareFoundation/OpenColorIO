@@ -373,7 +373,7 @@ OCIO_NAMESPACE_ENTER
         {
             os << " " << offset[i];
         }
-        os << ">\n";
+        os << ">";
         return os;
     }
         TransformDirection dir_;

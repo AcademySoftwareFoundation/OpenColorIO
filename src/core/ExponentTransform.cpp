@@ -134,7 +134,7 @@ OCIO_NAMESPACE_ENTER
           os << " " << exp[i];
         }
 
-        os << ">\n";
+        os << ">";
         return os;
     }
     

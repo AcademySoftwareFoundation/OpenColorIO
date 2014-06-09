@@ -776,18 +776,16 @@ OCIO_NAMESPACE_ENTER
         float sop[9];
         t.getSOP(sop);
         
-        os << "<CDLTransform ";
-        os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << "sop=";
+        os << "<CDLTransform";
+        os << " direction=" << TransformDirectionToString(t.getDirection());
+        os << ", sop=";
         for (unsigned int i=0; i<9; ++i)
         {
             if(i!=0) os << " ";
             os << sop[i];
         }
-        os << ", ";
-        os << "sat=" << t.getSat() << ",";
-        os << TransformDirectionToString(t.getDirection()) << ", ";
-        os << ">\n";
+        os << ", sat=" << t.getSat();
+        os << ">";
         return os;
     }
     

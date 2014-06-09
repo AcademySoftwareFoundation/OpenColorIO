@@ -245,7 +245,7 @@ OCIO_NAMESPACE_ENTER
         os << "outputcamera=" << t.getOutputCamera() << ", ";
         os << "display=" << t.getDisplay() << ", ";
         os << "cubeinput=" << t.getCubeInput();
-        os << ">\n";
+        os << ">";
         return os;
     }
     
