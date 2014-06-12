@@ -844,6 +844,19 @@ Keys:
 * ``direction``
 
 
+``ClampTransform``
+++++++++++++++++
+
+Constrain a value to lie between min and max.  If min is
+greater than max no clamp is performed.
+
+Keys:
+
+* ``min``
+* ``max``
+* ``direction``
+
+
 ``ColorSpaceTransform``
 +++++++++++++++++++++++
 

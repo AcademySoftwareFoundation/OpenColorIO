@@ -53,6 +53,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::Transform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::AllocationTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::CDLTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ClampTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpaceTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::DisplayTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
@@ -499,6 +500,88 @@ OCIO_NAMESPACE_ENTER
             out << YAML::EndMap;
         }
         
+        // ClampTransform
+
+        inline void load(const YAML::Node& node, ClampTransformRcPtr& t)
+        {
+            t = ClampTransform::Create();
+
+            std::string key;
+            std::vector<float> floatvecval;
+            
+            for (Iterator iter = node.begin();
+                 iter != node.end();
+                 ++iter)
+            {
+                const YAML::Node& first = get_first(iter);
+                const YAML::Node& second = get_second(iter);
+                
+                load(first, key);
+                
+                if (second.Type() == YAML::NodeType::Null) continue;
+                
+                if(key == "min")
+                {
+                    load(second, floatvecval);
+                    if(floatvecval.size() != 4)
+                    {
+                        std::ostringstream os;
+                        os << "ClampTransform parse error, 'min' field must be 4 ";
+                        os << "floats. Found '" << floatvecval.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setMin(&floatvecval[0]);
+                }
+                else if(key == "max")
+                {
+                    load(second, floatvecval);
+                    if(floatvecval.size() != 4)
+                    {
+                        std::ostringstream os;
+                        os << "ClampTransform parse error, 'max' field must be 4 ";
+                        os << "floats. Found '" << floatvecval.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setMax(&floatvecval[0]);
+                }
+                else if(key == "direction")
+                {
+                    TransformDirection val;
+                    load(second, val);
+                    t->setDirection(val);
+                }
+                else
+                {
+                    LogUnknownKeyWarning(node.Tag(), first);
+                }
+            }
+        }
+
+        inline void save(YAML::Emitter& out, ConstClampTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("ClampTransform");
+            out << YAML::Flow << YAML::BeginMap;
+
+            std::vector<float> min(4);
+            t->getMin(&min[0]);
+            if (!IsVecEqualToZero(&min[0], 4))
+            {
+                out << YAML::Key << "min";
+                out << YAML::Value << YAML::Flow << min;
+            }
+
+            std::vector<float> max(4);
+            t->getMax(&max[0]);
+            if (!IsVecEqualToOne(&max[0], 4))
+            {
+                out << YAML::Key << "max";
+                out << YAML::Value << YAML::Flow << max;
+            }
+
+            EmitBaseTransformKeyValues(out, t);
+            out << YAML::EndMap;
+        }
+
         // ColorSpaceTransform
         
         inline void load(const YAML::Node& node, ColorSpaceTransformRcPtr& t)
@@ -1101,6 +1184,11 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
+            else if(type == "ClampTransform") {
+                ClampTransformRcPtr temp;
+                load(node, temp);
+                t = temp;
+            }
             else if(type == "ColorSpaceTransform")  {
                 ColorSpaceTransformRcPtr temp;
                 load(node, temp);
@@ -1168,6 +1256,9 @@ OCIO_NAMESPACE_ENTER
             else if(ConstCDLTransformRcPtr CDL_tran = \
                 DynamicPtrCast<const CDLTransform>(t))
                 save(out, CDL_tran);
+            else if(ConstClampTransformRcPtr Clamp_tran = \
+                DynamicPtrCast<const ClampTransform>(t))
+                save(out, Clamp_tran);
             else if(ConstColorSpaceTransformRcPtr ColorSpace_tran = \
                 DynamicPtrCast<const ColorSpaceTransform>(t))
                 save(out, ColorSpace_tran);

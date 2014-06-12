@@ -60,6 +60,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildCDLOps(ops, config, *cdlTransform, dir);
         }
+        else if(ConstClampTransformRcPtr clampTransform = \
+            DynamicPtrCast<const ClampTransform>(transform))
+        {
+            BuildClampOps(ops, config, *clampTransform, dir);
+        }
         else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
             DynamicPtrCast<const ColorSpaceTransform>(transform))
         {
@@ -126,6 +131,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const CDLTransform*>(t))
         {
             os << *cdlTransform;
+        }
+        else if(const ClampTransform * clampTransform = \
+            dynamic_cast<const ClampTransform*>(t))
+        {
+            os << *clampTransform;
         }
         else if(const ColorSpaceTransform * colorSpaceTransform = \
             dynamic_cast<const ColorSpaceTransform*>(t))

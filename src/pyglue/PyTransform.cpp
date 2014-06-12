@@ -58,6 +58,12 @@ OCIO_NAMESPACE_ENTER
                 pyobj = PyObject_New(PyOCIO_Transform,
                     (PyTypeObject * ) &PyOCIO_CDLTransformType);
             }
+            else if(ConstClampTransformRcPtr cdlTransform = \
+                DynamicPtrCast<const ClampTransform>(transform))
+            {
+                pyobj = PyObject_New(PyOCIO_Transform,
+                    (PyTypeObject * ) &PyOCIO_ClampTransformType);
+            }
             else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
                 DynamicPtrCast<const ColorSpaceTransform>(transform))
             {

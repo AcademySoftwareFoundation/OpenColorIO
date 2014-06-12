@@ -16,6 +16,7 @@ from .Transform import Transform
 
 from .AllocationTransform import AllocationTransform
 from .CDLTransform import CDLTransform
+from .ClampTransform import ClampTransform
 from .ColorSpaceTransform import ColorSpaceTransform
 from .DisplayTransform import DisplayTransform
 from .ExponentTransform import ExponentTransform

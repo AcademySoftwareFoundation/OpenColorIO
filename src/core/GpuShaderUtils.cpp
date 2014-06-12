@@ -36,93 +36,57 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    namespace
+    {
+        void write_half_type(std::ostream & os, const char * cg_type,
+                             const char * glsl_type, const float * array, int n,
+                             GpuLanguage lang)
+        {
+            switch (lang)
+            {
+                case GPU_LANGUAGE_CG:
+                    os << cg_type << "(" << ClampToNormHalf(array[0]);
+                    for (int i = 1; i < n; ++i)
+                    {
+                        os << ", " << ClampToNormHalf(array[i]);
+                    }
+                    os << ")";
+                    break;
+                case GPU_LANGUAGE_GLSL_1_0:
+                case GPU_LANGUAGE_GLSL_1_3:
+                    os << glsl_type << "(" << array[0];
+                    for (int i = 1; i < n; ++i)
+                    {
+                        os << ", " << array[i];
+                    }
+                    os << ")";
+                    break;
+                default:
+                    throw Exception("Unsupported shader language.");
+            }
+        }
+    }
+
     void Write_half4x4(std::ostream & os, const float * m44, GpuLanguage lang)
     {
-        if(lang == GPU_LANGUAGE_CG)
-        {
-            os << "half4x4(";
-            for(int i=0; i<16; i++)
-            {
-                if(i!=0) os << ", ";
-                os << ClampToNormHalf(m44[i]);
-            }
-            os << ")";
-        }
-        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
-        {
-            os << "mat4(";
-            for(int i=0; i<16; i++)
-            {
-                if(i!=0) os << ", ";
-                os << m44[i]; // Clamping to half is not necessary
-            }
-            os << ")";
-        }
-        else
-        {
-            throw Exception("Unsupported shader language.");
-        }
+        write_half_type(os, "half4x4", "mat4", m44, 16, lang);
     }
     
     void Write_half4(std::ostream & os, const float * v4,  GpuLanguage lang)
     {
-        if(lang == GPU_LANGUAGE_CG)
-        {
-            os << "half4(";
-            for(int i=0; i<4; i++)
-            {
-                if(i!=0) os << ", ";
-                os << ClampToNormHalf(v4[i]);
-            }
-            os << ")";
-        }
-        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
-        {
-            os << "vec4(";
-            for(int i=0; i<4; i++)
-            {
-                if(i!=0) os << ", ";
-                os << v4[i]; // Clamping to half is not necessary
-            }
-            os << ")";
-        }
-        else
-        {
-            throw Exception("Unsupported shader language.");
-        }
+        write_half_type(os, "half4", "vec4", v4, 4, lang);
     }
     
     void Write_half3(std::ostream & os, const float * v3,  GpuLanguage lang)
     {
-        if(lang == GPU_LANGUAGE_CG)
-        {
-            os << "half3(";
-            for(int i=0; i<3; i++)
-            {
-                if(i!=0) os << ", ";
-                os << ClampToNormHalf(v3[i]);
-            }
-            os << ")";
-        }
-        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
-        {
-            os << "vec3(";
-            for(int i=0; i<3; i++)
-            {
-                if(i!=0) os << ", ";
-                os << v3[i]; // Clamping to half is not necessary
-            }
-            os << ")";
-        }
-        else
-        {
-            throw Exception("Unsupported shader language.");
-        }
+        write_half_type(os, "half3", "vec3", v3, 3, lang);
     }
     
-    
-    
-    
+    void Write_half2(std::ostream & os, const float * v2,  GpuLanguage lang)
+    {
+        write_half_type(os, "half2", "vec2", v2, 2, lang);
+    }
+
     std::string GpuTextHalf4x4(const float * m44, GpuLanguage lang)
     {
         std::ostringstream os;
@@ -144,6 +108,13 @@ OCIO_NAMESPACE_ENTER
         return os.str();
     }
     
+    std::string GpuTextHalf2(const float * v2, GpuLanguage lang)
+    {
+        std::ostringstream os;
+        Write_half2(os, v2, lang);
+        return os.str();
+    }
+
     // Note that Cg and GLSL have opposite ordering for vec/mtx multiplication
     void Write_mtx_x_vec(std::ostream & os,
                          const std::string & mtx, const std::string & vec,
