@@ -39,9 +39,9 @@ class Config:
         Returns whether Config is editable.
         
         The configurations returned from
-        :py:function:`PyOpenColorIO.GetCurrentConfig` are not editable, and if
+        :py:func:`PyOpenColorIO.GetCurrentConfig` are not editable, and if
         you want to edit them you can use
-        :py:method:`PyOpenColorIO.Config.createEditableCopy`.
+        :py:meth:`PyOpenColorIO.Config.createEditableCopy`.
            
         If you attempt to call any of the set functions on a noneditable
         Config, an exception will be thrown.
@@ -121,7 +121,7 @@ class Config:
         
         If a context is not provided, the current Context will be used. If a
         null context is provided, file references will not be taken into
-        account (this is essentially a hash of :py:method:`PyOpenColorIO.Config.serialize`).
+        account (this is essentially a hash of :py:meth:`PyOpenColorIO.Config.serialize`).
            
         :param pycontext: optional
         :type pycontext: object
@@ -227,7 +227,7 @@ class Config:
         """
         getColorSpaces()
         
-        Returns all the ColorSpaces defined in :py:class:`Config`.
+        Returns all the ColorSpaces defined in :py:class:`PyOpenColorIO.Config`.
            
         :return: ColorSpaces in :py:class:`PyOpenColorIO.Config`
         :rtype: tuple
@@ -238,7 +238,7 @@ class Config:
         """
         getColorSpace(name)
         
-        Returns the data for the specified color space in :py:class:`Config`.
+        Returns the data for the specified color space in :py:class:`PyOpenColorIO.Config`.
         
         This will return null if the specified name is not found.
         
@@ -346,7 +346,7 @@ class Config:
         
         Returns all the displays defined in :py:class:`PyOpenColorIO.Config`.
         
-        :return: displays in :py:class:`Config`
+        :return: displays in :py:class:`PyOpenColorIO.Config`
         :rtype: list of strings
         """
         pass
@@ -376,9 +376,9 @@ class Config:
         
         Returns all the views defined in :py:class:`PyOpenColorIO.Config`.
         
-        :param display: views in :py:class:`Config`
+        :param display: views in :py:class:`PyOpenColorIO.Config`
         :type display: string
-        :return: views in :py:class:`Config`.
+        :return: views in :py:class:`PyOpenColorIO.Config`.
         :rtype: list of strings
         """
         pass
