@@ -6,5 +6,5 @@ diff -Naur expressions.orig/CMakeLists.txt expressions/CMakeLists.txt
 +
 +cmake_minimum_required(VERSION 2.6)
 +
-+install(FILES AST.h Evaluator.h Exception.h expressions.h Generator.h Parser.h Tokenizer.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/expressions)
++install(FILES AST.h Evaluator.h Exception.h expressions.h Generator.h Memory.h Parser.h Tokenizer.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/expressions)
 
