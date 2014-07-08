@@ -24,6 +24,7 @@ option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+option(OCIO_USE_LLVM "Specify whether to enable LLVM JIT performance optimizations for expressions" ON)
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ON)
 
 # Use boost's shared_ptr by default on Windows (as <VS2010 doesn't have it),
@@ -196,6 +197,16 @@ else(USE_EXTERNAL_TINYXML)
 endif(USE_EXTERNAL_TINYXML)
     
 ###############################################################################
+### expressions ###
+set(expressions_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist)
+ExternalProject_Add(expressions
+        URL ${CMAKE_SOURCE_DIR}/ext/expressions-1.2.tar.gz
+        PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/expressions.patch
+        INSTALL_DIR ext/dist
+        CMAKE_ARGS ${expressions_CMAKE_ARGS}
+    )
+
+###############################################################################
 ### YAML ###
 
 if(USE_EXTERNAL_YAML)
@@ -303,6 +314,37 @@ if(OCIO_BUILD_TRUELIGHT)
         messageonce("Not building truelight transform support. Add the flag -D TRUELIGHT_INSTALL_PATH=... or set the TRUELIGHT_ROOT environment variable")
     endif()
 endif()
+
+###############################################################################
+### LLVM ###
+
+messageonce("LLVM Optimizations: ${OCIO_USE_LLVM}")
+
+if(OCIO_USE_LLVM)
+    if (LLVM_ROOT)
+        if( NOT EXISTS ${LLVM_ROOT}/include/llvm )
+            message(FATAL_ERROR "LLVM_ROOT (${LLVM_ROOT}) is not a valid LLVM install")
+        endif()
+        set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${LLVM_ROOT}/share/llvm/cmake")
+    endif()
+
+    find_package(LLVM)
+
+    if( NOT LLVM_FOUND )
+        message(FATAL_ERROR "LLVM package can't be found. Set CMAKE_PREFIX_PATH variable to LLVM's installation prefix.")
+    endif()
+
+    include_directories(${LLVM_INCLUDE_DIRS})
+    link_directories(${LLVM_LIBRARY_DIRS})
+    add_definitions( ${LLVM_DEFINITIONS} )
+
+    llvm_map_components_to_libraries(REQ_LLVM_LIBRARIES core jit native)
+
+    set(EXTERNAL_GENERAL_LIBRARIES ${EXTERNAL_GENERAL_LIBRARIES} ${REQ_LLVM_LIBRARIES})
+    add_definitions("-DUSE_LLVM")
+
+endif()
+
 
 ###############################################################################
 ### CORE ###
