@@ -28,6 +28,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#if OCIO_USE_BOOST_PTR
+#define EXPRESSIONS_USE_BOOST_PTR
+#endif
+
 #include <expressions/expressions.h>
 
 #include "ExpressionOps.h"
@@ -38,7 +42,7 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        std::string GenerateGpuShader(expr::ASTNode * ast, GpuLanguage lang)
+        std::string GenerateGpuShader(expr::ASTNodePtr ast, GpuLanguage lang)
         {
             expr::ShaderGenerator<float> generator;
             expr::ShaderGenerator<float>::Language vers;
@@ -69,7 +73,7 @@ OCIO_NAMESPACE_ENTER
             return shader;
         }
 
-        bool usesOtherChannels(expr::ASTNode * ast, std::string channel)
+        bool usesOtherChannels(expr::ASTNodePtr ast, std::string channel)
         {
             if (ast->type() == expr::ASTNode::NUMBER)
             {
@@ -77,7 +81,7 @@ OCIO_NAMESPACE_ENTER
             }
             if(ast->type() == expr::ASTNode::VARIABLE)
             {
-                expr::VariableASTNode<float>* v = static_cast<expr::VariableASTNode<float>* >(ast);
+                SHARED_PTR<expr::VariableASTNode<float> > v = STATIC_POINTER_CAST<expr::VariableASTNode<float> >(ast);
                 if (v->variable() != channel && v->variable() != "v")
                 {
                     return true;
@@ -86,40 +90,40 @@ OCIO_NAMESPACE_ENTER
             }
             else if (ast->type() == expr::ASTNode::OPERATION)
             {
-                expr::OperationASTNode* op = static_cast<expr::OperationASTNode*>(ast);
+                SHARED_PTR<expr::OperationASTNode> op = STATIC_POINTER_CAST<expr::OperationASTNode>(ast);
                 bool v1 = usesOtherChannels(op->right(), channel);
                 bool v2 = usesOtherChannels(op->left(), channel);
                 return v1 || v2;
             }
             else if (ast->type() == expr::ASTNode::FUNCTION1)
             {
-                expr::Function1ASTNode* f = static_cast<expr::Function1ASTNode*>(ast);
+                SHARED_PTR<expr::Function1ASTNode> f = STATIC_POINTER_CAST<expr::Function1ASTNode>(ast);
                 return usesOtherChannels(f->left(), channel);
             }
             else if (ast->type() == expr::ASTNode::FUNCTION2)
             {
-                expr::Function2ASTNode* f = static_cast<expr::Function2ASTNode*>(ast);
+                SHARED_PTR<expr::Function2ASTNode> f = STATIC_POINTER_CAST<expr::Function2ASTNode>(ast);
                 bool v1 = usesOtherChannels(f->right(), channel);
                 bool v2 = usesOtherChannels(f->left(), channel);
                 return v1 || v2;
             }
             else if (ast->type() == expr::ASTNode::COMPARISON)
             {
-                expr::ComparisonASTNode* c = static_cast<expr::ComparisonASTNode*>(ast);
+                SHARED_PTR<expr::ComparisonASTNode> c = STATIC_POINTER_CAST<expr::ComparisonASTNode>(ast);
                 bool v1 = usesOtherChannels(c->right(), channel);
                 bool v2 = usesOtherChannels(c->left(), channel);
                 return v1 || v2;
             }
             else if (ast->type() == expr::ASTNode::LOGICAL)
             {
-                expr::LogicalASTNode *l = static_cast<expr::LogicalASTNode*>(ast);
+                SHARED_PTR<expr::LogicalASTNode> l = STATIC_POINTER_CAST<expr::LogicalASTNode>(ast);
                 bool v1 = usesOtherChannels(l->right(), channel);
                 bool v2 = usesOtherChannels(l->left(), channel);
                 return v1 || v2;
             }
             else if (ast->type() == expr::ASTNode::BRANCH)
             {
-                expr::BranchASTNode* b = static_cast<expr::BranchASTNode*>(ast);
+                SHARED_PTR<expr::BranchASTNode> b = STATIC_POINTER_CAST<expr::BranchASTNode>(ast);
                 bool v1 = usesOtherChannels(b->yes(), channel);
                 bool v2 = usesOtherChannels(b->no(), channel);
                 bool v3 = usesOtherChannels(b->condition(), channel);
@@ -169,10 +173,10 @@ OCIO_NAMESPACE_ENTER
             std::string m_expressionB;
             std::string m_expressionA;
 
-            expr::ASTNode* m_astR;
-            expr::ASTNode* m_astG;
-            expr::ASTNode* m_astB;
-            expr::ASTNode* m_astA;
+            expr::ASTNodePtr m_astR;
+            expr::ASTNodePtr m_astG;
+            expr::ASTNodePtr m_astB;
+            expr::ASTNodePtr m_astA;
 
 
 #ifdef USE_LLVM
@@ -207,7 +211,11 @@ OCIO_NAMESPACE_ENTER
             m_expressionR(expressionR),
             m_expressionG(expressionG),
             m_expressionB(expressionB),
-            m_expressionA(expressionA)
+            m_expressionA(expressionA),
+            m_evaluatorR(NULL),
+            m_evaluatorG(NULL),
+            m_evaluatorB(NULL),
+            m_evaluatorA(NULL)
         {
             if (direction != TRANSFORM_DIR_FORWARD)
             {
@@ -250,7 +258,12 @@ OCIO_NAMESPACE_ENTER
         }
 
         ExpressionOp::~ExpressionOp()
-        { }
+        {
+            delete m_evaluatorR;
+            delete m_evaluatorG;
+            delete m_evaluatorB;
+            delete m_evaluatorA;
+        }
 
         std::string ExpressionOp::getInfo() const
         {
@@ -285,7 +298,7 @@ OCIO_NAMESPACE_ENTER
 
         bool ExpressionOp::hasChannelCrosstalk() const
         {
-            typedef std::map<std::string, expr::ASTNode *> NodeMap;
+            typedef std::map<std::string, expr::ASTNodePtr> NodeMap;
             NodeMap channels;
             channels["r"] = m_astR;
             channels["g"] = m_astG;
