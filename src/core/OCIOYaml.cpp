@@ -1546,15 +1546,15 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::vector<std::string> display;
                     load(second, display);
-                    const char* displays = JoinStringEnvStyle(display).c_str();
-                    c->setActiveDisplays(displays);
+                    std::string displays = JoinStringEnvStyle(display);
+                    c->setActiveDisplays(displays.c_str());
                 }
                 else if(key == "active_views")
                 {
                     std::vector<std::string> view;
                     load(second, view);
-                    const char* views = JoinStringEnvStyle(view).c_str();
-                    c->setActiveViews(views);
+                    std::string views = JoinStringEnvStyle(view);
+                    c->setActiveViews(views.c_str());
                 }
                 else if(key == "colorspaces")
                 {
