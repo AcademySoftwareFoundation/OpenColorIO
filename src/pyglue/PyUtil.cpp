@@ -26,22 +26,17 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
+#include <sstream>
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "PyUtil.h"
 
-#include <sstream>
-
 OCIO_NAMESPACE_ENTER
 {
-
-
+    
     ///////////////////////////////////////////////////////////////////////////
-
-
+    
     // http://docs.python.org/c-api/object.html#PyObject_IsTrue
     int ConvertPyObjectToBool(PyObject *object, void *valuePtr)
     {
@@ -142,7 +137,20 @@ OCIO_NAMESPACE_ENTER
         return 1;
     }
     
-    
+    int ConvertPyObjectToEnvironmentMode(PyObject *object, void *valuePtr)
+    {
+        EnvironmentMode* environmentmodePtr = static_cast<EnvironmentMode*>(valuePtr);
+        
+        if(!PyString_Check(object))
+        {
+            PyErr_SetString(PyExc_ValueError, "Object is not a string.");
+            return 0;
+        }
+        
+        *environmentmodePtr = EnvironmentModeFromString(PyString_AsString( object ));
+        
+        return 1;
+    }
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -327,6 +335,26 @@ OCIO_NAMESPACE_ENTER
         return returnlist;
     }
     
+    PyObject* CreatePyDictFromStringMap(const std::map<std::string, std::string> &data)
+    {
+        PyObject* returndict = PyDict_New();
+        if(!returndict) return 0;
+        
+        std::map<std::string, std::string>::const_iterator iter;
+        for(iter = data.begin(); iter != data.end(); ++iter)
+        {
+            int ret = PyDict_SetItem(returndict,
+                PyString_FromString(iter->first.c_str()),
+                PyString_FromString(iter->second.c_str()));
+            if(ret)
+            {
+                Py_DECREF(returndict);
+                return NULL;
+            }
+        }
+        
+        return returndict;
+    }
     
     namespace
     {
@@ -738,5 +766,6 @@ OCIO_NAMESPACE_ENTER
             PyErr_SetString(PyExc_RuntimeError, "Unknown C++ exception caught.");
         }
     }
+    
 }
 OCIO_NAMESPACE_EXIT

@@ -30,7 +30,10 @@ class AllocationTransform:
         :type hwalloc: object
         """
         pass
-        
+    
+    def getNumVars(self):
+        pass
+    
     def getVars(self):
         """
         getVars()

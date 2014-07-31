@@ -60,6 +60,8 @@ public class Globals extends LoadLibrary
     public native Interpolation InterpolationFromString(String s);
     public native String GpuLanguageToString(GpuLanguage language);
     public native GpuLanguage GpuLanguageFromString(String s);
+    public native String EnvironmentModeToString(EnvironmentMode mode);
+    public native GpuLanguage EnvironmentModeFromString(String s);
     
     // Roles
     public String ROLE_DEFAULT;

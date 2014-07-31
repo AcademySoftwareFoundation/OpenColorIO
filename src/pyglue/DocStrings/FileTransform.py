@@ -17,3 +17,9 @@ class FileTransform:
         pass
     def setInterpolation(self, interp):
         pass
+    def getNumFormats(self):
+        pass
+    def getFormatNameByIndex(self, index):
+        pass
+    def getFormatExtensionByIndex(self, index):
+        pass

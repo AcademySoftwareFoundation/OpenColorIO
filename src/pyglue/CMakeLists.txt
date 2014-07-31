@@ -2,6 +2,7 @@ if(CMAKE_FIRST_RUN)
     message(STATUS "Python library to include 'lib' prefix: ${OCIO_PYGLUE_LIB_PREFIX}")
 endif()
 
+
 if(CMAKE_FIRST_RUN)
     message(STATUS "Python ${PYTHON_VERSION} okay (UCS: ${PYTHON_UCS}), will build the Python bindings against ${PYTHON_INCLUDE}")
     message(STATUS "Python variant path is ${PYTHON_VARIANT_PATH}")
@@ -9,7 +10,7 @@ endif()
     
 if(CMAKE_COMPILER_IS_GNUCXX)
     # Python breaks strict-aliasing rules. Disable the warning here.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-missing-field-initializers")
 endif()
 
 if(NOT WIN32)
@@ -94,9 +95,11 @@ if(OCIO_PYGLUE_SONAME)
 endif()
 
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
+    set_target_properties(PyOpenColorIO PROPERTIES
+    	LINK_FLAGS "-undefined dynamic_lookup")
 endif()
 
+add_subdirectory(tests)
 
 message("PYTHON_VARIANT_PATH: ${PYTHON_VARIANT_PATH}")
 

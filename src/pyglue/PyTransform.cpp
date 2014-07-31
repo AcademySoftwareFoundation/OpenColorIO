@@ -26,22 +26,18 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
+#include <sstream>
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyTransform.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
-
-#include <sstream>
 
 OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        PyOCIO_Transform *  PyTransform_New(ConstTransformRcPtr transform)
+        PyOCIO_Transform * PyTransform_New(ConstTransformRcPtr transform)
         {
             if (!transform)
             {
@@ -160,106 +156,65 @@ OCIO_NAMESPACE_ENTER
     
     bool IsPyTransform(PyObject * pyobject)
     {
-        if(!pyobject) return false;
-        return PyObject_TypeCheck(pyobject, &PyOCIO_TransformType);
+        return IsPyOCIOType(pyobject, PyOCIO_TransformType);
     }
     
     bool IsPyTransformEditable(PyObject * pyobject)
     {
-        if(!IsPyTransform(pyobject)) return false;
-        
-        PyOCIO_Transform * pyobj = reinterpret_cast<PyOCIO_Transform *> (pyobject);
-        return (!pyobj->isconst);
+        return IsPyEditable<PyOCIO_Transform>(pyobject, PyOCIO_TransformType);
     }
     
     TransformRcPtr GetEditableTransform(PyObject * pyobject)
     {
-        if(!IsPyTransform(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO.Transform.");
-        }
-        
-        PyOCIO_Transform * pytransform = reinterpret_cast<PyOCIO_Transform *> (pyobject);
-        if(!pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be an editable OCIO.Transform.");
+        return GetEditablePyOCIO<PyOCIO_Transform, TransformRcPtr>(pyobject,
+            PyOCIO_TransformType);
     }
     
     ConstTransformRcPtr GetConstTransform(PyObject * pyobject, bool allowCast)
     {
-        if(!IsPyTransform(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO.Transform.");
-        }
-        
-        PyOCIO_Transform * pytransform = reinterpret_cast<PyOCIO_Transform *> (pyobject);
-        if(pytransform->isconst && pytransform->constcppobj)
-        {
-            return *pytransform->constcppobj;
-        }
-        
-        if(allowCast && !pytransform->isconst && pytransform->cppobj)
-        {
-            return *pytransform->cppobj;
-        }
-        
-        throw Exception("PyObject must be a valid OCIO.Transform.");
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    bool AddTransformObjectToModule( PyObject* m )
-    {
-        PyOCIO_TransformType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_TransformType) < 0 ) return false;
-        
-        Py_INCREF( &PyOCIO_TransformType );
-        PyModule_AddObject(m, "Transform",
-                (PyObject *)&PyOCIO_TransformType);
-        
-        return true;
+        return GetConstPyOCIO<PyOCIO_Transform, ConstTransformRcPtr>(pyobject,
+            PyOCIO_TransformType, allowCast);
     }
     
     namespace
     {
-        int PyOCIO_Transform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
-        void PyOCIO_Transform_delete( PyOCIO_Transform * self, PyObject * args );
         
-        PyObject * PyOCIO_Transform_isEditable( PyObject * self );
-        PyObject * PyOCIO_Transform_createEditableCopy( PyObject * self );
-        PyObject * PyOCIO_Transform_getDirection( PyObject * self );
-        PyObject * PyOCIO_Transform_setDirection( PyObject * self,  PyObject *args );
+        ///////////////////////////////////////////////////////////////////////
+        ///
+        
+        int PyOCIO_Transform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
+        void PyOCIO_Transform_delete(PyOCIO_Transform * self, PyObject * args);
+        PyObject * PyOCIO_Transform_isEditable(PyObject * self);
+        PyObject * PyOCIO_Transform_createEditableCopy(PyObject * self);
+        PyObject * PyOCIO_Transform_getDirection(PyObject * self);
+        PyObject * PyOCIO_Transform_setDirection(PyObject * self,PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_Transform_methods[] = {
-            {"isEditable",
+            { "isEditable",
             (PyCFunction) PyOCIO_Transform_isEditable, METH_NOARGS, TRANSFORM_ISEDITABLE__DOC__ },
-            {"createEditableCopy",
+            { "createEditableCopy",
             (PyCFunction) PyOCIO_Transform_createEditableCopy, METH_NOARGS, TRANSFORM_CREATEEDITABLECOPY__DOC__ },
-            {"getDirection",
+            { "getDirection",
             (PyCFunction) PyOCIO_Transform_getDirection, METH_NOARGS, TRANSFORM_GETDIRECTION__DOC__ },
-            {"setDirection",
+            { "setDirection",
             PyOCIO_Transform_setDirection, METH_VARARGS, TRANSFORM_SETDIRECTION__DOC__ },
-            {NULL, NULL, 0, NULL}
+            { NULL, NULL, 0, NULL }
         };
+        
     }
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     PyTypeObject PyOCIO_TransformType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
         "OCIO.Transform",                           //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
-        (destructor) PyOCIO_Transform_delete,        //tp_dealloc
+        (destructor) PyOCIO_Transform_delete,       //tp_dealloc
         0,                                          //tp_print
         0,                                          //tp_getattr
         0,                                          //tp_setattr
@@ -295,117 +250,70 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
-        0,                                          //tp_bases
-        0,                                          //tp_mro
-        0,                                          //tp_cache
-        0,                                          //tp_subclasses
-        0,                                          //tp_weaklist
-        0,                                          //tp_del
-        #if PY_VERSION_HEX > 0x02060000
-        0,                                          //tp_version_tag
-        #endif
     };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_Transform_init( PyOCIO_Transform *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        
+        int PyOCIO_Transform_init(PyOCIO_Transform * self, PyObject * /*args*/, PyObject * /*kwds*/)
         {
-            ///////////////////////////////////////////////////////////////////
-            /// init pyobject fields
-            
             self->constcppobj = new ConstTransformRcPtr();
             self->cppobj = new TransformRcPtr();
             self->isconst = true;
-            
             std::string message = "Base Transforms class can not be instantiated.";
             PyErr_SetString( PyExc_RuntimeError, message.c_str() );
             return -1;
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        void PyOCIO_Transform_delete( PyOCIO_Transform *self, PyObject * /*args*/ )
+        void PyOCIO_Transform_delete(PyOCIO_Transform *self, PyObject * /*args*/)
         {
-            delete self->constcppobj;
-            delete self->cppobj;
-            
-            self->ob_type->tp_free((PyObject*)self);
+            DeletePyObject<PyOCIO_Transform>(self);
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_Transform_isEditable( PyObject * self )
+        PyObject * PyOCIO_Transform_isEditable(PyObject * self)
         {
             return PyBool_FromLong(IsPyTransformEditable(self));
         }
         
-        PyObject * PyOCIO_Transform_createEditableCopy( PyObject * self )
+        PyObject * PyOCIO_Transform_createEditableCopy(PyObject * self)
         {
-            try
-            {
-                ConstTransformRcPtr transform = GetConstTransform(self, true);
-                TransformRcPtr copy = transform->createEditableCopy();
-                
-                PyOCIO_Transform * pycopy = PyTransform_New(copy);
-                pycopy->constcppobj = new ConstTransformRcPtr();
-                pycopy->cppobj = new TransformRcPtr();
-                *pycopy->cppobj = copy;
-                pycopy->isconst = false;
-                
-                return (PyObject *) pycopy;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstTransformRcPtr transform = GetConstTransform(self, true);
+            TransformRcPtr copy = transform->createEditableCopy();
+            PyOCIO_Transform * pycopy = PyTransform_New(copy);
+            pycopy->constcppobj = new ConstTransformRcPtr();
+            pycopy->cppobj = new TransformRcPtr();
+            *pycopy->cppobj = copy;
+            pycopy->isconst = false;
+            return (PyObject *) pycopy;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_Transform_getDirection( PyObject * self )
+        PyObject * PyOCIO_Transform_getDirection(PyObject * self)
         {
-            try
-            {
-                ConstTransformRcPtr transform = GetConstTransform(self, true);
-                TransformDirection dir = transform->getDirection();
-                return PyString_FromString( TransformDirectionToString( dir ) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstTransformRcPtr transform = GetConstTransform(self, true);
+            TransformDirection dir = transform->getDirection();
+            return PyString_FromString(TransformDirectionToString(dir));
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Transform_setDirection( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Transform_setDirection(PyObject * self, PyObject * args)
         {
-            try
-            {
-                TransformDirection dir;
-                if (!PyArg_ParseTuple(args,"O&:setDirection",
-                    ConvertPyObjectToTransformDirection, &dir)) return NULL;
-                
-                TransformRcPtr transform = GetEditableTransform(self);
-                transform->setDirection( dir );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            TransformDirection dir;
+            if (!PyArg_ParseTuple(args, "O&:setDirection",
+                ConvertPyObjectToTransformDirection, &dir)) return NULL;
+            TransformRcPtr transform = GetEditableTransform(self);
+            transform->setDirection(dir);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
+        
     }
-
+    
 }
 OCIO_NAMESPACE_EXIT

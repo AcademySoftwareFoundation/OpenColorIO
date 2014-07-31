@@ -10,7 +10,7 @@ if (OIIO_FOUND)
     
     add_executable(ociolutimage ${share_src_files} main.cpp)
     
-    target_link_libraries(ociolutimage ${OIIO_LIBRARIES} OpenColorIO dl)
+    target_link_libraries(ociolutimage ${OIIO_LIBRARIES} OpenColorIO ${CMAKE_DL_LIBS})
     
     install(TARGETS ociolutimage DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)
 endif()

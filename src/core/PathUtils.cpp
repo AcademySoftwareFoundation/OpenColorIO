@@ -48,6 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined(__APPLE__) && !defined(__IPHONE__)
 #include <crt_externs.h> // _NSGetEnviron()
+#include <unistd.h>
 #elif !defined(WINDOWS)
 #include <unistd.h>
 extern char **environ;
@@ -57,11 +58,6 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        typedef std::map<std::string, std::string> StringMap;
-        
-        StringMap g_fastFileHashCache;
-        Mutex g_fastFileHashCache_mutex;
-        
         std::string ComputeHash(const std::string & filename)
         {
             struct stat results;
@@ -76,20 +72,58 @@ OCIO_NAMESPACE_ENTER
             
             return "";
         }
+        
+        // We mutex both the main map and each item individually, so that
+        // the potentially slow stat calls dont block other lookups to already
+        // existing items. (The stat calls will block other lookups on the
+        // *same* file though).
+        
+        struct FileHashResult
+        {
+            Mutex mutex;
+            std::string hash;
+            bool ready;
+            
+            FileHashResult():
+                ready(false)
+            {}
+        };
+        
+        typedef OCIO_SHARED_PTR<FileHashResult> FileHashResultPtr;
+        typedef std::map<std::string, FileHashResultPtr> FileCacheMap;
+        
+        FileCacheMap g_fastFileHashCache;
+        Mutex g_fastFileHashCache_mutex;
     }
     
     std::string GetFastFileHash(const std::string & filename)
     {
-        AutoMutex lock(g_fastFileHashCache_mutex);
-        
-        StringMap::iterator iter = g_fastFileHashCache.find(filename);
-        if(iter != g_fastFileHashCache.end())
+        FileHashResultPtr fileHashResultPtr;
         {
-            return iter->second;
+            AutoMutex lock(g_fastFileHashCache_mutex);
+            FileCacheMap::iterator iter = g_fastFileHashCache.find(filename);
+            if(iter != g_fastFileHashCache.end())
+            {
+                fileHashResultPtr = iter->second;
+            }
+            else
+            {
+                fileHashResultPtr = FileHashResultPtr(new FileHashResult);
+                g_fastFileHashCache[filename] = fileHashResultPtr;
+            }
         }
         
-        std::string hash = ComputeHash(filename);
-        g_fastFileHashCache[filename] = hash;
+        std::string hash;
+        {
+            AutoMutex lock(fileHashResultPtr->mutex);
+            if(!fileHashResultPtr->ready)
+            {
+                fileHashResultPtr->ready = true;
+                fileHashResultPtr->hash = ComputeHash(filename);
+            }
+            
+            hash = fileHashResultPtr->hash;
+        }
         
         return hash;
     }
@@ -152,17 +186,27 @@ OCIO_NAMESPACE_ENTER
         const int MAX_PATH_LENGTH = 4096;
     }
     
-    void LoadEnvironment(EnvMap & map)
+    void LoadEnvironment(EnvMap & map, bool update)
     {
         for (char **env = GetEnviron(); *env != NULL; ++env)
         {
+            
             // split environment up into std::map[name] = value
             std::string env_str = (char*)*env;
             int pos = static_cast<int>(env_str.find_first_of('='));
-            map.insert(
-                EnvMap::value_type(env_str.substr(0, pos),
-                env_str.substr(pos+1, env_str.length()))
-            );
+            std::string name = env_str.substr(0, pos);
+            std::string value = env_str.substr(pos+1, env_str.length());
+            
+            if(update)
+            {
+                // update existing key:values that match
+                EnvMap::iterator iter = map.find(name);
+                if(iter != map.end()) iter->second = value;
+            }
+            else
+            {
+                map.insert(EnvMap::value_type(name, value));
+            }
         }
     }
     

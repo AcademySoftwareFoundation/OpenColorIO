@@ -26,186 +26,123 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyContext.h"
-#include "PyTransform.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    bool AddContextObjectToModule( PyObject* m )
-    {
-        PyOCIO_ContextType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_ContextType) < 0 ) return false;
-        
-        Py_INCREF( &PyOCIO_ContextType );
-        PyModule_AddObject(m, "Context",
-                (PyObject *)&PyOCIO_ContextType);
-        
-        return true;
-    }
     
     PyObject * BuildConstPyContext(ConstContextRcPtr context)
     {
-        if (!context)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_Context * pycontext = PyObject_New(
-                PyOCIO_Context, (PyTypeObject * ) &PyOCIO_ContextType);
-        
-        pycontext->constcppobj = new ConstContextRcPtr();
-        *pycontext->constcppobj = context;
-        
-        pycontext->cppobj = new ContextRcPtr();
-        pycontext->isconst = true;
-        
-        return ( PyObject * ) pycontext;
+        return BuildConstPyOCIO<PyOCIO_Context, ContextRcPtr,
+            ConstContextRcPtr>(context, PyOCIO_ContextType);
     }
     
     PyObject * BuildEditablePyContext(ContextRcPtr context)
     {
-        if (!context)
-        {
-            Py_RETURN_NONE;
-        }
-        
-        PyOCIO_Context * pycontext = PyObject_New(
-                PyOCIO_Context, (PyTypeObject * ) &PyOCIO_ContextType);
-        
-        pycontext->constcppobj = new ConstContextRcPtr();
-        pycontext->cppobj = new ContextRcPtr();
-        *pycontext->cppobj = context;
-        
-        pycontext->isconst = false;
-        
-        return ( PyObject * ) pycontext;
+        return BuildEditablePyOCIO<PyOCIO_Context, ContextRcPtr,
+            ConstContextRcPtr>(context, PyOCIO_ContextType);
     }
     
     bool IsPyContext(PyObject * pyobject)
     {
-        if(!pyobject) return false;
-        return (PyObject_Type(pyobject) == (PyObject *) (&PyOCIO_ContextType));
+        return IsPyOCIOType(pyobject, PyOCIO_ContextType);
     }
     
     bool IsPyContextEditable(PyObject * pyobject)
     {
-        if(!IsPyContext(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO.Context.");
-        }
-        
-        PyOCIO_Context * pycontext = reinterpret_cast<PyOCIO_Context *> (pyobject);
-        return (!pycontext->isconst);
+        return IsPyEditable<PyOCIO_Context>(pyobject, PyOCIO_ContextType);
     }
     
     ConstContextRcPtr GetConstContext(PyObject * pyobject, bool allowCast)
     {
-        if(!IsPyContext(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO.Context.");
-        }
-        
-        PyOCIO_Context * pycontext = reinterpret_cast<PyOCIO_Context *> (pyobject);
-        if(pycontext->isconst && pycontext->constcppobj)
-        {
-            return *pycontext->constcppobj;
-        }
-        
-        if(allowCast && !pycontext->isconst && pycontext->cppobj)
-        {
-            return *pycontext->cppobj;
-        }
-        
-        throw Exception("PyObject must be a valid OCIO.Context.");
+        return GetConstPyOCIO<PyOCIO_Context, ConstContextRcPtr>(pyobject,
+            PyOCIO_ContextType, allowCast);
     }
     
     ContextRcPtr GetEditableContext(PyObject * pyobject)
     {
-        if(!IsPyContext(pyobject))
-        {
-            throw Exception("PyObject must be an OCIO.Context.");
-        }
-        
-        PyOCIO_Context * pycontext = reinterpret_cast<PyOCIO_Context *> (pyobject);
-        if(!pycontext->isconst && pycontext->cppobj)
-        {
-            return *pycontext->cppobj;
-        }
-        
-        throw Exception("PyObject must be an editable OCIO.Context.");
+        return GetEditablePyOCIO<PyOCIO_Context, ContextRcPtr>(pyobject,
+            PyOCIO_ContextType);
     }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
-        int PyOCIO_Context_init( PyOCIO_Context * self, PyObject * args, PyObject * kwds );
-        void PyOCIO_Context_delete( PyOCIO_Context * self, PyObject * args );
-        PyObject * PyOCIO_Context_isEditable( PyObject * self );
-        PyObject * PyOCIO_Context_createEditableCopy( PyObject * self );
-        PyObject * PyOCIO_Context_getCacheID( PyObject * self );
         
-        PyObject * PyOCIO_Context_getSearchPath( PyObject * self );
-        PyObject * PyOCIO_Context_setSearchPath( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_Context_getWorkingDir( PyObject * self );
-        PyObject * PyOCIO_Context_setWorkingDir( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_Context_getStringVar( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_Context_setStringVar( PyObject * self,  PyObject *args );
+        ///////////////////////////////////////////////////////////////////////
+        ///
         
-        PyObject * PyOCIO_Context_loadEnvironment( PyObject * self );
-        
-        PyObject * PyOCIO_Context_resolveStringVar( PyObject * self,  PyObject *args );
-        PyObject * PyOCIO_Context_resolveFileLocation( PyObject * self,  PyObject *args );
+        int PyOCIO_Context_init(PyOCIO_Context * self, PyObject * args, PyObject * kwds);
+        void PyOCIO_Context_delete(PyOCIO_Context * self, PyObject * args);
+        PyObject * PyOCIO_Context_isEditable(PyObject * self);
+        PyObject * PyOCIO_Context_createEditableCopy(PyObject * self);
+        PyObject * PyOCIO_Context_getCacheID(PyObject * self);
+        PyObject * PyOCIO_Context_getSearchPath(PyObject * self);
+        PyObject * PyOCIO_Context_setSearchPath(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_getWorkingDir(PyObject * self);
+        PyObject * PyOCIO_Context_setWorkingDir(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_getStringVar(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_setStringVar(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_getNumStringVars(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_getStringVarNameByIndex(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_clearStringVars(PyObject * self);
+        PyObject * PyOCIO_Context_setEnvironmentMode(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_getEnvironmentMode(PyObject * self);
+        PyObject * PyOCIO_Context_loadEnvironment(PyObject * self);
+        PyObject * PyOCIO_Context_resolveStringVar(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Context_resolveFileLocation(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_Context_methods[] = {
-            {"isEditable",
+            { "isEditable",
             (PyCFunction) PyOCIO_Context_isEditable, METH_NOARGS, CONTEXT_ISEDITABLE__DOC__ },
-            {"createEditableCopy",
+            { "createEditableCopy",
             (PyCFunction) PyOCIO_Context_createEditableCopy, METH_NOARGS, CONTEXT_CREATEEDITABLECOPY__DOC__ },
-            {"getCacheID",
+            { "getCacheID",
             (PyCFunction) PyOCIO_Context_getCacheID, METH_NOARGS, CONTEXT_GETCACHEID__DOC__ },
-            {"getSearchPath",
+            { "getSearchPath",
             (PyCFunction) PyOCIO_Context_getSearchPath, METH_NOARGS, CONTEXT_GETSEARCHPATH__DOC__ },
-            {"setSearchPath",
+            { "setSearchPath",
             PyOCIO_Context_setSearchPath, METH_VARARGS, CONTEXT_SETSEARCHPATH__DOC__ },
-            {"getWorkingDir",
+            { "getWorkingDir",
             (PyCFunction) PyOCIO_Context_getWorkingDir, METH_NOARGS, CONTEXT_GETWORKINGDIR__DOC__ },
-            {"setWorkingDir",
+            { "setWorkingDir",
             PyOCIO_Context_setWorkingDir, METH_VARARGS, CONTEXT_SETWORKINGDIR__DOC__ },
-            {"getStringVar",
+            { "getStringVar",
             PyOCIO_Context_getStringVar, METH_VARARGS, CONTEXT_GETSTRINGVAR__DOC__ },
-            {"setStringVar",
+            { "setStringVar",
             PyOCIO_Context_setStringVar, METH_VARARGS, CONTEXT_SETSTRINGVAR__DOC__ },
-            {"loadEnvironment",
+            { "getNumStringVars",
+            PyOCIO_Context_getNumStringVars, METH_VARARGS, CONTEXT_GETNUMSTRINGVARS__DOC__ },
+            { "getStringVarNameByIndex",
+            PyOCIO_Context_getStringVarNameByIndex, METH_VARARGS, CONTEXT_GETSTRINGVARNAMEBYINDEX__DOC__ },
+            { "clearStringVars",
+            (PyCFunction) PyOCIO_Context_clearStringVars, METH_NOARGS, CONTEXT_CLEARSTRINGVARS__DOC__ },
+            { "setEnvironmentMode",
+            PyOCIO_Context_setEnvironmentMode, METH_VARARGS, CONTEXT_SETENVIRONMENTMODE__DOC__ },
+            { "getEnvironmentMode",
+            (PyCFunction) PyOCIO_Context_getEnvironmentMode, METH_NOARGS, CONTEXT_GETENVIRONMENTMODE__DOC__ },
+            { "loadEnvironment",
             (PyCFunction) PyOCIO_Context_loadEnvironment, METH_NOARGS, CONTEXT_LOADENVIRONMENT__DOC__ },
-            {"resolveStringVar",
+            { "resolveStringVar",
             PyOCIO_Context_resolveStringVar, METH_VARARGS, CONTEXT_RESOLVESTRINGVAR__DOC__ },
-            {"resolveFileLocation",
+            { "resolveFileLocation",
             PyOCIO_Context_resolveFileLocation, METH_VARARGS, CONTEXT_RESOLVEFILELOCATION__DOC__ },
-            {NULL, NULL, 0, NULL}
+            { NULL, NULL, 0, NULL }
         };
+        
     }
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     PyTypeObject PyOCIO_ContextType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
         "OCIO.Context",                             //tp_name
         sizeof(PyOCIO_Context),                     //tp_basicsize
         0,                                          //tp_itemsize
@@ -245,247 +182,190 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
-        0,                                          //tp_bases
-        0,                                          //tp_mro
-        0,                                          //tp_cache
-        0,                                          //tp_subclasses
-        0,                                          //tp_weaklist
-        0,                                          //tp_del
-        #if PY_VERSION_HEX > 0x02060000
-        0,                                          //tp_version_tag
-        #endif
     };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_Context_init( PyOCIO_Context *self, PyObject * /*args*/, PyObject * /*kwds*/ )
+        
+        int PyOCIO_Context_init(PyOCIO_Context *self, PyObject * /*args*/, PyObject * /*kwds*/)
         {
-            ///////////////////////////////////////////////////////////////////
-            /// init pyobject fields
-            
-            self->constcppobj = new ConstContextRcPtr();
-            self->cppobj = new ContextRcPtr();
-            self->isconst = true;
-            
-            try
-            {
-                *self->cppobj = Context::Create();
-                self->isconst = false;
-                return 0;
-            }
-            catch ( const std::exception & e )
-            {
-                std::string message = "Cannot create context: ";
-                message += e.what();
-                PyErr_SetString( PyExc_RuntimeError, message.c_str() );
-                return -1;
-            }
+            OCIO_PYTRY_ENTER()
+            return BuildPyObject<PyOCIO_Context, ConstContextRcPtr, ContextRcPtr>(self, Context::Create());
+            OCIO_PYTRY_EXIT(-1)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        
-        void PyOCIO_Context_delete( PyOCIO_Context *self, PyObject * /*args*/ )
+        void PyOCIO_Context_delete(PyOCIO_Context *self, PyObject * /*args*/)
         {
-            delete self->constcppobj;
-            delete self->cppobj;
-            
-            self->ob_type->tp_free((PyObject*)self);
+            DeletePyObject<PyOCIO_Context>(self);
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        
-        PyObject * PyOCIO_Context_isEditable( PyObject * self )
+        PyObject * PyOCIO_Context_isEditable(PyObject * self)
         {
             return PyBool_FromLong(IsPyContextEditable(self));
         }
         
-        PyObject * PyOCIO_Context_createEditableCopy( PyObject * self )
+        PyObject * PyOCIO_Context_createEditableCopy(PyObject * self)
         {
-            try
-            {
-                ConstContextRcPtr context = GetConstContext(self, true);
-                ContextRcPtr copy = context->createEditableCopy();
-                return BuildEditablePyContext( copy );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            ContextRcPtr copy = context->createEditableCopy();
+            return BuildEditablePyContext(copy);
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_getCacheID( PyObject * self )
+        PyObject * PyOCIO_Context_getCacheID(PyObject * self)
         {
-            try
-            {
-                ConstContextRcPtr context = GetConstContext(self, true);
-                return PyString_FromString( context->getCacheID() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyString_FromString(context->getCacheID());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        ////////////////////////////////////////////////////////////////////////
-        
-        PyObject * PyOCIO_Context_getSearchPath( PyObject * self )
+        PyObject * PyOCIO_Context_getSearchPath(PyObject * self)
         {
-            try
-            {
-                ConstContextRcPtr context = GetConstContext(self, true);
-                return PyString_FromString( context->getSearchPath() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyString_FromString(context->getSearchPath());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_setSearchPath( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Context_setSearchPath(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * path = 0;
-                if (!PyArg_ParseTuple(args,"s:setSearchPath", &path)) return NULL;
-                
-                ContextRcPtr context = GetEditableContext(self);
-                context->setSearchPath( path );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* path = 0;
+            if (!PyArg_ParseTuple(args, "s:setSearchPath",
+                &path)) return NULL;
+            ContextRcPtr context = GetEditableContext(self);
+            context->setSearchPath(path);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_getWorkingDir( PyObject * self )
+        PyObject * PyOCIO_Context_getWorkingDir(PyObject * self)
         {
-            try
-            {
-                ConstContextRcPtr context = GetConstContext(self, true);
-                return PyString_FromString( context->getWorkingDir() );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyString_FromString(context->getWorkingDir());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_setWorkingDir( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Context_setWorkingDir(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * dirname = 0;
-                if (!PyArg_ParseTuple(args,"s:setWorkingDir", &dirname)) return NULL;
-                
-                ContextRcPtr context = GetEditableContext(self);
-                context->setWorkingDir( dirname );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* dirname = 0;
+            if (!PyArg_ParseTuple(args, "s:setWorkingDir",
+                &dirname)) return NULL;
+            ContextRcPtr context = GetEditableContext(self);
+            context->setWorkingDir(dirname);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_getStringVar( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Context_getStringVar(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * name = 0;
-                if (!PyArg_ParseTuple(args,"s:getStringVar", &name)) return NULL;
-                
-                ConstContextRcPtr context = GetConstContext(self, true);
-                return PyString_FromString( context->getStringVar(name) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* name = 0;
+            if (!PyArg_ParseTuple(args, "s:getStringVar",
+                &name)) return NULL;
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyString_FromString(context->getStringVar(name));
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_setStringVar( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Context_setStringVar(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * name = 0;
-                char * value = 0;
-                if (!PyArg_ParseTuple(args,"ss:setStringVar", &name, &value)) return NULL;
-                
-                ContextRcPtr context = GetEditableContext(self);
-                context->setStringVar( name, value );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            char* name = 0;
+            char* value = 0;
+            if (!PyArg_ParseTuple(args, "ss:setStringVar",
+                &name, &value)) return NULL;
+            ContextRcPtr context = GetEditableContext(self);
+            context->setStringVar(name, value);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_loadEnvironment( PyObject * self )
+        PyObject * PyOCIO_Context_getNumStringVars(PyObject * self, PyObject * /*args*/)
         {
-            try
-            {
-                ContextRcPtr context = GetEditableContext(self);
-                context->loadEnvironment();
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyInt_FromLong(context->getNumStringVars());
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_resolveStringVar( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Context_getStringVarNameByIndex(PyObject * self, PyObject * args)
         {
-            try
-            {
-                char * str = 0;
-                if (!PyArg_ParseTuple(args,"s:resolveStringVar", &str)) return NULL;
-                
-                ConstContextRcPtr context = GetConstContext(self, true);
-                return PyString_FromString( context->resolveStringVar(str) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args,"i:getStringVarNameByIndex",
+                &index)) return NULL;
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyString_FromString(context->getStringVarNameByIndex(index));
+            OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_resolveFileLocation( PyObject * self, PyObject * args )
+        PyObject * PyOCIO_Context_clearStringVars(PyObject * self)
         {
-            try
-            {
-                char * filename = 0;
-                if (!PyArg_ParseTuple(args,"s:resolveFileLocation", &filename)) return NULL;
-                
-                ConstContextRcPtr context = GetConstContext(self, true);
-                return PyString_FromString( context->resolveFileLocation(filename) );
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            OCIO_PYTRY_ENTER()
+            ContextRcPtr context = GetEditableContext(self);
+            context->clearStringVars();
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Context_setEnvironmentMode(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            EnvironmentMode mode;
+            if (!PyArg_ParseTuple(args, "O&:setEnvironmentMode",
+                ConvertPyObjectToEnvironmentMode, &mode)) return NULL;
+            ContextRcPtr context = GetEditableContext(self);
+            context->setEnvironmentMode(mode);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Context_getEnvironmentMode(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstContextRcPtr context = GetConstContext(self, true);
+            EnvironmentMode mode = context->getEnvironmentMode();
+            return PyString_FromString(EnvironmentModeToString(mode));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Context_loadEnvironment(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ContextRcPtr context = GetEditableContext(self);
+            context->loadEnvironment();
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Context_resolveStringVar(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* str = 0;
+            if (!PyArg_ParseTuple(args,"s:resolveStringVar",
+                &str)) return NULL;
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyString_FromString(context->resolveStringVar(str));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Context_resolveFileLocation(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* filename = 0;
+            if (!PyArg_ParseTuple(args,"s:resolveFileLocation",
+                &filename)) return NULL;
+            ConstContextRcPtr context = GetConstContext(self, true);
+            return PyString_FromString(context->resolveFileLocation(filename));
+            OCIO_PYTRY_EXIT(NULL)
         }
         
     }

@@ -26,88 +26,51 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <Python.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "PyTransform.h"
 #include "PyUtil.h"
 #include "PyDoc.h"
 
+#define GetConstExponentTransform(pyobject) GetConstPyOCIO<PyOCIO_Transform, \
+    ConstExponentTransformRcPtr, ExponentTransform>(pyobject, \
+    PyOCIO_ExponentTransformType)
+
+#define GetEditableExponentTransform(pyobject) GetEditablePyOCIO<PyOCIO_Transform, \
+    ExponentTransformRcPtr, ExponentTransform>(pyobject, \
+    PyOCIO_ExponentTransformType)
+
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
-    ///
-    
-    bool AddExponentTransformObjectToModule( PyObject* m )
-    {
-        PyOCIO_ExponentTransformType.tp_new = PyType_GenericNew;
-        if ( PyType_Ready(&PyOCIO_ExponentTransformType) < 0 ) return false;
-        
-        Py_INCREF( &PyOCIO_ExponentTransformType );
-        PyModule_AddObject(m, "ExponentTransform",
-                (PyObject *)&PyOCIO_ExponentTransformType);
-        
-        return true;
-    }
-    
-    bool IsPyExponentTransform(PyObject * pyobject)
-    {
-        if(!pyobject) return false;
-        return PyObject_TypeCheck(pyobject, &PyOCIO_ExponentTransformType);
-    }
-    
-    ConstExponentTransformRcPtr GetConstExponentTransform(PyObject * pyobject, bool allowCast)
-    {
-        ConstExponentTransformRcPtr transform = \
-            DynamicPtrCast<const ExponentTransform>(GetConstTransform(pyobject, allowCast));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.ExponentTransform.");
-        }
-        return transform;
-    }
-    
-    ExponentTransformRcPtr GetEditableExponentTransform(PyObject * pyobject)
-    {
-        ExponentTransformRcPtr transform = \
-            DynamicPtrCast<ExponentTransform>(GetEditableTransform(pyobject));
-        if(!transform)
-        {
-            throw Exception("PyObject must be a valid OCIO.ExponentTransform.");
-        }
-        return transform;
-    }
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
-        int PyOCIO_ExponentTransform_init( PyOCIO_Transform * self, PyObject * args, PyObject * kwds );
         
-        PyObject * PyOCIO_ExponentTransform_getValue( PyObject * self );
-        PyObject * PyOCIO_ExponentTransform_setValue( PyObject * self,  PyObject *args );
+        ///////////////////////////////////////////////////////////////////////
+        ///
+        
+        int PyOCIO_ExponentTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
+        PyObject * PyOCIO_ExponentTransform_getValue(PyObject * self);
+        PyObject * PyOCIO_ExponentTransform_setValue(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
         ///
         
         PyMethodDef PyOCIO_ExponentTransform_methods[] = {
-            {"getValue",
+            { "getValue",
             (PyCFunction) PyOCIO_ExponentTransform_getValue, METH_NOARGS, EXPONENTTRANSFORM_GETVALUE__DOC__ },
-            {"setValue",
+            { "setValue",
             PyOCIO_ExponentTransform_setValue, METH_VARARGS, EXPONENTTRANSFORM_SETVALUE__DOC__ },
-            {NULL, NULL, 0, NULL}
+            { NULL, NULL, 0, NULL }
         };
+        
     }
     
     ///////////////////////////////////////////////////////////////////////////
     ///
     
     PyTypeObject PyOCIO_ExponentTransformType = {
-        PyObject_HEAD_INIT(NULL)
-        0,                                          //ob_size
+        PyVarObject_HEAD_INIT(NULL, 0)
         "OCIO.ExponentTransform",                   //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
@@ -147,120 +110,66 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_new 
         0,                                          //tp_free
         0,                                          //tp_is_gc
-        0,                                          //tp_bases
-        0,                                          //tp_mro
-        0,                                          //tp_cache
-        0,                                          //tp_subclasses
-        0,                                          //tp_weaklist
-        0,                                          //tp_del
-        #if PY_VERSION_HEX > 0x02060000
-        0,                                          //tp_version_tag
-        #endif
     };
-    
-    ///////////////////////////////////////////////////////////////////////////
-    ///
     
     namespace
     {
+        
         ///////////////////////////////////////////////////////////////////////
         ///
-        int PyOCIO_ExponentTransform_init( PyOCIO_Transform *self,
-            PyObject * args, PyObject * kwds )
+        
+        int PyOCIO_ExponentTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds)
         {
-            ///////////////////////////////////////////////////////////////////
-            /// init pyobject fields
-            
-            self->constcppobj = new ConstTransformRcPtr();
-            self->cppobj = new TransformRcPtr();
-            self->isconst = true;
-            
-            // Parse optional kwargs
-            PyObject * pyvalue = Py_None;
-            char * direction = NULL;
-            
-            static const char *kwlist[] = {
-                "value",
-                "direction",
-                NULL
-            };
-            
+            OCIO_PYTRY_ENTER()
+            static const char *kwlist[] = { "value", "direction", NULL };
+            PyObject* pyvalue = Py_None;
+            char* direction = NULL;
             if(!PyArg_ParseTupleAndKeywords(args, kwds, "|Os",
                 const_cast<char **>(kwlist),
                 &pyvalue, &direction )) return -1;
-            
-            try
+            ExponentTransformRcPtr ptr = ExponentTransform::Create();
+            int ret = BuildPyTransformObject<ExponentTransformRcPtr>(self, ptr);
+            if(pyvalue != Py_None)
             {
-                ExponentTransformRcPtr transform = ExponentTransform::Create();
-                *self->cppobj = transform;
-                self->isconst = false;
-                
-                if(pyvalue != Py_None)
+                std::vector<float> data;
+                if(!FillFloatVectorFromPySequence(pyvalue, data) ||
+                    (data.size() != 4))
                 {
-                    std::vector<float> data;
-                    if(!FillFloatVectorFromPySequence(pyvalue, data) || (data.size() != 4))
-                    {
-                        PyErr_SetString(PyExc_TypeError, "Value argument must be a float array, size 4");
-                        return -1;
-                    }
-                    
-                    transform->setValue( &data[0] );
+                    PyErr_SetString(PyExc_TypeError, "Value argument must be a float array, size 4");
+                    return -1;
                 }
-                if(direction) transform->setDirection(TransformDirectionFromString(direction));
+                ptr->setValue(&data[0]);
+            }
+            if(direction) ptr->setDirection(TransformDirectionFromString(direction));
+            return ret;
+            OCIO_PYTRY_EXIT(-1)
+        }
+        
+        PyObject * PyOCIO_ExponentTransform_getValue(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstExponentTransformRcPtr transform = GetConstExponentTransform(self);
+            std::vector<float> data(4);
+            transform->getValue(&data[0]);
+            return CreatePyListFromFloatVector(data);
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_ExponentTransform_setValue(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            PyObject* pyData = 0;
+            if (!PyArg_ParseTuple(args, "O:setValue",
+                &pyData)) return NULL;
+            ExponentTransformRcPtr transform = GetEditableExponentTransform(self);
+            std::vector<float> data;
+            if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 4)) {
+                PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 4");
                 return 0;
             }
-            catch ( const std::exception & e )
-            {
-                std::string message = "Cannot create ExponentTransform: ";
-                message += e.what();
-                PyErr_SetString( PyExc_RuntimeError, message.c_str() );
-                return -1;
-            }
-        }
-        
-        ////////////////////////////////////////////////////////////////////////
-        ///
-        
-        PyObject * PyOCIO_ExponentTransform_getValue( PyObject * self )
-        {
-            try
-            {
-                ConstExponentTransformRcPtr transform = GetConstExponentTransform(self, true);
-                std::vector<float> data(4);
-                transform->getValue(&data[0]);
-                return CreatePyListFromFloatVector(data);
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
-        }
-        
-        PyObject * PyOCIO_ExponentTransform_setValue( PyObject * self, PyObject * args )
-        {
-            try
-            {
-                PyObject * pyData = 0;
-                if (!PyArg_ParseTuple(args,"O:setValue", &pyData)) return NULL;
-                ExponentTransformRcPtr transform = GetEditableExponentTransform(self);
-                
-                std::vector<float> data;
-                if(!FillFloatVectorFromPySequence(pyData, data) || (data.size() != 4))
-                {
-                    PyErr_SetString(PyExc_TypeError, "First argument must be a float array, size 4");
-                    return 0;
-                }
-                
-                transform->setValue( &data[0] );
-                
-                Py_RETURN_NONE;
-            }
-            catch(...)
-            {
-                Python_Handle_Exception();
-                return NULL;
-            }
+            transform->setValue(&data[0]);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
         }
         
     }

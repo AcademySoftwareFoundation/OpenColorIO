@@ -261,7 +261,7 @@ device. Examples of common views are:
 * "Raw" when assigned a colorspace with ``raw: yes`` set will show the
   unaltered image, useful for tech-checking images
 
-An example of the ``displays`` section from the :ref:`config-spi-vfx` config:
+An example of the ``displays`` section from the :ref:`config-spivfx` config:
 
 .. code-block:: yaml
 
@@ -443,7 +443,7 @@ applications.
 ---------------------------------------
 
 Here is a example of a very simple ``colorspaces`` section, modified
-from the :ref:`config-spi-vfx` example config:
+from the :ref:`config-spivfx` example config:
 
 .. code-block:: yaml
 

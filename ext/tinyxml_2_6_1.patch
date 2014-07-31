@@ -1,7 +1,7 @@
 diff -Naur tinyxml.orig/CMakeLists.txt tinyxml/CMakeLists.txt
---- tinyxml.orig/CMakeLists.txt	1970-01-01 10:00:00.000000000 +1000
-+++ tinyxml/CMakeLists.txt	2011-03-01 21:10:38.000000000 +1100
-@@ -0,0 +1,20 @@
+--- tinyxml.orig/CMakeLists.txt	1969-12-31 16:00:00.000000000 -0800
++++ tinyxml/CMakeLists.txt	2013-06-18 17:10:59.000000000 -0700
+@@ -0,0 +1,25 @@
 +project(tinyxml)
 +
 +cmake_minimum_required(VERSION 2.8)
@@ -13,8 +13,13 @@ diff -Naur tinyxml.orig/CMakeLists.txt tinyxml/CMakeLists.txt
 +    tinyxmlerror.cpp
 +    tinyxmlparser.cpp)
 +
++set(TINYXML_COMPILE_FLAGS "-DTIXML_USE_STL -fPIC -fvisibility=hidden")
++if(OCIO_INLINES_HIDDEN)
++    set(TINYXML_COMPILE_FLAGS "${TINYXML_COMPILE_FLAGS} -fvisibility-inlines-hidden")
++endif()
++
 +set_target_properties(tinyxml PROPERTIES
-+    COMPILE_FLAGS "-DTIXML_USE_STL -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
++    COMPILE_FLAGS "${TINYXML_COMPILE_FLAGS}")
 +
 +install(TARGETS
 +    tinyxml

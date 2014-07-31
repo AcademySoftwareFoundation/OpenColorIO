@@ -55,6 +55,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/shared_ptr.hpp>
 #define OCIO_SHARED_PTR boost::shared_ptr
 #define OCIO_DYNAMIC_POINTER_CAST boost::dynamic_pointer_cast
+#elif defined(_LIBCPP_VERSION)
+#include <memory>
+#define OCIO_SHARED_PTR std::shared_ptr
+#define OCIO_DYNAMIC_POINTER_CAST std::dynamic_pointer_cast
 #elif __GNUC__ >= 4
 #include <tr1/memory>
 #define OCIO_SHARED_PTR std::tr1::shared_ptr
@@ -65,7 +69,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // If supported, define OCIOEXPORT, OCIOHIDDEN
 // (used to choose which symbols to export from OpenColorIO)
-#if defined __linux__ || __APPLE__
+#if defined __linux__ || __APPLE__ || __FreeBSD__
     #if __GNUC__ >= 4
         #define OCIOEXPORT __attribute__ ((visibility("default")))
         #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
