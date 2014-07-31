@@ -108,7 +108,7 @@ OCIO_NAMESPACE_ENTER
             FormatInfo info;
             info.name = "truelight";
             info.extension = "cub";
-            info.capabilities = FORMAT_CAPABILITY_READ;
+            info.capabilities = (FORMAT_CAPABILITY_READ | FORMAT_CAPABILITY_WRITE);
             formatInfoVec.push_back(info);
         }
         
