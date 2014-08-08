@@ -150,7 +150,6 @@ OCIO_NAMESPACE_ENTER
 }
 OCIO_NAMESPACE_EXIT
 
-extern "C"
 MOD_INIT(PyOpenColorIO)
 {
     PyObject * m;

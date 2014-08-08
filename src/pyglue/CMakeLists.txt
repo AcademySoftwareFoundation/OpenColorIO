@@ -95,7 +95,8 @@ if(OCIO_PYGLUE_SONAME)
 endif()
 
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
+    set_target_properties(PyOpenColorIO PROPERTIES
+    	LINK_FLAGS "-undefined dynamic_lookup")
 endif()
 
 add_subdirectory(tests)

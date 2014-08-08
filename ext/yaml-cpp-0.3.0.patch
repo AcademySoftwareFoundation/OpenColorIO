@@ -1,11 +1,18 @@
 diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt > yaml-cpp-0.3.0.patch
---- yaml-cpp.orig/CMakeLists.txt	2012-01-25 14:33:58.708744000 -0800
-+++ yaml-cpp/CMakeLists.txt	2012-01-25 14:34:10.989085000 -0800
-@@ -238,6 +238,7 @@
+--- yaml-cpp.orig/CMakeLists.txt	2012-01-21 00:52:48.000000000 -0800
++++ yaml-cpp/CMakeLists.txt	2013-06-18 16:40:03.209535420 -0700
+@@ -235,9 +235,15 @@
+ 	${contrib_private_headers}
+ )
+
++set(YAML_COMPILE_FLAGS "-fPIC -fvisibility=hidden")
++if(OCIO_INLINES_HIDDEN)
++	set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fvisibility-inlines-hidden")
++endif()
++
  set_target_properties(yaml-cpp PROPERTIES
  	VERSION "${YAML_CPP_VERSION}"
  	SOVERSION "${YAML_CPP_VERSION_MAJOR}.${YAML_CPP_VERSION_MINOR}"
-+	COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden"
++	COMPILE_FLAGS "${YAML_COMPILE_FLAGS}"
  	PROJECT_LABEL "yaml-cpp ${LABEL_SUFFIX}"
  )
- 
