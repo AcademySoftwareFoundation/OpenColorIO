@@ -223,23 +223,34 @@ if(USE_EXTERNAL_YAML)
     mark_as_advanced(YAML_CPP_INCLUDE_DIR YAML_CPP_LIBRARY YAML-CPP_FOUND)
 
     if(YAML_CPP_FOUND)
-        if(YAML_CPP_VERSION VERSION_GREATER "0.5.0")
+        if(YAML_CPP_VERSION VERSION_EQUAL ${YAML_VERSION_MIN} OR
+           YAML_CPP_VERSION VERSION_GREATER ${YAML_VERSION_MIN})
+            message(STATUS "System yaml-cpp library will be used.")
+            include_directories(BEFORE ${YAML_CPP_INCLUDE_DIRS})
+
             # Need to also get the boost headers here, as yaml-cpp 0.5.0+ requires them.
             # Don't bother doing this step if we are already including the boost headers for shared_ptr
             if(NOT OCIO_USE_BOOST_PTR)
-                set(Boost_ADDITIONAL_VERSIONS "1.49" "1.45" "1.44" "1.43" "1.43.0" "1.42"
-                                              "1.42.0" "1.41" "1.41.0" "1.40"
-                                              "1.40.0" "1.39" "1.39.0" "1.38"
-                                              "1.38.0" "1.37" "1.37.0" "1.34.1"
-                                              "1_34_1")
-                set(Boost_USE_MULTITHREADED ON)
-                find_package(Boost 1.34)
-                if(NOT Boost_FOUND)
-                    message(FATAL_ERROR "Error: Detected system yaml-cpp version ${YAML_CPP_VERSION} is greater than 0.5.0, and therefore requires boost, but a boost installation could not be found.")
-                endif()
+                set(YAML_CPP_VERSION_BOOST_DEPENDENCY "0.5.0")
+                if(YAML_CPP_VERSION VERSION_EQUAL ${YAML_CPP_VERSION_BOOST_DEPENDENCY} OR
+                   YAML_CPP_VERSION VERSION_GREATER ${YAML_CPP_VERSION_BOOST_DEPENDENCY})
 
-                set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
+                    set(Boost_ADDITIONAL_VERSIONS "1.49" "1.45" "1.44" "1.43" "1.43.0" "1.42"
+                                                  "1.42.0" "1.41" "1.41.0" "1.40"
+                                                  "1.40.0" "1.39" "1.39.0" "1.38"
+                                                  "1.38.0" "1.37" "1.37.0" "1.34.1"
+                                                  "1_34_1")
+                    set(Boost_USE_MULTITHREADED ON)
+                    find_package(Boost 1.34)
+                	if(Boost_FOUND)
+                        set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
+                	else()
+                		message(FATAL_ERROR "yaml-cpp ${YAML_CPP_VERSION_BOOST_DEPENDENCY} or greater requires boost. Make sure that boost is included.")
+                	endif()
+                endif()
             endif()
+        else()
+            message(FATAL_ERROR "ERROR: yaml-cpp ${YAML_VERSION_MIN} or greater is required.")
         endif()
         set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
     else(YAML_CPP_FOUND)

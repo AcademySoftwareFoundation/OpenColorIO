@@ -59,7 +59,13 @@ endif()
 if(OCIO_BUILD_STATIC)
     list(REMOVE_ITEM core_src_files ${CMAKE_SOURCE_DIR}/src/core/UnitTest.cpp)
     add_library(OpenColorIO_STATIC STATIC ${core_src_files})
-    add_dependencies(OpenColorIO_STATIC tinyxml YAML_CPP_LOCAL)
+
+    if(NOT USE_EXTERNAL_TINYXML)
+        add_dependencies(OpenColorIO_STATIC tinyxml)
+    endif()
+    if(NOT USE_EXTERNAL_YAML)
+        add_dependencies(OpenColorIO_STATIC YAML_CPP_LOCAL)
+    endif()
 
     set_target_properties(OpenColorIO_STATIC PROPERTIES
         OUTPUT_NAME OpenColorIO
