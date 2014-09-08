@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <exception>
 #include <iosfwd>
 #include <string>
-#include <cstddef>
 
 #include "OpenColorABI.h"
 #include "OpenColorTypes.h"

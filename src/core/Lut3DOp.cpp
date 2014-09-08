@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut3DOp.h"
 #include "MathUtils.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <sstream>
