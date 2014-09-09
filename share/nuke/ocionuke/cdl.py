@@ -71,12 +71,12 @@ def _xml_to_cdltransforms(xml):
 
     filetype = tree.tag
 
+    cccposition = 0
     if filetype == "ColorCorrection":
-        return [_xml_colorcorrection_to_cdltransform(tree, 0)]
+        return [_xml_colorcorrection_to_cdltransform(tree, cccposition)]
 
     elif filetype in ["ColorCorrectionCollection", "ColorDecisionList"]:
         allcdl = []
-        cccposition = 0
         for cc in tree.getchildren():
             if cc.tag == "ColorDecision":
                 cc = cc.getchildren()[0] # TODO: something better here
