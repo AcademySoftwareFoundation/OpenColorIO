@@ -88,26 +88,36 @@ OCIO_NAMESPACE_ENTER
 #else
         typedef YAML::const_iterator Iterator;
 #endif
-        
+
         // Iterator access
-        
-        inline const YAML::Node& get_first(const Iterator it)
-        {
+        // Note: The ownership semantics have changed between yaml-cpp 0.3.x and 0.5.x .
+        // Returning a const reference to a yaml node screws with the internal yaml-cpp smart ptr 
+        // implementation in the newer version. Luckily, the compiler does not care if we maintain
+        // const YAML::Node & = get_first(iter) syntax at the call site even when returning an actual object
+        // (instead of the reference as expected).
 #ifdef OLDYAML
+        inline const YAML::Node& get_first(const Iterator &it)
+        {
             return it.first();
-#else
-            return it->first;
-#endif
         }
-        
-        inline const YAML::Node& get_second(const Iterator it)
+#else
+        inline YAML::Node get_first(const Iterator &it)
         {
-#ifdef OLDYAML
-            return it.second();
-#else
-            return it->second;
-#endif
+            return it->first;
         }
+#endif
+        
+#ifdef OLDYAML
+        inline const YAML::Node& get_second(const Iterator &it)
+        {
+            return it.second();
+        }
+#else
+        inline YAML::Node get_second(const Iterator &it)
+        {
+            return it->second;
+        }
+#endif
         
         // Basic types
         
