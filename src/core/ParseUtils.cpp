@@ -359,6 +359,10 @@ OCIO_NAMESPACE_ENTER
         while ( istream.good() )
         {
             std::getline(istream, line);
+            if(line.size() > 0 && line[line.size() - 1] == '\r')
+            {
+                line.resize(line.size() - 1);
+            }
             if(!pystring::strip(line).empty())
             {
                 return true;
