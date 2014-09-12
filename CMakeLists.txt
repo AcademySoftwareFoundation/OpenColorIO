@@ -203,24 +203,17 @@ endif(USE_EXTERNAL_TINYXML)
 if(USE_EXTERNAL_YAML)
     # Set minimum yaml version for non-patched sources.
     set(YAML_VERSION_MIN "0.3.0")
-    include(FindPkgConfig)
-    pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
-    find_path(YAML_CPP_INCLUDE_DIR yaml-cpp/yaml.h
-        HINTS  ${PC_YAML_CPP_INCLUDEDIR} ${PC_YAML_CPP_INCLUDE_DIRS} )
-    find_library(YAML_CPP_LIBRARY LIBRARY_NAMES yaml-cpp libyaml-cpp
-        HINTS ${PC_YAML_CPP_LIBRARY_DIRS} )
-    set(YAML_CPP_LIBRARIES ${YAML_CPP_LIBRARY})
-    set(YAML_CPP_INCLUDE_DIRS ${YAML_CPP_INCLUDE_DIR})
-    set(YAML_CPP_VERSION ${PC_YAML_CPP_VERSION})
+
+    # Use PKG Config to help find the YAML_CPP library
+    if(PKG_CONFIG_EXECUTABLE)
+        include(FindPkgConfig)
+        pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
+    endif()
+    find_package(YAML_CPP)
 
     if(YAML_CPP_VERSION VERSION_LESS ${YAML_VERSION_MIN})
         message(FATAL_ERROR "ERROR: yaml-cpp ${YAML_VERSION_MIN} or greater is required.")
     endif()
-
-    find_package_handle_standard_args(yaml-cpp
-                                      REQUIRED_VARS YAML_CPP_LIBRARIES YAML_CPP_INCLUDE_DIRS )
-    set(YAML_CPP_FOUND ${YAML-CPP_FOUND})
-    mark_as_advanced(YAML_CPP_INCLUDE_DIR YAML_CPP_LIBRARY YAML-CPP_FOUND)
 
     if(YAML_CPP_FOUND)
         if(YAML_CPP_VERSION VERSION_EQUAL ${YAML_VERSION_MIN} OR

@@ -74,25 +74,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // If supported, define OCIOEXPORT, OCIOHIDDEN
 // (used to choose which symbols to export from OpenColorIO)
-#if defined __linux__ || __APPLE__ || __FreeBSD__
-    #if __GNUC__ >= 4
-        #define OCIOEXPORT __attribute__ ((visibility("default")))
-        #define OCIOHIDDEN __attribute__ ((visibility("hidden")))
-    #else
-        #define OCIOEXPORT
-        #define OCIOHIDDEN
-    #endif
-#elif defined(OCIO_BUILD_STATIC) && (defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER))
-    // Windows requires you to export from the main library and then import in any others
-    #if defined OpenColorIO_EXPORTS
-        #define OCIOEXPORT __declspec(dllexport)
-    #else
-        #define OCIOEXPORT __declspec(dllimport)
-    #endif
-    #define OCIOHIDDEN
-#else // Others platforms not supported atm
-    #define OCIOEXPORT
-    #define OCIOHIDDEN
+#if !defined(OCIO_BUILD_STATIC)
+	#if defined __linux__ || __APPLE__ || __FreeBSD__
+		#if __GNUC__ >= 4
+			#define OCIOEXPORT __attribute__ ((visibility("default")))
+			#define OCIOHIDDEN __attribute__ ((visibility("hidden")))
+		#else
+			#define OCIOEXPORT
+			#define OCIOHIDDEN
+		#endif
+	#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+		// Windows requires you to export from the main library and then import in any others
+		#if defined OpenColorIO_EXPORTS
+			#define OCIOEXPORT __declspec(dllexport)
+		#else
+			#define OCIOEXPORT __declspec(dllimport)
+		#endif
+		#define OCIOHIDDEN
+	#else // Others platforms not supported atm
+		#define OCIOEXPORT
+		#define OCIOHIDDEN
+#else // Static builds do not require special linkage attributes
+	#define OCIOEXPORT
+	#define OCIOHIDDEN
 #endif
 
 #endif // INCLUDED_OCIO_OPENCOLORABI_H
