@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <sstream>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -151,9 +152,17 @@ OCIO_NAMESPACE_ENTER
             _getcwd(path, MAXPATHLEN);
             return path;
 #else
-            char path[MAXPATHLEN];
-            ::getcwd(path, MAXPATHLEN);
-            return path;
+            std::vector<char> current_dir;
+#ifdef PATH_MAX
+            current_dir.resize(PATH_MAX);
+#else
+            current_dir.resize(1024);
+#endif
+            while (::getcwd(&current_dir[0], current_dir.size()) == NULL && errno == ERANGE) {
+                current_dir.resize(current_dir.size() + 1024);
+            }
+
+            return std::string(&current_dir[0]);
 #endif
         }
         
