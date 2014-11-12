@@ -341,6 +341,13 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         void setStrictParsingEnabled(bool enabled);
         
+        //!cpp:function::
+        // Returns delimiter chars used by parseColorSpaceFromString()
+        const char * delimiters() const;
+        //!cpp:function::
+        // Sets delimiter chars used by parseColorSpaceFromString()
+        void setDelimiters(const char * delimiters);
+
         ///////////////////////////////////////////////////////////////////////////
         //!rst:: .. _cfgroles_section:
         // 

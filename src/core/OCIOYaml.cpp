@@ -1492,6 +1492,12 @@ OCIO_NAMESPACE_ENTER
                     load(second, boolval);
                     c->setStrictParsingEnabled(boolval);
                 }
+                else if(key == "delimiters")
+                {
+                    if (iter.second().Type() != YAML::NodeType::Null && 
+                        iter.second().Read<std::string>(stringval))
+                        c->setDelimiters(stringval.c_str());
+                }
                 else if(key == "description")
                 {
                     load(second, stringval);
@@ -1686,6 +1692,7 @@ OCIO_NAMESPACE_ENTER
             }
             out << YAML::Key << "search_path" << YAML::Value << c->getSearchPath();
             out << YAML::Key << "strictparsing" << YAML::Value << c->isStrictParsingEnabled();
+            out << YAML::Key << "delimiters" << YAML::Value << c->delimiters();
             
             std::vector<float> luma(3, 0.f);
             c->getDefaultLumaCoefs(&luma[0]);
