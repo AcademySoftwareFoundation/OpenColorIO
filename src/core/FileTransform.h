@@ -149,6 +149,7 @@ OCIO_NAMESPACE_ENTER
     FileFormat * CreateFileFormatSpiMtx();
     FileFormat * CreateFileFormatTruelight();
     FileFormat * CreateFileFormatVF();
+    FileFormat * CreateFileFormatCTF();
     
 }
 OCIO_NAMESPACE_EXIT
