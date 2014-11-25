@@ -27,11 +27,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <tinyxml.h>
+#include <stdio.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
 #include "OpBuilders.h"
+#include "MatrixOps.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -39,25 +41,65 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
+        /// An internal Op cache that has been read from a CTF file.
+        class CachedOp
+        {
+        };
+
+        typedef OCIO_SHARED_PTR<CachedOp> CachedOpRcPtr;
+        typedef std::vector<CachedOpRcPtr> CachedOpRcPtrVec;
+
+        ////////////////////////////////////////////////////////////////
+
+        class XMLTagHandler;
+        typedef OCIO_SHARED_PTR<XMLTagHandler> XMLTagHandlerRcPtr;
+
+        class XMLTagHandler
+        {
+        public:
+            static XMLTagHandlerRcPtr CreateHandlerForTagName(std::string text);
+
+            virtual CachedOpRcPtr handleXMLTag() = 0;
+        };
+
+        class MatrixTagHandler : public XMLTagHandler
+        {
+            class MatrixCachedOp : public CachedOp
+            {
+
+            };
+
+            virtual CachedOpRcPtr handleXMLTag() {
+                return CachedOpRcPtr(new MatrixCachedOp);
+            }
+        };
+
+        /// A factory method to instantiate an appropriate XMLTagHandler for a given
+        /// tag name. For example, passing "matrix" to this function should instantiate
+        /// and return a MatrixTagHandler.
+        XMLTagHandlerRcPtr XMLTagHandler::CreateHandlerForTagName(std::string text)
+        {
+            return XMLTagHandlerRcPtr(new MatrixTagHandler());
+        }
+
+        ////////////////////////////////////////////////////////////////
+
         class LocalCachedFile : public CachedFile
         {
         public:
             LocalCachedFile ()
             {
-                /*
-                Instantiate cache variables.
-                */
+
             };
             
             ~LocalCachedFile() {};
             
-            /*
-            Cache variable definitions
-            */
+            CachedOpRcPtrVec m_cachedOps;
+
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        
+        typedef OCIO_SHARED_PTR<TiXmlDocument> TiXmlDocumentRcPtr;
         
         
         class LocalFileFormat : public FileFormat
@@ -100,7 +142,6 @@ OCIO_NAMESPACE_ENTER
             // data from the file.
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
-            /*
             // Create a TinyXML representation of the raw data we were given
             TiXmlDocumentRcPtr doc = TiXmlDocumentRcPtr(new TiXmlDocument());
             doc->Parse(rawdata.str().c_str());
@@ -116,11 +157,17 @@ OCIO_NAMESPACE_ENTER
             }
             
             TiXmlElement* rootElement = doc->RootElement();
-            */
+            printf("text: %s\n", rootElement->GetText());
+
+            // Create an XMLTagHandler to handle this specific tag
+            XMLTagHandlerRcPtr tagHandler = XMLTagHandler::CreateHandlerForTagName("matrix");
+            tagHandler->handleXMLTag();
 
             /*
             Read XML data into cachedFile
             */
+
+            //cachedFile->m_cachedOps.push_back(CachedOpRcPtr(new CachedOp(69)));
             
             return cachedFile;
         }
@@ -153,8 +200,22 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
+            float * scale = new float[4];
+            scale[0] = -2.0;
+            scale[1] = 2.0;
+            scale[2] = 2.0;
+            scale[3] = 3.0;
+
+            CreateScaleOp(ops, scale, dir);
+
+
             /*
-            Build Ops here
+            class Op;
+            typedef OCIO_SHARED_PTR<Op> OpRcPtr;
+            typedef std::vector<OpRcPtr> OpRcPtrVec;
+
+            ops.push_back( MatrixOffsetOpRcPtr(new MatrixOffsetOp(m44,
+            offset4, direction)) );
             */
         }
     }
