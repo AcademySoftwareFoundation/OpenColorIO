@@ -44,6 +44,8 @@ OCIO_NAMESPACE_ENTER
         /// An internal Op cache that has been read from a CTF file.
         class CachedOp
         {
+        public:
+            virtual void buildFinalOp(OpRcPtrVec &ops, TransformDirection dir) = 0;
         };
 
         typedef OCIO_SHARED_PTR<CachedOp> CachedOpRcPtr;
@@ -59,18 +61,39 @@ OCIO_NAMESPACE_ENTER
         public:
             static XMLTagHandlerRcPtr CreateHandlerForTagName(std::string text);
 
-            virtual CachedOpRcPtr handleXMLTag() = 0;
+            virtual CachedOpRcPtr handleXMLTag(TiXmlElement * element) = 0;
         };
 
+        /// Handles <matrix> tags in CTF files.
         class MatrixTagHandler : public XMLTagHandler
         {
             class MatrixCachedOp : public CachedOp
             {
+            public:
+                float m_m44[16];
 
+                virtual void buildFinalOp(OpRcPtrVec &ops, TransformDirection dir) {
+                    CreateMatrixOp(ops, &m_m44[0], dir);
+                }
             };
 
-            virtual CachedOpRcPtr handleXMLTag() {
-                return CachedOpRcPtr(new MatrixCachedOp);
+            virtual CachedOpRcPtr handleXMLTag(TiXmlElement * element) {
+                MatrixCachedOp * cachedOp = new MatrixCachedOp;
+
+                // The first child should be an <array> tag
+                TiXmlElement *arrayElement = element->FirstChildElement();
+
+                // Read the matrix tokens into our matrix array
+                std::istringstream is(arrayElement->GetText());
+                int i = 0;
+                while (!is.eof()) {
+                    double token;
+                    is >> token;
+
+                    cachedOp->m_m44[i++] = token;
+                }
+
+                return CachedOpRcPtr(cachedOp);
             }
         };
 
@@ -156,18 +179,24 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
+            // Get the root element of the CTF file. It should be "ProcessList"
             TiXmlElement* rootElement = doc->RootElement();
-            printf("text: %s\n", rootElement->GetText());
 
-            // Create an XMLTagHandler to handle this specific tag
-            XMLTagHandlerRcPtr tagHandler = XMLTagHandler::CreateHandlerForTagName("matrix");
-            tagHandler->handleXMLTag();
+            // Iterate through the children nodes.
+            TiXmlElement* currentElement = rootElement->FirstChildElement();
+            while (currentElement) {
+                std::string tagName = currentElement->Value();
 
-            /*
-            Read XML data into cachedFile
-            */
+                // Create an XMLTagHandler to handle this specific tag
+                XMLTagHandlerRcPtr tagHandler = XMLTagHandler::CreateHandlerForTagName(tagName);
+                CachedOpRcPtr cachedOp = tagHandler->handleXMLTag(currentElement);
 
-            //cachedFile->m_cachedOps.push_back(CachedOpRcPtr(new CachedOp(69)));
+                // Store the CachedOp in our cached file, as we'll need it later
+                cachedFile->m_cachedOps.push_back(cachedOp);
+
+                // On to the next one
+                currentElement = currentElement->NextSiblingElement();
+            }
             
             return cachedFile;
         }
@@ -199,24 +228,12 @@ OCIO_NAMESPACE_ENTER
                 os << " unspecified transform direction.";
                 throw Exception(os.str().c_str());
             }
-            
-            float * scale = new float[4];
-            scale[0] = -2.0;
-            scale[1] = 2.0;
-            scale[2] = 2.0;
-            scale[3] = 3.0;
 
-            CreateScaleOp(ops, scale, dir);
-
-
-            /*
-            class Op;
-            typedef OCIO_SHARED_PTR<Op> OpRcPtr;
-            typedef std::vector<OpRcPtr> OpRcPtrVec;
-
-            ops.push_back( MatrixOffsetOpRcPtr(new MatrixOffsetOp(m44,
-            offset4, direction)) );
-            */
+            // Iterate through the cached file ops
+            for (int i = 0; i < cachedFile->m_cachedOps.size(); i++) {
+                CachedOpRcPtr thisOp = cachedFile->m_cachedOps[i];
+                thisOp->buildFinalOp(ops, dir);
+            }
         }
     }
     
