@@ -64,6 +64,46 @@ OCIO_NAMESPACE_ENTER
             virtual CachedOpRcPtr handleXMLTag(TiXmlElement * element) = 0;
         };
 
+        /// To add support for a new CTF XML tag:
+        ///
+        /// 1. Copy the template FooTagHandler below and replace Foo with an
+        /// appropriate name.
+        ///
+        /// 2. Modify the CreateHandlerForTagName factory method to return
+        /// your new handler subclass when passed an appropriate XML tag string.
+
+        /*
+        class FooTagHandler : public XMLTagHandler
+        {
+            class FooCachedOp : public CachedOp
+            {
+            public:
+                /// Data structures representing the operator go here.
+                /// For example, the MatrixCachedOp contains just a float m_m44[16],
+                /// to store the elements of the matrix.
+
+                virtual void buildFinalOp(OpRcPtrVec &ops, TransformDirection dir) {
+                    /// Turn the cached data into actual ops by passing the 
+                    /// ops variable to a Create___Op function.
+
+                    /// For example, the matrix operator just called
+                    /// CreateMatrixOp(ops, &m_m44[0], dir);
+                }
+            };
+
+            virtual CachedOpRcPtr handleXMLTag(TiXmlElement * element) {
+                /// FooCachedOp * cachedOp = new FooCachedOp;
+
+                /// Read the ASCII data from the Tiny XML element representation
+                /// into the intermediate cached format.
+                /// For example, the MatrixTagHandler just converts the ASCII
+                /// values to floats and stores them in a MatrixCachedOp.               
+
+                /// return CachedOpRcPtr(cachedOp);
+            }
+        };
+        */
+
         /// Handles <matrix> tags in CTF files.
         class MatrixTagHandler : public XMLTagHandler
         {
@@ -72,11 +112,15 @@ OCIO_NAMESPACE_ENTER
             public:
                 float m_m44[16];
 
+                /// Turns the cached data into an Op and adds it to the vector of
+                /// Ops
                 virtual void buildFinalOp(OpRcPtrVec &ops, TransformDirection dir) {
                     CreateMatrixOp(ops, &m_m44[0], dir);
                 }
             };
 
+            /// Parses the raw ASCII data and returns a CachedOp
+            /// containing the data.
             virtual CachedOpRcPtr handleXMLTag(TiXmlElement * element) {
                 MatrixCachedOp * cachedOp = new MatrixCachedOp;
 
@@ -84,6 +128,7 @@ OCIO_NAMESPACE_ENTER
                 TiXmlElement *arrayElement = element->FirstChildElement();
 
                 // Read the matrix tokens into our matrix array
+                // TODO: if the matrix specified is only 3x3, extrapolate to 4x4
                 std::istringstream is(arrayElement->GetText());
                 int i = 0;
                 while (!is.eof()) {
@@ -102,7 +147,10 @@ OCIO_NAMESPACE_ENTER
         /// and return a MatrixTagHandler.
         XMLTagHandlerRcPtr XMLTagHandler::CreateHandlerForTagName(std::string text)
         {
-            return XMLTagHandlerRcPtr(new MatrixTagHandler());
+            if (text.compare("Matrix") == 0) {
+                return XMLTagHandlerRcPtr(new MatrixTagHandler());
+            }
+            return XMLTagHandlerRcPtr(NULL);
         }
 
         ////////////////////////////////////////////////////////////////
@@ -147,7 +195,7 @@ OCIO_NAMESPACE_ENTER
         void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
-            info.name = "Color Transform Format";
+            info.name = "Color Transform File";
             info.extension = "ctf";
             info.capabilities = FORMAT_CAPABILITY_READ;
             formatInfoVec.push_back(info);
@@ -162,7 +210,7 @@ OCIO_NAMESPACE_ENTER
             rawdata << istream.rdbuf();
 
             // We were asked to Read, so we should create a new cached file and fill it with
-            // data from the file.
+            // data from the .ctf file.
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
             // Create a TinyXML representation of the raw data we were given
@@ -180,20 +228,23 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Get the root element of the CTF file. It should be "ProcessList"
+            // TODO: should probably verify this!
             TiXmlElement* rootElement = doc->RootElement();
 
-            // Iterate through the children nodes.
+            // Iterate through the children nodes
             TiXmlElement* currentElement = rootElement->FirstChildElement();
             while (currentElement) {
                 std::string tagName = currentElement->Value();
 
                 // Create an XMLTagHandler to handle this specific tag
                 XMLTagHandlerRcPtr tagHandler = XMLTagHandler::CreateHandlerForTagName(tagName);
-                CachedOpRcPtr cachedOp = tagHandler->handleXMLTag(currentElement);
+                if (tagHandler) {
+                    CachedOpRcPtr cachedOp = tagHandler->handleXMLTag(currentElement);
 
-                // Store the CachedOp in our cached file, as we'll need it later
-                cachedFile->m_cachedOps.push_back(cachedOp);
-
+                    // Store the CachedOp in our cached file, as we'll need it later
+                    cachedFile->m_cachedOps.push_back(cachedOp);
+                }
+                
                 // On to the next one
                 currentElement = currentElement->NextSiblingElement();
             }
