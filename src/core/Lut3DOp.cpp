@@ -750,7 +750,10 @@ OCIO_NAMESPACE_EXIT
 
 #include <cstring>
 #include <cstdlib>
+
+#ifndef _WIN32
 #include <sys/time.h>
+#endif
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
@@ -908,6 +911,7 @@ OIIO_ADD_TEST(Lut3DOp, InverseComparisonCheck)
 OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
 {
     /*
+#ifndef _WIN32
     OCIO::Lut3D lut;
     
     lut.from_min[0] = 0.0f;
@@ -977,6 +981,7 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
 
     double speed_diff = totaltime_a/totaltime_b;
     printf("Tetra is %.04f speed of Linear\n", speed_diff);
+#endif
     */
 }
 #endif // OCIO_UNIT_TEST
