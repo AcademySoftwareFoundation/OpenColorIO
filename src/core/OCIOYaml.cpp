@@ -1663,6 +1663,8 @@ OCIO_NAMESPACE_ENTER
         
         inline void save(YAML::Emitter& out, const Config* c)
         {
+            out.SetFloatPrecision(2 + std::numeric_limits<float>::digits * 3010/10000);
+            out.SetDoublePrecision(2 + std::numeric_limits<double>::digits * 3010/10000);
             out << YAML::Block;
             out << YAML::BeginMap;
             out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
