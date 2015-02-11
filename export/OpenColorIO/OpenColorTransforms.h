@@ -274,6 +274,38 @@ OCIO_NAMESPACE_ENTER
     
     
     //!rst:: //////////////////////////////////////////////////////////////////
+
+    class Op;
+    typedef OCIO_SHARED_PTR<Op> OpRcPtr;
+    typedef std::vector<OpRcPtr> OpRcPtrVec;
+    
+    //!cpp:class::
+    class OCIOEXPORT CustomTransform : public Transform
+    {
+    public:
+	virtual ~CustomTransform();
+
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const = 0;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const = 0;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir) = 0;
+
+	virtual std::ostream& operator<< (std::ostream&) const = 0;
+
+	virtual void buildOps(OpRcPtrVec & ops,
+                              const Config& config,
+                              const ConstContextRcPtr &,
+                              TransformDirection dir) const = 0;
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const CustomTransform&);
+    
+    
+    //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class::
     class OCIOEXPORT DisplayTransform : public Transform

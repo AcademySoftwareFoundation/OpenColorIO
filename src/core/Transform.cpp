@@ -65,6 +65,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildColorSpaceOps(ops, config, context, *colorSpaceTransform, dir);
         }
+        else if(ConstCustomTransformRcPtr customTransform = \
+            DynamicPtrCast<const CustomTransform>(transform))
+        {
+            BuildCustomOps(ops, config, context, *customTransform, dir);
+        }
         else if(ConstDisplayTransformRcPtr displayTransform = \
             DynamicPtrCast<const DisplayTransform>(transform))
         {
@@ -131,6 +136,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const ColorSpaceTransform*>(t))
         {
             os << *colorSpaceTransform;
+        }
+        else if(const CustomTransform * customTransform = \
+            dynamic_cast<const CustomTransform*>(t))
+        {
+            os << *customTransform;
         }
         else if(const DisplayTransform * displayTransform = \
             dynamic_cast<const DisplayTransform*>(t))

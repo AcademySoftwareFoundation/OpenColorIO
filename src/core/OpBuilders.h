@@ -69,6 +69,12 @@ OCIO_NAMESPACE_ENTER
                             const ConstColorSpaceRcPtr & srcColorSpace,
                             const ConstColorSpaceRcPtr & dstColorSpace);
     
+    void BuildCustomOps(OpRcPtrVec & ops,
+                        const Config& config,
+                        const ConstContextRcPtr & context,
+                        const CustomTransform & transform,
+                        TransformDirection dir);
+    
     void BuildDisplayOps(OpRcPtrVec & ops,
                          const Config & config,
                          const ConstContextRcPtr & context,
