@@ -12,6 +12,7 @@ endif()
 ###############################################################################
 ### GLOBAL ###
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 option(OCIO_BUILD_SHARED "Set to OFF to disable building the shared core library" ON)
 option(OCIO_BUILD_STATIC "Set to OFF to disable building the static core library" ON)
 option(OCIO_BUILD_TRUELIGHT "Set to OFF to disable truelight" ON)
@@ -50,7 +51,10 @@ if(NOT SOVERSION)
 endif()
 
 ###############################################################################
-
+if(POLICY CMP0054)
+    ## Only interpret if() arguments as variables or keywords when unquoted
+    cmake_policy(SET CMP0054 NEW)
+endif()
 
 include(ParseArguments)
 include(OCIOMacros)
@@ -160,6 +164,7 @@ messageonce("Setting EXTDIST_PYTHONPATH: ${EXTDIST_PYTHONPATH}")
 
 ###############################################################################
 ### tinyxml ###
+##TODO: yaml and tinyxml : when there are not USE_EXTERNAL_TINYXML, use the same cmake schema/instructions => maybe refactorize in a cmake functions/macros ?
 
 if(USE_EXTERNAL_TINYXML)
     set(TINYXML_VERSION_MIN "2.6.1")
@@ -181,18 +186,60 @@ else(USE_EXTERNAL_TINYXML)
     if(CMAKE_TOOLCHAIN_FILE)
         set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
-    ExternalProject_Add(tinyxml
-        URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
-        PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
-        BINARY_DIR ext/build/tinyxml
-        INSTALL_DIR ext/dist
-        CMAKE_ARGS ${TINYXML_CMAKE_ARGS}
-    )
-    if(WIN32)
-        set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml.lib)
+    set(TINYXML_ZIPFILE     "${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz")
+    set(TINYXML_PATCHFILE   "${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch")
+    set(TINYXML_SOURCE_DIR  "${CMAKE_BINARY_DIR}/ext")
+    ## Create our TINYXML_LIB target
+    if(CMAKE_VERSION VERSION_GREATER "2.8.7")
+        option(TINYXML_OBJECT_LIB_EMBEDDED ${OCIO_BUILD_STATIC} "directly embedded tinyxml 3rdParty object lib into our resulting static lib, no link needed anymore")
     else()
-        set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
+        set(TINYXML_OBJECT_LIB_EMBEDDED OFF CACHE BOOL "directly embedded tinyxml 3rdParty object lib into our resulting static lib, no link needed anymore" FORCE)
+        message("Force disable TINYXML_OBJECT_LIB_EMBEDDED feature due to CMake Version less than 2.8.8")
     endif()
+    mark_as_advanced(TINYXML_OBJECT_LIB_EMBEDDED) ## two way to build with tinyxml (objects embedded or static transitive link)
+    if(TINYXML_OBJECT_LIB_EMBEDDED)
+        set(tinyxml_sources ${TINYXML_SOURCE_DIR}/tinyxml/tinystr.cpp       ${TINYXML_SOURCE_DIR}/tinyxml/tinyxml.cpp 
+                            ${TINYXML_SOURCE_DIR}/tinyxml/tinyxmlerror.cpp  ${TINYXML_SOURCE_DIR}/tinyxml/tinyxmlparser.cpp )
+        set(tinyxml_headers ${TINYXML_SOURCE_DIR}/tinyxml/tinystr.h         ${TINYXML_SOURCE_DIR}/tinyxml/tinyxml.h )
+        add_custom_command(                                 ## will be done at build time
+            OUTPUT ${tinyxml_sources} ${tinyxml_headers}    ## expected output files
+            COMMAND ${CMAKE_COMMAND} -E tar xzf ${TINYXML_ZIPFILE}
+            DEPENDS ${TINYXML_ZIPFILE}
+            WORKING_DIRECTORY ${TINYXML_SOURCE_DIR}
+            COMMENT "Unpacking ${TINYXML_ZIPFILE} to ${TINYXML_SOURCE_DIR}"
+            VERBATIM
+        )
+        include_directories(BEFORE ${TINYXML_SOURCE_DIR}/tinyxml) ## needed to build correctly
+        add_library(TINYXML_LIB OBJECT ${tinyxml_sources})
+        ## embedded tinyxml objects files (no static link needed anymore) 
+        ## => great news when build staticaly since we do not want another client project have to link also with tinyxml when he want to use this project
+        ## => could be problematic if the client project use another version of tinyxml... In this case build tinyxml as shared lib with all projects could be a solution
+        ## => TODO: so maybe provide a simple cmake way to build 3rdParty as shared and auto install with this project ?
+        set_target_properties(TINYXML_LIB PROPERTIES COMPILE_FLAGS "-DTIXML_USE_STL -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+        add_definitions(-DTIXML_USE_STL) ## needed to build correctly, and also need to be propagated in child projects (client projects)
+        list(APPEND EXTERNAL_OBJECTS $<TARGET_OBJECTS:TINYXML_LIB>)
+    else()
+        find_package(Git REQUIRED) ## in order to apply patch (for crossplateform compatibility)
+        ExternalProject_Add(tinyxml
+            URL             ${TINYXML_ZIPFILE}
+            SOURCE_DIR      ${TINYXML_SOURCE_DIR}/tinyxml
+            PATCH_COMMAND   ${GIT_EXECUTABLE} apply ${TINYXML_PATCHFILE}
+            BINARY_DIR      ext/build/tinyxml
+            INSTALL_DIR     ext/dist
+            CMAKE_ARGS      ${TINYXML_CMAKE_ARGS}
+        )
+        if(WIN32)
+            set(TINYXML_STATIC_LIBRARIES  ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml.lib)
+        else()
+            set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
+        endif()
+        add_library(TINYXML_LIB STATIC IMPORTED)
+        ## static is the .lib location, shared is the .dll/.so location (see IMPORTED_IMPLIB for the associated .lib archive location on windows)
+        set_property(TARGET TINYXML_LIB PROPERTY IMPORTED_LOCATION ${TINYXML_STATIC_LIBRARIES})
+        add_dependencies(TINYXML_LIB tinyxml)
+        list(APPEND EXTERNAL_LIBRARIES TINYXML_LIB)
+    endif()
+    set_target_properties(TINYXML_LIB PROPERTIES FOLDER External)
 endif(USE_EXTERNAL_TINYXML)
     
 ###############################################################################
@@ -243,27 +290,73 @@ if(USE_EXTERNAL_YAML)
     else(YAML_CPP_FOUND)
         message(FATAL_ERROR "ERROR: System yaml-cpp library was not found. Make sure the library is installed and the pkg-config file exists.")
     endif(YAML_CPP_FOUND)
-else(USE_EXTERNAL_YAML)
+else(USE_EXTERNAL_YAML) ## provide 2 way to build this dependency
     set(YAML_CPP_VERSION 0.3.0)
     set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
     if(CMAKE_TOOLCHAIN_FILE)
         set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
-    ExternalProject_Add(YAML_CPP_LOCAL
-        URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
-        BINARY_DIR ext/build/yaml-cpp
-        PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
-        INSTALL_DIR ext/dist
-        CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS}
-    )
-    set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
-    set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
-    if(WIN32)
-        set(YAML_CPP_STATIC_DEBUG_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmdd.lib)
-        set(YAML_CPP_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmd.lib)
+    set(YAML_CPP_ZIPFILE        "${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz")
+    set(YAML_CPP_SOURCE_DIR     "${CMAKE_BINARY_DIR}/ext")
+    set(YAML_CPP_PATCHFILE      "${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch")
+    set(YAML_CPP_SRCLISTFILE    "${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}-sourcesList.txt") ## see cmd line for this generated file bellow
+    ## Create our YAML_CPP_LIB target
+    if(CMAKE_VERSION VERSION_GREATER "2.8.7")
+        option(YAML_CPP_OBJECT_LIB_EMBEDDED ${OCIO_BUILD_STATIC} "directly embedded yaml-cpp 3rdParty lib into our resulting static lib, no link needed anymore")
     else()
-        set(YAML_CPP_STATIC_GENERAL_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
+        set(YAML_CPP_OBJECT_LIB_EMBEDDED OFF CACHE BOOL "directly embedded yaml-cpp 3rdParty object lib into our resulting static lib, no link needed anymore" FORCE)
+        message("Force disable YAML_CPP_OBJECT_LIB_EMBEDDED feature due to CMake Version less than 2.8.8")
     endif()
+    mark_as_advanced(YAML_CPP_OBJECT_LIB_EMBEDDED)
+    if(YAML_CPP_OBJECT_LIB_EMBEDDED)        
+        ## generated at extraction level dir, with (use git bash or cygwin under windows): 
+        ## find yaml-cpp -type f \( -name "*.h" -o -name "*.cpp" \) -not \( -path "*/test/*" -o -path "*/util/*" \) > yaml-cpp-sourcesList.txt
+        ## this will exclude test and util paths since we want YAML_CPP_BUILD_TOOLS:BOOL=OFF (see externalProject cmake args)
+        file(STRINGS ${YAML_CPP_SRCLISTFILE} YAML_CPP_SRCLISTFILE_CONTENT)
+        foreach(yamlsrc ${YAML_CPP_SRCLISTFILE_CONTENT})
+            list(APPEND yamlcpp_sources ${YAML_CPP_SOURCE_DIR}/${yamlsrc})  ## get absolute filepath
+        endforeach()
+        include_directories(BEFORE ${YAML_CPP_SOURCE_DIR}/yaml-cpp/include) ## needed to build correctly
+        add_custom_command(             ## will be done at build time
+            OUTPUT ${yamlcpp_sources}   ## expected output files
+            COMMAND ${CMAKE_COMMAND} -E tar xzf ${YAML_CPP_ZIPFILE}
+            DEPENDS ${YAML_CPP_ZIPFILE}
+            WORKING_DIRECTORY ${YAML_CPP_SOURCE_DIR}
+            COMMENT "Unpacking ${YAML_CPP_ZIPFILE} to ${YAML_CPP_SOURCE_DIR}"
+            VERBATIM
+        )
+        add_library(YAML_CPP_LIB OBJECT ${yamlcpp_sources})
+        ## embedded yaml-cpp objects files (no static link needed anymore)
+        ## => great news when build statically since we do not want another client project have to link also with yaml-cpp when he want to use this project
+        ## => could be problematic if the client project use another version of yaml-cpp... In this case build yaml-cpp as shared lib with all projects could be a solution 
+        ## => TODO: so maybe provide a simple cmake way to build 3rdParty as shared and auto install with this project ?
+        list(APPEND EXTERNAL_OBJECTS $<TARGET_OBJECTS:YAML_CPP_LIB>) 
+    else()
+        find_package(Git REQUIRED) ## in order to apply patch (for crossplateform compatibility)
+        ExternalProject_Add(YAML_CPP_LOCAL
+            URL             ${YAML_CPP_ZIPFILE}
+            SOURCE_DIR      ${YAML_CPP_SOURCE_DIR}/yaml-cpp
+            PATCH_COMMAND   ${GIT_EXECUTABLE} apply ${YAML_CPP_PATCHFILE}
+            BINARY_DIR      ext/build/yaml-cpp
+            INSTALL_DIR     ext/dist
+            CMAKE_ARGS      ${YAML_CPP_CMAKE_ARGS}
+        )
+        set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
+        set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
+        add_library(YAML_CPP_LIB STATIC IMPORTED)
+        if(WIN32)
+            set(YAML_CPP_STATIC_DEBUG_LIBRARIES     ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmdd.lib)
+            set(YAML_CPP_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmd.lib)
+            set_property(TARGET YAML_CPP_LIB PROPERTY IMPORTED_LOCATION_DEBUG   ${YAML_CPP_STATIC_DEBUG_LIBRARIES})
+            set_property(TARGET YAML_CPP_LIB PROPERTY IMPORTED_LOCATION_RELEASE ${YAML_CPP_STATIC_OPTIMIZED_LIBRARIES})
+        else()
+            set(YAML_CPP_STATIC_GENERAL_LIBRARIES           ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
+            set_property(TARGET YAML_CPP_LIB PROPERTY IMPORTED_LOCATION ${YAML_CPP_STATIC_GENERAL_LIBRARIES})
+        endif()
+        add_dependencies(YAML_CPP_LIB  YAML_CPP_LOCAL)
+        list(APPEND EXTERNAL_LIBRARIES YAML_CPP_LIB)
+    endif()
+    set_target_properties(YAML_CPP_LIB PROPERTIES FOLDER External)
 endif(USE_EXTERNAL_YAML)
 
 if(YAML_CPP_VERSION VERSION_LESS "0.5.0")
@@ -274,6 +367,8 @@ endif()
 ### Externals ###
 
 set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
+## maybe better to separate too general COMPILE_FLAGS (which are compiler specific) and split with specific COMPILE_DEFINITIONS
+## so we can easily export it from cmake for the installation and be used easily in child projects ?
 set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL ${YAML_CPP_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
 if(OCIO_INLINES_HIDDEN)
     set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fvisibility-inlines-hidden")
@@ -281,9 +376,13 @@ endif()
 
 set(EXTERNAL_LINK_FLAGS "")
 set(EXTERNAL_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
-set(EXTERNAL_DEBUG_LIBRARIES ${YAML_CPP_STATIC_DEBUG_LIBRARIES})
-set(EXTERNAL_OPTIMIZED_LIBRARIES ${YAML_CPP_STATIC_OPTIMIZED_LIBRARIES})
-set(EXTERNAL_GENERAL_LIBRARIES ${TINYXML_STATIC_LIBRARIES} ${YAML_CPP_STATIC_GENERAL_LIBRARIES})
+## EXTERNAL_OBJECTS (used with add_library) or EXTERNAL_LIBRARIES (used with target_link_libraries) are available
+## One will be empty (no effect) whereas the other will contain external dep to use (as object to incorporate or static lib to link)
+if(EXTERNAL_OBJECTS)
+    list(REMOVE_DUPLICATES EXTERNAL_OBJECTS)
+elseif(EXTERNAL_LIBRARIES)
+    list(REMOVE_DUPLICATES EXTERNAL_LIBRARIES)
+endif()
 
 ###############################################################################
 ### Documentation ###
@@ -346,7 +445,8 @@ endif()
 ###############################################################################
 ### APPS ###
 
-if(OCIO_BUILD_APPS)
+if(OCIO_BUILD_APPS AND (OCIO_BUILD_STATIC OR OCIO_BUILD_SHARED) )
+
     # Try to find OpenImageIO (OIIO) and OpenGL stuff
     OCIOFindOpenImageIO()
     
@@ -363,6 +463,8 @@ if(OCIO_BUILD_APPS)
     if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND AND OIIO_FOUND)
         add_subdirectory(src/apps/ociodisplay)
     else()
+        ## GLEW : http://glew.sourceforge.net/install.html
+        ## on windows, if you use STATIC version, do not forget to use : GEW_BUILD=GLEW_STATIC preprocessor definition
         messageonce("Not building ociodisplay. Requirement(s) found, OpenGL:${OPENGL_FOUND}, GLUT:${GLUT_FOUND}, GLEW:${GLEW_FOUND}, OIIO:${OIIO_FOUND}")
     endif()
     
@@ -371,6 +473,9 @@ if(OCIO_BUILD_APPS)
     
     # ociobakelut writes out luts
     add_subdirectory(src/apps/ociobakelut)
+    
+else()
+    message(STATUS "Disable build of apps. See cmake options : OCIO_BUILD_APPS and OCIO_BUILD_SHARED/OCIO_BUILD_STATIC (requiered)")
 endif()
 
 ###############################################################################
@@ -437,3 +542,96 @@ add_custom_target(test_verbose
 
 # Log CMake first run done
 SET(CMAKE_FIRST_RUN 0 CACHE INTERNAL "")
+
+
+
+## Export install
+## Example of usage by another project :
+##  set(OpenColorIO_DIR "" CACHE PATH "the installation dir of OpenColorIO (Where to find OpenColorIOConfig.cmake)")
+##  option(OpenColorIO_USE_STATIC OFF "use static target version of OpenColorIO")
+##  find_package(OpenColorIO)
+##  if(OPENCOLORIO_FOUND)
+##      include_directories(${OpenColorIO_INCLUDE_DIR})
+##      foreach(OCIO_DEF ${OCIO_COMPILE_DEFINITIONS})
+##          add_definitions(-D${OCIO_DEF})
+##      endforeach()
+##  endif()
+## <Then use latter in your project>
+## Target_link_library(<myTarget> ${OpenColorIO_LIBRARIES})
+get_property(OCIO_DIR_COMPILE_DEFINITIONS DIRECTORY PROPERTY COMPILE_DEFINITIONS)
+if(NOT OCIO_DIR_COMPILE_DEFINITIONS)
+    set(OCIO_DIR_COMPILE_DEFINITIONS )
+endif()
+if(TARGET OpenColorIO)
+    get_target_property(OCIO_SHARED_COMPILE_DEFINITIONS OpenColorIO COMPILE_DEFINITIONS)
+    if(OCIO_SHARED_COMPILE_DEFINITIONS)
+        set(OCIO_SHARED_COMPILE_DEFINITIONS ${OCIO_SHARED_COMPILE_DEFINITIONS} ${OCIO_DIR_COMPILE_DEFINITIONS})
+        list(REMOVE_DUPLICATES OCIO_SHARED_COMPILE_DEFINITIONS)
+    elseif(OCIO_DIR_COMPILE_DEFINITIONS)
+        set(OCIO_SHARED_COMPILE_DEFINITIONS ${OCIO_DIR_COMPILE_DEFINITIONS})
+    else()
+        set(OCIO_SHARED_COMPILE_DEFINITIONS )
+    endif()
+endif()
+if(TARGET OpenColorIO_STATIC)
+    get_target_property(OCIO_STATIC_COMPILE_DEFINITIONS OpenColorIO_STATIC COMPILE_DEFINITIONS)
+    if(OCIO_STATIC_COMPILE_DEFINITIONS)
+        set(OCIO_STATIC_COMPILE_DEFINITIONS ${OCIO_STATIC_COMPILE_DEFINITIONS} ${OCIO_DIR_COMPILE_DEFINITIONS})
+        list(REMOVE_DUPLICATES OCIO_STATIC_COMPILE_DEFINITIONS)
+    elseif(OCIO_DIR_COMPILE_DEFINITIONS)
+        set(OCIO_STATIC_COMPILE_DEFINITIONS ${OCIO_DIR_COMPILE_DEFINITIONS})
+    else()
+        set(OCIO_STATIC_COMPILE_DEFINITIONS )
+    endif()
+endif()
+install(EXPORT OpenColorIO DESTINATION cmake)
+file(WRITE "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake"
+    "
+    get_filename_component(OpenColorIO_DIR \"\${CMAKE_CURRENT_LIST_FILE}\" PATH)
+    
+    ## include
+    set(OpenColorIO_INCLUDE_DIR     \"\${OpenColorIO_DIR}/include\")
+    set(OpenColorIO_INCLUDE_DIRS    \"\${OpenColorIO_INCLUDE_DIR}\")
+    message(STATUS OpenColorIO_INCLUDE_DIRS=\${OpenColorIO_INCLUDE_DIRS})
+    
+    ## targets libraries + associated definitions
+    if(NOT TARGET OpenColorIO)
+        include(\"\${OpenColorIO_DIR}/cmake/OpenColorIO.cmake\") ## thanks to imported target
+        if(TARGET OpenColorIO AND NOT OpenColorIO_USE_STATIC)
+            message(STATUS \"shared target OpenColorIO : see OpenColorIO_LIBRARY\")
+            set(OpenColorIO_LIBRARY         OpenColorIO)
+            set(OCIO_COMPILE_DEFINITIONS    ${OCIO_SHARED_COMPILE_DEFINITIONS})
+        endif()
+        if(NOT TARGET OpenColorIO AND TARGET OpenColorIO_STATIC)
+            message(STATUS \"static target OpenColorIO_STATIC : see OpenColorIO_LIBRARY\")
+            set(OpenColorIO_LIBRARY         OpenColorIO_STATIC)
+            set(OCIO_COMPILE_DEFINITIONS    ${OCIO_STATIC_COMPILE_DEFINITIONS})
+        elseif(TARGET OpenColorIO_STATIC AND OpenColorIO_USE_STATIC)
+            message(STATUS \"static target OpenColorIO_STATIC : see OpenColorIO_LIBRARY\")
+            set(OpenColorIO_LIBRARY OpenColorIO_STATIC)
+            set(OCIO_COMPILE_DEFINITIONS    ${OCIO_STATIC_COMPILE_DEFINITIONS})
+        endif()
+    endif()
+    set(OpenColorIO_LIBRARIES \${OpenColorIO_LIBRARY})
+    message(STATUS OpenColorIO_LIBRARIES=\${OpenColorIO_LIBRARIES})
+    
+    ## display available preprocessor definition to use
+    if(OCIO_COMPILE_DEFINITIONS)
+        message(STATUS \"OCIO_COMPILE_DEFINITIONS=\")
+        foreach(OCIO_DEF \${OCIO_COMPILE_DEFINITIONS})
+            message(STATUS \"   \${OCIO_DEF}\")
+        endforeach()
+    endif()
+    
+    ## found
+    if(OpenColorIO_INCLUDE_DIRS AND OpenColorIO_LIBRARIES)
+        set(OpenColorIO_FOUND ON)
+        set(OPENCOLORIO_FOUND ON)
+    else()
+        set(OpenColorIO_FOUND OFF)
+        set(OPENCOLORIO_FOUND OFF)
+    endif()
+    message(STATUS OPENCOLORIO_FOUND=\${OPENCOLORIO_FOUND})
+    "
+)
+install(FILES "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake" DESTINATION .)

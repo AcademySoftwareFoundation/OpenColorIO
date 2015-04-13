@@ -10,7 +10,9 @@ if (OIIO_FOUND)
     
     add_executable(ocioconvert ${share_src_files} main.cpp)
     
-    target_link_libraries(ocioconvert ${OIIO_LIBRARIES} OpenColorIO ${CMAKE_DL_LIBS})
+    target_link_libraries(ocioconvert ${OIIO_LIBRARIES} ${CMAKE_DL_LIBS})
     
-    install(TARGETS ocioconvert DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)
+    target_link_OCIO(ocioconvert)
+    
+    install(TARGETS ocioconvert EXPORT OpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)
 endif()
