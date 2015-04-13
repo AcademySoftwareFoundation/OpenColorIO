@@ -19,67 +19,74 @@ list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorABI.h)
 # SHARED
 
 if(OCIO_BUILD_SHARED)
-    add_library(OpenColorIO SHARED ${core_src_files})
+    add_library(OpenColorIO SHARED ${EXTERNAL_OBJECTS} ${core_src_files})
 
     if(USE_EXTERNAL_TINYXML)
         target_link_libraries(OpenColorIO ${TINYXML_LIBRARIES})
     else(USE_EXTERNAL_TINYXML)
-        add_dependencies(OpenColorIO tinyxml)
+        add_dependencies(OpenColorIO TINYXML_LIB)
     endif(USE_EXTERNAL_TINYXML)
 
     if(USE_EXTERNAL_YAML)
         target_link_libraries(OpenColorIO ${YAML_CPP_LIBRARIES})
     else(USE_EXTERNAL_YAML)
-        add_dependencies(OpenColorIO YAML_CPP_LOCAL)
+        add_dependencies(OpenColorIO YAML_CPP_LIB)
     endif()
 
-    if(WIN32)
-        target_link_libraries(OpenColorIO
-            debug ${EXTERNAL_DEBUG_LIBRARIES}
-            optimized ${EXTERNAL_OPTIMIZED_LIBRARIES}
-            general ${EXTERNAL_GENERAL_LIBRARIES})
-    else()
-        target_link_libraries(OpenColorIO ${EXTERNAL_GENERAL_LIBRARIES})
+    if(EXTERNAL_LIBRARIES)
+        target_link_libraries(OpenColorIO ${EXTERNAL_LIBRARIES})
     endif()
     set_target_properties(OpenColorIO PROPERTIES
         OUTPUT_NAME OpenColorIO
-        COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
-        LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
+        COMPILE_FLAGS   "${EXTERNAL_COMPILE_FLAGS}"
+        LINK_FLAGS      "${EXTERNAL_LINK_FLAGS}")
     
     message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
     set_target_properties(OpenColorIO PROPERTIES
         VERSION ${OCIO_VERSION}
         SOVERSION ${SOVERSION})
     
-    install(TARGETS OpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX})
+    install(TARGETS OpenColorIO EXPORT OpenColorIO 
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin
+    )
 endif()
 
 # STATIC
 
 if(OCIO_BUILD_STATIC)
     list(REMOVE_ITEM core_src_files ${CMAKE_SOURCE_DIR}/src/core/UnitTest.cpp)
-    add_library(OpenColorIO_STATIC STATIC ${core_src_files})
-    add_dependencies(OpenColorIO_STATIC tinyxml YAML_CPP_LOCAL)
-    if(WIN32)
-        target_link_libraries(OpenColorIO_STATIC
-            debug ${EXTERNAL_DEBUG_LIBRARIES}
-            optimized ${EXTERNAL_OPTIMIZED_LIBRARIES}
-            general ${EXTERNAL_GENERAL_LIBRARIES})
-    else()
-        target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_GENERAL_LIBRARIES})
+    add_library(OpenColorIO_STATIC STATIC ${EXTERNAL_OBJECTS} ${core_src_files})
+    add_dependencies(OpenColorIO_STATIC TINYXML_LIB YAML_CPP_LIB)
+    if(EXTERNAL_LIBRARIES)
+        target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_LIBRARIES})
     endif()
+    
+	set_target_properties(OpenColorIO_STATIC PROPERTIES COMPILE_DEFINITIONS "OpenColorIO_STATIC")
     set_target_properties(OpenColorIO_STATIC PROPERTIES
-        OUTPUT_NAME OpenColorIO
-        COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
-        LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
+        OUTPUT_NAME                 OpenColorIO
+        ARCHIVE_OUTPUT_DIRECTORY    "${CMAKE_CURRENT_BINARY_DIR}/static"
+        COMPILE_FLAGS               "${EXTERNAL_COMPILE_FLAGS}"
+        LINK_FLAGS                  "${EXTERNAL_LINK_FLAGS}")
     
     message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
     set_target_properties(OpenColorIO_STATIC PROPERTIES
         VERSION ${OCIO_VERSION}
         SOVERSION ${SOVERSION})
     
-    install(TARGETS OpenColorIO_STATIC DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib)
+    install(TARGETS OpenColorIO_STATIC EXPORT OpenColorIO ARCHIVE DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/static)
 endif()
+
+macro(target_link_OCIO target)
+    if(OCIO_BUILD_SHARED)
+        target_link_libraries(${target} OpenColorIO         ${ARGN})
+    elseif(OCIO_BUILD_STATIC)
+        target_link_libraries(${target} OpenColorIO_STATIC  ${ARGN})
+        set_target_properties(${target} PROPERTIES COMPILE_DEFINITIONS OpenColorIO_STATIC)
+    endif()
+endmacro()
+
 
 # public interface
 install(FILES ${core_export_headers}
