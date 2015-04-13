@@ -34,6 +34,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <string>
 
 extern int unit_test_failures;
 
