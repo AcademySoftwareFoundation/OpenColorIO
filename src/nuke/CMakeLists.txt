@@ -14,9 +14,7 @@ include_directories(
 add_library(NukeOCIOColorSpace MODULE
     OCIOColorSpace/OCIOColorSpace.cpp
 )
-target_link_libraries(NukeOCIOColorSpace
-    OpenColorIO
-    #${Nuke_LIBRARIES}
+target_link_OCIO(NukeOCIOColorSpace #${Nuke_LIBRARIES}
 )
 set_target_properties(NukeOCIOColorSpace
     PROPERTIES
@@ -30,9 +28,7 @@ set_target_properties(NukeOCIOColorSpace
 add_library(NukeOCIODisplay MODULE
     OCIODisplay/OCIODisplay.cpp
 )
-target_link_libraries(NukeOCIODisplay
-    OpenColorIO
-    #${Nuke_LIBRARIES}
+target_link_OCIO(NukeOCIODisplay #${Nuke_LIBRARIES}
 )
 set_target_properties(NukeOCIODisplay
     PROPERTIES
@@ -46,9 +42,7 @@ set_target_properties(NukeOCIODisplay
 add_library(NukeOCIOFileTransform MODULE
     OCIOFileTransform/OCIOFileTransform.cpp
 )
-target_link_libraries(NukeOCIOFileTransform
-    OpenColorIO
-    #${Nuke_LIBRARIES}
+target_link_OCIO(NukeOCIOFileTransform #${Nuke_LIBRARIES}
 )
 set_target_properties(NukeOCIOFileTransform
     PROPERTIES
@@ -62,9 +56,7 @@ set_target_properties(NukeOCIOFileTransform
 add_library(NukeOCIOLogConvert MODULE
     OCIOLogConvert/OCIOLogConvert.cpp
 )
-target_link_libraries(NukeOCIOLogConvert
-    OpenColorIO
-    #${Nuke_LIBRARIES}
+target_link_OCIO(NukeOCIOLogConvert #${Nuke_LIBRARIES}
 )
 set_target_properties(NukeOCIOLogConvert
     PROPERTIES
@@ -78,9 +70,7 @@ set_target_properties(NukeOCIOLogConvert
 add_library(NukeOCIOLookTransform MODULE
     OCIOLookTransform/OCIOLookTransform.cpp
 )
-target_link_libraries(NukeOCIOLookTransform
-    OpenColorIO
-    #${Nuke_LIBRARIES}
+target_link_OCIO(NukeOCIOLookTransform #${Nuke_LIBRARIES}
 )
 set_target_properties(NukeOCIOLookTransform
     PROPERTIES
@@ -94,9 +84,7 @@ set_target_properties(NukeOCIOLookTransform
 add_library(NukeOCIOCDLTransform MODULE
     OCIOCDLTransform/OCIOCDLTransform.cpp
 )
-target_link_libraries(NukeOCIOCDLTransform
-    OpenColorIO
-    #${Nuke_LIBRARIES}
+target_link_OCIO(NukeOCIOCDLTransform #${Nuke_LIBRARIES}
 )
 set_target_properties(NukeOCIOCDLTransform
     PROPERTIES
@@ -115,22 +103,22 @@ add_custom_target(Nuke
     DEPENDS NukeOCIOCDLTransform
 )
 
-install(TARGETS NukeOCIOColorSpace
+install(TARGETS NukeOCIOColorSpace EXPORT OpenColorIO 
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIODisplay
+install(TARGETS NukeOCIODisplay EXPORT OpenColorIO 
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIOLogConvert
+install(TARGETS NukeOCIOLogConvert EXPORT OpenColorIO 
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIOFileTransform
+install(TARGETS NukeOCIOFileTransform EXPORT OpenColorIO 
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIOLookTransform
+install(TARGETS NukeOCIOLookTransform EXPORT OpenColorIO 
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
-install(TARGETS NukeOCIOCDLTransform
+install(TARGETS NukeOCIOCDLTransform EXPORT OpenColorIO 
         DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/nuke${Nuke_API_VERSION})
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/share/nuke
