@@ -92,11 +92,16 @@ ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorIO.h developers/ap
 ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTransforms.h developers/api/OpenColorTransforms.rst)
 ExtractRstCPP(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorTypes.h developers/api/OpenColorTypes.rst)
 
+if(OCIO_BUILD_PYGLUE)
+    set(DEPLIBS OpenColorIO PyOpenColorIO)
+else()
+    set(DEPLIBS OpenColorIO)
+endif()
+
 add_custom_target(doc ALL
     COMMAND PYTHONPATH=${PYTHONPATH} ${EXTDIST_BINPATH}/sphinx-build -b html . ${CMAKE_CURRENT_BINARY_DIR}/build-html
     DEPENDS
-        OpenColorIO
-        PyOpenColorIO
+        ${DEPLIBS}
         ${CMAKE_BINARY_DIR}/docs/conf.py
         developers/api/OpenColorIO.rst
         developers/api/OpenColorTransforms.rst
