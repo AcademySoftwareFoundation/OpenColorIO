@@ -206,7 +206,7 @@ section.
 A description of all roles. Note that applications may interpret or
 use these differently.
 
-* ``color_picking`` - Colors in a color-selection UI can be displayed
+* ``color_picking`` - colors in a color-selection UI can be displayed
   in this space, while selecting colors in a different working space
   (e.g ``scene_linear`` or ``texture_paint``)
 
@@ -216,28 +216,28 @@ use these differently.
 
 * ``compositing_log`` - a log colorspace used for certain processing
   operations (plate resizing, pulling keys, degrain, etc). Used by the
-  OCIOLogConvert Nuke node.
+  OCIOLogConvert Nuke node
 
 * ``data`` - used when writing data outputs such as normals, depth
   data, and other "non color" data. The colorspace in this role should
   typically have ``data: true`` specified, so no color transforms are
-  applied.
+  applied
 
 * ``default`` - when ``strictparsing: false``, this colorspace is used
   as a fallback. If not defined, the ``scene_linear`` role is used
 
-* ``matte_paint`` - Colorspace which matte-paintings are created in
+* ``matte_paint`` - colorspace which matte-paintings are created in
   (for more information, :ref:`see the guide on baking ICC profiles
   for Photoshop <userguide-bakelut-photoshop>`, and
   :ref:`config-spivfx`)
 
-* ``reference`` - Colorspace used for reference imagery (e.g sRGB
-  images from the internet)
+* ``reference`` - the colorspace against which the other colorspaces
+  are defined
 
-* ``scene_linear`` - The scene-referred linear-to-light colorspace,
-  typically used as reference space (see :ref:`faq-terminology`)
+* ``scene_linear`` - the scene-referred linear-to-light colorspace,
+  often the same as the reference space (see:ref:`faq-terminology`)
 
-* ``texture_paint`` - Similar to ``matte_paint`` but for painting
+* ``texture_paint`` - similar to ``matte_paint`` but for painting
   textures for 3D objects (see the description of texture painting in
   :ref:`SPI's pipeline <config-spipipeline-texture>`)
 
