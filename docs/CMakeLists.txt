@@ -55,7 +55,7 @@ set(SPHINX_VERSION 1.2b3)
 ExternalProject_Add(Sphinx
     DEPENDS setuptools docutils Jinja2 Pygments
     URL ${CMAKE_SOURCE_DIR}/ext/Sphinx-${SPHINX_VERSION}.tar.gz
-    PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/Sphinx-${SPHINX_VERSION}.patch
+    PATCH_COMMAND patch --binary -p1 < ${CMAKE_SOURCE_DIR}/ext/Sphinx-${SPHINX_VERSION}.patch
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${EXTDIST_PYTHONPATH}
     BUILD_COMMAND PYTHONPATH=${PYTHONPATH} ${PYTHON} setup.py build

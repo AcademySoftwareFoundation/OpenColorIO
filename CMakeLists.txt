@@ -9,6 +9,12 @@ if(NOT DEFINED CMAKE_FIRST_RUN)
     SET(CMAKE_FIRST_RUN 1 CACHE INTERNAL "")
 endif()
 
+if (MSVC)
+    set(PATCH myptch)
+else()
+    set(PATCH patch)
+endif ()
+
 ###############################################################################
 ### GLOBAL ###
 
@@ -183,12 +189,12 @@ else(USE_EXTERNAL_TINYXML)
     endif()
     ExternalProject_Add(tinyxml
         URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
-        PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
+        PATCH_COMMAND ${PATCH} --binary -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
         BINARY_DIR ext/build/tinyxml
         INSTALL_DIR ext/dist
         CMAKE_ARGS ${TINYXML_CMAKE_ARGS}
     )
-    if(WIN32)
+    if(MSVC)
         set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml.lib)
     else()
         set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
@@ -252,13 +258,13 @@ else(USE_EXTERNAL_YAML)
     ExternalProject_Add(YAML_CPP_LOCAL
         URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
         BINARY_DIR ext/build/yaml-cpp
-        PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
+        PATCH_COMMAND ${PATCH} --binary -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
         INSTALL_DIR ext/dist
         CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS}
     )
     set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
     set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
-    if(WIN32)
+    if(MSVC)
         set(YAML_CPP_STATIC_DEBUG_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmdd.lib)
         set(YAML_CPP_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmd.lib)
     else()
