@@ -310,7 +310,7 @@ endif()
 messageonce("SSE Optimizations: ${OCIO_USE_SSE}")
 
 if(OCIO_USE_SSE)
-    if(WIN32)
+    if(MSVC)
         # SSE instructions are automatically compiled into 64-bit applications so enabling the option is redundant and
         # actually produces an unknown option warning in Visual Studio.
         if(NOT CMAKE_CL_64)
