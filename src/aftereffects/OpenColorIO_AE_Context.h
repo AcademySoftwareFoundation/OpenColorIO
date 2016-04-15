@@ -64,10 +64,10 @@ class Path
         TYPE_WIN
     } PathType;
     
-    static PathType path_type(std::string path);
-    static bool is_relative(std::string path);
-    static std::string convert_delimiters(std::string path);
-    static std::vector<std::string> components(std::string path);
+    static PathType path_type(const std::string &path);
+    static bool is_relative(const std::string &path);
+    static std::string convert_delimiters(const std::string &path);
+    static std::vector<std::string> components(const std::string &path);
 };
 
 
