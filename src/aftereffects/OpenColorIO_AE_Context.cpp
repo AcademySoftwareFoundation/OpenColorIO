@@ -69,7 +69,7 @@ Path::Path(const Path &path)
 
 std::string Path::full_path() const
 {
-    if( is_relative(_path) && !_dir.empty() )
+    if( !_path.empty() && is_relative(_path) && !_dir.empty() )
     {
         std::vector<std::string> path_vec = components( convert_delimiters(_path) );
         std::vector<std::string> dir_vec = components(_dir);
@@ -115,7 +115,7 @@ std::string Path::full_path() const
 
 std::string Path::relative_path(bool force) const
 {
-    if( is_relative(_path) || _dir.empty() || _path.empty() )
+    if( _dir.empty() || _path.empty() || is_relative(_path) )
     {
         return _path;
     }
@@ -182,7 +182,7 @@ bool Path::exists() const
 }
 
 
-Path::PathType Path::path_type(std::string path)
+Path::PathType Path::path_type(const std::string &path)
 {
     if( path.empty() )
     {
@@ -228,7 +228,7 @@ Path::PathType Path::path_type(std::string path)
 }
 
 
-bool Path::is_relative(std::string path)
+bool Path::is_relative(const std::string &path)
 {
     Path::PathType type = path_type(path);
     
@@ -254,27 +254,29 @@ bool Path::is_relative(std::string path)
 }
 
 
-std::string Path::convert_delimiters(std::string path)
+std::string Path::convert_delimiters(const std::string &path)
 {
 #ifdef WIN_ENV
-    char search = mac_delimiter;
-    char replace = win_delimiter;
+    const char search = mac_delimiter;
+    const char replace = win_delimiter;
 #else
-    char search = win_delimiter;
-    char replace = mac_delimiter;
+    const char search = win_delimiter;
+    const char replace = mac_delimiter;
 #endif
 
-    for(int i=0; i < path.size(); i++)
+	std::string path_copy = path;
+
+    for(int i=0; i < path_copy.size(); i++)
     {
-        if(path[i] == search)
-            path[i] = replace;
+        if(path_copy[i] == search)
+            path_copy[i] = replace;
     }
     
-    return path;
+    return path_copy;
 }
 
 
-std::vector<std::string> Path::components(std::string path)
+std::vector<std::string> Path::components(const std::string &path)
 {
     std::vector<std::string> vec;
     
