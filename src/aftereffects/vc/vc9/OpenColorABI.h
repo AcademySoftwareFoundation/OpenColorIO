@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Makefile configuration options
 #define OCIO_NAMESPACE OpenColorIO
 #define OCIO_USE_BOOST_PTR 1
-#define OCIO_VERSION "1.0.7"
+#define OCIO_VERSION "1.0.9"
 #define OCIO_VERSION_NS v1
 
 /* Version as a single 4-byte hex number, e.g. 0x01050200 == 1.5.2
@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    */
 #define OCIO_VERSION_HEX ((1 << 24) | \
                           (0 << 16) | \
-                          (7 <<  8))
+                          (9 <<  8))
 
 
 // Namespace / version mojo
