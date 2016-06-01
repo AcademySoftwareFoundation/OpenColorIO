@@ -309,6 +309,53 @@ Java_org_OpenColorIO_CDLTransform_getDescription(JNIEnv * env, jobject self)
     OCIO_JNITRY_EXIT(NULL)
 }
 
+// ClampTransform
+
+JNIEXPORT jobject JNICALL
+Java_org_OpenColorIO_ClampTransform_Create(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    return BuildJObject<TransformRcPtr, TransformJNI>(env, self,
+             env->FindClass("org/OpenColorIO/ClampTransform"), ClampTransform::Create());
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_ClampTransform_setMin(JNIEnv * env, jobject self, jfloatArray vec4)
+{
+    OCIO_JNITRY_ENTER()
+    ClampTransformRcPtr clamp = GetEditableJOCIO<ClampTransformRcPtr, ClampTransformJNI>(env, self);
+    clamp->setMin(GetJFloatArrayValue(env, vec4, "vec4", 4)());
+    OCIO_JNITRY_EXIT()
+}
+
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_ClampTransform_getMin(JNIEnv * env, jobject self, jfloatArray vec4)
+{
+    OCIO_JNITRY_ENTER()
+    ConstClampTransformRcPtr clamp = GetConstJOCIO<ConstClampTransformRcPtr, ClampTransformJNI>(env, self);
+    clamp->getMin(SetJFloatArrayValue(env, vec4, "vec4", 4)());
+    OCIO_JNITRY_EXIT()
+}
+
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_ClampTransform_setMax(JNIEnv * env, jobject self, jfloatArray vec4)
+{
+    OCIO_JNITRY_ENTER()
+    ClampTransformRcPtr clamp = GetEditableJOCIO<ClampTransformRcPtr, ClampTransformJNI>(env, self);
+    clamp->setMax(GetJFloatArrayValue(env, vec4, "vec4", 4)());
+    OCIO_JNITRY_EXIT()
+}
+
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_ClampTransform_getMax(JNIEnv * env, jobject self, jfloatArray vec4)
+{
+    OCIO_JNITRY_ENTER()
+    ConstClampTransformRcPtr clamp = GetConstJOCIO<ConstClampTransformRcPtr, ClampTransformJNI>(env, self);
+    clamp->getMax(SetJFloatArrayValue(env, vec4, "vec4", 4)());
+    OCIO_JNITRY_EXIT()
+}
+
 // ColorSpaceTransform
 
 JNIEXPORT jobject JNICALL

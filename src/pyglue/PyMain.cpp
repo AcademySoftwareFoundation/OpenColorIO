@@ -191,6 +191,7 @@ MOD_INIT(PyOpenColorIO)
     {
         OCIO::AddObjectToModule(OCIO::PyOCIO_AllocationTransformType, "AllocationTransform", m);
         OCIO::AddObjectToModule(OCIO::PyOCIO_CDLTransformType, "CDLTransform", m);
+        OCIO::AddObjectToModule(OCIO::PyOCIO_ClampTransformType, "ClampTransform", m);
         OCIO::AddObjectToModule(OCIO::PyOCIO_ColorSpaceTransformType, "ColorSpaceTransform", m);
         OCIO::AddObjectToModule(OCIO::PyOCIO_DisplayTransformType, "DisplayTransform", m);
         OCIO::AddObjectToModule(OCIO::PyOCIO_ExponentTransformType, "ExponentTransform", m);

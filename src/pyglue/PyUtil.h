@@ -132,6 +132,7 @@ OCIO_NAMESPACE_ENTER
     
     extern PyTypeObject PyOCIO_AllocationTransformType;
     extern PyTypeObject PyOCIO_CDLTransformType;
+    extern PyTypeObject PyOCIO_ClampTransformType;
     extern PyTypeObject PyOCIO_ColorSpaceTransformType;
     extern PyTypeObject PyOCIO_DisplayTransformType;
     extern PyTypeObject PyOCIO_ExponentTransformType;

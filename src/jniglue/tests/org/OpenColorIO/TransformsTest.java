@@ -90,6 +90,16 @@ public class TransformsTest extends TestCase {
         cdl.setDescription("bar");
         assertEquals("bar", cdl.getDescription());
         
+        //// ClampTransform ////
+        ClampTransform clampt = new ClampTransform().Create();
+        float evals[] = new float[4];
+        clampt.setMin(new float[]{0.1f, 0.2f, 0.3f, 0.4f});
+        clampt.getMin(evals);
+        assertEquals(0.3f, evals[2], 1e-8);
+        clampt.setMax(new float[]{0.1f, 0.2f, 0.3f, 0.4f});
+        clampt.getMax(evals);
+        assertEquals(0.3f, evals[2], 1e-8);
+        
         //// ColorSpaceTransform ////
         ColorSpaceTransform ct = new ColorSpaceTransform().Create();
         ct.setSrc("foo");

@@ -34,6 +34,7 @@ set(JNIOCIO_CLASSES
   # Transforms
   org.OpenColorIO.AllocationTransform
   org.OpenColorIO.CDLTransform
+  org.OpenColorIO.ClampTransform
   org.OpenColorIO.ColorSpaceTransform
   org.OpenColorIO.DisplayTransform
   org.OpenColorIO.ExponentTransform
