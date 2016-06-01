@@ -35,11 +35,6 @@ OCIODisplay::OCIODisplay(Node *n) : DD::Image::PixelIop(n)
     m_channel = 2;
     m_transform = OCIO::DisplayTransform::Create();
     
-#ifdef OCIO_NUKE_GPU_ENABLE
-    m_textureUnit = -1;
-    m_textureHandle = 0;
-#endif
-    
     try
     {
         OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
@@ -348,34 +343,6 @@ void OCIODisplay::_validate(bool for_real)
         m_processor = config->getProcessor(context,
                                            m_transform,
                                            OCIO::TRANSFORM_DIR_FORWARD);
-
-#ifdef OCIO_NUKE_GPU_ENABLE
-        // TODO: Make this optional? Only computed before needed?
-        // Generate the GLSL code
-        OCIO::GpuShaderDesc shaderDesc;
-        shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
-        shaderDesc.setFunctionName("OCIODisplay$$");
-        shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
-        
-        int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
-        m_lut3d.resize(num3Dentries);
-        
-        m_processor->getGpuLut3D(&m_lut3d[0], shaderDesc);
-
-        // Store a variable name for the sampler3D object that is unique to this Op instance
-        m_textureName = uniqueGPUShaderId("$$lut");
-        
-        // GPU path shader declaration
-        std::stringstream gpuDecl;
-        gpuDecl << "uniform sampler3D " << m_textureName << ";\n";
-        gpuDecl << m_processor->getGpuShaderText(shaderDesc);
-        m_gpuEngineDecl = gpuDecl.str();
-                
-        // GPU path shader body
-        std::stringstream gpuBody;
-        gpuBody << "OUT.rgb = OCIODisplay$$(OUT, " << m_textureName << ").rgb;\n";
-        m_gpuEngineBody = gpuBody.str();
-#endif
     }
     catch(OCIO::Exception &e)
     {
@@ -563,121 +530,6 @@ int OCIODisplay::knob_changed(DD::Image::Knob *k)
         return 0;
     }
 }
-
-#ifdef OCIO_NUKE_GPU_ENABLE
-void OCIODisplay::checkGLError(const char* scope)
-{
-    GLenum glError = glGetError();
-    if (glError != GL_NO_ERROR)
-    {
-        std::ostringstream msg;
-        msg << scope << ": " << gluErrorString(glError) << std::endl;
-        warning(msg.str().c_str());
-    }
-}
-
-const char* OCIODisplay::gpuEngine_decl() const
-{
-    return m_gpuEngineDecl.c_str();
-}
-
-const char* OCIODisplay::gpuEngine_body() const
-{
-    return m_gpuEngineBody.c_str();
-}
-
-int OCIODisplay::gpuEngine_getNumRequiredTexUnits() const
-{
-    return 1;
-}
-
-void OCIODisplay::gpuEngine_GL_begin(DD::Image::GPUContext* context)
-{
-    // Get the texture unit from Nuke based on it's internal texture tracking
-    m_textureUnit = context->acquireTextureUnit();
-    
-    // If we've switched targets or if this is the first time creating our texture, let's do that now
-    bool updateTex = true;
-    if (m_textureHandle == 0)
-    {
-        glGenTextures(1, &m_textureHandle);
-        checkGLError("Generating texture");
-        updateTex = false;
-        debug("Processing in GPU mode.");
-    }
-    
-    glActiveTextureARB(GL_TEXTURE0_ARB + int(m_textureUnit));
-    checkGLError("Activating texture");
-
-    // Enable 3d texturing
-    glEnable(GL_TEXTURE_3D);
-    checkGLError("Enabling GL_TEXTURE_3D");
-    glBindTexture(GL_TEXTURE_3D, m_textureHandle);
-    checkGLError("Binding texture");
-    glActiveTextureARB(GL_TEXTURE0_ARB);
-    checkGLError("Activating GL_TEXTURE0_ARB"); 
-    
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    
-    // Bind the texture handle to the GL thingy
-    glBindTexture(GL_TEXTURE_3D, m_textureHandle);
-    checkGLError("Binding texture");
-    
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    checkGLError("Setting wrap parameters");
-    
-    // Either update the existing texture or make a new one
-    if (updateTex)
-    {
-        glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0,
-                LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, GL_RGB, GL_FLOAT, &m_lut3d[0]);
-        checkGLError("Updating texture");
-    }
-    else
-    {
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        checkGLError("Setting filter parameters");
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB,
-            LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-            0, GL_RGB, GL_FLOAT, &m_lut3d[0]);
-        checkGLError("Creating texture");
-    }
-    
-    // enable
-    glActiveTextureARB(GL_TEXTURE0_ARB + m_textureUnit);
-    glEnable(GL_TEXTURE_3D);
-    checkGLError("Enabling 3D textures");
-    glBindTexture(GL_TEXTURE_3D, m_textureHandle);
-    checkGLError("Binding texture");
-
-    glActiveTextureARB(GL_TEXTURE0_ARB);
-    
-    bool bindResult = context->bind(m_textureName.c_str(), m_textureUnit);
-    checkGLError("Binding texture via context");
-}
-
-void OCIODisplay::gpuEngine_GL_end(DD::Image::GPUContext* context)
-{
-    checkGLError("Compiling and executing shader");
-    
-    if (m_textureUnit >= 0)
-    {
-        glActiveTextureARB(GL_TEXTURE0_ARB + int(m_textureUnit));
-        checkGLError("Activating texture");
-        glDisable(GL_TEXTURE_3D);
-        checkGLError("Disabling texture");
-        glBindTexture(GL_TEXTURE_3D, 0);
-        checkGLError("Binding texture");
-        glActiveTextureARB(GL_TEXTURE0_ARB);
-    }
-    
-    context->releaseTextureUnit(m_textureUnit);
-}
-#endif
 
 const DD::Image::Op::Description OCIODisplay::description("OCIODisplay", build);
 

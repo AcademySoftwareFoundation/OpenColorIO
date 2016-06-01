@@ -45,20 +45,6 @@ class OCIODisplay : public DD::Image::PixelIop {
         OCIO::ConstProcessorRcPtr m_processor;
 
         DD::Image::Knob *m_displayKnob, *m_viewKnob;
-        
-#ifdef OCIO_NUKE_GPU_ENABLE
-        /* GPU members */
-        std::string m_gpuEngineDecl;
-        std::string m_gpuEngineBody;
-        std::string m_textureName;
-        GLint m_textureUnit;
-        GLuint m_textureHandle;
-        std::vector<float> m_lut3d;
-        static const int LUT3D_EDGE_SIZE = 32;
-        
-        void checkGLError(const char* scope);
-#endif
-        
         void refreshDisplayTransforms();
         
     public:
@@ -128,18 +114,7 @@ class OCIODisplay : public DD::Image::PixelIop {
         virtual int knob_changed(DD::Image::Knob *k);
 
         virtual void append(DD::Image::Hash& hash);
-        
-#ifdef OCIO_NUKE_GPU_ENABLE
-        /*!
-         * GPU implementation
-         */
-        virtual const char* gpuEngine_decl() const;
-        virtual const char* gpuEngine_body() const;
-        virtual int gpuEngine_getNumRequiredTexUnits() const;
-        virtual void gpuEngine_GL_begin(DD::Image::GPUContext* context);
-        virtual void gpuEngine_GL_end(DD::Image::GPUContext* context);
-#endif
-        
+
 
     protected:
 
