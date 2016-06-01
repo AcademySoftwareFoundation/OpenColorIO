@@ -246,6 +246,7 @@ OCIO_NAMESPACE_ENTER
         // Misc
         std::vector<float> defaultLumaCoefs_;
         bool strictParsing_;
+        std::string delimiters_;
         
         mutable Sanity sanity_;
         mutable std::string sanitytext_;
@@ -313,6 +314,7 @@ OCIO_NAMESPACE_ENTER
             
             defaultLumaCoefs_ = rhs.defaultLumaCoefs_;
             strictParsing_ = rhs.strictParsing_;
+            delimiters_ = rhs.delimiters_;
             
             sanity_ = rhs.sanity_;
             sanitytext_ = rhs.sanitytext_;
@@ -880,7 +882,23 @@ OCIO_NAMESPACE_ENTER
             int colorspacePos = pystring::rfind(fullstr, csname);
             if(colorspacePos < 0)
                 continue;
-            
+
+            // If specified, ensure candidate is bounded by delimiter chars or
+            // end-of-string on both sides.
+            if (!getImpl()->delimiters_.empty())
+            {
+                const int leftDelim = colorspacePos - 1;
+                const int rightDelim = colorspacePos + csname.size();
+                if (leftDelim > 0 && rightDelim < fullstr.size())
+                {
+                    if (getImpl()->delimiters_.find(fullstr[leftDelim]) == std::string::npos
+                        || getImpl()->delimiters_.find(fullstr[rightDelim]) == std::string::npos)
+                    {
+                        continue;
+                    }
+                }
+            }
+
             // If we have found a match, move the pointer over to the right end of the substring
             // This will allow us to find the longest name that matches the rightmost colorspace
             colorspacePos += (int)csname.size();
@@ -919,6 +937,19 @@ OCIO_NAMESPACE_ENTER
         return "";
     }
     
+    const char * Config::delimiters() const
+    {
+        return getImpl()->delimiters_.c_str();
+    }
+
+    void Config::setDelimiters(const char * delimiters)
+    {
+        getImpl()->delimiters_ = delimiters;
+
+        AutoMutex lock(getImpl()->cacheidMutex_);
+        getImpl()->resetCacheIDs();
+    }
+
     bool Config::isStrictParsingEnabled() const
     {
         return getImpl()->strictParsing_;
