@@ -84,7 +84,12 @@ OCIO_NAMESPACE_ENTER
                           const Config& config,
                           const ExponentTransform & transform,
                           TransformDirection dir);
-    
+
+    void BuildExpressionOps(OpRcPtrVec & ops,
+                          const Config& config,
+                          const ExpressionTransform & transform,
+                          TransformDirection dir);
+
     void BuildFileOps(OpRcPtrVec & ops,
                       const Config& config,
                       const ConstContextRcPtr & context,

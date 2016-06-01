@@ -57,6 +57,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ColorSpaceTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::DisplayTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExpressionTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
@@ -708,6 +709,89 @@ OCIO_NAMESPACE_ENTER
             out << YAML::EndMap;
         }
         
+        // ExpressionTransform
+        
+        inline void load(const YAML::Node& node, ExpressionTransformRcPtr& t)
+        {
+            t = ExpressionTransform::Create();
+            
+            std::string key;
+            std::map < char, std::string> channels;
+            
+            for (Iterator iter = node.begin();
+                 iter != node.end();
+                 ++iter)
+            {
+				const YAML::Node& first = get_first(iter);
+				const YAML::Node& second = get_second(iter);
+
+                load(first, key);
+
+				if(key == "direction")
+				{
+					TransformDirection val;
+					load(second, val);
+					t->setDirection(val);
+				}
+				else if (key.find("r") != std::string::npos ||
+						 key.find("g") != std::string::npos ||
+						 key.find("b") != std::string::npos ||
+						 key.find("a") != std::string::npos )
+				{
+					char chan[] = {'r','g','b','a'};
+					for (int i=0; i<4; i++)
+					{
+						char c = chan[i];
+
+						if (key.find(c) != std::string::npos)
+						{
+							if (iter.second().Type() != YAML::NodeType::Null)
+							{
+								std::string val;
+								load(second, val);
+
+								if(channels.count(c))
+								{
+									std::stringstream ss;
+									ss << "ExpressionTransform parse error, multiple definitions for \"" << c << "\" channel.";
+									throw Exception(ss.str().c_str());
+								}
+								channels[c] = val;
+							}
+						}
+					}
+				}
+
+                else
+                {
+                    LogUnknownKeyWarning(node.Tag(), first);
+                }
+            }
+
+            channels.count('r') ? t->setExpressionR(channels['r'].c_str()) : t->setExpressionR("");
+            channels.count('g') ? t->setExpressionG(channels['g'].c_str()) : t->setExpressionG("");
+            channels.count('b') ? t->setExpressionB(channels['b'].c_str()) : t->setExpressionB("");
+            channels.count('a') ? t->setExpressionA(channels['a'].c_str()) : t->setExpressionA("");
+        }
+        
+        inline void save(YAML::Emitter& out, ConstExpressionTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("ExpressionTransform");
+            out << YAML::Flow << YAML::BeginMap;
+
+            out << YAML::Key << "r";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionR();
+            out << YAML::Key << "g";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionG();
+            out << YAML::Key << "b";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionB();
+            out << YAML::Key << "a";
+            out << YAML::Value << YAML::DoubleQuoted << t->getExpressionA();
+
+            EmitBaseTransformKeyValues(out, t); 
+            out << YAML::EndMap;
+        }
+        
         // FileTransform
         
         inline void load(const YAML::Node& node, FileTransformRcPtr& t)
@@ -1216,6 +1300,11 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
+            else if(type == "ExpressionTransform")  {
+                ExpressionTransformRcPtr temp;
+                load(node, temp);
+                t = temp;
+            }
             else if(type == "FileTransform")  {
                 FileTransformRcPtr temp;
                 load(node, temp);
@@ -1281,6 +1370,9 @@ OCIO_NAMESPACE_ENTER
             else if(ConstExponentTransformRcPtr Exponent_tran = \
                 DynamicPtrCast<const ExponentTransform>(t))
                 save(out, Exponent_tran);
+            else if(ConstExpressionTransformRcPtr Expression_tran = \
+                DynamicPtrCast<const ExpressionTransform>(t))
+                save(out, Expression_tran);
             else if(ConstFileTransformRcPtr File_tran = \
                 DynamicPtrCast<const FileTransform>(t))
                 save(out, File_tran);
@@ -1788,7 +1880,7 @@ OCIO_NAMESPACE_ENTER
             {
                 out << YAML::Key << "environment";
                 out << YAML::Value << YAML::BeginMap;
-                for(unsigned i = 0; i < c->getNumEnvironmentVars(); ++i)
+                for(int i = 0; i < c->getNumEnvironmentVars(); ++i)
                 {   
                     const char* name = c->getEnvironmentVarNameByIndex(i);
                     out << YAML::Key << name;
@@ -1819,7 +1911,7 @@ OCIO_NAMESPACE_ENTER
 #endif
             out << YAML::Key << "roles";
             out << YAML::Value << YAML::BeginMap;
-            for(unsigned i = 0; i < c->getNumRoles(); ++i)
+            for(int i = 0; i < c->getNumRoles(); ++i)
             {
                 const char* role = c->getRoleName(i);
                 out << YAML::Key << role;
@@ -1834,12 +1926,12 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Newline;
             out << YAML::Key << "displays";
             out << YAML::Value << YAML::BeginMap;
-            for(unsigned i = 0; i < c->getNumDisplays(); ++i)
+            for(int i = 0; i < c->getNumDisplays(); ++i)
             {
                 const char* display = c->getDisplay(i);
                 out << YAML::Key << display;
                 out << YAML::Value << YAML::BeginSeq;
-                for(unsigned v = 0; v < c->getNumViews(display); ++v)
+                for(int v = 0; v < c->getNumViews(display); ++v)
                 {
                     View dview;
                     dview.name = c->getView(display, v);
@@ -1878,7 +1970,7 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Newline;
                 out << YAML::Key << "looks";
                 out << YAML::Value << YAML::BeginSeq;
-                for(unsigned i = 0; i < c->getNumLooks(); ++i)
+                for(int i = 0; i < c->getNumLooks(); ++i)
                 {
                     const char* name = c->getLookNameByIndex(i);
                     save(out, c->getLook(name));
@@ -1892,7 +1984,7 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Newline;
                 out << YAML::Key << "colorspaces";
                 out << YAML::Value << YAML::BeginSeq;
-                for(unsigned i = 0; i < c->getNumColorSpaces(); ++i)
+                for(int i = 0; i < c->getNumColorSpaces(); ++i)
                 {
                     const char* name = c->getColorSpaceNameByIndex(i);
                     save(out, c->getColorSpace(name));

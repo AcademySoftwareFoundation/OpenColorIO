@@ -80,6 +80,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildExponentOps(ops, config, *exponentTransform, dir);
         }
+        else if(ConstExpressionTransformRcPtr expressionTransform = \
+            DynamicPtrCast<const ExpressionTransform>(transform))
+        {
+            BuildExpressionOps(ops, config, *expressionTransform, dir);
+        }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
         {
@@ -151,6 +156,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const ExponentTransform*>(t))
         {
             os << *exponentTransform;
+        }
+        else if(const ExpressionTransform * expressionTransform = \
+            dynamic_cast<const ExpressionTransform*>(t))
+        {
+            os << *expressionTransform;
         }
         else if(const FileTransform * fileTransform = \
             dynamic_cast<const FileTransform*>(t))
