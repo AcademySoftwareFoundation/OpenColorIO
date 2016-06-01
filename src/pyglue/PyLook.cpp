@@ -128,7 +128,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_LookType = {
         PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
-        "OCIO.Look",                                //tp_name
+        OCIO_PYTHON_NAMESPACE(Look),                //tp_name
         sizeof(PyOCIO_Look),                        //tp_basicsize
         0,                                          //tp_itemsize
         (destructor)PyOCIO_Look_delete,             //tp_dealloc
