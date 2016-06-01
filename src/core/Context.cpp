@@ -350,12 +350,17 @@ namespace
 
     std::ostream& operator<< (std::ostream& os, const Context& context)
     {
-        os << "Context:\n";
+        os << "<Context";
+        os << " searchPath=" << context.getSearchPath();
+        os << ", workingDir=" << context.getWorkingDir();
+        os << ", environmentMode=" << EnvironmentModeToString(context.getEnvironmentMode());
+        os << ", environment=";
         for(int i=0; i<context.getNumStringVars(); ++i)
         {
             const char * key = context.getStringVarNameByIndex(i);
-            os << key << "=" << context.getStringVar(key) << "\n";
+            os << "\n\t" << key << ": " << context.getStringVar(key);
         }
+        os << ">";
         return os;
     }
     

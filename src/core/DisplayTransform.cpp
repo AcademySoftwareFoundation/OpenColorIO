@@ -231,8 +231,32 @@ OCIO_NAMESPACE_ENTER
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
         os << "inputColorSpace=" << t.getInputColorSpaceName() << ", ";
         os << "display=" << t.getDisplay() << ", ";
-        os << "view=" << t.getView() << ", ";
-        os << ">\n";
+        os << "view=" << t.getView();
+        if (t.getLooksOverrideEnabled())
+        {
+            os << ", looksOverride=" << t.getLooksOverride();
+        }
+        ConstTransformRcPtr transform(t.getLinearCC());
+        if (transform)
+        {
+            os << ", linearCC: " << *transform;
+        }
+        transform = t.getColorTimingCC();
+        if (transform)
+        {
+            os << ", colorTimingCC: " << *transform;
+        }
+        transform = t.getChannelView();
+        if (transform)
+        {
+            os << ", channelView: " << *transform;
+        }
+        transform = t.getDisplayCC();
+        if (transform)
+        {
+            os << ", displayCC: " << *transform;
+        }
+        os << ">";
         return os;
     }
     

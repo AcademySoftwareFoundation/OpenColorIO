@@ -130,7 +130,9 @@ OCIO_NAMESPACE_ENTER
     {
         os << "<ColorSpaceTransform ";
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << ">\n";
+        os << "src=" << t.getSrc() << ", ";
+        os << "dst=" << t.getDst();
+        os << ">";
         return os;
     }
     

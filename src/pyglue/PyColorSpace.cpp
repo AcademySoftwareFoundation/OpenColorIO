@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 #include <OpenColorIO/OpenColorIO.h>
+#include <sstream>
 
 #include "PyUtil.h"
 #include "PyDoc.h"
@@ -77,6 +78,7 @@ OCIO_NAMESPACE_ENTER
         
         int PyOCIO_ColorSpace_init(PyOCIO_ColorSpace * self, PyObject * args, PyObject * kwds);
         void PyOCIO_ColorSpace_delete(PyOCIO_ColorSpace * self, PyObject * args);
+        PyObject * PyOCIO_ColorSpace_str(PyObject * self);
         PyObject * PyOCIO_ColorSpace_isEditable(PyObject * self);
         PyObject * PyOCIO_ColorSpace_createEditableCopy(PyObject * self);
         PyObject * PyOCIO_ColorSpace_getName(PyObject * self);
@@ -165,7 +167,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_as_mapping
         0,                                          //tp_hash 
         0,                                          //tp_call
-        0,                                          //tp_str
+        PyOCIO_ColorSpace_str,                      //tp_str
         0,                                          //tp_getattro
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
@@ -267,6 +269,16 @@ OCIO_NAMESPACE_ENTER
             DeletePyObject<PyOCIO_ColorSpace>(self);
         }
         
+        PyObject * PyOCIO_ColorSpace_str(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
+            std::ostringstream out;
+            out << *colorSpace;
+            return PyString_FromString(out.str().c_str());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
         PyObject * PyOCIO_ColorSpace_isEditable(PyObject * self)
         {
             return PyBool_FromLong(IsPyColorSpaceEditable(self));
