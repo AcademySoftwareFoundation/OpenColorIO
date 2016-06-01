@@ -285,6 +285,11 @@ OCIO_NAMESPACE_ENTER
                     load(second, stringval);
                     v.looks = stringval;
                 }
+                else if(key == "description")
+                {
+                    load(second, stringval);
+                    v.description = stringval;
+                }
                 else
                 {
                     LogUnknownKeyWarning(node.Tag(), first);
@@ -304,7 +309,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        inline void save(YAML::Emitter& out, View view)
+        inline void save(YAML::Emitter& out, const View &view)
         {
             out << YAML::VerbatimTag("View");
             out << YAML::Flow;
@@ -312,6 +317,7 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Key << "name" << YAML::Value << view.name;
             out << YAML::Key << "colorspace" << YAML::Value << view.colorspace;
             if(!view.looks.empty()) out << YAML::Key << "looks" << YAML::Value << view.looks;
+            if(!view.description.empty()) out << YAML::Key << "description" << YAML::Value << YAML::DoubleQuoted << view.description;
             out << YAML::EndMap;
         }
         
@@ -1560,7 +1566,9 @@ OCIO_NAMESPACE_ENTER
                             View view;
                             load(dsecond[i], view);
                             c->addDisplay(display.c_str(), view.name.c_str(),
-                                          view.colorspace.c_str(), view.looks.c_str());
+                                          view.colorspace.c_str(),
+                                          view.looks.c_str(),
+                                          view.description.c_str());
                         }
                     }
                 }
@@ -1747,6 +1755,7 @@ OCIO_NAMESPACE_ENTER
                     dview.colorspace = c->getDisplayColorSpaceName(display, dview.name.c_str());
                     if(c->getDisplayLooks(display, dview.name.c_str()) != NULL)
                         dview.looks = c->getDisplayLooks(display, dview.name.c_str());
+                    dview.description = c->getDisplayDescription(display, dview.name.c_str());
                     save(out, dview);
                 
                 }

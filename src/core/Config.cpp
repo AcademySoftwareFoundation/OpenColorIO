@@ -1176,14 +1176,38 @@ OCIO_NAMESPACE_ENTER
         return views[index].looks.c_str();
     }
     
+    const char * Config::getDisplayDescription(const char * display, const char * view) const
+    {
+        if(!display || !view) return "";
+        
+        DisplayMap::const_iterator iter = find_display_const(getImpl()->displays_, display);
+        if(iter == getImpl()->displays_.end()) return "";
+        
+        const ViewVec & views = iter->second;
+        int index = find_view(views, view);
+        if(index<0) return "";
+        
+        return views[index].description.c_str();
+    }
+    
     void Config::addDisplay(const char * display, const char * view,
                             const char * colorSpaceName, const char * lookName)
     {
+        addDisplay(display, view, colorSpaceName, lookName, "");
+    }
+
+    void Config::addDisplay(const char * display, const char * view,
+                            const char * colorSpaceName, const char * lookName,
+                            const char * description)
+    {
         
         if(!display || !view || !colorSpaceName || !lookName) return;
+        if(!description) {
+            description = "";
+        }
         
-        AddDisplay(getImpl()->displays_,
-                   display, view, colorSpaceName, lookName);
+        AddDisplay(getImpl()->displays_, display, view, colorSpaceName,
+                   lookName, description);
         getImpl()->displayCache_.clear();
         
         AutoMutex lock(getImpl()->cacheidMutex_);

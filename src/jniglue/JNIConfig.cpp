@@ -434,17 +434,28 @@ Java_org_OpenColorIO_Config_getDisplayLooks(JNIEnv * env, jobject self, jstring 
     OCIO_JNITRY_EXIT(NULL)
 }
 
-// TODO: seems that 4 string params causes a memory error in the JNI layer?
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Config_getDisplayDescription(JNIEnv * env, jobject self, jstring display, jstring view)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return env->NewStringUTF(cfg->getDisplayDescription(GetJStringValue(env, display)(),
+                                                        GetJStringValue(env, view)()));
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+// TODO: seems that 5 string params causes a memory error in the JNI layer?
 /*
 JNIEXPORT void JNICALL
-Java_org_OpenColorIO_Config_addDisplay(JNIEnv * env, jobject self, jstring display, jstring view, jstring colorSpaceName, jstring looks)
+Java_org_OpenColorIO_Config_addDisplay(JNIEnv * env, jobject self, jstring display, jstring view, jstring colorSpaceName, jstring looks, jstring description)
 {
     OCIO_JNITRY_ENTER()
     ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
     cfg->addDisplay(GetJStringValue(env, display)(),
                     GetJStringValue(env, view)(),
                     GetJStringValue(env, colorSpaceName)(),
-                    GetJStringValue(env, looks)());
+                    GetJStringValue(env, looks)(),
+                    GetJStringValue(env, description)());
     
     OCIO_JNITRY_EXIT()
 }

@@ -123,6 +123,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getViews(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getDisplayColorSpaceName(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getDisplayLooks(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_getDisplayDescription(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_addDisplay(PyObject * self, PyObject * args, PyObject * kwargs);
         PyObject * PyOCIO_Config_clearDisplays(PyObject * self);
         PyObject * PyOCIO_Config_setActiveDisplays(PyObject * self, PyObject * args);
@@ -233,6 +234,8 @@ OCIO_NAMESPACE_ENTER
             PyOCIO_Config_getDisplayColorSpaceName, METH_VARARGS, CONFIG_GETDISPLAYCOLORSPACENAME__DOC__ },
             { "getDisplayLooks",
             PyOCIO_Config_getDisplayLooks, METH_VARARGS, CONFIG_GETDISPLAYLOOKS__DOC__ },
+            { "getDisplayDescription",
+            PyOCIO_Config_getDisplayDescription, METH_VARARGS, CONFIG_GETDISPLAYLOOKS__DOC__ },
             { "addDisplay",
             (PyCFunction) PyOCIO_Config_addDisplay, METH_VARARGS|METH_KEYWORDS, CONFIG_ADDDISPLAY__DOC__ },
             { "clearDisplays",
@@ -809,6 +812,18 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
+        PyObject * PyOCIO_Config_getDisplayDescription(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* display = 0;
+            char* view = 0;
+            if (!PyArg_ParseTuple(args, "ss:getDisplayDescription",
+                &display, &view)) return NULL;
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyString_FromString(config->getDisplayDescription(display, view));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
         PyObject * PyOCIO_Config_addDisplay(PyObject * self, PyObject * args, PyObject * kwargs)
         {
             OCIO_PYTRY_ENTER()
@@ -817,14 +832,16 @@ OCIO_NAMESPACE_ENTER
             char* view = 0;
             char* colorSpaceName = 0;
             char* looks = 0;
-            const char * kwlist[] = { "display", "view", "colorSpaceName", "looks",  NULL };
-            if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sss|s",
+            char* description = 0;
+            const char * kwlist[] = { "display", "view", "colorSpaceName", "looks", "description", NULL };
+            if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sss|ss",
                 const_cast<char**>(kwlist),
-                &display, &view, &colorSpaceName, &looks))
+                &display, &view, &colorSpaceName, &looks, &description))
                 return 0;
             std::string lookStr;
             if(looks) lookStr = looks;
-            config->addDisplay(display, view, colorSpaceName, lookStr.c_str());
+            config->addDisplay(display, view, colorSpaceName, lookStr.c_str(),
+                               description);
             Py_RETURN_NONE;
             OCIO_PYTRY_EXIT(NULL)
         }

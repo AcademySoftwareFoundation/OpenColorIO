@@ -47,15 +47,18 @@ OCIO_NAMESPACE_ENTER
         std::string name;
         std::string colorspace;
         std::string looks;
+        std::string description;
         
         View() { }
         
         View(const std::string & name_,
              const std::string & colorspace_,
-             const std::string & looksList_) :
+             const std::string & looksList_,
+             const std::string & description_) :
                 name(name_),
                 colorspace(colorspace_),
-                looks(looksList_)
+                looks(looksList_),
+                description(description_)
         { }
     };
     
@@ -72,7 +75,8 @@ OCIO_NAMESPACE_ENTER
                     const std::string & display,
                     const std::string & view,
                     const std::string & colorspace,
-                    const std::string & looks);
+                    const std::string & looks,
+                    const std::string & description);
     
     void ComputeDisplays(StringVec & displayCache,
                          const DisplayMap & displays,

@@ -77,8 +77,9 @@ public class Config extends LoadLibrary
     public native String getView(String display, int index);
     public native String getDisplayColorSpaceName(String display, String view);
     public native String getDisplayLooks(String display, String view);
-    // TODO: seems that 4 string params causes a memory error in the JNI layer?
-    // public native void addDisplay(String display, String view, String colorSpaceName, int looks);
+    public native String getDisplayDescription(String display, String view);
+    // TODO: seems that 5 string params causes a memory error in the JNI layer?
+    // public native void addDisplay(String display, String view, String colorSpaceName, String looks, String description);
     public native void clearDisplays();
     public native void setActiveDisplays(String displays);
     public native String getActiveDisplays();

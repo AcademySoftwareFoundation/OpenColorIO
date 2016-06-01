@@ -415,9 +415,25 @@ class Config:
         """
         pass
     
-    def addDisplay(self, display, view, csname, looks=None):
+    def getDisplayDescription(self, display, view):
         """
-        addDisplay(display, view, colorSpaceName[, looks])
+        getDisplayDescription(display, view)
+        
+        Returns the description corresponding to the display and view
+        combination in :py:class:`PyOpenColorIO.Config`.
+        
+        :param display: display
+        :type display: string
+        :param view: view
+        :type view: string
+        :return: description
+        :rtype: string
+        """
+        pass
+    
+    def addDisplay(self, display, view, csname, looks=None, description=None):
+        """
+        addDisplay(display, view, colorSpaceName[, looks[, description]])
         
         NEEDS WORK
         
@@ -429,6 +445,8 @@ class Config:
         :type colorSpaceName: string
         :param looks: optional
         :type looks: string
+        :param description: optional
+        :type description: string
         """
         pass
 
