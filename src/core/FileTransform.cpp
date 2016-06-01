@@ -204,6 +204,7 @@ OCIO_NAMESPACE_ENTER
     {
         registerFileFormat(CreateFileFormat3DL());
         registerFileFormat(CreateFileFormatCCC());
+        registerFileFormat(CreateFileFormatCDL());
         registerFileFormat(CreateFileFormatCC());
         registerFileFormat(CreateFileFormatCSP());
         registerFileFormat(CreateFileFormatHDL());
