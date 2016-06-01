@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <limits>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -247,8 +248,8 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        const int FLOAT_DECIMALS = 7;
-        const int DOUBLE_DECIMALS = 16;
+        const int FLOAT_DECIMALS = std::numeric_limits<float>::digits10 + 1;
+        const int DOUBLE_DECIMALS = std::numeric_limits<double>::digits10 + 1;
     }
     
     std::string FloatToString(float value)

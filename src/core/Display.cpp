@@ -71,13 +71,14 @@ OCIO_NAMESPACE_ENTER
                     const std::string & display,
                     const std::string & view,
                     const std::string & colorspace,
-                    const std::string & looks)
+                    const std::string & looks,
+                    const std::string & description)
     {
         DisplayMap::iterator iter = find_display(displays, display);
         if(iter == displays.end())
         {
             ViewVec views;
-            views.push_back( View(view, colorspace, looks) );
+            views.push_back( View(view, colorspace, looks, description) );
             displays[display] = views;
         }
         else
@@ -86,12 +87,13 @@ OCIO_NAMESPACE_ENTER
             int index = find_view(views, view);
             if(index<0)
             {
-                views.push_back( View(view, colorspace, looks) );
+                views.push_back( View(view, colorspace, looks, description) );
             }
             else
             {
                 views[index].colorspace = colorspace;
                 views[index].looks = looks;
+                views[index].description = description;
             }
         }
     }

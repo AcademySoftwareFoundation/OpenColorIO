@@ -27,37 +27,41 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <cstring>
-#include <sstream>
-#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "LogOps.h"
+#include "ClampOp.h"
 #include "OpBuilders.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
-    LogTransformRcPtr LogTransform::Create()
+    ClampTransformRcPtr ClampTransform::Create()
     {
-        return LogTransformRcPtr(new LogTransform(), &deleter);
+        return ClampTransformRcPtr(new ClampTransform(), &deleter);
     }
     
-    void LogTransform::deleter(LogTransform* t)
+    void ClampTransform::deleter(ClampTransform* t)
     {
         delete t;
     }
     
     
-    class LogTransform::Impl
+    class ClampTransform::Impl
     {
     public:
         TransformDirection dir_;
-        float base_;
+        float min_[4], max_[4];
         
         Impl() :
-            dir_(TRANSFORM_DIR_FORWARD),
-            base_(2.0)
-        { }
+            dir_(TRANSFORM_DIR_FORWARD)
+        {
+            for(int i=0; i<4; ++i)
+            {
+                min_[i] = 1.0f;
+                max_[i] = 1.0f;
+            }
+        }
         
         ~Impl()
         { }
@@ -65,7 +69,8 @@ OCIO_NAMESPACE_ENTER
         Impl& operator= (const Impl & rhs)
         {
             dir_ = rhs.dir_;
-            base_ = rhs.base_;
+            memcpy(min_, rhs.min_, 4*sizeof(float));
+            memcpy(max_, rhs.max_, 4*sizeof(float));
             return *this;
         }
     };
@@ -73,85 +78,101 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     
-    LogTransform::LogTransform()
-        : m_impl(new LogTransform::Impl)
+    
+    ClampTransform::ClampTransform()
+        : m_impl(new ClampTransform::Impl)
     {
     }
     
-    TransformRcPtr LogTransform::createEditableCopy() const
+    TransformRcPtr ClampTransform::createEditableCopy() const
     {
-        LogTransformRcPtr transform = LogTransform::Create();
+        ClampTransformRcPtr transform = ClampTransform::Create();
         *(transform->m_impl) = *m_impl;
         return transform;
     }
     
-    LogTransform::~LogTransform()
+    ClampTransform::~ClampTransform()
     {
         delete m_impl;
         m_impl = NULL;
     }
     
-    LogTransform& LogTransform::operator= (const LogTransform & rhs)
+    ClampTransform& ClampTransform::operator= (const ClampTransform & rhs)
     {
         *m_impl = *rhs.m_impl;
         return *this;
     }
     
-    TransformDirection LogTransform::getDirection() const
+    TransformDirection ClampTransform::getDirection() const
     {
         return getImpl()->dir_;
     }
     
-    void LogTransform::setDirection(TransformDirection dir)
+    void ClampTransform::setDirection(TransformDirection dir)
     {
         getImpl()->dir_ = dir;
     }
     
-    
-    float LogTransform::getBase() const
+    void ClampTransform::setMin(const float * vec4)
     {
-        return getImpl()->base_;
+        if(vec4) memcpy(getImpl()->min_, vec4, 4*sizeof(float));
     }
     
-    void LogTransform::setBase(float val)
+    void ClampTransform::getMin(float * vec4) const
     {
-        getImpl()->base_ = val;
+        if(vec4) memcpy(vec4, getImpl()->min_, 4*sizeof(float));
     }
     
-    std::ostream& operator<< (std::ostream& os, const LogTransform& t)
+    void ClampTransform::setMax(const float * vec4)
     {
-        os << "<LogTransform ";
-        os << "base=" << t.getBase() << ", ";
-        os << "direction=" << TransformDirectionToString(t.getDirection());
+        if(vec4) memcpy(getImpl()->max_, vec4, 4*sizeof(float));
+    }
+    
+    void ClampTransform::getMax(float * vec4) const
+    {
+        if(vec4) memcpy(vec4, getImpl()->max_, 4*sizeof(float));
+    }
+    
+    std::ostream& operator<< (std::ostream& os, const ClampTransform& t)
+    {
+        float min[4], max[4];
+
+        t.getMin(min);
+        t.getMax(max);
+
+        os << "<ClampTransform";
+        os << " direction=" << TransformDirectionToString(t.getDirection());
+        os << ", min=" << min[0];
+        for (int i = 1; i < 4; ++i)
+        {
+            os << " " << min[i];
+        }
+        os << ", max=" << max[0];
+        for (int i = 1; i < 4; ++i)
+        {
+            os << " " << max[i];
+        }
+
         os << ">";
-        
         return os;
     }
     
     
-    ///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
     
-    
-    void BuildLogOps(OpRcPtrVec & ops,
-                     const Config& /*config*/,
-                     const LogTransform& transform,
-                     TransformDirection dir)
+    void BuildClampOps(OpRcPtrVec & ops,
+                       const Config& /*config*/,
+                       const ClampTransform & transform,
+                       TransformDirection dir)
     {
         TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                  transform.getDirection());
+            transform.getDirection());
         
-        float basescalar = transform.getBase();
-        float base[3] = { basescalar, basescalar, basescalar };
+        float min[4], max[4];
+        transform.getMin(min);
+        transform.getMax(max);
         
-        float k[3] = { 1.0f, 1.0f, 1.0f };
-        float m[3] = { 1.0f, 1.0f, 1.0f };
-        float b[3] = { 0.0f, 0.0f, 0.0f };
-        float kb[3] = { 0.0f, 0.0f, 0.0f };
-        
-        // output = k * log(mx+b, base) + kb
-        CreateLogOp(ops,
-                    k, m, b, base, kb,
-                    combinedDir);
+        CreateClampOps(ops, min, max, combinedDir);
     }
 }
 OCIO_NAMESPACE_EXIT

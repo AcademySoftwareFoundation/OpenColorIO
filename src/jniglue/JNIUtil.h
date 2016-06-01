@@ -65,6 +65,7 @@ typedef JObject <ConstImageDescRcPtr, ImageDescRcPtr> ImageDescJNI;
 typedef JObject <ConstTransformRcPtr, TransformRcPtr> TransformJNI;
 typedef JObject <ConstAllocationTransformRcPtr, AllocationTransformRcPtr> AllocationTransformJNI;
 typedef JObject <ConstCDLTransformRcPtr, CDLTransformRcPtr> CDLTransformJNI;
+typedef JObject <ConstCLampTransformRcPtr, ClampTransformRcPtr> ClampTransformJNI;
 typedef JObject <ConstColorSpaceTransformRcPtr, ColorSpaceTransformRcPtr> ColorSpaceTransformJNI;
 typedef JObject <ConstDisplayTransformRcPtr, DisplayTransformRcPtr> DisplayTransformJNI;
 typedef JObject <ConstExponentTransformRcPtr, ExponentTransformRcPtr> ExponentTransformJNI;

@@ -123,9 +123,18 @@ OCIO_NAMESPACE_ENTER
     
     std::ostream& operator<< (std::ostream& os, const ExponentTransform& t)
     {
+        float exp[4];
+        t.getValue(exp);
+
         os << "<ExponentTransform ";
         os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << ">\n";
+        os << "value=" << exp[0];
+        for (int i = 1; i < 4; ++i)
+        {
+          os << " " << exp[i];
+        }
+
+        os << ">";
         return os;
     }
     

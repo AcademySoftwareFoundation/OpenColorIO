@@ -29,6 +29,8 @@ file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
 
 add_library(PyOpenColorIO MODULE ${pyglue_src_files} ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h)
 
+add_definitions(-DPYOCIO_NAME=PyOpenColorIO)
+
 if(OCIO_USE_BOOST_PTR)
     include_directories(
         ${PYTHON_INCLUDE}

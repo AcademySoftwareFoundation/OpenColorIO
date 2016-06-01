@@ -26,35 +26,16 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+package org.OpenColorIO;
+import org.OpenColorIO.*;
 
-#ifndef INCLUDED_OCIO_GPUSHADERUTILS_H
-#define INCLUDED_OCIO_GPUSHADERUTILS_H
-
-#include <OpenColorIO/OpenColorIO.h>
-
-#include <sstream>
-
-OCIO_NAMESPACE_ENTER
+public class ClampTransform extends Transform
 {
-    std::string GpuTextHalf4x4(const float * m44, GpuLanguage lang);
-    std::string GpuTextHalf4(const float * v4, GpuLanguage lang);
-    std::string GpuTextHalf3(const float * v3, GpuLanguage lang);
-    std::string GpuTextHalf2(const float * v2, GpuLanguage lang);
-    
-    void Write_mtx_x_vec(std::ostream & os,
-                         const std::string & mtx, const std::string & vec,
-                         GpuLanguage lang);
-    
-    void Write_half4x4(std::ostream & os, const float * m44, GpuLanguage lang);
-    void Write_half4(std::ostream & os, const float * v4,  GpuLanguage lang);
-    void Write_half3(std::ostream & os, const float * v3,  GpuLanguage lang);
-    void Write_half2(std::ostream & os, const float * v2,  GpuLanguage lang);
-    
-    // returns vec3
-    void Write_sampleLut3D_rgb(std::ostream & os, const std::string & variableName,
-                               const std::string & lutName, int lut3DEdgeLen,
-                               GpuLanguage lang);
+    public ClampTransform() { super(); }
+    protected ClampTransform(long impl) { super(impl); }
+    public native ClampTransform Create();
+    public native void setMin(float[] vec4);
+    public native void getMin(float[] vec4);
+    public native void setMax(float[] vec4);
+    public native void getMax(float[] vec4);
 }
-OCIO_NAMESPACE_EXIT
-
-#endif

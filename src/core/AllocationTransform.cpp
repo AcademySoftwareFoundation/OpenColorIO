@@ -149,9 +149,23 @@ OCIO_NAMESPACE_ENTER
     
     std::ostream& operator<< (std::ostream& os, const AllocationTransform& t)
     {
+        Allocation allocation(t.getAllocation());
+        int numVars(t.getNumVars());
+        std::vector<float> vars(numVars);
+        t.getVars(&vars[0]);
+
         os << "<AllocationTransform ";
-        os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << ">\n";
+        os << "direction=" << TransformDirectionToString(t.getDirection());
+        if (numVars)
+        {
+            os << ", allocation=" << AllocationToString(allocation) << ", ";
+            os << "vars=" << vars[0];
+            for (int i = 1; i < numVars; ++i)
+            {
+                os << " " << vars[i];
+            }
+        }
+        os << ">";
         
         return os;
     }

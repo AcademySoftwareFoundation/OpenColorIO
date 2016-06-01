@@ -225,6 +225,56 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const CDLTransform&);
     
+
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class:: Constrain a value to lie between min and max.  If min is
+    // greater than max no clamp is performed.  The inverse transform of clamp
+    // is a noop.
+    class OCIOEXPORT ClampTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static ClampTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+        
+        //!cpp:function::
+        void setMin(const float * rgba);
+        //!cpp:function::
+        void getMin(float * rgba) const;
+        
+        //!cpp:function::
+        void setMax(const float * rgba);
+        //!cpp:function::
+        void getMax(float * rgba) const;
+        
+    private:
+        ClampTransform();
+        ClampTransform(const ClampTransform &);
+        virtual ~ClampTransform();
+        
+        ClampTransform& operator= (const ClampTransform &);
+        
+        static void deleter(ClampTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&,
+                                                const ClampTransform&);
+    
     
     //!rst:: //////////////////////////////////////////////////////////////////
     
@@ -419,6 +469,70 @@ OCIO_NAMESPACE_ENTER
     
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExponentTransform&);
+    
+    
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class:: Represents expression transform: color = expression()
+    // 
+    // Available operations:
+    // Mathematical operations: + - / * ^ %
+    // Functions: min() max() ceil() floor() log() log2() log10()
+    // Trigonometry: sin() cos() tan()
+    // Equalities: == != < <= > >=
+    // Logical: && ||
+    // Ternary: ? :
+    class OCIOEXPORT ExpressionTransform : public Transform
+    {
+    public:
+        //!cpp:function::
+        static ExpressionTransformRcPtr Create();
+        
+        //!cpp:function::
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function::
+        virtual TransformDirection getDirection() const;
+        //!cpp:function::
+        virtual void setDirection(TransformDirection dir);
+        
+        //!cpp:function::
+        const char * getExpressionR() const;
+        //!cpp:function::
+        const char * getExpressionG() const;
+        //!cpp:function::
+        const char * getExpressionB() const;
+        //!cpp:function::
+        const char * getExpressionA() const;
+        
+        //!cpp:function::
+        void setExpressionR(const char * expressionR);
+        //!cpp:function::
+        void setExpressionG(const char * expressionG);
+        //!cpp:function::
+        void setExpressionB(const char * expressionB);
+        //!cpp:function::
+        void setExpressionA(const char * expressionA);
+        
+        
+    private:
+        ExpressionTransform();
+        ExpressionTransform(const ExpressionTransform &);
+        virtual ~ExpressionTransform();
+        
+        ExpressionTransform& operator= (const ExpressionTransform &);
+        
+        static void deleter(ExpressionTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const ExpressionTransform&);
     
     
     //!rst:: //////////////////////////////////////////////////////////////////

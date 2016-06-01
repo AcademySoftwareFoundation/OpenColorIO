@@ -65,6 +65,8 @@ const char* GetOCIOTClass(ConstTransformRcPtr tran) {
         return "org/OpenColorIO/AllocationTransform";
     else if(ConstCDLTransformRcPtr ct = DynamicPtrCast<const CDLTransform>(tran))
         return "org/OpenColorIO/CDLTransform";
+    else if(ConstClampTransformRcPtr ct = DynamicPtrCast<const ClampTransform>(tran))
+        return "org/OpenColorIO/ClampTransform";
     else if(ConstColorSpaceTransformRcPtr cst = DynamicPtrCast<const ColorSpaceTransform>(tran))
         return "org/OpenColorIO/ColorSpaceTransform";
     else if(ConstDisplayTransformRcPtr dt = DynamicPtrCast<const DisplayTransform>(tran))

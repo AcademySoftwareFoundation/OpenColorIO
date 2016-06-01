@@ -121,6 +121,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<CDLTransform> CDLTransformRcPtr;
     
+    class OCIOEXPORT ClampTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ClampTransform> ConstClampTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ClampTransform> ClampTransformRcPtr;
+
     class OCIOEXPORT ColorSpaceTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
@@ -139,6 +145,13 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<ExponentTransform> ExponentTransformRcPtr;
     
+    class OCIOEXPORT ExpressionTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const ExpressionTransform> ConstExpressionTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<ExpressionTransform> ExpressionTransformRcPtr;
+    
+    class OCIOEXPORT FileTransform;
     class OCIOEXPORT FileTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const FileTransform> ConstFileTransformRcPtr;

@@ -37,6 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define OCIO_PYTRY_ENTER() try {
 #define OCIO_PYTRY_EXIT(ret) } catch(...) { OCIO_NAMESPACE::Python_Handle_Exception(); return ret; }
+#define OCIO_STRINGIFY(str) OCIO_STRINGIFY_IMPL(str)
+#define OCIO_STRINGIFY_IMPL(str) #str
+#define OCIO_PYTHON_NAMESPACE(obj) OCIO_STRINGIFY(PYOCIO_NAME) "." #obj
 
 // Some utilities macros for python 2.5 to 3.3 compatibility
 #if PY_MAJOR_VERSION >= 3
@@ -129,6 +132,7 @@ OCIO_NAMESPACE_ENTER
     
     extern PyTypeObject PyOCIO_AllocationTransformType;
     extern PyTypeObject PyOCIO_CDLTransformType;
+    extern PyTypeObject PyOCIO_ClampTransformType;
     extern PyTypeObject PyOCIO_ColorSpaceTransformType;
     extern PyTypeObject PyOCIO_DisplayTransformType;
     extern PyTypeObject PyOCIO_ExponentTransformType;

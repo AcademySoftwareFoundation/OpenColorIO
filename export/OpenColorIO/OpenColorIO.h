@@ -341,6 +341,13 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         void setStrictParsingEnabled(bool enabled);
         
+        //!cpp:function::
+        // Returns delimiter chars used by parseColorSpaceFromString()
+        const char * delimiters() const;
+        //!cpp:function::
+        // Sets delimiter chars used by parseColorSpaceFromString()
+        void setDelimiters(const char * delimiters);
+
         ///////////////////////////////////////////////////////////////////////////
         //!rst:: .. _cfgroles_section:
         // 
@@ -392,6 +399,8 @@ OCIO_NAMESPACE_ENTER
         const char * getDisplayColorSpaceName(const char * display, const char * view) const;
         //!cpp:function::
         const char * getDisplayLooks(const char * display, const char * view) const;
+        //!cpp:function::
+        const char * getDisplayDescription(const char * display, const char * view) const;
         
         //!cpp:function:: For the (display,view) combination,
         // specify which colorSpace and look to use.
@@ -400,6 +409,16 @@ OCIO_NAMESPACE_ENTER
         void addDisplay(const char * display, const char * view,
                         const char * colorSpaceName, const char * looks);
         
+        //!cpp:function:: For the (display,view) combination,
+        // specify which colorSpace and look to use.
+        // If a look is not desired, then just pass an empty string.
+        // This version also has a description string.  If a description
+        // is not desired, then just pass an empty string.
+
+        void addDisplay(const char * display, const char * view,
+                        const char * colorSpaceName, const char * looks,
+                        const char * description);
+
         //!cpp:function::
         void clearDisplays();
         
@@ -732,6 +751,11 @@ OCIO_NAMESPACE_ENTER
         ConstTransformRcPtr getInverseTransform() const;
         //!cpp:function:: Setting a transform to a non-null call makes it allowed.
         void setInverseTransform(const ConstTransformRcPtr & transform);
+
+        //!cpp:function::
+        const char * getDescription() const;
+        //!cpp:function::
+        void setDescription(const char * description);
     private:
         Look();
         ~Look();

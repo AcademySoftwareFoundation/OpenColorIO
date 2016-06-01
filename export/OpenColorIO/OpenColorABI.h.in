@@ -69,7 +69,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // If supported, define OCIOEXPORT, OCIOHIDDEN
 // (used to choose which symbols to export from OpenColorIO)
-#if defined __linux__ || __APPLE__ || __FreeBSD__
+#if defined __GNUC__
     #if __GNUC__ >= 4
         #define OCIOEXPORT __attribute__ ((visibility("default")))
         #define OCIOHIDDEN __attribute__ ((visibility("hidden")))

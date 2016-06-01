@@ -60,6 +60,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildCDLOps(ops, config, *cdlTransform, dir);
         }
+        else if(ConstClampTransformRcPtr clampTransform = \
+            DynamicPtrCast<const ClampTransform>(transform))
+        {
+            BuildClampOps(ops, config, *clampTransform, dir);
+        }
         else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
             DynamicPtrCast<const ColorSpaceTransform>(transform))
         {
@@ -74,6 +79,11 @@ OCIO_NAMESPACE_ENTER
             DynamicPtrCast<const ExponentTransform>(transform))
         {
             BuildExponentOps(ops, config, *exponentTransform, dir);
+        }
+        else if(ConstExpressionTransformRcPtr expressionTransform = \
+            DynamicPtrCast<const ExpressionTransform>(transform))
+        {
+            BuildExpressionOps(ops, config, *expressionTransform, dir);
         }
         else if(ConstFileTransformRcPtr fileTransform = \
             DynamicPtrCast<const FileTransform>(transform))
@@ -127,6 +137,11 @@ OCIO_NAMESPACE_ENTER
         {
             os << *cdlTransform;
         }
+        else if(const ClampTransform * clampTransform = \
+            dynamic_cast<const ClampTransform*>(t))
+        {
+            os << *clampTransform;
+        }
         else if(const ColorSpaceTransform * colorSpaceTransform = \
             dynamic_cast<const ColorSpaceTransform*>(t))
         {
@@ -142,6 +157,11 @@ OCIO_NAMESPACE_ENTER
         {
             os << *exponentTransform;
         }
+        else if(const ExpressionTransform * expressionTransform = \
+            dynamic_cast<const ExpressionTransform*>(t))
+        {
+            os << *expressionTransform;
+        }
         else if(const FileTransform * fileTransform = \
             dynamic_cast<const FileTransform*>(t))
         {
@@ -151,6 +171,16 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const GroupTransform*>(t))
         {
             os << *groupTransform;
+        }
+        else if(const LogTransform * logTransform = \
+            dynamic_cast<const LogTransform*>(t))
+        {
+            os << *logTransform;
+        }
+        else if(const LookTransform * lookTransform = \
+            dynamic_cast<const LookTransform*>(t))
+        {
+            os << *lookTransform;
         }
         else if(const MatrixTransform * matrixTransform = \
             dynamic_cast<const MatrixTransform*>(t))

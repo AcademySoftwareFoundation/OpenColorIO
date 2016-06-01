@@ -27,6 +27,12 @@ class Look:
     def setProcessSpace(self, csname):
         pass
         
+    def getDescription(self):
+        pass
+        
+    def setDescription(self, desc):
+        pass
+        
     def getTransform(self):
         pass
         
