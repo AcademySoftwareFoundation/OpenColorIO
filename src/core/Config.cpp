@@ -1229,7 +1229,16 @@ OCIO_NAMESPACE_ENTER
 
     const char * Config::getActiveViews() const
     {
-        getImpl()->activeViewsStr_ = JoinStringEnvStyle(getImpl()->activeViews_);
+        if(!getImpl()->activeViewsEnvOverride_.empty())
+        {
+            getImpl()->activeViewsStr_ = JoinStringEnvStyle(getImpl()->activeViewsEnvOverride_);
+        } 
+        else
+        {
+            getImpl()->activeViewsStr_ = JoinStringEnvStyle(getImpl()->activeViews_);
+        }
+
+        
         return getImpl()->activeViewsStr_.c_str();
     }
     
