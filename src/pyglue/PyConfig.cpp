@@ -475,7 +475,8 @@ OCIO_NAMESPACE_ENTER
             if (!PyArg_ParseTuple(args, "s:getEnvironmentVarDefault",
                 &name)) return NULL;
             ConstConfigRcPtr config = GetConstConfig(self, true);
-            return PyString_FromString(config->getEnvironmentVarDefault(name));
+            std::string var = config->getEnvironmentVarDefault(name);
+            return PyString_FromString(var.c_str());
             OCIO_PYTRY_EXIT(NULL)
         }
         
