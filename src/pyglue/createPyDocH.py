@@ -71,6 +71,7 @@ if __name__ == "__main__":
     fileh.write("\n")
     fileh.write("%s\n" % GetDocStrings(AllocationTransform))
     fileh.write("%s\n" % GetDocStrings(CDLTransform))
+    fileh.write("%s\n" % GetDocStrings(ClampTransform))
     fileh.write("%s\n" % GetDocStrings(ColorSpaceTransform))
     fileh.write("%s\n" % GetDocStrings(DisplayTransform))
     fileh.write("%s\n" % GetDocStrings(ExponentTransform))

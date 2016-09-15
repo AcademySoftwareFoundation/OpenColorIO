@@ -57,6 +57,11 @@ OCIO_NAMESPACE_ENTER
                      const CDLTransform & transform,
                      TransformDirection dir);
     
+    void BuildClampOps(OpRcPtrVec & ops,
+                       const Config & config,
+                       const ClampTransform & transform,
+                       TransformDirection dir);
+
     void BuildColorSpaceOps(OpRcPtrVec & ops,
                             const Config& config,
                             const ConstContextRcPtr & context,

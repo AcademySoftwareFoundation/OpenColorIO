@@ -77,6 +77,15 @@ class TransformsTest(unittest.TestCase):
         cdl.setDescription("bar")
         self.assertEqual("bar", cdl.getDescription())
         
+        ### ClampTransform ###
+        ct = OCIO.ExponentTransform()
+        ct.setMin([0.1, 0.2, 0.3, 0.4])
+        evals = et.getMin()
+        self.assertAlmostEqual(0.3, evals[2], delta=1e-7)
+        ct.setMax([0.1, 0.2, 0.3, 0.4])
+        evals = et.getMax()
+        self.assertAlmostEqual(0.3, evals[2], delta=1e-7)
+        
         ### ColorSpaceTransform ###
         ct = OCIO.ColorSpaceTransform()
         ct.setSrc("foo")
