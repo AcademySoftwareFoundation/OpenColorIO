@@ -35,7 +35,7 @@ option(OCIO_PYGLUE_RESPECT_ABI "If ON, the Python module install path includes P
 option(OCIO_PYGLUE_SONAME "If ON, soname/soversion will be set for Python module library" OFF)
 option(OCIO_PYGLUE_LIB_PREFIX "If ON, prefix the Python module with 'lib'" OFF)
 
-if(UNIX AND NOT APPLE)
+if((UNIX AND NOT APPLE) OR WIN32)
     option(USE_EXTERNAL_YAML "Use system installed yaml-cpp library." OFF)
     option(USE_EXTERNAL_TINYXML "Use system installed tinyxml library." OFF)
     option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
@@ -168,6 +168,7 @@ if(USE_EXTERNAL_TINYXML)
         if(TINYXML_VERSION VERSION_EQUAL ${TINYXML_VERSION_MIN} OR
            TINYXML_VERSION VERSION_GREATER ${TINYXML_VERSION_MIN})
             message(STATUS "External TinyXML will be used.")
+            include_directories(BEFORE ${TINYXML_INCLUDE_DIRS})
         else()
             message(FATAL_ERROR "ERROR: ${TINYXML_VERSION} found, but ${TINYXML_VERSION_MIN} or newer is required.")
         endif()
@@ -175,6 +176,7 @@ if(USE_EXTERNAL_TINYXML)
         message(STATUS "TinyXML was not found. Perhaps you forgot to install the development package?")
     endif(TINYXML_FOUND)
 
+    set(TINYXML_STATIC_LIBRARIES ${TINYXML_LIBRARIES})
 else(USE_EXTERNAL_TINYXML)
     set(TINYXML_VERSION 2_6_1)
     set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
@@ -201,48 +203,59 @@ endif(USE_EXTERNAL_TINYXML)
 if(USE_EXTERNAL_YAML)
     # Set minimum yaml version for non-patched sources.
     set(YAML_VERSION_MIN "0.3.0")
-    include(FindPkgConfig)
-    pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
-    find_path(YAML_CPP_INCLUDE_DIR yaml-cpp/yaml.h
-        HINTS  ${PC_YAML_CPP_INCLUDEDIR} ${PC_YAML_CPP_INCLUDE_DIRS} )
-    find_library(YAML_CPP_LIBRARY LIBRARY_NAMES yaml-cpp libyaml-cpp
-        HINTS ${PC_YAML_CPP_LIBRARY_DIRS} )
-    set(YAML_CPP_LIBRARIES ${YAML_CPP_LIBRARY})
-    set(YAML_CPP_INCLUDE_DIRS ${YAML_CPP_INCLUDE_DIR})
-    set(YAML_CPP_VERSION ${PC_YAML_CPP_VERSION})
+
+    # Use PKG Config to help find the YAML_CPP library
+    if(PKG_CONFIG_EXECUTABLE)
+        include(FindPkgConfig)
+        pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
+    endif()
+    find_package(YAML_CPP)
 
     if(YAML_CPP_VERSION VERSION_LESS ${YAML_VERSION_MIN})
         message(FATAL_ERROR "ERROR: yaml-cpp ${YAML_VERSION_MIN} or greater is required.")
     endif()
 
-    find_package_handle_standard_args(yaml-cpp
-                                      REQUIRED_VARS YAML_CPP_LIBRARIES YAML_CPP_INCLUDE_DIRS )
-    set(YAML_CPP_FOUND ${YAML-CPP_FOUND})
-    mark_as_advanced(YAML_CPP_INCLUDE_DIR YAML_CPP_LIBRARY YAML-CPP_FOUND)
-
     if(YAML_CPP_FOUND)
-        if(YAML_CPP_VERSION VERSION_GREATER "0.5.0")
+        if(YAML_CPP_VERSION VERSION_EQUAL ${YAML_VERSION_MIN} OR
+           YAML_CPP_VERSION VERSION_GREATER ${YAML_VERSION_MIN})
+            message(STATUS "System yaml-cpp library will be used.")
+            include_directories(BEFORE ${YAML_CPP_INCLUDE_DIRS})
+
             # Need to also get the boost headers here, as yaml-cpp 0.5.0+ requires them.
             # Don't bother doing this step if we are already including the boost headers for shared_ptr
             if(NOT OCIO_USE_BOOST_PTR)
-                set(Boost_ADDITIONAL_VERSIONS "1.49" "1.45" "1.44" "1.43" "1.43.0" "1.42"
-                                              "1.42.0" "1.41" "1.41.0" "1.40"
-                                              "1.40.0" "1.39" "1.39.0" "1.38"
-                                              "1.38.0" "1.37" "1.37.0" "1.34.1"
-                                              "1_34_1")
-                set(Boost_USE_MULTITHREADED ON)
-                find_package(Boost 1.34)
-                if(NOT Boost_FOUND)
-                    message(FATAL_ERROR "Error: Detected system yaml-cpp version ${YAML_CPP_VERSION} is greater than 0.5.0, and therefore requires boost, but a boost installation could not be found.")
-                endif()
+                set(YAML_CPP_VERSION_BOOST_DEPENDENCY "0.5.0")
+                if(YAML_CPP_VERSION VERSION_EQUAL ${YAML_CPP_VERSION_BOOST_DEPENDENCY} OR
+                   YAML_CPP_VERSION VERSION_GREATER ${YAML_CPP_VERSION_BOOST_DEPENDENCY})
 
-                set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
+                    set(Boost_ADDITIONAL_VERSIONS "1.49" "1.45" "1.44" "1.43" "1.43.0" "1.42"
+                                                  "1.42.0" "1.41" "1.41.0" "1.40"
+                                                  "1.40.0" "1.39" "1.39.0" "1.38"
+                                                  "1.38.0" "1.37" "1.37.0" "1.34.1"
+                                                  "1_34_1")
+                    set(Boost_USE_MULTITHREADED ON)
+                    find_package(Boost 1.34)
+                	if(Boost_FOUND)
+                        set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
+                	else()
+                		message(FATAL_ERROR "yaml-cpp ${YAML_CPP_VERSION_BOOST_DEPENDENCY} or greater requires boost. Make sure that boost is included.")
+                	endif()
+                endif()
             endif()
+        else()
+            message(FATAL_ERROR "ERROR: yaml-cpp ${YAML_VERSION_MIN} or greater is required.")
         endif()
         set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
     else(YAML_CPP_FOUND)
         message(FATAL_ERROR "ERROR: System yaml-cpp library was not found. Make sure the library is installed and the pkg-config file exists.")
     endif(YAML_CPP_FOUND)
+
+    if(WIN32)
+        set(YAML_CPP_STATIC_DEBUG_LIBRARIES ${YAML_CPP_LIBRARIES})
+        set(YAML_CPP_STATIC_OPTIMIZED_LIBRARIES ${YAML_CPP_LIBRARIES})
+    else()
+        set(YAML_CPP_STATIC_GENERAL_LIBRARIES ${YAML_CPP_LIBRARIES})
+    endif()
 else(USE_EXTERNAL_YAML)
     set(YAML_CPP_VERSION 0.3.0)
     set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})

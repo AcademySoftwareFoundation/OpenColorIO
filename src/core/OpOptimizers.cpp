@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Logging.h"
 #include "Op.h"
 
+#include <algorithm>
 #include <iterator>
 #include <sstream>
 
