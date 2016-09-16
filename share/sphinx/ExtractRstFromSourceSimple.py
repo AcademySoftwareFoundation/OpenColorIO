@@ -51,7 +51,7 @@ def ExtractRst(inputstr, ofile):
                 # Make sure that the file name is valid here
                 if newOutputFile:
                     ofile.close()
-                ofile = file(filename, 'w')
+                ofile = open(filename, 'w')
                 newOutputFile = True
             ofile.write(docstring.strip() + '\n')
         else:
@@ -69,7 +69,7 @@ if __name__ == "__main__":
             sys.exit(1)
         
         src = open(sys.argv[1]).read()
-        output = file(sys.argv[2], 'w')
+        output = open(sys.argv[2], 'w')
         ExtractRst(src, output)
         output.close()
         
