@@ -135,7 +135,7 @@ public class TransformsTest extends TestCase {
         assertEquals("foobar", ft.getCCCId());
         ft.setInterpolation(Interpolation.INTERP_NEAREST);
         assertEquals(Interpolation.INTERP_NEAREST, ft.getInterpolation());
-        assertEquals(16, ft.getNumFormats());
+        assertEquals(17, ft.getNumFormats());
         assertEquals("flame", ft.getFormatNameByIndex(0));
         assertEquals("3dl", ft.getFormatExtensionByIndex(0));
         

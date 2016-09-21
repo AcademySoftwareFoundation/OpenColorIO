@@ -1504,6 +1504,20 @@ OCIO_NAMESPACE_ENTER
                     load(second, boolval);
                     c->setStrictParsingEnabled(boolval);
                 }
+                else if(key == "delimiters")
+                {
+                    if(second.Type() != YAML::NodeType::Sequence)
+                    {
+                        std::ostringstream os;
+                        os << "'delimiters' field needs to be a list.";
+                        throw Exception(os.str().c_str());
+                    }
+                    for(unsigned i = 0; i < second.size(); ++i)
+                    {
+                        load(second[i], stringval);
+                        c->addDelimiters(stringval.c_str());
+                    }
+                }
                 else if(key == "description")
                 {
                     load(second, stringval);
@@ -1698,6 +1712,15 @@ OCIO_NAMESPACE_ENTER
             }
             out << YAML::Key << "search_path" << YAML::Value << c->getSearchPath();
             out << YAML::Key << "strictparsing" << YAML::Value << c->isStrictParsingEnabled();
+            
+            if(c->getNumDelimiters() > 0)
+            {
+                out << YAML::Key << "delimiters";
+                out << YAML::Value << YAML::Flow << YAML::BeginSeq;
+                for(unsigned i = 0; i < c->getNumDelimiters(); ++i)
+                    out << c->getDelimiterByIndex(i);
+                out << YAML::EndSeq;
+            }
             
             std::vector<float> luma(3, 0.f);
             c->getDefaultLumaCoefs(&luma[0]);

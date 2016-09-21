@@ -299,6 +299,67 @@ class Config:
     def setStrictParsingEnabled(self, enable):
         pass
 
+    def getNumDelimiters(self):
+        """
+        getNumDelimiters()
+        
+        Returns the number of string delimiters that are defined
+        """
+        pass
+
+    def getDelimiterByIndex(self, index):
+        """
+        getDelimiterByIndex(index)
+        
+        Returns the string delimiter at index.
+        
+        :param index: the delimiter index
+        :type index: int
+        
+        .. note::
+           This will return None if the specified index is not found
+        """
+        pass
+
+    def addDelimiters(self, str):
+        """
+        addDelimiters()
+        
+        Add a string delimiter to the config
+        
+        :param str: the delimiter token
+        :type str: string
+        """
+        pass
+
+    def clearDelimiters(self):
+        """
+        clearDelimiters()
+        
+        Remove all the defined delimiters
+        """
+        pass
+
+    def containsToken(self, str, token):
+        """
+        containsToken(token, str)
+        
+        Returns true if str contains the token which is surrounded by one of
+        the defined delimiters. This function searches for tokens right to
+        left.
+        
+        .. note::
+           This will also return true for a str that has the token as a suffix
+           eg. mystring<delimiter><token>
+        
+        :param str: the string to check
+        :type str: string
+        :param token: the token to search for
+        :type token: string
+        :return: if the token exists
+        :rtype: bool
+        """
+
     def setRole(self, role, csname):
         """
         setRole(role, csname)

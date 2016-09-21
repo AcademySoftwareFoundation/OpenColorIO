@@ -91,7 +91,7 @@ public class BakerTest extends TestCase {
         assertEquals(2, bakee.getCubeSize());
         String output = bakee.bake();
         assertEquals(EXPECTED_LUT, output);
-        assertEquals(5, bakee.getNumFormats());
+        assertEquals(6, bakee.getNumFormats());
         assertEquals("cinespace", bakee.getFormatNameByIndex(2));
         assertEquals("3dl", bakee.getFormatExtensionByIndex(1));
     }

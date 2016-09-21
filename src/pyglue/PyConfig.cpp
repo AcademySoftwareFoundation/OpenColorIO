@@ -110,6 +110,11 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_parseColorSpaceFromString(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_isStrictParsingEnabled(PyObject * self);
         PyObject * PyOCIO_Config_setStrictParsingEnabled(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_getNumDelimiters(PyObject * self);
+        PyObject * PyOCIO_Config_getDelimiterByIndex(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_addDelimiters(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_Config_clearDelimiters(PyObject * self);
+        PyObject * PyOCIO_Config_containsToken(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_setRole(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getNumRoles(PyObject * self);
         PyObject * PyOCIO_Config_hasRole(PyObject * self, PyObject * args);
@@ -206,6 +211,16 @@ OCIO_NAMESPACE_ENTER
             (PyCFunction) PyOCIO_Config_isStrictParsingEnabled, METH_NOARGS, CONFIG_ISSTRICTPARSINGENABLED__DOC__ },
             { "setStrictParsingEnabled",
             PyOCIO_Config_setStrictParsingEnabled, METH_VARARGS, CONFIG_SETSTRICTPARSINGENABLED__DOC__ },
+            { "getNumDelimiters",
+            (PyCFunction) PyOCIO_Config_getNumDelimiters, METH_NOARGS, CONFIG_GETNUMDELIMITERS__DOC__ },
+            { "getDelimiterByIndex",
+            PyOCIO_Config_getDelimiterByIndex, METH_VARARGS, CONFIG_GETDELIMITERBYINDEX__DOC__ },
+            { "addDelimiters",
+            PyOCIO_Config_addDelimiters, METH_VARARGS, CONFIG_ADDDELIMITERS__DOC__ },
+            { "clearDelimiters",
+            (PyCFunction) PyOCIO_Config_clearDelimiters, METH_NOARGS, CONFIG_CLEARDELIMITERS__DOC__ },
+            { "containsToken",
+            PyOCIO_Config_containsToken, METH_VARARGS, CONFIG_CONTAINSTOKEN__DOC__ },
             { "setRole",
             PyOCIO_Config_setRole, METH_VARARGS, CONFIG_SETROLE__DOC__ },
             { "getNumRoles",
@@ -663,6 +678,58 @@ OCIO_NAMESPACE_ENTER
             ConfigRcPtr config = GetEditableConfig(self);
             config->setStrictParsingEnabled(enabled);
             Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_getNumDelimiters(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyInt_FromLong(config->getNumDelimiters());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_getDelimiterByIndex(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            int index = 0;
+            if (!PyArg_ParseTuple(args,"i:getDelimiterByIndex",
+                &index)) return NULL;
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyString_FromString(config->getDelimiterByIndex(index));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_addDelimiters(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            ConfigRcPtr config = GetEditableConfig(self);
+            char* delim = 0;
+            if (!PyArg_ParseTuple(args, "s:addDelimiters",
+                &delim)) return NULL;
+            config->addDelimiters(delim);
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_clearDelimiters(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConfigRcPtr config = GetEditableConfig(self);
+            config->clearDelimiters();
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_Config_containsToken(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            char* str = 0;
+            char* token = 0;
+            if (!PyArg_ParseTuple(args, "ss:containsToken",
+                &str, &token)) return NULL;
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            return PyBool_FromLong(config->containsToken(str, token));
             OCIO_PYTRY_EXIT(NULL)
         }
         

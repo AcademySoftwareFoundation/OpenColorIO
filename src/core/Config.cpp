@@ -249,6 +249,7 @@ OCIO_NAMESPACE_ENTER
         // Misc
         std::vector<float> defaultLumaCoefs_;
         bool strictParsing_;
+        StringVec delimiters_;
         
         mutable Sanity sanity_;
         mutable std::string sanitytext_;
@@ -274,6 +275,13 @@ OCIO_NAMESPACE_ENTER
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
             defaultLumaCoefs_[1] = DEFAULT_LUMA_COEFF_G;
             defaultLumaCoefs_[2] = DEFAULT_LUMA_COEFF_B;
+            
+            delimiters_.push_back("-");
+            delimiters_.push_back("_");
+            delimiters_.push_back("/");
+            delimiters_.push_back("\\");
+            delimiters_.push_back(".");
+            
         }
         
         ~Impl()
@@ -856,11 +864,6 @@ OCIO_NAMESPACE_ENTER
         getImpl()->colorspaces_.clear();
     }
     
-    
-    
-    
-    
-    
     const char * Config::parseColorSpaceFromString(const char * str) const
     {
         if(!str) return "";
@@ -869,40 +872,20 @@ OCIO_NAMESPACE_ENTER
         // convert the filename to lowercase.
         std::string fullstr = pystring::lower(std::string(str));
         
-        // See if it matches a lut name.
-        // This is the position of the RIGHT end of the colorspace substring, not the left
-        int rightMostColorPos=-1;
-        std::string rightMostColorspace = "";
-        int rightMostColorSpaceIndex = -1;
+        // 
+        int index = -1;
+        int clsmax = 0;
         
         // Find the right-most occcurance within the string for each colorspace.
         for (unsigned int i=0; i<getImpl()->colorspaces_.size(); ++i)
         {
             std::string csname = pystring::lower(getImpl()->colorspaces_[i]->getName());
-            
-            // find right-most extension matched in filename
-            int colorspacePos = pystring::rfind(fullstr, csname);
-            if(colorspacePos < 0)
-                continue;
-            
-            // If we have found a match, move the pointer over to the right end of the substring
-            // This will allow us to find the longest name that matches the rightmost colorspace
-            colorspacePos += (int)csname.size();
-            
-            if ( (colorspacePos > rightMostColorPos) ||
-                 ((colorspacePos == rightMostColorPos) && (csname.size() > rightMostColorspace.size()))
-                )
-            {
-                rightMostColorPos = colorspacePos;
-                rightMostColorspace = csname;
-                rightMostColorSpaceIndex = i;
-            }
+            if(containsToken(fullstr.c_str(), csname.c_str()) &&
+               (int)csname.size() > clsmax)
+                   index = i;
         }
         
-        if(rightMostColorSpaceIndex>=0)
-        {
-            return getImpl()->colorspaces_[rightMostColorSpaceIndex]->getName();
-        }
+        if(index >= 0) return getImpl()->colorspaces_[index]->getName();
         
         if(!getImpl()->strictParsing_)
         {
@@ -934,6 +917,101 @@ OCIO_NAMESPACE_ENTER
         
         AutoMutex lock(getImpl()->cacheidMutex_);
         getImpl()->resetCacheIDs();
+    }
+    
+    int Config::getNumDelimiters() const
+    {
+        return static_cast<int>(getImpl()->delimiters_.size());
+    }
+    
+    const char * Config::getDelimiterByIndex(int index) const
+    {
+        if(index<0 || index >= (int)getImpl()->delimiters_.size())
+        {
+            return NULL;
+        }
+        return getImpl()->delimiters_[index].c_str();
+    }
+    
+    void Config::addDelimiters(const char * str)
+    {
+        if(FindInStringVecCaseIgnore(getImpl()->delimiters_, str) == -1)
+            getImpl()->delimiters_.push_back(str);
+    }
+    
+    void Config::clearDelimiters()
+    {
+        getImpl()->delimiters_.clear();
+    }
+    
+    bool Config::containsToken(const char * str, const char * token) const
+    {
+        const int slen = (int)strlen(str);
+        const int tlen = (int)strlen(token);
+        std::string sstr = str;
+        int pos = slen;
+        int lpos = 0;
+        
+        // keep looking for tokens till we find one that is delimited or we
+        // run out of string
+        while (lpos != pos)
+        {
+            // try and find the token
+            lpos = pos;
+            std::string::size_type found = sstr.rfind(token, lpos - 1);
+            
+            // we didn't find the token
+            if(found == std::string::npos)
+                return false;
+            
+            pos = (int)found;
+            
+            // left and right delimiters?
+            bool ld = false;
+            bool rd = false;
+            
+            // token delimiter type -1 prefix, 0 top and tail, 1 suffix
+            int dt = 0;
+            
+            // check each delimiter
+            for (unsigned int i = 0; i < getImpl()->delimiters_.size(); ++i)
+            {
+                const int dlen = getImpl()->delimiters_[i].size();
+                int ldpos = pos - dlen;
+                int rdpos = pos + tlen;
+                
+                // look for the left side delimiter
+                if (ld == false &&
+                    pystring::rfind(str, getImpl()->delimiters_[i],
+                                    ldpos, ldpos + dlen) != -1)
+                    ld = true;
+                
+                if (rd == false &&
+                    pystring::rfind(str, getImpl()->delimiters_[i],
+                                    rdpos, rdpos + dlen) != -1)
+                    rd = true;
+                
+                // check to see if we are a token and the head or tail of the
+                // input string
+                if(pos == 0)
+                    dt = -1;
+                else if(rdpos == slen)
+                    dt = 1;
+                
+            }
+            
+            // <token><delimter><str>
+            if(rd == true && dt == -1) return true;
+            
+            // <str1><delimter><token><delimter><str2>
+            if(ld == true && rd == true && dt == 0) return true;
+            
+            // <str><delimter><token>
+            if(ld == true && dt == 1) return true;
+        
+        }
+        
+        return false;
     }
     
     // Roles
@@ -1734,6 +1812,64 @@ OIIO_ADD_TEST(Config, Roles)
     
 }
 
+OIIO_ADD_TEST(Config, Delimiters)
+{
+    
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    
+    config->clearDelimiters();
+    OIIO_CHECK_EQUAL(config->getNumDelimiters(), 0);
+    config->addDelimiters("-");
+    config->addDelimiters("__");
+    OIIO_CHECK_EQUAL(config->getNumDelimiters(), 2);
+    OIIO_CHECK_EQUAL(config->containsToken("footestfoo", "test"), false);
+    OIIO_CHECK_EQUAL(config->containsToken("foo-test-foo", "test"), true);
+    OIIO_CHECK_EQUAL(config->containsToken("foo__test__foo", "test"), true);
+    OIIO_CHECK_EQUAL(config->containsToken("foobar-test", "test"), true);
+    OIIO_CHECK_EQUAL(config->containsToken("foobar__test", "test"), true);
+    OIIO_CHECK_EQUAL(config->containsToken("foobar-test-morethanone-testtestfootest", "test"), true);
+    
+}
+
+OIIO_ADD_TEST(Config, parseColorSpaceFromString)
+{
+    
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    config->setStrictParsingEnabled(false);
+    config->clearDelimiters();
+    config->addDelimiters("-");
+    config->addDelimiters("_");
+    config->addDelimiters("/");
+    config->addDelimiters("\\");
+    config->addDelimiters(".");
+    
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("ACEScg");
+        config->addColorSpace(cs);
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("Gamma22");
+        config->addColorSpace(cs);
+    }
+    
+    OIIO_CHECK_ASSERT(strcmp(config->parseColorSpaceFromString("somefileGamma22.tx"),
+        "") == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->parseColorSpaceFromString("somefile-Gamma22.tx"),
+        "Gamma22") == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->parseColorSpaceFromString("somefile-ACEScg-blah.tx"),
+        "ACEScg") == 0);
+    OIIO_CHECK_ASSERT(strcmp(config->parseColorSpaceFromString("somefile-Gamma22-ACEScg.exr"),
+        "Gamma22") == 0);
+    
+    // check old behavior
+    config->addDelimiters("");
+    OIIO_CHECK_ASSERT(strcmp(config->parseColorSpaceFromString("somefileGamma22.tx"),
+        "Gamma22") == 0);
+    
+}
+
 OIIO_ADD_TEST(Config, Serialize)
 {
     
@@ -1763,6 +1899,8 @@ OIIO_ADD_TEST(Config, Serialize)
         config->setRole( OCIO::ROLE_COMPOSITING_LOG, cs->getName() );
     }
     
+    config->addDelimiters("__");
+    
     // for testing
     //std::ofstream outfile("/tmp/test.ocio");
     //config->serialize(outfile);
@@ -1776,6 +1914,7 @@ OIIO_ADD_TEST(Config, Serialize)
     "\n"
     "search_path: \"\"\n"
     "strictparsing: true\n"
+    "delimiters: [-, _, /, \\, ., __]\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
     "\n"
     "roles:\n"

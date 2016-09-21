@@ -65,6 +65,11 @@ public class Config extends LoadLibrary
     public native String parseColorSpaceFromString(String str);
     public native boolean isStrictParsingEnabled();
     public native void setStrictParsingEnabled(boolean enabled);
+    public native int getNumDelimiters();
+    public native String getDelimiterByIndex(int index);
+    public native void addDelimiters(String str);
+    public native void clearDelimiters();
+    public native boolean containsToken(String str, String token);
     public native void setRole(String role, String colorSpaceName);
     public native int getNumRoles();
     public native boolean hasRole(String role);
@@ -77,8 +82,7 @@ public class Config extends LoadLibrary
     public native String getView(String display, int index);
     public native String getDisplayColorSpaceName(String display, String view);
     public native String getDisplayLooks(String display, String view);
-    // TODO: seems that 4 string params causes a memory error in the JNI layer?
-    // public native void addDisplay(String display, String view, String colorSpaceName, int looks);
+    public native void addDisplay(String display, String view, String colorSpaceName, String looks);
     public native void clearDisplays();
     public native void setActiveDisplays(String displays);
     public native String getActiveDisplays();

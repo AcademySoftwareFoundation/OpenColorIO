@@ -9,6 +9,7 @@ public class GlobalsTest extends TestCase {
     + "\n"
     + "search_path: \"\"\n"
     + "strictparsing: false\n"
+    + "delimiters: [-, _, /, \\, .]\n"
     + "luma: [0.2126, 0.7152, 0.0722]\n"
     + "\n"
     + "roles:\n"

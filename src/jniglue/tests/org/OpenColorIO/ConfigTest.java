@@ -129,6 +129,18 @@ public class ConfigTest extends TestCase {
         if(_cfg.isStrictParsingEnabled()) fail("strict parsing should be off");
         _cfge.setStrictParsingEnabled(true);
         if(!_cfge.isStrictParsingEnabled()) fail("strict parsing should be on");
+        _cfge.clearDelimiters();
+        assertEquals(_cfge.getNumDelimiters(), 0);
+        _cfge.addDelimiters("-");
+        _cfge.addDelimiters("__");
+        assertEquals(_cfge.getNumDelimiters(), 2);
+        assertEquals(_cfge.containsToken("footestfoo", "test"), false);
+        assertEquals(_cfge.containsToken("foo-test-foo", "test"), true);
+        assertEquals(_cfge.containsToken("foo__test__foo", "test"), true);
+        assertEquals(_cfge.containsToken("foobar-test", "test"), true);
+        assertEquals(_cfge.containsToken("foobar__test", "test"), true);
+        _cfge.clearDelimiters();
+        assertEquals(_cfge.getNumDelimiters(), 0);
         assertEquals(2, _cfge.getNumRoles());
         if(_cfg.hasRole("foo")) fail("shouldn't have role foo");
         _cfge.setRole("foo", "dfadfadf");
@@ -143,10 +155,7 @@ public class ConfigTest extends TestCase {
         assertEquals("Raw", _cfge.getView("sRGB", 1));
         assertEquals("vd8", _cfge.getDisplayColorSpaceName("sRGB", "Film1D"));
         assertEquals("", _cfg.getDisplayLooks("sRGB", "Film1D"));
-        
-        // TODO: seems that 4 string params causes a memory error in the JNI layer?
-        //_cfge.addDisplay("foo", "bar", "foo", 0);
-        
+        _cfge.addDisplay("foo", "bar", "foo", "wee");
         _cfge.clearDisplays();
         _cfge.setActiveDisplays("sRGB");
         assertEquals("sRGB", _cfge.getActiveDisplays());

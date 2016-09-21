@@ -182,7 +182,8 @@ Java_org_OpenColorIO_Config_getEnvironmentVarNameByIndex(JNIEnv * env, jobject s
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    return env->NewStringUTF(cfg->getEnvironmentVarNameByIndex((int)index));
+    std::string name = cfg->getEnvironmentVarNameByIndex((int)index);
+    return env->NewStringUTF(name.c_str());
     OCIO_JNITRY_EXIT(NULL)
 }
 
@@ -191,7 +192,8 @@ Java_org_OpenColorIO_Config_getEnvironmentVarDefault(JNIEnv * env, jobject self,
 {
     OCIO_JNITRY_ENTER()
     ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
-    return env->NewStringUTF(cfg->getEnvironmentVarDefault(GetJStringValue(env, name)()));
+    std::string var = cfg->getEnvironmentVarDefault(GetJStringValue(env, name)());
+    return env->NewStringUTF(var.c_str());
     OCIO_JNITRY_EXIT(NULL)
 }
 
@@ -324,6 +326,52 @@ Java_org_OpenColorIO_Config_setStrictParsingEnabled(JNIEnv * env, jobject self, 
     OCIO_JNITRY_EXIT()
 }
 
+JNIEXPORT jint JNICALL
+Java_org_OpenColorIO_Config_getNumDelimiters(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return (jint)cfg->getNumDelimiters();
+    OCIO_JNITRY_EXIT(0)
+}
+
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Config_getDelimiterByIndex(JNIEnv * env, jobject self, jint index)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return env->NewStringUTF(cfg->getDelimiterByIndex((int)index));
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_Config_addDelimiters(JNIEnv * env, jobject self, jstring str)
+{
+    OCIO_JNITRY_ENTER()
+    ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
+    cfg->addDelimiters(GetJStringValue(env, str)());
+    OCIO_JNITRY_EXIT()
+}
+
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_Config_clearDelimiters(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ConfigRcPtr cfg = GetEditableJOCIO<ConfigRcPtr, ConfigJNI>(env, self);
+    cfg->clearDelimiters();
+    OCIO_JNITRY_EXIT()
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_OpenColorIO_Config_containsToken(JNIEnv * env, jobject self, jstring str, jstring token)
+{
+    OCIO_JNITRY_ENTER()
+    ConstConfigRcPtr cfg = GetConstJOCIO<ConstConfigRcPtr, ConfigJNI>(env, self);
+    return (jboolean)cfg->containsToken(GetJStringValue(env, str)(),
+                                        GetJStringValue(env, token)());
+    OCIO_JNITRY_EXIT(false)
+}
+
 JNIEXPORT void JNICALL
 Java_org_OpenColorIO_Config_setRole(JNIEnv * env, jobject self, jstring role, jstring colorSpaceName)
 {
@@ -434,8 +482,6 @@ Java_org_OpenColorIO_Config_getDisplayLooks(JNIEnv * env, jobject self, jstring 
     OCIO_JNITRY_EXIT(NULL)
 }
 
-// TODO: seems that 4 string params causes a memory error in the JNI layer?
-/*
 JNIEXPORT void JNICALL
 Java_org_OpenColorIO_Config_addDisplay(JNIEnv * env, jobject self, jstring display, jstring view, jstring colorSpaceName, jstring looks)
 {
@@ -445,10 +491,8 @@ Java_org_OpenColorIO_Config_addDisplay(JNIEnv * env, jobject self, jstring displ
                     GetJStringValue(env, view)(),
                     GetJStringValue(env, colorSpaceName)(),
                     GetJStringValue(env, looks)());
-    
     OCIO_JNITRY_EXIT()
 }
-*/
 
 JNIEXPORT void JNICALL
 Java_org_OpenColorIO_Config_clearDisplays(JNIEnv * env, jobject self)

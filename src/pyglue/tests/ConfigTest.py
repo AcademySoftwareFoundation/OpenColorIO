@@ -9,6 +9,7 @@ class ConfigTest(unittest.TestCase):
 
 search_path: luts
 strictparsing: false
+delimiters: [-, _, /, \\, .]
 luma: [0.2126, 0.7152, 0.0722]
 
 roles:
@@ -143,6 +144,18 @@ return out_pixel;
         self.assertEqual(False, _cfg.isStrictParsingEnabled())
         _cfge.setStrictParsingEnabled(True)
         self.assertEqual(True, _cfge.isStrictParsingEnabled())
+        _cfge.clearDelimiters()
+        self.assertEqual(_cfge.getNumDelimiters(), 0)
+        _cfge.addDelimiters("-")
+        _cfge.addDelimiters("__")
+        self.assertEqual(_cfge.getNumDelimiters(), 2)
+        self.assertEqual(_cfge.containsToken("footestfoo", "test"), False)
+        self.assertEqual(_cfge.containsToken("foo-test-foo", "test"), True)
+        self.assertEqual(_cfge.containsToken("foo__test__foo", "test"), True)
+        self.assertEqual(_cfge.containsToken("foobar-test", "test"), True)
+        self.assertEqual(_cfge.containsToken("foobar__test", "test"), True)
+        _cfge.clearDelimiters()
+        self.assertEqual(_cfge.getNumDelimiters(), 0)
         self.assertEqual(2, _cfge.getNumRoles())
         self.assertEqual(False, _cfg.hasRole("foo")) 
         _cfge.setRole("foo", "vd8")

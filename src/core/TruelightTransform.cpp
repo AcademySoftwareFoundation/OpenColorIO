@@ -326,6 +326,7 @@ OIIO_ADD_TEST(TruelightTransform, simpletest)
     "\n"
     "search_path: \"\"\n"
     "strictparsing: true\n"
+    "delimiters: [-, _, /, \\, .]\n"
     "luma: [0.2126, 0.7152, 0.0722]\n"
     "\n"
     "roles:\n"

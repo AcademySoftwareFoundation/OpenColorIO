@@ -9,6 +9,7 @@ class MainTest(unittest.TestCase):
 
 search_path: \"\"
 strictparsing: false
+delimiters: [-, _, /, \\, .]
 luma: [0.2126, 0.7152, 0.0722]
 
 roles:

@@ -341,6 +341,26 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         void setStrictParsingEnabled(bool enabled);
         
+        //!cpp:function:: Returns the number of string delimiters that are
+        // defined
+        int getNumDelimiters() const;
+        //!cpp:function:: Returns the string delimiter at index
+        // .. note::
+        //    This will return null if the specified index is not found.
+        const char * getDelimiterByIndex(int index) const;
+        //!cpp:function:: Add a string delimiter to the config
+        void addDelimiters(const char * str);
+        //!cpp:function:: Remove all the defined delimiters
+        void clearDelimiters();
+        
+        //!cpp:function:: Returns true if str contains the token which is
+        // surrounded by one of the defined delimiters. This function
+        // searches for tokens right to left.
+        // .. note::
+        //    This will also return true for a str that has the token as a
+        //    suffix eg. mystring<delimiter><token>
+        bool containsToken(const char * str, const char * token) const;
+        
         ///////////////////////////////////////////////////////////////////////////
         //!rst:: .. _cfgroles_section:
         // 
