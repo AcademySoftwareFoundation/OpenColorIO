@@ -32,9 +32,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <PyOpenColorIO/PyOpenColorIO.h>
 
 #include <vector>
+#include <map>
+#include <iostream>
 
 #define OCIO_PYTRY_ENTER() try {
-#define OCIO_PYTRY_EXIT(ret) } catch(...) { OpenColorIO::Python_Handle_Exception(); return ret; }
+#define OCIO_PYTRY_EXIT(ret) } catch(...) { OCIO_NAMESPACE::Python_Handle_Exception(); return ret; }
+#define OCIO_STRINGIFY(str) OCIO_STRINGIFY_IMPL(str)
+#define OCIO_STRINGIFY_IMPL(str) #str
+#define OCIO_PYTHON_NAMESPACE(obj) OCIO_STRINGIFY(PYOCIO_NAME) "." #obj
 
 // Some utilities macros for python 2.5 to 3.3 compatibility
 #if PY_MAJOR_VERSION >= 3
@@ -146,7 +151,6 @@ OCIO_NAMESPACE_ENTER
     inline PyObject * BuildConstPyOCIO(C ptr, PyTypeObject& type)
     {
         if(!ptr) return Py_INCREF(Py_None), Py_None;
-        //P * obj = PyObject_New(P, type); // (PyTypeObject *)&
         P * obj = (P *)_PyObject_New(&type);
         obj->constcppobj = new C ();
         *obj->constcppobj = ptr;
@@ -159,7 +163,6 @@ OCIO_NAMESPACE_ENTER
     inline PyObject * BuildEditablePyOCIO(T ptr, PyTypeObject& type)
     {
         if(!ptr) return Py_INCREF(Py_None), Py_None;
-        //P * obj = PyObject_New(P, type); // (PyTypeObject *)&
         P * obj = (P *) _PyObject_New(&type);
         obj->constcppobj = new C ();
         obj->cppobj = new T ();
@@ -270,6 +273,7 @@ OCIO_NAMESPACE_ENTER
     int ConvertPyObjectToTransformDirection(PyObject *object, void *valuePtr);
     int ConvertPyObjectToColorSpaceDirection(PyObject *object, void *valuePtr);
     int ConvertPyObjectToGpuLanguage(PyObject *object, void *valuePtr);
+    int ConvertPyObjectToEnvironmentMode(PyObject *object, void *valuePtr);
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -300,6 +304,7 @@ OCIO_NAMESPACE_ENTER
     PyObject* CreatePyListFromDoubleVector(const std::vector<double> &data);
     PyObject* CreatePyListFromStringVector(const std::vector<std::string> &data);
     PyObject* CreatePyListFromTransformVector(const std::vector<ConstTransformRcPtr> &data);
+    PyObject* CreatePyDictFromStringMap(const std::map<std::string, std::string> &data);
     
     //! Fill the specified vector type from the given pyobject
     //! Return true on success, false on failure.

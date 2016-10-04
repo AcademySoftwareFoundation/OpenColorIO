@@ -118,7 +118,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_DisplayTransformType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        "OCIO.DisplayTransform",                    //tp_name
+        OCIO_PYTHON_NAMESPACE(DisplayTransform),    //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
         0,                                          //tp_dealloc
@@ -165,10 +165,25 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        int PyOCIO_DisplayTransform_init(PyOCIO_Transform * self, PyObject * /*args*/, PyObject * /*kwds*/)
+        int PyOCIO_DisplayTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds)
         {
             OCIO_PYTRY_ENTER()
-            return BuildPyTransformObject<DisplayTransformRcPtr>(self, DisplayTransform::Create());
+            DisplayTransformRcPtr ptr = DisplayTransform::Create();
+            int ret = BuildPyTransformObject<DisplayTransformRcPtr>(self, ptr);
+            char* inputColorSpaceName = NULL;
+            char* display = NULL;
+            char* view = NULL;
+            char* direction = NULL;
+            static const char *kwlist[] = { "inputColorSpaceName",
+                "display", "view", "direction", NULL };
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|ssss",
+                const_cast<char **>(kwlist),
+                &inputColorSpaceName, &display, &view, &direction)) return -1;
+            if(inputColorSpaceName) ptr->setInputColorSpaceName(inputColorSpaceName);
+            if(display) ptr->setDisplay(display);
+            if(view) ptr->setView(view);
+            if(direction) ptr->setDirection(TransformDirectionFromString(direction));
+            return ret;
             OCIO_PYTRY_EXIT(-1)
         }
         

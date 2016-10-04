@@ -74,8 +74,8 @@ OCIO_NAMESPACE_ENTER
     };
     typedef std::map< std::string, std::string, EnvMapKey< std::string > > EnvMap;
     
-    // Get map of current env key = value,
-    void LoadEnvironment(EnvMap & map);
+    // Get map of current env key = value, or update the existing entries
+    void LoadEnvironment(EnvMap & map, bool update = false);
     
     // Expand a string with $VAR, ${VAR} or %VAR% with the keys passed
     // in the EnvMap.

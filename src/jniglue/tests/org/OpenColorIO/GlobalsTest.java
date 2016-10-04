@@ -134,6 +134,14 @@ public class GlobalsTest extends TestCase {
         assertEquals(globals.GpuLanguageToString(GpuLanguage.GPU_LANGUAGE_GLSL_1_3), "glsl_1.3");
         assertEquals(globals.GpuLanguageFromString("glsl_1.3"), GpuLanguage.GPU_LANGUAGE_GLSL_1_3);
         
+        // EnvironmentMode
+        assertEquals(globals.EnvironmentModeToString(EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN), "unknown");
+        assertEquals(globals.EnvironmentModeFromString("unknown"), EnvironmentMode.ENV_ENVIRONMENT_UNKNOWN);
+        assertEquals(globals.EnvironmentModeToString(EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED), "loadpredefined");
+        assertEquals(globals.EnvironmentModeFromString("loadpredefined"), EnvironmentMode.ENV_ENVIRONMENT_LOAD_PREDEFINED);
+        assertEquals(globals.EnvironmentModeToString(EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL), "loadall");
+        assertEquals(globals.EnvironmentModeFromString("loadall"), EnvironmentMode.ENV_ENVIRONMENT_LOAD_ALL);
+        
         // Roles
         assertEquals(globals.ROLE_DEFAULT, "default");
         assertEquals(globals.ROLE_REFERENCE, "reference");

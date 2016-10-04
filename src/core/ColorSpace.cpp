@@ -244,25 +244,37 @@ OCIO_NAMESPACE_ENTER
     
     std::ostream& operator<< (std::ostream& os, const ColorSpace& cs)
     {
+        int numVars(cs.getAllocationNumVars());
+        std::vector<float> vars(numVars);
+        cs.getAllocationVars(&vars[0]);
+
         os << "<ColorSpace ";
         os << "name=" << cs.getName() << ", ";
         os << "family=" << cs.getFamily() << ", ";
         os << "equalityGroup=" << cs.getEqualityGroup() << ", ";
         os << "bitDepth=" << BitDepthToString(cs.getBitDepth()) << ", ";
-        os << "isData=" << BoolToString(cs.isData()) << ", ";
-        os << "allocation=" << AllocationToString(cs.getAllocation()) << ", ";
-        os << ">\n";
+        os << "isData=" << BoolToString(cs.isData());
+        if (numVars)
+        {
+            os << ", allocation=" << AllocationToString(cs.getAllocation()) << ", ";
+            os << "vars=" << vars[0];
+            for (int i = 1; i < numVars; ++i)
+            {
+                os << " " << vars[i];
+            }
+        }
+        os << ">";
         
         if(cs.getTransform(COLORSPACE_DIR_TO_REFERENCE))
         {
-            os << "\t" << cs.getName() << " --> Reference\n";
-            os << cs.getTransform(COLORSPACE_DIR_TO_REFERENCE);
+            os << "\n    " << cs.getName() << " --> Reference";
+            os << "\n\t" << *cs.getTransform(COLORSPACE_DIR_TO_REFERENCE);
         }
         
         if(cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE))
         {
-            os << "\tReference --> " << cs.getName() << "\n";
-            os << cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+            os << "\n    Reference --> " << cs.getName();
+            os << "\n\t" << *cs.getTransform(COLORSPACE_DIR_FROM_REFERENCE);
         }
         return os;
     }

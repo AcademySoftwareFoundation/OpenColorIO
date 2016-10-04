@@ -122,8 +122,8 @@ OCIO_NAMESPACE_ENTER
     {
         os << "<LogTransform ";
         os << "base=" << t.getBase() << ", ";
-        os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << ">\n";
+        os << "direction=" << TransformDirectionToString(t.getDirection());
+        os << ">";
         
         return os;
     }

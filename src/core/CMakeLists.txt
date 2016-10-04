@@ -4,8 +4,8 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
-    ${EXTERNAL_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/ext/oiio/src/include
+    ${EXTERNAL_INCLUDE_DIRS}
 )
 
 file(GLOB_RECURSE core_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp")

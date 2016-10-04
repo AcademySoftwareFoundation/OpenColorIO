@@ -107,7 +107,7 @@ LogTransform
     
     import PyOpenColorIO as OCIO
 
-:py:class:`LogTransform` is used to define a log transform. The direction of
+:py:class:`PyOpenColorIO.LogTransform` is used to define a log transform. The direction of
 the transform and its numerical base can be specified.
 
 .. autoclass:: PyOpenColorIO.LogTransform

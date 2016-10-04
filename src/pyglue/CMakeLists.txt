@@ -10,7 +10,7 @@ endif()
     
 if(CMAKE_COMPILER_IS_GNUCXX)
     # Python breaks strict-aliasing rules. Disable the warning here.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-missing-field-initializers")
 endif()
 
 if(NOT WIN32)
@@ -29,20 +29,22 @@ file( GLOB pyglue_src_files "${CMAKE_SOURCE_DIR}/src/pyglue/*.cpp" )
 
 add_library(PyOpenColorIO MODULE ${pyglue_src_files} ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h)
 
+add_definitions(-DPYOCIO_NAME=PyOpenColorIO)
+
 if(OCIO_USE_BOOST_PTR)
     include_directories(
-        ${PYTHON_INCLUDE}
-        ${Boost_INCLUDE_DIR}
         ${CMAKE_SOURCE_DIR}/export/
         ${CMAKE_BINARY_DIR}/export/
         ${CMAKE_CURRENT_BINARY_DIR}
+        ${PYTHON_INCLUDE}
+        ${Boost_INCLUDE_DIR}
     )
 else()
     include_directories(
-        ${PYTHON_INCLUDE}
         ${CMAKE_SOURCE_DIR}/export/
         ${CMAKE_BINARY_DIR}/export/
         ${CMAKE_CURRENT_BINARY_DIR}
+        ${PYTHON_INCLUDE}
     )
 endif()
 
@@ -95,7 +97,8 @@ if(OCIO_PYGLUE_SONAME)
 endif()
 
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
+    set_target_properties(PyOpenColorIO PROPERTIES
+    	LINK_FLAGS "-undefined dynamic_lookup")
 endif()
 
 add_subdirectory(tests)

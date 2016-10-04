@@ -100,7 +100,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_MatrixTransformType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        "OCIO.MatrixTransform",                     //tp_name
+        OCIO_PYTHON_NAMESPACE(MatrixTransform),     //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
         0,                                          //tp_dealloc
@@ -147,10 +147,44 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        int PyOCIO_MatrixTransform_init(PyOCIO_Transform * self, PyObject * /*args*/, PyObject * /*kwds*/)
+        int PyOCIO_MatrixTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds)
         {
             OCIO_PYTRY_ENTER()
-            return BuildPyTransformObject<MatrixTransformRcPtr>(self, MatrixTransform::Create());
+            MatrixTransformRcPtr ptr = MatrixTransform::Create();
+            int ret = BuildPyTransformObject<MatrixTransformRcPtr>(self, ptr);
+            PyObject* pymatrix = 0;
+            PyObject* pyoffset = 0;
+            char* direction = NULL;
+            static const char *kwlist[] = { "matrix", "offset", "direction", NULL };
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|OOs",
+                const_cast<char **>(kwlist),
+                &pymatrix, &pyoffset, &direction)) return -1;
+            if (pymatrix)
+            {
+                std::vector<float> matrix;
+                if(!FillFloatVectorFromPySequence(pymatrix, matrix) ||
+                    (matrix.size() != 16))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                        "matrix must be a float array, size 16");
+                    return 0;
+                }
+                ptr->setMatrix(&matrix[0]);
+            }
+            if (pyoffset)
+            {
+                std::vector<float> offset;
+                if(!FillFloatVectorFromPySequence(pyoffset, offset) ||
+                    (offset.size() != 4))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                        "offset must be a float array, size 4");
+                    return 0;
+                }
+                ptr->setOffset(&offset[0]);
+            }
+            if(direction) ptr->setDirection(TransformDirectionFromString(direction));
+            return ret;
             OCIO_PYTRY_EXIT(-1)
         }
         

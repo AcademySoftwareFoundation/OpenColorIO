@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <sstream>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -48,6 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if defined(__APPLE__) && !defined(__IPHONE__)
 #include <crt_externs.h> // _NSGetEnviron()
+#include <unistd.h>
 #elif !defined(WINDOWS)
 #include <unistd.h>
 extern char **environ;
@@ -150,9 +152,17 @@ OCIO_NAMESPACE_ENTER
             _getcwd(path, MAXPATHLEN);
             return path;
 #else
-            char path[MAXPATHLEN];
-            ::getcwd(path, MAXPATHLEN);
-            return path;
+            std::vector<char> current_dir;
+#ifdef PATH_MAX
+            current_dir.resize(PATH_MAX);
+#else
+            current_dir.resize(1024);
+#endif
+            while (::getcwd(&current_dir[0], current_dir.size()) == NULL && errno == ERANGE) {
+                current_dir.resize(current_dir.size() + 1024);
+            }
+
+            return std::string(&current_dir[0]);
 #endif
         }
         
@@ -185,17 +195,27 @@ OCIO_NAMESPACE_ENTER
         const int MAX_PATH_LENGTH = 4096;
     }
     
-    void LoadEnvironment(EnvMap & map)
+    void LoadEnvironment(EnvMap & map, bool update)
     {
         for (char **env = GetEnviron(); *env != NULL; ++env)
         {
+            
             // split environment up into std::map[name] = value
             std::string env_str = (char*)*env;
             int pos = static_cast<int>(env_str.find_first_of('='));
-            map.insert(
-                EnvMap::value_type(env_str.substr(0, pos),
-                env_str.substr(pos+1, env_str.length()))
-            );
+            std::string name = env_str.substr(0, pos);
+            std::string value = env_str.substr(pos+1, env_str.length());
+            
+            if(update)
+            {
+                // update existing key:values that match
+                EnvMap::iterator iter = map.find(name);
+                if(iter != map.end()) iter->second = value;
+            }
+            else
+            {
+                map.insert(EnvMap::value_type(name, value));
+            }
         }
     }
     

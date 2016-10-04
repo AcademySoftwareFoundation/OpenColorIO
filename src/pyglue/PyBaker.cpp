@@ -154,7 +154,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_BakerType = {
         PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
-        "OCIO.Baker",                               //tp_name
+        OCIO_PYTHON_NAMESPACE(Baker),               //tp_name
         sizeof(PyOCIO_Baker),                       //tp_basicsize
         0,                                          //tp_itemsize
         (destructor)PyOCIO_Baker_delete,            //tp_dealloc
@@ -260,7 +260,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getFormat(PyObject * self, PyObject * args)
+        PyObject * PyOCIO_Baker_getFormat(PyObject * self, PyObject * /*args*/)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);

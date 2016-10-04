@@ -88,6 +88,24 @@ Java_org_OpenColorIO_Look_setProcessSpace(JNIEnv * env, jobject self, jstring pr
     OCIO_JNITRY_EXIT()
 }
 
+JNIEXPORT jstring JNICALL
+Java_org_OpenColorIO_Look_getDescription(JNIEnv * env, jobject self)
+{
+    OCIO_JNITRY_ENTER()
+    ConstLookRcPtr lok = GetConstJOCIO<ConstLookRcPtr, LookJNI>(env, self);
+    return env->NewStringUTF(lok->getDescription());
+    OCIO_JNITRY_EXIT(NULL)
+}
+
+JNIEXPORT void JNICALL
+Java_org_OpenColorIO_Look_setDescription(JNIEnv * env, jobject self, jstring processSpace)
+{
+    OCIO_JNITRY_ENTER()
+    LookRcPtr lok = GetEditableJOCIO<LookRcPtr, LookJNI>(env, self);
+    lok->setDescription(GetJStringValue(env, processSpace)());
+    OCIO_JNITRY_EXIT()
+}
+
 JNIEXPORT jobject JNICALL
 Java_org_OpenColorIO_Look_getTransform(JNIEnv * env, jobject self)
 {

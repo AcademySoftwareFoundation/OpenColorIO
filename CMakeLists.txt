@@ -1,7 +1,7 @@
 project(OpenColorIO)
 set(OCIO_VERSION_MAJOR 1)
 set(OCIO_VERSION_MINOR 0)
-set(OCIO_VERSION_PATCH 8)
+set(OCIO_VERSION_PATCH 9)
 
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
@@ -24,6 +24,7 @@ option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
+option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ON)
 
 # Use boost's shared_ptr by default on Windows (as <VS2010 doesn't have it),
 # Use std::tr1::shared_ptr by default on other platforms
@@ -116,6 +117,17 @@ else()
     set(OCIO_USE_BOOST_PTR 0)
 endif()
 
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if(OCIO_INLINES_HIDDEN)
+        execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+                        OUTPUT_VARIABLE GCC_VERSION)
+        if (GCC_VERSION VERSION_LESS 4.2)
+            message(STATUS "WARNING: GCC Version < 4.2 - disabling hidden inlines")
+            set(OCIO_INLINES_HIDDEN OFF)
+        endif()
+    endif()
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX)
     # Enable a bunch of compiler warnings...
     # http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
@@ -165,7 +177,7 @@ if(USE_EXTERNAL_TINYXML)
 
 else(USE_EXTERNAL_TINYXML)
     set(TINYXML_VERSION 2_6_1)
-    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist)
+    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
     if(CMAKE_TOOLCHAIN_FILE)
         set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
@@ -190,21 +202,50 @@ if(USE_EXTERNAL_YAML)
     # Set minimum yaml version for non-patched sources.
     set(YAML_VERSION_MIN "0.3.0")
     include(FindPkgConfig)
-    pkg_check_modules(YAML_CPP yaml-cpp)
+    pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
+    find_path(YAML_CPP_INCLUDE_DIR yaml-cpp/yaml.h
+        HINTS  ${PC_YAML_CPP_INCLUDEDIR} ${PC_YAML_CPP_INCLUDE_DIRS} )
+    find_library(YAML_CPP_LIBRARY LIBRARY_NAMES yaml-cpp libyaml-cpp
+        HINTS ${PC_YAML_CPP_LIBRARY_DIRS} )
+    set(YAML_CPP_LIBRARIES ${YAML_CPP_LIBRARY})
+    set(YAML_CPP_INCLUDE_DIRS ${YAML_CPP_INCLUDE_DIR})
+    set(YAML_CPP_VERSION ${PC_YAML_CPP_VERSION})
+
+    if(YAML_CPP_VERSION VERSION_LESS ${YAML_VERSION_MIN})
+        message(FATAL_ERROR "ERROR: yaml-cpp ${YAML_VERSION_MIN} or greater is required.")
+    endif()
+
+    find_package_handle_standard_args(yaml-cpp
+                                      REQUIRED_VARS YAML_CPP_LIBRARIES YAML_CPP_INCLUDE_DIRS )
+    set(YAML_CPP_FOUND ${YAML-CPP_FOUND})
+    mark_as_advanced(YAML_CPP_INCLUDE_DIR YAML_CPP_LIBRARY YAML-CPP_FOUND)
+
     if(YAML_CPP_FOUND)
-        if(YAML_CPP_VERSION VERSION_EQUAL ${YAML_VERSION_MIN} OR
-           YAML_CPP_VERSION VERSION_GREATER ${YAML_VERSION_MIN})
-            message(STATUS "System yaml-cpp library will be used.")
-            include_directories(BEFORE ${YAML_CPP_INCLUDE_DIRS})
-        else()
-            message(FATAL_ERROR "ERROR: yaml-cpp ${YAML_VERSION_MIN} or greater is required.")
+        if(YAML_CPP_VERSION VERSION_GREATER "0.5.0")
+            # Need to also get the boost headers here, as yaml-cpp 0.5.0+ requires them.
+            # Don't bother doing this step if we are already including the boost headers for shared_ptr
+            if(NOT OCIO_USE_BOOST_PTR)
+                set(Boost_ADDITIONAL_VERSIONS "1.49" "1.45" "1.44" "1.43" "1.43.0" "1.42"
+                                              "1.42.0" "1.41" "1.41.0" "1.40"
+                                              "1.40.0" "1.39" "1.39.0" "1.38"
+                                              "1.38.0" "1.37" "1.37.0" "1.34.1"
+                                              "1_34_1")
+                set(Boost_USE_MULTITHREADED ON)
+                find_package(Boost 1.34)
+                if(NOT Boost_FOUND)
+                    message(FATAL_ERROR "Error: Detected system yaml-cpp version ${YAML_CPP_VERSION} is greater than 0.5.0, and therefore requires boost, but a boost installation could not be found.")
+                endif()
+
+                set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
+            endif()
         endif()
+        set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
     else(YAML_CPP_FOUND)
         message(FATAL_ERROR "ERROR: System yaml-cpp library was not found. Make sure the library is installed and the pkg-config file exists.")
     endif(YAML_CPP_FOUND)
 else(USE_EXTERNAL_YAML)
     set(YAML_CPP_VERSION 0.3.0)
-    set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE)
+    set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
     if(CMAKE_TOOLCHAIN_FILE)
         set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
@@ -225,25 +266,17 @@ else(USE_EXTERNAL_YAML)
     endif()
 endif(USE_EXTERNAL_YAML)
 
-
+if(YAML_CPP_VERSION VERSION_LESS "0.5.0")
+    set(YAML_CPP_COMPILE_FLAGS "-DOLDYAML")
+endif()
 
 ###############################################################################
 ### Externals ###
 
 set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
-set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL")
-
-if(CMAKE_COMPILER_IS_GNUCXX)
-    
-    execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-                    OUTPUT_VARIABLE GCC_VERSION)
-                    
-    if (GCC_VERSION VERSION_LESS 4.2)
-        message(STATUS "GCC Version < 4.2 - symbol visibility hiding disabled")
-        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC")
-    else()
-        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
-    endif()
+set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL ${YAML_CPP_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
+if(OCIO_INLINES_HIDDEN)
+    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fvisibility-inlines-hidden")
 endif()
 
 set(EXTERNAL_LINK_FLAGS "")

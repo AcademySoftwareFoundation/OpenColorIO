@@ -44,6 +44,18 @@ def _cdltransform_to_node(cdl, node):
     node['cccid'].setValue(cdl.getID())
 
 
+def _xml_colorcorrection_to_cdltransform(xml, cccposition):
+    """From an XML string, return a CDLTransform object, if the cccid
+    is absent from the XML the given cccposition will be used instead 
+    """
+    ccxml = ET.tostring(xml)
+    cdl = OCIO.CDLTransform()
+    cdl.setXML(ccxml)
+    if "cccid" not in xml.getchildren():
+	cdl.setID(str(cccposition))
+
+    return cdl
+
 def _xml_to_cdltransforms(xml):
     """Given some XML as a string, returns a list of CDLTransform
     objects for each ColorCorrection (returns a one-item list for a
@@ -55,30 +67,28 @@ def _xml_to_cdltransforms(xml):
     # Strip away xmlns
     for elem in tree.getiterator():
         if elem.tag.startswith("{"):
-             elem.tag = elem.tag.partition("}")[2]
+            elem.tag = elem.tag.partition("}")[2]
 
     filetype = tree.tag
 
+    cccposition = 0
     if filetype == "ColorCorrection":
-        ccxml = ET.tostring(tree)
-        cdl = OCIO.CDLTransform()
-        cdl.setXML(ccxml)
-        return [cdl]
+        return [_xml_colorcorrection_to_cdltransform(tree, cccposition)]
 
-    elif filetype == "ColorCorrectionCollection":
+    elif filetype in ["ColorCorrectionCollection", "ColorDecisionList"]:
         allcdl = []
         for cc in tree.getchildren():
+            if cc.tag == "ColorDecision":
+                cc = cc.getchildren()[0] # TODO: something better here
             if cc.tag != "ColorCorrection": continue
-            ccxml = ET.tostring(cc)
-            cdl = OCIO.CDLTransform()
-            cdl.setXML(ccxml)
-            allcdl.append(cdl)
+            allcdl.append(_xml_colorcorrection_to_cdltransform(cc, cccposition))
+            cccposition += 1
         return allcdl
 
     else:
         raise RuntimeError(
             "The supplied file did not have the correct root element, expected"
-            " 'ColorCorrection' or 'ColorCorrectionCollection', got %r" % (filetype))
+            " 'ColorCorrection' or 'ColorCorrectionCollection' or 'ColorDecisionList', got %r" % (filetype))
 
 
 def _cdltransforms_to_xml(allcc):
@@ -175,7 +185,7 @@ def import_cc_from_xml(node = None, filename = None):
         node = nuke.thisNode()
 
     if filename is None:
-        ccfilename = nuke.getFilename("Color Correction filename", pattern = "*.cc *.ccc")
+        ccfilename = nuke.getFilename("Color Correction filename", pattern = "*.cc *.ccc *.cdl")
         if ccfilename is None:
             # User clicked cancel
             return
@@ -228,7 +238,7 @@ def import_multiple_from_ccc(filename = None):
     """
 
     if filename is None:
-        filename = nuke.getFilename("Color Correction XML file", pattern = "*.cc *.ccc")
+        filename = nuke.getFilename("Color Correction XML file", pattern = "*.cc *.ccc *.cdl")
         if filename is None:
             # User clicked cancel
             return

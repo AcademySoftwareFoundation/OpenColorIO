@@ -49,6 +49,7 @@ OCIO_NAMESPACE_ENTER
     public:
         std::string name_;
         std::string processSpace_;
+        std::string description_;
         TransformRcPtr transform_;
         TransformRcPtr inverseTransform_;
         
@@ -62,6 +63,7 @@ OCIO_NAMESPACE_ENTER
         {
             name_ = rhs.name_;
             processSpace_ = rhs.processSpace_;
+            description_ = rhs.description_;
             
             transform_ = rhs.transform_;
             if(transform_) transform_ = transform_->createEditableCopy();
@@ -136,23 +138,32 @@ OCIO_NAMESPACE_ENTER
         getImpl()->inverseTransform_ = transform->createEditableCopy();
     }
     
-    
+    const char * Look::getDescription() const
+    {
+        return getImpl()->description_.c_str();
+    }
+
+    void Look::setDescription(const char * description)
+    {
+        getImpl()->description_ = description;
+    }
+
     std::ostream& operator<< (std::ostream& os, const Look& look)
     {
-        os << "<Look ";
-        os << "name=" << look.getName() << ", ";
-        os << "processSpace=" << look.getProcessSpace() << ", ";
+        os << "<Look";
+        os << " name=" << look.getName();
+        os << ", processSpace=" << look.getProcessSpace();
         
         if(look.getTransform())
         {
-            os << "\tTransform: ";
-            os << *look.getTransform();
+            os << ",\n    transform=";
+            os << "\n\t" << *look.getTransform();
         }
         
         if(look.getInverseTransform())
         {
-            os << "\tInverseTransform: ";
-            os << *look.getInverseTransform();
+            os << ",\n    inverseTransform=";
+            os << "\n\t" << *look.getInverseTransform();
         }
         
         os << ">";

@@ -16,6 +16,8 @@ public class LookTest extends TestCase {
         assertEquals("coollook", lk.getName());
         lk.setProcessSpace("somespace");
         assertEquals("somespace", lk.getProcessSpace());
+        lk.setDescription("this is a test");
+        assertEquals("this is a test", lk.getDescription());
         ExponentTransform et = new ExponentTransform().Create();
         et.setValue(new float[]{0.1f, 0.2f, 0.3f, 0.4f});
         lk.setTransform(et);

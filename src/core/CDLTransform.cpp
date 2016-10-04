@@ -256,21 +256,26 @@ OCIO_NAMESPACE_ENTER
             os << "Null cccRootElement.";
             throw Exception(os.str().c_str());
         }
-            
-        if(std::string(cccRootElement->Value()) != "ColorCorrectionCollection")
+        
+        std::string rootElementType(cccRootElement->Value());
+        bool isCDL = (rootElementType == "ColorDecisionList");
+        const char* container = isCDL ? "ColorDecision" : "ColorCorrection";
+        
+        if(!isCDL && rootElementType != "ColorCorrectionCollection")
         {
             std::ostringstream os;
             os << "GetCDLTransforms Error. ";
-            os << "Root element is type '" << cccRootElement->Value() << "', ";
-            os << "ColorCorrectionCollection expected.";
+            os << "Root element is type '" << rootElementType << "', ";
+            os << "ColorDecisionList or ColorCorrectionCollection expected.";
             throw Exception(os.str().c_str());
         }
         
-        TiXmlNode * child = cccRootElement->FirstChild("ColorCorrection");
+        TiXmlNode * child = cccRootElement->FirstChild(container);
         while(child)
         {
+            TiXmlNode * xmlNode= (isCDL) ? child->FirstChild("ColorCorrection") : child;
             CDLTransformRcPtr transform = CDLTransform::Create();
-            LoadCDL(transform.get(), child->ToElement());
+            LoadCDL(transform.get(), xmlNode->ToElement());
             
             transformVec.push_back(transform);
             
@@ -290,7 +295,7 @@ OCIO_NAMESPACE_ENTER
                 transformMap[id] = transform;
             }
             
-            child = child->NextSibling("ColorCorrection");
+            child = child->NextSibling(container);
         }
     }
     
@@ -776,18 +781,16 @@ OCIO_NAMESPACE_ENTER
         float sop[9];
         t.getSOP(sop);
         
-        os << "<CDLTransform ";
-        os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << "sop=";
+        os << "<CDLTransform";
+        os << " direction=" << TransformDirectionToString(t.getDirection());
+        os << ", sop=";
         for (unsigned int i=0; i<9; ++i)
         {
             if(i!=0) os << " ";
             os << sop[i];
         }
-        os << ", ";
-        os << "sat=" << t.getSat() << ",";
-        os << TransformDirectionToString(t.getDirection()) << ", ";
-        os << ">\n";
+        os << ", sat=" << t.getSat();
+        os << ">";
         return os;
     }
     

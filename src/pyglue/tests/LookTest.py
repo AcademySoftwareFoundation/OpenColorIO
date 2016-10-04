@@ -11,6 +11,8 @@ class LookTest(unittest.TestCase):
         self.assertEqual("coollook", lk.getName())
         lk.setProcessSpace("somespace")
         self.assertEqual("somespace", lk.getProcessSpace())
+        lk.setDescription("this is a test")
+        self.assertEqual("this is a test", lk.getDescription())
         et = OCIO.ExponentTransform()
         et.setValue([0.1, 0.2, 0.3, 0.4])
         lk.setTransform(et)

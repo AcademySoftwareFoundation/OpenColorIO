@@ -40,6 +40,8 @@ public class Look extends LoadLibrary
     public native void setName(String name);
     public native String getProcessSpace();
     public native void setProcessSpace(String processSpace);
+    public native String getDescription();
+    public native void setDescription(String description);
     public native Transform getTransform();
     public native void setTransform(Transform transform);
     public native Transform getInverseTransform();

@@ -85,7 +85,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_ProcessorMetadataType = {
         PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
-        "OCIO.ProcessorMetadata",                   //tp_name
+        OCIO_PYTHON_NAMESPACE(ProcessorMetadata),   //tp_name
         sizeof(PyOCIO_ProcessorMetadata),           //tp_basicsize
         0,                                          //tp_itemsize
         (destructor)PyOCIO_ProcessorMetadata_delete,//tp_dealloc
