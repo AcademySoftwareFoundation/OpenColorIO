@@ -404,7 +404,7 @@ OCIO_NAMESPACE_ENTER
                 delta = (v - *lowbound) / (*highbound - *lowbound);
             }
             
-            return ((float)(lowbound - start) + delta) * invMaxIndex;
+            return std::max(((float)(lowbound - start) + delta) * invMaxIndex, 0.0f);
         }
         
         void Lut1D_LinearInverse(float* rgbaBuffer, long numPixels, const Lut1D & lut)
