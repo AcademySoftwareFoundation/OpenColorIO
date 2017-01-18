@@ -184,6 +184,7 @@ OCIO_NAMESPACE_ENTER
         
         int PyOCIO_Transform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
         void PyOCIO_Transform_delete(PyOCIO_Transform * self, PyObject * args);
+        PyObject * PyOCIO_Transform_str(PyObject * self);
         PyObject * PyOCIO_Transform_isEditable(PyObject * self);
         PyObject * PyOCIO_Transform_createEditableCopy(PyObject * self);
         PyObject * PyOCIO_Transform_getDirection(PyObject * self);
@@ -211,7 +212,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_TransformType = {
         PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
-        "OCIO.Transform",                           //tp_name
+        OCIO_PYTHON_NAMESPACE(Transform),           //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
         (destructor) PyOCIO_Transform_delete,       //tp_dealloc
@@ -225,7 +226,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_as_mapping
         0,                                          //tp_hash 
         0,                                          //tp_call
-        0,                                          //tp_str
+        PyOCIO_Transform_str,                       //tp_str
         0,                                          //tp_getattro
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
@@ -273,6 +274,16 @@ OCIO_NAMESPACE_ENTER
             DeletePyObject<PyOCIO_Transform>(self);
         }
         
+        PyObject * PyOCIO_Transform_str(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstTransformRcPtr transform = GetConstTransform(self, true);
+            std::ostringstream out;
+            out << *transform;
+            return PyString_FromString(out.str().c_str());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
         PyObject * PyOCIO_Transform_isEditable(PyObject * self)
         {
             return PyBool_FromLong(IsPyTransformEditable(self));

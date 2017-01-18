@@ -132,20 +132,23 @@ OCIO_NAMESPACE_ENTER
     {
     
     // Environment
-    std::string LookupEnvironment(const StringMap & env, const std::string & name)
+    const std::string LookupEnvironment(const StringMap & env,
+                                        const std::string & name)
     {
         StringMap::const_iterator iter = env.find(name);
         if(iter == env.end()) return "";
-        return iter->second;
+        std::string var = iter->second;
+        return var;
     }
     
     // Roles
     // (lower case role name: colorspace name)
-    std::string LookupRole(const StringMap & roles, const std::string & rolename)
+    const std::string LookupRole(const StringMap & roles, const std::string & rolename)
     {
         StringMap::const_iterator iter = roles.find(pystring::lower(rolename));
         if(iter == roles.end()) return "";
-        return iter->second;
+        std::string role = iter->second;
+        return role;
     }
     
     
@@ -704,7 +707,8 @@ OCIO_NAMESPACE_ENTER
     
     const char * Config::getEnvironmentVarDefault(const char * name) const
     {
-        return LookupEnvironment(getImpl()->env_, name).c_str();
+        std::string var = LookupEnvironment(getImpl()->env_, name);
+        return var.c_str();
     }
     
     void Config::clearEnvironmentVars()

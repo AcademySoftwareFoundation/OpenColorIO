@@ -330,7 +330,11 @@ OCIO_NAMESPACE_ENTER
         };
         typedef OCIO_SHARED_PTR<CachedFileCSP> CachedFileCSPRcPtr;
         
-        
+        inline bool
+        startswithU(const std::string & str, const std::string & prefix)
+        {
+            return pystring::startswith(pystring::upper(pystring::strip(str)), prefix);
+        }
         
         class LocalFileFormat : public FileFormat
         {
@@ -391,7 +395,7 @@ OCIO_NAMESPACE_ENTER
             // try and read the lut header
             std::string line;
             nextline (istream, line);
-            if (line != "CSPLUTV100")
+            if (!startswithU(line, "CSPLUTV100"))
             {
                 std::ostringstream os;
                 os << "Lut doesn't seem to be a csp file, expected 'CSPLUTV100'.";
@@ -401,7 +405,7 @@ OCIO_NAMESPACE_ENTER
 
             // next line tells us if we are reading a 1D or 3D lut
             nextline (istream, line);
-            if (line != "1D" && line != "3D")
+            if (!startswithU(line, "1D") && !startswithU(line, "3D"))
             {
                 std::ostringstream os;
                 os << "Unsupported CSP lut type. Require 1D or 3D. ";
@@ -414,12 +418,13 @@ OCIO_NAMESPACE_ENTER
             std::string metadata;
             bool lineUpdateNeeded = false;
             nextline (istream, line);
-            if (line == "BEGIN METADATA")
+            if(startswithU(line, "BEGIN METADATA"))
             {
-                while (line != "END METADATA" || !istream)
+                while (!startswithU(line, "END METADATA") ||
+                       !istream)
                 {
                     nextline (istream, line);
-                    if (line != "END METADATA")
+                    if (startswithU(line, "END METADATA"))
                         metadata += line + "\n";
                 }
                 lineUpdateNeeded = true;
@@ -1105,6 +1110,43 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
         if(i != 4) OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
     */
+    
+}
+
+OIIO_ADD_TEST(FileFormatCSP, lessStrictParse)
+{
+    std::ostringstream strebuf;
+    strebuf << " CspluTV100 malformed"                       << "\n";
+    strebuf << "3D"                                          << "\n";
+    strebuf << ""                                            << "\n";
+    strebuf << " BegIN MEtadATA malformed malformed malfo"   << "\n";
+    strebuf << "foobar"                                      << "\n";
+    strebuf << "   end metadata malformed malformed m a l"   << "\n";
+    strebuf << ""                                            << "\n";
+    strebuf << "11"                                          << "\n";
+    strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+    strebuf << "0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0" << "\n";
+    strebuf << "6"                                           << "\n";
+    strebuf << "0.0 0.2       0.4 0.6 0.8 1.0"               << "\n";
+    strebuf << "0.0 0.2000000 0.4 0.6 0.8 1.0"               << "\n";
+    strebuf << "5"                                           << "\n";
+    strebuf << "0.0 0.25       0.5 0.6 0.7"                  << "\n";
+    strebuf << "0.0 0.25000001 0.5 0.6 0.7"                  << "\n";
+    strebuf << ""                                            << "\n";
+    strebuf << "1 2 3"                                       << "\n";
+    strebuf << "0.0 0.0 0.0"                                 << "\n";
+    strebuf << "1.0 0.0 0.0"                                 << "\n";
+    strebuf << "0.0 0.5 0.0"                                 << "\n";
+    strebuf << "1.0 0.5 0.0"                                 << "\n";
+    strebuf << "0.0 1.0 0.0"                                 << "\n";
+    strebuf << "1.0 1.0 0.0"                                 << "\n";
+    
+    std::istringstream simple3D;
+    simple3D.str(strebuf.str());
+    
+    // Load file
+    OCIO::LocalFileFormat tester;
+    OIIO_CHECK_NO_THOW(OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D));
     
 }
 

@@ -1379,6 +1379,11 @@ OCIO_NAMESPACE_ENTER
                     load(second, val);
                     look->setInverseTransform(val);
                 }
+                else if(key == "description")
+                {
+                    load(second, stringval);
+                    look->setDescription(stringval.c_str());
+                }
                 else
                 {
                     LogUnknownKeyWarning(node.Tag(), first);
@@ -1392,6 +1397,13 @@ OCIO_NAMESPACE_ENTER
             out << YAML::BeginMap;
             out << YAML::Key << "name" << YAML::Value << look->getName();
             out << YAML::Key << "process_space" << YAML::Value << look->getProcessSpace();
+            if (look->getDescription() != NULL &&
+                strlen(look->getDescription()) > 0)
+            {
+                out << YAML::Key << "description";
+                out << YAML::Value << YAML::Literal << look->getDescription();
+            }
+
             
             if(look->getTransform())
             {

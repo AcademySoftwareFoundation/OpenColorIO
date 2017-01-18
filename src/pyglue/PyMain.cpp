@@ -153,14 +153,14 @@ OCIO_NAMESPACE_EXIT
 MOD_INIT(PyOpenColorIO)
 {
     PyObject * m;
-    MOD_DEF(m, "PyOpenColorIO", OCIO::OPENCOLORIO__DOC__, PyOCIO_methods);
+    MOD_DEF(m, OCIO_STRINGIFY(PYOCIO_NAME), OCIO::OPENCOLORIO__DOC__, PyOCIO_methods);
     
     PyModule_AddStringConstant(m, "version", OCIO::GetVersion());
     PyModule_AddIntConstant(m, "hexversion", OCIO::GetVersionHex());
     
     // Create Exceptions, and add to the module
-    char Exception[] = "PyOpenColorIO.Exception";
-    char ExceptionMissingFile[] = "PyOpenColorIO.ExceptionMissingFile";
+    char Exception[] = OCIO_PYTHON_NAMESPACE(Exception);
+    char ExceptionMissingFile[] = OCIO_PYTHON_NAMESPACE(ExceptionMissingFile);
     
 #if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 7
     OCIO::SetExceptionPyType(PyErr_NewExceptionWithDoc(Exception,

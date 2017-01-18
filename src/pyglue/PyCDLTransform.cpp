@@ -120,7 +120,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_CDLTransformType = {
         PyVarObject_HEAD_INIT(NULL, 0)
-        "OCIO.CDLTransform",                        //tp_name
+        OCIO_PYTHON_NAMESPACE(CDLTransform),        //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
         0,                                          //tp_dealloc
@@ -167,10 +167,65 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        int PyOCIO_CDLTransform_init(PyOCIO_Transform *self, PyObject* /*args*/, PyObject* /*kwds*/)
+        int PyOCIO_CDLTransform_init(PyOCIO_Transform *self, PyObject* args, PyObject* kwds)
         {
             OCIO_PYTRY_ENTER()
-            return BuildPyTransformObject<CDLTransformRcPtr>(self, CDLTransform::Create());
+            CDLTransformRcPtr ptr = CDLTransform::Create();
+            int ret = BuildPyTransformObject<CDLTransformRcPtr>(self, ptr);
+            PyObject* pyslope = NULL;
+            PyObject* pyoffset = NULL;
+            PyObject* pypower = NULL;
+            float sat = -1.0; // -1.0 is an illegal value for saturation
+            char* direction = NULL;
+            char* id = NULL;
+            char* description = NULL;
+            static const char *kwlist[] = { "slope", "offset",
+                "power", "sat", "direction", "id", "description", NULL };
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOfsss",
+                const_cast<char **>(kwlist),
+                &pyslope, &pyoffset, &pypower, &sat, &direction, &id,
+                &description)) return -1;
+            if (pyslope)
+            {
+                std::vector<float> slope;
+                if(!FillFloatVectorFromPySequence(pyslope, slope) ||
+                    (slope.size() != 3))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                        "slope must be a float array, size 3");
+                    return 0;
+                }
+                ptr->setSlope(&slope[0]);
+            }
+            if (pyoffset)
+            {
+                std::vector<float> offset;
+                if(!FillFloatVectorFromPySequence(pyoffset, offset) ||
+                    (offset.size() != 3))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                        "offset must be a float array, size 3");
+                    return 0;
+                }
+                ptr->setOffset(&offset[0]);
+            }
+            if (pypower)
+            {
+                std::vector<float> power;
+                if(!FillFloatVectorFromPySequence(pypower, power) ||
+                    (power.size() != 3))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                        "power must be a float array, size 3");
+                    return 0;
+                }
+                ptr->setPower(&power[0]);
+            }
+            if(sat >= 0.0f) ptr->setSat(sat);
+            if(direction) ptr->setDirection(TransformDirectionFromString(direction));
+            if(id) ptr->setID(id);
+            if(id) ptr->setDescription(description);
+            return ret;
             OCIO_PYTRY_EXIT(-1)
         }
         

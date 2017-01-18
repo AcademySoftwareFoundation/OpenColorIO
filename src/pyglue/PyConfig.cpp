@@ -81,6 +81,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_CreateFromStream(PyObject * cls, PyObject * args);
         int PyOCIO_Config_init(PyOCIO_Config * self, PyObject * args, PyObject * kwds);
         void PyOCIO_Config_delete(PyOCIO_Config * self, PyObject * args);
+        PyObject * PyOCIO_Config_repr(PyObject * self);
         PyObject * PyOCIO_Config_isEditable(PyObject * self);
         PyObject * PyOCIO_Config_createEditableCopy(PyObject * self);
         PyObject * PyOCIO_Config_sanityCheck(PyObject * self);
@@ -275,7 +276,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_ConfigType = {
         PyVarObject_HEAD_INIT(NULL, 0)              //obsize
-        "OCIO.Config",                              //tp_name
+        OCIO_PYTHON_NAMESPACE(Config),              //tp_name
         sizeof(PyOCIO_Config),                      //tp_basicsize
         0,                                          //tp_itemsize
         (destructor)PyOCIO_Config_delete,           //tp_dealloc
@@ -283,7 +284,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_getattr
         0,                                          //tp_setattr
         0,                                          //tp_compare
-        0,                                          //tp_repr
+        PyOCIO_Config_repr,                         //tp_repr
         0,                                          //tp_as_number
         0,                                          //tp_as_sequence
         0,                                          //tp_as_mapping
@@ -361,6 +362,16 @@ OCIO_NAMESPACE_ENTER
             DeletePyObject<PyOCIO_Config>(self);
         }
         
+        PyObject * PyOCIO_Config_repr(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstConfigRcPtr config = GetConstConfig(self, true);
+            std::ostringstream out;
+            out << *config;
+            return PyString_FromString(out.str().c_str());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
         PyObject * PyOCIO_Config_isEditable(PyObject * self)
         {
             return PyBool_FromLong(IsPyConfigEditable(self));
@@ -475,7 +486,8 @@ OCIO_NAMESPACE_ENTER
             if (!PyArg_ParseTuple(args, "s:getEnvironmentVarDefault",
                 &name)) return NULL;
             ConstConfigRcPtr config = GetConstConfig(self, true);
-            return PyString_FromString(config->getEnvironmentVarDefault(name));
+            std::string var = config->getEnvironmentVarDefault(name);
+            return PyString_FromString(var.c_str());
             OCIO_PYTRY_EXIT(NULL)
         }
         

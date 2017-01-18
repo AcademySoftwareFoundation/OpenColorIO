@@ -84,7 +84,7 @@ OCIO_NAMESPACE_ENTER
     
     PyTypeObject PyOCIO_AllocationTransformType = {
         PyVarObject_HEAD_INIT(NULL, 0)              //ob_size
-        "OCIO.AllocationTransform",                 //tp_name
+        OCIO_PYTHON_NAMESPACE(AllocationTransform), //tp_name
         sizeof(PyOCIO_Transform),                   //tp_basicsize
         0,                                          //tp_itemsize
         0,                                          //tp_dealloc
@@ -131,10 +131,33 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        int PyOCIO_AllocationTransform_init(PyOCIO_Transform * self, PyObject * /*args*/, PyObject * /*kwds*/)
+        int PyOCIO_AllocationTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds)
         {
             OCIO_PYTRY_ENTER()
-            return BuildPyTransformObject<AllocationTransformRcPtr>(self, AllocationTransform::Create());
+            AllocationTransformRcPtr ptr = AllocationTransform::Create();
+            int ret = BuildPyTransformObject<AllocationTransformRcPtr>(self, ptr);
+            char* allocation = NULL;
+            PyObject* pyvars = 0;
+            char* direction = NULL;
+            static const char *kwlist[] = { "allocation", "vars", "direction", NULL };
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|sOs",
+                const_cast<char **>(kwlist),
+                &allocation, &pyvars, &direction)) return -1;
+            if(allocation) ptr->setAllocation(AllocationFromString(allocation));
+            if (pyvars)
+            {
+                std::vector<float> vars;
+                if(!FillFloatVectorFromPySequence(pyvars, vars) ||
+                    (vars.size() < 2 || vars.size() > 3))
+                {
+                    PyErr_SetString(PyExc_TypeError,
+                        "vars must be a float array, size 2 or 3");
+                    return 0;
+                }
+                ptr->setVars(static_cast<int>(vars.size()), &vars[0]);
+            }
+            if(direction) ptr->setDirection(TransformDirectionFromString(direction));
+            return ret;
             OCIO_PYTRY_EXIT(-1)
         }
         

@@ -300,7 +300,7 @@ OCIO_NAMESPACE_ENTER
                 
                 float knew[3] = { m_k[0] / logf(m_base[0]),
                                   m_k[1] / logf(m_base[1]),
-                                  m_k[2] / logf(m_base[0]) };
+                                  m_k[2] / logf(m_base[2]) };
                 
                 float clampMin[3] = { FLTMIN, FLTMIN, FLTMIN };
                 

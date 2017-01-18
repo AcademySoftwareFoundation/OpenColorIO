@@ -1,9 +1,9 @@
 
 include_directories(
-  ${JNI_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_SOURCE_DIR}/export/
   ${CMAKE_BINARY_DIR}/export/
+  ${JNI_INCLUDE_DIRS}
 )
 
 set(JNIOCIO_CLASSES
