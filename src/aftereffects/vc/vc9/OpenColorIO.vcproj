@@ -349,6 +349,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\core\FileFormatCDL.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\src\core\FileFormatCSP.cpp"
 				>
 			</File>
