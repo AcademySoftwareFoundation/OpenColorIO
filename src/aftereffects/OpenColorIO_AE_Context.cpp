@@ -264,7 +264,7 @@ std::string Path::convert_delimiters(const std::string &path)
     const char replace = mac_delimiter;
 #endif
 
-	std::string path_copy = path;
+    std::string path_copy = path;
 
     for(int i=0; i < path_copy.size(); i++)
     {
@@ -356,7 +356,17 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
             
             for(int i=0; i < _config->getNumColorSpaces(); ++i)
             {
-                _inputs.push_back( _config->getColorSpaceNameByIndex(i) );
+                const char *colorSpaceName = _config->getColorSpaceNameByIndex(i);
+                
+                OCIO::ConstColorSpaceRcPtr colorSpace = _config->getColorSpace(colorSpaceName);
+                
+                const char *family = colorSpace->getFamily();
+                
+                _inputs.push_back(colorSpaceName);
+                
+                const std::string fullPath = (family == NULL ? colorSpaceName : std::string(family) + "/" + colorSpaceName);
+                
+                _inputsFullPath.push_back(fullPath);
             }
             
             
@@ -365,24 +375,20 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const std::string &path, OCIO_Sou
                 _devices.push_back( _config->getDisplay(i) );
             }
             
-            const char * defaultDisplay = _config->getDefaultDisplay();
-            const char * defaultTransform = _config->getDefaultView(defaultDisplay);
             
-            for(int i=0; i < _config->getNumViews(defaultDisplay); ++i)
-            {
-                _transforms.push_back( _config->getView(defaultDisplay, i) );
-            }
+            OCIO::ConstColorSpaceRcPtr defaultInput = _config->getColorSpace(OCIO::ROLE_DEFAULT);
             
-            
-            OCIO::ConstColorSpaceRcPtr defaultInput = _config->getColorSpace(OCIO::ROLE_SCENE_LINEAR);
-            
-            const char *defaultInputName = (defaultInput ? defaultInput->getName() : OCIO::ROLE_SCENE_LINEAR);
+            const char *defaultInputName = (defaultInput ? defaultInput->getName() : OCIO::ROLE_DEFAULT);
             
             
             setupConvert(defaultInputName, defaultInputName);
             
-            _transform = defaultTransform;
+            
+            const char *defaultDisplay = _config->getDefaultDisplay();
+            const char *defaultTransform = _config->getDefaultView(defaultDisplay);
+            
             _device = defaultDisplay;
+            _transform = defaultTransform;
         }
         else
         {
@@ -452,7 +458,17 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
             
             for(int i=0; i < _config->getNumColorSpaces(); ++i)
             {
-                _inputs.push_back( _config->getColorSpaceNameByIndex(i) );
+                const char *colorSpaceName = _config->getColorSpaceNameByIndex(i);
+                
+                OCIO::ConstColorSpaceRcPtr colorSpace = _config->getColorSpace(colorSpaceName);
+                
+                const char *family = colorSpace->getFamily();
+                
+                _inputs.push_back(colorSpaceName);
+                
+                const std::string fullPath = (family == NULL ? colorSpaceName : std::string(family) + "/" + colorSpaceName);
+                
+                _inputsFullPath.push_back(fullPath);
             }
             
             
@@ -461,25 +477,16 @@ OpenColorIO_AE_Context::OpenColorIO_AE_Context(const ArbitraryData *arb_data, co
                 _devices.push_back( _config->getDisplay(i) );
             }
             
-            const char * defaultDisplay = _config->getDefaultDisplay();
-            const char * defaultTransform = _config->getDefaultView(defaultDisplay);
-            
-            for(int i=0; i < _config->getNumViews(defaultDisplay); ++i)
-            {
-                _transforms.push_back( _config->getView(defaultDisplay, i) );
-            }
-            
-            
             if(arb_data->action == OCIO_ACTION_CONVERT)
             {
                 setupConvert(arb_data->input, arb_data->output);
                 
-                _transform = arb_data->transform;
                 _device = arb_data->device;
+                _transform = arb_data->transform;
             }
             else
             {
-                setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+                setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
                 
                 _output = arb_data->output;
             }
@@ -574,11 +581,11 @@ bool OpenColorIO_AE_Context::Verify(const ArbitraryData *arb_data, const std::st
     else if(arb_data->action == OCIO_ACTION_DISPLAY)
     {
         if(_input != arb_data->input ||
-            _transform != arb_data->transform ||
             _device != arb_data->device ||
+            _transform != arb_data->transform ||
             force_reset)
         {
-            setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+            setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
         }
     }
     else
@@ -608,17 +615,35 @@ void OpenColorIO_AE_Context::setupConvert(const char *input, const char *output)
 }
 
 
-void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *xform, const char *device)
+void OpenColorIO_AE_Context::setupDisplay(const char *input, const char *device, const char *xform)
 {
+    _transforms.clear();
+    
+    bool xformValid = false;
+    
+    for(int i=0; i < _config->getNumViews(device); i++)
+    {
+        const std::string transformName = _config->getView(device, i);
+        
+        if(transformName == xform)
+            xformValid = true;
+        
+        _transforms.push_back(transformName);
+    }
+    
+    if(!xformValid)
+        xform = _config->getDefaultView(device);
+    
+
     OCIO::DisplayTransformRcPtr transform = OCIO::DisplayTransform::Create();
     
     transform->setInputColorSpaceName(input);
-    transform->setView(xform);
     transform->setDisplay(device);
+    transform->setView(xform);
     
     _input = input;
-    _transform = xform;
     _device = device;
+    _transform = xform;
     
 
     _processor = _config->getProcessor(transform);

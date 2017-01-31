@@ -31,16 +31,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 @implementation OpenColorIO_AE_Menu
 
-- (id)init:(NSArray *)menuItems selectedItem:(NSInteger)selected {
+- (id)init:(NSArray *)menuItems selectedItem:(NSInteger)selected
+{
     self = [super init];
-
+    
     menu_items = menuItems;
     chosen_item = selected;
     
     return self;
 }
 
-- (void)showMenu {
+- (void)showMenu
+{
 
     // Doing some pretty weird stuff here.
     // I need to bring up a contextual menu without AE giving me an NSView.
@@ -101,14 +103,55 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     [menu release];
 }
 
-- (IBAction)menuItemAction:(id)sender {
+- (IBAction)menuItemAction:(id)sender
+{
     NSMenuItem *item = (NSMenuItem *)sender;
     
     chosen_item = [item tag];
 }
 
-- (NSInteger)selectedItem {
+- (NSInteger)selectedItem
+{
     return chosen_item;
+}
+
+
+
+- (id)initWithTextMenu:(NSMenu *)menu
+{
+    self = [super init];
+    
+    text_menu = menu;
+    chosen_menu_item = nil;
+    
+    return self;
+}
+
+- (void)showTextMenu
+{
+    id fakeMouseEvent=[NSEvent mouseEventWithType:NSLeftMouseDown
+                        location: [[NSApp keyWindow] convertScreenToBase:[NSEvent mouseLocation]]
+                        modifierFlags:0 
+                        timestamp:0
+                        windowNumber: [[NSApp keyWindow] windowNumber]
+                        context:nil
+                        eventNumber:0 
+                        clickCount:1 
+                        pressure:0];
+    
+    [NSMenu popUpContextMenu:text_menu withEvent:fakeMouseEvent forView:self];
+}
+
+- (IBAction)textMenuItemAction:(id)sender
+{
+    NSMenuItem *item = (NSMenuItem *)sender;
+    
+    chosen_menu_item = item;
+}
+
+- (NSMenuItem *)selectedTextMenuItem
+{
+    return chosen_menu_item;
 }
 
 @end
