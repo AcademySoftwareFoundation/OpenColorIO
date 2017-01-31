@@ -29,11 +29,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #import <Cocoa/Cocoa.h>
 
 
-@interface OpenColorIO_AE_Menu : NSView {
+@interface OpenColorIO_AE_Menu : NSView
+{
     NSArray *menu_items;
     NSInteger chosen_item;
+    
+    NSMenu *text_menu;
+    NSMenuItem *chosen_menu_item;
 }
 
+// index-based menu
 - (id)init:(NSArray *)menuItems selectedItem:(NSInteger)selected;
 
 - (void)showMenu;
@@ -41,5 +46,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - (IBAction)menuItemAction:(id)sender;
 
 - (NSInteger)selectedItem;
+
+// text-based menu
+- (id)initWithTextMenu:(NSMenu *)menu;
+
+- (void)showTextMenu;
+
+- (IBAction)textMenuItemAction:(id)sender;
+
+- (NSMenuItem *)selectedTextMenuItem;
 
 @end
