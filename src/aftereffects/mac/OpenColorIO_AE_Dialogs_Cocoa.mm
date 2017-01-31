@@ -255,11 +255,11 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
         
         NSMenu *currentMenu = menu;
         
-        for(int i=0; i < [pathComponents count]; i++)
+        for(int j=0; j < [pathComponents count]; j++)
         {
-            NSString *componentName = [pathComponents objectAtIndex:i];
+            NSString *componentName = [pathComponents objectAtIndex:j];
             
-            if(i == ([pathComponents count] - 1))
+            if(j == ([pathComponents count] - 1))
             {
                 NSMenuItem *newItem = [currentMenu addItemWithTitle:componentName action:@selector(textMenuItemAction:) keyEquivalent:@""];
                 
