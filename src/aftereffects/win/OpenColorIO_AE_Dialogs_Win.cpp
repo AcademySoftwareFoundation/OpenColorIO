@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "lcms2.h"
 
 
-HINSTANCE hDllInstance = NULL;
+static HINSTANCE hDllInstance = NULL;
 
 static void AppendString(char *text, int &length, const char *str, int len = -1)
 {
@@ -133,7 +133,7 @@ bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
     const char *my_lpstrTitle = "Import OCIO";
     const char *my_lpstrDefExt = "ocio";
 
-    char my_lpstrFilter[512];
+    char my_lpstrFilter[1024];
     MakeFilterText(my_lpstrFilter, extensions, true);
 
 
@@ -173,7 +173,7 @@ bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
     const char *my_lpstrTitle = "Export OCIO";
     const char *my_lpstrDefExt = "icc";
 
-    char my_lpstrFilter[256];
+    char my_lpstrFilter[512];
     MakeFilterText(my_lpstrFilter, extensions, false);
 
 
@@ -724,7 +724,12 @@ void ErrorMessage(const char *message , const void *hwnd)
     MessageBox((HWND)hwnd, message, "OpenColorIO", MB_OK);
 }
 
-
+#ifdef SUPPLY_HINSTANCE
+void SetHInstance(void *hInstance)
+{
+	hDllInstance = (HINSTANCE)hInstance;
+}
+#else
 BOOL WINAPI DllMain(HANDLE hInstance, DWORD fdwReason, LPVOID lpReserved)
 {
     if (fdwReason == DLL_PROCESS_ATTACH)
@@ -732,3 +737,4 @@ BOOL WINAPI DllMain(HANDLE hInstance, DWORD fdwReason, LPVOID lpReserved)
 
     return TRUE;
 }
+#endif

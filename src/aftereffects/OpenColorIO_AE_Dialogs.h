@@ -63,5 +63,8 @@ bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace,
 
 void ErrorMessage(const char *message, const void *hwnd);
 
+#ifdef SUPPLY_HINSTANCE
+void SetHInstance(void *hInstance);
+#endif
 
 #endif // _OPENCOLORIC_AE_DIALOG_H_
