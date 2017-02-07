@@ -140,19 +140,23 @@ DialogResult OpenColorIO_PS_Dialog(DialogParams &params, const void *plugHndl, c
     return  result;
 }
 
-#define ABOUT_TITLE @"OpenColorIO"
-
-#define ABOUT_TEXT      @"by Brendan Bolles\n\n" \
-                            "www.fnordware.com\n" \
-                            "Beta2 - " __DATE__
-
 
 void OpenColorIO_PS_About(const void *plugHndl, const void *mwnd)
 {
     NSApplicationLoad();
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-    NSAlert *alert = [NSAlert alertWithMessageText:ABOUT_TITLE defaultButton:nil alternateButton:nil otherButton:nil informativeTextWithFormat:@"%@", ABOUT_TEXT];
+	const std::string endl = "\n";
+
+	std::string text = std::string("OpenColorIO PS") + endl +
+						"Beta 3" + endl +
+						__DATE__ + endl +
+						endl +
+						"OCIO version " + OCIO::GetVersion();
+						
+	NSString *informativeText = [NSString stringWithUTF8String:text.c_str()];
+						
+    NSAlert *alert = [NSAlert alertWithMessageText:@"OpenColorIO" defaultButton:nil alternateButton:nil otherButton:nil informativeTextWithFormat:@"%@", informativeText];
     
     [alert setAlertStyle:NSInformationalAlertStyle];
     

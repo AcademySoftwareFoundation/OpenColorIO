@@ -999,6 +999,11 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
             NSAssert(defaultItem != nil, @"where's that default item?");
             
             [transformMenu selectItem:defaultItem];
+            
+            
+            [transform release];
+            
+            transform = [[transformMenu titleOfSelectedItem] retain];
         }
     }
     else
