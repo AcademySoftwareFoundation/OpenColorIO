@@ -34,6 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OpenColorIO_PS_Context.h"
 
 #ifdef __PIWin__
+//#include <Windows.h>
+#include <Shlobj.h>
+
 // DLLInstance for Windows
 HINSTANCE hDllInstance = NULL;
 #endif
@@ -122,7 +125,7 @@ static Boolean ReadScriptParams(GPtr globals)
         {
             while(PIGetKey(token, &key, &type, &flags))
             {
-                if(key == keySource)
+                if(key == ocioKeySource)
                 {
                     DescriptorEnumID ostypeStoreValue;
                     PIGetEnum(token, &ostypeStoreValue);
@@ -130,15 +133,15 @@ static Boolean ReadScriptParams(GPtr globals)
                                         ostypeStoreValue == sourceCustom ? OCIO_SOURCE_CUSTOM :
                                         OCIO_SOURCE_STANDARD);
                 }
-                else if(key == keyConfigName)
+                else if(key == ocioKeyConfigName)
                 {
                     PIGetStr(token, &globals->configName);
                 }
-                else if(key == keyConfigFileHandle)
+                else if(key == ocioKeyConfigFileHandle)
                 {
                     PIGetAlias(token, (Handle *)&globals->configFileHandle);
                 }
-                else if(key == keyAction)
+                else if(key == ocioKeyAction)
                 {
                     DescriptorEnumID ostypeStoreValue;
                     PIGetEnum(token, &ostypeStoreValue);
@@ -146,11 +149,11 @@ static Boolean ReadScriptParams(GPtr globals)
                                         ostypeStoreValue == actionDisplay ? OCIO_ACTION_DISPLAY :
                                         OCIO_ACTION_CONVERT);
                 }
-                else if(key == keyInvert)
+                else if(key == ocioKeyInvert)
                 {
                     PIGetBool(token, &globals->invert);
                 }
-                else if(key == keyInterpolation)
+                else if(key == ocioKeyInterpolation)
                 {
                     DescriptorEnumID ostypeStoreValue;
                     PIGetEnum(token, &ostypeStoreValue);
@@ -159,21 +162,21 @@ static Boolean ReadScriptParams(GPtr globals)
                                         ostypeStoreValue == interpTetrahedral ? OCIO_INTERP_TETRAHEDRAL :
                                         OCIO_INTERP_BEST);
                 }
-                else if(key == keyInputSpace)
+                else if(key == ocioKeyInputSpace)
                 {
                     PIGetStr(token, &globals->inputSpace);
                 }
-                else if(key == keyOutputSpace)
+                else if(key == ocioKeyOutputSpace)
                 {
                     PIGetStr(token, &globals->outputSpace);
                 }
-                else if(key == keyTransform)
-                {
-                    PIGetStr(token, &globals->transform);
-                }
-                else if(key == keyDevice)
+                else if(key == ocioKeyDevice)
                 {
                     PIGetStr(token, &globals->device);
+                }
+                else if(key == ocioKeyTransform)
+                {
+                    PIGetStr(token, &globals->transform);
                 }
             }
 
@@ -197,28 +200,28 @@ static OSErr WriteScriptParams(GPtr globals)
         
         if(token)
         {
-            PIPutEnum(token, keySource, typeSource, (globals->source == OCIO_SOURCE_ENVIRONMENT ? sourceEnvironment :
+            PIPutEnum(token, ocioKeySource, typeSource, (globals->source == OCIO_SOURCE_ENVIRONMENT ? sourceEnvironment :
                                                         globals->source == OCIO_SOURCE_CUSTOM ? sourceCustom :
                                                         sourceStandard));
         
             if(globals->source == OCIO_SOURCE_STANDARD)
             {
-                PIPutStr(token, keyConfigName, globals->configName);
+                PIPutStr(token, ocioKeyConfigName, globals->configName);
             }
             else if(globals->source == OCIO_SOURCE_CUSTOM)
             {
-                PIPutAlias(token, keyConfigFileHandle, (Handle)globals->configFileHandle);
+                PIPutAlias(token, ocioKeyConfigFileHandle, (Handle)globals->configFileHandle);
             }
             
             
-            PIPutEnum(token, keyAction, typeAction, (globals->action == OCIO_ACTION_LUT ? actionLUT :
+            PIPutEnum(token, ocioKeyAction, typeAction, (globals->action == OCIO_ACTION_LUT ? actionLUT :
                                                         globals->action == OCIO_ACTION_DISPLAY ? actionDisplay :
                                                         actionConvert));
             
             if(globals->action == OCIO_ACTION_LUT)
             {
-                PIPutBool(token, keyInvert, globals->invert);
-                PIPutEnum(token, keyInterpolation, typeInterpolation, (globals->interpolation == OCIO_INTERP_NEAREST ? interpNearest :
+                PIPutBool(token, ocioKeyInvert, globals->invert);
+                PIPutEnum(token, ocioKeyInterpolation, typeInterpolation, (globals->interpolation == OCIO_INTERP_NEAREST ? interpNearest :
                                                                         globals->interpolation == OCIO_INTERP_LINEAR ? interpLinear :
                                                                         globals->interpolation == OCIO_INTERP_TETRAHEDRAL ? interpTetrahedral :
                                                                         interpBest));
@@ -226,16 +229,16 @@ static OSErr WriteScriptParams(GPtr globals)
             }
             else if(globals->action == OCIO_ACTION_DISPLAY)
             {
-                PIPutStr(token, keyInputSpace, globals->inputSpace);
-                PIPutStr(token, keyTransform, globals->transform);
-                PIPutStr(token, keyDevice, globals->device);
+                PIPutStr(token, ocioKeyInputSpace, globals->inputSpace);
+                PIPutStr(token, ocioKeyDevice, globals->device);
+                PIPutStr(token, ocioKeyTransform, globals->transform);
             }
             else
             {
                 assert(globals->action == OCIO_ACTION_CONVERT);
                 
-                PIPutStr(token, keyInputSpace, globals->inputSpace);
-                PIPutStr(token, keyOutputSpace, globals->outputSpace);
+                PIPutStr(token, ocioKeyInputSpace, globals->inputSpace);
+                PIPutStr(token, ocioKeyOutputSpace, globals->outputSpace);
             }
             
             
@@ -256,8 +259,7 @@ static void DoAbout(AboutRecordPtr aboutRecord)
 #else
     // get platform handles
     const void *plugHndl = hDllInstance;
-    HWND hwnd = NULL;
-    suites.UtilitySuite()->AEGP_GetMainHWND((void *)&hwnd);
+    HWND hwnd = (HWND)HostGetPlatformWindowPtr(aboutRecord);
 #endif
 
     OpenColorIO_PS_About(plugHndl, hwnd);
@@ -286,8 +288,8 @@ void ValidateParameters(GPtr globals)
                 param->interpolation    = globals->interpolation;
                 myP2PString(param->inputSpace, globals->inputSpace);
                 myP2PString(param->outputSpace, globals->outputSpace);
-                myP2PString(param->transform, globals->transform);
                 myP2PString(param->device, globals->device);
+                myP2PString(param->transform, globals->transform);
 
                 PIUnlockHandle(gStuff->parameters);
             }
@@ -448,8 +450,8 @@ static void ConvertRow(T *row, int len, OCIO::ConstProcessorRcPtr processor)
 static void ProcessTile(GPtr globals, void *tileData, VRect &tileRect, int32 rowBytes, OCIO::ConstProcessorRcPtr processor)
 {
 
-    uint32 rectHeight = tileRect.bottom - tileRect.top;
-    uint32 rectWidth = tileRect.right - tileRect.left;
+    const uint32 rectHeight = tileRect.bottom - tileRect.top;
+    const uint32 rectWidth = tileRect.right - tileRect.left;
     
     unsigned char *row = (unsigned char *)tileData;
 
@@ -515,7 +517,11 @@ static void DoStart(GPtr globals)
                 dialogParams.source = SOURCE_ENVIRONMENT;
             }
         #else
-            #error "unimplemented"
+            assert(globals->configFileHandle != NULL);
+
+			dialogParams.config = PILockHandle(globals->configFileHandle, true);
+
+			PIUnlockHandle(globals->configFileHandle);
         #endif
         }
         else if(globals->source == OCIO_SOURCE_STANDARD)
@@ -536,8 +542,8 @@ static void DoStart(GPtr globals)
                                         
         dialogParams.inputSpace = myP2CString(globals->inputSpace);
         dialogParams.outputSpace = myP2CString(globals->outputSpace);
-        dialogParams.transform = myP2CString(globals->transform);
         dialogParams.device = myP2CString(globals->device);
+        dialogParams.transform = myP2CString(globals->transform);
         
     
     #ifdef __PIMac__
@@ -546,8 +552,7 @@ static void DoStart(GPtr globals)
     #else
         // get platform handles
         const void *plugHndl = hDllInstance;
-        HWND hwnd = NULL;
-        suites.UtilitySuite()->AEGP_GetMainHWND((void *)&hwnd);
+		HWND hwnd = (HWND)((PlatformData *)gStuff->platformData)->hwnd;
     #endif
         
         const DialogResult dialogResult = OpenColorIO_PS_Dialog(dialogParams, plugHndl, hwnd);
@@ -573,7 +578,16 @@ static void DoStart(GPtr globals)
                     globals->source = OCIO_SOURCE_NONE;
                 }
             #else
-                #error "unimplemented"
+				if(globals->configFileHandle)
+					PISetHandleSize(globals->configFileHandle, (dialogParams.config.length() + 1) * sizeof(char));
+				else	
+					globals->configFileHandle = PINewHandle((dialogParams.config.length() + 1) * sizeof(char));
+					
+				char *path_buf = PILockHandle(globals->configFileHandle, true);
+
+				strcpy(path_buf, dialogParams.config.c_str());
+
+				PIUnlockHandle(globals->configFileHandle);
             #endif
             }
             else if(dialogParams.source == SOURCE_STANDARD)
@@ -594,8 +608,8 @@ static void DoStart(GPtr globals)
                                         
             myC2PString(globals->inputSpace, dialogParams.inputSpace.c_str());
             myC2PString(globals->outputSpace, dialogParams.outputSpace.c_str());
-            myC2PString(globals->transform, dialogParams.transform.c_str());
             myC2PString(globals->device, dialogParams.device.c_str());
+            myC2PString(globals->transform, dialogParams.transform.c_str());
         }
         else
             gResult = userCanceledErr;
@@ -642,7 +656,11 @@ static void DoStart(GPtr globals)
                 path = file_path;
             }
         #else
-            #error "unimplemented"
+            assert(globals->configFileHandle != NULL);
+
+			path = PILockHandle(globals->configFileHandle, true);
+
+			PIUnlockHandle(globals->configFileHandle);
         #endif
         }
         else
@@ -651,9 +669,15 @@ static void DoStart(GPtr globals)
             
         #ifdef __PIMac__
             const char *standardDirectory = "/Library/Application Support/OpenColorIO";
-            const char *pathSeperator = "/";
+            const std::string pathSeperator = "/";
         #else
-            #error "unimplemented"
+			const std::string pathSeperator = "\\";
+
+            char appdata_path[MAX_PATH];
+            HRESULT result = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL,
+                                                SHGFP_TYPE_CURRENT, appdata_path);
+
+			const std::string standardDirectory = std::string(appdata_path) + pathSeperator + "OpenColorIO";
         #endif
         
             path = standardDirectory;
@@ -662,7 +686,7 @@ static void DoStart(GPtr globals)
             
             path += myP2CString(globals->configName);
             
-            path += "/config.ocio";
+            path += pathSeperator + "config.ocio";
         }
         
         if( path.empty() )

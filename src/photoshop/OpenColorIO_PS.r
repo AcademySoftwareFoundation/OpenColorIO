@@ -185,61 +185,61 @@ resource 'aete' (ResourceID, plugInName " dictionary", purgeable)
             IMAGE_DIRECT_PARAMETER,                         /* direct parameter, used by Photoshop */
             {                                               /* parameters here, if any */
                 "Source",                                   /* parameter name */
-                keySource,                                  /* parameter key ID */
+                ocioKeySource,                                  /* parameter key ID */
                 typeSource,                                 /* parameter type ID */
                 "Source of the OCIO configuration",         /* optional description */
                 flagsEnumeratedParameter,                   /* parameter flags */               
 
                 "Configuration",
-                keyConfigName,
+                ocioKeyConfigName,
                 typeChar,
                 "OCIO Configuration Name",
                 flagsSingleParameter,       
 
                 "File",
-                keyConfigFileHandle,
+                ocioKeyConfigFileHandle,
                 typePlatformFilePath,
                 "OCIO Configuration File",
                 flagsSingleParameter,       
 
                 "Action",
-                keyAction,
+                ocioKeyAction,
                 typeAction,
                 "OCIO Action",
                 flagsEnumeratedParameter,
                 
                 "Invert",
-                keyInvert,
+                ocioKeyInvert,
                 typeBoolean,
                 "Invert LUT",
                 flagsSingleParameter,
                 
                 "Interpolation",
-                keyInterpolation,
+                ocioKeyInterpolation,
                 typeInterpolation,
                 "OCIO Interpolation",
                 flagsEnumeratedParameter,
                 
                 "Input Space",
-                keyInputSpace,
+                ocioKeyInputSpace,
                 typeChar,
                 "OCIO Input Space",
                 flagsSingleParameter,
                 
                 "Output Space",
-                keyOutputSpace,
+                ocioKeyOutputSpace,
                 typeChar,
                 "OCIO Output Space",
                 flagsSingleParameter,
                 
                 "Transform",
-                keyTransform,
+                ocioKeyTransform,
                 typeChar,
                 "OCIO Transform",
                 flagsSingleParameter,
                 
                 "Device",
-                keyDevice,
+                ocioKeyDevice,
                 typeChar,
                 "OCIO Device",
                 flagsSingleParameter

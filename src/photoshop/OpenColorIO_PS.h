@@ -77,8 +77,8 @@ typedef struct Globals
     OCIO_Interp             interpolation;
     Str255                  inputSpace;
     Str255                  outputSpace;
-    Str255                  transform;
     Str255                  device;
+    Str255                  transform;
 } Globals, *GPtr, **GHdl;
 
 
@@ -103,8 +103,5 @@ DLLExport SPAPI void PluginMain(const int16 selector,
                                 entryData * data,
                                 int16 * result);
 
-// dialog procs
-//void DoDialog(GPtr globals);
-//void DoAboutDlog(AboutRecordPtr aboutRecord);
 
 #endif // _OPENCOLORIO_PS_H_
