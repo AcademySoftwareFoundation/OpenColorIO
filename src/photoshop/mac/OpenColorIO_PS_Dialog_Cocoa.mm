@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
+#include "OpenColorIO_PS_Version.h"
+
 // ==========
 // Only building this on 64-bit (Cocoa) architectures
 // ==========
@@ -152,7 +154,7 @@ void OpenColorIO_PS_About(const void *plugHndl, const void *mwnd)
 	const std::string endl = "\n";
 
 	std::string text = std::string("OpenColorIO PS") + endl +
-						"Beta 3" + endl +
+						OpenColorIO_PS_Beta_String + endl +
 						__DATE__ + endl +
 						endl +
 						"OCIO version " + OCIO::GetVersion();

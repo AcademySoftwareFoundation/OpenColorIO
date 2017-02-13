@@ -718,7 +718,7 @@ static void DoStart(GPtr globals)
             {
                 if(globals->action == OCIO_ACTION_DISPLAY)
                 {
-                    processor = context.getDisplayProcessor(myP2CString(globals->inputSpace), myP2CString(globals->transform), myP2CString(globals->device));
+                    processor = context.getDisplayProcessor(myP2CString(globals->inputSpace), myP2CString(globals->device), myP2CString(globals->transform));
                 }
                 else
                 {

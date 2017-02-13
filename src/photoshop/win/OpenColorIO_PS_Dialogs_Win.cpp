@@ -11,6 +11,7 @@
 #include <cstdlib>
 
 #include "OpenColorIO_PS_Context.h"
+#include "OpenColorIO_PS_Version.h"
 
 #include "OpenColorIO_AE_Dialogs.h"
 
@@ -1027,7 +1028,7 @@ void OpenColorIO_PS_About(const void *plugHndl, const void *mwnd)
 	const std::string endl = "\n";
 
 	std::string text = std::string("OpenColorIO PS") + endl +
-						"Beta 3" + endl +
+						OpenColorIO_PS_Beta_String + endl +
 						__DATE__ + endl +
 						endl +
 						"OCIO version " + OCIO::GetVersion();
