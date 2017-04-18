@@ -296,6 +296,11 @@ OCIO_NAMESPACE_ENTER
         {
             int indexLow = clamp(std::floor(index), 0.0f, maxIndex);
             int indexHigh = clamp(std::ceil(index), 0.0f, maxIndex);
+            if (indexLow == indexHigh) {
+                // Happens when index outside of the LUT range is requested. We do early
+                // output here to avoid possible precision issues during interpolation.
+                return simple_lut[indexLow];
+            }
             float delta = index - (float)indexLow;
             return (1.0f-delta) * simple_lut[indexLow] + delta * simple_lut[indexHigh];
         }
