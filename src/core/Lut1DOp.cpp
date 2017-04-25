@@ -297,7 +297,7 @@ OCIO_NAMESPACE_ENTER
             int indexLow = clamp(std::floor(index), 0.0f, maxIndex);
             int indexHigh = clamp(std::ceil(index), 0.0f, maxIndex);
             float delta = index - (float)indexLow;
-            return (1.0f-delta) * simple_lut[indexLow] + delta * simple_lut[indexHigh];
+            return simple_lut[indexLow] + delta * (simple_lut[indexHigh] - simple_lut[indexLow]);
         }
         
         void Lut1D_Linear(float* rgbaBuffer, long numPixels, const Lut1D & lut)
@@ -768,6 +768,48 @@ OIIO_ADD_TEST(Lut1DOp, FiniteValue)
     for(int i=0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(inputBuffer_nearestinverse[i], outputBuffer_nearestinverse[i], 1e-2f);
+    }
+}
+
+
+OIIO_ADD_TEST(Lut1DOp, ExtrapolationErrors)
+{
+    OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
+    lut->from_min[0] = 0.0f;
+    lut->from_min[2] = 0.0f;
+    lut->from_min[2] = 0.0f;
+
+    lut->from_max[0] = 1.0f;
+    lut->from_max[1] = 1.0f;
+    lut->from_max[2] = 1.0f;
+
+    // Simple y=x+0.1 LUT
+    for(int c=0; c<3; ++c)
+    {
+        lut->luts[c].push_back(0.1);
+        lut->luts[c].push_back(0.6);
+        lut->luts[c].push_back(1.1);
+    }
+
+    lut->maxerror = 1e-5f;
+    lut->errortype = OCIO::ERROR_RELATIVE;
+    OIIO_CHECK_EQUAL(lut->isNoOp(), false);
+
+    const int PIXELS = 5;
+    float inputBuffer_linearforward[PIXELS*4] = { -0.1f, -0.2f, -10.0f, 0.0f,
+                                                   0.5f, 1.0f, 1.1f, 0.0f,
+                                                   10.1f, 55.0f, 2.3f, 0.0f,
+                                                   9.1f, 1.0e6f, 1.0e9f, 0.0f,
+                                                   4.0e9f, 9.5e7f, 0.5f, 0.0f };
+    float outputBuffer_linearforward[PIXELS*4] = { 0.1f, 0.1f, 0.1f, 0.0f,
+                                                   0.6f, 1.1f, 1.1f, 0.0f,
+                                                   1.1f, 1.1f, 1.1f, 0.0f,
+                                                   1.1f, 1.1f, 1.1f, 0.0f,
+                                                   1.1f, 1.1f, 0.6f, 0.0f };
+    OCIO::Lut1D_Linear(inputBuffer_linearforward, PIXELS, *lut);
+    for(int i=0; i <sizeof(inputBuffer_linearforward)/sizeof(inputBuffer_linearforward[0]); ++i)
+    {
+        OIIO_CHECK_CLOSE(inputBuffer_linearforward[i], outputBuffer_linearforward[i], 1e-5f);
     }
 }
 
