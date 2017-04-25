@@ -344,6 +344,25 @@ class Config:
         """
         getDisplays()
         
+        Returns the displays that intersect the active displays defined in
+        :py:class:`PyOpenColorIO.Config`.  If no active displays are defined
+        return all the displays.
+        
+        :return: displays in :py:class:`PyOpenColorIO.Config`
+        :rtype: list of strings
+        """
+        pass
+
+    def getNumConfigDisplays(self):
+        pass
+        
+    def getConfigDisplay(self, index):
+        pass
+
+    def getConfigDisplays(self):
+        """
+        getConfigDisplays()
+        
         Returns all the displays defined in :py:class:`PyOpenColorIO.Config`.
         
         :return: displays in :py:class:`PyOpenColorIO.Config`
