@@ -341,6 +341,7 @@ add_subdirectory(src/core)
 messageonce("Build Unit Tests: ${OCIO_BUILD_TESTS}")
 if(OCIO_BUILD_TESTS)
     add_subdirectory(src/core_tests)
+    add_subdirectory(src/pyglue_tests)
 endif()
 
 ###############################################################################
