@@ -163,6 +163,9 @@ Enums
    
    Used when there is a choice of hardware shader language.
 
+.. cpp:type:: EnvironmentMode
+   
+
 
 Conversion
 **********
@@ -225,6 +228,12 @@ Conversion
    
 
 .. cpp:function:: extern GpuLanguage GpuLanguageFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * EnvironmentModeToString(EnvironmentMode mode)
+   
+
+.. cpp:function:: extern EnvironmentMode EnvironmentModeFromString(const char * s)
    
 
 

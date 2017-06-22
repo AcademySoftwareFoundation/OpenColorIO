@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../index.html" />
     <link rel="up" title="Developer guide" href="index.html" />
     <link rel="next" title="FAQ" href="../FAQ.html" />
     <link rel="prev" title="Python Types" href="bindings/PythonTypes.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -102,13 +102,11 @@ and are often used in a &#8216;read-only&#8217; context.</p>
 <p>Config are loaded at runtime to allow for customized color handling in a show-
 dependent manner.</p>
 <p>Example Configs:</p>
-<blockquote>
 <ul class="simple">
 <li>ACES (Acacdemy&#8217;s standard color workflow)</li>
 <li>spi-vfx (Used on some Imageworks VFX shows such as spiderman, etc).</li>
 <li>and others</li>
 </ul>
-</blockquote>
 </div>
 <div class="section" id="colorspaces">
 <h3>ColorSpaces<a class="headerlink" href="#colorspaces" title="Permalink to this headline">¶</a></h3>
@@ -175,7 +173,7 @@ and the <a class="reference internal" href="api/OpenColorIO.html#colorspace-sect
 &#8220;apply&#8221; function.  For the CPU veseion, first wrap your image in an
 ImageDesc class, and then call apply to process in place.</p>
 <p>Example:</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &lt;OpenColorIO/OpenColorIO.h&gt;</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;OpenColorIO/OpenColorIO.h&gt;</span><span class="cp"></span>
 <span class="k">namespace</span> <span class="n">OCIO</span> <span class="o">=</span> <span class="n">OCIO_NAMESPACE</span><span class="p">;</span>
 
 <span class="k">try</span>
@@ -222,9 +220,8 @@ FileTransform to know how to process all possible pixel operations, it&#8217;s m
 simpler to make light-weight processing operations, which the transforms can
 create to do the dirty work as needed.</p>
 <p>All image processing operations (ops) are a class that present the same
-interface, and it&#8217;s rather simple:
-(src/core/Op.h)</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="k">virtual</span> <span class="kt">void</span> <span class="n">apply</span><span class="p">(</span><span class="kt">float</span><span class="o">*</span> <span class="n">rgbaBuffer</span><span class="p">,</span> <span class="kt">long</span> <span class="n">numPixels</span><span class="p">)</span>
+interface, and it&#8217;s rather simple:</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="kt">void</span> <span class="n">apply</span><span class="p">(</span><span class="kt">float</span><span class="o">*</span> <span class="n">rgbaBuffer</span><span class="p">,</span> <span class="kt">long</span> <span class="n">numPixels</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Basically, given a packed float array with the specified number of pixels, process em.</p>
@@ -234,7 +231,7 @@ for converting themselves to a list of ops.  A simple FileTransform that only ha
 a single 1D lut internally may just generate a single Lut1DOp, but a
 FileTransform that references a more complex format (such as the houdini lut case
 referenced above) may generate a few ops:</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">void</span> <span class="n">FileFormatHDL</span><span class="o">::</span><span class="n">BuildFileOps</span><span class="p">(</span><span class="n">OpRcPtrVec</span> <span class="o">&amp;</span> <span class="n">ops</span><span class="p">,</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="n">FileFormatHDL</span><span class="o">::</span><span class="n">BuildFileOps</span><span class="p">(</span><span class="n">OpRcPtrVec</span> <span class="o">&amp;</span> <span class="n">ops</span><span class="p">,</span>
                          <span class="k">const</span> <span class="n">Config</span><span class="o">&amp;</span> <span class="cm">/*config*/</span><span class="p">,</span>
                          <span class="k">const</span> <span class="n">ConstContextRcPtr</span> <span class="o">&amp;</span> <span class="cm">/*context*/</span><span class="p">,</span>
                          <span class="n">CachedFileRcPtr</span> <span class="n">untypedCachedFile</span><span class="p">,</span>
@@ -257,42 +254,39 @@ optimization.</p>
 </div>
 <div class="section" id="an-example">
 <h3>An Example<a class="headerlink" href="#an-example" title="Permalink to this headline">¶</a></h3>
-<p>Let us consider the internal steps when getProcessor() is called to
-convert from ColorSpace &#8216;adx10&#8217; to ColorSpace &#8216;aces&#8217;.</p>
-<blockquote>
+<p>Let us consider the internal steps when getProcessor() is called to convert from ColorSpace
+&#8216;adx10&#8217; to ColorSpace &#8216;aces&#8217;:</p>
 <ul class="simple">
-<li>The first step is to turn this ColorSpace conversion into an</li>
+<li>The first step is to turn this ColorSpace conversion into an ordered list of transforms.</li>
 </ul>
-<p>ordered list of transforms.  We do this by creating a single of the
-conversions from &#8216;adx10&#8217; to reference, and then adding the
-transforms required to go from reference to &#8216;aces&#8217;.
-* The Transform list is then converted into a list of ops.  It is
-during this stage luts, are loaded, etc.</p>
-</blockquote>
+<p>We do this by creating a single of the conversions from &#8216;adx10&#8217; to reference, and then
+adding the transforms required to go from reference to &#8216;aces&#8217;.
+* The Transform list is then converted into a list of ops.  It is during this stage luts,
+are loaded, etc.</p>
 </div>
 <div class="section" id="cpu-code-path">
 <h3>CPU CODE PATH<a class="headerlink" href="#cpu-code-path" title="Permalink to this headline">¶</a></h3>
 <p>The master list of ops is then optimized, and stored internally in the processor.</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="n">FinalizeOpVec</span><span class="p">(</span><span class="n">m_cpuOps</span><span class="p">);</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="n">FinalizeOpVec</span><span class="p">(</span><span class="n">m_cpuOps</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>During Processor::apply(...), a subunit of pixels in the image are formatted into a sequential rgba block.  (Block size is optimized for computational (SSE) simplicity and performance, and is typically similar in size to an image scanline)</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="kt">float</span> <span class="o">*</span> <span class="n">rgbaBuffer</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="kt">float</span> <span class="o">*</span> <span class="n">rgbaBuffer</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="kt">long</span> <span class="n">numPixels</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-<span class="k">while</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
+<span class="k">while</span><span class="p">(</span><span class="nb">true</span><span class="p">)</span> <span class="p">{</span>
    <span class="n">scanlineHelper</span><span class="p">.</span><span class="n">prepRGBAScanline</span><span class="p">(</span><span class="o">&amp;</span><span class="n">rgbaBuffer</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">numPixels</span><span class="p">);</span>
    <span class="p">...</span>
 </pre></div>
 </div>
 <p>Then for each op, op-&gt;apply is called in-place.</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="k">for</span><span class="p">(</span><span class="n">OpRcPtrVec</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="n">m_cpuOps</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">size</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="n">OpRcPtrVec</span><span class="o">::</span><span class="n">size_type</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="n">m_cpuOps</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">size</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
 <span class="p">{</span>
    <span class="n">m_cpuOps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">apply</span><span class="p">(</span><span class="n">rgbaBuffer</span><span class="p">,</span> <span class="n">numPixels</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>After all ops have been applied, the results are copied back to the source</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="n">scanlineHelper</span><span class="p">.</span><span class="n">finishRGBAScanline</span><span class="p">();</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="n">scanlineHelper</span><span class="p">.</span><span class="n">finishRGBAScanline</span><span class="p">();</span>
 </pre></div>
 </div>
 </div>
@@ -340,7 +334,7 @@ post ops.</p>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

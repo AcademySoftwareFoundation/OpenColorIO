@@ -226,10 +226,40 @@ Given a lut src name, where should we find it?
 .. cpp:function:: ConstContextRcPtr Config::getCurrentContext() const
    
 
+.. cpp:function:: void Config::addEnvironmentVar(const char * name, const char * defaultValue)
+   
+
+.. cpp:function:: int Config::getNumEnvironmentVars() const
+   
+
+.. cpp:function:: const char * Config::getEnvironmentVarNameByIndex(int index) const
+   
+
+.. cpp:function:: const char * Config::getEnvironmentVarDefault(const char * name) const
+   
+
+.. cpp:function:: void Config::clearEnvironmentVars()
+   
+
+.. cpp:function:: void Config::setEnvironmentMode(EnvironmentMode mode)
+   
+
+.. cpp:function:: EnvironmentMode Config::getEnvironmentMode() const
+   
+
+.. cpp:function:: void Config::loadEnvironment()
+   
+
 .. cpp:function:: const char * Config::getSearchPath() const
    
 
+.. cpp:function:: void Config::setSearchPath(const char * path)
+   
+
 .. cpp:function:: const char * Config::getWorkingDir() const
+   
+
+.. cpp:function:: void Config::setWorkingDir(const char * dirname)
    
 
 .. _cfgcolorspaces_section:
@@ -633,6 +663,12 @@ in, for the math to apply correctly.
    
    Setting a transform to a non-null call makes it allowed.
 
+.. cpp:function:: const char * Look::getDescription() const
+   
+
+.. cpp:function:: void Look::setDescription(const char * description)
+   
+
 
 Processor
 *********
@@ -1025,6 +1061,21 @@ Context
    
 
 .. cpp:function:: const char * Context::getStringVar(const char * name) const
+   
+
+.. cpp:function:: int Context::getNumStringVars() const
+   
+
+.. cpp:function:: const char * Context::getStringVarNameByIndex(int index) const
+   
+
+.. cpp:function:: void Context::clearStringVars()
+   
+
+.. cpp:function:: void Context::setEnvironmentMode(EnvironmentMode mode)
+   
+
+.. cpp:function:: EnvironmentMode Context::getEnvironmentMode() const
    
 
 .. cpp:function:: void Context::loadEnvironment()

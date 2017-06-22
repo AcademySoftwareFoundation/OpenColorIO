@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../index.html" />
     <link rel="up" title="User Guide" href="index.html" />
     <link rel="next" title="Contexts" href="contexts.html" />
     <link rel="prev" title="Tool overview" href="tool_overview.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -227,7 +227,7 @@ VFX. As such, it can be a pain to integrate.</p>
 practical for working with 16-bit integer images (not floating
 point/linear-light images as is common in compositing software)</p>
 <p>The second issue is there is no simple way to load a simple 1D or 3D
-LUT into Photoshop (and it&#8217;s API does not make this easy either!)</p>
+LUT into Photoshop (and its API does not make this easy either!)</p>
 <div class="section" id="a-working-space">
 <h3>A working space<a class="headerlink" href="#a-working-space" title="Permalink to this headline">¶</a></h3>
 <p>First, we need to decide on a colorspace to use for the images in
@@ -288,7 +288,7 @@ a Terminal.app window to get the full path (or, type it manually)</p>
 <div class="highlight-python"><pre>bash$ ociobakelut --format icc --inputspace vd16 --outputspace srgb8 [...]</pre>
 </div>
 <p>Then we specify the display ICC profile:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">--</span><span class="n">displayicc</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">my</span><span class="o">/</span><span class="n">monitorprofile</span><span class="o">.</span><span class="n">icc</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">--</span><span class="n">displayicc</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">my</span><span class="o">/</span><span class="n">monitorprofile</span><span class="o">.</span><span class="n">icc</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>We can set the description (shown in Photoshop), and as the last argument, specify:</p>
@@ -296,7 +296,7 @@ a Terminal.app window to get the full path (or, type it manually)</p>
 </div>
 <p>Finally an argument for the output file:</p>
 <blockquote>
-[...] vd16_to_srgb.icc</blockquote>
+<div>[...] vd16_to_srgb.icc</div></blockquote>
 <p>If you selected the &#8220;sRGB IEC61966-2.1&#8221; display profile, you can omit
 the <tt class="docutils literal"><span class="pre">--displayicc</span></tt> argument (it defaults to an standard sRGB
 profile):</p>
@@ -375,7 +375,7 @@ calibrated monitor!</p>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

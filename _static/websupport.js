@@ -4,7 +4,7 @@
  *
  * sphinx.websupport utilties for all documentation.
  *
- * :copyright: Copyright 2007-2010 by the Sphinx team, see AUTHORS.
+ * :copyright: Copyright 2007-2013 by the Sphinx team, see AUTHORS.
  * :license: BSD, see LICENSE for details.
  *
  */
@@ -566,7 +566,7 @@
     var context = $.extend({}, opts, comment);
     var div = $(renderTemplate(commentTemplate, context));
 
-    // If the user has voted on this comment, highblight the correct arrow.
+    // If the user has voted on this comment, highlight the correct arrow.
     if (comment.vote) {
       var direction = (comment.vote == 1) ? 'u' : 'd';
       div.find('#' + direction + 'v' + comment.id).hide();

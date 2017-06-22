@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../../index.html" />
     <link rel="up" title="&lt;no title&gt;" href="index.html" />
     <link rel="next" title="Python API" href="../bindings/PythonAPI.html" />
     <link rel="prev" title="C++ Transforms" href="OpenColorTransforms.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -332,6 +332,11 @@ directly specifying it.</p>
 <dd><p>Used when there is a choice of hardware shader language.</p>
 </dd></dl>
 
+<dl class="type">
+<dt id="EnvironmentMode">
+<em class="property">type </em><tt class="descname">EnvironmentMode</tt><a class="headerlink" href="#EnvironmentMode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 <div class="section" id="conversion">
 <h2>Conversion<a class="headerlink" href="#conversion" title="Permalink to this headline">¶</a></h2>
@@ -435,6 +440,16 @@ const char* <tt class="descname">GpuLanguageToString</tt><big>(</big><a class="r
 <a class="reference internal" href="#GpuLanguage" title="GpuLanguage">GpuLanguage</a> <tt class="descname">GpuLanguageFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#GpuLanguageFromString__cCP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="function">
+<dt id="EnvironmentModeToString__EnvironmentMode">
+const char* <tt class="descname">EnvironmentModeToString</tt><big>(</big><a class="reference internal" href="#EnvironmentMode" title="EnvironmentMode">EnvironmentMode</a> <em>mode</em><big>)</big><a class="headerlink" href="#EnvironmentModeToString__EnvironmentMode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="EnvironmentModeFromString__cCP">
+<a class="reference internal" href="#EnvironmentMode" title="EnvironmentMode">EnvironmentMode</a> <tt class="descname">EnvironmentModeFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#EnvironmentModeFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 <div class="section" id="roles">
 <h2>Roles<a class="headerlink" href="#roles" title="Permalink to this headline">¶</a></h2>
@@ -524,7 +539,7 @@ another display transform in the host app for preview.</p>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

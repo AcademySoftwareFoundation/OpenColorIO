@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../index.html" />
     <link rel="up" title="Developer guide" href="index.html" />
     <link rel="next" title="Submitting Changes" href="submitting_changes.html" />
     <link rel="prev" title="Coding guidelines" href="coding_guidelines.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -110,10 +110,10 @@ created in <tt class="docutils literal"><span class="pre">build_dir/docs/build-h
 the edited rST files.</p>
 <p>Initial run:</p>
 <blockquote>
-$ mkdir build &amp;&amp; cd build</blockquote>
+<div>$ mkdir build &amp;&amp; cd build</div></blockquote>
 <p>Then after each change you wish to preview:</p>
 <blockquote>
-$ cmake -D OCIO_BUILD_DOCS=yes .. &amp;&amp; make doc</blockquote>
+<div>$ cmake -D OCIO_BUILD_DOCS=yes .. &amp;&amp; make doc</div></blockquote>
 </div>
 <div class="section" id="basics">
 <h2>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h2>
@@ -163,7 +163,7 @@ docutils site</a></p>
 <p>One of the features it includes is readjusting the hierarchy of
 heading decorations (the underlines for different heading levels). To
 configure this to use OCIO&#8217;s convention, put the following in your <tt class="docutils literal"><span class="pre">.emacs.d/init.el</span></tt>:</p>
-<div class="highlight-common-lisp"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">rst-preferred-decorations</span>
+<div class="highlight-common-lisp"><div class="highlight"><pre><span></span><span class="p">(</span><span class="k">setq</span> <span class="nv">rst-preferred-decorations</span>
       <span class="o">&#39;</span><span class="p">((</span><span class="nv">?=</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)</span>
         <span class="p">(</span><span class="nv">?*</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)</span>
         <span class="p">(</span><span class="nv">?+</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)</span>
@@ -188,7 +188,7 @@ configure this to use OCIO&#8217;s convention, put the following in your <tt cla
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

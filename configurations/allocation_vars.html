@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../index.html" />
     <link rel="up" title="Configurations" href="index.html" />
     <link rel="next" title="Installation" href="../installation.html" />
     <link rel="prev" title="Nuke default" href="nuke_default.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -101,8 +101,8 @@ being to maintain maximum fidelity and minimize clamping.</p>
 ranges between 0.0 - 1.0 (after converting to float).  If you wanted to apply
 a 3d lut to this data, there is no danger in samplingthat space uniformly and
 clamping data outside (0,1).   So for this colorspace we would tag it:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">uniform</span>
-<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.0</span><span class="p-Indicator">,</span> <span class="nv">1.0</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">allocation</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">uniform</span>
+<span class="l l-Scalar l-Scalar-Plain">allocationvars</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">0.0</span><span class="p p-Indicator">,</span> <span class="nv">1.0</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>These are the defaults, so the tagging could also be skipped.</p>
@@ -110,8 +110,8 @@ clamping data outside (0,1).   So for this colorspace we would tag it:</p>
 small undershoot and overshoot values were encountered? If you wanted OCIO to
 preserve this overshoot / undershoot pixel information, you would do so by
 modifying the allocation vars.</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">uniform</span>
-<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-0.125</span><span class="p-Indicator">,</span> <span class="nv">1.125</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">allocation</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">uniform</span>
+<span class="l l-Scalar l-Scalar-Plain">allocationvars</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">-0.125</span><span class="p p-Indicator">,</span> <span class="nv">1.125</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>This would mean that any image data originally within [-0.125, 1.125] will be
@@ -139,12 +139,12 @@ perceptually significant portions of the space wouldnt be sampled at all!</p>
 240.0
 256.0</p>
 <p>So another allocation is defined, lg2</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">linear</span>
-  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">linear</span>
+  <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
       <span class="no">Scene-linear, high dynamic range. Used for rendering and compositing.</span>
-  <span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg2</span>
-  <span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-8</span><span class="p-Indicator">,</span> <span class="nv">8</span><span class="p-Indicator">]</span>
+  <span class="l l-Scalar l-Scalar-Plain">allocation</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg2</span>
+  <span class="l l-Scalar l-Scalar-Plain">allocationvars</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">-8</span><span class="p p-Indicator">,</span> <span class="nv">8</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>In this case, we&#8217;re saying that the appropriate ways to sample the 3d lut are
@@ -165,8 +165,8 @@ which is why we optionally allow a 3d allocation var, a black point
 offset.  If you need to preserve 0.0 values, and you have a high
 dynamic range space, you can specify a small offset.</p>
 <p>Example:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg2</span>
-<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-8</span><span class="p-Indicator">,</span> <span class="nv">8</span><span class="p-Indicator">,</span> <span class="nv">0.00390625</span><span class="p-Indicator">]</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">allocation</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg2</span>
+<span class="l l-Scalar l-Scalar-Plain">allocationvars</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">[</span><span class="nv">-8</span><span class="p p-Indicator">,</span> <span class="nv">8</span><span class="p p-Indicator">,</span> <span class="nv">0.00390625</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 <p>The [-15.0, 6.0] values in spi-vfx come from the fact that all of the
@@ -194,7 +194,7 @@ see highlight clipping.</p>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

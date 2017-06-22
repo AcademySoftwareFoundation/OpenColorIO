@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../../index.html" />
     <link rel="up" title="&lt;no title&gt;" href="index.html" />
     <link rel="next" title="C++ Transforms" href="OpenColorTransforms.html" />
     <link rel="prev" title="&lt;no title&gt;" href="index.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -93,7 +93,7 @@
 <div class="section" id="c-api">
 <h1>C++ API<a class="headerlink" href="#c-api" title="Permalink to this headline">¶</a></h1>
 <p><strong>Usage Example:</strong> <em>Compositing plugin that converts from &#8220;log&#8221; to &#8220;lin&#8221;</em></p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &lt;OpenColorIO/OpenColorIO.h&gt;</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;OpenColorIO/OpenColorIO.h&gt;</span><span class="cp"></span>
 <span class="k">namespace</span> <span class="n">OCIO</span> <span class="o">=</span> <span class="n">OCIO_NAMESPACE</span><span class="p">;</span>
 
 <span class="k">try</span>
@@ -132,20 +132,20 @@ runtime.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="Exception::Exception__cCP">
- <tt class="descclassname">Exception::</tt><tt class="descname">Exception</tt><big>(</big>const char* <em>None</em><big>)</big><a class="headerlink" href="#Exception::Exception__cCP" title="Permalink to this definition">¶</a></dt>
+<dt id="Exception::Exception__X">
+ <tt class="descclassname">Exception::</tt><tt class="descname">Exception</tt><big>(</big><em>const char*</em><big>)</big><a class="headerlink" href="#Exception::Exception__X" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructor that takes a string as the exception message.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="Exception::Exception__ExceptionCR">
- <tt class="descclassname">Exception::</tt><tt class="descname">Exception</tt><big>(</big>const Exception&amp; <em>None</em><big>)</big><a class="headerlink" href="#Exception::Exception__ExceptionCR" title="Permalink to this definition">¶</a></dt>
+<dt>
+ <tt class="descclassname">Exception::</tt><tt class="descname">Exception</tt><big>(</big><em>const Exception&amp;</em><big>)</big></dt>
 <dd><p>Constructor that takes an exception pointer.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="Exception::assign-operator__ExceptionCR">
-Exception&amp; <tt class="descclassname">Exception::</tt><tt class="descname">operator=</tt><big>(</big>const Exception&amp; <em>None</em><big>)</big><a class="headerlink" href="#Exception::assign-operator__ExceptionCR" title="Permalink to this definition">¶</a></dt>
+<dt id="Exception::assign-operator__X">
+Exception&amp; <tt class="descclassname">Exception::</tt><tt class="descname">operator=</tt><big>(</big><em>const Exception&amp;</em><big>)</big><a class="headerlink" href="#Exception::assign-operator__X" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructor that takes an exception pointer and returns an exception pointer (???).</p>
 </dd></dl>
 
@@ -171,13 +171,13 @@ for other error conditions.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="ExceptionMissingFile::ExceptionMissingFile__cCP">
- <tt class="descclassname">ExceptionMissingFile::</tt><tt class="descname">ExceptionMissingFile</tt><big>(</big>const char* <em>None</em><big>)</big><a class="headerlink" href="#ExceptionMissingFile::ExceptionMissingFile__cCP" title="Permalink to this definition">¶</a></dt>
+<dt id="ExceptionMissingFile::ExceptionMissingFile__X">
+ <tt class="descclassname">ExceptionMissingFile::</tt><tt class="descname">ExceptionMissingFile</tt><big>(</big><em>const char*</em><big>)</big><a class="headerlink" href="#ExceptionMissingFile::ExceptionMissingFile__X" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="ExceptionMissingFile::ExceptionMissingFile__ExceptionMissingFileCR">
- <tt class="descclassname">ExceptionMissingFile::</tt><tt class="descname">ExceptionMissingFile</tt><big>(</big>const ExceptionMissingFile&amp; <em>None</em><big>)</big><a class="headerlink" href="#ExceptionMissingFile::ExceptionMissingFile__ExceptionMissingFileCR" title="Permalink to this definition">¶</a></dt>
+<dt>
+ <tt class="descclassname">ExceptionMissingFile::</tt><tt class="descname">ExceptionMissingFile</tt><big>(</big><em>const ExceptionMissingFile&amp;</em><big>)</big></dt>
 <dd></dd></dl>
 
 </div>
@@ -357,13 +357,63 @@ const char* <tt class="descclassname">Config::</tt><tt class="descname">getCache
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="Config::addEnvironmentVar__cCP.cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">addEnvironmentVar</tt><big>(</big>const char* <em>name</em>, const char* <em>defaultValue</em><big>)</big><a class="headerlink" href="#Config::addEnvironmentVar__cCP.cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getNumEnvironmentVarsC">
+int <tt class="descclassname">Config::</tt><tt class="descname">getNumEnvironmentVars</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getNumEnvironmentVarsC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getEnvironmentVarNameByIndex__iC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getEnvironmentVarNameByIndex</tt><big>(</big>int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getEnvironmentVarNameByIndex__iC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getEnvironmentVarDefault__cCPC">
+const char* <tt class="descclassname">Config::</tt><tt class="descname">getEnvironmentVarDefault</tt><big>(</big>const char* <em>name</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getEnvironmentVarDefault__cCPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::clearEnvironmentVars">
+void <tt class="descclassname">Config::</tt><tt class="descname">clearEnvironmentVars</tt><big>(</big><big>)</big><a class="headerlink" href="#Config::clearEnvironmentVars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::setEnvironmentMode__EnvironmentMode">
+void <tt class="descclassname">Config::</tt><tt class="descname">setEnvironmentMode</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#EnvironmentMode" title="EnvironmentMode">EnvironmentMode</a> <em>mode</em><big>)</big><a class="headerlink" href="#Config::setEnvironmentMode__EnvironmentMode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::getEnvironmentModeC">
+<a class="reference internal" href="OpenColorTypes.html#EnvironmentMode" title="EnvironmentMode">EnvironmentMode</a> <tt class="descclassname">Config::</tt><tt class="descname">getEnvironmentMode</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getEnvironmentModeC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::loadEnvironment">
+void <tt class="descclassname">Config::</tt><tt class="descname">loadEnvironment</tt><big>(</big><big>)</big><a class="headerlink" href="#Config::loadEnvironment" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="Config::getSearchPathC">
 const char* <tt class="descclassname">Config::</tt><tt class="descname">getSearchPath</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getSearchPathC" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="Config::setSearchPath__cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">setSearchPath</tt><big>(</big>const char* <em>path</em><big>)</big><a class="headerlink" href="#Config::setSearchPath__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="Config::getWorkingDirC">
 const char* <tt class="descclassname">Config::</tt><tt class="descname">getWorkingDir</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Config::getWorkingDirC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Config::setWorkingDir__cCP">
+void <tt class="descclassname">Config::</tt><tt class="descname">setWorkingDir</tt><big>(</big>const char* <em>dirname</em><big>)</big><a class="headerlink" href="#Config::setWorkingDir__cCP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -891,6 +941,16 @@ void <tt class="descclassname">Look::</tt><tt class="descname">setInverseTransfo
 <dd><p>Setting a transform to a non-null call makes it allowed.</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="Look::getDescriptionC">
+const char* <tt class="descclassname">Look::</tt><tt class="descname">getDescription</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Look::getDescriptionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Look::setDescription__cCP">
+void <tt class="descclassname">Look::</tt><tt class="descname">setDescription</tt><big>(</big>const char* <em>description</em><big>)</big><a class="headerlink" href="#Look::setDescription__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 <div class="section" id="processor">
 <h2>Processor<a class="headerlink" href="#processor" title="Permalink to this headline">¶</a></h2>
@@ -1034,7 +1094,7 @@ void <tt class="descclassname">ProcessorMetadata::</tt><tt class="descname">addL
 of application specific lut formats. The Baker can be used to create lut
 formats that ocio supports for writing.</p>
 <p><strong>Usage Example:</strong> <em>Bake a houdini sRGB viewer lut</em></p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">Config</span><span class="o">::</span><span class="n">CreateFromEnv</span><span class="p">();</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">Config</span><span class="o">::</span><span class="n">CreateFromEnv</span><span class="p">();</span>
 <span class="n">OCIO</span><span class="o">::</span><span class="n">BakerRcPtr</span> <span class="n">baker</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">Baker</span><span class="o">::</span><span class="n">Create</span><span class="p">();</span>
 <span class="n">baker</span><span class="o">-&gt;</span><span class="n">setConfig</span><span class="p">(</span><span class="n">config</span><span class="p">);</span>
 <span class="n">baker</span><span class="o">-&gt;</span><span class="n">setFormat</span><span class="p">(</span><span class="s">&quot;houdini&quot;</span><span class="p">);</span> <span class="c1">// set the houdini type</span>
@@ -1450,6 +1510,31 @@ const char* <tt class="descclassname">Context::</tt><tt class="descname">getStri
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="Context::getNumStringVarsC">
+int <tt class="descclassname">Context::</tt><tt class="descname">getNumStringVars</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::getNumStringVarsC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::getStringVarNameByIndex__iC">
+const char* <tt class="descclassname">Context::</tt><tt class="descname">getStringVarNameByIndex</tt><big>(</big>int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::getStringVarNameByIndex__iC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::clearStringVars">
+void <tt class="descclassname">Context::</tt><tt class="descname">clearStringVars</tt><big>(</big><big>)</big><a class="headerlink" href="#Context::clearStringVars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::setEnvironmentMode__EnvironmentMode">
+void <tt class="descclassname">Context::</tt><tt class="descname">setEnvironmentMode</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#EnvironmentMode" title="EnvironmentMode">EnvironmentMode</a> <em>mode</em><big>)</big><a class="headerlink" href="#Context::setEnvironmentMode__EnvironmentMode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="Context::getEnvironmentModeC">
+<a class="reference internal" href="OpenColorTypes.html#EnvironmentMode" title="EnvironmentMode">EnvironmentMode</a> <tt class="descclassname">Context::</tt><tt class="descname">getEnvironmentMode</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#Context::getEnvironmentModeC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="Context::loadEnvironment">
 void <tt class="descclassname">Context::</tt><tt class="descname">loadEnvironment</tt><big>(</big><big>)</big><a class="headerlink" href="#Context::loadEnvironment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Seed all string vars with the current environment.</p>
@@ -1489,7 +1574,7 @@ If the filename cannot be found, an exception will be thrown.</p>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

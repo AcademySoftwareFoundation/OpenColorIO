@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../index.html" />
     <link rel="up" title="Developer guide" href="index.html" />
     <link rel="next" title="&lt;no title&gt;" href="api/index.html" />
     <link rel="prev" title="Issues" href="issues.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -131,7 +131,7 @@ a time.</li>
 </ol>
 <div class="section" id="c">
 <span id="usage-applybasic-cpp"></span><h3>C++<a class="headerlink" href="#c" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &lt;OpenColorIO/OpenColorIO.h&gt;</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;OpenColorIO/OpenColorIO.h&gt;</span><span class="cp"></span>
 <span class="k">namespace</span> <span class="n">OCIO</span> <span class="o">=</span> <span class="n">OCIO_NAMESPACE</span><span class="p">;</span>
 
 <span class="k">try</span>
@@ -152,17 +152,17 @@ a time.</li>
 </div>
 <div class="section" id="python">
 <span id="usage-applybasic-python"></span><h3>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-py"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-py"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">GetCurrentConfig</span><span class="p">()</span>
     <span class="n">processor</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getProcessor</span><span class="p">(</span><span class="n">OCIO</span><span class="o">.</span><span class="n">Constants</span><span class="o">.</span><span class="n">ROLE_COMPOSITING_LOG</span><span class="p">,</span>
                                     <span class="n">OCIO</span><span class="o">.</span><span class="n">Constants</span><span class="o">.</span><span class="n">ROLE_SCENE_LINEAR</span><span class="p">)</span>
 
-    <span class="c"># Apply the color transform to the existing RGBA pixel data</span>
+    <span class="c1"># Apply the color transform to the existing RGBA pixel data</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">processor</span><span class="o">.</span><span class="n">applyRGBA</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&quot;OpenColorIO Error&quot;</span><span class="p">,</span><span class="n">e</span>
+    <span class="k">print</span> <span class="s2">&quot;OpenColorIO Error&quot;</span><span class="p">,</span><span class="n">e</span>
 </pre></div>
 </div>
 </div>
@@ -188,7 +188,7 @@ See <a class="reference internal" href="#usage-applybasic"><em>Applying a basic 
 </ol>
 <div class="section" id="id1">
 <h3>C++<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="cp">#include &lt;OpenColorIO/OpenColorIO.h&gt;</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;OpenColorIO/OpenColorIO.h&gt;</span><span class="cp"></span>
 <span class="k">namespace</span> <span class="n">OCIO</span> <span class="o">=</span> <span class="n">OCIO_NAMESPACE</span><span class="p">;</span>
 
 <span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">GetCurrentConfig</span><span class="p">();</span>
@@ -208,7 +208,7 @@ See <a class="reference internal" href="#usage-applybasic"><em>Applying a basic 
 </div>
 <div class="section" id="id2">
 <h3>Python<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 
 <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">GetCurrentConfig</span><span class="p">()</span>
 
@@ -262,7 +262,7 @@ See <a class="reference internal" href="#usage-applybasic"><em>Applying a basic 
 </ol>
 <div class="section" id="id3">
 <h3>C++<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="c1">// Step 1: Get the config</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="c1">// Step 1: Get the config</span>
 <span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">GetCurrentConfig</span><span class="p">();</span>
 
 <span class="c1">// Step 2: Lookup the display ColorSpace</span>
@@ -314,26 +314,26 @@ See <a class="reference internal" href="#usage-applybasic"><em>Applying a basic 
 </div>
 <div class="section" id="id4">
 <h3>Python<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 
-<span class="c"># Step 1: Get the config</span>
+<span class="c1"># Step 1: Get the config</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">GetCurrentConfig</span><span class="p">()</span>
 
-<span class="c"># Step 2: Lookup the display ColorSpace</span>
+<span class="c1"># Step 2: Lookup the display ColorSpace</span>
 <span class="n">device</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getDefaultDisplayDeviceName</span><span class="p">()</span>
 <span class="n">transformName</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getDefaultDisplayTransformName</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 <span class="n">displayColorSpace</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getDisplayColorSpaceName</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">transformName</span><span class="p">)</span>
 
-<span class="c"># Step 3: Create a DisplayTransform, and set the input and display ColorSpaces</span>
-<span class="c"># (This example assumes the input is scene linear. Adapt as needed.)</span>
+<span class="c1"># Step 3: Create a DisplayTransform, and set the input and display ColorSpaces</span>
+<span class="c1"># (This example assumes the input is scene linear. Adapt as needed.)</span>
 
 <span class="n">transform</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">DisplayTransform</span><span class="p">()</span>
 <span class="n">transform</span><span class="o">.</span><span class="n">setInputColorSpaceName</span><span class="p">(</span><span class="n">OCIO</span><span class="o">.</span><span class="n">Constants</span><span class="o">.</span><span class="n">ROLE_SCENE_LINEAR</span><span class="p">)</span>
 <span class="n">transform</span><span class="o">.</span><span class="n">setDisplayColorSpaceName</span><span class="p">(</span><span class="n">displayColorSpace</span><span class="p">)</span>
 
-<span class="c"># Step 4: Add custom transforms for a &#39;canonical&#39; Display Pipeline</span>
+<span class="c1"># Step 4: Add custom transforms for a &#39;canonical&#39; Display Pipeline</span>
 
-<span class="c"># Add an fstop exposure control (in SCENE_LINEAR)</span>
+<span class="c1"># Add an fstop exposure control (in SCENE_LINEAR)</span>
 <span class="n">gain</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">exposure</span>
 <span class="n">slope3f</span> <span class="o">=</span> <span class="p">(</span><span class="n">gain</span><span class="p">,</span> <span class="n">gain</span><span class="p">,</span> <span class="n">gain</span><span class="p">)</span>
 
@@ -342,12 +342,12 @@ See <a class="reference internal" href="#usage-applybasic"><em>Applying a basic 
 
 <span class="n">transform</span><span class="o">.</span><span class="n">setLinearCC</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
 
-<span class="c"># Add a Channel view &#39;swizzle&#39;</span>
+<span class="c1"># Add a Channel view &#39;swizzle&#39;</span>
 
-<span class="n">channelHot</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># show rgb</span>
-<span class="c"># channelHot = (1, 0, 0, 0) # show red</span>
-<span class="c"># channelHot = (0, 0, 0, 1) # show alpha</span>
-<span class="c"># channelHot = (1, 1, 1, 0) # show luma</span>
+<span class="n">channelHot</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># show rgb</span>
+<span class="c1"># channelHot = (1, 0, 0, 0) # show red</span>
+<span class="c1"># channelHot = (0, 0, 0, 1) # show alpha</span>
+<span class="c1"># channelHot = (1, 1, 1, 0) # show luma</span>
 
 <span class="n">lumacoef</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getDefaultLumaCoefs</span><span class="p">()</span>
 
@@ -357,7 +357,7 @@ See <a class="reference internal" href="#usage-applybasic"><em>Applying a basic 
 <span class="n">swizzle</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">m44</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
 <span class="n">transform</span><span class="o">.</span><span class="n">setChannelView</span><span class="p">(</span><span class="n">swizzle</span><span class="p">)</span>
 
-<span class="c"># And then process the image normally.</span>
+<span class="c1"># And then process the image normally.</span>
 <span class="n">processor</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getProcessor</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
 
 <span class="k">print</span> <span class="n">processor</span><span class="o">.</span><span class="n">applyRGB</span><span class="p">(</span><span class="n">imageData</span><span class="p">)</span>
@@ -382,7 +382,7 @@ processor as you normally would have, see above for details.</li>
 <div class="section" id="id5">
 <h3>C++<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <p>This example is available as a working app in the OCIO source: src/apps/ociodisplay.</p>
-<div class="highlight-cpp"><div class="highlight"><pre><span class="c1">// Step 0: Get the processor using any of the pipelines mentioned above.</span>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="c1">// Step 0: Get the processor using any of the pipelines mentioned above.</span>
 <span class="n">OCIO</span><span class="o">::</span><span class="n">ConstConfigRcPtr</span> <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">::</span><span class="n">GetCurrentConfig</span><span class="p">();</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">device</span> <span class="o">=</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">getDefaultDisplayDeviceName</span><span class="p">();</span>
 <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">transformName</span> <span class="o">=</span> <span class="n">config</span><span class="o">-&gt;</span><span class="n">getDefaultDisplayTransformName</span><span class="p">(</span><span class="n">device</span><span class="p">);</span>
@@ -439,7 +439,7 @@ processor as you normally would have, see above for details.</li>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

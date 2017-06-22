@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../index.html" />
     <link rel="up" title="User Guide" href="index.html" />
     <link rel="next" title="Config syntax" href="config_syntax.html" />
     <link rel="prev" title="Contexts" href="contexts.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -104,11 +104,11 @@ named transform which gets applied in a specific color space. All of the
 changes below to the .ocio configs can be done manually by editing the
 text, or using the Python API.</p>
 <p>Example look definition in a OCIO config:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">looks</span><span class="p-Indicator">:</span>
-<span class="p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">di</span>
-  <span class="l-Scalar-Plain">process_space</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rclg16</span>
-  <span class="l-Scalar-Plain">transform</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">look_di.cc</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">looks</span><span class="p p-Indicator">:</span>
+<span class="p p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">di</span>
+  <span class="l l-Scalar l-Scalar-Plain">process_space</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">rclg16</span>
+  <span class="l l-Scalar l-Scalar-Plain">transform</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">look_di.cc</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>The src file can be any LUT type that OCIO supports (in this case, it&#8217;s a
@@ -128,17 +128,17 @@ file-transform.</p>
 apply the specified look(s). This lets application in the viewer
 provide options which use the looks.</p>
 <p>Example:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">displays</span><span class="p-Indicator">:</span>
-  <span class="l-Scalar-Plain">DLP</span><span class="p-Indicator">:</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Raw</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">nc10</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Log</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">rclg10</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">p3dci16</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film DI</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">p3dci16</span><span class="p-Indicator">,</span> <span class="nv">looks</span><span class="p-Indicator">:</span> <span class="nv">di</span><span class="p-Indicator">}</span>
-  <span class="l-Scalar-Plain">sRGB</span><span class="p-Indicator">:</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Raw</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">nc10</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Log</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">rclg10</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">srgb10</span><span class="p-Indicator">}</span>
-    <span class="p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p-Indicator">{</span><span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film DI</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">srgb10</span><span class="p-Indicator">,</span> <span class="nv">looks</span><span class="p-Indicator">:</span> <span class="nv">di</span><span class="p-Indicator">}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">displays</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">DLP</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Raw</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">nc10</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Log</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">rclg10</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Film</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">p3dci16</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Film DI</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">p3dci16</span><span class="p p-Indicator">,</span> <span class="nv">looks</span><span class="p p-Indicator">:</span> <span class="nv">di</span><span class="p p-Indicator">}</span>
+  <span class="l l-Scalar l-Scalar-Plain">sRGB</span><span class="p p-Indicator">:</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Raw</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">nc10</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Log</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">rclg10</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Film</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">srgb10</span><span class="p p-Indicator">}</span>
+    <span class="p p-Indicator">-</span> <span class="kt">!&lt;View&gt;</span> <span class="p p-Indicator">{</span><span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Film DI</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">srgb10</span><span class="p p-Indicator">,</span> <span class="nv">looks</span><span class="p p-Indicator">:</span> <span class="nv">di</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>Option for advanced users: The looks tag is actually a comma-delimited
@@ -161,10 +161,10 @@ and only if not found will the &#8216;luts&#8217; directory be checked.</p>
 <p>env-vars, absolute, and relative paths can be used both in the config&#8217;s
 <tt class="docutils literal"><span class="pre">search_path</span></tt>, as well as the View&#8217;s src specification.</p>
 <p>Example:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">di</span>
-  <span class="l-Scalar-Plain">process_space</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">rclg16</span>
-  <span class="l-Scalar-Plain">transform</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">looks/$SHOT_di/current/look_$SHOT_di.cc</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;Look&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">di</span>
+  <span class="l l-Scalar l-Scalar-Plain">process_space</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">rclg16</span>
+  <span class="l l-Scalar l-Scalar-Plain">transform</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">looks/$SHOT_di/current/look_$SHOT_di.cc</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>Note that if the per-shot lut is not found, you can control whether a
@@ -207,7 +207,7 @@ flipbook applications to use this approach.</p>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

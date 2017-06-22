@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../index.html" />
     <link rel="up" title="Configurations" href="index.html" />
     <link rel="next" title="spi-vfx" href="spi_vfx.html" />
     <link rel="prev" title="Configurations" href="index.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -91,19 +91,19 @@
 <li>All images, on disk, contain colorspace information as a substring withing the filename.  This is obeyed by all applications that load image, write images, or view images.  File extensions and metadata are ignored with regards to color processing.</li>
 </ul>
 <blockquote>
-<p>Example:</p>
+<div><p>Example:</p>
 <div class="highlight-python"><pre>colorimage_lnf.exr  : lnf
 dataimage_ncf.exr : ncf
 plate_lg10.dpx : lg10
 texture_dt8.tif: dt8</pre>
 </div>
 <p>Note: fileformat extension does NOT imply a color space.  Not all dpx files are lg10. Note all tif images are dt8.</p>
-</blockquote>
+</div></blockquote>
 <ul class="simple">
 <li>The common file formats we use are exr, tif, dpx.</li>
 </ul>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li>render outputs: exr</li>
 <li>render inputs (mipmapped-textures): exr, tif (txtif)</li>
 <li>photographic plates (scans): dpx</li>
@@ -112,7 +112,7 @@ texture_dt8.tif: dt8</pre>
 <li>painted textures: psd, tif</li>
 <li>output proxies: jpg</li>
 </ul>
-</blockquote>
+</div></blockquote>
 <ul class="simple">
 <li>All pipelines that need to be colorspace aware rely on <tt class="docutils literal"><span class="pre">Config.parseColorSpaceFromString</span></tt>.</li>
 <li>Color configurations are show specific. The $OCIO environment variable is set as part of a &#8216;setshot&#8217; process, before other applications are launched.   Artists are not allowed to work across different shows without using a fresh shell + setshot.</li>
@@ -137,12 +137,12 @@ texture_dt8.tif: dt8</pre>
 <li>The original texture filenames contain the colorspace information as a substring, to signify processing intent.</li>
 </ul>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li>Textures that contain data (bump maps, opacity maps, blend maps, etc) are labelled with the nc colorspaces according to their bitdepth.  Ex: an 8-bit opacity map -&gt; skin_opacity_nc8.tif</li>
 <li>Painted textures that are intended to modulate diffuse color components are labelled dt (standing for &#8220;diffuse texture&#8221;).  The dt8 colorspace is designed such that, when linearized, values will not extend above 1.0.  At texture publishing time these are converted to lnh mipmapped tiffs/exr.  Note that as linear textures have greater allocation requirements, a bit depth promotion is required in this case.  I.e., even if the original texture as painted was only 8-bits, the mipmapped texture will be stored as a 16-bit float image.</li>
 <li>Painted environment maps, which may be emissive as labelled vd (standing for &#8216;video&#8217;).   These values, when linearized, have the potential to generate specular information well above 1.0.   Note that in the current vd linearization curves, the top code values may be very &#8220;sensitive&#8221;. I.e., very small changes in the initial code value (such as 254-&gt;255) may actually result in very large differences in the estimated scene-linear intensity.   All environment maps are store as lnh mipmapped tiffs/exr. The same bit-depth promotion as in the dt8 case is required here.</li>
 </ul>
-</blockquote>
+</div></blockquote>
 </div>
 <div class="section" id="compositing">
 <h2>Compositing<a class="headerlink" href="#compositing" title="Permalink to this headline">¶</a></h2>
@@ -170,7 +170,7 @@ texture_dt8.tif: dt8</pre>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

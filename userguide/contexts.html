@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../index.html" />
     <link rel="up" title="User Guide" href="index.html" />
     <link rel="next" title="Looks" href="looks.html" />
     <link rel="prev" title="Baking LUT’s" href="baking_luts.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -125,17 +125,17 @@ resource_path: luts</pre>
 </div>
 <p>Next, we define a colorspace that transforms from the show reference
 space to the display colorspace:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">colorspaces</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8</span>
-    <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
-    <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">$</span><span class="p-Indicator">{</span><span class="nv">SHOT</span><span class="p-Indicator">}</span><span class="nv">.spi1d</span><span class="p-Indicator">}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">colorspaces</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8</span>
+    <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
+    <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">$</span><span class="p p-Indicator">{</span><span class="nv">SHOT</span><span class="p p-Indicator">}</span><span class="nv">.spi1d</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>Then add a display alias for this transform:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">displays</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;Display&gt;</span> <span class="p-Indicator">{</span><span class="nv">device</span><span class="p-Indicator">:</span> <span class="nv">sRGB</span><span class="p-Indicator">,</span> <span class="nv">name</span><span class="p-Indicator">:</span> <span class="s">&quot;Shot</span><span class="nv"> </span><span class="s">LUT&quot;</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">srgb8</span><span class="p-Indicator">}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">displays</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;Display&gt;</span> <span class="p p-Indicator">{</span><span class="nv">device</span><span class="p p-Indicator">:</span> <span class="nv">sRGB</span><span class="p p-Indicator">,</span> <span class="nv">name</span><span class="p p-Indicator">:</span> <span class="s">&quot;Shot</span><span class="nv"> </span><span class="s">LUT&quot;</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">srgb8</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>Finally, we point the OCIO env-variable to the config, set the SHOT
@@ -157,7 +157,7 @@ containing multiple ASC CDL color corrections, each with a unique ID)</p>
 <p>The <tt class="docutils literal"><span class="pre">.cc</span></tt> file is applied identically to a regular LUT files, using
 a <tt class="docutils literal"><span class="pre">FileTransform</span></tt>. For example, if we have <tt class="docutils literal"><span class="pre">af-123.cc</span></tt> in the
 <tt class="docutils literal"><span class="pre">luts/</span></tt> directory:</p>
-<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;ColorCorrection</span> <span class="na">id=</span><span class="s">&quot;mygrade&quot;</span><span class="nt">&gt;</span>
+<div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;ColorCorrection</span> <span class="na">id=</span><span class="s">&quot;mygrade&quot;</span><span class="nt">&gt;</span>
         <span class="nt">&lt;SOPNode&gt;</span>
              <span class="nt">&lt;Slope&gt;</span>2 1 1<span class="nt">&lt;/Slope&gt;</span>
              <span class="nt">&lt;Offset&gt;</span>0 0 0<span class="nt">&lt;/Offset&gt;</span>
@@ -174,30 +174,30 @@ into log and apply a 3D print emulation LUT. Since this requires
 multiple transforms, instead of using a single <tt class="docutils literal"><span class="pre">FileTransform</span></tt>, we
 use a <tt class="docutils literal"><span class="pre">GroupTransform</span></tt> (which is is just a collection of other
 transforms):</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">colorspaces</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnh</span>
-    <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ln</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">16f</span><span class="p-Indicator">:</span>
-    <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">colorspaces</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnh</span>
+    <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ln</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">16f</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
 
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg10</span>
-    <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10ui</span>
-    <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
-    <span class="l-Scalar-Plain">to_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lg10.spi1d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">nearest</span><span class="p-Indicator">}</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg10</span>
+    <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10ui</span>
+    <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+    <span class="l l-Scalar l-Scalar-Plain">to_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lg10.spi1d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">nearest</span><span class="p p-Indicator">}</span>
 
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8</span>
-    <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
-    <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
-    <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
-      <span class="l-Scalar-Plain">children</span><span class="p-Indicator">:</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">$</span><span class="p-Indicator">{</span><span class="nv">SHOT</span><span class="p-Indicator">}</span><span class="nv">.cc</span><span class="p-Indicator">}</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lnh</span><span class="p-Indicator">,</span> <span class="nv">dst</span><span class="p-Indicator">:</span> <span class="nv">lg10</span><span class="p-Indicator">}</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">film_emulation.spi3d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8</span>
+    <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
+    <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+    <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
+      <span class="l l-Scalar l-Scalar-Plain">children</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">$</span><span class="p p-Indicator">{</span><span class="nv">SHOT</span><span class="p p-Indicator">}</span><span class="nv">.cc</span><span class="p p-Indicator">}</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lnh</span><span class="p p-Indicator">,</span> <span class="nv">dst</span><span class="p p-Indicator">:</span> <span class="nv">lg10</span><span class="p p-Indicator">}</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">film_emulation.spi3d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 <p>A .ccc file is a collection of <tt class="docutils literal"><span class="pre">&lt;ColorCorrection&gt;</span></tt>&#8216;s. The only
@@ -205,7 +205,7 @@ difference is when defining the <tt class="docutils literal"><span class="pre">F
 the <tt class="docutils literal"><span class="pre">cccdid</span></tt> key, which you can also construct using the context&#8217;s
 environment variables. This means we could create a <tt class="docutils literal"><span class="pre">grades.ccc</span></tt>
 file containing the grade for all our shots:</p>
-<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;ColorCorrectionCollection</span> <span class="na">xmlns=</span><span class="s">&quot;urn:ASC:CDL:v1.2&quot;</span><span class="nt">&gt;</span>
+<div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;ColorCorrectionCollection</span> <span class="na">xmlns=</span><span class="s">&quot;urn:ASC:CDL:v1.2&quot;</span><span class="nt">&gt;</span>
       <span class="nt">&lt;ColorCorrection</span> <span class="na">id=</span><span class="s">&quot;af-123&quot;</span><span class="nt">&gt;</span>
               <span class="nt">&lt;SOPNode&gt;</span>
                    <span class="nt">&lt;Slope&gt;</span>2 1 1<span class="nt">&lt;/Slope&gt;</span>
@@ -230,16 +230,16 @@ file containing the grade for all our shots:</p>
 </pre></div>
 </div>
 <p>And the colorspace definition to utilise this:</p>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8</span>
-  <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb</span>
-  <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
-  <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
-  <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
-    <span class="l-Scalar-Plain">children</span><span class="p-Indicator">:</span>
-      <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">grades.ccc</span><span class="p-Indicator">,</span> <span class="nv">cccid</span><span class="p-Indicator">:</span> <span class="nv">$</span><span class="p-Indicator">{</span><span class="nv">SHOT</span><span class="p-Indicator">}}</span>
-      <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lnh</span><span class="p-Indicator">,</span> <span class="nv">dst</span><span class="p-Indicator">:</span> <span class="nv">lg10</span><span class="p-Indicator">}</span>
-      <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">film_emulation.spi3d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8</span>
+  <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb</span>
+  <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
+  <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">children</span><span class="p p-Indicator">:</span>
+      <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">grades.ccc</span><span class="p p-Indicator">,</span> <span class="nv">cccid</span><span class="p p-Indicator">:</span> <span class="nv">$</span><span class="p p-Indicator">{</span><span class="nv">SHOT</span><span class="p p-Indicator">}}</span>
+      <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lnh</span><span class="p p-Indicator">,</span> <span class="nv">dst</span><span class="p p-Indicator">:</span> <span class="nv">lg10</span><span class="p p-Indicator">}</span>
+      <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">film_emulation.spi3d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 </div>
@@ -262,7 +262,7 @@ many shots in each sequence, so we wish to put the grades for each
 sequence in a separate file.</p>
 <p>Using the same directory structure as above, in <tt class="docutils literal"><span class="pre">~/showcfg/luts</span></tt> we
 first create two grade files, <tt class="docutils literal"><span class="pre">grades_af.ccc</span></tt>:</p>
-<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;ColorCorrectionCollection</span> <span class="na">xmlns=</span><span class="s">&quot;urn:ASC:CDL:v1.2&quot;</span><span class="nt">&gt;</span>
+<div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;ColorCorrectionCollection</span> <span class="na">xmlns=</span><span class="s">&quot;urn:ASC:CDL:v1.2&quot;</span><span class="nt">&gt;</span>
       <span class="nt">&lt;ColorCorrection</span> <span class="na">id=</span><span class="s">&quot;af/af-123/neutral&quot;</span><span class="nt">&gt;</span>
               <span class="nt">&lt;SOPNode&gt;</span>
                    <span class="nt">&lt;Slope&gt;</span>2 1 1<span class="nt">&lt;/Slope&gt;</span>
@@ -290,7 +290,7 @@ first create two grade files, <tt class="docutils literal"><span class="pre">gra
 </pre></div>
 </div>
 <p>And <tt class="docutils literal"><span class="pre">grades_sg.ccc</span></tt>:</p>
-<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;ColorCorrectionCollection</span> <span class="na">xmlns=</span><span class="s">&quot;urn:ASC:CDL:v1.2&quot;</span><span class="nt">&gt;</span>
+<div class="highlight-xml"><div class="highlight"><pre><span></span><span class="nt">&lt;ColorCorrectionCollection</span> <span class="na">xmlns=</span><span class="s">&quot;urn:ASC:CDL:v1.2&quot;</span><span class="nt">&gt;</span>
         <span class="nt">&lt;ColorCorrection</span> <span class="na">id=</span><span class="s">&quot;sg/sg-432/neutral&quot;</span><span class="nt">&gt;</span>
                 <span class="nt">&lt;SOPNode&gt;</span>
                      <span class="nt">&lt;Slope&gt;</span>0.9 0.7 0.9<span class="nt">&lt;/Slope&gt;</span>
@@ -329,71 +329,71 @@ footage on an sRGB display</li>
 <li><tt class="docutils literal"><span class="pre">srgb8graded</span></tt>, another display colorspace, for viewing the final
 &#8220;beauty grade&#8221;</li>
 </ul>
-<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">ocio_profile_version</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">1</span>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">ocio_profile_version</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
 
 <span class="c1"># The directory relative to the location of this config</span>
-<span class="l-Scalar-Plain">resource_path</span><span class="p-Indicator">:</span> <span class="s">&quot;luts&quot;</span>
+<span class="l l-Scalar l-Scalar-Plain">resource_path</span><span class="p p-Indicator">:</span> <span class="s">&quot;luts&quot;</span>
 
-<span class="l-Scalar-Plain">roles</span><span class="p-Indicator">:</span>
-  <span class="l-Scalar-Plain">scene_linear</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnh</span>
-  <span class="l-Scalar-Plain">compositing_log</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lgf</span>
+<span class="l l-Scalar l-Scalar-Plain">roles</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">scene_linear</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnh</span>
+  <span class="l l-Scalar l-Scalar-Plain">compositing_log</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lgf</span>
 
-<span class="l-Scalar-Plain">displays</span><span class="p-Indicator">:</span>
+<span class="l l-Scalar l-Scalar-Plain">displays</span><span class="p p-Indicator">:</span>
   <span class="c1"># Reference to display transform, without reversing the working grade</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;Display&gt;</span> <span class="p-Indicator">{</span><span class="nv">device</span><span class="p-Indicator">:</span> <span class="nv">sRGB</span><span class="p-Indicator">,</span> <span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film1D</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">srgb8</span><span class="p-Indicator">}</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;Display&gt;</span> <span class="p p-Indicator">{</span><span class="nv">device</span><span class="p p-Indicator">:</span> <span class="nv">sRGB</span><span class="p p-Indicator">,</span> <span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Film1D</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">srgb8</span><span class="p p-Indicator">}</span>
 
   <span class="c1"># Reference to display, reversing the working grade, and applying</span>
   <span class="c1"># the beauty grade</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;Display&gt;</span> <span class="p-Indicator">{</span><span class="nv">device</span><span class="p-Indicator">:</span> <span class="nv">sRGB</span><span class="p-Indicator">,</span> <span class="nv">name</span><span class="p-Indicator">:</span> <span class="nv">Film1DGraded</span><span class="p-Indicator">,</span> <span class="nv">colorspace</span><span class="p-Indicator">:</span> <span class="nv">srgb8graded</span><span class="p-Indicator">}</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;Display&gt;</span> <span class="p p-Indicator">{</span><span class="nv">device</span><span class="p p-Indicator">:</span> <span class="nv">sRGB</span><span class="p p-Indicator">,</span> <span class="nv">name</span><span class="p p-Indicator">:</span> <span class="nv">Film1DGraded</span><span class="p p-Indicator">,</span> <span class="nv">colorspace</span><span class="p p-Indicator">:</span> <span class="nv">srgb8graded</span><span class="p p-Indicator">}</span>
 
-<span class="l-Scalar-Plain">colorspaces</span><span class="p-Indicator">:</span>
+<span class="l l-Scalar l-Scalar-Plain">colorspaces</span><span class="p p-Indicator">:</span>
 
   <span class="c1"># The source space, containing a log to scene-linear LUT</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg10</span>
-    <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">10ui</span>
-    <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
-    <span class="l-Scalar-Plain">to_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lg10.spi1d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">nearest</span><span class="p-Indicator">}</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg10</span>
+    <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lg</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10ui</span>
+    <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+    <span class="l l-Scalar l-Scalar-Plain">to_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lg10.spi1d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">nearest</span><span class="p p-Indicator">}</span>
 
   <span class="c1"># Our scene-linear space (reference space)</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnh</span>
-    <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ln</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">16f</span>
-    <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnh</span>
+    <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ln</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">16f</span>
+    <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
 
   <span class="c1"># Neutrally graded scene-linear</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lnh_graded</span>
-    <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">ln</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">16f</span>
-    <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
-    <span class="l-Scalar-Plain">to_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="s">&quot;grades_${SEQ}.ccc&quot;</span><span class="p-Indicator">,</span> <span class="nv">cccid</span><span class="p-Indicator">:</span> <span class="s">&quot;${SEQ}/${SHOT}/neutral&quot;</span><span class="p-Indicator">}</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lnh_graded</span>
+    <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">ln</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">16f</span>
+    <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+    <span class="l l-Scalar l-Scalar-Plain">to_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="s">&quot;grades_${SEQ}.ccc&quot;</span><span class="p p-Indicator">,</span> <span class="nv">cccid</span><span class="p p-Indicator">:</span> <span class="s">&quot;${SEQ}/${SHOT}/neutral&quot;</span><span class="p p-Indicator">}</span>
 
 
   <span class="c1"># The display colorspace - how to get from scene-linear to sRGB</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8</span>
-    <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
-    <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
-    <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
-      <span class="l-Scalar-Plain">children</span><span class="p-Indicator">:</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lnh</span><span class="p-Indicator">,</span> <span class="nv">dst</span><span class="p-Indicator">:</span> <span class="nv">lg10</span><span class="p-Indicator">}</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lg_to_srgb.spi3d</span><span class="p-Indicator">,</span> <span class="nv">interpolation</span><span class="p-Indicator">:</span> <span class="nv">linear</span><span class="p-Indicator">}</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8</span>
+    <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
+    <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+    <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
+      <span class="l l-Scalar l-Scalar-Plain">children</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lnh</span><span class="p p-Indicator">,</span> <span class="nv">dst</span><span class="p p-Indicator">:</span> <span class="nv">lg10</span><span class="p p-Indicator">}</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lg_to_srgb.spi3d</span><span class="p p-Indicator">,</span> <span class="nv">interpolation</span><span class="p p-Indicator">:</span> <span class="nv">linear</span><span class="p p-Indicator">}</span>
 
   <span class="c1"># Display color, with neutral grade reversed, and beauty grade applied</span>
-  <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
-    <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb8graded</span>
-    <span class="l-Scalar-Plain">family</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">srgb</span>
-    <span class="l-Scalar-Plain">bitdepth</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">8ui</span>
-    <span class="l-Scalar-Plain">isdata</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
-    <span class="l-Scalar-Plain">from_reference</span><span class="p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
-      <span class="l-Scalar-Plain">children</span><span class="p-Indicator">:</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="s">&quot;grades_${SEQ}.ccc&quot;</span><span class="p-Indicator">,</span> <span class="nv">cccid</span><span class="p-Indicator">:</span> <span class="s">&quot;${SEQ}/${SHOT}/neutral&quot;</span><span class="p-Indicator">,</span> <span class="nv">direction</span><span class="p-Indicator">:</span> <span class="nv">inverse</span><span class="p-Indicator">}</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="s">&quot;grades_${SEQ}.ccc&quot;</span><span class="p-Indicator">,</span> <span class="nv">cccid</span><span class="p-Indicator">:</span> <span class="s">&quot;${SEQ}/${SHOT}/beauty&quot;</span><span class="p-Indicator">,</span> <span class="nv">direction</span><span class="p-Indicator">:</span> <span class="nv">forward</span><span class="p-Indicator">}</span>
-        <span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p-Indicator">{</span><span class="nv">src</span><span class="p-Indicator">:</span> <span class="nv">lnh</span><span class="p-Indicator">,</span> <span class="nv">dst</span><span class="p-Indicator">:</span> <span class="nv">srgb8</span><span class="p-Indicator">}</span>
+  <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb8graded</span>
+    <span class="l l-Scalar l-Scalar-Plain">family</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">srgb</span>
+    <span class="l l-Scalar l-Scalar-Plain">bitdepth</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">8ui</span>
+    <span class="l l-Scalar l-Scalar-Plain">isdata</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+    <span class="l l-Scalar l-Scalar-Plain">from_reference</span><span class="p p-Indicator">:</span> <span class="kt">!&lt;GroupTransform&gt;</span>
+      <span class="l l-Scalar l-Scalar-Plain">children</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="s">&quot;grades_${SEQ}.ccc&quot;</span><span class="p p-Indicator">,</span> <span class="nv">cccid</span><span class="p p-Indicator">:</span> <span class="s">&quot;${SEQ}/${SHOT}/neutral&quot;</span><span class="p p-Indicator">,</span> <span class="nv">direction</span><span class="p p-Indicator">:</span> <span class="nv">inverse</span><span class="p p-Indicator">}</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;FileTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="s">&quot;grades_${SEQ}.ccc&quot;</span><span class="p p-Indicator">,</span> <span class="nv">cccid</span><span class="p p-Indicator">:</span> <span class="s">&quot;${SEQ}/${SHOT}/beauty&quot;</span><span class="p p-Indicator">,</span> <span class="nv">direction</span><span class="p p-Indicator">:</span> <span class="nv">forward</span><span class="p p-Indicator">}</span>
+        <span class="p p-Indicator">-</span> <span class="kt">!&lt;ColorSpaceTransform&gt;</span> <span class="p p-Indicator">{</span><span class="nv">src</span><span class="p p-Indicator">:</span> <span class="nv">lnh</span><span class="p p-Indicator">,</span> <span class="nv">dst</span><span class="p p-Indicator">:</span> <span class="nv">srgb8</span><span class="p p-Indicator">}</span>
 </pre></div>
 </div>
 </div>
@@ -414,7 +414,7 @@ footage on an sRGB display</li>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

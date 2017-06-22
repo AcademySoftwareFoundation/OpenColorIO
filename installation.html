@@ -17,8 +17,8 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '1.0.8',
+        URL_ROOT:    './',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="index.html" />
     <link rel="next" title="User Guide" href="userguide/index.html" />
     <link rel="prev" title="How to Configure ColorSpace Allocation" href="configurations/allocation_vars.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -214,7 +214,7 @@ source the <tt class="docutils literal"><span class="pre">share/ocio/setup_ocio.
 <p>For a simple single-user setup, add the following to <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt>
 (assuming you are using bash, and the example install directory of
 <tt class="docutils literal"><span class="pre">/software/ocio</span></tt>):</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">source</span> <span class="o">/</span><span class="n">software</span><span class="o">/</span><span class="n">ocio</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">ocio</span><span class="o">/</span><span class="n">setup_ocio</span><span class="o">.</span><span class="n">sh</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">/</span><span class="n">software</span><span class="o">/</span><span class="n">ocio</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">ocio</span><span class="o">/</span><span class="n">setup_ocio</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 <p>The only environment variable you must configure manually is
@@ -237,8 +237,8 @@ register an OCIODisplay node for each display device/view specified in
 the config.</p>
 <p>To do this, in a menu.py on <span class="target" id="index-1"></span><a class="reference internal" href="#envvar-NUKE_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">NUKE_PATH</span></tt></a> (e.g
 <tt class="docutils literal"><span class="pre">~/.nuke/menu.py</span></tt> for a single user setup), add the following:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">ocionuke.viewer</span>
-<span class="n">ocionuke</span><span class="o">.</span><span class="n">viewer</span><span class="o">.</span><span class="n">populate_viewer</span><span class="p">(</span><span class="n">also_remove</span> <span class="o">=</span> <span class="s">&quot;default&quot;</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">ocionuke.viewer</span>
+<span class="n">ocionuke</span><span class="o">.</span><span class="n">viewer</span><span class="o">.</span><span class="n">populate_viewer</span><span class="p">(</span><span class="n">also_remove</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The <tt class="docutils literal"><span class="pre">also_remove</span></tt> argument can be set to either &#8220;default&#8221; to remove
@@ -247,10 +247,10 @@ to leave existing viewer processes untouched.</p>
 <p>Alternatively, if your workflow has different requirements, you can
 copy the function and modify it as required, or use it as reference to
 write your own, better viewer setup function!</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">nuke</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">nuke</span>
 
 
-<span class="k">def</span> <span class="nf">register_viewers</span><span class="p">(</span><span class="n">also_remove</span> <span class="o">=</span> <span class="s">&quot;default&quot;</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">register_viewers</span><span class="p">(</span><span class="n">also_remove</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Registers the a viewer process for each display device/view, and</span>
 <span class="sd">    sets the default viewer process.</span>
 
@@ -261,42 +261,42 @@ write your own, better viewer setup function!</p>
 <span class="sd">    - &quot;none&quot; to leave existing viewer processes untouched</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">if</span> <span class="n">also_remove</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;default&quot;</span><span class="p">,</span> <span class="s">&quot;none&quot;</span><span class="p">,</span> <span class="s">&quot;all&quot;</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;also_remove should be set to &#39;default&#39;, &#39;none&#39; or &#39;all&#39;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">also_remove</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;also_remove should be set to &#39;default&#39;, &#39;none&#39; or &#39;all&#39;&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">also_remove</span> <span class="o">==</span> <span class="s">&quot;default&quot;</span><span class="p">:</span>
-        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s">&#39;rec709&#39;</span><span class="p">)</span>
-        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s">&#39;sRGB&#39;</span><span class="p">)</span>
-        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s">&#39;None&#39;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">also_remove</span> <span class="o">==</span> <span class="s">&quot;all&quot;</span><span class="p">:</span>
-        <span class="c"># Unregister all processes, including None, which should be defined in config.ocio</span>
+    <span class="k">if</span> <span class="n">also_remove</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s1">&#39;rec709&#39;</span><span class="p">)</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s1">&#39;sRGB&#39;</span><span class="p">)</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s1">&#39;None&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">also_remove</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+        <span class="c1"># Unregister all processes, including None, which should be defined in config.ocio</span>
         <span class="k">for</span> <span class="n">curname</span> <span class="ow">in</span> <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">registeredNames</span><span class="p">():</span>
             <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">curname</span><span class="p">)</span>
 
-    <span class="c"># Formats the display and transform, e.g &quot;Film1D (sRGB)&quot;</span>
-    <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%(view)s</span><span class="s"> (</span><span class="si">%(display)s</span><span class="s">)&quot;</span>
+    <span class="c1"># Formats the display and transform, e.g &quot;Film1D (sRGB)&quot;</span>
+    <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%(view)s</span><span class="s2"> (</span><span class="si">%(display)s</span><span class="s2">)&quot;</span>
 
     <span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">GetCurrentConfig</span><span class="p">()</span>
 
-    <span class="c"># For every display, loop over every view</span>
+    <span class="c1"># For every display, loop over every view</span>
     <span class="k">for</span> <span class="n">display</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">getDisplays</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">view</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">getViews</span><span class="p">(</span><span class="n">display</span><span class="p">):</span>
-            <span class="c"># Register the node</span>
+            <span class="c1"># Register the node</span>
             <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;view&#39;</span><span class="p">:</span> <span class="n">view</span><span class="p">,</span> <span class="s">&quot;display&quot;</span><span class="p">:</span> <span class="n">display</span><span class="p">},</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">%</span> <span class="p">{</span><span class="s1">&#39;view&#39;</span><span class="p">:</span> <span class="n">view</span><span class="p">,</span> <span class="s2">&quot;display&quot;</span><span class="p">:</span> <span class="n">display</span><span class="p">},</span>
                 <span class="n">call</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">OCIODisplay</span><span class="p">,</span>
                 <span class="n">args</span> <span class="o">=</span> <span class="p">(),</span>
-                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;display&quot;</span><span class="p">:</span> <span class="n">display</span><span class="p">,</span> <span class="s">&quot;view&quot;</span><span class="p">:</span> <span class="n">view</span><span class="p">,</span> <span class="s">&quot;layer&quot;</span><span class="p">:</span> <span class="s">&quot;all&quot;</span><span class="p">})</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;display&quot;</span><span class="p">:</span> <span class="n">display</span><span class="p">,</span> <span class="s2">&quot;view&quot;</span><span class="p">:</span> <span class="n">view</span><span class="p">,</span> <span class="s2">&quot;layer&quot;</span><span class="p">:</span> <span class="s2">&quot;all&quot;</span><span class="p">})</span>
 
 
-    <span class="c"># Get the default display and view, set it as the default used on Nuke startup</span>
+    <span class="c1"># Get the default display and view, set it as the default used on Nuke startup</span>
     <span class="n">defaultDisplay</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getDefaultDisplay</span><span class="p">()</span>
     <span class="n">defaultView</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getDefaultView</span><span class="p">(</span><span class="n">defaultDisplay</span><span class="p">)</span>
     
     <span class="n">nuke</span><span class="o">.</span><span class="n">knobDefault</span><span class="p">(</span>
-        <span class="s">&quot;Viewer.viewerProcess&quot;</span><span class="p">,</span>
-        <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;view&#39;</span><span class="p">:</span> <span class="n">defaultView</span><span class="p">,</span> <span class="s">&quot;display&quot;</span><span class="p">:</span> <span class="n">defaultDisplay</span><span class="p">})</span>
+        <span class="s2">&quot;Viewer.viewerProcess&quot;</span><span class="p">,</span>
+        <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">%</span> <span class="p">{</span><span class="s1">&#39;view&#39;</span><span class="p">:</span> <span class="n">defaultView</span><span class="p">,</span> <span class="s2">&quot;display&quot;</span><span class="p">:</span> <span class="n">defaultDisplay</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>
@@ -335,10 +335,10 @@ Nuke nodes, and the <tt class="docutils literal"><span class="pre">PyOpenColorIO
 <dd><p>Python&#8217;s module search path. If you are using the PyOpenColorIO
 module, you must add <tt class="docutils literal"><span class="pre">lib/python2.x</span></tt> to this search path (e.g
 <tt class="docutils literal"><span class="pre">python/2.5</span></tt>), or importing the module will fail:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span>
 <span class="gt">Traceback (most recent call last):</span>
-  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n-Identifier">&lt;module&gt;</span>
-<span class="nc">ImportError</span>: <span class="n-Identifier">No module named PyOpenColorIO</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">ImportError</span>: <span class="n">No module named PyOpenColorIO</span>
 </pre></div>
 </div>
 <p>Note that <span class="target" id="index-2"></span><a class="reference internal" href="#envvar-DYLD_LIBRARY_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">DYLD_LIBRARY_PATH</span></tt></a> or <span class="target" id="index-3"></span><a class="reference internal" href="#envvar-LD_LIBRARY_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">LD_LIBRARY_PATH</span></tt></a>
@@ -372,7 +372,7 @@ the plugins are built against), and <tt class="docutils literal"><span class="pr
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

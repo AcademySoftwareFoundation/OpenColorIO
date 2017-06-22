@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../../index.html" />
     <link rel="up" title="Developer guide" href="../index.html" />
     <link rel="next" title="Python Types" href="PythonTypes.html" />
     <link rel="prev" title="Python API" href="PythonAPI.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -98,24 +98,24 @@
 <dt id="PyOpenColorIO.Transform">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">Transform</tt><a class="headerlink" href="#PyOpenColorIO.Transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>These are typically only needed when creating or manipulating configurations.</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Transform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.Transform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Transform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Transform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.Transform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Transform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Transform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.Transform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Transform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Transform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.Transform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Transform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -123,7 +123,7 @@
 </div>
 <div class="section" id="allocationtransform">
 <h2>AllocationTransform<a class="headerlink" href="#allocationtransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">transform</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">AllocationTransform</span><span class="p">()</span>
 <span class="n">transform</span><span class="o">.</span><span class="n">setAllocation</span><span class="p">(</span><span class="n">OCIO</span><span class="o">.</span><span class="n">Constants</span><span class="o">.</span><span class="n">ALLOCATION</span><span class="p">)</span>
 </pre></div>
@@ -133,92 +133,87 @@
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">AllocationTransform</tt><a class="headerlink" href="#PyOpenColorIO.AllocationTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Respans the &#8216;expanded&#8217; range into the specified (often compressed) range.</p>
 <p>Performs both squeeze (offset) and log transforms.</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.AllocationTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.AllocationTransform.getAllocation">
-<tt class="descname">getAllocation</tt><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.getAllocation" title="Permalink to this definition">¶</a></dt>
-<dd><p>getAllocation()</p>
-<p>Returns the allocation specified in the transform. Allocation is an
+<tt class="descname">getAllocation</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.getAllocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the allocation specified in the transform. Allocation is an
 enum, defined in Constants.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">Allocation</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Allocation</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.AllocationTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.AllocationTransform.getNumVars">
+<tt class="descname">getNumVars</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.getNumVars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.AllocationTransform.getVars">
-<tt class="descname">getVars</tt><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.getVars" title="Permalink to this definition">¶</a></dt>
-<dd><p>getVars()</p>
-<p>Returns the allocation values specified in the transform.</p>
+<tt class="descname">getVars</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.getVars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the allocation values specified in the transform.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">allocation values</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">allocation values</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">list of floats</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list of floats</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.AllocationTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.AllocationTransform.setAllocation">
-<tt class="descname">setAllocation</tt><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.setAllocation" title="Permalink to this definition">¶</a></dt>
-<dd><p>setAllocation(hwalloc)</p>
-<p>Sets the allocation of the transform.</p>
+<tt class="descname">setAllocation</tt><big>(</big><em>hwalloc</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.setAllocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the allocation of the transform.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>hwalloc</strong> (<em>object</em>) &#8211; Allocation</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>hwalloc</strong> (<em>object</em>) &#8211; Allocation</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.AllocationTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.AllocationTransform.setVars">
-<tt class="descname">setVars</tt><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.setVars" title="Permalink to this definition">¶</a></dt>
-<dd><p>setVars(pyvars)</p>
-<p>Sets the allocation in the transform.</p>
+<tt class="descname">setVars</tt><big>(</big><em>pyvars</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.AllocationTransform.setVars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the allocation in the transform.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyvars</strong> (<em>object</em>) &#8211; list of floats</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyvars</strong> (<em>object</em>) &#8211; list of floats</td>
 </tr>
 </tbody>
 </table>
@@ -229,253 +224,229 @@ enum, defined in Constants.</p>
 </div>
 <div class="section" id="cdltransform">
 <h2>CDLTransform<a class="headerlink" href="#cdltransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>import PyOpenColorIO as OCIO
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 
-cdl = OCIO.CDLTransform()
-# Set the slope, offset, power, and saturation for each channel.
-cdl.setSOP([, , , , , , , , ])
-cdl.setSat([, , ])
-cdl.getSatLumaCoefs()</pre>
+<span class="n">cdl</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">CDLTransform</span><span class="p">()</span>
+<span class="c1"># Set the slope, offset, power, and saturation for each channel.</span>
+<span class="n">cdl</span><span class="o">.</span><span class="n">setSOP</span><span class="p">([,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">,</span> <span class="p">])</span>
+<span class="n">cdl</span><span class="o">.</span><span class="n">setSat</span><span class="p">([,</span> <span class="p">,</span> <span class="p">])</span>
+<span class="n">cdl</span><span class="o">.</span><span class="n">getSatLumaCoefs</span><span class="p">()</span>
+</pre></div>
 </div>
 <dl class="class">
 <dt id="PyOpenColorIO.CDLTransform">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">CDLTransform</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>CDLTransform</p>
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.CDLTransform.CreateFromFile">
+<tt class="descname">CreateFromFile</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.CreateFromFile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.equals">
-<tt class="descname">equals</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.equals" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">equals</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.equals" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getDescription">
-<tt class="descname">getDescription</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getDescription" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDescription()</p>
-<p>Returns the description of <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
+<tt class="descname">getDescription</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getDescription" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the description of <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">description</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">description</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getID">
-<tt class="descname">getID</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getID" title="Permalink to this definition">¶</a></dt>
-<dd><p>getID()</p>
-<p>Returns the ID from <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
+<tt class="descname">getID</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the ID from <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">ID</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ID</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getOffset">
-<tt class="descname">getOffset</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getOffset" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getOffset</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getOffset" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getPower">
-<tt class="descname">getPower</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getPower" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getPower</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getPower" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getSOP">
-<tt class="descname">getSOP</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getSOP" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getSOP</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getSOP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getSat">
-<tt class="descname">getSat</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getSat" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getSat</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getSat" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getSatLumaCoefs">
-<tt class="descname">getSatLumaCoefs</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getSatLumaCoefs" title="Permalink to this definition">¶</a></dt>
-<dd><p>getSatLumaCoefs(pyData)</p>
-<p>Returns the SAT (saturation) and luma coefficients in <tt class="xref py py-class docutils literal"><span class="pre">CDLTransform</span></tt>.</p>
+<tt class="descname">getSatLumaCoefs</tt><big>(</big><em>pyData</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getSatLumaCoefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the SAT (saturation) and luma coefficients in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">saturation and luma coefficients</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">saturation and luma coefficients</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">list of floats</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list of floats</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getSlope">
-<tt class="descname">getSlope</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getSlope" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getSlope</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getSlope" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.getXML">
-<tt class="descname">getXML</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getXML" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getXML</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.getXML" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.setDescription">
-<tt class="descname">setDescription</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setDescription" title="Permalink to this definition">¶</a></dt>
-<dd><p>setDescription(str)</p>
-<p>Sets the description of <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
+<tt class="descname">setDescription</tt><big>(</big><em>str</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setDescription" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the description of <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>str</strong> (<em>string</em>) &#8211; description</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> (<em>string</em>) &#8211; description</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.setID">
-<tt class="descname">setID</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setID" title="Permalink to this definition">¶</a></dt>
-<dd><p>setID(str)</p>
-<p>Sets the ID in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
+<tt class="descname">setID</tt><big>(</big><em>str</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the ID in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>str</strong> (<em>string</em>) &#8211; ID</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> (<em>string</em>) &#8211; ID</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.setOffset">
-<tt class="descname">setOffset</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setOffset" title="Permalink to this definition">¶</a></dt>
-<dd><p>setOffset(pyData)</p>
-<p>Sets the offset (&#8216;O&#8217; part of SOP) in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
+<tt class="descname">setOffset</tt><big>(</big><em>pyData</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setOffset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the offset (&#8216;O&#8217; part of SOP) in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; list of three floats</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyData</strong> (<em>object</em>) &#8211; list of three floats</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.setPower">
-<tt class="descname">setPower</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setPower" title="Permalink to this definition">¶</a></dt>
-<dd><p>setPower(pyData)</p>
-<p>Sets the power (&#8216;P&#8217; part of SOP) in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
+<tt class="descname">setPower</tt><big>(</big><em>pyData</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setPower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the power (&#8216;P&#8217; part of SOP) in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; list of three floats</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyData</strong> (<em>object</em>) &#8211; list of three floats</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.setSOP">
-<tt class="descname">setSOP</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setSOP" title="Permalink to this definition">¶</a></dt>
-<dd><p>setSOP(pyData)</p>
-<p>Sets SOP in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
+<tt class="descname">setSOP</tt><big>(</big><em>pyData</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setSOP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets SOP in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; list of nine floats</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyData</strong> (<em>object</em>) &#8211; list of nine floats</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.setSat">
-<tt class="descname">setSat</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setSat" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setSat</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setSat" title="Permalink to this definition">¶</a></dt>
 <dd><p>setSAT(pyData)</p>
 <p>Sets SAT (saturation) in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyData</strong> (<em>float</em>) &#8211; saturation</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyData</strong> (<em>float</em>) &#8211; saturation</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.setSlope">
-<tt class="descname">setSlope</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setSlope" title="Permalink to this definition">¶</a></dt>
-<dd><p>setSlope(pyData)</p>
-<p>Sets the slope (&#8216;S&#8217; part of SOP) in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
+<tt class="descname">setSlope</tt><big>(</big><em>pyData</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setSlope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the slope (&#8216;S&#8217; part of SOP) in <a class="reference internal" href="#PyOpenColorIO.CDLTransform" title="PyOpenColorIO.CDLTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.CDLTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyData</strong> (<em>object</em>) &#8211; </li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyData</strong> (<em>object</em>) &#8211; </td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.CDLTransform.setXML">
-<tt class="descname">setXML</tt><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setXML" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setXML</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.CDLTransform.setXML" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -488,7 +459,7 @@ cdl.getSatLumaCoefs()</pre>
 <p class="first admonition-title">Note</p>
 <p class="last">Careless use of this may create infinite loops, so avoid referencing the colorspace you&#8217;re in.</p>
 </div>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">transform</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">ColorSpaceTransform</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -496,91 +467,81 @@ cdl.getSatLumaCoefs()</pre>
 <dt id="PyOpenColorIO.ColorSpaceTransform">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">ColorSpaceTransform</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>ColorSpaceTransform</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpaceTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpaceTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpaceTransform.getDst">
-<tt class="descname">getDst</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.getDst" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDst()</p>
-<p>Returns the name of the destination ColorSpace in this transform.</p>
+<tt class="descname">getDst</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.getDst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the destination ColorSpace in this transform.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">ColorSpace</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ColorSpace</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpaceTransform.getSrc">
-<tt class="descname">getSrc</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.getSrc" title="Permalink to this definition">¶</a></dt>
-<dd><p>getSrc()</p>
-<p>Returns the name of the source ColorSpace in this transform.</p>
+<tt class="descname">getSrc</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.getSrc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the source ColorSpace in this transform.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">ColorSpace</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ColorSpace</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpaceTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpaceTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpaceTransform.setDst">
-<tt class="descname">setDst</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.setDst" title="Permalink to this definition">¶</a></dt>
-<dd><p>setDst(dstname)</p>
-<p>Sets the destination ColorSpace in this transform.</p>
+<tt class="descname">setDst</tt><big>(</big><em>dstname</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.setDst" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the destination ColorSpace in this transform.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>str</strong> (<em>string</em>) &#8211; destination ColorSpace</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> (<em>string</em>) &#8211; destination ColorSpace</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpaceTransform.setSrc">
-<tt class="descname">setSrc</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.setSrc" title="Permalink to this definition">¶</a></dt>
-<dd><p>setSrc(srcname)</p>
-<p>Sets the source ColorSpace in this transform.</p>
+<tt class="descname">setSrc</tt><big>(</big><em>srcname</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpaceTransform.setSrc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the source ColorSpace in this transform.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>str</strong> (<em>string</em>) &#8211; source ColorSpace</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> (<em>string</em>) &#8211; source ColorSpace</td>
 </tr>
 </tbody>
 </table>
@@ -591,7 +552,7 @@ cdl.getSatLumaCoefs()</pre>
 </div>
 <div class="section" id="displaytransform">
 <h2>DisplayTransform<a class="headerlink" href="#displaytransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">transform</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">DisplayTransform</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -599,353 +560,308 @@ cdl.getSatLumaCoefs()</pre>
 <dt id="PyOpenColorIO.DisplayTransform">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">DisplayTransform</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to create transforms for displays.</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getChannelView">
-<tt class="descname">getChannelView</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getChannelView" title="Permalink to this definition">¶</a></dt>
-<dd><p>getChannelView()</p>
-<p>Returns the channel view of
+<tt class="descname">getChannelView</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getChannelView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the channel view of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">channel view</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">channel view</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">object</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">object</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getColorTimingCC">
-<tt class="descname">getColorTimingCC</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getColorTimingCC" title="Permalink to this definition">¶</a></dt>
-<dd><p>getColorTimingCC()</p>
-<p>Returns the color timing CC transform of
+<tt class="descname">getColorTimingCC</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getColorTimingCC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the color timing CC transform of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">color timing CC transform</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">color timing CC transform</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">object</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">object</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getDisplay">
-<tt class="descname">getDisplay</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getDisplay" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDisplay()</p>
-<p>Returns the display of
+<tt class="descname">getDisplay</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the display of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">display</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">display</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getDisplayCC">
-<tt class="descname">getDisplayCC</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getDisplayCC" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDisplayCC()</p>
-<p>Returns the display CC transform of
+<tt class="descname">getDisplayCC</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getDisplayCC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the display CC transform of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">display CC</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">display CC</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">object</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">object</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getInputColorSpaceName">
-<tt class="descname">getInputColorSpaceName</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getInputColorSpaceName" title="Permalink to this definition">¶</a></dt>
-<dd><p>getInputColorSpaceName()</p>
-<p>Returns the name of the input ColorSpace of
+<tt class="descname">getInputColorSpaceName</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getInputColorSpaceName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the input ColorSpace of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">name of input ColorSpace</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">name of input ColorSpace</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getLinearCC">
-<tt class="descname">getLinearCC</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getLinearCC" title="Permalink to this definition">¶</a></dt>
-<dd><p>getLinearCC()</p>
-<p>Returns the linear CC transform of
+<tt class="descname">getLinearCC</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getLinearCC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the linear CC transform of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">linear CC transform</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">linear CC transform</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">object</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">object</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getLooksOverride">
-<tt class="descname">getLooksOverride</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getLooksOverride" title="Permalink to this definition">¶</a></dt>
-<dd><p>getLooksOverride()</p>
-<p>Returns the looks in <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a> that&#8217;s
+<tt class="descname">getLooksOverride</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getLooksOverride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the looks in <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a> that&#8217;s
 overriding <a class="reference internal" href="PythonAPI.html#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>&#8216;s.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">looks override</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">looks override</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getLooksOverrideEnabled">
-<tt class="descname">getLooksOverrideEnabled</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getLooksOverrideEnabled" title="Permalink to this definition">¶</a></dt>
-<dd><p>getLooksOverrideEnabled()</p>
-<p>Returns whether the looks override of
+<tt class="descname">getLooksOverrideEnabled</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getLooksOverrideEnabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the looks override of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a> is enabled.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">looks override enabling</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">looks override enabling</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.getView">
-<tt class="descname">getView</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getView" title="Permalink to this definition">¶</a></dt>
-<dd><p>getView()</p>
-<p>Returns the view of
+<tt class="descname">getView</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.getView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the view of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">view</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">view</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setChannelView">
-<tt class="descname">setChannelView</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setChannelView" title="Permalink to this definition">¶</a></dt>
-<dd><p>setChannelView(pyCC)</p>
-<p>Sets the channel view transform of
+<tt class="descname">setChannelView</tt><big>(</big><em>pyCC</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setChannelView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the channel view transform of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyCC</strong> (<em>object</em>) &#8211; channel view transform</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyCC</strong> (<em>object</em>) &#8211; channel view transform</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setColorTimingCC">
-<tt class="descname">setColorTimingCC</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setColorTimingCC" title="Permalink to this definition">¶</a></dt>
-<dd><p>setColorTimingCC(pyCC)</p>
-<p>Sets the color timing CC transform of
+<tt class="descname">setColorTimingCC</tt><big>(</big><em>pyCC</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setColorTimingCC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the color timing CC transform of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyCC</strong> (<em>object</em>) &#8211; color timing CC</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyCC</strong> (<em>object</em>) &#8211; color timing CC</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setDisplay">
-<tt class="descname">setDisplay</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setDisplay" title="Permalink to this definition">¶</a></dt>
-<dd><p>setDisplay(str)</p>
-<p>Sets the display of
+<tt class="descname">setDisplay</tt><big>(</big><em>str</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the display of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>str</strong> (<em>string</em>) &#8211; display</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> (<em>string</em>) &#8211; display</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setDisplayCC">
-<tt class="descname">setDisplayCC</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setDisplayCC" title="Permalink to this definition">¶</a></dt>
-<dd><p>setDisplayCC(pyCC)</p>
-<p>Sets the display CC transform of
+<tt class="descname">setDisplayCC</tt><big>(</big><em>pyCC</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setDisplayCC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the display CC transform of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyCC</strong> (<em>object</em>) &#8211; display CC</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyCC</strong> (<em>object</em>) &#8211; display CC</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setInputColorSpaceName">
-<tt class="descname">setInputColorSpaceName</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setInputColorSpaceName" title="Permalink to this definition">¶</a></dt>
-<dd><p>setInputColorSpaceName(name)</p>
-<p>Sets the name of the input ColorSpace of
+<tt class="descname">setInputColorSpaceName</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setInputColorSpaceName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the name of the input ColorSpace of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<em>string</em>) &#8211; name of input ColorSpace</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>string</em>) &#8211; name of input ColorSpace</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setLinearCC">
-<tt class="descname">setLinearCC</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setLinearCC" title="Permalink to this definition">¶</a></dt>
-<dd><p>setLinearCC(pyCC)</p>
-<p>Sets the linear CC transform of
+<tt class="descname">setLinearCC</tt><big>(</big><em>pyCC</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setLinearCC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the linear CC transform of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyCC</strong> (<em>object</em>) &#8211; linear CC</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyCC</strong> (<em>object</em>) &#8211; linear CC</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setLooksOverride">
-<tt class="descname">setLooksOverride</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setLooksOverride" title="Permalink to this definition">¶</a></dt>
-<dd><p>setLooksOverride(str)</p>
-<p>Sets the looks override of <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
+<tt class="descname">setLooksOverride</tt><big>(</big><em>str</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setLooksOverride" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the looks override of <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>str</strong> (<em>string</em>) &#8211; looks override</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> (<em>string</em>) &#8211; looks override</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setLooksOverrideEnabled">
-<tt class="descname">setLooksOverrideEnabled</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setLooksOverrideEnabled" title="Permalink to this definition">¶</a></dt>
-<dd><p>setLooksOverrideEnabled(enabled)</p>
-<p>Sets the looks override enabling of
+<tt class="descname">setLooksOverrideEnabled</tt><big>(</big><em>enabled</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setLooksOverrideEnabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the looks override enabling of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>enabled</strong> (<em>object</em>) &#8211; looks override enabling</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>enabled</strong> (<em>object</em>) &#8211; looks override enabling</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.DisplayTransform.setView">
-<tt class="descname">setView</tt><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setView" title="Permalink to this definition">¶</a></dt>
-<dd><p>setView(str)</p>
-<p>Sets the view of
+<tt class="descname">setView</tt><big>(</big><em>str</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.DisplayTransform.setView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the view of
 <a class="reference internal" href="#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>str</strong> (<em>string</em>) &#8211; view</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> (<em>string</em>) &#8211; view</td>
 </tr>
 </tbody>
 </table>
@@ -956,7 +872,7 @@ overriding <a class="reference internal" href="PythonAPI.html#PyOpenColorIO.Conf
 </div>
 <div class="section" id="exponenttransform">
 <h2>ExponentTransform<a class="headerlink" href="#exponenttransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">transform</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">ExponentTransform</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -964,58 +880,53 @@ overriding <a class="reference internal" href="PythonAPI.html#PyOpenColorIO.Conf
 <dt id="PyOpenColorIO.ExponentTransform">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">ExponentTransform</tt><a class="headerlink" href="#PyOpenColorIO.ExponentTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>ExponentTransform</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ExponentTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ExponentTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ExponentTransform.getValue">
-<tt class="descname">getValue</tt><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.getValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>getValue()</p>
-<p>Returns the values in the exponent transform of
+<tt class="descname">getValue</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.getValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the values in the exponent transform of
 <a class="reference internal" href="#PyOpenColorIO.ExponentTransform" title="PyOpenColorIO.ExponentTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.ExponentTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">exponent transform values</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">exponent transform values</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">list of floats</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list of floats</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ExponentTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ExponentTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ExponentTransform.setValue">
-<tt class="descname">setValue</tt><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.setValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>setValue()</p>
-<p>Sets the values in the exponent transform of
+<tt class="descname">setValue</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ExponentTransform.setValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the values in the exponent transform of
 <a class="reference internal" href="#PyOpenColorIO.ExponentTransform" title="PyOpenColorIO.ExponentTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.ExponentTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyData</strong> (<em>list of 4 floats</em>) &#8211; exponent transform values</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyData</strong> (<em>list of 4 floats</em>) &#8211; exponent transform values</td>
 </tr>
 </tbody>
 </table>
@@ -1030,54 +941,69 @@ overriding <a class="reference internal" href="PythonAPI.html#PyOpenColorIO.Conf
 <dt id="PyOpenColorIO.FileTransform">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">FileTransform</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>FileTransform</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.getCCCId">
-<tt class="descname">getCCCId</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.getCCCId" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getCCCId</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.getCCCId" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.FileTransform.getFormatExtensionByIndex">
+<tt class="descname">getFormatExtensionByIndex</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.getFormatExtensionByIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.FileTransform.getFormatNameByIndex">
+<tt class="descname">getFormatNameByIndex</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.getFormatNameByIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.getInterpolation">
-<tt class="descname">getInterpolation</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.getInterpolation" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getInterpolation</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.getInterpolation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.FileTransform.getNumFormats">
+<tt class="descname">getNumFormats</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.getNumFormats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.getSrc">
-<tt class="descname">getSrc</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.getSrc" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getSrc</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.getSrc" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.setCCCId">
-<tt class="descname">setCCCId</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.setCCCId" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setCCCId</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.setCCCId" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.setInterpolation">
-<tt class="descname">setInterpolation</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.setInterpolation" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setInterpolation</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.setInterpolation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.FileTransform.setSrc">
-<tt class="descname">setSrc</tt><a class="headerlink" href="#PyOpenColorIO.FileTransform.setSrc" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setSrc</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.FileTransform.setSrc" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1089,59 +1015,59 @@ overriding <a class="reference internal" href="PythonAPI.html#PyOpenColorIO.Conf
 <dt id="PyOpenColorIO.GroupTransform">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">GroupTransform</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>GroupTransform</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.clear">
-<tt class="descname">clear</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.clear" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">clear</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.clear" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.empty">
-<tt class="descname">empty</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.empty" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">empty</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.empty" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.getTransform">
-<tt class="descname">getTransform</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.getTransform" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getTransform</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.getTransform" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.getTransforms">
-<tt class="descname">getTransforms</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.getTransforms" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getTransforms</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.getTransforms" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.push_back">
-<tt class="descname">push_back</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.push_back" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">push_back</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.push_back" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.setTransforms">
-<tt class="descname">setTransforms</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.setTransforms" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setTransforms</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.setTransforms" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.GroupTransform.size">
-<tt class="descname">size</tt><a class="headerlink" href="#PyOpenColorIO.GroupTransform.size" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">size</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.GroupTransform.size" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1149,58 +1075,53 @@ overriding <a class="reference internal" href="PythonAPI.html#PyOpenColorIO.Conf
 </div>
 <div class="section" id="logtransform">
 <h2>LogTransform<a class="headerlink" href="#logtransform" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 </pre></div>
 </div>
-<p><tt class="xref py py-class docutils literal"><span class="pre">LogTransform</span></tt> is used to define a log transform. The direction of
+<p><a class="reference internal" href="#PyOpenColorIO.LogTransform" title="PyOpenColorIO.LogTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.LogTransform</span></tt></a> is used to define a log transform. The direction of
 the transform and its numerical base can be specified.</p>
 <dl class="class">
 <dt id="PyOpenColorIO.LogTransform">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">LogTransform</tt><a class="headerlink" href="#PyOpenColorIO.LogTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>LogTransform</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LogTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.LogTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LogTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LogTransform.getBase">
-<tt class="descname">getBase</tt><a class="headerlink" href="#PyOpenColorIO.LogTransform.getBase" title="Permalink to this definition">¶</a></dt>
-<dd><p>getBase()</p>
-<p>Returns the base of <a class="reference internal" href="#PyOpenColorIO.LogTransform" title="PyOpenColorIO.LogTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.LogTransform</span></tt></a>.</p>
+<tt class="descname">getBase</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LogTransform.getBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the base of <a class="reference internal" href="#PyOpenColorIO.LogTransform" title="PyOpenColorIO.LogTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.LogTransform</span></tt></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LogTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.LogTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LogTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LogTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.LogTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LogTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LogTransform.setBase">
-<tt class="descname">setBase</tt><a class="headerlink" href="#PyOpenColorIO.LogTransform.setBase" title="Permalink to this definition">¶</a></dt>
-<dd><p>setBase(base)</p>
-<p>Sets the base in <a class="reference internal" href="#PyOpenColorIO.LogTransform" title="PyOpenColorIO.LogTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.LogTransform</span></tt></a>.</p>
+<tt class="descname">setBase</tt><big>(</big><em>base</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.LogTransform.setBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the base in <a class="reference internal" href="#PyOpenColorIO.LogTransform" title="PyOpenColorIO.LogTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.LogTransform</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>base</strong> (<em>float</em>) &#8211; base of log transform</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>base</strong> (<em>float</em>) &#8211; base of log transform</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LogTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.LogTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LogTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1212,54 +1133,54 @@ the transform and its numerical base can be specified.</p>
 <dt id="PyOpenColorIO.LookTransform">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">LookTransform</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform" title="Permalink to this definition">¶</a></dt>
 <dd><p>LookTransform</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.getDst">
-<tt class="descname">getDst</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.getDst" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDst</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.getDst" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.getLooks">
-<tt class="descname">getLooks</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.getLooks" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getLooks</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.getLooks" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.getSrc">
-<tt class="descname">getSrc</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.getSrc" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getSrc</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.getSrc" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.setDst">
-<tt class="descname">setDst</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.setDst" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDst</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.setDst" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.setLooks">
-<tt class="descname">setLooks</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.setLooks" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setLooks</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.setLooks" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.LookTransform.setSrc">
-<tt class="descname">setSrc</tt><a class="headerlink" href="#PyOpenColorIO.LookTransform.setSrc" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setSrc</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.LookTransform.setSrc" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1296,54 +1217,59 @@ the transform and its numerical base can be specified.</p>
 <em class="property">static </em><tt class="descname">View</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.View" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.MatrixTransform.equals">
+<tt class="descname">equals</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.equals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.getDirection">
-<tt class="descname">getDirection</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.getDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.getDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.getMatrix">
-<tt class="descname">getMatrix</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.getMatrix" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getMatrix</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.getMatrix" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.getOffset">
-<tt class="descname">getOffset</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.getOffset" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getOffset</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.getOffset" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.getValue">
-<tt class="descname">getValue</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.getValue" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getValue</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.getValue" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.setDirection">
-<tt class="descname">setDirection</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.setDirection" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDirection</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.setDirection" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.setMatrix">
-<tt class="descname">setMatrix</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.setMatrix" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setMatrix</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.setMatrix" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.setOffset">
-<tt class="descname">setOffset</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.setOffset" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setOffset</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.setOffset" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.MatrixTransform.setValue">
-<tt class="descname">setValue</tt><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.setValue" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setValue</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.MatrixTransform.setValue" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1366,7 +1292,7 @@ the transform and its numerical base can be specified.</p>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

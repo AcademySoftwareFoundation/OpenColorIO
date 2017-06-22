@@ -186,7 +186,7 @@ practical for working with 16-bit integer images (not floating
 point/linear-light images as is common in compositing software)
 
 The second issue is there is no simple way to load a simple 1D or 3D
-LUT into Photoshop (and it's API does not make this easy either!)
+LUT into Photoshop (and its API does not make this easy either!)
 
 A working space
 +++++++++++++++

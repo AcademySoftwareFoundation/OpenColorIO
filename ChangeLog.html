@@ -17,8 +17,8 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '1.0.8',
+        URL_ROOT:    './',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="index.html" />
     <link rel="next" title="License" href="License.html" />
     <link rel="prev" title="Downloads" href="downloads.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -77,6 +77,19 @@
 <div class="section" id="changelog">
 <span id="changelog-main"></span><h1>ChangeLog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <dl class="docutils">
+<dt><strong>Version 1.0.9 (Sep 2 2013):</strong></dt>
+<dd><ul class="first last simple">
+<li>CDL cccid supports both named id and index lookups</li>
+<li>ociobakelut / ocioconvert updates</li>
+<li>FreeBSD compile dixes</li>
+<li>FileTransform disk cache allows concurrent disk lookups</li>
+<li>CSP windows fix</li>
+<li>Python 3 support</li>
+<li>Fix envvar abs/relative path testing</li>
+<li>Can explicitly declare config envvars</li>
+<li>gcc44 compile warning fixes</li>
+</ul>
+</dd>
 <dt><strong>Version 1.0.8 (Dec 11 2012):</strong></dt>
 <dd><ul class="first last simple">
 <li>After Effects plugin</li>
@@ -486,7 +499,7 @@ Once this no longer is possible, a 0.7 &#8220;dev&#8221; branch will be forked.<
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

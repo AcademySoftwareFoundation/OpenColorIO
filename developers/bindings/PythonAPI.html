@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.0.8',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="../../index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="../../index.html" />
     <link rel="up" title="Developer guide" href="../index.html" />
     <link rel="next" title="Python Transforms" href="PythonTransforms.html" />
     <link rel="prev" title="C++ Types" href="../api/OpenColorTypes.html" /> 
@@ -39,7 +39,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -94,9 +94,9 @@
 <h1>Python API<a class="headerlink" href="#python-api" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="description">
 <h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
-<p>A color configuration (<tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt>) defines all the color spaces to be
+<p>A color configuration (<a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>) defines all the color spaces to be
 available at runtime.</p>
-<p>(<tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt>)  is the main object for interacting with this library.
+<p>(<a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>)  is the main object for interacting with this library.
 It encapsulates all the information necessary to use customized
 <a class="reference internal" href="PythonTransforms.html#PyOpenColorIO.ColorSpaceTransform" title="PyOpenColorIO.ColorSpaceTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.ColorSpaceTransform</span></tt></a> and
 <a class="reference internal" href="PythonTransforms.html#PyOpenColorIO.DisplayTransform" title="PyOpenColorIO.DisplayTransform"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.DisplayTransform</span></tt></a> operations.</p>
@@ -124,49 +124,49 @@ in a multi-app ecosystem, as it allows all applications to be consistently confi
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Paths to LUTs can be relative. The search paths are defined in <tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt>.</p>
+<p class="last">Paths to LUTs can be relative. The search paths are defined in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 </div>
 <p>See <a class="reference internal" href="../usage_examples.html#developers-usageexamples"><em>Usage Examples</em></a></p>
 <div class="section" id="examples-of-use">
 <h3>Examples of Use<a class="headerlink" href="#examples-of-use" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 
-<span class="c"># Load an existing configuration from the environment.</span>
-<span class="c"># The resulting configuration is read-only. If $OCIO is set, it will use that.</span>
-<span class="c"># Otherwise it will use an internal default.</span>
+<span class="c1"># Load an existing configuration from the environment.</span>
+<span class="c1"># The resulting configuration is read-only. If $OCIO is set, it will use that.</span>
+<span class="c1"># Otherwise it will use an internal default.</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">GetCurrentConfig</span><span class="p">()</span>
 
-<span class="c"># What color spaces exist?</span>
+<span class="c1"># What color spaces exist?</span>
 <span class="n">colorSpaceNames</span> <span class="o">=</span> <span class="p">[</span> <span class="n">cs</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">getColorSpaces</span><span class="p">()</span> <span class="p">]</span>
 
-<span class="c"># Given a string, can we parse a color space name from it?</span>
-<span class="n">inputString</span> <span class="o">=</span> <span class="s">&#39;myname_linear.exr&#39;</span>
+<span class="c1"># Given a string, can we parse a color space name from it?</span>
+<span class="n">inputString</span> <span class="o">=</span> <span class="s1">&#39;myname_linear.exr&#39;</span>
 <span class="n">colorSpaceName</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">parseColorSpaceFromString</span><span class="p">(</span><span class="n">inputString</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">colorSpaceName</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&#39;Found color space&#39;</span><span class="p">,</span> <span class="n">colorSpaceName</span>
+    <span class="k">print</span> <span class="s1">&#39;Found color space&#39;</span><span class="p">,</span> <span class="n">colorSpaceName</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&#39;Could not get color space from string&#39;</span><span class="p">,</span> <span class="n">inputString</span>
+    <span class="k">print</span> <span class="s1">&#39;Could not get color space from string&#39;</span><span class="p">,</span> <span class="n">inputString</span>
 
-<span class="c"># What is the name of scene-linear in the configuration?</span>
+<span class="c1"># What is the name of scene-linear in the configuration?</span>
 <span class="n">colorSpace</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getColorSpace</span><span class="p">(</span><span class="n">OCIO</span><span class="o">.</span><span class="n">Constants</span><span class="o">.</span><span class="n">ROLE_SCENE_LINEAR</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">colorSpace</span><span class="p">:</span>
     <span class="k">print</span> <span class="n">colorSpace</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="k">print</span> <span class="s">&#39;The role of scene-linear is not defined in the configuration&#39;</span>
+    <span class="k">print</span> <span class="s1">&#39;The role of scene-linear is not defined in the configuration&#39;</span>
 
-<span class="c"># For examples of how to actually perform the color transform math,</span>
-<span class="c"># see &#39;Python: Processor&#39; docs.</span>
+<span class="c1"># For examples of how to actually perform the color transform math,</span>
+<span class="c1"># see &#39;Python: Processor&#39; docs.</span>
 
-<span class="c"># Create a new, empty, editable configuration</span>
+<span class="c1"># Create a new, empty, editable configuration</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">Config</span><span class="p">()</span>
 
-<span class="c"># Create a new color space, and add it</span>
+<span class="c1"># Create a new color space, and add it</span>
 <span class="n">cs</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">ColorSpace</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="c"># (See ColorSpace for details)</span>
+<span class="c1"># (See ColorSpace for details)</span>
 <span class="n">config</span><span class="o">.</span><span class="n">addColorSpace</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
 
-<span class="c"># For additional examples of config manipulation, see</span>
-<span class="c"># https://github.com/imageworks/OpenColorIO-Configs/blob/master/nuke-default/make.py</span>
+<span class="c1"># For additional examples of config manipulation, see</span>
+<span class="c1"># https://github.com/imageworks/OpenColorIO-Configs/blob/master/nuke-default/make.py</span>
 </pre></div>
 </div>
 </div>
@@ -176,12 +176,21 @@ in a multi-app ecosystem, as it allows all applications to be consistently confi
 <dl class="class">
 <dt id="PyOpenColorIO.Exception">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">Exception</tt><a class="headerlink" href="#PyOpenColorIO.Exception" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>An exception class to throw for errors detected at runtime.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">All functions in the Config class can potentially throw this exception.</p>
+</div>
+</dd></dl>
 
 <dl class="class">
 <dt id="PyOpenColorIO.ExceptionMissingFile">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">ExceptionMissingFile</tt><a class="headerlink" href="#PyOpenColorIO.ExceptionMissingFile" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>An exception class for errors detected at runtime, thrown when OCIO cannot
+find a file that is expected to exist. This is provided as a custom type to
+distinguish cases where one wants to continue looking for missing files,
+but wants to properly fail for other error conditions.</p>
+</dd></dl>
 
 </div>
 <div class="section" id="global">
@@ -221,13 +230,12 @@ in a multi-app ecosystem, as it allows all applications to be consistently confi
 <dl class="staticmethod">
 <dt id="PyOpenColorIO.Config.CreateFromEnv">
 <em class="property">static </em><tt class="descname">CreateFromEnv</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.CreateFromEnv" title="Permalink to this definition">¶</a></dt>
-<dd><p>CreateFromEnv()</p>
-<p>Create a <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a> object using the environment variable.</p>
+<dd><p>Create a <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a> object using the environment variable.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">Config object</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Config object</td>
 </tr>
 </tbody>
 </table>
@@ -235,38 +243,34 @@ in a multi-app ecosystem, as it allows all applications to be consistently confi
 
 <dl class="staticmethod">
 <dt id="PyOpenColorIO.Config.CreateFromFile">
-<em class="property">static </em><tt class="descname">CreateFromFile</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.CreateFromFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>CreateFromFile(filename)</p>
-<p>Create a <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a> object using the information in a file.</p>
+<em class="property">static </em><tt class="descname">CreateFromFile</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.CreateFromFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a> object using the information in a file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>filename</strong> (<em>string</em>) &#8211; name of file</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>string</em>) &#8211; name of file</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Config object</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Config object</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="staticmethod">
+<dt id="PyOpenColorIO.Config.CreateFromStream">
+<em class="property">static </em><tt class="descname">CreateFromStream</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.CreateFromStream" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.addColorSpace">
-<tt class="descname">addColorSpace</tt><a class="headerlink" href="#PyOpenColorIO.Config.addColorSpace" title="Permalink to this definition">¶</a></dt>
-<dd><p>addColorSpace(pyColorSpace)</p>
-<p>Add a specified color space to <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">addColorSpace</tt><big>(</big><em>pyColorSpace</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.addColorSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a specified color space to <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyColorSpace</strong> (<em>object</em>) &#8211; color space</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyColorSpace</strong> (<em>object</em>) &#8211; color space</td>
 </tr>
 </tbody>
 </table>
@@ -277,16 +281,15 @@ this will overwrite it.</p>
 </div>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.addDisplay">
-<tt class="descname">addDisplay</tt><a class="headerlink" href="#PyOpenColorIO.Config.addDisplay" title="Permalink to this definition">¶</a></dt>
-<dd><p>addDisplay(display, view, colorSpaceName[, looks])</p>
-<p>NEEDS WORK</p>
+<tt class="descname">addDisplay</tt><big>(</big><em>display</em>, <em>view</em>, <em>colorSpaceName</em><span class="optional">[</span>, <em>looks</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.addDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>NEEDS WORK</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>display</strong> (<em>string</em>) &#8211; </li>
 <li><strong>view</strong> (<em>string</em>) &#8211; </li>
 <li><strong>colorSpaceName</strong> (<em>string</em>) &#8211; </li>
@@ -298,107 +301,106 @@ this will overwrite it.</p>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.addEnvironmentVar">
+<tt class="descname">addEnvironmentVar</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.addEnvironmentVar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.addLook">
-<tt class="descname">addLook</tt><a class="headerlink" href="#PyOpenColorIO.Config.addLook" title="Permalink to this definition">¶</a></dt>
-<dd><p>addLook(pylook)</p>
-<p>Adds a look to <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">addLook</tt><big>(</big><em>pylook</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.addLook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a look to <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pylook</strong> (<em>look object</em>) &#8211; look</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pylook</strong> (<em>look object</em>) &#8211; look</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.clearColorSpaces">
-<tt class="descname">clearColorSpaces</tt><a class="headerlink" href="#PyOpenColorIO.Config.clearColorSpaces" title="Permalink to this definition">¶</a></dt>
-<dd><p>clearColorSpaces()</p>
-<p>Clear the color spaces in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">clearColorSpaces</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.clearColorSpaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the color spaces in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.clearDisplays">
-<tt class="descname">clearDisplays</tt><a class="headerlink" href="#PyOpenColorIO.Config.clearDisplays" title="Permalink to this definition">¶</a></dt>
-<dd><p>clearDisplays()</p>
-</dd></dl>
+<tt class="descname">clearDisplays</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.clearDisplays" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.clearEnvironmentVars">
+<tt class="descname">clearEnvironmentVars</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.clearEnvironmentVars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.clearLook">
-<tt class="descname">clearLook</tt><a class="headerlink" href="#PyOpenColorIO.Config.clearLook" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">clearLook</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.clearLook" title="Permalink to this definition">¶</a></dt>
 <dd><p>clearLooks()</p>
 <p>Clear looks in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.clearLooks">
-<tt class="descname">clearLooks</tt><a class="headerlink" href="#PyOpenColorIO.Config.clearLooks" title="Permalink to this definition">¶</a></dt>
-<dd><p>clearLooks()</p>
-<p>Clear looks in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">clearLooks</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.clearLooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear looks in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.Config.createEditableCopy" title="Permalink to this definition">¶</a></dt>
-<dd><p>createEditableCopy()</p>
-<p>Returns an editable copy of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an editable copy of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">editable copy of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">editable copy of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Config object</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">Config object</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getActiveDisplays">
-<tt class="descname">getActiveDisplays</tt><a class="headerlink" href="#PyOpenColorIO.Config.getActiveDisplays" title="Permalink to this definition">¶</a></dt>
-<dd><p>getActiveDisplays()</p>
-<p>Returns the active displays in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">getActiveDisplays</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getActiveDisplays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the active displays in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">active displays</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">active displays</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getActiveViews">
-<tt class="descname">getActiveViews</tt><a class="headerlink" href="#PyOpenColorIO.Config.getActiveViews" title="Permalink to this definition">¶</a></dt>
-<dd><p>getActiveViews()</p>
-<p>Returns the active views in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">getActiveViews</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getActiveViews" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the active views in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">active views</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">active views</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getCacheID">
-<tt class="descname">getCacheID</tt><a class="headerlink" href="#PyOpenColorIO.Config.getCacheID" title="Permalink to this definition">¶</a></dt>
-<dd><p>getCacheID([, pycontext])</p>
-<p>This will produce a hash of the all colorspace definitions, etc.</p>
+<tt class="descname">getCacheID</tt><big>(</big><span class="optional">[</span><em>pycontext</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getCacheID" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will produce a hash of the all colorspace definitions, etc.</p>
 <p>All external references, such as files used in FileTransforms, etc.,
 will be incorporated into the cacheID. While the contents of the files
 are not read, the file system is queried for relavent information
@@ -406,279 +408,311 @@ are not read, the file system is queried for relavent information
 will change when the underlying luts are updated.</p>
 <p>If a context is not provided, the current Context will be used. If a
 null context is provided, file references will not be taken into
-account (this is essentially a hash of <a href="#id1"><span class="problematic" id="id2">:py:method:`PyOpenColorIO.Config.serialize`</span></a>).</p>
+account (this is essentially a hash of <a class="reference internal" href="#PyOpenColorIO.Config.serialize" title="PyOpenColorIO.Config.serialize"><tt class="xref py py-meth docutils literal"><span class="pre">PyOpenColorIO.Config.serialize()</span></tt></a>).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pycontext</strong> (<em>object</em>) &#8211; optional</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pycontext</strong> (<em>object</em>) &#8211; optional</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">hash of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">hash of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getColorSpace">
-<tt class="descname">getColorSpace</tt><a class="headerlink" href="#PyOpenColorIO.Config.getColorSpace" title="Permalink to this definition">¶</a></dt>
-<dd><p>getColorSpace(name)</p>
-<p>Returns the data for the specified color space in <tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt>.</p>
+<tt class="descname">getColorSpace</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getColorSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the data for the specified color space in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <p>This will return null if the specified name is not found.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>name</strong> (<em>string</em>) &#8211; name of color space</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>string</em>) &#8211; name of color space</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">data for specified color space</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">data for specified color space</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pyColorSpace object</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pyColorSpace object</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getColorSpaceNameByIndex">
+<tt class="descname">getColorSpaceNameByIndex</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getColorSpaceNameByIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getColorSpaces">
-<tt class="descname">getColorSpaces</tt><a class="headerlink" href="#PyOpenColorIO.Config.getColorSpaces" title="Permalink to this definition">¶</a></dt>
-<dd><p>getColorSpaces()</p>
-<p>Returns all the ColorSpaces defined in <tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt>.</p>
+<tt class="descname">getColorSpaces</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getColorSpaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all the ColorSpaces defined in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">ColorSpaces in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">ColorSpaces in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getCurrentContext">
-<tt class="descname">getCurrentContext</tt><a class="headerlink" href="#PyOpenColorIO.Config.getCurrentContext" title="Permalink to this definition">¶</a></dt>
-<dd><p>getCurrentContext()</p>
-<p>Return the current context, which is essentially a record of all
+<tt class="descname">getCurrentContext</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getCurrentContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current context, which is essentially a record of all
 the environment variables that are available for use in file path
 lookups.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">context</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">context</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">pycontext</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">pycontext</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getDefaultDisplay">
-<tt class="descname">getDefaultDisplay</tt><a class="headerlink" href="#PyOpenColorIO.Config.getDefaultDisplay" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDefaultDisplay()</p>
-<p>Returns the default display set in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">getDefaultDisplay</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getDefaultDisplay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the default display set in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">default display</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">default display</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getDefaultLumaCoefs">
-<tt class="descname">getDefaultLumaCoefs</tt><a class="headerlink" href="#PyOpenColorIO.Config.getDefaultLumaCoefs" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDefaultLumaCoefs()</p>
-<p>Returns the default luma coefficients in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">getDefaultLumaCoefs</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getDefaultLumaCoefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the default luma coefficients in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">luma coefficients</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">luma coefficients</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">list of floats</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list of floats</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getDefaultView">
-<tt class="descname">getDefaultView</tt><a class="headerlink" href="#PyOpenColorIO.Config.getDefaultView" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDefaultView(display)</p>
-<p>Returns the default view of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">getDefaultView</tt><big>(</big><em>display</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getDefaultView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the default view of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>display</strong> (<em>string</em>) &#8211; default view</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>display</strong> (<em>string</em>) &#8211; default view</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">view</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">view</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getDescription">
-<tt class="descname">getDescription</tt><a class="headerlink" href="#PyOpenColorIO.Config.getDescription" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDescription()</p>
-<p>Returns the stored description of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">getDescription</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getDescription" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the stored description of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">stored description of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">stored description of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getDisplay">
+<tt class="descname">getDisplay</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getDisplay" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getDisplayColorSpaceName">
-<tt class="descname">getDisplayColorSpaceName</tt><a class="headerlink" href="#PyOpenColorIO.Config.getDisplayColorSpaceName" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDisplayColorSpaceName(display, view)</p>
-<p>Returns the ColorSpace name corresponding to the display and view
+<tt class="descname">getDisplayColorSpaceName</tt><big>(</big><em>display</em>, <em>view</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getDisplayColorSpaceName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the ColorSpace name corresponding to the display and view
 combination in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>display</strong> (<em>string</em>) &#8211; display</li>
 <li><strong>view</strong> (<em>string</em>) &#8211; view</li>
 </ul>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">display color space name</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">display color space name</p>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
 </td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getDisplayLooks">
-<tt class="descname">getDisplayLooks</tt><a class="headerlink" href="#PyOpenColorIO.Config.getDisplayLooks" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDisplayLooks(display, view)</p>
-<p>Returns the looks corresponding to the display and view combination in
+<tt class="descname">getDisplayLooks</tt><big>(</big><em>display</em>, <em>view</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getDisplayLooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the looks corresponding to the display and view combination in
 <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>display</strong> (<em>string</em>) &#8211; display</li>
 <li><strong>view</strong> (<em>string</em>) &#8211; view</li>
 </ul>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">looks</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">looks</p>
 </td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
 </td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getDisplays">
-<tt class="descname">getDisplays</tt><a class="headerlink" href="#PyOpenColorIO.Config.getDisplays" title="Permalink to this definition">¶</a></dt>
-<dd><p>getDisplays()</p>
-<p>Returns all the displays defined in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">getDisplays</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getDisplays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all the displays defined in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">displays in <tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt></td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">displays in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">list of strings</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list of strings</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getEnvironmentVarDefault">
+<tt class="descname">getEnvironmentVarDefault</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getEnvironmentVarDefault" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getEnvironmentVarDefaults">
+<tt class="descname">getEnvironmentVarDefaults</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getEnvironmentVarDefaults" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getEnvironmentVarNameByIndex">
+<tt class="descname">getEnvironmentVarNameByIndex</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getEnvironmentVarNameByIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getIndexForColorSpace">
+<tt class="descname">getIndexForColorSpace</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getIndexForColorSpace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getLook">
-<tt class="descname">getLook</tt><a class="headerlink" href="#PyOpenColorIO.Config.getLook" title="Permalink to this definition">¶</a></dt>
-<dd><p>getLook(str)</p>
-<p>Returns the information of a specified look in
+<tt class="descname">getLook</tt><big>(</big><em>str</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getLook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the information of a specified look in
 <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>str</strong> (<em>string</em>) &#8211; look</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> (<em>string</em>) &#8211; look</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">specified look</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">specified look</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">look object</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">look object</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getLookNameByIndex">
+<tt class="descname">getLookNameByIndex</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getLookNameByIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getLooks">
-<tt class="descname">getLooks</tt><a class="headerlink" href="#PyOpenColorIO.Config.getLooks" title="Permalink to this definition">¶</a></dt>
-<dd><p>getLooks()</p>
-<p>Returns a list of all the looks defined in
+<tt class="descname">getLooks</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getLooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all the looks defined in
 <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">looks</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">looks</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">tuple of look objects</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple of look objects</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getNumColorSpaces">
+<tt class="descname">getNumColorSpaces</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getNumColorSpaces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getNumDisplays">
+<tt class="descname">getNumDisplays</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getNumDisplays" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getNumEnvironmentVars">
+<tt class="descname">getNumEnvironmentVars</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getNumEnvironmentVars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getNumLooks">
+<tt class="descname">getNumLooks</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getNumLooks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getNumRoles">
+<tt class="descname">getNumRoles</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getNumRoles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getNumViews">
+<tt class="descname">getNumViews</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getNumViews" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getProcessor">
-<tt class="descname">getProcessor</tt><a class="headerlink" href="#PyOpenColorIO.Config.getProcessor" title="Permalink to this definition">¶</a></dt>
-<dd><p>getProcessor(arg1[, arg2[, direction[, context]])</p>
-<p>Returns a processor for a specified transform.</p>
+<tt class="descname">getProcessor</tt><big>(</big><em>arg1[, arg2[, direction[, context]]</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getProcessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a processor for a specified transform.</p>
 <p>Although this is not often needed, it allows for the reuse of atomic
 OCIO functionality, such as applying an individual LUT file.</p>
 <p>There are two canonical ways of creating a
@@ -708,7 +742,7 @@ supported using the pixelStrideBytes arg). ???</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>arg1</strong> (<em>object</em>) &#8211; </li>
 <li><strong>arg2</strong> (<em>object</em>) &#8211; ignored if arg1 is a transform</li>
 <li><strong>direction</strong> (<em>string</em>) &#8211; optional</li>
@@ -720,92 +754,102 @@ supported using the pixelStrideBytes arg). ???</p>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getRoleName">
+<tt class="descname">getRoleName</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getRoleName" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getSearchPath">
-<tt class="descname">getSearchPath</tt><a class="headerlink" href="#PyOpenColorIO.Config.getSearchPath" title="Permalink to this definition">¶</a></dt>
-<dd><p>getSearchPath()</p>
-<p>Returns the search path.</p>
+<tt class="descname">getSearchPath</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getSearchPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the search path.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">search path</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">search path</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.getView">
+<tt class="descname">getView</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getView" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getViews">
-<tt class="descname">getViews</tt><a class="headerlink" href="#PyOpenColorIO.Config.getViews" title="Permalink to this definition">¶</a></dt>
-<dd><p>getViews(display)</p>
-<p>Returns all the views defined in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">getViews</tt><big>(</big><em>display</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getViews" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all the views defined in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>display</strong> (<em>string</em>) &#8211; views in <tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt></li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>display</strong> (<em>string</em>) &#8211; views in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">views in <tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt>.</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">views in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list of strings</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of strings</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.getWorkingDir">
-<tt class="descname">getWorkingDir</tt><a class="headerlink" href="#PyOpenColorIO.Config.getWorkingDir" title="Permalink to this definition">¶</a></dt>
-<dd><p>getWorkingDir()</p>
-<p>Returns the working directory.</p>
+<tt class="descname">getWorkingDir</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.getWorkingDir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the working directory.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">the working directory</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the working directory</td>
 </tr>
-<tr class="field"><th class="field-name">Rtype path:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Rtype path:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.hasRole">
+<tt class="descname">hasRole</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.hasRole" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.Config.isEditable" title="Permalink to this definition">¶</a></dt>
-<dd><p>isEditable()</p>
-<p>Returns whether Config is editable.</p>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.isEditable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether Config is editable.</p>
 <p>The configurations returned from
-<a href="#id3"><span class="problematic" id="id4">:py:function:`PyOpenColorIO.GetCurrentConfig`</span></a> are not editable, and if
+<a class="reference internal" href="#PyOpenColorIO.GetCurrentConfig" title="PyOpenColorIO.GetCurrentConfig"><tt class="xref py py-func docutils literal"><span class="pre">PyOpenColorIO.GetCurrentConfig()</span></tt></a> are not editable, and if
 you want to edit them you can use
-<a href="#id5"><span class="problematic" id="id6">:py:method:`PyOpenColorIO.Config.createEditableCopy`</span></a>.</p>
+<a class="reference internal" href="#PyOpenColorIO.Config.createEditableCopy" title="PyOpenColorIO.Config.createEditableCopy"><tt class="xref py py-meth docutils literal"><span class="pre">PyOpenColorIO.Config.createEditableCopy()</span></tt></a>.</p>
 <p>If you attempt to call any of the set functions on a noneditable
 Config, an exception will be thrown.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">state of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>&#8216;s editability</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">state of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>&#8216;s editability</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.isStrictParsingEnabled">
+<tt class="descname">isStrictParsingEnabled</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.isStrictParsingEnabled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.parseColorSpaceFromString">
-<tt class="descname">parseColorSpaceFromString</tt><a class="headerlink" href="#PyOpenColorIO.Config.parseColorSpaceFromString" title="Permalink to this definition">¶</a></dt>
-<dd><p>parseColorSpaceFromString(str)</p>
-<p>Parses out the color space from a string.</p>
+<tt class="descname">parseColorSpaceFromString</tt><big>(</big><em>str</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.parseColorSpaceFromString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses out the color space from a string.</p>
 <p>Given the specified string, gets the longest, right-most color space substring.
 * If strict parsing is enabled, and no color space is found, return an empty string.
 * If strict parsing is disabled, return the default role, if defined.
@@ -814,132 +858,108 @@ Config, an exception will be thrown.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>str</strong> (<em>string</em>) &#8211; ColorSpace data</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>str</strong> (<em>string</em>) &#8211; ColorSpace data</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">parsed data</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">parsed data</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.sanityCheck">
-<tt class="descname">sanityCheck</tt><a class="headerlink" href="#PyOpenColorIO.Config.sanityCheck" title="Permalink to this definition">¶</a></dt>
-<dd><p>sanityCheck()</p>
-<p>This will throw an exception if <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a> is
+<tt class="descname">sanityCheck</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.sanityCheck" title="Permalink to this definition">¶</a></dt>
+<dd><p>This will throw an exception if <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a> is
 malformed. The most common error occurs when references are made to
 colorspaces that do not exist.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.serialize">
-<tt class="descname">serialize</tt><a class="headerlink" href="#PyOpenColorIO.Config.serialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>serialize()</p>
-<p>Returns the string representation of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>
+<tt class="descname">serialize</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.serialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the string representation of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>
 in YAML text form. This is typically stored on disk in a file with the
 .ocio extension.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a> in YAML text form</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a> in YAML text form</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.setActiveDisplays">
-<tt class="descname">setActiveDisplays</tt><a class="headerlink" href="#PyOpenColorIO.Config.setActiveDisplays" title="Permalink to this definition">¶</a></dt>
-<dd><p>setActiveDisplays(displays)</p>
-<p>Sets the active displays in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">setActiveDisplays</tt><big>(</big><em>displays</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.setActiveDisplays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the active displays in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>displays</strong> (<em>string</em>) &#8211; active displays</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>displays</strong> (<em>string</em>) &#8211; active displays</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.setActiveViews">
-<tt class="descname">setActiveViews</tt><a class="headerlink" href="#PyOpenColorIO.Config.setActiveViews" title="Permalink to this definition">¶</a></dt>
-<dd><p>setActiveViews(views)</p>
-<p>Sets the active views in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">setActiveViews</tt><big>(</big><em>views</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.setActiveViews" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the active views in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>views</strong> (<em>string</em>) &#8211; active views</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>views</strong> (<em>string</em>) &#8211; active views</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.setDefaultLumaCoefs">
-<tt class="descname">setDefaultLumaCoefs</tt><a class="headerlink" href="#PyOpenColorIO.Config.setDefaultLumaCoefs" title="Permalink to this definition">¶</a></dt>
-<dd><p>setDefaultLumaCoefs(pyCoef)</p>
-<p>Sets the default luma coefficients in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">setDefaultLumaCoefs</tt><big>(</big><em>pyCoef</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.setDefaultLumaCoefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the default luma coefficients in <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pyCoef</strong> (<em>object</em>) &#8211; luma coefficients</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pyCoef</strong> (<em>object</em>) &#8211; luma coefficients</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.setDescription">
-<tt class="descname">setDescription</tt><a class="headerlink" href="#PyOpenColorIO.Config.setDescription" title="Permalink to this definition">¶</a></dt>
-<dd><p>setDescription(desc)</p>
-<p>Sets the description of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
+<tt class="descname">setDescription</tt><big>(</big><em>desc</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.setDescription" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the description of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>desc</strong> (<em>string</em>) &#8211; description of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>desc</strong> (<em>string</em>) &#8211; description of <a class="reference internal" href="#PyOpenColorIO.Config" title="PyOpenColorIO.Config"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Config</span></tt></a></td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.setRole">
-<tt class="descname">setRole</tt><a class="headerlink" href="#PyOpenColorIO.Config.setRole" title="Permalink to this definition">¶</a></dt>
-<dd><p>setRole(role, csname)</p>
-<p>Set a role&#8217;s ColorSpace.</p>
+<tt class="descname">setRole</tt><big>(</big><em>role</em>, <em>csname</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.setRole" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a role&#8217;s ColorSpace.</p>
 <p>Setting the colorSpaceName name to a null string unsets it.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>role</strong> (<em>string</em>) &#8211; role whose ColorSpace will be set</li>
 <li><strong>csname</strong> (<em>string</em>) &#8211; name of ColorSpace</li>
 </ul>
@@ -949,37 +969,34 @@ in YAML text form. This is typically stored on disk in a file with the
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Config.setSearchPath">
-<tt class="descname">setSearchPath</tt><a class="headerlink" href="#PyOpenColorIO.Config.setSearchPath" title="Permalink to this definition">¶</a></dt>
-<dd><p>setSearchPath(path)</p>
-<p>Sets the search path.</p>
+<tt class="descname">setSearchPath</tt><big>(</big><em>path</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.setSearchPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the search path.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>path</strong> (<em>string</em>) &#8211; the search path</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>string</em>) &#8211; the search path</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Config.setStrictParsingEnabled">
+<tt class="descname">setStrictParsingEnabled</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.setStrictParsingEnabled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Config.setWorkingDir">
-<tt class="descname">setWorkingDir</tt><a class="headerlink" href="#PyOpenColorIO.Config.setWorkingDir" title="Permalink to this definition">¶</a></dt>
-<dd><p>setWorkingDir(path)</p>
-<p>Sets the working directory.</p>
+<tt class="descname">setWorkingDir</tt><big>(</big><em>path</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Config.setWorkingDir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the working directory.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>path</strong> (<em>string</em>) &#8211; the working directory</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>string</em>) &#8211; the working directory</td>
 </tr>
 </tbody>
 </table>
@@ -1005,61 +1022,61 @@ image capture devices, such as cameras and scanners, and internal
 <p>Color spaces are specific to a particular image precision
 (float32, uint8, etc.). The set of color spaces that provide equivalent
 mappings (at different precisions) are referred to as a &#8216;family&#8217;.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">Config</span><span class="p">()</span>
 </pre></div>
 </div>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.getAllocation">
-<tt class="descname">getAllocation</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getAllocation" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getAllocation</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getAllocation" title="Permalink to this definition">¶</a></dt>
 <dd><p>If this colorspace needs to be transferred to a limited dynamic
 range coding space (such as during display with a GPU path), use this
 allocation to maximize bit efficiency.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.getAllocationVars">
-<tt class="descname">getAllocationVars</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getAllocationVars" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getAllocationVars</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getAllocationVars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.getBitDepth">
-<tt class="descname">getBitDepth</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getBitDepth" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getBitDepth</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getBitDepth" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.getDescription">
-<tt class="descname">getDescription</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getDescription" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getDescription</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getDescription" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.getEqualityGroup">
-<tt class="descname">getEqualityGroup</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getEqualityGroup" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getEqualityGroup</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getEqualityGroup" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.getFamily">
-<tt class="descname">getFamily</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getFamily" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getFamily</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getFamily" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.getName">
-<tt class="descname">getName</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getName" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getName</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.getTransform">
-<tt class="descname">getTransform</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getTransform" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getTransform</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.getTransform" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.isData">
-<tt class="descname">isData</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.isData" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isData</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.isData" title="Permalink to this definition">¶</a></dt>
 <dd><p>ColorSpaces that are data are treated a bit special. Basically, any
 colorspace transforms you try to apply to them are ignored. (Think
 of applying a gamut mapping transform to an ID pass). Also, the
@@ -1069,54 +1086,54 @@ of applying a gamut mapping transform to an ID pass). Also, the
 pixel data, such as normals, point positions, ID information, etc.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.setAllocation">
-<tt class="descname">setAllocation</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setAllocation" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setAllocation</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setAllocation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.setAllocationVars">
-<tt class="descname">setAllocationVars</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setAllocationVars" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setAllocationVars</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setAllocationVars" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.setBitDepth">
-<tt class="descname">setBitDepth</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setBitDepth" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setBitDepth</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setBitDepth" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.setDescription">
-<tt class="descname">setDescription</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setDescription" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setDescription</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setDescription" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.setEqualityGroup">
-<tt class="descname">setEqualityGroup</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setEqualityGroup" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setEqualityGroup</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setEqualityGroup" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.setFamily">
-<tt class="descname">setFamily</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setFamily" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setFamily</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setFamily" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.setIsData">
-<tt class="descname">setIsData</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setIsData" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setIsData</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setIsData" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.setName">
-<tt class="descname">setName</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setName" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setName</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.ColorSpace.setTransform">
-<tt class="descname">setTransform</tt><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setTransform" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setTransform</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.ColorSpace.setTransform" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1130,44 +1147,64 @@ pixel data, such as normals, point positions, ID information, etc.</p>
 <dd><p>The <em>Look</em> is an &#8216;artistic&#8217; image modification, in a specified image state.</p>
 <p>The processSpace defines the ColorSpace the image is required to be in, for
 the math to apply correctly.</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Look.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.Look.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Look.getDescription">
+<tt class="descname">getDescription</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.getDescription" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Look.getInverseTransform">
+<tt class="descname">getInverseTransform</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.getInverseTransform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Look.getName">
-<tt class="descname">getName</tt><a class="headerlink" href="#PyOpenColorIO.Look.getName" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getName</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.getName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Look.getProcessSpace">
-<tt class="descname">getProcessSpace</tt><a class="headerlink" href="#PyOpenColorIO.Look.getProcessSpace" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getProcessSpace</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.getProcessSpace" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Look.getTransform">
-<tt class="descname">getTransform</tt><a class="headerlink" href="#PyOpenColorIO.Look.getTransform" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getTransform</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.getTransform" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Look.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.Look.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Look.setDescription">
+<tt class="descname">setDescription</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.setDescription" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Look.setInverseTransform">
+<tt class="descname">setInverseTransform</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.setInverseTransform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Look.setName">
-<tt class="descname">setName</tt><a class="headerlink" href="#PyOpenColorIO.Look.setName" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setName</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.setName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Look.setProcessSpace">
-<tt class="descname">setProcessSpace</tt><a class="headerlink" href="#PyOpenColorIO.Look.setProcessSpace" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setProcessSpace</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.setProcessSpace" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Look.setTransform">
-<tt class="descname">setTransform</tt><a class="headerlink" href="#PyOpenColorIO.Look.setTransform" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setTransform</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Look.setTransform" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1183,219 +1220,179 @@ Once you have a process for a particular transform created, you can hang
 onto it to efficiently transform pixels.</p>
 <p>Processors can only be created from the <cite>PyOpenColorIO.Config</cite>
 getProcessor(...) call.</p>
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.applyRGB">
-<tt class="descname">applyRGB</tt><a class="headerlink" href="#PyOpenColorIO.Processor.applyRGB" title="Permalink to this definition">¶</a></dt>
-<dd><p>applyRGB(pixeldata)</p>
-<p>Apply the RGB part of the transform represented by
+<tt class="descname">applyRGB</tt><big>(</big><em>pixeldata</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.applyRGB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the RGB part of the transform represented by
 <a class="reference internal" href="#PyOpenColorIO.Processor" title="PyOpenColorIO.Processor"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Processor</span></tt></a> to an image.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pixeldata</strong> (<em>object</em>) &#8211; rgbrgb... array (length % 3 == 0)</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pixeldata</strong> (<em>object</em>) &#8211; rgbrgb... array (length % 3 == 0)</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">color converted pixeldata</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">color converted pixeldata</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.applyRGBA">
-<tt class="descname">applyRGBA</tt><a class="headerlink" href="#PyOpenColorIO.Processor.applyRGBA" title="Permalink to this definition">¶</a></dt>
-<dd><p>applyRGBA(pixeldata)</p>
-<p>Apply the RGB and alpha part of the transform represented by
+<tt class="descname">applyRGBA</tt><big>(</big><em>pixeldata</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.applyRGBA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the RGB and alpha part of the transform represented by
 <a class="reference internal" href="#PyOpenColorIO.Processor" title="PyOpenColorIO.Processor"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Processor</span></tt></a> to an image.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pixeldata</strong> (<em>object</em>) &#8211; rgbargba... array (length % 4 == 0)</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pixeldata</strong> (<em>object</em>) &#8211; rgbargba... array (length % 4 == 0)</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">color converted pixeldata</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">color converted pixeldata</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.getCpuCacheID">
-<tt class="descname">getCpuCacheID</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getCpuCacheID" title="Permalink to this definition">¶</a></dt>
-<dd><p>getCpuCacheID()</p>
-<p>Returns the cache ID of the CPU that <a class="reference internal" href="#PyOpenColorIO.Processor" title="PyOpenColorIO.Processor"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Processor</span></tt></a>
+<tt class="descname">getCpuCacheID</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.getCpuCacheID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the cache ID of the CPU that <a class="reference internal" href="#PyOpenColorIO.Processor" title="PyOpenColorIO.Processor"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Processor</span></tt></a>
 will run on.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">CPU cache ID</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">CPU cache ID</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.getGpuLut3D">
-<tt class="descname">getGpuLut3D</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuLut3D" title="Permalink to this definition">¶</a></dt>
-<dd><p>getGpuLut3D(shaderDesc)</p>
-<p>Returns the GPU LUT 3D.</p>
+<tt class="descname">getGpuLut3D</tt><big>(</big><em>shaderDesc</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuLut3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the GPU LUT 3D.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>shaderDesc</strong> (<em>dict</em>) &#8211; define &#8216;language&#8217;,&#8217;functionName&#8217;,&#8217;lut3DEdgeLen&#8217;</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>shaderDesc</strong> (<em>dict</em>) &#8211; define &#8216;language&#8217;,&#8217;functionName&#8217;,&#8217;lut3DEdgeLen&#8217;</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">GPU LUT 3D</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">GPU LUT 3D</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.getGpuLut3DCacheID">
-<tt class="descname">getGpuLut3DCacheID</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuLut3DCacheID" title="Permalink to this definition">¶</a></dt>
-<dd><p>getGpuLut3DCacheID(shaderDesc)</p>
-<p>Returns the GPU 3D LUT cache ID.</p>
+<tt class="descname">getGpuLut3DCacheID</tt><big>(</big><em>shaderDesc</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuLut3DCacheID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the GPU 3D LUT cache ID.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>shaderDesc</strong> (<em>dict</em>) &#8211; two params</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>shaderDesc</strong> (<em>dict</em>) &#8211; two params</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">GPU 3D LUT cache ID</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">GPU 3D LUT cache ID</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.getGpuShaderText">
-<tt class="descname">getGpuShaderText</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuShaderText" title="Permalink to this definition">¶</a></dt>
-<dd><p>getGpuShaderText(shaderDesc)</p>
-<p>Returns the GPU shader text.</p>
+<tt class="descname">getGpuShaderText</tt><big>(</big><em>shaderDesc</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuShaderText" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the GPU shader text.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>shaderDesc</strong> (<em>dict</em>) &#8211; define &#8216;language&#8217;,&#8217;functionName&#8217;,&#8217;lut3DEdgeLen&#8217;</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>shaderDesc</strong> (<em>dict</em>) &#8211; define &#8216;language&#8217;,&#8217;functionName&#8217;,&#8217;lut3DEdgeLen&#8217;</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">GPU shader text</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">GPU shader text</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.getGpuShaderTextCacheID">
-<tt class="descname">getGpuShaderTextCacheID</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuShaderTextCacheID" title="Permalink to this definition">¶</a></dt>
-<dd><p>getGpuShaderTextCacheID(shaderDesc)</p>
-<p>Returns the GPU shader text cache ID.</p>
+<tt class="descname">getGpuShaderTextCacheID</tt><big>(</big><em>shaderDesc</em><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.getGpuShaderTextCacheID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the GPU shader text cache ID.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>shaderDesc</strong> (<em>dict</em>) &#8211; define &#8216;language&#8217;,&#8217;functionName&#8217;,&#8217;lut3DEdgeLen&#8217;</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>shaderDesc</strong> (<em>dict</em>) &#8211; define &#8216;language&#8217;,&#8217;functionName&#8217;,&#8217;lut3DEdgeLen&#8217;</td>
 </tr>
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">GPU shader text cache ID</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">GPU shader text cache ID</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.getMetadata">
-<tt class="descname">getMetadata</tt><a class="headerlink" href="#PyOpenColorIO.Processor.getMetadata" title="Permalink to this definition">¶</a></dt>
-<dd><p>getMetadata()</p>
-<p>Returns information about the process that generated this processor.</p>
+<tt class="descname">getMetadata</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.getMetadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns information about the process that generated this processor.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">processor metadata</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">processor metadata</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body"><cite>PyOpenColorIO.ProcessorMetadata</cite></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><cite>PyOpenColorIO.ProcessorMetadata</cite></td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.hasChannelCrosstalk">
-<tt class="descname">hasChannelCrosstalk</tt><a class="headerlink" href="#PyOpenColorIO.Processor.hasChannelCrosstalk" title="Permalink to this definition">¶</a></dt>
-<dd><p>hasChannelCrosstalk()</p>
-<p>Returns whether the transformation of
+<tt class="descname">hasChannelCrosstalk</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.hasChannelCrosstalk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the transformation of
 <a class="reference internal" href="#PyOpenColorIO.Processor" title="PyOpenColorIO.Processor"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Processor</span></tt></a> introduces crosstalk between the
 image channels.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">whether there&#8217;s crosstalk between channels</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether there&#8217;s crosstalk between channels</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Processor.isNoOp">
-<tt class="descname">isNoOp</tt><a class="headerlink" href="#PyOpenColorIO.Processor.isNoOp" title="Permalink to this definition">¶</a></dt>
-<dd><p>isNoOp()</p>
-<p>Returns whether the actual transformation represented by
+<tt class="descname">isNoOp</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Processor.isNoOp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the actual transformation represented by
 <a class="reference internal" href="#PyOpenColorIO.Processor" title="PyOpenColorIO.Processor"><tt class="xref py py-class docutils literal"><span class="pre">PyOpenColorIO.Processor</span></tt></a> is a no-op.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Returns:</th><td class="field-body">whether transform is a no-op</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">whether transform is a no-op</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
@@ -1410,64 +1407,89 @@ image channels.</p>
 <dt id="PyOpenColorIO.Context">
 <em class="property">class </em><tt class="descclassname">PyOpenColorIO.</tt><tt class="descname">Context</tt><a class="headerlink" href="#PyOpenColorIO.Context" title="Permalink to this definition">¶</a></dt>
 <dd><p>Context</p>
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Context.clearStringVars">
+<tt class="descname">clearStringVars</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.clearStringVars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Context.createEditableCopy">
-<tt class="descname">createEditableCopy</tt><a class="headerlink" href="#PyOpenColorIO.Context.createEditableCopy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.createEditableCopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Context.getCacheID">
-<tt class="descname">getCacheID</tt><a class="headerlink" href="#PyOpenColorIO.Context.getCacheID" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getCacheID</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.getCacheID" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Context.getEnvironmentMode">
+<tt class="descname">getEnvironmentMode</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.getEnvironmentMode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PyOpenColorIO.Context.getNumStringVars">
+<tt class="descname">getNumStringVars</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.getNumStringVars" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Context.getSearchPath">
-<tt class="descname">getSearchPath</tt><a class="headerlink" href="#PyOpenColorIO.Context.getSearchPath" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getSearchPath</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.getSearchPath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Context.getStringVar">
-<tt class="descname">getStringVar</tt><a class="headerlink" href="#PyOpenColorIO.Context.getStringVar" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getStringVar</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.getStringVar" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Context.getStringVarNameByIndex">
+<tt class="descname">getStringVarNameByIndex</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.getStringVarNameByIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Context.getWorkingDir">
-<tt class="descname">getWorkingDir</tt><a class="headerlink" href="#PyOpenColorIO.Context.getWorkingDir" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">getWorkingDir</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.getWorkingDir" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Context.isEditable">
-<tt class="descname">isEditable</tt><a class="headerlink" href="#PyOpenColorIO.Context.isEditable" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">isEditable</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.isEditable" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Context.loadEnvironment">
-<tt class="descname">loadEnvironment</tt><a class="headerlink" href="#PyOpenColorIO.Context.loadEnvironment" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">loadEnvironment</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.loadEnvironment" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Context.resolveFileLocation">
-<tt class="descname">resolveFileLocation</tt><a class="headerlink" href="#PyOpenColorIO.Context.resolveFileLocation" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">resolveFileLocation</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.resolveFileLocation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Context.resolveStringVar">
-<tt class="descname">resolveStringVar</tt><a class="headerlink" href="#PyOpenColorIO.Context.resolveStringVar" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">resolveStringVar</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.resolveStringVar" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
+<dt id="PyOpenColorIO.Context.setEnvironmentMode">
+<tt class="descname">setEnvironmentMode</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.setEnvironmentMode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="PyOpenColorIO.Context.setSearchPath">
-<tt class="descname">setSearchPath</tt><a class="headerlink" href="#PyOpenColorIO.Context.setSearchPath" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setSearchPath</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.setSearchPath" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Context.setStringVar">
-<tt class="descname">setStringVar</tt><a class="headerlink" href="#PyOpenColorIO.Context.setStringVar" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setStringVar</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.setStringVar" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="method">
 <dt id="PyOpenColorIO.Context.setWorkingDir">
-<tt class="descname">setWorkingDir</tt><a class="headerlink" href="#PyOpenColorIO.Context.setWorkingDir" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">setWorkingDir</tt><big>(</big><big>)</big><a class="headerlink" href="#PyOpenColorIO.Context.setWorkingDir" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1490,7 +1512,7 @@ image channels.</p>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

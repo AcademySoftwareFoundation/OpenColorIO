@@ -17,8 +17,8 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '1.0.8',
+        URL_ROOT:    './',
+        VERSION:     '1.0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -28,7 +28,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
-    <link rel="top" title="OpenColorIO v1.0.8 documentation" href="index.html" />
+    <link rel="top" title="OpenColorIO 1.0.9 documentation" href="index.html" />
     <link rel="next" title="Downloads" href="downloads.html" />
     <link rel="prev" title="Internal Architecture Overview" href="developers/internal_architecture.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <h2 class="heading"><span>Open Source Color Management</span></h2>
       </div>
       <div class="topnav">
-      OpenColorIO v1.0.8 documentation
+      OpenColorIO 1.0.9 documentation
       </div>
       <div class="content">
         
@@ -112,26 +112,26 @@ applications. See the <a class="reference internal" href="License.html#license">
 <col width="46%" />
 </colgroup>
 <thead valign="bottom">
-<tr><th class="head">Ext</th>
+<tr class="row-odd"><th class="head">Ext</th>
 <th class="head">Details</th>
 <th class="head">Notes</th>
 </tr>
 </thead>
 <tbody valign="top">
-<tr><td>3dl</td>
+<tr class="row-even"><td>3dl</td>
 <td>Autodesk Apps: Lustre, Flame, etc.
 Supports shaper LUT + 3D</td>
 <td>Read + Write Support.</td>
 </tr>
-<tr><td>ccc</td>
+<tr class="row-odd"><td>ccc</td>
 <td>ASC CDL ColorCorrectionCollection</td>
 <td>Full read support.</td>
 </tr>
-<tr><td>cc</td>
+<tr class="row-even"><td>cc</td>
 <td>ASC CDL ColorCorrection</td>
 <td>Full read support.</td>
 </tr>
-<tr><td>csp</td>
+<tr class="row-odd"><td>csp</td>
 <td>Cinespace (Rising Sun Research)
 LUT. Spline-based shaper LUT, with
 either 1D or 3D LUT.</td>
@@ -139,15 +139,15 @@ either 1D or 3D LUT.</td>
 resampled into simple 1D LUT
 with 2^16 samples.</td>
 </tr>
-<tr><td>cub</td>
+<tr class="row-even"><td>cub</td>
 <td>Truelight format. Shaper Lut + 3D</td>
 <td>Full read support.</td>
 </tr>
-<tr><td>cube</td>
+<tr class="row-odd"><td>cube</td>
 <td>Iridas format. Either 1D or 3D Lut.</td>
 <td>Full read support</td>
 </tr>
-<tr><td>hdl</td>
+<tr class="row-even"><td>hdl</td>
 <td>Houdini. 1D Lut, 3D lut, 1D shaper
 Lut</td>
 <td>Only &#8216;C&#8217; type is supported.
@@ -155,33 +155,33 @@ Need to add R G B A RGB RGBA ALL.
 No support for Sampling tag.
 Header fields must be in strict order.</td>
 </tr>
-<tr><td>look</td>
+<tr class="row-odd"><td>look</td>
 <td>IRIDAS .look</td>
 <td>Read baked 3D LUT embedded in file.
 No mask support.</td>
 </tr>
-<tr><td>mga/m3d</td>
+<tr class="row-even"><td>mga/m3d</td>
 <td>Pandora 3D lut</td>
 <td>Full read support.</td>
 </tr>
-<tr><td>spi1d</td>
+<tr class="row-odd"><td>spi1d</td>
 <td>1D format. Imageworks native 1D
 lut format.  HDR friendly, supports
 arbitrary input and output domains</td>
 <td>Full read support.</td>
 </tr>
-<tr><td>spi3d</td>
+<tr class="row-even"><td>spi3d</td>
 <td>3D format. Imageworks native 3D
 lut format.</td>
 <td>Full read support.</td>
 </tr>
-<tr><td>spimtx</td>
+<tr class="row-odd"><td>spimtx</td>
 <td>3x3 matrix + color offset.
 Imageworks native color matrix
 format</td>
 <td>Full read support.</td>
 </tr>
-<tr><td>vf</td>
+<tr class="row-even"><td>vf</td>
 <td>Inventor 3d lut.</td>
 <td>Read support for 3d lut data
 and global_transform element</td>
@@ -234,57 +234,57 @@ necessitate adding such a feature.</p>
 <col width="51%" />
 </colgroup>
 <thead valign="bottom">
-<tr><th class="head">Ext</th>
+<tr class="row-odd"><th class="head">Ext</th>
 <th class="head">Details</th>
 <th class="head">Notes</th>
 </tr>
 </thead>
 <tbody valign="top">
-<tr><td>3dl</td>
+<tr class="row-even"><td>3dl</td>
 <td>Matched Results</td>
 <td>&nbsp;</td>
 </tr>
-<tr><td>ccc</td>
+<tr class="row-odd"><td>ccc</td>
 <td>n/a</td>
 <td>&nbsp;</td>
 </tr>
-<tr><td>cc</td>
+<tr class="row-even"><td>cc</td>
 <td>n/a</td>
 <td>&nbsp;</td>
 </tr>
-<tr><td>csp</td>
+<tr class="row-odd"><td>csp</td>
 <td><em>Difference</em></td>
 <td>Gain error. Believe OCIO is correct, but need to verify.</td>
 </tr>
-<tr><td>cub</td>
+<tr class="row-even"><td>cub</td>
 <td>Matched Results</td>
 <td>Note: Nuke&#8217;s .cub exporter is broken (gain error)</td>
 </tr>
-<tr><td>cube</td>
+<tr class="row-odd"><td>cube</td>
 <td>Matched Results</td>
 <td>&nbsp;</td>
 </tr>
-<tr><td>hdl</td>
+<tr class="row-even"><td>hdl</td>
 <td>n/a</td>
 <td>&nbsp;</td>
 </tr>
-<tr><td>mga/m3d</td>
+<tr class="row-odd"><td>mga/m3d</td>
 <td>n/a</td>
 <td>&nbsp;</td>
 </tr>
-<tr><td>spi1d</td>
+<tr class="row-even"><td>spi1d</td>
 <td>n/a</td>
 <td>&nbsp;</td>
 </tr>
-<tr><td>spi3d</td>
+<tr class="row-odd"><td>spi3d</td>
 <td>n/a</td>
 <td>&nbsp;</td>
 </tr>
-<tr><td>spimtx</td>
+<tr class="row-even"><td>spimtx</td>
 <td>n/a</td>
 <td>&nbsp;</td>
 </tr>
-<tr><td>vf</td>
+<tr class="row-odd"><td>vf</td>
 <td><em>Difference</em></td>
 <td>Gain error. Believe OCIO is correct, but need to verify.</td>
 </tr>
@@ -320,7 +320,7 @@ further information.</p>
 
     <div class="footer">
         &copy; Copyright 2010, Sony Pictures Imageworks.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1pre.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>
