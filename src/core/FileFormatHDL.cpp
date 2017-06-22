@@ -778,7 +778,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         LookTransformRcPtr transform = LookTransform::Create();
                         transform->setLooks(looks.c_str());
-                        transform->setSrc(inputSpace.c_str());
+                        transform->setSrc(shaperSpace.c_str());
                         transform->setDst(targetSpace.c_str());
                         cubeProc = config->getProcessor(transform,
                             TRANSFORM_DIR_FORWARD);
@@ -1476,6 +1476,144 @@ OIIO_ADD_TEST(FileFormatHDL, Bake3D1D)
     for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
         OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
     */
+}
+
+
+OIIO_ADD_TEST(FileFormatHDL, LookTest)
+{
+    // Note this sets up a Look with the same parameters as the Bake3D1D test
+    // however it uses a different shaper space, to ensure we catch that case.
+    // Also ensure we detect the effects of the desaturation by using a 3 cubed
+    // LUT, which will thus test colour values other than the corner points of
+    // the cube
+
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    
+    // Add lnf space
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("lnf");
+        cs->setFamily("lnf");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    
+    // Add shaper space
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("shaper");
+        cs->setFamily("shaper");
+        OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
+        float test[4] = {2.2f, 2.2f, 2.2f, 1.0f};
+        transform1->setValue(test);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+        config->addColorSpace(cs);
+    }
+    
+    // Add Look process space
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("look_process");
+        cs->setFamily("look_process");
+        OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
+        float test[4] = {2.6f, 2.6f, 2.6f, 1.0f};
+        transform1->setValue(test);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+        config->addColorSpace(cs);
+    }
+
+    // Add Look process space
+    {
+        OCIO::LookRcPtr look = OCIO::Look::Create();
+        look->setName("look");
+        look->setProcessSpace("look_process");
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+
+        // Set saturation to cause channel crosstalk, making a 3D LUT
+        transform1->setSat(0.5f);
+
+        look->setTransform(transform1);
+        config->addLook(look);
+    }
+    
+    
+    std::string bout = 
+    "Version\t\t3\n"
+    "Format\t\tany\n"
+    "Type\t\t3D+1D\n"
+    "From\t\t0.000000 1.000000\n"
+    "To\t\t0.000000 1.000000\n"
+    "Black\t\t0.000000\n"
+    "White\t\t1.000000\n"
+    "Length\t\t3 10\n"
+    "LUT:\n"
+    "Pre {\n"
+    "\t0.000000\n"
+    "\t0.368344\n"
+    "\t0.504760\n"
+    "\t0.606913\n"
+    "\t0.691699\n"
+    "\t0.765539\n"
+    "\t0.831684\n"
+    "\t0.892049\n"
+    "\t0.947870\n"
+    "\t1.000000\n"
+    "}\n"
+    "3D {\n"
+    "\t0.000000 0.000000 0.000000\n"
+    "\t0.276787 0.035360 0.035360\n"
+    "\t0.553575 0.070720 0.070720\n"
+    "\t0.148309 0.416989 0.148309\n"
+    "\t0.478739 0.478739 0.201718\n"
+    "\t0.774120 0.528900 0.245984\n"
+    "\t0.296618 0.833978 0.296618\n"
+    "\t0.650361 0.902354 0.355417\n"
+    "\t0.957478 0.957478 0.403436\n"
+    "\t0.009867 0.009867 0.239325\n"
+    "\t0.296368 0.049954 0.296368\n"
+    "\t0.575308 0.086766 0.343137\n"
+    "\t0.166161 0.437812 0.437812\n"
+    "\t0.500000 0.500000 0.500000\n"
+    "\t0.796987 0.550484 0.550484\n"
+    "\t0.316402 0.857106 0.607391\n"
+    "\t0.672631 0.925760 0.672631\n"
+    "\t0.981096 0.981096 0.725386\n"
+    "\t0.019735 0.019735 0.478650\n"
+    "\t0.312132 0.062101 0.541651\n"
+    "\t0.592736 0.099909 0.592736\n"
+    "\t0.180618 0.454533 0.695009\n"
+    "\t0.517061 0.517061 0.761560\n"
+    "\t0.815301 0.567796 0.815301\n"
+    "\t0.332322 0.875624 0.875624\n"
+    "\t0.690478 0.944497 0.944497\n"
+    "\t1.000000 1.000000 1.000000\n"
+    "}\n";
+    
+    //
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setFormat("houdini");
+    baker->setInputSpace("lnf");
+    baker->setShaperSpace("shaper");
+    baker->setTargetSpace("shaper");
+    baker->setLooks("look");
+    baker->setShaperSize(10);
+    baker->setCubeSize(3);
+    std::ostringstream output;
+    baker->bake(output);
+
+    std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
+    std::cerr << "Expected:" << std::endl << bout << std::endl;
+
+    //
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(output.str(), osvec);
+    std::vector<std::string> resvec;
+    OCIO::pystring::splitlines(bout, resvec);
+    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    
+    for(unsigned int i = 0; i < std::min(osvec.size(), resvec.size()); ++i)
+        OIIO_CHECK_EQUAL(OCIO::pystring::strip(osvec[i]), OCIO::pystring::strip(resvec[i]));
 }
 
 #endif // OCIO_BUILD_TESTS
