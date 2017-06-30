@@ -1,0 +1,36 @@
+version: '{branch}-{build}'
+image: Visual Studio 2013
+clone_folder: C:\source\ocio
+test: auto
+configuration:
+    - Release
+platform:
+    - x64
+   
+environment:
+  global:
+      CMAKE_PREFIX_PATH: C:/Libraries/boost
+      CMAKE_INSTALL_PREFIX: ../_install
+      BOOST_ROOT: 'C:\Libraries\boost'
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+      CMAKE_PLATFORM: "Visual Studio 12 2013 Win64"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
+
+install:
+  - cinstall: python
+  
+build_script:
+  - echo Running cmake...
+  - mkdir _build
+  - cd _build
+  - cmake 
+    -G "%CMAKE_PLATFORM%"
+    -DOCIO_USE_BOOST_PTR=ON
+    -DOCIO_BUILD_TESTS=ON
+    ..
+  - cmake --build . --target install --config %CONFIGURATION%
+
+matrix:
+    fast_finish: true
