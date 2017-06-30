@@ -36,6 +36,7 @@ include_directories(
     ${CMAKE_BINARY_DIR}/export/
     ${CMAKE_SOURCE_DIR}/src/apps/share/
     ${LCMS_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIR}
 )
 
 link_directories(

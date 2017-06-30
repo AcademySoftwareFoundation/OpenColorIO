@@ -4,6 +4,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
     ${CMAKE_SOURCE_DIR}/src/apps/share/
+    ${Boost_INCLUDE_DIR}
     )
 
 add_executable(ociocheck
