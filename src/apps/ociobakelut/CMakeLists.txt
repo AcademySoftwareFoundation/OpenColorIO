@@ -26,7 +26,7 @@ else()
     )
     set(LCMS_INCLUDE_DIRS 	${PROJECT_BINARY_DIR}/ext/dist/include)
     set(LCMS_LIBRARY_DIRS 	${PROJECT_BINARY_DIR}/ext/dist/lib)
-    set(LCMS_LIBRARIES 		${PROJECT_BINARY_DIR}/ext/dist/lib/lcms2${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(LCMS_LIBRARIES 		${PROJECT_BINARY_DIR}/ext/dist/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lcms2${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
 
 file(GLOB_RECURSE share_src_files "${CMAKE_SOURCE_DIR}/src/apps/share/*.cpp")
