@@ -40,6 +40,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 #include <GLUT/glut.h>
+#elif _WIN32
+#include <GL/glew.h>
+#include <GL/glut.h>
 #else
 #include <GL/glew.h>
 #include <GL/gl.h>
