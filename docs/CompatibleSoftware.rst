@@ -258,6 +258,19 @@ This integration is currently considered a work in progress, and should not be
 relied upon for critical production work.
 
 
+Gaffer
+******
+`Open Source VFX Platform <http://gafferhw.org>`__
+
+Gaffer is a node based application for use in CG and VFX production, with a
+particular focus on lighting and look development.
+
+
+Natron
+******
+'Open Source Compositing Softare <http://natron.fr>'
+
+
 CryEngine3 (Beta)
 *****************
 

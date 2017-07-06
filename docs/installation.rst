@@ -6,7 +6,7 @@ Installation
 The easy way
 ************
 
-While prebuilt binaries are not yet available for all paltforms, OCIO
+While prebuilt binaries are not yet available for all platforms, OCIO
 is available via several platform's package managers.
 
 Fedora and RHEL
@@ -36,11 +36,20 @@ Then simply run the following command to install::
 
     brew install opencolorio
 
+To build with the Python library use this command::
+
+    brew install opencolorio --with-python
+
 
 .. _building-from-source:
 
 Building from source
 ********************
+
+.. _osx-and-linux
+
+OS X and Linux
+++++++++++++++
 
 While there is a huge range of possible setups, the following steps
 should work on OS X and most Linux distros.
@@ -108,6 +117,104 @@ this::
     $ ls lib/
     libOpenColorIO.a      libOpenColorIO.dylib
 
+.. _windows-build
+
+Windows Build
++++++++++++++
+
+While build environments may vary between user, here is an example batch file
+for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`__::
+
+    @echo off
+
+
+    REM Grab the repo name, default is ocio_rw
+    set repo_name=ocio_rw
+    if not %1.==. set repo_name=%1
+
+
+    set CYGWIN=nodosfilewarning
+
+    set CMAKE_PATH=D:\OpenSource\cmake-3.9.3
+    set PYTHON_PATH=C:\Python27
+    set BOOST_ROOT=D:\SolidAngle\boost_1_55_0
+
+    set PATH=D:\Tools\cygwin64\bin;%CMAKE_PATH%\bin;%PYTHON_PATH%;%PATH%
+
+    call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+
+
+    set OCIO_PATH=D:\OpenSource\%repo_name%
+
+
+    @doskey ne="D:\Tools\Notepad++\notepad++.exe" -nosession -multiInst $*
+    @doskey sub="D:\Tools\Sublime Text 3\subl.exe" --project %OCIO_PATH%_project.sublime-project
+
+
+    REM Decompose the directory change to avoid problems...
+    D:
+
+    IF NOT EXIST %OCIO_PATH% ( 
+    echo %OCIO_PATH% does not exist
+    exit /b
+    )
+    cd %OCIO_PATH%
+
+
+    set CMAKE_BUILD_TYPE=Release
+
+    echo *******
+    echo *********************************************
+    echo ******* Building %OCIO_PATH%
+    echo **
+    echo **
+    set are_you_sure = Y
+    set /P are_you_sure=Build in %CMAKE_BUILD_TYPE% ([Y]/N)?  
+    if not %are_you_sure%==Y set CMAKE_BUILD_TYPE=Debug
+
+
+    set BUILD_PATH=_build_rls
+    if not %CMAKE_BUILD_TYPE%==Release set BUILD_PATH=_build_dbg
+
+    IF NOT EXIST %BUILD_PATH% ( mkdir %BUILD_PATH% )
+    cd %BUILD_PATH%
+
+
+    echo **
+    echo **
+
+    cmake -G "NMake Makefiles" ^
+        -DCMAKE_BUILD_TYPE=%CMAKE_BUILD_TYPE% ^
+        -DCMAKE_INSTALL_PREFIX=%OCIO_PATH%\_install ^
+        -DOCIO_BUILD_TESTS=ON ^
+        %OCIO_PATH%
+
+    set PATH=%OCIO_PATH%\%BUILD_PATH%\src\core;%PATH%
+
+
+    REM Find the current branch
+    set GITBRANCH=
+    for /f %%I in ('git.exe rev-parse --abbrev-ref HEAD 2^> NUL') do set GITBRANCH=%%I
+
+    if not "%GITBRANCH%" == ""  prompt $C%GITBRANCH%$F $P$G 
+
+
+    echo *******
+    echo *********************************************
+    echo boost    = %BOOST_ROOT%
+    echo cmake    = %CMAKE_PATH%
+    echo *******
+    if not "%GITBRANCH%" == "" echo branch  = %GITBRANCH%
+    echo *******
+    echo Mode    = %CMAKE_BUILD_TYPE%
+    echo path    = %OCIO_PATH%\%BUILD_PATH%
+    echo compile = nmake all
+    echo test    = nmake test
+    echo *********************************************
+    echo *******
+
+Also look to the Appveyor config script at the root of repository for an example
+build sequence.
 
 .. _enabling-optional-components:
 
@@ -230,7 +337,6 @@ Environment variables
    This variable needs to point to the global OCIO config file, e.g
    ``config.ocio``
 
-
 .. envvar:: OCIO_LOGGING_LEVEL
 
     Configures OCIO's internal logging level. Valid values are
@@ -283,8 +389,8 @@ Environment variables
 
 .. envvar:: NUKE_PATH
 
-    Nuke's customisation search path, where it will look for plugins,
-    gizmos, init.py and menu.py scripts and other customisations.
+    Nuke's customization search path, where it will look for plugins,
+    gizmos, init.py and menu.py scripts and other customizations.
 
     This should point to both ``lib/nuke6.2/`` (or whatever version
     the plugins are built against), and ``share/nuke/``
