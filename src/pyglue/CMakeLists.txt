@@ -55,24 +55,16 @@ if(NOT OCIO_PYGLUE_LIB_PREFIX)
     )
 endif()
 
-if(WIN32)
-    if(OCIO_PYGLUE_LINK)
-    target_link_libraries(PyOpenColorIO OpenColorIO
+target_link_OCIO(PyOpenColorIO)
+if(OCIO_PYGLUE_LINK AND WIN32)
+    target_link_libraries(PyOpenColorIO
         debug ${PYTHON_LIB}/python26_d.lib
         optimized ${PYTHON_LIB}/python26.lib)
-    else()
-    target_link_libraries(PyOpenColorIO OpenColorIO)
-    endif(OCIO_PYGLUE_LINK)
-else()
-    if(OCIO_PYGLUE_LINK)
-        message(STATUS "Linking python bindings against: ${PYTHON_LIBRARY}")
-        message(STATUS "Python library dirs: ${PYTHON_LIBRARY_DIRS}")
-        link_directories(${PYTHON_LIBRARY})
-        target_link_libraries(PyOpenColorIO OpenColorIO
-            ${PYTHON_LIBRARIES})
-    else()
-        target_link_libraries(PyOpenColorIO OpenColorIO)
-    endif(OCIO_PYGLUE_LINK)
+elseif(OCIO_PYGLUE_LINK)
+    message(STATUS "Linking python bindings against: ${PYTHON_LIBRARY}")
+    message(STATUS "Python library dirs: ${PYTHON_LIBRARY_DIRS}")
+    link_directories(${PYTHON_LIBRARY})
+    target_link_libraries(PyOpenColorIO ${PYTHON_LIBRARIES})
 endif()
 
 # PyOpenColorIO so serves dual roles:
@@ -105,7 +97,7 @@ add_subdirectory(tests)
 
 message("PYTHON_VARIANT_PATH: ${PYTHON_VARIANT_PATH}")
 
-install(TARGETS PyOpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/${PYTHON_VARIANT_PATH})
+install(TARGETS PyOpenColorIO EXPORT OpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/${PYTHON_VARIANT_PATH})
 
 install(FILES ${CMAKE_SOURCE_DIR}/export/PyOpenColorIO/PyOpenColorIO.h
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include/PyOpenColorIO/)

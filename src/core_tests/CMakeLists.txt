@@ -11,33 +11,32 @@ include_directories(
     ${EXTERNAL_INCLUDE_DIRS}
     )
 
+## do not link with OpenColorIO since we reuse the sources files to build this app (avoid double link definition)
 file( GLOB_RECURSE core_test_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp" )
-
-add_executable(ocio_core_tests ${core_test_src_files})
+add_executable(ocio_core_tests ${EXTERNAL_OBJECTS} ${core_test_src_files})
 
 if(USE_EXTERNAL_TINYXML)
     target_link_libraries(ocio_core_tests ${TINYXML_LIBRARIES})
 else(USE_EXTERNAL_TINYXML)
-    add_dependencies(ocio_core_tests tinyxml)
+    add_dependencies(ocio_core_tests TINYXML_LIB)
 endif(USE_EXTERNAL_TINYXML)
 
 if(USE_EXTERNAL_YAML)
     target_link_libraries(ocio_core_tests ${YAML_CPP_LIBRARIES})
 else(USE_EXTERNAL_YAML)
-    add_dependencies(ocio_core_tests  YAML_CPP_LOCAL)
+    add_dependencies(ocio_core_tests YAML_CPP_LIB)
 endif(USE_EXTERNAL_YAML)
 
-set_target_properties(ocio_core_tests PROPERTIES
-    COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS}"
-    LINK_FLAGS "${EXTERNAL_LINK_FLAGS}")
-if(WIN32)
-    target_link_libraries(ocio_core_tests
-            debug ${EXTERNAL_DEBUG_LIBRARIES}
-            optimized ${EXTERNAL_OPTIMIZED_LIBRARIES}
-            general ${EXTERNAL_GENERAL_LIBRARIES})
-else()
-    target_link_libraries(ocio_core_tests ${EXTERNAL_GENERAL_LIBRARIES})
+if(EXTERNAL_LIBRARIES)
+    target_link_libraries(ocio_core_tests ${EXTERNAL_LIBRARIES})
 endif()
+
+set_target_properties(ocio_core_tests PROPERTIES
+    COMPILE_FLAGS       "${EXTERNAL_COMPILE_FLAGS}"
+    LINK_FLAGS          "${EXTERNAL_LINK_FLAGS}"
+    ## to avoid import/export link dll incoherences (since we build an app with OpenColorIO sources)
+    COMPILE_DEFINITIONS OpenColorIO_STATIC
+)
 
 ###############################################################################
 ### CTEST ###

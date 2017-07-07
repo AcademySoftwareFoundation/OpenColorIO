@@ -1,18 +1,20 @@
 diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt > yaml-cpp-0.3.0.patch
---- yaml-cpp.orig/CMakeLists.txt	2012-01-21 00:52:48.000000000 -0800
-+++ yaml-cpp/CMakeLists.txt	2013-06-18 16:40:03.209535420 -0700
-@@ -235,9 +235,15 @@
+--- yaml-cpp.orig/CMakeLists.txt	Sat Jan 21 09:52:48 2012
++++ yaml-cpp/CMakeLists.txt	Mon Apr 13 16:03:41 2015
+@@ -235,10 +235,16 @@
  	${contrib_private_headers}
  )
-
+ 
 +set(YAML_COMPILE_FLAGS "-fPIC -fvisibility=hidden")
 +if(OCIO_INLINES_HIDDEN)
-+	set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fvisibility-inlines-hidden")
++    set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fvisibility-inlines-hidden")
 +endif()
 +
  set_target_properties(yaml-cpp PROPERTIES
  	VERSION "${YAML_CPP_VERSION}"
  	SOVERSION "${YAML_CPP_VERSION_MAJOR}.${YAML_CPP_VERSION_MINOR}"
-+	COMPILE_FLAGS "${YAML_COMPILE_FLAGS}"
  	PROJECT_LABEL "yaml-cpp ${LABEL_SUFFIX}"
++    COMPILE_FLAGS "${YAML_COMPILE_FLAGS}"
  )
+ 
+ if(IPHONE)
