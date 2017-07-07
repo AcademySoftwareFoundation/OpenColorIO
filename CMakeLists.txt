@@ -54,6 +54,7 @@ endif()
 
 include(ParseArguments)
 include(OCIOMacros)
+include(OCIOFunctions)
 include(ExternalProject)
 
 enable_language(CXX)
@@ -69,6 +70,12 @@ if(APPLE OR IPHONE)
     if(CMAKE_FIRST_RUN)
         message(STATUS "Setting OSX Architectures to: ${CMAKE_OSX_ARCHITECTURES}")
     endif()
+    # Because of the way quoting works with CMAKE_ARGS I need to convert the ";"
+    # separated list into a string with another seperator and use the
+    # LIST_SEPARATOR option on ExternalProject_Add
+    string(REPLACE ";" "^^" CMAKE_OSX_ARCHITECTURES_STR "${CMAKE_OSX_ARCHITECTURES}")
+    
+    OCIOPrefixListItems("-arch " CMAKE_OSX_ARCHITECTURES OCIO_ARCH_FLAGS)
 endif()
 
 # Set the default built type
@@ -181,12 +188,16 @@ else(USE_EXTERNAL_TINYXML)
     if(CMAKE_TOOLCHAIN_FILE)
         set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
+    if(APPLE OR IPHONE)
+        set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES_STR})
+    endif()
     ExternalProject_Add(tinyxml
         URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
         PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
         BINARY_DIR ext/build/tinyxml
         INSTALL_DIR ext/dist
         CMAKE_ARGS ${TINYXML_CMAKE_ARGS}
+        LIST_SEPARATOR ^^
     )
     if(WIN32)
         set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml.lib)
@@ -249,12 +260,16 @@ else(USE_EXTERNAL_YAML)
     if(CMAKE_TOOLCHAIN_FILE)
         set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
+    if(APPLE OR IPHONE)
+        set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES_STR})
+    endif()
     ExternalProject_Add(YAML_CPP_LOCAL
         URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
         BINARY_DIR ext/build/yaml-cpp
         PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
         INSTALL_DIR ext/dist
         CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS}
+        LIST_SEPARATOR ^^
     )
     set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
     set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
