@@ -60,7 +60,15 @@ if(OCIO_BUILD_STATIC)
     list(REMOVE_ITEM core_src_files ${CMAKE_SOURCE_DIR}/src/core/UnitTest.cpp)
     add_library(OpenColorIO_STATIC STATIC ${core_src_files})
     add_dependencies(OpenColorIO_STATIC tinyxml YAML_CPP_LOCAL)
+
     if(WIN32)
+        get_target_property(OCIO_STATIC_DEFS OpenColorIO_STATIC COMPILE_DEFINITIONS)
+        list(APPEND OCIO_STATIC_DEFS OCIO_STATIC=1)
+        set_target_properties(
+            OpenColorIO_STATIC
+            PROPERTIES
+            COMPILE_DEFINITIONS ${OCIO_STATIC_DEFS}
+            )
         target_link_libraries(OpenColorIO_STATIC
             debug ${EXTERNAL_DEBUG_LIBRARIES}
             optimized ${EXTERNAL_OPTIMIZED_LIBRARIES}

@@ -158,6 +158,27 @@ endif()
 messageonce("Setting EXTDIST_BINPATH: ${EXTDIST_BINPATH}")
 messageonce("Setting EXTDIST_PYTHONPATH: ${EXTDIST_PYTHONPATH}")
 
+# Ensure GNU Patch is available on the local system if building 
+# TinyXML or YAMLCPP via the ExternalProject_Add() command
+if((NOT USE_EXTERNAL_TINYXML) OR (NOT USE_EXTERNAL_YAML))
+    find_program(
+        PATCH_EXECUTABLE
+        patch
+        PATHS
+            "C:/Program Files/GnuWin32/bin"
+            "C:/Program Files (x86)/GnuWin32/bin"
+            "/usr/local/bin"
+            "/usr/bin"
+            "/bin"
+        
+        DOC "Path to the Patch executable"    
+    )
+
+    if(${PATCH_EXECUTABLE} STREQUAL "PATCH_EXECUTABLE-NOTFOUND")
+        message(FATAL_ERROR "Cannot find GNU Patch utility.  Aborting")
+    endif()        
+endif()
+
 ###############################################################################
 ### tinyxml ###
 
@@ -183,7 +204,7 @@ else(USE_EXTERNAL_TINYXML)
     endif()
     ExternalProject_Add(tinyxml
         URL ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz
-        PATCH_COMMAND patch -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
+        PATCH_COMMAND ${PATCH_EXECUTABLE} -f -p1 < ${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch
         BINARY_DIR ext/build/tinyxml
         INSTALL_DIR ext/dist
         CMAKE_ARGS ${TINYXML_CMAKE_ARGS}
@@ -252,7 +273,7 @@ else(USE_EXTERNAL_YAML)
     ExternalProject_Add(YAML_CPP_LOCAL
         URL ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz
         BINARY_DIR ext/build/yaml-cpp
-        PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
+        PATCH_COMMAND ${PATCH_EXECUTABLE} -p1 < ${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch
         INSTALL_DIR ext/dist
         CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS}
     )
