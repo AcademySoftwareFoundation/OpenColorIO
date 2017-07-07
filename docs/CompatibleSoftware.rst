@@ -239,20 +239,14 @@ display. If the transform was approved on a different monitor, then maybe you
 should choose its profile instead.
 
 
-RV (Beta)
+RV
 *********
 
 `Playback Tool - Tweak Software <http://www.tweaksoftware.com>`__
 
-`OCIO support in RV <https://github.com/imageworks/OpenColorIO/tree/master/src/rv>`__
-is currently being developed by Ben Dickson (dbr).
-
-See this `email thread <http://groups.google.com/group/ocio-dev/browse_thread/thread/955fc6271f89a28e>`__
-for additional details.
-
-This integration is currently considered a work in progress, and should not be
-relied upon for critical production work.
-
+RV has native OCIO support in version 4 onwards. For more details, see
+the OpenColorIO section of the `RV User Manual
+<http://www.tweaksoftware.com/static/documentation/rv/current/html/rv_manual.html#OpenColorIO>`__.
 
 Java (Beta)
 ***********
@@ -262,13 +256,6 @@ in the codebase.
 
 This integration is currently considered a work in progress, and should not be
 relied upon for critical production work.
-
-
-Ramen (Beta)
-************
-`Open Source Compositor <http://ramencomp.blogspot.com>`__
-
-Under development, with native OCIO color managment.
 
 
 CryEngine3 (Beta)

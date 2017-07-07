@@ -49,7 +49,7 @@ The basic requirements are:
 
 - cmake >= 2.8
 - (optional) Python 2.x (for the Python bindings)
-- (optional) Nuke 6.x (for the Nuke nodes)
+- (optional) Nuke 6.x or newer (for the Nuke nodes)
 - (optional) OpenImageIO (for apps including ocioconvert)
 - (optional) Truelight SDK (for TruelightTransform)
 
@@ -229,6 +229,26 @@ Environment variables
 
    This variable needs to point to the global OCIO config file, e.g
    ``config.ocio``
+
+
+.. envvar:: OCIO_LOGGING_LEVEL
+
+    Configures OCIO's internal logging level. Valid values are
+    ``none``, ``warning``, ``info``, or ``debug`` (or their respective
+    numeric values ``0``, ``1``, ``2``, or ``3`` can be used)
+
+    Logging output is sent to STDERR output.
+
+.. envvar:: OCIO_ACTIVE_DISPLAYS
+
+   Overrides the :ref:`active_displays` configuration value.
+   Colon-separated list of displays, e.g ``sRGB:P3``
+
+.. envvar:: OCIO_ACTIVE_VIEWS
+
+   Overrides the :ref:`active_views` configuration
+   item. Colon-separated list of view names, e.g
+   ``internal:client:DI``
 
 .. envvar:: DYLD_LIBRARY_PATH
 
