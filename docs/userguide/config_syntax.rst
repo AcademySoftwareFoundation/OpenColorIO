@@ -337,7 +337,7 @@ visible.
 
 Overridden by the ``OCIO_ACTIVE_VIEWS`` env-var::
 
-    export OCIO_ACTIVE_DISPLAYS="Film:Log:Raw"
+    export OCIO_ACTIVE_VIEWS="Film:Log:Raw"
 
 
 ``looks``
