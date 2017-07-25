@@ -218,7 +218,7 @@ else(USE_EXTERNAL_TINYXML)
         ExternalProject_Add(tinyxml
             URL             ${TINYXML_ZIPFILE}
             SOURCE_DIR      ${TINYXML_SOURCE_DIR}/tinyxml
-            PATCH_COMMAND   ${GIT_EXECUTABLE} apply ${TINYXML_PATCHFILE}
+            PATCH_COMMAND   ${GIT_EXECUTABLE} apply --ignore-whitespace ${TINYXML_PATCHFILE}
             BINARY_DIR      ext/build/tinyxml
             INSTALL_DIR     ext/dist
             CMAKE_ARGS      ${TINYXML_CMAKE_ARGS}
@@ -332,7 +332,7 @@ else(USE_EXTERNAL_YAML) ## provide 2 ways to build this dependency
         ExternalProject_Add(YAML_CPP_LOCAL
             URL             ${YAML_CPP_ZIPFILE}
             SOURCE_DIR      ${YAML_CPP_SOURCE_DIR}/yaml-cpp
-            PATCH_COMMAND   ${GIT_EXECUTABLE} apply ${YAML_CPP_PATCHFILE}
+            PATCH_COMMAND   ${GIT_EXECUTABLE} apply --ignore-whitespace ${YAML_CPP_PATCHFILE}
             BINARY_DIR      ext/build/yaml-cpp
             INSTALL_DIR     ext/dist
             CMAKE_ARGS      ${YAML_CPP_CMAKE_ARGS}
