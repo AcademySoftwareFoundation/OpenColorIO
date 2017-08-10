@@ -30,8 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <iterator>
 
-#include <tinyxml.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
@@ -39,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut3DOp.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
+#include "XML.h"
 
 /*
 
@@ -201,34 +200,15 @@ OCIO_NAMESPACE_ENTER
         {
 
             // Get root element from XML file
-            TiXmlDocumentRcPtr doc;
-            TiXmlElement* rootElement;
+            TiXmlDocumentRcPtr doc(XML::Parse(istream, "look"));
+            TiXmlElement* rootElement = doc->RootElement();
 
+            // Check for blank file
+            if(!rootElement)
             {
-                std::ostringstream rawdata;
-                rawdata << istream.rdbuf();
-
-                doc = TiXmlDocumentRcPtr(new TiXmlDocument());
-                doc->Parse(rawdata.str().c_str());
-
-                if(doc->Error())
-                {
-                    std::ostringstream os;
-                    os << "XML Parse Error. ";
-                    os << doc->ErrorDesc() << " (line ";
-                    os << doc->ErrorRow() << ", character ";
-                    os << doc->ErrorCol() << ")";
-                    throw Exception(os);
-                }
-
-                // Check for blank file
-                rootElement = doc->RootElement();
-                if(!rootElement)
-                {
-                    std::ostringstream os;
-                    os << "Error loading xml. Null root element.";
-                    throw Exception(os);
-                }
+                std::ostringstream os;
+                os << "Error loading xml. Null root element.";
+                throw Exception(os);
             }
 
             // Check root element is <look>
@@ -242,7 +222,7 @@ OCIO_NAMESPACE_ENTER
             }
 
             // Fail to load file if it contains a <mask> section
-            if(rootElement->FirstChild("mask") && rootElement->FirstChild("mask")->FirstChild())
+            if(rootElement->FirstChildElement("mask") && rootElement->FirstChildElement("mask")->FirstChild())
             {
                 // If root element contains "mask" child, and it is
                 // not empty, throw exception
@@ -257,7 +237,7 @@ OCIO_NAMESPACE_ENTER
             // which we could use if available. Need to check
             // assumption that it is only written for 1D transforms,
             // and it matches the desired output
-            TiXmlNode* lutsection = rootElement->FirstChild("LUT");
+            TiXmlNode* lutsection = rootElement->FirstChildElement("LUT");
 
             if(!lutsection)
             {
@@ -272,7 +252,7 @@ OCIO_NAMESPACE_ENTER
 
             {
                 // Get size from <look><LUT><size>'123'</size></LUT></look>
-                TiXmlNode* elemsize = lutsection->FirstChild("size");
+                TiXmlNode* elemsize = lutsection->FirstChildElement("size");
                 if(!elemsize)
                 {
                     std::ostringstream os;
@@ -301,7 +281,7 @@ OCIO_NAMESPACE_ENTER
             // Grab raw 3D data
             std::vector<float> raw;
             {
-                TiXmlNode* dataelem = lutsection->FirstChild("data");
+                TiXmlNode* dataelem = lutsection->FirstChildElement("data");
                 if(!dataelem)
                 {
                     std::ostringstream os;

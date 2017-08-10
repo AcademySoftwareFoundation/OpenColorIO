@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <fstream>
 #include <sstream>
-#include <tinyxml.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -66,13 +65,13 @@ OCIO_NAMESPACE_ENTER
         {
             if ( element->NoChildren() )
             {
-                element->LinkEndChild( new TiXmlText( value ) );
+                element->LinkEndChild( element->GetDocument()->NewText( value ) );
             }
             else
             {
                 if ( 0 == element->GetText() )
                 {
-                    element->InsertBeforeChild( element->FirstChild(), TiXmlText( value ) );
+                    element->InsertFirstChild( element->GetDocument()->NewText( value ) );
                 }
                 else
                 {
@@ -87,46 +86,45 @@ OCIO_NAMESPACE_ENTER
             TiXmlDocument doc;
             
             // TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "", "" );
-            TiXmlElement * root = new TiXmlElement( "ColorCorrection" );
+            TiXmlElement * root = doc.NewElement( "ColorCorrection" );
             doc.LinkEndChild( root );
             root->SetAttribute("id", cdl.getID());
             
-            TiXmlElement * sop = new TiXmlElement( "SOPNode" );
+            TiXmlElement * sop = doc.NewElement( "SOPNode" );
             root->LinkEndChild( sop );
             
-            TiXmlElement * desc = new TiXmlElement( "Description" );
+            TiXmlElement * desc = doc.NewElement( "Description" );
             sop->LinkEndChild( desc );
             SetTiXmlText(desc, cdl.getDescription());
             
-            TiXmlElement * slope = new TiXmlElement( "Slope" );
+            TiXmlElement * slope = doc.NewElement( "Slope" );
             sop->LinkEndChild( slope );
             float slopeval[3];
             cdl.getSlope(slopeval);
             SetTiXmlText(slope, FloatVecToString(slopeval, 3).c_str());
             
-            TiXmlElement * offset = new TiXmlElement( "Offset" );
+            TiXmlElement * offset = doc.NewElement( "Offset" );
             sop->LinkEndChild( offset );
             float offsetval[3];
             cdl.getOffset(offsetval);
             SetTiXmlText(offset, FloatVecToString(offsetval, 3).c_str());
             
-            TiXmlElement * power = new TiXmlElement( "Power" );
+            TiXmlElement * power = doc.NewElement( "Power" );
             sop->LinkEndChild( power );
             float powerval[3];
             cdl.getPower(powerval);
             SetTiXmlText(power, FloatVecToString(powerval, 3).c_str());
             
-            TiXmlElement * sat = new TiXmlElement( "SatNode" );
+            TiXmlElement * sat = doc.NewElement( "SatNode" );
             root->LinkEndChild( sat );
             
-            TiXmlElement * saturation = new TiXmlElement( "Saturation" );
+            TiXmlElement * saturation = doc.NewElement( "Saturation" );
             sat->LinkEndChild( saturation );
             SetTiXmlText(saturation, FloatToString(cdl.getSat()).c_str());
             
             TiXmlPrinter printer;
-            printer.SetStreamPrinting();
             doc.Accept( &printer );
-            return printer.Str();
+            return std::string(printer.CStr(), printer.CStrSize()-1);
         }
     }
     
@@ -158,7 +156,7 @@ OCIO_NAMESPACE_ENTER
         
         cdl->setID(id);
         
-        TiXmlElement* desc = handle.FirstChild( "SOPNode" ).FirstChild("Description").ToElement();
+        TiXmlElement* desc = handle.FirstChildElement( "SOPNode" ).FirstChildElement("Description").ToElement();
         if(desc)
         {
             const char * text = desc->GetText();
@@ -168,7 +166,7 @@ OCIO_NAMESPACE_ENTER
         std::vector<std::string> lineParts;
         std::vector<float> floatArray;
         
-        TiXmlElement* slope = handle.FirstChild( "SOPNode" ).FirstChild("Slope").ToElement();
+        TiXmlElement* slope = handle.FirstChildElement( "SOPNode" ).FirstChildElement("Slope").ToElement();
         if(slope)
         {
             const char * text = slope->GetText();
@@ -187,7 +185,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        TiXmlElement* offset = handle.FirstChild( "SOPNode" ).FirstChild("Offset").ToElement();
+        TiXmlElement* offset = handle.FirstChildElement( "SOPNode" ).FirstChildElement("Offset").ToElement();
         if(offset)
         {
             const char * text = offset->GetText();
@@ -206,7 +204,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        TiXmlElement* power = handle.FirstChild( "SOPNode" ).FirstChild("Power").ToElement();
+        TiXmlElement* power = handle.FirstChildElement( "SOPNode" ).FirstChildElement("Power").ToElement();
         if(power)
         {
             const char * text = power->GetText();
@@ -225,7 +223,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        TiXmlElement* sat = handle.FirstChild( "SatNode" ).FirstChild("Saturation").ToElement();
+        TiXmlElement* sat = handle.FirstChildElement( "SatNode" ).FirstChildElement("Saturation").ToElement();
         if(sat)
         {
             const char * text = sat->GetText();
@@ -270,10 +268,10 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os);
         }
         
-        TiXmlNode * child = cccRootElement->FirstChild(container);
+        TiXmlNode * child = cccRootElement->FirstChildElement(container);
         while(child)
         {
-            TiXmlNode * xmlNode= (isCDL) ? child->FirstChild("ColorCorrection") : child;
+            TiXmlNode * xmlNode= (isCDL) ? child->FirstChildElement("ColorCorrection") : child;
             CDLTransformRcPtr transform = CDLTransform::Create();
             LoadCDL(transform.get(), xmlNode->ToElement());
             
@@ -295,32 +293,13 @@ OCIO_NAMESPACE_ENTER
                 transformMap[id] = transform;
             }
             
-            child = child->NextSibling(container);
+            child = child->NextSiblingElement(container);
         }
     }
     
     void LoadCDL(CDLTransform * cdl, const char * xml)
     {
-        if(!xml || (strlen(xml) == 0))
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << "Null string provided.";
-            throw Exception(os.str().c_str());
-        }
-        
-        TiXmlDocument doc;
-        doc.Parse(xml);
-        
-        if(doc.Error())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << doc.ErrorDesc() << " (line ";
-            os << doc.ErrorRow() << ", character ";
-            os << doc.ErrorCol() << ")";
-            throw Exception(os.str().c_str());
-        }
+        TiXmlDocument doc(XML::Parse(xml, "CDL"));
         
         if(!doc.RootElement())
         {
@@ -432,35 +411,9 @@ OCIO_NAMESPACE_ENTER
             os << "permissions are set.";
             throw Exception(os);
         }
-        
-        // Read the file into a string.
-        std::ostringstream rawdata;
-        rawdata << istream.rdbuf();
-        std::string xml = rawdata.str();
-        
-        if(xml.empty())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << "The specified source file, '";
-            os << src << "' appears to be empty.";
-            throw Exception(os.str().c_str());
-        }
-        
-        TiXmlDocument doc;
-        doc.Parse(xml.c_str());
-        
-        if(doc.Error())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml from file '";
-            os << src << "'. ";
-            os << doc.ErrorDesc() << " (line ";
-            os << doc.ErrorRow() << ", character ";
-            os << doc.ErrorCol() << ")";
-            throw Exception(os.str().c_str());
-        }
-        
+
+        TiXmlDocument doc(XML::Parse(istream, "CDL", src));
+
         if(!doc.RootElement())
         {
             std::ostringstream os;
