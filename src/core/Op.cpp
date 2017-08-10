@@ -49,7 +49,7 @@ OCIO_NAMESPACE_ENTER
         std::ostringstream os;
         os << "Op: " << getInfo() << " cannot be combined. ";
         os << "A type-specific combining function is not defined.";
-        throw Exception(os.str().c_str());
+        throw Exception(os);
     }
     
     std::ostream& operator<< (std::ostream & os, const Op & op)

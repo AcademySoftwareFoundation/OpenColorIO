@@ -400,7 +400,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Lut doesn't seem to be a csp file, expected 'CSPLUTV100'.";
                 os << "First line: '" << line << "'.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             // next line tells us if we are reading a 1D or 3D lut
@@ -410,7 +410,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Unsupported CSP lut type. Require 1D or 3D. ";
                 os << "Found, '" << line << "'.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             std::string csptype = line;
 
@@ -450,7 +450,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Prelut does not specify valid dimension size on channel '";
                     os << c << ": " << line;
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 if(cpoints>=2)
@@ -470,7 +470,7 @@ OCIO_NAMESPACE_ENTER
                         os << "Prelut does not specify the expected number of data points. ";
                         os << "Expected: " << cpoints << ".";
                         os << "Found: " << inputparts.size() << ", " << outputparts.size() << ".";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     
                     if(!StringVecToFloatVec(prelut_in[c], inputparts) ||
@@ -478,7 +478,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         std::ostringstream os;
                         os << "Prelut data is malformed, cannot to float array.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     
                     
@@ -567,7 +567,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "Malformed 3D csp lut, couldn't read cube row (";
                         os << i << "): " << line << " .";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                 }
             }
@@ -677,7 +677,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "When a shaper space has been specified, '";
                     os << baker.getShaperSpace() << "', a shaper size less than 2 is not allowed.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 shaperOutData.resize(shaperSize*3);
@@ -693,7 +693,7 @@ OCIO_NAMESPACE_ENTER
                     os << "The specified shaperSpace, '";
                     os << baker.getShaperSpace() << "' has channel crosstalk, which is not appropriate for shapers. ";
                     os << "Please select an alternate shaper space or omit this option.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
                 shaperToInput->apply(shaperInImg);
@@ -726,7 +726,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Could not find colorspace '" << baker.getInputSpace() << "'";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 // Let's make an allocation transform for this colorspace
@@ -857,7 +857,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build CSP Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             TransformDirection newDir = CombineTransformDirections(dir,

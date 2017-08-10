@@ -182,7 +182,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "ExponentOp can only be combined with other ";
                 os << "ExponentOps.  secondOp:" << secondOp->getInfo();
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             double combined[4] = { m_exp4[0]*typedRcPtr->m_exp4[0],

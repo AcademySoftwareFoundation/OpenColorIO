@@ -116,7 +116,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "'" << key << "' line not found";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             // Error if incorrect number of values is found
@@ -136,7 +136,7 @@ OCIO_NAMESPACE_ENTER
                     os << "between " << min_vals << " and " << max_vals;
                 }
 
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             return iter->second;
@@ -193,7 +193,7 @@ OCIO_NAMESPACE_ENTER
                             os << "Malformed LUT - Unknown word '";
                             os << word << "' after LUT name '";
                             os << nextword << "'";
-                            throw Exception(os.str().c_str());
+                            throw Exception(os);
                         }
                     }
                 }
@@ -224,7 +224,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "Invalid float value in " << lutname;
                         os << " LUT, '" << word << "'";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                 }
                 else
@@ -232,7 +232,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Unexpected word, possibly a value outside";
                     os <<" a LUT {} block. Word was '" << word << "'";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
 
                 }
             }
@@ -351,7 +351,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Invalid float value(s) on 'From' line, '";
                     os << value[0] << "' and '"  << value[1] << "'";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 for(int i = 0; i < 3; ++i)
@@ -375,7 +375,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Invalid float value(s) on 'To' line, '";
                     os << value[0] << "' and '"  << value[1] << "'";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 cachedFile->to_min = to_min;
                 cachedFile->to_max = to_max;
@@ -394,7 +394,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Invalid float value on 'Black' line, '";
                     os << value[0] << "'";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 cachedFile->hdlblack = black;
             }
@@ -409,7 +409,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Invalid float value on 'White' line, '";
                     os << value[0] << "'";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 cachedFile->hdlwhite = white;
             }
@@ -423,7 +423,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Unsupported Houdini LUT type: '" << ltype << "'";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
             }
 
@@ -446,7 +446,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "Invalid integer on 'Length' line: ";
                         os << "'" << value[0] << "'";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     lut_sizes.push_back(tmpsize);
                 }
@@ -487,7 +487,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "3D+1D LUT should contain Pre{} LUT section";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 if(size_prelut != static_cast<int>(lut_iter->second.size()))
@@ -495,7 +495,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Pre{} LUT was " << lut_iter->second.size();
                     os << " values long, expected " << size_prelut << " values";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 lut1d_ptr->luts[0] = lut_iter->second;
@@ -517,7 +517,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "3D LUT section not found";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 int size_3d_cubed = size_3d * size_3d * size_3d;
@@ -533,7 +533,7 @@ OCIO_NAMESPACE_ENTER
                     os << "(" << foundlines << " lines), ";
                     os << "expected " << (size_3d_cubed*3) << " values ";
                     os << "(" << size_3d_cubed << " lines)";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 lut3d_ptr->lut = lut_iter->second;
@@ -550,7 +550,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "3D+1D LUT should contain Pre{} LUT section";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 if(size_1d != static_cast<int>(lut_iter->second.size()))
@@ -558,7 +558,7 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "RGB{} LUT was " << lut_iter->second.size();
                     os << " values long, expected " << size_1d << " values";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 lut1d_ptr->luts[0] = lut_iter->second;
@@ -582,7 +582,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Unknown hdl format name, '";
                 os << formatName << "'.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             // Get config
@@ -614,7 +614,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cube size must be 2 or larger (was " << cubeSize << ")";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // ..and same for shaper size
@@ -624,7 +624,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "A shaper space ('" << baker.getShaperSpace() << "') has";
                 os << " been specified, so the shaper size must be 2 or larger";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // ..and finally, for the 1D LUT size
@@ -633,7 +633,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "1D LUT size must be higher than 2 (was " << onedSize << ")";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // Version numbers
@@ -717,7 +717,7 @@ OCIO_NAMESPACE_ENTER
                     os << "' has channel crosstalk, which is not appropriate for";
                     os << " shapers. Please select an alternate shaper space or";
                     os << " omit this option.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 // Calculate min/max value
@@ -917,7 +917,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build Houdini Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             TransformDirection newDir = CombineTransformDirections(dir,

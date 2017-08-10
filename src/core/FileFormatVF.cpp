@@ -180,7 +180,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Parse error in .vf lut. ";
                 os << "Incorrect number of lut3d entries. ";
                 os << "Found " << raw3d.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(size3d[0]*size3d[1]*size3d[2] == 0)
@@ -188,7 +188,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Parse error in .vf lut. ";
                 os << "No 3D Lut entries found.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
@@ -248,7 +248,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build .vf Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             TransformDirection newDir = CombineTransformDirections(dir,
@@ -258,7 +258,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Cannot build file format transform,";
                 os << " unspecified transform direction.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(newDir == TRANSFORM_DIR_FORWARD)

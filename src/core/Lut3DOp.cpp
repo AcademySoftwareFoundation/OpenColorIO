@@ -548,7 +548,7 @@ OCIO_NAMESPACE_ENTER
             os << numPixels << " element(s) does not correspond to a ";
             os << "unform cube edge length. (nearest edge length is ";
             os << dim << ").";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         return dim;
@@ -660,7 +660,7 @@ OCIO_NAMESPACE_ENTER
                 os << "3D Luts can only be applied in the forward direction. ";
                 os << "(" << TransformDirectionToString(m_direction) << ")";
                 os << " specified.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // Validate the requested interpolation type

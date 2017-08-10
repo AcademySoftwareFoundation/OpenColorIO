@@ -198,7 +198,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Max value equals min value '";
                 os << oldmax4[i] << "' in channel index ";
                 os << i << ".";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(m44) m44[5*i] = (newmax4[i]-newmin4[i]) / denom;

@@ -139,7 +139,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error loading CDL xml. ";
             os << "Null root element.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         if(std::string(root->Value()) != "ColorCorrection")
@@ -148,7 +148,7 @@ OCIO_NAMESPACE_ENTER
             os << "Error loading CDL xml. ";
             os << "Root element is type '" << root->Value() << "', ";
             os << "ColorCorrection expected.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         TiXmlHandle handle( root );
@@ -181,7 +181,7 @@ OCIO_NAMESPACE_ENTER
                     os << "Error loading CDL xml. ";
                     os << id << ".SOPNode.Slope text '";
                     os << text << "' is not convertible to 3 floats.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 cdl->setSlope(&floatArray[0]);
             }
@@ -200,7 +200,7 @@ OCIO_NAMESPACE_ENTER
                     os << "Error loading CDL xml. ";
                     os << id << ".SOPNode.Offset text '";
                     os << text << "' is not convertible to 3 floats.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 cdl->setOffset(&floatArray[0]);
             }
@@ -219,7 +219,7 @@ OCIO_NAMESPACE_ENTER
                     os << "Error loading CDL xml. ";
                     os << id << ".SOPNode.Power text '";
                     os << text << "' is not convertible to 3 floats.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 cdl->setPower(&floatArray[0]);
             }
@@ -238,7 +238,7 @@ OCIO_NAMESPACE_ENTER
                     os << "Error loading CDL xml. ";
                     os << id << ".SatNode.Saturation text '";
                     os << text << "' is not convertible to float.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 cdl->setSat(satval);
             }
@@ -254,7 +254,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "GetCDLTransforms Error. ";
             os << "Null cccRootElement.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         std::string rootElementType(cccRootElement->Value());
@@ -267,7 +267,7 @@ OCIO_NAMESPACE_ENTER
             os << "GetCDLTransforms Error. ";
             os << "Root element is type '" << rootElementType << "', ";
             os << "ColorDecisionList or ColorCorrectionCollection expected.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         TiXmlNode * child = cccRootElement->FirstChild(container);
@@ -289,7 +289,7 @@ OCIO_NAMESPACE_ENTER
                     os << "Error loading ccc xml. ";
                     os << "Duplicate elements with '" << id << "' found. ";
                     os << "If id is specified, it must be unique.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 transformMap[id] = transform;
@@ -327,7 +327,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error loading CDL xml, ";
             os << "please confirm the xml is valid.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         LoadCDL(cdl, doc.RootElement()->ToElement());
@@ -376,7 +376,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "Error loading CDL xml. ";
             os << "Source file not specified.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         std::string cccid;
@@ -419,7 +419,7 @@ OCIO_NAMESPACE_ENTER
             os << "' could not be loaded from the src file '";
             os << src;
             os << "'.";
-            throw Exception (os.str().c_str());
+            throw Exception(os);
         }
         
         
@@ -430,7 +430,7 @@ OCIO_NAMESPACE_ENTER
             os << "Error could not read CDL source file '" << src;
             os << "'. Please verify the file exists and appropriate ";
             os << "permissions are set.";
-            throw Exception (os.str().c_str());
+            throw Exception(os);
         }
         
         // Read the file into a string.
@@ -467,7 +467,7 @@ OCIO_NAMESPACE_ENTER
             os << "Error loading CDL xml from file '";
             os << src << "'. ";
             os << "Please confirm the xml is valid.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         std::string rootValue = doc.RootElement()->Value();
@@ -495,7 +495,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Error loading ccc xml. ";
                 os << "No ColorCorrection elements found in file '";
                 os << src << "'.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             g_cacheSrcIsCC[src] = false;
@@ -542,7 +542,7 @@ OCIO_NAMESPACE_ENTER
             os << "' could not be loaded from the src file '";
             os << src;
             os << "'.";
-            throw Exception (os.str().c_str());
+            throw Exception(os);
         }
     }
     

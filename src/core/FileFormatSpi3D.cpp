@@ -114,7 +114,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Lut does not appear to be valid spilut format. ";
                 os << "Expected 'SPILUT'.  Found, '" << lineBuffer << "'.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             // TODO: Assert 2nd line is 3 3
@@ -155,7 +155,7 @@ OCIO_NAMESPACE_ENTER
                         os << "A lut entry is specified (";
                         os << rIndex << " " << gIndex << " " << bIndex;
                         os << " that falls outside of the cube.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
 
                     lut3d->lut[index+0] = redValue;
@@ -188,7 +188,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build Spi3D Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             TransformDirection newDir = CombineTransformDirections(dir,

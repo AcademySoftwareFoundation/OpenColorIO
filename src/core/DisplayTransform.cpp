@@ -277,7 +277,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "DisplayTransform can only be applied in the forward direction.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         std::string inputColorSpaceName = displayTransform.getInputColorSpaceName();
@@ -288,7 +288,7 @@ OCIO_NAMESPACE_ENTER
             os << "DisplayTransform error.";
             if(inputColorSpaceName.empty()) os << " InputColorSpaceName is unspecified.";
             else os <<  " Cannot find inputColorSpace, named '" << inputColorSpaceName << "'.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         std::string display = displayTransform.getDisplay();
@@ -301,7 +301,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "DisplayTransform error.";
             os <<  " Cannot find display colorspace,  '" << displayColorSpaceName << "'.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         bool skipColorSpaceConversions = (inputColorSpace->isData() || displayColorspace->isData());

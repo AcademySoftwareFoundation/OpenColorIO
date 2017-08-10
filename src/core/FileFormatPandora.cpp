@@ -173,7 +173,7 @@ OCIO_NAMESPACE_ENTER
                             std::ostringstream os;
                             os << "Parse error in Pandora lut. Expected to find 4 integers. Instead found '"
                             << line << "'";
-                            throw Exception(os.str().c_str());
+                            throw Exception(os);
                         }
                         
                         raw3d.push_back(tmpints[1]);
@@ -190,7 +190,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Parse error in Pandora lut. ";
                 os << "Incorrect number of lut3d entries. ";
                 os << "Found " << raw3d.size()/3 << ", expected " << lutEdgeLen*lutEdgeLen*lutEdgeLen << ".";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(lutEdgeLen*lutEdgeLen*lutEdgeLen == 0)
@@ -198,7 +198,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Parse error in Pandora lut. ";
                 os << "No 3D Lut entries found.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(outputBitDepthMaxValue <= 0)
@@ -206,7 +206,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Parse error in Pandora lut. ";
                 os << "A valid 'out' tag was not found.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
@@ -252,7 +252,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build Truelight .cub Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             TransformDirection newDir = CombineTransformDirections(dir,
@@ -262,7 +262,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Cannot build file format transform,";
                 os << " unspecified transform direction.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(newDir == TRANSFORM_DIR_FORWARD)
