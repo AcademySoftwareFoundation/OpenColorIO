@@ -88,7 +88,9 @@ OCIO_NAMESPACE_ENTER
     class OCIOEXPORT Exception : public std::exception
     {
     public:
-        //!cpp:function:: Constructor that takes a string as the exception message.
+        //!cpp:function:: Constructor that takes a std::string as the exception message.
+        Exception(const std::ostringstream& os) throw();
+        //!cpp:function:: Constructor that takes a c-string as the exception message.
         Exception(const char *) throw();
         //!cpp:function:: Constructor that takes an exception pointer.
         Exception(const Exception&) throw();
