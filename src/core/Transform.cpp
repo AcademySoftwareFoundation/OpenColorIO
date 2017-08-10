@@ -109,7 +109,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Unknown transform type for Op Creation.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
     }
     
@@ -176,7 +176,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream error;
             os << "Unknown transform type for serialization.";
-            throw Exception(error.str().c_str());
+            throw Exception(error);
         }
         
         return os;

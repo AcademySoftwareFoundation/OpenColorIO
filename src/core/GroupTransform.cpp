@@ -129,7 +129,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Invalid transform index " << index << ".";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         return getImpl()->vec_[index];

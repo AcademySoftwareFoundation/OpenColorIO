@@ -269,7 +269,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Error parsing .3dl file.";
                 os << "Does not appear to contain a valid shaper lut or a 3D lut.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
@@ -304,7 +304,7 @@ OCIO_NAMESPACE_ENTER
                     os << "file, but instead a related format that shares a similar ";
                     os << "structure.";
                     
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 int shaperbitdepth = GetLikelyLutBitDepth(shapermax);
@@ -315,7 +315,7 @@ OCIO_NAMESPACE_ENTER
                     os << "The maximum shaper lut value, " << shapermax;
                     os << ", does not correspond to any likely bit depth. ";
                     os << "Please confirm source file is valid.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 int bitdepthmax = GetMaxValueFromIntegerBitDepth(shaperbitdepth);
@@ -364,7 +364,7 @@ OCIO_NAMESPACE_ENTER
                     os << "file, but instead a related format that shares a similar ";
                     os << "structure.";
                     
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 int lut3dbitdepth = GetLikelyLutBitDepth(lut3dmax);
@@ -375,7 +375,7 @@ OCIO_NAMESPACE_ENTER
                     os << "The maximum 3d lut value, " << lut3dmax;
                     os << ", does not correspond to any likely bit depth. ";
                     os << "Please confirm source file is valid.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 int bitdepthmax = GetMaxValueFromIntegerBitDepth(lut3dbitdepth);
@@ -441,7 +441,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Unknown 3dl format name, '";
                 os << formatName << "'.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             ConstConfigRcPtr config = baker.getConfig();
@@ -540,7 +540,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build .3dl Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             TransformDirection newDir = CombineTransformDirections(dir,
@@ -550,7 +550,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Cannot build file format transform,";
                 os << " unspecified transform direction.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // TODO: INTERP_LINEAR should not be hard-coded.

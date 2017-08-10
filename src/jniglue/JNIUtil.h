@@ -173,7 +173,7 @@ inline void CheckArrayLength(JNIEnv * env, const char* name, T ptr, int32_t leng
         std::ostringstream err;
         err << name << " needs to have " << length;
         err << " elements but found only " << env->GetArrayLength(ptr);
-        throw Exception(err.str().c_str());
+        throw Exception(err);
     }
 }
 

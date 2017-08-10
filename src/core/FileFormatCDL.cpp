@@ -27,7 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <map>
-#include <tinyxml.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -36,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OpBuilders.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
+#include "XML.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -95,19 +95,7 @@ OCIO_NAMESPACE_ENTER
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
-            TiXmlDocumentRcPtr doc = TiXmlDocumentRcPtr(new TiXmlDocument());
-            doc->Parse(rawdata.str().c_str());
-            
-            if(doc->Error())
-            {
-                std::ostringstream os;
-                os << "XML Parse Error. ";
-                os << doc->ErrorDesc() << " (line ";
-                os << doc->ErrorRow() << ", character ";
-                os << doc->ErrorCol() << ")";
-                throw Exception(os.str().c_str());
-            }
-            
+            TiXmlDocumentRcPtr doc(XML::Parse(istream, "CDL"));
             TiXmlElement* rootElement = doc->RootElement();
             GetCDLTransforms(cachedFile->transformMap,
                              cachedFile->transformVec,
@@ -130,7 +118,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build .cdl Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             TransformDirection newDir = CombineTransformDirections(dir,
@@ -140,7 +128,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Cannot build ASC FileTransform,";
                 os << " unspecified transform direction.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // Below this point, we should throw ExceptionMissingFile on

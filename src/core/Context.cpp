@@ -312,7 +312,7 @@ namespace
             std::ostringstream errortext;
             errortext << "The specified absolute file reference ";
             errortext << "'" << expandedfullpath << "' could not be located. ";
-            throw Exception(errortext.str().c_str());
+            throw Exception(errortext);
         }
         }
         

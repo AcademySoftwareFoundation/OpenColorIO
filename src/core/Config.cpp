@@ -1371,7 +1371,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Could not find colorspace '" << srcName << "'.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         ConstColorSpaceRcPtr dst = getColorSpace(dstName);
@@ -1379,7 +1379,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Could not find colorspace '" << dstName << "'.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         return getProcessor(context, src, dst);
@@ -1501,7 +1501,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream error;
             error << "Error building YAML: " << e.what();
-            throw Exception(error.str().c_str());
+            throw Exception(error);
         }
     }
     

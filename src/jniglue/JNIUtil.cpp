@@ -48,14 +48,14 @@ float* GetJFloatBuffer(JNIEnv * env, jobject buffer, int32_t len) {
         std::ostringstream err;
         err << "the FloatBuffer object is not 'direct' it needs to be created ";
         err << "from a ByteBuffer.allocateDirect(..).asFloatBuffer() call.";
-        throw Exception(err.str().c_str());
+        throw Exception(err);
     }
     if(env->GetDirectBufferCapacity(buffer) != len) {
         std::ostringstream err;
         err << "the FloatBuffer object is not allocated correctly it needs to ";
         err << "of size " << len << " but is ";
         err << env->GetDirectBufferCapacity(buffer) << ".";
-        throw Exception(err.str().c_str());
+        throw Exception(err);
     }
     return (float*)env->GetDirectBufferAddress(buffer);
 }

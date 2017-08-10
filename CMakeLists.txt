@@ -167,8 +167,8 @@ messageonce("Setting EXTDIST_PYTHONPATH: ${EXTDIST_PYTHONPATH}")
 ##TODO: yaml and tinyxml : when there are not USE_EXTERNAL_TINYXML, use the same cmake schema/instructions => maybe refactorize in a cmake functions/macros ?
 
 if(USE_EXTERNAL_TINYXML)
-    set(TINYXML_VERSION_MIN "2.6.1")
-    find_package(TinyXML)
+    set(TINYXML_VERSION_MIN "5.0.0")
+    find_package(TinyXML2)
     if(TINYXML_FOUND)
         if(TINYXML_VERSION VERSION_EQUAL ${TINYXML_VERSION_MIN} OR
            TINYXML_VERSION VERSION_GREATER ${TINYXML_VERSION_MIN})
@@ -181,14 +181,15 @@ if(USE_EXTERNAL_TINYXML)
     endif(TINYXML_FOUND)
 
 else(USE_EXTERNAL_TINYXML)
-    set(TINYXML_VERSION 2_6_1)
-    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
+    set(TINYXML_VERSION 5.0.1)
+    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN}
+                           -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON)
     if(CMAKE_TOOLCHAIN_FILE)
         set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
-    set(TINYXML_ZIPFILE     "${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz")
-    set(TINYXML_PATCHFILE   "${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch")
-    set(TINYXML_SOURCE_DIR  "${CMAKE_BINARY_DIR}/ext")
+    set(TINYXML_ZIPFILE     "${CMAKE_SOURCE_DIR}/ext/tinyxml2-${TINYXML_VERSION}.tar.gz")
+    set(TINYXML_PATCHFILE   "${CMAKE_SOURCE_DIR}/ext/tinyxml2-${TINYXML_VERSION}.patch")
+    set(TINYXML_SOURCE_DIR  "${CMAKE_BINARY_DIR}/ext/tinyxml2-${TINYXML_VERSION}")
     ## Create our TINYXML_LIB target
     if(CMAKE_VERSION VERSION_GREATER "2.8.7")
         option(TINYXML_OBJECT_LIB_EMBEDDED ${OCIO_BUILD_STATIC} "directly embedded tinyxml 3rdParty object lib into our resulting static lib, no link needed anymore")
@@ -198,18 +199,16 @@ else(USE_EXTERNAL_TINYXML)
     endif()
     mark_as_advanced(TINYXML_OBJECT_LIB_EMBEDDED) ## two way to build with tinyxml (objects embedded or static transitive link)
     if(TINYXML_OBJECT_LIB_EMBEDDED)
-        set(tinyxml_sources ${TINYXML_SOURCE_DIR}/tinyxml/tinystr.cpp       ${TINYXML_SOURCE_DIR}/tinyxml/tinyxml.cpp 
-                            ${TINYXML_SOURCE_DIR}/tinyxml/tinyxmlerror.cpp  ${TINYXML_SOURCE_DIR}/tinyxml/tinyxmlparser.cpp )
-        set(tinyxml_headers ${TINYXML_SOURCE_DIR}/tinyxml/tinystr.h         ${TINYXML_SOURCE_DIR}/tinyxml/tinyxml.h )
+        set(tinyxml_sources ${TINYXML_SOURCE_DIR}/tinyxml2.cpp ${TINYXML_SOURCE_DIR}/tinyxml2.h)
         add_custom_command(                                 ## will be done at build time
             OUTPUT ${tinyxml_sources} ${tinyxml_headers}    ## expected output files
             COMMAND ${CMAKE_COMMAND} -E tar xzf ${TINYXML_ZIPFILE}
             DEPENDS ${TINYXML_ZIPFILE}
-            WORKING_DIRECTORY ${TINYXML_SOURCE_DIR}
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/ext
             COMMENT "Unpacking ${TINYXML_ZIPFILE} to ${TINYXML_SOURCE_DIR}"
             VERBATIM
         )
-        include_directories(BEFORE ${TINYXML_SOURCE_DIR}/tinyxml) ## needed to build correctly
+        include_directories(BEFORE ${TINYXML_SOURCE_DIR}) ## needed to build correctly
         add_library(TINYXML_LIB OBJECT ${tinyxml_sources})
         ## embedded tinyxml objects files (no static link needed anymore) 
         ## => great news when build staticaly since we do not want another client project have to link also with tinyxml when he want to use this project
@@ -222,16 +221,15 @@ else(USE_EXTERNAL_TINYXML)
         find_package(Git REQUIRED) ## in order to apply patch (for crossplateform compatibility)
         ExternalProject_Add(tinyxml
             URL             ${TINYXML_ZIPFILE}
-            SOURCE_DIR      ${TINYXML_SOURCE_DIR}/tinyxml
-            PATCH_COMMAND   ${GIT_EXECUTABLE} apply ${TINYXML_PATCHFILE}
+            SOURCE_DIR      ${TINYXML_SOURCE_DIR}
             BINARY_DIR      ext/build/tinyxml
             INSTALL_DIR     ext/dist
             CMAKE_ARGS      ${TINYXML_CMAKE_ARGS}
         )
         if(WIN32)
-            set(TINYXML_STATIC_LIBRARIES  ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml.lib)
+            set(TINYXML_STATIC_LIBRARIES  ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml2.lib)
         else()
-            set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml.a)
+            set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml2.a)
         endif()
         add_library(TINYXML_LIB STATIC IMPORTED)
         ## static is the .lib location, shared is the .dll/.so location (see IMPORTED_IMPLIB for the associated .lib archive location on windows)

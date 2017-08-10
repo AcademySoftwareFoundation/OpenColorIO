@@ -30,8 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstring>
 #include <iterator>
 
-#include <tinyxml.h>
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "FileTransform.h"
@@ -39,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut3DOp.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
+#include "XML.h"
 
 /*
 
@@ -201,34 +200,15 @@ OCIO_NAMESPACE_ENTER
         {
 
             // Get root element from XML file
-            TiXmlDocumentRcPtr doc;
-            TiXmlElement* rootElement;
+            TiXmlDocumentRcPtr doc(XML::Parse(istream, "look"));
+            TiXmlElement* rootElement = doc->RootElement();
 
+            // Check for blank file
+            if(!rootElement)
             {
-                std::ostringstream rawdata;
-                rawdata << istream.rdbuf();
-
-                doc = TiXmlDocumentRcPtr(new TiXmlDocument());
-                doc->Parse(rawdata.str().c_str());
-
-                if(doc->Error())
-                {
-                    std::ostringstream os;
-                    os << "XML Parse Error. ";
-                    os << doc->ErrorDesc() << " (line ";
-                    os << doc->ErrorRow() << ", character ";
-                    os << doc->ErrorCol() << ")";
-                    throw Exception(os.str().c_str());
-                }
-
-                // Check for blank file
-                rootElement = doc->RootElement();
-                if(!rootElement)
-                {
-                    std::ostringstream os;
-                    os << "Error loading xml. Null root element.";
-                    throw Exception(os.str().c_str());
-                }
+                std::ostringstream os;
+                os << "Error loading xml. Null root element.";
+                throw Exception(os);
             }
 
             // Check root element is <look>
@@ -238,17 +218,17 @@ OCIO_NAMESPACE_ENTER
                 os << "Error loading .look LUT. ";
                 os << "Root element is type '" << rootElement->Value() << "', ";
                 os << "expected 'look'.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             // Fail to load file if it contains a <mask> section
-            if(rootElement->FirstChild("mask") && rootElement->FirstChild("mask")->FirstChild())
+            if(rootElement->FirstChildElement("mask") && rootElement->FirstChildElement("mask")->FirstChild())
             {
                 // If root element contains "mask" child, and it is
                 // not empty, throw exception
                 std::ostringstream os;
                 os << "Cannot load .look LUT containing mask";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             // Get <LUT> section
@@ -257,14 +237,14 @@ OCIO_NAMESPACE_ENTER
             // which we could use if available. Need to check
             // assumption that it is only written for 1D transforms,
             // and it matches the desired output
-            TiXmlNode* lutsection = rootElement->FirstChild("LUT");
+            TiXmlNode* lutsection = rootElement->FirstChildElement("LUT");
 
             if(!lutsection)
             {
                 std::ostringstream os;
                 os << "Error loading .look LUT. ";
                 os << "Could not find required 'LUT' section.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             // Get 3D LUT size
@@ -272,13 +252,13 @@ OCIO_NAMESPACE_ENTER
 
             {
                 // Get size from <look><LUT><size>'123'</size></LUT></look>
-                TiXmlNode* elemsize = lutsection->FirstChild("size");
+                TiXmlNode* elemsize = lutsection->FirstChildElement("size");
                 if(!elemsize)
                 {
                     std::ostringstream os;
                     os << "Error loading .look LUT. ";
                     os << "LUT section did not contain 'size'.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 std::string size_raw = std::string(elemsize->ToElement()->GetText());
@@ -294,20 +274,20 @@ OCIO_NAMESPACE_ENTER
                     std::ostringstream os;
                     os << "Invalid LUT size value: '" << size_raw;
                     os << "'. Expected quoted integer.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
             }
 
             // Grab raw 3D data
             std::vector<float> raw;
             {
-                TiXmlNode* dataelem = lutsection->FirstChild("data");
+                TiXmlNode* dataelem = lutsection->FirstChildElement("data");
                 if(!dataelem)
                 {
                     std::ostringstream os;
                     os << "Error loading .look LUT. ";
                     os << "LUT section did not contain 'data'.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
 
                 raw.reserve(3*(size_3d*size_3d*size_3d));
@@ -326,7 +306,7 @@ OCIO_NAMESPACE_ENTER
                     os << "Error loading .look LUT. ";
                     os << "Number of characters in 'data' must be multiple of 8. ";
                     os << what.size() << " elements found.";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 const char * ascii = what.c_str();
@@ -339,7 +319,7 @@ OCIO_NAMESPACE_ENTER
                         os << "Error loading .look LUT. ";
                         os << "Non-hex characters found in 'data' block ";
                         os << "at index '" << (8*i) << "'.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     raw.push_back(fval);
                 }
@@ -355,7 +335,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Parse error in Iridas .look lut. ";
                 os << "Incorrect number of lut3d entries. ";
                 os << "Found " << raw.size() << " values, expected " << (size_3d*size_3d*size_3d)*3 << ".";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             // Reformat 3D data
@@ -383,7 +363,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build Iridas .look Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             TransformDirection newDir = CombineTransformDirections(dir,
@@ -393,7 +373,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Cannot build file format transform,";
                 os << " unspecified transform direction.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             CreateLut3DOp(ops, cachedFile->lut3D,

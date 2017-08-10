@@ -229,7 +229,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream err;
             err << "The format named '" << getImpl()->formatName_;
             err << "' could not be found. ";
-            throw Exception(err.str().c_str());
+            throw Exception(err);
         }
         
         try
@@ -241,7 +241,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream err;
             err << "Error baking " << getImpl()->formatName_ << ":";
             err << e.what();
-            throw Exception(err.str().c_str());
+            throw Exception(err);
         }
         
         // 

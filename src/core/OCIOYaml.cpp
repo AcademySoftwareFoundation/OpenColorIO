@@ -300,7 +300,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "View '" << v.name << "' ";
                 os << "does not specify colorspace.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
         }
         
@@ -424,7 +424,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "CDLTransform parse error, 'slope' field must be 3 ";
                         os << "floats. Found '" << floatvecval.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     t->setSlope(&floatvecval[0]);
                 }
@@ -436,7 +436,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "CDLTransform parse error, 'offset' field must be 3 ";
                         os << "floats. Found '" << floatvecval.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     t->setOffset(&floatvecval[0]);
                 }
@@ -448,7 +448,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "CDLTransform parse error, 'power' field must be 3 ";
                         os << "floats. Found '" << floatvecval.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     t->setPower(&floatvecval[0]);
                 }
@@ -589,7 +589,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "ExponentTransform parse error, value field must be 4 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     t->setValue(&val[0]);
                 }
@@ -889,7 +889,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "MatrixTransform parse error, matrix field must be 16 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     t->setMatrix(&val[0]);
                 }
@@ -902,7 +902,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "MatrixTransform parse error, offset field must be 4 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     t->setOffset(&val[0]);
                 }
@@ -1096,7 +1096,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Unsupported Transform type encountered: (" << node.Type() << ") in OCIO profile. ";
                 os << "Only Mapping types supported.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             std::string type = node.Tag();
@@ -1166,7 +1166,7 @@ OCIO_NAMESPACE_ENTER
                 //  t = EmptyTransformRcPtr(new EmptyTransform(), &deleter);
                 std::ostringstream os;
                 os << "Unsupported transform type !<" << type << "> in OCIO profile. ";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
         }
         
@@ -1482,7 +1482,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         std::ostringstream os;
                         os << "'environment' field needs to be a (name: key) map.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     for (Iterator it = second.begin();
                          it != second.end();
@@ -1518,7 +1518,7 @@ OCIO_NAMESPACE_ENTER
                         std::ostringstream os;
                         os << "'luma' field must be 3 ";
                         os << "floats. Found '" << val.size() << "'.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     c->setDefaultLumaCoefs(&val[0]);
                 }
@@ -1528,7 +1528,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         std::ostringstream os;
                         os << "'roles' field needs to be a (name: key) map.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     for (Iterator it = second.begin();
                          it != second.end();
@@ -1546,7 +1546,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         std::ostringstream os;
                         os << "'displays' field needs to be a (name: key) map.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     for (Iterator it = second.begin();
                          it != second.end();
@@ -1584,7 +1584,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         std::ostringstream os;
                         os << "'colorspaces' field needs to be a (- !<ColorSpace>) list.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     for(unsigned i = 0; i < second.size(); ++i)
                     {
@@ -1598,7 +1598,7 @@ OCIO_NAMESPACE_ENTER
                                 {
                                     std::ostringstream os;
                                     os << "Colorspace with name '" << cs->getName() << "' already defined.";
-                                    throw Exception(os.str().c_str());
+                                    throw Exception(os);
                                 }
                             }
                             c->addColorSpace(cs);
@@ -1619,7 +1619,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         std::ostringstream os;
                         os << "'looks' field needs to be a (- !<Look>) list.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     
                     for(unsigned i = 0; i < second.size(); ++i)
@@ -1824,7 +1824,7 @@ OCIO_NAMESPACE_ENTER
             os << "Error: Loading the OCIO profile ";
             if(filename) os << "'" << filename << "' ";
             os << "failed. " << e.what();
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
     }
     

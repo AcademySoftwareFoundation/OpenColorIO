@@ -27,10 +27,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <OpenColorIO/OpenColorIO.h>
+#include <sstream>
 
 OCIO_NAMESPACE_ENTER
 {
-  
+
+    Exception::Exception(const std::ostringstream& os) throw()
+    : std::exception(),
+      msg_(os.str())
+    {}
+
     Exception::Exception(const char * msg) throw()
     : std::exception(),
       msg_(msg)

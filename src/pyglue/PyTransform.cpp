@@ -124,7 +124,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "Unknown transform type for BuildConstPyTransform.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         pyobj->constcppobj = new ConstTransformRcPtr();
