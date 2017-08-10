@@ -200,7 +200,7 @@ OCIO_NAMESPACE_ENTER
                     os << ")";
                 }
                 
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // Put the new ops into a temp array, to see if it's a no-op
@@ -237,7 +237,7 @@ OCIO_NAMESPACE_ENTER
                 os << "BuildLookOps error. ";
                 os << "The specified look, '" << lookTokens[i].name;
                 os << "' has an ill-defined transform direction.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(!IsOpVecNoOp(tmpOps))
@@ -252,7 +252,7 @@ OCIO_NAMESPACE_ENTER
                         os << "The specified look, '" << lookTokens[i].name;
                         os << "', requires processing in the ColorSpace, '";
                         os << look->getProcessSpace() << "' which is not defined.";
-                        throw Exception(os.str().c_str());
+                        throw Exception(os);
                     }
                     
                     BuildColorSpaceOps(ops, config, context,
@@ -287,7 +287,7 @@ OCIO_NAMESPACE_ENTER
             os << "BuildLookOps error.";
             os << "The specified lookTransform specifies a src colorspace, '";
             os <<  lookTransform.getSrc() << "', which is not defined.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         if(!dst)
@@ -296,7 +296,7 @@ OCIO_NAMESPACE_ENTER
             os << "BuildLookOps error.";
             os << "The specified lookTransform specifies a dst colorspace, '";
             os <<  lookTransform.getDst() << "', which is not defined.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         LookParseResult looks;
@@ -312,7 +312,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "BuildLookOps error. A valid transform direction must be specified.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         ConstColorSpaceRcPtr currentColorSpace = src;

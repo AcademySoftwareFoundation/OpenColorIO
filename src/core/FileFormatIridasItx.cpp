@@ -168,7 +168,7 @@ OCIO_NAMESPACE_ENTER
                             std::ostringstream os;
                             os << "Malformed color triples specified in Iridas .itx lut:";
                             os << "'" << line << "'.";
-                            throw Exception(os.str().c_str());
+                            throw Exception(os);
                         }
                         
                         for(int i=0; i<3; ++i)
@@ -191,7 +191,7 @@ OCIO_NAMESPACE_ENTER
                     os << "Parse error in Iridas .itx lut. ";
                     os << "Incorrect number of lut3d entries. ";
                     os << "Found " << raw.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 // Reformat 3D data
@@ -205,7 +205,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Parse error in Iridas .itx lut. ";
                 os << "Lut type (1D/3D) unspecified.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             return cachedFile;
@@ -222,7 +222,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Unknown 3dl format name, '";
                 os << formatName << "'.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             ConstConfigRcPtr config = baker.getConfig();
@@ -294,7 +294,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build Iridas .itx Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             TransformDirection newDir = CombineTransformDirections(dir,
@@ -304,7 +304,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Cannot build file format transform,";
                 os << " unspecified transform direction.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // TODO: INTERP_LINEAR should not be hard-coded.

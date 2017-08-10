@@ -101,7 +101,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Error parsing .cc file. ";
                 os << "Does not appear to contain a valid ASC CDL XML:";
                 os << e.what();
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             return cachedFile;
@@ -122,7 +122,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build .cc Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             TransformDirection newDir = CombineTransformDirections(dir,
@@ -132,7 +132,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Cannot build file format transform,";
                 os << " unspecified transform direction.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             BuildCDLOps(ops,

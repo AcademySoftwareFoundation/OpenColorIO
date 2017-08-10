@@ -224,7 +224,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Parse error in Truelight .cub lut. ";
                 os << "Incorrect number of lut1d entries. ";
                 os << "Found " << raw1d.size()/3 << ", expected " << size1d << ".";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(size3d[0]*size3d[1]*size3d[2] != static_cast<int>(raw3d.size()/3))
@@ -233,7 +233,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Parse error in Truelight .cub lut. ";
                 os << "Incorrect number of lut3d entries. ";
                 os << "Found " << raw3d.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             
@@ -371,7 +371,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build Truelight .cub Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             TransformDirection newDir = CombineTransformDirections(dir,
@@ -381,7 +381,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Cannot build file format transform,";
                 os << " unspecified transform direction.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // TODO: INTERP_LINEAR should not be hard-coded.

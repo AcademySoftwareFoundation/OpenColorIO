@@ -251,7 +251,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << "FileFormat Registry error. ";
             os << "A file format did not provide the required format info.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         for(unsigned int i=0; i<formatInfoVec.size(); ++i)
@@ -261,7 +261,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "FileFormat Registry error. ";
                 os << "A file format does not define either reading or writing.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(getFileFormatByName(formatInfoVec[i].name))
@@ -269,7 +269,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "Cannot register multiple file formats named, '";
                 os << formatInfoVec[i].name << "'.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             m_formatsByName[formatInfoVec[i].name] = format;
@@ -390,7 +390,7 @@ OCIO_NAMESPACE_ENTER
     {
         std::ostringstream os;
         os << "Format " << formatName << " does not support writing.";
-        throw Exception(os.str().c_str());
+        throw Exception(os);
     }
     
     namespace
@@ -418,7 +418,7 @@ OCIO_NAMESPACE_ENTER
                 os << filepath <<"', could not be opened. ";
                 os << "Please confirm the file exists with appropriate read";
                 os << " permissions.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             // Try the initial format.
@@ -520,14 +520,14 @@ OCIO_NAMESPACE_ENTER
                 os << filepath <<"' could not be loaded. ";
                 os << primaryErrorText;
                 
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             else
             {
                 std::ostringstream os;
                 os << "The specified transform file '";
                 os << filepath <<"' does not appear to be a valid, known LUT file format.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
         }
         
@@ -636,7 +636,7 @@ OCIO_NAMESPACE_ENTER
         {
             std::ostringstream os;
             os << "The transform file has not been specified.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         std::string filepath = context->resolveFileLocation(src.c_str());
@@ -652,7 +652,7 @@ OCIO_NAMESPACE_ENTER
             os << "The specified file load ";
             os << filepath << " appeared to succeed, but no format ";
             os << "was returned.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         if(!cachedFile.get())
@@ -661,7 +661,7 @@ OCIO_NAMESPACE_ENTER
             os << "The specified file load ";
             os << filepath << " appeared to succeed, but no cachedFile ";
             os << "was returned.";
-            throw Exception(os.str().c_str());
+            throw Exception(os);
         }
         
         format->BuildFileOps(ops,

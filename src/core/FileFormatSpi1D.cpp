@@ -240,7 +240,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Cannot build Spi1D Op. Invalid cache type.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
 
             TransformDirection newDir = CombineTransformDirections(dir,

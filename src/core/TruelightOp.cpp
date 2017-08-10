@@ -133,7 +133,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream err;
                 err << "we don't support cubeinput of type " << cubeinput;
                 err << " try log, linear or video.";
-                throw Exception(err.str().c_str());
+                throw Exception(err);
             }
             
 #ifdef OCIO_TRUELIGHT_SUPPORT
@@ -142,7 +142,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream err;
                 err << "Error: " << TruelightGetErrorString();
-                throw Exception(err.str().c_str());
+                throw Exception(err);
             }
             
             m_truelight = TruelightCreateInstance();
@@ -150,7 +150,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream err;
                 err << "Error: '" << TruelightGetErrorString();
-                throw Exception(err.str().c_str());
+                throw Exception(err);
             }
             
             // floating point
@@ -236,7 +236,7 @@ OCIO_NAMESPACE_ENTER
 #ifndef OCIO_TRUELIGHT_SUPPORT
             std::ostringstream err;
             err << "OCIO has been built without Truelight support";
-            throw Exception(err.str().c_str());
+            throw Exception(err);
 #else
             if(m_profile != "")
             {
@@ -244,7 +244,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream err;
                     err << "Error: " << TruelightGetErrorString();
-                    throw Exception(err.str().c_str());
+                    throw Exception(err);
                 }
             }
             
@@ -254,7 +254,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream err;
                     err << "Error: " << TruelightGetErrorString();
-                    throw Exception(err.str().c_str());
+                    throw Exception(err);
                 }
             }
             
@@ -264,7 +264,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream err;
                     err << "Error: " << TruelightGetErrorString();
-                    throw Exception(err.str().c_str());
+                    throw Exception(err);
                 }
             }
             
@@ -274,7 +274,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream err;
                     err << "Error: " << TruelightGetErrorString();
-                    throw Exception(err.str().c_str());
+                    throw Exception(err);
                 }
             }
             
@@ -284,7 +284,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream err;
                     err << "Error: " << TruelightGetErrorString();
-                    throw Exception(err.str().c_str());
+                    throw Exception(err);
                 }
             }
             
@@ -294,7 +294,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream err;
                     err << "Error: " << TruelightGetErrorString();
-                    throw Exception(err.str().c_str());
+                    throw Exception(err);
                 }
             }
             
@@ -304,7 +304,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream err;
                     err << "Error: " << TruelightGetErrorString();
-                    throw Exception(err.str().c_str());
+                    throw Exception(err);
                 }
             }
             
@@ -314,7 +314,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream err;
                     err << "Error: " << TruelightGetErrorString();
-                    throw Exception(err.str().c_str());
+                    throw Exception(err);
                 }
             }
             
@@ -322,14 +322,14 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream err;
                 err << "Error: " << TruelightGetErrorString();
-                throw Exception(err.str().c_str());
+                throw Exception(err);
             }
             
             if(TruelightInstanceSetUp(m_truelight) == 0)
             {
                 std::ostringstream err;
                 err << "Error: " << TruelightGetErrorString();
-                throw Exception(err.str().c_str());
+                throw Exception(err);
             }
 #endif // OCIO_TRUELIGHT_SUPPORT
             

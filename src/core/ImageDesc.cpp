@@ -129,7 +129,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "PackedImageDesc Error: A null image ptr was specified.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(width <= 0 || height <= 0)
@@ -137,7 +137,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "PackedImageDesc Error: Image dimensions must be positive for both x,y. '";
                 os << width << "x" << height << "' is not allowed.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(numChannels < 3)
@@ -145,7 +145,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "PackedImageDesc Error: Image numChannels must be three (or more) (rgb+). '";
                 os << numChannels << "' is not allowed.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
         }
         else if(const PlanarImageDesc * planarImg = dynamic_cast<const PlanarImageDesc*>(&img))
@@ -171,14 +171,14 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "PlanarImageDesc Error: Image dimensions must be positive for both x,y. '";
                 os << width << "x" << height << "' is not allowed.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             if(rData == NULL || gData == NULL || bData == NULL)
             {
                 std::ostringstream os;
                 os << "PlanarImageDesc Error: Valid ptrs must be passed for all 3 image rgb color channels.";
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
         }
         else

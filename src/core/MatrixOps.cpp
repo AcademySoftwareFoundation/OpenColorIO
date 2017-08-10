@@ -239,7 +239,7 @@ OCIO_NAMESPACE_ENTER
                 std::ostringstream os;
                 os << "MatrixOffsetOp can only be combined with other ";
                 os << "MatrixOffsetOps.  secondOp:" << secondOp->getInfo();
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             float mout[16];
@@ -268,7 +268,7 @@ OCIO_NAMESPACE_ENTER
                         os << typedRcPtr->m_m44[i] << " ";
                     }
                     os << ").";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 GetMxbCombine(mout, vout,
@@ -291,7 +291,7 @@ OCIO_NAMESPACE_ENTER
                         os << m_m44[i] << " ";
                     }
                     os << ").";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 GetMxbCombine(mout, vout,
@@ -317,7 +317,7 @@ OCIO_NAMESPACE_ENTER
                         os << m_m44[i] << " ";
                     }
                     os << ").";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 if(!GetMxbInverse(minv2, vinv2, typedRcPtr->m_m44, typedRcPtr->m_offset4))
@@ -330,7 +330,7 @@ OCIO_NAMESPACE_ENTER
                         os << typedRcPtr->m_m44[i] << " ";
                     }
                     os << ").";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
                 
                 GetMxbCombine(mout, vout,
@@ -343,7 +343,7 @@ OCIO_NAMESPACE_ENTER
                 os << "MatrixOffsetOp cannot combine ops with unspecified ";
                 os << "directions. First op: " << m_direction << " ";
                 os << "secondOp:" << typedRcPtr->m_direction;
-                throw Exception(os.str().c_str());
+                throw Exception(os);
             }
             
             CreateMatrixOffsetOp(ops,
@@ -371,7 +371,7 @@ OCIO_NAMESPACE_ENTER
                     os << "Matrix inverse does not exist for m44 (";
                     for(int i=0; i<16; ++i) os << m_m44[i] << " ";
                     os << ").";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
             }
             

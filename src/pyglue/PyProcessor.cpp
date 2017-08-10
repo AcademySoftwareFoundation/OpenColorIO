@@ -204,7 +204,7 @@ OCIO_NAMESPACE_ENTER
                     os << keystr << "'. ";
                     os << "Allowed keys: (";
                     os << "'language', 'functionName', 'lut3DEdgeLen').";
-                    throw Exception(os.str().c_str());
+                    throw Exception(os);
                 }
             }
         }
