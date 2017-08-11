@@ -182,61 +182,26 @@ if(USE_EXTERNAL_TINYXML)
 
 else(USE_EXTERNAL_TINYXML)
     set(TINYXML_VERSION 5.0.1)
-    set(TINYXML_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN}
-                           -DBUILD_SHARED_LIBS=OFF -DBUILD_STATIC_LIBS=ON)
-    if(CMAKE_TOOLCHAIN_FILE)
-        set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
-    endif()
     set(TINYXML_ZIPFILE     "${CMAKE_SOURCE_DIR}/ext/tinyxml2-${TINYXML_VERSION}.tar.gz")
-    set(TINYXML_PATCHFILE   "${CMAKE_SOURCE_DIR}/ext/tinyxml2-${TINYXML_VERSION}.patch")
     set(TINYXML_SOURCE_DIR  "${CMAKE_BINARY_DIR}/ext/tinyxml2-${TINYXML_VERSION}")
     ## Create our TINYXML_LIB target
-    if(CMAKE_VERSION VERSION_GREATER "2.8.7")
-        option(TINYXML_OBJECT_LIB_EMBEDDED ${OCIO_BUILD_STATIC} "directly embedded tinyxml 3rdParty object lib into our resulting static lib, no link needed anymore")
-    else()
-        set(TINYXML_OBJECT_LIB_EMBEDDED OFF CACHE BOOL "directly embedded tinyxml 3rdParty object lib into our resulting static lib, no link needed anymore" FORCE)
-        message("Force disable TINYXML_OBJECT_LIB_EMBEDDED feature due to CMake Version less than 2.8.8")
-    endif()
-    mark_as_advanced(TINYXML_OBJECT_LIB_EMBEDDED) ## two way to build with tinyxml (objects embedded or static transitive link)
-    if(TINYXML_OBJECT_LIB_EMBEDDED)
-        set(tinyxml_sources ${TINYXML_SOURCE_DIR}/tinyxml2.cpp ${TINYXML_SOURCE_DIR}/tinyxml2.h)
-        add_custom_command(                                 ## will be done at build time
-            OUTPUT ${tinyxml_sources} ${tinyxml_headers}    ## expected output files
-            COMMAND ${CMAKE_COMMAND} -E tar xzf ${TINYXML_ZIPFILE}
-            DEPENDS ${TINYXML_ZIPFILE}
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/ext
-            COMMENT "Unpacking ${TINYXML_ZIPFILE} to ${TINYXML_SOURCE_DIR}"
-            VERBATIM
-        )
-        include_directories(BEFORE ${TINYXML_SOURCE_DIR}) ## needed to build correctly
-        add_library(TINYXML_LIB OBJECT ${tinyxml_sources})
-        ## embedded tinyxml objects files (no static link needed anymore) 
-        ## => great news when build staticaly since we do not want another client project have to link also with tinyxml when he want to use this project
-        ## => could be problematic if the client project use another version of tinyxml... In this case build tinyxml as shared lib with all projects could be a solution
-        ## => TODO: so maybe provide a simple cmake way to build 3rdParty as shared and auto install with this project ?
-        set_target_properties(TINYXML_LIB PROPERTIES COMPILE_FLAGS "-DTIXML_USE_STL -fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
-        add_definitions(-DTIXML_USE_STL) ## needed to build correctly, and also need to be propagated in child projects (client projects)
-        list(APPEND EXTERNAL_OBJECTS $<TARGET_OBJECTS:TINYXML_LIB>)
-    else()
-        find_package(Git REQUIRED) ## in order to apply patch (for crossplateform compatibility)
-        ExternalProject_Add(tinyxml
-            URL             ${TINYXML_ZIPFILE}
-            SOURCE_DIR      ${TINYXML_SOURCE_DIR}
-            BINARY_DIR      ext/build/tinyxml
-            INSTALL_DIR     ext/dist
-            CMAKE_ARGS      ${TINYXML_CMAKE_ARGS}
-        )
-        if(WIN32)
-            set(TINYXML_STATIC_LIBRARIES  ${PROJECT_BINARY_DIR}/ext/dist/lib/tinyxml2.lib)
-        else()
-            set(TINYXML_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libtinyxml2.a)
-        endif()
-        add_library(TINYXML_LIB STATIC IMPORTED)
-        ## static is the .lib location, shared is the .dll/.so location (see IMPORTED_IMPLIB for the associated .lib archive location on windows)
-        set_property(TARGET TINYXML_LIB PROPERTY IMPORTED_LOCATION ${TINYXML_STATIC_LIBRARIES})
-        add_dependencies(TINYXML_LIB tinyxml)
-        list(APPEND EXTERNAL_LIBRARIES TINYXML_LIB)
-    endif()
+    set(tinyxml_sources ${TINYXML_SOURCE_DIR}/tinyxml2.cpp ${TINYXML_SOURCE_DIR}/tinyxml2.h)
+    add_custom_command(                                 ## will be done at build time
+        OUTPUT ${tinyxml_sources} ${tinyxml_headers}    ## expected output files
+        COMMAND ${CMAKE_COMMAND} -E tar xzf ${TINYXML_ZIPFILE}
+        DEPENDS ${TINYXML_ZIPFILE}
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/ext
+        COMMENT "Unpacking ${TINYXML_ZIPFILE} to ${TINYXML_SOURCE_DIR}"
+        VERBATIM
+    )
+    include_directories(BEFORE ${TINYXML_SOURCE_DIR}) ## needed to build correctly
+    add_library(TINYXML_LIB OBJECT ${tinyxml_sources})
+    ## embedded tinyxml objects files (no static link needed anymore)
+    ## => great news when build staticaly since we do not want another client project have to link also with tinyxml when he want to use this project
+    ## => could be problematic if the client project use another version of tinyxml... In this case build tinyxml as shared lib with all projects could be a solution
+    ## => TODO: so maybe provide a simple cmake way to build 3rdParty as shared and auto install with this project ?
+    set_target_properties(TINYXML_LIB PROPERTIES COMPILE_FLAGS "-fPIC -fvisibility-inlines-hidden -fvisibility=hidden")
+    list(APPEND EXTERNAL_OBJECTS $<TARGET_OBJECTS:TINYXML_LIB>)
     set_target_properties(TINYXML_LIB PROPERTIES FOLDER External)
 endif(USE_EXTERNAL_TINYXML)
     

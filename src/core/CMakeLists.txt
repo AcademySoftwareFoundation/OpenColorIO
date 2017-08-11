@@ -22,7 +22,7 @@ if(OCIO_BUILD_SHARED)
     add_library(OpenColorIO SHARED ${EXTERNAL_OBJECTS} ${core_src_files})
 
     if(USE_EXTERNAL_TINYXML)
-        target_link_libraries(OpenColorIO ${TINYXML_LIBRARIES})
+        target_link_libraries(OpenColorIO tinyxml2)
     else(USE_EXTERNAL_TINYXML)
         add_dependencies(OpenColorIO TINYXML_LIB)
     endif(USE_EXTERNAL_TINYXML)

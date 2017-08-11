@@ -8,21 +8,21 @@
 #  TINYXML_MAJOR_VERSION
 #  TINYXML_MINOR_VERSION
 #  TINYXML_PATCH_VERSION
-#  TINYXML_VERSION 
+#  TINYXML_VERSION
 
-find_path(TINYXML_INCLUDE_DIR tinyxml.h)
-find_library(TINYXML_LIBRARY NAMES tinyxml)
+find_path(TINYXML_INCLUDE_DIR tinyxml2.h)
+find_library(TINYXML_LIBRARY NAMES tinyxml2)
 
 # Try to get the tinyxml version from the header file.
 if(TINYXML_INCLUDE_DIR)
-    set(_tixml_header ${TINYXML_INCLUDE_DIR}/tinyxml.h)
+    set(_tixml_header ${TINYXML_INCLUDE_DIR}/tinyxml2.h)
     file(READ ${_tixml_header} _contents)
     if(_contents)
-        string(REGEX MATCH "const int TIXML_MAJOR_VERSION = ([0-9]+);" _TMP_major "${_contents}")
+        string(REGEX MATCH "const int TIXML2_MAJOR_VERSION = ([0-9]+);" _TMP_major "${_contents}")
         string(REGEX REPLACE ".*([0-9]+).*" "\\1" _OUT_major "${_TMP_major}")
-        string(REGEX MATCH "const int TIXML_MINOR_VERSION = ([0-9]+);" _TMP_minor "${_contents}")
+        string(REGEX MATCH "const int TIXML2_MINOR_VERSION = ([0-9]+);" _TMP_minor "${_contents}")
         string(REGEX REPLACE ".*([0-9]+).*" "\\1" _OUT_minor "${_TMP_minor}")
-        string(REGEX MATCH "const int TIXML_PATCH_VERSION = ([0-9]+);" _TMP_patch "${_contents}")
+        string(REGEX MATCH "const int TIXML2_PATCH_VERSION = ([0-9]+);" _TMP_patch "${_contents}")
         string(REGEX REPLACE ".*([0-9]+).*" "\\1" _OUT_patch "${_TMP_patch}")
 
         if(NOT ${_OUT_major} MATCHES "[0-9]+")
