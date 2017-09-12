@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <limits>
 #include <sstream>
+#include <algorithm>
 
 OCIO_NAMESPACE_ENTER
 {

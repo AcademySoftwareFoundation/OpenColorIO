@@ -1,12 +1,14 @@
 diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt > yaml-cpp-0.3.0.patch
 --- yaml-cpp.orig/CMakeLists.txt	Sat Jan 21 09:52:48 2012
 +++ yaml-cpp/CMakeLists.txt	Mon Apr 13 16:03:41 2015
-@@ -235,10 +235,16 @@
+@@ -235,10 +235,18 @@
  	${contrib_private_headers}
  )
  
-+set(YAML_COMPILE_FLAGS "-fPIC -fvisibility=hidden")
-+if(OCIO_INLINES_HIDDEN)
++if(CMAKE_COMPILER_IS_GNUCXX)
++    set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
++endif()
++if(OCIO_INLINES_HIDDEN AND CMAKE_COMPILER_IS_GNUCXX)
 +    set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fvisibility-inlines-hidden")
 +endif()
 +

@@ -17,12 +17,12 @@ else()
     endif()
     set(LCMS_INSTALL_DIR ${CMAKE_BINARY_DIR}/ext/dist)
     ExternalProject_Add(LCMS
-	PREFIX 		${CMAKE_BINARY_DIR}/lcms2-prefix
-        URL 		${CMAKE_SOURCE_DIR}/ext/lcms2-${LCMS_VERSION}.tar.gz
-	PATCH_COMMAND 	${GIT_EXECUTABLE} apply ${CMAKE_SOURCE_DIR}/ext/lcms2-${LCMS_VERSION}.patch
-        BINARY_DIR 	${CMAKE_BINARY_DIR}/ext/build/lcms2
-        INSTALL_DIR 	${LCMS_INSTALL_DIR}
-        CMAKE_ARGS 	${LCMS_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${LCMS_INSTALL_DIR}
+        PREFIX         ${CMAKE_BINARY_DIR}/lcms2-prefix
+        URL            ${CMAKE_SOURCE_DIR}/ext/lcms2-${LCMS_VERSION}.tar.gz
+        PATCH_COMMAND  ${GIT_EXECUTABLE} apply ${CMAKE_SOURCE_DIR}/ext/lcms2-${LCMS_VERSION}.patch
+        BINARY_DIR     ${CMAKE_BINARY_DIR}/ext/build/lcms2
+        INSTALL_DIR    ${LCMS_INSTALL_DIR}
+        CMAKE_ARGS     ${LCMS_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=${LCMS_INSTALL_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     )
     set(LCMS_INCLUDE_DIRS 	${PROJECT_BINARY_DIR}/ext/dist/include)
     set(LCMS_LIBRARY_DIRS 	${PROJECT_BINARY_DIR}/ext/dist/lib)
@@ -44,6 +44,8 @@ link_directories(
 )
 
 add_executable(ociobakelut ${share_src_files} main.cpp ocioicc.cpp)
+
+set_target_properties(ociobakelut PROPERTIES COMPILE_FLAGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
 
 if(LCMS_BUNDLED)
     add_dependencies(ociobakelut LCMS)

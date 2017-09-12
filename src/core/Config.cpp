@@ -132,23 +132,21 @@ OCIO_NAMESPACE_ENTER
     {
     
     // Environment
-    const std::string LookupEnvironment(const StringMap & env,
+    const char* LookupEnvironment(const StringMap & env,
                                         const std::string & name)
     {
         StringMap::const_iterator iter = env.find(name);
         if(iter == env.end()) return "";
-        std::string var = iter->second;
-        return var;
+        return iter->second.c_str();
     }
     
     // Roles
     // (lower case role name: colorspace name)
-    const std::string LookupRole(const StringMap & roles, const std::string & rolename)
+    const char* LookupRole(const StringMap & roles, const std::string & rolename)
     {
         StringMap::const_iterator iter = roles.find(pystring::lower(rolename));
         if(iter == roles.end()) return "";
-        std::string role = iter->second;
-        return role;
+        return iter->second.c_str();
     }
     
     
@@ -707,8 +705,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * Config::getEnvironmentVarDefault(const char * name) const
     {
-        std::string var = LookupEnvironment(getImpl()->env_, name);
-        return var.c_str();
+        return LookupEnvironment(getImpl()->env_, name);
     }
     
     void Config::clearEnvironmentVars()
@@ -807,7 +804,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         // Check to see if the name is a role
-        std::string csname = LookupRole(getImpl()->roles_, name);
+        const char* csname = LookupRole(getImpl()->roles_, name);
         if( FindColorSpaceIndex(&csindex, getImpl()->colorspaces_, csname) )
         {
             return csindex;
@@ -907,8 +904,8 @@ OCIO_NAMESPACE_ENTER
         if(!getImpl()->strictParsing_)
         {
             // Is a default role defined?
-            std::string csname = LookupRole(getImpl()->roles_, ROLE_DEFAULT);
-            if(!csname.empty())
+            const char* csname = LookupRole(getImpl()->roles_, ROLE_DEFAULT);
+            if(csname!="")
             {
                 int csindex = -1;
                 if( FindColorSpaceIndex(&csindex, getImpl()->colorspaces_, csname) )
