@@ -5,10 +5,10 @@ diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt > yaml-cpp-0.3.0
  	${contrib_private_headers}
  )
  
-+if(CMAKE_COMPILER_IS_GNUCXX)
++if(UNIX)
 +    set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
 +endif()
-+if(OCIO_INLINES_HIDDEN AND CMAKE_COMPILER_IS_GNUCXX)
++if(OCIO_INLINES_HIDDEN AND UNIX)
 +    set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fvisibility-inlines-hidden")
 +endif()
 +

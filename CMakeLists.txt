@@ -25,7 +25,7 @@ option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
-option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" CMAKE_COMPILER_IS_GNUCXX)
+option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" UNIX)
 
 # Use boost's shared_ptr by default on Windows (as <VS2010 doesn't have it),
 # Use std::tr1::shared_ptr by default on other platforms
@@ -373,7 +373,7 @@ set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dis
 ## maybe better to separate too general COMPILE_FLAGS (which are compiler specific) and split with specific COMPILE_DEFINITIONS
 ## so we can easily export it from cmake for the installation and be used easily in child projects ?
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+if(UNIX)
     set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
     if(OCIO_INLINES_HIDDEN)
         set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -fvisibility-inlines-hidden")
