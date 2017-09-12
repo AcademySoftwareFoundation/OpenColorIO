@@ -786,9 +786,9 @@ OIIO_ADD_TEST(Lut1DOp, ExtrapolationErrors)
     // Simple y=x+0.1 LUT
     for(int c=0; c<3; ++c)
     {
-        lut->luts[c].push_back(0.1);
-        lut->luts[c].push_back(0.6);
-        lut->luts[c].push_back(1.1);
+        lut->luts[c].push_back(0.1f);
+        lut->luts[c].push_back(0.6f);
+        lut->luts[c].push_back(1.1f);
     }
 
     lut->maxerror = 1e-5f;

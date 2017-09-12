@@ -116,7 +116,7 @@ struct AddTest { AddTest(OIIOTest* test); };
             (void)++unit_test_failures))
 
 #define OIIO_CHECK_THOW(S, E)                                           \
-    try { S; throw "throwanything"; } catch( E const& ex ) { } catch (...) { \
+    try { S; throw "throwanything"; } catch( E const& ) { } catch (...) { \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
         << "FAILED: " << #E << " is expected to be thrown\n";           \
         ++unit_test_failures; }

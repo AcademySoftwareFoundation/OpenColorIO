@@ -25,7 +25,7 @@ option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
-option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ON)
+option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" CMAKE_COMPILER_IS_GNUCXX)
 
 # Use boost's shared_ptr by default on Windows (as <VS2010 doesn't have it),
 # Use std::tr1::shared_ptr by default on other platforms
@@ -186,6 +186,7 @@ else(USE_EXTERNAL_TINYXML)
     if(CMAKE_TOOLCHAIN_FILE)
         set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
+    set(TINYXML_CMAKE_ARGS ${TINYXML_CMAKE_ARGS} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
     set(TINYXML_ZIPFILE     "${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.tar.gz")
     set(TINYXML_PATCHFILE   "${CMAKE_SOURCE_DIR}/ext/tinyxml_${TINYXML_VERSION}.patch")
     set(TINYXML_SOURCE_DIR  "${CMAKE_BINARY_DIR}/ext")
@@ -290,12 +291,13 @@ if(USE_EXTERNAL_YAML)
     else(YAML_CPP_FOUND)
         message(FATAL_ERROR "ERROR: System yaml-cpp library was not found. Make sure the library is installed and the pkg-config file exists.")
     endif(YAML_CPP_FOUND)
-else(USE_EXTERNAL_YAML) ## provide 2 way to build this dependency
+else(USE_EXTERNAL_YAML) ## provide 2 ways to build this dependency
     set(YAML_CPP_VERSION 0.3.0)
     set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
     if(CMAKE_TOOLCHAIN_FILE)
         set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
+    set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
     set(YAML_CPP_ZIPFILE        "${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.tar.gz")
     set(YAML_CPP_SOURCE_DIR     "${CMAKE_BINARY_DIR}/ext")
     set(YAML_CPP_PATCHFILE      "${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch")
@@ -367,12 +369,20 @@ endif()
 ### Externals ###
 
 set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${PROJECT_BINARY_DIR}/ext/dist/include)
+
 ## maybe better to separate too general COMPILE_FLAGS (which are compiler specific) and split with specific COMPILE_DEFINITIONS
 ## so we can easily export it from cmake for the installation and be used easily in child projects ?
-set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL ${YAML_CPP_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
-if(OCIO_INLINES_HIDDEN)
-    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -fvisibility-inlines-hidden")
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
+    if(OCIO_INLINES_HIDDEN)
+        set(GCC_COMPILE_FLAGS "${GCC_COMPILE_FLAGS} -fvisibility-inlines-hidden")
+    endif()
+else()
+    set(OCIO_INLINES_HIDDEN OFF)
 endif()
+
+set(EXTERNAL_COMPILE_FLAGS "-DTIXML_USE_STL ${YAML_CPP_COMPILE_FLAGS} ${GCC_COMPILE_FLAGS}")
 
 set(EXTERNAL_LINK_FLAGS "")
 set(EXTERNAL_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
