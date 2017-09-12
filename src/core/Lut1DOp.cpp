@@ -156,8 +156,8 @@ OCIO_NAMESPACE_ENTER
             md5_byte_t digest[16];
             
             md5_init(&state);
-            md5_append(&state, (const md5_byte_t *)from_min, 3*sizeof(float));
-            md5_append(&state, (const md5_byte_t *)from_max, 3*sizeof(float));
+            md5_append(&state, (const md5_byte_t *)from_min, (int)3*sizeof(float));
+            md5_append(&state, (const md5_byte_t *)from_max, (int)3*sizeof(float));
             
             for(int i=0; i<3; ++i)
             {
