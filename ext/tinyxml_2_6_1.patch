@@ -15,11 +15,11 @@ diff -Naur tinyxml.orig/CMakeLists.txt tinyxml/CMakeLists.txt
 +
 +set(TINYXML_COMPILE_FLAGS "-DTIXML_USE_STL")
 +
-+if(CMAKE_COMPILER_IS_GNUCXX)
++if(UNIX)
 +    set(TINYXML_COMPILE_FLAGS "${TINYXML_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
 +endif()
 +
-+if(OCIO_INLINES_HIDDEN AND CMAKE_COMPILER_IS_GNUCXX)
++if(OCIO_INLINES_HIDDEN AND UNIX)
 +    set(TINYXML_COMPILE_FLAGS "${TINYXML_COMPILE_FLAGS} -fvisibility-inlines-hidden")
 +endif()
 +

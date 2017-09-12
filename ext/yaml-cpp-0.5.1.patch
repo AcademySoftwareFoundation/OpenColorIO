@@ -3,6 +3,6 @@ diff -Naur yaml-cpp-0.5.1.orig/CMakeLists.txt yaml-cpp-0.5.1/CMakeLists.txt
 +++ yaml-cpp-0.5.1/CMakeLists.txt	2014-01-30 09:51:04.000000000 +0000
 @@ -238,1 +238,3 @@
 -set(YAML_COMPILE_FLAGS "-fPIC -fvisibility=hidden")
-+if(CMAKE_COMPILER_IS_GNUCXX)
++if(UNIX)
 +    set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
 +endif()
