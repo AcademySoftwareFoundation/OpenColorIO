@@ -905,7 +905,7 @@ OCIO_NAMESPACE_ENTER
         {
             // Is a default role defined?
             const char* csname = LookupRole(getImpl()->roles_, ROLE_DEFAULT);
-            if(csname!="")
+            if(csname && *csname)
             {
                 int csindex = -1;
                 if( FindColorSpaceIndex(&csindex, getImpl()->colorspaces_, csname) )
@@ -962,7 +962,8 @@ OCIO_NAMESPACE_ENTER
     
     bool Config::hasRole(const char * role) const
     {
-        return LookupRole(getImpl()->roles_, role) == "" ? false : true;
+        const char* rname = LookupRole(getImpl()->roles_, role);
+        return  rname && *rname;
     }
     
     const char * Config::getRoleName(int index) const
