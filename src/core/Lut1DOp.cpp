@@ -807,7 +807,7 @@ OIIO_ADD_TEST(Lut1DOp, ExtrapolationErrors)
                                                    1.1f, 1.1f, 1.1f, 0.0f,
                                                    1.1f, 1.1f, 0.6f, 0.0f };
     OCIO::Lut1D_Linear(inputBuffer_linearforward, PIXELS, *lut);
-    for(int i=0; i <sizeof(inputBuffer_linearforward)/sizeof(inputBuffer_linearforward[0]); ++i)
+    for(size_t i=0; i <sizeof(inputBuffer_linearforward)/sizeof(inputBuffer_linearforward[0]); ++i)
     {
         OIIO_CHECK_CLOSE(inputBuffer_linearforward[i], outputBuffer_linearforward[i], 1e-5f);
     }
