@@ -281,48 +281,51 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            env_ = rhs.env_;
-            context_ = rhs.context_->createEditableCopy();
-            description_ = rhs.description_;
-            
-            // Deep copy the colorspaces
-            colorspaces_.clear();
-            colorspaces_.reserve(rhs.colorspaces_.size());
-            for(unsigned int i=0; i<rhs.colorspaces_.size(); ++i)
+            if(this!=&rhs)
             {
-                colorspaces_.push_back(rhs.colorspaces_[i]->createEditableCopy());
+                env_ = rhs.env_;
+                context_ = rhs.context_->createEditableCopy();
+                description_ = rhs.description_;
+                
+                // Deep copy the colorspaces
+                colorspaces_.clear();
+                colorspaces_.reserve(rhs.colorspaces_.size());
+                for(unsigned int i=0; i<rhs.colorspaces_.size(); ++i)
+                {
+                    colorspaces_.push_back(rhs.colorspaces_[i]->createEditableCopy());
+                }
+                
+                // Deep copy the looks
+                looksList_.clear();
+                looksList_.reserve(rhs.looksList_.size());
+                for(unsigned int i=0; i<rhs.looksList_.size(); ++i)
+                {
+                    looksList_.push_back(rhs.looksList_[i]->createEditableCopy());
+                }
+                
+                // Assignment operator will suffice for these
+                roles_ = rhs.roles_;
+                
+                displays_ = rhs.displays_;
+                activeDisplays_ = rhs.activeDisplays_;
+                activeViews_ = rhs.activeViews_;
+                activeViewsEnvOverride_ = rhs.activeViewsEnvOverride_;
+                activeDisplaysEnvOverride_ = rhs.activeDisplaysEnvOverride_;
+                activeDisplaysStr_ = rhs.activeDisplaysStr_;
+                displayCache_ = rhs.displayCache_;
+                
+                defaultLumaCoefs_ = rhs.defaultLumaCoefs_;
+                strictParsing_ = rhs.strictParsing_;
+                
+                sanity_ = rhs.sanity_;
+                sanitytext_ = rhs.sanitytext_;
+                
+                cacheids_ = rhs.cacheids_;
+                cacheidnocontext_ = cacheidnocontext_;
             }
-            
-            // Deep copy the looks
-            looksList_.clear();
-            looksList_.reserve(rhs.looksList_.size());
-            for(unsigned int i=0; i<rhs.looksList_.size(); ++i)
-            {
-                looksList_.push_back(rhs.looksList_[i]->createEditableCopy());
-            }
-            
-            // Assignment operator will suffice for these
-            roles_ = rhs.roles_;
-            
-            displays_ = rhs.displays_;
-            activeDisplays_ = rhs.activeDisplays_;
-            activeViews_ = rhs.activeViews_;
-            activeViewsEnvOverride_ = rhs.activeViewsEnvOverride_;
-            activeDisplaysEnvOverride_ = rhs.activeDisplaysEnvOverride_;
-            activeDisplaysStr_ = rhs.activeDisplaysStr_;
-            displayCache_ = rhs.displayCache_;
-            
-            defaultLumaCoefs_ = rhs.defaultLumaCoefs_;
-            strictParsing_ = rhs.strictParsing_;
-            
-            sanity_ = rhs.sanity_;
-            sanitytext_ = rhs.sanitytext_;
-            
-            cacheids_ = rhs.cacheids_;
-            cacheidnocontext_ = cacheidnocontext_;
             return *this;
         }
-        
+
         // Any time you modify the state of the config, you must call this
         // to reset internal cache states.  You also should do this in a
         // thread safe manner by acquiring the cacheidMutex_;
