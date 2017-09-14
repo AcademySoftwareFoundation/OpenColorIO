@@ -83,7 +83,7 @@ OIIO_ADD_TEST(Exception, Basic)
     }
     catch(...)
     {
-        OIIO_CHECK_EQUAL(0x0, "wrong exception type");
+        OIIO_CHECK_ASSERT(!"Wrong exception type");
     }
 
     // Test 2
@@ -99,7 +99,7 @@ OIIO_ADD_TEST(Exception, Basic)
     }
     catch(...)
     {
-        OIIO_CHECK_EQUAL(0x0, "wrong exception type");
+        OIIO_CHECK_ASSERT(!"Wrong exception type");
     }
 }
 
