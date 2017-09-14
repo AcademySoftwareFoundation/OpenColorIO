@@ -64,6 +64,9 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
+#include <string.h>
+
+
 OIIO_ADD_TEST(Exception, Basic)
 {
     static const char* dummyErrorStr = "Dummy error";
