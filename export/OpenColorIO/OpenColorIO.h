@@ -85,22 +85,15 @@ OCIO_NAMESPACE_ENTER
     //
     // .. warning:: 
     //    All functions in the Config class can potentially throw this exception.
-    class OCIOEXPORT Exception : public std::exception
+    class OCIOEXPORT Exception : public std::runtime_error
     {
     public:
         //!cpp:function:: Constructor that takes a string as the exception message.
         Exception(const char *) throw();
         //!cpp:function:: Constructor that takes an exception pointer.
         Exception(const Exception&) throw();
-        //!cpp:function:: Constructor that takes an exception pointer and returns an exception pointer (???).
-        Exception& operator=(const Exception&) throw();
         //!cpp:function::
         virtual ~Exception() throw();
-        //!cpp:function::
-        virtual const char* what() const throw();
-        
-    private:
-        std::string msg_;
     };
     
     //!cpp:class:: An exception class for errors detected at
