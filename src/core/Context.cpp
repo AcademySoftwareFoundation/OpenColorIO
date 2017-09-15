@@ -448,9 +448,6 @@ OIIO_ADD_TEST(Context, ABSPath)
     
     OIIO_CHECK_NO_THOW(con->resolveFileLocation("${non_abs}"));
 
-    std::cout << con->resolveFileLocation("${non_abs}") << " vs."
-        << contextpath << std::endl;
-
     OIIO_CHECK_ASSERT(strcmp(sanatizepath(con->resolveFileLocation("${non_abs}")).c_str(), 
                                             contextpath.c_str()) == 0);
     
