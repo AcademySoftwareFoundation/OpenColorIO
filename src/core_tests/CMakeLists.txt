@@ -43,13 +43,26 @@ set_target_properties(ocio_core_tests PROPERTIES
 
 set(OCIO_TEST_AREA ${CMAKE_CURRENT_BINARY_DIR})
 
-message(STATUS "Create ocio_core_tests.sh.in from ocio_core_tests.sh")
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ocio_core_tests.sh.in
-    ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.sh @ONLY)
+if(UNIX)
+    message(STATUS "Create ocio_core_tests.sh.in from ocio_core_tests.sh")
 
-add_custom_target(MainTests
-                  COMMAND /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.sh
-                  DEPENDS ocio_core_tests
-                  COMMENT "Setting Up and Running OCIO UNIT tests")
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ocio_core_tests.sh.in
+        ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.sh @ONLY)
+
+    add_custom_target(MainTests
+                      COMMAND /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.sh
+                      DEPENDS ocio_core_tests
+                      COMMENT "Setting Up and Running OCIO UNIT tests")
+else()
+    message(STATUS "Create ocio_core_tests.bat.in from ocio_core_tests.bat")
+
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ocio_core_tests.bat.in
+        ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.bat @ONLY)
+
+    add_custom_target(MainTests
+                      COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.bat
+                      DEPENDS ocio_core_tests
+                      COMMENT "Setting Up and Running OCIO UNIT tests")
+endif()
 
 add_test(ocio_core_tests "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target MainTests)
