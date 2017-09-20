@@ -139,24 +139,18 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
-if(WIN32)
-    if(PYTHON_VERSION AND PYTHON_INCLUDE AND PYTHON_LIB)
-        set(EXTDIST_PYTHONPATH ${PYTHON_LIB}/python${PYTHON_VARIANT_PATH}/site-packages)
-        set(PYTHONPATH ${EXTDIST_PYTHONPATH};$ENV{PYTHONPATH})
-        set(PYTHON_OK YES)
-        message(STATUS "Setting Python path to: ${PYTHONPATH}")
-    endif()
-else()
-    # Find Python, used for (possibly) building pyglue, and now to
-    # construct the external project path
-    OCIOFindPython()
+###############################################################################
+### Python ###
 
-    set(EXTDIST_ROOT ${CMAKE_BINARY_DIR}/ext/dist)
-    set(EXTDIST_BINPATH ${EXTDIST_ROOT}/bin)
-    if(PYTHON_OK)
-        set(EXTDIST_PYTHONPATH ${EXTDIST_ROOT}/lib/python${PYTHON_VERSION}/site-packages)
-        set(PYTHONPATH ${EXTDIST_PYTHONPATH}:$ENV{PYTHONPATH})
-    endif()
+OCIOFindPython()
+
+# Find Python, used for (possibly) building pyglue, and now to
+# construct the external project path
+set(EXTDIST_ROOT ${CMAKE_BINARY_DIR}/ext/dist)
+set(EXTDIST_BINPATH ${EXTDIST_ROOT}/bin)
+if(PYTHON_OK)
+    set(EXTDIST_PYTHONPATH ${EXTDIST_ROOT}/${PYTHON_VARIANT_PATH})
+    set(PYTHONPATH ${EXTDIST_PYTHONPATH}:$ENV{PYTHONPATH})
 endif()
 
 messageonce("Setting EXTDIST_BINPATH: ${EXTDIST_BINPATH}")
@@ -504,7 +498,7 @@ endif()
 ###############################################################################
 ### PYGLUE ###
 
-if(OCIO_BUILD_PYGLUE)
+if(OCIO_BUILD_PYGLUE AND NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
     if(PYTHON_OK)
         add_subdirectory(src/pyglue)
     else()
