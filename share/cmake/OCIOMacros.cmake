@@ -117,7 +117,7 @@ MACRO(OCIOFindPython)
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
 
-        if(${PYTHON_RETURNVALUE} EQUAL 0 AND NOT ${PYTHON_X64} MATCHES "64bit")
+        if( NOT ${PYTHON_RETURNVALUE} EQUAL 0 OR NOT ${PYTHON_X64} MATCHES "64bit")
             set(PYTHON_OK NO)
         endif()
     endif()

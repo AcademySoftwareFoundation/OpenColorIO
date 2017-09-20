@@ -15,6 +15,8 @@ include_directories(
 file( GLOB_RECURSE core_test_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp" )
 add_executable(ocio_core_tests ${EXTERNAL_OBJECTS} ${core_test_src_files})
 
+set_target_properties(ocio_core_tests PROPERTIES COMPILE_FLAGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+
 if(USE_EXTERNAL_TINYXML)
     target_link_libraries(ocio_core_tests ${TINYXML_LIBRARIES})
 else(USE_EXTERNAL_TINYXML)
