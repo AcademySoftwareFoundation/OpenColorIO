@@ -31,6 +31,7 @@ build_script:
     -DOCIO_BUILD_TESTS=ON
     ..
   - cmake --build . --target install --config %CONFIGURATION%
+  - ctest --output-on-failure .
 
 matrix:
     fast_finish: true

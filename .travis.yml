@@ -20,7 +20,4 @@ script:
  - cd _build
  - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
  - cmake --build . --target install
-
-# Run Tests
-after_script:
  - ctest --output-on-failure .

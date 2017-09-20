@@ -13,13 +13,11 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-missing-field-initializers")
 endif()
 
-if(NOT WIN32)
-    find_package(PythonLibs)
-    if(NOT PYTHONLIBS_FOUND)
-        message(FATAL "Python libraries were not found, exiting.")
-    endif()
-    SET(PYTHON_INCLUDES ${PYTHON_INCLUDE_DIRS})
+find_package(PythonLibs)
+if(NOT PYTHONLIBS_FOUND)
+    message(FATAL "Python libraries were not found, exiting.")
 endif()
+SET(PYTHON_INCLUDES ${PYTHON_INCLUDE_DIRS})
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h
                   COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/src/pyglue/createPyDocH.py ${CMAKE_BINARY_DIR}/src/pyglue/PyDoc.h
@@ -56,11 +54,15 @@ if(NOT OCIO_PYGLUE_LIB_PREFIX)
 endif()
 
 target_link_OCIO(PyOpenColorIO)
-if(OCIO_PYGLUE_LINK AND WIN32)
-    target_link_libraries(PyOpenColorIO
-        debug ${PYTHON_LIB}/python26_d.lib
-        optimized ${PYTHON_LIB}/python26.lib)
-elseif(OCIO_PYGLUE_LINK)
+
+if(WIN32)
+    # Python extension on Windows is pyd
+    set_target_properties(PyOpenColorIO PROPERTIES SUFFIX ".pyd")
+endif()
+
+if(OCIO_PYGLUE_LINK OR WIN32)
+    # Windows always need the python library, 
+    #  refer to https://docs.python.org/3/extending/windows.html#a-cookbook-approach
     message(STATUS "Linking python bindings against: ${PYTHON_LIBRARY}")
     message(STATUS "Python library dirs: ${PYTHON_LIBRARY_DIRS}")
     link_directories(${PYTHON_LIBRARY})
@@ -89,8 +91,7 @@ if(OCIO_PYGLUE_SONAME)
 endif()
 
 if(APPLE)
-    set_target_properties(PyOpenColorIO PROPERTIES
-    	LINK_FLAGS "-undefined dynamic_lookup")
+    set_target_properties(PyOpenColorIO PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
 endif()
 
 add_subdirectory(tests)

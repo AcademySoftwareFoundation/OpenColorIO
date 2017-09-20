@@ -154,7 +154,10 @@ MOD_INIT(PyOpenColorIO)
 {
     PyObject * m;
     MOD_DEF(m, OCIO_STRINGIFY(PYOCIO_NAME), OCIO::OPENCOLORIO__DOC__, PyOCIO_methods);
-    
+
+    if (m == NULL)
+        return MOD_ERROR_VAL;
+
     PyModule_AddStringConstant(m, "version", OCIO::GetVersion());
     PyModule_AddIntConstant(m, "hexversion", OCIO::GetVersionHex());
     

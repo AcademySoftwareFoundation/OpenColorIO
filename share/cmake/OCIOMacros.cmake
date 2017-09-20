@@ -110,7 +110,14 @@ MACRO(OCIOFindPython)
     set(PYTHON_OK YES) # OK until something goes wrong
 
     # Get Python version
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(sysconfig.get_python_version())"
+    if(WIN32)
+        # Windows install path use the version without the dot
+        set(version_cmd "from distutils import sysconfig; print(sysconfig.get_config_var('VERSION'))")
+    else()
+        set(version_cmd "from distutils import sysconfig; print(sysconfig.get_python_version())")
+    endif()
+
+    execute_process(COMMAND ${PYTHON} -c "${version_cmd}"
         OUTPUT_VARIABLE PYTHON_VERSION
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -141,7 +148,7 @@ MACRO(OCIOFindPython)
 
 
     # Locate headers
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('INCLDIRSTOMAKE').split())))"
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('INCLUDEPY').split())))"
         OUTPUT_VARIABLE PYTHON_INCLUDE_RAW
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -155,9 +162,15 @@ MACRO(OCIOFindPython)
         set(PYTHON_OK NO)
     endif()
 
+    if(WIN32)
+        # LIBPL does not exist on Windows, and no variable exist
+        set(library_cmd "from distutils import sysconfig; print '%s/libs' % sysconfig.get_config_var('prefix')")
+    else()
+        set(library_cmd "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('LIBPL').split())))")
+    endif()
 
     # Locate Python library
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('LIBPL').split())))"
+    execute_process(COMMAND ${PYTHON} -c "${library_cmd}"
         OUTPUT_VARIABLE PYTHON_LIBRARY_DIRS_RAW
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
