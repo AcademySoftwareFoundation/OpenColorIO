@@ -29,10 +29,6 @@ add_library(PyOpenColorIO MODULE ${pyglue_src_files} ${CMAKE_BINARY_DIR}/src/pyg
 
 add_definitions(-DPYOCIO_NAME=PyOpenColorIO)
 
-if(MSVC)
-    add_definitions(-DUSE_SYSTEM_python=ON)
-endif()
-
 if(OCIO_USE_BOOST_PTR)
     include_directories(
         ${CMAKE_SOURCE_DIR}/export/

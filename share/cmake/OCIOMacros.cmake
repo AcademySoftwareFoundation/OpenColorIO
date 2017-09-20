@@ -109,6 +109,19 @@ MACRO(OCIOFindPython)
 
     set(PYTHON_OK YES) # OK until something goes wrong
 
+    if(MSVC)
+        # Python default installation on Windows is Python 32bit
+        execute_process(COMMAND ${PYTHON} -c "import sys,platform; print platform.architecture()[0]"
+            OUTPUT_VARIABLE PYTHON_X64
+            RESULT_VARIABLE PYTHON_RETURNVALUE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        if(${PYTHON_RETURNVALUE} EQUAL 0 AND NOT ${PYTHON_X64} MATCHES "64bit")
+            set(PYTHON_OK NO)
+        endif()
+    endif()
+
     # Get Python version
     if(WIN32)
         # Windows install path use the version without the dot
