@@ -32,7 +32,7 @@ build_script:
     -DCMAKE_BUILD_TYPE=%CONFIGURATION%
     ..
   - cmake --build . --target install --config %CONFIGURATION%
-  - ctest --output-on-failure .
+  - cmake --build . --target MainTests --config %CONFIGURATION%
 
 matrix:
     fast_finish: true
