@@ -11,18 +11,29 @@ include_directories(
     ${EXTERNAL_INCLUDE_DIRS}
     )
 
+if(WIN32)
+    # Hack to get around the "Debug" and "Release" sub directories 
+    #  cmake tries to add with Windows VC+++ IDE
+
+    # Set output path
+    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+    set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+    # For multi-config builds (e.g. msvc)
+    foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
+        string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+        set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
+        set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
+        set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
+    endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
+endif()
+
+
 ## do not link with OpenColorIO since we reuse the sources files to build this app (avoid double link definition)
 file( GLOB_RECURSE core_test_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp" )
 add_executable(ocio_core_tests ${EXTERNAL_OBJECTS} ${core_test_src_files})
 
 set_target_properties(ocio_core_tests PROPERTIES COMPILE_FLAGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
-
-if(WIN32)
-    # Hack to get around the "Debug" and "Release" sub directories 
-    #  cmake tries to add with Windows VC+++ IDE
-    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
-    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
-endif()
 
 if(USE_EXTERNAL_TINYXML)
     target_link_libraries(ocio_core_tests ${TINYXML_LIBRARIES})
