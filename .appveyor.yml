@@ -10,7 +10,6 @@ platform:
 environment:
   global:
       CMAKE_PREFIX_PATH: C:/Libraries/boost
-      CMAKE_INSTALL_PREFIX: ../_install
       BOOST_ROOT: 'C:\Libraries\boost'
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
@@ -27,8 +26,8 @@ build_script:
   - cd _build
   - cmake 
     -G "%CMAKE_PLATFORM%"
+    -DCMAKE_INSTALL_PREFIX=..\_install
     -DOCIO_USE_BOOST_PTR=ON
-    -DOCIO_BUILD_TESTS=ON
     -DCMAKE_BUILD_TYPE=%CONFIGURATION%
     ..
   - cmake --build . --target install --config %CONFIGURATION%

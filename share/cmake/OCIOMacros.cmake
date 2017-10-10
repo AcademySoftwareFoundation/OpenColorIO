@@ -209,10 +209,19 @@ MACRO(OCIOFindPython)
     if(OCIO_PYGLUE_RESPECT_ABI)
         # Respect Python major/minor version, and UCS version (unicode
         # content system). E.g install into "lib/python2.6/ucs4/site-packages"
-        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/${PYTHON_UCS}/site-packages")
+        # Windows & *nix does not use the same path, refer to https://docs.python.org/2/install/
+        if(WIN32)
+            set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/${PYTHON_UCS}/site-packages")
+        else()
+            set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/${PYTHON_UCS}/site-packages")
+        endif()
     else()
         # Ignore UCS value and install into lib/python2.6/site-packages dir
-        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/site-packages")
+        if(WIN32)
+            set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/site-packages")
+        else()
+            set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/site-packages")
+        endif()
     endif()
 
 ENDMACRO()
@@ -319,8 +328,9 @@ ENDMACRO()
 
 MACRO(ExtractRstCPP INFILE OUTFILE)
    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       OUTPUT ${OUTFILE}
-      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py ${INFILE} ${OUTFILE}
+      COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py ${INFILE} ${OUTFILE}
       DEPENDS ${INFILE}
       COMMENT "Extracting reStructuredText from ${INFILE} (using old process)"
    )
@@ -328,8 +338,9 @@ ENDMACRO()
 
 MACRO(ExtractRstSimple INFILE OUTFILE)
    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       OUTPUT ${OUTFILE}
-      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceSimple.py ${INFILE} ${OUTFILE}
+      COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceSimple.py ${INFILE} ${OUTFILE}
       DEPENDS ${INFILE}
       COMMENT "Extracting reStructuredText from ${INFILE}"
    )
