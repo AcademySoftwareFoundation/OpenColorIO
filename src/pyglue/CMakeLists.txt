@@ -11,7 +11,9 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCXX)
     # Python breaks strict-aliasing rules. Disable the warning here.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-missing-field-initializers")
-else()
+endif()
+
+if(WIN32)
     # Mute a design issue where the Exception public class inherits 
     # from a STL Exception. STL classes are never supposed to
     # be exported among different dynamic libraries.
