@@ -50,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PrivateTypes.h"
 #include "pystring/pystring.h"
 #include "OCIOYaml.h"
+#include "Platform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -262,10 +263,10 @@ OCIO_NAMESPACE_ENTER
             strictParsing_(true),
             sanity_(SANITY_UNKNOWN)
         {
-            char* activeDisplays = std::getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR);
+            char* activeDisplays = Platform::getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR);
             SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays);
             
-            char * activeViews = std::getenv(OCIO_ACTIVE_VIEWS_ENVVAR);
+            char * activeViews = Platform::getenv(OCIO_ACTIVE_VIEWS_ENVVAR);
             SplitStringEnvStyle(activeViewsEnvOverride_, activeViews);
             
             defaultLumaCoefs_.resize(3);
@@ -351,7 +352,7 @@ OCIO_NAMESPACE_ENTER
     
     ConstConfigRcPtr Config::CreateFromEnv()
     {
-        char* file = std::getenv(OCIO_CONFIG_ENVVAR);
+        char* file = Platform::getenv(OCIO_CONFIG_ENVVAR);
         if(file) return CreateFromFile(file);
         
         std::ostringstream os;

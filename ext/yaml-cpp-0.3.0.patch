@@ -1,6 +1,6 @@
-diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt > yaml-cpp-0.3.0.patch
---- yaml-cpp.orig/CMakeLists.txt	Sat Jan 21 09:52:48 2012
-+++ yaml-cpp/CMakeLists.txt	Mon Apr 13 16:03:41 2015
+diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt
+--- yaml-cpp.orig/CMakeLists.txt	2012-01-21 03:52:48.000000000 -0500
++++ yaml-cpp/CMakeLists.txt	2017-10-11 14:13:47.762198400 -0400
 @@ -235,10 +235,18 @@
  	${contrib_private_headers}
  )
@@ -20,3 +20,15 @@ diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt > yaml-cpp-0.3.0
  )
  
  if(IPHONE)
+diff -Naur yaml-cpp.orig/src/scanner.h yaml-cpp/src/scanner.h
+--- yaml-cpp.orig/src/scanner.h	2012-01-21 03:52:48.000000000 -0500
++++ yaml-cpp/src/scanner.h	2017-10-11 14:14:10.420198400 -0400
+@@ -57,7 +57,7 @@
+ 		
+ 		bool InFlowContext() const { return !m_flows.empty(); }
+ 		bool InBlockContext() const { return m_flows.empty(); }
+-		int GetFlowLevel() const { return m_flows.size(); }
++		int GetFlowLevel() const { return int(m_flows.size()); }
+ 		
+ 		Token::TYPE GetStartTokenFor(IndentMarker::INDENT_TYPE type) const;
+ 		IndentMarker *PushIndentTo(int column, IndentMarker::INDENT_TYPE type);

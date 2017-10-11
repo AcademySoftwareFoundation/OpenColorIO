@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Logging.h"
 #include "Mutex.h"
 #include "pystring/pystring.h"
+#include "Platform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -56,7 +57,7 @@ OCIO_NAMESPACE_ENTER
             
             g_initialized = true;
             
-            char* levelstr = std::getenv(OCIO_LOGGING_LEVEL_ENVVAR);
+            char* levelstr = Platform::getenv(OCIO_LOGGING_LEVEL_ENVVAR);
             if(levelstr)
             {
                 g_loggingOverride = true;
