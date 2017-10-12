@@ -50,12 +50,14 @@ OCIO_NAMESPACE_ENTER
             const errno_t err = ::_dupenv_s(&value, &len, name);
             if(err!=0 || len==0 || !value || !*value)
             {
+                if(value) free(value);
                 return 0x0;
             }
             else
             {
                 str.resize(len+1);
-                ::strncpy_s(&str[0], len, value, len);
+                ::snprintf(&str[0], len, "%s", value);
+                if(value) free(value);
             }
 
             return const_cast<char*>(str.c_str());
@@ -98,6 +100,16 @@ OIIO_ADD_TEST(Platform, getenv)
         char* env = OCIO::Platform::getenv("NotExistingEnvVariable");
         env = OCIO::Platform::getenv("PATH");
         OIIO_CHECK_ASSERT(env && *env);
+    }
+}
+
+OIIO_ADD_TEST(Platform, putenv)
+{
+    {
+        ::putenv("MY_DUMMY_ENV=SomeValue");
+        const char* env = OCIO::Platform::getenv("MY_DUMMY_ENV");
+        OIIO_CHECK_ASSERT(env && *env);
+        OIIO_CHECK_ASSERT(0==strcmp("SomeValue", env));
     }
 }
 
