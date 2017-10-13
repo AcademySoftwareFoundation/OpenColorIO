@@ -26,6 +26,7 @@ colorspaces:
     
     EXPECTED_LUT = """CSPLUTV100
 3D
+
 BEGIN METADATA
 this is some metadata!
 END METADATA

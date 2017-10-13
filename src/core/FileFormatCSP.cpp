@@ -1133,7 +1133,30 @@ OIIO_ADD_TEST(FileFormatCSP, complete3D)
     OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
-        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        if(i>6)
+        {
+            // number comparison
+            std::vector<std::string> strings1;
+            OCIO::pystring::split(OCIO::pystring::strip(osvec[i]), strings1);
+            std::vector<float> numbers1;
+            OCIO::StringVecToFloatVec(numbers1, strings1);
+
+            std::vector<std::string> strings2;
+            OCIO::pystring::split(OCIO::pystring::strip(resvec[i]), strings2);
+            std::vector<float> numbers2;
+            OCIO::StringVecToFloatVec(numbers2, strings2);
+
+            OIIO_CHECK_EQUAL(numbers1.size(), numbers2.size());
+            for(unsigned int j=0; j<numbers1.size(); ++j)
+            {
+                OIIO_CHECK_CLOSE(numbers1[j], numbers2[j], 1e-5f);
+            }
+        }
+        else
+        {
+            // text comparison
+            OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        }
     }
 }
 
