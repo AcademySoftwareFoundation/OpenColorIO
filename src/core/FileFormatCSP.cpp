@@ -425,7 +425,7 @@ OCIO_NAMESPACE_ENTER
                        !istream)
                 {
                     nextline (istream, line);
-                    if (startswithU(line, "END METADATA"))
+                    if (!startswithU(line, "END METADATA"))
                         metadata += line + "\n";
                 }
                 lineUpdateNeeded = true;
@@ -686,18 +686,20 @@ OCIO_NAMESPACE_ENTER
                 GenerateIdentityLut1D(&shaperOutData[0], shaperSize, 3);
                 GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
                 
-                ConstProcessorRcPtr shaperToInput = config->getProcessor(baker.getShaperSpace(), baker.getInputSpace());
-                if(shaperToInput->hasChannelCrosstalk())
+                ConstProcessorRcPtr inputToShader
+                    = config->getProcessor(baker.getInputSpace(), baker.getShaperSpace());
+                if(inputToShader->hasChannelCrosstalk())
                 {
                     // TODO: Automatically turn shaper into non-crosstalked version?
                     std::ostringstream os;
                     os << "The specified shaperSpace, '";
-                    os << baker.getShaperSpace() << "' has channel crosstalk, which is not appropriate for shapers. ";
+                    os << baker.getShaperSpace() 
+                       << "' has channel crosstalk, which is not appropriate for shapers. ";
                     os << "Please select an alternate shaper space or omit this option.";
                     throw Exception(os.str().c_str());
                 }
-                PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
-                shaperToInput->apply(shaperInImg);
+                PackedImageDesc inputToShaderImg(&shaperOutData[0], shaperSize, 1, 3);
+                inputToShader->apply(inputToShaderImg);
 
                 ConstProcessorRcPtr shaperToTarget;
                 if (!looks.empty())
@@ -711,8 +713,8 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                  shaperToTarget = config->getProcessor(baker.getShaperSpace(),
-                      baker.getTargetSpace());
+                  shaperToTarget 
+                    = config->getProcessor(baker.getShaperSpace(), baker.getTargetSpace());
                 }
                 shaperToTarget->apply(cubeImg);
             }
@@ -763,10 +765,11 @@ OCIO_NAMESPACE_ENTER
                 GenerateIdentityLut1D(&shaperInData[0], shaperSize, 3);
                 
                 // Apply the forward to the allocation to the output shaper y axis, and the cube
-                ConstProcessorRcPtr shaperToInput = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE);
+                ConstProcessorRcPtr shaperProcessor
+                    = config->getProcessor(allocationTransform, TRANSFORM_DIR_INVERSE);
                 PackedImageDesc shaperInImg(&shaperInData[0], shaperSize, 1, 3);
-                shaperToInput->apply(shaperInImg);
-                shaperToInput->apply(cubeImg);
+                shaperProcessor->apply(shaperInImg);
+                shaperProcessor->apply(cubeImg);
                 
                 // Apply the 3d lut to the remainder (from the input to the output)
                 ConstProcessorRcPtr inputToTarget;
@@ -781,7 +784,8 @@ OCIO_NAMESPACE_ENTER
                 }
                 else
                 {
-                    inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+                    inputToTarget
+                        = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
                 }
                 inputToTarget->apply(cubeImg);
             }
@@ -789,6 +793,7 @@ OCIO_NAMESPACE_ENTER
             // Write out the file
             ostream << "CSPLUTV100\n";
             ostream << "3D\n";
+            ostream << "\n";
             ostream << "BEGIN METADATA\n";
             std::string metadata = baker.getMetadata();
             if(!metadata.empty())
@@ -930,8 +935,8 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     strebuf << "0.0 0.2 0.4 0.6 0.8 1.0" << "\n";
     strebuf << "0.0 0.4 0.8 1.2 1.6 2.0" << "\n";
     strebuf << "3"                       << "\n";
-    strebuf << "0.0 0.1 1.0"            << "\n";
-    strebuf << "0.0 0.2 2.0"            << "\n";
+    strebuf << "0.0 0.1 1.0"             << "\n";
+    strebuf << "0.0 0.2 2.0"             << "\n";
     strebuf << ""                        << "\n";
     strebuf << "6"                       << "\n";
     strebuf << "0.0 0.0 0.0"             << "\n";
@@ -953,6 +958,12 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     OCIO::CachedFileRcPtr cachedFile = tester.Read(simple1D);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
+    // check metadata
+    OIIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
+
+    // check prelut data
+    OIIO_CHECK_ASSERT(csplut->hasprelut);
+
     // check prelut data (note: the spline is resampled into a 1D LUT)
     for(int c=0; c<3; ++c)
     {
@@ -963,6 +974,7 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
             OIIO_CHECK_CLOSE(input*2.0f, output, 1e-4);
         }
     }
+
     // check 1D data
     // red
     unsigned int i;
@@ -975,6 +987,8 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     for(i = 0; i < csplut->lut1D->luts[2].size(); ++i)
         OIIO_CHECK_EQUAL(blue[i], csplut->lut1D->luts[2][i]);
     
+    // check 3D lut data
+    OIIO_CHECK_ASSERT(csplut->lut3D->lut.size()==0);
 }
 
 OIIO_ADD_TEST(FileFormatCSP, simple3D)
@@ -1020,14 +1034,26 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
     OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
+    // check metadata
+    OIIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
+
     // check prelut data
-    OIIO_CHECK_ASSERT(csplut->hasprelut == false);
-    
+    OIIO_CHECK_ASSERT(!csplut->hasprelut); // as in & out from the preLut are the same,
+                                           //  there is nothing to do.
+
     // check cube data
     for(unsigned int i = 0; i < csplut->lut3D->lut.size(); ++i) {
         OIIO_CHECK_EQUAL(cube[i], csplut->lut3D->lut[i]);
     }
-    
+
+    // check 1D lut data
+    OIIO_CHECK_ASSERT(csplut->lut1D->luts[0].size()==0);
+    OIIO_CHECK_ASSERT(csplut->lut1D->luts[1].size()==0);
+    OIIO_CHECK_ASSERT(csplut->lut1D->luts[2].size()==0);
+}
+
+OIIO_ADD_TEST(FileFormatCSP, complete3D)
+{
     // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
@@ -1057,39 +1083,39 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
         cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
         config->addColorSpace(cs);
     }
-    
-    /*
-    std::string bout =
-    "CSPLUTV100\n"
-    "3D\n"
-    "\n"
-    "BEGIN METADATA\n"
-    "date: 2011:02:21 15:22:55\n"
-    "END METADATA\n"
-    "\n"
-    "10\n"
-    "0.000000 0.111111 0.222222 0.333333 0.444444 0.555556 0.666667 0.777778 0.888889 1.000000\n"
-    "0.000000 0.429520 0.560744 0.655378 0.732058 0.797661 0.855604 0.907865 0.955710 1.000000\n"
-    "10\n"
-    "0.000000 0.111111 0.222222 0.333333 0.444444 0.555556 0.666667 0.777778 0.888889 1.000000\n"
-    "0.000000 0.429520 0.560744 0.655378 0.732058 0.797661 0.855604 0.907865 0.955710 1.000000\n"
-    "10\n"
-    "0.000000 0.111111 0.222222 0.333333 0.444444 0.555556 0.666667 0.777778 0.888889 1.000000\n"
-    "0.000000 0.429520 0.560744 0.655378 0.732058 0.797661 0.855604 0.907865 0.955710 1.000000\n"
-    "\n"
-    "2 2 2\n"
-    "0.100000 0.100000 0.100000\n"
-    "1.000000 0.100000 0.100000\n"
-    "0.100000 1.000000 0.100000\n"
-    "1.000000 1.000000 0.100000\n"
-    "0.100000 0.100000 1.000000\n"
-    "1.000000 0.100000 1.000000\n"
-    "0.100000 1.000000 1.000000\n"
-    "1.000000 1.000000 1.000000\n"
-    "\n";
+
+    std::ostringstream bout;
+    bout << "CSPLUTV100"                 << "\n";
+    bout << "3D"                         << "\n";
+    bout << ""                           << "\n";
+    bout << "BEGIN METADATA"             << "\n";
+    bout << "date: 2011:02:21 15:22:55"  << "\n";
+    bout << "END METADATA"               << "\n";
+    bout << ""                           << "\n";
+    bout << "10"                         << "\n";
+    bout << "0.000000 0.111111 0.222222 0.333333 0.444444 0.555556 0.666667 0.777778 0.888889 1.000000" << "\n";
+    bout << "0.000000 0.429520 0.560744 0.655378 0.732058 0.797661 0.855604 0.907865 0.955710 1.000000" << "\n";
+    bout << "10"                         << "\n";
+    bout << "0.000000 0.111111 0.222222 0.333333 0.444444 0.555556 0.666667 0.777778 0.888889 1.000000" << "\n";
+    bout << "0.000000 0.429520 0.560744 0.655378 0.732058 0.797661 0.855604 0.907865 0.955710 1.000000" << "\n";
+    bout << "10"                         << "\n";
+    bout << "0.000000 0.111111 0.222222 0.333333 0.444444 0.555556 0.666667 0.777778 0.888889 1.000000" << "\n";
+    bout << "0.000000 0.429520 0.560744 0.655378 0.732058 0.797661 0.855604 0.907865 0.955710 1.000000" << "\n";
+    bout << ""                           << "\n";
+    bout << "2 2 2"                      << "\n";
+    bout << "0.100000 0.100000 0.100000" << "\n";
+    bout << "1.100000 0.100000 0.100000" << "\n";
+    bout << "0.100000 1.100000 0.100000" << "\n";
+    bout << "1.100000 1.100000 0.100000" << "\n";
+    bout << "0.100000 0.100000 1.100000" << "\n";
+    bout << "1.100000 0.100000 1.100000" << "\n";
+    bout << "0.100000 1.100000 1.100000" << "\n";
+    bout << "1.100000 1.100000 1.100000" << "\n";
+    bout << ""                           << "\n";
     
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
+    baker->setMetadata("date: 2011:02:21 15:22:55");
     baker->setFormat("cinespace");
     baker->setInputSpace("lnf");
     baker->setShaperSpace("shaper");
@@ -1103,15 +1129,109 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
     std::vector<std::string> osvec;
     OCIO::pystring::splitlines(output.str(), osvec);
     std::vector<std::string> resvec;
-    OCIO::pystring::splitlines(bout, resvec);
+    OCIO::pystring::splitlines(bout.str(), resvec);
     OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
     for(unsigned int i = 0; i < resvec.size(); ++i)
     {
-        // skip timestamp line
-        if(i != 4) OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        if(i>6)
+        {
+            // number comparison
+            std::vector<std::string> strings1;
+            OCIO::pystring::split(OCIO::pystring::strip(osvec[i]), strings1);
+            std::vector<float> numbers1;
+            OCIO::StringVecToFloatVec(numbers1, strings1);
+
+            std::vector<std::string> strings2;
+            OCIO::pystring::split(OCIO::pystring::strip(resvec[i]), strings2);
+            std::vector<float> numbers2;
+            OCIO::StringVecToFloatVec(numbers2, strings2);
+
+            OIIO_CHECK_EQUAL(numbers1.size(), numbers2.size());
+            for(unsigned int j=0; j<numbers1.size(); ++j)
+            {
+                OIIO_CHECK_CLOSE(numbers1[j], numbers2[j], 1e-5f);
+            }
+        }
+        else
+        {
+            // text comparison
+            OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+        }
     }
-    */
+}
+
+OIIO_ADD_TEST(FileFormatCSP, no_shaper)
+{
+    // check baker output
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("lnf");
+        cs->setFamily("lnf");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        float rgb[3] = {0.1f, 0.1f, 0.1f};
+        transform1->setOffset(rgb);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        config->addColorSpace(cs);
+    }
+
+    std::ostringstream bout;
+    bout << "CSPLUTV100"                 << "\n";
+    bout << "3D"                         << "\n";
+    bout << ""                           << "\n";
+    bout << "BEGIN METADATA"             << "\n";
+    bout << "date: 2011:02:21 15:22:55"  << "\n";
+    bout << "END METADATA"               << "\n";
+    bout << ""                           << "\n";
+    bout << "2"                          << "\n";
+    bout << "0.000000 1.000000"          << "\n";
+    bout << "0.000000 1.000000"          << "\n";
+    bout << "2"                          << "\n";
+    bout << "0.000000 1.000000"          << "\n";
+    bout << "0.000000 1.000000"          << "\n";
+    bout << "2"                          << "\n";
+    bout << "0.000000 1.000000"          << "\n";
+    bout << "0.000000 1.000000"          << "\n";
+    bout << ""                           << "\n";
+    bout << "2 2 2"                      << "\n";
+    bout << "0.100000 0.100000 0.100000" << "\n";
+    bout << "1.100000 0.100000 0.100000" << "\n";
+    bout << "0.100000 1.100000 0.100000" << "\n";
+    bout << "1.100000 1.100000 0.100000" << "\n";
+    bout << "0.100000 0.100000 1.100000" << "\n";
+    bout << "1.100000 0.100000 1.100000" << "\n";
+    bout << "0.100000 1.100000 1.100000" << "\n";
+    bout << "1.100000 1.100000 1.100000" << "\n";
+    bout << ""                           << "\n";
     
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setMetadata("date: 2011:02:21 15:22:55");
+    baker->setFormat("cinespace");
+    baker->setInputSpace("lnf");
+    baker->setTargetSpace("target");
+    baker->setShaperSize(10);
+    baker->setCubeSize(2);
+    std::ostringstream output;
+    baker->bake(output);
+
+    //
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(output.str(), osvec);
+    std::vector<std::string> resvec;
+    OCIO::pystring::splitlines(bout.str(), resvec);
+    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    for(unsigned int i = 0; i < resvec.size(); ++i)
+    {
+        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+    }
 }
 
 OIIO_ADD_TEST(FileFormatCSP, lessStrictParse)
@@ -1147,8 +1267,16 @@ OIIO_ADD_TEST(FileFormatCSP, lessStrictParse)
     
     // Load file
     OCIO::LocalFileFormat tester;
-    OIIO_CHECK_NO_THOW(OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D));
+    OCIO::CachedFileRcPtr cachedFile;
+    OIIO_CHECK_NO_THOW(cachedFile = tester.Read(simple3D));
+    OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);   
     
+    // check metadata
+    OIIO_CHECK_EQUAL(csplut->metadata, std::string("foobar\n"));
+
+    // check prelut data
+    OIIO_CHECK_ASSERT(!csplut->hasprelut); // as in & out from the preLut are the same,
+                                           //  there is nothing to do.
 }
 
 // TODO: More strenuous tests of prelut resampling (non-noop preluts)
