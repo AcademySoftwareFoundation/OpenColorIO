@@ -1730,8 +1730,21 @@ OCIO_NAMESPACE_ENTER
             for(int i = 0; i < c->getNumRoles(); ++i)
             {
                 const char* role = c->getRoleName(i);
-                out << YAML::Key << role;
-                out << YAML::Value << c->getColorSpace(role)->getName();
+                if(role && *role)
+                {
+                    ConstColorSpaceRcPtr colorspace = c->getColorSpace(role);
+                    if(colorspace)
+                    {
+                        out << YAML::Key << role;
+                        out << YAML::Value << c->getColorSpace(role)->getName();
+                    }
+                    else
+                    {
+                        std::ostringstream os;
+                        os << "Colorspace associated to the role '" << role << "', does not exist.";
+                        throw Exception(os.str().c_str());
+                    }
+                }
             }
             out << YAML::EndMap;
 #ifndef OLDYAML
