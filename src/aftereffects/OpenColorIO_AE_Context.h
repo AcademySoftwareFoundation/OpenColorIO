@@ -64,10 +64,10 @@ class Path
         TYPE_WIN
     } PathType;
     
-    static PathType path_type(std::string path);
-    static bool is_relative(std::string path);
-    static std::string convert_delimiters(std::string path);
-    static std::vector<std::string> components(std::string path);
+    static PathType path_type(const std::string &path);
+    static bool is_relative(const std::string &path);
+    static std::string convert_delimiters(const std::string &path);
+    static std::vector<std::string> components(const std::string &path);
 };
 
 
@@ -81,7 +81,7 @@ class OpenColorIO_AE_Context
     bool Verify(const ArbitraryData *arb_data, const std::string &dir);
     
     void setupConvert(const char *input, const char *output);
-    void setupDisplay(const char *input, const char *transform, const char *device);
+    void setupDisplay(const char *input, const char *device, const char *transform);
     void setupLUT(bool invert, OCIO_Interp interpolation);
   
     typedef std::vector<std::string> SpaceVec;
@@ -89,13 +89,14 @@ class OpenColorIO_AE_Context
     OCIO_Action getAction() const { return _action; }
     const std::string & getInput() const { return _input; }
     const std::string & getOutput() const { return _output; }
-    const std::string & getTransform() const { return _transform; }
     const std::string & getDevice() const { return _device; }
-    const SpaceVec & getInputs() const { return _inputs; }
-    const SpaceVec & getTransforms() const { return _transforms; }
+    const std::string & getTransform() const { return _transform; }
+    const SpaceVec & getInputs(bool fullPath=false) const { return fullPath ? _inputsFullPath : _inputs; }
     const SpaceVec & getDevices() const { return _devices; }
+    const SpaceVec & getTransforms() const { return _transforms; }
     
-    const OCIO::ConstProcessorRcPtr & processor() const { return _processor; }
+    OCIO::ConstConfigRcPtr config() const { return _config; }
+    OCIO::ConstProcessorRcPtr processor() const { return _processor; }
     
     bool ExportLUT(const std::string &path, const std::string &display_icc_path);
     
@@ -110,11 +111,12 @@ class OpenColorIO_AE_Context
     
     std::string _input;
     std::string _output;
-    std::string _transform;
     std::string _device;
+    std::string _transform;
     SpaceVec _inputs;
-    SpaceVec _transforms;
+    SpaceVec _inputsFullPath;
     SpaceVec _devices;
+    SpaceVec _transforms;
     
     bool _invert;
     OCIO_Interp _interpolation;

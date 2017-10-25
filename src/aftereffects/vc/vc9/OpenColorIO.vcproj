@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp\include&quot;;.\"
+				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;.\"
 				PreprocessorDefinitions="TIXML_USE_STL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,7 +107,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp\include&quot;;.\"
+				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;.\"
 				PreprocessorDefinitions="TIXML_USE_STL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -171,7 +171,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp\include&quot;;.\"
+				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;.\"
 				PreprocessorDefinitions="NDEBUG;TIXML_USE_STL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -235,7 +235,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp\include&quot;;.\"
+				AdditionalIncludeDirectories="..\..\..\..\export;..\..\..\..\src\core;..\..\..\..\ext\boost_1_48_0;..\..\..\..\ext\tinyxml;&quot;..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;.\"
 				PreprocessorDefinitions="NDEBUG;TIXML_USE_STL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -317,6 +317,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\core\Display.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\src\core\DisplayTransform.cpp"
 				>
 			</File>
@@ -342,6 +346,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\src\core\FileFormatCCC.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\core\FileFormatCDL.cpp"
 				>
 			</File>
 			<File
@@ -528,6 +536,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\src\core\CDLTransform.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\core\Display.h"
 				>
 			</File>
 			<File
