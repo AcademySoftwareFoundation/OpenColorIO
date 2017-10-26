@@ -132,23 +132,21 @@ OCIO_NAMESPACE_ENTER
     {
     
     // Environment
-    const std::string LookupEnvironment(const StringMap & env,
+    const char* LookupEnvironment(const StringMap & env,
                                         const std::string & name)
     {
         StringMap::const_iterator iter = env.find(name);
         if(iter == env.end()) return "";
-        std::string var = iter->second;
-        return var;
+        return iter->second.c_str();
     }
     
     // Roles
     // (lower case role name: colorspace name)
-    const std::string LookupRole(const StringMap & roles, const std::string & rolename)
+    const char* LookupRole(const StringMap & roles, const std::string & rolename)
     {
         StringMap::const_iterator iter = roles.find(pystring::lower(rolename));
         if(iter == roles.end()) return "";
-        std::string role = iter->second;
-        return role;
+        return iter->second.c_str();
     }
     
     
@@ -283,48 +281,51 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            env_ = rhs.env_;
-            context_ = rhs.context_->createEditableCopy();
-            description_ = rhs.description_;
-            
-            // Deep copy the colorspaces
-            colorspaces_.clear();
-            colorspaces_.reserve(rhs.colorspaces_.size());
-            for(unsigned int i=0; i<rhs.colorspaces_.size(); ++i)
+            if(this!=&rhs)
             {
-                colorspaces_.push_back(rhs.colorspaces_[i]->createEditableCopy());
+                env_ = rhs.env_;
+                context_ = rhs.context_->createEditableCopy();
+                description_ = rhs.description_;
+                
+                // Deep copy the colorspaces
+                colorspaces_.clear();
+                colorspaces_.reserve(rhs.colorspaces_.size());
+                for(unsigned int i=0; i<rhs.colorspaces_.size(); ++i)
+                {
+                    colorspaces_.push_back(rhs.colorspaces_[i]->createEditableCopy());
+                }
+                
+                // Deep copy the looks
+                looksList_.clear();
+                looksList_.reserve(rhs.looksList_.size());
+                for(unsigned int i=0; i<rhs.looksList_.size(); ++i)
+                {
+                    looksList_.push_back(rhs.looksList_[i]->createEditableCopy());
+                }
+                
+                // Assignment operator will suffice for these
+                roles_ = rhs.roles_;
+                
+                displays_ = rhs.displays_;
+                activeDisplays_ = rhs.activeDisplays_;
+                activeViews_ = rhs.activeViews_;
+                activeViewsEnvOverride_ = rhs.activeViewsEnvOverride_;
+                activeDisplaysEnvOverride_ = rhs.activeDisplaysEnvOverride_;
+                activeDisplaysStr_ = rhs.activeDisplaysStr_;
+                displayCache_ = rhs.displayCache_;
+                
+                defaultLumaCoefs_ = rhs.defaultLumaCoefs_;
+                strictParsing_ = rhs.strictParsing_;
+                
+                sanity_ = rhs.sanity_;
+                sanitytext_ = rhs.sanitytext_;
+                
+                cacheids_ = rhs.cacheids_;
+                cacheidnocontext_ = cacheidnocontext_;
             }
-            
-            // Deep copy the looks
-            looksList_.clear();
-            looksList_.reserve(rhs.looksList_.size());
-            for(unsigned int i=0; i<rhs.looksList_.size(); ++i)
-            {
-                looksList_.push_back(rhs.looksList_[i]->createEditableCopy());
-            }
-            
-            // Assignment operator will suffice for these
-            roles_ = rhs.roles_;
-            
-            displays_ = rhs.displays_;
-            activeDisplays_ = rhs.activeDisplays_;
-            activeViews_ = rhs.activeViews_;
-            activeViewsEnvOverride_ = rhs.activeViewsEnvOverride_;
-            activeDisplaysEnvOverride_ = rhs.activeDisplaysEnvOverride_;
-            activeDisplaysStr_ = rhs.activeDisplaysStr_;
-            displayCache_ = rhs.displayCache_;
-            
-            defaultLumaCoefs_ = rhs.defaultLumaCoefs_;
-            strictParsing_ = rhs.strictParsing_;
-            
-            sanity_ = rhs.sanity_;
-            sanitytext_ = rhs.sanitytext_;
-            
-            cacheids_ = rhs.cacheids_;
-            cacheidnocontext_ = cacheidnocontext_;
             return *this;
         }
-        
+
         // Any time you modify the state of the config, you must call this
         // to reset internal cache states.  You also should do this in a
         // thread safe manner by acquiring the cacheidMutex_;
@@ -707,8 +708,7 @@ OCIO_NAMESPACE_ENTER
     
     const char * Config::getEnvironmentVarDefault(const char * name) const
     {
-        std::string var = LookupEnvironment(getImpl()->env_, name);
-        return var.c_str();
+        return LookupEnvironment(getImpl()->env_, name);
     }
     
     void Config::clearEnvironmentVars()
@@ -807,7 +807,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         // Check to see if the name is a role
-        std::string csname = LookupRole(getImpl()->roles_, name);
+        const char* csname = LookupRole(getImpl()->roles_, name);
         if( FindColorSpaceIndex(&csindex, getImpl()->colorspaces_, csname) )
         {
             return csindex;
@@ -907,8 +907,8 @@ OCIO_NAMESPACE_ENTER
         if(!getImpl()->strictParsing_)
         {
             // Is a default role defined?
-            std::string csname = LookupRole(getImpl()->roles_, ROLE_DEFAULT);
-            if(!csname.empty())
+            const char* csname = LookupRole(getImpl()->roles_, ROLE_DEFAULT);
+            if(csname && *csname)
             {
                 int csindex = -1;
                 if( FindColorSpaceIndex(&csindex, getImpl()->colorspaces_, csname) )
@@ -965,7 +965,8 @@ OCIO_NAMESPACE_ENTER
     
     bool Config::hasRole(const char * role) const
     {
-        return LookupRole(getImpl()->roles_, role) == "" ? false : true;
+        const char* rname = LookupRole(getImpl()->roles_, role);
+        return  rname && *rname;
     }
     
     const char * Config::getRoleName(int index) const

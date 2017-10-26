@@ -379,8 +379,8 @@ OCIO_NAMESPACE_ENTER
             md5_state_t state;
             md5_byte_t digest[16];
             md5_init(&state);
-            md5_append(&state, (const md5_byte_t *)m_m44, 16*sizeof(float));
-            md5_append(&state, (const md5_byte_t *)m_offset4, 4*sizeof(float));
+            md5_append(&state, (const md5_byte_t *)m_m44,     (int)(16*sizeof(float)));
+            md5_append(&state, (const md5_byte_t *)m_offset4, (int)(4*sizeof(float)));
             md5_finish(&state, digest);
             
             std::ostringstream cacheIDStream;

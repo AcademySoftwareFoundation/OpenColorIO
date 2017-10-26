@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <iomanip>
 #include <iterator>
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 

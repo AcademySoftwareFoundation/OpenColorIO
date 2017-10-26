@@ -32,36 +32,19 @@ OCIO_NAMESPACE_ENTER
 {
   
     Exception::Exception(const char * msg) throw()
-    : std::exception(),
-      msg_(msg)
+    : std::runtime_error(msg)
     {}
 
     Exception::Exception(const Exception& e) throw()
-    : std::exception(),
-      msg_(e.msg_)
+    : std::runtime_error(e)
     {}
-
-    //*** operator=
-    Exception& Exception::operator=(const Exception& e) throw()
-    {
-        msg_ = e.msg_;
-        return *this;
-    }
 
     //*** ~Exception
     Exception::~Exception() throw()
     {
     }
 
-    //*** what
-    const char* Exception::what() const throw()
-    {
-        return msg_.c_str();
-    }
 
-  
-  
-  
     ExceptionMissingFile::ExceptionMissingFile(const char * msg) throw()
     : Exception(msg)
     {}
@@ -72,3 +55,52 @@ OCIO_NAMESPACE_ENTER
 
 }
 OCIO_NAMESPACE_EXIT
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+#include <string.h>
+
+
+OIIO_ADD_TEST(Exception, Basic)
+{
+    static const char* dummyErrorStr = "Dummy error";
+
+    // Test 1
+
+    try
+    {
+        throw OCIO::Exception(dummyErrorStr);
+    }
+    catch(const std::exception& ex)
+    {
+        OIIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
+    }
+    catch(...)
+    {
+        OIIO_CHECK_ASSERT(!"Wrong exception type");
+    }
+
+    // Test 2
+
+    try
+    {
+        OCIO::Exception ex(dummyErrorStr);
+        throw OCIO::Exception(ex);
+    }
+    catch(const std::exception& ex)
+    {
+        OIIO_CHECK_EQUAL(strcmp(ex.what(), dummyErrorStr), 0);
+    }
+    catch(...)
+    {
+        OIIO_CHECK_ASSERT(!"Wrong exception type");
+    }
+}
+
+#endif // OCIO_UNIT_TEST

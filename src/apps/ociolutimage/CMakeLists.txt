@@ -10,7 +10,11 @@ if (OIIO_FOUND)
     
     add_executable(ociolutimage ${share_src_files} main.cpp)
     
-    target_link_libraries(ociolutimage ${OIIO_LIBRARIES} OpenColorIO ${CMAKE_DL_LIBS})
+    set_target_properties(ociolutimage PROPERTIES COMPILE_FLAGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+
+    target_link_libraries(ociolutimage ${OIIO_LIBRARIES} ${CMAKE_DL_LIBS})
     
-    install(TARGETS ociolutimage DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)
+    target_link_OCIO(ociolutimage)
+    
+    install(TARGETS ociolutimage EXPORT OpenColorIO DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin)
 endif()

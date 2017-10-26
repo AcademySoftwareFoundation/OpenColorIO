@@ -1,15 +1,18 @@
 # travis-ci.org build file
+# https://docs.travis-ci.com/user/languages/cpp
 
-# As CMake is not officially supported we use erlang VMs
-language: erlang
+language: cpp
 
-# Settings to try
+compiler:
+  - clang
+  - gcc
+
+os:
+  - linux
+  - osx
+
 env:
-  - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=yes"
-
-# Make sure CMake is installed
-install:
- - sudo apt-get install cmake
+  - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=yes -DOCIO_BUILD_DOCS=yes"
 
 # Run the Build script
 script:
@@ -17,7 +20,12 @@ script:
  - cd _build
  - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
  - cmake --build . --target install
-
-# Run Tests
-after_script:
  - ctest --output-on-failure .
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  on:
+    tags: true
+  local_dir: ./docs/build-html

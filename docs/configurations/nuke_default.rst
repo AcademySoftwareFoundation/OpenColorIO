@@ -1,4 +1,4 @@
-Nuke default
+nuke-default
 ============
 
 This profile corresponds to the default Nuke color configuration (currently generated from Nuke 6.1).
