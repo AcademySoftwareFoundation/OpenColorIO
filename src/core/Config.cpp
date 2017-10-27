@@ -1959,4 +1959,13 @@ OIIO_ADD_TEST(Config, EnvCheck)
     }
 }
 
+OIIO_ADD_TEST(Config, RoleWithoutColorSpace)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create()->createEditableCopy();
+    config->setRole("reference", "UnknownColorSpace");
+
+    std::ostringstream os;
+    OIIO_CHECK_THOW(config->serialize(os), OCIO::Exception);
+}
+
 #endif // OCIO_UNIT_TEST
