@@ -196,7 +196,6 @@ void GlobalSetdown_GL()
 	if(g_framebuffer != GL_INVALID_VALUE)
 	{
         glDeleteFramebuffersEXT(1, &g_framebuffer);
-
 		g_framebuffer = GL_INVALID_VALUE;
 	}
     
