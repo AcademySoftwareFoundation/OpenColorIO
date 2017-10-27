@@ -519,9 +519,9 @@ static void DoStart(GPtr globals)
         #else
             assert(globals->configFileHandle != NULL);
 
-			dialogParams.config = PILockHandle(globals->configFileHandle, true);
+            dialogParams.config = PILockHandle(globals->configFileHandle, true);
 
-			PIUnlockHandle(globals->configFileHandle);
+            PIUnlockHandle(globals->configFileHandle);
         #endif
         }
         else if(globals->source == OCIO_SOURCE_STANDARD)
@@ -552,7 +552,7 @@ static void DoStart(GPtr globals)
     #else
         // get platform handles
         const void *plugHndl = hDllInstance;
-		HWND hwnd = (HWND)((PlatformData *)gStuff->platformData)->hwnd;
+        HWND hwnd = (HWND)((PlatformData *)gStuff->platformData)->hwnd;
     #endif
         
         const DialogResult dialogResult = OpenColorIO_PS_Dialog(dialogParams, plugHndl, hwnd);
@@ -578,16 +578,16 @@ static void DoStart(GPtr globals)
                     globals->source = OCIO_SOURCE_NONE;
                 }
             #else
-				if(globals->configFileHandle)
-					PISetHandleSize(globals->configFileHandle, (dialogParams.config.length() + 1) * sizeof(char));
-				else	
-					globals->configFileHandle = PINewHandle((dialogParams.config.length() + 1) * sizeof(char));
-					
-				char *path_buf = PILockHandle(globals->configFileHandle, true);
+                if(globals->configFileHandle)
+                    PISetHandleSize(globals->configFileHandle, (dialogParams.config.length() + 1) * sizeof(char));
+                else    
+                    globals->configFileHandle = PINewHandle((dialogParams.config.length() + 1) * sizeof(char));
+                    
+                char *path_buf = PILockHandle(globals->configFileHandle, true);
 
-				strcpy(path_buf, dialogParams.config.c_str());
+                strcpy(path_buf, dialogParams.config.c_str());
 
-				PIUnlockHandle(globals->configFileHandle);
+                PIUnlockHandle(globals->configFileHandle);
             #endif
             }
             else if(dialogParams.source == SOURCE_STANDARD)
@@ -658,9 +658,9 @@ static void DoStart(GPtr globals)
         #else
             assert(globals->configFileHandle != NULL);
 
-			path = PILockHandle(globals->configFileHandle, true);
+            path = PILockHandle(globals->configFileHandle, true);
 
-			PIUnlockHandle(globals->configFileHandle);
+            PIUnlockHandle(globals->configFileHandle);
         #endif
         }
         else
@@ -671,13 +671,13 @@ static void DoStart(GPtr globals)
             const char *standardDirectory = "/Library/Application Support/OpenColorIO";
             const std::string pathSeperator = "/";
         #else
-			const std::string pathSeperator = "\\";
+            const std::string pathSeperator = "\\";
 
             char appdata_path[MAX_PATH];
             HRESULT result = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL,
                                                 SHGFP_TYPE_CURRENT, appdata_path);
 
-			const std::string standardDirectory = std::string(appdata_path) + pathSeperator + "OpenColorIO";
+            const std::string standardDirectory = std::string(appdata_path) + pathSeperator + "OpenColorIO";
         #endif
         
             path = standardDirectory;

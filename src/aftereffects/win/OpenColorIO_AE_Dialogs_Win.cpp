@@ -727,7 +727,7 @@ void ErrorMessage(const char *message , const void *hwnd)
 #ifdef SUPPLY_HINSTANCE
 void SetHInstance(void *hInstance)
 {
-	hDllInstance = (HINSTANCE)hInstance;
+    hDllInstance = (HINSTANCE)hInstance;
 }
 #else
 BOOL WINAPI DllMain(HANDLE hInstance, DWORD fdwReason, LPVOID lpReserved)

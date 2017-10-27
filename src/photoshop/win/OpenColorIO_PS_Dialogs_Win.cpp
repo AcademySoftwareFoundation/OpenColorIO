@@ -21,7 +21,7 @@
 static HINSTANCE hDllInstance = NULL;
 
 enum {
-	DLOG_noUI = -1,
+    DLOG_noUI = -1,
 	DLOG_OK = IDOK,
 	DLOG_Cancel = IDCANCEL,
 	DLOG_Export = 3,

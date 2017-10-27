@@ -151,16 +151,16 @@ void OpenColorIO_PS_About(const void *plugHndl, const void *mwnd)
     NSApplicationLoad();
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-	const std::string endl = "\n";
+    const std::string endl = "\n";
 
-	std::string text = std::string("OpenColorIO PS") + endl +
-						OpenColorIO_PS_Beta_String + endl +
-						__DATE__ + endl +
-						endl +
-						"OCIO version " + OCIO::GetVersion();
-						
-	NSString *informativeText = [NSString stringWithUTF8String:text.c_str()];
-						
+    std::string text = std::string("OpenColorIO PS") + endl +
+                        OpenColorIO_PS_Beta_String + endl +
+                        __DATE__ + endl +
+                        endl +
+                        "OCIO version " + OCIO::GetVersion();
+                        
+    NSString *informativeText = [NSString stringWithUTF8String:text.c_str()];
+                        
     NSAlert *alert = [NSAlert alertWithMessageText:@"OpenColorIO" defaultButton:nil alternateButton:nil otherButton:nil informativeTextWithFormat:@"%@", informativeText];
     
     [alert setAlertStyle:NSInformationalAlertStyle];

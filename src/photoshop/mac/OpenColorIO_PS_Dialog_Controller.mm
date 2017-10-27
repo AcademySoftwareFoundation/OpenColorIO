@@ -546,10 +546,10 @@ static NSString *standardPath = @"/Library/Application Support/OpenColorIO";
                 const char *extension = OCIO::FileTransform::getFormatExtensionByIndex(i);
                 //const char *format = OCIO::FileTransform::getFormatNameByIndex(i);
                 
-				NSString *extensionString = [NSString stringWithUTF8String:extension];
-				
-				if(![extensionString isEqualToString:@"ccc"]) // .ccc files require an ID parameter
-					[extensions addObject:[NSString stringWithUTF8String:extension]];
+                NSString *extensionString = [NSString stringWithUTF8String:extension];
+                
+                if(![extensionString isEqualToString:@"ccc"]) // .ccc files require an ID parameter
+                    [extensions addObject:[NSString stringWithUTF8String:extension]];
             }
             
             
