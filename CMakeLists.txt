@@ -18,8 +18,8 @@ option(OCIO_BUILD_STATIC "Set to OFF to disable building the static core library
 option(OCIO_BUILD_TRUELIGHT "Set to OFF to disable truelight" ON)
 option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
 option(OCIO_BUILD_NUKE "Set to OFF to disable building nuke plugins" ON)
-option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
-option(OCIO_BUILD_TESTS "Specify whether to build unittests" OFF)
+option(OCIO_BUILD_DOCS "Specify whether to build documentation" UNIX)
+option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_PYGLUE "Specify whether to build python bindings" ON)
 option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
@@ -150,7 +150,15 @@ set(EXTDIST_ROOT ${CMAKE_BINARY_DIR}/ext/dist)
 set(EXTDIST_BINPATH ${EXTDIST_ROOT}/bin)
 if(PYTHON_OK)
     set(EXTDIST_PYTHONPATH ${EXTDIST_ROOT}/${PYTHON_VARIANT_PATH})
-    set(PYTHONPATH ${EXTDIST_PYTHONPATH}:$ENV{PYTHONPATH})
+    if(UNIX)
+        set(PYTHONPATH ${EXTDIST_PYTHONPATH}:$ENV{PYTHONPATH})
+    else()
+        # The line below should work but ';' is always replaced by a space
+        #   which breaks the build. Anyway in the worst scenario, no expected
+        #   modules are present in the local python so install them.
+        #set(PYTHONPATH ${EXTDIST_PYTHONPATH}\\;$ENV{PYTHONPATH})
+        set(PYTHONPATH ${EXTDIST_PYTHONPATH})
+    endif()
 endif()
 
 messageonce("Setting EXTDIST_BINPATH: ${EXTDIST_BINPATH}")
