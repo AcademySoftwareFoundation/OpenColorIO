@@ -202,7 +202,7 @@ OCIO_NAMESPACE_ENTER
 
   namespace Platform
   {
-    char* getenv (const char* name);
+    void getenv (const char* name, std::string& value);
   }
 
 }
