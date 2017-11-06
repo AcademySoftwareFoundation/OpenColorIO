@@ -446,12 +446,12 @@ OIIO_ADD_TEST(Context, ABSPath)
     con->setStringVar("non_abs", "src/core/Context.cpp");
     con->setStringVar("is_abs", contextpath.c_str());
     
-    OIIO_CHECK_NO_THOW(con->resolveFileLocation("${non_abs}"));
+    OIIO_CHECK_NO_THROW(con->resolveFileLocation("${non_abs}"));
 
     OIIO_CHECK_ASSERT(strcmp(sanatizepath(con->resolveFileLocation("${non_abs}")).c_str(), 
                                             contextpath.c_str()) == 0);
     
-    OIIO_CHECK_NO_THOW(con->resolveFileLocation("${is_abs}"));
+    OIIO_CHECK_NO_THROW(con->resolveFileLocation("${is_abs}"));
     OIIO_CHECK_ASSERT(strcmp(con->resolveFileLocation("${is_abs}"), contextpath.c_str()) == 0);
    
 }
@@ -463,7 +463,7 @@ OIIO_ADD_TEST(Context, VarSearchPath)
     context->setStringVar("SOURCE_DIR", ociodir.c_str());
     context->setSearchPath("${SOURCE_DIR}/src/core");
 
-    OIIO_CHECK_NO_THOW(context->resolveFileLocation("Context.cpp"));
+    OIIO_CHECK_NO_THROW(context->resolveFileLocation("Context.cpp"));
     OIIO_CHECK_ASSERT(strcmp(sanatizepath(context->resolveFileLocation("Context.cpp")).c_str(), 
                                 contextpath.c_str()) == 0);
 

@@ -1147,7 +1147,7 @@ OIIO_ADD_TEST(FileFormatCSP, lessStrictParse)
     
     // Load file
     OCIO::LocalFileFormat tester;
-    OIIO_CHECK_NO_THOW(OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D));
+    OIIO_CHECK_NO_THROW(OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D));
     
 }
 

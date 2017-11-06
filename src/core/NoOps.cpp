@@ -508,9 +508,9 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
     OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
     
-    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
-                                                 gpuLatticeOps,
-                                                 gpuPostOps) );
+    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+                                                  gpuLatticeOps,
+                                                  gpuPostOps) );
     }
     
     {
@@ -524,9 +524,9 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
     OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
     
-    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
-                                                 gpuLatticeOps,
-                                                 gpuPostOps) );
+    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+                                                  gpuLatticeOps,
+                                                  gpuPostOps) );
     }
     
     {
@@ -542,9 +542,9 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
     OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
     
-    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
-                                                 gpuLatticeOps,
-                                                 gpuPostOps) );
+    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+                                                  gpuLatticeOps,
+                                                  gpuPostOps) );
     }
     
     {
@@ -561,9 +561,9 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
     OIIO_CHECK_EQUAL(gpuPostOps.size(), 1);
     
-    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
-                                                 gpuLatticeOps,
-                                                 gpuPostOps) );
+    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+                                                  gpuLatticeOps,
+                                                  gpuPostOps) );
     }
     
     {
@@ -578,9 +578,9 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 1);
     OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
     
-    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
-                                                 gpuLatticeOps,
-                                                 gpuPostOps) );
+    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+                                                  gpuLatticeOps,
+                                                  gpuPostOps) );
     }
     
     {
@@ -600,9 +600,9 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
     OIIO_CHECK_EQUAL(gpuPostOps.size(), 2);
     
-    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
-                                                 gpuLatticeOps,
-                                                 gpuPostOps) );
+    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+                                                  gpuLatticeOps,
+                                                  gpuPostOps) );
     }
     
     {
@@ -624,9 +624,9 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 8);
     OIIO_CHECK_EQUAL(gpuPostOps.size(), 2);
     
-    OIIO_CHECK_NO_THOW( AssertPartitionIntegrity(gpuPreOps,
-                                                 gpuLatticeOps,
-                                                 gpuPostOps) );
+    OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
+                                                  gpuLatticeOps,
+                                                  gpuPostOps) );
     /*
     std::cerr << "gpuPreOps" << std::endl;
     std::cerr << SerializeOpVec(gpuPreOps, 4) << std::endl;

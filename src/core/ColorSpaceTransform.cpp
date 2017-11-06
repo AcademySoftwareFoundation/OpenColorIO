@@ -152,13 +152,13 @@ OCIO_NAMESPACE_ENTER
         
         if(combinedDir == TRANSFORM_DIR_FORWARD)
         {
-            src = config.getColorSpace( colorSpaceTransform.getSrc() );
-            dst = config.getColorSpace( colorSpaceTransform.getDst() );
+            src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
+            dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
         }
         else if(combinedDir == TRANSFORM_DIR_INVERSE)
         {
-            dst = config.getColorSpace( colorSpaceTransform.getSrc() );
-            src = config.getColorSpace( colorSpaceTransform.getDst() );
+            dst = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getSrc() ) );
+            src = config.getColorSpace( context->resolveStringVar( colorSpaceTransform.getDst() ) );
         }
         
         BuildColorSpaceOps(ops, config, context, src, dst);
