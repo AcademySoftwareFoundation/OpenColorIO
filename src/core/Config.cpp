@@ -2034,7 +2034,8 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
     }
 
     {
-        putenv("CAMERARAW=lnh");
+        char * env = "CAMERARAW=lnh";
+        putenv(env);
 
         std::istringstream is;
         is.str(MY_OCIO_CONFIG);
@@ -2048,7 +2049,8 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
     {
         // Test when the env. variable content is wrong
 
-        putenv("CAMERARAW=FaultyColorSpaceName");
+        char * env = "CAMERARAW=FaultyColorSpaceName";
+        putenv(env);
 
         std::istringstream is;
         is.str(MY_OCIO_CONFIG);
