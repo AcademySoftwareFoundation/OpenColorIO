@@ -1364,7 +1364,7 @@ OIIO_ADD_TEST(FileFormatCSP, lessStrictParse)
     // Load file
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THOW(cachedFile = tester.Read(simple3D));
+    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(simple3D));
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);   
     
     // check metadata
