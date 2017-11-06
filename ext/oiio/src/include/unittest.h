@@ -109,20 +109,27 @@ struct AddTest { AddTest(OIIOTest* test); };
             (void)++unit_test_failures))
 
 #define OIIO_CHECK_CLOSE(x,y,tol)                                       \
-    ((std::abs((x) - (y)) < tol) ? ((void)0)                            \
+    ((std::abs((x) - (y)) < (tol)) ? ((void)0)                          \
          : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
              << "FAILED: abs(" << #x << " - " << #y << ") < " << #tol << "\n" \
              << "\tvalues were '" << (x) << "', '" << (y) << "' and '" << (tol) << "'\n"), \
             (void)++unit_test_failures))
 
-#define OIIO_CHECK_THOW(S, E)                                           \
+#define OIIO_CHECK_THROW(S, E)                                          \
     try { S; throw "throwanything"; } catch( E const& ) { } catch (...) { \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
         << "FAILED: " << #E << " is expected to be thrown\n";           \
         ++unit_test_failures; }
 
-#define OIIO_CHECK_NO_THOW(S)                                           \
-    try { S; } catch (...) {                                            \
+#define OIIO_CHECK_NO_THROW(S)                                          \
+    try {                                                               \
+        S;                                                              \
+    } catch (OCIO_NAMESPACE::Exception & ex ) {                         \
+        std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
+            << "FAILED: exception thrown from " << #S << ": \""         \
+            << ex.what() << "\"\n";                                     \
+        ++unit_test_failures;                                           \
+    } catch (...) {                                                     \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
         << "FAILED: exception thrown from " << #S <<"\n";               \
         ++unit_test_failures; }
