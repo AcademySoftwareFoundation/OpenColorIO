@@ -8,7 +8,7 @@ picture production with an emphasis on visual effects and computer animation. As
 such, OCIO helps enforce a color management methodology that is required for the
 high fidelity color imaging in modern computer graphics. This section introduces
 those concepts and general workflow practices. Additional information can be
-found in Jeremy Selan's Cinematic Color `document <http://github.com/jeremyselan/cinematiccolor>`_.
+found in Jeremy Selan's Cinematic Color `document <http://cinematiccolor.org/>`_.
 
 While OCIO is a color management library, it's only knowledge of color science
 comes from it's execution of the transforms defined in the OCIO configuration
