@@ -19,10 +19,6 @@ Public Configs
     spi_vfx
     spi_anim
     nuke_default
-    aces_0.1.1
-    aces_0.7.1
-    aces_1.0.1
-    aces_1.0.2
     aces_1.0.3
     
 Config Creation
