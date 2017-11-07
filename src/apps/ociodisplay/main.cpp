@@ -790,10 +790,13 @@ void parseArguments(int argc, char **argv)
         }
         std::cout << std::endl;
         std::cout << "OCIO: " << std::endl
-                  << "\tversion       = " << OCIO::GetVersion() << std::endl
-                  << "\tconfiguration = " << getenv("OCIO") << std::endl;
-        OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
-        std::cout << "\tsearch_path   = " << config->getSearchPath() << std::endl;
+                  << "\tversion       = " << OCIO::GetVersion() << std::endl;
+        if(getenv("OCIO"))
+        {
+            std::cout << "\tconfiguration = " << getenv("OCIO") << std::endl;
+            OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+            std::cout << "\tsearch_path   = " << config->getSearchPath() << std::endl;
+        }
     }
 }
 
