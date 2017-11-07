@@ -27,15 +27,22 @@ MACRO(OCIOFindOpenGL)
     endif()
 
     # Find GLEW
+
+    if(GLEW_PATH)
+        message(STATUS "GLEW path explicitly specified: ${GLEW_PATH}")
+    endif()
+
     set(GLEW_VERSION 1.5.1)
     FIND_PATH(GLEW_INCLUDES GL/glew.h
+        ${GLEW_PATH}/include
         /usr/include
         /usr/local/include
         /sw/include
         /opt/local/include
         DOC "The directory where GL/glew.h resides")
     FIND_LIBRARY(GLEW_LIBRARIES
-        NAMES GLEW glew
+        NAMES GLEW glew glew32
+        ${GLEW_PATH}/lib
         /usr/lib64
         /usr/lib
         /usr/local/lib64
@@ -49,7 +56,7 @@ MACRO(OCIOFindOpenGL)
         message(STATUS "Found GLEW library ${GLEW_LIBRARIES}")
         message(STATUS "Found GLEW includes ${GLEW_INCLUDES}")
     else()
-        message(STATUS "GLEW not found")
+        message(STATUS "GLEW ${GLEW_VERSION} not found. Specify GLEW_PATH to locate it")
         set(GLEW_FOUND FALSE)
     endif()
 ENDMACRO()
@@ -89,6 +96,27 @@ MACRO(OCIOFindOpenImageIO)
         set(OIIO_FOUND TRUE)
         message(STATUS "Found OIIO library ${OIIO_LIBRARIES}")
         message(STATUS "Found OIIO includes ${OIIO_INCLUDES}")
+
+        # Unfortunately, OIIO hides a dependency to Ilmbase includes
+
+        if(ILMBASE_PATH)
+            message(STATUS "Ilmbase path explicitly specified: ${ILMBASE_PATH}")
+        endif()
+
+        FIND_PATH( ILMBASE_INCLUDES OpenEXR/half.h
+            ${ILMBASE_PATH}/include/
+            /usr/include
+            /usr/local/include
+            /sw/include
+            /opt/local/include
+            DOC "The directory where OpenEXR/half.h resides")
+
+        if(ILMBASE_INCLUDES)
+            message(STATUS "Found Ilmbase includes ${ILMBASE_INCLUDES}")
+        else()
+            set(OIIO_FOUND FALSE)
+            message(STATUS "Ilmbase not found. Specify ILMBASE_PATH to locate it")
+        endif()
     else()
         set(OIIO_FOUND FALSE)
         message(STATUS "OIIO not found. Specify OIIO_PATH to locate it")
