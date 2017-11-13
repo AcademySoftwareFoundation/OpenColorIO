@@ -1,6 +1,6 @@
-diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt > yaml-cpp-0.3.0.patch
---- yaml-cpp.orig/CMakeLists.txt	Sat Jan 21 09:52:48 2012
-+++ yaml-cpp/CMakeLists.txt	Mon Apr 13 16:03:41 2015
+diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt
+--- yaml-cpp.orig/CMakeLists.txt	2012-01-21 03:52:48.000000000 -0500
++++ yaml-cpp/CMakeLists.txt	2017-10-11 17:42:12.272508800 -0400
 @@ -235,10 +235,18 @@
  	${contrib_private_headers}
  )
@@ -20,3 +20,27 @@ diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt > yaml-cpp-0.3.0
  )
  
  if(IPHONE)
+diff -Naur yaml-cpp.orig/include/yaml-cpp/binary.h yaml-cpp/include/yaml-cpp/binary.h
+--- yaml-cpp.orig/include/yaml-cpp/binary.h	2012-01-21 03:52:48.000000000 -0500
++++ yaml-cpp/include/yaml-cpp/binary.h	2017-10-11 17:40:38.558486200 -0400
+@@ -18,7 +18,7 @@
+     class Binary {
+     public:
+         Binary(): m_unownedData(0), m_unownedSize(0) {}
+-        Binary(const unsigned char *data, std::size_t size): m_unownedData(data), m_unownedSize(size) {}
++        Binary(const unsigned char *dataptr, std::size_t datasize): m_unownedData(dataptr), m_unownedSize(datasize) {}
+         
+         bool owned() const { return !m_unownedData; }
+         std::size_t size() const { return owned() ? m_data.size() : m_unownedSize; }
+diff -Naur yaml-cpp.orig/src/scanner.h yaml-cpp/src/scanner.h
+--- yaml-cpp.orig/src/scanner.h	2012-01-21 03:52:48.000000000 -0500
++++ yaml-cpp/src/scanner.h	2017-10-11 17:41:13.076986200 -0400
+@@ -57,7 +57,7 @@
+ 		
+ 		bool InFlowContext() const { return !m_flows.empty(); }
+ 		bool InBlockContext() const { return m_flows.empty(); }
+-		int GetFlowLevel() const { return m_flows.size(); }
++		int GetFlowLevel() const { return int(m_flows.size()); }
+ 		
+ 		Token::TYPE GetStartTokenFor(IndentMarker::INDENT_TYPE type) const;
+ 		IndentMarker *PushIndentTo(int column, IndentMarker::INDENT_TYPE type);

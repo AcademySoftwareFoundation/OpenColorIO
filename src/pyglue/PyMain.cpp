@@ -167,9 +167,9 @@ MOD_INIT(PyOpenColorIO)
     
 #if PY_MAJOR_VERSION >= 2 && PY_MINOR_VERSION >= 7
     OCIO::SetExceptionPyType(PyErr_NewExceptionWithDoc(Exception,
-        (char*)OCIO::EXCEPTION__DOC__, OCIO::GetExceptionPyType(), NULL));
+        const_cast<char*>(OCIO::EXCEPTION__DOC__), OCIO::GetExceptionPyType(), NULL));
     OCIO::SetExceptionMissingFilePyType(PyErr_NewExceptionWithDoc(ExceptionMissingFile,
-        (char*)OCIO::EXCEPTIONMISSINGFILE__DOC__, OCIO::GetExceptionMissingFilePyType(), NULL));
+        const_cast<char*>(OCIO::EXCEPTIONMISSINGFILE__DOC__), OCIO::GetExceptionMissingFilePyType(), NULL));
 #else
     OCIO::SetExceptionPyType(PyErr_NewException(Exception,
         OCIO::GetExceptionPyType(), NULL));
