@@ -1969,7 +1969,7 @@ OIIO_ADD_TEST(Config, RoleWithoutColorSpace)
     config->setRole("reference", "UnknownColorSpace");
 
     std::ostringstream os;
-    OIIO_CHECK_THOW(config->serialize(os), OCIO::Exception);
+    OIIO_CHECK_THROW(config->serialize(os), OCIO::Exception);
 }
 
 OIIO_ADD_TEST(Config, Env_colorspace_name)
