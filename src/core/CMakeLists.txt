@@ -16,6 +16,17 @@ configure_file(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorABI.h.in
     ${CMAKE_BINARY_DIR}/export/OpenColorABI.h @ONLY)
 list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorABI.h)
 
+# Process all warnings as errors
+
+if(WIN32)
+    # On debug mode there are other kinds of warning...
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} /WX")
+    endif()
+else()
+    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -Werror")
+endif()
+
 # SHARED
 
 if(OCIO_BUILD_SHARED)
@@ -36,6 +47,14 @@ if(OCIO_BUILD_SHARED)
     if(EXTERNAL_LIBRARIES)
         target_link_libraries(OpenColorIO ${EXTERNAL_LIBRARIES})
     endif()
+
+    if(WIN32)
+        # Mute a design issue where the Exception public class inherits 
+        # from a STL Exception. STL classes are never supposed to
+        # be exported among different dynamic libraries.
+        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} /wd4275")
+    endif()
+
     set_target_properties(OpenColorIO PROPERTIES
         OUTPUT_NAME OpenColorIO
         COMPILE_FLAGS   "${EXTERNAL_COMPILE_FLAGS}"

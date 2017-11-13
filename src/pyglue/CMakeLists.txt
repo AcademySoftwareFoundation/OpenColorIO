@@ -13,6 +13,19 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-missing-field-initializers")
 endif()
 
+if(WIN32)
+    # Mute a design issue where the Exception public class inherits 
+    # from a STL Exception. STL classes are never supposed to
+    # be exported among different dynamic libraries.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
+endif()
+
+# Process all warnings as errors
+# Unfortunately Windows still has a warning
+if(UNIX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+endif()
+
 find_package(PythonLibs)
 if(NOT PYTHONLIBS_FOUND)
     message(FATAL "Python libraries were not found, exiting.")

@@ -106,6 +106,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #ifdef WINDOWS
 #define snprintf sprintf_s
 #define strtok_r strtok_s
+#define sscanf sscanf_s
+#define putenv _putenv
 typedef __int64 FilePos;
 #define fseeko _fseeki64
 #define ftello _ftelli64
@@ -197,6 +199,11 @@ OCIO_NAMESPACE_ENTER
     };
 #endif // __APPLE__
 #endif // WINDOWS
+
+  namespace Platform
+  {
+    void getenv (const char* name, std::string& value);
+  }
 
 }
 OCIO_NAMESPACE_EXIT

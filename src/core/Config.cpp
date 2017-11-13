@@ -50,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PrivateTypes.h"
 #include "pystring/pystring.h"
 #include "OCIOYaml.h"
+#include "Platform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -262,11 +263,13 @@ OCIO_NAMESPACE_ENTER
             strictParsing_(true),
             sanity_(SANITY_UNKNOWN)
         {
-            char* activeDisplays = std::getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR);
-            SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays);
+            std::string activeDisplays;
+            Platform::getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
+            SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays.c_str());
             
-            char * activeViews = std::getenv(OCIO_ACTIVE_VIEWS_ENVVAR);
-            SplitStringEnvStyle(activeViewsEnvOverride_, activeViews);
+            std::string activeViews;
+            Platform::getenv(OCIO_ACTIVE_VIEWS_ENVVAR, activeViews);
+            SplitStringEnvStyle(activeViewsEnvOverride_, activeViews.c_str());
             
             defaultLumaCoefs_.resize(3);
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
@@ -351,8 +354,9 @@ OCIO_NAMESPACE_ENTER
     
     ConstConfigRcPtr Config::CreateFromEnv()
     {
-        char* file = std::getenv(OCIO_CONFIG_ENVVAR);
-        if(file) return CreateFromFile(file);
+        std::string file;
+        Platform::getenv(OCIO_CONFIG_ENVVAR, file);
+        if(!file.empty()) return CreateFromFile(file.c_str());
         
         std::ostringstream os;
         os << "Color management disabled. ";

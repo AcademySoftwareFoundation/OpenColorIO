@@ -1602,8 +1602,8 @@ OIIO_ADD_TEST(FileFormatHDL, LookTest)
     std::ostringstream output;
     baker->bake(output);
 
-    std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
-    std::cerr << "Expected:" << std::endl << bout << std::endl;
+    //std::cerr << "The LUT: " << std::endl << output.str() << std::endl;
+    //std::cerr << "Expected:" << std::endl << bout << std::endl;
 
     //
     std::vector<std::string> osvec;
