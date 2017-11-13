@@ -491,7 +491,7 @@ OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
     // Read file
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THOW(cachedFile = tester.Read(lutIStream));
+    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
     OIIO_CHECK_ASSERT(lut->has1D);
@@ -559,7 +559,7 @@ OIIO_ADD_TEST(FileFormatTruelight, Shaper)
     // Read file
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THOW(cachedFile = tester.Read(lutIStream));
+    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream));
     
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
@@ -646,7 +646,7 @@ OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
     // Read file
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THOW(cachedFile = tester.Read(lutIStream));
+    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(lutIStream));
     OCIO::LocalCachedFileRcPtr lut = OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
     
     OIIO_CHECK_ASSERT(!lut->has1D);
