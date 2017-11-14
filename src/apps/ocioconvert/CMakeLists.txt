@@ -4,6 +4,7 @@ if (OIIO_FOUND)
         ${CMAKE_BINARY_DIR}/export/
         ${CMAKE_SOURCE_DIR}/src/apps/share/
         ${OIIO_INCLUDES}
+        ${ILMBASE_INCLUDES}
     )
     
     file(GLOB_RECURSE share_src_files "${CMAKE_SOURCE_DIR}/src/apps/share/*.cpp")
