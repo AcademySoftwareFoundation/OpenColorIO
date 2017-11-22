@@ -20,6 +20,7 @@ option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
 option(OCIO_BUILD_NUKE "Set to OFF to disable building nuke plugins" ON)
 option(OCIO_BUILD_DOCS "Specify whether to build documentation" UNIX)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
+option(OCIO_BUILD_GPU_TESTS "Specify whether to build unittests" OFF)
 option(OCIO_BUILD_PYGLUE "Specify whether to build python bindings" ON)
 option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
@@ -444,15 +445,38 @@ if(OCIO_BUILD_TRUELIGHT)
     endif()
 endif()
 
+
 ###############################################################################
 ### CORE ###
 
 add_subdirectory(src/core)
 
+if(OCIO_BUILD_GPU_TESTS OR OCIO_BUILD_APPS)
+    OCIOFindOpenGL()
+endif()
+
+
+###############################################################################
+### TESTS ###
+
 messageonce("Build Unit Tests: ${OCIO_BUILD_TESTS}")
 if(OCIO_BUILD_TESTS)
     add_subdirectory(src/core_tests)
+else()
+    messageonce("Not building unit tests...")
 endif()
+
+messageonce("Build GPU Unit Tests: ${OCIO_BUILD_GPU_TESTS}")
+if(OCIO_BUILD_GPU_TESTS)
+    if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND)
+        add_subdirectory(src/core_gpu_tests)
+    else()
+        messageonce("Not building gpu unit tests. Requirement(s) found, OpenGL:${OPENGL_FOUND}, GLUT:${GLUT_FOUND}, GLEW:${GLEW_FOUND}")
+    endif()
+else()
+    messageonce("Not building gpu unit tests.")
+endif()
+
 
 ###############################################################################
 ### APPS ###
@@ -471,7 +495,6 @@ if(OCIO_BUILD_APPS AND (OCIO_BUILD_STATIC OR OCIO_BUILD_SHARED) )
     
     # ociodisplay, displays color-transformed images (uses OpenImageIO,
     # and OpenGL)
-    OCIOFindOpenGL()
     if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND AND OIIO_FOUND)
         add_subdirectory(src/apps/ociodisplay)
     else()

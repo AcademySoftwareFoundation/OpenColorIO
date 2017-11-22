@@ -1,0 +1,92 @@
+###############################################################################
+### CORE GPU UNIT TESTS ###
+
+add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
+
+include_directories(
+    ${CMAKE_SOURCE_DIR}/src/core_gpu_tests
+    ${CMAKE_SOURCE_DIR}/export/
+    ${CMAKE_BINARY_DIR}/export/
+    ${OPENGL_INCLUDE_DIR}
+    ${GLUT_INCLUDE_DIR}
+    ${GLEW_INCLUDES}
+    ${EXTERNAL_INCLUDE_DIRS}
+    )
+
+if(WIN32)
+    # Hack to get around the "Debug" and "Release" sub directories 
+    #  cmake tries to add with Windows VC+++ IDE
+
+    # Set output path
+    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+    set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+    # For multi-config builds (e.g. msvc)
+    foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
+        string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
+        set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
+        set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
+        set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
+    endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
+endif()
+
+file( GLOB_RECURSE core_test_src_files "${CMAKE_SOURCE_DIR}/src/core_gpu_tests/*.cpp" )
+add_executable(ocio_core_gpu_tests ${EXTERNAL_OBJECTS} ${core_test_src_files})
+
+set_target_properties(ocio_core_gpu_tests PROPERTIES COMPILE_FLAGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+
+target_link_libraries(ocio_core_gpu_tests ${GLUT_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARY})
+
+if(USE_EXTERNAL_TINYXML)
+    target_link_libraries(ocio_core_gpu_tests ${TINYXML_LIBRARIES})
+else(USE_EXTERNAL_TINYXML)
+    add_dependencies(ocio_core_gpu_tests TINYXML_LIB)
+endif(USE_EXTERNAL_TINYXML)
+
+if(USE_EXTERNAL_YAML)
+    target_link_libraries(ocio_core_gpu_tests ${YAML_CPP_LIBRARIES})
+else(USE_EXTERNAL_YAML)
+    add_dependencies(ocio_core_gpu_tests YAML_CPP_LIB)
+endif(USE_EXTERNAL_YAML)
+
+if(EXTERNAL_LIBRARIES)
+    target_link_libraries(ocio_core_gpu_tests ${EXTERNAL_LIBRARIES})
+endif()
+
+target_link_OCIO(ocio_core_gpu_tests)
+
+set_target_properties(ocio_core_gpu_tests PROPERTIES
+    COMPILE_FLAGS       "${EXTERNAL_COMPILE_FLAGS}"
+    LINK_FLAGS          "${EXTERNAL_LINK_FLAGS}"
+    ## to avoid import/export link dll incoherences (since we build an app with OpenColorIO sources)
+    COMPILE_DEFINITIONS OpenColorIO_STATIC
+)
+
+###############################################################################
+### CTEST ###
+
+set(OCIO_TEST_AREA ${CMAKE_CURRENT_BINARY_DIR})
+
+if(UNIX)
+    message(STATUS "Create ocio_core_tests.sh.in from ocio_core_tests.sh")
+
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ocio_core_tests.sh.in
+        ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.sh @ONLY)
+
+    add_custom_target(MainGPUTests
+                      COMMAND /bin/sh ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.sh
+                      DEPENDS ocio_core_gpu_tests
+                      COMMENT "Setting Up and Running OCIO GPU UNIT tests")
+else()
+    message(STATUS "Create ocio_core_tests.bat.in from ocio_core_tests.bat")
+
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ocio_core_tests.bat.in
+        ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.bat @ONLY)
+
+    add_custom_target(MainGPUTests
+                      COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.bat
+                      DEPENDS ocio_core_gpu_tests
+                      COMMENT "Setting Up and Running OCIO GPU UNIT tests")
+endif()
+
+add_test(ocio_core_gpu_tests "${CMAKE_COMMAND}" --build ${CMAKE_BINARY_DIR} --target MainGPUTests)
