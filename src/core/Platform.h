@@ -92,8 +92,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #include <pthread.h>
 // OS for spinlock
 #ifdef __APPLE__
-#include <libkern/OSAtomic.h>
 #include <sys/types.h>
+#include <AvailabilityMacros.h>
+#ifdef AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER
+#include <os/lock.h>
+#else
+#include <libkern/OSAtomic.h>
+#endif
 #endif
 #endif
 
@@ -168,6 +173,17 @@ OCIO_NAMESPACE_ENTER
     };
 
 #if __APPLE__
+#ifdef AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER
+    class _SpinLock {
+    public:
+	_SpinLock()   { _spinlock = OS_UNFAIR_LOCK_INIT; }
+	~_SpinLock()  { }
+	void lock()   { os_unfair_lock_lock(&_spinlock); }
+	void unlock() { os_unfair_lock_unlock(&_spinlock); }
+    private:
+	os_unfair_lock _spinlock;
+    };
+#else
     class _SpinLock {
     public:
 	_SpinLock()   { _spinlock = 0; }
@@ -177,6 +193,7 @@ OCIO_NAMESPACE_ENTER
     private:
 	OSSpinLock _spinlock;
     };
+#endif
 #elif ANDROID
     // we don't have access to pthread on andriod so we just make an empty
     // class that does nothing.
