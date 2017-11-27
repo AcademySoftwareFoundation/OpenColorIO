@@ -23,7 +23,7 @@ class OCIOGPUTest
         inline const std::string& group() const  { return _group; }
         inline const std::string& name() const  { return _name; }
 
-        void setContext(OCIO_NAMESPACE::TransformRcPtr& transform, float errorThreshold);
+        void setContext(OCIO_NAMESPACE::TransformRcPtr transform, float errorThreshold);
 
         inline OCIO_NAMESPACE::ConstProcessorRcPtr& getProcessor() { return _processor; }
         inline float getErrorThreshold() { return _errorThreshold; }

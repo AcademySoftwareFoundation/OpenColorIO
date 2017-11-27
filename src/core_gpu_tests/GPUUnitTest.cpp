@@ -28,6 +28,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <sstream>
 #include <map>
 #include <stdlib.h>
+#include <string.h>
 
 
 
@@ -36,7 +37,7 @@ OCIOGPUTest::OCIOGPUTest(const std::string& testgroup, const std::string& testna
 {
 }
 
-void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr& transform, float errorThreshold)
+void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform, float errorThreshold)
 { 
     OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
     _processor = config->getProcessor(transform);
@@ -218,17 +219,17 @@ namespace
         return program;
     }
 
-    void UpdateImageTexture(float epsilon)
+    void UpdateImageTexture()
     {
         const float step = 1.0f / (g_winWidth * g_winHeight);
         const float inv_step = 1.0f / step;
         const uint32_t step_round = uint32_t(inv_step);
 
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
-        for(int idx=0; idx<numEntries; ++idx)
+        for(unsigned idx=0; idx<numEntries; ++idx)
         {
             // if step = 0.01f ==> value = (uint32_t((idx * 0.01f) % 100) * 0.01f
-            g_image[idx] = (uint32_t((idx * step) * inv_step) % step_round) * step;
+            g_image[idx] = float(uint32_t((idx * step) * inv_step) % step_round) * step;
         }
 
         glBindTexture(GL_TEXTURE_2D, g_imageTexID);
@@ -336,7 +337,7 @@ int main(int, char **)
 {
     int argc = 2;
     const char* argv[] = { "main", "-glDebug" };
-    glutInit(&argc, (char**)&argv[0]);
+    glutInit(&argc, const_cast<char**>(&argv[0]));
     
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(g_winWidth, g_winHeight);
@@ -348,7 +349,7 @@ int main(int, char **)
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
-        printf("OpenGL 2.0 not supported\n");
+        std::cout << "OpenGL 2.0 not supported" << std::endl;
         exit(1);
     }
 #endif
@@ -413,7 +414,7 @@ int main(int, char **)
         try
         {
             // Update the image texture
-            UpdateImageTexture(test->getErrorThreshold());
+            UpdateImageTexture();
 
             // Update the GPU shader program
             UpdateOCIOGLState(test->getProcessor());

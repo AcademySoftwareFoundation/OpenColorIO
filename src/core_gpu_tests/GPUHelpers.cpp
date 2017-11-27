@@ -14,12 +14,14 @@ namespace OCIO = OCIO_NAMESPACE;
 #endif
 
 
+
+#include <stdio.h>
 #include <fstream>
 
-#ifdef WINDOWS
-#include <stdio.h>
-#else
+#if !defined(WINDOWS)
+#include <sstream>
 #include <stdlib.h>
+#include <time.h>
 #endif
 
 
@@ -38,30 +40,24 @@ std::string createTempFile(const std::string& fileExt, const std::string& fileCo
     filename = tmpFilename;
     filename += fileExt;
     
-    std::ofstream ofs(filename, std::ios_base::out);
-    ofs << fileContent;
-    ofs.close();
-
 #else
 
-    char tmpFilename[] = "/tmp/ocioTmpFile-XXXXXX";
-    f = mkstemp(tmpFilename);
+    // Note: because of security issue, tmpnam could not be used
 
-    if(f==-1)
-    {
-        throw OCIO::Exception(strerror(errno));
-    }
+    std::stringstream ss;
+    time_t t = time(NULL);
+    ss << rand_r((unsigned int*)&t);
+    std::string str = "/tmp/ocio";
+    str += ss.str();
+    str += fileExt;
 
-    if(-1==write(f, fileContent.c_str(), fileContent.size())
-    {
-        throw OCIO::Exception(strerror(errno));
-    }
-
-    close(f);
-
-    filename = tmpFilename;
+    filename = str;
 
 #endif
+
+    std::ofstream ofs(filename.c_str(), std::ios_base::out);
+    ofs << fileContent;
+    ofs.close();
 
     return filename;
 }
