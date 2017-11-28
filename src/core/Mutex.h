@@ -98,16 +98,13 @@ OCIO_NAMESPACE_ENTER
     };
 
 #ifndef NDEBUG
-    // add debug wrappers to mutex and spinlock
+    // add debug wrappers to mutex
     typedef DebugLock<_Mutex> Mutex;
-    typedef DebugLock<_SpinLock> SpinLock;
 #else
     typedef _Mutex Mutex;
-    typedef _SpinLock SpinLock;
 #endif
 
     typedef AutoLock<Mutex> AutoMutex;
-    typedef AutoLock<SpinLock> AutoSpin;
 
 }
 OCIO_NAMESPACE_EXIT
