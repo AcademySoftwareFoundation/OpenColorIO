@@ -82,20 +82,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #include <process.h>
 
 #else
+// assume linux/unix/posix
 
-// linux/unix/posix
 #include <stdlib.h>
 #if !defined(__FreeBSD__)
 #include <alloca.h>
 #endif
 #include <string.h>
 #include <pthread.h>
-// OS for spinlock
-#ifdef __APPLE__
-#include <libkern/OSAtomic.h>
-#include <sys/types.h>
-#endif
-#endif
+
+#endif // defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
 
 // general includes
 #include <stdio.h>
@@ -118,7 +114,7 @@ inline double log2(double x) {
 
 #else
 typedef off_t FilePos;
-#endif
+#endif // WINDOWS
     
 
 OCIO_NAMESPACE_ENTER
@@ -129,7 +125,7 @@ OCIO_NAMESPACE_ENTER
 #define OCIO_LITTLE_ENDIAN 1  // This is correct on x86
 
     /*
-     * Mutex/SpinLock classes
+     * Mutex classes
      */
 
 #ifdef WINDOWS
@@ -142,16 +138,6 @@ OCIO_NAMESPACE_ENTER
 	void unlock() { ReleaseMutex(_mutex); }
     private:
 	HANDLE _mutex;
-    };
-
-    class _SpinLock {
-    public:
-	_SpinLock()    { InitializeCriticalSection(&_spinlock); }
-	~_SpinLock()   { DeleteCriticalSection(&_spinlock); }
-	void lock()   { EnterCriticalSection(&_spinlock); }
-	void unlock() { LeaveCriticalSection(&_spinlock); }
-    private:
-	CRITICAL_SECTION _spinlock;
     };
 
 #else
@@ -167,37 +153,6 @@ OCIO_NAMESPACE_ENTER
 	pthread_mutex_t _mutex;
     };
 
-#if __APPLE__
-    class _SpinLock {
-    public:
-	_SpinLock()   { _spinlock = 0; }
-	~_SpinLock()  { }
-	void lock()   { OSSpinLockLock(&_spinlock); }
-	void unlock() { OSSpinLockUnlock(&_spinlock); }
-    private:
-	OSSpinLock _spinlock;
-    };
-#elif ANDROID
-    // we don't have access to pthread on andriod so we just make an empty
-    // class that does nothing.
-    class _SpinLock {
-    public:
-    _SpinLock()   { }
-    ~_SpinLock()  { }
-    void lock()   { }
-    void unlock() { }
-    };
-#else
-    class _SpinLock {
-    public:
-	_SpinLock()   { pthread_spin_init(&_spinlock, PTHREAD_PROCESS_PRIVATE); }
-	~_SpinLock()  { pthread_spin_destroy(&_spinlock); }
-	void lock()   { pthread_spin_lock(&_spinlock); }
-	void unlock() { pthread_spin_unlock(&_spinlock); }
-    private:
-	pthread_spinlock_t _spinlock;
-    };
-#endif // __APPLE__
 #endif // WINDOWS
 
   namespace Platform
