@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2012 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2003-2017 Sony Pictures Imageworks Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,31 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _OPENCOLORIC_AE_DIALOG_H_
-#define _OPENCOLORIC_AE_DIALOG_H_
+#define OpenColorIOSignature    'ocio'
 
-#include <string>
-#include <map>
-#include <vector>
+#define ocioKeySource           'oSrc'
+#define ocioKeyConfigName       'oCfN'
+#define ocioKeyConfigFileHandle 'oCfH'
+#define ocioKeyAction           'oAct'
+#define ocioKeyInvert           'oInv'
+#define ocioKeyInterpolation    'oInt'
+#define ocioKeyInputSpace       'oInp'
+#define ocioKeyOutputSpace      'oOut'
+#define ocioKeyTransform        'oTrn'
+#define ocioKeyDevice           'oDev'
 
-#include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
+#define typeSource          'tSrc'
+#define sourceEnvironment   'sEnv'
+#define sourceStandard      'sStd'
+#define sourceCustom        'sCus'
 
+#define typeAction          'tAct'
+#define actionLUT           'aLUT'
+#define actionConvert       'aCvt'
+#define actionDisplay       'aDis'
 
-typedef std::map<std::string, std::string> ExtensionMap; // map[ ext ] = format
-
-bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd);
-
-bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd);
-
-bool GetMonitorProfile(char *path, int buf_len, const void *hwnd);
-
-
-typedef std::vector<std::string> ConfigVec;
-
-void GetStdConfigs(ConfigVec &configs);
-
-std::string GetStdConfigPath(const std::string &name);
-
-
-typedef std::vector<std::string> MenuVec;
-
-int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd);
-
-
-bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace, bool selectRoles, const void *hwnd);
-
-
-void ErrorMessage(const char *message, const void *hwnd);
-
-#ifdef SUPPLY_HINSTANCE
-void SetHInstance(void *hInstance);
-#endif
-
-#endif // _OPENCOLORIC_AE_DIALOG_H_
+#define typeInterpolation   'tInt'
+#define interpNearest       'tNer'
+#define interpLinear        'tLin'
+#define interpTetrahedral   'tTet'
+#define interpBest          'tBst'

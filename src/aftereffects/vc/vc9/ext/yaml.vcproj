@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;..\..\..\..\..\ext\boost_1_48_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -106,7 +106,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;..\..\..\..\..\ext\boost_1_48_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -169,7 +169,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;..\..\..\..\..\ext\boost_1_48_0"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -232,7 +232,255 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp\include&quot;"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;..\..\..\..\..\ext\boost_1_48_0"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
+				EnableFunctionLevelLinking="true"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug_4ByteStruct|Win32"
+			OutputDirectory="build\$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;..\..\..\..\..\ext\boost_1_48_0"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				WarningLevel="3"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug_4ByteStruct|x64"
+			OutputDirectory="build\$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;..\..\..\..\..\ext\boost_1_48_0"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release_4ByteStruct|Win32"
+			OutputDirectory="build\$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;..\..\..\..\..\ext\boost_1_48_0"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
+				EnableFunctionLevelLinking="true"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release_4ByteStruct|x64"
+			OutputDirectory="build\$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;..\..\..\..\..\ext\yaml-cpp-0.5.1\include&quot;;..\..\..\..\..\ext\boost_1_48_0"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -277,115 +525,119 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\aliasmanager.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\binary.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\binary.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\convert.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\conversion.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\directives.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\directives.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\emit.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\emitfromevents.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\emitfromevents.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\emitter.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\emitter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\emitterstate.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\emitterstate.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\emitterutils.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\emitterutils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\exp.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\exp.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\contrib\graphbuilder.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\contrib\graphbuilder.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\contrib\graphbuilderadapter.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\contrib\graphbuilderadapter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\contrib\graphbuilderadapter.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\memory.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\iterator.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\node.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\node.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\node_data.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\nodebuilder.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\nodebuilder.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\nodeownership.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\nodeevents.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\null.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\null.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\ostream.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\ostream_wrapper.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\parser.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\parse.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\regex.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\parser.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\scanner.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\regex.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\scanscalar.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\scanner.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\scantag.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\scanscalar.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\scantoken.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\scantag.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\simplekey.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\scantoken.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\singledocparser.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\simplekey.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\stream.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\singledocparser.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\tag.cpp"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\stream.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\tag.cpp"
 				>
 			</File>
 		</Filter>
@@ -395,199 +647,95 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\aliasmanager.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\collectionstack.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\anchor.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\directives.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\contrib\anchordict.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\emitterstate.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\collectionstack.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\emitterutils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\conversion.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\exp.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\directives.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\contrib\graphbuilderadapter.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\dll.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\indentation.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\emitfromevents.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\nodebuilder.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\emitter.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\nodeevents.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\emittermanip.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\ptr_stack.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\emitterstate.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\ptr_vector.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\emitterutils.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\regex.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\eventhandler.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\regeximpl.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\exceptions.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\scanner.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\exp.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\scanscalar.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\contrib\graphbuilder.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\scantag.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\indentation.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\setting.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\iterator.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\singledocparser.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\iterpriv.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\stream.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\ltnode.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\streamcharsource.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\mark.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\stringsource.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\node.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\tag.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\nodebuilder.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\nodeimpl.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\nodeownership.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\nodereadimpl.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\nodeutil.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\noncopyable.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\null.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\ostream.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\parser.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\ptr_stack.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\ptr_vector.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\regex.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\regeximpl.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\scanner.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\scanscalar.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\scantag.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\setting.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\singledocparser.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\stlemitter.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\stlnode.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\stream.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\streamcharsource.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\stringsource.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\tag.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\src\token.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\traits.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\ext\yaml-cpp\include\yaml-cpp\yaml.h"
+				RelativePath="..\..\..\..\..\ext\yaml-cpp-0.5.1\src\token.h"
 				>
 			</File>
 		</Filter>

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2012 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2003-2017 Sony Pictures Imageworks Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,63 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _OPENCOLORIC_AE_DIALOG_H_
-#define _OPENCOLORIC_AE_DIALOG_H_
+#ifndef _OPENCOLORIO_PS_DIALOG_H_
+#define _OPENCOLORIO_PS_DIALOG_H_
 
 #include <string>
-#include <map>
-#include <vector>
 
-#include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
+enum DialogResult
+{
+    RESULT_OK,
+    RESULT_CANCEL,
+    RESULT_EXPORT
+};
+
+enum DialogSource
+{
+    SOURCE_ENVIRONMENT,
+    SOURCE_STANDARD,
+    SOURCE_CUSTOM
+};
+
+enum DialogAction
+{
+    ACTION_LUT,
+    ACTION_CONVERT,
+    ACTION_DISPLAY
+};
+
+enum DialogInterp
+{
+    INTERPO_NEAREST,
+    INTERPO_LINEAR,
+    INTERPO_TETRAHEDRAL,
+    INTERPO_BEST
+};
+
+typedef struct DialogParams
+{
+    DialogSource    source;
+    std::string     config; // path when source == SOURCE_CUSTOM
+    DialogAction    action;
+    bool            invert;
+    DialogInterp    interpolation;
+    std::string     inputSpace;
+    std::string     outputSpace;
+    std::string     device;
+    std::string     transform;
+} DialogParams;
 
 
-typedef std::map<std::string, std::string> ExtensionMap; // map[ ext ] = format
+// return true if user hit OK
+// if user hit OK, params block will have been modified
+//
+// send in block of parameters
+// plugHndl is bundle identifier string on Mac, hInstance on win
+// mwnd is the main window, Windows only (NULL on Mac)
 
-bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd);
+DialogResult OpenColorIO_PS_Dialog(DialogParams &params, const void *plugHndl, const void *mwnd);
 
-bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd);
+void OpenColorIO_PS_About(const void *plugHndl, const void *mwnd);
 
-bool GetMonitorProfile(char *path, int buf_len, const void *hwnd);
-
-
-typedef std::vector<std::string> ConfigVec;
-
-void GetStdConfigs(ConfigVec &configs);
-
-std::string GetStdConfigPath(const std::string &name);
-
-
-typedef std::vector<std::string> MenuVec;
-
-int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd);
-
-
-bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace, bool selectRoles, const void *hwnd);
-
-
-void ErrorMessage(const char *message, const void *hwnd);
-
-#ifdef SUPPLY_HINSTANCE
-void SetHInstance(void *hInstance);
-#endif
-
-#endif // _OPENCOLORIC_AE_DIALOG_H_
+#endif // _OPENCOLORIO_PS_DIALOG_H_

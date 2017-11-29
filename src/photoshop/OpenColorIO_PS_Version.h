@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2012 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2003-2017 Sony Pictures Imageworks Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,21 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _OPENCOLORIC_AE_DIALOG_H_
-#define _OPENCOLORIC_AE_DIALOG_H_
-
-#include <string>
-#include <map>
-#include <vector>
-
-#include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
+#ifndef _OPENCOLORIO_PS_VERSION_H_
+#define _OPENCOLORIO_PS_VERSION_H_
 
 
-typedef std::map<std::string, std::string> ExtensionMap; // map[ ext ] = format
+#define OpenColorIO_PS_Major_Version 1
+#define OpenColorIO_PS_Minor_Version 0
+#define OpenColorIO_PS_Version_String "1.0"
+#define OpenColorIO_PS_Beta_String "Beta 4"
+#define OpenColorIO_PS_Build_Date __DATE__
+#define OpenColorIO_PS_Build_Date_Manual "13 February 2017"
+#define OpenColorIO_PS_Build_Complete_Manual "v1.0 Beta 4 - " OpenColorIO_PS_Build_Date
+#define OpenColorIO_PS_Copyright_Year "2017"
+#define OpenColorIO_PS_Build_Year "2017"
 
-bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd);
-
-bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const void *hwnd);
-
-bool GetMonitorProfile(char *path, int buf_len, const void *hwnd);
-
-
-typedef std::vector<std::string> ConfigVec;
-
-void GetStdConfigs(ConfigVec &configs);
-
-std::string GetStdConfigPath(const std::string &name);
+#define OpenColorIO_PS_Description "OpenColorIO"
 
 
-typedef std::vector<std::string> MenuVec;
-
-int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd);
-
-
-bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace, bool selectRoles, const void *hwnd);
-
-
-void ErrorMessage(const char *message, const void *hwnd);
-
-#ifdef SUPPLY_HINSTANCE
-void SetHInstance(void *hInstance);
-#endif
-
-#endif // _OPENCOLORIC_AE_DIALOG_H_
+#endif // _OPENCOLORIO_PS_VERSION_H_
