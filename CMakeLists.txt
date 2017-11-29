@@ -457,7 +457,7 @@ endif()
 
 
 ###############################################################################
-### TESTS ###
+### CPU TESTS ###
 
 messageonce("Build Unit Tests: ${OCIO_BUILD_TESTS}")
 if(OCIO_BUILD_TESTS)
@@ -466,12 +466,16 @@ else()
     messageonce("Not building unit tests...")
 endif()
 
+
+###############################################################################
+### GPU TESTS ###
+
 messageonce("Build GPU Unit Tests: ${OCIO_BUILD_GPU_TESTS}")
 if(OCIO_BUILD_GPU_TESTS)
-    if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND)
-        add_subdirectory(src/core_gpu_tests)
+    if(NOT OPENGL_FOUND OR NOT GLUT_FOUND OR NOT GLEW_FOUND OR NOT OCIO_BUILD_SHARED)
+        messageonce("Not building gpu unit tests. Requirement(s) found, OpenColorIO:${OCIO_BUILD_SHARED}, OpenGL:${OPENGL_FOUND}, GLUT:${GLUT_FOUND}, GLEW:${GLEW_FOUND}")
     else()
-        messageonce("Not building gpu unit tests. Requirement(s) found, OpenGL:${OPENGL_FOUND}, GLUT:${GLUT_FOUND}, GLEW:${GLEW_FOUND}")
+        add_subdirectory(src/core_gpu_tests)
     endif()
 else()
     messageonce("Not building gpu unit tests.")
@@ -510,7 +514,7 @@ if(OCIO_BUILD_APPS AND (OCIO_BUILD_STATIC OR OCIO_BUILD_SHARED) )
     add_subdirectory(src/apps/ociobakelut)
     
 else()
-    message(STATUS "Disable build of apps. See cmake options : OCIO_BUILD_APPS and OCIO_BUILD_SHARED/OCIO_BUILD_STATIC (requiered)")
+    message(STATUS "Disable build of apps. See cmake options : OCIO_BUILD_APPS and OCIO_BUILD_SHARED/OCIO_BUILD_STATIC (required)")
 endif()
 
 ###############################################################################
@@ -572,7 +576,7 @@ include(CPack)
 
 add_custom_target(test_verbose
                   COMMAND ctest -VV
-                  DEPENDS ocio_core_tests
+                  DEPENDS ocio_core_tests ocio_core_gpu_tests
                   COMMENT "Running ctest with verbose output")
 
 # Log CMake first run done
