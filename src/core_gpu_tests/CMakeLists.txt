@@ -60,10 +60,17 @@ if(UNIX)
                       DEPENDS ocio_core_gpu_tests OpenColorIO
                       COMMENT "Setting Up and Running OCIO GPU UNIT tests")
 else()
+
     message(STATUS "Create ocio_core_tests.bat.in from ocio_core_tests.bat")
 
+    if(MSVC_IDE)
+        set( MY_PATH ${CMAKE_BINARY_DIR}/src/core/${CMAKE_BUILD_TYPE} )
+    else()
+        set( MY_PATH ${CMAKE_BINARY_DIR}/src/core )
+    endif()
+
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ocio_core_tests.bat.in
-        ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.bat @ONLY)
+        ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.bat)
 
     add_custom_target(MainGPUTests
                       COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ocio_core_tests.bat

@@ -7,4 +7,6 @@ set OCIO_JOB=meatballs
 set OCIO_SEQ=cheesecake
 set OCIO_SHOT=mb-cc-001
 
+set PATH=@MY_PATH@;$ENV{PATH}
+
 @CMAKE_CURRENT_BINARY_DIR@/ocio_core_gpu_tests.exe --log_level=test_suite
