@@ -129,8 +129,14 @@ static void InitImageTexture(const char * filename)
 
             img.resize(texWidth*texHeight*components);
             memset(&img[0], 0, texWidth*texHeight*components*sizeof(float));
-            
-            f->read_image(OIIO::TypeFloat, &img[0]);
+
+            f->read_image(
+#if (OIIO_VERSION >= 10800)
+                OIIO::TypeFloat, 
+#else
+                OIIO::TypeDesc::TypeFloat, 
+#endif
+                &img[0]);
             OIIO::ImageInput::destroy(f);
         }
         catch(...)
@@ -789,6 +795,9 @@ void parseArguments(int argc, char **argv)
                       << "\t" << g_filename << std::endl;
         }
         std::cout << std::endl;
+        std::cout << "OIIO: " << std::endl
+                  << "\tversion       = " << OIIO_VERSION_STRING << std::endl;
+        std::cout << std::endl;
         std::cout << "OCIO: " << std::endl
                   << "\tversion       = " << OCIO::GetVersion() << std::endl;
         if(getenv("OCIO"))
@@ -859,7 +868,7 @@ int main(int argc, char **argv)
         glutIdleFunc(Idle);
     }
     */
-    
+
     glutMainLoop();
 
     return 0;
