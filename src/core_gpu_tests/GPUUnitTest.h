@@ -15,6 +15,7 @@ class OCIOGPUTest;
 
 typedef void (*OCIOTestFunc)(OCIOGPUTest & test);
 
+// The class holds the information around a specific GPU unit test
 class OCIOGPUTest
 {
     public:
@@ -32,7 +33,7 @@ class OCIOGPUTest
 
     private:
         const std::string _group, _name;
-        OCIOTestFunc _function;
+        OCIOTestFunc _function;          
         OCIO_NAMESPACE::ConstProcessorRcPtr _processor;
         float _errorThreshold;
 };

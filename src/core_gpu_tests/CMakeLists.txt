@@ -17,6 +17,8 @@ include_directories(
     ${GLEW_INCLUDES}
     )
 
+set(EXTERNAL_COMPILE_FLAGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+
 if(WIN32)
     # Hack to get around the "Debug" and "Release" sub directories 
     #  cmake tries to add with Windows VC+++ IDE
@@ -32,12 +34,18 @@ if(WIN32)
         set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
         set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR} )
     endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
+
+    # Mute a design issue where the Exception public class inherits 
+    # from a STL Exception. STL classes are never supposed to
+    # be exported among different dynamic libraries.
+    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} /wd4275")
+
 endif()
 
 file( GLOB_RECURSE core_test_src_files "${CMAKE_SOURCE_DIR}/src/core_gpu_tests/*.cpp" )
 add_executable(ocio_core_gpu_tests ${core_test_src_files})
 
-set_target_properties(ocio_core_gpu_tests PROPERTIES COMPILE_FLAGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+set_target_properties(ocio_core_gpu_tests PROPERTIES COMPILE_FLAGS ${EXTERNAL_COMPILE_FLAGS})
 
 target_link_libraries(ocio_core_gpu_tests ${GLUT_LIBRARY} ${GLEW_LIBRARIES} ${OPENGL_LIBRARY})
 

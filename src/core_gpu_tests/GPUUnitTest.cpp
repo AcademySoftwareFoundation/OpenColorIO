@@ -228,7 +228,7 @@ namespace
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         for(unsigned idx=0; idx<numEntries; ++idx)
         {
-            // if step = 0.01f ==> value = (uint32_t((idx * 0.01f) % 100) * 0.01f
+            // if step = 0.01f ==> value = (uint32_t((idx * 0.01f * 100.0f) % 100) * 0.01f
             g_image[idx] = float(uint32_t((idx * step) * inv_step) % step_round) * step;
         }
 
@@ -238,6 +238,7 @@ namespace
     }
 
 
+    // The main if the shader program hard-coded to accept the lut 3D smapler as input
     const char * g_fragShaderText = ""
     "\n"
     "uniform sampler2D tex1;\n"
@@ -292,6 +293,7 @@ namespace
         }
     }
 
+    // Validate the GPU processing against the CPU one
     void ValidateImageTexture(OCIO::ConstProcessorRcPtr& processor, float epsilon)
     {
         // Step 1: Compute the output using the CPU engine
@@ -354,18 +356,25 @@ int main(int, char **)
     }
 #endif
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);      // 4-byte pixel alignment
-    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);
-    glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);
-    glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE);
-    glEnable(GL_TEXTURE_2D);
-    glClearColor(0, 0, 0, 0);                   // background color
-    glClearStencil(0);                          // clear stencil buffer
+    // Step 1: Initilize the OpenGL engine
 
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
+
+    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);     //
+    glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);   // avoid any kind of clamping
+    glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE); //
+
+    glEnable(GL_TEXTURE_2D);
+    glClearColor(0, 0, 0, 0);                        // background color
+    glClearStencil(0);                               // clear stencil buffer
+
+    // Step 2: Allocate the needed textures
 
     AllocateImageTexture();
 
     AllocateDefaultLut3D();
+
+    // Step 3: Create the frame buffer and render buffer
 
     GLuint fboId;
 
@@ -390,6 +399,8 @@ int main(int, char **)
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rboId);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Step 4: Execute all the unit tests
 
     unsigned failures = 0;
 
