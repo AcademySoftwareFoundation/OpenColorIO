@@ -360,8 +360,7 @@ int main(int, char **)
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);           // 4-byte pixel alignment
 
-    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);     //
-    glClampColor(GL_CLAMP_VERTEX_COLOR, GL_FALSE);   // avoid any kind of clamping
+    glClampColor(GL_CLAMP_READ_COLOR, GL_FALSE);     // avoid any kind of clamping
     glClampColor(GL_CLAMP_FRAGMENT_COLOR, GL_FALSE); //
 
     glEnable(GL_TEXTURE_2D);
