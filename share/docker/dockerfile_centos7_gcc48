@@ -21,7 +21,9 @@ RUN yum -y install epel-release && \
     bzip2-devel \
     freeglut-devel \
     libXmu-devel \
-    libXi-devel
+    libXi-devel && \
+    yum clean all
+    
 
 RUN mkdir /home/download && \
     cd /home/download && \
@@ -57,7 +59,6 @@ RUN cd /home/git && \
     cmake3 .. && \
     make install -j2
 
-RUN yum clean all && \
-    rm -rf /var/cache/yum && \
+RUN rm -rf /var/cache/yum && \
     rm -R /home/git && \
     rm -R /home/download
