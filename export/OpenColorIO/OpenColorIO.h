@@ -100,7 +100,17 @@ OCIO_NAMESPACE_ENTER
         virtual const char* what() const throw();
         
     private:
+        //Add pragma warnings, STL member is private and not consumed by client of DLL
+        #ifdef _WIN32
+        #pragma warning(push)
+        #pragma warning(disable:4251)
+        #endif // _WIN32
+
         std::string msg_;
+
+        #ifdef _WIN32
+        #pragma warning(pop)
+        #endif // _WIN32
     };
     
     //!cpp:class:: An exception class for errors detected at
