@@ -30,8 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OPENCOLORIO_H
 #define INCLUDED_OCIO_OPENCOLORIO_H
 
-#include <stdexcept>
+#include <exception>
 #include <iosfwd>
+#include <string>
 #include <cstddef>
 
 #include "OpenColorABI.h"
@@ -84,15 +85,22 @@ OCIO_NAMESPACE_ENTER
     //
     // .. warning:: 
     //    All functions in the Config class can potentially throw this exception.
-    class OCIOEXPORT Exception : public std::runtime_error
+    class OCIOEXPORT Exception : public std::exception
     {
     public:
         //!cpp:function:: Constructor that takes a string as the exception message.
         Exception(const char *) throw();
-        //!cpp:function:: Constructor that takes an existing exception.
+        //!cpp:function:: Constructor that takes an exception pointer.
         Exception(const Exception&) throw();
-        //!cpp:function:: Destructor
+        //!cpp:function:: Constructor that takes an exception pointer and returns an exception pointer (???).
+        Exception& operator=(const Exception&) throw();
+        //!cpp:function::
         virtual ~Exception() throw();
+        //!cpp:function::
+        virtual const char* what() const throw();
+        
+    private:
+        std::string msg_;
     };
     
     //!cpp:class:: An exception class for errors detected at
@@ -105,9 +113,9 @@ OCIO_NAMESPACE_ENTER
     class OCIOEXPORT ExceptionMissingFile : public Exception
     {
     public:
-        //!cpp:function:: Constructor that takes a string as the exception message.
+        //!cpp:function::
         ExceptionMissingFile(const char *) throw();
-        //!cpp:function:: Constructor that takes an existing exception.
+        //!cpp:function::
         ExceptionMissingFile(const ExceptionMissingFile&) throw();
     };
     
@@ -191,6 +199,7 @@ OCIO_NAMESPACE_ENTER
     // See :ref:`developers-usageexamples`
     
     //!cpp:function:: Get the current configuration.
+    
     extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
     
     //!cpp:function:: Set the current configuration. This will then store a copy of the specified config.
@@ -208,11 +217,11 @@ OCIO_NAMESPACE_ENTER
         // Initialization
         // ^^^^^^^^^^^^^^
         
-        //!cpp:function:: Constructor a default empty configuration.
+        //!cpp:function:: Constructor...ELABORATE
         static ConfigRcPtr Create();
-        //!cpp:function:: Constructor a configuration using the SYNCOLOR environment variable.
+        //!cpp:function:: 
         static ConstConfigRcPtr CreateFromEnv();
-        //!cpp:function:: Constructor a configuration using specific config file.
+        //!cpp:function::
         static ConstConfigRcPtr CreateFromFile(const char * filename);
         //!cpp:function::
         static ConstConfigRcPtr CreateFromStream(std::istream & istream);
@@ -363,7 +372,7 @@ OCIO_NAMESPACE_ENTER
         //
         // Looks is a potentially comma (or colon) delimited list of lookNames,
         // Where +/- prefixes are optionally allowed to denote forward/inverse
-        // look specification. (And forward is assumed in the absence of either)
+        // look specification. (And forward is assumed in the absense of either)
         
         //!cpp:function::
         const char * getDefaultDisplay() const;
@@ -545,7 +554,7 @@ OCIO_NAMESPACE_ENTER
     // and color encoding. Transforming images between different
     // *ColorSpaces* is the primary motivation for this library.
     //
-    // While a complete discussion of color spaces is beyond the scope of
+    // While a complete discussion of colorspaces is beyond the scope of
     // header documentation, traditional uses would be to have *ColorSpaces*
     // corresponding to: physical capture devices (known cameras, scanners),
     // and internal 'convenience' spaces (such as scene linear, logarithmic).
@@ -883,7 +892,7 @@ OCIO_NAMESPACE_ENTER
     // Baker
     // *****
     // 
-    // In certain situations it is necessary to serialize transforms into a variety
+    // In certain situations it is nessary to serilize transforms into a variety
     // of application specific lut formats. The Baker can be used to create lut
     // formats that ocio supports for writing.
     // 
@@ -952,7 +961,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: set the looks to be applied during baking
         // Looks is a potentially comma (or colon) delimited list of lookNames,
         // Where +/- prefixes are optionally allowed to denote forward/inverse
-        // look specification. (And forward is assumed in the absence of either)
+        // look specification. (And forward is assumed in the absense of either)
         void setLooks(const char * looks);
         //!cpp:function:: get the looks to be applied during baking
         const char * getLooks() const;
@@ -1146,12 +1155,12 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         ~GpuShaderDesc();
         
-        //!cpp:function:: Set the shader program language
+        //!cpp:function::
         void setLanguage(GpuLanguage lang);
         //!cpp:function::
         GpuLanguage getLanguage() const;
         
-        //!cpp:function:: Set the function name of the shader program 
+        //!cpp:function::
         void setFunctionName(const char * name);
         //!cpp:function::
         const char * getFunctionName() const;
