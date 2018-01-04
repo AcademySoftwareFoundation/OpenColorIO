@@ -1,5 +1,5 @@
 #
-# Ubuntu Dockerfile for OCIO 1.0.10
+# Ubuntu Dockerfile for OCIO
 #
 
 # Pull base image.
