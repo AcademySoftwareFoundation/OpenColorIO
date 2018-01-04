@@ -30,8 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OPENCOLORIO_H
 #define INCLUDED_OCIO_OPENCOLORIO_H
 
-#include <stdexcept>
+#include <exception>
 #include <iosfwd>
+#include <string>
 #include <cstddef>
 
 #include "OpenColorABI.h"
@@ -84,15 +85,32 @@ OCIO_NAMESPACE_ENTER
     //
     // .. warning:: 
     //    All functions in the Config class can potentially throw this exception.
-    class OCIOEXPORT Exception : public std::runtime_error
+    class OCIOEXPORT Exception : public std::exception
     {
     public:
         //!cpp:function:: Constructor that takes a string as the exception message.
         Exception(const char *) throw();
-        //!cpp:function:: Constructor that takes an existing exception.
+        //!cpp:function:: Constructor that takes an exception pointer.
         Exception(const Exception&) throw();
-        //!cpp:function:: Destructor
+        //!cpp:function:: Constructor that takes an exception pointer and returns an exception pointer (???).
+        Exception& operator=(const Exception&) throw();
+        //!cpp:function::
         virtual ~Exception() throw();
+        //!cpp:function::
+        virtual const char* what() const throw();
+        
+    private:
+        //Add pragma warnings, STL member is private and not consumed by client of DLL
+        #ifdef _WIN32
+        #pragma warning(push)
+        #pragma warning(disable:4251)
+        #endif // _WIN32
+
+        std::string msg_;
+
+        #ifdef _WIN32
+        #pragma warning(pop)
+        #endif // _WIN32
     };
     
     //!cpp:class:: An exception class for errors detected at
@@ -191,6 +209,7 @@ OCIO_NAMESPACE_ENTER
     // See :ref:`developers-usageexamples`
     
     //!cpp:function:: Get the current configuration.
+    
     extern OCIOEXPORT ConstConfigRcPtr GetCurrentConfig();
     
     //!cpp:function:: Set the current configuration. This will then store a copy of the specified config.
@@ -210,9 +229,9 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function:: Constructor a default empty configuration.
         static ConfigRcPtr Create();
-        //!cpp:function:: Constructor a configuration using the SYNCOLOR environment variable.
+        //!cpp:function::  Constructor a configuration using the OCIO environmnet variable.
         static ConstConfigRcPtr CreateFromEnv();
-        //!cpp:function:: Constructor a configuration using specific config file.
+        //!cpp:function:: Constructor a configuration using a specific config file.
         static ConstConfigRcPtr CreateFromFile(const char * filename);
         //!cpp:function::
         static ConstConfigRcPtr CreateFromStream(std::istream & istream);
@@ -1151,7 +1170,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         GpuLanguage getLanguage() const;
         
-        //!cpp:function:: Set the function name of the shader program 
+        //!cpp:function:: Set the function name of the shader program
         void setFunctionName(const char * name);
         //!cpp:function::
         const char * getFunctionName() const;
