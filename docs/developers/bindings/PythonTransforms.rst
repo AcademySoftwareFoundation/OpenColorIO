@@ -17,7 +17,7 @@ AllocationTransform
     
     import PyOpenColorIO as OCIO
     transform = OCIO.AllocationTransform()
-    transform.setAllocation(OCIO.Constants.ALLOCATION)
+    transform.setAllocation(OCIO.Constants.ALLOCATION_LG2)
 
 .. autoclass:: PyOpenColorIO.AllocationTransform
     :members:
