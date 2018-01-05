@@ -61,6 +61,33 @@ working fork::
 You should then do a git fetch, and git merge (detailed below) to download the
 remote branches you've just added.
 
+Reference Build Environment
+***************************
+
+To aid new developers to the project and provide a baseline standard,
+OCIO provides a reference build environment through Docker. Docker essentially is a
+container that consits of both a Linux distro and the dependencies needed to run
+a client application. This is typically used for deploying apps and services to
+servers, but we are using it to provide an isolated development environment to build
+and test OCIO with. With this environment you are guaranteed to be able to compile OCIO
+and run its non-GUI command line applications.
+
+For more information on Docker, start here:
+https://docs.docker.com/engine/docker-overview/
+
+In order to run the Docker environment you will have to build it from the Dockerfile
+provided in the repo directory::
+
+    OpenColorIO/shared/docker
+
+Run this command in order to build the Docker image (aprox. 20min)::
+
+    docker build . -t ocio:centos7_gcc48 -f dockerfile_centos7_gcc48
+
+You can then mount the current OCIO directory and compile using the Docker image with::
+
+    docker run --volume $PWD/../../:/src/ociosrc -t ocio:centos7_gcc48 bash -c 'mkdir /build && cd /build && cmake /src/ociosrc && make -j2`
+
 
 Merging changes
 ***************
