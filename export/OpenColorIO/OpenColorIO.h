@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OPENCOLORIO_H
 #define INCLUDED_OCIO_OPENCOLORIO_H
 
-#include <exception>
+#include <stdexcept>
 #include <iosfwd>
 #include <string>
 #include <cstddef>
@@ -85,32 +85,13 @@ OCIO_NAMESPACE_ENTER
     //
     // .. warning:: 
     //    All functions in the Config class can potentially throw this exception.
-    class OCIOEXPORT Exception : public std::exception
+    class OCIOEXPORT Exception : public std::runtime_error
     {
     public:
         //!cpp:function:: Constructor that takes a string as the exception message.
         Exception(const char *) throw();
-        //!cpp:function:: Constructor that takes an exception pointer.
+        //!cpp:function:: Constructor that takes an existing exception.
         Exception(const Exception&) throw();
-        //!cpp:function:: Constructor that takes an exception pointer and returns an exception pointer (???).
-        Exception& operator=(const Exception&) throw();
-        //!cpp:function::
-        virtual ~Exception() throw();
-        //!cpp:function::
-        virtual const char* what() const throw();
-        
-    private:
-        //Add pragma warnings, STL member is private and not consumed by client of DLL
-        #ifdef _WIN32
-        #pragma warning(push)
-        #pragma warning(disable:4251)
-        #endif // _WIN32
-
-        std::string msg_;
-
-        #ifdef _WIN32
-        #pragma warning(pop)
-        #endif // _WIN32
     };
     
     //!cpp:class:: An exception class for errors detected at
