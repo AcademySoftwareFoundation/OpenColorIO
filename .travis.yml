@@ -24,18 +24,28 @@ env:
   - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=yes -DOCIO_BUILD_DOCS=yes"
 
 # Install missing packages
-install:
-  - if [[ $TRAVIS_OS_NAME = linux ]]; then sudo apt-get update -qq; fi
-  - if [[ $TRAVIS_OS_NAME = linux ]]; then sudo apt-get install -qq texlive-full; fi
+before_install:
+  # Linux ones
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
+      sudo apt-get update -qq;
+      sudo apt-get install -y -qq texlive-full;
+      sudo apt-get install -y -qq freeglut3-dev libglew-dev libxmu-dev libxi-dev; 
+    fi
+  # OSX ones
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update;
+      brew install glew;
+    fi
 
 # Run the Build script
 script:
- - mkdir _build
- - cd _build
- - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
- - cmake --build . --target install
- - ctest --output-on-failure .
- - if [[ $TRAVIS_OS_NAME = linux ]]; then cmake --build . --target pdf; fi
+  - mkdir _build
+  - cd _build
+  - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
+  - cmake --build . --target install
+  - cmake --build . --target MainTests
+  - cmake --build . --target PYTests
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake --build . --target pdf; fi
 
 deploy:
   provider: pages
