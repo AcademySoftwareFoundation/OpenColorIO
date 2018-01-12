@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    std::string CacheIDHash(const char * array, int size)
+    std::string CacheIDHash(const char * array, unsigned size)
     {
         md5_state_t state;
         md5_byte_t digest[16];

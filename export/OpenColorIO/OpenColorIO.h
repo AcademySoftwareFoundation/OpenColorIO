@@ -771,8 +771,8 @@ OCIO_NAMESPACE_ENTER
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
-        // CPU Path
-        // ^^^^^^^^
+        // CPU Renderer
+        // ^^^^^^^^^^^^
         
         //!cpp:function:: Apply to an image.
         void apply(ImageDesc& img) const;
@@ -795,27 +795,13 @@ OCIO_NAMESPACE_ENTER
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
-        // GPU Path
-        // ^^^^^^^^
-        // Get the 3d lut + cg shader for the specified
-        // :cpp:class:`DisplayTransform`.
-        //
-        // cg signature will be::
-        //    
-        //    shaderFcnName(in half4 inPixel, const uniform sampler3D lut3d)
-        //
-        // lut3d should be size: 3 * edgeLen * edgeLen * edgeLen
-        // return 0 if unknown
+        // GPU Renderer
+        // ^^^^^^^^^^^^
+        // Get the GPU shader program and its description
         
-        //!cpp:function::
-        const char * getGpuShaderText(const GpuShaderDesc & shaderDesc) const;
-        //!cpp:function::
-        const char * getGpuShaderTextCacheID(const GpuShaderDesc & shaderDesc) const;
-        
-        //!cpp:function::
-        void getGpuLut3D(float* lut3d, const GpuShaderDesc & shaderDesc) const;
-        //!cpp:function::
-        const char * getGpuLut3DCacheID(const GpuShaderDesc & shaderDesc) const;
+        //!cpp:function:: Extract the shader information to implement the color processing
+        ConstGpuShaderRcPtr extractGpuShaderInfo(GpuShaderRcPtr & builder) const;
+
         
     private:
         Processor();
@@ -1136,7 +1122,48 @@ OCIO_NAMESPACE_ENTER
     //!rst::
     // GpuShaderDesc
     // *************
-    
+    //
+    // **Usage Example:** *Create a fragment shader*
+    //
+    //   This example was built following the recipe found in src/apps/ociodisplay/main.cpp 
+    //
+    // .. code-block:: cpp
+    //
+    //    ...
+    //
+    //    // Get the processor
+    //    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
+    //    OCIO::ConstProcessorRcPtr processor 
+    //       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
+    //
+    //    // Step 1: Create a GPU Shader Description
+    //    OCIO::GpuShaderDesc shaderDesc;
+    //    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+    //    shaderDesc.setFunctionName("OCIODisplay");
+    //    
+    //    // Step 2: Create the predefined legacy (see below) GPU shader builder
+    //    //         Note: Provide a custom OCIO::GpuShader implementation if needed.
+    //    OCIO::GpuShaderRcPtr builder = OCIO::GpuShader::CreateLegacyShader(shaderDesc, edgelen);
+    //
+    //    // Step 3: Extract the shader information to implement a specific processor
+    //    OCIO::ConstGpuShaderRcPtr shaderInfo = processor->extractGpuShaderInfo(builder);
+    //
+    //    // Step 4: Instantiate the 3D LUT
+    //    if(shaderInfo->getNumTextures()==1)
+    //    {
+    //       const std::string lut3dCacheID = shaderInfo->getTextureCacheID(0);
+    //       if(lut3dCacheID != g_lut3dCacheID)
+    //       { /* OpenGL code to create the GPU 3D texture */ }
+    //    }
+    //
+    //    // Step 5: Instantiate the Shader program
+    //    const std::string shaderCacheID = shaderInfo->getCacheID();
+    //    if(shaderCacheID != g_shaderCacheID)
+    //    { /* OpenGL calls to create the GPU shader program */ }
+    // 
+    //    ...
+    //
+
     //!cpp:class::
     class OCIOEXPORT GpuShaderDesc
     {
@@ -1145,7 +1172,11 @@ OCIO_NAMESPACE_ENTER
         GpuShaderDesc();
         //!cpp:function::
         ~GpuShaderDesc();
-        
+        //!cpp:function::
+        GpuShaderDesc(const GpuShaderDesc &);
+        //!cpp:function::
+        GpuShaderDesc& operator= (const GpuShaderDesc &);
+       
         //!cpp:function:: Set the shader program language
         void setLanguage(GpuLanguage lang);
         //!cpp:function::
@@ -1155,19 +1186,27 @@ OCIO_NAMESPACE_ENTER
         void setFunctionName(const char * name);
         //!cpp:function::
         const char * getFunctionName() const;
-        
+
+        //!cpp:function:: Set the pixel name variable holding the color values
+        void setPixelName(const char * name);
         //!cpp:function::
-        void setLut3DEdgeLen(int len);
-        //!cpp:function::
-        int getLut3DEdgeLen() const;
-        
+        const char * getPixelName() const;
+
+        //!cpp:function::  Set a resource name prefix
+        //
+        // .. note::
+        //   Some applications require that textures, uniforms, 
+        //   and helper methods be uniquely named because several 
+        //   processor instances could coexist.
+        //
+        void setNamePrefix(const char * prefix);
         //!cpp:function:: 
+        const char * getNamePrefix() const;
+
+        //!cpp:function::
         const char * getCacheID() const;
-        
+
     private:
-        
-        GpuShaderDesc(const GpuShaderDesc &);
-        GpuShaderDesc& operator= (const GpuShaderDesc &);
         
         class Impl;
         friend class Impl;
@@ -1177,6 +1216,200 @@ OCIO_NAMESPACE_ENTER
     };
     
     
+    ///////////////////////////////////////////////////////////////////////////
+    //!rst::
+    // GpuShader
+    // *************
+    // 
+    // The class holds all the information to build a shader program as
+    // anything is dynamic. Unlike the Legacy GPU shader which bakes the color transform 
+    // to have at most one 3D Texture, the default GPU shader preserves all requested luts. 
+    // It explains the interface to query all the needed 3D textures (dedicated to 3D Luts),
+    // 1/2D textures (dedicated to 1D Luts) and uniforms. 
+    // The GPU shader API is public to allow third-party applications to build a specific
+    // implementation to better fit their GPU context.
+    // 
+    // 
+    // **Note:**
+    // The legacy shader is...
+    // The default shader is ...
+    // 
+    // **Usage Example:** *Manipulate a Gpu Shader class instance*
+    //
+    //
+    // .. code-block:: cpp
+    // 
+    //    ...
+    //
+    //    // Get the processor
+    //    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
+    //    OCIO::ConstProcessorRcPtr processor 
+    //       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
+    //
+    //    // Step 1: Create a GPU Shader Description
+    //    OCIO::GpuShaderDesc shaderDesc;
+    //    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+    //    shaderDesc.setFunctionName("OCIODisplay");
+    //    shaderDesc.setNamePrefix("ocio_");
+    //
+    //    // Step 2: Create the predefined default GPU shader builder able to handle
+    //    //         any number of 1D and 3D Luts.
+    //    OCIO::GpuShaderRcPtr builder = OCIO::GpuShader::CreateShader(shaderDesc);
+    //
+    //    // Step 3: Extract the shader information to implement a specific processor
+    //    OCIO::ConstGpuShaderRcPtr shaderInfo
+    //      = processor->extractGpuShaderInfo(builder, OCIO::GpuShader::KEEP_UNIFORMS);
+    //    
+    //    // Step 4: Search for [0..n] 3D textures (from 3D Luts)
+    //    for(unsigned idx=0; idx<shaderInfo->getNum3DTextures(); ++idx)
+    //    { /* Some OpenGL code to create & initialize a 3D texture */ }
+    //
+    //    // Step 5: Search for [0..n] 1D or 2D textures (from 1D Luts)
+    //    for(unsigned idx=0; idx<shaderInfo->getNumTextures(); ++idx)
+    //    { /* Some OpenGL code to create & initialize a 1D or 2D texture */ }
+    //
+    //    // Step 6: Search for [0..n] uniforms (i.e. user controllable values)
+    //    for(unsigned idx=0; idx<shaderInfo->getNumUniforms(); ++idx)
+    //    { /* Some OpenGL code to declare the uniform */ }
+    //
+    //    // Step 7: Compute the Shader (e.g. helper method consumed by the main)
+    //    const char * shaderProgramStr = shaderInfo->getShaderText();
+    //    if(shaderProgramStr && *shaderProgramStr)
+    //    { /* Some OpenGL code to compile and link the complete shader program */ }
+    //
+    //    // Step 8: Initialize all the uniforms (including texture related ones)
+    //    { /* Some OpenGL code here */ }
+    // 
+    //    ...
+    //
+
+
+    //!cpp:class::
+    class OCIOEXPORT GpuShader
+    {
+    public:
+        enum TextureType
+        {
+            TEXTURE_RED_CHANNEL, // Only use the red channel of the texture
+            TEXTURE_RGB_CHANNEL
+        };
+
+        enum UniformType
+        {
+            UNIFORM_BOOL_TYPE,
+            UNIFORM_FLOAT_TYPE
+        };
+
+        virtual GpuLanguage getLanguage() const = 0;
+        virtual const char * getFunctionName() const = 0;
+        virtual const char * getPixelName() const = 0;
+        virtual const char * getNamePrefix() const = 0;
+
+    public:
+        //!cpp:function:: Create the legacy shader builder 
+        static GpuShaderRcPtr CreateLegacyShader(const GpuShaderDesc & desc, unsigned edgelen);
+
+        //!cpp:function:: Create the default shader builder
+        static GpuShaderRcPtr CreateShader(const GpuShaderDesc & desc);
+
+        //!cpp:function::
+        virtual unsigned getNumUniforms() const = 0;
+        //!cpp:function::
+        virtual void getUniform(
+            unsigned index, const char *& name, UniformType & type, void *& value) const = 0;
+        //!cpp:function::
+        virtual void addUniform(
+            unsigned index, const char * name, UniformType type, void * value) = 0;
+
+        //!cpp:function:: 1D lut related methods
+        virtual unsigned getNumTextures() const = 0;
+        virtual void addTexture(
+            const char * name, const char * id, unsigned width, unsigned height,
+            TextureType channel, Interpolation interpolation,
+            float * red, float * green, float * blue) = 0;
+        virtual void getTexture(
+            unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
+            TextureType & channel, Interpolation & interpolation) = 0;
+        virtual void getTextureValues(
+            unsigned index, const float *& red, const float *& green, const float *& blue) const = 0;
+
+        //!cpp:function:: 3D lut related methods
+        virtual unsigned getNum3DTextures() const = 0;
+        virtual void add3DTexture(
+            const char * name, const char * id, unsigned edgelen, 
+            Interpolation interpolation, float * values) = 0;
+        virtual void get3DTexture(
+            unsigned index, const char *& name, const char *& id, unsigned & edgelen) const = 0;
+        virtual void get3DTextureValues(unsigned index, const float *& value) const = 0;
+
+        //!cpp:function:: Methods to specialize the complete shader program
+        //
+        // .. note::
+        // 
+        //   A shader program could contain:
+        //   1. A declaration part  i.e. uniform sampled3D tex3;
+        //   2. Some helper methods
+        //   3. The shader method is decomposed in:
+        //   3.1. The method header   i.e. void OCIODisplay(in vec4 inColor, sampler3D tex3) {
+        //   3.2. The method body     i.e.   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
+        //   3.3. The method footer   i.e.   return outColor; }
+        //   
+        // .. example:
+        // 
+        // // All global declarations
+        // uniform sampled3D tex3;
+        // 
+        // // All helper methods
+        // vec3 computePosition(vec3 color)
+        // {
+        //   vec3 coords = color;
+        //   // Some processing...
+        //   return coords;
+        // }
+        // 
+        // // The shader program method
+        // void OCIODisplay(in vec4 inColor, sampler3D tex3)
+        // {
+        //   vec4 outColor = inColor;
+        //   outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
+        //   return outColor; 
+        // }
+        // 
+        virtual void addToDeclareShaderCode(const char * shaderCode) = 0;
+        virtual void addToHelperShaderCode(const char * shaderCode) = 0;
+        virtual void addToMainHeaderShaderCode(const char * shaderCode) = 0;
+        virtual void addToMainShaderCode(const char * shaderCode) = 0;
+        virtual void addToMainFooterShaderCode(const char * shaderCode) = 0;
+
+        //!cpp:function:: Create a partial shader program (without the main function)
+        //
+        // .. note::
+        //   The shader method is decomposed to allow a specific implementation
+        //   to change some parts. Some product integrations add the color processing
+        //   within a bigger shader program imposing some extra constraints.
+        //
+        virtual void createShaderText(
+            const char * shaderDeclarations, const char * shaderHelperMethods,
+            const char * shaderMainHeader, const char * shaderMainBody,
+            const char * shaderMainFooter) = 0;
+
+        //!cpp:function:: Get the shader program (without the main function)
+        virtual const char * getShaderText() const = 0;
+
+        //!cpp:function:: Get a cache identifier
+        virtual const char * getCacheID() const = 0;
+
+        //!cpp:function::
+        virtual void finalize() = 0;
+
+        //!cpp:function::
+        virtual GpuShaderRcPtr clone() const = 0;
+
+    protected:
+        virtual ~GpuShader() {}
+    };
+    
+
     ///////////////////////////////////////////////////////////////////////////
     //!rst::
     // Context

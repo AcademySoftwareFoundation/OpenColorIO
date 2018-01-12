@@ -77,13 +77,15 @@ OCIO_NAMESPACE_ENTER
 #ifndef NDEBUG
     template <class T>
     class DebugLock : public T {
-     public:
-	DebugLock() : _locked(0) {}
-	void lock()   { T::lock(); _locked = 1; }
-	void unlock() { assert(_locked); _locked = 0; T::unlock(); }
-	bool locked() { return _locked != 0; }
-     private:
-	int _locked;
+      public:
+        DebugLock()   : _locked(0) {}
+        ~DebugLock()  { assert(_locked==0); }
+
+        void lock()   { assert(_locked>=0); ++_locked; if(_locked==1) { T::lock(); } }
+        void unlock() { assert(_locked>=1); --_locked; if(_locked==0) { T::unlock(); } }
+        bool locked() { return _locked != 0; }
+      private:
+        int _locked;
     };
 #endif
 

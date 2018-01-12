@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut1DOp.h"
 #include "MathUtils.h"
 #include "SSE.h"
+#include "GpuShaderUtils.h"
 
 #include <algorithm>
 #include <cmath>
@@ -464,10 +465,8 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
+            virtual bool isLut() const { return true; }
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shader) const;
             
         private:
             const Lut1DRcPtr m_lut;
@@ -609,17 +608,46 @@ OCIO_NAMESPACE_ENTER
                 }
             }
         }
-        
-        bool Lut1DOp::supportsGpuShader() const
+
+        void Lut1DOp::extractGpuShaderInfo(GpuShaderRcPtr & shader) const
         {
-            return false;
-        }
-        
-        void Lut1DOp::writeGpuShader(std::ostream & /*shader*/,
-                                     const std::string & /*pixelName*/,
-                                     const GpuShaderDesc & /*shaderDesc*/) const
-        {
-            throw Exception("Lut1DOp does not support analytical shader generation.");
+            if(m_direction == TRANSFORM_DIR_FORWARD)
+            {
+                const unsigned length = unsigned(m_lut->luts[0].size());
+                const unsigned width  = 4096; // TODO: Find the 1D texture maximum length
+                const unsigned height = (length / 4096) + 1;
+
+                std::ostringstream ss;
+                ss << shader->getNamePrefix()
+                   << std::string("lut1d_")
+                   << shader->getNumTextures();
+
+                const std::string name(ss.str());
+
+                shader->addTexture(
+                    name.c_str(), m_cacheID.c_str(), width, height, GpuShader::TEXTURE_RGB_CHANNEL, 
+                    m_interpolation, &m_lut->luts[0][0], &m_lut->luts[1][0], &m_lut->luts[2][0]);
+
+                std::ostringstream code;
+                code << "    " << shader->getPixelName() << ".rgb = ";
+                if(height>0)
+                {
+                    // In case the 1D lut length exceeds the 1D texture maximum length
+                    Write_sampleLut2D_rgb(
+                        code, shader->getPixelName(), name, width, height, shader->getLanguage());
+                }
+                else
+                {
+                    Write_sampleLut1D_rgb(
+                        code, shader->getPixelName(), name, width, shader->getLanguage());
+                }
+
+                shader->addToMainShaderCode(code.str().c_str());
+            }
+            else
+            {
+                throw Exception("Not yet implemented");
+            }
         }
     }
     

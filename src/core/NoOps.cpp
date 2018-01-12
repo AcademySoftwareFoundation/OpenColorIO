@@ -58,11 +58,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() { }
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const { }
             
-            virtual bool supportsGpuShader() const { return true; }
-            virtual void writeGpuShader(std::ostream & /*shader*/,
-                                        const std::string & /*pixelName*/,
-                                        const GpuShaderDesc & /*shaderDesc*/) const
-            { }
+            void extractGpuShaderInfo(GpuShaderRcPtr & /*shader*/) const {}
         
             void getGpuAllocation(AllocationData & allocation) const;
             
@@ -137,7 +133,7 @@ OCIO_NAMESPACE_ENTER
                 // If it's the first, save it as our start.
                 // Otherwise, update the end.
                 
-                if(!opVec[i]->supportsGpuShader())
+                if(opVec[i]->isLut())
                 {
                     if(start<0)
                     {
@@ -270,9 +266,9 @@ OCIO_NAMESPACE_ENTER
         // All gpu pre ops must support analytical gpu shader generation
         for(unsigned int i=0; i<gpuPreOps.size(); ++i)
         {
-            if(!gpuPreOps[i]->supportsGpuShader())
+            if(gpuPreOps[i]->isLut())
             {
-                throw Exception("Patition failed check. gpuPreOps");
+                throw Exception("Partition failed check. gpuPreOps");
             }
         }
         
@@ -283,25 +279,25 @@ OCIO_NAMESPACE_ENTER
             bool requireslattice = false;
             for(unsigned int i=0; i<gpuLatticeOps.size(); ++i)
             {
-                if(!gpuLatticeOps[i]->supportsGpuShader()) requireslattice = true;
+                if(gpuLatticeOps[i]->isLut()) requireslattice = true;
             }
             
             if(!requireslattice)
             {
-                throw Exception("Patition failed check. gpuLatticeOps");
+                throw Exception("Partition failed check. gpuLatticeOps");
             }
         }
         
         // All gpu post ops must support analytical gpu shader generation
         for(unsigned int i=0; i<gpuPostOps.size(); ++i)
         {
-            if(!gpuPostOps[i]->supportsGpuShader())
+            if(gpuPostOps[i]->isLut())
             {
-                throw Exception("Patition failed check. gpuPostOps");
+                throw Exception("Partition failed check. gpuPostOps");
             }
         }
     }
-    
+
     ////////////////////////////////////////////////////////////////////////////
     
     namespace
@@ -327,11 +323,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() {}
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
             
-            virtual bool supportsGpuShader() const { return true; }
-            virtual void writeGpuShader(std::ostream & /*shader*/,
-                                        const std::string & /*pixelName*/,
-                                        const GpuShaderDesc & /*shaderDesc*/) const
-            { }
+            void extractGpuShaderInfo(GpuShaderRcPtr & /*shader*/) const {}
             
         private:
             std::string m_fileReference;
@@ -397,11 +389,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() {}
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
             
-            virtual bool supportsGpuShader() const { return true; }
-            virtual void writeGpuShader(std::ostream & /*shader*/,
-                                        const std::string & /*pixelName*/,
-                                        const GpuShaderDesc & /*shaderDesc*/) const
-            { }
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & /*shader*/) const {}
             
         private:
             std::string m_look;
@@ -495,6 +483,7 @@ void CreateGenericLutOp(OpRcPtrVec & ops)
     
     CreateLut1DOp(ops, lut, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
 }
+
 
 OIIO_ADD_TEST(NoOps, PartitionGPUOps)
 {

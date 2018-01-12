@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    std::string CacheIDHash(const char * array, int size);
+    std::string CacheIDHash(const char * array, unsigned size);
     
     // TODO: get rid of md5.h include, make this a generic byte array
     std::string GetPrintableHash(const md5_byte_t * digest);

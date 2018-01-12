@@ -115,16 +115,13 @@ OCIO_NAMESPACE_ENTER
             // caching, must thus be appropriately mutexed.
             
             virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
-            
-            
-            //! Does this op support gpu shader text generation
-            virtual bool supportsGpuShader() const = 0;
-            
-            // TODO: If temp variables are ever needed, also pass tempvar prefix.
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const = 0;
-            
+
+            // Detect lut ops if baking is needed
+            virtual bool isLut() const { return false; }
+
+            // Create & add the gpu shader information needed by the op
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shader) const = 0;
+
         private:
             Op& operator= (const Op &);
     };

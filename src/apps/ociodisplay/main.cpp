@@ -61,6 +61,7 @@ namespace OIIO = OIIO_NAMESPACE;
 
 
 bool g_verbose = false;
+bool g_gpu = false;
 std::string g_filename;
 
 
@@ -141,7 +142,7 @@ static void InitImageTexture(const char * filename)
         }
         catch(...)
         {
-            std::cerr << "Error loading file.";
+            std::cerr << "Error loading file." << std::endl;
             exit(1);
         }
     }
@@ -377,12 +378,9 @@ static void Key(unsigned char key, int /*x*/, int /*y*/)
 }
 
 
-static void SpecialKey(int key, int x, int y)
+static void SpecialKey(int key, int /* x */, int /* y */)
 {
-    (void) x;
-    (void) y;
-    
-    int mod = glutGetModifiers();
+    const int mod = glutGetModifiers();
     
     if(key == GLUT_KEY_UP && (mod & GLUT_ACTIVE_CTRL))
     {
@@ -413,7 +411,6 @@ static void SpecialKey(int key, int x, int y)
     }
     
     UpdateOCIOGLState();
-    
     glutPostRedisplay();
 }
 
@@ -433,7 +430,8 @@ CompileShaderText(GLenum shaderType, const char *text)
         GLchar log[1000];
         GLsizei len;
         glGetShaderInfoLog(shader, 1000, &len, log);
-        fprintf(stderr, "Error: problem compiling shader: %s\n", log);
+
+        std::cerr << "Error: problem compiling shader: " << log << std::endl;
         return 0;
     }
     
@@ -460,7 +458,8 @@ LinkShaders(GLuint fragShader)
             GLchar log[1000];
             GLsizei len;
             glGetProgramInfoLog(program, 1000, &len, log);
-            fprintf(stderr, "Shader link error:\n%s\n", log);
+
+            std::cerr << "Shader link error:" << log << std::endl;
             return 0;
         }
     }
@@ -471,12 +470,12 @@ LinkShaders(GLuint fragShader)
 const char * g_fragShaderText = ""
 "\n"
 "uniform sampler2D tex1;\n"
-"uniform sampler3D tex2;\n"
+"uniform sampler3D ociolut3d_0;\n"
 "\n"
 "void main()\n"
 "{\n"
 "    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
-"    gl_FragColor = OCIODisplay(col, tex2);\n"
+"    gl_FragColor = OCIODisplay(col, ociolut3d_0);\n"
 "}\n";
 
 
@@ -556,33 +555,75 @@ void UpdateOCIOGLState()
     }
     catch(...)
     {
+        std::cerr << "Unexpected error" << std::endl;
         return;
     }
     
     // Step 1: Create a GPU Shader Description
     OCIO::GpuShaderDesc shaderDesc;
-    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
+    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
     shaderDesc.setFunctionName("OCIODisplay");
-    shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
-    
-    // Step 2: Compute the 3D LUT
-    std::string lut3dCacheID = processor->getGpuLut3DCacheID(shaderDesc);
-    if(lut3dCacheID != g_lut3dcacheid)
+
+    // Step 2: Create the legacy GPU shader builder
+    OCIO::GpuShaderRcPtr builder = OCIO::GpuShader::CreateLegacyShader(shaderDesc, LUT3D_EDGE_SIZE);
+
+    // Step 3: Extract the shader program information for a specific processor    
+    OCIO::ConstGpuShaderRcPtr shader = processor->extractGpuShaderInfo(builder);
+
+    if(g_gpu)
     {
-        //std::cerr << "Computing 3DLut " << g_lut3dcacheid << std::endl;
-        
-        g_lut3dcacheid = lut3dCacheID;
-        processor->getGpuLut3D(&g_lut3d[0], shaderDesc);
-        
-        glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
-        glTexSubImage3D(GL_TEXTURE_3D, 0,
-                        0, 0, 0, 
-                        LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                        GL_RGB,GL_FLOAT, &g_lut3d[0]);
+        std::cout << std::endl;
+        std::cout << "GPU Shader Program:" << std::endl;
+        std::cout << std::endl;
+    }
+
+    // Step 4: Compute the 3D LUT
+    if(shader->getNum3DTextures()==1)
+    {
+        const char * lut3dCacheID = 0x0;
+        const char * lut3dName    = 0x0;
+        unsigned dimension        = 0;
+        const float * values      = 0x0;
+
+        shader->get3DTexture(0, lut3dName, lut3dCacheID, dimension);
+        if(dimension!=LUT3D_EDGE_SIZE)
+        {
+            std::cerr << "Corrupted 3D lut: " << lut3dName << std::endl;
+            return;
+        }
+
+        shader->get3DTextureValues(0, values);
+
+        if(g_gpu)
+        {
+            std::cout << "3D Texture: name=" << lut3dName << ", "
+                      << "edgelen=" << dimension << ", "
+                      << "id=" << lut3dCacheID 
+                      << std::endl;
+        }
+
+        if(lut3dCacheID && std::string(lut3dCacheID) != g_lut3dcacheid)
+        {
+            //std::cerr << "Computing 3DLut " << g_lut3dcacheid << std::endl;
+
+            g_lut3dcacheid = lut3dCacheID;
+            
+            glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
+            glTexSubImage3D(GL_TEXTURE_3D, 0,
+                            0, 0, 0, 
+                            LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
+                            GL_RGB,GL_FLOAT, values);
+        }
     }
     
-    // Step 3: Compute the Shader
-    std::string shaderCacheID = processor->getGpuShaderTextCacheID(shaderDesc);
+    // Step 5: Compute the Shader
+    const std::string shaderCacheID = shader->getCacheID();
+
+    if(g_gpu)
+    {
+        std::cout << "Program: id=" << shaderCacheID << std::endl;
+    }
+
     if(g_program == 0 || shaderCacheID != g_shadercacheid)
     {
         //std::cerr << "Computing Shader " << g_shadercacheid << std::endl;
@@ -590,9 +631,13 @@ void UpdateOCIOGLState()
         g_shadercacheid = shaderCacheID;
         
         std::ostringstream os;
-        os << processor->getGpuShaderText(shaderDesc) << "\n";
+        os << shader->getShaderText() << "\n";
         os << g_fragShaderText;
-        //std::cerr << os.str() << std::endl;
+
+        if(g_gpu)
+        {
+            std::cout << os.str() << std::endl;
+        }
         
         if(g_fragShader) glDeleteShader(g_fragShader);
         g_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
@@ -602,7 +647,7 @@ void UpdateOCIOGLState()
     
     glUseProgram(g_program);
     glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
-    glUniform1i(glGetUniformLocation(g_program, "tex2"), 2);
+    glUniform1i(glGetUniformLocation(g_program, "ociolut3d_0"), 2);
 }
 
 void menuCallback(int /*id*/)
@@ -768,6 +813,10 @@ void parseArguments(int argc, char **argv)
         {
             g_verbose = true;
         }
+        else if(0==strcmp(argv[i], "-gpu"))
+        {
+            g_gpu = true;
+        }
         else if(0==strcmp(argv[i], "-h"))
         {
             std::cout << std::endl;
@@ -775,8 +824,9 @@ void parseArguments(int argc, char **argv)
             std::cout << "  ociodisplay [OPTIONS] [image]  where" << std::endl;
             std::cout << std::endl;
             std::cout << "  OPTIONS:" << std::endl;
-            std::cout << "     -h :  displays the help and exit" << std::endl;
-            std::cout << "     -v :  displays the color space information" << std::endl;
+            std::cout << "     -h   :  displays the help and exit" << std::endl;
+            std::cout << "     -v   :  displays the color space information" << std::endl;
+            std::cout << "     -gpu :  displays the color space gpu information" << std::endl;
             std::cout << std::endl;
             exit(0);
         }
@@ -825,21 +875,26 @@ int main(int argc, char **argv)
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
-        printf("OpenGL 2.0 not supported\n");
+        std::cerr << "OpenGL 2.0 not supported" << std::endl;
         exit(1);
     }
 #endif
     
-    glutReshapeFunc(Reshape);
+    glutReshapeFunc(Reshape); 
     glutKeyboardFunc(Key);
     glutSpecialFunc(SpecialKey);
     glutDisplayFunc(Redisplay);
     
     std::cout << USAGE_TEXT << std::endl;
     
-    // TODO: switch profiles based on shading language
-    std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-    std::cout << std::endl;
+    if(g_gpu)
+    {
+        std::cout << "Graphic Card Information: " << std::endl
+                  << "\t" << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl
+                  << "\t" << glGetString(GL_RENDERER) << std::endl
+                  << std::endl
+                  << std::endl;
+    } 
 
     AllocateLut3D();
     
@@ -858,8 +913,16 @@ int main(int argc, char **argv)
     
     Reshape(1024, 512);
     
-    UpdateOCIOGLState();
-    
+    try
+    {
+        UpdateOCIOGLState();
+    }
+    catch(OCIO::Exception & e)
+    {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
+
     Redisplay();
     
     /*

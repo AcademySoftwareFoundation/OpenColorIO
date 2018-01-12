@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HashUtils.h"
 #include "Lut3DOp.h"
 #include "MathUtils.h"
+#include "GpuShaderUtils.h"
 
 #include <cmath>
 #include <limits>
@@ -577,11 +578,9 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
-            
+            virtual bool isLut() const { return true; }
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shader) const;
+
         private:
             Lut3DRcPtr m_lut;
             Interpolation m_interpolation;
@@ -722,16 +721,32 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        bool Lut3DOp::supportsGpuShader() const
-        {
-            return false;
-        }
         
-        void Lut3DOp::writeGpuShader(std::ostream & /*shader*/,
-                                     const std::string & /*pixelName*/,
-                                     const GpuShaderDesc & /*shaderDesc*/) const
+        void Lut3DOp::extractGpuShaderInfo(GpuShaderRcPtr & shader) const
         {
-            throw Exception("Lut3DOp does not support analytical shader generation.");
+            if(m_direction == TRANSFORM_DIR_FORWARD)
+            {
+                std::ostringstream ss;
+                ss << shader->getNamePrefix()
+                   << std::string("lut3d_")
+                   << shader->getNum3DTextures();
+
+                const std::string name(ss.str());
+
+                shader->add3DTexture(
+                    name.c_str(), m_cacheID.c_str(), m_lut->size[0], m_interpolation, &m_lut->lut[0]);
+
+                std::ostringstream code;
+                code << "    " << shader->getPixelName() << ".rgb = ";
+                Write_sampleLut3D_rgb(
+                    code, shader->getPixelName(), name, m_lut->size[0], shader->getLanguage());
+
+                shader->addToMainShaderCode(code.str().c_str());
+            }
+            else
+            {
+                throw Exception("Not yet implemented");
+            }
         }
     }
     

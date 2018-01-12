@@ -83,10 +83,8 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shader) const;
+
         private:
             double m_exp4[4];
 
@@ -226,24 +224,21 @@ OCIO_NAMESPACE_ENTER
             ApplyClampExponent(rgbaBuffer, numPixels, exp);
         }
         
-        bool ExponentOp::supportsGpuShader() const
+        void ExponentOp::extractGpuShaderInfo(GpuShaderRcPtr & shader) const 
         {
-            return true;
-        }
-        
-        void ExponentOp::writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const
-        {
-            float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
-                float(m_exp4[2]), float(m_exp4[3]) };
+            const float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
+                                   float(m_exp4[2]), float(m_exp4[3]) };
 
-            GpuLanguage lang = shaderDesc.getLanguage();
-            float zerovec[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            const GpuLanguage lang = shader->getLanguage();
+            const float zerovec[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-            shader << pixelName << " = pow(";
-            shader << "max(" << pixelName << ", " << GpuTextHalf4(zerovec, lang) << ")";
-            shader << ", " << GpuTextHalf4(exp, lang) << ");\n";
+            std::ostringstream code;
+            code << "    " << shader->getPixelName() << " = pow("
+                 << "max(" << shader->getPixelName() << ", " << GpuTextHalf4(zerovec, lang) << ")"
+                 << ", " << GpuTextHalf4(exp, lang) << ");"
+                 << std::endl;
+
+            shader->addToMainShaderCode(code.str().c_str());
         }
         
     }  // Anon namespace

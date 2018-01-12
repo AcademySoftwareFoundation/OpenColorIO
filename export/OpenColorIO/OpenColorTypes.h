@@ -97,7 +97,11 @@ OCIO_NAMESPACE_ENTER
     class OCIOEXPORT ImageDesc;
     class OCIOEXPORT GpuShaderDesc;
     class OCIOEXPORT Exception;
-    
+
+    //!cpp:type::
+    class OCIOEXPORT GpuShader;
+    typedef OCIO_SHARED_PTR<GpuShader> GpuShaderRcPtr;
+    typedef OCIO_SHARED_PTR<const GpuShader> ConstGpuShaderRcPtr;
     
     //!rst::
     // Transforms

@@ -165,11 +165,11 @@ OCIO_NAMESPACE_ENTER
     
     
     void Write_sampleLut3D_rgb(std::ostream & os, const std::string& variableName,
-                               const std::string& lutName, int lut3DEdgeLen,
+                               const std::string& lutName, unsigned edgelen,
                                GpuLanguage lang)
     {
-        float m = ((float) lut3DEdgeLen-1.0f) / (float) lut3DEdgeLen;
-        float b = 1.0f / (2.0f * (float) lut3DEdgeLen);
+        float m = ((float) edgelen-1.0f) / (float) edgelen;
+        float b = 1.0f / (2.0f * (float) edgelen);
         
         if(lang == GPU_LANGUAGE_CG)
         {
@@ -189,5 +189,18 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    void Write_sampleLut2D_rgb(std::ostream &, const std::string &,
+                               const std::string &, unsigned, unsigned,
+                               GpuLanguage)
+    {
+        throw Exception("Not yet implemented");
+    }
+
+    void Write_sampleLut1D_rgb(std::ostream &, const std::string &,
+                               const std::string &, unsigned,
+                               GpuLanguage)
+    {
+        throw Exception("Not yet implemented");
+    }
 }
 OCIO_NAMESPACE_EXIT
