@@ -1,0 +1,195 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Developer Guide" href="index.html" />
+    <link rel="next" title="Submitting Changes" href="submitting_changes.html" />
+    <link rel="prev" title="Coding guidelines" href="coding_guidelines.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Documentation guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="submitting_changes.html">Submitting Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="issues.html">Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_examples.html">Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorIO.html">C++ API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTransforms.html">C++ Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTypes.html">C++ Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonAPI.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTransforms.html">Python Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTypes.html">Python Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internal_architecture.html">Internal Architecture Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="documentation-guidelines">
+<h1>Documentation guidelines<a class="headerlink" href="#documentation-guidelines" title="Permalink to this headline">¶</a></h1>
+<p>OpenColorIO is documentated using reStructuredText, processed by
+<a class="reference external" href="http://sphinx-doc.org/">Sphinx</a>.</p>
+<p>The documentation primarily lives in the <tt class="docutils literal"><span class="pre">docs/</span></tt> folder, within the
+main OpenColorIO repoistory.</p>
+<p>The rST source for the C++ API documentation is extracted from
+comments in the public header files in <tt class="docutils literal"><span class="pre">export/</span></tt></p>
+<p>The Python API documentation is extracted from dummy .py files within
+the <tt class="docutils literal"><span class="pre">src/pyglue/DocStrings/</span></tt> folder</p>
+<div class="section" id="building-the-docs">
+<h2>Building the docs<a class="headerlink" href="#building-the-docs" title="Permalink to this headline">¶</a></h2>
+<p>Just like a <a class="reference internal" href="../installation.html#building-from-source"><em>regular build from source</em></a>,
+but specify the <tt class="docutils literal"><span class="pre">-D</span> <span class="pre">OCIO_BUILD_DOCS=yes</span></tt> argument to CMake.</p>
+<p>Then run the <tt class="docutils literal"><span class="pre">make</span> <span class="pre">doc</span></tt> target. The default HTML output will be
+created in <tt class="docutils literal"><span class="pre">build_dir/docs/build-html/</span></tt></p>
+<p>Note that CMake must be run before each invokation of <tt class="docutils literal"><span class="pre">make</span></tt> to copy
+the edited rST files.</p>
+<p>Initial run:</p>
+<blockquote>
+<div>$ mkdir build &amp;&amp; cd build</div></blockquote>
+<p>Then after each change you wish to preview:</p>
+<blockquote>
+<div>$ cmake -D OCIO_BUILD_DOCS=yes .. &amp;&amp; make doc</div></blockquote>
+</div>
+<div class="section" id="basics">
+<h2>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Try to keep the writing style consistent with surrounding docs.</p>
+</li>
+<li><p class="first">Fix all warnings output by the Sphinx build process. An example of
+such an warning is:</p>
+<div class="highlight-python"><pre>checking consistency... [...]/build/docs/userguide/writing_configs.rst:: WARNING: document isn't included in any toctree</pre>
+</div>
+</li>
+<li><p class="first">Use the following hierarchy of header decorations:</p>
+<div class="highlight-python"><pre>Level 1 heading
+===============
+
+Level 2 heading
+***************
+
+Level 3 heading
++++++++++++++++
+
+Level 4 heading
+---------------</pre>
+</div>
+</li>
+<li><p class="first">To add a new page, create a new <tt class="docutils literal"><span class="pre">.rst</span></tt> file in the appropriate
+location. In that directory&#8217;s <tt class="docutils literal"><span class="pre">index.rst</span></tt>, add the new file to
+the <tt class="docutils literal"><span class="pre">toctree</span></tt> directive.</p>
+<p>The new file should contain a top-level heading (decorated with
+<cite>=====</cite> underline), and an approriate label for referencing from
+other pages. For example, a new file
+<tt class="docutils literal"><span class="pre">docs/userguide/baking_luts.rst</span></tt> might start like this:</p>
+<div class="highlight-python"><pre>.. _userguide-bakingluts:
+
+Baking LUT's
+============
+
+In order to bake a LUT, ...</pre>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="emacs-rst-mode">
+<h2>Emacs rST mode<a class="headerlink" href="#emacs-rst-mode" title="Permalink to this headline">¶</a></h2>
+<p>Emacs&#8217; includes a mode for editing rST files. It is documented on <a class="reference external" href="http://docutils.sourceforge.net/docs/user/emacs.html">the
+docutils site</a></p>
+<p>One of the features it includes is readjusting the hierarchy of
+heading decorations (the underlines for different heading levels). To
+configure this to use OCIO&#8217;s convention, put the following in your <tt class="docutils literal"><span class="pre">.emacs.d/init.el</span></tt>:</p>
+<div class="highlight-common-lisp"><div class="highlight"><pre><span class="p">(</span><span class="k">setq</span> <span class="nv">rst-preferred-decorations</span>
+      <span class="o">&#39;</span><span class="p">((</span><span class="nv">?=</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">(</span><span class="nv">?*</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">(</span><span class="nv">?+</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">(</span><span class="nv">?-</span> <span class="nv">simple</span> <span class="mi">0</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

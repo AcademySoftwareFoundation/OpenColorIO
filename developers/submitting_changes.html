@@ -1,0 +1,186 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Developer Guide" href="index.html" />
+    <link rel="next" title="Issues" href="issues.html" />
+    <link rel="prev" title="Documentation guidelines" href="documentation_guidelines.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation_guidelines.html">Documentation guidelines</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Submitting Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="issues.html">Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_examples.html">Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorIO.html">C++ API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTransforms.html">C++ Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTypes.html">C++ Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonAPI.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTransforms.html">Python Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTypes.html">Python Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internal_architecture.html">Internal Architecture Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="submitting-changes">
+<span id="id1"></span><h1>Submitting Changes<a class="headerlink" href="#submitting-changes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="code-review">
+<h2>Code Review<a class="headerlink" href="#code-review" title="Permalink to this headline">¶</a></h2>
+<p>Ask early, and ask often!</p>
+<p>All new contributors are highly encouraged to post development ideas, questions,
+or any other thoughts to the <a class="reference internal" href="../index.html#mailing-lists"><em>Mailing Lists</em></a> before starting to code.  This
+greatly improves the process and quality of the resulting library.   Code
+reviews (particularly for non-trivial changes) are typically far simpler if the
+reviewers are aware of a development task beforehand. (And, who knows? Maybe they
+will have implementation suggestions as well!)</p>
+</div>
+<div class="section" id="github-basics">
+<h2>GitHub Basics<a class="headerlink" href="#github-basics" title="Permalink to this headline">¶</a></h2>
+<p>This will outline the general mechanics of working with git and GitHub to
+successfully contribute to the project. If any of the terms used are unfamiliar
+to you please do a quick search and then ask any of the contributors for
+assistance.</p>
+<ul>
+<li><p class="first">Fork the Imageworks OpenColorIO repository</p>
+</li>
+<li><p class="first">Activate Travis-CI and Appveyor for your fork</p>
+</li>
+<li><p class="first">Clone your fork to your local workspace:</p>
+<div class="highlight-python"><pre>git clone https://github.com/$USER/OpenColorIO.git</pre>
+</div>
+</li>
+<li><p class="first">cd into the cloned directory</p>
+</li>
+<li><p class="first">Connect your cloned repo to the original upstream repository as a remote:</p>
+<div class="highlight-python"><pre>git remote add upstream https://github.com/imageworks/OpenColorIO.git</pre>
+</div>
+</li>
+<li><p class="first">You should now have two remotes:</p>
+<div class="highlight-python"><pre>git remote -v
+origin https://github.com/$USER/OpenColorIO (fetch)
+origin https://github.com/$USER/OpenColorIO (fetch)
+upstream https://github.com/imageworks/OpenColorIO (fetch)
+upstream https://github.com/imageworks/OpenColorIO (push)</pre>
+</div>
+</li>
+<li><p class="first">Pull the latest changes from upstream:</p>
+<div class="highlight-python"><pre>git checkout master
+git pull upstream master</pre>
+</div>
+</li>
+<li><p class="first">Create a branch for your contribution:</p>
+<div class="highlight-python"><pre>git checkout -b myFeature</pre>
+</div>
+</li>
+<li><p class="first">Check if it successfully compiles and passes all unit tests</p>
+</li>
+<li><p class="first">Commit your changes:</p>
+<div class="highlight-python"><pre>git add .
+git commit -m 'Implement my feature'</pre>
+</div>
+</li>
+<li><p class="first">Push your changes back to origin (your fork):</p>
+<div class="highlight-python"><pre>git push origin myFeature</pre>
+</div>
+</li>
+<li><p class="first">Ensure that all CI tests complete on Travis-CI and Appveyor</p>
+</li>
+<li><p class="first">Visit your fork in a web browser on github.com</p>
+</li>
+<li><p class="first">When ready click the &#8220;New pull request&#8221; button, make sure it can merge, and
+add appropriate comments and notes</p>
+</li>
+<li><p class="first">Wait for code review and comments from the community</p>
+</li>
+</ul>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

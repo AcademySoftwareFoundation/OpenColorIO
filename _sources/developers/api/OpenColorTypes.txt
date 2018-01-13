@@ -1,0 +1,306 @@
+
+
+C++ Types
+=========
+
+
+Core
+****
+
+.. cpp:type:: ConstConfigRcPtr
+   
+
+.. cpp:type:: ConfigRcPtr
+   
+
+.. cpp:type:: ConstColorSpaceRcPtr
+   
+
+.. cpp:type:: ColorSpaceRcPtr
+   
+
+.. cpp:type:: ConstLookRcPtr
+   
+
+.. cpp:type:: LookRcPtr
+   
+
+.. cpp:type:: ConstContextRcPtr
+   
+
+.. cpp:type:: ContextRcPtr
+   
+
+.. cpp:type:: ConstProcessorRcPtr
+   
+
+.. cpp:type:: ProcessorRcPtr
+   
+
+.. cpp:type:: ConstProcessorMetadataRcPtr
+   
+
+.. cpp:type:: ProcessorMetadataRcPtr
+   
+
+.. cpp:type:: ConstBakerRcPtr
+   
+
+.. cpp:type:: BakerRcPtr
+   
+
+
+Transforms
+**********
+
+.. cpp:type:: ConstTransformRcPtr
+   
+
+.. cpp:type:: TransformRcPtr
+   
+
+.. cpp:type:: ConstAllocationTransformRcPtr
+   
+
+.. cpp:type:: AllocationTransformRcPtr
+   
+
+.. cpp:type:: ConstCDLTransformRcPtr
+   
+
+.. cpp:type:: CDLTransformRcPtr
+   
+
+.. cpp:type:: ConstColorSpaceTransformRcPtr
+   
+
+.. cpp:type:: ColorSpaceTransformRcPtr
+   
+
+.. cpp:type:: ConstDisplayTransformRcPtr
+   
+
+.. cpp:type:: DisplayTransformRcPtr
+   
+
+.. cpp:type:: ConstExponentTransformRcPtr
+   
+
+.. cpp:type:: ExponentTransformRcPtr
+   
+
+.. cpp:type:: ConstFileTransformRcPtr
+   
+
+.. cpp:type:: FileTransformRcPtr
+   
+
+.. cpp:type:: ConstGroupTransformRcPtr
+   
+
+.. cpp:type:: GroupTransformRcPtr
+   
+
+.. cpp:type:: ConstLogTransformRcPtr
+   
+
+.. cpp:type:: LogTransformRcPtr
+   
+
+.. cpp:type:: ConstLookTransformRcPtr
+   
+
+.. cpp:type:: LookTransformRcPtr
+   
+
+.. cpp:type:: ConstMatrixTransformRcPtr
+   
+
+.. cpp:type:: MatrixTransformRcPtr
+   
+
+.. cpp:type:: ConstTruelightTransformRcPtr
+   
+
+.. cpp:type:: TruelightTransformRcPtr
+   
+
+
+Enums
+*****
+
+.. cpp:type:: ColorSpaceDirection
+   
+
+.. cpp:type:: TransformDirection
+   
+
+.. cpp:type:: Interpolation
+   
+   
+   Specify the interpolation type to use
+   If the specified interpolation type is not supported in the requested
+   context (for example, using tetrahedral interpolationon 1D luts)
+   an exception will be throw.
+   
+   INTERP_BEST will choose the best interpolation type for the requested
+   context:
+   
+   Lut1D INTERP_BEST: LINEAR
+   Lut3D INTERP_BEST: LINEAR
+   
+   Note: INTERP_BEST is subject to change in minor releases, so if you
+   care about locking off on a specific interpolation type, we'd recommend
+   directly specifying it.
+
+.. cpp:type:: BitDepth
+   
+
+.. cpp:type:: Allocation
+   
+
+.. cpp:type:: GpuLanguage
+   
+   Used when there is a choice of hardware shader language.
+
+.. cpp:type:: EnvironmentMode
+   
+
+
+Conversion
+**********
+
+.. cpp:function:: extern const char * BoolToString(bool val)
+   
+
+.. cpp:function:: extern bool BoolFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * LoggingLevelToString(LoggingLevel level)
+   
+
+.. cpp:function:: extern LoggingLevel LoggingLevelFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * TransformDirectionToString(TransformDirection dir)
+   
+
+.. cpp:function:: extern TransformDirection TransformDirectionFromString(const char * s)
+   
+
+.. cpp:function:: extern TransformDirection GetInverseTransformDirection(TransformDirection dir)
+   
+
+.. cpp:function:: extern TransformDirection CombineTransformDirections(TransformDirection d1, TransformDirection d2)
+   
+
+.. cpp:function:: extern const char * ColorSpaceDirectionToString(ColorSpaceDirection dir)
+   
+
+.. cpp:function:: extern ColorSpaceDirection ColorSpaceDirectionFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * BitDepthToString(BitDepth bitDepth)
+   
+
+.. cpp:function:: extern BitDepth BitDepthFromString(const char * s)
+   
+
+.. cpp:function:: extern bool BitDepthIsFloat(BitDepth bitDepth)
+   
+
+.. cpp:function:: extern int BitDepthToInt(BitDepth bitDepth)
+   
+
+.. cpp:function:: extern const char * AllocationToString(Allocation allocation)
+   
+
+.. cpp:function:: extern Allocation AllocationFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * InterpolationToString(Interpolation interp)
+   
+
+.. cpp:function:: extern Interpolation InterpolationFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * GpuLanguageToString(GpuLanguage language)
+   
+
+.. cpp:function:: extern GpuLanguage GpuLanguageFromString(const char * s)
+   
+
+.. cpp:function:: extern const char * EnvironmentModeToString(EnvironmentMode mode)
+   
+
+.. cpp:function:: extern EnvironmentMode EnvironmentModeFromString(const char * s)
+   
+
+
+Roles
+*****
+
+ColorSpace Roles are used so that plugins, in addition to this API can have
+abstract ways of asking for common colorspaces, without referring to them
+by hardcoded names.
+
+Internal::
+   
+   GetGPUDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
+                            (ROLE_COLOR_TIMING (ASCColorCorrection))
+
+External Plugins (currently known)::
+   
+   Colorpicker UIs       - (ROLE_COLOR_PICKING)
+   Compositor LogConvert - (ROLE_SCENE_LINEAR, ROLE_COMPOSITING_LOG)
+
+
+
+
+.. c:var:: const char* ROLE_DEFAULT
+   
+   "default"
+
+
+.. c:var:: const char* ROLE_REFERENCE
+   
+   "reference"
+
+
+.. c:var:: const char* ROLE_DATA
+   
+   "data"
+
+
+.. c:var:: const char* ROLE_COLOR_PICKING
+   
+   "color_picking"
+
+
+.. c:var:: const char* ROLE_SCENE_LINEAR
+   
+   "scene_linear"
+
+
+.. c:var:: const char* ROLE_COMPOSITING_LOG
+   
+   "compositing_log"
+
+
+.. c:var:: const char* ROLE_COLOR_TIMING
+   
+   "color_timing"
+
+
+.. c:var:: const char* ROLE_TEXTURE_PAINT
+   
+   This role defines the transform for painting textures. In some
+   workflows this is just a inverse display gamma with some limits
+
+
+.. c:var:: const char* ROLE_MATTE_PAINT
+   
+   This role defines the transform for matte painting. In some workflows
+   this is a 1D HDR to LDR allocation. It is normally combined with
+   another display transform in the host app for preview.
+

@@ -1,0 +1,623 @@
+
+
+C++ Transforms
+==============
+
+Typically only needed when creating and/or manipulating configurations
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: Transform
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const Transform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: AllocationTransform
+   
+   Forward direction wraps the 'expanded' range into the
+   specified, often compressed, range.
+
+.. cpp:function:: static AllocationTransformRcPtr AllocationTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr AllocationTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection AllocationTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void AllocationTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: Allocation AllocationTransform::getAllocation() const
+   
+
+.. cpp:function:: void AllocationTransform::setAllocation(Allocation allocation)
+   
+
+.. cpp:function:: int AllocationTransform::getNumVars() const
+   
+
+.. cpp:function:: void AllocationTransform::getVars(float * vars) const
+   
+
+.. cpp:function:: void AllocationTransform::setVars(int numvars, const float * vars)
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const AllocationTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: CDLTransform
+   
+   An implementation of the ASC CDL Transfer Functions and
+   Interchange - Syntax (Based on the version 1.2 document)
+   
+   .. note::
+      the clamping portion of the CDL is only applied if a non-identity
+      power is specified.
+
+.. cpp:function:: static CDLTransformRcPtr CDLTransform::Create()
+   
+
+.. cpp:function:: static CDLTransformRcPtr CDLTransform::CreateFromFile(const char * src, const char * cccid)
+   
+   Load the CDL from the src .cc or .ccc file.
+   If a .ccc is used, the cccid must also be specified
+   src must be an absolute path reference, no relative directory
+   or envvar resolution is performed.
+
+.. cpp:function:: virtual TransformRcPtr CDLTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection CDLTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void CDLTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: bool CDLTransform::equals(const ConstCDLTransformRcPtr & other) const
+   
+
+.. cpp:function:: const char * CDLTransform::getXML() const
+   
+
+.. cpp:function:: void CDLTransform::setXML(const char * xml)
+   
+
+**ASC_SOP**
+
+Slope, offset, power::
+   
+   out = clamp( (in * slope) + offset ) ^ power
+
+.. cpp:function:: void CDLTransform::setSlope(const float * rgb)
+   
+
+.. cpp:function:: void CDLTransform::getSlope(float * rgb) const
+   
+
+.. cpp:function:: void CDLTransform::setOffset(const float * rgb)
+   
+
+.. cpp:function:: void CDLTransform::getOffset(float * rgb) const
+   
+
+.. cpp:function:: void CDLTransform::setPower(const float * rgb)
+   
+
+.. cpp:function:: void CDLTransform::getPower(float * rgb) const
+   
+
+.. cpp:function:: void CDLTransform::setSOP(const float * vec9)
+   
+
+.. cpp:function:: void CDLTransform::getSOP(float * vec9) const
+   
+
+**ASC_SAT**
+
+.. cpp:function:: void CDLTransform::setSat(float sat)
+   
+
+.. cpp:function:: float CDLTransform::getSat() const
+   
+
+.. cpp:function:: void CDLTransform::getSatLumaCoefs(float * rgb) const
+   
+   These are hard-coded, by spec, to r709
+
+**Metadata**
+
+These do not affect the image processing, but
+are often useful for pipeline purposes and are
+included in the serialization.
+
+.. cpp:function:: void CDLTransform::setID(const char * id)
+   
+   Unique Identifier for this correction
+
+.. cpp:function:: const char * CDLTransform::getID() const
+   
+
+.. cpp:function:: void CDLTransform::setDescription(const char * desc)
+   
+   Textual description of color correction
+   (stored on the SOP)
+
+.. cpp:function:: const char * CDLTransform::getDescription() const
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const CDLTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: ColorSpaceTransform
+   
+
+.. cpp:function:: static ColorSpaceTransformRcPtr ColorSpaceTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr ColorSpaceTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection ColorSpaceTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void ColorSpaceTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: const char * ColorSpaceTransform::getSrc() const
+   
+
+.. cpp:function:: void ColorSpaceTransform::setSrc(const char * src)
+   
+
+.. cpp:function:: const char * ColorSpaceTransform::getDst() const
+   
+
+.. cpp:function:: void ColorSpaceTransform::setDst(const char * dst)
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const ColorSpaceTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: DisplayTransform
+   
+
+.. cpp:function:: static DisplayTransformRcPtr DisplayTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr DisplayTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection DisplayTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void DisplayTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: void DisplayTransform::setInputColorSpaceName(const char * name)
+   
+   Step 0. Specify the incoming color space
+
+.. cpp:function:: const char * DisplayTransform::getInputColorSpaceName() const
+   
+
+.. cpp:function:: void DisplayTransform::setLinearCC(const ConstTransformRcPtr & cc)
+   
+   Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR
+
+.. cpp:function:: ConstTransformRcPtr DisplayTransform::getLinearCC() const
+   
+
+.. cpp:function:: void DisplayTransform::setColorTimingCC(const ConstTransformRcPtr & cc)
+   
+   Step 2: Apply a color correction, in ROLE_COLOR_TIMING
+
+.. cpp:function:: ConstTransformRcPtr DisplayTransform::getColorTimingCC() const
+   
+
+.. cpp:function:: void DisplayTransform::setChannelView(const ConstTransformRcPtr & transform)
+   
+   Step 3: Apply the Channel Viewing Swizzle (mtx)
+
+.. cpp:function:: ConstTransformRcPtr DisplayTransform::getChannelView() const
+   
+
+.. cpp:function:: void DisplayTransform::setDisplay(const char * display)
+   
+   Step 4: Apply the output display transform
+   This is controlled by the specification of (display, view)
+
+.. cpp:function:: const char * DisplayTransform::getDisplay() const
+   
+
+.. cpp:function:: void DisplayTransform::setView(const char * view)
+   
+   Specify which view transform to use
+
+.. cpp:function:: const char * DisplayTransform::getView() const
+   
+
+.. cpp:function:: void DisplayTransform::setDisplayCC(const ConstTransformRcPtr & cc)
+   
+   Step 5: Apply a post display transform color correction
+
+.. cpp:function:: ConstTransformRcPtr DisplayTransform::getDisplayCC() const
+   
+
+.. cpp:function:: void DisplayTransform::setLooksOverride(const char * looks)
+   
+   A user can optionally override the looks that are,
+   by default, used with the expected display / view combination.
+   A common use case for this functionality is in an image viewing
+   app, where per-shot looks are supported.  If for some reason
+   a per-shot look is not defined for the current Context, the
+   Config::getProcessor fcn will not succeed by default.  Thus,
+   with this mechanism the viewing app could override to looks = "",
+   and this will allow image display to continue (though hopefully)
+   the interface would reflect this fallback option.)
+   
+   Looks is a potentially comma (or colon) delimited list of lookNames,
+   Where +/- prefixes are optionally allowed to denote forward/inverse
+   look specification. (And forward is assumed in the absense of either)
+
+.. cpp:function:: const char * DisplayTransform::getLooksOverride() const
+   
+
+.. cpp:function:: void DisplayTransform::setLooksOverrideEnabled(bool enabled)
+   
+   Specifiy whether the lookOverride should be used,
+   or not. This is a speparate flag, as it's often useful to override
+   "looks" to an empty string
+
+.. cpp:function:: bool DisplayTransform::getLooksOverrideEnabled() const
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const DisplayTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: ExponentTransform
+   
+   Represents exponent transform: pow( clamp(color), value)
+   
+   If the exponent is 1.0, this will not clamp. Otherwise, the input color
+   will be clamped between [0.0, inf]
+
+.. cpp:function:: static ExponentTransformRcPtr ExponentTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr ExponentTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection ExponentTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void ExponentTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: void ExponentTransform::setValue(const float * vec4)
+   
+
+.. cpp:function:: void ExponentTransform::getValue(float * vec4) const
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const ExponentTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: FileTransform
+   
+
+.. cpp:function:: static FileTransformRcPtr FileTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr FileTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection FileTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void FileTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: const char * FileTransform::getSrc() const
+   
+
+.. cpp:function:: void FileTransform::setSrc(const char * src)
+   
+
+.. cpp:function:: const char * FileTransform::getCCCId() const
+   
+
+.. cpp:function:: void FileTransform::setCCCId(const char * id)
+   
+
+.. cpp:function:: Interpolation FileTransform::getInterpolation() const
+   
+
+.. cpp:function:: void FileTransform::setInterpolation(Interpolation interp)
+   
+
+.. cpp:function:: static int FileTransform::getNumFormats()
+   
+   get the number of lut readers
+
+.. cpp:function:: static const char * FileTransform::getFormatNameByIndex(int index)
+   
+   get the lut readers at index, return empty string if
+   an invalid index is specified
+
+.. cpp:function:: static const char * FileTransform::getFormatExtensionByIndex(int index)
+   
+   get the lut reader extension at index, return empty string if
+   an invalid index is specified
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const FileTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: GroupTransform
+   
+
+.. cpp:function:: static GroupTransformRcPtr GroupTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr GroupTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection GroupTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void GroupTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: ConstTransformRcPtr GroupTransform::getTransform(int index) const
+   
+
+.. cpp:function:: int GroupTransform::size() const
+   
+
+.. cpp:function:: void GroupTransform::push_back(const ConstTransformRcPtr& transform)
+   
+
+.. cpp:function:: void GroupTransform::clear()
+   
+
+.. cpp:function:: bool GroupTransform::empty() const
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const GroupTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: LogTransform
+   
+   Represents log transform: log(color, base)
+   
+   * The input will be clamped for negative numbers.
+   * Default base is 2.0
+   * Only the rgb channels are affected
+
+.. cpp:function:: static LogTransformRcPtr LogTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr LogTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection LogTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void LogTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: void LogTransform::setBase(float val)
+   
+
+.. cpp:function:: float LogTransform::getBase() const
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const LogTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: LookTransform
+   
+
+.. cpp:function:: static LookTransformRcPtr LookTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr LookTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection LookTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void LookTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: const char * LookTransform::getSrc() const
+   
+
+.. cpp:function:: void LookTransform::setSrc(const char * src)
+   
+
+.. cpp:function:: const char * LookTransform::getDst() const
+   
+
+.. cpp:function:: void LookTransform::setDst(const char * dst)
+   
+
+.. cpp:function:: void LookTransform::setLooks(const char * looks)
+   
+   Specify looks to apply.
+   Looks is a potentially comma (or colon) delimited list of look names,
+   Where +/- prefixes are optionally allowed to denote forward/inverse
+   look specification. (And forward is assumed in the absense of either)
+
+.. cpp:function:: const char * LookTransform::getLooks() const
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const LookTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: MatrixTransform
+   
+   Represents an MX+B Matrix transform
+
+.. cpp:function:: static MatrixTransformRcPtr MatrixTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr MatrixTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection MatrixTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void MatrixTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: bool MatrixTransform::equals(const MatrixTransform & other) const
+   
+
+.. cpp:function:: void MatrixTransform::setValue(const float * m44, const float * offset4)
+   
+
+.. cpp:function:: void MatrixTransform::getValue(float * m44, float * offset4) const
+   
+
+.. cpp:function:: void MatrixTransform::setMatrix(const float * m44)
+   
+
+.. cpp:function:: void MatrixTransform::getMatrix(float * m44) const
+   
+
+.. cpp:function:: void MatrixTransform::setOffset(const float * offset4)
+   
+
+.. cpp:function:: void MatrixTransform::getOffset(float * offset4) const
+   
+
+**Convenience functions**
+
+to get the mtx and offset corresponding to higher-level concepts
+
+.. note::
+   These can throw an exception if for any component
+   ``oldmin == oldmax. (divide by 0)``
+
+.. cpp:function:: static void MatrixTransform::Fit(float * m44, float * offset4, const float * oldmin4, const float * oldmax4, const float * newmin4, const float * newmax4)
+   
+
+.. cpp:function:: static void MatrixTransform::Identity(float * m44, float * offset4)
+   
+
+.. cpp:function:: static void MatrixTransform::Sat(float * m44, float * offset4, float sat, const float * lumaCoef3)
+   
+
+.. cpp:function:: static void MatrixTransform::Scale(float * m44, float * offset4, const float * scale4)
+   
+
+.. cpp:function:: static void MatrixTransform::View(float * m44, float * offset4, int * channelHot4, const float * lumaCoef3)
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const MatrixTransform&)
+   
+
+//////////////////////////////////////////////////////////////////
+
+.. cpp:class:: TruelightTransform
+   
+   Truelight transform using its API
+
+.. cpp:function:: static TruelightTransformRcPtr TruelightTransform::Create()
+   
+
+.. cpp:function:: virtual TransformRcPtr TruelightTransform::createEditableCopy() const
+   
+
+.. cpp:function:: virtual TransformDirection TruelightTransform::getDirection() const
+   
+
+.. cpp:function:: virtual void TruelightTransform::setDirection(TransformDirection dir)
+   
+
+.. cpp:function:: void TruelightTransform::setConfigRoot(const char * configroot)
+   
+
+.. cpp:function:: const char * TruelightTransform::getConfigRoot() const
+   
+
+.. cpp:function:: void TruelightTransform::setProfile(const char * profile)
+   
+
+.. cpp:function:: const char * TruelightTransform::getProfile() const
+   
+
+.. cpp:function:: void TruelightTransform::setCamera(const char * camera)
+   
+
+.. cpp:function:: const char * TruelightTransform::getCamera() const
+   
+
+.. cpp:function:: void TruelightTransform::setInputDisplay(const char * display)
+   
+
+.. cpp:function:: const char * TruelightTransform::getInputDisplay() const
+   
+
+.. cpp:function:: void TruelightTransform::setRecorder(const char * recorder)
+   
+
+.. cpp:function:: const char * TruelightTransform::getRecorder() const
+   
+
+.. cpp:function:: void TruelightTransform::setPrint(const char * print)
+   
+
+.. cpp:function:: const char * TruelightTransform::getPrint() const
+   
+
+.. cpp:function:: void TruelightTransform::setLamp(const char * lamp)
+   
+
+.. cpp:function:: const char * TruelightTransform::getLamp() const
+   
+
+.. cpp:function:: void TruelightTransform::setOutputCamera(const char * camera)
+   
+
+.. cpp:function:: const char * TruelightTransform::getOutputCamera() const
+   
+
+.. cpp:function:: void TruelightTransform::setDisplay(const char * display)
+   
+
+.. cpp:function:: const char * TruelightTransform::getDisplay() const
+   
+
+.. cpp:function:: void TruelightTransform::setCubeInput(const char * type)
+   
+
+.. cpp:function:: const char * TruelightTransform::getCubeInput() const
+   
+
+.. cpp:function:: extern std::ostream& operator<< (std::ostream&, const TruelightTransform &)
+   
+

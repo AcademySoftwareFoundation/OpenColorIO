@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="index.html" />
+    <link rel="next" title="User Guide" href="userguide/index.html" />
+    <link rel="prev" title="How to Configure ColorSpace Allocation" href="configurations/allocation_vars.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurations/index.html">Configurations</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-easy-way">The easy way</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-from-source">Building from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quick-environment-configuration">Quick environment configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nuke-configuration">Nuke Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#environment-variables">Environment variables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="installation">
+<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-easy-way">
+<h2>The easy way<a class="headerlink" href="#the-easy-way" title="Permalink to this headline">¶</a></h2>
+<p>While prebuilt binaries are not yet available for all platforms, OCIO
+is available via several platform&#8217;s package managers.</p>
+<div class="section" id="fedora-and-rhel">
+<h3>Fedora and RHEL<a class="headerlink" href="#fedora-and-rhel" title="Permalink to this headline">¶</a></h3>
+<p>In Fedora Core 15 and above, the following command will install OpenColorIO:</p>
+<div class="highlight-python"><pre>yum install OpenColorIO</pre>
+</div>
+<p>Providing you are using the <a class="reference external" href="http://fedoraproject.org/wiki/EPEL">Fedora EPEL repository</a> (see the <a class="reference external" href="http://fedoraproject.org/wiki/EPEL/FAQ#Using_EPEL">FAQ for instructions</a>), this same
+command will work for RedHat Enterprise Linux 6 and higher (including
+RHEL derivatives such as CentOS 6 and Scientific Linux 6)</p>
+</div>
+<div class="section" id="os-x-using-homebrew">
+<h3>OS X using Homebrew<a class="headerlink" href="#os-x-using-homebrew" title="Permalink to this headline">¶</a></h3>
+<p>You can use the Homebrew package manager to install OpenColorIO on OS X.</p>
+<p>First install Homebrew as per the instructions on the <a class="reference external" href="http://mxcl.github.com/homebrew/">Homebrew
+homepage</a> (or see the <a class="reference external" href="https://github.com/mxcl/homebrew/wiki/Installation">Homebrew wiki</a> for more
+detailed instructions)</p>
+<p>Then simply run the following command to install:</p>
+<div class="highlight-python"><pre>brew install opencolorio</pre>
+</div>
+<p>To build with the Python library use this command:</p>
+<div class="highlight-python"><pre>brew install opencolorio --with-python</pre>
+</div>
+</div>
+</div>
+<div class="section" id="building-from-source">
+<span id="id2"></span><h2>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="os-x-and-linux">
+<h3>OS X and Linux<a class="headerlink" href="#os-x-and-linux" title="Permalink to this headline">¶</a></h3>
+<p>While there is a huge range of possible setups, the following steps
+should work on OS X and most Linux distros.</p>
+<p>The basic requirements are:</p>
+<ul class="simple">
+<li>cmake &gt;= 2.8</li>
+<li>(optional) Python 2.x (for the Python bindings)</li>
+<li>(optional) Nuke 6.x or newer (for the Nuke nodes)</li>
+<li>(optional) OpenImageIO (for apps including ocioconvert)</li>
+<li>(optional) Truelight SDK (for TruelightTransform)</li>
+</ul>
+<p>To keep things simple, this guide will use the following example
+paths - these will almost definitely be different for you:</p>
+<ul class="simple">
+<li>source code: <tt class="docutils literal"><span class="pre">/source/ocio</span></tt></li>
+<li>the temporary build location: <tt class="docutils literal"><span class="pre">/tmp/ociobuild</span></tt></li>
+<li>the final install directory: <tt class="docutils literal"><span class="pre">/software/ocio</span></tt></li>
+</ul>
+<p>First make the build directory and cd to it:</p>
+<div class="highlight-python"><pre>$ mkdir /tmp/ociobuild
+$ cd /tmp/ociobuild</pre>
+</div>
+<p>Next step is to run cmake, which looks for things such as the
+compiler&#8217;s required arguments, optional requirements like Python,
+Nuke, OpenImageIO etc</p>
+<p>As we want to install OCIO to a custom location (instead of the
+default <tt class="docutils literal"><span class="pre">/usr/local</span></tt>), we will run cmake with
+<tt class="docutils literal"><span class="pre">CMAKE_INSTALL_PREFIX</span></tt></p>
+<p>Still in <tt class="docutils literal"><span class="pre">/tmp/ociobuild</span></tt>, run:</p>
+<div class="highlight-python"><pre>$ cmake -D CMAKE_INSTALL_PREFIX=/software/ocio /source/ocio</pre>
+</div>
+<p>The last argument is the location of the OCIO source code (containing
+the main CMakeLists.txt file). You should see something along the
+lines of:</p>
+<div class="highlight-python"><pre>-- Configuring done
+-- Generating done
+-- Build files have been written to: /tmp/ociobuild</pre>
+</div>
+<p>Next, build everything (with the <tt class="docutils literal"><span class="pre">-j</span></tt> flag to build using 8
+threads):</p>
+<div class="highlight-python"><pre>$ make -j8</pre>
+</div>
+<p>This should complete in a few minutes. Finally, install the files into
+the specified location:</p>
+<div class="highlight-python"><pre>$ make install</pre>
+</div>
+<p>If nothing went wrong, <tt class="docutils literal"><span class="pre">/software/ocio</span></tt> should look something like
+this:</p>
+<div class="highlight-python"><pre>$ cd /software/ocio
+$ ls
+bin/     include/ lib/
+$ ls bin/
+ocio2icc    ociobakelut ociocheck
+$ ls include/
+OpenColorIO/   PyOpenColorIO/ pkgconfig/
+$ ls lib/
+libOpenColorIO.a      libOpenColorIO.dylib</pre>
+</div>
+</div>
+<div class="section" id="windows-build">
+<h3>Windows Build<a class="headerlink" href="#windows-build" title="Permalink to this headline">¶</a></h3>
+<p>While build environments may vary between user, here is an example batch file
+for compiling on Windows as provided by <a class="reference external" href="https://github.com/hodoulp">&#64;hodoulp</a>:</p>
+<div class="highlight-python"><pre>@echo off
+
+
+REM Grab the repo name, default is ocio_rw
+set repo_name=ocio_rw
+if not %1.==. set repo_name=%1
+
+
+set CYGWIN=nodosfilewarning
+
+set CMAKE_PATH=D:\OpenSource\cmake-3.9.3
+set PYTHON_PATH=C:\Python27
+set BOOST_ROOT=D:\SolidAngle\boost_1_55_0
+
+set PATH=D:\Tools\cygwin64\bin;%CMAKE_PATH%\bin;%PYTHON_PATH%;%PATH%
+
+call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+
+
+set OCIO_PATH=D:\OpenSource\%repo_name%
+
+
+@doskey ne="D:\Tools\Notepad++\notepad++.exe" -nosession -multiInst $*
+@doskey sub="D:\Tools\Sublime Text 3\subl.exe" --project %OCIO_PATH%_project.sublime-project
+
+
+REM Decompose the directory change to avoid problems...
+D:
+
+IF NOT EXIST %OCIO_PATH% (
+echo %OCIO_PATH% does not exist
+exit /b
+)
+cd %OCIO_PATH%
+
+
+set CMAKE_BUILD_TYPE=Release
+
+echo *******
+echo *********************************************
+echo ******* Building %OCIO_PATH%
+echo **
+echo **
+set are_you_sure = Y
+set /P are_you_sure=Build in %CMAKE_BUILD_TYPE% ([Y]/N)?
+if not %are_you_sure%==Y set CMAKE_BUILD_TYPE=Debug
+
+
+set BUILD_PATH=_build_rls
+if not %CMAKE_BUILD_TYPE%==Release set BUILD_PATH=_build_dbg
+
+IF NOT EXIST %BUILD_PATH% ( mkdir %BUILD_PATH% )
+cd %BUILD_PATH%
+
+
+echo **
+echo **
+
+cmake -G "NMake Makefiles" ^
+    -DCMAKE_BUILD_TYPE=%CMAKE_BUILD_TYPE% ^
+    -DCMAKE_INSTALL_PREFIX=%OCIO_PATH%\_install ^
+    -DOCIO_BUILD_TESTS=ON ^
+    %OCIO_PATH%
+
+set PATH=%OCIO_PATH%\%BUILD_PATH%\src\core;%PATH%
+
+
+REM Find the current branch
+set GITBRANCH=
+for /f %%I in ('git.exe rev-parse --abbrev-ref HEAD 2^&gt; NUL') do set GITBRANCH=%%I
+
+if not "%GITBRANCH%" == ""  prompt $C%GITBRANCH%$F $P$G
+
+
+echo *******
+echo *********************************************
+echo boost    = %BOOST_ROOT%
+echo cmake    = %CMAKE_PATH%
+echo *******
+if not "%GITBRANCH%" == "" echo branch  = %GITBRANCH%
+echo *******
+echo Mode    = %CMAKE_BUILD_TYPE%
+echo path    = %OCIO_PATH%\%BUILD_PATH%
+echo compile = nmake all
+echo test    = nmake test
+echo *********************************************
+echo *******</pre>
+</div>
+<p>Also look to the Appveyor config script at the root of repository for an example
+build sequence.</p>
+</div>
+<div class="section" id="enabling-optional-components">
+<span id="id3"></span><h3>Enabling optional components<a class="headerlink" href="#enabling-optional-components" title="Permalink to this headline">¶</a></h3>
+<p>The OpenColorIO library is probably not all you want - the Python
+libraries bindings, the Nuke nodes and several applications are only
+built if their dependencies are found.</p>
+<p>In the case of the Python bindings, the dependencies are the Python
+headers for the version you wish to use. These may be picked up by
+default - if so, when you run cmake you would see:</p>
+<div class="highlight-python"><pre>-- Python 2.6 okay, will build the Python bindings against .../include/python2.6</pre>
+</div>
+<p>If not, you can point cmake to correct Python executable using the
+<tt class="docutils literal"><span class="pre">-D</span> <span class="pre">PYTHON=...</span></tt> cmake flag:</p>
+<div class="highlight-python"><pre>$ cmake -D PYTHON=/my/custom/python2.6 /source/ocio</pre>
+</div>
+<p>Same process with Nuke (although it less likely to be picked up
+automatically). Point cmake to your Nuke install directory by adding
+<tt class="docutils literal"><span class="pre">-D</span> <span class="pre">NUKE_INSTALL_PATH</span></tt>:</p>
+<div class="highlight-python"><pre>$ cmake -D PYTHON=/my/custom/python2.6 -D NUKE_INSTALL_PATH=/Applications/Nuke6.2v1/Nuke6.2v1.app/Contents/MacOS/ /source/ocio</pre>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">NUKE_INSTALL_PATH</span></tt> directory should contain the Nuke executable
+(e.g Nuke6.2v1), and a <tt class="docutils literal"><span class="pre">include/</span></tt> directory containing <tt class="docutils literal"><span class="pre">DDImage/</span></tt>
+and others.</p>
+<p>If set correctly, you will see something similar to:</p>
+<div class="highlight-python"><pre>-- Found Nuke: /Applications/Nuke6.2v1/Nuke6.2v1.app/Contents/MacOS/include
+-- Nuke_API_VERSION: --6.2--</pre>
+</div>
+<p>The Nuke plugins are installed into <tt class="docutils literal"><span class="pre">lib/nuke$MAJOR.$MINOR/</span></tt>, e.g
+<tt class="docutils literal"><span class="pre">lib/nuke6.2/OCIODisdplay.so</span></tt></p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you are using the Nuke plugins, you should compile the Python
+bindings for the same version of Python that Nuke uses
+internally. For Nuke 6.0 and 6.1 this is Python 2.5, and for 6.2
+it is Python 2.6</p>
+</div>
+<p>The applications included with OCIO have various dependencies - to
+determine these, look at the CMake output when first run:</p>
+<div class="highlight-python"><pre>-- Not building ocioconvert. Requirement(s) found: OIIO:FALSE</pre>
+</div>
+</div>
+</div>
+<div class="section" id="quick-environment-configuration">
+<span id="quick-env-config"></span><h2>Quick environment configuration<a class="headerlink" href="#quick-environment-configuration" title="Permalink to this headline">¶</a></h2>
+<p>The quickest way to set the required <a class="reference internal" href="#environment-setup"><em>Environment variables</em></a> is to
+source the <tt class="docutils literal"><span class="pre">share/ocio/setup_ocio.sh</span></tt> script installed with OCIO.</p>
+<p>For a simple single-user setup, add the following to <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt>
+(assuming you are using bash, and the example install directory of
+<tt class="docutils literal"><span class="pre">/software/ocio</span></tt>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">source</span> <span class="o">/</span><span class="n">software</span><span class="o">/</span><span class="n">ocio</span><span class="o">/</span><span class="n">share</span><span class="o">/</span><span class="n">ocio</span><span class="o">/</span><span class="n">setup_ocio</span><span class="o">.</span><span class="n">sh</span>
+</pre></div>
+</div>
+<p>The only environment variable you must configure manually is
+<span class="target" id="index-0"></span><a class="reference internal" href="#envvar-OCIO"><tt class="xref std std-envvar docutils literal"><span class="pre">OCIO</span></tt></a>, which points to the configuration file you wish to
+use. For prebuilt config files, see the
+<a class="reference internal" href="downloads.html#downloads"><em>Downloads</em></a> section</p>
+<p>To do this, you would add a line to <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt> (or a per-project
+configuration script etc), for example:</p>
+<div class="highlight-python"><pre>export OCIO="/path/to/my/config.ocio"</pre>
+</div>
+</div>
+<div class="section" id="nuke-configuration">
+<span id="id4"></span><h2>Nuke Configuration<a class="headerlink" href="#nuke-configuration" title="Permalink to this headline">¶</a></h2>
+<p>If you specified the <tt class="docutils literal"><span class="pre">NUKE_INSTALL_PATH</span></tt> option when running cmake,
+you should have a <tt class="docutils literal"><span class="pre">/software/ocio/lib/nuke6.2</span></tt> directory containing
+various files.</p>
+<p>If you have followed <a class="reference internal" href="#quick-env-config"><em>Quick environment configuration</em></a>, the plugins should be
+functional. However, one common additional configuration step is to
+register an OCIODisplay node for each display device/view specified in
+the config.</p>
+<p>To do this, in a menu.py on <span class="target" id="index-1"></span><a class="reference internal" href="#envvar-NUKE_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">NUKE_PATH</span></tt></a> (e.g
+<tt class="docutils literal"><span class="pre">~/.nuke/menu.py</span></tt> for a single user setup), add the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">ocionuke.viewer</span>
+<span class="n">ocionuke</span><span class="o">.</span><span class="n">viewer</span><span class="o">.</span><span class="n">populate_viewer</span><span class="p">(</span><span class="n">also_remove</span> <span class="o">=</span> <span class="s">&quot;default&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">also_remove</span></tt> argument can be set to either &#8220;default&#8221; to remove
+the default sRGB/rec709 options, &#8220;all&#8221; to remove everything, or &#8220;none&#8221;
+to leave existing viewer processes untouched.</p>
+<p>Alternatively, if your workflow has different requirements, you can
+copy the function and modify it as required, or use it as reference to
+write your own, better viewer setup function!</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">nuke</span>
+
+
+<span class="k">def</span> <span class="nf">register_viewers</span><span class="p">(</span><span class="n">also_remove</span> <span class="o">=</span> <span class="s">&quot;default&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Registers the a viewer process for each display device/view, and</span>
+<span class="sd">    sets the default viewer process.</span>
+
+<span class="sd">    ``also_remove`` can be set to either:</span>
+<span class="sd">    </span>
+<span class="sd">    - &quot;default&quot; to remove the default sRGB/rec709 viewer processes</span>
+<span class="sd">    - &quot;all&quot; to remove all processes</span>
+<span class="sd">    - &quot;none&quot; to leave existing viewer processes untouched</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">also_remove</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&quot;default&quot;</span><span class="p">,</span> <span class="s">&quot;none&quot;</span><span class="p">,</span> <span class="s">&quot;all&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;also_remove should be set to &#39;default&#39;, &#39;none&#39; or &#39;all&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">also_remove</span> <span class="o">==</span> <span class="s">&quot;default&quot;</span><span class="p">:</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s">&#39;rec709&#39;</span><span class="p">)</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s">&#39;sRGB&#39;</span><span class="p">)</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s">&#39;None&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">also_remove</span> <span class="o">==</span> <span class="s">&quot;all&quot;</span><span class="p">:</span>
+        <span class="c"># Unregister all processes, including None, which should be defined in config.ocio</span>
+        <span class="k">for</span> <span class="n">curname</span> <span class="ow">in</span> <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">registeredNames</span><span class="p">():</span>
+            <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">curname</span><span class="p">)</span>
+
+    <span class="c"># Formats the display and transform, e.g &quot;Film1D (sRGB)&quot;</span>
+    <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%(view)s</span><span class="s"> (</span><span class="si">%(display)s</span><span class="s">)&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">PyOpenColorIO</span> <span class="kn">as</span> <span class="nn">OCIO</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">OCIO</span><span class="o">.</span><span class="n">GetCurrentConfig</span><span class="p">()</span>
+
+    <span class="c"># For every display, loop over every view</span>
+    <span class="k">for</span> <span class="n">display</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">getDisplays</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">view</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">getViews</span><span class="p">(</span><span class="n">display</span><span class="p">):</span>
+            <span class="c"># Register the node</span>
+            <span class="n">nuke</span><span class="o">.</span><span class="n">ViewerProcess</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;view&#39;</span><span class="p">:</span> <span class="n">view</span><span class="p">,</span> <span class="s">&quot;display&quot;</span><span class="p">:</span> <span class="n">display</span><span class="p">},</span>
+                <span class="n">call</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">OCIODisplay</span><span class="p">,</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="p">(),</span>
+                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;display&quot;</span><span class="p">:</span> <span class="n">display</span><span class="p">,</span> <span class="s">&quot;view&quot;</span><span class="p">:</span> <span class="n">view</span><span class="p">,</span> <span class="s">&quot;layer&quot;</span><span class="p">:</span> <span class="s">&quot;all&quot;</span><span class="p">})</span>
+
+
+    <span class="c"># Get the default display and view, set it as the default used on Nuke startup</span>
+    <span class="n">defaultDisplay</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getDefaultDisplay</span><span class="p">()</span>
+    <span class="n">defaultView</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getDefaultView</span><span class="p">(</span><span class="n">defaultDisplay</span><span class="p">)</span>
+    
+    <span class="n">nuke</span><span class="o">.</span><span class="n">knobDefault</span><span class="p">(</span>
+        <span class="s">&quot;Viewer.viewerProcess&quot;</span><span class="p">,</span>
+        <span class="n">DISPLAY_UI_FORMAT</span> <span class="o">%</span> <span class="p">{</span><span class="s">&#39;view&#39;</span><span class="p">:</span> <span class="n">defaultView</span><span class="p">,</span> <span class="s">&quot;display&quot;</span><span class="p">:</span> <span class="n">defaultDisplay</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="environment-variables">
+<span id="environment-setup"></span><h2>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
+<dl class="envvar">
+<dt id="envvar-OCIO">
+<tt class="descname">OCIO</tt><a class="headerlink" href="#envvar-OCIO" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable needs to point to the global OCIO config file, e.g
+<tt class="docutils literal"><span class="pre">config.ocio</span></tt></p>
+</dd></dl>
+
+<dl class="envvar">
+<dt id="envvar-OCIO_LOGGING_LEVEL">
+<tt class="descname">OCIO_LOGGING_LEVEL</tt><a class="headerlink" href="#envvar-OCIO_LOGGING_LEVEL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures OCIO&#8217;s internal logging level. Valid values are
+<tt class="docutils literal"><span class="pre">none</span></tt>, <tt class="docutils literal"><span class="pre">warning</span></tt>, <tt class="docutils literal"><span class="pre">info</span></tt>, or <tt class="docutils literal"><span class="pre">debug</span></tt> (or their respective
+numeric values <tt class="docutils literal"><span class="pre">0</span></tt>, <tt class="docutils literal"><span class="pre">1</span></tt>, <tt class="docutils literal"><span class="pre">2</span></tt>, or <tt class="docutils literal"><span class="pre">3</span></tt> can be used)</p>
+<p>Logging output is sent to STDERR output.</p>
+</dd></dl>
+
+<dl class="envvar">
+<dt id="envvar-OCIO_ACTIVE_DISPLAYS">
+<tt class="descname">OCIO_ACTIVE_DISPLAYS</tt><a class="headerlink" href="#envvar-OCIO_ACTIVE_DISPLAYS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overrides the <em class="xref std std-ref">active_displays</em> configuration value.
+Colon-separated list of displays, e.g <tt class="docutils literal"><span class="pre">sRGB:P3</span></tt></p>
+</dd></dl>
+
+<dl class="envvar">
+<dt id="envvar-OCIO_ACTIVE_VIEWS">
+<tt class="descname">OCIO_ACTIVE_VIEWS</tt><a class="headerlink" href="#envvar-OCIO_ACTIVE_VIEWS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overrides the <em class="xref std std-ref">active_views</em> configuration
+item. Colon-separated list of view names, e.g
+<tt class="docutils literal"><span class="pre">internal:client:DI</span></tt></p>
+</dd></dl>
+
+<dl class="envvar">
+<dt id="envvar-DYLD_LIBRARY_PATH">
+<tt class="descname">DYLD_LIBRARY_PATH</tt><a class="headerlink" href="#envvar-DYLD_LIBRARY_PATH" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <tt class="docutils literal"><span class="pre">lib/</span></tt> folder (containing <tt class="docutils literal"><span class="pre">libOpenColorIO.dylib</span></tt>) must be
+on the <tt class="docutils literal"><span class="pre">DYLD_LIBRARY_PATH</span></tt> search path, or you will get an error
+similar to:</p>
+<div class="highlight-python"><pre>dlopen(.../OCIOColorSpace.so, 2): Library not loaded: libOpenColorIO.dylib
+Referenced from: .../OCIOColorSpace.so
+Reason: image not found</pre>
+</div>
+<p>This applies to anything that links against OCIO, including the
+Nuke nodes, and the <tt class="docutils literal"><span class="pre">PyOpenColorIO</span></tt> Python bindings.</p>
+</dd></dl>
+
+<dl class="envvar">
+<dt id="envvar-LD_LIBRARY_PATH">
+<tt class="descname">LD_LIBRARY_PATH</tt><a class="headerlink" href="#envvar-LD_LIBRARY_PATH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to the <tt class="docutils literal"><span class="pre">DYLD_LIBRARY_PATH</span></tt> on Linux</p>
+</dd></dl>
+
+<dl class="envvar">
+<dt id="envvar-PYTHONPATH">
+<tt class="descname">PYTHONPATH</tt><a class="headerlink" href="#envvar-PYTHONPATH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Python&#8217;s module search path. If you are using the PyOpenColorIO
+module, you must add <tt class="docutils literal"><span class="pre">lib/python2.x</span></tt> to this search path (e.g
+<tt class="docutils literal"><span class="pre">python/2.5</span></tt>), or importing the module will fail:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">PyOpenColorIO</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">ImportError</span>: <span class="n">No module named PyOpenColorIO</span>
+</pre></div>
+</div>
+<p>Note that <span class="target" id="index-2"></span><a class="reference internal" href="#envvar-DYLD_LIBRARY_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">DYLD_LIBRARY_PATH</span></tt></a> or <span class="target" id="index-3"></span><a class="reference internal" href="#envvar-LD_LIBRARY_PATH"><tt class="xref std std-envvar docutils literal"><span class="pre">LD_LIBRARY_PATH</span></tt></a>
+must be set correctly for the module to work.</p>
+</dd></dl>
+
+<dl class="envvar">
+<dt id="envvar-NUKE_PATH">
+<tt class="descname">NUKE_PATH</tt><a class="headerlink" href="#envvar-NUKE_PATH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Nuke&#8217;s customization search path, where it will look for plugins,
+gizmos, init.py and menu.py scripts and other customizations.</p>
+<p>This should point to both <tt class="docutils literal"><span class="pre">lib/nuke6.2/</span></tt> (or whatever version
+the plugins are built against), and <tt class="docutils literal"><span class="pre">share/nuke/</span></tt></p>
+</dd></dl>
+
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,532 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="index.html" />
+    <link rel="next" title="License" href="License.html" />
+    <link rel="prev" title="Downloads" href="downloads.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="changelog">
+<span id="changelog-main"></span><h1>ChangeLog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt><strong>Version 1.1.0 (Jan 5 2018):</strong></dt>
+<dd><ul class="first last simple">
+<li>libc++ build fixes</li>
+<li>Added support for YAML &gt; 5.0.1</li>
+<li>YAML and TinyXML patch fixes</li>
+<li>Clang visibility fix</li>
+<li>Added write support for Truelight LUTs</li>
+<li>Improved OCIOYaml</li>
+<li>Python string corruption fix</li>
+<li>Added support for CDL</li>
+<li>Updated documentation</li>
+<li>Added args/kwargs support to Python MatrixTransform</li>
+<li>Added description field to Look objects</li>
+<li>Improved Python 3 compatibility</li>
+<li>CSP file read fix</li>
+<li>Added Linux, MacOS, and Windows continuos integration</li>
+<li>Improved 1D LUT extrapolation</li>
+<li>Improved 1D LUT negative handling</li>
+<li>Improved Windows build system</li>
+<li>Improved cross-platform build system</li>
+<li>Undefined role crash fix</li>
+<li>After Effects plugin updated</li>
+<li>Added reference Photoshop plugin</li>
+<li>Added reference Docker image</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.9 (Sep 2 2013):</strong></dt>
+<dd><ul class="first last simple">
+<li>CDL cccid supports both named id and index lookups</li>
+<li>ociobakelut / ocioconvert updates</li>
+<li>FreeBSD compile dixes</li>
+<li>FileTransform disk cache allows concurrent disk lookups</li>
+<li>CSP windows fix</li>
+<li>Python 3 support</li>
+<li>Fix envvar abs/relative path testing</li>
+<li>Can explicitly declare config envvars</li>
+<li>gcc44 compile warning fixes</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.8 (Dec 11 2012):</strong></dt>
+<dd><ul class="first last simple">
+<li>After Effects plugin</li>
+<li>Core increased precision for matrix inversion</li>
+<li>Core md5 symbols no longer leaked</li>
+<li>CMake compatibility with OIIO 1.0 namespacing</li>
+<li>Cmake option to control python soname</li>
+<li>Nuke register_viewers defaults OCIODisplay to &#8220;all&#8221;</li>
+<li>Nuke ColorLookup &lt;-&gt; spi1d lut examples</li>
+<li>Windows uses boost shared_ptr by default</li>
+<li>Windows fixed csp writing</li>
+<li>Windows build fixes</li>
+<li>ociobakelut supports looks</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.7 (April 17 2012):</strong></dt>
+<dd><ul class="first last simple">
+<li>IRIDAS .look support</li>
+<li>ociolutimage utility added (handles image &lt;-&gt; 3dlut)</li>
+<li>CMake build allows optional reliance on system libraries</li>
+<li>CMake layout changes for python and nuke installs</li>
+<li>Bumped internals to yaml 0.3.0, pystring 1.1.2</li>
+<li>Optimized internal handling of Matrix / Exponent Ops</li>
+<li>Added INTERP_BEST interpolation option</li>
+<li>Python config.clearLooks() added</li>
+<li>Python docs revamp</li>
+<li>Nuke config-dependent knob values now baked into .nk scripts</li>
+<li>Nuke OCIOLookTransform gets reload button</li>
+<li>Nuke nodes get updated help text</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.6 (March 12 2012):</strong></dt>
+<dd><ul class="first last simple">
+<li>JNI (Java) updates</li>
+<li>ocioconvert arbitrary attr support</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.5 (Feb 22 2012):</strong></dt>
+<dd><ul class="first last simple">
+<li>Internal optimization framework added</li>
+<li>SetLoggingLevel(..) bugfix</li>
+<li>Python API Documentation / website updates</li>
+<li>Clang compilation fix</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.4 (Jan 25 2012):</strong></dt>
+<dd><ul class="first last simple">
+<li>ocio2icc deprecated (functionality merged into ociobakelut)</li>
+<li>rv integration (beta)</li>
+<li>nuke: updated channel handling</li>
+<li>Documentation / website updates</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.3 (Dec 21 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Tetrahedral 3dlut interpolation (CPU only)</li>
+<li>ociocheck and Config.sanityCheck() have improved validation</li>
+<li>Mari: updated examples</li>
+<li>Makefile: misc updates to match distro library conventions</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.2 (Nov 30 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>3D lut processing (cpu) is resiliant to nans</li>
+<li>Nuke OCIOFileTransform gains Reload buttons</li>
+<li>Installation on multi-lib <a href="#id1"><span class="problematic" id="id2">*</span></a>nix systems improved</li>
+<li>Installation handling of soversion for C++/python improved</li>
+<li>ociobakelut improvements</li>
+<li>Initial version of Java bindings (alpha)</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.1 (Oct 31 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Luts with incorrect extension are properly loaded</li>
+<li>ocio2icc / ociobakelut get &#8211;lut option (no longer requires ocio config)</li>
+<li>DisplayTransform looks do not apply to &#8216;data&#8217; passes.</li>
+</ul>
+</dd>
+<dt><strong>Version 1.0.0 (Oct 3 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>ABI Lockoff for 1.0 branch</li>
+<li>General API Cleanup (removed deprecated / unnecessary functions)</li>
+<li>New features can be added, but the ABI will only be extended in a binary compatible manner.
+Profiles written from 1.0 will always be readable in future versions.</li>
+<li>Fixed Truelight Reading Bug</li>
+<li>ocio2icc no longer requires ocio config (can provide raw lut(s)</li>
+</ul>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="docutils">
+<dt><strong>Version 0.8.7 (Oct 3 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Fixed Truelight Reading Bug</li>
+</ul>
+</dd>
+<dt><strong>Version 0.8.6 (Sept 7 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Updated .ocio config reading / writing to be forwards compatibile with 1.0
+(Profiles written in 0.8.6+ will be 1.0 compatible. Compatibility from prior versions is likely, though not guaranteed.)</li>
+<li>Better logging</li>
+<li>Added ColorSpace.equalitygroup (makes ColorSpace equality explicit)</li>
+<li>Substantial Nuke node updates</li>
+<li>Added support for Iridas .itx read/write</li>
+<li>Windows Build Support</li>
+</ul>
+</dd>
+<dt><strong>Version 0.8.5 (Aug 2 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Nuke OCIODisplay fixed (bug from 0.8.4)</li>
+<li>Updated Houdini HDL Reader / Writer</li>
+</ul>
+</dd>
+<dt><strong>Version 0.8.4 (July 25 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Native Look Support</li>
+<li>Core / Nuke OCIODisplay supports alpha viewing</li>
+<li>Added Houdini (.lut) writing</li>
+<li>Added Pandora (.mga,.m3d) reading</li>
+<li>Additional internal bug fixes</li>
+</ul>
+</dd>
+<dt><strong>Version 0.8.3 (June 27 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>OCIO::Config symlink resolution fixed (bugfix)</li>
+<li>Nuke OCIODisplay knobs use string storage (bugfix)</li>
+<li>Makefile cleanup</li>
+<li>Documentation cleanup</li>
+</ul>
+</dd>
+<dt><strong>Version 0.8.2 (June 7 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Numerous Windows compatibility fixes</li>
+<li>Python binding improvements</li>
+<li>OCIO::Baker / ociobakelut improvements</li>
+<li>Lut1D/3D do not crash on nans (bugfix)</li>
+<li>Nuke UI doesnt crash in known corner case (bugfix)</li>
+</ul>
+</dd>
+<dt><strong>Version 0.8.1 (May 9 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>New roles: TEXTURE_PAINT + MATTE_PAINT</li>
+<li>Mari API Example (src/mari)</li>
+<li>FileFormat registry updated to allow Windows + Debug support</li>
+<li>boost_ptr build compatibility option</li>
+</ul>
+</dd>
+<dt><strong>Version 0.8.0 (Apr 19 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>ABI Lockoff for stable 0.8 branch
+New features can be added, but the ABI will only be extended in a binary compatible manner</li>
+<li>Otherwise identical to 0.7.9</li>
+</ul>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="docutils">
+<dt><strong>Version 0.7.9 (Apr 18 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Added support for .vf luts</li>
+<li>Misc. Nuke enhancements</li>
+<li>Adds optional boost ptr support (backwards compatibility)</li>
+<li>Makefile enhancements (Nuke / CMAKE_INSTALL_EXEC_PREFIX)</li>
+<li>cdlTransform.setXML crash fix</li>
+</ul>
+</dd>
+<dt><strong>Version 0.7.8 (March 31 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Iridas lut (.cube) bugfix, DOMAIN_MIN / DOMAIN_MAX now obeyed</li>
+<li>Exposed GPU functions in python (needed for Mari)</li>
+<li>Nuke OCIODisplay cleanup: Fixed knob names and added envvar support</li>
+<li>ociobaker cleanup</li>
+<li>tinyxml ABI visibility cleaned up</li>
+<li>Removed Boost dependency, tr1::shared_ptr now used instead</li>
+</ul>
+</dd>
+<dt><strong>Version 0.7.7 (March 1 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Lut baking API + standalone app</li>
+<li>Truelight runtime support (optional)</li>
+<li>Cinespace (3d) lut writing</li>
+<li>CSP prelut support</li>
+<li>Boost argparse dependency removed</li>
+<li>SanityCheck is more exhaustive</li>
+<li>FileTransform supports relative path dirs</li>
+<li>Python enhancements (transform kwarg support)</li>
+<li>Makefile enhancements (OIIO Path)</li>
+<li>Processor API update (code compatible, binary incompatible)</li>
+</ul>
+</dd>
+<dt><strong>Version 0.7.6 (Feb 1 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Updated Config Display API (.ocio config format updated)</li>
+<li>Added ocio2icc app (ICC Profile Generation)</li>
+<li>Revamp of ASC CDL, added .cc and .ccc support</li>
+<li>Documentation Improvements</li>
+<li>Makefile enhancements (Boost_INCLUDE_DIR, etc)</li>
+</ul>
+</dd>
+<dt><strong>Version 0.7.5 (Jan 13 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>ociodisplay enhancements</li>
+<li>gpu display bugfix (glsl profile 1.0 only)</li>
+<li>Makefile enhancements</li>
+<li>Nuke installation cleanup</li>
+<li>Doc generation using sphinx (html + pdf)</li>
+</ul>
+</dd>
+<dt><strong>Version 0.7.4 (Jan 4 2011):</strong></dt>
+<dd><ul class="first last simple">
+<li>Added &#8216;Context&#8217;, allowing for &#8216;per-shot&#8217; Transforms</li>
+<li>Misc API Cleanup: removed old functions + fixed const-ness</li>
+<li>Added config.sanityCheck() for validation</li>
+<li>Additional Makefile configuration options, SONAME, etc.</li>
+</ul>
+</dd>
+<dt><strong>Version 0.7.3 (Dec 16 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Added example applications: ociodisplay, ocioconvert</li>
+<li>Makefile: Add boost header dependency</li>
+<li>Makefile: Nuke plugins are now version specific</li>
+<li>Fixed bug in GLSL MatrixOp</li>
+</ul>
+</dd>
+<dt><strong>Version 0.7.2 (Dec 9 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>GPUAllocation refactor (API tweak)</li>
+<li>Added AllocationTransform</li>
+<li>Added LogTransform</li>
+<li>Removed CineonLogToLinTransform</li>
+<li>A few bug fixes</li>
+</ul>
+</dd>
+<dt><strong>Version 0.7.1 (Nov 15 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Additional 3d lut formats: Truelight .cub + Iridas .cube</li>
+<li>FileTransform supports envvars and search paths</li>
+<li>Added Nuke plugins: LogConvert + FileTransform</li>
+<li>Improved OCIO profile formatting</li>
+<li>GCC visibility used (when available) to hide private symbols</li>
+<li>A few bug fixes</li>
+</ul>
+</dd>
+<dt><strong>Version 0.7.0 (Oct 21 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Switched file format from XML to Yaml</li>
+</ul>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="docutils">
+<dt><strong>Version 0.6.1 (Oct 5 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Exposed ExponentTransform</li>
+<li>Added CineonLogToLinTransform - a simple &#8216;straight-line&#8217; negative
+linearization. Not strictly needed (could be done previously
+with LUTs) but often convenient to have.</li>
+<li>Added DisplayTransform.displayCC for post display lut CC.</li>
+<li>Many python improvements</li>
+<li>A few bug fixes</li>
+<li>A few Makefile enhancements</li>
+</ul>
+</dd>
+<dt><strong>Version 0.6.0 (Sept 21 2010):</strong></dt>
+<dd><ul class="first last">
+<li><p class="first">Start of 0.6, &#8220;stable&#8221; branch</p>
+<p>All 0.6.x builds will be ABI compatible (forward only).
+New features (even experimental ones) will be added to the 0.6 branch,
+as long as binary and source compatibility is maintained.
+Once this no longer is possible, a 0.7 &#8220;dev&#8221; branch will be forked.</p>
+</li>
+<li><p class="first">Split public header into 3 parts for improved readability
+(you still only import &lt;OpenColorIO/OpenColorIO.h&gt; though)</p>
+</li>
+<li><p class="first">Added MatrixTransform</p>
+</li>
+<li><p class="first">Refactored internal unit testing</p>
+</li>
+<li><p class="first">Fixed many compile warnings</p>
+</li>
+</ul>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="docutils">
+<dt><strong>Version 0.5.16 (Sept 16 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>PyTransforms now use native python class inheritance</li>
+<li>OCIO namespace can now be configured at build time (for distribution in commercial apps)</li>
+<li>Updated make install behavior</li>
+<li>DisplayTransform accepts generic cc operators (instead of CDL only)</li>
+<li>A few bug fixes / compile warning fixes</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.15 (Sept 8 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>OCIO is well behaved when $OCIO is unset, allowing un-color-managed use.</li>
+<li>Color Transforms can be applied in python config-&gt;getProcessor</li>
+<li>Simplification of API (getColorSpace allows cs name, role names, and cs objects)</li>
+<li>Makefile enhancements (courtesy Malcolm Humphreys)</li>
+<li>A bunch of bug fixes</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.14 (Sept 1 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Python binding enhancements</li>
+<li>Simplified class implmentations (reduced internal header count)</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.13 (Aug 24 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>GPU Processing now supports High Dynamic Range color spaces</li>
+<li>Added log processing operator</li>
+<li>Numerous bug fixes</li>
+<li>Numerous enhancements to python glue</li>
+<li>Exposed PyOpenColorIO header, for use in apps that require custom python glue</li>
+<li>Matrix op is optimized for diagonal-only subcases</li>
+<li>Numerous changes to Nuke Plugin (now with an addition node, OCIODisplay)</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.12 (Aug 18 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Additional DisplayTransform improvements</li>
+<li>Additional GPU Improvements</li>
+<li>Added op hashing (processor-&gt;getGPULut3DCacheID)</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.11 (Aug 11 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Initial DisplayTransform implementation</li>
+<li>ASC CDL Support</li>
+<li>Config Luma coefficients</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.10 (July 22 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Updated Nuke Plugin, now works in OSX</li>
+<li>Fixed misc. build warnings.</li>
+<li>Continued GPU progress (still under development)</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.9 (June 28 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Renamed project, classes, namespaces to OpenColorIO (OCIO)</li>
+<li>Added single-pixel processor path</li>
+<li>Improved python path makefile detection</li>
+<li>Continued GPU progress (still under development)</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.8 (June 22 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Support for .3dl</li>
+<li>Support for matrix ops</li>
+<li>Code refactor (added Processors) to support gpu/cpu model</li>
+<li>Much better error checking</li>
+<li>Compilation support for python 2.5</li>
+<li>Compilation support for OSX</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.7 (June 14 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Python API is much more fleshed out</li>
+<li>Improved public C++ header</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.6 (June 8 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>PyConfig stub implementation</li>
+<li>Dropped ImageDesc.init; added PlanarImageDesc / PackedImageDesc</li>
+<li>Dropped tr1::shared_ptr; added boost::shared_ptr</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.5 (June 4 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>.ocio supports path references</li>
+<li>Switch config envvar to $OCIO</li>
+<li>Added 3D lut processing ops</li>
+</ul>
+</dd>
+<dt><strong>Version 0.5.4 (June 1 2010):</strong></dt>
+<dd><ul class="first last simple">
+<li>Initial Release</li>
+<li>CMake linux support</li>
+<li>XML OCIO format parsing / saving</li>
+<li>Example colorspace configuration with a few &#8216;trivial&#8217; colorspaces</li>
+<li>Mutable colorspace configuration API</li>
+<li>Support for 1D lut processing</li>
+<li>Support for SPI 1D fileformats.</li>
+<li>Nuke plugin</li>
+</ul>
+</dd>
+</dl>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

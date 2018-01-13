@@ -1,0 +1,1055 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="&lt;no title&gt;" href="index.html" />
+    <link rel="next" title="C++ Types" href="OpenColorTypes.html" />
+    <link rel="prev" title="C++ API" href="OpenColorIO.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation_guidelines.html">Documentation guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../submitting_changes.html">Submitting Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../issues.html">Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_examples.html">Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OpenColorIO.html">C++ API</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">C++ Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OpenColorTypes.html">C++ Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bindings/PythonAPI.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bindings/PythonTransforms.html">Python Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bindings/PythonTypes.html">Python Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../internal_architecture.html">Internal Architecture Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="c-transforms">
+<h1>C++ Transforms<a class="headerlink" href="#c-transforms" title="Permalink to this headline">¶</a></h1>
+<p>Typically only needed when creating and/or manipulating configurations</p>
+<hr class="docutils" />
+<dl class="class">
+<dt id="Transform">
+<em class="property">class </em><tt class="descname">Transform</tt><a class="headerlink" href="#Transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="lshift-operator__X.X">
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const Transform&amp;</em><big>)</big><a class="headerlink" href="#lshift-operator__X.X" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="AllocationTransform">
+<em class="property">class </em><tt class="descname">AllocationTransform</tt><a class="headerlink" href="#AllocationTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forward direction wraps the &#8216;expanded&#8217; range into the
+specified, often compressed, range.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="AllocationTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#AllocationTransformRcPtr" title="AllocationTransformRcPtr">AllocationTransformRcPtr</a> <tt class="descclassname">AllocationTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#AllocationTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">AllocationTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#AllocationTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">AllocationTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#AllocationTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationTransform::setDirection__TransformDirection">
+void <tt class="descclassname">AllocationTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#AllocationTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationTransform::getAllocationC">
+<a class="reference internal" href="OpenColorTypes.html#Allocation" title="Allocation">Allocation</a> <tt class="descclassname">AllocationTransform::</tt><tt class="descname">getAllocation</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#AllocationTransform::getAllocationC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationTransform::setAllocation__Allocation">
+void <tt class="descclassname">AllocationTransform::</tt><tt class="descname">setAllocation</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#Allocation" title="Allocation">Allocation</a> <em>allocation</em><big>)</big><a class="headerlink" href="#AllocationTransform::setAllocation__Allocation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationTransform::getNumVarsC">
+int <tt class="descclassname">AllocationTransform::</tt><tt class="descname">getNumVars</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#AllocationTransform::getNumVarsC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationTransform::getVars__floatPC">
+void <tt class="descclassname">AllocationTransform::</tt><tt class="descname">getVars</tt><big>(</big>float* <em>vars</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#AllocationTransform::getVars__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationTransform::setVars__i.floatCP">
+void <tt class="descclassname">AllocationTransform::</tt><tt class="descname">setVars</tt><big>(</big>int <em>numvars</em>, const float* <em>vars</em><big>)</big><a class="headerlink" href="#AllocationTransform::setVars__i.floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const AllocationTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="CDLTransform">
+<em class="property">class </em><tt class="descname">CDLTransform</tt><a class="headerlink" href="#CDLTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>An implementation of the ASC CDL Transfer Functions and
+Interchange - Syntax (Based on the version 1.2 document)</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the clamping portion of the CDL is only applied if a non-identity
+power is specified.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#CDLTransformRcPtr" title="CDLTransformRcPtr">CDLTransformRcPtr</a> <tt class="descclassname">CDLTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#CDLTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::CreateFromFile__cCP.cCP">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#CDLTransformRcPtr" title="CDLTransformRcPtr">CDLTransformRcPtr</a> <tt class="descclassname">CDLTransform::</tt><tt class="descname">CreateFromFile</tt><big>(</big>const char* <em>src</em>, const char* <em>cccid</em><big>)</big><a class="headerlink" href="#CDLTransform::CreateFromFile__cCP.cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the CDL from the src .cc or .ccc file.
+If a .ccc is used, the cccid must also be specified
+src must be an absolute path reference, no relative directory
+or envvar resolution is performed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">CDLTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">CDLTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::setDirection__TransformDirection">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#CDLTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::equals__ConstCDLTransformRcPtrCRC">
+bool <tt class="descclassname">CDLTransform::</tt><tt class="descname">equals</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstCDLTransformRcPtr" title="ConstCDLTransformRcPtr">const ConstCDLTransformRcPtr&amp;</a> <em>other</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::equals__ConstCDLTransformRcPtrCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getXMLC">
+const char* <tt class="descclassname">CDLTransform::</tt><tt class="descname">getXML</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getXMLC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::setXML__cCP">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">setXML</tt><big>(</big>const char* <em>xml</em><big>)</big><a class="headerlink" href="#CDLTransform::setXML__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p><strong>ASC_SOP</strong></p>
+<p>Slope, offset, power:</p>
+<div class="highlight-python"><pre>out = clamp( (in * slope) + offset ) ^ power</pre>
+</div>
+<dl class="function">
+<dt id="CDLTransform::setSlope__floatCP">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">setSlope</tt><big>(</big>const float* <em>rgb</em><big>)</big><a class="headerlink" href="#CDLTransform::setSlope__floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getSlope__floatPC">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">getSlope</tt><big>(</big>float* <em>rgb</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getSlope__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::setOffset__floatCP">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">setOffset</tt><big>(</big>const float* <em>rgb</em><big>)</big><a class="headerlink" href="#CDLTransform::setOffset__floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getOffset__floatPC">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">getOffset</tt><big>(</big>float* <em>rgb</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getOffset__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::setPower__floatCP">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">setPower</tt><big>(</big>const float* <em>rgb</em><big>)</big><a class="headerlink" href="#CDLTransform::setPower__floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getPower__floatPC">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">getPower</tt><big>(</big>float* <em>rgb</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getPower__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::setSOP__floatCP">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">setSOP</tt><big>(</big>const float* <em>vec9</em><big>)</big><a class="headerlink" href="#CDLTransform::setSOP__floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getSOP__floatPC">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">getSOP</tt><big>(</big>float* <em>vec9</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getSOP__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p><strong>ASC_SAT</strong></p>
+<dl class="function">
+<dt id="CDLTransform::setSat__float">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">setSat</tt><big>(</big>float <em>sat</em><big>)</big><a class="headerlink" href="#CDLTransform::setSat__float" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getSatC">
+float <tt class="descclassname">CDLTransform::</tt><tt class="descname">getSat</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getSatC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getSatLumaCoefs__floatPC">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">getSatLumaCoefs</tt><big>(</big>float* <em>rgb</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getSatLumaCoefs__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>These are hard-coded, by spec, to r709</p>
+</dd></dl>
+
+<p><strong>Metadata</strong></p>
+<p>These do not affect the image processing, but
+are often useful for pipeline purposes and are
+included in the serialization.</p>
+<dl class="function">
+<dt id="CDLTransform::setID__cCP">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">setID</tt><big>(</big>const char* <em>id</em><big>)</big><a class="headerlink" href="#CDLTransform::setID__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique Identifier for this correction</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getIDC">
+const char* <tt class="descclassname">CDLTransform::</tt><tt class="descname">getID</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getIDC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::setDescription__cCP">
+void <tt class="descclassname">CDLTransform::</tt><tt class="descname">setDescription</tt><big>(</big>const char* <em>desc</em><big>)</big><a class="headerlink" href="#CDLTransform::setDescription__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Textual description of color correction
+(stored on the SOP)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="CDLTransform::getDescriptionC">
+const char* <tt class="descclassname">CDLTransform::</tt><tt class="descname">getDescription</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#CDLTransform::getDescriptionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const CDLTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="ColorSpaceTransform">
+<em class="property">class </em><tt class="descname">ColorSpaceTransform</tt><a class="headerlink" href="#ColorSpaceTransform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ColorSpaceTransformRcPtr" title="ColorSpaceTransformRcPtr">ColorSpaceTransformRcPtr</a> <tt class="descclassname">ColorSpaceTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#ColorSpaceTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">ColorSpaceTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpaceTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">ColorSpaceTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpaceTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceTransform::setDirection__TransformDirection">
+void <tt class="descclassname">ColorSpaceTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#ColorSpaceTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceTransform::getSrcC">
+const char* <tt class="descclassname">ColorSpaceTransform::</tt><tt class="descname">getSrc</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpaceTransform::getSrcC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceTransform::setSrc__cCP">
+void <tt class="descclassname">ColorSpaceTransform::</tt><tt class="descname">setSrc</tt><big>(</big>const char* <em>src</em><big>)</big><a class="headerlink" href="#ColorSpaceTransform::setSrc__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceTransform::getDstC">
+const char* <tt class="descclassname">ColorSpaceTransform::</tt><tt class="descname">getDst</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ColorSpaceTransform::getDstC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceTransform::setDst__cCP">
+void <tt class="descclassname">ColorSpaceTransform::</tt><tt class="descname">setDst</tt><big>(</big>const char* <em>dst</em><big>)</big><a class="headerlink" href="#ColorSpaceTransform::setDst__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const ColorSpaceTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="DisplayTransform">
+<em class="property">class </em><tt class="descname">DisplayTransform</tt><a class="headerlink" href="#DisplayTransform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#DisplayTransformRcPtr" title="DisplayTransformRcPtr">DisplayTransformRcPtr</a> <tt class="descclassname">DisplayTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#DisplayTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">DisplayTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setDirection__TransformDirection">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#DisplayTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setInputColorSpaceName__cCP">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setInputColorSpaceName</tt><big>(</big>const char* <em>name</em><big>)</big><a class="headerlink" href="#DisplayTransform::setInputColorSpaceName__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step 0. Specify the incoming color space</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getInputColorSpaceNameC">
+const char* <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getInputColorSpaceName</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getInputColorSpaceNameC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setLinearCC__ConstTransformRcPtrCR">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setLinearCC</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>cc</em><big>)</big><a class="headerlink" href="#DisplayTransform::setLinearCC__ConstTransformRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step 1: Apply a Color Correction, in ROLE_SCENE_LINEAR</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getLinearCCC">
+<a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">ConstTransformRcPtr</a> <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getLinearCC</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getLinearCCC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setColorTimingCC__ConstTransformRcPtrCR">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setColorTimingCC</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>cc</em><big>)</big><a class="headerlink" href="#DisplayTransform::setColorTimingCC__ConstTransformRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step 2: Apply a color correction, in ROLE_COLOR_TIMING</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getColorTimingCCC">
+<a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">ConstTransformRcPtr</a> <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getColorTimingCC</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getColorTimingCCC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setChannelView__ConstTransformRcPtrCR">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setChannelView</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em><big>)</big><a class="headerlink" href="#DisplayTransform::setChannelView__ConstTransformRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step 3: Apply the Channel Viewing Swizzle (mtx)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getChannelViewC">
+<a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">ConstTransformRcPtr</a> <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getChannelView</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getChannelViewC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setDisplay__cCP">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setDisplay</tt><big>(</big>const char* <em>display</em><big>)</big><a class="headerlink" href="#DisplayTransform::setDisplay__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step 4: Apply the output display transform
+This is controlled by the specification of (display, view)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getDisplayC">
+const char* <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getDisplay</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getDisplayC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setView__cCP">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setView</tt><big>(</big>const char* <em>view</em><big>)</big><a class="headerlink" href="#DisplayTransform::setView__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify which view transform to use</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getViewC">
+const char* <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getView</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getViewC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setDisplayCC__ConstTransformRcPtrCR">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setDisplayCC</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>cc</em><big>)</big><a class="headerlink" href="#DisplayTransform::setDisplayCC__ConstTransformRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step 5: Apply a post display transform color correction</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getDisplayCCC">
+<a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">ConstTransformRcPtr</a> <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getDisplayCC</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getDisplayCCC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setLooksOverride__cCP">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setLooksOverride</tt><big>(</big>const char* <em>looks</em><big>)</big><a class="headerlink" href="#DisplayTransform::setLooksOverride__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>A user can optionally override the looks that are,
+by default, used with the expected display / view combination.
+A common use case for this functionality is in an image viewing
+app, where per-shot looks are supported.  If for some reason
+a per-shot look is not defined for the current Context, the
+Config::getProcessor fcn will not succeed by default.  Thus,
+with this mechanism the viewing app could override to looks = &#8220;&#8221;,
+and this will allow image display to continue (though hopefully)
+the interface would reflect this fallback option.)</p>
+<p>Looks is a potentially comma (or colon) delimited list of lookNames,
+Where +/- prefixes are optionally allowed to denote forward/inverse
+look specification. (And forward is assumed in the absense of either)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getLooksOverrideC">
+const char* <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getLooksOverride</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getLooksOverrideC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::setLooksOverrideEnabled__b">
+void <tt class="descclassname">DisplayTransform::</tt><tt class="descname">setLooksOverrideEnabled</tt><big>(</big>bool <em>enabled</em><big>)</big><a class="headerlink" href="#DisplayTransform::setLooksOverrideEnabled__b" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifiy whether the lookOverride should be used,
+or not. This is a speparate flag, as it&#8217;s often useful to override
+&#8220;looks&#8221; to an empty string</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DisplayTransform::getLooksOverrideEnabledC">
+bool <tt class="descclassname">DisplayTransform::</tt><tt class="descname">getLooksOverrideEnabled</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#DisplayTransform::getLooksOverrideEnabledC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const DisplayTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="ExponentTransform">
+<em class="property">class </em><tt class="descname">ExponentTransform</tt><a class="headerlink" href="#ExponentTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents exponent transform: pow( clamp(color), value)</p>
+<p>If the exponent is 1.0, this will not clamp. Otherwise, the input color
+will be clamped between [0.0, inf]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ExponentTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#ExponentTransformRcPtr" title="ExponentTransformRcPtr">ExponentTransformRcPtr</a> <tt class="descclassname">ExponentTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#ExponentTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ExponentTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">ExponentTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ExponentTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ExponentTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">ExponentTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ExponentTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ExponentTransform::setDirection__TransformDirection">
+void <tt class="descclassname">ExponentTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#ExponentTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ExponentTransform::setValue__floatCP">
+void <tt class="descclassname">ExponentTransform::</tt><tt class="descname">setValue</tt><big>(</big>const float* <em>vec4</em><big>)</big><a class="headerlink" href="#ExponentTransform::setValue__floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ExponentTransform::getValue__floatPC">
+void <tt class="descclassname">ExponentTransform::</tt><tt class="descname">getValue</tt><big>(</big>float* <em>vec4</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#ExponentTransform::getValue__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const ExponentTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="FileTransform">
+<em class="property">class </em><tt class="descname">FileTransform</tt><a class="headerlink" href="#FileTransform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#FileTransformRcPtr" title="FileTransformRcPtr">FileTransformRcPtr</a> <tt class="descclassname">FileTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#FileTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">FileTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#FileTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">FileTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#FileTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::setDirection__TransformDirection">
+void <tt class="descclassname">FileTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#FileTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::getSrcC">
+const char* <tt class="descclassname">FileTransform::</tt><tt class="descname">getSrc</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#FileTransform::getSrcC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::setSrc__cCP">
+void <tt class="descclassname">FileTransform::</tt><tt class="descname">setSrc</tt><big>(</big>const char* <em>src</em><big>)</big><a class="headerlink" href="#FileTransform::setSrc__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::getCCCIdC">
+const char* <tt class="descclassname">FileTransform::</tt><tt class="descname">getCCCId</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#FileTransform::getCCCIdC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::setCCCId__cCP">
+void <tt class="descclassname">FileTransform::</tt><tt class="descname">setCCCId</tt><big>(</big>const char* <em>id</em><big>)</big><a class="headerlink" href="#FileTransform::setCCCId__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::getInterpolationC">
+<a class="reference internal" href="OpenColorTypes.html#Interpolation" title="Interpolation">Interpolation</a> <tt class="descclassname">FileTransform::</tt><tt class="descname">getInterpolation</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#FileTransform::getInterpolationC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::setInterpolation__Interpolation">
+void <tt class="descclassname">FileTransform::</tt><tt class="descname">setInterpolation</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#Interpolation" title="Interpolation">Interpolation</a> <em>interp</em><big>)</big><a class="headerlink" href="#FileTransform::setInterpolation__Interpolation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::getNumFormats">
+<em class="property">static</em> int <tt class="descclassname">FileTransform::</tt><tt class="descname">getNumFormats</tt><big>(</big><big>)</big><a class="headerlink" href="#FileTransform::getNumFormats" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the number of lut readers</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::getFormatNameByIndex__i">
+<em class="property">static</em> const char* <tt class="descclassname">FileTransform::</tt><tt class="descname">getFormatNameByIndex</tt><big>(</big>int <em>index</em><big>)</big><a class="headerlink" href="#FileTransform::getFormatNameByIndex__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the lut readers at index, return empty string if
+an invalid index is specified</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="FileTransform::getFormatExtensionByIndex__i">
+<em class="property">static</em> const char* <tt class="descclassname">FileTransform::</tt><tt class="descname">getFormatExtensionByIndex</tt><big>(</big>int <em>index</em><big>)</big><a class="headerlink" href="#FileTransform::getFormatExtensionByIndex__i" title="Permalink to this definition">¶</a></dt>
+<dd><p>get the lut reader extension at index, return empty string if
+an invalid index is specified</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const FileTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="GroupTransform">
+<em class="property">class </em><tt class="descname">GroupTransform</tt><a class="headerlink" href="#GroupTransform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GroupTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#GroupTransformRcPtr" title="GroupTransformRcPtr">GroupTransformRcPtr</a> <tt class="descclassname">GroupTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#GroupTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GroupTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">GroupTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GroupTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GroupTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">GroupTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GroupTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GroupTransform::setDirection__TransformDirection">
+void <tt class="descclassname">GroupTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#GroupTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GroupTransform::getTransform__iC">
+<a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">ConstTransformRcPtr</a> <tt class="descclassname">GroupTransform::</tt><tt class="descname">getTransform</tt><big>(</big>int <em>index</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GroupTransform::getTransform__iC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GroupTransform::sizeC">
+int <tt class="descclassname">GroupTransform::</tt><tt class="descname">size</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GroupTransform::sizeC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GroupTransform::push_back__ConstTransformRcPtrCR">
+void <tt class="descclassname">GroupTransform::</tt><tt class="descname">push_back</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#ConstTransformRcPtr" title="ConstTransformRcPtr">const ConstTransformRcPtr&amp;</a> <em>transform</em><big>)</big><a class="headerlink" href="#GroupTransform::push_back__ConstTransformRcPtrCR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GroupTransform::clear">
+void <tt class="descclassname">GroupTransform::</tt><tt class="descname">clear</tt><big>(</big><big>)</big><a class="headerlink" href="#GroupTransform::clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GroupTransform::emptyC">
+bool <tt class="descclassname">GroupTransform::</tt><tt class="descname">empty</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#GroupTransform::emptyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const GroupTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="LogTransform">
+<em class="property">class </em><tt class="descname">LogTransform</tt><a class="headerlink" href="#LogTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents log transform: log(color, base)</p>
+<ul class="simple">
+<li>The input will be clamped for negative numbers.</li>
+<li>Default base is 2.0</li>
+<li>Only the rgb channels are affected</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="LogTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#LogTransformRcPtr" title="LogTransformRcPtr">LogTransformRcPtr</a> <tt class="descclassname">LogTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#LogTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LogTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">LogTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#LogTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LogTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">LogTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#LogTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LogTransform::setDirection__TransformDirection">
+void <tt class="descclassname">LogTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#LogTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LogTransform::setBase__float">
+void <tt class="descclassname">LogTransform::</tt><tt class="descname">setBase</tt><big>(</big>float <em>val</em><big>)</big><a class="headerlink" href="#LogTransform::setBase__float" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LogTransform::getBaseC">
+float <tt class="descclassname">LogTransform::</tt><tt class="descname">getBase</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#LogTransform::getBaseC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const LogTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="LookTransform">
+<em class="property">class </em><tt class="descname">LookTransform</tt><a class="headerlink" href="#LookTransform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#LookTransformRcPtr" title="LookTransformRcPtr">LookTransformRcPtr</a> <tt class="descclassname">LookTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#LookTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">LookTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#LookTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">LookTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#LookTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::setDirection__TransformDirection">
+void <tt class="descclassname">LookTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#LookTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::getSrcC">
+const char* <tt class="descclassname">LookTransform::</tt><tt class="descname">getSrc</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#LookTransform::getSrcC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::setSrc__cCP">
+void <tt class="descclassname">LookTransform::</tt><tt class="descname">setSrc</tt><big>(</big>const char* <em>src</em><big>)</big><a class="headerlink" href="#LookTransform::setSrc__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::getDstC">
+const char* <tt class="descclassname">LookTransform::</tt><tt class="descname">getDst</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#LookTransform::getDstC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::setDst__cCP">
+void <tt class="descclassname">LookTransform::</tt><tt class="descname">setDst</tt><big>(</big>const char* <em>dst</em><big>)</big><a class="headerlink" href="#LookTransform::setDst__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::setLooks__cCP">
+void <tt class="descclassname">LookTransform::</tt><tt class="descname">setLooks</tt><big>(</big>const char* <em>looks</em><big>)</big><a class="headerlink" href="#LookTransform::setLooks__cCP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify looks to apply.
+Looks is a potentially comma (or colon) delimited list of look names,
+Where +/- prefixes are optionally allowed to denote forward/inverse
+look specification. (And forward is assumed in the absense of either)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="LookTransform::getLooksC">
+const char* <tt class="descclassname">LookTransform::</tt><tt class="descname">getLooks</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#LookTransform::getLooksC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const LookTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="MatrixTransform">
+<em class="property">class </em><tt class="descname">MatrixTransform</tt><a class="headerlink" href="#MatrixTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an MX+B Matrix transform</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#MatrixTransformRcPtr" title="MatrixTransformRcPtr">MatrixTransformRcPtr</a> <tt class="descclassname">MatrixTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#MatrixTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">MatrixTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#MatrixTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">MatrixTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#MatrixTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::setDirection__TransformDirection">
+void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#MatrixTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::equals__MatrixTransformCRC">
+bool <tt class="descclassname">MatrixTransform::</tt><tt class="descname">equals</tt><big>(</big>const MatrixTransform&amp; <em>other</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#MatrixTransform::equals__MatrixTransformCRC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::setValue__floatCP.floatCP">
+void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">setValue</tt><big>(</big>const float* <em>m44</em>, const float* <em>offset4</em><big>)</big><a class="headerlink" href="#MatrixTransform::setValue__floatCP.floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::getValue__floatP.floatPC">
+void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">getValue</tt><big>(</big>float* <em>m44</em>, float* <em>offset4</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#MatrixTransform::getValue__floatP.floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::setMatrix__floatCP">
+void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">setMatrix</tt><big>(</big>const float* <em>m44</em><big>)</big><a class="headerlink" href="#MatrixTransform::setMatrix__floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::getMatrix__floatPC">
+void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">getMatrix</tt><big>(</big>float* <em>m44</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#MatrixTransform::getMatrix__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::setOffset__floatCP">
+void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">setOffset</tt><big>(</big>const float* <em>offset4</em><big>)</big><a class="headerlink" href="#MatrixTransform::setOffset__floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::getOffset__floatPC">
+void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">getOffset</tt><big>(</big>float* <em>offset4</em><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#MatrixTransform::getOffset__floatPC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p><strong>Convenience functions</strong></p>
+<p>to get the mtx and offset corresponding to higher-level concepts</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">These can throw an exception if for any component
+<tt class="docutils literal"><span class="pre">oldmin</span> <span class="pre">==</span> <span class="pre">oldmax.</span> <span class="pre">(divide</span> <span class="pre">by</span> <span class="pre">0)</span></tt></p>
+</div>
+<dl class="function">
+<dt id="MatrixTransform::Fit__floatP.floatP.floatCP.floatCP.floatCP.floatCP">
+<em class="property">static</em> void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">Fit</tt><big>(</big>float* <em>m44</em>, float* <em>offset4</em>, const float* <em>oldmin4</em>, const float* <em>oldmax4</em>, const float* <em>newmin4</em>, const float* <em>newmax4</em><big>)</big><a class="headerlink" href="#MatrixTransform::Fit__floatP.floatP.floatCP.floatCP.floatCP.floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::Identity__floatP.floatP">
+<em class="property">static</em> void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">Identity</tt><big>(</big>float* <em>m44</em>, float* <em>offset4</em><big>)</big><a class="headerlink" href="#MatrixTransform::Identity__floatP.floatP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::Sat__floatP.floatP.float.floatCP">
+<em class="property">static</em> void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">Sat</tt><big>(</big>float* <em>m44</em>, float* <em>offset4</em>, float <em>sat</em>, const float* <em>lumaCoef3</em><big>)</big><a class="headerlink" href="#MatrixTransform::Sat__floatP.floatP.float.floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::Scale__floatP.floatP.floatCP">
+<em class="property">static</em> void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">Scale</tt><big>(</big>float* <em>m44</em>, float* <em>offset4</em>, const float* <em>scale4</em><big>)</big><a class="headerlink" href="#MatrixTransform::Scale__floatP.floatP.floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="MatrixTransform::View__floatP.floatP.iP.floatCP">
+<em class="property">static</em> void <tt class="descclassname">MatrixTransform::</tt><tt class="descname">View</tt><big>(</big>float* <em>m44</em>, float* <em>offset4</em>, int* <em>channelHot4</em>, const float* <em>lumaCoef3</em><big>)</big><a class="headerlink" href="#MatrixTransform::View__floatP.floatP.iP.floatCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const MatrixTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+<hr class="docutils" />
+<dl class="class">
+<dt id="TruelightTransform">
+<em class="property">class </em><tt class="descname">TruelightTransform</tt><a class="headerlink" href="#TruelightTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Truelight transform using its API</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::Create">
+<em class="property">static</em> <a class="reference internal" href="OpenColorTypes.html#TruelightTransformRcPtr" title="TruelightTransformRcPtr">TruelightTransformRcPtr</a> <tt class="descclassname">TruelightTransform::</tt><tt class="descname">Create</tt><big>(</big><big>)</big><a class="headerlink" href="#TruelightTransform::Create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::createEditableCopyC">
+<a class="reference internal" href="OpenColorTypes.html#TransformRcPtr" title="TransformRcPtr">TransformRcPtr</a> <tt class="descclassname">TruelightTransform::</tt><tt class="descname">createEditableCopy</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::createEditableCopyC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getDirectionC">
+<a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getDirection</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getDirectionC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setDirection__TransformDirection">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setDirection</tt><big>(</big><a class="reference internal" href="OpenColorTypes.html#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#TruelightTransform::setDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setConfigRoot__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setConfigRoot</tt><big>(</big>const char* <em>configroot</em><big>)</big><a class="headerlink" href="#TruelightTransform::setConfigRoot__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getConfigRootC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getConfigRoot</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getConfigRootC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setProfile__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setProfile</tt><big>(</big>const char* <em>profile</em><big>)</big><a class="headerlink" href="#TruelightTransform::setProfile__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getProfileC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getProfile</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getProfileC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setCamera__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setCamera</tt><big>(</big>const char* <em>camera</em><big>)</big><a class="headerlink" href="#TruelightTransform::setCamera__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getCameraC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getCamera</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getCameraC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setInputDisplay__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setInputDisplay</tt><big>(</big>const char* <em>display</em><big>)</big><a class="headerlink" href="#TruelightTransform::setInputDisplay__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getInputDisplayC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getInputDisplay</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getInputDisplayC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setRecorder__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setRecorder</tt><big>(</big>const char* <em>recorder</em><big>)</big><a class="headerlink" href="#TruelightTransform::setRecorder__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getRecorderC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getRecorder</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getRecorderC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setPrint__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setPrint</tt><big>(</big>const char* <em>print</em><big>)</big><a class="headerlink" href="#TruelightTransform::setPrint__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getPrintC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getPrint</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getPrintC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setLamp__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setLamp</tt><big>(</big>const char* <em>lamp</em><big>)</big><a class="headerlink" href="#TruelightTransform::setLamp__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getLampC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getLamp</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getLampC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setOutputCamera__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setOutputCamera</tt><big>(</big>const char* <em>camera</em><big>)</big><a class="headerlink" href="#TruelightTransform::setOutputCamera__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getOutputCameraC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getOutputCamera</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getOutputCameraC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setDisplay__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setDisplay</tt><big>(</big>const char* <em>display</em><big>)</big><a class="headerlink" href="#TruelightTransform::setDisplay__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getDisplayC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getDisplay</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getDisplayC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::setCubeInput__cCP">
+void <tt class="descclassname">TruelightTransform::</tt><tt class="descname">setCubeInput</tt><big>(</big>const char* <em>type</em><big>)</big><a class="headerlink" href="#TruelightTransform::setCubeInput__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TruelightTransform::getCubeInputC">
+const char* <tt class="descclassname">TruelightTransform::</tt><tt class="descname">getCubeInput</tt><big>(</big><big>)</big><tt class="descclassname"> const</tt><a class="headerlink" href="#TruelightTransform::getCubeInputC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt>
+std::ostream&amp; <tt class="descname">operator&lt;&lt;</tt><big>(</big><em>std::ostream&amp;</em>, <em>const TruelightTransform&amp;</em><big>)</big></dt>
+<dd></dd></dl>
+
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

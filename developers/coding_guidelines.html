@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Developer Guide" href="index.html" />
+    <link rel="next" title="Documentation guidelines" href="documentation_guidelines.html" />
+    <link rel="prev" title="Getting started" href="getting_started.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Coding guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation_guidelines.html">Documentation guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="submitting_changes.html">Submitting Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="issues.html">Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_examples.html">Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorIO.html">C++ API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTransforms.html">C++ Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTypes.html">C++ Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonAPI.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTransforms.html">Python Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTypes.html">Python Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internal_architecture.html">Internal Architecture Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="coding-guidelines">
+<h1>Coding guidelines<a class="headerlink" href="#coding-guidelines" title="Permalink to this headline">¶</a></h1>
+<p>There are only two important rules:</p>
+<ol class="arabic simple">
+<li>When making changes, conform to the style and conventions of the surrounding code.</li>
+<li>Strive for clarity, even if that means occasionally breaking the guidelines. Use your head and ask for advice if your common sense seems to disagree with the conventions.</li>
+</ol>
+<div class="section" id="file-conventions">
+<h2>File Conventions<a class="headerlink" href="#file-conventions" title="Permalink to this headline">¶</a></h2>
+<p>C++ implementation should be named <tt class="docutils literal"><span class="pre">*.cpp</span></tt>. Headers should be named <tt class="docutils literal"><span class="pre">*.h</span></tt>.
+All source files should begin with the copyright and license, which can be cut and pasted from other source files). For NEW source files, please do change the copyright year to the present. However DO NOT edit existing files just to update the copyright year, it just creates pointless deltas and offers no increased protection</p>
+</div>
+<div class="section" id="line-length">
+<h2>Line Length<a class="headerlink" href="#line-length" title="Permalink to this headline">¶</a></h2>
+<p>Each line of text in your code should be at most 80 characters long.</p>
+<p>Generally the only exceptions are for comments with example commands or URLs - to make cut and paste easier.</p>
+<p>The other exception is for those rare cases where letting a line be longer (and wrapping on an 80-character window) is actually a better and clearer alternative than trying to split it into two lines. Sometimes this happens, but it&#8217;s rare.</p>
+<p>DO NOT alter somebody else&#8217;s code to re-wrap lines (or change whitespace) just because you found something that violates the rules. Let the group/author/leader know, and resist the temptation to change it yourself.</p>
+</div>
+<div class="section" id="formatting">
+<h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Indent 4 spaces at a time, and use actual spaces, not tabs.  This is particularly critical on python code.  The only exception currently allowed in within Makefiles, where tab characters are sometimes required.</li>
+<li>Opening brace on the line following the condition or loop.</li>
+<li>The contents of namespaces are not indented.</li>
+<li>Function names should be on the same line as their return values.</li>
+<li>Function calls should NOT have a space between the function name and the opening parenthesis. A single space should be added after each required comma.</li>
+</ul>
+<p>Here is a short code fragement that shows these concepts in action:</p>
+<div class="highlight-c++"><div class="highlight"><pre><span class="k">namespace</span>
+<span class="p">{</span>
+
+
+<span class="kt">int</span> <span class="n">MungeMyNumbers</span><span class="p">(</span><span class="kt">int</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">b</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">b</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="mi">16</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">x</span> <span class="o">+=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">i</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="p">}</span> <span class="c1">// namespace</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="misc-rules">
+<h2>Misc. Rules<a class="headerlink" href="#misc-rules" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Avoid macros when possible.</li>
+<li>Anonymous namespaces are preferred when sensible.</li>
+<li>Variable names should be camelCase, as well as longAndExplicit.</li>
+<li>Avoid long function implementations. Break up work into small, manageable chunks.</li>
+<li>Use &#8220;TODO:&#8221; comments for code that is temporary, a short-term solution, or good-enough but not perfect. This is vastly preferred to leaving subtle corner cases undocumented.</li>
+<li>Always initialize variables on construction.</li>
+<li>Do not leave dead code paths around. (This is what revision history is for)</li>
+<li>Includes should always be ordered as follows: C library, C++ library, other libraries&#8217; .h, OCIO public headers, OCIO private headers. Includes within a category should be alphabetized.</li>
+<li>The C++ &#8220;using&#8221; directive is not allowed.</li>
+<li>Static / global variables should be avoided at all costs.</li>
+<li>Use const whenever it makes sense to do so.</li>
+<li>The use of Boost is not allowed, except for unit_test_framework and shared_ptr.</li>
+<li>Default function arguments are not allowed.</li>
+</ul>
+</div>
+<div class="section" id="bottom-line">
+<h2>Bottom Line<a class="headerlink" href="#bottom-line" title="Permalink to this headline">¶</a></h2>
+<p>When in doubt, look elsewhere in the code base for examples of similar structures and try to format your code in the same manner.</p>
+<p>Portions of this document have been blatantly lifted from <a class="reference external" href="http://openimageio.org/wiki/index.php?title=Coding_Style_Guide">OpenImageIO</a>,
+and <a class="reference external" href="http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml">Google</a>.</p>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

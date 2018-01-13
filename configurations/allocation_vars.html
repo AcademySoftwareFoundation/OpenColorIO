@@ -1,0 +1,198 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Configurations" href="index.html" />
+    <link rel="next" title="Installation" href="../installation.html" />
+    <link rel="prev" title="aces_1.0.3" href="aces_1.0.3.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Configurations</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#public-configs">Public Configs</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#config-creation">Config Creation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developers/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="how-to-configure-colorspace-allocation">
+<span id="allocationvars"></span><h1>How to Configure ColorSpace Allocation<a class="headerlink" href="#how-to-configure-colorspace-allocation" title="Permalink to this headline">¶</a></h1>
+<p>The allocation / allocation vars are utilized using during GPU 3dlut / shader
+text generation. (Processor::getGpuShaderText, Processor::getGpuLut3D).</p>
+<p>If, in the course of GPU processing, a 3D lut is required, the &#8220;allocation /
+allocation vars&#8221; direct how OCIO should sample the colorspace, with the intent
+being to maintain maximum fidelity and minimize clamping.</p>
+<p>Currently support allocations / variables:</p>
+<dl class="docutils">
+<dt>ALLOCATION_UNIFORM::</dt>
+<dd>2 vars: [min, max]</dd>
+<dt>ALLOCATION_LG2::</dt>
+<dd>2 vars: [lg2min, lg2max]
+3 vars: [lg2min, lg2max, linear_offset]</dd>
+</dl>
+<p>So say you have an srgb image (such as an 8-bit tif), where you know the data
+ranges between 0.0 - 1.0 (after converting to float).  If you wanted to apply
+a 3d lut to this data, there is no danger in samplingthat space uniformly and
+clamping data outside (0,1).   So for this colorspace we would tag it:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">uniform</span>
+<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">0.0</span><span class="p-Indicator">,</span> <span class="nv">1.0</span><span class="p-Indicator">]</span>
+</pre></div>
+</div>
+<p>These are the defaults, so the tagging could also be skipped.</p>
+<p>But what if you were actually first processing the data, where occasionally
+small undershoot and overshoot values were encountered? If you wanted OCIO to
+preserve this overshoot / undershoot pixel information, you would do so by
+modifying the allocation vars.</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">uniform</span>
+<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-0.125</span><span class="p-Indicator">,</span> <span class="nv">1.125</span><span class="p-Indicator">]</span>
+</pre></div>
+</div>
+<p>This would mean that any image data originally within [-0.125, 1.125] will be
+preserved during GPU processing.  (Protip: Data outside this range <em>may</em>
+actually be preserved in some circumstances - such as if a 3d lut is not needed
+- but it&#8217;s not required to be preserved).</p>
+<p>So why not leave this at huge values (such as [-1000.0, 1000.0]) all the time?
+Well, there&#8217;s a cost to supporting this larger dynamic range, and that cost is
+reduced precision within the 3D luts sample space.   So in general you&#8217;re best
+served by using sensible allocations (the smallest you can get away with, but
+no smaller).</p>
+<p>Now in the case of high-dynamic range color spaces (such as float linear), a
+uniform sampling is not sufficient because the max value we need to preserve is
+so high.</p>
+<p>Say you were using a 32x32x32 3d lookup table (a common size).  Middle gray is
+at 0.18, and specular values are very much above that.  Say the max value we
+wanted to preserve in our coding space is 256.0, each 3d lut lattice coordinates
+would represent 8.0 units of linear light! That means the vast majority of the
+perceptually significant portions of the space wouldnt be sampled at all!</p>
+<p>unform allocation from 0-256:
+0
+8.0
+16.0
+...
+240.0
+256.0</p>
+<p>So another allocation is defined, lg2</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="p-Indicator">-</span> <span class="kt">!&lt;ColorSpace&gt;</span>
+  <span class="l-Scalar-Plain">name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">linear</span>
+  <span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="p-Indicator">|</span>
+      <span class="no">Scene-linear, high dynamic range. Used for rendering and compositing.</span>
+  <span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg2</span>
+  <span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-8</span><span class="p-Indicator">,</span> <span class="nv">8</span><span class="p-Indicator">]</span>
+</pre></div>
+</div>
+<p>In this case, we&#8217;re saying that the appropriate ways to sample the 3d lut are
+logarithmically, from 2^-8 stops to 2^8 stops.</p>
+<p>Sample locations:
+2^-8: 0.0039
+2^-7: 0.0078
+2^-6: 0.0156
+...
+2^0:  1.0
+...
+2^6:  64.0
+2^7:  128.0
+2^8:  256.0</p>
+<p>Which gives us a much better perceptual sampling of the space.</p>
+<p>The one downside of this approach is that it can&#8217;t represent 0.0,
+which is why we optionally allow a 3d allocation var, a black point
+offset.  If you need to preserve 0.0 values, and you have a high
+dynamic range space, you can specify a small offset.</p>
+<p>Example:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">allocation</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">lg2</span>
+<span class="l-Scalar-Plain">allocationvars</span><span class="p-Indicator">:</span> <span class="p-Indicator">[</span><span class="nv">-8</span><span class="p-Indicator">,</span> <span class="nv">8</span><span class="p-Indicator">,</span> <span class="nv">0.00390625</span><span class="p-Indicator">]</span>
+</pre></div>
+</div>
+<p>The [-15.0, 6.0] values in spi-vfx come from the fact that all of the
+linearizations provided in that profile span the region from 2^-15
+stops, to 2^6 stops.   One could probably change that black point to a
+higher number (such as -8), but if you raised it too much you would
+start seeing black values be clipped.   Conversely, on the high end
+one could raise it a bit but if you raised it too far the precision
+would suffer around gray, and if you lowered it further you&#8217;d start to
+see highlight clipping.</p>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

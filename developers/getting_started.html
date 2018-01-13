@@ -1,0 +1,192 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Developer Guide" href="index.html" />
+    <link rel="next" title="Coding guidelines" href="coding_guidelines.html" />
+    <link rel="prev" title="Developer Guide" href="index.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation_guidelines.html">Documentation guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="submitting_changes.html">Submitting Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="issues.html">Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage_examples.html">Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorIO.html">C++ API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTransforms.html">C++ Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/OpenColorTypes.html">C++ Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonAPI.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTransforms.html">Python Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bindings/PythonTypes.html">Python Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internal_architecture.html">Internal Architecture Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="getting-started">
+<span id="id1"></span><h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="checking-out-the-codebase">
+<h2>Checking Out The Codebase<a class="headerlink" href="#checking-out-the-codebase" title="Permalink to this headline">¶</a></h2>
+<p>The master code repository is available on Github:  <a class="reference external" href="http://github.com/imageworks/OpenColorIO">http://github.com/imageworks/OpenColorIO</a></p>
+<p>For those unfamiliar with git, the wonderful part about it is that even though
+only a limited number people have write access to the master repository, anyone
+is free to create, and even check in, changes to their own local git repository.
+Your local changes will not automatically be pushed back to the master
+repository, so everyone feel free to informally play around with the codebase.
+Also - unlike svn - when you download the git repository you have a full copy of
+the project&#8217;s history (including revision history, logs, etc), so the majority
+of code changes you will make, including commits, do not require network server
+access.</p>
+<p>The first step is to install git on your system.  For those new to the world of
+git, GitHub has an excellent tutorial stepping you through the process,
+available at: <a class="reference external" href="http://help.github.com/">http://help.github.com/</a></p>
+<p>To check out a read-only version of the repository (no GitHub signup required):</p>
+<div class="highlight-python"><pre>git clone git://github.com/imageworks/OpenColorIO.git ocio</pre>
+</div>
+<p>For write-access, you must first register for a GitHub account (free).  Then,
+you must create a local fork of the OpenColorIO repository by visiting
+<a class="reference external" href="http://github.com/imageworks/OpenColorIO">http://github.com/imageworks/OpenColorIO</a> and clicking the &#8220;Fork&#8221; icon. If you
+get hung up on this, further instructions on this process are available at
+<a class="reference external" href="http://help.github.com/forking/">http://help.github.com/forking/</a></p>
+<p>To check out a read-write version of the repository (GitHub acct required):</p>
+<div class="highlight-python"><pre>git clone git@github.com:$USER/OpenColorIO.git ocio
+
+Initialized empty Git repository in /mcp/ocio/.git/
+remote: Counting objects: 2220, done.
+remote: Compressing objects: 100% (952/952), done.
+remote: Total 2220 (delta 1434), reused 1851 (delta 1168)
+Receiving objects: 100% (2220/2220), 2.89 MiB | 2.29 MiB/s, done.
+Resolving deltas: 100% (1434/1434), done.</pre>
+</div>
+<p>Both read + read/write users should then add the Imageworks (SPI) master branch
+as a remote. This will allow you to more easily fetch updates as they become
+available:</p>
+<div class="highlight-python"><pre>cd ocio
+git remote add upstream git://github.com/imageworks/OpenColorIO.git</pre>
+</div>
+<p>Optionally, you may then add any additional users who have individual working
+forks (just as you&#8217;ve done).  This will allow you to track, view, and
+potentially merge intermediate changes before they&#8217;re been pushed into the main
+trunk. (For really bleeding edge folks).  For example, to add Jeremy Selan&#8217;s
+working fork:</p>
+<div class="highlight-python"><pre>git remote add js git://github.com/jeremyselan/OpenColorIO.git</pre>
+</div>
+<p>You should then do a git fetch, and git merge (detailed below) to download the
+remote branches you&#8217;ve just added.</p>
+</div>
+<div class="section" id="reference-build-environment">
+<h2>Reference Build Environment<a class="headerlink" href="#reference-build-environment" title="Permalink to this headline">¶</a></h2>
+<p>To aid new developers to the project and provide a baseline standard,
+OCIO provides a reference build environment through Docker. Docker essentially is a
+container that consits of both a Linux distro and the dependencies needed to run
+a client application. This is typically used for deploying apps and services to
+servers, but we are using it to provide an isolated development environment to build
+and test OCIO with. With this environment you are guaranteed to be able to compile OCIO
+and run its non-GUI command line applications.</p>
+<p>For more information on Docker, start here:
+<a class="reference external" href="https://docs.docker.com/engine/docker-overview/">https://docs.docker.com/engine/docker-overview/</a></p>
+<p>In order to run the Docker environment you will have to build it from the Dockerfile
+provided in the repo directory:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">OpenColorIO</span><span class="o">/</span><span class="n">shared</span><span class="o">/</span><span class="n">docker</span>
+</pre></div>
+</div>
+<p>Run this command in order to build the Docker image (aprox. 20min):</p>
+<div class="highlight-python"><pre>docker build . -t ocio:centos7_gcc48 -f dockerfile_centos7_gcc48</pre>
+</div>
+<p>You can then mount the current OCIO directory and compile using the Docker image with:</p>
+<div class="highlight-python"><pre>docker run --volume $PWD/../../:/src/ociosrc -t ocio:centos7_gcc48 bash -c 'mkdir /build &amp;&amp; cd /build &amp;&amp; cmake /src/ociosrc &amp;&amp; make -j2`</pre>
+</div>
+</div>
+<div class="section" id="merging-changes">
+<h2>Merging changes<a class="headerlink" href="#merging-changes" title="Permalink to this headline">¶</a></h2>
+<p>More detailed guide coming soon, for now, see <a class="reference external" href="http://help.github.com/remotes/">http://help.github.com/remotes/</a></p>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,546 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="../../_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="&lt;no title&gt;" href="index.html" />
+    <link rel="next" title="Python API" href="../bindings/PythonAPI.html" />
+    <link rel="prev" title="C++ Transforms" href="OpenColorTransforms.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="../../index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../userguide/index.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../coding_guidelines.html">Coding guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../documentation_guidelines.html">Documentation guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../submitting_changes.html">Submitting Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../issues.html">Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage_examples.html">Usage Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OpenColorIO.html">C++ API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OpenColorTransforms.html">C++ Transforms</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">C++ Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bindings/PythonAPI.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bindings/PythonTransforms.html">Python Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../bindings/PythonTypes.html">Python Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../internal_architecture.html">Internal Architecture Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="c-types">
+<h1>C++ Types<a class="headerlink" href="#c-types" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="core">
+<h2>Core<a class="headerlink" href="#core" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="ConstConfigRcPtr">
+<em class="property">type </em><tt class="descname">ConstConfigRcPtr</tt><a class="headerlink" href="#ConstConfigRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConfigRcPtr">
+<em class="property">type </em><tt class="descname">ConfigRcPtr</tt><a class="headerlink" href="#ConfigRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstColorSpaceRcPtr">
+<em class="property">type </em><tt class="descname">ConstColorSpaceRcPtr</tt><a class="headerlink" href="#ConstColorSpaceRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ColorSpaceRcPtr">
+<em class="property">type </em><tt class="descname">ColorSpaceRcPtr</tt><a class="headerlink" href="#ColorSpaceRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstLookRcPtr">
+<em class="property">type </em><tt class="descname">ConstLookRcPtr</tt><a class="headerlink" href="#ConstLookRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="LookRcPtr">
+<em class="property">type </em><tt class="descname">LookRcPtr</tt><a class="headerlink" href="#LookRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstContextRcPtr">
+<em class="property">type </em><tt class="descname">ConstContextRcPtr</tt><a class="headerlink" href="#ConstContextRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ContextRcPtr">
+<em class="property">type </em><tt class="descname">ContextRcPtr</tt><a class="headerlink" href="#ContextRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstProcessorRcPtr">
+<em class="property">type </em><tt class="descname">ConstProcessorRcPtr</tt><a class="headerlink" href="#ConstProcessorRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ProcessorRcPtr">
+<em class="property">type </em><tt class="descname">ProcessorRcPtr</tt><a class="headerlink" href="#ProcessorRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstProcessorMetadataRcPtr">
+<em class="property">type </em><tt class="descname">ConstProcessorMetadataRcPtr</tt><a class="headerlink" href="#ConstProcessorMetadataRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ProcessorMetadataRcPtr">
+<em class="property">type </em><tt class="descname">ProcessorMetadataRcPtr</tt><a class="headerlink" href="#ProcessorMetadataRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstBakerRcPtr">
+<em class="property">type </em><tt class="descname">ConstBakerRcPtr</tt><a class="headerlink" href="#ConstBakerRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="BakerRcPtr">
+<em class="property">type </em><tt class="descname">BakerRcPtr</tt><a class="headerlink" href="#BakerRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="transforms">
+<h2>Transforms<a class="headerlink" href="#transforms" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="ConstTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstTransformRcPtr</tt><a class="headerlink" href="#ConstTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="TransformRcPtr">
+<em class="property">type </em><tt class="descname">TransformRcPtr</tt><a class="headerlink" href="#TransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstAllocationTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstAllocationTransformRcPtr</tt><a class="headerlink" href="#ConstAllocationTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="AllocationTransformRcPtr">
+<em class="property">type </em><tt class="descname">AllocationTransformRcPtr</tt><a class="headerlink" href="#AllocationTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstCDLTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstCDLTransformRcPtr</tt><a class="headerlink" href="#ConstCDLTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="CDLTransformRcPtr">
+<em class="property">type </em><tt class="descname">CDLTransformRcPtr</tt><a class="headerlink" href="#CDLTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstColorSpaceTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstColorSpaceTransformRcPtr</tt><a class="headerlink" href="#ConstColorSpaceTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ColorSpaceTransformRcPtr">
+<em class="property">type </em><tt class="descname">ColorSpaceTransformRcPtr</tt><a class="headerlink" href="#ColorSpaceTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstDisplayTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstDisplayTransformRcPtr</tt><a class="headerlink" href="#ConstDisplayTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="DisplayTransformRcPtr">
+<em class="property">type </em><tt class="descname">DisplayTransformRcPtr</tt><a class="headerlink" href="#DisplayTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstExponentTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstExponentTransformRcPtr</tt><a class="headerlink" href="#ConstExponentTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ExponentTransformRcPtr">
+<em class="property">type </em><tt class="descname">ExponentTransformRcPtr</tt><a class="headerlink" href="#ExponentTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstFileTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstFileTransformRcPtr</tt><a class="headerlink" href="#ConstFileTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="FileTransformRcPtr">
+<em class="property">type </em><tt class="descname">FileTransformRcPtr</tt><a class="headerlink" href="#FileTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstGroupTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstGroupTransformRcPtr</tt><a class="headerlink" href="#ConstGroupTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="GroupTransformRcPtr">
+<em class="property">type </em><tt class="descname">GroupTransformRcPtr</tt><a class="headerlink" href="#GroupTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstLogTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstLogTransformRcPtr</tt><a class="headerlink" href="#ConstLogTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="LogTransformRcPtr">
+<em class="property">type </em><tt class="descname">LogTransformRcPtr</tt><a class="headerlink" href="#LogTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstLookTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstLookTransformRcPtr</tt><a class="headerlink" href="#ConstLookTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="LookTransformRcPtr">
+<em class="property">type </em><tt class="descname">LookTransformRcPtr</tt><a class="headerlink" href="#LookTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstMatrixTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstMatrixTransformRcPtr</tt><a class="headerlink" href="#ConstMatrixTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="MatrixTransformRcPtr">
+<em class="property">type </em><tt class="descname">MatrixTransformRcPtr</tt><a class="headerlink" href="#MatrixTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="ConstTruelightTransformRcPtr">
+<em class="property">type </em><tt class="descname">ConstTruelightTransformRcPtr</tt><a class="headerlink" href="#ConstTruelightTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="TruelightTransformRcPtr">
+<em class="property">type </em><tt class="descname">TruelightTransformRcPtr</tt><a class="headerlink" href="#TruelightTransformRcPtr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="enums">
+<h2>Enums<a class="headerlink" href="#enums" title="Permalink to this headline">¶</a></h2>
+<dl class="type">
+<dt id="ColorSpaceDirection">
+<em class="property">type </em><tt class="descname">ColorSpaceDirection</tt><a class="headerlink" href="#ColorSpaceDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="TransformDirection">
+<em class="property">type </em><tt class="descname">TransformDirection</tt><a class="headerlink" href="#TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="Interpolation">
+<em class="property">type </em><tt class="descname">Interpolation</tt><a class="headerlink" href="#Interpolation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the interpolation type to use
+If the specified interpolation type is not supported in the requested
+context (for example, using tetrahedral interpolationon 1D luts)
+an exception will be throw.</p>
+<p>INTERP_BEST will choose the best interpolation type for the requested
+context:</p>
+<p>Lut1D INTERP_BEST: LINEAR
+Lut3D INTERP_BEST: LINEAR</p>
+<p>Note: INTERP_BEST is subject to change in minor releases, so if you
+care about locking off on a specific interpolation type, we&#8217;d recommend
+directly specifying it.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="BitDepth">
+<em class="property">type </em><tt class="descname">BitDepth</tt><a class="headerlink" href="#BitDepth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="Allocation">
+<em class="property">type </em><tt class="descname">Allocation</tt><a class="headerlink" href="#Allocation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="type">
+<dt id="GpuLanguage">
+<em class="property">type </em><tt class="descname">GpuLanguage</tt><a class="headerlink" href="#GpuLanguage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used when there is a choice of hardware shader language.</p>
+</dd></dl>
+
+<dl class="type">
+<dt id="EnvironmentMode">
+<em class="property">type </em><tt class="descname">EnvironmentMode</tt><a class="headerlink" href="#EnvironmentMode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="conversion">
+<h2>Conversion<a class="headerlink" href="#conversion" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="BoolToString__b">
+const char* <tt class="descname">BoolToString</tt><big>(</big>bool <em>val</em><big>)</big><a class="headerlink" href="#BoolToString__b" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="BoolFromString__cCP">
+bool <tt class="descname">BoolFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#BoolFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LoggingLevelToString__LoggingLevel">
+const char* <tt class="descname">LoggingLevelToString</tt><big>(</big>LoggingLevel <em>level</em><big>)</big><a class="headerlink" href="#LoggingLevelToString__LoggingLevel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="LoggingLevelFromString__cCP">
+LoggingLevel <tt class="descname">LoggingLevelFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#LoggingLevelFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TransformDirectionToString__TransformDirection">
+const char* <tt class="descname">TransformDirectionToString</tt><big>(</big><a class="reference internal" href="#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#TransformDirectionToString__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="TransformDirectionFromString__cCP">
+<a class="reference internal" href="#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descname">TransformDirectionFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#TransformDirectionFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GetInverseTransformDirection__TransformDirection">
+<a class="reference internal" href="#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descname">GetInverseTransformDirection</tt><big>(</big><a class="reference internal" href="#TransformDirection" title="TransformDirection">TransformDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#GetInverseTransformDirection__TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="CombineTransformDirections__TransformDirection.TransformDirection">
+<a class="reference internal" href="#TransformDirection" title="TransformDirection">TransformDirection</a> <tt class="descname">CombineTransformDirections</tt><big>(</big><a class="reference internal" href="#TransformDirection" title="TransformDirection">TransformDirection</a> <em>d1</em>, <a class="reference internal" href="#TransformDirection" title="TransformDirection">TransformDirection</a> <em>d2</em><big>)</big><a class="headerlink" href="#CombineTransformDirections__TransformDirection.TransformDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceDirectionToString__ColorSpaceDirection">
+const char* <tt class="descname">ColorSpaceDirectionToString</tt><big>(</big><a class="reference internal" href="#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <em>dir</em><big>)</big><a class="headerlink" href="#ColorSpaceDirectionToString__ColorSpaceDirection" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="ColorSpaceDirectionFromString__cCP">
+<a class="reference internal" href="#ColorSpaceDirection" title="ColorSpaceDirection">ColorSpaceDirection</a> <tt class="descname">ColorSpaceDirectionFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#ColorSpaceDirectionFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="BitDepthToString__BitDepth">
+const char* <tt class="descname">BitDepthToString</tt><big>(</big><a class="reference internal" href="#BitDepth" title="BitDepth">BitDepth</a> <em>bitDepth</em><big>)</big><a class="headerlink" href="#BitDepthToString__BitDepth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="BitDepthFromString__cCP">
+<a class="reference internal" href="#BitDepth" title="BitDepth">BitDepth</a> <tt class="descname">BitDepthFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#BitDepthFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="BitDepthIsFloat__BitDepth">
+bool <tt class="descname">BitDepthIsFloat</tt><big>(</big><a class="reference internal" href="#BitDepth" title="BitDepth">BitDepth</a> <em>bitDepth</em><big>)</big><a class="headerlink" href="#BitDepthIsFloat__BitDepth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="BitDepthToInt__BitDepth">
+int <tt class="descname">BitDepthToInt</tt><big>(</big><a class="reference internal" href="#BitDepth" title="BitDepth">BitDepth</a> <em>bitDepth</em><big>)</big><a class="headerlink" href="#BitDepthToInt__BitDepth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationToString__Allocation">
+const char* <tt class="descname">AllocationToString</tt><big>(</big><a class="reference internal" href="#Allocation" title="Allocation">Allocation</a> <em>allocation</em><big>)</big><a class="headerlink" href="#AllocationToString__Allocation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="AllocationFromString__cCP">
+<a class="reference internal" href="#Allocation" title="Allocation">Allocation</a> <tt class="descname">AllocationFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#AllocationFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="InterpolationToString__Interpolation">
+const char* <tt class="descname">InterpolationToString</tt><big>(</big><a class="reference internal" href="#Interpolation" title="Interpolation">Interpolation</a> <em>interp</em><big>)</big><a class="headerlink" href="#InterpolationToString__Interpolation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="InterpolationFromString__cCP">
+<a class="reference internal" href="#Interpolation" title="Interpolation">Interpolation</a> <tt class="descname">InterpolationFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#InterpolationFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuLanguageToString__GpuLanguage">
+const char* <tt class="descname">GpuLanguageToString</tt><big>(</big><a class="reference internal" href="#GpuLanguage" title="GpuLanguage">GpuLanguage</a> <em>language</em><big>)</big><a class="headerlink" href="#GpuLanguageToString__GpuLanguage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="GpuLanguageFromString__cCP">
+<a class="reference internal" href="#GpuLanguage" title="GpuLanguage">GpuLanguage</a> <tt class="descname">GpuLanguageFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#GpuLanguageFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="EnvironmentModeToString__EnvironmentMode">
+const char* <tt class="descname">EnvironmentModeToString</tt><big>(</big><a class="reference internal" href="#EnvironmentMode" title="EnvironmentMode">EnvironmentMode</a> <em>mode</em><big>)</big><a class="headerlink" href="#EnvironmentModeToString__EnvironmentMode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="EnvironmentModeFromString__cCP">
+<a class="reference internal" href="#EnvironmentMode" title="EnvironmentMode">EnvironmentMode</a> <tt class="descname">EnvironmentModeFromString</tt><big>(</big>const char* <em>s</em><big>)</big><a class="headerlink" href="#EnvironmentModeFromString__cCP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="roles">
+<h2>Roles<a class="headerlink" href="#roles" title="Permalink to this headline">¶</a></h2>
+<p>ColorSpace Roles are used so that plugins, in addition to this API can have
+abstract ways of asking for common colorspaces, without referring to them
+by hardcoded names.</p>
+<p>Internal:</p>
+<div class="highlight-python"><pre>GetGPUDisplayTransform - (ROLE_SCENE_LINEAR (fstop exposure))
+                         (ROLE_COLOR_TIMING (ASCColorCorrection))</pre>
+</div>
+<p>External Plugins (currently known):</p>
+<div class="highlight-python"><pre>Colorpicker UIs       - (ROLE_COLOR_PICKING)
+Compositor LogConvert - (ROLE_SCENE_LINEAR, ROLE_COMPOSITING_LOG)</pre>
+</div>
+<dl class="var">
+<dt id="ROLE_DEFAULT">
+const char* <tt class="descname">ROLE_DEFAULT</tt><a class="headerlink" href="#ROLE_DEFAULT" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8220;default&#8221;</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="ROLE_REFERENCE">
+const char* <tt class="descname">ROLE_REFERENCE</tt><a class="headerlink" href="#ROLE_REFERENCE" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8220;reference&#8221;</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="ROLE_DATA">
+const char* <tt class="descname">ROLE_DATA</tt><a class="headerlink" href="#ROLE_DATA" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8220;data&#8221;</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="ROLE_COLOR_PICKING">
+const char* <tt class="descname">ROLE_COLOR_PICKING</tt><a class="headerlink" href="#ROLE_COLOR_PICKING" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8220;color_picking&#8221;</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="ROLE_SCENE_LINEAR">
+const char* <tt class="descname">ROLE_SCENE_LINEAR</tt><a class="headerlink" href="#ROLE_SCENE_LINEAR" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8220;scene_linear&#8221;</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="ROLE_COMPOSITING_LOG">
+const char* <tt class="descname">ROLE_COMPOSITING_LOG</tt><a class="headerlink" href="#ROLE_COMPOSITING_LOG" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8220;compositing_log&#8221;</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="ROLE_COLOR_TIMING">
+const char* <tt class="descname">ROLE_COLOR_TIMING</tt><a class="headerlink" href="#ROLE_COLOR_TIMING" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#8220;color_timing&#8221;</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="ROLE_TEXTURE_PAINT">
+const char* <tt class="descname">ROLE_TEXTURE_PAINT</tt><a class="headerlink" href="#ROLE_TEXTURE_PAINT" title="Permalink to this definition">¶</a></dt>
+<dd><p>This role defines the transform for painting textures. In some
+workflows this is just a inverse display gamma with some limits</p>
+</dd></dl>
+
+<dl class="var">
+<dt id="ROLE_MATTE_PAINT">
+const char* <tt class="descname">ROLE_MATTE_PAINT</tt><a class="headerlink" href="#ROLE_MATTE_PAINT" title="Permalink to this definition">¶</a></dt>
+<dd><p>This role defines the transform for matte painting. In some workflows
+this is a 1D HDR to LDR allocation. It is normally combined with
+another display transform in the host app for preview.</p>
+</dd></dl>
+
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>

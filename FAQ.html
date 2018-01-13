@@ -1,0 +1,327 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>OpenColorIO</title>
+
+    
+    <link rel="stylesheet" href="_static/ocio.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="top" title="OpenColorIO 1.1.0 documentation" href="index.html" />
+    <link rel="next" title="Downloads" href="downloads.html" />
+    <link rel="prev" title="Compatible Software" href="CompatibleSoftware.html" /> 
+  </head>
+  <body>
+    <div class="header"><h1 class="heading"><a href="index.html">
+          <span>OpenColorIO</span></a></h1>
+        <h2 class="heading"><span>Open Source Color Management</span></h2>
+      </div>
+      <div class="topnav">
+      OpenColorIO 1.1.0 documentation
+      </div>
+      <div class="content">
+        
+        <table width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+        <td width="200">
+            <div class="sidebar2">
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configurations/index.html">Configurations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide/index.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers/index.html">Developer Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CompatibleSoftware.html">Compatible Software</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">FAQ</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#license">License?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#terminology">Terminology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-lut-formats-are-supported">What LUT Formats are supported?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#can-you-query-a-color-space-by-name-like-rec709-and-get-back-xyz-coordinates-of-its-primaries-and-whitepoint">Can you query a color space by name (like &#8220;Rec709&#8221;) and get back XYZ coordinates of its primaries and whitepoint?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#can-you-convert-xyz-named-color-space-rgb-values">Can you convert XYZ &lt;-&gt; named color space RGB values?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-are-the-differences-between-nuke-s-vectorfield-and-ociofiletransform">What are the differences between Nuke&#8217;s Vectorfield and OCIOFileTransform?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-do-colorspace-setallocation-and-colorspace-setallocationvars-do">What do ColorSpace::setAllocation() and ColorSpace::setAllocationVars() do?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ChangeLog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="License.html">License</a></li>
+</ul>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+            </div>
+        </td>
+        <td width="100%" id="bodycontent">
+        
+<div class="section" id="faq">
+<span id="id1"></span><h1>FAQ<a class="headerlink" href="#faq" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="license">
+<h2>License?<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<p>New BSD.</p>
+<p>You are welcome to include the OpenColorIO in commercial, or open source
+applications. See the <a class="reference internal" href="License.html#license"><em>License</em></a> for further details.</p>
+</div>
+<div class="section" id="terminology">
+<span id="faq-terminology"></span><h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Transform - a function that alters RGB(A) data (e.g transform an image from scene linear to sRGB)</li>
+<li>Reference space - a space that connects colorspaces</li>
+<li>Colorspace - a meaningful space that can be transferred to and from the reference space</li>
+<li>Display - a virtual or physical display device (e.g an sRGB display device)</li>
+<li>View - a meaningful view of the reference space on a Display (e.g a film emulation view on an sRGB display device)</li>
+<li>Role - abstract colorspace naming (e.g specify the &#8220;lnh&#8221; colorspace as the scene_linear role, or the color-picker UI uses color_picking role)</li>
+<li>Look - a color transform which applies a creative look (for example a per-shot netural grade to remove color-casts from a sequence of film scans, or a DI look)</li>
+</ul>
+</div>
+<div class="section" id="what-lut-formats-are-supported">
+<span id="faq-supportedlut"></span><h2>What LUT Formats are supported?<a class="headerlink" href="#what-lut-formats-are-supported" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="43%" />
+<col width="46%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Ext</th>
+<th class="head">Details</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>3dl</td>
+<td>Autodesk Apps: Lustre, Flame, etc.
+Supports shaper LUT + 3D</td>
+<td>Read + Write Support.</td>
+</tr>
+<tr class="row-odd"><td>ccc</td>
+<td>ASC CDL ColorCorrectionCollection</td>
+<td>Full read support.</td>
+</tr>
+<tr class="row-even"><td>cc</td>
+<td>ASC CDL ColorCorrection</td>
+<td>Full read support.</td>
+</tr>
+<tr class="row-odd"><td>csp</td>
+<td>Cinespace (Rising Sun Research)
+LUT. Spline-based shaper LUT, with
+either 1D or 3D LUT.</td>
+<td>Read + Write Support.  Shaper is
+resampled into simple 1D LUT
+with 2^16 samples.</td>
+</tr>
+<tr class="row-even"><td>cub</td>
+<td>Truelight format. Shaper Lut + 3D</td>
+<td>Full read support.</td>
+</tr>
+<tr class="row-odd"><td>cube</td>
+<td>Iridas format. Either 1D or 3D Lut.</td>
+<td>Full read support</td>
+</tr>
+<tr class="row-even"><td>hdl</td>
+<td>Houdini. 1D Lut, 3D lut, 1D shaper
+Lut</td>
+<td>Only &#8216;C&#8217; type is supported.
+Need to add R G B A RGB RGBA ALL.
+No support for Sampling tag.
+Header fields must be in strict order.</td>
+</tr>
+<tr class="row-odd"><td>look</td>
+<td>IRIDAS .look</td>
+<td>Read baked 3D LUT embedded in file.
+No mask support.</td>
+</tr>
+<tr class="row-even"><td>mga/m3d</td>
+<td>Pandora 3D lut</td>
+<td>Full read support.</td>
+</tr>
+<tr class="row-odd"><td>spi1d</td>
+<td>1D format. Imageworks native 1D
+lut format.  HDR friendly, supports
+arbitrary input and output domains</td>
+<td>Full read support.</td>
+</tr>
+<tr class="row-even"><td>spi3d</td>
+<td>3D format. Imageworks native 3D
+lut format.</td>
+<td>Full read support.</td>
+</tr>
+<tr class="row-odd"><td>spimtx</td>
+<td>3x3 matrix + color offset.
+Imageworks native color matrix
+format</td>
+<td>Full read support.</td>
+</tr>
+<tr class="row-even"><td>vf</td>
+<td>Inventor 3d lut.</td>
+<td>Read support for 3d lut data
+and global_transform element</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Shaper LUT application in OCIO currently only supports linear interpolation.
+For very small shaper LUT sizes this may not be sufficient. (CSP shaper luts
+excluded; they do use spline interpolation at load-time).</p>
+</div>
+</div>
+<div class="section" id="can-you-query-a-color-space-by-name-like-rec709-and-get-back-xyz-coordinates-of-its-primaries-and-whitepoint">
+<h2>Can you query a color space by name (like &#8220;Rec709&#8221;) and get back XYZ coordinates of its primaries and whitepoint?<a class="headerlink" href="#can-you-query-a-color-space-by-name-like-rec709-and-get-back-xyz-coordinates-of-its-primaries-and-whitepoint" title="Permalink to this headline">¶</a></h2>
+<p>Not currently.</p>
+<p>OCIO is a color configuration &#8216;playback&#8217; tool that tries to be as flexible as possible;
+color information such as this is often only needed / relevant at configuration authoring time.
+Making primaries / whitepoint required would limit the pipeline OCIO could service. In the
+strictest sense, we would consider OCIO to be a &#8216;baked&#8217; representation of color processes,
+similar to how Alembic files do not store animation rig data, but rather only the baked geometry.</p>
+<p>Also, remember that not all colorspaces using in visual effects even have strongly
+defined color space definitions. For example, scanned film negatives,  when linearized with
+1d transfer curves (the historical norm in vfx), do not have defined primaries/white point.
+Each rgb value could of course individually be tied to a specific color, but if you were to
+do a sweep  of the pure &#8216;red channel&#8217;, for example, you&#8217;d find that it creates a curves in
+chromaticity space, not a single point.  (This is due to the 1d linearization not attempting
+to undo the subtractive processes that created the pixels in the first place.</p>
+<p>But many color spaces in OCIO <em>do</em> have very strongly defined white points/chromaticities.
+On the display side, for example, we have very  precise information on this.</p>
+<p>Perhaps OCIO should include optional metadata to tag outputs?  We are looking at this as
+as a OCIO 1.2 feature.</p>
+</div>
+<div class="section" id="can-you-convert-xyz-named-color-space-rgb-values">
+<h2>Can you convert XYZ &lt;-&gt; named color space RGB values?<a class="headerlink" href="#can-you-convert-xyz-named-color-space-rgb-values" title="Permalink to this headline">¶</a></h2>
+<p>OCIO includes a MatrixTransform, so the processing capability is there. But there is no convenience
+function to compute this matrix for you. (We do include other Matrix convenience functions though,
+so it already has a place to be added. See MatrixTransform in export/OpenColorTransforms.h)</p>
+<p>There&#8217;s talk of extended OCIO 1.2 to have a plugin api where colorspaces could be dynamically
+added at runtime (such as after reading exr  chromaticity header metadata).  This would
+necessitate adding such a feature.</p>
+</div>
+<div class="section" id="what-are-the-differences-between-nuke-s-vectorfield-and-ociofiletransform">
+<h2>What are the differences between Nuke&#8217;s Vectorfield and OCIOFileTransform?<a class="headerlink" href="#what-are-the-differences-between-nuke-s-vectorfield-and-ociofiletransform" title="Permalink to this headline">¶</a></h2>
+<p>(All tests done with Nuke 6.3)</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="41%" />
+<col width="51%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Ext</th>
+<th class="head">Details</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>3dl</td>
+<td>Matched Results</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>ccc</td>
+<td>n/a</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>cc</td>
+<td>n/a</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>csp</td>
+<td><em>Difference</em></td>
+<td>Gain error. Believe OCIO is correct, but need to verify.</td>
+</tr>
+<tr class="row-even"><td>cub</td>
+<td>Matched Results</td>
+<td>Note: Nuke&#8217;s .cub exporter is broken (gain error)</td>
+</tr>
+<tr class="row-odd"><td>cube</td>
+<td>Matched Results</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>hdl</td>
+<td>n/a</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>mga/m3d</td>
+<td>n/a</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>spi1d</td>
+<td>n/a</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>spi3d</td>
+<td>n/a</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>spimtx</td>
+<td>n/a</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>vf</td>
+<td><em>Difference</em></td>
+<td>Gain error. Believe OCIO is correct, but need to verify.</td>
+</tr>
+</tbody>
+</table>
+<p>All gain differences are due to a common &#8216;gotcha&#8217; when interpolating 3d luts, related to
+internal index computation. If you have a 32x32x32 3dlut, when sampling values from (0,1)
+do you internally scale by 31.0 or 32.0?  This is typically well-defined for each format,
+(in this case the answer is usually 31.0) but when incorrectly handled in an application,
+you occationally see gain errors that differ by this amount. (In the case of a 32-sized
+3dlut, 32/31 = ~3% error)</p>
+</div>
+<div class="section" id="what-do-colorspace-setallocation-and-colorspace-setallocationvars-do">
+<h2>What do ColorSpace::setAllocation() and ColorSpace::setAllocationVars() do?<a class="headerlink" href="#what-do-colorspace-setallocation-and-colorspace-setallocationvars-do" title="Permalink to this headline">¶</a></h2>
+<p>These hints only come into play during GPU processing, and are used to determine proper
+colorspace allocation handling for 3D LUTs. See this page <a class="reference internal" href="configurations/allocation_vars.html#allocationvars"><em>How to Configure ColorSpace Allocation</em></a> for
+further information.</p>
+</div>
+</div>
+
+    
+
+        </td>
+        </tr></table>
+        <br>
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2010, Sony Pictures Imageworks.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
+    </div>
+  </body>
+</html>
