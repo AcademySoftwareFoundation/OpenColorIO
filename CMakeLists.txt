@@ -60,6 +60,7 @@ endif()
 include(ParseArguments)
 include(OCIOMacros)
 include(ExternalProject)
+include(GNUInstallDirs)
 
 enable_language(CXX)
 
@@ -558,7 +559,7 @@ endif()
 configure_file(${CMAKE_SOURCE_DIR}/share/ocio/setup_ocio.sh.in
     ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/setup_ocio.sh @ONLY)
 
-INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/setup_ocio.sh DESTINATION share/ocio/)
+INSTALL(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/share/ocio/setup_ocio.sh DESTINATION ${CMAKE_INSTALL_DATADIR}/ocio/)
 
 ###############################################################################
 ### CPACK ###
@@ -623,7 +624,7 @@ if(TARGET OpenColorIO_STATIC)
         set(OCIO_STATIC_COMPILE_DEFINITIONS )
     endif()
 endif()
-install(EXPORT OpenColorIO DESTINATION cmake)
+install(EXPORT OpenColorIO DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OpenColorIO)
 file(WRITE "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake"
     "
     get_filename_component(OpenColorIO_DIR \"\${CMAKE_CURRENT_LIST_FILE}\" PATH)
@@ -635,7 +636,7 @@ file(WRITE "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake"
     
     ## targets libraries + associated definitions
     if(NOT TARGET OpenColorIO)
-        include(\"\${OpenColorIO_DIR}/cmake/OpenColorIO.cmake\") ## thanks to imported target
+        include(\"\${OpenColorIO_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/OpenColorIO/OpenColorIO.cmake\") ## thanks to imported target
         if(TARGET OpenColorIO AND NOT OpenColorIO_USE_STATIC)
             message(STATUS \"shared target OpenColorIO : see OpenColorIO_LIBRARY\")
             set(OpenColorIO_LIBRARY         OpenColorIO)
@@ -673,4 +674,4 @@ file(WRITE "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake"
     message(STATUS OPENCOLORIO_FOUND=\${OPENCOLORIO_FOUND})
     "
 )
-install(FILES "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake" DESTINATION .)
+install(FILES "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake" DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OpenColorIO)
