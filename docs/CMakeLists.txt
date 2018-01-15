@@ -142,6 +142,13 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build-html/
         PATTERN .* EXCLUDE
 )
 
+if(TARGET doc)
+    message(STATUS "Copying admin doc files to deploy area")
+    file(COPY ${CMAKE_SOURCE_DIR}/docs/.nojekyll
+              ${CMAKE_SOURCE_DIR}/docs/google2560df9c4b755196.html
+         DESTINATION ${CMAKE_BINARY_DIR}/docs/build-html)
+endif()
+
 find_package(LATEX)
 if(PDFLATEX_COMPILER)
     

@@ -54,3 +54,4 @@ deploy:
   on:
     tags: true
   local_dir: ./docs/build-html
+  fqdn: opencolorio.org
