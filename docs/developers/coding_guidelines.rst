@@ -37,7 +37,7 @@ Formatting
 
 * Function calls should NOT have a space between the function name and the opening parenthesis. A single space should be added after each required comma.
 
-Here is a short code fragement that shows these concepts in action:
+Here is a short code fragment that shows these concepts in action:
 
 .. code-block:: c++
 
