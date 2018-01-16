@@ -3,13 +3,13 @@
 Compatible Software
 ===================
 
-The following sofware all supports OpenColorIO (to varying degrees).
+The following software all supports OpenColorIO (to varying degrees).
 
 If you are interested in getting OCIO support for an application not listed
 here, please contact the ocio-dev mailing list.
 
 If you are a developer and would like assistance integration OCIO into your
-application, please contant ocio-dev as well.
+application, please contact ocio-dev as well.
 
 
 After Effects
@@ -143,7 +143,7 @@ Remaining integration tasks include
 C++
 ***
 
-The core OpenColorIO API is avaiable for use in C++. See the `export
+The core OpenColorIO API is available for use in C++. See the `export
 directory
 <http://github.com/imageworks/OpenColorIO/tree/master/export/OpenColorIO>`__
 for the C++ API headers.  Minimal code examples are also available in
@@ -161,7 +161,7 @@ Python
 The OpenColorIO API is available for use in python. See the "pyglue" directory
 in the codebase.
 
-See the devleoper guide for `usage examples
+See the developer guide for `usage examples
 <developers-usageexamples>`__ and API documentation on the PYthon
 bindings
 
@@ -268,7 +268,7 @@ particular focus on lighting and look development.
 
 Natron
 ******
-'Open Source Compositing Softare <http://natron.fr>'
+'Open Source Compositing Software <http://natron.fr>'
 
 
 CryEngine3 (Beta)
