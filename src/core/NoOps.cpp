@@ -58,7 +58,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() { }
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const { }
             
-            void extractGpuShaderInfo(GpuShaderRcPtr & /*shader*/) const {}
+            void extractGpuShaderInfo(GpuShaderRcPtr & /*shaderInfo*/) const {}
         
             void getGpuAllocation(AllocationData & allocation) const;
             
@@ -323,7 +323,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() {}
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
             
-            void extractGpuShaderInfo(GpuShaderRcPtr & /*shader*/) const {}
+            void extractGpuShaderInfo(GpuShaderRcPtr & /*shaderInfo*/) const {}
             
         private:
             std::string m_fileReference;
@@ -389,7 +389,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() {}
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
             
-            virtual void extractGpuShaderInfo(GpuShaderRcPtr & /*shader*/) const {}
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & /*shaderInfo*/) const {}
             
         private:
             std::string m_look;

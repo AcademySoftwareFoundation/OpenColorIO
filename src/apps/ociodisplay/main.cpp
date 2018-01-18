@@ -142,7 +142,7 @@ static void InitImageTexture(const char * filename)
         }
         catch(...)
         {
-            std::cerr << "Error loading file." << std::endl;
+            std::cerr << "Error loading file.";
             exit(1);
         }
     }
@@ -378,9 +378,12 @@ static void Key(unsigned char key, int /*x*/, int /*y*/)
 }
 
 
-static void SpecialKey(int key, int /* x */, int /* y */)
+static void SpecialKey(int key, int x, int y)
 {
-    const int mod = glutGetModifiers();
+    (void) x;
+    (void) y;
+
+    int mod = glutGetModifiers();
     
     if(key == GLUT_KEY_UP && (mod & GLUT_ACTIVE_CTRL))
     {
@@ -431,7 +434,7 @@ CompileShaderText(GLenum shaderType, const char *text)
         GLsizei len;
         glGetShaderInfoLog(shader, 1000, &len, log);
 
-        std::cerr << "Error: problem compiling shader: " << log << std::endl;
+        fprintf(stderr, "Error: problem compiling shader: %s\n", log);
         return 0;
     }
     
@@ -459,7 +462,7 @@ LinkShaders(GLuint fragShader)
             GLsizei len;
             glGetProgramInfoLog(program, 1000, &len, log);
 
-            std::cerr << "Shader link error:" << log << std::endl;
+            fprintf(stderr, "Shader link error:\n%s\n", log);
             return 0;
         }
     }
@@ -555,7 +558,6 @@ void UpdateOCIOGLState()
     }
     catch(...)
     {
-        std::cerr << "Unexpected error" << std::endl;
         return;
     }
     
@@ -875,7 +877,7 @@ int main(int argc, char **argv)
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0"))
     {
-        std::cerr << "OpenGL 2.0 not supported" << std::endl;
+        printf("OpenGL 2.0 not supported\n");
         exit(1);
     }
 #endif
@@ -887,14 +889,9 @@ int main(int argc, char **argv)
     
     std::cout << USAGE_TEXT << std::endl;
     
-    if(g_gpu)
-    {
-        std::cout << "Graphic Card Information: " << std::endl
-                  << "\t" << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl
-                  << "\t" << glGetString(GL_RENDERER) << std::endl
-                  << std::endl
-                  << std::endl;
-    } 
+    // TODO: switch profiles based on shading language  890     if(g_gpu)
+    std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    std::cout << std::endl;
 
     AllocateLut3D();
     

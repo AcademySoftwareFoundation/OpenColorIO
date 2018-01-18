@@ -466,7 +466,7 @@ OCIO_NAMESPACE_ENTER
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool isLut() const { return true; }
-            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shader) const;
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const;
             
         private:
             const Lut1DRcPtr m_lut;
@@ -609,7 +609,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
 
-        void Lut1DOp::extractGpuShaderInfo(GpuShaderRcPtr & shader) const
+        void Lut1DOp::extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const
         {
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
@@ -618,31 +618,31 @@ OCIO_NAMESPACE_ENTER
                 const unsigned height = (length / 4096) + 1;
 
                 std::ostringstream ss;
-                ss << shader->getNamePrefix()
+                ss << shaderInfo->getNamePrefix()
                    << std::string("lut1d_")
-                   << shader->getNumTextures();
+                   << shaderInfo->getNumTextures();
 
                 const std::string name(ss.str());
 
-                shader->addTexture(
+                shaderInfo->addTexture(
                     name.c_str(), m_cacheID.c_str(), width, height, GpuShader::TEXTURE_RGB_CHANNEL, 
                     m_interpolation, &m_lut->luts[0][0], &m_lut->luts[1][0], &m_lut->luts[2][0]);
 
                 std::ostringstream code;
-                code << "    " << shader->getPixelName() << ".rgb = ";
+                code << "    " << shaderInfo->getPixelName() << ".rgb = ";
                 if(height>0)
                 {
                     // In case the 1D lut length exceeds the 1D texture maximum length
                     Write_sampleLut2D_rgb(
-                        code, shader->getPixelName(), name, width, height, shader->getLanguage());
+                        code, shaderInfo->getPixelName(), name, width, height, shaderInfo->getLanguage());
                 }
                 else
                 {
                     Write_sampleLut1D_rgb(
-                        code, shader->getPixelName(), name, width, shader->getLanguage());
+                        code, shaderInfo->getPixelName(), name, width, shaderInfo->getLanguage());
                 }
 
-                shader->addToMainShaderCode(code.str().c_str());
+                shaderInfo->addToMainShaderCode(code.str().c_str());
             }
             else
             {

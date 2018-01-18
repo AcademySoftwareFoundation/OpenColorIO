@@ -130,7 +130,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shader) const;
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const;
         
         private:
             bool m_isNoOp;
@@ -441,9 +441,9 @@ OCIO_NAMESPACE_ENTER
         } // Op::process
         
         
-        void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderRcPtr & shader) const
+        void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const
         {
-            const GpuLanguage lang = shader->getLanguage();
+            const GpuLanguage lang = shaderInfo->getLanguage();
             
             // TODO: This should not act upon alpha,
             // since we dont apply it on the CPU?
@@ -456,17 +456,17 @@ OCIO_NAMESPACE_ENTER
                 {
                     if(m_m44IsDiagonal)
                     {
-                        code << "    " << shader->getPixelName() << " = ";
+                        code << "    " << shaderInfo->getPixelName() << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44);
                         Write_half4(code, scale, lang);
-                        code << " * " << shader->getPixelName() << ";\n";
+                        code << " * " << shaderInfo->getPixelName() << ";\n";
                     }
                     else
                     {
-                        code << "    " << shader->getPixelName() << " = ";
+                        code << "    " << shaderInfo->getPixelName() << " = ";
                         Write_mtx_x_vec(code,
-                                        GpuTextHalf4x4(m_m44, lang), shader->getPixelName(),
+                                        GpuTextHalf4x4(m_m44, lang), shaderInfo->getPixelName(),
                                         lang);
                         code << ";\n";
                     }
@@ -474,9 +474,9 @@ OCIO_NAMESPACE_ENTER
                 
                 if(!m_offset4IsIdentity)
                 {
-                    code << "    " << shader->getPixelName() << " = ";
+                    code << "    " << shaderInfo->getPixelName() << " = ";
                     Write_half4(code, m_offset4, lang);
-                    code << " + " << shader->getPixelName() << ";\n";
+                    code << " + " << shaderInfo->getPixelName() << ";\n";
                 }
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
@@ -488,33 +488,33 @@ OCIO_NAMESPACE_ENTER
                                            -m_offset4[2],
                                            -m_offset4[3] };
                     
-                    code << "    " << shader->getPixelName() << " = ";
+                    code << "    " << shaderInfo->getPixelName() << " = ";
                     Write_half4(code, offset_inv, lang);
-                    code << " + " << shader->getPixelName() << ";\n";
+                    code << " + " << shaderInfo->getPixelName() << ";\n";
                 }
                 
                 if(!m_m44IsIdentity)
                 {
                     if(m_m44IsDiagonal)
                     {
-                        code << "    " << shader->getPixelName() << " = ";
+                        code << "    " << shaderInfo->getPixelName() << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44_inv);
                         Write_half4(code, scale, lang);
-                        code << " * " << shader->getPixelName() << ";\n";
+                        code << " * " << shaderInfo->getPixelName() << ";\n";
                     }
                     else
                     {
-                        code << "    " << shader->getPixelName() << " = ";
+                        code << "    " << shaderInfo->getPixelName() << " = ";
                         Write_mtx_x_vec(code,
-                                        GpuTextHalf4x4(m_m44_inv, lang), shader->getPixelName(),
+                                        GpuTextHalf4x4(m_m44_inv, lang), shaderInfo->getPixelName(),
                                         lang);
                         code << ";\n";
                     }
                 }
             }
 
-            shader->addToMainShaderCode(code.str().c_str());
+            shaderInfo->addToMainShaderCode(code.str().c_str());
         }
         
     }  // Anon namespace

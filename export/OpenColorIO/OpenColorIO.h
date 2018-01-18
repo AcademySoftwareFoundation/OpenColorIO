@@ -1122,47 +1122,6 @@ OCIO_NAMESPACE_ENTER
     //!rst::
     // GpuShaderDesc
     // *************
-    //
-    // **Usage Example:** *Create a fragment shader*
-    //
-    //   This example was built following the recipe found in src/apps/ociodisplay/main.cpp 
-    //
-    // .. code-block:: cpp
-    //
-    //    ...
-    //
-    //    // Get the processor
-    //    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
-    //    OCIO::ConstProcessorRcPtr processor 
-    //       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
-    //
-    //    // Step 1: Create a GPU Shader Description
-    //    OCIO::GpuShaderDesc shaderDesc;
-    //    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
-    //    shaderDesc.setFunctionName("OCIODisplay");
-    //    
-    //    // Step 2: Create the predefined legacy (see below) GPU shader builder
-    //    //         Note: Provide a custom OCIO::GpuShader implementation if needed.
-    //    OCIO::GpuShaderRcPtr builder = OCIO::GpuShader::CreateLegacyShader(shaderDesc, edgelen);
-    //
-    //    // Step 3: Extract the shader information to implement a specific processor
-    //    OCIO::ConstGpuShaderRcPtr shaderInfo = processor->extractGpuShaderInfo(builder);
-    //
-    //    // Step 4: Instantiate the 3D LUT
-    //    if(shaderInfo->getNumTextures()==1)
-    //    {
-    //       const std::string lut3dCacheID = shaderInfo->getTextureCacheID(0);
-    //       if(lut3dCacheID != g_lut3dCacheID)
-    //       { /* OpenGL code to create the GPU 3D texture */ }
-    //    }
-    //
-    //    // Step 5: Instantiate the Shader program
-    //    const std::string shaderCacheID = shaderInfo->getCacheID();
-    //    if(shaderCacheID != g_shaderCacheID)
-    //    { /* OpenGL calls to create the GPU shader program */ }
-    // 
-    //    ...
-    //
 
     //!cpp:class::
     class OCIOEXPORT GpuShaderDesc
@@ -1221,21 +1180,68 @@ OCIO_NAMESPACE_ENTER
     // GpuShader
     // *************
     // 
-    // The class holds all the information to build a shader program as
-    // anything is dynamic. Unlike the Legacy GPU shader which bakes the color transform 
+    // The class holds all the GPU information to build a shader program from a specific
+    // processor. Unlike the Legacy GPU shader which bakes the color transform 
     // to have at most one 3D Texture, the default GPU shader preserves all requested luts. 
-    // It explains the interface to query all the needed 3D textures (dedicated to 3D Luts),
-    // 1/2D textures (dedicated to 1D Luts) and uniforms. 
+    // 
     // The GPU shader API is public to allow third-party applications to build a specific
-    // implementation to better fit their GPU context.
+    // implementation to better fit their GPU needs.
     // 
     // 
     // **Note:**
-    // The legacy shader is...
-    // The default shader is ...
+    // The legacy shader class is used to extract all the GPU shader information 
+    // from a specific color processor while baking the processor. It means it combines all LUTs
+    // in one 3D Lut of a specific edge length so that at most one 3D Lut could exist.
     // 
-    // **Usage Example:** *Manipulate a Gpu Shader class instance*
+    // The default shader is also used to extract all the GPU shader information
+    // from a specific color processor without the LUT's limitation. It means that any number
+    // of 1D Luts and 3D Luts could be present.
+    // 
+    // 
+    // **Usage Example:** *Extracting all the GPU information using the legacy shader builder*
     //
+    //   This example was built following the recipe found in src/apps/ociodisplay/main.cpp 
+    //
+    // .. code-block:: cpp
+    //
+    //    ...
+    //
+    //    // Get the processor
+    //    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
+    //    OCIO::ConstProcessorRcPtr processor 
+    //       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
+    //
+    //    // Step 1: Create a GPU Shader Description
+    //    OCIO::GpuShaderDesc shaderDesc;
+    //    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+    //    shaderDesc.setFunctionName("OCIODisplay");
+    //    
+    //    // Step 2: Create the predefined legacy (see below) GPU shader builder
+    //    //         Note: Provide a custom OCIO::GpuShader implementation if needed.
+    //    OCIO::GpuShaderRcPtr builder = OCIO::GpuShader::CreateLegacyShader(shaderDesc, edgelen);
+    //
+    //    // Step 3: Extract the shader information to implement a specific processor
+    //    OCIO::ConstGpuShaderRcPtr shaderInfo = processor->extractGpuShaderInfo(builder);
+    //
+    //    // Step 4: Instantiate the 3D LUT
+    //    if(shaderInfo->getNumTextures()==1)
+    //    {
+    //       const std::string lut3dCacheID = shaderInfo->getTextureCacheID(0);
+    //       if(lut3dCacheID != g_lut3dCacheID)
+    //       { /* OpenGL code to create the GPU 3D texture */ }
+    //    }
+    //
+    //    // Step 5: Instantiate the Shader program
+    //    const std::string shaderCacheID = shaderInfo->getCacheID();
+    //    if(shaderCacheID != g_shaderCacheID)
+    //    { /* OpenGL calls to create the GPU shader program */ }
+    // 
+    //    ...
+    // 
+    // 
+    // **Usage Example:** *Extracting all the GPU information using the modern shader builder*
+    //
+    //   This example was built following the recipe found in src/apps/ociodisplay/main.cpp 
     //
     // .. code-block:: cpp
     // 

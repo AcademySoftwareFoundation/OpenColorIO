@@ -120,7 +120,7 @@ OCIO_NAMESPACE_ENTER
             virtual bool isLut() const { return false; }
 
             // Create & add the gpu shader information needed by the op
-            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shader) const = 0;
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const = 0;
 
         private:
             Op& operator= (const Op &);

@@ -224,21 +224,21 @@ OCIO_NAMESPACE_ENTER
             ApplyClampExponent(rgbaBuffer, numPixels, exp);
         }
         
-        void ExponentOp::extractGpuShaderInfo(GpuShaderRcPtr & shader) const 
+        void ExponentOp::extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const 
         {
             const float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
                                    float(m_exp4[2]), float(m_exp4[3]) };
 
-            const GpuLanguage lang = shader->getLanguage();
+            const GpuLanguage lang = shaderInfo->getLanguage();
             const float zerovec[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
             std::ostringstream code;
-            code << "    " << shader->getPixelName() << " = pow("
-                 << "max(" << shader->getPixelName() << ", " << GpuTextHalf4(zerovec, lang) << ")"
+            code << "    " << shaderInfo->getPixelName() << " = pow("
+                 << "max(" << shaderInfo->getPixelName() << ", " << GpuTextHalf4(zerovec, lang) << ")"
                  << ", " << GpuTextHalf4(exp, lang) << ");"
                  << std::endl;
 
-            shader->addToMainShaderCode(code.str().c_str());
+            shaderInfo->addToMainShaderCode(code.str().c_str());
         }
         
     }  // Anon namespace

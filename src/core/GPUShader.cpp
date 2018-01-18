@@ -495,19 +495,22 @@ OCIO_NAMESPACE_ENTER
 
     unsigned GenericGpuShader::getNumUniforms() const
     {
+        // Outside the scope of this code review. Will add in future step.
         return 0;
     }
 
     void GenericGpuShader::getUniform(
         unsigned, const char *&, UniformType &, void *&) const
     {
-        // TODO: Keep all the uniform information
+        // Outside the scope of this code review. Will add in future step.
+        throw Exception("Not yet implemented");
     }
 
     void GenericGpuShader::addUniform(
         unsigned, const char *, UniformType, void *)
     {
-        // TODO: Get all the uniform information
+        // Outside the scope of this code review. Will add in future step.
+        throw Exception("Not yet implemented");
     }
 
     unsigned GenericGpuShader::getNumTextures() const

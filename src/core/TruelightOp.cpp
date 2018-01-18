@@ -74,7 +74,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shader) const;
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const;
         
         private:
             TransformDirection m_direction;
@@ -358,7 +358,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        void TruelightOp::extractGpuShaderInfo(GpuShaderRcPtr & shader) const
+        void TruelightOp::extractGpuShaderInfo(GpuShaderRcPtr & /*shaderInfo*/) const
         {
             throw Exception("TruelightOp does not define an gpu shader.");
         }

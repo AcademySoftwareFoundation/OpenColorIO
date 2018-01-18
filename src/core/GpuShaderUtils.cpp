@@ -193,6 +193,7 @@ OCIO_NAMESPACE_ENTER
                                const std::string &, unsigned, unsigned,
                                GpuLanguage)
     {
+        // Outside the scope of this code review. Will add in future step.
         throw Exception("Not yet implemented");
     }
 
@@ -200,6 +201,7 @@ OCIO_NAMESPACE_ENTER
                                const std::string &, unsigned,
                                GpuLanguage)
     {
+        // Outside the scope of this code review. Will add in future step.
         throw Exception("Not yet implemented");
     }
 }

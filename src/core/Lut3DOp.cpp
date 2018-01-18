@@ -579,7 +579,7 @@ OCIO_NAMESPACE_ENTER
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool isLut() const { return true; }
-            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shader) const;
+            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const;
 
         private:
             Lut3DRcPtr m_lut;
@@ -722,26 +722,26 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        void Lut3DOp::extractGpuShaderInfo(GpuShaderRcPtr & shader) const
+        void Lut3DOp::extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const
         {
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
                 std::ostringstream ss;
-                ss << shader->getNamePrefix()
+                ss << shaderInfo->getNamePrefix()
                    << std::string("lut3d_")
-                   << shader->getNum3DTextures();
+                   << shaderInfo->getNum3DTextures();
 
                 const std::string name(ss.str());
 
-                shader->add3DTexture(
+                shaderInfo->add3DTexture(
                     name.c_str(), m_cacheID.c_str(), m_lut->size[0], m_interpolation, &m_lut->lut[0]);
 
                 std::ostringstream code;
-                code << "    " << shader->getPixelName() << ".rgb = ";
+                code << "    " << shaderInfo->getPixelName() << ".rgb = ";
                 Write_sampleLut3D_rgb(
-                    code, shader->getPixelName(), name, m_lut->size[0], shader->getLanguage());
+                    code, shaderInfo->getPixelName(), name, m_lut->size[0], shaderInfo->getLanguage());
 
-                shader->addToMainShaderCode(code.str().c_str());
+                shaderInfo->addToMainShaderCode(code.str().c_str());
             }
             else
             {
