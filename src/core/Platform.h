@@ -143,6 +143,8 @@ OCIO_NAMESPACE_ENTER
 #else
     // assume linux/unix/posix
 
+    // Note: Not recursive mutex implementation
+
     class _Mutex {
      public:
 	_Mutex()      { pthread_mutex_init(&_mutex, 0); }
