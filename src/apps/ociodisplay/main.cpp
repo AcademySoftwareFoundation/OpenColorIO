@@ -889,7 +889,7 @@ int main(int argc, char **argv)
     
     std::cout << USAGE_TEXT << std::endl;
     
-    // TODO: switch profiles based on shading language  890     if(g_gpu)
+    // TODO: switch profiles based on shading language
     std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << std::endl;
 
