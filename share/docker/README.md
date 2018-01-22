@@ -20,5 +20,7 @@ Please refer to the link below to have the full explanation.
 
 References
 ----------
+
 How to use docker files:  https://docs.docker.com/engine/reference/builder/#usage
+
 Windows limitation: https://stackoverflow.com/questions/41286028/docker-build-error-checking-context-cant-stat-c-users-username-appdata
