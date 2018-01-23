@@ -21,7 +21,7 @@ ALLOCATION_LG2::
 
 So say you have an srgb image (such as an 8-bit tif), where you know the data
 ranges between 0.0 - 1.0 (after converting to float).  If you wanted to apply
-a 3d lut to this data, there is no danger in samplingthat space uniformly and
+a 3d lut to this data, there is no danger in sampling that space uniformly and
 clamping data outside (0,1).   So for this colorspace we would tag it:
 
 .. code-block:: yaml
@@ -60,7 +60,7 @@ Say you were using a 32x32x32 3d lookup table (a common size).  Middle gray is
 at 0.18, and specular values are very much above that.  Say the max value we
 wanted to preserve in our coding space is 256.0, each 3d lut lattice coordinates
 would represent 8.0 units of linear light! That means the vast majority of the
-perceptually significant portions of the space wouldnt be sampled at all!
+perceptually significant portions of the space wouldn't be sampled at all!
 
 unform allocation from 0-256\:
 0
