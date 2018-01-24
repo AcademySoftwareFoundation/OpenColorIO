@@ -74,7 +74,7 @@ RUN cd /home/devel/git && \
     cmake -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=/usr/local \
           -DOCIO_BUILD_TESTS=ON \
-          -DOCIO_BUILD_GPU_TESTS=ON \
+          -DOCIO_BUILD_GPU_TESTS=OFF \
           -DOCIO_BUILD_SHARED=ON \
           -DOCIO_BUILD_STATIC=ON \
           -DOCIO_BUILD_DOCS=ON \
