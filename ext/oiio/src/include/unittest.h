@@ -35,6 +35,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <iomanip>
 
 extern int unit_test_failures;
 
@@ -110,7 +111,8 @@ struct AddTest { AddTest(OIIOTest* test); };
 
 #define OIIO_CHECK_CLOSE(x,y,tol)                                       \
     ((std::abs((x) - (y)) < (tol)) ? ((void)0)                          \
-         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
+         : ((std::cout << std::setprecision(10)                         \
+             << __FILE__ << ":" << __LINE__ << ":\n"                    \
              << "FAILED: abs(" << #x << " - " << #y << ") < " << #tol << "\n" \
              << "\tvalues were '" << (x) << "', '" << (y) << "' and '" << (tol) << "'\n"), \
             (void)++unit_test_failures))

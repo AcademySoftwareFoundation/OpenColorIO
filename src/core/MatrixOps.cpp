@@ -26,6 +26,12 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
+/*
+    Made by Autodesk Inc. under the terms of the OpenColorIO BSD 3 Clause License
+*/
+
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "GpuShaderUtils.h"
@@ -637,6 +643,180 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 
 OCIO_NAMESPACE_USING
+
+OIIO_ADD_TEST(MatrixOps, Scale)
+{
+    float error = 1e-8f;
+
+    OpRcPtrVec ops;
+    const float scale[] = { 1.1f, 1.3f, 0.3f, 1.0f };
+    CreateScaleOp(ops, scale, TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    ops[0]->finalize();
+
+    CreateScaleOp(ops, scale, TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    ops[1]->finalize();
+
+    const unsigned NB_PIXELS = 3;
+    const float src[NB_PIXELS*4] = {  0.1004f,  0.2f,  0.3f,    0.4f,
+                                     -0.1008f, -0.2f, 50.01f, 123.4f,
+                                      1.0090f,  1.0f,  1.0f,    1.0f };
+
+    const float dst[NB_PIXELS*4] = {  0.11044f,  0.26f,  0.090f,   0.4f,
+                                      -0.11088f, -0.26f, 15.003f, 123.4f,
+                                       1.10990f,  1.30f,  0.300f,   1.0f };
+
+    float tmp[NB_PIXELS*4];
+    memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
+
+    ops[0]->apply(tmp, NB_PIXELS);
+
+    for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
+    }
+
+    ops[1]->apply(tmp, NB_PIXELS);
+
+    for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(src[idx], tmp[idx],error);
+    }
+}
+
+OIIO_ADD_TEST(MatrixOps, Offset)
+{
+    float error = 1e-5f;
+
+    OpRcPtrVec ops;
+    const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
+    CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    ops[0]->finalize();
+
+    CreateOffsetOp(ops, offset, TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    ops[1]->finalize();
+
+    const unsigned NB_PIXELS = 3;
+    const float src[NB_PIXELS*4] = {  0.1004f,  0.2f,  0.3f,    0.4f,
+                                     -0.1008f, -0.2f, 50.01f, 123.4f,
+                                      1.0090f,  1.0f,  1.0f,    1.0f };
+
+    const float dst[NB_PIXELS*4] = {  1.2004f, -1.100f,  0.600f,   0.4f,
+                                      0.9992f, -1.500f, 50.310f, 123.4f,
+                                      2.1090f, -0.300f,  1.300f,   1.0f };
+
+    float tmp[NB_PIXELS*4];
+    memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
+
+    ops[0]->apply(tmp, NB_PIXELS);
+
+    for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
+    }
+
+    ops[1]->apply(tmp, NB_PIXELS);
+
+    for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(src[idx], tmp[idx], error);
+    }
+}
+
+OIIO_ADD_TEST(MatrixOps, Matrix)
+{
+    float error = 1e-5f;
+
+    const float matrix[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
+                               0.5f, 1.6f, 0.7f, 0.8f,
+                               0.2f, 0.1f, 1.1f, 0.2f,
+                               0.3f, 0.4f, 0.5f, 1.6f };
+                   
+    OpRcPtrVec ops;
+    CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    ops[0]->finalize();
+
+    CreateMatrixOp(ops, matrix, TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    ops[1]->finalize();
+
+    const unsigned NB_PIXELS = 3;
+    const float src[NB_PIXELS*4] = {  0.1004f,  0.201f,  0.303f,    0.408f,
+                                     -0.1008f, -0.207f, 50.019f,  123.422f,
+                                      1.0090f,  1.009f,  1.044f,    1.001f };
+
+    const double dst[NB_PIXELS*4] = {   0.40474f,   0.91030f,    0.45508f,   0.914820f,
+                                       64.22222f, 133.369308f,  79.66444f, 222.371658f,
+                                        2.02530,    3.65050f,    1.65130f,   2.829900f };
+
+    float tmp[NB_PIXELS*4];
+    memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
+
+    ops[0]->apply(tmp, NB_PIXELS);
+
+    for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
+    }
+
+    ops[1]->apply(tmp, NB_PIXELS);
+
+    for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(src[idx], tmp[idx], error);
+    }
+}
+
+OIIO_ADD_TEST(MatrixOps, Arbitrary)
+{
+    float error = 1e-5f;
+
+    const float matrix[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
+                               0.5f, 1.6f, 0.7f, 0.8f,
+                               0.2f, 0.1f, 1.1f, 0.2f,
+                               0.3f, 0.4f, 0.5f, 1.6f };
+                   
+    const float offset[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+
+    OpRcPtrVec ops;
+    CreateMatrixOffsetOp(ops, matrix, offset, TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    ops[0]->finalize();
+
+    CreateMatrixOffsetOp(ops, matrix, offset, TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    ops[1]->finalize();
+
+    const unsigned NB_PIXELS = 3;
+    const float src[NB_PIXELS*4] = {  0.1004f,  0.201f,  0.303f,    0.408f,
+                                     -0.1008f, -0.207f, 50.019f,  123.422f,
+                                      1.0090f,  1.009f,  1.044f,    1.001f };
+
+    const float dst[NB_PIXELS*4] = {  -0.09526f,   0.660300f,  0.70508f,   0.914820f,
+                                      63.72222f, 133.119308f, 79.91444f, 222.371658f,
+                                       1.52530f,   3.400500f,  1.90130f,   2.829900f };
+
+    float tmp[NB_PIXELS*4];
+    memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
+
+    ops[0]->apply(tmp, NB_PIXELS);
+
+    for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
+    }
+
+    ops[1]->apply(tmp, NB_PIXELS);
+
+    for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(src[idx], tmp[idx], error);
+    }
+}
 
 OIIO_ADD_TEST(MatrixOps, Combining)
 {
