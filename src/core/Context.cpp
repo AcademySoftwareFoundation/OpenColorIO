@@ -75,16 +75,18 @@ namespace
         
         Impl& operator= (const Impl & rhs)
         {
-            AutoMutex lock1(resultsCacheMutex_);
-            AutoMutex lock2(rhs.resultsCacheMutex_);
-            
-            searchPath_ = rhs.searchPath_;
-            workingDir_ = rhs.workingDir_;
-            envMap_ = rhs.envMap_;
-            
-            resultsCache_ = rhs.resultsCache_;
-            cacheID_ = rhs.cacheID_;
-            
+            if(this!=&rhs)
+            {
+                AutoMutex lock1(resultsCacheMutex_);
+                AutoMutex lock2(rhs.resultsCacheMutex_);
+                
+                searchPath_ = rhs.searchPath_;
+                workingDir_ = rhs.workingDir_;
+                envMap_ = rhs.envMap_;
+                
+                resultsCache_ = rhs.resultsCache_;
+                cacheID_ = rhs.cacheID_;
+            }
             return *this;
         }
     };
