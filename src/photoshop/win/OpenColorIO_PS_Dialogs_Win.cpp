@@ -1027,8 +1027,7 @@ void OpenColorIO_PS_About(const void *plugHndl, const void *mwnd)
 	
 	const std::string endl = "\n";
 
-	std::string text = std::string("OpenColorIO PS") + endl +
-						OpenColorIO_PS_Beta_String + endl +
+	std::string text = std::string("OpenColorIO") + endl +
 						__DATE__ + endl +
 						endl +
 						"OCIO version " + OCIO::GetVersion();

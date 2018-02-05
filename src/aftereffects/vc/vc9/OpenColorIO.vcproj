@@ -749,6 +749,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\core\Platform.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\src\core\Processor.cpp"
 				>
 			</File>
