@@ -1,6 +1,6 @@
 .. _developer-guide:
 
-Developer guide
+Developer Guide
 ===============
 
 Some information on contributing to OCIO:

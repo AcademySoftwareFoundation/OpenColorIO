@@ -4,12 +4,13 @@ Looks
 =====
 
 A "look" is a named color transform, intended to modify the look of an
-image in a "creative" manner (as opposed to a colorspace definion
-which tends to be technically/mathematically defined)
+image in a "creative" manner (as opposed to a colorspace definition
+which tends to be technically/mathematically defined). An OCIO look typically
+exists as a flexible addendum to a defined viewing transform. 
 
 Examples of looks may be a neutral grade, to be applied to film scans
 prior to VFX work, or a per-shot DI grade decided on by the director,
-to be applied just before the viewing transform
+to be applied just before the viewing transform.
 
 Looks are defined similarly to colorspaces, you specify a name and a
 transform (possibly a GroupTransform containing several other
@@ -22,7 +23,7 @@ colorspace in which the transform is applied.
 Example configuration
 *********************
 
-Step 1: Setup a Look
+**Step 1: Setup a Look**
 
 A look is a top-level OCIO configuration object. Conceptually, it's a
 named transform which gets applied in a specific color space. All of the
@@ -39,6 +40,14 @@ Example look definition in a OCIO config:
       process_space: rclg16
       transform: !<FileTransform> {src: look_di.cc, interpolation: linear}
 
+Example Python API call:
+
+.. code-block:: python
+
+    look = OCIO.Look(name='di', processSpace='rclg16')
+    t = OCIO.FileTransform('look_di.cc', interpolation=OCIO.Constants.INTERP_LINEAR)
+    look.setTransform(t)
+    config.addLook(look)
 
 The src file can be any LUT type that OCIO supports (in this case, it's a
 file that contains the ``<ColorCorrection>`` element from a CDL file.) You
@@ -54,13 +63,13 @@ linear input to the ``OCIOLookTransform`` node, the pixels will be
 converted to ``rclg16`` before applying the ``look_di.cc``
 file-transform.
 
-Step 2: Update the Display to use a look.
+**Step 2: Update the Display to use a look.**
 
 You can specify an optional 'looks' tag in the View tag, which will
 apply the specified look(s). This lets application in the viewer
 provide options which use the looks.
 
-Example:
+Example YAML config:
 
 .. code-block:: yaml
 
@@ -76,12 +85,23 @@ Example:
         - !<View> {name: Film, colorspace: srgb10}
         - !<View> {name: Film DI, colorspace: srgb10, looks: di}
 
+Example Python API call:
+
+.. code-block:: python
+
+    for name,colorspace,look in [ ['Raw','nc10',''], ['Log','rclg10',''], 
+            ['Film','p3dci16',''], ['Film DI','p3dci16','di'] ]:
+        config.addDisplay('DLP',name,colorspace,look)
+
+    for name,colorspace,look in [ ['Raw','nc10',''], ['Log','rclg10',''], 
+            ['Film','srgb10',''], ['Film DI','srgb10','di'] ]:
+        config.addDisplay('sRGB',name,colorspace,look)
 
 Option for advanced users: The looks tag is actually a comma-delimited
 list supporting +/- modifiers. So if you you wanted to specify a View
 that undoes DI, and then adds Onset, you could do "-di,+onset".
 
-Step 3: Get per-shot looks supported.
+**Step 3: Get per-shot looks supported.**
 
 In the top example, look_di.cc, being a relative path location, will check
 each location in the config's search_path. The first file that's found

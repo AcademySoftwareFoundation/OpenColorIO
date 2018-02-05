@@ -13,8 +13,9 @@ roles and so on. For information on setting up configurations, see
 The API
 *******
 
-Most users will never directly interact with the C++ API. However the API is used by all the supplied applications (e.g :ref:`overview-ocio2icc`) and plugins (e.g 
-the :ref:`overview-nukeplugins`)
+Most users will never directly interact with the C++ API. However the API is
+used by all the supplied applications (e.g :ref:`overview-ocio2icc`) and plugins
+(e.g the :ref:`overview-nukeplugins`)
 
 To get started with the API, see the :ref:`developer-guide`
 
@@ -139,7 +140,8 @@ ocioconvert
 
 Loads an image, applies a color transform, and saves it to a new file.
 
-OpenImageIO is used to open and save the file, so a wide range of formats are supported.
+OpenImageIO is used to open and save the file, so a wide range of formats are
+supported.
 
 .. TODO: Link to more elaborate description
 
@@ -149,7 +151,9 @@ OpenImageIO is used to open and save the file, so a wide range of formats are su
 ociodisplay
 ***********
 
-A basic image viewer. Uses OpenImageIO to load images, and displays them using OCIO and typical viewer controls (scene-linear exposure control and a post-display gamma control)
+A basic image viewer. Uses OpenImageIO to load images, and displays them using
+OCIO and typical viewer controls (scene-linear exposure control and a
+post-display gamma control)
 
 May be useful to users to quickly check colorspace configuration, but
 primarily a demonstration of the OCIO API
@@ -164,12 +168,15 @@ Nuke plugins
 
 A set of OCIO nodes for The Foundry's Nuke, including:
 
-* OCIOColorSpace, transforms between two color spaces (similar to the built-in "ColorSpace" node, but the colorspaces are described in the OCIO config file)
+* OCIOColorSpace, transforms between two color spaces (similar to the built-in
+  "ColorSpace" node, but the colorspaces are described in the OCIO config file)
 
 * OCIODisplay to be used as viewer processes
 
-* OCIOFileTransform loads a transform from a file (e.g a 1D or 3D LUT), and applies it
+* OCIOFileTransform loads a transform from a file (e.g a 1D or 3D LUT), and
+  applies it
 
-* OCIOCDLTransform applies CDL-compliant grades, and includes utilities to create/load ASC CDL files
+* OCIOCDLTransform applies CDL-compliant grades, and includes utilities to
+  create/load ASC CDL files
 
 .. TODO - Link to more elaborate description

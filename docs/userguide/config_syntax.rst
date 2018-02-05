@@ -10,7 +10,7 @@ available, or what sections are optional.
 
 This page alone will not help you to write a useful config file! See
 the :ref:`configurations` section for examples of complete, practical
-configs, and discussion of how they fit within a facitilies workflow.
+configs, and discussion of how they fit within a facilities workflow.
 
 YAML basics
 ***********
@@ -61,7 +61,7 @@ always ``1`` (one)
 
 Optional. Default is an empty search path.
 
-``search_path`` is a colon-seperated list of directories. Each
+``search_path`` is a colon-separated list of directories. Each
 directory is checked in order to locate a file (e.g. a LUT).
 
 This works is very similar to how the UNIX ``$PATH`` env-var works for
@@ -148,7 +148,7 @@ Deprecated. Optional. Default is the Rec.709 primaries specified by the ASC:
 
     luma: [0.2126, 0.7152, 0.0722]
 
-These are the luminance coeficients, which can be used by
+These are the luminance coefficients, which can be used by
 OCIO-supporting applications when adjusting saturation (e.g. in an
 image-viewer when displaying a single channel)
 
@@ -337,7 +337,7 @@ visible.
 
 Overridden by the ``OCIO_ACTIVE_VIEWS`` env-var::
 
-    export OCIO_ACTIVE_DISPLAYS="Film:Log:Raw"
+    export OCIO_ACTIVE_VIEWS="Film:Log:Raw"
 
 
 ``looks``
@@ -540,7 +540,7 @@ apply our 3D LUT on the log-encoded images.
 
 This primarily demonstrates the meta-transform ``GroupTransform``: a
 transform which simply composes two or more transforms together into
-one. Anything that acceptsa transform like ``FileTransform`` or
+one. Anything that accepts a transform like ``FileTransform`` or
 ``CDLTransform`` will also accept a ``GroupTransform``
 
 It is also worth noting the ``ColorSpaceTransform``, which transforms
@@ -604,11 +604,11 @@ With the image now in the reference space, srgb8's transform is applied:
 
 .. note::
 
-    OCIO has an transform optimiser which removes redunant steps, and
+    OCIO has an transform optimizer which removes redundant steps, and
     combines similar transforms into one operation.
 
     In the previous example, the complete transform chain would be
-    "lg16 -> lnf, lnf -> lg16, lg16 -> srgb8". However the optimiser
+    "lg16 -> lnf, lnf -> lg16, lg16 -> srgb8". However the optimizer
     will reduce this to "lg16 -> srgb".
 
 

@@ -5,8 +5,8 @@ Downloads
 
 * Sample OCIO Configurations -- `.zip <http://github.com/imageworks/OpenColorIO-Configs/zipball/master>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO-Configs/tarball/master>`__
 * Reference Images v1.0v4 -- `.tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v4.tgz>`__
-* Core Library v1.0.9 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.9>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.9>`__
-* Core Library latest -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/master>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/master>`__
+* Core Library v1.1.1 -- `.zip <https://github.com/imageworks/OpenColorIO/archive/v1.1.1.zip>`__ `.tar.gz <https://github.com/imageworks/OpenColorIO/archive/v1.1.1.tar.gz>`__
+* Core Library dev -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/master>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/master>`__
 
 Per-version updates: :ref:`changelog-main`.
 
@@ -23,6 +23,7 @@ Deprecated Downloads
 * Reference Images v1.0v2 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v2.tgz>`__
 * Reference Images v1.0v1 `tgz <http://code.google.com/p/opencolorio/downloads/detail?name=ocio-images.1.0v1.tgz>`__
 
+* Core Library v1.0.9 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.9>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.9>`__
 * Core Library v1.0.8 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.8>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.8>`__
 * Core Library v1.0.7 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.7>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.7>`__
 * Core Library v1.0.6 -- `.zip <http://github.com/imageworks/OpenColorIO/zipball/v1.0.6>`__ `.tar.gz <http://github.com/imageworks/OpenColorIO/tarball/v1.0.6>`__

@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#ifndef WINDOWS
+#ifndef WIN32
 
 // fwd declare yaml-cpp visibility
 #pragma GCC visibility push(hidden)
@@ -67,7 +67,16 @@ namespace YAML {
 
 #endif
 
+#ifdef WIN32
+#pragma warning( push )
+#pragma warning( disable: 4146 )
+#endif
+
 #include <yaml-cpp/yaml.h>
+
+#ifdef WIN32
+#pragma warning( pop )
+#endif
 
 #include "Logging.h"
 #include "MathUtils.h"
@@ -1687,7 +1696,7 @@ OCIO_NAMESPACE_ENTER
             {
                 out << YAML::Key << "environment";
                 out << YAML::Value << YAML::BeginMap;
-                for(unsigned i = 0; i < c->getNumEnvironmentVars(); ++i)
+                for(int i = 0; i < c->getNumEnvironmentVars(); ++i)
                 {   
                     const char* name = c->getEnvironmentVarNameByIndex(i);
                     out << YAML::Key << name;
@@ -1718,11 +1727,24 @@ OCIO_NAMESPACE_ENTER
 #endif
             out << YAML::Key << "roles";
             out << YAML::Value << YAML::BeginMap;
-            for(unsigned i = 0; i < c->getNumRoles(); ++i)
+            for(int i = 0; i < c->getNumRoles(); ++i)
             {
                 const char* role = c->getRoleName(i);
-                out << YAML::Key << role;
-                out << YAML::Value << c->getColorSpace(role)->getName();
+                if(role && *role)
+                {
+                    ConstColorSpaceRcPtr colorspace = c->getColorSpace(role);
+                    if(colorspace)
+                    {
+                        out << YAML::Key << role;
+                        out << YAML::Value << c->getColorSpace(role)->getName();
+                    }
+                    else
+                    {
+                        std::ostringstream os;
+                        os << "Colorspace associated to the role '" << role << "', does not exist.";
+                        throw Exception(os.str().c_str());
+                    }
+                }
             }
             out << YAML::EndMap;
 #ifndef OLDYAML
@@ -1733,12 +1755,12 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Newline;
             out << YAML::Key << "displays";
             out << YAML::Value << YAML::BeginMap;
-            for(unsigned i = 0; i < c->getNumDisplays(); ++i)
+            for(int i = 0; i < c->getNumDisplays(); ++i)
             {
                 const char* display = c->getDisplay(i);
                 out << YAML::Key << display;
                 out << YAML::Value << YAML::BeginSeq;
-                for(unsigned v = 0; v < c->getNumViews(display); ++v)
+                for(int v = 0; v < c->getNumViews(display); ++v)
                 {
                     View dview;
                     dview.name = c->getView(display, v);
@@ -1776,7 +1798,7 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Newline;
                 out << YAML::Key << "looks";
                 out << YAML::Value << YAML::BeginSeq;
-                for(unsigned i = 0; i < c->getNumLooks(); ++i)
+                for(int i = 0; i < c->getNumLooks(); ++i)
                 {
                     const char* name = c->getLookNameByIndex(i);
                     save(out, c->getLook(name));
@@ -1790,7 +1812,7 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Newline;
                 out << YAML::Key << "colorspaces";
                 out << YAML::Value << YAML::BeginSeq;
-                for(unsigned i = 0; i < c->getNumColorSpaces(); ++i)
+                for(int i = 0; i < c->getNumColorSpaces(); ++i)
                 {
                     const char* name = c->getColorSpaceNameByIndex(i);
                     save(out, c->getColorSpace(name));

@@ -16,7 +16,7 @@ dependent manner.
 
 Example Configs:
 
-* ACES (Acacdemy's standard color workflow)
+* ACES (Academy's standard color workflow)
 * spi-vfx (Used on some Imageworks VFX shows such as spiderman, etc).
 * and others
 
@@ -151,7 +151,7 @@ on the transforms to do pixel processing themselves.
 Consider that the FileTransform represents a wide-range of image processing
 operations (basically all of em), many of which are really complex.  For example,
 the houdini lut format in a single file may contain a log convert, a 1d lut, and
-then a 3d lut; all of which need to be applied in a row!  If we dont want the
+then a 3d lut; all of which need to be applied in a row!  If we don't want the
 FileTransform to know how to process all possible pixel operations, it's much
 simpler to make light-weight processing operations, which the transforms can
 create to do the dirty work as needed.
@@ -263,7 +263,7 @@ GPU CODE PATH
 
 
 #. Between the first an the second lists (gpu-preops, and gpu-latticeops), we
-anaylze the op-stream metadata and determine the appropriate allocation to use.
+analyze the op-stream metadata and determine the appropriate allocation to use.
 (to minimize clamping, quantization, etc). This is accounted for here by
 interserting a forward allocation to the end of the pre-ops, and the inverse
 allocation to the start of the lattice ops.

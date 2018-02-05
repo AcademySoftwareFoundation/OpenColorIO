@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "lcms2.h"
 
 
-HINSTANCE hDllInstance = NULL;
+static HINSTANCE hDllInstance = NULL;
 
 static void AppendString(char *text, int &length, const char *str, int len = -1)
 {
@@ -93,7 +93,7 @@ static void MakeFilterText(char *filter_text,
 
     for(ExtensionMap::const_iterator i = extensions.begin(); i != extensions.end(); i++)
     {
-		std::string extension = i->first;
+        std::string extension = i->first;
         std::string format = i->second;
 
         std::string format_part = format + " (*." + extension + ")";
@@ -133,7 +133,7 @@ bool OpenFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
     const char *my_lpstrTitle = "Import OCIO";
     const char *my_lpstrDefExt = "ocio";
 
-    char my_lpstrFilter[512];
+    char my_lpstrFilter[1024];
     MakeFilterText(my_lpstrFilter, extensions, true);
 
 
@@ -173,7 +173,7 @@ bool SaveFile(char *path, int buf_len, const ExtensionMap &extensions, const voi
     const char *my_lpstrTitle = "Export OCIO";
     const char *my_lpstrDefExt = "icc";
 
-    char my_lpstrFilter[256];
+    char my_lpstrFilter[512];
     MakeFilterText(my_lpstrFilter, extensions, false);
 
 
@@ -461,6 +461,176 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 }
 
 
+static void
+tokenize(std::vector<std::string> &tokens, 
+         const std::string& str, 
+         std::string delimiters)
+{
+    std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+    std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
+
+    while (pos != std::string::npos || lastPos != std::string::npos)
+    {
+        tokens.push_back(str.substr(lastPos, pos - lastPos));
+        lastPos = str.find_first_not_of(delimiters, pos);
+        pos = str.find_first_of(delimiters, lastPos);
+    }
+}
+
+
+bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace, bool selectRoles, const void *hwnd)
+{
+    HMENU menu = CreatePopupMenu();
+
+    for(int i=0; i < config->getNumColorSpaces(); ++i)
+    {
+        const char *colorSpaceName = config->getColorSpaceNameByIndex(i);
+        
+        OCIO::ConstColorSpaceRcPtr colorSpacePtr = config->getColorSpace(colorSpaceName);
+        
+        const char *family = colorSpacePtr->getFamily();
+        
+        
+        std::string colorSpacePath;
+        
+        if(family == NULL)
+        {
+            colorSpacePath = colorSpaceName;
+        }
+        else
+        {
+            colorSpacePath = std::string(family) + "/" + colorSpaceName;
+        }
+        
+        
+        std::vector<std::string> pathComponents;
+
+        tokenize(pathComponents, colorSpacePath, "/");
+
+
+        
+        HMENU currentMenu = menu;
+        
+        for(int j=0; j < pathComponents.size(); j++)
+        {
+            const std::string &componentName = pathComponents[j];
+            
+            if(j == (pathComponents.size() - 1))
+            {
+                UINT flags = MF_STRING;
+
+                if(componentName == colorSpace)
+                    flags |= MF_CHECKED;
+
+                const BOOL inserted = AppendMenu(currentMenu, flags, i + 1, componentName.c_str());
+
+                assert(inserted);
+            }
+            else
+            {
+                int componentMenuPos = -1;
+
+                for(int k=0; k < GetMenuItemCount(currentMenu) && componentMenuPos < 0; k++)
+                {
+                    CHAR buf[256];
+
+                    const int strLen = GetMenuString(currentMenu, k, buf, 255, MF_BYPOSITION);
+
+                    assert(strLen > 0);
+
+                    if(componentName == buf)
+                        componentMenuPos = k;
+                }
+
+                if(componentMenuPos < 0)
+                {
+                    HMENU subMenu = CreateMenu();
+                    
+                    const BOOL inserted = AppendMenu(currentMenu, MF_STRING | MF_POPUP, (UINT_PTR)subMenu, componentName.c_str());
+
+                    assert(inserted);
+
+                    componentMenuPos = (GetMenuItemCount(currentMenu) - 1);
+                }
+                
+                currentMenu = GetSubMenu(currentMenu, componentMenuPos);
+            }
+        }
+    }
+    
+    
+    if(config->getNumRoles() > 0)
+    {
+        HMENU rolesMenu = CreatePopupMenu();
+
+        const BOOL rolesInserted = InsertMenu(menu, 0, MF_STRING | MF_BYPOSITION | MF_POPUP, (UINT_PTR)rolesMenu, "Roles");
+
+        assert(rolesInserted);
+        
+        for(int i=0; i < config->getNumRoles(); i++)
+        {
+            const std::string roleName = config->getRoleName(i);
+            
+            OCIO::ConstColorSpaceRcPtr colorSpacePtr = config->getColorSpace(roleName.c_str());
+            
+            const std::string colorSpaceName = colorSpacePtr->getName();
+            
+            int colorSpaceIndex = -1;
+
+            for(int k=0; k < config->getNumColorSpaces() && colorSpaceIndex < 0; k++)
+            {
+                const std::string colorSpaceName2 = config->getColorSpaceNameByIndex(k);
+
+                if(colorSpaceName2 == colorSpaceName)
+                    colorSpaceIndex = k;
+            }
+
+            HMENU roleSubmenu = CreatePopupMenu();
+            
+            UINT roleFlags = MF_STRING | MF_POPUP;
+
+            if(selectRoles && roleName == colorSpace)
+                roleFlags |= MF_CHECKED;
+
+            const BOOL roleInserted = AppendMenu(rolesMenu, roleFlags, (UINT_PTR)roleSubmenu, roleName.c_str());
+
+            assert(roleInserted);
+            
+            UINT colorSpaceFlags = MF_STRING;
+
+            if(colorSpaceName == colorSpace)
+                colorSpaceFlags |= MF_CHECKED;
+
+            const BOOL colorSpaceInsterted = AppendMenu(roleSubmenu, colorSpaceFlags, colorSpaceIndex + 1, colorSpaceName.c_str());
+
+            assert(colorSpaceInsterted);
+        }
+        
+        const BOOL dividerInserted = InsertMenu(menu, 1, MF_STRING | MF_BYPOSITION | MF_SEPARATOR, 0, "Sep");
+
+        assert(dividerInserted);
+    }
+
+    POINT pos;
+    GetCursorPos(&pos);
+
+    int result = TrackPopupMenuEx(menu,
+                        (TPM_NONOTIFY | TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD),
+                        pos.x, pos.y, (HWND)hwnd, NULL);
+
+    DestroyMenu(menu);
+
+    if(result > 0)
+    {
+        colorSpace = config->getColorSpaceNameByIndex(result - 1);
+
+        return true;
+    }
+    else
+        return false;
+}
+
+
 void GetStdConfigs(ConfigVec &configs)
 {
     char appdata_path[MAX_PATH];
@@ -554,7 +724,12 @@ void ErrorMessage(const char *message , const void *hwnd)
     MessageBox((HWND)hwnd, message, "OpenColorIO", MB_OK);
 }
 
-
+#ifdef SUPPLY_HINSTANCE
+void SetHInstance(void *hInstance)
+{
+    hDllInstance = (HINSTANCE)hInstance;
+}
+#else
 BOOL WINAPI DllMain(HANDLE hInstance, DWORD fdwReason, LPVOID lpReserved)
 {
     if (fdwReason == DLL_PROCESS_ATTACH)
@@ -562,3 +737,4 @@ BOOL WINAPI DllMain(HANDLE hInstance, DWORD fdwReason, LPVOID lpReserved)
 
     return TRUE;
 }
+#endif

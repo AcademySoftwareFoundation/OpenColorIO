@@ -202,7 +202,7 @@ std::string GetStdConfigPath(const std::string &name)
 
 int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
 {
-    NSMutableArray *item_array = [[NSMutableArray alloc] init];
+    NSMutableArray *item_array = [NSMutableArray array];
     
     for(MenuVec::const_iterator i = menu_items.begin(); i != menu_items.end(); i++)
     {
@@ -218,9 +218,145 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
     NSInteger item = [menu selectedItem];
     
     [menu release];
-    [item_array release];
     
     return item;
+}
+
+
+bool ColorSpacePopUpMenu(OCIO::ConstConfigRcPtr config, std::string &colorSpace, bool selectRoles, const void *hwnd)
+{
+    NSMenu *menu = [[[NSMenu alloc] initWithTitle:@"ColorSpace Pop-Up"] autorelease];
+    
+    [menu setAutoenablesItems:NO];
+    
+    
+    for(int i=0; i < config->getNumColorSpaces(); ++i)
+    {
+        const char *colorSpaceName = config->getColorSpaceNameByIndex(i);
+        
+        OCIO::ConstColorSpaceRcPtr colorSpacePtr = config->getColorSpace(colorSpaceName);
+        
+        const char *family = colorSpacePtr->getFamily();
+        
+        
+        NSString *colorSpacePath = nil;
+        
+        if(family == NULL)
+        {
+            colorSpacePath = [NSString stringWithUTF8String:colorSpaceName];
+        }
+        else
+        {
+            colorSpacePath = [NSString stringWithFormat:@"%s/%s", family, colorSpaceName];
+        }
+        
+        
+        NSArray *pathComponents = [colorSpacePath pathComponents];
+        
+        NSMenu *currentMenu = menu;
+        
+        for(int j=0; j < [pathComponents count]; j++)
+        {
+            NSString *componentName = [pathComponents objectAtIndex:j];
+            
+            if(j == ([pathComponents count] - 1))
+            {
+                NSMenuItem *newItem = [currentMenu addItemWithTitle:componentName action:@selector(textMenuItemAction:) keyEquivalent:@""];
+                
+                if(colorSpace == [componentName UTF8String])
+                {
+                    [newItem setState:NSOnState];
+                }
+            }
+            else
+            {
+                NSMenuItem *componentItem = [currentMenu itemWithTitle:componentName];
+                
+                if(componentItem == nil)
+                {
+                    componentItem = [currentMenu addItemWithTitle:componentName action:NULL keyEquivalent:@""];
+                    
+                    NSMenu *subMenu = [[[NSMenu alloc] initWithTitle:componentName] autorelease];
+                    
+                    [subMenu setAutoenablesItems:NO];
+                    
+                    [componentItem setSubmenu:subMenu];
+                }
+                
+                currentMenu = [componentItem submenu];
+            }
+        }
+    }
+    
+    
+    if(config->getNumRoles() > 0)
+    {
+        NSMenuItem *rolesItem = [menu insertItemWithTitle:@"Roles" action:NULL keyEquivalent:@"" atIndex:0];
+        
+        NSMenu *rolesMenu = [[[NSMenu alloc] initWithTitle:@"Roles"] autorelease];
+        
+        [rolesMenu setAutoenablesItems:NO];
+        
+        [rolesItem setSubmenu:rolesMenu];
+        
+        for(int i=0; i < config->getNumRoles(); i++)
+        {
+            NSString *roleName = [NSString stringWithUTF8String:config->getRoleName(i)];
+            
+            OCIO::ConstColorSpaceRcPtr colorSpacePtr = config->getColorSpace([roleName UTF8String]);
+            
+            NSString *colorSpaceName = [NSString stringWithUTF8String:colorSpacePtr->getName()];
+            
+            SEL selector = (selectRoles ? @selector(textMenuItemAction:) : NULL);
+            
+            NSMenuItem *roleItem = [rolesMenu addItemWithTitle:roleName action:selector keyEquivalent:@""];
+            
+            if(colorSpace == [roleName UTF8String])
+            {
+                [roleItem setState:NSOnState];
+            }
+            
+            NSMenu *roleMenu = [[[NSMenu alloc] initWithTitle:roleName] autorelease];
+            
+            [roleMenu setAutoenablesItems:NO];
+            
+            [roleItem setSubmenu:roleMenu];
+            
+            NSMenuItem *roleColorSpaceItem = [roleMenu addItemWithTitle:colorSpaceName action:@selector(textMenuItemAction:) keyEquivalent:@""];
+            
+            if(colorSpace == [colorSpaceName UTF8String])
+            {
+                [roleColorSpaceItem setState:NSOnState];
+            }
+        }
+        
+        [menu insertItem:[NSMenuItem separatorItem] atIndex:1];
+    }
+    
+        
+    
+    OpenColorIO_AE_Menu *ocio_menu = [[OpenColorIO_AE_Menu alloc] initWithTextMenu:menu];
+    
+    [ocio_menu showTextMenu];
+    
+    
+    NSMenuItem *item = [ocio_menu selectedTextMenuItem];
+    
+    
+    bool selected = false;
+    
+    if(item != nil)
+    {
+        colorSpace = [[item title] UTF8String];
+        
+        selected = true;
+    }
+    
+    
+    [ocio_menu release];
+    
+    
+    return selected;
 }
 
 
