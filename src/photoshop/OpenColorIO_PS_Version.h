@@ -31,14 +31,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #define OpenColorIO_PS_Major_Version 1
-#define OpenColorIO_PS_Minor_Version 0
-#define OpenColorIO_PS_Version_String "1.0"
-#define OpenColorIO_PS_Beta_String "Beta 4"
+#define OpenColorIO_PS_Minor_Version 1
+#define OpenColorIO_PS_Version_String "1.1.0"
 #define OpenColorIO_PS_Build_Date __DATE__
-#define OpenColorIO_PS_Build_Date_Manual "13 February 2017"
-#define OpenColorIO_PS_Build_Complete_Manual "v1.0 Beta 4 - " OpenColorIO_PS_Build_Date
-#define OpenColorIO_PS_Copyright_Year "2017"
-#define OpenColorIO_PS_Build_Year "2017"
+#define OpenColorIO_PS_Build_Date_Manual "5 February 2018"
+#define OpenColorIO_PS_Build_Complete_Manual "v1.1.0 - " OpenColorIO_PS_Build_Date
+#define OpenColorIO_PS_Copyright_Year "2018"
+#define OpenColorIO_PS_Build_Year "2018"
 
 #define OpenColorIO_PS_Description "OpenColorIO"
 
