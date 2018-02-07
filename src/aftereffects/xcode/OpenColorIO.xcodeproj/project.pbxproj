@@ -14,6 +14,7 @@
 		2A7CACBF15536CD700F52C98 /* NoOps.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A7CACB915536CD700F52C98 /* NoOps.h */; };
 		2A7CACC015536CD700F52C98 /* OpOptimizers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A7CACBA15536CD700F52C98 /* OpOptimizers.cpp */; };
 		2A7F20D31E2F17D2003428D7 /* FileFormatCDL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2A7F20D21E2F17D2003428D7 /* FileFormatCDL.cpp */; };
+		2AA3F61E2028C82D004F36B7 /* Platform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2AA3F61D2028C82D004F36B7 /* Platform.cpp */; };
 		2ACB3D001CC074A200134356 /* Display.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACB3CFE1CC074A200134356 /* Display.cpp */; };
 		2ACB3D011CC074A200134356 /* Display.h in Headers */ = {isa = PBXBuildFile; fileRef = 2ACB3CFF1CC074A200134356 /* Display.h */; };
 		2ACF56CC14776A1E00991ED5 /* AllocationOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2ACF567614776A1E00991ED5 /* AllocationOp.cpp */; };
@@ -110,6 +111,7 @@
 		2A7CACB915536CD700F52C98 /* NoOps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NoOps.h; sourceTree = "<group>"; };
 		2A7CACBA15536CD700F52C98 /* OpOptimizers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OpOptimizers.cpp; sourceTree = "<group>"; };
 		2A7F20D21E2F17D2003428D7 /* FileFormatCDL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileFormatCDL.cpp; sourceTree = "<group>"; };
+		2AA3F61D2028C82D004F36B7 /* Platform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Platform.cpp; sourceTree = "<group>"; };
 		2ACB3CFE1CC074A200134356 /* Display.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Display.cpp; sourceTree = "<group>"; };
 		2ACB3CFF1CC074A200134356 /* Display.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Display.h; sourceTree = "<group>"; };
 		2ACF567114776A0A00991ED5 /* libOpenColorIO.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libOpenColorIO.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -231,6 +233,7 @@
 		2ACF567514776A1E00991ED5 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				2AA3F61D2028C82D004F36B7 /* Platform.cpp */,
 				2ACB3CFE1CC074A200134356 /* Display.cpp */,
 				2ACB3CFF1CC074A200134356 /* Display.h */,
 				2ACF567614776A1E00991ED5 /* AllocationOp.cpp */,
@@ -497,6 +500,7 @@
 				2A7CACC015536CD700F52C98 /* OpOptimizers.cpp in Sources */,
 				2ACB3D001CC074A200134356 /* Display.cpp in Sources */,
 				2A7F20D31E2F17D2003428D7 /* FileFormatCDL.cpp in Sources */,
+				2AA3F61E2028C82D004F36B7 /* Platform.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
