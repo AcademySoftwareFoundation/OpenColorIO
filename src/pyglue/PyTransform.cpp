@@ -183,11 +183,11 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_Transform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        void PyOCIO_Transform_delete(PyOCIO_Transform * self, PyObject * args);
+        void PyOCIO_Transform_delete(PyOCIO_Transform * self);
         PyObject * PyOCIO_Transform_str(PyObject * self);
-        PyObject * PyOCIO_Transform_isEditable(PyObject * self);
-        PyObject * PyOCIO_Transform_createEditableCopy(PyObject * self);
-        PyObject * PyOCIO_Transform_getDirection(PyObject * self);
+        PyObject * PyOCIO_Transform_isEditable(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Transform_createEditableCopy(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Transform_getDirection(PyObject * self, PyObject *);
         PyObject * PyOCIO_Transform_setDirection(PyObject * self,PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
@@ -226,7 +226,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_as_mapping
         0,                                          //tp_hash 
         0,                                          //tp_call
-        PyOCIO_Transform_str,                       //tp_str
+        (reprfunc)PyOCIO_Transform_str,             //tp_str
         0,                                          //tp_getattro
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
@@ -269,7 +269,7 @@ OCIO_NAMESPACE_ENTER
             return -1;
         }
         
-        void PyOCIO_Transform_delete(PyOCIO_Transform *self, PyObject * /*args*/)
+        void PyOCIO_Transform_delete(PyOCIO_Transform *self)
         {
             DeletePyObject<PyOCIO_Transform>(self);
         }
@@ -284,12 +284,12 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
 
-        PyObject * PyOCIO_Transform_isEditable(PyObject * self)
+        PyObject * PyOCIO_Transform_isEditable(PyObject * self, PyObject *)
         {
             return PyBool_FromLong(IsPyTransformEditable(self));
         }
         
-        PyObject * PyOCIO_Transform_createEditableCopy(PyObject * self)
+        PyObject * PyOCIO_Transform_createEditableCopy(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstTransformRcPtr transform = GetConstTransform(self, true);
@@ -303,7 +303,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Transform_getDirection(PyObject * self)
+        PyObject * PyOCIO_Transform_getDirection(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstTransformRcPtr transform = GetConstTransform(self, true);

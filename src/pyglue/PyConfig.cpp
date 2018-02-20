@@ -76,48 +76,48 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        PyObject * PyOCIO_Config_CreateFromEnv(PyObject * cls);
+        PyObject * PyOCIO_Config_CreateFromEnv(PyObject * cls, PyObject * args);
         PyObject * PyOCIO_Config_CreateFromFile(PyObject * cls, PyObject * args);
         PyObject * PyOCIO_Config_CreateFromStream(PyObject * cls, PyObject * args);
         int PyOCIO_Config_init(PyOCIO_Config * self, PyObject * args, PyObject * kwds);
-        void PyOCIO_Config_delete(PyOCIO_Config * self, PyObject * args);
+        void PyOCIO_Config_delete(PyOCIO_Config * self);
         PyObject * PyOCIO_Config_repr(PyObject * self);
-        PyObject * PyOCIO_Config_isEditable(PyObject * self);
-        PyObject * PyOCIO_Config_createEditableCopy(PyObject * self);
-        PyObject * PyOCIO_Config_sanityCheck(PyObject * self);
-        PyObject * PyOCIO_Config_getDescription(PyObject * self);
+        PyObject * PyOCIO_Config_isEditable(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Config_createEditableCopy(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Config_sanityCheck(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Config_getDescription(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_setDescription(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_serialize(PyObject * self);
+        PyObject * PyOCIO_Config_serialize(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_getCacheID(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getCurrentContext(PyObject * self);
+        PyObject * PyOCIO_Config_getCurrentContext(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_addEnvironmentVar(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getNumEnvironmentVars(PyObject * self);
+        PyObject * PyOCIO_Config_getNumEnvironmentVars(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_getEnvironmentVarNameByIndex(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getEnvironmentVarDefault(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getEnvironmentVarDefaults(PyObject * self);
-        PyObject * PyOCIO_Config_clearEnvironmentVars(PyObject * self);
-        PyObject * PyOCIO_Config_getSearchPath(PyObject * self);
+        PyObject * PyOCIO_Config_getEnvironmentVarDefaults(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Config_clearEnvironmentVars(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Config_getSearchPath(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_setSearchPath(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getWorkingDir(PyObject * self);
+        PyObject * PyOCIO_Config_getWorkingDir(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_setWorkingDir(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_Config_getNumColorSpaces(PyObject * self);
+        PyObject * PyOCIO_Config_getNumColorSpaces(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_getColorSpaceNameByIndex(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_Config_getColorSpaces(PyObject * self); // py interface only
+        PyObject * PyOCIO_Config_getColorSpaces(PyObject * self, PyObject *); // py interface only
         PyObject * PyOCIO_Config_getColorSpace(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getIndexForColorSpace(PyObject * self,  PyObject * args);
         PyObject * PyOCIO_Config_addColorSpace(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_clearColorSpaces(PyObject * self);
+        PyObject * PyOCIO_Config_clearColorSpaces(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_parseColorSpaceFromString(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_isStrictParsingEnabled(PyObject * self);
+        PyObject * PyOCIO_Config_isStrictParsingEnabled(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_setStrictParsingEnabled(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_setRole(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getNumRoles(PyObject * self);
+        PyObject * PyOCIO_Config_getNumRoles(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_hasRole(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getRoleName(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getDefaultDisplay(PyObject * self);
-        PyObject * PyOCIO_Config_getNumDisplays(PyObject * self);
+        PyObject * PyOCIO_Config_getDefaultDisplay(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Config_getNumDisplays(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_getDisplay(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getDisplays(PyObject * self);
+        PyObject * PyOCIO_Config_getDisplays(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_getDefaultView(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getNumViews(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getView(PyObject * self, PyObject * args);
@@ -125,23 +125,30 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Config_getDisplayColorSpaceName(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getDisplayLooks(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_addDisplay(PyObject * self, PyObject * args, PyObject * kwargs);
-        PyObject * PyOCIO_Config_clearDisplays(PyObject * self);
+        PyObject * PyOCIO_Config_clearDisplays(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_setActiveDisplays(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getActiveDisplays(PyObject * self);
+        PyObject * PyOCIO_Config_getActiveDisplays(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_setActiveViews(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getActiveViews(PyObject * self);
-        PyObject * PyOCIO_Config_getDefaultLumaCoefs(PyObject * self);
+        PyObject * PyOCIO_Config_getActiveViews(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Config_getDefaultLumaCoefs(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_setDefaultLumaCoefs(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Config_getLook( PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_getNumLooks(PyObject * self);
+        PyObject * PyOCIO_Config_getNumLooks(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_getLookNameByIndex(PyObject * self, PyObject * args);        
-        PyObject * PyOCIO_Config_getLooks(PyObject * self);
+        PyObject * PyOCIO_Config_getLooks(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_addLook(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Config_clearLooks(PyObject * self);
+        PyObject * PyOCIO_Config_clearLooks(PyObject * self, PyObject *);
         PyObject * PyOCIO_Config_getProcessor(PyObject * self, PyObject * args, PyObject * kwargs);
         
         ///////////////////////////////////////////////////////////////////////
         ///
+        
+        // disable cast-function-type warning on GCC 8+
+        // this is triggered by methods that take kwargs (METH_KEYWORDS)
+        #pragma GCC diagnostic push
+        #if __GNUC__ >= 8
+        #pragma GCC diagnostic ignored "-Wcast-function-type"
+        #endif
         
         PyMethodDef PyOCIO_Config_methods[] = {
             { "CreateFromEnv",
@@ -269,6 +276,8 @@ OCIO_NAMESPACE_ENTER
             { NULL, NULL, 0, NULL }
         };
         
+        #pragma GCC diagnostic pop
+        
     }
     
     ///////////////////////////////////////////////////////////////////////////
@@ -284,7 +293,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_getattr
         0,                                          //tp_setattr
         0,                                          //tp_compare
-        PyOCIO_Config_repr,                         //tp_repr
+        (reprfunc)PyOCIO_Config_repr,               //tp_repr
         0,                                          //tp_as_number
         0,                                          //tp_as_sequence
         0,                                          //tp_as_mapping
@@ -323,7 +332,7 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        PyObject * PyOCIO_Config_CreateFromEnv(PyObject * /*self*/)
+        PyObject * PyOCIO_Config_CreateFromEnv(PyObject *, PyObject * /*self*, *args*/)
         {
             OCIO_PYTRY_ENTER()
             return BuildConstPyConfig(Config::CreateFromEnv());
@@ -357,7 +366,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        void PyOCIO_Config_delete(PyOCIO_Config *self, PyObject * /*args*/)
+        void PyOCIO_Config_delete(PyOCIO_Config *self)
         {
             DeletePyObject<PyOCIO_Config>(self);
         }
@@ -372,12 +381,12 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
 
-        PyObject * PyOCIO_Config_isEditable(PyObject * self)
+        PyObject * PyOCIO_Config_isEditable(PyObject * self, PyObject *)
         {
             return PyBool_FromLong(IsPyConfigEditable(self));
         }
         
-        PyObject * PyOCIO_Config_createEditableCopy(PyObject * self)
+        PyObject * PyOCIO_Config_createEditableCopy(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -386,7 +395,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_sanityCheck(PyObject * self)
+        PyObject * PyOCIO_Config_sanityCheck(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -395,7 +404,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getDescription(PyObject * self)
+        PyObject * PyOCIO_Config_getDescription(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -415,7 +424,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_serialize(PyObject * self)
+        PyObject * PyOCIO_Config_serialize(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -439,7 +448,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getCurrentContext(PyObject * self)
+        PyObject * PyOCIO_Config_getCurrentContext(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -460,7 +469,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getNumEnvironmentVars(PyObject * self)
+        PyObject * PyOCIO_Config_getNumEnvironmentVars(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -491,7 +500,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getEnvironmentVarDefaults(PyObject * self)
+        PyObject * PyOCIO_Config_getEnvironmentVarDefaults(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             std::map<std::string, std::string> data;
@@ -505,7 +514,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_clearEnvironmentVars(PyObject * self)
+        PyObject * PyOCIO_Config_clearEnvironmentVars(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConfigRcPtr config = GetEditableConfig(self);
@@ -514,7 +523,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getSearchPath(PyObject * self)
+        PyObject * PyOCIO_Config_getSearchPath(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -534,7 +543,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getWorkingDir(PyObject * self)
+        PyObject * PyOCIO_Config_getWorkingDir(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -554,7 +563,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getNumColorSpaces(PyObject * self)
+        PyObject * PyOCIO_Config_getNumColorSpaces(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -573,7 +582,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getColorSpaces(PyObject * self)
+        PyObject * PyOCIO_Config_getColorSpaces(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -624,7 +633,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_clearColorSpaces(PyObject * self)
+        PyObject * PyOCIO_Config_clearColorSpaces(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConfigRcPtr config = GetEditableConfig(self);
@@ -646,7 +655,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_isStrictParsingEnabled(PyObject * self)
+        PyObject * PyOCIO_Config_isStrictParsingEnabled(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -679,7 +688,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getNumRoles(PyObject * self)
+        PyObject * PyOCIO_Config_getNumRoles(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -709,7 +718,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getDefaultDisplay(PyObject * self)
+        PyObject * PyOCIO_Config_getDefaultDisplay(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -717,7 +726,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getNumDisplays(PyObject * self)
+        PyObject * PyOCIO_Config_getNumDisplays(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -736,7 +745,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getDisplays(PyObject * self)
+        PyObject * PyOCIO_Config_getDisplays(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -841,7 +850,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_clearDisplays(PyObject * self)
+        PyObject * PyOCIO_Config_clearDisplays(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConfigRcPtr config = GetEditableConfig(self);
@@ -862,7 +871,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getActiveDisplays(PyObject * self)
+        PyObject * PyOCIO_Config_getActiveDisplays(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -882,7 +891,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getActiveViews(PyObject * self)
+        PyObject * PyOCIO_Config_getActiveViews(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -908,7 +917,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getDefaultLumaCoefs(PyObject * self)
+        PyObject * PyOCIO_Config_getDefaultLumaCoefs(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -929,7 +938,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getNumLooks(PyObject * self)
+        PyObject * PyOCIO_Config_getNumLooks(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -948,7 +957,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_getLooks(PyObject * self)
+        PyObject * PyOCIO_Config_getLooks(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstConfigRcPtr config = GetConstConfig(self, true);
@@ -977,7 +986,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Config_clearLooks(PyObject * self)
+        PyObject * PyOCIO_Config_clearLooks(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConfigRcPtr config = GetEditableConfig(self);

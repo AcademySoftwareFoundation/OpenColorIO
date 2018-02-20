@@ -50,23 +50,23 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_DisplayTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName(PyObject * self, PyObject *);
         PyObject * PyOCIO_DisplayTransform_setInputColorSpaceName(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_DisplayTransform_getLinearCC(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_getLinearCC(PyObject * self, PyObject *);
         PyObject * PyOCIO_DisplayTransform_setLinearCC(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_DisplayTransform_getColorTimingCC(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_getColorTimingCC(PyObject * self, PyObject *);
         PyObject * PyOCIO_DisplayTransform_setColorTimingCC(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_DisplayTransform_getChannelView(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_getChannelView(PyObject * self, PyObject *);
         PyObject * PyOCIO_DisplayTransform_setChannelView(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_DisplayTransform_getDisplay(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_getDisplay(PyObject * self, PyObject *);
         PyObject * PyOCIO_DisplayTransform_setDisplay(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_DisplayTransform_getView(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_getView(PyObject * self, PyObject *);
         PyObject * PyOCIO_DisplayTransform_setView(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_DisplayTransform_getDisplayCC(PyObject * self);
+        PyObject * PyOCIO_DisplayTransform_getDisplayCC(PyObject * self, PyObject *);
         PyObject * PyOCIO_DisplayTransform_setDisplayCC(PyObject * self, PyObject * args );
-        PyObject * PyOCIO_DisplayTransform_getLooksOverride(PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_getLooksOverride(PyObject * self, PyObject * args );
         PyObject * PyOCIO_DisplayTransform_setLooksOverride(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled(PyObject * self );
+        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled(PyObject * self, PyObject * args );
         PyObject * PyOCIO_DisplayTransform_setLooksOverrideEnabled(PyObject * self,  PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
@@ -187,7 +187,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName(PyObject * self)
+        PyObject * PyOCIO_DisplayTransform_getInputColorSpaceName(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
@@ -207,7 +207,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getLinearCC(PyObject * self)
+        PyObject * PyOCIO_DisplayTransform_getLinearCC(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
@@ -228,7 +228,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getColorTimingCC(PyObject * self)
+        PyObject * PyOCIO_DisplayTransform_getColorTimingCC(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
@@ -249,7 +249,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getChannelView(PyObject * self)
+        PyObject * PyOCIO_DisplayTransform_getChannelView(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
@@ -270,7 +270,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getDisplay(PyObject * self)
+        PyObject * PyOCIO_DisplayTransform_getDisplay(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
@@ -290,7 +290,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getView(PyObject * self)
+        PyObject * PyOCIO_DisplayTransform_getView(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
@@ -310,7 +310,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getDisplayCC(PyObject * self)
+        PyObject * PyOCIO_DisplayTransform_getDisplayCC(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
@@ -331,7 +331,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getLooksOverride(PyObject * self)
+        PyObject * PyOCIO_DisplayTransform_getLooksOverride(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);
@@ -351,7 +351,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled(PyObject * self)
+        PyObject * PyOCIO_DisplayTransform_getLooksOverrideEnabled(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstDisplayTransformRcPtr transform = GetConstDisplayTransform(self);

@@ -53,10 +53,10 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_AllocationTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_AllocationTransform_getAllocation(PyObject * self);
+        PyObject * PyOCIO_AllocationTransform_getAllocation(PyObject * self,  PyObject *);
         PyObject * PyOCIO_AllocationTransform_setAllocation(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_AllocationTransform_getNumVars(PyObject * self);
-        PyObject * PyOCIO_AllocationTransform_getVars(PyObject * self);
+        PyObject * PyOCIO_AllocationTransform_getNumVars(PyObject * self,  PyObject *);
+        PyObject * PyOCIO_AllocationTransform_getVars(PyObject * self,  PyObject *);
         PyObject * PyOCIO_AllocationTransform_setVars(PyObject * self,  PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ OCIO_NAMESPACE_ENTER
             { "setAllocation",
             PyOCIO_AllocationTransform_setAllocation, METH_VARARGS, ALLOCATIONTRANSFORM_SETALLOCATION__DOC__ },
             { "getNumVars",
-            (PyCFunction) PyOCIO_AllocationTransform_getNumVars, METH_VARARGS, ALLOCATIONTRANSFORM_GETNUMVARS__DOC__ },
+            (PyCFunction) PyOCIO_AllocationTransform_getNumVars, METH_NOARGS, ALLOCATIONTRANSFORM_GETNUMVARS__DOC__ },
             { "getVars",
             (PyCFunction) PyOCIO_AllocationTransform_getVars, METH_NOARGS, ALLOCATIONTRANSFORM_GETVARS__DOC__ },
             { "setVars",
@@ -160,7 +160,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        PyObject * PyOCIO_AllocationTransform_getAllocation(PyObject * self)
+        PyObject * PyOCIO_AllocationTransform_getAllocation(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self);
@@ -180,7 +180,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_AllocationTransform_getNumVars(PyObject * self)
+        PyObject * PyOCIO_AllocationTransform_getNumVars(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self);
@@ -188,7 +188,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_AllocationTransform_getVars(PyObject * self)
+        PyObject * PyOCIO_AllocationTransform_getVars(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstAllocationTransformRcPtr transform = GetConstAllocationTransform(self);

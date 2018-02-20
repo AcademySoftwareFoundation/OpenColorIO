@@ -50,7 +50,7 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_LogTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_LogTransform_getBase(PyObject * self);
+        PyObject * PyOCIO_LogTransform_getBase(PyObject * self, PyObject *);
         PyObject * PyOCIO_LogTransform_setBase(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
@@ -137,7 +137,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        PyObject * PyOCIO_LogTransform_getBase(PyObject * self)
+        PyObject * PyOCIO_LogTransform_getBase(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLogTransformRcPtr transform = GetConstLogTransform(self);

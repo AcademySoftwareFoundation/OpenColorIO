@@ -60,31 +60,31 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_Baker_init(PyOCIO_Baker * self, PyObject * args, PyObject * kwds);
-        void PyOCIO_Baker_delete(PyOCIO_Baker * self, PyObject * args);
-        PyObject * PyOCIO_Baker_isEditable(PyObject * self);
-        PyObject * PyOCIO_Baker_createEditableCopy(PyObject * self);
+        void PyOCIO_Baker_delete(PyOCIO_Baker * self);
+        PyObject * PyOCIO_Baker_isEditable(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Baker_createEditableCopy(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setConfig(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getConfig(PyObject * self);
+        PyObject * PyOCIO_Baker_getConfig(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setFormat(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Baker_getFormat(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Baker_setType(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getType(PyObject * self);
+        PyObject * PyOCIO_Baker_getType(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setMetadata(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getMetadata(PyObject * self);
+        PyObject * PyOCIO_Baker_getMetadata(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setInputSpace(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getInputSpace(PyObject * self);
+        PyObject * PyOCIO_Baker_getInputSpace(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setShaperSpace(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getShaperSpace(PyObject * self);
+        PyObject * PyOCIO_Baker_getShaperSpace(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setLooks(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getLooks(PyObject * self);
+        PyObject * PyOCIO_Baker_getLooks(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setTargetSpace(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getTargetSpace(PyObject * self);
+        PyObject * PyOCIO_Baker_getTargetSpace(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setShaperSize(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getShaperSize(PyObject * self);
+        PyObject * PyOCIO_Baker_getShaperSize(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_setCubeSize(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Baker_getCubeSize(PyObject * self);
-        PyObject * PyOCIO_Baker_bake(PyObject * self);
-        PyObject * PyOCIO_Baker_getNumFormats(PyObject * self);
+        PyObject * PyOCIO_Baker_getCubeSize(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Baker_bake(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Baker_getNumFormats(PyObject * self, PyObject *);
         PyObject * PyOCIO_Baker_getFormatNameByIndex(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Baker_getFormatExtensionByIndex(PyObject * self, PyObject * args);
         
@@ -208,17 +208,17 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        void PyOCIO_Baker_delete(PyOCIO_Baker *self, PyObject * /*args*/)
+        void PyOCIO_Baker_delete(PyOCIO_Baker *self)
         {
             DeletePyObject<PyOCIO_Baker>(self);
         }
         
-        PyObject * PyOCIO_Baker_isEditable(PyObject * self)
+        PyObject * PyOCIO_Baker_isEditable(PyObject * self, PyObject *)
         {
             return PyBool_FromLong(IsPyConfigEditable(self));
         }
         
-        PyObject * PyOCIO_Baker_createEditableCopy(PyObject * self)
+        PyObject * PyOCIO_Baker_createEditableCopy(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -240,7 +240,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getConfig(PyObject * self)
+        PyObject * PyOCIO_Baker_getConfig(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -280,7 +280,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getType(PyObject * self)
+        PyObject * PyOCIO_Baker_getType(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -300,7 +300,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getMetadata(PyObject * self)
+        PyObject * PyOCIO_Baker_getMetadata(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -320,7 +320,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getInputSpace(PyObject * self)
+        PyObject * PyOCIO_Baker_getInputSpace(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -340,7 +340,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getShaperSpace(PyObject * self)
+        PyObject * PyOCIO_Baker_getShaperSpace(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -360,7 +360,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getLooks(PyObject * self)
+        PyObject * PyOCIO_Baker_getLooks(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -380,7 +380,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getTargetSpace(PyObject * self)
+        PyObject * PyOCIO_Baker_getTargetSpace(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -400,7 +400,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getShaperSize(PyObject * self)
+        PyObject * PyOCIO_Baker_getShaperSize(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -420,7 +420,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getCubeSize(PyObject * self)
+        PyObject * PyOCIO_Baker_getCubeSize(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -428,7 +428,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_bake(PyObject * self)
+        PyObject * PyOCIO_Baker_bake(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
@@ -438,7 +438,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Baker_getNumFormats(PyObject * self)
+        PyObject * PyOCIO_Baker_getNumFormats(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstBakerRcPtr baker = GetConstBaker(self);
