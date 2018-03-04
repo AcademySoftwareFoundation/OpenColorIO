@@ -1,8 +1,0 @@
-diff -Naur yaml-cpp-0.5.1.orig/CMakeLists.txt yaml-cpp-0.5.1/CMakeLists.txt
---- yaml-cpp-0.5.1.orig/CMakeLists.txt	2014-01-30 09:45:54.000000000 +0000
-+++ yaml-cpp-0.5.1/CMakeLists.txt	2014-01-30 09:51:04.000000000 +0000
-@@ -238,1 +238,3 @@
--set(YAML_COMPILE_FLAGS "-fPIC -fvisibility=hidden")
-+if(UNIX)
-+    set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fPIC -fvisibility=hidden")
-+endif()

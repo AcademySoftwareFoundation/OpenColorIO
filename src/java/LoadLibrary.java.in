@@ -35,6 +35,6 @@ public class LoadLibrary
     public long m_impl = 0;
     static
     {
-        System.loadLibrary("OpenColorIO-JNI.@OCIO_VERSION@");
+        System.loadLibrary("OpenColorIO-JNI.@OpenColorIO_VERSION@");
     }
 }

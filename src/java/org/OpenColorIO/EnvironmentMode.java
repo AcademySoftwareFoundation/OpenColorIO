@@ -26,21 +26,19 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef INCLUDED_OCIO_UNITTEST_H
-#define INCLUDED_OCIO_UNITTEST_H
+package org.OpenColorIO;
+import org.OpenColorIO.*;
 
-#ifdef OCIO_UNIT_TEST
-
-#ifndef WIN32
-#pragma GCC visibility push(default)
-#endif
-
-#include <unittest.h> // OIIO unit tests header
-
-#ifndef WIN32
-#pragma GCC visibility pop
-#endif
-
-#endif // OCIO_UNIT_TEST
-
-#endif // INCLUDED_OCIO_UNITTEST_H
+public class EnvironmentMode extends LoadLibrary
+{
+    private final int m_enum;
+    protected EnvironmentMode(int type) { super(); m_enum = type; }
+    public native String toString();
+    public native boolean equals(Object obj);
+    public static final EnvironmentMode
+        ENV_ENVIRONMENT_UNKNOWN = new EnvironmentMode(0);
+    public static final EnvironmentMode
+        ENV_ENVIRONMENT_LOAD_PREDEFINED = new EnvironmentMode(1);
+    public static final EnvironmentMode
+        ENV_ENVIRONMENT_LOAD_ALL = new EnvironmentMode(2);
+}
