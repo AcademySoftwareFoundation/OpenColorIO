@@ -851,9 +851,9 @@ static BOOL CALLBACK DialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARA
 				char *envFile = std::getenv("OCIO");
 
 				const DWORD envType = (envFile == NULL ? CONFIG_SEPERATOR : CONFIG_ENVIRONMENT);
-				const bool envSelected = (envFile == NULL != NULL && g_source == SOURCE_ENVIRONMENT);
-
-				ADD_MENU_ITEM(DLOG_Configuration_Menu, index, "$OCIO", CONFIG_ENVIRONMENT, envSelected);
+				const bool envSelected = (envFile != NULL && g_source == SOURCE_ENVIRONMENT);
+				
+				ADD_MENU_ITEM(DLOG_Configuration_Menu, index, "$OCIO", envType, envSelected);
 				index++;
 
 				ADD_MENU_ITEM(DLOG_Configuration_Menu, index, "-", CONFIG_SEPERATOR, FALSE);
