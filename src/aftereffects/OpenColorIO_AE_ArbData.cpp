@@ -70,9 +70,16 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
             
             
             // set default with environment variable if it's set
-            char *file = std::getenv("OCIO");
+		#ifdef MAC_ENV
+			char *file = std::getenv("OCIO");
+			const bool gotOCIO = (file != NULL);
+		#else
+			char file[32767] = { '\0' };
+			const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
+			const bool gotOCIO = (envResult > 0);
+		#endif
             
-            if(file)
+            if(gotOCIO)
             {
                 try
                 {

@@ -417,9 +417,11 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
             }
             else if(label == "$OCIO")
             {
-                char *file = std::getenv("OCIO");
+				char envFile[32767] = { '\0' };
+				const DWORD envResult = GetEnvironmentVariable("OCIO", envFile, 32767);
+				const bool gotOCIO = (envResult > 0);
 
-                if(file == NULL)
+                if(gotOCIO)
                     flags |= MF_GRAYED;
             }
             else if(label == "(nada)")

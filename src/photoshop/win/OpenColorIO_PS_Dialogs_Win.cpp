@@ -312,94 +312,95 @@ static void TrackActionRadios(HWND hwndDlg, bool readFromControl)
 	}
    
     
-    assert(g_context != NULL);
-    
-    const int inputLabel = DLOG_Menu1_Label;
-	const int inputMenu = DLOG_Menu1_Menu;
+    if(g_context != NULL)
+	{
+		const int inputLabel = DLOG_Menu1_Label;
+		const int inputMenu = DLOG_Menu1_Menu;
 
-	SET_LABEL_STRING(inputLabel, "Input Space:");
-    
-	REMOVE_ALL_MENU_ITEMS(inputMenu);
-    
-    const SpaceVec &colorSpaces = g_context->getColorSpaces();
-    
-	int index = 0;
+		SET_LABEL_STRING(inputLabel, "Input Space:");
+	    
+		REMOVE_ALL_MENU_ITEMS(inputMenu);
+	    
+		const SpaceVec &colorSpaces = g_context->getColorSpaces();
+	    
+		int index = 0;
 
-    for(SpaceVec::const_iterator i = colorSpaces.begin(); i != colorSpaces.end(); ++i)
-    {
-		ADD_MENU_ITEM(inputMenu, index, i->c_str(), index, (g_inputSpace == *i));
-		index++;
-    }
-    
-	SHOW_ITEM(DLOG_Menu1_Button, TRUE);
-    
-    
-    if(g_action == ACTION_DISPLAY)
-    {
-        const int deviceLabel = DLOG_Menu2_Label;
-        const int deviceMenu = DLOG_Menu2_Menu;
-        
-        const int transformLabel = DLOG_Menu3_Label;
-        const int transformMenu = DLOG_Menu3_Menu;
-        
-		SET_LABEL_STRING(deviceLabel, "Device:");
-		SHOW_ITEM(deviceLabel, TRUE);
-
-		SHOW_ITEM(deviceMenu, TRUE);
-        
-		REMOVE_ALL_MENU_ITEMS(deviceMenu);
-        
-        const SpaceVec &devices = g_context->getDevices();
-        
-		index = 0;
-
-        for(SpaceVec::const_iterator i = devices.begin(); i != devices.end(); ++i)
-        {
-			ADD_MENU_ITEM(deviceMenu, index, i->c_str(), index, (g_device == *i));
+		for(SpaceVec::const_iterator i = colorSpaces.begin(); i != colorSpaces.end(); ++i)
+		{
+			ADD_MENU_ITEM(inputMenu, index, i->c_str(), index, (g_inputSpace == *i));
 			index++;
-        }
-        
-        SHOW_ITEM(DLOG_Menu2_Button, FALSE);
-                
-        
-		SET_LABEL_STRING(transformLabel, "Transform:");
-		SHOW_ITEM(transformLabel, TRUE);
+		}
+	    
+		SHOW_ITEM(DLOG_Menu1_Button, TRUE);
+	    
+	    
+		if(g_action == ACTION_DISPLAY)
+		{
+			const int deviceLabel = DLOG_Menu2_Label;
+			const int deviceMenu = DLOG_Menu2_Menu;
+	        
+			const int transformLabel = DLOG_Menu3_Label;
+			const int transformMenu = DLOG_Menu3_Menu;
+	        
+			SET_LABEL_STRING(deviceLabel, "Device:");
+			SHOW_ITEM(deviceLabel, TRUE);
 
-		SHOW_ITEM(transformMenu, TRUE);
-        
-		REMOVE_ALL_MENU_ITEMS(transformMenu);
-        
+			SHOW_ITEM(deviceMenu, TRUE);
+	        
+			REMOVE_ALL_MENU_ITEMS(deviceMenu);
+	        
+			const SpaceVec &devices = g_context->getDevices();
+	        
+			index = 0;
 
-        TrackMenu2(hwndDlg, false);
-    }
-    else
-    {
-        assert(g_action == ACTION_CONVERT);
-        
-        const int outputLabel = DLOG_Menu2_Label;
-        const int outputMenu = DLOG_Menu2_Menu;
-        
-		SET_LABEL_STRING(outputLabel, "Output Space:");
-		SHOW_ITEM(outputLabel, TRUE);
+			for(SpaceVec::const_iterator i = devices.begin(); i != devices.end(); ++i)
+			{
+				ADD_MENU_ITEM(deviceMenu, index, i->c_str(), index, (g_device == *i));
+				index++;
+			}
+	        
+			SHOW_ITEM(DLOG_Menu2_Button, FALSE);
+	                
+	        
+			SET_LABEL_STRING(transformLabel, "Transform:");
+			SHOW_ITEM(transformLabel, TRUE);
 
-		SHOW_ITEM(outputMenu, TRUE);
-        
-		REMOVE_ALL_MENU_ITEMS(outputMenu);
-        
-		index = 0;
+			SHOW_ITEM(transformMenu, TRUE);
+	        
+			REMOVE_ALL_MENU_ITEMS(transformMenu);
+	        
 
-        for(SpaceVec::const_iterator i = colorSpaces.begin(); i != colorSpaces.end(); ++i)
-        {
-			ADD_MENU_ITEM(outputMenu, index, i->c_str(), index, (g_outputSpace == *i));
-			index++;
-        }
-        
-        SHOW_ITEM(DLOG_Menu2_Button, TRUE);
-        
-        
-		SHOW_ITEM(DLOG_Menu3_Label, FALSE);
-		SHOW_ITEM(DLOG_Menu3_Menu, FALSE);
-    }
+			TrackMenu2(hwndDlg, false);
+		}
+		else
+		{
+			assert(g_action == ACTION_CONVERT);
+	        
+			const int outputLabel = DLOG_Menu2_Label;
+			const int outputMenu = DLOG_Menu2_Menu;
+	        
+			SET_LABEL_STRING(outputLabel, "Output Space:");
+			SHOW_ITEM(outputLabel, TRUE);
+
+			SHOW_ITEM(outputMenu, TRUE);
+	        
+			REMOVE_ALL_MENU_ITEMS(outputMenu);
+	        
+			index = 0;
+
+			for(SpaceVec::const_iterator i = colorSpaces.begin(); i != colorSpaces.end(); ++i)
+			{
+				ADD_MENU_ITEM(outputMenu, index, i->c_str(), index, (g_outputSpace == *i));
+				index++;
+			}
+	        
+			SHOW_ITEM(DLOG_Menu2_Button, TRUE);
+	        
+	        
+			SHOW_ITEM(DLOG_Menu3_Label, FALSE);
+			SHOW_ITEM(DLOG_Menu3_Menu, FALSE);
+		}
+	}
 }
 
 enum {
@@ -425,13 +426,14 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
 		}
 		else if(source == CONFIG_ENVIRONMENT)
 		{
-			char *envFile = std::getenv("OCIO");
-
 			g_source = SOURCE_ENVIRONMENT;
 			
-			if(envFile != NULL)
+			char envPath[32767] = { '\0' };
+			const DWORD envResult = GetEnvironmentVariable("OCIO", envPath, 32767);
+
+			if(envResult > 0)
 			{
-				configPath = envFile;
+				configPath = envPath;
 			}
 		}
 		else if(source == CONFIG_CUSTOM)
@@ -487,13 +489,14 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
 	{
 		if(g_source == SOURCE_ENVIRONMENT)
 		{
-			char *envFile = std::getenv("OCIO");
-
 			SELECT_STRING_ITEM(DLOG_Configuration_Menu, "$OCIO");
 			
-			if(envFile != NULL)
+			char envPath[32767] = { '\0' };
+			const DWORD envResult = GetEnvironmentVariable("OCIO", envPath, 32767);
+
+			if(envResult > 0)
 			{
-				configPath = envFile;
+				configPath = envPath;
 			}
 		}
 		else if(g_source == SOURCE_CUSTOM)
@@ -848,10 +851,11 @@ static BOOL CALLBACK DialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARA
 			do{
 				int index = 0;
 				
-				char *envFile = std::getenv("OCIO");
+				char envPath[32767] = { '\0' };
+				const DWORD envResult = GetEnvironmentVariable("OCIO", envPath, 32767);
 
-				const DWORD envType = (envFile == NULL ? CONFIG_SEPERATOR : CONFIG_ENVIRONMENT);
-				const bool envSelected = (envFile != NULL && g_source == SOURCE_ENVIRONMENT);
+				const DWORD envType = (envResult > 0 ? CONFIG_ENVIRONMENT : CONFIG_SEPERATOR);
+				const bool envSelected = (envResult > 0 && g_source == SOURCE_ENVIRONMENT);
 				
 				ADD_MENU_ITEM(DLOG_Configuration_Menu, index, "$OCIO", envType, envSelected);
 				index++;

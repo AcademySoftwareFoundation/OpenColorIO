@@ -634,9 +634,16 @@ static PF_Err DoRender(
                 
                 if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
                 {
-                    char *file = std::getenv("OCIO");
+				#ifdef MAC_ENV
+					char *envFile = std::getenv("OCIO");
+					const bool gotOCIO = (envFile != NULL);
+				#else
+					char envFile[32767] = { '\0' };
+					const DWORD envResult = GetEnvironmentVariable("OCIO", envFile, 32767);
+					const bool gotOCIO = (envResult > 0);
+				#endif
                     
-                    if(file == NULL)
+                    if(!gotOCIO)
                         seq_data->status = STATUS_FILE_MISSING;
                 }
                 else if(arb_data->source == OCIO_SOURCE_STANDARD)
@@ -1012,9 +1019,16 @@ static PF_Err GetExternalDependencies(
         }
         else if(extra->check_type == PF_DepCheckType_MISSING_DEPENDENCIES)
         {
-            char *file = std::getenv("OCIO");
-            
-            if(!file)
+		#ifdef MAC_ENV
+			char *envFile = std::getenv("OCIO");
+			const bool gotOCIO = (envFile != NULL);
+		#else
+			char envFile[32767] = { '\0' };
+			const DWORD envResult = GetEnvironmentVariable("OCIO", envFile, 32767);
+			const bool gotOCIO = (envResult > 0);
+		#endif
+        
+            if(!gotOCIO)
                 dependency = "$OCIO environment variable";
         }
     }
