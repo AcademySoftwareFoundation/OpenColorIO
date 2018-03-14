@@ -67,7 +67,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 
 #include "Platform.h"
 
-// #define DEBUG_THREADING
 
 /** For internal use only */
 
@@ -75,15 +74,19 @@ OCIO_NAMESPACE_ENTER
 {
 
 #ifndef NDEBUG
+    // In debug mode, try to trap recursive cases and lock/unlock debalancing cases
     template <class T>
     class DebugLock : public T {
-     public:
-	DebugLock() : _locked(0) {}
-	void lock()   { T::lock(); _locked = 1; }
-	void unlock() { assert(_locked); _locked = 0; T::unlock(); }
-	bool locked() { return _locked != 0; }
-     private:
-	int _locked;
+        public:
+            DebugLock() : _locked(0) {}
+            ~DebugLock() { assert(!_locked); }
+
+            void lock()   { assert(!_locked); _locked = 1; T::lock(); }
+            void unlock() { assert(_locked); _locked = 0; T::unlock(); }
+
+            bool locked() { return _locked != 0; }
+        private:
+            int _locked;
     };
 #endif
 
@@ -98,16 +101,13 @@ OCIO_NAMESPACE_ENTER
     };
 
 #ifndef NDEBUG
-    // add debug wrappers to mutex and spinlock
+    // add debug wrappers to mutex
     typedef DebugLock<_Mutex> Mutex;
-    typedef DebugLock<_SpinLock> SpinLock;
 #else
     typedef _Mutex Mutex;
-    typedef _SpinLock SpinLock;
 #endif
 
     typedef AutoLock<Mutex> AutoMutex;
-    typedef AutoLock<SpinLock> AutoSpin;
 
 }
 OCIO_NAMESPACE_EXIT

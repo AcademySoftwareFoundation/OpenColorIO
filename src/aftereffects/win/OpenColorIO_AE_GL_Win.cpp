@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static HWND         g_win = NULL;
 static HDC          g_hdc = NULL;
 static HGLRC        g_context = NULL;
-static GLuint       g_framebuffer;
+static GLuint       g_framebuffer = GL_INVALID_VALUE;
 
 
 static bool HaveRequiredExtensions()
@@ -193,14 +193,18 @@ GLuint GetFrameBuffer()
 
 void GlobalSetdown_GL()
 {
+    if(g_framebuffer != GL_INVALID_VALUE)
+    {
+        glDeleteFramebuffersEXT(1, &g_framebuffer);
+        g_framebuffer = GL_INVALID_VALUE;
+    }
+    
     if(g_context)
     {
         wglDeleteContext(g_context);
         g_context = NULL;
-        
-        glDeleteFramebuffersEXT(1, &g_framebuffer);
     }
-    
+
     if(g_win)
     {
         ReleaseDC(g_win, g_hdc);

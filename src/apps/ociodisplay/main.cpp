@@ -36,17 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <vector>
 
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <OpenGL/glext.h>
-#include <GLUT/glut.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glext.h>
-#include <GL/glut.h>
-#endif
-
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
@@ -55,6 +44,25 @@ namespace OCIO = OCIO_NAMESPACE;
 #if (OIIO_VERSION < 10100)
 namespace OIIO = OIIO_NAMESPACE;
 #endif
+
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#include <OpenGL/glext.h>
+#include <GLUT/glut.h>
+#elif _WIN32
+#include <GL/glew.h>
+#include <GL/glut.h>
+#else
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glut.h>
+#endif
+
+
+bool g_verbose = false;
+std::string g_filename;
+
 
 GLint g_win = 0;
 int g_winWidth = 0;
@@ -75,6 +83,7 @@ std::string g_shadercacheid;
 std::string g_inputColorSpace;
 std::string g_display;
 std::string g_transformName;
+std::string g_look;
 
 float g_exposure_fstop = 0.0f;
 float g_display_gamma = 1.0f;
@@ -92,7 +101,7 @@ static void InitImageTexture(const char * filename)
     int texHeight = 512;
     int components = 4;
     
-    if(filename)
+    if(filename && *filename)
     {
         std::cout << "loading: " << filename << std::endl;
         try
@@ -117,12 +126,18 @@ static void InitImageTexture(const char * filename)
             texWidth = spec.width;
             texHeight = spec.height;
             components = spec.nchannels;
-            
+
             img.resize(texWidth*texHeight*components);
             memset(&img[0], 0, texWidth*texHeight*components*sizeof(float));
-            
-            f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
-            delete f;
+
+            f->read_image(
+#if (OIIO_VERSION >= 10800)
+                OIIO::TypeFloat, 
+#else
+                OIIO::TypeDesc::TypeFloat, 
+#endif
+                &img[0]);
+            OIIO::ImageInput::destroy(f);
         }
         catch(...)
         {
@@ -182,9 +197,10 @@ void InitOCIO(const char * filename)
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     g_display = config->getDefaultDisplay();
     g_transformName = config->getDefaultView(g_display.c_str());
+    g_look = config->getDisplayLooks(g_display.c_str(), g_transformName.c_str());
     
     g_inputColorSpace = OCIO::ROLE_SCENE_LINEAR;
-    if(filename)
+    if(filename && *filename)
     {
         std::string cs = config->parseColorSpaceFromString(filename);
         if(!cs.empty())
@@ -194,7 +210,8 @@ void InitOCIO(const char * filename)
         }
         else
         {
-            std::cout << "colorspace: " << g_inputColorSpace << " \t(could not determine from filename, using default)" << std::endl;
+            std::cout << "colorspace: " << g_inputColorSpace 
+                << " \t(could not determine from filename, using default)" << std::endl;
         }
     }
 }
@@ -472,6 +489,26 @@ void UpdateOCIOGLState()
     transform->setInputColorSpaceName( g_inputColorSpace.c_str() );
     transform->setDisplay( g_display.c_str() );
     transform->setView( g_transformName.c_str() );
+    transform->setLooksOverride( g_look.c_str() );
+
+    if(g_verbose)
+    {
+        std::cout << std::endl;
+        std::cout << "Color transformation composed of:" << std::endl;
+        std::cout << "      Image ColorSpace is:\t" << g_inputColorSpace << std::endl;
+        std::cout << "      Transform is:\t\t" << g_transformName << std::endl;
+        std::cout << "      Device is:\t\t" << g_display << std::endl;
+        std::cout << "      Looks Override is:\t'" << g_look << "'" << std::endl;
+        std::cout << "  with:" << std::endl;
+        std::cout << "    exposure_fstop = " << g_exposure_fstop << std::endl;
+        std::cout << "    display_gamma  = " << g_display_gamma << std::endl;
+        std::cout << "    channels       = " 
+                  << (g_channelHot[0] ? "R" : "")
+                  << (g_channelHot[1] ? "G" : "")
+                  << (g_channelHot[2] ? "B" : "")
+                  << (g_channelHot[3] ? "A" : "") << std::endl;
+
+    }
     
     // Add optional transforms to create a full-featured, "canonical" display pipeline
     // Fstop exposure control (in SCENE_LINEAR)
@@ -598,7 +635,9 @@ void displayDevice_CB(int id)
     {
         g_transformName = config->getDefaultView(g_display.c_str());
     }
-    
+
+    g_look = config->getDisplayLooks(g_display.c_str(), g_transformName.c_str());
+
     UpdateOCIOGLState();
     glutPostRedisplay();
 }
@@ -611,6 +650,21 @@ void transform_CB(int id)
     if(!transform) return;
     
     g_transformName = transform;
+
+    g_look = config->getDisplayLooks(g_display.c_str(), g_transformName.c_str());
+    
+    UpdateOCIOGLState();
+    glutPostRedisplay();
+}
+
+void look_CB(int id)
+{
+    OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+    
+    const char * look = config->getLookNameByIndex(id);
+    if(!look || !*look) return;
+    
+    g_look = look;
     
     UpdateOCIOGLState();
     glutPostRedisplay();
@@ -620,11 +674,41 @@ static void PopulateOCIOMenus()
 {
     OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
     
-    
     int csMenuID = glutCreateMenu(imageColorSpace_CB);
+
+    std::map<std::string, int> families;
     for(int i=0; i<config->getNumColorSpaces(); ++i)
     {
-        glutAddMenuEntry(config->getColorSpaceNameByIndex(i), i);
+        const char * csName = config->getColorSpaceNameByIndex(i);
+        if(csName && *csName)
+        {
+            OCIO::ConstColorSpaceRcPtr cs = config->getColorSpace(csName);
+            if(cs)
+            {
+                const char * family = cs->getFamily();
+                if(family && *family)
+                {
+                    if(families.find(family)==families.end())
+                    {
+                        families[family] = glutCreateMenu(imageColorSpace_CB);
+                        glutAddMenuEntry(csName, i);
+
+                        glutSetMenu(csMenuID);
+                        glutAddSubMenu(family, families[family]);
+                    }
+                    else
+                    {
+                        glutSetMenu(families[family]);
+                        glutAddMenuEntry(csName, i);
+                    }
+                }
+                else
+                {
+                    glutSetMenu(csMenuID);
+                    glutAddMenuEntry(csName, i);
+                }
+            }
+        }
     }
     
     int deviceMenuID = glutCreateMenu(displayDevice_CB);
@@ -640,10 +724,17 @@ static void PopulateOCIOMenus()
         glutAddMenuEntry(config->getView(defaultDisplay, i), i);
     }
     
+    int lookMenuID = glutCreateMenu(look_CB);
+    for(int i=0; i<config->getNumLooks(); ++i)
+    {
+        glutAddMenuEntry(config->getLookNameByIndex(i), i);
+    }
+    
     glutCreateMenu(menuCallback);
     glutAddSubMenu("Image ColorSpace", csMenuID);
     glutAddSubMenu("Transform", transformMenuID);
     glutAddSubMenu("Device", deviceMenuID);
+    glutAddSubMenu("Looks Override", lookMenuID);
     
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -665,9 +756,58 @@ const char * USAGE_TEXT = "\n"
 "\tA:   View Alpha\n"
 "\tL:   View Luma\n"
 "\n"
-"\tRight-Mouse Button:   Configure Display / Transform / ColorSpace\n"
+"\tRight-Mouse Button:   Configure Display / Transform / ColorSpace / Looks\n"
 "\n"
 "\tEsc: Quit\n";
+
+void parseArguments(int argc, char **argv)
+{
+    for(int i=1; i<argc; ++i)
+    {
+        if(0==strcmp(argv[i], "-v"))
+        {
+            g_verbose = true;
+        }
+        else if(0==strcmp(argv[i], "-h"))
+        {
+            std::cout << std::endl;
+            std::cout << "help:" << std::endl;
+            std::cout << "  ociodisplay [OPTIONS] [image]  where" << std::endl;
+            std::cout << std::endl;
+            std::cout << "  OPTIONS:" << std::endl;
+            std::cout << "     -h :  displays the help and exit" << std::endl;
+            std::cout << "     -v :  displays the color space information" << std::endl;
+            std::cout << std::endl;
+            exit(0);
+        }
+        else
+        {
+            g_filename = argv[i];
+        }
+    }
+
+    if(g_verbose)
+    {
+        std::cout << std::endl;
+        if(!g_filename.empty())
+        {
+            std::cout << "Image:" << std::endl
+                      << "\t" << g_filename << std::endl;
+        }
+        std::cout << std::endl;
+        std::cout << "OIIO: " << std::endl
+                  << "\tversion       = " << OIIO_VERSION_STRING << std::endl;
+        std::cout << std::endl;
+        std::cout << "OCIO: " << std::endl
+                  << "\tversion       = " << OCIO::GetVersion() << std::endl;
+        if(getenv("OCIO"))
+        {
+            std::cout << "\tconfiguration = " << getenv("OCIO") << std::endl;
+            OCIO::ConstConfigRcPtr config = OCIO::GetCurrentConfig();
+            std::cout << "\tsearch_path   = " << config->getSearchPath() << std::endl;
+        }
+    }
+}
 
 int main(int argc, char **argv)
 {
@@ -676,6 +816,8 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(512, 512);
     glutInitWindowPosition (100, 100);
+
+    parseArguments(argc, argv);
     
     g_win = glutCreateWindow(argv[0]);
     
@@ -693,19 +835,18 @@ int main(int argc, char **argv)
     glutSpecialFunc(SpecialKey);
     glutDisplayFunc(Redisplay);
     
-    const char * filename = 0;
-    if(argc>1) filename = argv[1];
-    
     std::cout << USAGE_TEXT << std::endl;
     
     // TODO: switch profiles based on shading language
-    // std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+    std::cout << std::endl;
+
     AllocateLut3D();
     
-    InitImageTexture(filename);
+    InitImageTexture(g_filename.c_str());
     try
     {
-        InitOCIO(filename);
+        InitOCIO(g_filename.c_str());
     }
     catch(OCIO::Exception & e)
     {
@@ -727,8 +868,8 @@ int main(int argc, char **argv)
         glutIdleFunc(Idle);
     }
     */
-    
+
     glutMainLoop();
-    
+
     return 0;
 }

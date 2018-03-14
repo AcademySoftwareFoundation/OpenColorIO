@@ -490,11 +490,11 @@ static PF_Err DrawEvent(
                         
                         bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
                         
-                        DrawMenu(bot, "Transform:", arb_data->transform);
+                        DrawMenu(bot, "Device:", arb_data->device);
                         
                         bot.Move(0, MENU_HEIGHT + MENU_SPACE_V);
                         
-                        DrawMenu(bot, "Device:", arb_data->device);
+                        DrawMenu(bot, "Transform:", arb_data->transform);
                     }
                 }
             }
@@ -679,7 +679,10 @@ static void DoClickPath(
             }
             else if(arb_data->action == OCIO_ACTION_DISPLAY)
             {
-                seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+                seq_data->context->setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+                
+                // transform may have changed
+                strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
             }
         }
         
@@ -847,7 +850,10 @@ static void DoClickConfig(
                 }
                 else if(arb_data->action == OCIO_ACTION_DISPLAY)
                 {
-                    seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+                    seq_data->context->setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+                    
+                    // transform may have changed
+                    strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
                 }
             }
             
@@ -897,7 +903,10 @@ static void DoClickConvertDisplay(
         {
             arb_data->action = OCIO_ACTION_DISPLAY;
             
-            seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
+            seq_data->context->setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+            
+            // transform may have changed
+            strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
             
             params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
         }
@@ -976,120 +985,166 @@ static void DoClickMenus(
 {
     if(seq_data->context != NULL && arb_data->action == seq_data->context->getAction())
     {
-        MenuVec menu_items;
-        int selected_item;
+        if(arb_data->action == OCIO_ACTION_CONVERT ||
+            (arb_data->action == OCIO_ACTION_DISPLAY && (reg == REGION_MENU1)))
+        {
+            // colorSpace menus
+            std::string selected_item;
         
-        if(arb_data->action == OCIO_ACTION_LUT)
-        {
             if(reg == REGION_MENU1)
             {
-                menu_items.push_back("Nearest Neighbor");
-                menu_items.push_back("Linear");
-                menu_items.push_back("Tetrahedral");
-                menu_items.push_back("(-");
-                menu_items.push_back("Best");
-                
-                selected_item = arb_data->interpolation == OCIO_INTERP_NEAREST ? 0 :
-                                arb_data->interpolation == OCIO_INTERP_LINEAR ? 1 :
-                                arb_data->interpolation == OCIO_INTERP_TETRAHEDRAL ? 2 :
-                                arb_data->interpolation == OCIO_INTERP_BEST ? 4 :
-                                -1;
-            }
-        }
-        else if(arb_data->action == OCIO_ACTION_CONVERT)
-        {
-            menu_items = seq_data->context->getInputs();
-            
-            if(reg == REGION_MENU1)
-            {
-                selected_item = FindInVec(menu_items, arb_data->input);
+                selected_item = arb_data->input;
             }
             else
             {
-                selected_item = FindInVec(menu_items, arb_data->output);
+                selected_item = arb_data->output;
+            }
+            
+            
+            void *hwndOwner = NULL;
+
+        #ifdef WIN_ENV
+            PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
+        #endif
+        
+            const bool changed = ColorSpacePopUpMenu(seq_data->context->config(), selected_item, true, hwndOwner);
+            
+            
+            if(changed)
+            {
+                if(reg == REGION_MENU1)
+                {
+                    strncpy(arb_data->input, selected_item.c_str(), ARB_SPACE_LEN);
+                }
+                else
+                {
+                    strncpy(arb_data->output, selected_item.c_str(), ARB_SPACE_LEN);
+                }
+                
+                params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
             }
         }
-        else if(arb_data->action == OCIO_ACTION_DISPLAY)
+        else
         {
-            if(reg == REGION_MENU1)
-            {
-                menu_items = seq_data->context->getInputs();
-                
-                selected_item = FindInVec(menu_items, arb_data->input);
-            }
-            else if(reg == REGION_MENU2)
-            {
-                menu_items = seq_data->context->getTransforms();
-                
-                selected_item = FindInVec(menu_items, arb_data->transform);
-            }
-            else if(reg == REGION_MENU3)
-            {
-                menu_items = seq_data->context->getDevices();
-                
-                selected_item = FindInVec(menu_items, arb_data->device);
-            }
-        }
-        
-        
-        
-        void *hwndOwner = NULL;
-
-    #ifdef WIN_ENV
-        PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
-    #endif
-
-        int result = PopUpMenu(menu_items, selected_item, hwndOwner);
-        
-        
-        if(result != selected_item)
-        {
-            std::string color_space = menu_items[ result ];
+            // standard menus
+            MenuVec menu_items;
+            int selected_item;
             
             if(arb_data->action == OCIO_ACTION_LUT)
             {
                 if(reg == REGION_MENU1)
                 {
-                    arb_data->interpolation =   result == 0 ? OCIO_INTERP_NEAREST :
-                                                result == 2 ? OCIO_INTERP_TETRAHEDRAL :
-                                                result == 4 ? OCIO_INTERP_BEST :
-                                                OCIO_INTERP_LINEAR;
-                                            
-                    seq_data->context->setupLUT(arb_data->invert, arb_data->interpolation);
+                    menu_items.push_back("Nearest Neighbor");
+                    menu_items.push_back("Linear");
+                    menu_items.push_back("Tetrahedral");
+                    menu_items.push_back("(-");
+                    menu_items.push_back("Best");
+                    
+                    selected_item = arb_data->interpolation == OCIO_INTERP_NEAREST ? 0 :
+                                    arb_data->interpolation == OCIO_INTERP_LINEAR ? 1 :
+                                    arb_data->interpolation == OCIO_INTERP_TETRAHEDRAL ? 2 :
+                                    arb_data->interpolation == OCIO_INTERP_BEST ? 4 :
+                                    -1;
                 }
             }
             else if(arb_data->action == OCIO_ACTION_CONVERT)
             {
+                menu_items = seq_data->context->getInputs();
+                
                 if(reg == REGION_MENU1)
                 {
-                    strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
+                    selected_item = FindInVec(menu_items, arb_data->input);
                 }
-                else if(reg == REGION_MENU2)
+                else
                 {
-                    strncpy(arb_data->output, color_space.c_str(), ARB_SPACE_LEN);
+                    selected_item = FindInVec(menu_items, arb_data->output);
                 }
-                
-                seq_data->context->setupConvert(arb_data->input, arb_data->output);
             }
             else if(arb_data->action == OCIO_ACTION_DISPLAY)
             {
                 if(reg == REGION_MENU1)
                 {
-                    strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
+                    menu_items = seq_data->context->getInputs();
+                    
+                    selected_item = FindInVec(menu_items, arb_data->input);
                 }
                 else if(reg == REGION_MENU2)
                 {
-                    strncpy(arb_data->transform, color_space.c_str(), ARB_SPACE_LEN);
+                    menu_items = seq_data->context->getDevices();
+                    
+                    selected_item = FindInVec(menu_items, arb_data->device);
                 }
                 else if(reg == REGION_MENU3)
                 {
-                    strncpy(arb_data->device, color_space.c_str(), ARB_SPACE_LEN);
-                }
-                
-                seq_data->context->setupDisplay(arb_data->input, arb_data->transform, arb_data->device);
-            }
+                    menu_items = seq_data->context->getTransforms();
                     
-            params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+                    selected_item = FindInVec(menu_items, arb_data->transform);
+                }
+            }
+            
+            
+            
+            void *hwndOwner = NULL;
+
+        #ifdef WIN_ENV
+            PF_GET_PLATFORM_DATA(PF_PlatData_MAIN_WND, &hwndOwner);
+        #endif
+
+            int result = PopUpMenu(menu_items, selected_item, hwndOwner);
+            
+            
+            if(result != selected_item)
+            {
+                std::string color_space = menu_items[ result ];
+                
+                if(arb_data->action == OCIO_ACTION_LUT)
+                {
+                    if(reg == REGION_MENU1)
+                    {
+                        arb_data->interpolation =   result == 0 ? OCIO_INTERP_NEAREST :
+                                                    result == 2 ? OCIO_INTERP_TETRAHEDRAL :
+                                                    result == 4 ? OCIO_INTERP_BEST :
+                                                    OCIO_INTERP_LINEAR;
+                                                
+                        seq_data->context->setupLUT(arb_data->invert, arb_data->interpolation);
+                    }
+                }
+                else if(arb_data->action == OCIO_ACTION_CONVERT)
+                {
+                    if(reg == REGION_MENU1)
+                    {
+                        strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
+                    }
+                    else if(reg == REGION_MENU2)
+                    {
+                        strncpy(arb_data->output, color_space.c_str(), ARB_SPACE_LEN);
+                    }
+                    
+                    seq_data->context->setupConvert(arb_data->input, arb_data->output);
+                }
+                else if(arb_data->action == OCIO_ACTION_DISPLAY)
+                {
+                    if(reg == REGION_MENU1)
+                    {
+                        strncpy(arb_data->input, color_space.c_str(), ARB_SPACE_LEN);
+                    }
+                    else if(reg == REGION_MENU2)
+                    {
+                        strncpy(arb_data->device, color_space.c_str(), ARB_SPACE_LEN);
+                    }
+                    else if(reg == REGION_MENU3)
+                    {
+                        strncpy(arb_data->transform, color_space.c_str(), ARB_SPACE_LEN);
+                    }
+                    
+                    seq_data->context->setupDisplay(arb_data->input, arb_data->device, arb_data->transform);
+                    
+                    // transform may have changed
+                    strncpy(arb_data->transform, seq_data->context->getTransform().c_str(), ARB_SPACE_LEN);
+                }
+                        
+                params[OCIO_DATA]->uu.change_flags = PF_ChangeFlag_CHANGED_VALUE;
+            }
         }
     }
 }

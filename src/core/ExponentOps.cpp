@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <cstring>
 #include <sstream>
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 

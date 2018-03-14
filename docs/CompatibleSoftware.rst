@@ -3,13 +3,13 @@
 Compatible Software
 ===================
 
-The following sofware all supports OpenColorIO (to varying degrees).
+The following software all supports OpenColorIO (to varying degrees).
 
 If you are interested in getting OCIO support for an application not listed
 here, please contact the ocio-dev mailing list.
 
 If you are a developer and would like assistance integration OCIO into your
-application, please contant ocio-dev as well.
+application, please contact ocio-dev as well.
 
 
 After Effects
@@ -143,7 +143,7 @@ Remaining integration tasks include
 C++
 ***
 
-The core OpenColorIO API is avaiable for use in C++. See the `export
+The core OpenColorIO API is available for use in C++. See the `export
 directory
 <http://github.com/imageworks/OpenColorIO/tree/master/export/OpenColorIO>`__
 for the C++ API headers.  Minimal code examples are also available in
@@ -161,7 +161,7 @@ Python
 The OpenColorIO API is available for use in python. See the "pyglue" directory
 in the codebase.
 
-See the devleoper guide for `usage examples
+See the developer guide for `usage examples
 <developers-usageexamples>`__ and API documentation on the PYthon
 bindings
 
@@ -239,20 +239,14 @@ display. If the transform was approved on a different monitor, then maybe you
 should choose its profile instead.
 
 
-RV (Beta)
+RV
 *********
 
 `Playback Tool - Tweak Software <http://www.tweaksoftware.com>`__
 
-`OCIO support in RV <https://github.com/imageworks/OpenColorIO/tree/master/src/rv>`__
-is currently being developed by Ben Dickson (dbr).
-
-See this `email thread <http://groups.google.com/group/ocio-dev/browse_thread/thread/955fc6271f89a28e>`__
-for additional details.
-
-This integration is currently considered a work in progress, and should not be
-relied upon for critical production work.
-
+RV has native OCIO support in version 4 onwards. For more details, see
+the OpenColorIO section of the `RV User Manual
+<http://www.tweaksoftware.com/static/documentation/rv/current/html/rv_manual.html#OpenColorIO>`__.
 
 Java (Beta)
 ***********
@@ -264,11 +258,17 @@ This integration is currently considered a work in progress, and should not be
 relied upon for critical production work.
 
 
-Ramen (Beta)
-************
-`Open Source Compositor <http://ramencomp.blogspot.com>`__
+Gaffer
+******
+`Open Source VFX Platform <http://gafferhw.org>`__
 
-Under development, with native OCIO color managment.
+Gaffer is a node based application for use in CG and VFX production, with a
+particular focus on lighting and look development.
+
+
+Natron
+******
+'Open Source Compositing Software <http://natron.fr>'
 
 
 CryEngine3 (Beta)

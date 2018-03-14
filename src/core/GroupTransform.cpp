@@ -104,7 +104,10 @@ OCIO_NAMESPACE_ENTER
     
     GroupTransform& GroupTransform::operator= (const GroupTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if(this!=&rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -155,7 +158,6 @@ OCIO_NAMESPACE_ENTER
         os << "<GroupTransform ";
         os << "direction=" << TransformDirectionToString(groupTransform.getDirection()) << ", ";
         os << "transforms=";
-        TransformDirection dir_;
         for(int i=0; i<groupTransform.size(); ++i)
         {
             ConstTransformRcPtr transform = groupTransform.getTransform(i);

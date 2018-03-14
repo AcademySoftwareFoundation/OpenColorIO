@@ -1,23 +1,57 @@
 # travis-ci.org build file
+# https://docs.travis-ci.com/user/languages/cpp
 
-# As CMake is not officially supported we use erlang VMs
-language: erlang
+matrix:
+  include:
+    - os: linux
+      language: cpp
+      compiler: clang
+    - os: linux
+      language: cpp
+      compiler: gcc
+    - os: osx
+      language: cpp
+      compiler: clang
+    - os: osx
+      language: cpp
+      compiler: gcc
+    - os: osx
+      language: cpp
+      compiler: clang
+      osx_image: xcode9.1
 
-# Settings to try
 env:
-  - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=yes"
+  - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=yes -DOCIO_BUILD_DOCS=yes"
 
-# Make sure CMake is installed
-install:
- - sudo apt-get install cmake
+# Install missing packages
+before_install:
+  # Linux ones
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
+      sudo apt-get update -qq;
+      sudo apt-get install -y -qq texlive-full;
+      sudo apt-get install -y -qq freeglut3-dev libglew-dev libxmu-dev libxi-dev; 
+    fi
+  # OSX ones
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update;
+      brew install glew;
+    fi
 
 # Run the Build script
 script:
- - mkdir _build
- - cd _build
- - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
- - cmake --build . --target install
+  - mkdir _build
+  - cd _build
+  - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
+  - cmake --build . --target install
+  - cmake --build . --target MainTests
+  - cmake --build . --target PYTests
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake --build . --target pdf; fi
 
-# Run Tests
-after_script:
- - ctest --output-on-failure .
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  on:
+    tags: true
+  local_dir: ./docs/build-html
+  fqdn: opencolorio.org

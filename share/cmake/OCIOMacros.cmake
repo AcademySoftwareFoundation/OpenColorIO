@@ -27,15 +27,22 @@ MACRO(OCIOFindOpenGL)
     endif()
 
     # Find GLEW
+
+    if(GLEW_PATH)
+        message(STATUS "GLEW path explicitly specified: ${GLEW_PATH}")
+    endif()
+
     set(GLEW_VERSION 1.5.1)
     FIND_PATH(GLEW_INCLUDES GL/glew.h
+        ${GLEW_PATH}/include
         /usr/include
         /usr/local/include
         /sw/include
         /opt/local/include
         DOC "The directory where GL/glew.h resides")
     FIND_LIBRARY(GLEW_LIBRARIES
-        NAMES GLEW glew
+        NAMES GLEW glew glew32
+        ${GLEW_PATH}/lib
         /usr/lib64
         /usr/lib
         /usr/local/lib64
@@ -49,7 +56,7 @@ MACRO(OCIOFindOpenGL)
         message(STATUS "Found GLEW library ${GLEW_LIBRARIES}")
         message(STATUS "Found GLEW includes ${GLEW_INCLUDES}")
     else()
-        message(STATUS "GLEW not found")
+        message(STATUS "GLEW ${GLEW_VERSION} not found. Specify GLEW_PATH to locate it")
         set(GLEW_FOUND FALSE)
     endif()
 ENDMACRO()
@@ -89,6 +96,27 @@ MACRO(OCIOFindOpenImageIO)
         set(OIIO_FOUND TRUE)
         message(STATUS "Found OIIO library ${OIIO_LIBRARIES}")
         message(STATUS "Found OIIO includes ${OIIO_INCLUDES}")
+
+        # Unfortunately, OIIO hides a dependency to Ilmbase includes
+
+        if(ILMBASE_PATH)
+            message(STATUS "Ilmbase path explicitly specified: ${ILMBASE_PATH}")
+        endif()
+
+        FIND_PATH( ILMBASE_INCLUDES OpenEXR/half.h
+            ${ILMBASE_PATH}/include/
+            /usr/include
+            /usr/local/include
+            /sw/include
+            /opt/local/include
+            DOC "The directory where OpenEXR/half.h resides")
+
+        if(ILMBASE_INCLUDES)
+            message(STATUS "Found Ilmbase includes ${ILMBASE_INCLUDES}")
+        else()
+            set(OIIO_FOUND FALSE)
+            message(STATUS "Ilmbase not found. Specify ILMBASE_PATH to locate it")
+        endif()
     else()
         set(OIIO_FOUND FALSE)
         message(STATUS "OIIO not found. Specify OIIO_PATH to locate it")
@@ -109,8 +137,28 @@ MACRO(OCIOFindPython)
 
     set(PYTHON_OK YES) # OK until something goes wrong
 
+    if(MSVC)
+        # Python default installation on Windows is Python 32bit
+        execute_process(COMMAND ${PYTHON} -c "import sys,platform; print platform.architecture()[0]"
+            OUTPUT_VARIABLE PYTHON_X64
+            RESULT_VARIABLE PYTHON_RETURNVALUE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        if( NOT ${PYTHON_RETURNVALUE} EQUAL 0 OR NOT ${PYTHON_X64} MATCHES "64bit")
+            set(PYTHON_OK NO)
+        endif()
+    endif()
+
     # Get Python version
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(sysconfig.get_python_version())"
+    if(WIN32)
+        # Windows install path use the version without the dot
+        set(version_cmd "from distutils import sysconfig; print(sysconfig.get_config_var('VERSION'))")
+    else()
+        set(version_cmd "from distutils import sysconfig; print(sysconfig.get_python_version())")
+    endif()
+
+    execute_process(COMMAND ${PYTHON} -c "${version_cmd}"
         OUTPUT_VARIABLE PYTHON_VERSION
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -141,7 +189,7 @@ MACRO(OCIOFindPython)
 
 
     # Locate headers
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('INCLDIRSTOMAKE').split())))"
+    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('INCLUDEPY').split())))"
         OUTPUT_VARIABLE PYTHON_INCLUDE_RAW
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -155,9 +203,15 @@ MACRO(OCIOFindPython)
         set(PYTHON_OK NO)
     endif()
 
+    if(WIN32)
+        # LIBPL does not exist on Windows, and no variable exist
+        set(library_cmd "from distutils import sysconfig; print '%s/libs' % sysconfig.get_config_var('prefix')")
+    else()
+        set(library_cmd "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('LIBPL').split())))")
+    endif()
 
     # Locate Python library
-    execute_process(COMMAND ${PYTHON} -c "from distutils import sysconfig; print(':'.join(set(sysconfig.get_config_var('LIBPL').split())))"
+    execute_process(COMMAND ${PYTHON} -c "${library_cmd}"
         OUTPUT_VARIABLE PYTHON_LIBRARY_DIRS_RAW
         RESULT_VARIABLE PYTHON_RETURNVALUE
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -183,10 +237,19 @@ MACRO(OCIOFindPython)
     if(OCIO_PYGLUE_RESPECT_ABI)
         # Respect Python major/minor version, and UCS version (unicode
         # content system). E.g install into "lib/python2.6/ucs4/site-packages"
-        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/${PYTHON_UCS}/site-packages")
+        # Windows & *nix does not use the same path, refer to https://docs.python.org/2/install/
+        if(WIN32)
+            set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/${PYTHON_UCS}/site-packages")
+        else()
+            set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/${PYTHON_UCS}/site-packages")
+        endif()
     else()
         # Ignore UCS value and install into lib/python2.6/site-packages dir
-        set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/site-packages")
+        if(WIN32)
+            set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/site-packages")
+        else()
+            set(PYTHON_VARIANT_PATH "lib${LIB_SUFFIX}/python${PYTHON_VERSION}/site-packages")
+        endif()
     endif()
 
 ENDMACRO()
@@ -293,8 +356,9 @@ ENDMACRO()
 
 MACRO(ExtractRstCPP INFILE OUTFILE)
    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       OUTPUT ${OUTFILE}
-      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py ${INFILE} ${OUTFILE}
+      COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceCPP.py ${INFILE} ${OUTFILE}
       DEPENDS ${INFILE}
       COMMENT "Extracting reStructuredText from ${INFILE} (using old process)"
    )
@@ -302,8 +366,9 @@ ENDMACRO()
 
 MACRO(ExtractRstSimple INFILE OUTFILE)
    add_custom_command(
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       OUTPUT ${OUTFILE}
-      COMMAND ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceSimple.py ${INFILE} ${OUTFILE}
+      COMMAND ${PYTHON} ${CMAKE_SOURCE_DIR}/share/sphinx/ExtractRstFromSourceSimple.py ${INFILE} ${OUTFILE}
       DEPENDS ${INFILE}
       COMMENT "Extracting reStructuredText from ${INFILE}"
    )

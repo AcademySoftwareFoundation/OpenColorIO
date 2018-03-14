@@ -30,10 +30,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_UNITTEST_H
 
 #ifdef OCIO_UNIT_TEST
+
+#ifndef WIN32
 #pragma GCC visibility push(default)
+#endif
+
 #include <unittest.h> // OIIO unit tests header
 OIIO_TEST_APP(OpenColorIO_Core_Unit_Tests)
+
+#ifndef WIN32
 #pragma GCC visibility pop
+#endif
+
 #endif // OCIO_UNIT_TEST
 
 #endif // INCLUDED_OCIO_UNITTEST_H

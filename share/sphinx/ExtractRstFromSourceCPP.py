@@ -229,7 +229,7 @@ if __name__ == "__main__":
             sys.exit(1)
         
         src = open(sys.argv[1]).read()
-        output = open(sys.argv[2], 'w')
+        output = open(sys.argv[2], 'w+')
         ExtractRst(src, output)
         output.close()
         

@@ -1,6 +1,8 @@
 .DS_Store
 attic
 build*
+_build*
+_install*
 dist*
 mastercopy
 *.pyc

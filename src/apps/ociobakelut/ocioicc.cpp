@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 #include <OpenColorIO/OpenColorIO.h>
 

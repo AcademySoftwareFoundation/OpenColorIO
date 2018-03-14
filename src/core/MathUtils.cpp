@@ -327,17 +327,6 @@ OCIO_NAMESPACE_ENTER
         GetV4Sum(vout, vout, v2);
     }
     
-    namespace
-    {
-    
-    void GetMxbResult(float* vout, float* m, float* x, float* v)
-    {
-        GetM44V4Product(vout, m, x);
-        GetV4Sum(vout, vout, v);
-    }
-    
-    } // anon namespace
-    
     bool GetMxbInverse(float* mout, float* vout,
                        const float* m_, const float* v_)
     {
@@ -372,6 +361,18 @@ OCIO_NAMESPACE_USING
 
 #include "UnitTest.h"
 
+namespace
+{
+    
+    void GetMxbResult(float* vout, float* m, float* x, float* v)
+    {
+        GetM44V4Product(vout, m, x);
+        GetV4Sum(vout, vout, v);
+    }
+    
+}
+
+   
 OIIO_ADD_TEST(MathUtils, M44_is_diagonal)
 {
     {

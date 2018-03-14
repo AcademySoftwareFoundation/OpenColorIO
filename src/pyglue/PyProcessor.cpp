@@ -273,7 +273,7 @@ OCIO_NAMESPACE_ENTER
                 PyErr_SetString(PyExc_TypeError, os.str().c_str());
                 return 0;
             }
-            PackedImageDesc img(&data[0], data.size()/3, 1, 3);
+            PackedImageDesc img(&data[0], long(data.size()/3), 1, 3);
             processor->apply(img);
             return CreatePyListFromFloatVector(data);
             OCIO_PYTRY_EXIT(NULL)
@@ -301,7 +301,7 @@ OCIO_NAMESPACE_ENTER
                 PyErr_SetString(PyExc_TypeError, os.str().c_str());
                 return 0;
             }
-            PackedImageDesc img(&data[0], data.size()/4, 1, 4);
+            PackedImageDesc img(&data[0], long(data.size()/4), 1, 4);
             processor->apply(img);
             return CreatePyListFromFloatVector(data);
             OCIO_PYTRY_EXIT(NULL)
