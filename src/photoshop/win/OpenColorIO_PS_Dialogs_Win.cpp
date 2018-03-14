@@ -362,7 +362,7 @@ static void TrackActionRadios(HWND hwndDlg, bool readFromControl)
         SHOW_ITEM(DLOG_Menu2_Button, FALSE);
                 
         
-		SET_LABEL_STRING(transformLabel, "Device:");
+		SET_LABEL_STRING(transformLabel, "Transform:");
 		SHOW_ITEM(transformLabel, TRUE);
 
 		SHOW_ITEM(transformMenu, TRUE);
