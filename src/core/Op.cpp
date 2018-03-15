@@ -91,7 +91,7 @@ OCIO_NAMESPACE_ENTER
         {
             os << pystring::mul(" ", indent);
             os << "Op " << i << ": " << *ops[i] << " ";
-            os << ops[i]->getCacheID() << " supports_gpu: true";
+            os << ops[i]->getCacheID() << " supports_gpu:" << ops[i]->supportsLegacyShader();
             os << "\n";
         }
         

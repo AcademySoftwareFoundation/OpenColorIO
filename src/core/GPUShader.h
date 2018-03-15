@@ -110,8 +110,7 @@ OCIO_NAMESPACE_ENTER
     // *************
     // 
     // The class holds all the information to build a shader program without baking
-    // the color transform. It mainly means that the processor could contain several 1D or 3D luts
-    // even after the optimization step.
+    // the color transform. It mainly means that the processor could contain several 1D or 3D luts.
     // 
 
     class GenericGpuShader : public GpuShader
@@ -119,12 +118,12 @@ OCIO_NAMESPACE_ENTER
     public:
         static GpuShaderRcPtr Create(const GpuShaderDesc & desc);
 
-        //
         GpuLanguage getLanguage() const;
         const char * getFunctionName() const;
         const char * getPixelName() const;
         const char * getNamePrefix() const;
 
+        // Accessors to the uniforms
         //
         unsigned getNumUniforms() const;
         void getUniform(
@@ -132,6 +131,7 @@ OCIO_NAMESPACE_ENTER
         void addUniform(
             unsigned index, const char * name, UniformType type, void * value);
 
+        // Accessors to the 1D & 2D textures built from 1D Luts
         //
         unsigned getNumTextures() const;
         void addTexture(
@@ -144,6 +144,7 @@ OCIO_NAMESPACE_ENTER
         void getTextureValues(
             unsigned index, const float *& red, const float *& green, const float *& blue) const;
 
+        // Accessors to the 3D textures built from 3D Luts
         //
         unsigned getNum3DTextures() const;
         void add3DTexture(
@@ -153,14 +154,17 @@ OCIO_NAMESPACE_ENTER
             unsigned index, const char *& name, const char *& id, unsigned & edgelen) const;
         void get3DTextureValues(unsigned index, const float *& value) const;
 
+        // Get the complete shader text
         const char * getShaderText() const;
 
+        // Get the corresponding cache identifier
         const char * getCacheID() const;
 
         void finalize();
 
         GpuShaderRcPtr clone() const;
 
+        // Methods to specialize each part of a complete shader program
         //
         void addToDeclareShaderCode(const char * shaderCode);
         void addToHelperShaderCode(const char * shaderCode);
@@ -168,6 +172,7 @@ OCIO_NAMESPACE_ENTER
         void addToMainShaderCode(const char * shaderCode);
         void addToMainFooterShaderCode(const char * shaderCode);
 
+        // Method called to build the complete shader program
         void createShaderText(
             const char * shaderDeclarations, const char * shaderHelperMethods,
             const char * shaderMainHeader, const char * shaderMainBody,
