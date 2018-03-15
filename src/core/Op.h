@@ -117,7 +117,7 @@ OCIO_NAMESPACE_ENTER
             virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
 
             // Detect lut ops if baking is needed
-            virtual bool isLut() const { return false; }
+            virtual bool supportsLegacyShader() const { return true; }
 
             // Create & add the gpu shader information needed by the op
             virtual void extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const = 0;

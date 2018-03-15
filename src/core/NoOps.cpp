@@ -133,7 +133,7 @@ OCIO_NAMESPACE_ENTER
                 // If it's the first, save it as our start.
                 // Otherwise, update the end.
                 
-                if(opVec[i]->isLut())
+                if(!opVec[i]->supportsLegacyShader())
                 {
                     if(start<0)
                     {
@@ -266,7 +266,7 @@ OCIO_NAMESPACE_ENTER
         // All gpu pre ops must support analytical gpu shader generation
         for(unsigned int i=0; i<gpuPreOps.size(); ++i)
         {
-            if(gpuPreOps[i]->isLut())
+            if(!gpuPreOps[i]->supportsLegacyShader())
             {
                 throw Exception("Partition failed check. gpuPreOps");
             }
@@ -279,7 +279,7 @@ OCIO_NAMESPACE_ENTER
             bool requireslattice = false;
             for(unsigned int i=0; i<gpuLatticeOps.size(); ++i)
             {
-                if(gpuLatticeOps[i]->isLut()) requireslattice = true;
+                if(!gpuLatticeOps[i]->supportsLegacyShader()) requireslattice = true;
             }
             
             if(!requireslattice)
@@ -291,7 +291,7 @@ OCIO_NAMESPACE_ENTER
         // All gpu post ops must support analytical gpu shader generation
         for(unsigned int i=0; i<gpuPostOps.size(); ++i)
         {
-            if(gpuPostOps[i]->isLut())
+            if(!gpuPostOps[i]->supportsLegacyShader())
             {
                 throw Exception("Partition failed check. gpuPostOps");
             }

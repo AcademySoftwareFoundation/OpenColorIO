@@ -54,7 +54,7 @@ namespace
                 // An unfortunate copy is mandatory to allow the creation of a GPU shader cache. 
                 // The cache needs a decoupling of the processor and shader instances forbidding
                 // shared naked pointer usage.
-                CreateArray(r, width , height, depth, type, red);
+                CreateArray(r, width, height, depth, type, red);
                 CreateArray(g, width, height, depth, type, green);
                 CreateArray(b, width, height, depth, type, blue);
             }
@@ -75,7 +75,7 @@ namespace
         typedef std::vector<Texture> Textures;
 
     public:       
-        PrivateImpl(const OCIO_NAMESPACE::GpuShaderDesc & desc) : _desc(desc) {}
+        PrivateImpl(const OCIO_NAMESPACE::GpuShaderDesc & desc) : m_desc(desc) {}
         virtual ~PrivateImpl() {}
 
         void addTexture(
@@ -188,14 +188,14 @@ namespace
 
         void finalize()
         {
-            // Finalize the shader porgam
+            // Finalize the shader program
             createShaderText(
                 declarations.c_str(), helpers.c_str(), 
                 mainHeader.c_str(), mainBody.c_str(), mainFooter.c_str());
 
             // Compute the identifier
             std::ostringstream ss;
-            ss << _desc.getCacheID();
+            ss << m_desc.getCacheID();
             ss << shaderCode;
             for(unsigned idx=0; idx<textures3D.size(); ++idx)
             {
@@ -210,7 +210,7 @@ namespace
             shaderCodeID = OCIO_NAMESPACE::CacheIDHash(id.c_str(), unsigned(id.length()));
         }
 
-        inline const OCIO_NAMESPACE::GpuShaderDesc & getDesc() const { return _desc; }
+        inline const OCIO_NAMESPACE::GpuShaderDesc & getDesc() const { return m_desc; }
 
         std::string declarations;
         std::string helpers;
@@ -228,7 +228,7 @@ namespace
         PrivateImpl(const PrivateImpl & rhs);
         PrivateImpl& operator= (const PrivateImpl & rhs);
 
-        const OCIO_NAMESPACE::GpuShaderDesc _desc;
+        const OCIO_NAMESPACE::GpuShaderDesc m_desc;
     };
 };
 

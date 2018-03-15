@@ -59,8 +59,6 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_GpuShaderDesc_getLanguage(PyObject * self);
         PyObject * PyOCIO_GpuShaderDesc_setFunctionName(PyObject * self, PyObject * args);
         PyObject * PyOCIO_GpuShaderDesc_getFunctionName(PyObject * self);
-        PyObject * PyOCIO_GpuShaderDesc_setLut3DEdgeLen(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_GpuShaderDesc_getLut3DEdgeLen(PyObject * self);
         PyObject * PyOCIO_GpuShaderDesc_getCacheID(PyObject * self);
         
         ///////////////////////////////////////////////////////////////////////
@@ -75,10 +73,6 @@ OCIO_NAMESPACE_ENTER
             PyOCIO_GpuShaderDesc_setFunctionName, METH_VARARGS, GPUSHADERDESC_SETFUNCTIONNAME__DOC__ },            
             { "getFunctionName",
             (PyCFunction) PyOCIO_GpuShaderDesc_getFunctionName, METH_NOARGS, GPUSHADERDESC_GETFUNCTIONNAME__DOC__ },
-            { "setLut3DEdgeLen",
-            PyOCIO_GpuShaderDesc_setLut3DEdgeLen, METH_VARARGS, GPUSHADERDESC_SETLUT3DEDGELEN__DOC__ },
-            { "getLut3DEdgeLen",
-            (PyCFunction) PyOCIO_GpuShaderDesc_getLut3DEdgeLen, METH_NOARGS, GPUSHADERDESC_GETLUT3DEDGELEN__DOC__ },
             { "getCacheID",
             (PyCFunction) PyOCIO_GpuShaderDesc_getCacheID, METH_NOARGS, GPUSHADERDESC_GETCACHEID__DOC__ },
             { NULL, NULL, 0, NULL }
@@ -195,26 +189,6 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_ENTER()
             ConstGpuShaderDescRcPtr desc = GetConstGpuShaderDesc(self);
             return PyString_FromString(desc->getFunctionName());
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_GpuShaderDesc_setLut3DEdgeLen(PyObject * self, PyObject * args)
-        {
-            OCIO_PYTRY_ENTER()
-            int len = 0;
-            if (!PyArg_ParseTuple(args,"i:setLut3DEdgeLen",
-                &len)) return NULL;
-            GpuShaderDescRcPtr desc = GetEditableGpuShaderDesc(self);
-            desc->setLut3DEdgeLen(len);
-            Py_RETURN_NONE;
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_GpuShaderDesc_getLut3DEdgeLen(PyObject * self)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstGpuShaderDescRcPtr desc = GetConstGpuShaderDesc(self);
-            return PyInt_FromLong(desc->getLut3DEdgeLen());
             OCIO_PYTRY_EXIT(NULL)
         }
         

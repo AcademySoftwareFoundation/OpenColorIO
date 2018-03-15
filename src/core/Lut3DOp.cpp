@@ -578,7 +578,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool isLut() const { return true; }
+            virtual bool supportsLegacyShader() const { return false; }
             virtual void extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const;
 
         private:
