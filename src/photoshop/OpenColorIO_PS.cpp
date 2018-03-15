@@ -325,11 +325,11 @@ static void InitGlobals(Ptr globalPtr)
 
 #ifdef __PIMac__
     char *file = std::getenv("OCIO");
-	const bool gotOCIO = (file != NULL);
+    const bool gotOCIO = (file != NULL);
 #else
-	char file[32767] = { '\0' };
-	const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
-	const bool gotOCIO = (envResult > 0);
+    char file[32767] = { '\0' };
+    const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
+    const bool gotOCIO = (envResult > 0);
 #endif
     
     if(gotOCIO)
@@ -639,16 +639,16 @@ static void DoStart(GPtr globals)
     {
         if(globals->source == OCIO_SOURCE_ENVIRONMENT)
         {
-		#ifdef __PIMac__
-			char *envFile = std::getenv("OCIO");
-			const bool gotOCIO = (envFile != NULL);
-		#else
-			char envFile[32767] = { '\0' };
-			const DWORD envResult = GetEnvironmentVariable("OCIO", envFile, 32767);
-			const bool gotOCIO = (envResult > 0);
-		#endif
+        #ifdef __PIMac__
+            char *envFile = std::getenv("OCIO");
+            const bool gotOCIO = (envFile != NULL);
+        #else
+            char envFile[32767] = { '\0' };
+            const DWORD envResult = GetEnvironmentVariable("OCIO", envFile, 32767);
+            const bool gotOCIO = (envResult > 0);
+        #endif
 
-			if(gotOCIO && strlen(envFile) > 0)
+            if(gotOCIO && strlen(envFile) > 0)
             {
                 path = envFile;
             }

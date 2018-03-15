@@ -350,14 +350,14 @@ static PF_Err DrawEvent(
                 
                 if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
                 {
-				#ifdef MAC_ENV
-					char *file = std::getenv("OCIO");
-					const bool gotOCIO = (file != NULL);
-				#else
-					char file[32767] = { '\0' };
-					const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
-					const bool gotOCIO = (envResult > 0);
-				#endif
+                #ifdef MAC_ENV
+                    char *file = std::getenv("OCIO");
+                    const bool gotOCIO = (file != NULL);
+                #else
+                    char file[32767] = { '\0' };
+                    const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
+                    const bool gotOCIO = (envResult > 0);
+                #endif
                     
                     if(gotOCIO)
                         file_string = file;
@@ -766,14 +766,14 @@ static void DoClickConfig(
         if(choice == 0)
         {
             // $OCIO
-		#ifdef MAC_ENV
-			char *file = std::getenv("OCIO");
-			const bool gotOCIO = (file != NULL);
-		#else
-			char file[32767] = { '\0' };
-			const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
-			const bool gotOCIO = (envResult > 0);
-		#endif
+        #ifdef MAC_ENV
+            char *file = std::getenv("OCIO");
+            const bool gotOCIO = (file != NULL);
+        #else
+            char file[32767] = { '\0' };
+            const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
+            const bool gotOCIO = (envResult > 0);
+        #endif
             
             if(gotOCIO)
             {
