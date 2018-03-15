@@ -421,7 +421,7 @@ int PopUpMenu(const MenuVec &menu_items, int selected_index, const void *hwnd)
                 const DWORD envResult = GetEnvironmentVariable("OCIO", envFile, 32767);
                 const bool gotOCIO = (envResult > 0);
 
-                if(gotOCIO)
+                if(!gotOCIO)
                     flags |= MF_GRAYED;
             }
             else if(label == "(nada)")
