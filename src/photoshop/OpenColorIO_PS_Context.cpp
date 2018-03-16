@@ -27,6 +27,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "OpenColorIO_PS_Context.h"
 
+#ifndef __APPLE__
+#include <Windows.h>
+#endif
+
 int
 FindSpace(const SpaceVec &spaceVec, const std::string &space)
 {
