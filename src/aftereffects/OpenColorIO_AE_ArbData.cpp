@@ -70,22 +70,16 @@ PF_Err ArbNewDefault(PF_InData *in_data, PF_OutData *out_data,
             
             
             // set default with environment variable if it's set
-        #ifdef MAC_ENV
-            char *file = std::getenv("OCIO");
-            const bool gotOCIO = (file != NULL);
-        #else
-            char file[32767] = { '\0' };
-            const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
-            const bool gotOCIO = (envResult > 0);
-        #endif
+            std::string env;
+            OpenColorIO_AE_Context::getenvOCIO(env);
             
-            if(gotOCIO)
+            if(!env.empty())
             {
                 try
                 {
-                    OpenColorIO_AE_Context context(file, OCIO_SOURCE_ENVIRONMENT);
+                    OpenColorIO_AE_Context context(env, OCIO_SOURCE_ENVIRONMENT);
                     
-                    strncpy(arb_data->path, file, ARB_PATH_LEN);
+                    strncpy(arb_data->path, env.c_str(), ARB_PATH_LEN);
                     
                     arb_data->action = context.getAction();
                     arb_data->source = OCIO_SOURCE_ENVIRONMENT;

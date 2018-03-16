@@ -283,3 +283,19 @@ OpenColorIO_PS_Context::getDefaultTransform(const std::string &device) const
     return _config->getDefaultView( device.c_str() );
 }
 
+
+void
+OpenColorIO_PS_Context::getenv(const char *name, std::string &value)
+{
+#ifdef __APPLE__
+    char *env = std::getenv(name);
+    
+    value = (env != NULL ? env : "");
+#else
+    char env[32767] = { '\0' };
+    
+    const DWORD result = GetEnvironmentVariable(name, env, 32767);
+    
+    value = (result > 0 ? env : "");
+#endif
+}

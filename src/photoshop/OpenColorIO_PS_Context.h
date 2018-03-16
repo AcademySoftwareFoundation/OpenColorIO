@@ -71,6 +71,10 @@ class OpenColorIO_PS_Context
     SpaceVec getTransforms(const std::string &device) const;
     std::string getDefaultTransform(const std::string &device) const;
 
+    static void getenv(const char *name, std::string &value);
+    
+    static void getenvOCIO(std::string &value) { getenv("OCIO", value); }
+
   private:
     std::string _path;
     

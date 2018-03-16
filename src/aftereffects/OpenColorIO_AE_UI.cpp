@@ -350,17 +350,11 @@ static PF_Err DrawEvent(
                 
                 if(arb_data->source == OCIO_SOURCE_ENVIRONMENT)
                 {
-                #ifdef MAC_ENV
-                    char *file = std::getenv("OCIO");
-                    const bool gotOCIO = (file != NULL);
-                #else
-                    char file[32767] = { '\0' };
-                    const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
-                    const bool gotOCIO = (envResult > 0);
-                #endif
+                    std::string env;
+                    OpenColorIO_AE_Context::getenvOCIO(env);
                     
-                    if(gotOCIO)
-                        file_string = file;
+                    if(!env.empty())
+                        file_string = env;
                 }
                 else
                 {
@@ -766,18 +760,12 @@ static void DoClickConfig(
         if(choice == 0)
         {
             // $OCIO
-        #ifdef MAC_ENV
-            char *file = std::getenv("OCIO");
-            const bool gotOCIO = (file != NULL);
-        #else
-            char file[32767] = { '\0' };
-            const DWORD envResult = GetEnvironmentVariable("OCIO", file, 32767);
-            const bool gotOCIO = (envResult > 0);
-        #endif
+            std::string env;
+            OpenColorIO_AE_Context::getenvOCIO(env);
             
-            if(gotOCIO)
+            if(!env.empty())
             {
-                Path path(file, GetProjectDir(in_data));
+                Path path(env, GetProjectDir(in_data));
                 
                 new_context = new OpenColorIO_AE_Context(path.full_path(),
                                                             OCIO_SOURCE_ENVIRONMENT);

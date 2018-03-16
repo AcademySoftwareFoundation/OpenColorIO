@@ -428,12 +428,12 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
         {
             g_source = SOURCE_ENVIRONMENT;
             
-            char envPath[32767] = { '\0' };
-            const DWORD envResult = GetEnvironmentVariable("OCIO", envPath, 32767);
+            std::string env;
+            OpenColorIO_PS_Context::getenvOCIO(env);
 
-            if(envResult > 0)
+            if(!env.empty())
             {
-                configPath = envPath;
+                configPath = env;
             }
         }
         else if(source == CONFIG_CUSTOM)
@@ -491,12 +491,12 @@ static void TrackConfigMenu(HWND hwndDlg, bool readFromControl)
         {
             SELECT_STRING_ITEM(DLOG_Configuration_Menu, "$OCIO");
             
-            char envPath[32767] = { '\0' };
-            const DWORD envResult = GetEnvironmentVariable("OCIO", envPath, 32767);
+            std::string env;
+            OpenColorIO_PS_Context::getenvOCIO(env);
 
-            if(envResult > 0)
+            if(!env.empty())
             {
-                configPath = envPath;
+                configPath = env;
             }
         }
         else if(g_source == SOURCE_CUSTOM)
@@ -851,11 +851,11 @@ static BOOL CALLBACK DialogProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARA
             do{
                 int index = 0;
                 
-                char envPath[32767] = { '\0' };
-                const DWORD envResult = GetEnvironmentVariable("OCIO", envPath, 32767);
+                std::string env;
+                OpenColorIO_PS_Context::getenvOCIO(env);
 
-                const DWORD envType = (envResult > 0 ? CONFIG_ENVIRONMENT : CONFIG_SEPERATOR);
-                const bool envSelected = (envResult > 0 && g_source == SOURCE_ENVIRONMENT);
+                const DWORD envType = (!env.empty() ? CONFIG_ENVIRONMENT : CONFIG_SEPERATOR);
+                const bool envSelected = (!env.empty() && g_source == SOURCE_ENVIRONMENT);
                 
                 ADD_MENU_ITEM(DLOG_Configuration_Menu, index, "$OCIO", envType, envSelected);
                 index++;

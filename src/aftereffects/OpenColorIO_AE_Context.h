@@ -101,6 +101,10 @@ class OpenColorIO_AE_Context
     bool ExportLUT(const std::string &path, const std::string &display_icc_path);
     
     bool ProcessWorldGL(PF_EffectWorld *float_world);
+    
+    static void getenv(const char *name, std::string &value);
+    
+    static void getenvOCIO(std::string &value) { getenv("OCIO", value); }
 
   private:
     std::string _path;
