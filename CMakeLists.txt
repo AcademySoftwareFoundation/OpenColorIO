@@ -23,6 +23,7 @@ option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_PYGLUE "Specify whether to build python bindings" ON)
 option(OCIO_BUILD_JNIGLUE "Specify whether to build java bindings" OFF)
 option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java bindings" ON)
+option(OCIO_BUILD_GLSL "Set to OFF to disable building OpenGL engine" ON)
 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" UNIX)
@@ -488,6 +489,18 @@ if(OCIO_BUILD_APPS AND (OCIO_BUILD_STATIC OR OCIO_BUILD_SHARED) )
     
 else()
     message(STATUS "Disable build of apps. See cmake options : OCIO_BUILD_APPS and OCIO_BUILD_SHARED/OCIO_BUILD_STATIC (requiered)")
+endif()
+
+###############################################################################
+### OpenGL Engine ###
+
+if(OCIO_BUILD_GLSL)
+    if(OPENGL_FOUND AND GLEW_FOUND)
+        messageonce("Build the OpenGL engine")
+        add_subdirectory(src/glsl)
+    else()
+        messageonce("Not building the OpenGL engine. Requirement(s) found, OpenGL:${OPENGL_FOUND}, GLEW:${GLEW_FOUND}")
+    endif()
 endif()
 
 ###############################################################################

@@ -1223,18 +1223,19 @@ OCIO_NAMESPACE_ENTER
     //    // Step 3: Extract the shader information to implement a specific processor
     //    OCIO::ConstGpuShaderRcPtr shaderInfo = processor->extractGpuShaderInfo(builder);
     //
-    //    // Step 4: Instantiate the 3D LUT
-    //    if(shaderInfo->getNumTextures()==1)
-    //    {
-    //       const std::string lut3dCacheID = shaderInfo->getTextureCacheID(0);
-    //       if(lut3dCacheID != g_lut3dCacheID)
-    //       { /* OpenGL code to create the GPU 3D texture */ }
-    //    }
+    //    // Step 4: Use the helper OpenGL builder
+    //    OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shader);
     //
-    //    // Step 5: Instantiate the Shader program
-    //    const std::string shaderCacheID = shaderInfo->getCacheID();
-    //    if(shaderCacheID != g_shaderCacheID)
-    //    { /* OpenGL calls to create the GPU shader program */ }
+    //    // Step 5: Allocate the LUTs
+    //    oglBuilder->allocateAllTextures();
+    //
+    //    // Step 6: Compute the fragment header program (e.g. helper method consumed by the main)
+    //    g_program = oglBuilder->buildProgram(g_fragShaderText);
+    //
+    //    // Step 7: Initialize all the uniforms (including the textures related ones)
+    //    glUseProgram(g_program);
+    //    glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
+    //    oglBuilder->useAllTextures(g_program);
     // 
     //    ...
     // 
@@ -1263,28 +1264,22 @@ OCIO_NAMESPACE_ENTER
     //    OCIO::GpuShaderRcPtr builder = OCIO::GpuShader::CreateShader(shaderDesc);
     //
     //    // Step 3: Extract the shader information to implement a specific processor
-    //    OCIO::ConstGpuShaderRcPtr shaderInfo
-    //      = processor->extractGpuShaderInfo(builder, OCIO::GpuShader::KEEP_UNIFORMS);
+    //    OCIO::ConstGpuShaderRcPtr shaderInfo = processor->extractGpuShaderInfo(builder);
     //    
-    //    // Step 4: Search for [0..n] 3D textures (from 3D Luts)
-    //    for(unsigned idx=0; idx<shaderInfo->getNum3DTextures(); ++idx)
-    //    { /* Some OpenGL code to create & initialize a 3D texture */ }
+    //    // Step 4: Use the helper OpenGL builder
+    //    OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shader);
     //
-    //    // Step 5: Search for [0..n] 1D or 2D textures (from 1D Luts)
-    //    for(unsigned idx=0; idx<shaderInfo->getNumTextures(); ++idx)
-    //    { /* Some OpenGL code to create & initialize a 1D or 2D texture */ }
+    //    // Step 5: Allocate the LUTs
+    //    oglBuilder->allocateAllTextures();
     //
-    //    // Step 6: Search for [0..n] uniforms (i.e. user controllable values)
-    //    for(unsigned idx=0; idx<shaderInfo->getNumUniforms(); ++idx)
-    //    { /* Some OpenGL code to declare the uniform */ }
+    //    // Step 6: Compute the fragment header program (e.g. helper method consumed by the main)
+    //    g_program = oglBuilder->buildProgram(g_fragShaderText);
     //
-    //    // Step 7: Compute the Shader (e.g. helper method consumed by the main)
-    //    const char * shaderProgramStr = shaderInfo->getShaderText();
-    //    if(shaderProgramStr && *shaderProgramStr)
-    //    { /* Some OpenGL code to compile and link the complete shader program */ }
-    //
-    //    // Step 8: Initialize all the uniforms (including texture related ones)
-    //    { /* Some OpenGL code here */ }
+    //    // Step 7: Initialize all the uniforms (including the textures related ones)
+    //    glUseProgram(g_program);
+    //    glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
+    //    oglBuilder->useAllTextures(g_program);
+
     // 
     //    ...
     //
@@ -1335,7 +1330,7 @@ OCIO_NAMESPACE_ENTER
             float * red, float * green, float * blue) = 0;
         virtual void getTexture(
             unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
-            TextureType & channel, Interpolation & interpolation) = 0;
+            TextureType & channel, Interpolation & interpolation) const = 0;
         virtual void getTextureValues(
             unsigned index, const float *& red, const float *& green, const float *& blue) const = 0;
 
@@ -1356,7 +1351,7 @@ OCIO_NAMESPACE_ENTER
         //   1. A declaration part  i.e. uniform sampled3D tex3;
         //   2. Some helper methods
         //   3. The shader method is decomposed in:
-        //   3.1. The method header   i.e. void OCIODisplay(in vec4 inColor, sampler3D tex3) {
+        //   3.1. The method header   i.e. void OCIODisplay(in vec4 inColor) {
         //   3.2. The method body     i.e.   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
         //   3.3. The method footer   i.e.   return outColor; }
         //   
@@ -1374,7 +1369,7 @@ OCIO_NAMESPACE_ENTER
         // }
         // 
         // // The shader program method
-        // void OCIODisplay(in vec4 inColor, sampler3D tex3)
+        // void OCIODisplay(in vec4 inColor)
         // {
         //   vec4 outColor = inColor;
         //   outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;

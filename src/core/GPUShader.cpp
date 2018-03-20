@@ -93,7 +93,7 @@ namespace
             unsigned index, const char *& name, const char *& id, 
             unsigned & width, unsigned & height, 
             OCIO_NAMESPACE::GpuShader::TextureType & channel, 
-            OCIO_NAMESPACE::Interpolation & interpolation)
+            OCIO_NAMESPACE::Interpolation & interpolation) const
         {
             if(index >= textures.size())
             {
@@ -336,7 +336,7 @@ OCIO_NAMESPACE_ENTER
 
     void LegacyGpuShader::getTexture(
         unsigned, const char *&, const char *&, 
-        unsigned &, unsigned &, TextureType &, Interpolation &)
+        unsigned &, unsigned &, TextureType &, Interpolation &) const
     {
         throw Exception("1D luts are not supported");
     }
@@ -401,6 +401,10 @@ OCIO_NAMESPACE_ENTER
 
     void LegacyGpuShader::addToDeclareShaderCode(const char * shaderCode)
     {
+        if(getImpl()->declarations.empty())
+        {
+            getImpl()->declarations += "\n// Declaration of all variables\n\n";
+        }
         getImpl()->declarations += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
@@ -528,7 +532,7 @@ OCIO_NAMESPACE_ENTER
 
     void GenericGpuShader::getTexture(
         unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
-        TextureType & channel, Interpolation & interpolation)
+        TextureType & channel, Interpolation & interpolation) const
     {
         getImpl()->getTexture(index, name, id, width, height, channel, interpolation);
     }
@@ -579,6 +583,10 @@ OCIO_NAMESPACE_ENTER
 
     void GenericGpuShader::addToDeclareShaderCode(const char * shaderCode)
     {
+        if(getImpl()->declarations.empty())
+        {
+            getImpl()->declarations += "\n// Declaration of all variables\n\n";
+        }
         getImpl()->declarations += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 

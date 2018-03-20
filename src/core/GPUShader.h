@@ -48,7 +48,7 @@ OCIO_NAMESPACE_ENTER
         // Get the texture 1D or 2D information
         void getTexture(
             unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
-            TextureType & channel, Interpolation & interpolation);
+            TextureType & channel, Interpolation & interpolation) const;
         // Get the texture 1D or 2D values only
         void getTextureValues(
             unsigned index, const float *& red, const float *& green, const float *& blue) const;
@@ -140,7 +140,7 @@ OCIO_NAMESPACE_ENTER
             float * red, float * green, float * blue);
         void getTexture(
             unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
-            TextureType & channel, Interpolation & interpolation);
+            TextureType & channel, Interpolation & interpolation) const;
         void getTextureValues(
             unsigned index, const float *& red, const float *& green, const float *& blue) const;
 

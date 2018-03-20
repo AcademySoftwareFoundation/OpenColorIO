@@ -733,6 +733,9 @@ OCIO_NAMESPACE_ENTER
 
                 const std::string name(ss.str());
 
+                const std::string decl(std::string("uniform sampler3D ") + name + ";\n");
+                shaderInfo->addToDeclareShaderCode(decl.c_str());
+
                 shaderInfo->add3DTexture(
                     name.c_str(), m_cacheID.c_str(), m_lut->size[0], m_interpolation, &m_lut->lut[0]);
 
