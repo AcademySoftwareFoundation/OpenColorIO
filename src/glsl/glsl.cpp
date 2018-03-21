@@ -22,6 +22,23 @@
 
 namespace
 {
+    void SetTextureParameters(GLenum textureType, OCIO::Interpolation interpolation)
+    {
+        if(interpolation==OCIO::INTERP_LINEAR || interpolation==OCIO::INTERP_BEST)
+        {
+            glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+        else
+        {
+            glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        }
+        glTexParameteri(textureType, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(textureType, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(textureType, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    }
+
     void AllocateTexture3D(unsigned index, unsigned& texId, unsigned edgelen, const float* values)
     {
         glGenTextures(1, &texId);
@@ -32,12 +49,7 @@ namespace
         
         glBindTexture(GL_TEXTURE_3D, texId);
 
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        SetTextureParameters(GL_TEXTURE_3D, OCIO::INTERP_LINEAR);
 
         glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB,
                      edgelen, edgelen, edgelen, 0, GL_RGB, GL_FLOAT, values);
@@ -54,19 +66,7 @@ namespace
         {
             glBindTexture(GL_TEXTURE_2D, texId);
 
-            if(interpolation==OCIO::INTERP_LINEAR || interpolation==OCIO::INTERP_BEST)
-            {
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            }
-            else
-            {
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            }
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            SetTextureParameters(GL_TEXTURE_2D, interpolation);
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, width, height, 0, GL_RED, GL_FLOAT, values);
         }
@@ -74,19 +74,7 @@ namespace
         {
             glBindTexture(GL_TEXTURE_1D, texId);
 
-            if(interpolation==OCIO::INTERP_LINEAR || interpolation==OCIO::INTERP_BEST)
-            {
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            }
-            else
-            {
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            }
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            SetTextureParameters(GL_TEXTURE_1D, interpolation);
 
             glTexImage1D(GL_TEXTURE_1D, 0, GL_R16F, width, 0, GL_RED, GL_FLOAT, values);
         }
@@ -126,18 +114,16 @@ namespace
         
         glLinkProgram(program);
         
-        /* check link */
+        GLint stat;
+        glGetProgramiv(program, GL_LINK_STATUS, &stat);
+        if (!stat) 
         {
-            GLint stat;
-            glGetProgramiv(program, GL_LINK_STATUS, &stat);
-            if (!stat) {
-                GLchar log[1000];
-                GLsizei len;
-                glGetProgramInfoLog(program, 1000, &len, log);
+            GLchar log[1000];
+            GLsizei len;
+            glGetProgramInfoLog(program, 1000, &len, log);
 
-                fprintf(stderr, "Shader link error:\n%s\n", log);
-                return 0;
-            }
+            fprintf(stderr, "Shader link error:\n%s\n", log);
+            return 0;
         }
         
         return program;
@@ -180,9 +166,13 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
     m_startIndex = startIndex + 1;
     unsigned currIndex = m_startIndex;
 
+    // Process the 3D Luts first
+
     const unsigned maxTexture3D = m_gpuShader->getNum3DTextures();
     for(unsigned idx=0; idx<maxTexture3D; ++idx)
     {
+        // 1. Get the information of the 3D lut
+
         const char* name = 0x0;
         const char* uid  = 0x0;
         unsigned edgelen = 0;
@@ -191,17 +181,25 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         const float* values = 0x0;
         m_gpuShader->get3DTextureValues(idx, values);
 
+        // 2. Allocate the 3D lut
+
         unsigned texId = 0;
         AllocateTexture3D(currIndex, texId, edgelen, values);
+
+        // 3. Keep the texture id & name for the later enabling
 
         m_textureIds.push_back(std::make_pair(texId, name));
 
         currIndex++;
     }
 
+    // Process the 1D luts
+
     const unsigned maxTexture2D = m_gpuShader->getNumTextures();
     for(unsigned idx=0; idx<maxTexture2D; ++idx)
     {
+        // 1. Get the information of the 3D lut
+
         const char* name = 0x0;
         const char* uid  = 0x0;
         unsigned width = 0;
@@ -215,10 +213,17 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         const float* blue  = 0x0;
         m_gpuShader->getTextureValues(idx, red, green, blue);
 
+        // 2. Allocate the 1D lut (which could be a 1D or 2D texture)
+
         unsigned texId = 0;
         AllocateTexture2D(currIndex, texId, width, height, interpolation, red);
+
+        // 3. Keep the texture id & name for the later enabling
+
         m_textureIds.push_back(std::make_pair(texId, name));
         currIndex++;
+
+        // 4. Repeat for the green and blue if needed
 
         if(channel==OCIO::GpuShader::TEXTURE_RGB_CHANNEL)
         {
@@ -251,7 +256,7 @@ void OpenGLBuilder::useAllTextures()
     for(size_t idx=0; idx<max; ++idx)
     {
         const std::pair<unsigned, std::string> data = m_textureIds[idx];
-        glUniform1i(glGetUniformLocation(m_program, data.second.c_str()), m_startIndex + idx);
+        glUniform1i(glGetUniformLocation(m_program, data.second.c_str()), GLint(m_startIndex + idx));
     }
 }
 

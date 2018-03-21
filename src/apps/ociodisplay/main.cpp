@@ -491,10 +491,12 @@ void UpdateOCIOGLState()
     shaderDesc.setNamePrefix("ocio_");
 
     // Step 2: Create the legacy GPU shader builder
-    OCIO::GpuShaderRcPtr builder = OCIO::GpuShader::CreateLegacyShader(shaderDesc, LUT3D_EDGE_SIZE);
+    OCIO::ConstGpuShaderRcPtr builder 
+        = OCIO::GpuShader::CreateLegacyShader(shaderDesc, LUT3D_EDGE_SIZE);
 
     // Step 3: Extract the shader program information for a specific processor    
-    OCIO::ConstGpuShaderRcPtr shader = processor->extractGpuShaderInfo(builder);
+    OCIO::ConstGpuShaderRcPtr shaderInfo
+        = processor->extractGpuShaderInfo(builder);
 
     if(g_gpu)
     {
@@ -504,25 +506,25 @@ void UpdateOCIOGLState()
     }
 
     // Step 4: Use the helper OpenGL builder
-    oglBuilder = OpenGLBuilder::Create(shader);
+    oglBuilder = OpenGLBuilder::Create(shaderInfo);
 
     // Step 5: Allocate all the LUTs
     oglBuilder->allocateAllTextures();
     
     // Step 6: Build the fragment shader program
-    const std::string shaderCacheID = shader->getCacheID();
+    const std::string shaderCacheID = shaderInfo->getCacheID();
     if(g_program == 0 || shaderCacheID != g_shadercacheid)
     {
         //std::cerr << "Computing Shader " << g_shadercacheid << std::endl;
         
         g_shadercacheid = shaderCacheID;
         
-        std::ostringstream os;
-        os << shader->getShaderText() << "\n";
-        os << g_fragShaderText;
-
         if(g_gpu)
         {
+            std::ostringstream os;
+            os << shaderInfo->getShaderText() << "\n";
+            os << g_fragShaderText;
+
             std::cout << os.str() << std::endl;
         }
 

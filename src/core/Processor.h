@@ -78,7 +78,7 @@ OCIO_NAMESPACE_ENTER
         const char * getCpuCacheID() const;
 
         // Extract all the information to fully implement the processor shader program.
-        ConstGpuShaderRcPtr extractGpuShaderInfo(GpuShaderRcPtr & shader) const;
+        ConstGpuShaderRcPtr extractGpuShaderInfo(ConstGpuShaderRcPtr & shader) const;
 
         ////////////////////////////////////////////
         //

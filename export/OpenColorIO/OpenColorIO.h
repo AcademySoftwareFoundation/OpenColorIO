@@ -800,7 +800,7 @@ OCIO_NAMESPACE_ENTER
         // Get the GPU shader program and its description
         
         //!cpp:function:: Extract the shader information to implement the color processing
-        ConstGpuShaderRcPtr extractGpuShaderInfo(GpuShaderRcPtr & builder) const;
+        ConstGpuShaderRcPtr extractGpuShaderInfo(ConstGpuShaderRcPtr & builder) const;
 
         
     private:
@@ -1198,7 +1198,7 @@ OCIO_NAMESPACE_ENTER
     // of 1D Luts and 3D Luts could be present.
     // 
     // 
-    // **Usage Example:** *Extracting all the GPU information using the legacy shader builder*
+    // **Usage Example:** *Extracting all the GPU information*
     //
     //   This example was built following the recipe found in src/apps/ociodisplay/main.cpp 
     //
@@ -1207,79 +1207,70 @@ OCIO_NAMESPACE_ENTER
     //    ...
     //
     //    // Get the processor
+    //    //
     //    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
     //    OCIO::ConstProcessorRcPtr processor 
     //       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
     //
-    //    // Step 1: Create a GPU Shader Description
+    //    // Step 1: Create a GPU Shader description
+    //    //   
     //    OCIO::GpuShaderDesc shaderDesc;
     //    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
     //    shaderDesc.setFunctionName("OCIODisplay");
     //    
-    //    // Step 2: Create the predefined legacy (see below) GPU shader builder
-    //    //         Note: Provide a custom OCIO::GpuShader implementation if needed.
-    //    OCIO::GpuShaderRcPtr builder = OCIO::GpuShader::CreateLegacyShader(shaderDesc, edgelen);
-    //
-    //    // Step 3: Extract the shader information to implement a specific processor
-    //    OCIO::ConstGpuShaderRcPtr shaderInfo = processor->extractGpuShaderInfo(builder);
-    //
-    //    // Step 4: Use the helper OpenGL builder
-    //    OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shader);
-    //
-    //    // Step 5: Allocate the LUTs
-    //    oglBuilder->allocateAllTextures();
-    //
-    //    // Step 6: Compute the fragment header program (e.g. helper method consumed by the main)
-    //    g_program = oglBuilder->buildProgram(g_fragShaderText);
-    //
-    //    // Step 7: Initialize all the uniforms (including the textures related ones)
-    //    glUseProgram(g_program);
-    //    glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
-    //    oglBuilder->useAllTextures(g_program);
-    // 
-    //    ...
-    // 
-    // 
-    // **Usage Example:** *Extracting all the GPU information using the modern shader builder*
-    //
-    //   This example was built following the recipe found in src/apps/ociodisplay/main.cpp 
-    //
-    // .. code-block:: cpp
-    // 
-    //    ...
-    //
-    //    // Get the processor
-    //    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromEnv();
-    //    OCIO::ConstProcessorRcPtr processor 
-    //       = config->getProcessor("ACES - ACEScg", "Output - sRGB");
-    //
-    //    // Step 1: Create a GPU Shader Description
-    //    OCIO::GpuShaderDesc shaderDesc;
-    //    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
-    //    shaderDesc.setFunctionName("OCIODisplay");
-    //    shaderDesc.setNamePrefix("ocio_");
-    //
-    //    // Step 2: Create the predefined default GPU shader builder able to handle
-    //    //         any number of 1D and 3D Luts.
-    //    OCIO::GpuShaderRcPtr builder = OCIO::GpuShader::CreateShader(shaderDesc);
-    //
-    //    // Step 3: Extract the shader information to implement a specific processor
-    //    OCIO::ConstGpuShaderRcPtr shaderInfo = processor->extractGpuShaderInfo(builder);
+    //    // Step 2: Create a GPU shader builder
+    //    //
+    //    // The three potential scenarios are:
+    //    //
+    //    //   1. Create a 'baked' shader program. It means that the color processor
+    //    //      is baked to contain at most one 3D lut and no 1D luts.
+    //    //
+    //    //      This is the current behavior which will be still part of OCIO v2
+    //    //      for backward compatibility.
+    //    //
+    //         OCIO::ConstGpuShaderRcPtr builder = OCIO::GpuShader::CreateLegacyShader(shaderDesc, edgelen);
+    //    //
+    //    //   2. Create a generic shader program. It means that the color processor 
+    //    //      is used as-is (i.e. without any baking step) and could contain any number
+    //    //      of 1D & 3D luts.
+    //    //
+    //    //      This is the new approach part of OCIO v2 to have the same processing quality
+    //    //      between the CPU and GPU.
+    //    //
+    //         OCIO::ConstGpuShaderRcPtr builder = OCIO::GpuShader::CreateShader(shaderDesc);
+    //    //
+    //    //   3. Create a custom shader program. Many tools at Autodesk are using various private
+    //    //      GPU libraries imposing to develop custom builders.
+    //    //
+    //    //      This is a mandatory scenario to better integrate in any DCC's.
+    //    //
+    //         OCIO::ConstGpuShaderRcPtr builder = MyCustomGpuShader::CreateShader(shaderDesc);
     //    
+    //    // Step 3: Extract the shader information from a specific processor
+    //    //
+    //    // Note: While 'builder' instance is independent from any processor,
+    //    //       'shaderInfo' holds data from a specific processor. 
+    //    //
+    //    OCIO::ConstGpuShaderRcPtr shaderInfo = processor->extractGpuShaderInfo(builder);
+    //
     //    // Step 4: Use the helper OpenGL builder
-    //    OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shader);
+    //    //
+    //    OpenGLBuilderRcPtr oglBuilder = OpenGLBuilder::Create(shaderInfo);
     //
     //    // Step 5: Allocate the LUTs
+    //    //
     //    oglBuilder->allocateAllTextures();
     //
-    //    // Step 6: Compute the fragment header program (e.g. helper method consumed by the main)
+    //    // Step 6: Build the fragment shader program (i.e. helper method consumed by the main)
+    //    //  used by a shader program (i.e. g_fragShaderText) 
+    //    //
     //    g_program = oglBuilder->buildProgram(g_fragShaderText);
     //
-    //    // Step 7: Initialize all the uniforms (including the textures related ones)
+    //    // Step 7: Enable the fragment shader program, and all needed textures
+    //    //
     //    glUseProgram(g_program);
     //    glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
     //    oglBuilder->useAllTextures(g_program);
-
     // 
     //    ...
     //

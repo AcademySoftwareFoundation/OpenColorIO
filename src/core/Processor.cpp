@@ -190,7 +190,7 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->getCpuCacheID();
     }
     
-    ConstGpuShaderRcPtr Processor::extractGpuShaderInfo(GpuShaderRcPtr & shader) const
+    ConstGpuShaderRcPtr Processor::extractGpuShaderInfo(ConstGpuShaderRcPtr & shader) const
     {
         return getImpl()->extractGpuShaderInfo(shader);
     }
@@ -413,7 +413,7 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    ConstGpuShaderRcPtr Processor::Impl::extractGpuShaderInfo(GpuShaderRcPtr & shader) const
+    ConstGpuShaderRcPtr Processor::Impl::extractGpuShaderInfo(ConstGpuShaderRcPtr & shader) const
     {
         AutoMutex lock(m_resultsCacheMutex);
 

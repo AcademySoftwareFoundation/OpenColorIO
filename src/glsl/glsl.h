@@ -43,11 +43,11 @@ protected:
     void deleteAllTextures();
 
 private:
-    OCIO::ConstGpuShaderRcPtr m_gpuShader;
-    unsigned m_startIndex;
-    TextureIds m_textureIds;
-    unsigned m_fragShader;
-    unsigned m_program;
+    OCIO::ConstGpuShaderRcPtr m_gpuShader; // Description of the fragement shader to create
+    unsigned m_startIndex;                 // Starting index for texture allocations
+    TextureIds m_textureIds;               // Texture ids of all needed textures
+    unsigned m_fragShader;                 // Fragment shader identifier
+    unsigned m_program;                    // Program identifier
 };
 
 
