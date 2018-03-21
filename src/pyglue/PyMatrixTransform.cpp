@@ -51,13 +51,13 @@ OCIO_NAMESPACE_ENTER
         
         int PyOCIO_MatrixTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
         PyObject * PyOCIO_MatrixTransform_equals(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_getValue(PyObject * self);
+        PyObject * PyOCIO_MatrixTransform_getValue(PyObject * self, PyObject *);
         PyObject * PyOCIO_MatrixTransform_setValue(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_getMatrix(PyObject * self);
+        PyObject * PyOCIO_MatrixTransform_getMatrix(PyObject * self, PyObject *);
         PyObject * PyOCIO_MatrixTransform_setMatrix(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_getOffset(PyObject * self);
+        PyObject * PyOCIO_MatrixTransform_getOffset(PyObject * self, PyObject *);
         PyObject * PyOCIO_MatrixTransform_setOffset(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_MatrixTransform_Identity(PyObject * cls);
+        PyObject * PyOCIO_MatrixTransform_Identity(PyObject * cls, PyObject *);
         PyObject * PyOCIO_MatrixTransform_Fit(PyObject * cls, PyObject * args);
         PyObject * PyOCIO_MatrixTransform_Sat(PyObject * cls, PyObject * args);
         PyObject * PyOCIO_MatrixTransform_Scale(PyObject * cls, PyObject * args);
@@ -202,7 +202,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_MatrixTransform_getValue(PyObject * self)
+        PyObject * PyOCIO_MatrixTransform_getValue(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self);
@@ -247,7 +247,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_MatrixTransform_getMatrix(PyObject * self)
+        PyObject * PyOCIO_MatrixTransform_getMatrix(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self);
@@ -277,7 +277,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_MatrixTransform_getOffset(PyObject * self)
+        PyObject * PyOCIO_MatrixTransform_getOffset(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstMatrixTransformRcPtr transform = GetConstMatrixTransform(self);
@@ -307,7 +307,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_MatrixTransform_Identity(PyObject * /*self*/)
+        PyObject * PyOCIO_MatrixTransform_Identity(PyObject *, PyObject * /*self*, *args*/)
         {
             OCIO_PYTRY_ENTER()
             std::vector<float> matrix(16);

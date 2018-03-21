@@ -77,23 +77,23 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_Context_init(PyOCIO_Context * self, PyObject * args, PyObject * kwds);
-        void PyOCIO_Context_delete(PyOCIO_Context * self, PyObject * args);
+        void PyOCIO_Context_delete(PyOCIO_Context * self);
         PyObject * PyOCIO_Context_str(PyObject * self);
-        PyObject * PyOCIO_Context_isEditable(PyObject * self);
-        PyObject * PyOCIO_Context_createEditableCopy(PyObject * self);
-        PyObject * PyOCIO_Context_getCacheID(PyObject * self);
-        PyObject * PyOCIO_Context_getSearchPath(PyObject * self);
+        PyObject * PyOCIO_Context_isEditable(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Context_createEditableCopy(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Context_getCacheID(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Context_getSearchPath(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_setSearchPath(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Context_getWorkingDir(PyObject * self);
+        PyObject * PyOCIO_Context_getWorkingDir(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_setWorkingDir(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_getStringVar(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_setStringVar(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_getNumStringVars(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_getStringVarNameByIndex(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Context_clearStringVars(PyObject * self);
+        PyObject * PyOCIO_Context_clearStringVars(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_setEnvironmentMode(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Context_getEnvironmentMode(PyObject * self);
-        PyObject * PyOCIO_Context_loadEnvironment(PyObject * self);
+        PyObject * PyOCIO_Context_getEnvironmentMode(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Context_loadEnvironment(PyObject * self, PyObject *);
         PyObject * PyOCIO_Context_resolveStringVar(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Context_resolveFileLocation(PyObject * self, PyObject * args);
         
@@ -159,7 +159,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_as_mapping
         0,                                          //tp_hash 
         0,                                          //tp_call
-        PyOCIO_Context_str,                         //tp_str
+        (reprfunc)PyOCIO_Context_str,               //tp_str
         0,                                          //tp_getattro
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
@@ -199,7 +199,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        void PyOCIO_Context_delete(PyOCIO_Context *self, PyObject * /*args*/)
+        void PyOCIO_Context_delete(PyOCIO_Context *self)
         {
             DeletePyObject<PyOCIO_Context>(self);
         }
@@ -214,12 +214,12 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
 
-        PyObject * PyOCIO_Context_isEditable(PyObject * self)
+        PyObject * PyOCIO_Context_isEditable(PyObject * self, PyObject *)
         {
             return PyBool_FromLong(IsPyContextEditable(self));
         }
         
-        PyObject * PyOCIO_Context_createEditableCopy(PyObject * self)
+        PyObject * PyOCIO_Context_createEditableCopy(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstContextRcPtr context = GetConstContext(self, true);
@@ -228,7 +228,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_getCacheID(PyObject * self)
+        PyObject * PyOCIO_Context_getCacheID(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstContextRcPtr context = GetConstContext(self, true);
@@ -236,7 +236,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_getSearchPath(PyObject * self)
+        PyObject * PyOCIO_Context_getSearchPath(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstContextRcPtr context = GetConstContext(self, true);
@@ -256,7 +256,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_getWorkingDir(PyObject * self)
+        PyObject * PyOCIO_Context_getWorkingDir(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstContextRcPtr context = GetConstContext(self, true);
@@ -319,7 +319,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_clearStringVars(PyObject * self)
+        PyObject * PyOCIO_Context_clearStringVars(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ContextRcPtr context = GetEditableContext(self);
@@ -340,7 +340,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_getEnvironmentMode(PyObject * self)
+        PyObject * PyOCIO_Context_getEnvironmentMode(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstContextRcPtr context = GetConstContext(self, true);
@@ -349,7 +349,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Context_loadEnvironment(PyObject * self)
+        PyObject * PyOCIO_Context_loadEnvironment(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ContextRcPtr context = GetEditableContext(self);

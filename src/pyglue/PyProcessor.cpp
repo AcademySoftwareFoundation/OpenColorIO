@@ -60,13 +60,13 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_Processor_init(PyOCIO_Processor * self, PyObject * args, PyObject * kwds);
-        void PyOCIO_Processor_delete(PyOCIO_Processor * self, PyObject * args);
-        PyObject * PyOCIO_Processor_isNoOp(PyObject * self);
-        PyObject * PyOCIO_Processor_hasChannelCrosstalk(PyObject * self);
-        PyObject * PyOCIO_Processor_getMetadata(PyObject * self);
+        void PyOCIO_Processor_delete(PyOCIO_Processor * self);
+        PyObject * PyOCIO_Processor_isNoOp(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Processor_hasChannelCrosstalk(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Processor_getMetadata(PyObject * self, PyObject *);
         PyObject * PyOCIO_Processor_applyRGB(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Processor_applyRGBA(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Processor_getCpuCacheID(PyObject * self);
+        PyObject * PyOCIO_Processor_getCpuCacheID(PyObject * self, PyObject *);
         PyObject * PyOCIO_Processor_getGpuShaderText(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Processor_getGpuShaderTextCacheID(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Processor_getGpuLut3D(PyObject * self, PyObject * args);
@@ -222,12 +222,12 @@ OCIO_NAMESPACE_ENTER
             return -1;
         }
         
-        void PyOCIO_Processor_delete(PyOCIO_Processor *self, PyObject * /*args*/)
+        void PyOCIO_Processor_delete(PyOCIO_Processor *self)
         {
             DeletePyObject<PyOCIO_Processor>(self);
         }
         
-        PyObject * PyOCIO_Processor_isNoOp(PyObject * self)
+        PyObject * PyOCIO_Processor_isNoOp(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstProcessorRcPtr processor = GetConstProcessor(self);
@@ -235,7 +235,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Processor_hasChannelCrosstalk(PyObject * self)
+        PyObject * PyOCIO_Processor_hasChannelCrosstalk(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstProcessorRcPtr processor = GetConstProcessor(self);
@@ -243,7 +243,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Processor_getMetadata(PyObject * self)
+        PyObject * PyOCIO_Processor_getMetadata(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstProcessorRcPtr processor = GetConstProcessor(self);
@@ -307,7 +307,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Processor_getCpuCacheID(PyObject * self)
+        PyObject * PyOCIO_Processor_getCpuCacheID(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstProcessorRcPtr processor = GetConstProcessor(self);

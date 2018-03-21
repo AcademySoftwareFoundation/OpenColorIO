@@ -54,14 +54,14 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_GpuShaderDesc_init(PyOCIO_GpuShaderDesc * self, PyObject * args, PyObject * kwds);
-        void PyOCIO_GpuShaderDesc_delete(PyOCIO_GpuShaderDesc * self, PyObject * args);
+        void PyOCIO_GpuShaderDesc_delete(PyOCIO_GpuShaderDesc * self);
         PyObject * PyOCIO_GpuShaderDesc_setLanguage(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_GpuShaderDesc_getLanguage(PyObject * self);
+        PyObject * PyOCIO_GpuShaderDesc_getLanguage(PyObject * self, PyObject *);
         PyObject * PyOCIO_GpuShaderDesc_setFunctionName(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_GpuShaderDesc_getFunctionName(PyObject * self);
+        PyObject * PyOCIO_GpuShaderDesc_getFunctionName(PyObject * self, PyObject *);
         PyObject * PyOCIO_GpuShaderDesc_setLut3DEdgeLen(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_GpuShaderDesc_getLut3DEdgeLen(PyObject * self);
-        PyObject * PyOCIO_GpuShaderDesc_getCacheID(PyObject * self);
+        PyObject * PyOCIO_GpuShaderDesc_getLut3DEdgeLen(PyObject * self, PyObject *);
+        PyObject * PyOCIO_GpuShaderDesc_getCacheID(PyObject * self, PyObject *);
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -152,7 +152,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        void PyOCIO_GpuShaderDesc_delete(PyOCIO_GpuShaderDesc *self, PyObject * /*args*/)
+        void PyOCIO_GpuShaderDesc_delete(PyOCIO_GpuShaderDesc *self)
         {
             DeletePyObject<PyOCIO_GpuShaderDesc>(self);
         }
@@ -169,7 +169,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GpuShaderDesc_getLanguage(PyObject * self)
+        PyObject * PyOCIO_GpuShaderDesc_getLanguage(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstGpuShaderDescRcPtr desc = GetConstGpuShaderDesc(self);
@@ -190,7 +190,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GpuShaderDesc_getFunctionName(PyObject * self)
+        PyObject * PyOCIO_GpuShaderDesc_getFunctionName(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstGpuShaderDescRcPtr desc = GetConstGpuShaderDesc(self);
@@ -210,7 +210,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GpuShaderDesc_getLut3DEdgeLen(PyObject * self)
+        PyObject * PyOCIO_GpuShaderDesc_getLut3DEdgeLen(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstGpuShaderDescRcPtr desc = GetConstGpuShaderDesc(self);
@@ -218,7 +218,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GpuShaderDesc_getCacheID(PyObject * self)
+        PyObject * PyOCIO_GpuShaderDesc_getCacheID(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstGpuShaderDescRcPtr desc = GetConstGpuShaderDesc(self);

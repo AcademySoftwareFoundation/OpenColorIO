@@ -50,22 +50,22 @@ OCIO_NAMESPACE_ENTER
         int PyOCIO_CDLTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds); 
         PyObject * PyOCIO_CDLTransform_CreateFromFile(PyObject * self, PyObject * args);
         PyObject * PyOCIO_CDLTransform_equals(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_CDLTransform_getXML(PyObject * self);
+        PyObject * PyOCIO_CDLTransform_getXML(PyObject * self, PyObject *);
         PyObject * PyOCIO_CDLTransform_setXML(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_CDLTransform_getSlope(PyObject * self);
-        PyObject * PyOCIO_CDLTransform_getOffset(PyObject * self);
-        PyObject * PyOCIO_CDLTransform_getPower(PyObject * self);
-        PyObject * PyOCIO_CDLTransform_getSOP(PyObject * self);
-        PyObject * PyOCIO_CDLTransform_getSat(PyObject * self);
+        PyObject * PyOCIO_CDLTransform_getSlope(PyObject * self, PyObject *);
+        PyObject * PyOCIO_CDLTransform_getOffset(PyObject * self, PyObject *);
+        PyObject * PyOCIO_CDLTransform_getPower(PyObject * self, PyObject *);
+        PyObject * PyOCIO_CDLTransform_getSOP(PyObject * self, PyObject *);
+        PyObject * PyOCIO_CDLTransform_getSat(PyObject * self, PyObject *);
         PyObject * PyOCIO_CDLTransform_setSlope(PyObject * self, PyObject * args);
         PyObject * PyOCIO_CDLTransform_setOffset(PyObject * self, PyObject * args);
         PyObject * PyOCIO_CDLTransform_setPower(PyObject * self, PyObject * args);
         PyObject * PyOCIO_CDLTransform_setSOP(PyObject * self, PyObject * args);
         PyObject * PyOCIO_CDLTransform_setSat(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_CDLTransform_getSatLumaCoefs(PyObject * self);
-        PyObject * PyOCIO_CDLTransform_getID(PyObject * self);
+        PyObject * PyOCIO_CDLTransform_getSatLumaCoefs(PyObject * self, PyObject *);
+        PyObject * PyOCIO_CDLTransform_getID(PyObject * self, PyObject *);
         PyObject * PyOCIO_CDLTransform_setID(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_CDLTransform_getDescription(PyObject * self);
+        PyObject * PyOCIO_CDLTransform_getDescription(PyObject * self, PyObject *);
         PyObject * PyOCIO_CDLTransform_setDescription(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_CDLTransform_getXML(PyObject * self)
+        PyObject * PyOCIO_CDLTransform_getXML(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
@@ -271,7 +271,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_CDLTransform_getSlope(PyObject * self)
+        PyObject * PyOCIO_CDLTransform_getSlope(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
@@ -281,7 +281,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_CDLTransform_getOffset(PyObject * self)
+        PyObject * PyOCIO_CDLTransform_getOffset(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
@@ -291,7 +291,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_CDLTransform_getPower(PyObject * self)
+        PyObject * PyOCIO_CDLTransform_getPower(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
@@ -301,7 +301,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_CDLTransform_getSOP(PyObject * self)
+        PyObject * PyOCIO_CDLTransform_getSOP(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
@@ -311,7 +311,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_CDLTransform_getSat(PyObject * self)
+        PyObject * PyOCIO_CDLTransform_getSat(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
@@ -398,7 +398,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_CDLTransform_getSatLumaCoefs(PyObject * self)
+        PyObject * PyOCIO_CDLTransform_getSatLumaCoefs(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
@@ -408,7 +408,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_CDLTransform_getID(PyObject * self)
+        PyObject * PyOCIO_CDLTransform_getID(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
@@ -427,7 +427,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_CDLTransform_getDescription(PyObject * self)
+        PyObject * PyOCIO_CDLTransform_getDescription(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);

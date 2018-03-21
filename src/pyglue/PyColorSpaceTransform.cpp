@@ -50,9 +50,9 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_ColorSpaceTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_ColorSpaceTransform_getSrc(PyObject * self);
+        PyObject * PyOCIO_ColorSpaceTransform_getSrc(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpaceTransform_setSrc(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_ColorSpaceTransform_getDst(PyObject * self);
+        PyObject * PyOCIO_ColorSpaceTransform_getDst(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpaceTransform_setDst(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
@@ -143,7 +143,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        PyObject * PyOCIO_ColorSpaceTransform_getSrc(PyObject * self)
+        PyObject * PyOCIO_ColorSpaceTransform_getSrc(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceTransformRcPtr transform = GetConstColorSpaceTransform(self);
@@ -162,7 +162,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ColorSpaceTransform_getDst(PyObject * self)
+        PyObject * PyOCIO_ColorSpaceTransform_getDst(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceTransformRcPtr transform = GetConstColorSpaceTransform(self);

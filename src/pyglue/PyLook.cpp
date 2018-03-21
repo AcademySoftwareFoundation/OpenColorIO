@@ -77,19 +77,19 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_Look_init(PyOCIO_Look * self, PyObject * args, PyObject * kwds);
-        void PyOCIO_Look_delete(PyOCIO_Look * self, PyObject * args);
+        void PyOCIO_Look_delete(PyOCIO_Look * self);
         PyObject * PyOCIO_Look_str(PyObject * self);
-        PyObject * PyOCIO_Look_isEditable(PyObject * self);
-        PyObject * PyOCIO_Look_createEditableCopy(PyObject * self);
-        PyObject * PyOCIO_Look_getName(PyObject * self);
+        PyObject * PyOCIO_Look_isEditable(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Look_createEditableCopy(PyObject * self, PyObject *);
+        PyObject * PyOCIO_Look_getName(PyObject * self, PyObject *);
         PyObject * PyOCIO_Look_setName(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Look_getProcessSpace(PyObject * self);
+        PyObject * PyOCIO_Look_getProcessSpace(PyObject * self, PyObject *);
         PyObject * PyOCIO_Look_setProcessSpace(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Look_getDescription(PyObject * self);
+        PyObject * PyOCIO_Look_getDescription(PyObject * self, PyObject *);
         PyObject * PyOCIO_Look_setDescription(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Look_getTransform(PyObject * self);
+        PyObject * PyOCIO_Look_getTransform(PyObject * self, PyObject *);
         PyObject * PyOCIO_Look_setTransform(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Look_getInverseTransform(PyObject * self);
+        PyObject * PyOCIO_Look_getInverseTransform(PyObject * self, PyObject *);
         PyObject * PyOCIO_Look_setInverseTransform(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
@@ -144,7 +144,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_as_mapping
         0,                                          //tp_hash 
         0,                                          //tp_call
-        PyOCIO_Look_str,                            //tp_str
+        (reprfunc)PyOCIO_Look_str,                  //tp_str
         0,                                          //tp_getattro
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
@@ -202,7 +202,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        void PyOCIO_Look_delete(PyOCIO_Look *self, PyObject * /*args*/)
+        void PyOCIO_Look_delete(PyOCIO_Look *self)
         {
             DeletePyObject<PyOCIO_Look>(self);
         }
@@ -217,12 +217,12 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
 
-        PyObject * PyOCIO_Look_isEditable(PyObject * self)
+        PyObject * PyOCIO_Look_isEditable(PyObject * self, PyObject *)
         {
             return PyBool_FromLong(IsPyLookEditable(self));
         }
         
-        PyObject * PyOCIO_Look_createEditableCopy(PyObject * self)
+        PyObject * PyOCIO_Look_createEditableCopy(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLookRcPtr look = GetConstLook(self, true);
@@ -231,7 +231,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Look_getName(PyObject * self)
+        PyObject * PyOCIO_Look_getName(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLookRcPtr look = GetConstLook(self, true);
@@ -251,7 +251,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Look_getProcessSpace(PyObject * self)
+        PyObject * PyOCIO_Look_getProcessSpace(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLookRcPtr look = GetConstLook(self, true);
@@ -271,7 +271,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Look_getDescription(PyObject * self)
+        PyObject * PyOCIO_Look_getDescription(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLookRcPtr look = GetConstLook(self, true);
@@ -290,7 +290,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Look_getTransform(PyObject * self)
+        PyObject * PyOCIO_Look_getTransform(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLookRcPtr look = GetConstLook(self, true);
@@ -313,7 +313,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_Look_getInverseTransform(PyObject * self)
+        PyObject * PyOCIO_Look_getInverseTransform(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLookRcPtr look = GetConstLook(self, true);

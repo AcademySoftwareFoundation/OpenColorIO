@@ -50,7 +50,7 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_ExponentTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_ExponentTransform_getValue(PyObject * self);
+        PyObject * PyOCIO_ExponentTransform_getValue(PyObject * self, PyObject *);
         PyObject * PyOCIO_ExponentTransform_setValue(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
@@ -145,7 +145,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        PyObject * PyOCIO_ExponentTransform_getValue(PyObject * self)
+        PyObject * PyOCIO_ExponentTransform_getValue(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstExponentTransformRcPtr transform = GetConstExponentTransform(self);

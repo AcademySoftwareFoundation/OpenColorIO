@@ -51,13 +51,13 @@ OCIO_NAMESPACE_ENTER
         
         int PyOCIO_GroupTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
         PyObject * PyOCIO_GroupTransform_getTransform(PyObject * self,  PyObject * args);
-        PyObject * PyOCIO_GroupTransform_getTransforms(PyObject * self);
+        PyObject * PyOCIO_GroupTransform_getTransforms(PyObject * self, PyObject *);
         PyObject * PyOCIO_GroupTransform_setTransforms(PyObject * self,  PyObject * args);
         // TODO: make these appear more like a pysequence. .append, len(), etc
-        PyObject * PyOCIO_GroupTransform_size(PyObject * self);
+        PyObject * PyOCIO_GroupTransform_size(PyObject * self, PyObject *);
         PyObject * PyOCIO_GroupTransform_push_back(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_GroupTransform_clear(PyObject * self);
-        PyObject * PyOCIO_GroupTransform_empty(PyObject * self);
+        PyObject * PyOCIO_GroupTransform_clear(PyObject * self, PyObject *);
+        PyObject * PyOCIO_GroupTransform_empty(PyObject * self, PyObject *);
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -175,7 +175,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GroupTransform_getTransforms(PyObject * self)
+        PyObject * PyOCIO_GroupTransform_getTransforms(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstGroupTransformRcPtr transform = GetConstGroupTransform(self);
@@ -206,7 +206,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GroupTransform_size(PyObject * self)
+        PyObject * PyOCIO_GroupTransform_size(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstGroupTransformRcPtr transform = GetConstGroupTransform(self);
@@ -228,7 +228,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GroupTransform_clear(PyObject * self)
+        PyObject * PyOCIO_GroupTransform_clear(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             GroupTransformRcPtr transform = GetEditableGroupTransform(self);
@@ -237,7 +237,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_GroupTransform_empty(PyObject * self)
+        PyObject * PyOCIO_GroupTransform_empty(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstGroupTransformRcPtr transform = GetConstGroupTransform(self);

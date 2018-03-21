@@ -77,25 +77,25 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_ColorSpace_init(PyOCIO_ColorSpace * self, PyObject * args, PyObject * kwds);
-        void PyOCIO_ColorSpace_delete(PyOCIO_ColorSpace * self, PyObject * args);
+        void PyOCIO_ColorSpace_delete(PyOCIO_ColorSpace * self);
         PyObject * PyOCIO_ColorSpace_str(PyObject * self);
-        PyObject * PyOCIO_ColorSpace_isEditable(PyObject * self);
-        PyObject * PyOCIO_ColorSpace_createEditableCopy(PyObject * self);
-        PyObject * PyOCIO_ColorSpace_getName(PyObject * self);
+        PyObject * PyOCIO_ColorSpace_isEditable(PyObject * self, PyObject *);
+        PyObject * PyOCIO_ColorSpace_createEditableCopy(PyObject * self, PyObject *);
+        PyObject * PyOCIO_ColorSpace_getName(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpace_setName(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_ColorSpace_getFamily(PyObject * self);
+        PyObject * PyOCIO_ColorSpace_getFamily(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpace_setFamily(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_ColorSpace_getEqualityGroup(PyObject * self);
+        PyObject * PyOCIO_ColorSpace_getEqualityGroup(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpace_setEqualityGroup(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_ColorSpace_getDescription(PyObject * self);
+        PyObject * PyOCIO_ColorSpace_getDescription(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpace_setDescription(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_ColorSpace_getBitDepth(PyObject * self);
+        PyObject * PyOCIO_ColorSpace_getBitDepth(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpace_setBitDepth(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_ColorSpace_isData(PyObject * self);
+        PyObject * PyOCIO_ColorSpace_isData(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpace_setIsData(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_ColorSpace_getAllocation(PyObject * self);
+        PyObject * PyOCIO_ColorSpace_getAllocation(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpace_setAllocation(PyObject * self, PyObject * args );
-        PyObject * PyOCIO_ColorSpace_getAllocationVars(PyObject * self);
+        PyObject * PyOCIO_ColorSpace_getAllocationVars(PyObject * self, PyObject *);
         PyObject * PyOCIO_ColorSpace_setAllocationVars(PyObject * self,  PyObject * args);
         PyObject * PyOCIO_ColorSpace_getTransform(PyObject * self, PyObject * args);
         PyObject * PyOCIO_ColorSpace_setTransform(PyObject * self, PyObject * args);
@@ -167,7 +167,7 @@ OCIO_NAMESPACE_ENTER
         0,                                          //tp_as_mapping
         0,                                          //tp_hash 
         0,                                          //tp_call
-        PyOCIO_ColorSpace_str,                      //tp_str
+        (reprfunc)PyOCIO_ColorSpace_str,            //tp_str
         0,                                          //tp_getattro
         0,                                          //tp_setattro
         0,                                          //tp_as_buffer
@@ -264,7 +264,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        void PyOCIO_ColorSpace_delete(PyOCIO_ColorSpace *self, PyObject * /*args*/)
+        void PyOCIO_ColorSpace_delete(PyOCIO_ColorSpace *self)
         {
             DeletePyObject<PyOCIO_ColorSpace>(self);
         }
@@ -279,12 +279,12 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
 
-        PyObject * PyOCIO_ColorSpace_isEditable(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_isEditable(PyObject * self, PyObject *)
         {
             return PyBool_FromLong(IsPyColorSpaceEditable(self));
         }
         
-        PyObject * PyOCIO_ColorSpace_createEditableCopy(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_createEditableCopy(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
@@ -293,7 +293,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ColorSpace_getName(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_getName(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
@@ -312,7 +312,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ColorSpace_getFamily(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_getFamily(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
@@ -331,7 +331,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ColorSpace_getEqualityGroup(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_getEqualityGroup(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
@@ -350,7 +350,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ColorSpace_getDescription(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_getDescription(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
@@ -369,7 +369,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ColorSpace_getBitDepth(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_getBitDepth(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
@@ -388,7 +388,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ColorSpace_isData(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_isData(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
@@ -408,7 +408,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ColorSpace_getAllocation(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_getAllocation(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);
@@ -428,7 +428,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ColorSpace_getAllocationVars(PyObject * self)
+        PyObject * PyOCIO_ColorSpace_getAllocationVars(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstColorSpaceRcPtr colorSpace = GetConstColorSpace(self, true);

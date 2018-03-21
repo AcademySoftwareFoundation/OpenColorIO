@@ -48,11 +48,11 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_LookTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_LookTransform_getSrc(PyObject * self);
+        PyObject * PyOCIO_LookTransform_getSrc(PyObject * self, PyObject *);
         PyObject * PyOCIO_LookTransform_setSrc(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_LookTransform_getDst(PyObject * self);
+        PyObject * PyOCIO_LookTransform_getDst(PyObject * self, PyObject *);
         PyObject * PyOCIO_LookTransform_setDst(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_LookTransform_getLooks(PyObject * self);
+        PyObject * PyOCIO_LookTransform_getLooks(PyObject * self, PyObject *);
         PyObject * PyOCIO_LookTransform_setLooks(PyObject * self, PyObject * args);
         
         ///////////////////////////////////////////////////////////////////////
@@ -150,7 +150,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        PyObject * PyOCIO_LookTransform_getSrc(PyObject * self)
+        PyObject * PyOCIO_LookTransform_getSrc(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLookTransformRcPtr transform = GetConstLookTransform(self);
@@ -170,7 +170,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_LookTransform_getDst(PyObject * self)
+        PyObject * PyOCIO_LookTransform_getDst(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLookTransformRcPtr transform = GetConstLookTransform(self);
@@ -190,7 +190,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_LookTransform_getLooks(PyObject * self)
+        PyObject * PyOCIO_LookTransform_getLooks(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstLookTransformRcPtr transform = GetConstLookTransform(self);

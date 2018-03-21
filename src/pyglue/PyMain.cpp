@@ -37,7 +37,7 @@ namespace OCIO = OCIO_NAMESPACE;
 namespace
 {
     
-    PyObject * PyOCIO_ClearAllCaches(PyObject * /* self */)
+    PyObject * PyOCIO_ClearAllCaches(PyObject *, PyObject * /* self, args */)
     {
         OCIO_PYTRY_ENTER()
         OCIO::ClearAllCaches();
@@ -45,7 +45,7 @@ namespace
         OCIO_PYTRY_EXIT(NULL)
     }
     
-    PyObject * PyOCIO_GetLoggingLevel(PyObject * /* self */)
+    PyObject * PyOCIO_GetLoggingLevel(PyObject *, PyObject * /* self, args */)
     {
         OCIO_PYTRY_ENTER()
         return PyString_FromString(
@@ -69,7 +69,7 @@ namespace
         OCIO_PYTRY_EXIT(NULL)
     }
     
-    PyObject * PyOCIO_GetCurrentConfig(PyObject * /* self */)
+    PyObject * PyOCIO_GetCurrentConfig(PyObject *, PyObject * /* self, args */)
     {
         OCIO_PYTRY_ENTER()
         return OCIO::BuildConstPyConfig(OCIO::GetCurrentConfig());

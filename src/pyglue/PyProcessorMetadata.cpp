@@ -59,9 +59,9 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_ProcessorMetadata_init(PyOCIO_ProcessorMetadata * self, PyObject * args, PyObject * kwds);
-        void PyOCIO_ProcessorMetadata_delete(PyOCIO_ProcessorMetadata * self, PyObject * args);
-        PyObject * PyOCIO_ProcessorMetadata_getFiles(PyObject * self);
-        PyObject * PyOCIO_ProcessorMetadata_getLooks(PyObject * self);
+        void PyOCIO_ProcessorMetadata_delete(PyOCIO_ProcessorMetadata * self);
+        PyObject * PyOCIO_ProcessorMetadata_getFiles(PyObject * self, PyObject *);
+        PyObject * PyOCIO_ProcessorMetadata_getLooks(PyObject * self, PyObject *);
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -138,12 +138,12 @@ OCIO_NAMESPACE_ENTER
             return -1;
         }
         
-        void PyOCIO_ProcessorMetadata_delete(PyOCIO_ProcessorMetadata *self, PyObject * /*args*/)
+        void PyOCIO_ProcessorMetadata_delete(PyOCIO_ProcessorMetadata *self)
         {
             DeletePyObject<PyOCIO_ProcessorMetadata>(self);
         }
         
-        PyObject * PyOCIO_ProcessorMetadata_getFiles(PyObject * self)
+        PyObject * PyOCIO_ProcessorMetadata_getFiles(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstProcessorMetadataRcPtr metadata = GetConstProcessorMetadata(self);
@@ -154,7 +154,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_ProcessorMetadata_getLooks(PyObject * self)
+        PyObject * PyOCIO_ProcessorMetadata_getLooks(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstProcessorMetadataRcPtr metadata = GetConstProcessorMetadata(self);

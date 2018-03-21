@@ -50,13 +50,13 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_FileTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds);
-        PyObject * PyOCIO_FileTransform_getSrc(PyObject * self);
+        PyObject * PyOCIO_FileTransform_getSrc(PyObject * self, PyObject *);
         PyObject * PyOCIO_FileTransform_setSrc(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_FileTransform_getCCCId(PyObject * self);
+        PyObject * PyOCIO_FileTransform_getCCCId(PyObject * self, PyObject *);
         PyObject * PyOCIO_FileTransform_setCCCId(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_FileTransform_getInterpolation(PyObject * self);
+        PyObject * PyOCIO_FileTransform_getInterpolation(PyObject * self, PyObject *);
         PyObject * PyOCIO_FileTransform_setInterpolation(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_FileTransform_getNumFormats(PyObject * self);
+        PyObject * PyOCIO_FileTransform_getNumFormats(PyObject * self, PyObject *);
         PyObject * PyOCIO_FileTransform_getFormatNameByIndex(PyObject * self, PyObject * args);
         PyObject * PyOCIO_FileTransform_getFormatExtensionByIndex(PyObject * self, PyObject * args);
         
@@ -161,7 +161,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(-1)
         }
         
-        PyObject * PyOCIO_FileTransform_getSrc(PyObject * self)
+        PyObject * PyOCIO_FileTransform_getSrc(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstFileTransformRcPtr transform = GetConstFileTransform(self);
@@ -181,7 +181,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_FileTransform_getCCCId(PyObject * self)
+        PyObject * PyOCIO_FileTransform_getCCCId(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstFileTransformRcPtr transform = GetConstFileTransform(self);
@@ -201,7 +201,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_FileTransform_getInterpolation(PyObject * self)
+        PyObject * PyOCIO_FileTransform_getInterpolation(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstFileTransformRcPtr transform = GetConstFileTransform(self);
@@ -222,7 +222,7 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_EXIT(NULL)
         }
         
-        PyObject * PyOCIO_FileTransform_getNumFormats(PyObject * self)
+        PyObject * PyOCIO_FileTransform_getNumFormats(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()
             ConstFileTransformRcPtr transform = GetConstFileTransform(self);
