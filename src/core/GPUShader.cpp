@@ -235,12 +235,12 @@ namespace
 
 OCIO_NAMESPACE_ENTER
 {
-    GpuShaderRcPtr GpuShader::CreateLegacyShader(const GpuShaderDesc & desc, unsigned edgelen)
+    GpuShaderRcPtr GpuShader::CreateLegacyShaderBuilder(const GpuShaderDesc & desc, unsigned edgelen)
     {
         return LegacyGpuShader::Create(desc, edgelen);
     }
 
-    GpuShaderRcPtr GpuShader::CreateShader(const GpuShaderDesc & desc)
+    GpuShaderRcPtr GpuShader::CreateShaderBuilder(const GpuShaderDesc & desc)
     {
         return GenericGpuShader::Create(desc);
     }

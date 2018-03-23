@@ -492,7 +492,7 @@ void UpdateOCIOGLState()
 
     // Step 2: Create the legacy GPU shader builder
     OCIO::ConstGpuShaderRcPtr builder 
-        = OCIO::GpuShader::CreateLegacyShader(shaderDesc, LUT3D_EDGE_SIZE);
+        = OCIO::GpuShader::CreateLegacyShaderBuilder(shaderDesc, LUT3D_EDGE_SIZE);
 
     // Step 3: Extract the shader program information for a specific processor    
     OCIO::ConstGpuShaderRcPtr shaderInfo

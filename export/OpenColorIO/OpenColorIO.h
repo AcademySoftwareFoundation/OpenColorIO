@@ -1222,29 +1222,31 @@ OCIO_NAMESPACE_ENTER
     //    //
     //    // The three potential scenarios are:
     //    //
-    //    //   1. Create a 'baked' shader program. It means that the color processor
+    //    //   1. Instantiate the legacy shader builder. This means that the color processor
     //    //      is baked to contain at most one 3D lut and no 1D luts.
     //    //
     //    //      This is the current behavior which will be still part of OCIO v2
     //    //      for backward compatibility.
     //    //
-    //         OCIO::ConstGpuShaderRcPtr builder = OCIO::GpuShader::CreateLegacyShader(shaderDesc, edgelen);
+    //         OCIO::ConstGpuShaderRcPtr builder 
+    //             = OCIO::GpuShader::CreateLegacyShaderBuilder(shaderDesc, edgelen);
     //    //
-    //    //   2. Create a generic shader program. It means that the color processor 
+    //    //   2. Instantiate the generic shader builder. This means that the color processor 
     //    //      is used as-is (i.e. without any baking step) and could contain any number
     //    //      of 1D & 3D luts.
     //    //
     //    //      This is the new approach part of OCIO v2 to have the same processing quality
     //    //      between the CPU and GPU.
     //    //
-    //         OCIO::ConstGpuShaderRcPtr builder = OCIO::GpuShader::CreateShader(shaderDesc);
+    //         OCIO::ConstGpuShaderRcPtr builder = OCIO::GpuShader::CreateShaderBuilder(shaderDesc);
     //    //
-    //    //   3. Create a custom shader program. Many tools at Autodesk are using various private
-    //    //      GPU libraries imposing to develop custom builders.
+    //    //   3. Instantiate a custom shader builder.
     //    //
-    //    //      This is a mandatory scenario to better integrate in any DCC's.
+    //    //      Writing a custom shader builder is a way to tailor the shaders to the needs 
+    //    //      of a given client program. This could allow use of alternate shading languages, 
+    //    //      alternate ways of managing textures on the GPU, etc.
     //    //
-    //         OCIO::ConstGpuShaderRcPtr builder = MyCustomGpuShader::CreateShader(shaderDesc);
+    //         OCIO::ConstGpuShaderRcPtr builder = MyCustomGpuShader::CreateShaderBuilder(shaderDesc);
     //    
     //    // Step 3: Extract the shader information from a specific processor
     //    //
@@ -1299,10 +1301,10 @@ OCIO_NAMESPACE_ENTER
 
     public:
         //!cpp:function:: Create the legacy shader builder 
-        static GpuShaderRcPtr CreateLegacyShader(const GpuShaderDesc & desc, unsigned edgelen);
+        static GpuShaderRcPtr CreateLegacyShaderBuilder(const GpuShaderDesc & desc, unsigned edgelen);
 
         //!cpp:function:: Create the default shader builder
-        static GpuShaderRcPtr CreateShader(const GpuShaderDesc & desc);
+        static GpuShaderRcPtr CreateShaderBuilder(const GpuShaderDesc & desc);
 
         //!cpp:function::
         virtual unsigned getNumUniforms() const = 0;

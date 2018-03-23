@@ -29,7 +29,7 @@ public:
     ~OpenGLBuilder();
 
     // Allocate all the needed textures starting at the (zero based) index 1 by default
-    //  (e.g. the first index is reserved for the input image to process)
+    //  (i.e. the first index is reserved for the input image to process)
     void allocateAllTextures(unsigned startIndex = 1);
     void useAllTextures();
 

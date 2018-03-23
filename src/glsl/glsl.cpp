@@ -198,7 +198,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
     const unsigned maxTexture2D = m_gpuShader->getNumTextures();
     for(unsigned idx=0; idx<maxTexture2D; ++idx)
     {
-        // 1. Get the information of the 3D lut
+        // 1. Get the information of the 1D lut
 
         const char* name = 0x0;
         const char* uid  = 0x0;
@@ -213,7 +213,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         const float* blue  = 0x0;
         m_gpuShader->getTextureValues(idx, red, green, blue);
 
-        // 2. Allocate the 1D lut (which could be a 1D or 2D texture)
+        // 2. Allocate the 1D lut (a 2D texture is needed to hold large luts)
 
         unsigned texId = 0;
         AllocateTexture2D(currIndex, texId, width, height, interpolation, red);
