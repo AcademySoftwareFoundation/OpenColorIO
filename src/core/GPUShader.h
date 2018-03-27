@@ -32,27 +32,6 @@ OCIO_NAMESPACE_ENTER
         const char * getNamePrefix() const;
         unsigned getEdgelen() const;
 
-        // Accessors to the uniforms
-        //
-        unsigned getNumUniforms() const;
-        void getUniform(unsigned index, const char *& name, UniformType & type, void *& value) const;
-        void addUniform(unsigned index, const char * name, UniformType type, void * value);
-
-        // Accessors to the 1D & 2D textures built from 1D Luts
-        //
-        unsigned getNumTextures() const;
-        void addTexture(
-            const char * name, const char * id, unsigned width, unsigned height,
-            TextureType channel, Interpolation interpolation,
-            float * red, float * green, float * blue);
-        // Get the texture 1D or 2D information
-        void getTexture(
-            unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
-            TextureType & channel, Interpolation & interpolation) const;
-        // Get the texture 1D or 2D values only
-        void getTextureValues(
-            unsigned index, const float *& red, const float *& green, const float *& blue) const;
-
         // Accessors to the 3D textures built from 3D Luts
         //
         unsigned getNum3DTextures() const;
@@ -86,6 +65,29 @@ OCIO_NAMESPACE_ENTER
             const char * shaderDeclarations, const char * shaderHelperMethods,
             const char * shaderMainHeader, const char * shaderMainBody,
             const char * shaderMainFooter);
+
+    protected:
+
+        // Uniforms are not used by the legacy shader builder
+        //
+        unsigned getNumUniforms() const;
+        void getUniform(unsigned index, const char *& name, UniformType & type, void *& value) const;
+        void addUniform(unsigned index, const char * name, UniformType type, void * value);
+
+        // 1D & 2D textures are not used by the legacy shader builder
+        //
+        unsigned getNumTextures() const;
+        void addTexture(
+            const char * name, const char * id, unsigned width, unsigned height,
+            TextureType channel, Interpolation interpolation,
+            float * red, float * green, float * blue);
+        // Get the texture 1D or 2D information
+        void getTexture(
+            unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
+            TextureType & channel, Interpolation & interpolation) const;
+        // Get the texture 1D or 2D values only
+        void getTextureValues(
+            unsigned index, const float *& red, const float *& green, const float *& blue) const;
 
     private:
         LegacyGpuShader(const GpuShaderDesc & desc, unsigned edgelen);

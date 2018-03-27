@@ -1246,7 +1246,15 @@ OCIO_NAMESPACE_ENTER
     //    //      of a given client program. This could allow use of alternate shading languages, 
     //    //      alternate ways of managing textures on the GPU, etc.
     //    //
-    //         OCIO::ConstGpuShaderRcPtr builder = MyCustomGpuShader::CreateShaderBuilder(shaderDesc);
+    //    //      To implement a custom shader builder, one should create a class inheriting
+    //    //      from the pure virtual class GpuShader. That new class should implement all
+    //    //      the methods to grab the resource information needed by a 
+    //    //      color transformation. 
+    //    //
+    //    //      Please refer to the GenericGpuShader class to have an example.
+    //    //
+    //         OCIO::ConstGpuShaderRcPtr builder 
+    //             = MyCustomGpuShader::CreateShaderBuilder(shaderDesc);
     //    
     //    // Step 3: Extract the shader information from a specific processor
     //    //
@@ -1271,7 +1279,9 @@ OCIO_NAMESPACE_ENTER
     //    // Step 7: Enable the fragment shader program, and all needed textures
     //    //
     //    glUseProgram(g_program);
+    //    // The image texture
     //    glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
+    //    // The LUT textures
     //    oglBuilder->useAllTextures(g_program);
     // 
     //    ...
