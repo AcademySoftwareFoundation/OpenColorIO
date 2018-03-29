@@ -190,9 +190,9 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->getCpuCacheID();
     }
     
-    ConstGpuShaderRcPtr Processor::extractGpuShaderInfo(ConstGpuShaderRcPtr & shader) const
+    void Processor::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
     {
-        return getImpl()->extractGpuShaderInfo(shader);
+        getImpl()->extractGpuShaderInfo(shaderDesc);
     }
     
     
@@ -202,10 +202,10 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
-        void WriteShaderHeader(GpuShaderRcPtr & shader)
+        void WriteShaderHeader(GpuShaderDescRcPtr & shaderDesc)
         {
-            const GpuLanguage lang(shader->getLanguage());
-            const std::string fcnName(shader->getFunctionName());
+            const GpuLanguage lang(shaderDesc->getLanguage());
+            const std::string fcnName(shaderDesc->getFunctionName());
 
             std::ostringstream code;
             code << "\n// Declaration of the main color processing method\n\n";
@@ -231,27 +231,27 @@ OCIO_NAMESPACE_ENTER
             
             if(lang == GPU_LANGUAGE_CG)
             {
-                code << "    half4 " << shader->getPixelName() << " = inPixel; \n";
+                code << "    half4 " << shaderDesc->getPixelName() << " = inPixel; \n";
             }
             else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
             {
-                code << "    vec4 " << shader->getPixelName() << " = inPixel; \n";
+                code << "    vec4 " << shaderDesc->getPixelName() << " = inPixel; \n";
             }
             else 
             {
                 throw Exception("Unsupported shader language.");
             }
 
-            shader->addToMainHeaderShaderCode(code.str().c_str());
+            shaderDesc->addToMainHeaderShaderCode(code.str().c_str());
         }
         
         
-        void WriteShaderFooter(GpuShaderRcPtr & shader)
+        void WriteShaderFooter(GpuShaderDescRcPtr & shaderDesc)
         {
             std::ostringstream code;
-            code << "    return " << shader->getPixelName() << ";\n";
+            code << "    return " << shaderDesc->getPixelName() << ";\n";
             code << "}" << "\n\n";
-            shader->addToMainFooterShaderCode(code.str().c_str());
+            shaderDesc->addToMainFooterShaderCode(code.str().c_str());
         }
 
 
@@ -413,12 +413,11 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
-    ConstGpuShaderRcPtr Processor::Impl::extractGpuShaderInfo(ConstGpuShaderRcPtr & shader) const
+    void Processor::Impl::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
     {
         AutoMutex lock(m_resultsCacheMutex);
 
-        GpuShaderRcPtr s = shader->clone();
-        LegacyGpuShader * legacy = dynamic_cast<LegacyGpuShader*>(s.get());
+        LegacyGpuShaderDesc * legacy = dynamic_cast<LegacyGpuShaderDesc*>(shaderDesc.get());
 
 
         // Build the final gpu list of ops
@@ -444,21 +443,19 @@ OCIO_NAMESPACE_ENTER
         // Create the shader program information
         for(OpRcPtrVec::size_type i=0, size = m_gpuOps.size(); i<size; ++i)
         {
-            m_gpuOps[i]->extractGpuShaderInfo(s);
+            m_gpuOps[i]->extractGpuShaderInfo(shaderDesc);
         }
 
-        WriteShaderHeader(s);
-        WriteShaderFooter(s);
+        WriteShaderHeader(shaderDesc);
+        WriteShaderFooter(shaderDesc);
 
-        s->finalize();
+        shaderDesc->finalize();
             
         if(IsDebugLoggingEnabled())
         {
             LogDebug("GPU Shader");
-            LogDebug(s->getShaderText());
+            LogDebug(shaderDesc->getShaderText());
         }
-
-        return s;
     }
 
     

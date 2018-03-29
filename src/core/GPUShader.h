@@ -14,22 +14,18 @@ OCIO_NAMESPACE_ENTER
 {
     ///////////////////////////////////////////////////////////////////////////
 
-    // LegacyGpuShader
+    // LegacyGpuShaderDesc
     // *************
     // 
-    // The class holds all the information to build a shader program but bake
-    // the color transform (i.e. using the processor) to have at most one 3D Texture.
+    // The class holds all the information to build a 'baked' shader program
+    // (i.e. which contains at most one 3D Texture).
     // 
 
-    class LegacyGpuShader : public GpuShader
+    class LegacyGpuShaderDesc : public GpuShaderDesc
     {
     public:
-        static GpuShaderRcPtr Create(const GpuShaderDesc & desc, unsigned edgelen);
+        static GpuShaderDescRcPtr Create(unsigned edgelen);
 
-        GpuLanguage getLanguage() const;
-        const char * getFunctionName() const;
-        const char * getPixelName() const;
-        const char * getNamePrefix() const;
         unsigned getEdgelen() const;
 
         // Accessors to the 3D textures built from 3D Luts
@@ -46,11 +42,9 @@ OCIO_NAMESPACE_ENTER
         const char * getShaderText() const;
 
         // Get the corresponding cache identifier
-        const char * getCacheID() const;
+        virtual const char * getCacheID() const;
 
-        void finalize();
-
-        GpuShaderRcPtr clone() const;
+        virtual void finalize();
 
         // Methods to specialize each part of a complete shader program
         //
@@ -90,13 +84,14 @@ OCIO_NAMESPACE_ENTER
             unsigned index, const float *& red, const float *& green, const float *& blue) const;
 
     private:
-        LegacyGpuShader(const GpuShaderDesc & desc, unsigned edgelen);
-        virtual ~LegacyGpuShader();
+
+        LegacyGpuShaderDesc(unsigned edgelen);
+        virtual ~LegacyGpuShaderDesc();
         
-        LegacyGpuShader(const LegacyGpuShader &);
-        LegacyGpuShader& operator= (const LegacyGpuShader &);
+        LegacyGpuShaderDesc(const LegacyGpuShaderDesc &);
+        LegacyGpuShaderDesc& operator= (const LegacyGpuShaderDesc &);
         
-        static void Deleter(LegacyGpuShader* c);
+        static void Deleter(LegacyGpuShaderDesc* c);
         
         class Impl;
         friend class Impl;
@@ -108,22 +103,18 @@ OCIO_NAMESPACE_ENTER
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // GenericGpuShader
+    // GenericGpuShaderDesc
     // *************
     // 
     // The class holds all the information to build a shader program without baking
-    // the color transform. It mainly means that the processor could contain several 1D or 3D luts.
+    // the color transform. It mainly means that the processor could contain 
+    // several 1D or 3D luts.
     // 
 
-    class GenericGpuShader : public GpuShader
+    class GenericGpuShaderDesc : public GpuShaderDesc
     {
     public:
-        static GpuShaderRcPtr Create(const GpuShaderDesc & desc);
-
-        GpuLanguage getLanguage() const;
-        const char * getFunctionName() const;
-        const char * getPixelName() const;
-        const char * getNamePrefix() const;
+        static GpuShaderDescRcPtr Create();
 
         // Accessors to the uniforms
         //
@@ -160,11 +151,9 @@ OCIO_NAMESPACE_ENTER
         const char * getShaderText() const;
 
         // Get the corresponding cache identifier
-        const char * getCacheID() const;
+        virtual const char * getCacheID() const;
 
-        void finalize();
-
-        GpuShaderRcPtr clone() const;
+        virtual void finalize();
 
         // Methods to specialize each part of a complete shader program
         //
@@ -181,13 +170,14 @@ OCIO_NAMESPACE_ENTER
             const char * shaderMainFooter);
 
     private:
-        GenericGpuShader(const GpuShaderDesc & desc);
-        virtual ~GenericGpuShader();
+
+        GenericGpuShaderDesc();
+        virtual ~GenericGpuShaderDesc();
         
-        GenericGpuShader(const GenericGpuShader &);
-        GenericGpuShader& operator= (const GenericGpuShader &);
+        GenericGpuShaderDesc(const GenericGpuShaderDesc &);
+        GenericGpuShaderDesc& operator= (const GenericGpuShaderDesc &);
         
-        static void Deleter(GenericGpuShader* c);
+        static void Deleter(GenericGpuShaderDesc* c);
         
         class Impl;
         friend class Impl;

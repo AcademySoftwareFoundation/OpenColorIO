@@ -95,13 +95,12 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<Baker> BakerRcPtr;
     
     class OCIOEXPORT ImageDesc;
-    class OCIOEXPORT GpuShaderDesc;
     class OCIOEXPORT Exception;
 
     //!cpp:type::
-    class OCIOEXPORT GpuShader;
-    typedef OCIO_SHARED_PTR<GpuShader> GpuShaderRcPtr;
-    typedef OCIO_SHARED_PTR<const GpuShader> ConstGpuShaderRcPtr;
+    class OCIOEXPORT GpuShaderDesc;
+    typedef OCIO_SHARED_PTR<GpuShaderDesc> GpuShaderDescRcPtr;
+    typedef OCIO_SHARED_PTR<const GpuShaderDesc> ConstGpuShaderDescRcPtr;
     
     //!rst::
     // Transforms

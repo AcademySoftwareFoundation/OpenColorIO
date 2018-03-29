@@ -58,7 +58,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() { }
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const { }
             
-            void extractGpuShaderInfo(GpuShaderRcPtr & /*shaderInfo*/) const {}
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
         
             void getGpuAllocation(AllocationData & allocation) const;
             
@@ -133,7 +133,7 @@ OCIO_NAMESPACE_ENTER
                 // If it's the first, save it as our start.
                 // Otherwise, update the end.
                 
-                if(!opVec[i]->supportsLegacyShader())
+                if(!opVec[i]->supportedByLegacyShader())
                 {
                     if(start<0)
                     {
@@ -266,7 +266,7 @@ OCIO_NAMESPACE_ENTER
         // All gpu pre ops must support analytical gpu shader generation
         for(unsigned int i=0; i<gpuPreOps.size(); ++i)
         {
-            if(!gpuPreOps[i]->supportsLegacyShader())
+            if(!gpuPreOps[i]->supportedByLegacyShader())
             {
                 throw Exception("Partition failed check. gpuPreOps");
             }
@@ -279,7 +279,7 @@ OCIO_NAMESPACE_ENTER
             bool requireslattice = false;
             for(unsigned int i=0; i<gpuLatticeOps.size(); ++i)
             {
-                if(!gpuLatticeOps[i]->supportsLegacyShader()) requireslattice = true;
+                if(!gpuLatticeOps[i]->supportedByLegacyShader()) requireslattice = true;
             }
             
             if(!requireslattice)
@@ -291,7 +291,7 @@ OCIO_NAMESPACE_ENTER
         // All gpu post ops must support analytical gpu shader generation
         for(unsigned int i=0; i<gpuPostOps.size(); ++i)
         {
-            if(!gpuPostOps[i]->supportsLegacyShader())
+            if(!gpuPostOps[i]->supportedByLegacyShader())
             {
                 throw Exception("Partition failed check. gpuPostOps");
             }
@@ -323,7 +323,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() {}
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
             
-            void extractGpuShaderInfo(GpuShaderRcPtr & /*shaderInfo*/) const {}
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
             
         private:
             std::string m_fileReference;
@@ -389,7 +389,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() {}
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
             
-            virtual void extractGpuShaderInfo(GpuShaderRcPtr & /*shaderInfo*/) const {}
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
             
         private:
             std::string m_look;

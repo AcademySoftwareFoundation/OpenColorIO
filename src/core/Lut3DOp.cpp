@@ -578,8 +578,8 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsLegacyShader() const { return false; }
-            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const;
+            virtual bool supportedByLegacyShader() const { return false; }
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
         private:
             Lut3DRcPtr m_lut;
@@ -722,29 +722,29 @@ OCIO_NAMESPACE_ENTER
         }
         
         
-        void Lut3DOp::extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const
+        void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
                 std::ostringstream ss;
-                ss << shaderInfo->getNamePrefix()
+                ss << shaderDesc->getResourcePrefix()
                    << std::string("lut3d_")
-                   << shaderInfo->getNum3DTextures();
+                   << shaderDesc->getNum3DTextures();
 
                 const std::string name(ss.str());
 
                 const std::string decl(std::string("uniform sampler3D ") + name + ";\n");
-                shaderInfo->addToDeclareShaderCode(decl.c_str());
+                shaderDesc->addToDeclareShaderCode(decl.c_str());
 
-                shaderInfo->add3DTexture(
+                shaderDesc->add3DTexture(
                     name.c_str(), m_cacheID.c_str(), m_lut->size[0], m_interpolation, &m_lut->lut[0]);
 
                 std::ostringstream code;
-                code << "    " << shaderInfo->getPixelName() << ".rgb = ";
+                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
                 Write_sampleLut3D_rgb(
-                    code, shaderInfo->getPixelName(), name, m_lut->size[0], shaderInfo->getLanguage());
+                    code, shaderDesc->getPixelName(), name, m_lut->size[0], shaderDesc->getLanguage());
 
-                shaderInfo->addToMainShaderCode(code.str().c_str());
+                shaderDesc->addToMainShaderCode(code.str().c_str());
             }
             else
             {

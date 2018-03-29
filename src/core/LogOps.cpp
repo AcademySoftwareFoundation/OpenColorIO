@@ -135,7 +135,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual void extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const;
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
             
         private:
             float m_k[3];
@@ -277,9 +277,9 @@ OCIO_NAMESPACE_ENTER
             }
         } // Op::process
         
-        void LogOp::extractGpuShaderInfo(GpuShaderRcPtr & shaderInfo) const
+        void LogOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            const GpuLanguage lang = shaderInfo->getLanguage();
+            const GpuLanguage lang = shaderDesc->getLanguage();
             
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
@@ -308,18 +308,18 @@ OCIO_NAMESPACE_ENTER
                 // 2) knew * log(x) + kb
                 
                 std::ostringstream code;
-                code << "    " << shaderInfo->getPixelName() << ".rgb = ";
+                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
                 code << "max(" << GpuTextHalf3(clampMin,lang) << ", ";
                 code << GpuTextHalf3(m_m,lang) << " * ";
-                code << shaderInfo->getPixelName() << ".rgb + ";
+                code << shaderDesc->getPixelName() << ".rgb + ";
                 code << GpuTextHalf3(m_b,lang) << ");\n";
                 
-                code << "    " << shaderInfo->getPixelName() << ".rgb = ";
+                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
                 code << GpuTextHalf3(knew,lang) << " * ";
-                code << "log(" << shaderInfo->getPixelName() << ".rgb) + ";
+                code << "log(" << shaderDesc->getPixelName() << ".rgb) + ";
                 code << GpuTextHalf3(m_kb,lang) << ";\n";
 
-                shaderInfo->addToMainShaderCode(code.str().c_str());
+                shaderDesc->addToMainShaderCode(code.str().c_str());
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
@@ -337,21 +337,21 @@ OCIO_NAMESPACE_ENTER
                 // 3) minv * (x - b)
                 
                 std::ostringstream code;
-                code << "    " << shaderInfo->getPixelName() << ".rgb = ";
+                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
                 code << GpuTextHalf3(kinv,lang) << " * (";
-                code << shaderInfo->getPixelName() << ".rgb - ";
+                code << shaderDesc->getPixelName() << ".rgb - ";
                 code << GpuTextHalf3(m_kb,lang) << ");\n";
                 
-                code << "    " << shaderInfo->getPixelName() << ".rgb = pow(";
+                code << "    " << shaderDesc->getPixelName() << ".rgb = pow(";
                 code << GpuTextHalf3(m_base,lang) << ", ";
-                code << shaderInfo->getPixelName() << ".rgb);\n";
+                code << shaderDesc->getPixelName() << ".rgb);\n";
                 
-                code << "    " << shaderInfo->getPixelName() << ".rgb = ";
+                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
                 code << GpuTextHalf3(minv,lang) << " * (";
-                code << shaderInfo->getPixelName() << ".rgb - ";
+                code << shaderDesc->getPixelName() << ".rgb - ";
                 code << GpuTextHalf3(m_b,lang) << ");\n";
 
-                shaderInfo->addToMainShaderCode(code.str().c_str());
+                shaderDesc->addToMainShaderCode(code.str().c_str());
             }
         }
         

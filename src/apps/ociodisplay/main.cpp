@@ -27,6 +27,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+/*
+    Made by Autodesk Inc. under the terms of the OpenColorIO BSD 3 Clause License
+*/
+
+
 #include <cstdlib>
 #include <cmath>
 #include <cstdio>
@@ -484,19 +489,15 @@ void UpdateOCIOGLState()
         return;
     }
     
-    // Step 1: Create a GPU Shader Description
-    OCIO::GpuShaderDesc shaderDesc;
-    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
-    shaderDesc.setFunctionName("OCIODisplay");
-    shaderDesc.setNamePrefix("ocio_");
+    // Step 1: Create the legacy GPU shader description
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
+    shaderDesc->setFunctionName("OCIODisplay");
+    shaderDesc->setResourcePrefix("ocio_");
 
-    // Step 2: Create the legacy GPU shader builder
-    OCIO::ConstGpuShaderRcPtr builder 
-        = OCIO::GpuShader::CreateLegacyShaderBuilder(shaderDesc, LUT3D_EDGE_SIZE);
-
-    // Step 3: Extract the shader program information for a specific processor    
-    OCIO::ConstGpuShaderRcPtr shaderInfo
-        = processor->extractGpuShaderInfo(builder);
+    // Step 2: Collect the shader program information for a specific processor    
+    processor->extractGpuShaderInfo(shaderDesc);
 
     if(g_gpu)
     {
@@ -505,14 +506,14 @@ void UpdateOCIOGLState()
         std::cout << std::endl;
     }
 
-    // Step 4: Use the helper OpenGL builder
-    oglBuilder = OpenGLBuilder::Create(shaderInfo);
+    // Step 3: Use the helper OpenGL builder
+    oglBuilder = OpenGLBuilder::Create(shaderDesc);
 
-    // Step 5: Allocate all the LUTs
+    // Step 4: Allocate & upload all the LUTs
     oglBuilder->allocateAllTextures();
     
-    // Step 6: Build the fragment shader program
-    const std::string shaderCacheID = shaderInfo->getCacheID();
+    // Step 5: Build the fragment shader program
+    const std::string shaderCacheID = shaderDesc->getCacheID();
     if(g_program == 0 || shaderCacheID != g_shadercacheid)
     {
         //std::cerr << "Computing Shader " << g_shadercacheid << std::endl;
@@ -522,7 +523,7 @@ void UpdateOCIOGLState()
         if(g_gpu)
         {
             std::ostringstream os;
-            os << shaderInfo->getShaderText() << "\n";
+            os << shaderDesc->getShaderText() << "\n";
             os << g_fragShaderText;
 
             std::cout << os.str() << std::endl;
@@ -531,9 +532,11 @@ void UpdateOCIOGLState()
         g_program = oglBuilder->buildProgram(g_fragShaderText);
     }
     
-    // Step 7: Enable the fragment shader program, and all needed textures
+    // Step 6: Enable the fragment shader program, and all needed textures
     oglBuilder->useProgram();
+    // The image texture
     glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
+    // The LUT textures
     oglBuilder->useAllTextures();
 }
 

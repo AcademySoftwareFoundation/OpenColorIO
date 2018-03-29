@@ -131,13 +131,13 @@ namespace
 }
 
 
-OpenGLBuilderRcPtr OpenGLBuilder::Create(OCIO::ConstGpuShaderRcPtr& gpuShader)
+OpenGLBuilderRcPtr OpenGLBuilder::Create(const OCIO::GpuShaderDescRcPtr & shaderDesc)
 {
-    return OpenGLBuilderRcPtr(new OpenGLBuilder(gpuShader));
+    return OpenGLBuilderRcPtr(new OpenGLBuilder(shaderDesc));
 }
 
-OpenGLBuilder::OpenGLBuilder(OCIO::ConstGpuShaderRcPtr& gpuShader)
-    :   m_gpuShader(gpuShader)
+OpenGLBuilder::OpenGLBuilder(const OCIO::GpuShaderDescRcPtr & shaderDesc)
+    :   m_shaderDesc(shaderDesc)
     ,   m_startIndex(0)
     ,   m_fragShader(0)
     ,   m_program(0)
@@ -168,7 +168,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
     // Process the 3D Luts first
 
-    const unsigned maxTexture3D = m_gpuShader->getNum3DTextures();
+    const unsigned maxTexture3D = m_shaderDesc->getNum3DTextures();
     for(unsigned idx=0; idx<maxTexture3D; ++idx)
     {
         // 1. Get the information of the 3D lut
@@ -176,10 +176,10 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         const char* name = 0x0;
         const char* uid  = 0x0;
         unsigned edgelen = 0;
-        m_gpuShader->get3DTexture(idx, name, uid, edgelen);
+        m_shaderDesc->get3DTexture(idx, name, uid, edgelen);
 
         const float* values = 0x0;
-        m_gpuShader->get3DTextureValues(idx, values);
+        m_shaderDesc->get3DTextureValues(idx, values);
 
         // 2. Allocate the 3D lut
 
@@ -195,7 +195,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
     // Process the 1D luts
 
-    const unsigned maxTexture2D = m_gpuShader->getNumTextures();
+    const unsigned maxTexture2D = m_shaderDesc->getNumTextures();
     for(unsigned idx=0; idx<maxTexture2D; ++idx)
     {
         // 1. Get the information of the 1D lut
@@ -204,14 +204,14 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         const char* uid  = 0x0;
         unsigned width = 0;
         unsigned height = 0;
-        OCIO::GpuShader::TextureType channel = OCIO::GpuShader::TEXTURE_RGB_CHANNEL;
+        OCIO::GpuShaderDesc::TextureType channel = OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL;
         OCIO::Interpolation interpolation = OCIO::INTERP_LINEAR;
-        m_gpuShader->getTexture(idx, name, uid, width, height, channel, interpolation);
+        m_shaderDesc->getTexture(idx, name, uid, width, height, channel, interpolation);
 
         const float* red   = 0x0;
         const float* green = 0x0;
         const float* blue  = 0x0;
-        m_gpuShader->getTextureValues(idx, red, green, blue);
+        m_shaderDesc->getTextureValues(idx, red, green, blue);
 
         // 2. Allocate the 1D lut (a 2D texture is needed to hold large luts)
 
@@ -225,7 +225,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         // 4. Repeat for the green and blue if needed
 
-        if(channel==OCIO::GpuShader::TEXTURE_RGB_CHANNEL)
+        if(channel==OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL)
         {
             AllocateTexture2D(currIndex, texId, width, height, interpolation, green);
             m_textureIds.push_back(std::make_pair(texId, name));
@@ -263,7 +263,7 @@ void OpenGLBuilder::useAllTextures()
 unsigned OpenGLBuilder::buildProgram(const std::string& fragMainMethod)
 {
     std::ostringstream os;
-    os << m_gpuShader->getShaderText() << "\n";
+    os << m_shaderDesc->getShaderText() << "\n";
     os << fragMainMethod;
 
     if(m_fragShader) glDeleteShader(m_fragShader);

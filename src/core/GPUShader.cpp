@@ -21,12 +21,12 @@ namespace
     {
         static void  CreateArray(
             float * buf, unsigned w, unsigned h, unsigned d, 
-            OCIO_NAMESPACE::GpuShader::TextureType type, std::vector<float>& res)
+            OCIO_NAMESPACE::GpuShaderDesc::TextureType type, std::vector<float>& res)
         {
             if(buf)
             {
                 const unsigned size 
-                    = w * h * d * (type==OCIO_NAMESPACE::GpuShader::TEXTURE_RGB_CHANNEL ? 3 : 1);
+                    = w * h * d * (type==OCIO_NAMESPACE::GpuShaderDesc::TEXTURE_RGB_CHANNEL ? 3 : 1);
                 res.resize(size);
                 memcpy(&res[0], buf, size * sizeof(float));
             }
@@ -37,7 +37,7 @@ namespace
         {
             Texture(const char * n, const char * identifier, 
                 unsigned w, unsigned h, unsigned d,
-                OCIO_NAMESPACE::GpuShader::TextureType channel, 
+                OCIO_NAMESPACE::GpuShaderDesc::TextureType channel, 
                 OCIO_NAMESPACE::Interpolation interpolation, 
                 float * r, float * g, float * b)
                 :   name(n)
@@ -64,7 +64,7 @@ namespace
             unsigned width;
             unsigned height;
             unsigned depth;
-            OCIO_NAMESPACE::GpuShader::TextureType type;
+            OCIO_NAMESPACE::GpuShaderDesc::TextureType type;
             OCIO_NAMESPACE::Interpolation interp;
 
             std::vector<float> red;
@@ -75,12 +75,12 @@ namespace
         typedef std::vector<Texture> Textures;
 
     public:       
-        PrivateImpl(const OCIO_NAMESPACE::GpuShaderDesc & desc) : m_desc(desc) {}
+        PrivateImpl() {}
         virtual ~PrivateImpl() {}
 
         void addTexture(
             const char * name, const char * id, unsigned width, unsigned height, 
-            OCIO_NAMESPACE::GpuShader::TextureType channel,
+            OCIO_NAMESPACE::GpuShaderDesc::TextureType channel,
             OCIO_NAMESPACE::Interpolation interpolation, 
             float * red, float * green, float * blue)
         {
@@ -92,7 +92,7 @@ namespace
         void getTexture(
             unsigned index, const char *& name, const char *& id, 
             unsigned & width, unsigned & height, 
-            OCIO_NAMESPACE::GpuShader::TextureType & channel, 
+            OCIO_NAMESPACE::GpuShaderDesc::TextureType & channel, 
             OCIO_NAMESPACE::Interpolation & interpolation) const
         {
             if(index >= textures.size())
@@ -135,7 +135,7 @@ namespace
         {
             Texture t(
                 name, id, dimension, dimension, dimension, 
-                OCIO_NAMESPACE::GpuShader::TEXTURE_RGB_CHANNEL, 
+                OCIO_NAMESPACE::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
                 interpolation, values, 0x0, 0x0);
             textures3D.push_back(t);
         }
@@ -186,7 +186,7 @@ namespace
             shaderCodeID.resize(0);
         }
 
-        void finalize()
+        void finalize(const std::string & cacheID)
         {
             // Finalize the shader program
             createShaderText(
@@ -195,7 +195,7 @@ namespace
 
             // Compute the identifier
             std::ostringstream ss;
-            ss << m_desc.getCacheID();
+            ss << cacheID;
             ss << shaderCode;
             for(unsigned idx=0; idx<textures3D.size(); ++idx)
             {
@@ -209,8 +209,6 @@ namespace
             const std::string id(ss.str());
             shaderCodeID = OCIO_NAMESPACE::CacheIDHash(id.c_str(), unsigned(id.length()));
         }
-
-        inline const OCIO_NAMESPACE::GpuShaderDesc & getDesc() const { return m_desc; }
 
         std::string declarations;
         std::string helpers;
@@ -227,29 +225,17 @@ namespace
     private:
         PrivateImpl(const PrivateImpl & rhs);
         PrivateImpl& operator= (const PrivateImpl & rhs);
-
-        const OCIO_NAMESPACE::GpuShaderDesc m_desc;
     };
 };
 
 
 OCIO_NAMESPACE_ENTER
 {
-    GpuShaderRcPtr GpuShader::CreateLegacyShaderBuilder(const GpuShaderDesc & desc, unsigned edgelen)
-    {
-        return LegacyGpuShader::Create(desc, edgelen);
-    }
-
-    GpuShaderRcPtr GpuShader::CreateShaderBuilder(const GpuShaderDesc & desc)
-    {
-        return GenericGpuShader::Create(desc);
-    }
-
-    class LegacyGpuShader::Impl : public PrivateImpl
+    class LegacyGpuShaderDesc::Impl : public PrivateImpl
     {
     public:       
-        Impl(const GpuShaderDesc & desc, unsigned edgelen)
-            :   PrivateImpl(desc)
+        Impl(unsigned edgelen)
+            :   PrivateImpl()
             ,   _edgelen(edgelen)
         {
         }
@@ -259,100 +245,77 @@ OCIO_NAMESPACE_ENTER
         inline unsigned getEdgelen() const { return _edgelen; }
     
     private:
-        Impl(const Impl & rhs);
-        Impl& operator= (const Impl & rhs);
-
         unsigned _edgelen;
     };
 
-    GpuShaderRcPtr LegacyGpuShader::Create(const GpuShaderDesc & desc, unsigned edgelen)
+    GpuShaderDescRcPtr LegacyGpuShaderDesc::Create(unsigned edgelen)
     {
-        return GpuShaderRcPtr(new LegacyGpuShader(desc, edgelen), &LegacyGpuShader::Deleter);
+        return GpuShaderDescRcPtr(new LegacyGpuShaderDesc(edgelen), &LegacyGpuShaderDesc::Deleter);
     }
 
-    LegacyGpuShader::LegacyGpuShader(const GpuShaderDesc & desc, unsigned edgelen)
-        :   GpuShader()
-        ,   m_impl(new Impl(desc, edgelen))
+    LegacyGpuShaderDesc::LegacyGpuShaderDesc(unsigned edgelen)
+        :   GpuShaderDesc()
+        ,   m_impl(new Impl(edgelen))
     {
     }
 
-    LegacyGpuShader::~LegacyGpuShader()
+    LegacyGpuShaderDesc::~LegacyGpuShaderDesc()
     {
         delete m_impl;
         m_impl = 0x0;
     }
 
-    GpuLanguage LegacyGpuShader::getLanguage() const
-    {
-        return getImpl()->getDesc().getLanguage();
-    }
-
-    const char * LegacyGpuShader::getFunctionName() const
-    {
-        return getImpl()->getDesc().getFunctionName();
-    }
-
-    const char * LegacyGpuShader::getPixelName() const
-    {
-        return getImpl()->getDesc().getPixelName();
-    }
-
-    const char * LegacyGpuShader::getNamePrefix() const
-    {
-        return getImpl()->getDesc().getNamePrefix();
-    }
-
-    unsigned LegacyGpuShader::getEdgelen() const
+    unsigned LegacyGpuShaderDesc::getEdgelen() const
     {
         return getImpl()->getEdgelen();
     }
 
-    unsigned LegacyGpuShader::getNumUniforms() const
+    unsigned LegacyGpuShaderDesc::getNumUniforms() const
     {
         return 0;
     }
 
-    void LegacyGpuShader::getUniform(unsigned, const char *&, UniformType &, void *&) const
+    void LegacyGpuShaderDesc::getUniform(unsigned, const char *&, UniformType &, void *&) const
     {
         throw Exception("Uniforms are not supported");
     }
 
-    void LegacyGpuShader::addUniform(unsigned, const char *, UniformType, void *)
+    void LegacyGpuShaderDesc::addUniform(unsigned, const char *, UniformType, void *)
     {
         throw Exception("Uniforms are not supported");
     }
 
-    unsigned LegacyGpuShader::getNumTextures() const
+    unsigned LegacyGpuShaderDesc::getNumTextures() const
     {
         return 0;
     }
 
-    void LegacyGpuShader::addTexture(
+    void LegacyGpuShaderDesc::addTexture(
         const char *, const char *, unsigned, unsigned,
         TextureType, Interpolation, float *, float *, float *)
     {
         throw Exception("1D luts are not supported");
     }
 
-    void LegacyGpuShader::getTexture(
+    void LegacyGpuShaderDesc::getTexture(
         unsigned, const char *&, const char *&, 
         unsigned &, unsigned &, TextureType &, Interpolation &) const
     {
         throw Exception("1D luts are not supported");
     }
 
-    void LegacyGpuShader::getTextureValues(
+    void LegacyGpuShaderDesc::getTextureValues(
         unsigned, const float *&, const float *&, const float *&) const
     {
         throw Exception("1D luts are not supported");
     }
 
-    unsigned LegacyGpuShader::getNum3DTextures() const
+    unsigned LegacyGpuShaderDesc::getNum3DTextures() const
     {
         return unsigned(getImpl()->textures3D.size());
     }
 
-    void LegacyGpuShader::add3DTexture(
+    void LegacyGpuShaderDesc::add3DTexture(
         const char * name, const char * id, unsigned dimension, 
         Interpolation interpolation, float * values)
     {
@@ -373,33 +336,28 @@ OCIO_NAMESPACE_ENTER
         getImpl()->add3DTexture(name, id, dimension, interpolation, values);
     }
 
-    void LegacyGpuShader::get3DTexture(
+    void LegacyGpuShaderDesc::get3DTexture(
         unsigned index, const char *& name, const char *& id, unsigned & dimension) const
     {
         getImpl()->get3DTexture(index, name, id, dimension);
     }
 
-    void LegacyGpuShader::get3DTextureValues(unsigned index, const float *& value) const
+    void LegacyGpuShaderDesc::get3DTextureValues(unsigned index, const float *& value) const
     {
         getImpl()->get3DTextureValues(index, value);
     }
 
-    const char * LegacyGpuShader::getShaderText() const
+    const char * LegacyGpuShaderDesc::getShaderText() const
     {
         return getImpl()->shaderCode.c_str();
     }
 
-    const char * LegacyGpuShader::getCacheID() const
+    const char * LegacyGpuShaderDesc::getCacheID() const
     {
         return getImpl()->shaderCodeID.c_str();
     }
 
-    GpuShaderRcPtr LegacyGpuShader::clone() const
-    {
-        return Create(getImpl()->getDesc(), getImpl()->getEdgelen());
-    }
-
-    void LegacyGpuShader::addToDeclareShaderCode(const char * shaderCode)
+    void LegacyGpuShaderDesc::addToDeclareShaderCode(const char * shaderCode)
     {
         if(getImpl()->declarations.empty())
         {
@@ -408,27 +366,27 @@ OCIO_NAMESPACE_ENTER
         getImpl()->declarations += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void LegacyGpuShader::addToHelperShaderCode(const char * shaderCode)
+    void LegacyGpuShaderDesc::addToHelperShaderCode(const char * shaderCode)
     {
         getImpl()->helpers += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void LegacyGpuShader::addToMainShaderCode(const char * shaderCode)
+    void LegacyGpuShaderDesc::addToMainShaderCode(const char * shaderCode)
     {
         getImpl()->mainBody += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void LegacyGpuShader::addToMainHeaderShaderCode(const char * shaderCode)
+    void LegacyGpuShaderDesc::addToMainHeaderShaderCode(const char * shaderCode)
     {
         getImpl()->mainHeader += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void LegacyGpuShader::addToMainFooterShaderCode(const char * shaderCode)
+    void LegacyGpuShaderDesc::addToMainFooterShaderCode(const char * shaderCode)
     {
         getImpl()->mainFooter += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void LegacyGpuShader::createShaderText(
+    void LegacyGpuShaderDesc::createShaderText(
         const char * shaderDeclarations, const char * shaderHelperMethods,
         const char * shaderMainHeader, const char * shaderMainBody,
         const char * shaderMainFooter)
@@ -438,91 +396,67 @@ OCIO_NAMESPACE_ENTER
             shaderMainBody, shaderMainFooter);
     }
 
-    void LegacyGpuShader::finalize()
+    void LegacyGpuShaderDesc::finalize()
     {
-        getImpl()->finalize();
+        getImpl()->finalize(GpuShaderDesc::getCacheID());
     }
 
-    void LegacyGpuShader::Deleter(LegacyGpuShader* c)
+    void LegacyGpuShaderDesc::Deleter(LegacyGpuShaderDesc* c)
     {
         delete c;
     }
 
 
-    class GenericGpuShader::Impl : public PrivateImpl
+    class GenericGpuShaderDesc::Impl : public PrivateImpl
     {
     public:       
-        Impl(const GpuShaderDesc & desc) : PrivateImpl(desc) {}
+        Impl() : PrivateImpl() {}
         ~Impl() {}
-
-    private:
-        Impl(const Impl & rhs);
-        Impl& operator= (const Impl & rhs);
     };
 
-    GpuShaderRcPtr GenericGpuShader::Create(const GpuShaderDesc & desc)
+    GpuShaderDescRcPtr GenericGpuShaderDesc::Create()
     {
-        return GpuShaderRcPtr(new GenericGpuShader(desc), &GenericGpuShader::Deleter);
+        return GpuShaderDescRcPtr(new GenericGpuShaderDesc(), &GenericGpuShaderDesc::Deleter);
     }
 
-    GenericGpuShader::GenericGpuShader(const GpuShaderDesc & desc)
-        :   GpuShader()
-        ,   m_impl(new Impl(desc))
+    GenericGpuShaderDesc::GenericGpuShaderDesc()
+        :   GpuShaderDesc()
+        ,   m_impl(new Impl())
     {
     }
 
-    GenericGpuShader::~GenericGpuShader()
+    GenericGpuShaderDesc::~GenericGpuShaderDesc()
     {
         delete m_impl;
         m_impl = 0x0;
     }
 
-    GpuLanguage GenericGpuShader::getLanguage() const
-    {
-        return getImpl()->getDesc().getLanguage();
-    }
-
-    const char * GenericGpuShader::getFunctionName() const
-    {
-        return getImpl()->getDesc().getFunctionName();
-    }
-
-    const char * GenericGpuShader::getPixelName() const
-    {
-        return getImpl()->getDesc().getPixelName();
-    }
-
-    const char * GenericGpuShader::getNamePrefix() const
-    {
-        return getImpl()->getDesc().getNamePrefix();
-    }
-
-    unsigned GenericGpuShader::getNumUniforms() const
+    unsigned GenericGpuShaderDesc::getNumUniforms() const
     {
         // Outside the scope of this code review. Will add in future step.
         return 0;
     }
 
-    void GenericGpuShader::getUniform(
+    void GenericGpuShaderDesc::getUniform(
         unsigned, const char *&, UniformType &, void *&) const
     {
         // Outside the scope of this code review. Will add in future step.
         throw Exception("Not yet implemented");
     }
 
-    void GenericGpuShader::addUniform(
+    void GenericGpuShaderDesc::addUniform(
         unsigned, const char *, UniformType, void *)
     {
         // Outside the scope of this code review. Will add in future step.
         throw Exception("Not yet implemented");
     }
 
-    unsigned GenericGpuShader::getNumTextures() const
+    unsigned GenericGpuShaderDesc::getNumTextures() const
     {
         return unsigned(getImpl()->textures.size());
     }
 
-    void GenericGpuShader::addTexture(
+    void GenericGpuShaderDesc::addTexture(
         const char * name, const char * id, unsigned width, unsigned height,
         TextureType channel, Interpolation interpolation,
         float * red, float * green, float * blue)
@@ -530,58 +464,53 @@ OCIO_NAMESPACE_ENTER
         getImpl()->addTexture(name, id, width, height, channel, interpolation, red, green, blue);
     }
 
-    void GenericGpuShader::getTexture(
+    void GenericGpuShaderDesc::getTexture(
         unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
         TextureType & channel, Interpolation & interpolation) const
     {
         getImpl()->getTexture(index, name, id, width, height, channel, interpolation);
     }
 
-    void GenericGpuShader::getTextureValues(
+    void GenericGpuShaderDesc::getTextureValues(
         unsigned index, const float *& red, const float *& green, const float *& blue) const
     {
         getImpl()->getTextureValues(index, red, green, blue);
     }
 
-    unsigned GenericGpuShader::getNum3DTextures() const
+    unsigned GenericGpuShaderDesc::getNum3DTextures() const
     {
         return unsigned(getImpl()->textures3D.size());
     }
 
-    void GenericGpuShader::add3DTexture(
+    void GenericGpuShaderDesc::add3DTexture(
         const char * name, const char * id, unsigned edgelen, 
         Interpolation interpolation, float * values)
     {
         getImpl()->add3DTexture(name, id, edgelen, interpolation, values);
     }
 
-    void GenericGpuShader::get3DTexture(
+    void GenericGpuShaderDesc::get3DTexture(
         unsigned index, const char *& name, const char *& id, unsigned & edgelen) const
     {
         getImpl()->get3DTexture(index, name, id, edgelen);
     }
 
-    void GenericGpuShader::get3DTextureValues(unsigned index, const float *& value) const
+    void GenericGpuShaderDesc::get3DTextureValues(unsigned index, const float *& value) const
     {
         getImpl()->get3DTextureValues(index, value);
     }
 
-    const char * GenericGpuShader::getShaderText() const
+    const char * GenericGpuShaderDesc::getShaderText() const
     {
         return getImpl()->shaderCode.c_str();
     }
 
-    const char * GenericGpuShader::getCacheID() const
+    const char * GenericGpuShaderDesc::getCacheID() const
     {
         return getImpl()->shaderCodeID.c_str();
     }
 
-    GpuShaderRcPtr GenericGpuShader::clone() const
-    {
-        return Create(getImpl()->getDesc());
-    }
-
-    void GenericGpuShader::addToDeclareShaderCode(const char * shaderCode)
+    void GenericGpuShaderDesc::addToDeclareShaderCode(const char * shaderCode)
     {
         if(getImpl()->declarations.empty())
         {
@@ -590,27 +519,27 @@ OCIO_NAMESPACE_ENTER
         getImpl()->declarations += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void GenericGpuShader::addToHelperShaderCode(const char * shaderCode)
+    void GenericGpuShaderDesc::addToHelperShaderCode(const char * shaderCode)
     {
         getImpl()->helpers += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void GenericGpuShader::addToMainShaderCode(const char * shaderCode)
+    void GenericGpuShaderDesc::addToMainShaderCode(const char * shaderCode)
     {
         getImpl()->mainBody += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void GenericGpuShader::addToMainHeaderShaderCode(const char * shaderCode)
+    void GenericGpuShaderDesc::addToMainHeaderShaderCode(const char * shaderCode)
     {
         getImpl()->mainHeader += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void GenericGpuShader::addToMainFooterShaderCode(const char * shaderCode)
+    void GenericGpuShaderDesc::addToMainFooterShaderCode(const char * shaderCode)
     {
         getImpl()->mainFooter += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void GenericGpuShader::createShaderText(
+    void GenericGpuShaderDesc::createShaderText(
         const char * shaderDeclarations, const char * shaderHelperMethods,
         const char * shaderMainHeader, const char * shaderMainBody,
         const char * shaderMainFooter)
@@ -620,12 +549,12 @@ OCIO_NAMESPACE_ENTER
             shaderMainBody, shaderMainFooter);
     }
 
-    void GenericGpuShader::finalize()
+    void GenericGpuShaderDesc::finalize()
     {
-        getImpl()->finalize();
+        getImpl()->finalize(GpuShaderDesc::getCacheID());
     }
 
-    void GenericGpuShader::Deleter(GenericGpuShader* c)
+    void GenericGpuShaderDesc::Deleter(GenericGpuShaderDesc* c)
     {
         delete c;
     }

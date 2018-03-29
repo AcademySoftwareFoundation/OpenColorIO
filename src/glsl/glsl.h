@@ -24,26 +24,26 @@ class OpenGLBuilder
 
 public:
     // Create an OpenGL builder using the GPU shader information from a specific processor
-    static OpenGLBuilderRcPtr Create(OCIO::ConstGpuShaderRcPtr& gpuShader);
+    static OpenGLBuilderRcPtr Create(const OCIO::GpuShaderDescRcPtr & gpuShader);
 
     ~OpenGLBuilder();
 
-    // Allocate all the needed textures starting at the (zero based) index 1 by default
+    // Allocate & upload all the needed textures starting at the (zero based) index 1 by default
     //  (i.e. the first index is reserved for the input image to process)
     void allocateAllTextures(unsigned startIndex = 1);
     void useAllTextures();
 
     // Build the shader fragment program
-    unsigned buildProgram(const std::string& fragMainMethod);
+    unsigned buildProgram(const std::string & fragMainMethod);
     void useProgram();
 
 protected:
-    OpenGLBuilder(OCIO::ConstGpuShaderRcPtr& gpuShader);
+    OpenGLBuilder(const OCIO::GpuShaderDescRcPtr & gpuShader);
 
     void deleteAllTextures();
 
 private:
-    OCIO::ConstGpuShaderRcPtr m_gpuShader; // Description of the fragement shader to create
+    const OCIO::GpuShaderDescRcPtr m_shaderDesc; // Description of the fragment shader to create
     unsigned m_startIndex;                 // Starting index for texture allocations
     TextureIds m_textureIds;               // Texture ids of all needed textures
     unsigned m_fragShader;                 // Fragment shader identifier

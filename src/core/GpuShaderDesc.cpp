@@ -26,10 +26,16 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/*
+    Made by Autodesk Inc. under the terms of the OpenColorIO BSD 3 Clause License
+*/
+
+
 #include <sstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "GpuShader.h"
 #include "Mutex.h"
 
 OCIO_NAMESPACE_ENTER
@@ -39,39 +45,47 @@ OCIO_NAMESPACE_ENTER
     public:
         GpuLanguage language_;
         std::string functionName_;
-        std::string namePrefix_;
+        std::string resourcePrefix_;
         std::string pixelName_;
-
+        
         mutable std::string cacheID_;
         mutable Mutex cacheIDMutex_;
         
         Impl()
-            :   language_(GPU_LANGUAGE_GLSL_1_3)
+            :   language_(GPU_LANGUAGE_UNKNOWN)
             ,   functionName_("OCIOMain")
-            ,   namePrefix_("ocio")
+            ,   resourcePrefix_("ocio")
             ,   pixelName_("outColor")
         {
         }
         
         ~Impl()
         { }
-    
+        
         Impl& operator= (const Impl & rhs)
         {
             language_ = rhs.language_;
             functionName_ = rhs.functionName_;
-            namePrefix_ = rhs.namePrefix_;
+            resourcePrefix_ = rhs.resourcePrefix_;
             pixelName_ = rhs.pixelName_;
             cacheID_ = rhs.cacheID_;
             return *this;
         }
-
-    private:
-        Impl(const Impl & rhs);
     };
     
+
+    GpuShaderDescRcPtr GpuShaderDesc::CreateLegacyShaderDesc(unsigned edgelen)
+    {
+        return LegacyGpuShaderDesc::Create(edgelen);
+    }
+
+    GpuShaderDescRcPtr GpuShaderDesc::CreateShaderDesc()
+    {
+        return GenericGpuShaderDesc::Create();
+    }
+
     GpuShaderDesc::GpuShaderDesc()
-        :   m_impl(new GpuShaderDesc::Impl())
+        :   m_impl(new GpuShaderDesc::Impl)
     {
     }
     
@@ -80,18 +94,7 @@ OCIO_NAMESPACE_ENTER
         delete m_impl;
         m_impl = NULL;
     }
-
-    GpuShaderDesc::GpuShaderDesc(const GpuShaderDesc & desc)
-        :   m_impl(new GpuShaderDesc::Impl())
-    {
-        *m_impl = *desc.m_impl;
-    }
-
-    GpuShaderDesc& GpuShaderDesc::operator= (const GpuShaderDesc & desc)
-    {
-        *m_impl = *desc.m_impl;
-        return *this;
-    }
+    
     
     void GpuShaderDesc::setLanguage(GpuLanguage lang)
     {
@@ -116,24 +119,24 @@ OCIO_NAMESPACE_ENTER
     {
         return getImpl()->functionName_.c_str();
     }
-
-    void GpuShaderDesc::setNamePrefix(const char * prefix)
+    
+    void GpuShaderDesc::setResourcePrefix(const char * prefix)
     {
         AutoMutex lock(getImpl()->cacheIDMutex_);
-        getImpl()->namePrefix_ = prefix;
-        getImpl()->cacheID_ = "";
+        getImpl()->resourcePrefix_ = prefix;
+        getImpl()->cacheID_    = "";
     }
 
-    const char * GpuShaderDesc::getNamePrefix() const
+    const char * GpuShaderDesc::getResourcePrefix() const
     {
-        return getImpl()->namePrefix_.c_str();
+        return getImpl()->resourcePrefix_.c_str();
     }
 
     void GpuShaderDesc::setPixelName(const char * name)
     {
         AutoMutex lock(getImpl()->cacheIDMutex_);
         getImpl()->pixelName_ = name;
-        getImpl()->cacheID_ = "";
+        getImpl()->cacheID_   = "";
     }
 
     const char * GpuShaderDesc::getPixelName() const
@@ -150,8 +153,8 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << GpuLanguageToString(getImpl()->language_) << " ";
             os << getImpl()->functionName_ << " ";
-            os << getImpl()->namePrefix_;
-            os << getImpl()->pixelName_;
+            os << getImpl()->resourcePrefix_ << " ";
+            os << getImpl()->pixelName_ << " ";
             getImpl()->cacheID_ = os.str();
         }
         
