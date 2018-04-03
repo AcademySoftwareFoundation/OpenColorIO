@@ -144,3 +144,10 @@ Context
 .. autoclass:: PyOpenColorIO.Context
     :members:
     :undoc-members:
+
+Baker
+*****
+
+.. autoclass:: PyOpenColorIO.Baker
+    :members:
+    :undoc-members:
