@@ -319,7 +319,7 @@ OCIO_NAMESPACE_ENTER
                 code << "log(" << shaderDesc->getPixelName() << ".rgb) + ";
                 code << GpuTextHalf3(m_kb,lang) << ";\n";
 
-                shaderDesc->addToMainShaderCode(code.str().c_str());
+                shaderDesc->addToFunctionShaderCode(code.str().c_str());
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
@@ -351,7 +351,7 @@ OCIO_NAMESPACE_ENTER
                 code << shaderDesc->getPixelName() << ".rgb - ";
                 code << GpuTextHalf3(m_b,lang) << ");\n";
 
-                shaderDesc->addToMainShaderCode(code.str().c_str());
+                shaderDesc->addToFunctionShaderCode(code.str().c_str());
             }
         }
         

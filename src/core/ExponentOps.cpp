@@ -238,7 +238,7 @@ OCIO_NAMESPACE_ENTER
                  << ", " << GpuTextHalf4(exp, lang) << ");"
                  << std::endl;
 
-            shaderDesc->addToMainShaderCode(code.str().c_str());
+            shaderDesc->addToFunctionShaderCode(code.str().c_str());
         }
         
     }  // Anon namespace

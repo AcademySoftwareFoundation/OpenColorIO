@@ -744,7 +744,7 @@ OCIO_NAMESPACE_ENTER
                 Write_sampleLut3D_rgb(
                     code, shaderDesc->getPixelName(), name, m_lut->size[0], shaderDesc->getLanguage());
 
-                shaderDesc->addToMainShaderCode(code.str().c_str());
+                shaderDesc->addToFunctionShaderCode(code.str().c_str());
             }
             else
             {

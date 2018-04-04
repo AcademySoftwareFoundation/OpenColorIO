@@ -173,15 +173,15 @@ namespace
 
         void createShaderText(
             const char * shaderDeclarations, const char * shaderHelperMethods,
-            const char * shaderMainHeader, const char * shaderMainBody,
-            const char * shaderMainFooter)
+            const char * shaderFunctionHeader, const char * shaderFunctionBody,
+            const char * shaderFunctionFooter)
         {
             shaderCode.resize(0);
             shaderCode += (shaderDeclarations && *shaderDeclarations) ? shaderDeclarations : "";
             shaderCode += (shaderHelperMethods && *shaderHelperMethods) ? shaderHelperMethods : "";
-            shaderCode += (shaderMainHeader && *shaderMainHeader) ? shaderMainHeader : "";
-            shaderCode += (shaderMainBody && shaderMainBody) ? shaderMainBody : "";
-            shaderCode += (shaderMainFooter && shaderMainFooter) ? shaderMainFooter : "";
+            shaderCode += (shaderFunctionHeader && *shaderFunctionHeader) ? shaderFunctionHeader : "";
+            shaderCode += (shaderFunctionBody && shaderFunctionBody) ? shaderFunctionBody : "";
+            shaderCode += (shaderFunctionFooter && shaderFunctionFooter) ? shaderFunctionFooter : "";
 
             shaderCodeID.resize(0);
         }
@@ -190,8 +190,8 @@ namespace
         {
             // Finalize the shader program
             createShaderText(
-                declarations.c_str(), helpers.c_str(), 
-                mainHeader.c_str(), mainBody.c_str(), mainFooter.c_str());
+                declarations.c_str(), helperMethods.c_str(), 
+                functionHeader.c_str(), functionBody.c_str(), functionFooter.c_str());
 
             // Compute the identifier
             std::ostringstream ss;
@@ -211,10 +211,10 @@ namespace
         }
 
         std::string declarations;
-        std::string helpers;
-        std::string mainHeader;
-        std::string mainBody;
-        std::string mainFooter;
+        std::string helperMethods;
+        std::string functionHeader;
+        std::string functionBody;
+        std::string functionFooter;
 
         std::string shaderCode;
         std::string shaderCodeID;
@@ -368,32 +368,32 @@ OCIO_NAMESPACE_ENTER
 
     void LegacyGpuShaderDesc::addToHelperShaderCode(const char * shaderCode)
     {
-        getImpl()->helpers += (shaderCode && *shaderCode) ? shaderCode : "";
+        getImpl()->helperMethods += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void LegacyGpuShaderDesc::addToMainShaderCode(const char * shaderCode)
+    void LegacyGpuShaderDesc::addToFunctionShaderCode(const char * shaderCode)
     {
-        getImpl()->mainBody += (shaderCode && *shaderCode) ? shaderCode : "";
+        getImpl()->functionBody += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void LegacyGpuShaderDesc::addToMainHeaderShaderCode(const char * shaderCode)
+    void LegacyGpuShaderDesc::addToFunctionHeaderShaderCode(const char * shaderCode)
     {
-        getImpl()->mainHeader += (shaderCode && *shaderCode) ? shaderCode : "";
+        getImpl()->functionHeader += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void LegacyGpuShaderDesc::addToMainFooterShaderCode(const char * shaderCode)
+    void LegacyGpuShaderDesc::addToFunctionFooterShaderCode(const char * shaderCode)
     {
-        getImpl()->mainFooter += (shaderCode && *shaderCode) ? shaderCode : "";
+        getImpl()->functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
     void LegacyGpuShaderDesc::createShaderText(
         const char * shaderDeclarations, const char * shaderHelperMethods,
-        const char * shaderMainHeader, const char * shaderMainBody,
-        const char * shaderMainFooter)
+        const char * shaderFunctionHeader, const char * shaderFunctionBody,
+        const char * shaderFunctionFooter)
     {
         getImpl()->createShaderText(
-            shaderDeclarations, shaderHelperMethods, shaderMainHeader, 
-            shaderMainBody, shaderMainFooter);
+            shaderDeclarations, shaderHelperMethods, shaderFunctionHeader, 
+            shaderFunctionBody, shaderFunctionFooter);
     }
 
     void LegacyGpuShaderDesc::finalize()
@@ -521,37 +521,37 @@ OCIO_NAMESPACE_ENTER
 
     void GenericGpuShaderDesc::addToHelperShaderCode(const char * shaderCode)
     {
-        getImpl()->helpers += (shaderCode && *shaderCode) ? shaderCode : "";
+        getImpl()->helperMethods += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void GenericGpuShaderDesc::addToMainShaderCode(const char * shaderCode)
+    void GenericGpuShaderDesc::addToFunctionShaderCode(const char * shaderCode)
     {
-        getImpl()->mainBody += (shaderCode && *shaderCode) ? shaderCode : "";
+        getImpl()->functionBody += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void GenericGpuShaderDesc::addToMainHeaderShaderCode(const char * shaderCode)
+    void GenericGpuShaderDesc::addToFunctionHeaderShaderCode(const char * shaderCode)
     {
-        getImpl()->mainHeader += (shaderCode && *shaderCode) ? shaderCode : "";
+        getImpl()->functionHeader += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
-    void GenericGpuShaderDesc::addToMainFooterShaderCode(const char * shaderCode)
+    void GenericGpuShaderDesc::addToFunctionFooterShaderCode(const char * shaderCode)
     {
-        getImpl()->mainFooter += (shaderCode && *shaderCode) ? shaderCode : "";
+        getImpl()->functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
     void GenericGpuShaderDesc::createShaderText(
         const char * shaderDeclarations, const char * shaderHelperMethods,
-        const char * shaderMainHeader, const char * shaderMainBody,
-        const char * shaderMainFooter)
+        const char * shaderFunctionHeader, const char * shaderFunctionBody,
+        const char * shaderFunctionFooter)
     {
         getImpl()->createShaderText(
-            shaderDeclarations, shaderHelperMethods, shaderMainHeader, 
-            shaderMainBody, shaderMainFooter);
+            shaderDeclarations, shaderHelperMethods, shaderFunctionHeader, 
+            shaderFunctionBody, shaderFunctionFooter);
     }
 
     void GenericGpuShaderDesc::finalize()
     {
-        getImpl()->finalize(GpuShaderDesc::getCacheID());
+        getImpl()->finalize(GpuShaderDesc::getCacheID() );
     }
 
     void GenericGpuShaderDesc::Deleter(GenericGpuShaderDesc* c)

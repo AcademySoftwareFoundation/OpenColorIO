@@ -17,6 +17,8 @@ class OpenGLBuilder;
 typedef OCIO_SHARED_PTR<OpenGLBuilder> OpenGLBuilderRcPtr;
 
 
+// This a reference implementation showing how to do the texture updload & allocation, 
+// and the program compilation for the GLSL shader language.
 
 class OpenGLBuilder
 {

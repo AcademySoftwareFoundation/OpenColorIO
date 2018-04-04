@@ -642,7 +642,7 @@ OCIO_NAMESPACE_ENTER
                         code, shaderDesc->getPixelName(), name, width, shaderDesc->getLanguage());
                 }
 
-                shaderDesc->addToMainShaderCode(code.str().c_str());
+                shaderDesc->addToFunctionShaderCode(code.str().c_str());
             }
             else
             {

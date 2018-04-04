@@ -514,7 +514,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
 
-            shaderDesc->addToMainShaderCode(code.str().c_str());
+            shaderDesc->addToFunctionShaderCode(code.str().c_str());
         }
         
     }  // Anon namespace

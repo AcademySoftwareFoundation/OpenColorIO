@@ -50,15 +50,15 @@ OCIO_NAMESPACE_ENTER
         //
         void addToDeclareShaderCode(const char * shaderCode);
         void addToHelperShaderCode(const char * shaderCode);
-        void addToMainHeaderShaderCode(const char * shaderCode);
-        void addToMainShaderCode(const char * shaderCode);
-        void addToMainFooterShaderCode(const char * shaderCode);
+        void addToFunctionHeaderShaderCode(const char * shaderCode);
+        void addToFunctionShaderCode(const char * shaderCode);
+        void addToFunctionFooterShaderCode(const char * shaderCode);
 
         // Method called to build the complete shader program
         void createShaderText(
             const char * shaderDeclarations, const char * shaderHelperMethods,
-            const char * shaderMainHeader, const char * shaderMainBody,
-            const char * shaderMainFooter);
+            const char * shaderFunctionHeader, const char * shaderFunctionBody,
+            const char * shaderFunctionFooter);
 
     protected:
 
@@ -159,9 +159,9 @@ OCIO_NAMESPACE_ENTER
         //
         void addToDeclareShaderCode(const char * shaderCode);
         void addToHelperShaderCode(const char * shaderCode);
-        void addToMainHeaderShaderCode(const char * shaderCode);
-        void addToMainShaderCode(const char * shaderCode);
-        void addToMainFooterShaderCode(const char * shaderCode);
+        void addToFunctionHeaderShaderCode(const char * shaderCode);
+        void addToFunctionShaderCode(const char * shaderCode);
+        void addToFunctionFooterShaderCode(const char * shaderCode);
 
         // Method called to build the complete shader program
         void createShaderText(

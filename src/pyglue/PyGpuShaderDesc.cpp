@@ -132,17 +132,16 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        void GpuShaderDesc_deleter(GpuShaderDesc* d)
+        void GpuShaderDesc_deleter(PyOCIO_GpuShaderDesc *self, PyObject * /*args*/)
         {
-            delete d;
+            DeletePyObject<PyOCIO_GpuShaderDesc>(self);
         }
-        
+
         int PyOCIO_GpuShaderDesc_init(PyOCIO_GpuShaderDesc* self, PyObject * /*args*/, PyObject * /*kwds*/)
         {
             OCIO_PYTRY_ENTER()
             return BuildPyObject<PyOCIO_GpuShaderDesc, ConstGpuShaderDescRcPtr,
-                GpuShaderDescRcPtr>(self, GpuShaderDescRcPtr(new GpuShaderDesc(),
-                    GpuShaderDesc_deleter));
+                GpuShaderDescRcPtr>(self, GpuShaderDesc::CreateLegacyShaderDesc(32));
             OCIO_PYTRY_EXIT(-1)
         }
         

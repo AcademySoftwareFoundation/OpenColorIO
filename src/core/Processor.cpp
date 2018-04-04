@@ -242,7 +242,7 @@ OCIO_NAMESPACE_ENTER
                 throw Exception("Unsupported shader language.");
             }
 
-            shaderDesc->addToMainHeaderShaderCode(code.str().c_str());
+            shaderDesc->addToFunctionHeaderShaderCode(code.str().c_str());
         }
         
         
@@ -251,7 +251,7 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream code;
             code << "    return " << shaderDesc->getPixelName() << ";\n";
             code << "}" << "\n\n";
-            shaderDesc->addToMainFooterShaderCode(code.str().c_str());
+            shaderDesc->addToFunctionFooterShaderCode(code.str().c_str());
         }
 
 
