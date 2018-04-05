@@ -1260,8 +1260,8 @@ OCIO_NAMESPACE_ENTER
     //    //
     //    oglBuilder->allocateAllTextures();
     //
-    //    // Step 5: Build the shader function used by the global shader 
-    //    //         program (i.e. g_fragShaderText)
+    //    // Step 5: Build the complete fragment shader program using 
+    //    //         g_fragShaderText which is the client shader program.
     //    //
     //    g_programId = oglBuilder->buildProgram(g_fragShaderText);
     //

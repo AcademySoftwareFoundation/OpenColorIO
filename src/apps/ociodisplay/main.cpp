@@ -27,11 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-/*
-    Made by Autodesk Inc. under the terms of the OpenColorIO BSD 3 Clause License
-*/
-
-
 #include <cstdlib>
 #include <cmath>
 #include <cstdio>

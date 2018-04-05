@@ -26,10 +26,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*
-    Made by Autodesk Inc. under the terms of the OpenColorIO BSD 3 Clause License
-*/
-
 
 #include <sstream>
 
