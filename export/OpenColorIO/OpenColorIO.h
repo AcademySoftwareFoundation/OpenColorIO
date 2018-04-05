@@ -1140,8 +1140,8 @@ OCIO_NAMESPACE_ENTER
     //    program which consumes the pixel color processing.
     //    
     //    The OCIO shader program is fully described by the GpuShaderDesc
-    //    independently from the client shader program. The only interface 
-    //    point is the agremment on the OCIO function shader name.
+    //    independently from the client shader program. The only critical 
+    //    point is the agreement on the OCIO function shader name.
     //    
     //    To summarize, the complete shader program is:
     //    
@@ -1157,7 +1157,7 @@ OCIO_NAMESPACE_ENTER
     //  | | uniform sampled3D tex3;                                         | |
     //  | |                                                                 | |
     //  | | // All helper methods                                           | |
-    //  | | vec3 computePosition(vec3 color)                                | |
+    //  | | vec3 computePos(vec3 color)                                     | |
     //  | | {                                                               | |
     //  | |   vec3 coords = color;                                          | |
     //  | |   ...                                                           | |
@@ -1169,7 +1169,7 @@ OCIO_NAMESPACE_ENTER
     //  | | {                                                               | |
     //  | |   vec4 outColor = inColor;                                      | |
     //  | |   ...                                                           | |
-    //  | |   outColor = texture3D(tex3, computePosition(inColor.rgb)).rgb; | |
+    //  | |   outColor.rbg = texture3D(tex3, computePos(inColor.rgb)).rgb;  | |
     //  | |   ...                                                           | |
     //  | |   return outColor;                                              | |
     //  | | }                                                               | |
