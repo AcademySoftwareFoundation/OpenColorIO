@@ -1131,7 +1131,73 @@ OCIO_NAMESPACE_ENTER
     // allows all the ops to be processed as-is, without baking, like the CPU renderer.
     // Custom implementations could be written to accomodate the GPU needs of of a 
     // specific client app.
-    // 
+    //
+    //
+    // .. note::
+    //
+    //    The complete fragment shader program is decomposed in two main parts:
+    //    the OCIO shader program for the color processing and the client shader 
+    //    program which consumes the pixel color processing.
+    //    
+    //    The OCIO shader program is fully described by the GpuShaderDesc
+    //    independently from the client shader program. The only interface 
+    //    point is the agremment on the OCIO function shader name.
+    //    
+    //    To summarize, the complete shader program is:
+    //    
+    //  |---------------------------------------------------------------------|
+    //  |             The complete fragment shader program                    |
+    //  |             ------------------------------------                    |
+    //  |                                                                     |
+    //  | |-----------------------------------------------------------------| |
+    //  | |                The OCIO shader program                          | |
+    //  | |                -----------------------                          | |
+    //  | |                                                                 | |
+    //  | | // All global declarations                                      | |
+    //  | | uniform sampled3D tex3;                                         | |
+    //  | |                                                                 | |
+    //  | | // All helper methods                                           | |
+    //  | | vec3 computePosition(vec3 color)                                | |
+    //  | | {                                                               | |
+    //  | |   vec3 coords = color;                                          | |
+    //  | |   ...                                                           | |
+    //  | |   return coords;                                                | |
+    //  | | }                                                               | |
+    //  | |                                                                 | |
+    //  | | // The OCIO shader function                                     | |
+    //  | | vec4 OCIODisplay(in vec4 inColor)                               | |
+    //  | | {                                                               | |
+    //  | |   vec4 outColor = inColor;                                      | |
+    //  | |   ...                                                           | |
+    //  | |   outColor = texture3D(tex3, computePosition(inColor.rgb)).rgb; | |
+    //  | |   ...                                                           | |
+    //  | |   return outColor;                                              | |
+    //  | | }                                                               | |
+    //  | |                                                                 | |
+    //  | |-----------------------------------------------------------------| |
+    //  |                                                                     |
+    //  |                                                                     |
+    //  | |-----------------------------------------------------------------| |
+    //  | |                The client shader program                        | |
+    //  | |                -------------------------                        | |
+    //  | |                                                                 | |
+    //  | | uniform sampler2D image;                                        | |
+    //  | |                                                                 | |
+    //  | | void main()                                                     | |
+    //  | | {                                                               | |
+    //  | |   vec4 inColor = texture2D(image, gl_TexCoord[0].st);           | |
+    //  | |   ...                                                           | |
+    //  | |   vec4 outColor = OCIODisplay(inColor);                         | |
+    //  | |   ...                                                           | |
+    //  | |   gl_FragColor = outColor;                                      | |
+    //  | | }                                                               | |
+    //  | |                                                                 | |
+    //  | |-----------------------------------------------------------------| |
+    //  |                                                                     |
+    //  |                                                                     |
+    //  |---------------------------------------------------------------------|
+    //
+    //
     // **Usage Example:** *Building a GPU shader*
     //
     //   This example is based on the code in: src/apps/ociodisplay/main.cpp 
@@ -1290,14 +1356,14 @@ OCIO_NAMESPACE_ENTER
             unsigned index, const char *& name, const char *& id, unsigned & edgelen) const = 0;
         virtual void get3DTextureValues(unsigned index, const float *& value) const = 0;
 
-        //!cpp:function:: Methods to specialize parts of a shader program
+        //!cpp:function:: Methods to specialize parts of a OCIO shader program
         //
         // .. note::
         // 
-        //   A shader program could contain:
+        //   An OCIO shader program could contain:
         //   1. A declaration part  e.g., uniform sampled3D tex3;
         //   2. Some helper methods
-        //   3. The shader program function may be broken down as:
+        //   3. The OCIO shader function may be broken down as:
         //   3.1. The function header   e.g., void OCIODisplay(in vec4 inColor) {
         //   3.2. The function body     e.g.,   vec4 outColor.rgb = texture3D(tex3, inColor.rgb).rgb;
         //   3.3. The function footer   e.g.,   return outColor; }
@@ -1315,8 +1381,8 @@ OCIO_NAMESPACE_ENTER
         //   return coords;
         // }
         // 
-        // // The shader program function
-        // void OCIODisplay(in vec4 inColor)
+        // // The shader function
+        // vec4 OCIODisplay(in vec4 inColor)
         // {
         //   vec4 outColor = inColor;
         //   outColor.rgb = texture3D(tex3, computePosition(inColor.rgb)).rgb;
@@ -1329,19 +1395,19 @@ OCIO_NAMESPACE_ENTER
         virtual void addToFunctionShaderCode(const char * shaderCode) = 0;
         virtual void addToFunctionFooterShaderCode(const char * shaderCode) = 0;
 
-        //!cpp:function:: Create the complete function shader
+        //!cpp:function:: Create the OCIO shader program
         //
         // .. note::
-        //   The function shader is decomposed to allow a specific implementation
+        //   The OCIO shader program is decomposed to allow a specific implementation
         //   to change some parts. Some product integrations add the color processing
-        //   within a bigger shader program, imposing constraints requiring this flexibility.
+        //   within a client shader program, imposing constraints requiring this flexibility.
         //
         virtual void createShaderText(
             const char * shaderDeclarations, const char * shaderHelperMethods,
             const char * shaderFunctionHeader, const char * shaderFunctionBody,
             const char * shaderFunctionFooter) = 0;
 
-        //!cpp:function:: Get the complete function shader program
+        //!cpp:function:: Get the complete OCIO shader program
         virtual const char * getShaderText() const = 0;
 
         //!cpp:function::

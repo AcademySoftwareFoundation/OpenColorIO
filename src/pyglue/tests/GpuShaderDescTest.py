@@ -11,5 +11,7 @@ class GpuShaderDescTest(unittest.TestCase):
         self.assertEqual(OCIO.Constants.GPU_LANGUAGE_GLSL_1_3, desc.getLanguage())
         desc.setFunctionName("foo123")
         self.assertEqual("foo123", desc.getFunctionName())
-        self.assertEqual("glsl_1.3 foo123 ociooutColor", desc.getCacheID())
+        desc.finalize()
+        self.assertEqual("glsl_1.3 foo123 ocio outColor $4dd1c89df8002b409e089089ce8f24e7", 
+                         desc.getCacheID())
 

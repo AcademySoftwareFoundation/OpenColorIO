@@ -6,7 +6,7 @@
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "HashUtils.h"
-#include "GPUShader.h"
+#include "GpuShader.h"
 
 #include <sstream>
 #include <vector>
@@ -195,7 +195,6 @@ namespace
 
             // Compute the identifier
             std::ostringstream ss;
-            ss << cacheID;
             ss << shaderCode;
             for(unsigned idx=0; idx<textures3D.size(); ++idx)
             {
@@ -206,8 +205,8 @@ namespace
                 ss << textures[idx].id;
             }
 
-            const std::string id(ss.str());
-            shaderCodeID = OCIO_NAMESPACE::CacheIDHash(id.c_str(), unsigned(id.length()));
+            const std::string id = ss.str();
+            shaderCodeID = cacheID + OCIO_NAMESPACE::CacheIDHash(id.c_str(), unsigned(id.length()));
         }
 
         std::string declarations;

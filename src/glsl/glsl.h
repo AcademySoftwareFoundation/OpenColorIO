@@ -35,8 +35,9 @@ public:
     void allocateAllTextures(unsigned startIndex = 1);
     void useAllTextures();
 
-    // Build the shader fragment program
-    unsigned buildProgram(const std::string & fragMainMethod);
+    // Build the complete shader program which includes the OCIO shader program 
+    // and the client shader program.
+    unsigned buildProgram(const std::string & clientShaderProgram);
     void useProgram();
 
 protected:

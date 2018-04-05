@@ -256,15 +256,18 @@ void OpenGLBuilder::useAllTextures()
     for(size_t idx=0; idx<max; ++idx)
     {
         const std::pair<unsigned, std::string> data = m_textureIds[idx];
-        glUniform1i(glGetUniformLocation(m_program, data.second.c_str()), GLint(m_startIndex + idx));
+        glUniform1i(
+            glGetUniformLocation(m_program, 
+                                 data.second.c_str()), 
+                                 GLint(m_startIndex + idx) );
     }
 }
 
-unsigned OpenGLBuilder::buildProgram(const std::string& fragMainMethod)
+unsigned OpenGLBuilder::buildProgram(const std::string & clientShaderProgram)
 {
     std::ostringstream os;
     os << m_shaderDesc->getShaderText() << "\n";
-    os << fragMainMethod;
+    os << clientShaderProgram;
 
     if(m_fragShader) glDeleteShader(m_fragShader);
     m_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());

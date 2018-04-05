@@ -60,6 +60,7 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_GpuShaderDesc_setFunctionName(PyObject * self, PyObject * args);
         PyObject * PyOCIO_GpuShaderDesc_getFunctionName(PyObject * self);
         PyObject * PyOCIO_GpuShaderDesc_getCacheID(PyObject * self);
+        PyObject * PyOCIO_GpuShaderDesc_finalize(PyObject * self);
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -75,6 +76,8 @@ OCIO_NAMESPACE_ENTER
             (PyCFunction) PyOCIO_GpuShaderDesc_getFunctionName, METH_NOARGS, GPUSHADERDESC_GETFUNCTIONNAME__DOC__ },
             { "getCacheID",
             (PyCFunction) PyOCIO_GpuShaderDesc_getCacheID, METH_NOARGS, GPUSHADERDESC_GETCACHEID__DOC__ },
+            { "finalize",
+            (PyCFunction) PyOCIO_GpuShaderDesc_finalize, METH_NOARGS, GPUSHADERDESC_FINALIZE__DOC__ },
             { NULL, NULL, 0, NULL }
         };
         
@@ -196,6 +199,15 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_ENTER()
             ConstGpuShaderDescRcPtr desc = GetConstGpuShaderDesc(self);
             return PyString_FromString(desc->getCacheID());
+            OCIO_PYTRY_EXIT(NULL)
+        }
+        
+        PyObject * PyOCIO_GpuShaderDesc_finalize(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            GpuShaderDescRcPtr desc = GetEditableGpuShaderDesc(self);
+            desc->finalize();
+            Py_RETURN_NONE;
             OCIO_PYTRY_EXIT(NULL)
         }
         
