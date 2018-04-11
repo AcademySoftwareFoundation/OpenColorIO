@@ -69,6 +69,9 @@ OCIO_NAMESPACE_ENTER
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);
+    // Used by tests
+    void CreateIdentifyOp(OpRcPtrVec & ops,
+                          TransformDirection direction);
 }
 OCIO_NAMESPACE_EXIT
 

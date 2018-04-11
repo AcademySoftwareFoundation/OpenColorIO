@@ -145,8 +145,8 @@ OCIO_NAMESPACE_ENTER
         
         // disable cast-function-type warning on GCC 8+
         // this is triggered by methods that take kwargs (METH_KEYWORDS)
-        #pragma GCC diagnostic push
         #if __GNUC__ >= 8
+        #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wcast-function-type"
         #endif
         
@@ -276,7 +276,9 @@ OCIO_NAMESPACE_ENTER
             { NULL, NULL, 0, NULL }
         };
         
+        #if __GNUC__ >= 8
         #pragma GCC diagnostic pop
+        #endif
         
     }
     

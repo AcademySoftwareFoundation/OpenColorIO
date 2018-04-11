@@ -628,7 +628,22 @@ OCIO_NAMESPACE_ENTER
         
         CreateMatrixOffsetOp(ops, matrix, offset, direction);
     }
-    
+
+    void CreateIdentityMatrixOp(OpRcPtrVec & ops,
+                                TransformDirection direction)
+    {
+        float matrix[16];
+        memset(matrix, 0, 16 * sizeof(float));
+        matrix[0] = 1.0f;
+        matrix[5] = 1.0f;
+        matrix[10] = 1.0f;
+        matrix[15] = 1.0f;
+        float offset[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+        ops.push_back(MatrixOffsetOpRcPtr(new MatrixOffsetOp(matrix,
+            offset, direction)));
+    }
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -641,22 +656,31 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+#include "NoOps.h"
+#include "LogOps.h"
 
 OCIO_NAMESPACE_USING
 
 OIIO_ADD_TEST(MatrixOps, Scale)
 {
-    float error = 1e-8f;
+    const float error = 1e-8f;
 
     OpRcPtrVec ops;
     const float scale[] = { 1.1f, 1.3f, 0.3f, 1.0f };
-    CreateScaleOp(ops, scale, TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 1);
-    ops[0]->finalize();
 
-    CreateScaleOp(ops, scale, TRANSFORM_DIR_INVERSE);
+    std::string cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+
+    cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_INVERSE));
     OIIO_CHECK_EQUAL(ops.size(), 2);
-    ops[1]->finalize();
+    OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
     const unsigned NB_PIXELS = 3;
     const float src[NB_PIXELS*4] = {  0.1004f,  0.2f,  0.3f,    0.4f,
@@ -681,23 +705,30 @@ OIIO_ADD_TEST(MatrixOps, Scale)
 
     for(unsigned idx=0; idx<(NB_PIXELS*4); ++idx)
     {
-        OIIO_CHECK_CLOSE(src[idx], tmp[idx],error);
+        OIIO_CHECK_CLOSE(src[idx], tmp[idx], error);
     }
 }
 
 OIIO_ADD_TEST(MatrixOps, Offset)
 {
-    float error = 1e-5f;
+    const float error = 1e-5f;
 
     OpRcPtrVec ops;
     const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
-    CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 1);
-    ops[0]->finalize();
 
-    CreateOffsetOp(ops, offset, TRANSFORM_DIR_INVERSE);
+    std::string cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+
+    cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_INVERSE));
     OIIO_CHECK_EQUAL(ops.size(), 2);
-    ops[1]->finalize();
+    OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
     const unsigned NB_PIXELS = 3;
     const float src[NB_PIXELS*4] = {  0.1004f,  0.2f,  0.3f,    0.4f,
@@ -728,7 +759,7 @@ OIIO_ADD_TEST(MatrixOps, Offset)
 
 OIIO_ADD_TEST(MatrixOps, Matrix)
 {
-    float error = 1e-5f;
+    const float error = 1e-5f;
 
     const float matrix[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
                                0.5f, 1.6f, 0.7f, 0.8f,
@@ -736,22 +767,37 @@ OIIO_ADD_TEST(MatrixOps, Matrix)
                                0.3f, 0.4f, 0.5f, 1.6f };
                    
     OpRcPtrVec ops;
-    CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_NO_THROW(CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 1);
-    ops[0]->finalize();
 
-    CreateMatrixOp(ops, matrix, TRANSFORM_DIR_INVERSE);
+    std::string cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+
+    cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+
+    OIIO_CHECK_NO_THROW(CreateMatrixOp(ops, matrix, TRANSFORM_DIR_INVERSE));
     OIIO_CHECK_EQUAL(ops.size(), 2);
-    ops[1]->finalize();
+
+    cacheID = ops[1]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[1]->finalize());
+
+    cacheID = ops[1]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
 
     const unsigned NB_PIXELS = 3;
     const float src[NB_PIXELS*4] = {  0.1004f,  0.201f,  0.303f,    0.408f,
                                      -0.1008f, -0.207f, 50.019f,  123.422f,
                                       1.0090f,  1.009f,  1.044f,    1.001f };
 
-    const double dst[NB_PIXELS*4] = {   0.40474f,   0.91030f,    0.45508f,   0.914820f,
-                                       64.22222f, 133.369308f,  79.66444f, 222.371658f,
-                                        2.02530,    3.65050f,    1.65130f,   2.829900f };
+    const double dst[NB_PIXELS*4] = {
+         0.40474f,    0.91030f,  0.45508f,   0.914820f,
+        64.22222f, 133.369308f, 79.66444f, 222.371658f,
+         2.02530f,    3.65050f,  1.65130f,   2.829900f };
 
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
@@ -773,7 +819,7 @@ OIIO_ADD_TEST(MatrixOps, Matrix)
 
 OIIO_ADD_TEST(MatrixOps, Arbitrary)
 {
-    float error = 1e-5f;
+    const float error = 1e-5f;
 
     const float matrix[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
                                0.5f, 1.6f, 0.7f, 0.8f,
@@ -783,22 +829,40 @@ OIIO_ADD_TEST(MatrixOps, Arbitrary)
     const float offset[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
 
     OpRcPtrVec ops;
-    CreateMatrixOffsetOp(ops, matrix, offset, TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_NO_THROW(
+        CreateMatrixOffsetOp(ops, matrix, offset,TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 1);
-    ops[0]->finalize();
 
-    CreateMatrixOffsetOp(ops, matrix, offset, TRANSFORM_DIR_INVERSE);
+    std::string cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+
+    cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+
+    OIIO_CHECK_NO_THROW(
+        CreateMatrixOffsetOp(ops, matrix, offset, TRANSFORM_DIR_INVERSE));
     OIIO_CHECK_EQUAL(ops.size(), 2);
-    ops[1]->finalize();
+
+    cacheID = ops[1]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[1]->finalize());
+
+    cacheID = ops[1]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
 
     const unsigned NB_PIXELS = 3;
-    const float src[NB_PIXELS*4] = {  0.1004f,  0.201f,  0.303f,    0.408f,
-                                     -0.1008f, -0.207f, 50.019f,  123.422f,
-                                      1.0090f,  1.009f,  1.044f,    1.001f };
+    const float src[NB_PIXELS*4] = {
+         0.1004f,  0.201f,  0.303f,    0.408f,
+        -0.1008f, -0.207f, 50.019f,  123.422f,
+         1.0090f,  1.009f,  1.044f,    1.001f };
 
-    const float dst[NB_PIXELS*4] = {  -0.09526f,   0.660300f,  0.70508f,   0.914820f,
-                                      63.72222f, 133.119308f, 79.91444f, 222.371658f,
-                                       1.52530f,   3.400500f,  1.90130f,   2.829900f };
+    const float dst[NB_PIXELS*4] = {
+        -0.09526f,   0.660300f,  0.70508f,   0.914820f,
+        63.72222f, 133.119308f, 79.91444f, 222.371658f,
+         1.52530f,   3.400500f,  1.90130f,   2.829900f };
 
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
@@ -816,40 +880,260 @@ OIIO_ADD_TEST(MatrixOps, Arbitrary)
     {
         OIIO_CHECK_CLOSE(src[idx], tmp[idx], error);
     }
+
+    std::string opInfo0 = ops[0]->getInfo();
+    OIIO_CHECK_EQUAL(opInfo0.empty(), false);
+
+    std::string opInfo1 = ops[1]->getInfo();
+    OIIO_CHECK_EQUAL(opInfo0, opInfo1);
+
+    OpRcPtr clonedOp = ops[1]->clone();
+    
+    std::string cacheIDCloned = clonedOp->getCacheID();
+    
+    OIIO_CHECK_EQUAL(cacheIDCloned.empty(), true);
+
+    OIIO_CHECK_NO_THROW(clonedOp->finalize());
+
+    cacheIDCloned = clonedOp->getCacheID();
+
+    OIIO_CHECK_EQUAL(cacheIDCloned.empty(), false);
+    OIIO_CHECK_EQUAL(cacheIDCloned, cacheID);
+}
+
+OIIO_ADD_TEST(MatrixOps, CreateFitOp)
+{
+    const float error = 1e-7f;
+
+    const float oldmin4[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    const float oldmax4[4] = { 1.0f, 2.0f, 3.0f, 4.0f };
+    const float newmin4[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    const float newmax4[4] = { 1.0f, 4.0f, 9.0f, 16.0f };
+
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateFitOp(ops,
+        oldmin4, oldmax4,
+        newmin4, newmax4, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+
+    std::string cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+
+    cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+
+    OIIO_CHECK_NO_THROW(CreateFitOp(ops,
+        oldmin4, oldmax4,
+        newmin4, newmax4, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+
+    cacheID = ops[1]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[1]->finalize());
+
+    cacheID = ops[1]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+
+    const unsigned NB_PIXELS = 3;
+    const float src[NB_PIXELS * 4] = { 0.1004f, 0.201f, 0.303f,  0.408f,
+                                        -0.10f, -21.0f,  50.0f,    1.0f,
+                                         42.0f,   1.0f, -1.11f, -0.001f };
+
+    const double dst[NB_PIXELS * 4] = { 0.1004f, 0.402f, 0.909f,  1.632f,
+                                         -0.10f, -42.0f, 150.0f,    4.0f,
+                                          42.0f,   2.0f, -3.33f, -0.004f };
+
+    float tmp[NB_PIXELS * 4];
+    memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
+
+    ops[0]->apply(tmp, NB_PIXELS);
+
+    for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
+    }
+
+    ops[1]->apply(tmp, NB_PIXELS);
+
+    for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(src[idx], tmp[idx], error);
+    }
+
+}
+
+OIIO_ADD_TEST(MatrixOps, CreateSaturationOp)
+{
+    const float error = 1e-5f;
+    const float sat = 0.9f;
+    const float lumaCoef3[3] = { 1.0f, 0.5f, 0.1f };
+
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(
+        CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD));
+
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+
+    std::string cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+
+    cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+
+    OIIO_CHECK_NO_THROW(
+        CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+
+    cacheID = ops[1]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[1]->finalize());
+
+    cacheID = ops[1]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+
+    const unsigned NB_PIXELS = 3;
+    const float src[NB_PIXELS * 4] = { 0.1004f, 0.201f, 0.303f,  0.408f,
+                                        -0.10f, -21.0f,  50.0f,    1.0f,
+                                         42.0f,   1.0f, -1.11f, -0.001f };
+
+    const double dst[NB_PIXELS * 4] = {
+        0.11348f, 0.20402f, 0.29582f,  0.408f,
+          -0.65f,  -19.46f,   44.44f,    1.0f,
+        42.0389f,  5.1389f,  3.2399f, -0.001f };
+
+    float tmp[NB_PIXELS * 4];
+    memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
+
+    ops[0]->apply(tmp, NB_PIXELS);
+
+    for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
+    }
+
+    ops[1]->apply(tmp, NB_PIXELS);
+
+    for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(src[idx], tmp[idx], error);
+    }
 }
 
 OIIO_ADD_TEST(MatrixOps, Combining)
 {
-    float m1[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
+    const float error = 1e-4f;
+    const float m1[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
                      0.5f, 1.6f, 0.7f, 0.8f,
                      0.2f, 0.1f, 1.1f, 0.2f,
                      0.3f, 0.4f, 0.5f, 1.6f };
                    
-    float v1[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+    const float v1[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
     
-    float m2[16] = { 1.1f, -0.1f, -0.1f, 0.0f,
+    const float m2[16] = { 1.1f, -0.1f, -0.1f, 0.0f,
                      0.1f, 0.9f, -0.2f, 0.0f,
                      0.05f, 0.0f, 1.1f, 0.0f,
                      0.0f, 0.0f, 0.0f, 1.0f };
-    float v2[4] = { -0.2f, -0.1f, -0.1f, -0.2f };
+    const float v2[4] = { -0.2f, -0.1f, -0.1f, -0.2f };
     
     const float source[] = { 0.1f, 0.2f, 0.3f, 0.4f,
                              -0.1f, -0.2f, 50.0f, 123.4f,
                              1.0f, 1.0f, 1.0f, 1.0f };
-    float error = 1e-4f;
     
     {
         OpRcPtrVec ops;
-        CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD);
-        CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_FORWARD);
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_FORWARD));
         OIIO_CHECK_EQUAL(ops.size(), 2);
-        ops[0]->finalize();
-        ops[1]->finalize();
+        OIIO_CHECK_NO_THROW(ops[0]->finalize());
+        OIIO_CHECK_NO_THROW(ops[1]->finalize());
         
         OpRcPtrVec combined;
-        ops[0]->combineWith(combined, ops[1]);
+        OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, ops[1]));
         OIIO_CHECK_EQUAL(combined.size(), 1);
-        combined[0]->finalize();
+        OIIO_CHECK_NO_THROW(combined[0]->finalize());
+
+        const std::string cacheIDCombined = combined[0]->getCacheID();
+        OIIO_CHECK_EQUAL(cacheIDCombined.empty(), false);
+
+        for(int test=0; test<3; ++test)
+        {
+            float tmp[4];
+            memcpy(tmp, &source[4*test], 4*sizeof(float));
+            ops[0]->apply(tmp, 1);
+            ops[1]->apply(tmp, 1);
+            
+            float tmp2[4];
+            memcpy(tmp2, &source[4*test], 4*sizeof(float));
+            combined[0]->apply(tmp2, 1);
+            
+            for(unsigned int i=0; i<4; ++i)
+            {
+                OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+            }
+        }
+
+        ops.clear();
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        OpRcPtr op0 = ops[0];
+        OpRcPtr op1 = ops[1];
+
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OIIO_CHECK_EQUAL(ops.size(), 1);
+
+        const std::string cacheIDOptimized = ops[0]->getCacheID();
+        OIIO_CHECK_EQUAL(cacheIDOptimized.empty(), false);
+
+        OIIO_CHECK_EQUAL(cacheIDCombined, cacheIDOptimized);
+
+        op0->finalize();
+        op1->finalize();
+
+        for (int test = 0; test<3; ++test)
+        {
+            float tmp[4];
+            memcpy(tmp, &source[4 * test], 4 * sizeof(float));
+            op0->apply(tmp, 1);
+            op1->apply(tmp, 1);
+
+            float tmp2[4];
+            memcpy(tmp2, &source[4 * test], 4 * sizeof(float));
+            ops[0]->apply(tmp2, 1);
+
+            for (unsigned int i = 0; i<4; ++i)
+            {
+                OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+            }
+        }
+    }
+    
+    
+    {
+        OpRcPtrVec ops;
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_INVERSE));
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        OIIO_CHECK_NO_THROW(ops[0]->finalize());
+        OIIO_CHECK_NO_THROW(ops[1]->finalize());
+        
+        OpRcPtrVec combined;
+        OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, ops[1]));
+        OIIO_CHECK_EQUAL(combined.size(), 1);
+        OIIO_CHECK_NO_THROW(combined[0]->finalize());
+        
         
         for(int test=0; test<3; ++test)
         {
@@ -869,20 +1153,20 @@ OIIO_ADD_TEST(MatrixOps, Combining)
         }
     }
     
-    
     {
         OpRcPtrVec ops;
-        CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD);
-        CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_INVERSE);
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_INVERSE));
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_FORWARD));
         OIIO_CHECK_EQUAL(ops.size(), 2);
-        ops[0]->finalize();
-        ops[1]->finalize();
+        OIIO_CHECK_NO_THROW(ops[0]->finalize());
+        OIIO_CHECK_NO_THROW(ops[1]->finalize());
         
         OpRcPtrVec combined;
-        ops[0]->combineWith(combined, ops[1]);
+        OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, ops[1]));
         OIIO_CHECK_EQUAL(combined.size(), 1);
-        combined[0]->finalize();
-        
+        OIIO_CHECK_NO_THROW(combined[0]->finalize());
         
         for(int test=0; test<3; ++test)
         {
@@ -904,16 +1188,18 @@ OIIO_ADD_TEST(MatrixOps, Combining)
     
     {
         OpRcPtrVec ops;
-        CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_INVERSE);
-        CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_FORWARD);
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_INVERSE));
+        OIIO_CHECK_NO_THROW(
+            CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_INVERSE));
         OIIO_CHECK_EQUAL(ops.size(), 2);
-        ops[0]->finalize();
-        ops[1]->finalize();
+        OIIO_CHECK_NO_THROW(ops[0]->finalize());
+        OIIO_CHECK_NO_THROW(ops[1]->finalize());
         
         OpRcPtrVec combined;
-        ops[0]->combineWith(combined, ops[1]);
+        OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, ops[1]));
         OIIO_CHECK_EQUAL(combined.size(), 1);
-        combined[0]->finalize();
+        OIIO_CHECK_NO_THROW(combined[0]->finalize());
         
         for(int test=0; test<3; ++test)
         {
@@ -932,37 +1218,264 @@ OIIO_ADD_TEST(MatrixOps, Combining)
             }
         }
     }
+}
+
+OIIO_ADD_TEST(MatrixOps, ThrowCreate)
+{
+    OpRcPtrVec ops;
+    const float scale[] = { 1.1f, 1.3f, 0.3f, 1.0f };
+    OIIO_CHECK_THROW_WHAT(
+        CreateScaleOp(ops, scale, TRANSFORM_DIR_UNKNOWN),
+        OCIO::Exception, "unspecified transform direction");
+
+    const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
+    OIIO_CHECK_THROW_WHAT(
+        CreateOffsetOp(ops, offset, TRANSFORM_DIR_UNKNOWN),
+        OCIO::Exception, "unspecified transform direction");
+
+    const float matrix[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
+        0.5f, 1.6f, 0.7f, 0.8f,
+        0.2f, 0.1f, 1.1f, 0.2f,
+        0.3f, 0.4f, 0.5f, 1.6f };
+
+    OIIO_CHECK_THROW_WHAT(
+        CreateMatrixOp(ops, matrix, TRANSFORM_DIR_UNKNOWN),
+        OCIO::Exception, "unspecified transform direction");
+
+    // Firt can't be created when old min and max are equal
+    const float oldmin4[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
+    const float oldmax4[4] = { 1.0f, 2.0f, 3.0f, 4.0f };
+    const float newmin4[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    const float newmax4[4] = { 1.0f, 4.0f, 9.0f, 16.0f };
+
+    OIIO_CHECK_THROW_WHAT(CreateFitOp(ops,
+        oldmin4, oldmax4,
+        newmin4, newmax4, TRANSFORM_DIR_FORWARD),
+        OCIO::Exception,
+        "Cannot create Fit operator. Max value equals min value");
+}
+
+OIIO_ADD_TEST(MatrixOps, ThrowFinalize)
+{
+    // Matrix that can't be inverted can't be used in inverse direction
+    OpRcPtrVec ops;
+    const float scale[] = { 0.0f, 1.3f, 0.3f, 1.0f };
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_INVERSE));
+
+    OIIO_CHECK_THROW_WHAT(ops[0]->finalize(),
+        OCIO::Exception, "Matrix inverse does not exist");
+}
+
+OIIO_ADD_TEST(MatrixOps, ThrowCombine)
+{
+    OpRcPtrVec ops;
     
-    {
-        OpRcPtrVec ops;
-        CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_INVERSE);
-        CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_INVERSE);
-        OIIO_CHECK_EQUAL(ops.size(), 2);
-        ops[0]->finalize();
-        ops[1]->finalize();
-        
-        OpRcPtrVec combined;
-        ops[0]->combineWith(combined, ops[1]);
-        OIIO_CHECK_EQUAL(combined.size(), 1);
-        combined[0]->finalize();
-        
-        for(int test=0; test<3; ++test)
-        {
-            float tmp[4];
-            memcpy(tmp, &source[4*test], 4*sizeof(float));
-            ops[0]->apply(tmp, 1);
-            ops[1]->apply(tmp, 1);
-            
-            float tmp2[4];
-            memcpy(tmp2, &source[4*test], 4*sizeof(float));
-            combined[0]->apply(tmp2, 1);
-            
-            for(unsigned int i=0; i<4; ++i)
-            {
-                OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
-            }
-        }
-    }
+    // combining with different op
+    const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+    
+    OpRcPtrVec combinedOps;
+    OIIO_CHECK_THROW_WHAT(
+        ops[0]->combineWith(combinedOps, ops[1]),
+        OCIO::Exception, "can only be combined with other MatrixOffsetOps");
+
+    // combining forward with inverse that can't be inverted
+    ops.clear();
+    const float scaleNoInv[] = { 1.1f, 0.0f, 0.3f, 0.0f };
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scaleNoInv, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+
+    OIIO_CHECK_THROW_WHAT(
+        ops[0]->combineWith(combinedOps, ops[1]),
+        OCIO::Exception, "Cannot invert second MatrixOffsetOp op");
+
+    // combining inverse that can't be inverted with forward
+    ops.clear();
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scaleNoInv, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+
+    OIIO_CHECK_THROW_WHAT(
+        ops[0]->combineWith(combinedOps, ops[1]),
+        OCIO::Exception, "Cannot invert primary MatrixOffsetOp op");
+
+    // combining inverse with inverse that can't be inverted 
+    ops.clear();
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scaleNoInv, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+
+    OIIO_CHECK_THROW_WHAT(
+        ops[0]->combineWith(combinedOps, ops[1]),
+        OCIO::Exception, "Cannot invert second MatrixOffsetOp op");
+    
+    // combining inverse that can't be inverted with inverse
+    ops.clear();
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scaleNoInv, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+
+    OIIO_CHECK_THROW_WHAT(
+        ops[0]->combineWith(combinedOps, ops[1]),
+        OCIO::Exception, "Cannot invert primary MatrixOffsetOp op");
+
+}
+
+OIIO_ADD_TEST(MatrixOps, NoOp)
+{
+    OpRcPtrVec ops;
+    const float offset[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD));
+
+    // no ops are not created
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+
+    const float scale[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+
+    const float matrix[16] = { 1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f };
+
+    OIIO_CHECK_NO_THROW(CreateMatrixOp(ops, matrix, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OIIO_CHECK_NO_THROW(CreateMatrixOp(ops, matrix, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OIIO_CHECK_NO_THROW(
+        CreateMatrixOffsetOp(ops, matrix, offset, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+    OIIO_CHECK_NO_THROW(
+        CreateMatrixOffsetOp(ops, matrix, offset, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+
+    const float oldmin4[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    const float oldmax4[4] = { 1.0f, 2.0f, 3.0f, 4.0f };
+
+    OIIO_CHECK_NO_THROW(CreateFitOp(ops,
+        oldmin4, oldmax4,
+        oldmin4, oldmax4, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+
+    OIIO_CHECK_NO_THROW(CreateFitOp(ops,
+        oldmin4, oldmax4,
+        oldmin4, oldmax4, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+
+    const float sat = 1.0f;
+    const float lumaCoef3[3] = { 1.0f, 1.0f, 1.0f };
+
+    OIIO_CHECK_NO_THROW(
+        CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+
+    OIIO_CHECK_NO_THROW(
+        CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 0);
+
+    // except if CreateIdentityMatrixOp is used
+    OIIO_CHECK_NO_THROW(CreateIdentityMatrixOp(ops, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OIIO_CHECK_EQUAL(ops[0]->isNoOp(), true);
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+    OIIO_CHECK_EQUAL(ops[0]->isNoOp(), true);
+
+    OIIO_CHECK_NO_THROW(CreateIdentityMatrixOp(ops, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_CHECK_EQUAL(ops[1]->isNoOp(), true);
+    OIIO_CHECK_NO_THROW(ops[1]->finalize());
+    OIIO_CHECK_EQUAL(ops[1]->isNoOp(), true);
+
+}
+
+OIIO_ADD_TEST(MatrixOps, isSameType)
+{
+    const float sat = 0.9f;
+    const float lumaCoef3[3] = { 1.0f, 0.5f, 0.1f };
+    const float scale[] = { 1.1f, 1.3f, 0.3f, 1.0f };
+    const float k[3] = { 0.18f, 0.5f, 0.3f };
+    const float m[3] = { 2.0f, 4.0f, 8.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base[3] = { 10.0f, 5.0f, 2.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+
+    // Create saturation, scale and log
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(
+        CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_CHECK_NO_THROW(
+        CreateLogOp(ops, k, m, b, base, kb, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 3);
+    // saturation and scale are MatrixOffset operators, log is not.
+    OIIO_CHECK_EQUAL(ops[0]->isSameType(ops[1]), true);
+    OIIO_CHECK_EQUAL(ops[1]->isSameType(ops[0]), true);
+    OIIO_CHECK_EQUAL(ops[0]->isSameType(ops[2]), false);
+    OIIO_CHECK_EQUAL(ops[2]->isSameType(ops[0]), false);
+    OIIO_CHECK_EQUAL(ops[1]->isSameType(ops[2]), false);
+    OIIO_CHECK_EQUAL(ops[2]->isSameType(ops[1]), false);
+}
+
+OIIO_ADD_TEST(MatrixOps, isInverse)
+{
+    const float error = 1e-8f;
+
+    OpRcPtrVec ops;
+    const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
+    const float offsetInv[] = { -1.1f, 1.3f, -0.3f, 0.0f };
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offsetInv, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 3);
+
+    const float k[3] = { 0.18f, 0.5f, 0.3f };
+    const float m[3] = { 2.0f, 4.0f, 8.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base[3] = { 10.0f, 5.0f, 2.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+    OIIO_CHECK_NO_THROW(
+        CreateLogOp(ops, k, m, b, base, kb, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 4);
+
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[1]), true);
+    OIIO_CHECK_EQUAL(ops[1]->isInverse(ops[0]), true);
+    
+    // isInverse does not try to invert the transform
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[2]), false);
+    OIIO_CHECK_EQUAL(ops[2]->isInverse(ops[0]), false);
+    
+    OIIO_CHECK_EQUAL(ops[2]->isInverse(ops[3]), false);
+    OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[2]), false);
+}
+
+OIIO_ADD_TEST(MatrixOps, hasChannelCrosstalk)
+{
+    const float scale[] = { 1.1f, 1.3f, 0.3f, 1.0f };
+    const float sat = 0.9f;
+    const float lumaCoef3[3] = { 1.0f, 0.5f, 0.1f };
+
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+    OIIO_CHECK_NO_THROW(
+        CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_CHECK_NO_THROW(ops[1]->finalize());
+
+    OIIO_CHECK_EQUAL(ops[0]->hasChannelCrosstalk(), false);
+    OIIO_CHECK_EQUAL(ops[1]->hasChannelCrosstalk(), true);
 }
 
 #endif

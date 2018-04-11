@@ -123,6 +123,23 @@ struct AddTest { AddTest(OIIOTest* test); };
         << "FAILED: " << #E << " is expected to be thrown\n";           \
         ++unit_test_failures; }
 
+// Check that an exception E is thrown and that what() contains W
+// When a function can throw different exceptions this can be used
+// to verify that the right one is thrown.
+#define OIIO_CHECK_THROW_WHAT(S, E, W)                                  \
+    try { S; throw "throwanything"; } catch (E const& ex) {             \
+        std::string what(ex.what());                                    \
+        if (what.find(W) == std::string::npos) {                        \
+            std::cout << __FILE__ << ":" << __LINE__ << ":\n"           \
+            << "FAILED: " << #E << " was thrown with \"" << what <<     \
+            "\". Expecting to contain \"" << W << "\"\n";               \
+            ++unit_test_failures;                                       \
+        }                                                               \
+    } catch (...) {                                                     \
+        std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
+        << "FAILED: " << #E << " is expected to be thrown\n";           \
+        ++unit_test_failures; }
+
 #define OIIO_CHECK_NO_THROW(S)                                          \
     try {                                                               \
         S;                                                              \

@@ -269,29 +269,30 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 #include "UnitTest.h"
+#include "NoOps.h"
 
 OCIO_NAMESPACE_USING
 
 OIIO_ADD_TEST(ExponentOps, Value)
 {
-    float exp1[4] = { 1.2f, 1.3f, 1.4f, 1.5f };
+    const float exp1[4] = { 1.2f, 1.3f, 1.4f, 1.5f };
     
     OpRcPtrVec ops;
-    CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD);
-    CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE));
     OIIO_CHECK_EQUAL(ops.size(), 2);
     
     for(unsigned int i=0; i<ops.size(); ++i)
     {
-        ops[i]->finalize();
+        OIIO_CHECK_NO_THROW(ops[i]->finalize());
     }
     
     float error = 1e-6f;
     
-    const float source[] = {  0.5f, 0.5f, 0.5f, 0.5f, };
+    const float source[] = {  0.1f, 0.3f, 0.9f, 0.5f, };
     
-    const float result1[] = {  0.43527528164806206f, 0.40612619817811774f,
-                               0.37892914162759955f, 0.35355339059327379f };
+    const float result1[] = { 0.0630957261f, 0.209053621f,
+        0.862858355f, 0.353553385f };
     
     float tmp[4];
     memcpy(tmp, source, 4*sizeof(float));
@@ -309,17 +310,57 @@ OIIO_ADD_TEST(ExponentOps, Value)
     }
 }
 
+void ValidateOp(const float * source, const OpRcPtr op, const float * result, const float error)
+{
+    float tmp[4];
+    memcpy(tmp, source, 4 * sizeof(float));
+    op->apply(tmp, 1);
+
+    for (unsigned int i = 0; i<4; ++i)
+    {
+        OIIO_CHECK_CLOSE(tmp[i], result[i], error);
+    }
+}
+
+OIIO_ADD_TEST(ExponentOps, ValueLimits)
+{
+    const float exp1[4] = { 0.0f, 2.0f, -2.0f, 1.5f };
+
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+
+    float error = 1e-6f;
+
+    const float source1[] = { 1.0f, 1.0f, 1.0f, 1.0f, };
+    const float result1[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    ValidateOp(source1, ops[0], result1, error);
+
+    const float source2[] = { 2.0f, 2.0f, 2.0f, 2.0f, };
+    const float result2[] = { 1.0f, 4.0f, 0.25f, 2.82842708f };
+    ValidateOp(source2, ops[0], result2, error);
+
+    const float source3[] = { -2.0f, -2.0f, 1.0f, -2.0f, };
+    const float result3[] = { 1.0f, 0.0f, 1.0f, 0.0f };
+    ValidateOp(source3, ops[0], result3, error);
+
+    const float source4[] = { 0.0f, 0.0f, 1.0f, 0.0f, };
+    const float result4[] = { 1.0f, 0.0f, 1.0f, 0.0f };
+    ValidateOp(source4, ops[0], result4, error);
+}
+
 OIIO_ADD_TEST(ExponentOps, Inverse)
 {
-    float exp1[4] = { 2.0f, 1.02345f, 5.651321f, 0.12345678910f };
-    float exp2[4] = { 2.0f, 2.0f, 2.0f, 2.0f };
+    const float exp1[4] = { 2.0f, 1.02345f, 5.651321f, 0.12345678910f };
+    const float exp2[4] = { 2.0f, 2.0f, 2.0f, 2.0f };
     
     OpRcPtrVec ops;
     
-    CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD);
-    CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE);
-    CreateExponentOp(ops, exp2, TRANSFORM_DIR_FORWARD);
-    CreateExponentOp(ops, exp2, TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp2, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp2, TRANSFORM_DIR_INVERSE));
     
     OIIO_CHECK_EQUAL(ops.size(), 4);
     
@@ -340,19 +381,19 @@ OIIO_ADD_TEST(ExponentOps, Inverse)
 
 OIIO_ADD_TEST(ExponentOps, Combining)
 {
+    const float error = 1e-6f;
     {
-    float exp1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
-    float exp2[4] = { 1.2f, 1.2f, 1.2f, 1.0f };
+    const float exp1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    const float exp2[4] = { 1.2f, 1.2f, 1.2f, 1.0f };
     
     OpRcPtrVec ops;
-    CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD);
-    CreateExponentOp(ops, exp2, TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp2, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 2);
     
-    float error = 1e-6f;
-    const float source[] = {  0.5f, 0.5f, 0.5f, 0.5f, };
-    const float result[] = {  0.18946457081379978f, 0.18946457081379978f,
-                               0.18946457081379978f, 0.5f };
+    const float source[] = {  0.9f, 0.4f, 0.1f, 0.5f, };
+    const float result[] = { 0.776572466f, 0.110903174f,
+        0.00398107106f, 0.5f };
     
     float tmp[4];
     memcpy(tmp, source, 4*sizeof(float));
@@ -364,9 +405,8 @@ OIIO_ADD_TEST(ExponentOps, Combining)
         OIIO_CHECK_CLOSE(tmp[i], result[i], error);
     }
     
-    
     OpRcPtrVec combined;
-    ops[0]->combineWith(combined, ops[1]);
+    OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, ops[1]));
     OIIO_CHECK_EQUAL(combined.size(), 1);
     
     float tmp2[4];
@@ -381,16 +421,124 @@ OIIO_ADD_TEST(ExponentOps, Combining)
     
     {
     
-    float exp1[4] = {1.037289f, 1.019015f, 0.966082f, 1.0f};
+    const float exp1[4] = {1.037289f, 1.019015f, 0.966082f, 1.0f};
     
     OpRcPtrVec ops;
-    CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD);
-    CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE));
     OIIO_CHECK_EQUAL(ops.size(), 2);
     
-    bool isInverse = ops[0]->isInverse(ops[1]);
+    const bool isInverse = ops[0]->isInverse(ops[1]);
     OIIO_CHECK_EQUAL(isInverse, true);
+
+    OpRcPtrVec combined;
+    OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, ops[1]));
+    OIIO_CHECK_EQUAL(combined.empty(), true);
+
+    }
+
+    {
+    const float exp1[4] = { 1.037289f, 1.019015f, 0.966082f, 1.0f };
+
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 3);
+
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+    OIIO_CHECK_EQUAL(ops.size(), 3);
+
+    const float source[] = { 0.1f, 0.5f, 0.9f, 0.5f, };
+    const float result[] = { 0.0765437484f, 0.480251998f,
+        0.909373641f, 0.5f };
+
+    float tmp[4];
+    memcpy(tmp, source, 4 * sizeof(float));
+    ops[0]->apply(tmp, 1);
+    ops[1]->apply(tmp, 1);
+    ops[2]->apply(tmp, 1);
+
+    for (unsigned int i = 0; i<4; ++i)
+    {
+        OIIO_CHECK_CLOSE(tmp[i], result[i], error);
+    }
+
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+
+    memcpy(tmp, source, 4 * sizeof(float));
+    ops[0]->apply(tmp, 1);
+
+    for (unsigned int i = 0; i<4; ++i)
+    {
+        OIIO_CHECK_CLOSE(tmp[i], result[i], error);
+    }
     }
 }
+
+OIIO_ADD_TEST(ExponentOps, ThrowCreate)
+{
+    const float exp1[4] = { 0.0f, 1.3f, 1.4f, 1.5f };
+
+    OpRcPtrVec ops;
+    OIIO_CHECK_THROW_WHAT(
+        CreateExponentOp(ops, exp1, TRANSFORM_DIR_UNKNOWN),
+        OpenColorIO::Exception, "unspecified transform direction");
+
+    OIIO_CHECK_THROW_WHAT(
+        CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE),
+        OpenColorIO::Exception, "Cannot apply 0.0 exponent in the inverse");
+}
+
+OIIO_ADD_TEST(ExponentOps, ThrowCombine)
+{
+    const float exp1[4] = { 0.0f, 1.3f, 1.4f, 1.5f };
+
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+    
+    OpRcPtrVec combinedOps;
+    OIIO_CHECK_THROW_WHAT(
+        ops[0]->combineWith(combinedOps, ops[1]),
+        OpenColorIO::Exception, "can only be combined with other ExponentOps");
+}
+
+OIIO_ADD_TEST(ExponentOps, NoOp)
+{
+    const float exp1[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    // CreateExponentOp will not create a NoOp
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE));
+
+    OIIO_CHECK_EQUAL(ops.empty(), true);
+}
+
+OIIO_ADD_TEST(ExponentOps, CacheID)
+{
+    const float exp1[4] = { 2.0f, 2.1f, 3.0f, 3.1f };
+    const float exp2[4] = { 4.0f, 4.1f, 5.0f, 5.1f };
+
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp2, TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
+
+    OIIO_CHECK_EQUAL(ops.size(), 3);
+
+
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+
+    const std::string opCacheID0 = ops[0]->getCacheID();
+    const std::string opCacheID1 = ops[1]->getCacheID();
+    const std::string opCacheID2 = ops[2]->getCacheID();
+
+    OIIO_CHECK_EQUAL(opCacheID0, opCacheID2);
+    OIIO_CHECK_NE(opCacheID0, opCacheID1);
+}
+
 
 #endif // OCIO_UNIT_TEST
