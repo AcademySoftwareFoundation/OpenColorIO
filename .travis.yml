@@ -31,7 +31,7 @@ before_install:
       sudo apt-get install -y -qq texlive-full;
       sudo apt-get install -y -qq freeglut3-dev libglew-dev libxmu-dev libxi-dev; 
     fi
-  # OSX ones
+  # OSX ones 
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update;
       brew install glew;
