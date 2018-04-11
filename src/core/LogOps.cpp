@@ -410,7 +410,7 @@ OIIO_ADD_TEST(LogOps, LinToLog)
 
     // one operator has been created
     OIIO_CHECK_EQUAL(ops.size(), 1);
-    OIIO_CHECK_NE(ops[0], NULL);
+    OIIO_CHECK_NE(ops[0].get(), NULL);
 
     // no chache ID before operator has been finalized
     std::string opCache = ops[0]->getCacheID();
@@ -557,9 +557,9 @@ OIIO_ADD_TEST(LogOps, CacheID)
 
     // 3 operators have been created
     OIIO_CHECK_EQUAL(ops.size(), 3);
-    OIIO_CHECK_NE(ops[0], NULL);
-    OIIO_CHECK_NE(ops[1], NULL);
-    OIIO_CHECK_NE(ops[2], NULL);
+    OIIO_CHECK_NE(ops[0].get(), NULL);
+    OIIO_CHECK_NE(ops[1].get(), NULL);
+    OIIO_CHECK_NE(ops[2].get(), NULL);
 
     OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
 
