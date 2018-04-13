@@ -221,15 +221,16 @@ namespace
 
     void UpdateImageTexture()
     {
-        const float step = 1.0f / (g_winWidth * g_winHeight);
-        const float inv_step = 1.0f / step;
-        const uint32_t step_round = uint32_t(inv_step);
+        static const float min = -1.0f;
+        static const float max = +2.0f;
+        static const float range = max - min;
 
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
+        const float step = range / numEntries;
+
         for(unsigned idx=0; idx<numEntries; ++idx)
         {
-            // if step = 0.01f ==> value = (uint32_t((idx * 0.01f * 100.0f) % 100) * 0.01f
-            g_image[idx] = float(uint32_t((idx * step) * inv_step) % step_round) * step;
+            g_image[idx] = min + step * float(idx);
         }
 
         glBindTexture(GL_TEXTURE_2D, g_imageTexID);
