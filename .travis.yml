@@ -35,6 +35,10 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update;
       brew install glew;
+      echo 'eval "$(pyenv init -)"' >> .bash_profile;
+      source .bash_profile;
+      pyenv install 3.5.2;
+      pyenv global 3.5.2;
     fi
 
 # Run the Build script
