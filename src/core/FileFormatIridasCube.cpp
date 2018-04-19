@@ -379,7 +379,7 @@ OCIO_NAMESPACE_ENTER
                 pystring::split(pystring::strip(metadata), metadatavec, "\n");
                 if (metadatavec.size() > 0)
                 {
-                    for (int i = 0; i < metadatavec.size(); ++i)
+                    for (size_t i = 0; i < metadatavec.size(); ++i)
                     {
                         ostream << "# " << metadatavec[i] << "\n";
                     }
