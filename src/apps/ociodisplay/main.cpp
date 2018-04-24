@@ -59,8 +59,10 @@ namespace OIIO = OIIO_NAMESPACE;
 #include <GL/glut.h>
 #endif
 
+#include "glsl.h"
 
 bool g_verbose = false;
+bool g_gpu = false;
 std::string g_filename;
 
 
@@ -68,16 +70,13 @@ GLint g_win = 0;
 int g_winWidth = 0;
 int g_winHeight = 0;
 
-GLuint g_fragShader = 0;
 GLuint g_program = 0;
+OpenGLBuilderRcPtr g_oglBuilder;
 
 GLuint g_imageTexID;
 float g_imageAspect;
 
-GLuint g_lut3dTexID;
 const int LUT3D_EDGE_SIZE = 32;
-std::vector<float> g_lut3d;
-std::string g_lut3dcacheid;
 std::string g_shadercacheid;
 
 std::string g_inputColorSpace;
@@ -216,27 +215,6 @@ void InitOCIO(const char * filename)
     }
 }
 
-static void AllocateLut3D()
-{
-    glGenTextures(1, &g_lut3dTexID);
-    
-    int num3Dentries = 3*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE*LUT3D_EDGE_SIZE;
-    g_lut3d.resize(num3Dentries);
-    memset(&g_lut3d[0], 0, sizeof(float)*num3Dentries);
-    
-    glActiveTexture(GL_TEXTURE2);
-    
-    glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB16F_ARB,
-                 LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                 0, GL_RGB,GL_FLOAT, &g_lut3d[0]);
-}
-
 /*
 static void
 Idle(void)
@@ -316,8 +294,7 @@ static void Reshape(int width, int height)
 
 static void CleanUp(void)
 {
-    glDeleteShader(g_fragShader);
-    glDeleteProgram(g_program);
+    g_oglBuilder.reset();
     glutDestroyWindow(g_win);
 }
 
@@ -417,66 +394,14 @@ static void SpecialKey(int key, int x, int y)
     glutPostRedisplay();
 }
 
-GLuint
-CompileShaderText(GLenum shaderType, const char *text)
-{
-    GLuint shader;
-    GLint stat;
-    
-    shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, (const GLchar **) &text, NULL);
-    glCompileShader(shader);
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &stat);
-    
-    if (!stat)
-    {
-        GLchar log[1000];
-        GLsizei len;
-        glGetShaderInfoLog(shader, 1000, &len, log);
-        fprintf(stderr, "Error: problem compiling shader: %s\n", log);
-        return 0;
-    }
-    
-    return shader;
-}
-
-GLuint
-LinkShaders(GLuint fragShader)
-{
-    if (!fragShader) return 0;
-    
-    GLuint program = glCreateProgram();
-    
-    if (fragShader)
-        glAttachShader(program, fragShader);
-    
-    glLinkProgram(program);
-    
-    /* check link */
-    {
-        GLint stat;
-        glGetProgramiv(program, GL_LINK_STATUS, &stat);
-        if (!stat) {
-            GLchar log[1000];
-            GLsizei len;
-            glGetProgramInfoLog(program, 1000, &len, log);
-            fprintf(stderr, "Shader link error:\n%s\n", log);
-            return 0;
-        }
-    }
-    
-    return program;
-}
-
 const char * g_fragShaderText = ""
 "\n"
 "uniform sampler2D tex1;\n"
-"uniform sampler3D tex2;\n"
 "\n"
 "void main()\n"
 "{\n"
 "    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
-"    gl_FragColor = OCIODisplay(col, tex2);\n"
+"    gl_FragColor = OCIODisplay(col);\n"
 "}\n";
 
 
@@ -559,50 +484,55 @@ void UpdateOCIOGLState()
         return;
     }
     
-    // Step 1: Create a GPU Shader Description
-    OCIO::GpuShaderDesc shaderDesc;
-    shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
-    shaderDesc.setFunctionName("OCIODisplay");
-    shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
-    
-    // Step 2: Compute the 3D LUT
-    std::string lut3dCacheID = processor->getGpuLut3DCacheID(shaderDesc);
-    if(lut3dCacheID != g_lut3dcacheid)
+    // Step 1: Create the legacy GPU shader description
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+    shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
+    shaderDesc->setFunctionName("OCIODisplay");
+    shaderDesc->setResourcePrefix("ocio_");
+
+    // Step 2: Collect the shader program information for a specific processor    
+    processor->extractGpuShaderInfo(shaderDesc);
+
+    if(g_gpu)
     {
-        //std::cerr << "Computing 3DLut " << g_lut3dcacheid << std::endl;
-        
-        g_lut3dcacheid = lut3dCacheID;
-        processor->getGpuLut3D(&g_lut3d[0], shaderDesc);
-        
-        glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
-        glTexSubImage3D(GL_TEXTURE_3D, 0,
-                        0, 0, 0, 
-                        LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                        GL_RGB,GL_FLOAT, &g_lut3d[0]);
+        std::cout << std::endl;
+        std::cout << "GPU Shader Program:" << std::endl;
+        std::cout << std::endl;
     }
+
+    // Step 3: Use the helper OpenGL builder
+    g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
+
+    // Step 4: Allocate & upload all the LUTs
+    g_oglBuilder->allocateAllTextures();
     
-    // Step 3: Compute the Shader
-    std::string shaderCacheID = processor->getGpuShaderTextCacheID(shaderDesc);
+    // Step 5: Build the fragment shader program
+    const std::string shaderCacheID = shaderDesc->getCacheID();
     if(g_program == 0 || shaderCacheID != g_shadercacheid)
     {
         //std::cerr << "Computing Shader " << g_shadercacheid << std::endl;
         
         g_shadercacheid = shaderCacheID;
         
-        std::ostringstream os;
-        os << processor->getGpuShaderText(shaderDesc) << "\n";
-        os << g_fragShaderText;
-        //std::cerr << os.str() << std::endl;
-        
-        if(g_fragShader) glDeleteShader(g_fragShader);
-        g_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
-        if(g_program) glDeleteProgram(g_program);
-        g_program = LinkShaders(g_fragShader);
+        if(g_gpu)
+        {
+            std::ostringstream os;
+            os << shaderDesc->getShaderText() << "\n";
+            os << g_fragShaderText;
+
+            std::cout << os.str() << std::endl;
+        }
+
+        g_program = g_oglBuilder->buildProgram(g_fragShaderText);
     }
     
-    glUseProgram(g_program);
+    // Step 6: Enable the fragment shader program, and all needed textures
+    g_oglBuilder->useProgram();
+    // The image texture
     glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
-    glUniform1i(glGetUniformLocation(g_program, "tex2"), 2);
+    // The LUT textures
+    g_oglBuilder->useAllTextures();
 }
 
 void menuCallback(int /*id*/)
@@ -768,6 +698,10 @@ void parseArguments(int argc, char **argv)
         {
             g_verbose = true;
         }
+        else if(0==strcmp(argv[i], "-gpu"))
+        {
+            g_gpu = true;
+        }
         else if(0==strcmp(argv[i], "-h"))
         {
             std::cout << std::endl;
@@ -775,8 +709,9 @@ void parseArguments(int argc, char **argv)
             std::cout << "  ociodisplay [OPTIONS] [image]  where" << std::endl;
             std::cout << std::endl;
             std::cout << "  OPTIONS:" << std::endl;
-            std::cout << "     -h :  displays the help and exit" << std::endl;
-            std::cout << "     -v :  displays the color space information" << std::endl;
+            std::cout << "     -h      :  displays the help and exit" << std::endl;
+            std::cout << "     -v      :  displays the color space information" << std::endl;
+            std::cout << "     -gpu    :  displays the color space gpu information" << std::endl;
             std::cout << std::endl;
             exit(0);
         }
@@ -841,8 +776,6 @@ int main(int argc, char **argv)
     std::cout << "GL_SHADING_LANGUAGE_VERSION: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
     std::cout << std::endl;
 
-    AllocateLut3D();
-    
     InitImageTexture(g_filename.c_str());
     try
     {
@@ -858,7 +791,15 @@ int main(int argc, char **argv)
     
     Reshape(1024, 512);
     
-    UpdateOCIOGLState();
+    try
+    {
+        UpdateOCIOGLState();
+    }
+    catch(OCIO::Exception & e)
+    {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
     
     Redisplay();
     

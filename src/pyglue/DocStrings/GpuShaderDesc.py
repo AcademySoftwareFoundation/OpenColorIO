@@ -13,10 +13,8 @@ class GpuShaderDesc:
         pass
     def getFunctionName(self):
         pass
-    def setLut3DEdgeLen(self, len):
-        pass
-    def getLut3DEdgeLen(self):
-        pass
     def getCacheID(self):
+        pass
+    def finalize(self):
         pass
 

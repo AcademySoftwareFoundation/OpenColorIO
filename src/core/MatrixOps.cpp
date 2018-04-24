@@ -136,10 +136,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
         
         private:
             bool m_isNoOp;
@@ -449,47 +446,42 @@ OCIO_NAMESPACE_ENTER
             }
         } // Op::process
         
-        bool MatrixOffsetOp::supportsGpuShader() const
+        void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            return true;
-        }
-        
-        void MatrixOffsetOp::writeGpuShader(std::ostream & shader,
-                                            const std::string & pixelName,
-                                            const GpuShaderDesc & shaderDesc) const
-        {
-            GpuLanguage lang = shaderDesc.getLanguage();
+            const GpuLanguage lang = shaderDesc->getLanguage();
             
             // TODO: This should not act upon alpha,
             // since we dont apply it on the CPU?
             
+            std::ostringstream code;
+
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
                 if(!m_m44IsIdentity)
                 {
                     if(m_m44IsDiagonal)
                     {
-                        shader << pixelName << " = ";
+                        code << "    " << shaderDesc->getPixelName() << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44);
-                        Write_half4(shader, scale, lang);
-                        shader << " * " << pixelName << ";\n";
+                        Write_half4(code, scale, lang);
+                        code << " * " << shaderDesc->getPixelName() << ";\n";
                     }
                     else
                     {
-                        shader << pixelName << " = ";
-                        Write_mtx_x_vec(shader,
-                                        GpuTextHalf4x4(m_m44, lang), pixelName,
+                        code << "    " << shaderDesc->getPixelName() << " = ";
+                        Write_mtx_x_vec(code,
+                                        GpuTextHalf4x4(m_m44, lang), shaderDesc->getPixelName(),
                                         lang);
-                        shader << ";\n";
+                        code << ";\n";
                     }
                 }
                 
                 if(!m_offset4IsIdentity)
                 {
-                    shader << pixelName << " = ";
-                    Write_half4(shader, m_offset4, lang);
-                    shader << " + " << pixelName << ";\n";
+                    code << "    " << shaderDesc->getPixelName() << " = ";
+                    Write_half4(code, m_offset4, lang);
+                    code << " + " << shaderDesc->getPixelName() << ";\n";
                 }
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
@@ -501,31 +493,33 @@ OCIO_NAMESPACE_ENTER
                                            -m_offset4[2],
                                            -m_offset4[3] };
                     
-                    shader << pixelName << " = ";
-                    Write_half4(shader, offset_inv, lang);
-                    shader << " + " << pixelName << ";\n";
+                    code << "    " << shaderDesc->getPixelName() << " = ";
+                    Write_half4(code, offset_inv, lang);
+                    code << " + " << shaderDesc->getPixelName() << ";\n";
                 }
                 
                 if(!m_m44IsIdentity)
                 {
                     if(m_m44IsDiagonal)
                     {
-                        shader << pixelName << " = ";
+                        code << "    " << shaderDesc->getPixelName() << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44_inv);
-                        Write_half4(shader, scale, lang);
-                        shader << " * " << pixelName << ";\n";
+                        Write_half4(code, scale, lang);
+                        code << " * " << shaderDesc->getPixelName() << ";\n";
                     }
                     else
                     {
-                        shader << pixelName << " = ";
-                        Write_mtx_x_vec(shader,
-                                        GpuTextHalf4x4(m_m44_inv, lang), pixelName,
+                        code << "    " << shaderDesc->getPixelName() << " = ";
+                        Write_mtx_x_vec(code,
+                                        GpuTextHalf4x4(m_m44_inv, lang), shaderDesc->getPixelName(),
                                         lang);
-                        shader << ";\n";
+                        code << ";\n";
                     }
                 }
             }
+
+            shaderDesc->addToFunctionShaderCode(code.str().c_str());
         }
         
     }  // Anon namespace

@@ -50,8 +50,19 @@ OCIO_NAMESPACE_ENTER
     
     // returns vec3
     void Write_sampleLut3D_rgb(std::ostream & os, const std::string & variableName,
-                               const std::string & lutName, int lut3DEdgeLen,
+                               const std::string & lutName, int edgeLen,
                                GpuLanguage lang);
+
+    // Special case where 1D lut length exceeds the 1D texture length limitation
+    // so that a 2D texture is needed.
+    void Write_sampleLut2D_rgb(std::ostream & os, const std::string & variableName,
+                               const std::string & lutName, unsigned width, unsigned height,
+                               GpuLanguage lang);
+
+    void Write_sampleLut1D_rgb(std::ostream & os, const std::string & variableName,
+                               const std::string & lutName, unsigned length,
+                               GpuLanguage lang);
+
 }
 OCIO_NAMESPACE_EXIT
 

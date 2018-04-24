@@ -117,14 +117,12 @@ OCIO_NAMESPACE_ENTER
             virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
             
             
-            //! Does this op support gpu shader text generation
-            virtual bool supportsGpuShader() const = 0;
-            
-            // TODO: If temp variables are ever needed, also pass tempvar prefix.
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const = 0;
-            
+            // Detect if the ops is supported by the legacy shader description
+            virtual bool supportedByLegacyShader() const { return true; }
+
+            // Create & add the gpu shader information needed by the op
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const = 0;
+
         private:
             Op& operator= (const Op &);
     };

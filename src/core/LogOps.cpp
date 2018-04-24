@@ -135,10 +135,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
             
         private:
             float m_k[3];
@@ -280,16 +277,9 @@ OCIO_NAMESPACE_ENTER
             }
         } // Op::process
         
-        bool LogOp::supportsGpuShader() const
+        void LogOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            return true;
-        }
-        
-        void LogOp::writeGpuShader(std::ostream & shader,
-                                   const std::string & pixelName,
-                                   const GpuShaderDesc & shaderDesc) const
-        {
-            GpuLanguage lang = shaderDesc.getLanguage();
+            const GpuLanguage lang = shaderDesc->getLanguage();
             
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
@@ -299,9 +289,9 @@ OCIO_NAMESPACE_ENTER
                 // We account for the change of base by rolling the multiplier
                 // in with 'k'
                 
-                float knew[3] = { m_k[0] / logf(m_base[0]),
-                                  m_k[1] / logf(m_base[1]),
-                                  m_k[2] / logf(m_base[2]) };
+                const float knew[3] = { m_k[0] / logf(m_base[0]),
+                                        m_k[1] / logf(m_base[1]),
+                                        m_k[2] / logf(m_base[2]) };
                 
                 float clampMin[3] = { FLTMIN, FLTMIN, FLTMIN };
                 
@@ -317,45 +307,51 @@ OCIO_NAMESPACE_ENTER
                 // 1) clamp(mx+b)
                 // 2) knew * log(x) + kb
                 
-                shader << pixelName << ".rgb = ";
-                shader << "max(" << GpuTextHalf3(clampMin,lang) << ", ";
-                shader << GpuTextHalf3(m_m,lang) << " * ";
-                shader << pixelName << ".rgb + ";
-                shader << GpuTextHalf3(m_b,lang) << ");\n";
+                std::ostringstream code;
+                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
+                code << "max(" << GpuTextHalf3(clampMin,lang) << ", ";
+                code << GpuTextHalf3(m_m,lang) << " * ";
+                code << shaderDesc->getPixelName() << ".rgb + ";
+                code << GpuTextHalf3(m_b,lang) << ");\n";
                 
-                shader << pixelName << ".rgb = ";
-                shader << GpuTextHalf3(knew,lang) << " * ";
-                shader << "log(" << pixelName << ".rgb) + ";
-                shader << GpuTextHalf3(m_kb,lang) << ";\n";
+                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
+                code << GpuTextHalf3(knew,lang) << " * ";
+                code << "log(" << shaderDesc->getPixelName() << ".rgb) + ";
+                code << GpuTextHalf3(m_kb,lang) << ";\n";
+
+                shaderDesc->addToFunctionShaderCode(code.str().c_str());
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                float kinv[3] = { 1.0f / m_k[0],
-                                  1.0f / m_k[1],
-                                  1.0f / m_k[2] };
+                const float kinv[3] = { 1.0f / m_k[0],
+                                        1.0f / m_k[1],
+                                        1.0f / m_k[2] };
                 
-                float minv[3] = { 1.0f / m_m[0],
-                                  1.0f / m_m[1],
-                                  1.0f / m_m[2] };
+                const float minv[3] = { 1.0f / m_m[0],
+                                        1.0f / m_m[1],
+                                        1.0f / m_m[2] };
                 
                 // Decompose into 3 steps
                 // 1) kinv * ( x - kb)
                 // 2) pow(base, x)
                 // 3) minv * (x - b)
                 
-                shader << pixelName << ".rgb = ";
-                shader << GpuTextHalf3(kinv,lang) << " * (";
-                shader << pixelName << ".rgb - ";
-                shader << GpuTextHalf3(m_kb,lang) << ");\n";
+                std::ostringstream code;
+                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
+                code << GpuTextHalf3(kinv,lang) << " * (";
+                code << shaderDesc->getPixelName() << ".rgb - ";
+                code << GpuTextHalf3(m_kb,lang) << ");\n";
                 
-                shader << pixelName << ".rgb = pow(";
-                shader << GpuTextHalf3(m_base,lang) << ", ";
-                shader << pixelName << ".rgb);\n";
+                code << "    " << shaderDesc->getPixelName() << ".rgb = pow(";
+                code << GpuTextHalf3(m_base,lang) << ", ";
+                code << shaderDesc->getPixelName() << ".rgb);\n";
                 
-                shader << pixelName << ".rgb = ";
-                shader << GpuTextHalf3(minv,lang) << " * (";
-                shader << pixelName << ".rgb - ";
-                shader << GpuTextHalf3(m_b,lang) << ");\n";
+                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
+                code << GpuTextHalf3(minv,lang) << " * (";
+                code << shaderDesc->getPixelName() << ".rgb - ";
+                code << GpuTextHalf3(m_b,lang) << ");\n";
+
+                shaderDesc->addToFunctionShaderCode(code.str().c_str());
             }
         }
         

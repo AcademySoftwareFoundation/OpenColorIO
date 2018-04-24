@@ -228,20 +228,6 @@ return out_pixel;
         desc = OCIO.GpuShaderDesc()
         desc.setLanguage(OCIO.Constants.GPU_LANGUAGE_GLSL_1_3)
         desc.setFunctionName("pytestocio")
-        desc.setLut3DEdgeLen(32)
-        glsl = _proc.getGpuShaderText(desc)
-        self.assertEqual(self.GLSLResult, glsl)
-        # old DEPRECIATED GpuShaderDesc dict support
-        desc2 = {"language": OCIO.Constants.GPU_LANGUAGE_GLSL_1_3, "functionName": "pytestocio", "lut3DEdgeLen": 32}
-        glsl = _proc.getGpuShaderText(desc2)
-        self.assertEqual(self.GLSLResult, glsl)
-        #self.assertEqual("$1dead2bf42974cd1769164e45a0c9e40", _proc.getGpuShaderTextCacheID(desc))
-        #self.assertEqual("$1dead2bf42974cd1769164e45a0c9e40", _proc.getGpuShaderTextCacheID(desc2))
-        len = desc.getLut3DEdgeLen()
-        size = 3 * len * len * len
-        self.assertEqual(0.0, _proc.getGpuLut3D(desc2)[size-1]);
-        self.assertEqual("<NULL>", _proc.getGpuLut3DCacheID(desc))
-        self.assertEqual("<NULL>", _proc.getGpuLut3DCacheID(desc2))
         
         del _cfge
         del _cfg

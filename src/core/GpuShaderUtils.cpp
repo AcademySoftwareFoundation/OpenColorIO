@@ -184,11 +184,11 @@ OCIO_NAMESPACE_ENTER
     
     
     void Write_sampleLut3D_rgb(std::ostream & os, const std::string& variableName,
-                               const std::string& lutName, int lut3DEdgeLen,
+                               const std::string& lutName, int edgeLen,
                                GpuLanguage lang)
     {
-        float m = ((float) lut3DEdgeLen-1.0f) / (float) lut3DEdgeLen;
-        float b = 1.0f / (2.0f * (float) lut3DEdgeLen);
+        float m = ((float) edgeLen-1.0f) / (float) edgeLen;
+        float b = 1.0f / (2.0f * (float) edgeLen);
         
         if(lang == GPU_LANGUAGE_CG)
         {
@@ -208,5 +208,20 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
+    void Write_sampleLut2D_rgb(std::ostream &, const std::string &,
+                               const std::string &, unsigned, unsigned,
+                               GpuLanguage)
+    {
+        // TODO: To add when implementing the Generic Shader Desc
+        throw Exception("Not yet implemented");
+    }
+
+    void Write_sampleLut1D_rgb(std::ostream &, const std::string &,
+                               const std::string &, unsigned,
+                               GpuLanguage)
+    {
+        // TODO: To add when implementing the Generic Shader Desc
+        throw Exception("Not yet implemented");
+    }
 }
 OCIO_NAMESPACE_EXIT

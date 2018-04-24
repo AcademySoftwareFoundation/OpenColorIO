@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HashUtils.h"
 #include "Lut3DOp.h"
 #include "MathUtils.h"
+#include "GpuShaderUtils.h"
 
 #include <cmath>
 #include <limits>
@@ -585,11 +586,9 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
-            
+            virtual bool supportedByLegacyShader() const { return false; }
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
         private:
             Lut3DRcPtr m_lut;
             Interpolation m_interpolation;
@@ -730,16 +729,27 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        bool Lut3DOp::supportsGpuShader() const
+        void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            return false;
-        }
-        
-        void Lut3DOp::writeGpuShader(std::ostream & /*shader*/,
-                                     const std::string & /*pixelName*/,
-                                     const GpuShaderDesc & /*shaderDesc*/) const
-        {
-            throw Exception("Lut3DOp does not support analytical shader generation.");
+            std::ostringstream ss;
+            ss << shaderDesc->getResourcePrefix()
+               << std::string("lut3d_")
+               << shaderDesc->getNum3DTextures();
+
+            const std::string name(ss.str());
+
+            const std::string decl(std::string("uniform sampler3D ") + name + ";\n");
+            shaderDesc->addToDeclareShaderCode(decl.c_str());
+
+            shaderDesc->add3DTexture(
+                name.c_str(), m_cacheID.c_str(), m_lut->size[0], m_interpolation, &m_lut->lut[0]);
+
+            std::ostringstream code;
+            code << "    " << shaderDesc->getPixelName() << ".rgb = ";
+            Write_sampleLut3D_rgb(
+                code, shaderDesc->getPixelName(), name, m_lut->size[0], shaderDesc->getLanguage());
+
+            shaderDesc->addToFunctionShaderCode(code.str().c_str());
         }
     }
     

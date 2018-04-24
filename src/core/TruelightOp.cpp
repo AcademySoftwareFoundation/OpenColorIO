@@ -74,10 +74,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
         
         private:
             TransformDirection m_direction;
@@ -361,14 +358,7 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        bool TruelightOp::supportsGpuShader() const
-        {
-            return false;
-        }
-        
-        void TruelightOp::writeGpuShader(std::ostream & /*shader*/,
-                                            const std::string & /*pixelName*/,
-                                            const GpuShaderDesc & /*shaderDesc*/) const
+        void TruelightOp::extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const
         {
             throw Exception("TruelightOp does not define an gpu shader.");
         }

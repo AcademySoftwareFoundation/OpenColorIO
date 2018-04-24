@@ -27,62 +27,56 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+#ifndef INCLUDED_OCIO_GLSL_H_
+#define INCLUDED_OCIO_GLSL_H_
+
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "GPUHelpers.h"
+
+#include <vector>
 
 
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-#undef WINDOWS
-#define WINDOWS
-#endif
+class OpenGLBuilder;
+typedef OCIO_SHARED_PTR<OpenGLBuilder> OpenGLBuilderRcPtr;
 
 
+// This a reference implementation showing how to do the texture updload & allocation, 
+// and the program compilation for the GLSL shader language.
 
-#include <stdio.h>
-#include <fstream>
-
-#if !defined(WINDOWS)
-#include <sstream>
-#include <stdlib.h>
-#include <time.h>
-#endif
-
-
-std::string createTempFile(const std::string& fileExt, const std::string& fileContent)
+class OpenGLBuilder
 {
-    std::string filename;
+    typedef std::vector<std::pair<unsigned, std::string>> TextureIds;
 
-#ifdef WINDOWS
+public:
+    // Create an OpenGL builder using the GPU shader information from a specific processor
+    static OpenGLBuilderRcPtr Create(const OCIO::GpuShaderDescRcPtr & gpuShader);
 
-    char tmpFilename[L_tmpnam];
-    if(tmpnam_s(tmpFilename))
-    {
-        throw OCIO::Exception("Could not create a temporary file");
-    }
+    ~OpenGLBuilder();
 
-    filename = tmpFilename;
-    filename += fileExt;
-    
-#else
+    // Allocate & upload all the needed textures starting at the (zero based) index 1 by default
+    //  (i.e. the first index is reserved for the input image to process)
+    void allocateAllTextures(unsigned startIndex = 1);
+    void useAllTextures();
 
-    // Note: because of security issue, tmpnam could not be used
+    // Build the complete shader program which includes the OCIO shader program 
+    // and the client shader program.
+    unsigned buildProgram(const std::string & clientShaderProgram);
+    void useProgram();
 
-    std::stringstream ss;
-    time_t t = time(NULL);
-    ss << rand_r((unsigned int*)&t);
-    std::string str = "/tmp/ocio";
-    str += ss.str();
-    str += fileExt;
+protected:
+    OpenGLBuilder(const OCIO::GpuShaderDescRcPtr & gpuShader);
 
-    filename = str;
+    void deleteAllTextures();
 
-#endif
+private:
+    const OCIO::GpuShaderDescRcPtr m_shaderDesc; // Description of the fragment shader to create
+    unsigned m_startIndex;                 // Starting index for texture allocations
+    TextureIds m_textureIds;               // Texture ids of all needed textures
+    unsigned m_fragShader;                 // Fragment shader identifier
+    unsigned m_program;                    // Program identifier
+};
 
-    std::ofstream ofs(filename.c_str(), std::ios_base::out);
-    ofs << fileContent;
-    ofs.close();
 
-    return filename;
-}
+#endif // INCLUDED_OCIO_GLSL_H_
+
