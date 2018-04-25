@@ -386,17 +386,17 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OIIO_ADD_TEST(LogOps, LinToLog)
 {
-    float k[3] = { 0.18f, 0.18f, 0.18f };
-    float m[3] = { 2.0f, 2.0f, 2.0f };
-    float b[3] = { 0.1f, 0.1f, 0.1f };
-    float base[3] = { 10.0f, 10.0f, 10.0f };
-    float kb[3] = { 1.0f, 1.0f, 1.0f };
+    const float k[3] = { 0.18f, 0.18f, 0.18f };
+    const float m[3] = { 2.0f, 2.0f, 2.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base[3] = { 10.0f, 10.0f, 10.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
     
     
     float data[8] = { 0.01f, 0.1f, 1.0f, 1.0f,
                       10.0f, 100.0f, 1000.0f, 1.0f, };
     
-    float result[8] = { 0.8342526242885725f,
+    const float result[8] = { 0.8342526242885725f,
                         0.90588182584953925f,
                         1.057999473052105462f,
                         1.0f,
@@ -406,9 +406,23 @@ OIIO_ADD_TEST(LogOps, LinToLog)
                         1.0f };
     
     OCIO::OpRcPtrVec ops;
-    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD);
-    
-    FinalizeOpVec(ops);
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+
+    // one operator has been created
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OIIO_CHECK_NE(ops[0].get(), NULL);
+
+    // no chache ID before operator has been finalized
+    std::string opCache = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(opCache.size(), 0);
+
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+
+    // validate properties
+    opCache = ops[0]->getCacheID();
+    OIIO_CHECK_NE(opCache.size(), 0);
+    OIIO_CHECK_EQUAL(ops[0]->isNoOp(), false);
+    OIIO_CHECK_EQUAL(ops[0]->hasChannelCrosstalk(), false);
     
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -424,11 +438,11 @@ OIIO_ADD_TEST(LogOps, LinToLog)
 
 OIIO_ADD_TEST(LogOps, LogToLin)
 {
-    float k[3] = { 0.18f, 0.18f, 0.18f };
-    float m[3] = { 2.0f, 2.0f, 2.0f };
-    float b[3] = { 0.1f, 0.1f, 0.1f };
-    float base[3] = { 10.0f, 10.0f, 10.0f };
-    float kb[3] = { 1.0f, 1.0f, 1.0f };
+    const float k[3] = { 0.18f, 0.18f, 0.18f };
+    const float m[3] = { 2.0f, 2.0f, 2.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base[3] = { 10.0f, 10.0f, 10.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
     
     float data[8] = { 0.8342526242885725f,
                       0.90588182584953925f,
@@ -439,13 +453,13 @@ OIIO_ADD_TEST(LogOps, LogToLin)
                       1.59418930777214063f,
                       1.0f };
     
-    float result[8] = { 0.01f, 0.1f, 1.0f, 1.0f,
+    const float result[8] = { 0.01f, 0.1f, 1.0f, 1.0f,
                         10.0f, 100.0f, 1000.0f, 1.0f, };
     
     OCIO::OpRcPtrVec ops;
-    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
     
-    FinalizeOpVec(ops);
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
     
     // Apply the result
     for(OCIO::OpRcPtrVec::size_type i = 0, size = ops.size(); i < size; ++i)
@@ -461,20 +475,20 @@ OIIO_ADD_TEST(LogOps, LogToLin)
 
 OIIO_ADD_TEST(LogOps, Inverse)
 {
-    float k[3] = { 0.18f, 0.5f, 0.3f };
-    float m[3] = { 2.0f, 4.0f, 8.0f };
-    float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float k[3] = { 0.18f, 0.5f, 0.3f };
+    const float m[3] = { 2.0f, 4.0f, 8.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
     float base[3] = { 10.0f, 5.0f, 2.0f };
-    float kb[3] = { 1.0f, 1.0f, 1.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
     
     OCIO::OpRcPtrVec ops;
-    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
     
-    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
     
     base[0] += 1e-5f;
-    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE);
-    CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
     
     OIIO_CHECK_EQUAL(ops.size(), 4);
     
@@ -496,7 +510,7 @@ OIIO_ADD_TEST(LogOps, Inverse)
     
     OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[3]), false);
 
-    float result[12] = { 0.01f, 0.1f, 1.0f, 1.0f,
+    const float result[12] = { 0.01f, 0.1f, 1.0f, 1.0f,
                         1.0f, 10.0f, 100.0f, 1.0f,
                         1000.0f, 1.0f, 0.5f, 1.0f
                       };
@@ -524,6 +538,155 @@ OIIO_ADD_TEST(LogOps, Inverse)
     {
         OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-3 );
     }
+}
+
+OIIO_ADD_TEST(LogOps, CacheID)
+{
+    const float k[3] = { 0.18f, 0.18f, 0.18f };
+    const float m[3] = { 2.0f, 2.0f, 2.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base[3] = { 10.0f, 10.0f, 10.0f };
+    float kb[3] = { 1.0f, 1.0f, 1.0f };
+
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    kb[0] += 1.0f;
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    kb[0] -= 1.0f;
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+
+    // 3 operators have been created
+    OIIO_CHECK_EQUAL(ops.size(), 3);
+    OIIO_CHECK_NE(ops[0].get(), NULL);
+    OIIO_CHECK_NE(ops[1].get(), NULL);
+    OIIO_CHECK_NE(ops[2].get(), NULL);
+
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+
+    const std::string opCacheID0 = ops[0]->getCacheID();
+    const std::string opCacheID1 = ops[1]->getCacheID();
+    const std::string opCacheID2 = ops[2]->getCacheID();
+    OIIO_CHECK_EQUAL(opCacheID0, opCacheID2);
+    OIIO_CHECK_NE(opCacheID0, opCacheID1);
+}
+
+OIIO_ADD_TEST(LogOps, ThrowDirection)
+{
+    const float k[3] = { 0.18f, 0.18f, 0.18f };
+    const float m[3] = { 2.0f, 2.0f, 2.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base[3] = { 10.0f, 10.0f, 10.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_THROW_WHAT(
+        CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_UNKNOWN),
+        OCIO::Exception, "unspecified transform direction");
+}
+
+OIIO_ADD_TEST(LogOps, ThrowBase)
+{
+    const float k[3] = { 0.18f, 0.18f, 0.18f };
+    const float m[3] = { 2.0f, 2.0f, 2.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base0[3] = { 1.0f, 10.0f, 10.0f };
+    const float base1[3] = { 10.0f, 1.0f, 10.0f };
+    const float base2[3] = { 10.0f, 10.0f, 1.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+
+    // Can't use base 1 for forward log transform
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base0, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
+        OCIO::Exception, "base cannot be 1");
+
+    ops.clear();
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base1, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
+        OCIO::Exception, "base cannot be 1");
+
+    ops.clear();
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base2, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
+        OCIO::Exception, "base cannot be 1");
+
+    // Base 1 is valid for inverse log transform
+    ops.clear();
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base0, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+
+    const std::string opCacheID = ops[0]->getCacheID();
+    OIIO_CHECK_NE(opCacheID.size(), 0);
+}
+
+OIIO_ADD_TEST(LogOps, ThrowSlope)
+{
+    const float k[3] = { 0.18f, 0.18f, 0.18f };
+    const float m0[3] = { 0.0f, 2.0f, 2.0f };
+    const float m1[3] = { 2.0f, 0.0f, 2.0f };
+    const float m2[3] = { 2.0f, 2.0f, 0.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base[3] = { 10.0f, 10.0f, 10.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+
+    // Can't use slope 0 for inverse log transform
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m0, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
+        OCIO::Exception, "m (slope) cannot be 0");
+    ops.clear();
+
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m1, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
+        OCIO::Exception, "m (slope) cannot be 0");
+    ops.clear();
+
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m2, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
+        OCIO::Exception, "m (slope) cannot be 0");
+    ops.clear();
+
+    // Slope 0 is valid for forward log transform
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m0, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+
+    const std::string opCacheID = ops[0]->getCacheID();
+    OIIO_CHECK_NE(opCacheID.size(), 0);
+}
+
+OIIO_ADD_TEST(LogOps, ThrowMultiplier)
+{
+    const float k0[3] = { 0.0f, 0.18f, 0.18f };
+    const float k1[3] = { 0.18f, 0.0f, 0.18f };
+    const float k2[3] = { 0.18f, 0.18f, 0.0f };
+    const float m[3] = { 2.0f, 2.0f, 2.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base[3] = { 10.0f, 10.0f, 10.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+
+    // Can't use multiplier 0 for inverse log transform
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k0, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
+        OCIO::Exception, "k (multiplier) cannot be 0");
+    ops.clear();
+
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k1, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
+        OCIO::Exception, "k (multiplier) cannot be 0");
+    ops.clear();
+
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k2, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
+    OIIO_CHECK_THROW_WHAT(FinalizeOpVec(ops),
+        OCIO::Exception, "k (multiplier) cannot be 0");
+    ops.clear();
+
+    // Multiplier 0 is valid for forward log transform
+    OIIO_CHECK_NO_THROW(CreateLogOp(ops, k0, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+
+    const std::string opCacheID = ops[0]->getCacheID();
+    OIIO_CHECK_NE(opCacheID.size(), 0);
 }
 
 #endif // OCIO_UNIT_TEST

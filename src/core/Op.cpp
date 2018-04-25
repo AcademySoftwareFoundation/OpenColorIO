@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pystring/pystring.h"
 
 #include <sstream>
+#include <cstring>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -124,3 +125,236 @@ OCIO_NAMESPACE_ENTER
     }
 }
 OCIO_NAMESPACE_EXIT
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+#include "MatrixOps.h"
+#include "LogOps.h"
+#include "NoOps.h"
+
+OCIO_NAMESPACE_USING
+
+void Apply(const OpRcPtrVec ops, float * source, long numPixels)
+{
+    OpRcPtrVec::size_type numOps = ops.size();
+    for (OpRcPtrVec::size_type i = 0; i < numOps; ++i)
+    {
+        ops[i]->apply(source, numPixels);
+    }
+}
+
+OIIO_ADD_TEST(FinalizeOpVec, OptimizeCombine)
+{
+    const float m1[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
+        0.5f, 1.6f, 0.7f, 0.8f,
+        0.2f, 0.1f, 1.1f, 0.2f,
+        0.3f, 0.4f, 0.5f, 1.6f };
+
+    const float v1[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+
+    const float m2[16] = { 1.1f, -0.1f, -0.1f, 0.0f,
+        0.1f, 0.9f, -0.2f, 0.0f,
+        0.05f, 0.0f, 1.1f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f };
+    const float v2[4] = { -0.2f, -0.1f, -0.1f, -0.2f };
+
+    const float source[] = { 0.1f, 0.2f, 0.3f, 0.4f,
+        -0.1f, -0.2f, 50.0f, 123.4f,
+        1.0f, 1.0f, 1.0f, 1.0f };
+    const float error = 1e-4f;
+
+    const float k[3] = { 0.18f, 0.18f, 0.18f };
+    const float m[3] = { 2.0f, 2.0f, 2.0f };
+    const float b[3] = { 0.1f, 0.1f, 0.1f };
+    const float base[3] = { 10.0f, 10.0f, 10.0f };
+    const float kb[3] = { 1.0f, 1.0f, 1.0f };
+
+    // Combining ops
+    {
+        OpRcPtrVec ops;
+        OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m2, v2, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+     
+        // No optimize: keep both matrix ops
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+
+        // apply ops
+        float tmp[12];
+        memcpy(tmp, source, 12 * sizeof(float));
+        Apply(ops, tmp, 3);
+
+        // Optimize: Combine 2 matrix ops
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OIIO_CHECK_EQUAL(ops.size(), 1);
+
+        // apply op
+        float tmp2[12];
+        memcpy(tmp2, source, 12 * sizeof(float));
+        Apply(ops, tmp2, 3);
+
+        // compare results
+        for (unsigned int i = 0; i<12; ++i)
+        {
+            OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+        }
+    }
+
+    // remove NoOp at the beginning
+    {
+        OpRcPtrVec ops;
+        // NoOp
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+
+        OIIO_CHECK_EQUAL(ops.size(), 3);
+
+        // No optimize: keep both all ops
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OIIO_CHECK_EQUAL(ops.size(), 3);
+
+        // apply ops
+        float tmp[12];
+        memcpy(tmp, source, 12 * sizeof(float));
+        Apply(ops, tmp, 3);
+
+        // Optimize: remove the no op
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        OIIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
+        OIIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
+
+        // apply ops
+        float tmp2[12];
+        memcpy(tmp2, source, 12 * sizeof(float));
+        Apply(ops, tmp2, 3);
+
+        // compare results
+        for (unsigned int i = 0; i<12; ++i)
+        {
+            OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+        }
+    }
+
+    // remove NoOp in the middle
+    {
+        OpRcPtrVec ops;
+        OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        // NoOp
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+
+        OIIO_CHECK_EQUAL(ops.size(), 3);
+
+        // No optimize: keep both all ops
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OIIO_CHECK_EQUAL(ops.size(), 3);
+
+        // apply ops
+        float tmp[12];
+        memcpy(tmp, source, 12 * sizeof(float));
+        Apply(ops, tmp, 3);
+
+        // Optimize: remove the no op
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        OIIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
+        OIIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
+
+        // apply ops
+        float tmp2[12];
+        memcpy(tmp2, source, 12 * sizeof(float));
+        Apply(ops, tmp2, 3);
+
+        // compare results
+        for (unsigned int i = 0; i<12; ++i)
+        {
+            OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+        }
+    }
+
+    // remove NoOp in the end
+    {
+        OpRcPtrVec ops;
+        OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+        // NoOp
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+
+        OIIO_CHECK_EQUAL(ops.size(), 3);
+
+        // No optimize: keep both all ops
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OIIO_CHECK_EQUAL(ops.size(), 3);
+
+        // apply ops
+        float tmp[12];
+        memcpy(tmp, source, 12 * sizeof(float));
+        Apply(ops, tmp, 3);
+
+        // Optimize: remove the no op
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        OIIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
+        OIIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
+
+        // apply ops
+        float tmp2[12];
+        memcpy(tmp2, source, 12 * sizeof(float));
+        Apply(ops, tmp2, 3);
+
+        // compare results
+        for (unsigned int i = 0; i<12; ++i)
+        {
+            OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+        }
+    }
+
+    // remove several NoOp
+    {
+        OpRcPtrVec ops;
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OIIO_CHECK_NO_THROW(CreateMatrixOffsetOp(ops, m1, v1, TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+        OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
+
+        OIIO_CHECK_EQUAL(ops.size(), 9);
+
+        // No optimize: keep both all ops
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
+        OIIO_CHECK_EQUAL(ops.size(), 9);
+
+        // apply ops
+        float tmp[12];
+        memcpy(tmp, source, 12 * sizeof(float));
+        Apply(ops, tmp, 3);
+
+        // Optimize: remove the no op
+        OIIO_CHECK_NO_THROW(FinalizeOpVec(ops));
+        OIIO_CHECK_EQUAL(ops.size(), 2);
+        OIIO_CHECK_EQUAL(ops[0]->getInfo(), "<MatrixOffsetOp>");
+        OIIO_CHECK_EQUAL(ops[1]->getInfo(), "<LogOp>");
+
+        // apply ops
+        float tmp2[12];
+        memcpy(tmp2, source, 12 * sizeof(float));
+        Apply(ops, tmp2, 3);
+
+        // compare results
+        for (unsigned int i = 0; i<12; ++i)
+        {
+            OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
+        }
+    }
+}
+
+#endif

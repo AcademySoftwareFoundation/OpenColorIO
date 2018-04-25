@@ -475,6 +475,7 @@ messageonce("Build GPU Unit Tests: ${OCIO_BUILD_GPU_TESTS}")
 if(OCIO_BUILD_GPU_TESTS)
     if(NOT OPENGL_FOUND OR NOT GLUT_FOUND OR NOT GLEW_FOUND OR NOT OCIO_BUILD_SHARED)
         messageonce("Not building gpu unit tests. Requirement(s) found, OpenColorIO:${OCIO_BUILD_SHARED}, OpenGL:${OPENGL_FOUND}, GLUT:${GLUT_FOUND}, GLEW:${GLEW_FOUND}")
+        set(OCIO_BUILD_GPU_TESTS OFF)
     else()
         add_subdirectory(src/core_gpu_tests)
     endif()
@@ -575,9 +576,17 @@ include(CPack)
 ###############################################################################
 ### CTEST ###
 
+if(OCIO_BUILD_TESTS)
+    set(TEST_DEPENDS ocio_core_tests)
+endif()
+
+if(OCIO_BUILD_GPU_TESTS)
+    set(TEST_DEPENDS ${TEST_DEPENDS} ocio_core_gpu_tests)
+endif()
+
 add_custom_target(test_verbose
                   COMMAND ctest -VV
-                  DEPENDS ocio_core_tests ocio_core_gpu_tests
+                  DEPENDS ${TEST_DEPENDS}
                   COMMENT "Running ctest with verbose output")
 
 # Log CMake first run done

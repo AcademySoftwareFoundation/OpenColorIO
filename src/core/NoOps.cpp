@@ -272,7 +272,7 @@ OCIO_NAMESPACE_ENTER
         {
             if(!gpuPreOps[i]->supportsGpuShader())
             {
-                throw Exception("Patition failed check. gpuPreOps");
+                throw Exception("Partition failed check. One gpuPreOps op does not support GPU.");
             }
         }
         
@@ -280,15 +280,18 @@ OCIO_NAMESPACE_ENTER
         // shaders (otherwise this block isnt necessary!)
         if(gpuLatticeOps.size()>0)
         {
-            bool requireslattice = false;
-            for(unsigned int i=0; i<gpuLatticeOps.size(); ++i)
+            bool requiresLattice = false;
+            for(unsigned int i=0; i<gpuLatticeOps.size() && !requiresLattice; ++i)
             {
-                if(!gpuLatticeOps[i]->supportsGpuShader()) requireslattice = true;
+                if (!gpuLatticeOps[i]->supportsGpuShader())
+                {
+                    requiresLattice = true;
+                }
             }
             
-            if(!requireslattice)
+            if(!requiresLattice)
             {
-                throw Exception("Patition failed check. gpuLatticeOps");
+                throw Exception("Partition failed check. All gpuLatticeOps ops do support GPU.");
             }
         }
         
@@ -297,7 +300,7 @@ OCIO_NAMESPACE_ENTER
         {
             if(!gpuPostOps[i]->supportsGpuShader())
             {
-                throw Exception("Patition failed check. gpuPostOps");
+                throw Exception("Partition failed check. One gpuPostOps op does not support GPU.");
             }
         }
     }
@@ -364,7 +367,7 @@ OCIO_NAMESPACE_ENTER
     }
     
     void CreateFileNoOp(OpRcPtrVec & ops,
-                                 const std::string & fileReference)
+                        const std::string & fileReference)
     {
         ops.push_back( FileNoOpRcPtr(new FileNoOp(fileReference)) );
     }
@@ -449,6 +452,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 OCIO_NAMESPACE_USING
+namespace OCIO = OCIO_NAMESPACE;
 
 #include "UnitTest.h"
 #include "Lut1DOp.h"
@@ -465,7 +469,7 @@ void CreateGenericAllocationOp(OpRcPtrVec & ops)
 
 void CreateGenericScaleOp(OpRcPtrVec & ops)
 {
-    float scale4[4] = { 1.04f, 1.05f, 1.06f, 1.0f };
+    const float scale4[4] = { 1.04f, 1.05f, 1.06f, 1.0f };
     CreateScaleOp(ops, scale4, TRANSFORM_DIR_FORWARD);
 }
 
@@ -480,11 +484,11 @@ void CreateGenericLutOp(OpRcPtrVec & ops)
         lut->from_max[0] = 1.0f;
         lut->from_max[1] = 1.0f;
         lut->from_max[2] = 1.0f;
-        int size = 256;
+        const int size = 256;
         for(int i=0; i<size; ++i)
         {
-            float x = (float)i / (float)(size-1);
-            float x2 = x*x;
+            const float x = (float)i / (float)(size-1);
+            const float x2 = x*x;
             
             for(int c=0; c<3; ++c)
             {
@@ -502,7 +506,8 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OpRcPtrVec ops;
     
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    OIIO_CHECK_NO_THROW(
+        PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
     OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
@@ -516,14 +521,18 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     {
     OpRcPtrVec ops;
     CreateGenericAllocationOp(ops);
-    
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    OIIO_CHECK_NO_THROW(
+        PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
     OIIO_CHECK_EQUAL(gpuPreOps.size(), 1);
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
     OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
-    
+
+    OIIO_CHECK_EQUAL(ops[0]->isSameType(gpuPreOps[0]), true);
+
     OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
                                                   gpuLatticeOps,
                                                   gpuPostOps) );
@@ -534,9 +543,11 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     
     CreateGenericAllocationOp(ops);
     CreateGenericScaleOp(ops);
-    
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    OIIO_CHECK_NO_THROW(
+        PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
     OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
@@ -553,9 +564,11 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     CreateGenericAllocationOp(ops);
     CreateGenericLutOp(ops);
     CreateGenericScaleOp(ops);
-    
+    OIIO_CHECK_EQUAL(ops.size(), 3);
+
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    OIIO_CHECK_NO_THROW(
+        PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
     OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
@@ -570,9 +583,11 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OpRcPtrVec ops;
     
     CreateGenericLutOp(ops);
-    
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    OIIO_CHECK_NO_THROW(
+        PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
     OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 1);
@@ -592,9 +607,11 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     CreateGenericLutOp(ops);
     CreateGenericScaleOp(ops);
     CreateGenericAllocationOp(ops);
-    
+    OIIO_CHECK_EQUAL(ops.size(), 6);
+
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    OIIO_CHECK_NO_THROW(
+        PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
     OIIO_CHECK_EQUAL(gpuPreOps.size(), 0);
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 4);
@@ -616,9 +633,11 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     CreateGenericLutOp(ops);
     CreateGenericScaleOp(ops);
     CreateGenericAllocationOp(ops);
-    
+    OIIO_CHECK_EQUAL(ops.size(), 8);
+
     OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
-    PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops);
+    OIIO_CHECK_NO_THROW(
+        PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
     OIIO_CHECK_EQUAL(gpuPreOps.size(), 2);
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 8);
@@ -637,5 +656,90 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     */
     }
 } // PartitionGPUOps
+
+OIIO_ADD_TEST(NoOps, Throw)
+{
+    // PartitionGPUOps might throw, but could not find how
+
+    OpRcPtrVec ops;
+
+    CreateGenericAllocationOp(ops);
+    CreateGenericLutOp(ops);
+    CreateGenericScaleOp(ops);
+
+    OpRcPtrVec gpuPreOps, gpuLatticeOps, gpuPostOps;
+    OIIO_CHECK_NO_THROW(
+        PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
+
+    OIIO_CHECK_THROW_WHAT(AssertPartitionIntegrity(
+        gpuLatticeOps, gpuLatticeOps, gpuPostOps),
+        OCIO::Exception, "One gpuPreOps op does not support GPU");
+
+    OIIO_CHECK_THROW_WHAT(AssertPartitionIntegrity(
+        gpuPreOps, gpuPreOps, gpuPostOps),
+        OCIO::Exception, "All gpuLatticeOps ops do support GPU");
+
+    OIIO_CHECK_THROW_WHAT(AssertPartitionIntegrity(
+        gpuPreOps, gpuLatticeOps, gpuLatticeOps),
+        OCIO::Exception, "One gpuPostOps op does not support GPU");
+
+}
+
+OIIO_ADD_TEST(NoOps, AllocationOp)
+{
+    OpRcPtrVec ops;
+    CreateGenericAllocationOp(ops);
+    CreateGenericScaleOp(ops);
+
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OpRcPtr clonedOp = ops[0]->clone();
+
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[0]), true);
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[1]), false);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[0]), true);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[1]), false);
+
+    OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
+    OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
+    OIIO_CHECK_EQUAL(clonedOp->supportsGpuShader(), true);
+}
+
+OIIO_ADD_TEST(NoOps, FileOp)
+{
+    OpRcPtrVec ops;
+    CreateFileNoOp(ops,"");
+    CreateGenericAllocationOp(ops);
+
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OpRcPtr clonedOp = ops[0]->clone();
+
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[0]), true);
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[1]), false);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[0]), true);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[1]), false);
+
+    OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
+    OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
+    OIIO_CHECK_EQUAL(clonedOp->supportsGpuShader(), true);
+}
+
+OIIO_ADD_TEST(NoOps, LookOp)
+{
+    OpRcPtrVec ops;
+    CreateLookNoOp(ops, "");
+    CreateGenericAllocationOp(ops);
+
+    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OpRcPtr clonedOp = ops[0]->clone();
+
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[0]), true);
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[1]), false);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[0]), true);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[1]), false);
+
+    OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
+    OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
+    OIIO_CHECK_EQUAL(clonedOp->supportsGpuShader(), true);
+}
 
 #endif // OCIO_UNIT_TEST
