@@ -40,9 +40,8 @@ OCIO_NAMESPACE_ENTER
     {
         // This method converts a float to a string adding a dot when
         // the float does not have a fractional part. Hence, it ensures
-        // that the shader understand that number as a float and not as an integer.
-        //
-        // Always add the float indicator even if the issue only appears on MAC platform.
+        // that the shader program understand that number as a float 
+        // and not as an integer.
         //
         std::string GetFloatString(float v)
         {
