@@ -84,11 +84,11 @@ vec4 pytestocio(in vec4 inPixel,
     const sampler3D lut3d) 
 {
 vec4 out_pixel = inPixel; 
-out_pixel = out_pixel * mat4(1.08749, -0.0794667, -0.00802222, 0, -0.0236222, 1.03164, -0.00802222, 0, -0.0236222, -0.0794667, 1.10309, 0, 0, 0, 0, 1);
-out_pixel = pow(max(out_pixel, vec4(0, 0, 0, 0)), vec4(0.909091, 0.909091, 0.909091, 1));
-out_pixel = out_pixel * mat4(1.11111, -2, -3, -4, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-out_pixel = vec4(4.68889, -2.3, -0.4, -0) + out_pixel;
-out_pixel = pow(max(out_pixel, vec4(0, 0, 0, 0)), vec4(0.454545, 0.454545, 0.454545, 1));""" \
+out_pixel = out_pixel * mat4(1.0874889, -0.079466686, -0.0080222245, 0., -0.023622228, 1.0316445, -0.0080222245, 0., -0.023622226, -0.079466686, 1.1030889, 0., 0., 0., 0., 1.);
+out_pixel = pow(max(out_pixel, vec4(0., 0., 0., 0.)), vec4(0.90909088, 0.90909088, 0.90909088, 1.));
+out_pixel = out_pixel * mat4(1.1111112, -2., -3., -4., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1.);
+out_pixel = vec4(4.688889, -2.3, -0.40000001, -0.) + out_pixel;
+out_pixel = pow(max(out_pixel, vec4(0., 0., 0., 0.)), vec4(0.45454544, 0.45454544, 0.45454544, 1.));""" \
  + osx_hack + \
 """
 return out_pixel;
