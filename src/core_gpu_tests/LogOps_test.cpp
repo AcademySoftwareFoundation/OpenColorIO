@@ -27,61 +27,56 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <OpenColorIO/OpenColorIO.h>
+
+
 namespace OCIO = OCIO_NAMESPACE;
+#include "GPUUnitTest.h"
 
-#include "GPUHelpers.h"
-
-
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-#undef WINDOWS
-#define WINDOWS
-#endif
+OCIO_NAMESPACE_USING
 
 
-
-#include <stdio.h>
-#include <fstream>
-
-#if !defined(WINDOWS)
-#include <sstream>
-#include <stdlib.h>
-#include <time.h>
-#endif
-
-
-std::string createTempFile(const std::string& fileExt, const std::string& fileContent)
+// Helper method to build unit tests
+void AddLogTest(OCIOGPUTest & test, TransformDirection direction,
+    const float base, float epsilon)
 {
-    std::string filename;
+    OCIO::LogTransformRcPtr log = OCIO::LogTransform::Create();
+    log->setDirection(direction);
+    log->setBase(base);
 
-#ifdef WINDOWS
+    test.setContext(log->createEditableCopy(), epsilon);
+}
 
-    char tmpFilename[L_tmpnam];
-    if(tmpnam_s(tmpFilename))
-    {
-        throw OCIO::Exception("Could not create a temporary file");
-    }
 
-    filename = tmpFilename;
-    filename += fileExt;
-    
-#else
+OCIO_ADD_GPU_TEST(LogTransform, LogBase)
+{
+    const float base10 = 10.0f;
+    AddLogTest(test, TRANSFORM_DIR_FORWARD, base10, 1e-5f);
+}
 
-    // Note: because of security issue, tmpnam could not be used
 
-    std::stringstream ss;
-    time_t t = time(NULL);
-    ss << rand_r((unsigned int*)&t);
-    std::string str = "/tmp/ocio";
-    str += ss.str();
-    str += fileExt;
+OCIO_ADD_GPU_TEST(LogTransform, LogBase_inverse)
+{
+    const float base10 = 10.0f;
+    AddLogTest(test, TRANSFORM_DIR_INVERSE, base10, 1e-4f);
+}
 
-    filename = str;
 
-#endif
+OCIO_ADD_GPU_TEST(LogTransform, euler_constant)
+{
+    const float eulerConstant = std::exp(1.0f);
+    AddLogTest(test, TRANSFORM_DIR_FORWARD, eulerConstant, 1e-5f);
+}
 
-    std::ofstream ofs(filename.c_str(), std::ios_base::out);
-    ofs << fileContent;
-    ofs.close();
 
-    return filename;
+OCIO_ADD_GPU_TEST(LogTransform, euler_constant_inverse)
+{
+    const float eulerConstant = std::exp(1.0f);
+    AddLogTest(test, TRANSFORM_DIR_INVERSE, eulerConstant, 1e-5f);
+}
+
+
+OCIO_ADD_GPU_TEST(LogTransform, base1_inverse)
+{
+    const float base1 = 1.0f;
+    AddLogTest(test, TRANSFORM_DIR_INVERSE, base1, 1e-5f);
 }

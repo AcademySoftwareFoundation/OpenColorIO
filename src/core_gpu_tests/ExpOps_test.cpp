@@ -27,61 +27,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <OpenColorIO/OpenColorIO.h>
+
+
 namespace OCIO = OCIO_NAMESPACE;
+#include "GPUUnitTest.h"
 
-#include "GPUHelpers.h"
-
-
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-#undef WINDOWS
-#define WINDOWS
-#endif
+OCIO_NAMESPACE_USING
 
 
-
-#include <stdio.h>
-#include <fstream>
-
-#if !defined(WINDOWS)
-#include <sstream>
-#include <stdlib.h>
-#include <time.h>
-#endif
-
-
-std::string createTempFile(const std::string& fileExt, const std::string& fileContent)
+// Helper method to build unit tests
+void AddExpTest(OCIOGPUTest & test, TransformDirection direction,
+    const float * value, float epsilon)
 {
-    std::string filename;
+    OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
+    exp->setDirection(direction);
+    exp->setValue(value);
 
-#ifdef WINDOWS
+    test.setContext(exp->createEditableCopy(), epsilon);
+}
 
-    char tmpFilename[L_tmpnam];
-    if(tmpnam_s(tmpFilename))
-    {
-        throw OCIO::Exception("Could not create a temporary file");
-    }
 
-    filename = tmpFilename;
-    filename += fileExt;
-    
-#else
+OCIO_ADD_GPU_TEST(ExpTransform, ExpValue)
+{
+    const float exp1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+    AddExpTest(test, TRANSFORM_DIR_FORWARD, exp1, 1e-6f);
+}
 
-    // Note: because of security issue, tmpnam could not be used
-
-    std::stringstream ss;
-    time_t t = time(NULL);
-    ss << rand_r((unsigned int*)&t);
-    std::string str = "/tmp/ocio";
-    str += ss.str();
-    str += fileExt;
-
-    filename = str;
-
-#endif
-
-    std::ofstream ofs(filename.c_str(), std::ios_base::out);
-    ofs << fileContent;
-    ofs.close();
-
-    return filename;
+OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_inverse)
+{
+    const float exp1[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
+    AddExpTest(test, TRANSFORM_DIR_INVERSE, exp1, 1e-6f);
 }

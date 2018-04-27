@@ -89,7 +89,8 @@ OIIO_ADD_TEST(Platform, getenv)
 OIIO_ADD_TEST(Platform, putenv)
 {
     {
-        ::putenv("MY_DUMMY_ENV=SomeValue");
+        const std::string value("MY_DUMMY_ENV=SomeValue");
+        ::putenv(const_cast<char*>(value.c_str()));
         std::string env;
         OCIO::Platform::getenv("MY_DUMMY_ENV", env);
         OIIO_CHECK_ASSERT(!env.empty());

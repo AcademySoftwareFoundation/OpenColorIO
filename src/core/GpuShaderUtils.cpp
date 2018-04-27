@@ -36,6 +36,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    namespace
+    {
+        // This method converts a float to a string adding a dot when
+        // the float does not have a fractional part. Hence, it ensures
+        // that the shader program understand that number as a float 
+        // and not as an integer.
+        //
+        std::string GetFloatString(float v)
+        {
+            float integerpart = 0.0f;
+            const float fracpart = modff(v, &integerpart);
+
+            std::ostringstream oss;
+            oss.precision(8);
+            oss << v << ((fracpart==0.0f) ? "." : "");
+            return oss.str();
+        }
+    }
+
     void Write_half4x4(std::ostream & os, const float * m44, GpuLanguage lang)
     {
         if(lang == GPU_LANGUAGE_CG)
@@ -54,7 +73,7 @@ OCIO_NAMESPACE_ENTER
             for(int i=0; i<16; i++)
             {
                 if(i!=0) os << ", ";
-                os << m44[i]; // Clamping to half is not necessary
+                os << GetFloatString(m44[i]); // Clamping to half is not necessary
             }
             os << ")";
         }
@@ -82,7 +101,7 @@ OCIO_NAMESPACE_ENTER
             for(int i=0; i<4; i++)
             {
                 if(i!=0) os << ", ";
-                os << v4[i]; // Clamping to half is not necessary
+                os << GetFloatString(v4[i]); // Clamping to half is not necessary
             }
             os << ")";
         }
@@ -110,7 +129,7 @@ OCIO_NAMESPACE_ENTER
             for(int i=0; i<3; i++)
             {
                 if(i!=0) os << ", ";
-                os << v3[i]; // Clamping to half is not necessary
+                os << GetFloatString(v3[i]); // Clamping to half is not necessary
             }
             os << ")";
         }

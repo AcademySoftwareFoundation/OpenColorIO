@@ -1427,8 +1427,6 @@ OIIO_ADD_TEST(MatrixOps, isSameType)
 
 OIIO_ADD_TEST(MatrixOps, isInverse)
 {
-    const float error = 1e-8f;
-
     OpRcPtrVec ops;
     const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
     const float offsetInv[] = { -1.1f, 1.3f, -0.3f, 0.0f };

@@ -1,5 +1,29 @@
 /*
-    Made by Autodesk Inc. under the terms of the OpenColorIO BSD 3 Clause License
+Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+All Rights Reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+* Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+* Neither the name of Sony Pictures Imageworks nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -27,6 +51,8 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <string>
 #include <sstream>
 #include <map>
+#include <iomanip>
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -80,7 +106,6 @@ namespace
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         g_image.resize(numEntries);
-        memset(&g_image[0], 0, numEntries * sizeof(float));
 
         glGenTextures(1, &g_imageTexID);
 
@@ -93,18 +118,14 @@ namespace
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, g_winWidth, g_winHeight, 0,
-            GL_RGBA, GL_FLOAT, &g_image[0]);
     }
 
     void AllocateDefaultLut3D()
     {
-        glGenTextures(1, &g_lut3dTexID);
-        
         const unsigned num3Dentries = 3 * LUT3D_EDGE_SIZE * LUT3D_EDGE_SIZE * LUT3D_EDGE_SIZE;
         g_lut3d.resize(num3Dentries);
-        memset(&g_lut3d[0], 0, sizeof(float) * num3Dentries);
+        
+        glGenTextures(1, &g_lut3dTexID);
         
         glActiveTexture(GL_TEXTURE2);
         
@@ -115,10 +136,6 @@ namespace
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB,
-                     LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                     0, GL_RGB,GL_FLOAT, &g_lut3d[0]);
     }
 
     void Reshape()
@@ -221,18 +238,20 @@ namespace
 
     void UpdateImageTexture()
     {
-        const float step = 1.0f / (g_winWidth * g_winHeight);
-        const float inv_step = 1.0f / step;
-        const uint32_t step_round = uint32_t(inv_step);
+        static const float min = -1.0f;
+        static const float max = +2.0f;
+        static const float range = max - min;
 
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
+        const float step = range / numEntries;
+
         for(unsigned idx=0; idx<numEntries; ++idx)
         {
-            // if step = 0.01f ==> value = (uint32_t((idx * 0.01f * 100.0f) % 100) * 0.01f
-            g_image[idx] = float(uint32_t((idx * step) * inv_step) % step_round) * step;
+            g_image[idx] = min + step * float(idx);
         }
 
         glBindTexture(GL_TEXTURE_2D, g_imageTexID);
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, g_winWidth, g_winHeight, 0,
             GL_RGBA, GL_FLOAT, &g_image[0]);
     }
@@ -269,10 +288,10 @@ namespace
             processor->getGpuLut3D(&g_lut3d[0], shaderDesc);
             
             glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
-            glTexSubImage3D(GL_TEXTURE_3D, 0,
-                            0, 0, 0, 
+
+            glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB,
                             LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                            GL_RGB,GL_FLOAT, &g_lut3d[0]);
+                            0, GL_RGB,GL_FLOAT, &g_lut3d[0]);
         }
         
         // Step 3: Compute the Shader
@@ -318,13 +337,14 @@ namespace
                 (std::fabs(cppImage[4*idx+3]-gpuImage[4*idx+3]) > epsilon) )
             {
                 std::stringstream err;
-                err << "Image from orig[" << idx << "] = {" 
+                err << std::setprecision(10)
+                    << "Image[" << idx << "] form orig = {"
                     << g_image[4*idx+0] << ", " << g_image[4*idx+1] << ", "
                     << g_image[4*idx+2] << ", " << g_image[4*idx+3] << "}"
-                    << " to cpu[" << idx << "] = {"
+                    << " to cpu = {"
                     << cppImage[4*idx+0] << ", " << cppImage[4*idx+1] << ", "
                     << cppImage[4*idx+2] << ", " << cppImage[4*idx+3] << "}"
-                    << " and gpu[" << idx << "] = {" 
+                    << " and gpu = {"
                     << gpuImage[4*idx+0] << ", " << gpuImage[4*idx+1] << ", "
                     << gpuImage[4*idx+2] << ", " << gpuImage[4*idx+3] << "}";
 
