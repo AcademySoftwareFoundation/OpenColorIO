@@ -67,8 +67,6 @@ namespace
     {
         glGenTextures(1, &texId);
         
-        const unsigned num3Dentries = 3*edgelen*edgelen*edgelen;
-
         glActiveTexture(GL_TEXTURE0 + index);
         
         glBindTexture(GL_TEXTURE_3D, texId);

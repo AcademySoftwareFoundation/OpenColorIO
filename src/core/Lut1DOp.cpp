@@ -634,15 +634,15 @@ OCIO_NAMESPACE_ENTER
             return false;
         }
 
-        bool Lut1DOp::canCombineWith(const OpRcPtr & op) const
+        bool Lut1DOp::canCombineWith(const OpRcPtr & /*op*/) const
         {
             // TODO: To implement
 
             return false;
         }
         
-        void Lut1DOp::combineWith(OpRcPtrVec & ops,
-                                  const OpRcPtr & secondOp) const
+        void Lut1DOp::combineWith(OpRcPtrVec & /*ops*/,
+                                  const OpRcPtr & /*secondOp*/) const
         {
             // TODO: To implement
 
@@ -703,11 +703,11 @@ OCIO_NAMESPACE_ENTER
             // TODO: To enhance when adding half domain luts
 
             const float stepValue 
-                = GetBitDepthRange(getOutputBitDepth()) / (idealSize - 1.0f);
+                = GetBitDepthRange(getOutputBitDepth()) / (float(idealSize) - 1.0f);
 
             for(unsigned idx=0; idx<idealSize; ++idx)
             {
-                const float ftemp = idx * stepValue;
+                const float ftemp = float(idx) * stepValue;
 
                 lut->luts[0][idx] = ftemp;
                 lut->luts[1][idx] = ftemp;

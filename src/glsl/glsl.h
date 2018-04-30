@@ -46,7 +46,7 @@ typedef OCIO_SHARED_PTR<OpenGLBuilder> OpenGLBuilderRcPtr;
 
 class OpenGLBuilder
 {
-    typedef std::vector<std::pair<unsigned, std::string>> TextureIds;
+    typedef std::vector< std::pair<unsigned, std::string> > TextureIds;
 
 public:
     // Create an OpenGL builder using the GPU shader information from a specific processor
