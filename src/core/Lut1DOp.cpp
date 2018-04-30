@@ -1643,17 +1643,8 @@ OIIO_ADD_TEST(Lut1DOp, GPU)
     
     OCIO::FinalizeOpVec(ops);
     OIIO_CHECK_EQUAL(ops.size(), 1);
-    OIIO_CHECK_EQUAL(ops[0]->supportsGpuShader(), false);
-
-    std::ostringstream shader;
-    std::string pixelName = "";
-    OCIO::GpuShaderDesc shaderDesc;
-
-    OIIO_CHECK_THROW_WHAT(
-        ops[0]->writeGpuShader(shader, pixelName,shaderDesc),
-        OCIO::Exception, "does not support analytical shader generation");
+    OIIO_CHECK_EQUAL(ops[0]->supportedByLegacyShader(), false);
 }
-
 
 OIIO_ADD_TEST(Lut1DOp, IdentityLut1D)
 {
@@ -1679,6 +1670,7 @@ OIIO_ADD_TEST(Lut1DOp, IdentityLut1D)
         OIIO_CHECK_EQUAL(data[2*channels+c], 0.66666667f);
         OIIO_CHECK_EQUAL(data[3*channels+c], 1.0f);
     }
+}
 
 OIIO_ADD_TEST(Lut1DOp, padLutChannel_one_dimension)
 {
