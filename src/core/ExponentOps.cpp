@@ -212,6 +212,8 @@ OCIO_NAMESPACE_ENTER
             {
                 cacheIDStream << m_exp4[i] << " ";
             }
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
         }

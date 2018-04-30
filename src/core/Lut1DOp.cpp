@@ -558,7 +558,6 @@ OCIO_NAMESPACE_ENTER
             virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
 
         protected:
-            BitDepth getOriginalInputBitDepth() const;
             bool hasExtendedDomain() const;
             Lut1DRcPtr makeLookupDomain(BitDepth incomingBitDepth) const;
             Lut1DRcPtr compose(const Lut1DOpRcPtr & newDomain) const;
@@ -568,7 +567,6 @@ OCIO_NAMESPACE_ENTER
             const Lut1DRcPtr m_lut;
             Interpolation m_interpolation;
             TransformDirection m_direction;
-            const BitDepth m_originalBitDepth;
             
             Lut1DRcPtr m_lut_gpu_apply;
             std::string m_cacheID;
@@ -581,8 +579,7 @@ OCIO_NAMESPACE_ENTER
                             Op(),
                             m_lut(lut),
                             m_interpolation(interpolation),
-                            m_direction(direction),
-                            m_originalBitDepth(Op::getInputBitDepth())
+                            m_direction(direction)
         {
         }
         
@@ -652,11 +649,6 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }   
 
-        BitDepth Lut1DOp::getOriginalInputBitDepth() const
-        {
-            return m_originalBitDepth;
-        }
-
         bool Lut1DOp::hasExtendedDomain() const
         {
             if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
@@ -677,13 +669,19 @@ OCIO_NAMESPACE_ENTER
 
             // TODO: To enhance when adding half domain luts
 
-            return m_lut->from_min[0]<=0.0f 
-                || m_lut->from_min[1]<=0.0f 
-                || m_lut->from_min[2]<=0.0f
+            // TODO: To enhance to support not monotonic luts
 
-                || m_lut->from_max[0]>=1.0f 
-                || m_lut->from_max[1]>=1.0f 
-                || m_lut->from_max[2]>=1.0f;
+            // The input bit depth describes the scaling of the LUT entries.
+            const float normalMin = GetBitDepthMin(getInputBitDepth());
+            const float normalMax = GetBitDepthMax(getInputBitDepth());
+
+            return m_lut->from_min[0]<normalMin
+                || m_lut->from_min[1]<normalMin 
+                || m_lut->from_min[2]<normalMin
+
+                || m_lut->from_max[0]>normalMax
+                || m_lut->from_max[1]>normalMax 
+                || m_lut->from_max[2]>normalMax;
         }
 
         Lut1DRcPtr Lut1DOp::makeLookupDomain(BitDepth incomingBitDepth) const
@@ -746,7 +744,7 @@ OCIO_NAMESPACE_ENTER
                 in[4*idx + 3] = 0.0f;
             }
 
-            apply(&in[0], (long)newDomain->m_lut->luts[0].size());
+            apply(&in[0], (long)max);
 
             Lut1DRcPtr lut(Lut1D::Create());
             lut->luts[0].resize(max);
@@ -781,7 +779,7 @@ OCIO_NAMESPACE_ENTER
                 throw Exception("Only 32F bit depth is supported");
             }
 
-            BitDepth depth(getOriginalInputBitDepth());
+            BitDepth depth(getInputBitDepth());
 
             // For typical LUTs (e.g. gamma tables from ICC monitor profiles)
             // we can use a smaller FastLUT on the GPU.
@@ -797,8 +795,7 @@ OCIO_NAMESPACE_ENTER
                 depth = BIT_DEPTH_UINT12;
             }
 
-            // But if the LUT has values outside [0,1] (e.g. some OCIO cases),
-            // use a half-domain fastLUT.
+            // But if the LUT has values outside [0,1], use a half-domain fastLUT.
             if(hasExtendedDomain())
             {
                 depth = BIT_DEPTH_F16;
@@ -856,12 +853,14 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream << m_lut->getCacheID() << " ";
             cacheIDStream << InterpolationToString(m_interpolation) << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
 
             if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                // Compute a fast Lut 1D dedicated to the GPU processing
+                // Compute a fast forward Lut 1D from an inverse lut 1D
                 m_lut_gpu_apply = makeFastLut1D(true);
             }
             else
@@ -902,8 +901,7 @@ OCIO_NAMESPACE_ENTER
 
         void Lut1DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            if(getInputBitDepth()!=BIT_DEPTH_F32 
-                || getOutputBitDepth()!=BIT_DEPTH_F32)
+            if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
             {
                 throw Exception("Only 32F bit depth is supported for the GPU shader");
             }
@@ -952,7 +950,7 @@ OCIO_NAMESPACE_ENTER
                 name.c_str(), m_cacheID.c_str(), width, height, 
                 GpuShaderDesc::TEXTURE_RGB_CHANNEL, m_interpolation, &rgb[0]);
 
-            // Add the lut code to thr OCIO shader program
+            // Add the lut code to the OCIO shader program
 
             const GpuLanguage lang = shaderDesc->getLanguage();
             if( lang!=GPU_LANGUAGE_CG 
@@ -967,6 +965,7 @@ OCIO_NAMESPACE_ENTER
             if(height>1)
             {
                 // In case the 1D lut length exceeds the 1D texture maximum length
+                //  so a 2D texture is used.
 
                 const std::string decl(std::string("uniform sampler2D ") + name + ";\n");
                 shaderDesc->addToDeclareShaderCode(decl.c_str());

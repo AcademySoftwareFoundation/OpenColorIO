@@ -258,6 +258,8 @@ OCIO_NAMESPACE_ENTER
             }
             
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             
             m_cacheID = cacheIDStream.str();

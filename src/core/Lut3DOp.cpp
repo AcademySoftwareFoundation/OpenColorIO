@@ -709,6 +709,8 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream << m_lut->getCacheID() << " ";
             cacheIDStream << InterpolationToString(m_interpolation) << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
         }
