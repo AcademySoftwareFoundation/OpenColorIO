@@ -62,7 +62,7 @@ namespace
                 unsigned w, unsigned h, unsigned d,
                 OCIO_NAMESPACE::GpuShaderDesc::TextureType channel, 
                 OCIO_NAMESPACE::Interpolation interpolation, 
-                float * r, float * g, float * b)
+                float * v)
                 :   name(n)
                 ,   id(identifier)
                 ,   width(w)
@@ -70,16 +70,12 @@ namespace
                 ,   depth(d)
                 ,   type(channel)
                 ,   interp(interpolation)
-                ,   red(0x0)
-                ,   green(0x0)
-                ,   blue(0x0)
+                ,   values(0x0)
             {
                 // An unfortunate copy is mandatory to allow the creation of a GPU shader cache. 
                 // The cache needs a decoupling of the processor and shader instances forbidding
                 // shared naked pointer usage.
-                CreateArray(r, width, height, depth, type, red);
-                CreateArray(g, width, height, depth, type, green);
-                CreateArray(b, width, height, depth, type, blue);
+                CreateArray(v, width, height, depth, type, values);
             }
 
             std::string name;
@@ -90,9 +86,7 @@ namespace
             OCIO_NAMESPACE::GpuShaderDesc::TextureType type;
             OCIO_NAMESPACE::Interpolation interp;
 
-            std::vector<float> red;
-            std::vector<float> green;
-            std::vector<float> blue;
+            std::vector<float> values;
         };
 
         typedef std::vector<Texture> Textures;
@@ -104,11 +98,9 @@ namespace
         void addTexture(
             const char * name, const char * id, unsigned width, unsigned height, 
             OCIO_NAMESPACE::GpuShaderDesc::TextureType channel,
-            OCIO_NAMESPACE::Interpolation interpolation, 
-            float * red, float * green, float * blue)
+            OCIO_NAMESPACE::Interpolation interpolation, float * values)
         {
-            Texture t(
-                name, id, width, height, 1, channel, interpolation, red, green, blue);
+            Texture t(name, id, width, height, 1, channel, interpolation, values);
             textures.push_back(t);
         }
 
@@ -135,8 +127,7 @@ namespace
             interpolation = t.interp;
         }
 
-        void getTextureValues(
-            unsigned index, const float *& red, const float *& green, const float *& blue) const
+        void getTextureValues(unsigned index, const float *& values) const
         {
             if(index >= textures.size())
             {
@@ -147,9 +138,7 @@ namespace
             }
 
             const Texture & t = textures[index];
-            red   = &t.red[0];
-            green = &t.green[0];
-            blue  = &t.blue[0];
+            values   = &t.values[0];
         }
 
         void add3DTexture(
@@ -159,7 +148,7 @@ namespace
             Texture t(
                 name, id, dimension, dimension, dimension, 
                 OCIO_NAMESPACE::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
-                interpolation, values, 0x0, 0x0);
+                interpolation, values);
             textures3D.push_back(t);
         }
 
@@ -180,7 +169,7 @@ namespace
             dimension = t.width;
         }
 
-        void get3DTextureValues(unsigned index, const float *& value) const
+        void get3DTextureValues(unsigned index, const float *& values) const
         {
             if(index >= textures3D.size())
             {
@@ -191,7 +180,7 @@ namespace
             }
 
             const Texture & t = textures3D[index];
-            value = &t.red[0];
+            values = &t.values[0];
         }
 
         void createShaderText(
@@ -314,7 +303,7 @@ OCIO_NAMESPACE_ENTER
 
     void LegacyGpuShaderDesc::addTexture(
         const char *, const char *, unsigned, unsigned,
-        TextureType, Interpolation, float *, float *, float *)
+        TextureType, Interpolation, float *)
     {
         throw Exception("1D luts are not supported");
     }
@@ -326,8 +315,7 @@ OCIO_NAMESPACE_ENTER
         throw Exception("1D luts are not supported");
     }
 
-    void LegacyGpuShaderDesc::getTextureValues(
-        unsigned, const float *&, const float *&, const float *&) const
+    void LegacyGpuShaderDesc::getTextureValues(unsigned, const float *&) const
     {
         throw Exception("1D luts are not supported");
     }
@@ -364,9 +352,9 @@ OCIO_NAMESPACE_ENTER
         getImpl()->get3DTexture(index, name, id, dimension);
     }
 
-    void LegacyGpuShaderDesc::get3DTextureValues(unsigned index, const float *& value) const
+    void LegacyGpuShaderDesc::get3DTextureValues(unsigned index, const float *& values) const
     {
-        getImpl()->get3DTextureValues(index, value);
+        getImpl()->get3DTextureValues(index, values);
     }
 
     const char * LegacyGpuShaderDesc::getShaderText() const
@@ -480,10 +468,9 @@ OCIO_NAMESPACE_ENTER
 
     void GenericGpuShaderDesc::addTexture(
         const char * name, const char * id, unsigned width, unsigned height,
-        TextureType channel, Interpolation interpolation,
-        float * red, float * green, float * blue)
+        TextureType channel, Interpolation interpolation, float * values)
     {
-        getImpl()->addTexture(name, id, width, height, channel, interpolation, red, green, blue);
+        getImpl()->addTexture(name, id, width, height, channel, interpolation, values);
     }
 
     void GenericGpuShaderDesc::getTexture(
@@ -493,10 +480,9 @@ OCIO_NAMESPACE_ENTER
         getImpl()->getTexture(index, name, id, width, height, channel, interpolation);
     }
 
-    void GenericGpuShaderDesc::getTextureValues(
-        unsigned index, const float *& red, const float *& green, const float *& blue) const
+    void GenericGpuShaderDesc::getTextureValues(unsigned index, const float *& values) const
     {
-        getImpl()->getTextureValues(index, red, green, blue);
+        getImpl()->getTextureValues(index, values);
     }
 
     unsigned GenericGpuShaderDesc::getNum3DTextures() const
@@ -517,9 +503,9 @@ OCIO_NAMESPACE_ENTER
         getImpl()->get3DTexture(index, name, id, edgelen);
     }
 
-    void GenericGpuShaderDesc::get3DTextureValues(unsigned index, const float *& value) const
+    void GenericGpuShaderDesc::get3DTextureValues(unsigned index, const float *& values) const
     {
-        getImpl()->get3DTextureValues(index, value);
+        getImpl()->get3DTextureValues(index, values);
     }
 
     const char * GenericGpuShaderDesc::getShaderText() const
@@ -543,6 +529,10 @@ OCIO_NAMESPACE_ENTER
 
     void GenericGpuShaderDesc::addToHelperShaderCode(const char * shaderCode)
     {
+        if(getImpl()->helperMethods.empty())
+        {
+            getImpl()->helperMethods += "\n// Declaration of all helper methods\n\n";
+        }
         getImpl()->helperMethods += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 

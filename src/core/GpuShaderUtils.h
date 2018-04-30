@@ -40,28 +40,28 @@ OCIO_NAMESPACE_ENTER
     std::string GpuTextHalf4(const float * v4, GpuLanguage lang);
     std::string GpuTextHalf3(const float * v3, GpuLanguage lang);
     
-    void Write_mtx_x_vec(std::ostream & os,
-                         const std::string & mtx, const std::string & vec,
+    std::string Write_mtx_x_vec(const std::string & mtx, const std::string & vec,
                          GpuLanguage lang);
     
-    void Write_half4x4(std::ostream & os, const float * m44, GpuLanguage lang);
-    void Write_half4(std::ostream & os, const float * v4,  GpuLanguage lang);
-    void Write_half3(std::ostream & os, const float * v3,  GpuLanguage lang);
+    std::string Write_half4x4(const float * m44, GpuLanguage lang);
+    std::string Write_half4(const float * v4,  GpuLanguage lang);
+    std::string Write_half3(const float * v3,  GpuLanguage lang);
     
     // returns vec3
-    void Write_sampleLut3D_rgb(std::ostream & os, const std::string & variableName,
-                               const std::string & lutName, int edgeLen,
-                               GpuLanguage lang);
+    std::string Write_sampleLut3D_rgb(const std::string & variableName,
+                                      const std::string & lutName,
+                                      int edgeLen,
+                                      GpuLanguage lang);
 
     // Special case where 1D lut length exceeds the 1D texture length limitation
     // so that a 2D texture is needed.
-    void Write_sampleLut2D_rgb(std::ostream & os, const std::string & variableName,
-                               const std::string & lutName, unsigned width, unsigned height,
-                               GpuLanguage lang);
+    std::string Write_sampleLut2D_rgb(const std::string & variableName,
+                                      const std::string & lutName,
+                                      GpuLanguage lang);
 
-    void Write_sampleLut1D_rgb(std::ostream & os, const std::string & variableName,
-                               const std::string & lutName, unsigned length,
-                               GpuLanguage lang);
+    std::string Write_sampleLut1D_rgb(const std::string & variableName,
+                                      const std::string & lutName,
+                                      GpuLanguage lang);
 
 }
 OCIO_NAMESPACE_EXIT

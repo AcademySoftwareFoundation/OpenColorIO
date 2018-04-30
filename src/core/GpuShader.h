@@ -54,11 +54,10 @@ OCIO_NAMESPACE_ENTER
         // Accessors to the 3D textures built from 3D Luts
         //
         unsigned getNum3DTextures() const;
-        void add3DTexture(
-            const char * name, const char * id, unsigned edgelen, 
-            Interpolation interpolation, float * values);
-        void get3DTexture(
-            unsigned index, const char *& name, const char *& id, unsigned & edgelen) const;
+        void add3DTexture(const char * name, const char * id, unsigned edgelen, 
+                          Interpolation interpolation, float * values);
+        void get3DTexture(unsigned index, const char *& name, 
+                          const char *& id, unsigned & edgelen) const;
         void get3DTextureValues(unsigned index, const float *& value) const;
 
         // Get the complete shader text
@@ -78,10 +77,11 @@ OCIO_NAMESPACE_ENTER
         void addToFunctionFooterShaderCode(const char * shaderCode);
 
         // Method called to build the complete shader program
-        void createShaderText(
-            const char * shaderDeclarations, const char * shaderHelperMethods,
-            const char * shaderFunctionHeader, const char * shaderFunctionBody,
-            const char * shaderFunctionFooter);
+        void createShaderText(const char * shaderDeclarations,
+                              const char * shaderHelperMethods,
+                              const char * shaderFunctionHeader,
+                              const char * shaderFunctionBody,
+                              const char * shaderFunctionFooter);
 
     protected:
 
@@ -94,17 +94,14 @@ OCIO_NAMESPACE_ENTER
         // 1D & 2D textures are not used by the legacy shader builder
         //
         unsigned getNumTextures() const;
-        void addTexture(
-            const char * name, const char * id, unsigned width, unsigned height,
-            TextureType channel, Interpolation interpolation,
-            float * red, float * green, float * blue);
+        void addTexture(const char * name, const char * id, unsigned width, unsigned height,
+                        TextureType channel, Interpolation interpolation, float * values);
         // Get the texture 1D or 2D information
-        void getTexture(
-            unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
-            TextureType & channel, Interpolation & interpolation) const;
+        void getTexture(unsigned index, const char *& name, const char *& id, 
+                        unsigned & width, unsigned & height,
+                        TextureType & channel, Interpolation & interpolation) const;
         // Get the texture 1D or 2D values only
-        void getTextureValues(
-            unsigned index, const float *& red, const float *& green, const float *& blue) const;
+        void getTextureValues(unsigned index, const float *& values) const;
 
     private:
 
@@ -150,24 +147,20 @@ OCIO_NAMESPACE_ENTER
         // Accessors to the 1D & 2D textures built from 1D Luts
         //
         unsigned getNumTextures() const;
-        void addTexture(
-            const char * name, const char * id, unsigned width, unsigned height,
-            TextureType channel, Interpolation interpolation,
-            float * red, float * green, float * blue);
-        void getTexture(
-            unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
-            TextureType & channel, Interpolation & interpolation) const;
-        void getTextureValues(
-            unsigned index, const float *& red, const float *& green, const float *& blue) const;
+        void addTexture(const char * name, const char * id, unsigned width, unsigned height,
+                        TextureType channel, Interpolation interpolation, float * values);
+        void getTexture(unsigned index, const char *& name, const char *& id, 
+                        unsigned & width, unsigned & height,
+                        TextureType & channel, Interpolation & interpolation) const;
+        void getTextureValues(unsigned index, const float *& values) const;
 
         // Accessors to the 3D textures built from 3D Luts
         //
         unsigned getNum3DTextures() const;
-        void add3DTexture(
-            const char * name, const char * id, unsigned edgelen, 
-            Interpolation interpolation, float * values);
-        void get3DTexture(
-            unsigned index, const char *& name, const char *& id, unsigned & edgelen) const;
+        void add3DTexture(const char * name, const char * id, unsigned edgelen, 
+                          Interpolation interpolation, float * values);
+        void get3DTexture(unsigned index, const char *& name, 
+                          const char *& id, unsigned & edgelen) const;
         void get3DTextureValues(unsigned index, const float *& value) const;
 
         // Get the complete shader text
@@ -187,10 +180,11 @@ OCIO_NAMESPACE_ENTER
         void addToFunctionFooterShaderCode(const char * shaderCode);
 
         // Method called to build the complete shader program
-        void createShaderText(
-            const char * shaderDeclarations, const char * shaderHelperMethods,
-            const char * shaderMainHeader, const char * shaderMainBody,
-            const char * shaderMainFooter);
+        void createShaderText(const char * shaderDeclarations, 
+                              const char * shaderHelperMethods,
+                              const char * shaderMainHeader,
+                              const char * shaderMainBody,
+                              const char * shaderMainFooter);
 
     private:
 

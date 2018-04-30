@@ -61,15 +61,23 @@ namespace OCIO = OCIO_NAMESPACE;
 
 
 OCIOGPUTest::OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFunc test) 
-    : _group(testgroup), _name(testname), _function(test), _errorThreshold(1e-8f)
+    : m_group(testgroup), m_name(testname), m_function(test), m_errorThreshold(1e-8f)
 {
 }
 
-void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform, float errorThreshold)
-{ 
+void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr & transform, 
+                             OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc,
+                             float errorThreshold)
+{
+    if(m_processor.get()!=0x0)
+    {
+        throw OCIO_NAMESPACE::Exception("GPU Unit test already exists");
+    }
+
     OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
-    _processor = config->getProcessor(transform);
-    _errorThreshold = errorThreshold;
+    m_shaderDesc = shaderDesc;
+    m_processor = config->getProcessor(transform);
+    m_errorThreshold = errorThreshold;
 }
 
 
@@ -92,15 +100,10 @@ namespace
     const unsigned g_winHeight  = 256;
     const unsigned g_components = 4;
 
-    GLuint g_program = 0;
     OpenGLBuilderRcPtr g_oglBuilder;
 
     std::vector<float> g_image;
     GLuint g_imageTexID;
-
-    const int LUT3D_EDGE_SIZE = 32;
-
-    std::string g_shadercacheid;
 
     void AllocateImageTexture()
     {
@@ -120,27 +123,6 @@ namespace
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     }
 
-<<<<<<< HEAD
-    void AllocateDefaultLut3D()
-    {
-        const unsigned num3Dentries = 3 * LUT3D_EDGE_SIZE * LUT3D_EDGE_SIZE * LUT3D_EDGE_SIZE;
-        g_lut3d.resize(num3Dentries);
-        
-        glGenTextures(1, &g_lut3dTexID);
-        
-        glActiveTexture(GL_TEXTURE2);
-        
-        glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
-
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    }
-
-=======
->>>>>>> 3e1db7c... Add the new GPU API with the legacy shader desc
     void Reshape()
     {
         glViewport(0, 0, g_winWidth, g_winHeight);
@@ -186,7 +168,6 @@ namespace
     void UpdateImageTexture()
     {
         static const float min = -1.0f;
-        static const float max = +2.0f;
         static const float range = max - min;
 
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
@@ -216,52 +197,29 @@ namespace
     "}\n";
 
 
-    void UpdateOCIOGLState(OCIO::ConstProcessorRcPtr& processor)
+    void UpdateOCIOGLState(OCIO::ConstProcessorRcPtr & processor,
+                           OCIO::GpuShaderDescRcPtr & shaderDesc)
     {
         // Step 1: Create the legacy GPU shader description
-        OCIO::GpuShaderDescRcPtr shaderDesc 
-            = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
         shaderDesc->setFunctionName("OCIODisplay");
         shaderDesc->setResourcePrefix("ocio_");
 
         // Step 2: Collect the shader program information for a specific processor    
         processor->extractGpuShaderInfo(shaderDesc);
 
-<<<<<<< HEAD
-        std::string lut3dCacheID = processor->getGpuLut3DCacheID(shaderDesc);
-        if(lut3dCacheID != g_lut3dcacheid)
-        {
-            g_lut3dcacheid = lut3dCacheID;
-            processor->getGpuLut3D(&g_lut3d[0], shaderDesc);
-            
-            glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
-
-            glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB,
-                            LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                            0, GL_RGB,GL_FLOAT, &g_lut3d[0]);
-        }
-        
-        // Step 3: Compute the Shader
-=======
         // Step 3: Use the helper OpenGL builder
         g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
->>>>>>> 3e1db7c... Add the new GPU API with the legacy shader desc
 
         // Step 4: Allocate & upload all the LUTs
         g_oglBuilder->allocateAllTextures();
 
         // Step 5: Build the fragment shader program
-        const std::string shaderCacheID = shaderDesc->getCacheID();
-        if(g_program == 0 || shaderCacheID != g_shadercacheid)
-        {
-            g_shadercacheid = shaderCacheID;           
-            g_program = g_oglBuilder->buildProgram(g_fragShaderText);
-        }
+        g_oglBuilder->buildProgram(g_fragShaderText);
 
         // Step 6: Enable the fragment shader program, and all needed textures
         g_oglBuilder->useProgram();
-        glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
+        glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "tex1"), 1);
         g_oglBuilder->useAllTextures();
     }
 
@@ -380,27 +338,27 @@ int main(int, char **)
     const size_t numTests = tests.size();
     for(size_t idx=0; idx<numTests; ++idx)
     {
-        OCIOGPUTest* test = tests[idx];
-        test->setup();
-
         const unsigned curr_failures = failures;
- 
-        // Set the rendering destination to FBO
-        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-        
-        // Clear buffer
-        glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        std::cerr << "Test [" << test->group() << "] [" << test->name() << "] - ";
-
+     
         try
         {
+            OCIOGPUTest* test = tests[idx];
+            std::cerr << "Test [" << test->group() << "] [" << test->name() << "] - ";
+
+            test->setup();
+
+            // Set the rendering destination to FBO
+            glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+            
+            // Clear buffer
+            glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
             // Update the image texture
             UpdateImageTexture();
 
             // Update the GPU shader program
-            UpdateOCIOGLState(test->getProcessor());
+            UpdateOCIOGLState(test->getProcessor(), test->getShaderDesc());
 
             // Process the image texture into the rendering buffer
             Reshape();

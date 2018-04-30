@@ -46,21 +46,25 @@ class OCIOGPUTest
     public:
         OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFunc test);
 
-        inline const std::string& group() const  { return _group; }
-        inline const std::string& name() const  { return _name; }
+        inline const std::string& group() const  { return m_group; }
+        inline const std::string& name() const  { return m_name; }
 
-        void setContext(OCIO_NAMESPACE::TransformRcPtr transform, float errorThreshold);
+        void setContext(OCIO_NAMESPACE::TransformRcPtr & transform, 
+                        OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc,
+                        float errorThreshold);
 
-        inline OCIO_NAMESPACE::ConstProcessorRcPtr& getProcessor() { return _processor; }
-        inline float getErrorThreshold() { return _errorThreshold; }
+        inline OCIO_NAMESPACE::ConstProcessorRcPtr & getProcessor() { return m_processor; }
+        inline OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc() { return m_shaderDesc; }
+        inline float getErrorThreshold() { return m_errorThreshold; }
 
-        inline void setup() { _function(*this); }
+        inline void setup() { m_function(*this); }
 
     private:
-        const std::string _group, _name;
-        OCIOTestFunc _function;          
-        OCIO_NAMESPACE::ConstProcessorRcPtr _processor;
-        float _errorThreshold;
+        const std::string m_group, m_name;
+        OCIOTestFunc m_function;          
+        OCIO_NAMESPACE::ConstProcessorRcPtr m_processor;
+        OCIO_NAMESPACE::GpuShaderDescRcPtr m_shaderDesc;
+        float m_errorThreshold;
 };
 
 typedef std::vector<OCIOGPUTest*> UnitTests;

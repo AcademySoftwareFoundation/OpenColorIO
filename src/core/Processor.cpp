@@ -207,7 +207,7 @@ OCIO_NAMESPACE_ENTER
             const std::string fcnName(shaderDesc->getFunctionName());
 
             std::ostringstream code;
-            code << "\n// Declaration of the main color processing method\n\n";
+            code << "\n// Declaration of the OCIO shader function\n\n";
             
             if(lang == GPU_LANGUAGE_CG)
             {

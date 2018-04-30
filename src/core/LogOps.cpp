@@ -279,6 +279,12 @@ OCIO_NAMESPACE_ENTER
         
         void LogOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
+            if(getInputBitDepth()!=BIT_DEPTH_F32 
+                || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported for the GPU shader");
+            }
+
             const GpuLanguage lang = shaderDesc->getLanguage();
             
             if(m_direction == TRANSFORM_DIR_FORWARD)

@@ -731,6 +731,12 @@ OCIO_NAMESPACE_ENTER
         
         void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
+            if(getInputBitDepth()!=BIT_DEPTH_F32 
+                || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported for the GPU shader");
+            }
+
             std::ostringstream ss;
             ss << shaderDesc->getResourcePrefix()
                << std::string("lut3d_")
@@ -745,9 +751,10 @@ OCIO_NAMESPACE_ENTER
                 name.c_str(), m_cacheID.c_str(), m_lut->size[0], m_interpolation, &m_lut->lut[0]);
 
             std::ostringstream code;
-            code << "    " << shaderDesc->getPixelName() << ".rgb = ";
-            Write_sampleLut3D_rgb(
-                code, shaderDesc->getPixelName(), name, m_lut->size[0], shaderDesc->getLanguage());
+
+            code << "    "
+                 << Write_sampleLut3D_rgb(
+                     shaderDesc->getPixelName(), name, m_lut->size[0], shaderDesc->getLanguage());
 
             shaderDesc->addToFunctionShaderCode(code.str().c_str());
         }

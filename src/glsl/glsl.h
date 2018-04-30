@@ -63,6 +63,7 @@ public:
     // and the client shader program.
     unsigned buildProgram(const std::string & clientShaderProgram);
     void useProgram();
+    unsigned getProgramHandle();
 
 protected:
     OpenGLBuilder(const OCIO::GpuShaderDescRcPtr & gpuShader);
@@ -75,6 +76,7 @@ private:
     TextureIds m_textureIds;               // Texture ids of all needed textures
     unsigned m_fragShader;                 // Fragment shader identifier
     unsigned m_program;                    // Program identifier
+    std::string m_shaderCacheID;           // Current shader program key
 };
 
 

@@ -226,6 +226,12 @@ OCIO_NAMESPACE_ENTER
         
         void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const 
         {
+            if(getInputBitDepth()!=BIT_DEPTH_F32 
+                || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported for the GPU shader");
+            }
+
             const float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
                                    float(m_exp4[2]), float(m_exp4[3]) };
 

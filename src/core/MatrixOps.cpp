@@ -448,6 +448,12 @@ OCIO_NAMESPACE_ENTER
         
         void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
+            if(getInputBitDepth()!=BIT_DEPTH_F32 
+                || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported for the GPU shader");
+            }
+
             const GpuLanguage lang = shaderDesc->getLanguage();
             
             // TODO: This should not act upon alpha,
@@ -464,15 +470,15 @@ OCIO_NAMESPACE_ENTER
                         code << "    " << shaderDesc->getPixelName() << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44);
-                        Write_half4(code, scale, lang);
+                        code << Write_half4(scale, lang);
                         code << " * " << shaderDesc->getPixelName() << ";\n";
                     }
                     else
                     {
                         code << "    " << shaderDesc->getPixelName() << " = ";
-                        Write_mtx_x_vec(code,
-                                        GpuTextHalf4x4(m_m44, lang), shaderDesc->getPixelName(),
-                                        lang);
+                        code << Write_mtx_x_vec(GpuTextHalf4x4(m_m44, lang), 
+                                                shaderDesc->getPixelName(),
+                                                lang);
                         code << ";\n";
                     }
                 }
@@ -480,7 +486,7 @@ OCIO_NAMESPACE_ENTER
                 if(!m_offset4IsIdentity)
                 {
                     code << "    " << shaderDesc->getPixelName() << " = ";
-                    Write_half4(code, m_offset4, lang);
+                    code << Write_half4(m_offset4, lang);
                     code << " + " << shaderDesc->getPixelName() << ";\n";
                 }
             }
@@ -494,7 +500,7 @@ OCIO_NAMESPACE_ENTER
                                            -m_offset4[3] };
                     
                     code << "    " << shaderDesc->getPixelName() << " = ";
-                    Write_half4(code, offset_inv, lang);
+                    code << Write_half4(offset_inv, lang);
                     code << " + " << shaderDesc->getPixelName() << ";\n";
                 }
                 
@@ -505,15 +511,15 @@ OCIO_NAMESPACE_ENTER
                         code << "    " << shaderDesc->getPixelName() << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44_inv);
-                        Write_half4(code, scale, lang);
+                        code << Write_half4(scale, lang);
                         code << " * " << shaderDesc->getPixelName() << ";\n";
                     }
                     else
                     {
                         code << "    " << shaderDesc->getPixelName() << " = ";
-                        Write_mtx_x_vec(code,
-                                        GpuTextHalf4x4(m_m44_inv, lang), shaderDesc->getPixelName(),
-                                        lang);
+                        code << Write_mtx_x_vec(GpuTextHalf4x4(m_m44_inv, lang), 
+                                                shaderDesc->getPixelName(),
+                                                lang);
                         code << ";\n";
                     }
                 }

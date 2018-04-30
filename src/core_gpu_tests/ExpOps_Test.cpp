@@ -35,23 +35,64 @@ namespace OCIO = OCIO_NAMESPACE;
 OCIO_NAMESPACE_USING
 
 
+const int LUT3D_EDGE_SIZE = 32;
+const float g_epsilon = 1e-6f;
+
+
 // Helper method to build unit tests
-void AddExpTest(OCIOGPUTest & test, TransformDirection direction,
-    const float * value, float epsilon)
+void AddExpTest(OCIOGPUTest & test, 
+                OCIO::GpuShaderDescRcPtr & shaderDesc,
+                TransformDirection direction,
+                const float * value,
+                float epsilon)
 {
     OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
     exp->setDirection(direction);
     exp->setValue(value);
 
-    test.setContext(exp->createEditableCopy(), epsilon);
+    test.setContext(exp->createEditableCopy(), shaderDesc, epsilon);
 }
 
 
-OCIO_ADD_GPU_TEST(ExpTransform, ExpValue)
+OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_legacy_shader)
 {
     const float exp1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
-    AddExpTest(test, TRANSFORM_DIR_FORWARD, exp1, 1e-6f);
-    AddExpTest(test, TRANSFORM_DIR_INVERSE, exp1, 1e-6f);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+
+    AddExpTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, exp1, g_epsilon);
 }
 
 
+OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_generic_shader)
+{
+    const float exp1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExpTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, exp1, g_epsilon);
+}
+
+
+OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_inverse_legacy_shader)
+{
+    const float exp1[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+
+    AddExpTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, exp1, g_epsilon);
+}
+
+
+OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_inverse_generic_shader)
+{
+    const float exp1[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddExpTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, exp1, g_epsilon);
+}

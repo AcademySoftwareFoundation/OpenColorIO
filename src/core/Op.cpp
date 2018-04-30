@@ -36,6 +36,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    Op::Op()
+        :   m_inputBitDepth(BIT_DEPTH_F32)
+        ,   m_outputBitDepth(BIT_DEPTH_F32)
+    { }
+
     Op::~Op()
     { }
     
@@ -53,6 +58,16 @@ OCIO_NAMESPACE_ENTER
         throw Exception(os.str().c_str());
     }
     
+    BitDepth Op::getInputBitDepth() const 
+    {
+        return m_inputBitDepth; 
+    }
+
+    BitDepth Op::getOutputBitDepth() const 
+    {
+        return m_outputBitDepth;
+    }
+
     std::ostream& operator<< (std::ostream & os, const Op & op)
     {
         os << op.getInfo();

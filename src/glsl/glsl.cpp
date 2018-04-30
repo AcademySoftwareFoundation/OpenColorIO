@@ -92,7 +92,7 @@ namespace
 
             SetTextureParameters(GL_TEXTURE_2D, interpolation);
 
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, values);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F_ARB, width, height, 0, GL_RGB, GL_FLOAT, values);
         }
         else
         {
@@ -100,7 +100,7 @@ namespace
 
             SetTextureParameters(GL_TEXTURE_1D, interpolation);
 
-            glTexImage1D(GL_TEXTURE_1D, 0, GL_R16F, width, 0, GL_RED, GL_FLOAT, values);
+            glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB32F_ARB, width, 0, GL_RGB, GL_FLOAT, values);
         }
     }
 
@@ -120,8 +120,12 @@ namespace
             GLsizei len;
             glGetShaderInfoLog(shader, 1000, &len, log);
 
-            fprintf(stderr, "Error: problem compiling shader: %s\n", log);
-            return 0;
+            std::string err("OCIO Shader program compliation failed: ");
+            err += log;
+            err += "\n";
+            err += text;
+
+            throw OCIO::Exception(err.c_str());
         }
         
         return shader;
@@ -134,7 +138,9 @@ namespace
         GLuint program = glCreateProgram();
         
         if (fragShader)
+        {
             glAttachShader(program, fragShader);
+        }
         
         glLinkProgram(program);
         
@@ -146,8 +152,9 @@ namespace
             GLsizei len;
             glGetProgramInfoLog(program, 1000, &len, log);
 
-            fprintf(stderr, "Shader link error:\n%s\n", log);
-            return 0;
+            std::string err("Shader link error:\n");
+            err += log;
+            throw OCIO::Exception(err.c_str());
         }
         
         return program;
@@ -232,33 +239,18 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         OCIO::Interpolation interpolation = OCIO::INTERP_LINEAR;
         m_shaderDesc->getTexture(idx, name, uid, width, height, channel, interpolation);
 
-        const float* red   = 0x0;
-        const float* green = 0x0;
-        const float* blue  = 0x0;
-        m_shaderDesc->getTextureValues(idx, red, green, blue);
+        const float * values   = 0x0;
+        m_shaderDesc->getTextureValues(idx, values);
 
         // 2. Allocate the 1D lut (a 2D texture is needed to hold large luts)
 
         unsigned texId = 0;
-        AllocateTexture2D(currIndex, texId, width, height, interpolation, red);
+        AllocateTexture2D(currIndex, texId, width, height, interpolation, values);
 
         // 3. Keep the texture id & name for the later enabling
 
         m_textureIds.push_back(std::make_pair(texId, name));
         currIndex++;
-
-        // 4. Repeat for the green and blue if needed
-
-        if(channel==OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL)
-        {
-            AllocateTexture2D(currIndex, texId, width, height, interpolation, green);
-            m_textureIds.push_back(std::make_pair(texId, name));
-            currIndex++;
-
-            AllocateTexture2D(currIndex, texId, width, height, interpolation, blue);
-            m_textureIds.push_back(std::make_pair(texId, name));
-            currIndex++;
-        }
     }
 }
 
@@ -293,10 +285,23 @@ unsigned OpenGLBuilder::buildProgram(const std::string & clientShaderProgram)
     os << m_shaderDesc->getShaderText() << "\n";
     os << clientShaderProgram;
 
-    if(m_fragShader) glDeleteShader(m_fragShader);
-    m_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
-    if(m_program) glDeleteProgram(m_program);
-    m_program = LinkShaders(m_fragShader);   
+    try
+    {
+        const std::string shaderCacheID = m_shaderDesc->getCacheID();
+        if(shaderCacheID!=m_shaderCacheID)
+        {
+            if(m_fragShader) glDeleteShader(m_fragShader);
+            m_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
+            if(m_program) glDeleteProgram(m_program);
+            m_program = LinkShaders(m_fragShader);
+
+            m_shaderCacheID = shaderCacheID;
+        }
+    }
+    catch(...)
+    {
+        throw OCIO::Exception(os.str().c_str());
+    }
 
     return m_program;
 }
@@ -305,3 +310,9 @@ void OpenGLBuilder::useProgram()
 {
     glUseProgram(m_program);
 }
+
+unsigned OpenGLBuilder::getProgramHandle()
+{
+    return m_program;
+}
+

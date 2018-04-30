@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MathUtils.h"
 #include "SSE.h"
 #include "GpuShaderUtils.h"
+#include "BitDepthUtils.h"
 
 #include <algorithm>
 #include <cmath>
@@ -442,11 +443,94 @@ OCIO_NAMESPACE_ENTER
             }
         }
     
-    
+        void PadLutChannel(unsigned width,
+                           unsigned height,
+                           const std::vector<float> & channel,
+                           std::vector<float> & chn)
+        {
+            const unsigned currWidth = (unsigned)channel.size();
+
+            if (height>1)
+            {
+                // Fill the texture values
+                //
+                // Make the last texel of a given row the same as the first texel 
+                // of its next row.  This will preserve the continuity along row breaks 
+                // as long as the lookup position used by the sampler is based on (width-1) 
+                // to account for the 1 texel padding at the end of each row.
+
+                const unsigned step = width-1;
+                for(unsigned i=0 ; i<currWidth-step ; i+=step)
+                {
+                    chn.insert(chn.end(), &channel[i], &channel[i+step]);
+                    chn.push_back(channel[i+step]);
+                }
+
+                // If there are still texels to fill, add them to the texture data
+                const unsigned leftover = currWidth%step;
+                if (leftover > 0)
+                {
+                    chn.insert(chn.end(), &channel[currWidth-leftover], &channel[currWidth-1]);
+                    chn.push_back(channel[currWidth-1]);
+                }
+
+                // Pad the remaining of the texture with the last LUT entry.
+                chn.insert(chn.end(), width*height-chn.size(), channel[currWidth-1]);
+            }
+            else
+            {
+                chn = channel;
+
+                // Pad the remaining of the texture with the last LUT entry.
+                chn.insert(chn.end(), width*height-channel.size(), channel[currWidth-1]);
+            }
+        }
+
+        unsigned GetLutIdealSize(BitDepth incomingBitDepth)
+        {
+            // Returns the number of entries in order to make an identity LUT.
+
+            // For half domain always return 65536, since that is expected.
+            // However note that if the incomingBitDepth is, e.g. 10i, 
+            // this might not be the number of entries required for a look-up.
+
+            // For 32f, a look-up is impractical so in that case return 64k.
+
+            switch(incomingBitDepth)
+            {
+                case BIT_DEPTH_UINT8:
+                case BIT_DEPTH_UINT10:
+                case BIT_DEPTH_UINT12:
+                case BIT_DEPTH_UINT16:
+                    return (unsigned)(GetBitDepthRange(incomingBitDepth) + 1);
+
+                case BIT_DEPTH_UNKNOWN:
+                case BIT_DEPTH_UINT14:
+                case BIT_DEPTH_UINT32:
+                default:
+                {
+                    std::string err("Bit depth is not supported: ");
+                    err += BitDepthToString(incomingBitDepth);
+                    throw Exception(err.c_str());
+                    break;
+                }
+
+                case BIT_DEPTH_F16:
+                case BIT_DEPTH_F32:
+                    break;
+            }
+
+            return 65536;
+        }
+
     }
     
     namespace
     {
+        class Lut1DOp;
+        typedef OCIO_SHARED_PTR<Lut1DOp> Lut1DOpRcPtr;
+        
+
         class Lut1DOp : public Op
         {
         public:
@@ -469,16 +553,26 @@ OCIO_NAMESPACE_ENTER
             
             virtual bool supportedByLegacyShader() const { return false; }
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
+            virtual bool canCombineWith(const OpRcPtr & op) const;
+            virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+
+        protected:
+            BitDepth getOriginalInputBitDepth() const;
+            bool hasExtendedDomain() const;
+            Lut1DRcPtr makeLookupDomain(BitDepth incomingBitDepth) const;
+            Lut1DRcPtr compose(const Lut1DOpRcPtr & newDomain) const;
+            Lut1DRcPtr makeFastLut1D(bool forGPU) const;
             
         private:
             const Lut1DRcPtr m_lut;
             Interpolation m_interpolation;
             TransformDirection m_direction;
+            const BitDepth m_originalBitDepth;
             
+            Lut1DRcPtr m_lut_gpu_apply;
             std::string m_cacheID;
         };
-        
-        typedef OCIO_SHARED_PTR<Lut1DOp> Lut1DOpRcPtr;
         
         
         Lut1DOp::Lut1DOp(const Lut1DRcPtr & lut,
@@ -487,7 +581,8 @@ OCIO_NAMESPACE_ENTER
                             Op(),
                             m_lut(lut),
                             m_interpolation(interpolation),
-                            m_direction(direction)
+                            m_direction(direction),
+                            m_originalBitDepth(Op::getInputBitDepth())
         {
         }
         
@@ -538,7 +633,191 @@ OCIO_NAMESPACE_ENTER
         {
             return false;
         }
+
+        bool Lut1DOp::canCombineWith(const OpRcPtr & op) const
+        {
+            // TODO: To implement
+
+            return false;
+        }
         
+        void Lut1DOp::combineWith(OpRcPtrVec & ops,
+                                  const OpRcPtr & secondOp) const
+        {
+            // TODO: To implement
+
+            std::ostringstream os;
+            os << "Op: " << getInfo() << " cannot be combined. ";
+            os << "A type-specific combining function is not defined.";
+            throw Exception(os.str().c_str());
+        }   
+
+        BitDepth Lut1DOp::getOriginalInputBitDepth() const
+        {
+            return m_originalBitDepth;
+        }
+
+        bool Lut1DOp::hasExtendedDomain() const
+        {
+            if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported");
+            }
+
+            // The forward LUT is allowed to have entries outside the outDepth 
+            // (e.g. a 10i LUT is allowed to have values on [-20,1050] if it wants).
+            // This is called an extended range LUT and helps maximize accuracy 
+            // by allowing clamping to happen (if necessary) after the interpolation.
+            // The implication is that the inverse LUT needs to evaluate over 
+            // an extended domain.  Since this potentially requires a slower rendering 
+            // method for the Fast style, this method allows the renderers 
+            // to determine if this is necessary.
+
+            // TODO: To enhance when adding bit depth
+
+            // TODO: To enhance when adding half domain luts
+
+            return m_lut->from_min[0]<=0.0f 
+                || m_lut->from_min[1]<=0.0f 
+                || m_lut->from_min[2]<=0.0f
+
+                || m_lut->from_max[0]>=1.0f 
+                || m_lut->from_max[1]>=1.0f 
+                || m_lut->from_max[2]>=1.0f;
+        }
+
+        Lut1DRcPtr Lut1DOp::makeLookupDomain(BitDepth incomingBitDepth) const
+        {
+            if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported");
+            }
+
+            const unsigned idealSize = GetLutIdealSize(incomingBitDepth);
+
+            Lut1DRcPtr lut(Lut1D::Create());
+            lut->luts[0].resize(idealSize);
+            lut->luts[1].resize(idealSize);
+            lut->luts[2].resize(idealSize);
+
+            // TODO: To enhance when adding half domain luts
+
+            const float stepValue 
+                = GetBitDepthRange(getOutputBitDepth()) / (idealSize - 1.0f);
+
+            for(unsigned idx=0; idx<idealSize; ++idx)
+            {
+                const float ftemp = idx * stepValue;
+
+                lut->luts[0][idx] = ftemp;
+                lut->luts[1][idx] = ftemp;
+                lut->luts[2][idx] = ftemp;
+            }
+
+            return lut;
+        }
+
+        Lut1DRcPtr Lut1DOp::compose(const Lut1DOpRcPtr & newDomain) const
+        {
+            if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported");
+            }
+
+            if(newDomain->getOutputBitDepth()!=getInputBitDepth())
+            {
+                std::string err("Bit depth mismatch: ");
+                err += BitDepthToString(newDomain->getOutputBitDepth());
+                err += " vs. ";
+                err += BitDepthToString(getInputBitDepth());
+
+                throw Exception(err.c_str());
+            }
+
+            const size_t max = newDomain->m_lut->luts[0].size();
+
+            std::vector<float> in;
+            in.resize(max*4);
+            for(size_t idx=0; idx<max; ++idx)
+            {
+                in[4*idx + 0] = newDomain->m_lut->luts[0][idx];
+                in[4*idx + 1] = newDomain->m_lut->luts[1][idx];
+                in[4*idx + 2] = newDomain->m_lut->luts[2][idx];
+                in[4*idx + 3] = 0.0f;
+            }
+
+            apply(&in[0], (long)newDomain->m_lut->luts[0].size());
+
+            Lut1DRcPtr lut(Lut1D::Create());
+            lut->luts[0].resize(max);
+            lut->luts[1].resize(max);
+            lut->luts[2].resize(max);
+
+            for(size_t idx=0; idx<max; ++idx)
+            {
+                lut->luts[0][idx] = in[4*idx + 0];
+                lut->luts[1][idx] = in[4*idx + 1];
+                lut->luts[2][idx] = in[4*idx + 2];
+            }
+
+            return lut;
+        }   
+
+        // The domain to use for the FastLut is a challenging problem since we don't
+        // know the input and output color space of the LUT.  In particular, we don't
+        // know if a half or normal domain would be better.  For now, we use a
+        // heuristic which is based on the original input bit-depth of the inverse LUT
+        // (the output bit-depth of the forward LUT).  (We preserve the original depth
+        // as a member since typically by the time this routine is called, the depth
+        // has been reset to 32f.)  However, there are situations where the origDepth
+        // is not reliable (e.g. a user creates a transform in Custom mode and exports it).
+        // Ultimately, the goal is to replace this with an automated algorithm that
+        // computes the best domain based on analysis of the curvature of the LUT.
+        //
+        Lut1DRcPtr Lut1DOp::makeFastLut1D(bool forGPU) const
+        {
+            if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported");
+            }
+
+            BitDepth depth(getOriginalInputBitDepth());
+
+            // For typical LUTs (e.g. gamma tables from ICC monitor profiles)
+            // we can use a smaller FastLUT on the GPU.
+            // Currently allowing 16f to be subsampled for GPU but using 16i as a way
+            // to indicate not to subsample certain LUTs (e.g. float-conversion LUTs).
+            if(forGPU && depth != BIT_DEPTH_UINT16)
+            {
+                // GPU will always interpolate rather than look-up.
+                // Use a smaller table for better efficiency.
+
+                // TODO: Investigate performance/quality trade-off.
+
+                depth = BIT_DEPTH_UINT12;
+            }
+
+            // But if the LUT has values outside [0,1] (e.g. some OCIO cases),
+            // use a half-domain fastLUT.
+            if(hasExtendedDomain())
+            {
+                depth = BIT_DEPTH_F16;
+            }
+
+            // Make a domain for the composed Lut1D.
+            Lut1DOpRcPtr newDomainLut(new Lut1DOp(makeLookupDomain(depth), 
+                                                  m_interpolation, 
+                                                  TRANSFORM_DIR_FORWARD));
+
+            // Regardless of what depth is used to build the domain, set the in & out 
+            // to the actual depth so that scaling is done correctly.
+            newDomainLut->setInputBitDepth(getInputBitDepth());
+            newDomainLut->setOutputBitDepth(getInputBitDepth());
+
+            // Compose the newDomain Lut with the inverse Lut.
+            return compose(newDomainLut);
+        }
+
         void Lut1DOp::finalize()
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
@@ -579,6 +858,16 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
+
+            if(m_direction == TRANSFORM_DIR_INVERSE)
+            {
+                // Compute a fast Lut 1D dedicated to the GPU processing
+                m_lut_gpu_apply = makeFastLut1D(true);
+            }
+            else
+            {
+                m_lut_gpu_apply = m_lut;
+            }
         }
         
         void Lut1DOp::apply(float* rgbaBuffer, long numPixels) const
@@ -613,43 +902,133 @@ OCIO_NAMESPACE_ENTER
 
         void Lut1DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            if(m_direction == TRANSFORM_DIR_FORWARD)
+            if(getInputBitDepth()!=BIT_DEPTH_F32 
+                || getOutputBitDepth()!=BIT_DEPTH_F32)
             {
-                const unsigned length = unsigned(m_lut->luts[0].size());
-                const unsigned width  = 4096; // TODO: Find the 1D texture maximum length
-                const unsigned height = (length / 4096) + 1;
+                throw Exception("Only 32F bit depth is supported for the GPU shader");
+            }
 
-                std::ostringstream ss;
-                ss << shaderDesc->getResourcePrefix()
-                   << std::string("lut1d_")
-                   << shaderDesc->getNumTextures();
+            // TODO: Find the 1D texture maximum length
+            static const unsigned defaultMaxWidth = 4096;
 
-                const std::string name(ss.str());
+            const unsigned length = unsigned(m_lut_gpu_apply->luts[0].size());
+            const unsigned width  = std::min(length, defaultMaxWidth);
+            const unsigned height = (length / defaultMaxWidth) + 1;
 
-                shaderDesc->addTexture(
-                    name.c_str(), m_cacheID.c_str(), width, height, GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
-                    m_interpolation, &m_lut->luts[0][0], &m_lut->luts[1][0], &m_lut->luts[2][0]);
+            // Pad the lut to correctly benefit from the texture linear
+            // interpolation between the texels.
 
-                std::ostringstream code;
-                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
-                if(height>0)
+            std::vector<float> red;
+            PadLutChannel(width, height, m_lut_gpu_apply->luts[0], red);
+
+            std::vector<float> grn;
+            PadLutChannel(width, height, m_lut_gpu_apply->luts[1], grn);
+
+            std::vector<float> blu;
+            PadLutChannel(width, height, m_lut_gpu_apply->luts[2], blu);
+
+            const unsigned maxValues = width * height;
+
+            std::vector<float> rgb;
+            rgb.resize(maxValues * 3);
+
+            for(unsigned idx=0; idx<maxValues; ++idx)
+            {
+                rgb[3*idx+0] = red[idx];
+                rgb[3*idx+1] = grn[idx];
+                rgb[3*idx+2] = blu[idx];
+            }
+
+            // Register the RGB lut
+
+            std::ostringstream ss;
+            ss << shaderDesc->getResourcePrefix()
+               << std::string("lut1d_")
+               << shaderDesc->getNumTextures();
+
+            const std::string name(ss.str());
+
+            shaderDesc->addTexture(
+                name.c_str(), m_cacheID.c_str(), width, height, 
+                GpuShaderDesc::TEXTURE_RGB_CHANNEL, m_interpolation, &rgb[0]);
+
+            // Add the lut code to thr OCIO shader program
+
+            const GpuLanguage lang = shaderDesc->getLanguage();
+            if( lang!=GPU_LANGUAGE_CG 
+                && lang!=GPU_LANGUAGE_GLSL_1_0 
+                && lang!=GPU_LANGUAGE_GLSL_1_3 )
+            {
+                throw Exception("Unsupported shader language.");
+            }
+
+            std::ostringstream code;
+
+            if(height>1)
+            {
+                // In case the 1D lut length exceeds the 1D texture maximum length
+
+                const std::string decl(std::string("uniform sampler2D ") + name + ";\n");
+                shaderDesc->addToDeclareShaderCode(decl.c_str());
+
+                const std::string computerPositionFunc(name + "_ComputePos");
+
+                if(lang == GPU_LANGUAGE_CG)
                 {
-                    // In case the 1D lut length exceeds the 1D texture maximum length
-                    Write_sampleLut2D_rgb(
-                        code, shaderDesc->getPixelName(), name, width, height, shaderDesc->getLanguage());
+                    code << "    half3 coords = " << computerPositionFunc << "(float f);\n";
                 }
                 else
                 {
-                    Write_sampleLut1D_rgb(
-                        code, shaderDesc->getPixelName(), name, width, shaderDesc->getLanguage());
+                    // The computation of the texture coordinates is more complexe
+                    // because of the texture value padding.  Refer to padLutChannel()
+
+                    std::ostringstream func;
+                    func << "vec2 " << computerPositionFunc << "(float f)\n";
+                    func << "{\n";
+                               // Need min() to protect against f > 1 causing a bogus x value.
+                    func << "    float dep = min(f, 1.0) * " << float(length-1) << ";\n";
+
+                    func << "    vec2 retVal;\n";
+                    func << "    retVal.y = float(int(dep / " << float(width-1) << "));\n";
+                    func << "    retVal.x = dep - retVal.y * " << float(width-1) << ";\n";
+
+                    func << "    retVal.x = (retVal.x + 0.5) / " << float(width) << ";\n";
+                    func << "    retVal.y = (retVal.y + 0.5) / " << float(height) << ";\n";
+                    func << "    return retVal;\n";
+                    func << "}\n";
+
+                    shaderDesc->addToHelperShaderCode(func.str().c_str());
                 }
 
-                shaderDesc->addToFunctionShaderCode(code.str().c_str());
+                code << Write_sampleLut2D_rgb(
+                    shaderDesc->getPixelName(), name, shaderDesc->getLanguage());
             }
             else
             {
-                throw Exception("Not yet implemented");
+                const std::string decl(std::string("uniform sampler1D ") + name + ";\n");
+                shaderDesc->addToDeclareShaderCode(decl.c_str());
+
+                if(lang == GPU_LANGUAGE_CG)
+                {
+                    code << "    half3 coords = (" << shaderDesc->getPixelName() 
+                         << ".rgb * half3(" 
+                         << (length-1) << "," << (length-1) << "," << (length-1) 
+                         << ") + " << "half3(0.5, 0.5, 0.5) ) / half3(" 
+                         << length << "," << length << "," << length << ");\n";
+                }
+                else
+                {
+                    code << "    vec3 coords = (" << shaderDesc->getPixelName() 
+                         << ".rgb * vec3(" 
+                         << (length-1) << "," << (length-1) << "," << (length-1) 
+                         << ") + " << "vec3(0.5, 0.5, 0.5) ) / vec3(" 
+                         << length << "," << length << "," << length << ");\n";
+                }
+
+                code << Write_sampleLut1D_rgb(shaderDesc->getPixelName(), name, lang);
             }
+
+            shaderDesc->addToFunctionShaderCode(code.str().c_str());
         }
     }
     
@@ -1301,6 +1680,80 @@ OIIO_ADD_TEST(Lut1DOp, IdentityLut1D)
         OIIO_CHECK_EQUAL(data[3*channels+c], 1.0f);
     }
 
+OIIO_ADD_TEST(Lut1DOp, padLutChannel_one_dimension)
+{
+    const unsigned width  = 15;
+
+    // Create a channel multi row and smaller than the expected texture size
+
+    std::vector<float> channel;
+    channel.resize(width - 5);
+
+    // Fill the channel
+
+    for(unsigned idx=0; idx<channel.size(); ++idx)
+    {
+        channel[idx] = float(idx);
+    }
+
+    // Pad the texture values
+
+    std::vector<float> chn;
+    OIIO_CHECK_NO_THROW( OCIO::PadLutChannel(width, 1, channel, chn) );
+
+    // Check the values
+
+    const float res[15] = { 0.0f,  1.0f,  2.0f,  3.0f,  4.0f,
+                            5.0f,  6.0f,  7.0f,  8.0f,  9.0f,
+                            9.0f,  9.0f,  9.0f,  9.0f,  9.0f };
+    OIIO_CHECK_EQUAL(chn.size(), 15);
+    for(unsigned idx=0; idx<15; ++idx)
+    {
+        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+    }
+}
+
+OIIO_ADD_TEST(Lut1DOp, padLutChannel_two_dimensions)
+{
+    const unsigned width  = 5;
+    const unsigned height = 3;
+
+    // Create a channel multi row and smaller than the expected texture size
+
+    std::vector<float> channel;
+    channel.resize(width * (height-1) + 1);
+
+    // Fill the channel
+
+    for(unsigned idx=0; idx<channel.size(); ++idx)
+    {
+        channel[idx] = float(idx);
+    }
+
+    // Pad the texture values
+
+    std::vector<float> chn;
+    OIIO_CHECK_NO_THROW( OCIO::PadLutChannel(width, height, channel, chn) );
+
+    // Check the values
+
+    const float res[15] = { 0.0f,  1.0f,  2.0f,  3.0f,  4.0f,
+                            4.0f,  5.0f,  6.0f,  7.0f,  8.0f,
+                            8.0f,  9.0f, 10.0f, 10.0f, 10.0f };
+    OIIO_CHECK_EQUAL(chn.size(), 15);
+    for(unsigned idx=0; idx<15; ++idx)
+    {
+        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+    }
+}
+
+OIIO_ADD_TEST(Lut1DOp, GetLutIdealSize)
+{
+    OIIO_CHECK_EQUAL(OCIO::GetLutIdealSize(OCIO::BIT_DEPTH_UINT8), 256);
+    OIIO_CHECK_EQUAL(OCIO::GetLutIdealSize(OCIO::BIT_DEPTH_UINT16), 65536);
+
+    OIIO_CHECK_EQUAL(OCIO::GetLutIdealSize(OCIO::BIT_DEPTH_F16), 65536);
+    OIIO_CHECK_EQUAL(OCIO::GetLutIdealSize(OCIO::BIT_DEPTH_F32), 65536);
 }
 
 #endif // OCIO_UNIT_TEST

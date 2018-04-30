@@ -40,8 +40,9 @@ OCIO_NAMESPACE_ENTER
     {
         // This method converts a float to a string adding a dot when
         // the float does not have a fractional part. Hence, it ensures
-        // that the shader program understand that number as a float 
-        // and not as an integer.
+        // that the shader understand that number as a float and not as an integer.
+        //
+        // Always add the float indicator even if the issue only appears on MAC platform.
         //
         std::string GetFloatString(float v)
         {
@@ -49,14 +50,16 @@ OCIO_NAMESPACE_ENTER
             const float fracpart = modff(v, &integerpart);
 
             std::ostringstream oss;
-            oss.precision(8);
+            oss.precision(16);
             oss << v << ((fracpart==0.0f) ? "." : "");
             return oss.str();
         }
     }
 
-    void Write_half4x4(std::ostream & os, const float * m44, GpuLanguage lang)
+    std::string Write_half4x4(const float * m44, GpuLanguage lang)
     {
+        std::ostringstream os;
+
         if(lang == GPU_LANGUAGE_CG)
         {
             os << "half4x4(";
@@ -81,10 +84,14 @@ OCIO_NAMESPACE_ENTER
         {
             throw Exception("Unsupported shader language.");
         }
+
+        return os.str();
     }
     
-    void Write_half4(std::ostream & os, const float * v4,  GpuLanguage lang)
+    std::string Write_half4(const float * v4,  GpuLanguage lang)
     {
+        std::ostringstream os;
+
         if(lang == GPU_LANGUAGE_CG)
         {
             os << "half4(";
@@ -109,10 +116,14 @@ OCIO_NAMESPACE_ENTER
         {
             throw Exception("Unsupported shader language.");
         }
+
+        return os.str();
     }
     
-    void Write_half3(std::ostream & os, const float * v3,  GpuLanguage lang)
+    std::string Write_half3(const float * v3,  GpuLanguage lang)
     {
+        std::ostringstream os;
+
         if(lang == GPU_LANGUAGE_CG)
         {
             os << "half3(";
@@ -137,6 +148,8 @@ OCIO_NAMESPACE_ENTER
         {
             throw Exception("Unsupported shader language.");
         }
+
+        return os.str();
     }
     
     
@@ -144,30 +157,26 @@ OCIO_NAMESPACE_ENTER
     
     std::string GpuTextHalf4x4(const float * m44, GpuLanguage lang)
     {
-        std::ostringstream os;
-        Write_half4x4(os, m44, lang);
-        return os.str();
+        return Write_half4x4(m44, lang);
     }
     
     std::string GpuTextHalf4(const float * v4, GpuLanguage lang)
     {
-        std::ostringstream os;
-        Write_half4(os, v4, lang);
-        return os.str();
+        return Write_half4(v4, lang);
     }
     
     std::string GpuTextHalf3(const float * v3, GpuLanguage lang)
     {
-        std::ostringstream os;
-        Write_half3(os, v3, lang);
-        return os.str();
+        return Write_half3(v3, lang);
     }
     
     // Note that Cg and GLSL have opposite ordering for vec/mtx multiplication
-    void Write_mtx_x_vec(std::ostream & os,
-                         const std::string & mtx, const std::string & vec,
-                         GpuLanguage lang)
+    std::string Write_mtx_x_vec(const std::string & mtx, 
+                                const std::string & vec,
+                                GpuLanguage lang)
     {
+        std::ostringstream os;
+
         if(lang == GPU_LANGUAGE_CG)
         {
             os << "mul( " << mtx << ", " << vec << ")";
@@ -180,24 +189,31 @@ OCIO_NAMESPACE_ENTER
         {
             throw Exception("Unsupported shader language.");
         }
+
+        return os.str();
     }
     
     
-    void Write_sampleLut3D_rgb(std::ostream & os, const std::string& variableName,
-                               const std::string& lutName, int edgeLen,
-                               GpuLanguage lang)
+    std::string Write_sampleLut3D_rgb(const std::string & variableName,
+                                      const std::string & lutName, 
+                                      int edgeLen,
+                                      GpuLanguage lang)
     {
-        float m = ((float) edgeLen-1.0f) / (float) edgeLen;
-        float b = 1.0f / (2.0f * (float) edgeLen);
+        std::ostringstream os;
+
+        const float m = ((float) edgeLen-1.0f) / (float) edgeLen;
+        const float b = 1.0f / (2.0f * (float) edgeLen);
         
         if(lang == GPU_LANGUAGE_CG)
         {
+            os << variableName << ".rgb = ";
             os << "tex3D(";
             os << lutName << ", ";
             os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
         }
         else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
         {
+            os << variableName << ".rgb = ";
             os << "texture3D(";
             os << lutName << ", ";
             os << m << " * " << variableName << ".rgb + " << b << ").rgb;" << std::endl;
@@ -206,22 +222,104 @@ OCIO_NAMESPACE_ENTER
         {
             throw Exception("Unsupported shader language.");
         }
+
+        return os.str();
     }
 
-    void Write_sampleLut2D_rgb(std::ostream &, const std::string &,
-                               const std::string &, unsigned, unsigned,
-                               GpuLanguage)
+    std::string Write_sampleLut2D_rgb(const std::string & variableName,
+                                      const std::string & lutName,
+                                      GpuLanguage lang)
     {
-        // TODO: To add when implementing the Generic Shader Desc
-        throw Exception("Not yet implemented");
+        std::ostringstream os;
+
+        if(lang == GPU_LANGUAGE_CG)
+        {
+            os << "    " 
+               << variableName << ".r = "
+               << "tex2D(" << lutName << ", " 
+               << lutName << "_ComputePos(" << variableName << ".r)).r;" << std::endl;
+
+            os << "    " 
+               << variableName << ".g = "
+               << "tex2D(" << lutName << ", " 
+               << lutName << "_ComputePos(" << variableName << ".g)).g;" << std::endl;
+
+            os << "    " 
+               << variableName << ".b = "
+               << "tex2D(" << lutName << ", " 
+               << lutName << "_ComputePos(" << variableName << ".b)).b;" << std::endl;
+        }
+        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
+        {
+            os << "    " 
+               << variableName << ".r = "
+               << "texture2D(" << lutName << ", " 
+               << lutName << "_ComputePos(" << variableName << ".r)).r;" << std::endl;
+
+            os << "    " 
+               << variableName << ".g = "
+               << "texture2D(" << lutName << ", " 
+               << lutName << "_ComputePos(" << variableName << ".g)).g;" << std::endl;
+
+            os << "    " 
+               << variableName << ".b = "
+               << "texture2D(" << lutName << ", " 
+               << lutName << "_ComputePos(" << variableName << ".b)).b;" << std::endl;
+        }
+        else
+        {
+            throw Exception("Unsupported shader language.");
+        }
+
+        return os.str();
     }
 
-    void Write_sampleLut1D_rgb(std::ostream &, const std::string &,
-                               const std::string &, unsigned,
-                               GpuLanguage)
+    std::string Write_sampleLut1D_rgb(const std::string & variableName,
+                                      const std::string & lutName,
+                                      GpuLanguage lang)
     {
-        // TODO: To add when implementing the Generic Shader Desc
-        throw Exception("Not yet implemented");
+        std::ostringstream os;
+
+        if(lang == GPU_LANGUAGE_CG)
+        {
+            os << "    " 
+               << variableName << ".r = ";
+            os << "tex1D(";
+            os << lutName << ", coords.r).r;" << std::endl;
+
+            os << "    " 
+               << variableName << ".g = ";
+            os << "tex1D(";
+            os << lutName << ", coords.g).g;" << std::endl;
+
+            os << "    " 
+               << variableName << ".b = ";
+            os << "tex1D(";
+            os << lutName << ", coords.b).b;" << std::endl;
+        }
+        else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
+        {
+            os << "    " 
+               << variableName << ".r = ";
+            os << "texture1D(";
+            os << lutName << ", coords.r).r;" << std::endl;
+
+            os << "    " 
+               << variableName << ".g = ";
+            os << "texture1D(";
+            os << lutName << ", coords.g).g;" << std::endl;
+
+            os << "    " 
+               << variableName << ".b = ";
+            os << "texture1D(";
+            os << lutName << ", coords.b).b;" << std::endl;
+        }
+        else
+        {
+            throw Exception("Unsupported shader language.");
+        }
+
+        return os.str();
     }
 }
 OCIO_NAMESPACE_EXIT

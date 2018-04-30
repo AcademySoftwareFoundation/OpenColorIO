@@ -123,8 +123,21 @@ OCIO_NAMESPACE_ENTER
             // Create & add the gpu shader information needed by the op
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const = 0;
 
+            virtual BitDepth getInputBitDepth() const;
+            virtual BitDepth getOutputBitDepth() const;
+
+            // To be implemented by each op to natively support 
+            // the input and output bit depths.  For now, all ops are 32f by default.
+            virtual void setInputBitDepth(BitDepth /*bitdepth*/) {}
+            virtual void setOutputBitDepth(BitDepth /*bitdepth*/) {}
+
+        protected:
+            Op();
+
         private:
             Op& operator= (const Op &);
+            BitDepth m_inputBitDepth;
+            BitDepth m_outputBitDepth;
     };
     
     std::ostream& operator<< (std::ostream&, const Op&);

@@ -70,14 +70,12 @@ GLint g_win = 0;
 int g_winWidth = 0;
 int g_winHeight = 0;
 
-GLuint g_program = 0;
 OpenGLBuilderRcPtr g_oglBuilder;
 
 GLuint g_imageTexID;
 float g_imageAspect;
 
 const int LUT3D_EDGE_SIZE = 32;
-std::string g_shadercacheid;
 
 std::string g_inputColorSpace;
 std::string g_display;
@@ -508,29 +506,12 @@ void UpdateOCIOGLState()
     g_oglBuilder->allocateAllTextures();
     
     // Step 5: Build the fragment shader program
-    const std::string shaderCacheID = shaderDesc->getCacheID();
-    if(g_program == 0 || shaderCacheID != g_shadercacheid)
-    {
-        //std::cerr << "Computing Shader " << g_shadercacheid << std::endl;
-        
-        g_shadercacheid = shaderCacheID;
-        
-        if(g_gpu)
-        {
-            std::ostringstream os;
-            os << shaderDesc->getShaderText() << "\n";
-            os << g_fragShaderText;
-
-            std::cout << os.str() << std::endl;
-        }
-
-        g_program = g_oglBuilder->buildProgram(g_fragShaderText);
-    }
+    g_oglBuilder->buildProgram(g_fragShaderText);
     
     // Step 6: Enable the fragment shader program, and all needed textures
     g_oglBuilder->useProgram();
     // The image texture
-    glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
+    glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "tex1"), 1);
     // The LUT textures
     g_oglBuilder->useAllTextures();
 }

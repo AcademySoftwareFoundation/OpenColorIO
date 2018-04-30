@@ -36,12 +36,14 @@ OCIO_NAMESPACE_USING
 
 
 
+const int LUT3D_EDGE_SIZE = 32;
 const float g_epsilon = 1e-5f;
 
 
 // Helper method to build unit tests
 void AddMatrixTest(OCIOGPUTest & test, TransformDirection direction, 
-                   const float * m, const float * o, float epsilon)
+                   const float * m, const float * o, float epsilon,
+                   bool genericShaderDesc = false)
 {
     OCIO::MatrixTransformRcPtr matrix = OCIO::MatrixTransform::Create();
     matrix->setDirection(direction);
@@ -54,7 +56,11 @@ void AddMatrixTest(OCIOGPUTest & test, TransformDirection direction,
         matrix->setOffset(o);
     }
 
-    test.setContext(matrix->createEditableCopy(), epsilon);
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = genericShaderDesc ? OCIO::GpuShaderDesc::CreateShaderDesc()
+          : OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+
+    test.setContext(matrix->createEditableCopy(), shaderDesc, epsilon);
 }
 
 
@@ -141,4 +147,30 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_inverse)
     const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
     
     AddMatrixTest(test, TRANSFORM_DIR_INVERSE, m, o, g_epsilon);
+}
+
+
+OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_generic_shader)
+{
+    const float m[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
+                          0.5f, 1.6f, 0.7f, 0.8f,
+                          0.2f, 0.1f, 1.1f, 0.2f,
+                          0.3f, 0.4f, 0.5f, 1.6f };
+
+    const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+    
+    AddMatrixTest(test, TRANSFORM_DIR_FORWARD, m, o, g_epsilon, true);
+}
+
+
+OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_inverse_generic_shader)
+{
+    const float m[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
+                          0.5f, 1.6f, 0.7f, 0.8f,
+                          0.2f, 0.1f, 1.1f, 0.2f,
+                          0.3f, 0.4f, 0.5f, 1.6f };
+
+    const float o[4] = { -0.5f, -0.25f, 0.25f, 0.0f };
+    
+    AddMatrixTest(test, TRANSFORM_DIR_INVERSE, m, o, g_epsilon, true);
 }
