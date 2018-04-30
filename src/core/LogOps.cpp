@@ -60,9 +60,9 @@ OCIO_NAMESPACE_ENTER
             // We account for the change of base by rolling the multiplier
             // in with 'k'
             
-            float knew[3] = { k[0] / logf(base[0]),
-                              k[1] / logf(base[1]),
-                              k[2] / logf(base[2]) };
+            const float knew[3] = { k[0] / logf(base[0]),
+                                    k[1] / logf(base[1]),
+                                    k[2] / logf(base[2]) };
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
@@ -85,13 +85,13 @@ OCIO_NAMESPACE_ENTER
                            const float * base,
                            const float * kb)
         {
-            float kinv[3] = { 1.0f / k[0],
-                               1.0f / k[1],
-                               1.0f / k[2] };
+            const float kinv[3] = { 1.0f / k[0],
+                                    1.0f / k[1],
+                                    1.0f / k[2] };
             
-            float minv[3] = { 1.0f / m[0],
-                               1.0f / m[1],
-                               1.0f / m[2] };
+            const float minv[3] = { 1.0f / m[0],
+                                    1.0f / m[1],
+                                    1.0f / m[2] };
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
@@ -258,6 +258,8 @@ OCIO_NAMESPACE_ENTER
             }
             
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             
             m_cacheID = cacheIDStream.str();
@@ -285,8 +287,6 @@ OCIO_NAMESPACE_ENTER
                 throw Exception("Only 32F bit depth is supported for the GPU shader");
             }
 
-            const GpuLanguage lang = shaderDesc->getLanguage();
-            
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
                 // Lin To Log
@@ -299,33 +299,33 @@ OCIO_NAMESPACE_ENTER
                                         m_k[1] / logf(m_base[1]),
                                         m_k[2] / logf(m_base[2]) };
                 
-                float clampMin[3] = { FLTMIN, FLTMIN, FLTMIN };
+                float clampMin = FLTMIN;
                 
                 // TODO: Switch to f32 for internal Cg processing?
-                if(lang == GPU_LANGUAGE_CG)
+                if(shaderDesc->getLanguage() == GPU_LANGUAGE_CG)
                 {
-                    clampMin[0] = static_cast<float>(GetHalfNormMin());
-                    clampMin[1] = static_cast<float>(GetHalfNormMin());
-                    clampMin[2] = static_cast<float>(GetHalfNormMin());
+                    clampMin = static_cast<float>(GetHalfNormMin());
                 }
                 
                 // Decompose into 2 steps
                 // 1) clamp(mx+b)
                 // 2) knew * log(x) + kb
                 
-                std::ostringstream code;
-                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
-                code << "max(" << GpuTextHalf3(clampMin,lang) << ", ";
-                code << GpuTextHalf3(m_m,lang) << " * ";
-                code << shaderDesc->getPixelName() << ".rgb + ";
-                code << GpuTextHalf3(m_b,lang) << ");\n";
-                
-                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
-                code << GpuTextHalf3(knew,lang) << " * ";
-                code << "log(" << shaderDesc->getPixelName() << ".rgb) + ";
-                code << GpuTextHalf3(m_kb,lang) << ";\n";
+                GpuShaderText ss(shaderDesc->getLanguage());
+                ss.indent();
 
-                shaderDesc->addToFunctionShaderCode(code.str().c_str());
+                ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+                             << "max(" << ss.vec3fConst(clampMin) << ", "
+                             << ss.vec3fConst(m_m[0], m_m[1], m_m[2]) << " * "
+                             << shaderDesc->getPixelName() << ".rgb + "
+                             << ss.vec3fConst(m_b[0], m_b[1], m_b[2]) << ");";
+                
+                ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+                             << ss.vec3fConst(knew[0], knew[1], knew[2]) << " * "
+                             << "log(" << shaderDesc->getPixelName() << ".rgb) + "
+                             << ss.vec3fConst(m_kb[0], m_kb[1], m_kb[2]) << ";";
+
+                shaderDesc->addToFunctionShaderCode(ss.string().c_str());
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
@@ -336,28 +336,30 @@ OCIO_NAMESPACE_ENTER
                 const float minv[3] = { 1.0f / m_m[0],
                                         1.0f / m_m[1],
                                         1.0f / m_m[2] };
-                
+
                 // Decompose into 3 steps
                 // 1) kinv * ( x - kb)
                 // 2) pow(base, x)
                 // 3) minv * (x - b)
-                
-                std::ostringstream code;
-                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
-                code << GpuTextHalf3(kinv,lang) << " * (";
-                code << shaderDesc->getPixelName() << ".rgb - ";
-                code << GpuTextHalf3(m_kb,lang) << ");\n";
-                
-                code << "    " << shaderDesc->getPixelName() << ".rgb = pow(";
-                code << GpuTextHalf3(m_base,lang) << ", ";
-                code << shaderDesc->getPixelName() << ".rgb);\n";
-                
-                code << "    " << shaderDesc->getPixelName() << ".rgb = ";
-                code << GpuTextHalf3(minv,lang) << " * (";
-                code << shaderDesc->getPixelName() << ".rgb - ";
-                code << GpuTextHalf3(m_b,lang) << ");\n";
 
-                shaderDesc->addToFunctionShaderCode(code.str().c_str());
+                GpuShaderText ss(shaderDesc->getLanguage());
+                ss.indent();
+
+                ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+                             << ss.vec3fConst(kinv[0], kinv[1], kinv[2]) << " * ("
+                             << shaderDesc->getPixelName() << ".rgb - "
+                             << ss.vec3fConst(m_kb[0], m_kb[1], m_kb[2]) << ");";
+                
+                ss.newLine() << shaderDesc->getPixelName() << ".rgb = pow("
+                             << ss.vec3fConst(m_base[0], m_base[1], m_base[2]) << ", "
+                             << shaderDesc->getPixelName() << ".rgb);";
+                
+                ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+                             << ss.vec3fConst(minv[0], minv[1], minv[2]) << " * ("
+                             << shaderDesc->getPixelName() << ".rgb - "
+                             << ss.vec3fConst(m_b[0], m_b[1], m_b[2]) << ");";
+
+                shaderDesc->addToFunctionShaderCode(ss.string().c_str());
             }
         }
         

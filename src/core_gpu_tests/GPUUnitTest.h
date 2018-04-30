@@ -30,8 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OPENCOLORIO_GPU_UNITTEST_H
 #define OPENCOLORIO_GPU_UNITTEST_H
 
-#include <iostream>
-#include <cmath>
 #include <vector>
 #include <string>
 
@@ -49,15 +47,37 @@ class OCIOGPUTest
         inline const std::string& group() const  { return m_group; }
         inline const std::string& name() const  { return m_name; }
 
-        void setContext(OCIO_NAMESPACE::TransformRcPtr & transform, 
-                        OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc,
-                        float errorThreshold);
+        void setContext(OCIO_NAMESPACE::TransformRcPtr transform, 
+                        OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc);
+
+        void setContext(OCIO_NAMESPACE::ConstProcessorRcPtr processor, 
+                        OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc);
 
         inline OCIO_NAMESPACE::ConstProcessorRcPtr & getProcessor() { return m_processor; }
         inline OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc() { return m_shaderDesc; }
-        inline float getErrorThreshold() { return m_errorThreshold; }
+
+        // Use or not a wide range image
+        inline bool useWideRange() const { return m_useWideRange; }
+        inline void setWideRange(bool use) { m_useWideRange = use; }
+
+        inline float getErrorThreshold() const { return m_errorThreshold; }
+        inline void setErrorThreshold(float error) { m_errorThreshold = error; }
+
+        inline bool performRelativeComparison() const { return m_performRelativeComparison; }
+        inline void setRelativeComparison(bool relCompare) { m_performRelativeComparison = relCompare; }
+
+        // This is the lower bound for the value that is divided into the absolute error 
+        // to obtain the relative error.
+        inline float getExpectedMinimalValue() const { return m_expectedMinimalValue; }
+        inline void setExpectedMinimalValue(float minValue) { m_expectedMinimalValue = minValue; }
+
+        // Dump or not the gpu shader program
+        inline void setVerbose(bool verbose) { m_verbose = verbose; }
+        inline bool isVerbose() const { return m_verbose; }
 
         inline void setup() { m_function(*this); }
+
+        inline bool isValid() { return m_processor && m_shaderDesc; }
 
     private:
         const std::string m_group, m_name;
@@ -65,6 +85,10 @@ class OCIOGPUTest
         OCIO_NAMESPACE::ConstProcessorRcPtr m_processor;
         OCIO_NAMESPACE::GpuShaderDescRcPtr m_shaderDesc;
         float m_errorThreshold;
+        bool m_useWideRange;
+        bool m_performRelativeComparison;
+        float m_expectedMinimalValue;
+        bool m_verbose;
 };
 
 typedef std::vector<OCIOGPUTest*> UnitTests;

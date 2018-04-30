@@ -46,13 +46,16 @@ typedef OCIO_SHARED_PTR<OpenGLBuilder> OpenGLBuilderRcPtr;
 
 class OpenGLBuilder
 {
-    typedef std::vector<std::pair<unsigned, std::string>> TextureIds;
+    typedef std::vector< std::pair<unsigned, std::string> > TextureIds;
 
 public:
     // Create an OpenGL builder using the GPU shader information from a specific processor
     static OpenGLBuilderRcPtr Create(const OCIO::GpuShaderDescRcPtr & gpuShader);
 
     ~OpenGLBuilder();
+
+    inline void setVerbose(bool verbose) { m_verbose = verbose; }
+    inline bool isVerbose() const { return m_verbose; }
 
     // Allocate & upload all the needed textures starting at the (zero based) index 1 by default
     //  (i.e. the first index is reserved for the input image to process)
@@ -64,6 +67,10 @@ public:
     unsigned buildProgram(const std::string & clientShaderProgram);
     void useProgram();
     unsigned getProgramHandle();
+
+    // Determine the maximun width value of a texture
+    // depending of the graphic card and its driver.
+    static unsigned GetTextureMaxWidth();
 
 protected:
     OpenGLBuilder(const OCIO::GpuShaderDescRcPtr & gpuShader);
@@ -77,6 +84,7 @@ private:
     unsigned m_fragShader;                 // Fragment shader identifier
     unsigned m_program;                    // Program identifier
     std::string m_shaderCacheID;           // Current shader program key
+    bool m_verbose;
 };
 
 

@@ -279,7 +279,7 @@ OCIO_NAMESPACE_ENTER
             bool requiresLattice = false;
             for(unsigned int i=0; i<gpuLatticeOps.size() && !requiresLattice; ++i)
             {
-                if (!gpuLatticeOps[i]->supportsGpuShader())
+                if (!gpuLatticeOps[i]->supportedByLegacyShader())
                 {
                     requiresLattice = true;
                 }
@@ -689,7 +689,7 @@ OIIO_ADD_TEST(NoOps, AllocationOp)
 
     OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
     OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
-    OIIO_CHECK_EQUAL(clonedOp->supportsGpuShader(), true);
+    OIIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
 
 OIIO_ADD_TEST(NoOps, FileOp)
@@ -708,7 +708,7 @@ OIIO_ADD_TEST(NoOps, FileOp)
 
     OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
     OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
-    OIIO_CHECK_EQUAL(clonedOp->supportsGpuShader(), true);
+    OIIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
 
 OIIO_ADD_TEST(NoOps, LookOp)
@@ -727,7 +727,7 @@ OIIO_ADD_TEST(NoOps, LookOp)
 
     OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
     OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
-    OIIO_CHECK_EQUAL(clonedOp->supportsGpuShader(), true);
+    OIIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
 
 #endif // OCIO_UNIT_TEST

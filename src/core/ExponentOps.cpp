@@ -212,6 +212,8 @@ OCIO_NAMESPACE_ENTER
             {
                 cacheIDStream << m_exp4[i] << " ";
             }
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
         }
@@ -235,16 +237,19 @@ OCIO_NAMESPACE_ENTER
             const float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
                                    float(m_exp4[2]), float(m_exp4[3]) };
 
-            const GpuLanguage lang = shaderDesc->getLanguage();
-            const float zerovec[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            GpuShaderText ss(shaderDesc->getLanguage());
+            ss.indent();
 
-            std::ostringstream code;
-            code << "    " << shaderDesc->getPixelName() << " = pow("
-                 << "max(" << shaderDesc->getPixelName() << ", " << GpuTextHalf4(zerovec, lang) << ")"
-                 << ", " << GpuTextHalf4(exp, lang) << ");"
-                 << std::endl;
+            // outColor = pow(max(outColor, 0.), exp);
 
-            shaderDesc->addToFunctionShaderCode(code.str().c_str());
+            ss.newLine()
+                << shaderDesc->getPixelName() 
+                << " = pow( "
+                << "max( " << shaderDesc->getPixelName() 
+                << ", " << ss.vec4fConst(0.0f) << " )"
+                << ", " << ss.vec4fConst(exp[0], exp[1], exp[2], exp[3]) << " );";
+
+            shaderDesc->addToFunctionShaderCode(ss.string().c_str());
         }
         
     }  // Anon namespace

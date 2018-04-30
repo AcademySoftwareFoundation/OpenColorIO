@@ -41,6 +41,11 @@ OCIO_NAMESPACE_ENTER
         ,   m_outputBitDepth(BIT_DEPTH_F32)
     { }
 
+    Op::Op(BitDepth inputBitDepth, BitDepth outputBitDepth)
+        :   m_inputBitDepth(inputBitDepth)
+        ,   m_outputBitDepth(outputBitDepth)
+    { }
+
     Op::~Op()
     { }
     

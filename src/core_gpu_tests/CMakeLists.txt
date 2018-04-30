@@ -8,10 +8,13 @@
 
 add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
+set( CMAKE_UNIT_TEST_FILES_DIRECTORY ${CMAKE_BINARY_DIR}/unittestsfiles )
+add_definitions("-DOCIO_UNIT_TEST_FILES_DIR=${CMAKE_UNIT_TEST_FILES_DIRECTORY}")
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/core_gpu_tests
     ${CMAKE_SOURCE_DIR}/export/
-    ${CMAKE_SOURCE_DIR}/src/glsl/
+    ${CMAKE_SOURCE_DIR}/src/lang-glsl/
     ${CMAKE_BINARY_DIR}/export/
     ${OPENGL_INCLUDE_DIR}
     ${GLUT_INCLUDE_DIR}

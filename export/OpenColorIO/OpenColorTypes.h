@@ -95,7 +95,6 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<Baker> BakerRcPtr;
     
     class OCIOEXPORT ImageDesc;
-    class OCIOEXPORT GpuShaderDesc;
     class OCIOEXPORT Exception;
     
     //!cpp:type::
@@ -266,9 +265,11 @@ OCIO_NAMESPACE_ENTER
     enum GpuLanguage
     {
         GPU_LANGUAGE_UNKNOWN = 0,
-        GPU_LANGUAGE_CG,           ///< Nvidia Cg shader
-        GPU_LANGUAGE_GLSL_1_0,     ///< OpenGL Shading Language
-        GPU_LANGUAGE_GLSL_1_3      ///< OpenGL Shading Language
+        GPU_LANGUAGE_CG,                ///< Nvidia Cg shader
+        GPU_LANGUAGE_GLSL_1_0,          ///< OpenGL Shading Language
+        GPU_LANGUAGE_GLSL_1_3,          ///< OpenGL Shading Language
+        GPU_LANGUAGE_GLSL_4_0,          ///< OpenGL Shading Language
+        GPU_LANGUAGE_HLSL_DX11          ///< DirectX Shading Language
     };
     
     //!cpp:type::

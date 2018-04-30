@@ -42,46 +42,73 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "glsl.h"
 
 #include <sstream>
+#include <iostream>
 
+// TODO: Lot of other GLSL helper methods from synColor will be added here.
 
 namespace
 {
+    void CheckStatus()
+    {
+        const GLenum glErr = glGetError();
+        if(glErr!=GL_NO_ERROR)
+        {
+#ifdef __APPLE__
+            // TODO: Improve the error message
+            throw OCIO::Exception("OpenGL Error");
+#else
+            throw OCIO::Exception((const char*)gluErrorString(glErr));
+#endif
+        }
+    }
+
     void SetTextureParameters(GLenum textureType, OCIO::Interpolation interpolation)
     {
-        if(interpolation==OCIO::INTERP_LINEAR || interpolation==OCIO::INTERP_BEST)
-        {
-            glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        }
-        else
+        if(interpolation==OCIO::INTERP_NEAREST)
         {
             glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
+        else
+        {
+            glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+
         glTexParameteri(textureType, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(textureType, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(textureType, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     }
 
-    void AllocateTexture3D(unsigned index, unsigned& texId, unsigned edgelen, const float* values)
+    void AllocateTexture3D(unsigned index, unsigned & texId, 
+                           OCIO::Interpolation interpolation,
+                           unsigned edgelen, const float * values)
     {
+        if(values==0x0)
+        {
+            throw OCIO::Exception("Missing texture data");
+        }
+
         glGenTextures(1, &texId);
         
-        const unsigned num3Dentries = 3*edgelen*edgelen*edgelen;
-
         glActiveTexture(GL_TEXTURE0 + index);
         
         glBindTexture(GL_TEXTURE_3D, texId);
 
-        SetTextureParameters(GL_TEXTURE_3D, OCIO::INTERP_LINEAR);
+        SetTextureParameters(GL_TEXTURE_3D, interpolation);
 
         glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB,
                      edgelen, edgelen, edgelen, 0, GL_RGB, GL_FLOAT, values);
     }
 
-    void AllocateTexture2D(unsigned index, unsigned& texId, unsigned width, unsigned height,
-        OCIO::Interpolation interpolation, const float* values)
+    void AllocateTexture2D(unsigned index, unsigned & texId, unsigned width, unsigned height,
+                           OCIO::Interpolation interpolation, const float * values)
     {
+        if(values==0x0)
+        {
+            throw OCIO::Exception("Missing texture data");
+        }
+
         glGenTextures(1, &texId);
 
         glActiveTexture(GL_TEXTURE0 + index);
@@ -104,8 +131,15 @@ namespace
         }
     }
 
-    GLuint CompileShaderText(GLenum shaderType, const char *text)
+    GLuint CompileShaderText(GLenum shaderType, const char * text)
     {
+        CheckStatus();
+
+        if(!text || !*text)
+        {
+            throw OCIO::Exception("Invalid fragment shader program");
+        }
+
         GLuint shader;
         GLint stat;
         
@@ -120,7 +154,7 @@ namespace
             GLsizei len;
             glGetShaderInfoLog(shader, 1000, &len, log);
 
-            std::string err("OCIO Shader program compliation failed: ");
+            std::string err("OCIO Shader program compilation failed: ");
             err += log;
             err += "\n";
             err += text;
@@ -131,13 +165,15 @@ namespace
         return shader;
     }
 
-    GLuint LinkShaders(GLuint fragShader)
+    void LinkShaders(GLuint program, GLuint fragShader)
     {
-        if (!fragShader) return 0;
-        
-        GLuint program = glCreateProgram();
-        
-        if (fragShader)
+        CheckStatus();
+
+        if (!fragShader)
+        {
+            throw OCIO::Exception("Missing shader program");
+        }
+        else        
         {
             glAttachShader(program, fragShader);
         }
@@ -156,8 +192,6 @@ namespace
             err += log;
             throw OCIO::Exception(err.c_str());
         }
-        
-        return program;
     }
 }
 
@@ -171,7 +205,8 @@ OpenGLBuilder::OpenGLBuilder(const OCIO::GpuShaderDescRcPtr & shaderDesc)
     :   m_shaderDesc(shaderDesc)
     ,   m_startIndex(0)
     ,   m_fragShader(0)
-    ,   m_program(0)
+    ,   m_program(glCreateProgram())
+    ,   m_verbose(false)
 {
 }
 
@@ -179,6 +214,7 @@ OpenGLBuilder::~OpenGLBuilder()
 {
     if(m_fragShader)
     {
+        glDetachShader(m_program, m_fragShader);
         glDeleteShader(m_fragShader);
         m_fragShader = 0;
     }
@@ -207,7 +243,8 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         const char* name = 0x0;
         const char* uid  = 0x0;
         unsigned edgelen = 0;
-        m_shaderDesc->get3DTexture(idx, name, uid, edgelen);
+        OCIO::Interpolation interpolation = OCIO::INTERP_LINEAR;
+        m_shaderDesc->get3DTexture(idx, name, uid, edgelen, interpolation);
 
         const float* values = 0x0;
         m_shaderDesc->get3DTextureValues(idx, values);
@@ -215,7 +252,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         // 2. Allocate the 3D lut
 
         unsigned texId = 0;
-        AllocateTexture3D(currIndex, texId, edgelen, values);
+        AllocateTexture3D(currIndex, texId, interpolation, edgelen, values);
 
         // 3. Keep the texture id & name for the later enabling
 
@@ -281,26 +318,33 @@ void OpenGLBuilder::useAllTextures()
 
 unsigned OpenGLBuilder::buildProgram(const std::string & clientShaderProgram)
 {
-    std::ostringstream os;
-    os << m_shaderDesc->getShaderText() << "\n";
-    os << clientShaderProgram;
-
-    try
+    const std::string shaderCacheID = m_shaderDesc->getCacheID();
+    if(shaderCacheID!=m_shaderCacheID)
     {
-        const std::string shaderCacheID = m_shaderDesc->getCacheID();
-        if(shaderCacheID!=m_shaderCacheID)
+        if(m_fragShader)
         {
-            if(m_fragShader) glDeleteShader(m_fragShader);
-            m_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
-            if(m_program) glDeleteProgram(m_program);
-            m_program = LinkShaders(m_fragShader);
-
-            m_shaderCacheID = shaderCacheID;
+            glDetachShader(m_program, m_fragShader);
+            glDeleteShader(m_fragShader);
         }
-    }
-    catch(...)
-    {
-        throw OCIO::Exception(os.str().c_str());
+
+        std::ostringstream os;
+        os  << m_shaderDesc->getShaderText() << std::endl
+            << clientShaderProgram << std::endl;
+
+        if(m_verbose)
+        {
+            std::cout << std::endl;
+            std::cout << "GPU Shader Program:" << std::endl;
+            std::cout << std::endl;
+            std::cout << os.str() << std::endl;
+            std::cout << std::endl;
+        }
+
+        m_fragShader = CompileShaderText(GL_FRAGMENT_SHADER, os.str().c_str());
+
+        LinkShaders(m_program, m_fragShader);
+
+        m_shaderCacheID = shaderCacheID;
     }
 
     return m_program;
@@ -314,5 +358,70 @@ void OpenGLBuilder::useProgram()
 unsigned OpenGLBuilder::getProgramHandle()
 {
     return m_program;
+}
+
+unsigned OpenGLBuilder::GetTextureMaxWidth()
+{
+    // Arbitrary huge number only to find the limit
+    static unsigned maxTextureSize = 256 * 1024;
+
+    CheckStatus();
+
+    unsigned w = maxTextureSize;
+    unsigned h = 1;
+
+    while(w>1)
+    {
+        glTexImage2D(GL_PROXY_TEXTURE_2D, 0, 
+                     GL_RGB32F_ARB, 
+                     w, h, 0, 
+                     GL_RGB, GL_FLOAT, NULL);
+
+        bool texValid = true;
+        GLenum glErr = GL_NO_ERROR;
+
+        while((glErr=glGetError()) != GL_NO_ERROR)
+        {
+            if(glErr==GL_INVALID_VALUE)
+            {
+                texValid = false;
+            }
+        }
+
+#ifndef SYN_OSX
+        //
+        // In case of Linux, if glTexImage2D() succeed
+        //  glGetTexLevelParameteriv() could fail.
+        //
+        // In case of OSX, glTexImage2D() will provide the right result,
+        //  and glGetTexLevelParameteriv() always fails.
+        //  So do not try glGetTexLevelParameteriv().
+        //
+        if(texValid)
+        {
+            GLint format = 0;
+            glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0,
+                                     GL_TEXTURE_COMPONENTS, &format);
+
+            texValid = texValid && (GL_RGB32F_ARB==format);
+
+            while((glErr=glGetError()) != GL_NO_ERROR);
+        }
+#endif
+
+        if(texValid) break;
+
+        w = w >> 1;
+        h = h << 1;
+    }
+
+    if(w==1)
+    {
+        throw OCIO::Exception("Maximum texture size unknown");
+    }
+
+    CheckStatus();
+
+    return w;
 }
 

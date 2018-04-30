@@ -771,7 +771,7 @@ OCIO_NAMESPACE_ENTER
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
-        // CPU Path
+        // CPU Renderer
         // ^^^^^^^^
         
         //!cpp:function:: Apply to an image.
@@ -795,7 +795,7 @@ OCIO_NAMESPACE_ENTER
         
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
-        // GPU Path
+        // GPU Renderer
         // ^^^^^^^^
         // Get the GPU shader program and its description
         
@@ -1331,31 +1331,30 @@ OCIO_NAMESPACE_ENTER
 
         // Note: Support for uniforms will be added in a follow-up
         virtual unsigned getNumUniforms() const = 0;
-        virtual void getUniform(
-            unsigned index, const char *& name, UniformType & type, void *& value) const = 0;
-        virtual void addUniform(
-            unsigned index, const char * name, UniformType type, void * value) = 0;
+        virtual void getUniform(unsigned index, const char *& name, 
+                                UniformType & type, void *& value) const = 0;
+        virtual void addUniform(unsigned index, const char * name, 
+                                UniformType type, void * value) = 0;
 
         //!cpp:function:: 1D lut related methods
+        virtual unsigned getTextureMaxWidth() const = 0;
+        virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
         virtual unsigned getNumTextures() const = 0;
-        // .. note:: Pad the lut values to exactly fit the texture size.
-        //           The size is width * height * channels where channels is 3 (i.e. RGB).
         virtual void addTexture(
             const char * name, const char * id, unsigned width, unsigned height,
             TextureType channel, Interpolation interpolation,
             float * values) = 0;
-        virtual void getTexture(
-            unsigned index, const char *& name, const char *& id, unsigned & width, unsigned & height,
-            TextureType & channel, Interpolation & interpolation) const = 0;
+        virtual void getTexture(unsigned index, const char *& name, const char *& id, 
+                                unsigned & width, unsigned & height,
+                                TextureType & channel, Interpolation & interpolation) const = 0;
         virtual void getTextureValues(unsigned index, const float *& values) const = 0;
 
         //!cpp:function:: 3D lut related methods
         virtual unsigned getNum3DTextures() const = 0;
-        virtual void add3DTexture(
-            const char * name, const char * id, unsigned edgelen, 
-            Interpolation interpolation, float * values) = 0;
-        virtual void get3DTexture(
-            unsigned index, const char *& name, const char *& id, unsigned & edgelen) const = 0;
+        virtual void add3DTexture(const char * name, const char * id, unsigned edgelen, 
+                                  Interpolation interpolation, float * values) = 0;
+        virtual void get3DTexture(unsigned index, const char *& name, const char *& id, 
+                                  unsigned & edgelen, Interpolation & interpolation) const = 0;
         virtual void get3DTextureValues(unsigned index, const float *& values) const = 0;
 
         //!cpp:function:: Methods to specialize parts of a OCIO shader program

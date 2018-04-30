@@ -57,7 +57,8 @@ OCIO_NAMESPACE_ENTER
         void add3DTexture(const char * name, const char * id, unsigned edgelen, 
                           Interpolation interpolation, float * values);
         void get3DTexture(unsigned index, const char *& name, 
-                          const char *& id, unsigned & edgelen) const;
+                          const char *& id, unsigned & edgelen, 
+                          Interpolation & interpolation) const;
         void get3DTextureValues(unsigned index, const float *& value) const;
 
         // Get the complete shader text
@@ -85,6 +86,9 @@ OCIO_NAMESPACE_ENTER
 
     protected:
 
+        unsigned getTextureMaxWidth() const;
+        void setTextureMaxWidth(unsigned maxWidth);
+
         // Uniforms are not used by the legacy shader builder
         //
         unsigned getNumUniforms() const;
@@ -104,7 +108,7 @@ OCIO_NAMESPACE_ENTER
         void getTextureValues(unsigned index, const float *& values) const;
 
     private:
-
+        LegacyGpuShaderDesc();
         LegacyGpuShaderDesc(unsigned edgelen);
         virtual ~LegacyGpuShaderDesc();
         
@@ -136,6 +140,9 @@ OCIO_NAMESPACE_ENTER
     public:
         static GpuShaderDescRcPtr Create();
 
+        unsigned getTextureMaxWidth() const;
+        void setTextureMaxWidth(unsigned maxWidth);
+
         // Accessors to the uniforms
         //
         unsigned getNumUniforms() const;
@@ -160,7 +167,8 @@ OCIO_NAMESPACE_ENTER
         void add3DTexture(const char * name, const char * id, unsigned edgelen, 
                           Interpolation interpolation, float * values);
         void get3DTexture(unsigned index, const char *& name, 
-                          const char *& id, unsigned & edgelen) const;
+                          const char *& id, unsigned & edgelen, 
+                          Interpolation & interpolation) const;
         void get3DTextureValues(unsigned index, const float *& value) const;
 
         // Get the complete shader text

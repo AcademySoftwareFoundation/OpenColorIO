@@ -6,7 +6,7 @@ include_directories(
         ${GLEW_INCLUDES}
 )
 
-file(GLOB_RECURSE glsl_src_files "${CMAKE_SOURCE_DIR}/src/glsl/*.cpp")
+file(GLOB_RECURSE glsl_src_files "${CMAKE_SOURCE_DIR}/src/lang-glsl/*.cpp")
 
 add_library(OCIOOpenGL STATIC ${glsl_src_files})
 
@@ -20,7 +20,7 @@ set_target_properties(OCIOOpenGL
 )
 
 install(TARGETS OCIOOpenGL EXPORT OpenColorIO 
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/glsl)
+        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/share/lang-glsl/lib)
 
-install(FILES ${CMAKE_SOURCE_DIR}/glsl.h
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/glsl/)
+install(FILES ${CMAKE_SOURCE_DIR}/src/lang-glsl/glsl.h
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/lang-glsl/include)
