@@ -489,7 +489,7 @@ endif()
 
 if(OCIO_BUILD_APPS AND OPENGL_FOUND AND GLEW_FOUND)
     messageonce("Build the OpenGL engine")
-    add_subdirectory(src/glsl)
+    add_subdirectory(src/lang-glsl)
 else()
     messageonce("Not building the OpenGL engine. Requirement(s) found, OpenGL:${OPENGL_FOUND}, GLEW:${GLEW_FOUND}")
 endif()

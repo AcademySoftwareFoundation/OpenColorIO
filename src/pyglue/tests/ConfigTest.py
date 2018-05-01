@@ -225,9 +225,6 @@ return out_pixel;
         rgbafoo = _proc.applyRGBA([0.48, 0.18, 0.18, 1.0])
         self.assertAlmostEqual(1.0, rgbafoo[3], delta=1e-8)
         #self.assertEqual("$a92ef63abd9edf61ad5a7855da064648", _proc.getCpuCacheID())
-        desc = OCIO.GpuShaderDesc()
-        desc.setLanguage(OCIO.Constants.GPU_LANGUAGE_GLSL_1_3)
-        desc.setFunctionName("pytestocio")
         
         del _cfge
         del _cfg

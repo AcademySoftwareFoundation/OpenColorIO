@@ -11,7 +11,7 @@ add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/core_gpu_tests
     ${CMAKE_SOURCE_DIR}/export/
-    ${CMAKE_SOURCE_DIR}/src/glsl/
+    ${CMAKE_SOURCE_DIR}/src/lang-glsl/
     ${CMAKE_BINARY_DIR}/export/
     ${OPENGL_INCLUDE_DIR}
     ${GLUT_INCLUDE_DIR}
