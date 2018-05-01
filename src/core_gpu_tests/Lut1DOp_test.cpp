@@ -86,7 +86,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_inverse_legacy_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    // TODO: Investiguate why the shader needs such an error tolerance
+    // TODO: Investigate why the test needs such a threshold
     test.setContext(file->createEditableCopy(), shaderDesc, 1e-1f);
 }
 
@@ -122,7 +122,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    // TODO: Investiguate why the shader needs such an error tolerance
+    // TODO: Investigate why the test needs such a threshold
     test.setContext(file->createEditableCopy(), shaderDesc, 1e-1f);
 }
 
@@ -156,7 +156,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_inverse_legacy_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    // TODO: Investiguate why the shader needs such an error tolerance
+    // TODO: Investigate why the test needs such a threshold
     test.setContext(file->createEditableCopy(), shaderDesc, 1e-1f);
 }
 
@@ -190,7 +190,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    // TODO: Investiguate why the shader needs such an error tolerance
+    // TODO: Investigate why the test needs such a threshold
     test.setContext(file->createEditableCopy(), shaderDesc, 1e-1f);
 }
 
@@ -224,7 +224,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_inverse_legacy_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    // TODO: Investiguate why the shader needs such an error tolerance
+    // TODO: Investigate why the test needs such a threshold
     test.setContext(file->createEditableCopy(), shaderDesc, 2e-1f);
 }
 
@@ -258,7 +258,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    // TODO: Investiguate why the shader needs such an error tolerance
+    // TODO: Investigate why the test needs such a threshold
     test.setContext(file->createEditableCopy(), shaderDesc, 2e-1f);
 }
 

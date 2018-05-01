@@ -117,7 +117,7 @@ OCIO_NAMESPACE_ENTER
             virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
             
             
-            // Detect if the ops is supported by the legacy shader description
+            // Is this op supported by the legacy shader text generator ?
             virtual bool supportedByLegacyShader() const { return true; }
 
             // Create & add the gpu shader information needed by the op
@@ -127,7 +127,8 @@ OCIO_NAMESPACE_ENTER
             virtual BitDepth getOutputBitDepth() const;
 
             // To be implemented by each op to natively support 
-            // the input and output bit depths.  For now, all ops are 32f by default.
+            // the input and output bit depths.
+            // For now, all ops are 32f by default.
             virtual void setInputBitDepth(BitDepth /*bitdepth*/) {}
             virtual void setOutputBitDepth(BitDepth /*bitdepth*/) {}
 

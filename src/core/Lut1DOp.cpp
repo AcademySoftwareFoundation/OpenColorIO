@@ -846,7 +846,13 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception("Cannot apply lut1d op, no lut data provided.");
             }
-            
+
+            if(m_lut->luts[0].size()!=m_lut->luts[1].size()
+                || m_lut->luts[0].size()!=m_lut->luts[2].size())
+            {
+                throw Exception("Cannot apply lut1d op with inconsistent lut data provided.");
+            }
+
             // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<Lut1DOp ";

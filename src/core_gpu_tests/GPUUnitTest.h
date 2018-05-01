@@ -53,6 +53,10 @@ class OCIOGPUTest
                         OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc,
                         float errorThreshold);
 
+        void setContext(OCIO_NAMESPACE::ConstProcessorRcPtr & processor, 
+                        OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc,
+                        float errorThreshold);
+
         inline OCIO_NAMESPACE::ConstProcessorRcPtr & getProcessor() { return m_processor; }
         inline OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc() { return m_shaderDesc; }
         inline float getErrorThreshold() { return m_errorThreshold; }

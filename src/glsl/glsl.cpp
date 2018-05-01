@@ -63,8 +63,14 @@ namespace
         glTexParameteri(textureType, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     }
 
-    void AllocateTexture3D(unsigned index, unsigned& texId, unsigned edgelen, const float* values)
+    void AllocateTexture3D(unsigned index, unsigned & texId, unsigned edgelen, 
+                           const float * values)
     {
+        if(values==0x0)
+        {
+            throw OCIO::Exception("Missing texture data");
+        }
+
         glGenTextures(1, &texId);
         
         glActiveTexture(GL_TEXTURE0 + index);
@@ -77,9 +83,14 @@ namespace
                      edgelen, edgelen, edgelen, 0, GL_RGB, GL_FLOAT, values);
     }
 
-    void AllocateTexture2D(unsigned index, unsigned& texId, unsigned width, unsigned height,
-        OCIO::Interpolation interpolation, const float* values)
+    void AllocateTexture2D(unsigned index, unsigned & texId, unsigned width, unsigned height,
+                           OCIO::Interpolation interpolation, const float * values)
     {
+        if(values==0x0)
+        {
+            throw OCIO::Exception("Missing texture data");
+        }
+
         glGenTextures(1, &texId);
 
         glActiveTexture(GL_TEXTURE0 + index);
@@ -102,8 +113,13 @@ namespace
         }
     }
 
-    GLuint CompileShaderText(GLenum shaderType, const char *text)
+    GLuint CompileShaderText(GLenum shaderType, const char * text)
     {
+        if(!text || !*text)
+        {
+            throw OCIO::Exception("Invalid fragment shader program");
+        }
+
         GLuint shader;
         GLint stat;
         
@@ -205,12 +221,14 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         const char* name = 0x0;
         const char* uid  = 0x0;
         unsigned edgelen = 0;
-        m_shaderDesc->get3DTexture(idx, name, uid, edgelen);
+        OCIO::Interpolation interpolation = OCIO::INTERP_LINEAR;
+        m_shaderDesc->get3DTexture(idx, name, uid, edgelen, interpolation);
 
         const float* values = 0x0;
         m_shaderDesc->get3DTextureValues(idx, values);
 
-        // 2. Allocate the 3D lut
+        // 2. Allocate the 3D lut, always in linear mode
+        //     Other interpolations are computed using linear mode.
 
         unsigned texId = 0;
         AllocateTexture3D(currIndex, texId, edgelen, values);

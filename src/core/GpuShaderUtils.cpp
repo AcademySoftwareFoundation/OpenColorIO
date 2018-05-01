@@ -237,34 +237,40 @@ OCIO_NAMESPACE_ENTER
             os << "    " 
                << variableName << ".r = "
                << "tex2D(" << lutName << ", " 
-               << lutName << "_ComputePos(" << variableName << ".r)).r;" << std::endl;
+               << lutName << "_ComputePos(" << variableName << ".r)).r;"
+               << std::endl;
 
             os << "    " 
                << variableName << ".g = "
                << "tex2D(" << lutName << ", " 
-               << lutName << "_ComputePos(" << variableName << ".g)).g;" << std::endl;
+               << lutName << "_ComputePos(" << variableName << ".g)).g;"
+               << std::endl;
 
             os << "    " 
                << variableName << ".b = "
                << "tex2D(" << lutName << ", " 
-               << lutName << "_ComputePos(" << variableName << ".b)).b;" << std::endl;
+               << lutName << "_ComputePos(" << variableName << ".b)).b;"
+               << std::endl;
         }
         else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
         {
             os << "    " 
                << variableName << ".r = "
                << "texture2D(" << lutName << ", " 
-               << lutName << "_ComputePos(" << variableName << ".r)).r;" << std::endl;
+               << lutName << "_ComputePos(" << variableName << ".r)).r;"
+               << std::endl;
 
             os << "    " 
                << variableName << ".g = "
                << "texture2D(" << lutName << ", " 
-               << lutName << "_ComputePos(" << variableName << ".g)).g;" << std::endl;
+               << lutName << "_ComputePos(" << variableName << ".g)).g;"
+               << std::endl;
 
             os << "    " 
                << variableName << ".b = "
                << "texture2D(" << lutName << ", " 
-               << lutName << "_ComputePos(" << variableName << ".b)).b;" << std::endl;
+               << lutName << "_ComputePos(" << variableName << ".b)).b;"
+               << std::endl;
         }
         else
         {
