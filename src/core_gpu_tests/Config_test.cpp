@@ -92,18 +92,21 @@ std::string createConfig()
         "    allocation: uniform\n"
         "    allocationvars: [0, 1]\n"
         "    to_reference: !<GroupTransform>\n"
-        "      children:\n"
-        "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
-        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
-        "        - !<FileTransform> {src: lut1d_3.spi1d, interpolation: linear}\n";
+        "      children:\n";
 
     return ocioConfigStr;
 }
 
 OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
 {
+    std::string configStr = createConfig();
+    configStr +=
+        "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_3.spi1d, interpolation: linear}\n";
+
     std::istringstream is;
-    is.str(createConfig());
+    is.str(configStr);
 
     OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
     config->sanityCheck();
@@ -119,8 +122,14 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
 
 OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
 {
+    std::string configStr = createConfig();
+    configStr +=
+        "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_3.spi1d, interpolation: linear}\n";
+
     std::istringstream is;
-    is.str(createConfig());
+    is.str(configStr);
 
     OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
     config->sanityCheck();
@@ -131,4 +140,29 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
 
     // TODO: Investigate why the test needs such a threshold
     test.setContext(processor, shaderDesc, 1e-2f);
+}
+
+OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
+{
+    std::string configStr = createConfig();
+    configStr +=
+        "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
+        "        - !<MatrixTransform> {matrix: [0.75573, 0.22197, 0.0223, 0, "\
+                                               "0.05901, 0.96928, -0.02829, 0, "\
+                                               "0.16134, 0.07406, 0.7646, 0, "\
+                                               "0, 0, 0, 1]}\n"
+        "        - !<LogTransform> {base: 10, direction: inverse}\n";
+
+    std::istringstream is;
+    is.str(configStr);
+
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
+    config->sanityCheck();
+
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(processor, shaderDesc, 1e-4f);
 }

@@ -263,4 +263,20 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_inverse_generic_shader)
 }
 
 
+OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_nearest_generic_shader)
+{
+    const std::string 
+        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_3.spi1d"));
+
+    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
+    file->setSrc(filename.c_str());
+    file->setInterpolation(OCIO::INTERP_NEAREST);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc, g_epsilon);
+}
+
+
 #endif
