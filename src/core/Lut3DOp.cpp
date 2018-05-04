@@ -132,7 +132,7 @@ OCIO_NAMESPACE_ENTER
                                       int size_red, int size_green, int size_blue,
                                       const float* simple_rgb_lut, int channelIndex)
         {
-            return simple_rgb_lut[ GetLut3DIndex_B(rIndex, gIndex, bIndex,
+            return simple_rgb_lut[GetLut3DIndex_RedFast(rIndex, gIndex, bIndex,
                 size_red, size_green, size_blue) + channelIndex];
         }
         
@@ -141,7 +141,7 @@ OCIO_NAMESPACE_ENTER
                                          int size_red, int size_green, int size_blue,
                                          const float* simple_rgb_lut)
         {
-            int offset = GetLut3DIndex_B(rIndex, gIndex, bIndex, size_red, size_green, size_blue);
+            int offset = GetLut3DIndex_RedFast(rIndex, gIndex, bIndex, size_red, size_green, size_blue);
             rgb[0] = simple_rgb_lut[offset];
             rgb[1] = simple_rgb_lut[offset+1];
             rgb[2] = simple_rgb_lut[offset+2];
@@ -355,22 +355,30 @@ OCIO_NAMESPACE_ENTER
                 float fz = delta[2];
 
                 // Compute index into LUT for surrounding corners
-                const int n000 = GetLut3DIndex_B(indexLow[0], indexLow[1], indexLow[2],
-                                                 lutSize[0], lutSize[1], lutSize[2]);
-                const int n100 = GetLut3DIndex_B(indexHigh[0], indexLow[1], indexLow[2],
-                                                 lutSize[0], lutSize[1], lutSize[2]);
-                const int n010 = GetLut3DIndex_B(indexLow[0], indexHigh[1], indexLow[2],
-                                                 lutSize[0], lutSize[1], lutSize[2]);
-                const int n001 = GetLut3DIndex_B(indexLow[0], indexLow[1], indexHigh[2],
-                                                 lutSize[0], lutSize[1], lutSize[2]);
-                const int n110 = GetLut3DIndex_B(indexHigh[0], indexHigh[1], indexLow[2],
-                                                 lutSize[0], lutSize[1], lutSize[2]);
-                const int n101 = GetLut3DIndex_B(indexHigh[0], indexLow[1], indexHigh[2],
-                                                 lutSize[0], lutSize[1], lutSize[2]);
-                const int n011 = GetLut3DIndex_B(indexLow[0], indexHigh[1], indexHigh[2],
-                                                 lutSize[0], lutSize[1], lutSize[2]);
-                const int n111 = GetLut3DIndex_B(indexHigh[0], indexHigh[1], indexHigh[2],
-                                                 lutSize[0], lutSize[1], lutSize[2]);
+                const int n000 =
+                    GetLut3DIndex_RedFast(indexLow[0], indexLow[1], indexLow[2],
+                                          lutSize[0], lutSize[1], lutSize[2]);
+                const int n100 =
+                    GetLut3DIndex_RedFast(indexHigh[0], indexLow[1], indexLow[2],
+                                          lutSize[0], lutSize[1], lutSize[2]);
+                const int n010 =
+                    GetLut3DIndex_RedFast(indexLow[0], indexHigh[1], indexLow[2],
+                                          lutSize[0], lutSize[1], lutSize[2]);
+                const int n001 =
+                    GetLut3DIndex_RedFast(indexLow[0], indexLow[1], indexHigh[2],
+                                          lutSize[0], lutSize[1], lutSize[2]);
+                const int n110 =
+                    GetLut3DIndex_RedFast(indexHigh[0], indexHigh[1], indexLow[2],
+                                          lutSize[0], lutSize[1], lutSize[2]);
+                const int n101 =
+                    GetLut3DIndex_RedFast(indexHigh[0], indexLow[1], indexHigh[2],
+                                          lutSize[0], lutSize[1], lutSize[2]);
+                const int n011 =
+                    GetLut3DIndex_RedFast(indexLow[0], indexHigh[1], indexHigh[2],
+                                          lutSize[0], lutSize[1], lutSize[2]);
+                const int n111 =
+                    GetLut3DIndex_RedFast(indexHigh[0], indexHigh[1], indexHigh[2],
+                                          lutSize[0], lutSize[1], lutSize[2]);
 
                 if (fx > fy) {
                     if (fy > fz) {

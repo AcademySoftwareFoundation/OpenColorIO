@@ -305,16 +305,10 @@ int main (int argc, const char* argv[])
 // TODO: These should be exposed from inside OCIO, in appropriate time.
 //
 
-inline int GetLut3DIndex_B(int indexR, int indexG, int indexB,
-                           int sizeR,  int sizeG,  int /*sizeB*/)
+inline int GetLut3DIndex_RedFast(int indexR, int indexG, int indexB,
+                                 int sizeR,  int sizeG,  int /*sizeB*/)
 {
     return 3 * (indexR + sizeR * (indexG + sizeG * indexB));
-}
-
-inline int GetLut3DIndex_R(int indexR, int indexG, int indexB,
-                           int /*sizeR*/,  int sizeG,  int sizeB)
-{
-    return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
 }
 
 void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
@@ -383,8 +377,8 @@ void WriteLut3D(const std::string & filename, const float* lutdata, int edgeLen)
         {
             for(int bindex=0; bindex<edgeLen; ++bindex)
             {
-                index = GetLut3DIndex_B(rindex, gindex, bindex,
-                                        edgeLen, edgeLen, edgeLen);
+                index = GetLut3DIndex_RedFast(rindex, gindex, bindex,
+                                              edgeLen, edgeLen, edgeLen);
                 
                 output << rindex << " " << gindex << " " << bindex << " ";
                 output << lutdata[index+0] << " ";

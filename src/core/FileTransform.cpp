@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <map>
 #include <sstream>
+#include <algorithm>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -208,6 +209,7 @@ OCIO_NAMESPACE_ENTER
         registerFileFormat(CreateFileFormatCC());
         registerFileFormat(CreateFileFormatCSP());
         registerFileFormat(CreateFileFormatHDL());
+        registerFileFormat(CreateFileFormatDiscreet1DL());
         registerFileFormat(CreateFileFormatIridasItx());
         registerFileFormat(CreateFileFormatIridasCube());
         registerFileFormat(CreateFileFormatIridasLook());
@@ -232,13 +234,14 @@ OCIO_NAMESPACE_ENTER
         return NULL;
     }
     
-    FileFormat* FormatRegistry::getFileFormatForExtension(const std::string & extension) const
+    void FormatRegistry::getFileFormatForExtension(
+        const std::string & extension,
+        FileFormatVector & possibleFormats) const
     {
-        FileFormatMap::const_iterator iter = m_formatsByExtension.find(
+        FileFormatVectorMap::const_iterator iter = m_formatsByExtension.find(
             pystring::lower(extension));
         if(iter != m_formatsByExtension.end())
-            return iter->second;
-        return NULL;
+            possibleFormats = iter->second;
     }
     
     void FormatRegistry::registerFileFormat(FileFormat* format)
@@ -272,11 +275,9 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            m_formatsByName[formatInfoVec[i].name] = format;
+            m_formatsByName[pystring::lower(formatInfoVec[i].name)] = format;
             
-            // For now, dont worry if multiple formats register the same extension
-            // TODO: keep track of all of em! (make the value a vector)
-            m_formatsByExtension[formatInfoVec[i].extension] = format;
+            m_formatsByExtension[formatInfoVec[i].extension].push_back(format);
             
             if(formatInfoVec[i].capabilities & FORMAT_CAPABILITY_READ)
             {
@@ -423,45 +424,61 @@ OCIO_NAMESPACE_ENTER
             
             // Try the initial format.
             std::string primaryErrorText;
-            std::string root, extension;
+            std::string root, extension, name;
             pystring::os::path::splitext(root, extension, filepath);
-            extension = pystring::replace(extension,".","",1); // remove the leading '.'
-            
+            // remove the leading '.'
+            extension = pystring::replace(extension,".","",1);
+
+            name = pystring::os::path::basename(root);
+
             FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
             
-            FileFormat * primaryFormat = 
-                formatRegistry.getFileFormatForExtension(extension);
-            if(primaryFormat)
+            FileFormatVector possibleFormats;
+            formatRegistry.getFileFormatForExtension(extension, possibleFormats);
+            FileFormatVector::const_iterator endFormat = possibleFormats.end();
+            FileFormatVector::const_iterator itFormat = possibleFormats.begin();
+            while(itFormat != endFormat)
             {
+
+                FileFormat * tryFormat = *itFormat;
                 try
                 {
-                    CachedFileRcPtr cachedFile = primaryFormat->Read(filestream);
+                    CachedFileRcPtr cachedFile = tryFormat->Read(
+                        filestream,
+                        name);
                     
                     if(IsDebugLoggingEnabled())
                     {
                         std::ostringstream os;
                         os << "    Loaded primary format ";
-                        os << primaryFormat->getName();
+                        os << tryFormat->getName();
                         LogDebug(os.str());
                     }
                     
-                    returnFormat = primaryFormat;
+                    returnFormat = tryFormat;
                     returnCachedFile = cachedFile;
                     return;
                 }
                 catch(std::exception & e)
                 {
+                    primaryErrorText += tryFormat->getName();
+                    primaryErrorText += " failed with: '";
                     primaryErrorText = e.what();
-                    
+                    primaryErrorText += "'.  ";
+
                     if(IsDebugLoggingEnabled())
                     {
                         std::ostringstream os;
                         os << "    Failed primary format ";
-                        os << primaryFormat->getName();
+                        os << tryFormat->getName();
                         os << ":  " << e.what();
                         LogDebug(os.str());
                     }
+
+                    filestream.clear();
+                    filestream.seekg(std::ifstream::beg);
                 }
+                ++itFormat;
             }
             
             filestream.clear();
@@ -477,12 +494,15 @@ OCIO_NAMESPACE_ENTER
             {
                 altFormat = formatRegistry.getRawFormatByIndex(findex);
                 
-                // Dont bother trying the primaryFormat twice.
-                if(altFormat == primaryFormat) continue;
+                // Do not try primary formats twice.
+                FileFormatVector::const_iterator itAlt = std::find(
+                    possibleFormats.begin(), possibleFormats.end(), altFormat);
+                if(itAlt != endFormat)
+                    continue;
                 
                 try
                 {
-                    cachedFile = altFormat->Read(filestream);
+                    cachedFile = altFormat->Read(filestream, name);
                     
                     if(IsDebugLoggingEnabled())
                     {
@@ -513,22 +533,28 @@ OCIO_NAMESPACE_ENTER
             }
             
             // No formats succeeded. Error out with a sensible message.
-            if(primaryFormat)
+            std::ostringstream os;
+            os << "The specified transform file '";
+            os << filepath << "' could not be loaded.  ";
+
+            if (IsDebugLoggingEnabled())
             {
-                std::ostringstream os;
-                os << "The specified transform file '";
-                os << filepath <<"' could not be loaded. ";
-                os << primaryErrorText;
-                
-                throw Exception(os.str().c_str());
+                os << "(Refer to debug log for errors from all formats). ";
             }
             else
             {
-                std::ostringstream os;
-                os << "The specified transform file '";
-                os << filepath <<"' does not appear to be a valid, known LUT file format.";
-                throw Exception(os.str().c_str());
+                os << "(Enable debug log for errors from all formats). ";
             }
+
+            if(!possibleFormats.empty())
+            {
+                os << "All formats have been tried including ";
+                os << "formats registered for the given extension. ";
+                os << "These formats gave the following errors: ";
+                os << primaryErrorText;
+            }
+
+            throw Exception(os.str().c_str());
         }
         
         // We mutex both the main map and each item individually, so that
@@ -671,3 +697,191 @@ OCIO_NAMESPACE_ENTER
     }
 }
 OCIO_NAMESPACE_EXIT
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+#include <algorithm>
+
+void LoadTransformFile(const std::string & filePath)
+{
+    // Create a FileTransform
+    OCIO::FileTransformRcPtr pFileTransform
+        = OCIO::FileTransform::Create();
+    //! A tranform file does not define any interpolation (contrary to config
+    //! file), this is to avoid exception when creating the operation.
+    pFileTransform->setInterpolation(OCIO::INTERP_LINEAR);
+    pFileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    pFileTransform->setSrc(filePath.c_str());
+
+    // Create empty Config to use
+    OCIO::ConfigRcPtr pConfig = OCIO::Config::Create();
+
+    // Get the processor corresponding to the transform
+    OCIO::ConstProcessorRcPtr pProcessor
+        = pConfig->getProcessor(pFileTransform);
+
+}
+
+#ifndef OCIO_UNIT_TEST_FILES_DIR
+#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
+#endif
+
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
+static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
+
+OIIO_ADD_TEST(FileTransform, LoadFileOK)
+{
+    // Discreet 1D Lut
+    const std::string discreetLut(ocioTestFilesDir
+        + std::string("/logtolin_8to8.lut"));
+    OIIO_CHECK_NO_THROW(LoadTransformFile(discreetLut));
+
+    // Houdini 1D LUT
+    const std::string houdiniLut(ocioTestFilesDir
+        + std::string("/sRGB.lut"));
+    OIIO_CHECK_NO_THROW(LoadTransformFile(houdiniLut));
+
+    // Discreet 3D LUT file
+    const std::string discree3DtLut(ocioTestFilesDir
+        + std::string("/discreet-3d-lut.3dl"));
+    OIIO_CHECK_NO_THROW(LoadTransformFile(discree3DtLut));
+
+    // 3D LUT file
+    const std::string crosstalk3DtLut(ocioTestFilesDir
+        + std::string("/crosstalk.3dl"));
+    OIIO_CHECK_NO_THROW(LoadTransformFile(crosstalk3DtLut));
+
+    const std::string lustre3DtLut(ocioTestFilesDir
+        + std::string("/lustre_33x33x33.3dl"));
+    OIIO_CHECK_NO_THROW(LoadTransformFile(lustre3DtLut));
+}
+
+OIIO_ADD_TEST(FileTransform, LoadFileFail)
+{
+    // Legacy Lustre 1D LUT files. Similar to supported formats but actually
+    // are different formats.
+    // Test that they are correctly recognized as unreadable. 
+    // TODO - validate exception being thrown
+    {
+        const std::string lustreOldLut(ocioTestFilesDir
+            + std::string("/legacy_slog_to_log_v3_lustre.lut"));
+        OIIO_CHECK_THROW(LoadTransformFile(lustreOldLut), OCIO::Exception);
+    }
+    {
+        const std::string lustreOldLut(ocioTestFilesDir
+            + std::string("/legacy_flmlk_desat.lut"));
+        OIIO_CHECK_THROW(LoadTransformFile(lustreOldLut), OCIO::Exception);
+    }
+
+    // Color transform file
+    {
+        const std::string colTransform(ocioTestFilesDir
+            + std::string("/example-3d-lut.ctf"));
+        OIIO_CHECK_THROW(LoadTransformFile(colTransform), OCIO::Exception);
+    }
+
+    // Invalid file
+    {
+        const std::string unKnown(ocioTestFilesDir
+            + std::string("/error_unknown_format.txt"));
+        OIIO_CHECK_THROW(LoadTransformFile(unKnown), OCIO::Exception);
+    }
+}
+
+bool FormatNameFoundByExtension(const std::string & extension, const std::string & formatName)
+{
+    bool foundIt = false;
+    OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
+
+    OCIO::FileFormatVector possibleFormats;
+    formatRegistry.getFileFormatForExtension(extension, possibleFormats);
+    OCIO::FileFormatVector::const_iterator endFormat = possibleFormats.end();
+    OCIO::FileFormatVector::const_iterator itFormat = possibleFormats.begin();
+    while (itFormat != endFormat && !foundIt)
+    {
+        OCIO::FileFormat * tryFormat = *itFormat;
+
+        if (formatName == tryFormat->getName())
+            foundIt = true;
+
+        ++itFormat;
+    }
+    return foundIt;
+}
+
+bool FormatExtensionFoundByName(const std::string & extension, const std::string & formatName)
+{
+    bool foundIt = false;
+    OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
+
+    OCIO::FileFormat * fileFormat = formatRegistry.getFileFormatByName(formatName);
+    if (fileFormat)
+    {
+        OCIO::FormatInfoVec formatInfoVec;
+        fileFormat->GetFormatInfo(formatInfoVec);
+
+        for (unsigned int i = 0; i < formatInfoVec.size() && !foundIt; ++i)
+        {
+            if (extension == formatInfoVec[i].extension)
+                foundIt = true;
+
+        }
+    }
+    return foundIt;
+}
+
+OIIO_ADD_TEST(FileTransform, AllFormats)
+{
+    OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
+    OIIO_CHECK_EQUAL(16, formatRegistry.getNumRawFormats());
+    OIIO_CHECK_EQUAL(18, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
+    OIIO_CHECK_EQUAL(6, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
+
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("3dl", "flame"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cc", "ColorCorrection"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("ccc", "ColorCorrectionCollection"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cdl", "ColorDecisionList"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("csp", "cinespace"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cub", "truelight"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cube", "iridas_cube"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("itx", "iridas_itx"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("look", "iridas_look"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("lut", "houdini"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("lut", "Discreet 1D LUT"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("mga", "pandora_mga"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("spi1d", "spi1d"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("spi3d", "spi3d"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("spimtx", "spimtx"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("vf", "nukevf"));
+    // When a FileFormat handles 2 "formats" it declares both names
+    // but only exposes one name using the getName() function.
+    OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("3dl", "lustre"));
+    OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("m3d", "pandora_m3d"));
+
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "flame"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "lustre"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cc", "ColorCorrection"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("ccc", "ColorCorrectionCollection"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cdl", "ColorDecisionList"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("csp", "cinespace"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cub", "truelight"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cube", "iridas_cube"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("itx", "iridas_itx"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("look", "iridas_look"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("lut", "houdini"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("lut", "Discreet 1D LUT"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("m3d", "pandora_m3d"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("mga", "pandora_mga"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spi1d", "spi1d"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spi3d", "spi3d"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spimtx", "spimtx"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("vf", "nukevf"));
+
+}
+
+
+#endif

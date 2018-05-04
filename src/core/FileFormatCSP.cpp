@@ -345,7 +345,9 @@ OCIO_NAMESPACE_ENTER
             
             virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual CachedFileRcPtr Read(std::istream & istream) const;
+            virtual CachedFileRcPtr Read(
+                std::istream & istream,
+                const std::string & fileName) const;
             
             virtual void Write(const Baker & baker,
                                const std::string & formatName,
@@ -380,7 +382,9 @@ OCIO_NAMESPACE_ENTER
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Read(std::istream & istream) const
+        LocalFileFormat::Read(
+            std::istream & istream,
+            const std::string & /* fileName unused */) const
         {
 
             // this shouldn't happen
@@ -970,8 +974,9 @@ OIIO_ADD_TEST(FileFormatCSP, simple1D)
     simple1D.str(strebuf.str());
     
     // Read file
+    std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple1D);
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple1D, emptyString);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
 
     // check metadata
@@ -1046,8 +1051,9 @@ OIIO_ADD_TEST(FileFormatCSP, simple3D)
     simple3D.str(strebuf.str());
     
     // Load file
+    std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D);
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D, emptyString);
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);
     
     // check metadata
@@ -1362,9 +1368,10 @@ OIIO_ADD_TEST(FileFormatCSP, lessStrictParse)
     simple3D.str(strebuf.str());
     
     // Load file
+    std::string emptyString;
     OCIO::LocalFileFormat tester;
     OCIO::CachedFileRcPtr cachedFile;
-    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(simple3D));
+    OIIO_CHECK_NO_THROW(cachedFile = tester.Read(simple3D, emptyString));
     OCIO::CachedFileCSPRcPtr csplut = OCIO::DynamicPtrCast<OCIO::CachedFileCSP>(cachedFile);   
     
     // check metadata

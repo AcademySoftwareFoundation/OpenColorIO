@@ -71,7 +71,9 @@ OCIO_NAMESPACE_ENTER
             
             virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual CachedFileRcPtr Read(std::istream & istream) const;
+            virtual CachedFileRcPtr Read(
+                std::istream & istream,
+                const std::string & fileName) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                          const Config& config,
@@ -79,7 +81,32 @@ OCIO_NAMESPACE_ENTER
                          CachedFileRcPtr untypedCachedFile,
                          const FileTransform& fileTransform,
                          TransformDirection dir) const;
+
+        private:
+            static void ThrowErrorMessage(const std::string & error,
+                const std::string & fileName,
+                int line,
+                const std::string & lineContent);
         };
+
+        void LocalFileFormat::ThrowErrorMessage(const std::string & error,
+            const std::string & fileName,
+            int line,
+            const std::string & lineContent)
+        {
+            std::ostringstream os;
+            os << "Error parsing Nuke .vf file (";
+            os << fileName;
+            os << ").  ";
+            if (-1 != line)
+            {
+                os << "At line (" << line << "): '";
+                os << lineContent << "'.  ";
+            }
+            os << error;
+
+            throw Exception(os.str().c_str());
+        }
         
         void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
@@ -91,7 +118,9 @@ OCIO_NAMESPACE_ENTER
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Read(std::istream & istream) const
+        LocalFileFormat::Read(
+            std::istream & istream,
+            const std::string & fileName) const
         {
             // this shouldn't happen
             if(!istream)
@@ -101,10 +130,12 @@ OCIO_NAMESPACE_ENTER
             
             // Validate the file type
             std::string line;
-            if(!nextline(istream, line) || 
+            int lineNumber = 1;
+            if(!nextline(istream, line) ||
                !pystring::startswith(pystring::lower(line), "#inventor"))
             {
-                throw Exception("Lut doesn't seem to be a .vf lut. Expecting '#Inventor V2.1 ascii'.");
+                ThrowErrorMessage("Expecting '#Inventor V2.1 ascii'.",
+                    fileName, lineNumber, line);
             }
             
             // Parse the file
@@ -117,9 +148,11 @@ OCIO_NAMESPACE_ENTER
                 std::vector<float> tmpfloats;
                 
                 bool in3d = false;
-                
+
                 while(nextline(istream, line))
                 {
+                    ++lineNumber;
+
                     // Strip, lowercase, and split the line
                     pystring::split(pystring::lower(pystring::strip(line)), parts);
                     
@@ -136,7 +169,9 @@ OCIO_NAMESPACE_ENTER
                                !StringToInt( &size3d[1], parts[2].c_str()) ||
                                !StringToInt( &size3d[2], parts[3].c_str()))
                             {
-                                throw Exception("Malformed grid_size tag in .vf lut.");
+                                ThrowErrorMessage(
+                                    "Malformed grid_size tag.",
+                                    fileName, lineNumber, line);
                             }
                             
                             raw3d.reserve(3*size3d[0]*size3d[1]*size3d[2]);
@@ -145,13 +180,19 @@ OCIO_NAMESPACE_ENTER
                         {
                             if(parts.size() != 17)
                             {
-                                throw Exception("Malformed global_transform tag. 16 floats expected.");
+                                ThrowErrorMessage(
+                                    "Malformed global_transform tag. "
+                                    "16 floats expected.",
+                                    fileName, lineNumber, line);
                             }
                             
                             parts.erase(parts.begin()); // Drop the 1st entry. (the tag)
                             if(!StringVecToFloatVec(global_transform, parts) || global_transform.size() != 16)
                             {
-                                throw Exception("Malformed global_transform tag. Could not convert to float array.");
+                                ThrowErrorMessage(
+                                    "Malformed global_transform tag. "
+                                    "Could not convert to float array.",
+                                    fileName, lineNumber, line);
                             }
                         }
                         // TODO: element_size (aka scale3)
@@ -177,18 +218,18 @@ OCIO_NAMESPACE_ENTER
             if(size3d[0]*size3d[1]*size3d[2] != static_cast<int>(raw3d.size()/3))
             {
                 std::ostringstream os;
-                os << "Parse error in .vf lut. ";
                 os << "Incorrect number of lut3d entries. ";
                 os << "Found " << raw3d.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
-                throw Exception(os.str().c_str());
+                ThrowErrorMessage(
+                    os.str().c_str(),
+                    fileName, -1, "");
             }
             
             if(size3d[0]*size3d[1]*size3d[2] == 0)
             {
-                std::ostringstream os;
-                os << "Parse error in .vf lut. ";
-                os << "No 3D Lut entries found.";
-                throw Exception(os.str().c_str());
+                ThrowErrorMessage(
+                    "No 3D Lut entries found.",
+                    fileName, -1, "");
             }
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
@@ -214,14 +255,16 @@ OCIO_NAMESPACE_ENTER
             cachedFile->lut3D->size[2] = size3d[2];
             cachedFile->lut3D->lut.reserve(raw3d.size());
             
-            for(int rIndex=0; rIndex<size3d[0]; ++rIndex)
+            // lut3D->lut is red fastest (loop on B, G then R to push values)
+            for (int bIndex = 0; bIndex<size3d[2]; ++bIndex)
             {
                 for(int gIndex=0; gIndex<size3d[1]; ++gIndex)
                 {
-                    for(int bIndex=0; bIndex<size3d[2]; ++bIndex)
+                    for (int rIndex = 0; rIndex<size3d[0]; ++rIndex)
                     {
-                        int i = GetLut3DIndex_B(rIndex, gIndex, bIndex,
-                                                size3d[0], size3d[1], size3d[2]);
+                        // In file, lut is blue fastest
+                        int i = GetLut3DIndex_BlueFast(rIndex, gIndex, bIndex,
+                            size3d[0], size3d[1], size3d[2]);
                         
                         cachedFile->lut3D->lut.push_back(static_cast<float>(raw3d[i+0]));
                         cachedFile->lut3D->lut.push_back(static_cast<float>(raw3d[i+1]));
@@ -294,4 +337,76 @@ OCIO_NAMESPACE_EXIT
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// TODO: Unit test
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+#include <fstream>
+
+OIIO_ADD_TEST(FileFormatVF, FormatInfo)
+{
+    OCIO::FormatInfoVec formatInfoVec;
+    OCIO::LocalFileFormat tester;
+    tester.GetFormatInfo(formatInfoVec);
+
+    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OIIO_CHECK_EQUAL("nukevf", formatInfoVec[0].name);
+    OIIO_CHECK_EQUAL("vf", formatInfoVec[0].extension);
+    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+        formatInfoVec[0].capabilities);
+}
+
+void ReadVF(const std::string & fileContent)
+{
+    std::istringstream is;
+    is.str(fileContent);
+
+    // Read file
+    OCIO::LocalFileFormat tester;
+    const std::string SAMPLE_NAME("Memory File");
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+}
+
+OIIO_ADD_TEST(FileFormatVF, ReadFailure)
+{
+    {
+        // Validate stream can be read with no error.
+        // Then stream will be altered to introduce errors.
+        const std::string SAMPLE_ERROR =
+            "#Inventor V2.1 ascii\n"
+            "grid_size 2 2 2\n"
+            "global_transform 1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1 \n"
+            "data\n"
+            "0 0 0\n"
+            "0 0 1\n"
+            "0 1 0\n"
+            "0 1 1\n"
+            "1 0 0\n"
+            "1 0 1\n"
+            "1 1 0\n"
+            "1 1 1\n";
+
+        OIIO_CHECK_NO_THROW(ReadVF(SAMPLE_ERROR));
+    }
+    {
+        // Too much data
+        const std::string SAMPLE_ERROR =
+            "#Inventor V2.1 ascii\n"
+            "grid_size 2 2 2\n"
+            "global_transform 1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1 \n"
+            "data\n"
+            "0 0 0\n"
+            "0 0 1\n"
+            "0 1 0\n"
+            "0 1 1\n"
+            "1 0 0\n"
+            "1 0 1\n"
+            "1 1 0\n"
+            "1 1 0\n"
+            "1 1 1\n";
+
+        OIIO_CHECK_THROW(ReadVF(SAMPLE_ERROR), OCIO::Exception);
+    }
+}
+
+#endif // OCIO_UNIT_TEST

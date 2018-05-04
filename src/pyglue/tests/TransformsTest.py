@@ -200,7 +200,7 @@ class TransformsTest(unittest.TestCase):
         self.assertEqual("foobar", ft.getCCCId())
         ft.setInterpolation(OCIO.Constants.INTERP_NEAREST)
         self.assertEqual(OCIO.Constants.INTERP_NEAREST, ft.getInterpolation())
-        self.assertEqual(17, ft.getNumFormats())
+        self.assertEqual(18, ft.getNumFormats())
         self.assertEqual("flame", ft.getFormatNameByIndex(0))
         self.assertEqual("3dl", ft.getFormatExtensionByIndex(0))
 

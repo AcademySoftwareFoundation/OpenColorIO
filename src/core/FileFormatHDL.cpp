@@ -276,7 +276,9 @@ OCIO_NAMESPACE_ENTER
             
             virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual CachedFileRcPtr Read(std::istream & istream) const;
+            virtual CachedFileRcPtr Read(
+                std::istream & istream,
+                const std::string & fileName) const;
             
             virtual void Write(const Baker & baker,
                                const std::string & formatName,
@@ -300,7 +302,9 @@ OCIO_NAMESPACE_ENTER
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Read(std::istream & istream) const
+        LocalFileFormat::Read(
+            std::istream & istream,
+            const std::string & /* fileName unused */) const
         {
             
             // this shouldn't happen
@@ -1023,8 +1027,9 @@ OIIO_ADD_TEST(FileFormatHDL, Read1D)
     simple3D1D.str(strebuf.str());
     
     // Load file
+    std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D);
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D, emptyString);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
@@ -1171,8 +1176,9 @@ OIIO_ADD_TEST(FileFormatHDL, Read3D)
     std::istringstream simple3D1D;
     simple3D1D.str(strebuf.str());
     // Load file
+    std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D);
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D, emptyString);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //
@@ -1341,8 +1347,9 @@ OIIO_ADD_TEST(FileFormatHDL, Read3D1D)
     simple3D1D.str(strebuf.str());
     
     // Load file
+    std::string emptyString;
     OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D);
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(simple3D1D, emptyString);
     OCIO::CachedFileHDLRcPtr lut = OCIO::DynamicPtrCast<OCIO::CachedFileHDL>(cachedFile);
     
     //

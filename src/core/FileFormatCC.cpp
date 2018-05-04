@@ -62,7 +62,9 @@ OCIO_NAMESPACE_ENTER
             
             virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual CachedFileRcPtr Read(std::istream & istream) const;
+            virtual CachedFileRcPtr Read(
+                std::istream & istream,
+                const std::string & fileName) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                                       const Config& config,
@@ -84,7 +86,9 @@ OCIO_NAMESPACE_ENTER
         // Try and load the format
         // Raise an exception if it can't be loaded.
         
-        CachedFileRcPtr LocalFileFormat::Read(std::istream & istream) const
+        CachedFileRcPtr LocalFileFormat::Read(
+            std::istream & istream,
+            const std::string & /* fileName unused */) const
         {
             std::ostringstream rawdata;
             rawdata << istream.rdbuf();
