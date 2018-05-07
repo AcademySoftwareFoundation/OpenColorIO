@@ -976,34 +976,24 @@ OCIO_NAMESPACE_ENTER
                 const std::string decl(std::string("uniform sampler2D ") + name + ";\n");
                 shaderDesc->addToDeclareShaderCode(decl.c_str());
 
-                const std::string computerPositionFunc(name + "_ComputePos");
+                const std::string vec2( (lang == GPU_LANGUAGE_CG) ? "half2" : "vec2");
 
-                if(lang == GPU_LANGUAGE_CG)
-                {
-                    code << "    half3 coords = " << computerPositionFunc << "(float f);\n";
-                }
-                else
-                {
-                    // The computation of the texture coordinates is more complexe
-                    // because of the texture value padding.  Refer to padLutChannel()
+                std::ostringstream func;
+                func << vec2 << " " << name << "_ComputePos(float f)\n";
+                func << "{\n";
+                           // Need min() to protect against f > 1 causing a bogus x value.
+                func << "    float dep = min(f, 1.0) * " << float(length-1) << ";\n";
 
-                    std::ostringstream func;
-                    func << "vec2 " << computerPositionFunc << "(float f)\n";
-                    func << "{\n";
-                               // Need min() to protect against f > 1 causing a bogus x value.
-                    func << "    float dep = min(f, 1.0) * " << float(length-1) << ";\n";
+                func << "    " << vec2 << " retVal;\n";
+                func << "    retVal.y = float(int(dep / " << float(width-1) << "));\n";
+                func << "    retVal.x = dep - retVal.y * " << float(width-1) << ";\n";
 
-                    func << "    vec2 retVal;\n";
-                    func << "    retVal.y = float(int(dep / " << float(width-1) << "));\n";
-                    func << "    retVal.x = dep - retVal.y * " << float(width-1) << ";\n";
+                func << "    retVal.x = (retVal.x + 0.5) / " << float(width) << ";\n";
+                func << "    retVal.y = (retVal.y + 0.5) / " << float(height) << ";\n";
+                func << "    return retVal;\n";
+                func << "}\n";
 
-                    func << "    retVal.x = (retVal.x + 0.5) / " << float(width) << ";\n";
-                    func << "    retVal.y = (retVal.y + 0.5) / " << float(height) << ";\n";
-                    func << "    return retVal;\n";
-                    func << "}\n";
-
-                    shaderDesc->addToHelperShaderCode(func.str().c_str());
-                }
+                shaderDesc->addToHelperShaderCode(func.str().c_str());
 
                 code << Write_sampleLut2D_rgb(
                     shaderDesc->getPixelName(), name, shaderDesc->getLanguage());

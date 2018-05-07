@@ -50,18 +50,23 @@ class OCIOGPUTest
         inline const std::string& name() const  { return m_name; }
 
         void setContext(OCIO_NAMESPACE::TransformRcPtr & transform, 
-                        OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc,
-                        float errorThreshold);
+                        OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc);
 
         void setContext(OCIO_NAMESPACE::ConstProcessorRcPtr & processor, 
-                        OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc,
-                        float errorThreshold);
+                        OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc);
 
         inline OCIO_NAMESPACE::ConstProcessorRcPtr & getProcessor() { return m_processor; }
         inline OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc() { return m_shaderDesc; }
+
+        inline bool useHDRMode() { return m_useHDRMode; }
+        inline void setHDRNode(bool use) { m_useHDRMode = use; }
+
+        inline void setErrorThreshold(float error) { m_errorThreshold = error; }
         inline float getErrorThreshold() { return m_errorThreshold; }
 
         inline void setup() { m_function(*this); }
+
+        inline bool isValid() { return m_processor && m_shaderDesc; }
 
     private:
         const std::string m_group, m_name;
@@ -69,6 +74,7 @@ class OCIOGPUTest
         OCIO_NAMESPACE::ConstProcessorRcPtr m_processor;
         OCIO_NAMESPACE::GpuShaderDescRcPtr m_shaderDesc;
         float m_errorThreshold;
+        bool m_useHDRMode;
 };
 
 typedef std::vector<OCIOGPUTest*> UnitTests;

@@ -60,9 +60,9 @@ OCIO_NAMESPACE_ENTER
             // We account for the change of base by rolling the multiplier
             // in with 'k'
             
-            float knew[3] = { k[0] / logf(base[0]),
-                              k[1] / logf(base[1]),
-                              k[2] / logf(base[2]) };
+            const float knew[3] = { k[0] / logf(base[0]),
+                                    k[1] / logf(base[1]),
+                                    k[2] / logf(base[2]) };
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
@@ -85,13 +85,13 @@ OCIO_NAMESPACE_ENTER
                            const float * base,
                            const float * kb)
         {
-            float kinv[3] = { 1.0f / k[0],
-                               1.0f / k[1],
-                               1.0f / k[2] };
+            const float kinv[3] = { 1.0f / k[0],
+                                    1.0f / k[1],
+                                    1.0f / k[2] };
             
-            float minv[3] = { 1.0f / m[0],
-                               1.0f / m[1],
-                               1.0f / m[2] };
+            const float minv[3] = { 1.0f / m[0],
+                                    1.0f / m[1],
+                                    1.0f / m[2] };
             
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {

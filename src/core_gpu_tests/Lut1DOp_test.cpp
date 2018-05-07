@@ -42,8 +42,6 @@ OCIO_NAMESPACE_USING
 
 
 const int LUT3D_EDGE_SIZE = 32;
-const float g_epsilon = 1e-6f;
-
 
 
 #ifdef OCIO_SOURCE_DIR
@@ -57,7 +55,7 @@ static const std::string ociodir(STR(OCIO_SOURCE_DIR));
 
 
 OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_legacy_shader)
-{
+{    
     const std::string 
         filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_1.spi1d"));
 
@@ -67,9 +65,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_legacy_shader)
     file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
-    test.setContext(file->createEditableCopy(), shaderDesc, g_epsilon);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -84,10 +82,12 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_inverse_legacy_shader)
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
 
     // TODO: Investigate why the test needs such a threshold
-    test.setContext(file->createEditableCopy(), shaderDesc, 1e-1f);
+    test.setErrorThreshold(1e-2f);
 }
 
 
@@ -104,7 +104,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    test.setContext(file->createEditableCopy(), shaderDesc, g_epsilon);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -122,8 +122,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    // TODO: Investigate why the test needs such a threshold
-    test.setContext(file->createEditableCopy(), shaderDesc, 1e-1f);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -137,9 +136,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_legacy_shader)
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
-    test.setContext(file->createEditableCopy(), shaderDesc, g_epsilon);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -154,10 +153,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_inverse_legacy_shader)
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
-    // TODO: Investigate why the test needs such a threshold
-    test.setContext(file->createEditableCopy(), shaderDesc, 1e-1f);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -173,7 +171,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    test.setContext(file->createEditableCopy(), shaderDesc, g_epsilon);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -190,8 +188,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    // TODO: Investigate why the test needs such a threshold
-    test.setContext(file->createEditableCopy(), shaderDesc, 1e-1f);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -205,9 +202,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_legacy_shader)
     file->setInterpolation(OCIO::INTERP_LINEAR);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
-    test.setContext(file->createEditableCopy(), shaderDesc, g_epsilon);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -222,10 +219,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_inverse_legacy_shader)
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
-    // TODO: Investigate why the test needs such a threshold
-    test.setContext(file->createEditableCopy(), shaderDesc, 2e-1f);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -241,7 +237,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    test.setContext(file->createEditableCopy(), shaderDesc, g_epsilon);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -258,8 +254,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    // TODO: Investigate why the test needs such a threshold
-    test.setContext(file->createEditableCopy(), shaderDesc, 2e-1f);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 
@@ -275,7 +270,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_nearest_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    test.setContext(file->createEditableCopy(), shaderDesc, g_epsilon);
+    test.setContext(file->createEditableCopy(), shaderDesc);
 }
 
 

@@ -56,18 +56,59 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <stdlib.h>
 #include <string.h>
+#include <iomanip>
 
 #include "glsl.h"
 
 
+namespace Shader
+{
+    // Based on testings, the interpolation precision for GPU textures is 8-bits
+    // so it is the default error threshold for all GPU unit tests.
+    const float defaultErrorThreshold = 1.0f/256.0f;
+
+    // Check if difference between floats f1 and f2 does not exceed eps
+    bool CompareFloats(float f1, float f2, float eps)
+    {
+      return ((f1 > f2)? f1 - f2: f2 - f1) <= eps;
+    }
+
+    // Compute the absolute equality of two floats
+    // a is the first float to compare
+    // b is the first float to compare
+    // epsilon is the maximum expected epsilon
+    bool Compare(float a, float b, float epsilon)
+    {
+        // In some occasions, MAX_FLOAT will be "rounded" to infinity on some GPU renderers.
+        // In order to avoid this issue, consider all number over/under a given threshold as
+        // equal for testing purposes.
+        #define LARGE_THRESHOLD    std::numeric_limits<float>::max()
+
+        if ( ( (a >=  LARGE_THRESHOLD) && (b >=  LARGE_THRESHOLD) ) ||
+             ( (a <= -LARGE_THRESHOLD) && (b <= -LARGE_THRESHOLD) ) ||
+             ( _isnan(a) && _isnan(b) ) )
+        {
+            return true;
+        }
+
+        #undef LARGE_THRESHOLD
+
+        return CompareFloats(a, b, epsilon);
+    }
+}
+
+
 OCIOGPUTest::OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFunc test) 
-    : m_group(testgroup), m_name(testname), m_function(test), m_errorThreshold(1e-8f)
+    :   m_group(testgroup)
+    ,   m_name(testname)
+    ,   m_function(test)
+    ,   m_errorThreshold(Shader::defaultErrorThreshold)
+    ,   m_useHDRMode(true)
 {
 }
 
 void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr & transform, 
-                             OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc,
-                             float errorThreshold)
+                             OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc)
 {
     if(m_processor.get()!=0x0)
     {
@@ -78,12 +119,10 @@ void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr & transform,
 
     m_shaderDesc     = shaderDesc;
     m_processor      = config->getProcessor(transform);
-    m_errorThreshold = errorThreshold;
 }
 
 void OCIOGPUTest::setContext(OCIO_NAMESPACE::ConstProcessorRcPtr & processor, 
-                             OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc,
-                             float errorThreshold)
+                             OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc)
 {
     if(m_processor.get()!=0x0)
     {
@@ -92,7 +131,6 @@ void OCIOGPUTest::setContext(OCIO_NAMESPACE::ConstProcessorRcPtr & processor,
 
     m_shaderDesc     = shaderDesc;
     m_processor      = processor;
-    m_errorThreshold = errorThreshold;
 }
 
 
@@ -180,10 +218,11 @@ namespace
         glutDestroyWindow(g_win);
     }
 
-    void UpdateImageTexture()
+    void UpdateImageTexture(bool useHDR)
     {
-        static const float min = -1.0f;
-        static const float range = max - min;
+        const float min = useHDR ? -1.0f : 0.0f;
+        const float max = useHDR ? +2.0f : 1.0f;
+        const float range = max - min;
 
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         const float step = range / numEntries;
@@ -203,11 +242,11 @@ namespace
     // The main if the shader program hard-coded to accept the lut 3D smapler as input
     const char * g_fragShaderText = ""
     "\n"
-    "uniform sampler2D tex1;\n"
+    "uniform sampler2D img;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
+    "    vec4 col = texture2D(img, gl_TexCoord[0].st);\n"
     "    gl_FragColor = OCIODisplay(col);\n"
     "}\n";
 
@@ -234,7 +273,7 @@ namespace
 
         // Step 6: Enable the fragment shader program, and all needed textures
         g_oglBuilder->useProgram();
-        glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "tex1"), 1);
+        glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "img"), 1);
         g_oglBuilder->useAllTextures();
     }
 
@@ -257,24 +296,24 @@ namespace
         
         for(size_t idx=0; idx<(g_winWidth * g_winHeight); ++idx)
         {
-            if( (std::fabs(cppImage[4*idx+0]-gpuImage[4*idx+0]) > epsilon) ||
-                (std::fabs(cppImage[4*idx+1]-gpuImage[4*idx+1]) > epsilon) ||
-                (std::fabs(cppImage[4*idx+2]-gpuImage[4*idx+2]) > epsilon) ||
-                (std::fabs(cppImage[4*idx+3]-gpuImage[4*idx+3]) > epsilon) )
+            if(!Shader::Compare(cppImage[4*idx+0], gpuImage[4*idx+0], epsilon) ||
+               !Shader::Compare(cppImage[4*idx+1], gpuImage[4*idx+1], epsilon) ||
+               !Shader::Compare(cppImage[4*idx+2], gpuImage[4*idx+2], epsilon) ||
+               !Shader::Compare(cppImage[4*idx+3], gpuImage[4*idx+3], epsilon))
             {
                 std::stringstream err;
                 err << std::setprecision(10)
-                    << "Image[" << idx << "] form orig = {"
+                    << "\n\tfrom orig[" << idx << "] = {" 
                     << g_image[4*idx+0] << ", " << g_image[4*idx+1] << ", "
-                    << g_image[4*idx+2] << ", " << g_image[4*idx+3] << "}"
-                    << " to cpu = {"
+                    << g_image[4*idx+2] << ", " << g_image[4*idx+3] << "}\n"
+                    << "\tto  cpu = {"
                     << cppImage[4*idx+0] << ", " << cppImage[4*idx+1] << ", "
-                    << cppImage[4*idx+2] << ", " << cppImage[4*idx+3] << "}"
-                    << " and gpu = {"
+                    << cppImage[4*idx+2] << ", " << cppImage[4*idx+3] << "}\n"
+                    << "\tand gpu = {" 
                     << gpuImage[4*idx+0] << ", " << gpuImage[4*idx+1] << ", "
-                    << gpuImage[4*idx+2] << ", " << gpuImage[4*idx+3] << "}";
-
-                err << "\twith epsilon=" << epsilon;
+                    << gpuImage[4*idx+2] << ", " << gpuImage[4*idx+3] << "}\n"
+                    << "\twith epsilon=" 
+                    << epsilon;
                 throw OCIO::Exception(err.str().c_str());
             }
         }
@@ -355,32 +394,36 @@ int main(int, char **)
     {
         const unsigned curr_failures = failures;
      
+        OCIOGPUTest* test = tests[idx];
+
         try
         {
-            OCIOGPUTest* test = tests[idx];
             std::cerr << "Test [" << test->group() << "] [" << test->name() << "] - ";
 
             test->setup();
 
-            // Set the rendering destination to FBO
-            glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-            
-            // Clear buffer
-            glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            if(test->isValid())
+            {
+                // Set the rendering destination to FBO
+                glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+                
+                // Clear buffer
+                glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // Update the image texture
-            UpdateImageTexture();
+                // Update the image texture
+                UpdateImageTexture(test->useHDRMode());
 
-            // Update the GPU shader program
-            UpdateOCIOGLState(test->getProcessor(), test->getShaderDesc());
+                // Update the GPU shader program
+                UpdateOCIOGLState(test->getProcessor(), test->getShaderDesc());
 
-            // Process the image texture into the rendering buffer
-            Reshape();
-            Redisplay();
+                // Process the image texture into the rendering buffer
+                Reshape();
+                Redisplay();
 
-            // Validate the processed image using the rendering buffer
-            ValidateImageTexture(test->getProcessor(), test->getErrorThreshold());
+                // Validate the processed image using the rendering buffer
+                ValidateImageTexture(test->getProcessor(), test->getErrorThreshold());
+            }
         }
         catch(OCIO::Exception & ex)
         {
@@ -393,9 +436,14 @@ int main(int, char **)
             std::cerr << "FAILED - Unexpected error" << std::endl;
         }
 
-        if(curr_failures==failures)
+        if(curr_failures==failures && test->isValid())
         {
             std::cerr << "PASSED" << std::endl;
+        }
+        else if(!test->isValid())
+        {
+            ++failures;
+            std::cerr << "FAILED - Invalid test" << std::endl;
         }
 
         glUseProgram(0);
@@ -404,4 +452,6 @@ int main(int, char **)
     }
 
     std::cerr << std::endl << failures << " tests failed" << std::endl << std::endl;
+
+    return failures;
 }

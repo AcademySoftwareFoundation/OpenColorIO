@@ -37,9 +37,9 @@ namespace OCIO = OCIO_NAMESPACE;
 OCIO_NAMESPACE_USING
 
 
-const int LUT3D_EDGE_SIZE = 32;
+const int LUT3D_EDGE_SIZE = 64;
 
-const float g_epsilon = 1e-6f;
+const float g_epsilon = 1e-5f;
 const float g_epsilon_inverse = 1e-4f;
 
 

@@ -91,7 +91,7 @@ std::string createConfig()
         "    isdata: false\n"
         "    allocation: uniform\n"
         "    allocationvars: [0, 1]\n"
-        "    to_reference: !<GroupTransform>\n"
+        "    from_reference: !<GroupTransform>\n"
         "      children:\n";
 
     return ocioConfigStr;
@@ -102,8 +102,7 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
     std::string configStr = createConfig();
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
-        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
-        "        - !<FileTransform> {src: lut1d_3.spi1d, interpolation: linear}\n";
+        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n";
 
     std::istringstream is;
     is.str(configStr);
@@ -112,12 +111,9 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
     config->sanityCheck();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
-
     OCIO::GpuShaderDescRcPtr shaderDesc
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(32);
-
-    // TODO: Investigate why the test needs such a threshold
-    test.setContext(processor, shaderDesc, 1e-2f);
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(64);
+    test.setContext(processor, shaderDesc);
 }
 
 OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
@@ -125,8 +121,7 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
     std::string configStr = createConfig();
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
-        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
-        "        - !<FileTransform> {src: lut1d_3.spi1d, interpolation: linear}\n";
+        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n";
 
     std::istringstream is;
     is.str(configStr);
@@ -135,11 +130,8 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
     config->sanityCheck();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
-
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
-    // TODO: Investigate why the test needs such a threshold
-    test.setContext(processor, shaderDesc, 1e-2f);
+    test.setContext(processor, shaderDesc);
 }
 
 OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
@@ -148,11 +140,11 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
         "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
-        "        - !<MatrixTransform> {matrix: [0.75573, 0.22197, 0.0223, 0, "\
-                                               "0.05901, 0.96928, -0.02829, 0, "\
-                                               "0.16134, 0.07406, 0.7646, 0, "\
-                                               "0, 0, 0, 1]}\n"
-        "        - !<LogTransform> {base: 10, direction: inverse}\n";
+        "        - !<LogTransform> {base: 10}\n"
+        "        - !<MatrixTransform> {matrix: [0.075573, 0.022197,  0.00223,  0, "\
+                                               "0.005901, 0.096928, -0.002829, 0, "\
+                                               "0.016134, 0.007406,  0.07646,  0, "\
+                                               "0,        0,         0,        1]}\n";
 
     std::istringstream is;
     is.str(configStr);
@@ -161,8 +153,6 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
     config->sanityCheck();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
-
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-
-    test.setContext(processor, shaderDesc, 1e-4f);
+    test.setContext(processor, shaderDesc);
 }
