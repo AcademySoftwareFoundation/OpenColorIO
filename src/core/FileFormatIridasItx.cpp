@@ -93,7 +93,9 @@ OCIO_NAMESPACE_ENTER
             
             virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual CachedFileRcPtr Read(std::istream & istream) const;
+            virtual CachedFileRcPtr Read(
+                std::istream & istream,
+                const std::string & fileName) const;
             
             virtual void Write(const Baker & baker,
                                const std::string & formatName,
@@ -105,8 +107,33 @@ OCIO_NAMESPACE_ENTER
                          CachedFileRcPtr untypedCachedFile,
                          const FileTransform& fileTransform,
                          TransformDirection dir) const;
+
+        private:
+            static void ThrowErrorMessage(const std::string & error,
+                const std::string & fileName,
+                int line,
+                const std::string & lineContent);
         };
-        
+
+        void LocalFileFormat::ThrowErrorMessage(const std::string & error,
+            const std::string & fileName,
+            int line,
+            const std::string & lineContent)
+        {
+            std::ostringstream os;
+            os << "Error parsing Iridas .itx file (";
+            os << fileName;
+            os << ").  ";
+            if (-1 != line)
+            {
+                os << "At line (" << line << "): '";
+                os << lineContent << "'.  ";
+            }
+            os << error;
+
+            throw Exception(os.str().c_str());
+        }
+
         void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
@@ -117,7 +144,9 @@ OCIO_NAMESPACE_ENTER
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Read(std::istream & istream) const
+        LocalFileFormat::Read(
+            std::istream & istream,
+            const std::string & fileName) const
         {
             // this shouldn't happen
             if(!istream)
@@ -135,9 +164,11 @@ OCIO_NAMESPACE_ENTER
                 std::string line;
                 std::vector<std::string> parts;
                 std::vector<float> tmpfloats;
-                
+                int lineNumber = 0;
+
                 while(nextline(istream, line))
                 {
+                    ++lineNumber;
                     // All lines starting with '#' are comments
                     if(pystring::startswith(line,"#")) continue;
                     
@@ -149,9 +180,14 @@ OCIO_NAMESPACE_ENTER
                     {
                         int size = 0;
                         
-                        if(parts.size() != 2 || !StringToInt( &size, parts[1].c_str()))
+                        if(parts.size() != 2 
+                            || !StringToInt( &size, parts[1].c_str()))
                         {
-                            throw Exception("Malformed LUT_3D_SIZE tag in Iridas .itx lut.");
+                            ThrowErrorMessage(
+                                "Malformed LUT_3D_SIZE tag.",
+                                fileName,
+                                lineNumber,
+                                line);
                         }
                         size3d[0] = size;
                         size3d[1] = size;
@@ -164,12 +200,14 @@ OCIO_NAMESPACE_ENTER
                     {
                         // It must be a float triple!
                         
-                        if(!StringVecToFloatVec(tmpfloats, parts) || tmpfloats.size() != 3)
+                        if(!StringVecToFloatVec(tmpfloats, parts)
+                            || tmpfloats.size() != 3)
                         {
-                            std::ostringstream os;
-                            os << "Malformed color triples specified in Iridas .itx lut:";
-                            os << "'" << line << "'.";
-                            throw Exception(os.str().c_str());
+                            ThrowErrorMessage(
+                                "Malformed color triples specified.",
+                                fileName,
+                                lineNumber,
+                                line);
                         }
                         
                         for(int i=0; i<3; ++i)
@@ -181,18 +219,21 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Interpret the parsed data, validate lut sizes
-            
-            LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
+            LocalCachedFileRcPtr cachedFile 
+                = LocalCachedFileRcPtr(new LocalCachedFile());
             
             if(in3d)
             {
-                if(size3d[0]*size3d[1]*size3d[2] != static_cast<int>(raw.size()/3))
+                if(size3d[0]*size3d[1]*size3d[2] 
+                    != static_cast<int>(raw.size()/3))
                 {
                     std::ostringstream os;
-                    os << "Parse error in Iridas .itx lut. ";
                     os << "Incorrect number of lut3d entries. ";
-                    os << "Found " << raw.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
-                    throw Exception(os.str().c_str());
+                    os << "Found " << raw.size() / 3 << ", expected ";
+                    os << size3d[0] * size3d[1] * size3d[2] << ".";
+                    ThrowErrorMessage(
+                        os.str().c_str(),
+                        fileName, -1, "");
                 }
                 
                 // Reformat 3D data
@@ -203,10 +244,9 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                std::ostringstream os;
-                os << "Parse error in Iridas .itx lut. ";
-                os << "Lut type (1D/3D) unspecified.";
-                throw Exception(os.str().c_str());
+                ThrowErrorMessage(
+                    "No 3D lut found.",
+                    fileName, -1, "");
             }
             
             return cachedFile;
@@ -333,5 +373,93 @@ OCIO_NAMESPACE_ENTER
 }
 OCIO_NAMESPACE_EXIT
 
-
 ///////////////////////////////////////////////////////////////////////////////
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+void ReadIridasItx(const std::string & fileContent)
+{
+    std::istringstream is;
+    is.str(fileContent);
+
+    // Read file
+    OCIO::LocalFileFormat tester;
+    const std::string SAMPLE_NAME("Memory File");
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+}
+
+OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
+{
+    {
+        // Validate stream can be read with no error.
+        // Then stream will be altered to introduce errors.
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2\n"
+
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_NO_THROW(ReadIridasItx(SAMPLE_ERROR));
+    }
+    {
+        // Wrong LUT_3D_SIZE tag
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2 2\n"
+
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_THROW(ReadIridasItx(SAMPLE_ERROR), OCIO::Exception);
+    }
+    {
+        // Unexpected tag
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2\n"
+
+            "WRONG_TAG\n"
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_THROW(ReadIridasItx(SAMPLE_ERROR), OCIO::Exception);
+    }
+    {
+        // Wrong number of entries
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2\n"
+
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_THROW(ReadIridasItx(SAMPLE_ERROR), OCIO::Exception);
+    }
+}
+
+#endif // OCIO_UNIT_TEST

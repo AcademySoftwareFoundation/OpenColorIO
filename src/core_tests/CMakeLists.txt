@@ -4,6 +4,9 @@
 add_definitions("-DOCIO_UNIT_TEST")
 add_definitions("-DOCIO_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
+set( CMAKE_UNIT_TEST_FILES_DIRECTORY ${CMAKE_BINARY_DIR}/unittestsfiles )
+add_definitions("-DOCIO_UNIT_TEST_FILES_DIR=${CMAKE_UNIT_TEST_FILES_DIRECTORY}")
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/export/
     ${CMAKE_BINARY_DIR}/export/
@@ -56,6 +59,15 @@ set_target_properties(ocio_core_tests PROPERTIES
     LINK_FLAGS          "${EXTERNAL_LINK_FLAGS}"
     ## to avoid import/export link dll incoherences (since we build an app with OpenColorIO sources)
     COMPILE_DEFINITIONS OpenColorIO_STATIC
+)
+
+# Extract test files
+execute_process(
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_UNIT_TEST_FILES_DIRECTORY}
+)
+execute_process(
+	COMMAND ${CMAKE_COMMAND} -E tar xvz ${CMAKE_SOURCE_DIR}/testdata/unittestsfiles.tar.gz
+	WORKING_DIRECTORY ${CMAKE_UNIT_TEST_FILES_DIRECTORY}
 )
 
 ###############################################################################

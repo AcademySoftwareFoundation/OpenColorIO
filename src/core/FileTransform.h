@@ -67,7 +67,7 @@ OCIO_NAMESPACE_ENTER
     };
     
     typedef std::vector<FormatInfo> FormatInfoVec;
-    
+
     class FileFormat
     {
     public:
@@ -75,7 +75,12 @@ OCIO_NAMESPACE_ENTER
         
         virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const = 0;
         
-        virtual CachedFileRcPtr Read(std::istream & istream) const = 0;
+        // read an istream. originalFileName is used by parsers that make use
+        // of aspects of the file name as part of the parsing.
+        // It may be set to an empty string if not known.
+        virtual CachedFileRcPtr Read(
+            std::istream & istream,
+            const std::string & originalFileName) const = 0;
         
         virtual void Write(const Baker & baker,
                            const std::string & formatName,
@@ -96,7 +101,8 @@ OCIO_NAMESPACE_ENTER
     
     typedef std::map<std::string, FileFormat*> FileFormatMap;
     typedef std::vector<FileFormat*> FileFormatVector;
-    
+    typedef std::map<std::string, FileFormatVector> FileFormatVectorMap;
+
     // TODO: This interface is ugly. What private API is actually appropriate?
     // Maybe, instead of exposing the raw formats, we wrap it?
     // FileCachePair GetFile(const std::string & filepath) and all
@@ -107,9 +113,8 @@ OCIO_NAMESPACE_ENTER
     public:
         static FormatRegistry & GetInstance();
         
-        // TODO: Make these return a vector of possible formats
         FileFormat* getFileFormatByName(const std::string & name) const;
-        FileFormat* getFileFormatForExtension(const std::string & extension) const;
+        void getFileFormatForExtension(const std::string & extension, FileFormatVector & possibleFormats) const;
         
         int getNumRawFormats() const;
         FileFormat* getRawFormatByIndex(int index) const;
@@ -124,7 +129,7 @@ OCIO_NAMESPACE_ENTER
         void registerFileFormat(FileFormat* format);
         
         FileFormatMap m_formatsByName;
-        FileFormatMap m_formatsByExtension;
+        FileFormatVectorMap m_formatsByExtension;
         FileFormatVector m_rawFormats;
         
         typedef std::vector<std::string> StringVec;
@@ -141,6 +146,7 @@ OCIO_NAMESPACE_ENTER
     FileFormat * CreateFileFormatCC();
     FileFormat * CreateFileFormatCSP();
     FileFormat * CreateFileFormatHDL();
+    FileFormat * CreateFileFormatDiscreet1DL();
     FileFormat * CreateFileFormatIridasItx();
     FileFormat * CreateFileFormatIridasCube();
     FileFormat * CreateFileFormatIridasLook();

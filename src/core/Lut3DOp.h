@@ -64,22 +64,22 @@ OCIO_NAMESPACE_ENTER
     };
     
     // RGB channel ordering.
-    // Pixels ordered in such a way that the blue coordinate changes fastest,
-    // then the green coordinate, and finally, the red coordinate changes slowest
-    
-    inline int GetLut3DIndex_B(int indexR, int indexG, int indexB,
-                               int sizeR,  int sizeG,  int /*sizeB*/)
+    // LUT entries ordered in such a way that the red coordinate changes fastest,
+    // then the green coordinate, and finally, the blue coordinate changes slowest
+
+    inline int GetLut3DIndex_RedFast(int indexR, int indexG, int indexB,
+                                     int sizeR,  int sizeG,  int /*sizeB*/)
     {
         return 3 * (indexR + sizeR * (indexG + sizeG * indexB));
     }
     
     
     // RGB channel ordering.
-    // Pixels ordered in such a way that the red coordinate changes fastest,
-    // then the green coordinate, and finally, the blue coordinate changes slowest
-    
-    inline int GetLut3DIndex_R(int indexR, int indexG, int indexB,
-                               int /*sizeR*/,  int sizeG,  int sizeB)
+    // LUT entries ordered in such a way that the blue coordinate changes fastest,
+    // then the green coordinate, and finally, the red coordinate changes slowest
+
+    inline int GetLut3DIndex_BlueFast(int indexR, int indexG, int indexB,
+                                      int /*sizeR*/,  int sizeG,  int sizeB)
     {
         return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
     }

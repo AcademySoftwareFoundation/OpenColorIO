@@ -177,7 +177,9 @@ OCIO_NAMESPACE_ENTER
 
             virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
 
-            virtual CachedFileRcPtr Read(std::istream & istream) const;
+            virtual CachedFileRcPtr Read(
+                std::istream & istream,
+                const std::string & fileName) const;
 
             virtual void BuildFileOps(OpRcPtrVec & ops,
                          const Config& config,
@@ -197,7 +199,9 @@ OCIO_NAMESPACE_ENTER
         }
 
         CachedFileRcPtr
-        LocalFileFormat::Read(std::istream & istream) const
+        LocalFileFormat::Read(
+            std::istream & istream,
+            const std::string & /* fileName unused */) const
         {
 
             // Get root element from XML file
@@ -741,8 +745,9 @@ OIIO_ADD_TEST(FileFormatIridasLook, simple3d)
     simple1D.str(strebuf.str());
 
     // Read file
+    std::string emptyString;
     LocalFileFormat tester;
-    CachedFileRcPtr cachedFile = tester.Read(simple1D);
+    CachedFileRcPtr cachedFile = tester.Read(simple1D, emptyString);
     LocalCachedFileRcPtr looklut = DynamicPtrCast<LocalCachedFile>(cachedFile);
 
     // Check LUT size is correct
@@ -1341,7 +1346,8 @@ OIIO_ADD_TEST(FileFormatIridasLook, fail_on_mask)
     LocalFileFormat tester;
     try
     {
-        CachedFileRcPtr cachedFile = tester.Read(infile);
+        std::string emptyString;
+        CachedFileRcPtr cachedFile = tester.Read(infile, emptyString);
         OIIO_CHECK_ASSERT(false); // Fail test if previous line doesn't throw Exception
     }
     catch(Exception& e)

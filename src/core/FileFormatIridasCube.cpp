@@ -119,7 +119,9 @@ OCIO_NAMESPACE_ENTER
             
             virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual CachedFileRcPtr Read(std::istream & istream) const;
+            virtual CachedFileRcPtr Read(
+                std::istream & istream,
+                const std::string & fileName) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                          const Config& config,
@@ -127,8 +129,32 @@ OCIO_NAMESPACE_ENTER
                          CachedFileRcPtr untypedCachedFile,
                          const FileTransform& fileTransform,
                          TransformDirection dir) const;
+        private:
+            static void ThrowErrorMessage(const std::string & error,
+                const std::string & fileName,
+                int line,
+                const std::string & lineContent);
         };
         
+        void LocalFileFormat::ThrowErrorMessage(const std::string & error,
+            const std::string & fileName,
+            int line,
+            const std::string & lineContent)
+        {
+            std::ostringstream os;
+            os << "Error parsing Iridas .cube file (";
+            os << fileName;
+            os << ").  ";
+            if (-1 != line)
+            {
+                os << "At line (" << line << "): '";
+                os << lineContent << "'.  ";
+            }
+            os << error;
+
+            throw Exception(os.str().c_str());
+        }
+
         void LocalFileFormat::GetFormatInfo(FormatInfoVec & formatInfoVec) const
         {
             FormatInfo info;
@@ -139,7 +165,9 @@ OCIO_NAMESPACE_ENTER
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Read(std::istream & istream) const
+        LocalFileFormat::Read(
+            std::istream & istream,
+            const std::string & fileName) const
         {
             // this shouldn't happen
             if(!istream)
@@ -163,9 +191,11 @@ OCIO_NAMESPACE_ENTER
                 std::string line;
                 std::vector<std::string> parts;
                 std::vector<float> tmpfloats;
+                int lineNumber = 0;
                 
                 while(nextline(istream, line))
                 {
+                    ++lineNumber;
                     // All lines starting with '#' are comments
                     if(pystring::startswith(line,"#")) continue;
                     
@@ -179,9 +209,14 @@ OCIO_NAMESPACE_ENTER
                     }
                     else if(pystring::lower(parts[0]) == "lut_1d_size")
                     {
-                        if(parts.size() != 2 || !StringToInt( &size1d, parts[1].c_str()))
+                        if(parts.size() != 2
+                            || !StringToInt( &size1d, parts[1].c_str()))
                         {
-                            throw Exception("Malformed LUT_1D_SIZE tag in Iridas .cube lut.");
+                            ThrowErrorMessage(
+                                "Malformed LUT_1D_SIZE tag.",
+                                fileName,
+                                lineNumber,
+                                line);
                         }
                         
                         raw.reserve(3*size1d);
@@ -189,15 +224,24 @@ OCIO_NAMESPACE_ENTER
                     }
                     else if(pystring::lower(parts[0]) == "lut_2d_size")
                     {
-                        throw Exception("Unsupported Iridas .cube lut tag: 'LUT_2D_SIZE'.");
+                        ThrowErrorMessage(
+                            "Unsupported tag: 'LUT_2D_SIZE'.",
+                            fileName,
+                            lineNumber,
+                            line);
                     }
                     else if(pystring::lower(parts[0]) == "lut_3d_size")
                     {
                         int size = 0;
                         
-                        if(parts.size() != 2 || !StringToInt( &size, parts[1].c_str()))
+                        if(parts.size() != 2
+                            || !StringToInt( &size, parts[1].c_str()))
                         {
-                            throw Exception("Malformed LUT_3D_SIZE tag in Iridas .cube lut.");
+                            ThrowErrorMessage(
+                                "Malformed LUT_3D_SIZE tag.",
+                                fileName,
+                                lineNumber,
+                                line);
                         }
                         size3d[0] = size;
                         size3d[1] = size;
@@ -213,7 +257,11 @@ OCIO_NAMESPACE_ENTER
                             !StringToFloat( &domain_min[1], parts[2].c_str()) ||
                             !StringToFloat( &domain_min[2], parts[3].c_str()))
                         {
-                            throw Exception("Malformed DOMAIN_MIN tag in Iridas .cube lut.");
+                            ThrowErrorMessage(
+                                "Malformed DOMAIN_MIN tag.",
+                                fileName,
+                                lineNumber,
+                                line);
                         }
                     }
                     else if(pystring::lower(parts[0]) == "domain_max")
@@ -223,7 +271,11 @@ OCIO_NAMESPACE_ENTER
                             !StringToFloat( &domain_max[1], parts[2].c_str()) ||
                             !StringToFloat( &domain_max[2], parts[3].c_str()))
                         {
-                            throw Exception("Malformed DOMAIN_MAX tag in Iridas .cube lut.");
+                            ThrowErrorMessage(
+                                "Malformed DOMAIN_MAX tag.",
+                                fileName,
+                                lineNumber,
+                                line);
                         }
                     }
                     else
@@ -232,10 +284,11 @@ OCIO_NAMESPACE_ENTER
                         
                         if(!StringVecToFloatVec(tmpfloats, parts) || tmpfloats.size() != 3)
                         {
-                            std::ostringstream os;
-                            os << "Malformed color triples specified in Iridas .cube lut:";
-                            os << "'" << line << "'.";
-                            throw Exception(os.str().c_str());
+                            ThrowErrorMessage(
+                                "Malformed color triples specified.",
+                                fileName,
+                                lineNumber,
+                                line);
                         }
                         
                         for(int i=0; i<3; ++i)
@@ -255,10 +308,12 @@ OCIO_NAMESPACE_ENTER
                 if(size1d != static_cast<int>(raw.size()/3))
                 {
                     std::ostringstream os;
-                    os << "Parse error in Iridas .cube lut. ";
                     os << "Incorrect number of lut1d entries. ";
-                    os << "Found " << raw.size()/3 << ", expected " << size1d << ".";
-                    throw Exception(os.str().c_str());
+                    os << "Found " << raw.size() / 3;
+                    os << ", expected " << size1d << ".";
+                    ThrowErrorMessage(
+                        os.str().c_str(),
+                        fileName, -1, "");
                 }
                 
                 // Reformat 1D data
@@ -297,13 +352,16 @@ OCIO_NAMESPACE_ENTER
             {
                 cachedFile->has3D = true;
                 
-                if(size3d[0]*size3d[1]*size3d[2] != static_cast<int>(raw.size()/3))
+                if(size3d[0]*size3d[1]*size3d[2] 
+                    != static_cast<int>(raw.size()/3))
                 {
                     std::ostringstream os;
-                    os << "Parse error in Iridas .cube lut. ";
                     os << "Incorrect number of lut3d entries. ";
-                    os << "Found " << raw.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
-                    throw Exception(os.str().c_str());
+                    os << "Found " << raw.size() / 3 << ", expected ";
+                    os << size3d[0] * size3d[1] * size3d[2] << ".";
+                    ThrowErrorMessage(
+                        os.str().c_str(),
+                        fileName, -1, "");
                 }
                 
                 // Reformat 3D data
@@ -316,10 +374,9 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                std::ostringstream os;
-                os << "Parse error in Iridas .cube lut. ";
-                os << "Lut type (1D/3D) unspecified.";
-                throw Exception(os.str().c_str());
+                ThrowErrorMessage(
+                    "Lut type (1D/3D) unspecified.",
+                    fileName, -1, "");
             }
             
             return cachedFile;
@@ -396,3 +453,152 @@ OCIO_NAMESPACE_EXIT
 
 
 ///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+#include <fstream>
+
+OIIO_ADD_TEST(FileFormatIridasCube, FormatInfo)
+{
+    OCIO::FormatInfoVec formatInfoVec;
+    OCIO::LocalFileFormat tester;
+    tester.GetFormatInfo(formatInfoVec);
+
+    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OIIO_CHECK_EQUAL("iridas_cube", formatInfoVec[0].name);
+    OIIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
+    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+        formatInfoVec[0].capabilities);
+}
+
+OCIO::LocalCachedFileRcPtr ReadIridasCube(const std::string & fileContent)
+{
+    std::istringstream is;
+    is.str(fileContent);
+
+    // Read file
+    OCIO::LocalFileFormat tester;
+    const std::string SAMPLE_NAME("Memory File");
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+
+    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+}
+
+OIIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
+{
+    {
+        // Validate stream can be read with no error.
+        // Then stream will be altered to introduce errors.
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2\n"
+            "DOMAIN_MIN 0.0 0.0 0.0\n"
+            "DOMAIN_MAX 1.0 1.0 1.0\n"
+
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_NO_THROW(ReadIridasCube(SAMPLE_ERROR));
+    }
+    {
+        // Wrong LUT_3D_SIZE tag
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2 2\n"
+            "DOMAIN_MIN 0.0 0.0 0.0\n"
+            "DOMAIN_MAX 1.0 1.0 1.0\n"
+
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_THROW(ReadIridasCube(SAMPLE_ERROR), OCIO::Exception);
+    }
+    {
+        // Wrong DOMAIN_MIN tag
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2\n"
+            "DOMAIN_MIN 0.0 0.0\n"
+            "DOMAIN_MAX 1.0 1.0 1.0\n"
+
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_THROW(ReadIridasCube(SAMPLE_ERROR), OCIO::Exception);
+    }
+    {
+        // Wrong DOMAIN_MAX tag
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2\n"
+            "DOMAIN_MIN 0.0 0.0 0.0\n"
+            "DOMAIN_MAX 1.0 1.0 1.0 1.0\n"
+
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_THROW(ReadIridasCube(SAMPLE_ERROR), OCIO::Exception);
+    }
+    {
+        // Unexpected tag
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2\n"
+            "DOMAIN_MIN 0.0 0.0 0.0\n"
+            "DOMAIN_MAX 1.0 1.0 1.0\n"
+            "WRONG_TAG\n"
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_THROW(ReadIridasCube(SAMPLE_ERROR), OCIO::Exception);
+    }
+    {
+        // Wrong number of entries
+        const std::string SAMPLE_ERROR =
+            "LUT_3D_SIZE 2\n"
+            "DOMAIN_MIN 0.0 0.0 0.0\n"
+            "DOMAIN_MAX 1.0 1.0 1.0\n"
+
+            "0.0 0.0 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 1.0 1.0\n";
+
+        OIIO_CHECK_THROW(ReadIridasCube(SAMPLE_ERROR), OCIO::Exception);
+    }
+}
+
+#endif // OCIO_UNIT_TEST

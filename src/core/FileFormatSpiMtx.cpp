@@ -70,7 +70,9 @@ OCIO_NAMESPACE_ENTER
             
             virtual void GetFormatInfo(FormatInfoVec & formatInfoVec) const;
             
-            virtual CachedFileRcPtr Read(std::istream & istream) const;
+            virtual CachedFileRcPtr Read(
+                std::istream & istream,
+                const std::string & fileName) const;
             
             virtual void BuildFileOps(OpRcPtrVec & ops,
                          const Config& config,
@@ -90,7 +92,9 @@ OCIO_NAMESPACE_ENTER
         }
         
         CachedFileRcPtr
-        LocalFileFormat::Read(std::istream & istream) const
+        LocalFileFormat::Read(
+            std::istream & istream,
+            const std::string & fileName) const
         {
 
             // Read the entire file.
@@ -113,7 +117,8 @@ OCIO_NAMESPACE_ENTER
             if(lineParts.size() != 12)
             {
                 std::ostringstream os;
-                os << "Error parsing .spimtx file. ";
+                os << "Error parsing .spimtx file (";
+                os << fileName << "). ";
                 os << "File must contain 12 float entries. ";
                 os << lineParts.size() << " found.";
                 throw Exception(os.str().c_str());
@@ -124,7 +129,8 @@ OCIO_NAMESPACE_ENTER
             if(!StringVecToFloatVec(floatArray, lineParts))
             {
                 std::ostringstream os;
-                os << "Error parsing .spimtx file. ";
+                os << "Error parsing .spimtx file (";
+                os << fileName << "). ";
                 os << "File must contain all float entries. ";
                 throw Exception(os.str().c_str());
             }
@@ -193,3 +199,149 @@ OCIO_NAMESPACE_ENTER
     }
 }
 OCIO_NAMESPACE_EXIT
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+#include <fstream>
+
+OIIO_ADD_TEST(FileFormatSpiMtx, FormatInfo)
+{
+    OCIO::FormatInfoVec formatInfoVec;
+    OCIO::LocalFileFormat tester;
+    tester.GetFormatInfo(formatInfoVec);
+
+    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OIIO_CHECK_EQUAL("spimtx", formatInfoVec[0].name);
+    OIIO_CHECK_EQUAL("spimtx", formatInfoVec[0].extension);
+    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+        formatInfoVec[0].capabilities);
+}
+
+OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & filePath)
+{
+    // Open the filePath
+    std::ifstream filestream;
+    filestream.open(filePath.c_str(), std::ios_base::in);
+
+    std::string root, extension, name;
+    OCIO::pystring::os::path::splitext(root, extension, filePath);
+
+    name = OCIO::pystring::os::path::basename(root);
+
+    // Read file
+    OCIO::LocalFileFormat tester;
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(filestream, name);
+
+    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+}
+
+#ifndef OCIO_UNIT_TEST_FILES_DIR
+#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
+#endif
+
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
+static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
+
+OIIO_ADD_TEST(FileFormatSpiMtx, Test)
+{
+    OCIO::LocalCachedFileRcPtr cachedFile;
+    const std::string spiMtxFile(ocioTestFilesDir + std::string("/camera_to_aces.spimtx"));
+    OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spiMtxFile));
+
+    OIIO_CHECK_NE(NULL, cachedFile.get());
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[0]);
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[1]);
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[2]);
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
+
+    OIIO_CHECK_EQUAL(0.754338638f, cachedFile->m44[0]);
+    OIIO_CHECK_EQUAL(0.133697046f, cachedFile->m44[1]);
+    OIIO_CHECK_EQUAL(0.111968437f, cachedFile->m44[2]);
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[3]);
+
+    OIIO_CHECK_EQUAL(0.021198141f, cachedFile->m44[4]);
+    OIIO_CHECK_EQUAL(1.005410934f, cachedFile->m44[5]);
+    OIIO_CHECK_EQUAL(-0.026610548f, cachedFile->m44[6]);
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[7]);
+
+    OIIO_CHECK_CLOSE(-0.00975699, cachedFile->m44[8], 1e-6f);
+    OIIO_CHECK_EQUAL(0.004508563f, cachedFile->m44[9]);
+    OIIO_CHECK_EQUAL(1.005253201f, cachedFile->m44[10]);
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[11]);
+
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[12]);
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[13]);
+    OIIO_CHECK_EQUAL(0.0f, cachedFile->m44[14]);
+    OIIO_CHECK_EQUAL(1.0f, cachedFile->m44[15]);
+}
+
+OCIO::LocalCachedFileRcPtr ReadSpiMtx(const std::string & fileContent)
+{
+    std::istringstream is;
+    is.str(fileContent);
+
+    // Read file
+    OCIO::LocalFileFormat tester;
+    const std::string SAMPLE_NAME("Memory File");
+    OCIO::CachedFileRcPtr cachedFile = tester.Read(is, SAMPLE_NAME);
+
+    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+}
+
+OIIO_ADD_TEST(FileFormatSpiMtx, ReadOffset)
+{
+    {
+        // Validate stream can be read with no error.
+        // Then stream will be altered to introduce errors.
+        const std::string SAMPLE_FILE =
+            "1 0 0 6553.5\n"
+            "0 1 0 32767.5\n"
+            "0 0 1 65535.0\n";
+
+        OCIO::LocalCachedFileRcPtr cachedFile;
+        OIIO_CHECK_NO_THROW(cachedFile = ReadSpiMtx(SAMPLE_FILE));
+        OIIO_CHECK_NE(NULL, cachedFile.get());
+        OIIO_CHECK_EQUAL(0.1f, cachedFile->offset4[0]);
+        OIIO_CHECK_EQUAL(0.5f, cachedFile->offset4[1]);
+        OIIO_CHECK_EQUAL(1.0f, cachedFile->offset4[2]);
+        OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[3]);
+    }
+}
+
+OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
+{
+    {
+        // Validate stream can be read with no error.
+        // Then stream will be altered to introduce errors.
+        const std::string SAMPLE_ERROR =
+            "1.0 0.0 0.0 0.0\n"
+            "0.0 1.0 0.0 0.0\n"
+            "0.0 0.0 1.0 0.0\n";
+
+        OIIO_CHECK_NO_THROW(ReadSpiMtx(SAMPLE_ERROR));
+    }
+    {
+        // Wrong number of elements
+        const std::string SAMPLE_ERROR =
+            "1.0 0.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "0.0 0.0 1.0\n";
+
+        OIIO_CHECK_THROW(ReadSpiMtx(SAMPLE_ERROR), OCIO::Exception);
+    }
+    {
+        // Some elements can' t be read as float
+        const std::string SAMPLE_ERROR =
+            "1.0 0.0 0.0 0.0\n"
+            "0.0 error 0.0 0.0\n"
+            "0.0 0.0 1.0 0.0\n";
+
+        OIIO_CHECK_THROW(ReadSpiMtx(SAMPLE_ERROR), OCIO::Exception);
+    }
+}
+
+#endif // OCIO_UNIT_TEST
