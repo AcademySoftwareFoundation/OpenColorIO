@@ -127,6 +127,10 @@ OCIO_NAMESPACE_ENTER
                                const std::string & formatName,
                                std::ostream & ostream) const;
             
+            virtual void Write(const Baker & baker,
+                               const std::string & formatName,
+                               std::ostream & ostream) const;
+            
             virtual void BuildFileOps(OpRcPtrVec & ops,
                          const Config& config,
                          const ConstContextRcPtr & context,
@@ -384,6 +388,81 @@ OCIO_NAMESPACE_ENTER
             }
             
             return cachedFile;
+        }
+        
+        void LocalFileFormat::Write(const Baker & baker,
+                                    const std::string & formatName,
+                                    std::ostream & ostream) const
+        {
+            
+            int DEFAULT_CUBE_SIZE = 32;
+            
+            if(formatName != "iridas_cube")
+            {
+                std::ostringstream os;
+                os << "Unknown cube format name, '";
+                os << formatName << "'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            ConstConfigRcPtr config = baker.getConfig();
+            
+            int cubeSize = baker.getCubeSize();
+            if (cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+            cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
+            
+            std::vector<float> cubeData;
+            cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+            GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
+            PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+            
+            // Apply our conversion from the input space to the output space.
+            ConstProcessorRcPtr inputToTarget;
+            std::string looks = baker.getLooks();
+            if(!looks.empty())
+            {
+                LookTransformRcPtr transform = LookTransform::Create();
+                transform->setLooks(looks.c_str());
+                transform->setSrc(baker.getInputSpace());
+                transform->setDst(baker.getTargetSpace());
+                inputToTarget = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
+            }
+            else
+            {
+                inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+            }
+            inputToTarget->apply(cubeImg);
+            
+            if (baker.getMetadata() != NULL)
+            {
+                std::string metadata = baker.getMetadata();
+                std::vector<std::string> metadatavec;
+                pystring::split(pystring::strip(metadata), metadatavec, "\n");
+                if (metadatavec.size() > 0)
+                {
+                    for (size_t i = 0; i < metadatavec.size(); ++i)
+                    {
+                        ostream << "# " << metadatavec[i] << "\n";
+                    }
+                    ostream << "\n";
+                }
+            }
+            ostream << "LUT_3D_SIZE " << cubeSize << "\n";
+            if (cubeSize < 2)
+            {
+                throw Exception("Internal cube size exception");
+            }
+            
+            // Set to a fixed 6 decimal precision
+            ostream.setf(std::ios::fixed, std::ios::floatfield);
+            ostream.precision(6);
+            for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+            {
+                float r = cubeData[3*i+0];
+                float g = cubeData[3*i+1];
+                float b = cubeData[3*i+2];
+                ostream << r << " " << g << " " << b << "\n";
+            }
         }
         
         void LocalFileFormat::Write(const Baker & baker,
