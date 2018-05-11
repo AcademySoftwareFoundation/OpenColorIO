@@ -37,7 +37,7 @@ OCIO_NAMESPACE_USING
 
 
 const int LUT3D_EDGE_SIZE = 32;
-const float g_epsilon = 1e-5f;
+const float g_epsilon = 5e-7f;
 
 
 // Helper method to build unit tests

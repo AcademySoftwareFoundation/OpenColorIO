@@ -134,6 +134,7 @@ OCIO_NAMESPACE_ENTER
 
         protected:
             Op();
+            Op(BitDepth inputBitDepth, BitDepth outputBitDepth);
 
         private:
             Op& operator= (const Op &);

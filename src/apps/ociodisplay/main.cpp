@@ -492,15 +492,9 @@ void UpdateOCIOGLState()
     // Step 2: Collect the shader program information for a specific processor    
     processor->extractGpuShaderInfo(shaderDesc);
 
-    if(g_gpu)
-    {
-        std::cout << std::endl;
-        std::cout << "GPU Shader Program:" << std::endl;
-        std::cout << std::endl;
-    }
-
     // Step 3: Use the helper OpenGL builder
     g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
+    g_oglBuilder->setVerbose(g_gpu);
 
     // Step 4: Allocate & upload all the LUTs
     g_oglBuilder->allocateAllTextures();

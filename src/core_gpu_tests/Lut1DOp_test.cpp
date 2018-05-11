@@ -47,6 +47,7 @@ const int LUT3D_EDGE_SIZE = 32;
 #ifdef OCIO_SOURCE_DIR
 
 
+// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
@@ -54,31 +55,45 @@ const int LUT3D_EDGE_SIZE = 32;
 static const std::string ociodir(STR(OCIO_SOURCE_DIR));
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_legacy_shader)
-{    
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_1.spi1d"));
+namespace
+{
+    OCIO::FileTransformRcPtr GetFileTransform(const std::string & filename)
+    {
+        const std::string 
+            filepath(ociodir + std::string("/src/core_tests/testfiles/") + filename);
 
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
+        file->setSrc(filepath.c_str());
+        file->setInterpolation(OCIO::INTERP_LINEAR);
+        file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+        return file;
+    }
+}
+
+// The LUTs below are identities unless otherwise noted.
+// Various sizes are used to test different 1D LUT texture packings on the GPU.
+// lut1d_1.spi1d has    512 entries
+// lut1d_2.spi1d has   8192 entries
+// lut1d_3.spi1d has 131072 entries
+
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_legacy_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_1.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+
+    // TODO: Investigate why the test needs such a threshold
+    test.setErrorThreshold(3e-3f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_inverse_legacy_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_legacy_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_1.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_1.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
@@ -91,187 +106,215 @@ OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_inverse_legacy_shader)
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_generic_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_generic_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_1.spi1d"));
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_1.spi1d");
 
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_small_inverse_generic_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_generic_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_1.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_1.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_legacy_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_legacy_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_2.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(5e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_inverse_legacy_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_legacy_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_2.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(5e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_generic_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_generic_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_2.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_2_inverse_generic_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_generic_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_2.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_2.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(5e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_legacy_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_legacy_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_3.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_inverse_legacy_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_legacy_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_3.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_generic_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_generic_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_3.spi1d"));
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
 
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_inverse_generic_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_generic_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_3.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
     file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(Lut1DOp, arbitrary_lut1d_big_nearest_generic_shader)
+OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_nearest_generic_shader)
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut1d_3.spi1d"));
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
     file->setInterpolation(OCIO::INTERP_NEAREST);
 
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
 }
 
+
+OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_legacy_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setWideRange(false);
+    test.setErrorThreshold(1e-3f);
+}
+
+
+OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_legacy_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
+    file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setWideRange(false);
+    test.setErrorThreshold(1e-4f);
+}
+
+
+OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_generic_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
+}
+
+/*
+    TODO: Uncomment when the Lut1D inverse is fully working.
+
+OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_generic_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_4.spi1d");
+    file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
+}
+*/
+
+OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_5.spi1d");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-3f);
+    test.setRelativeComparison(true);
+}
+
+/*
+    TODO: Uncomment when the Lut1D inverse is fully working.
+
+OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_5.spi1d");
+    file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-4f);
+}
+*/
 
 #endif

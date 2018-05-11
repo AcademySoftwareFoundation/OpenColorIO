@@ -33,9 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace OCIO = OCIO_NAMESPACE;
 #include "GPUUnitTest.h"
 
-//#include <stdio.h>
 #include <sstream>
-//#include <string>
 
 OCIO_NAMESPACE_USING
 
@@ -46,6 +44,10 @@ OCIO_NAMESPACE_USING
 
 static const std::string ociodir(STR(OCIO_SOURCE_DIR));
 
+
+// Based on testings, the interpolation precision for GPU textures is 8-bits
+// so it is the default error threshold for all GPU unit tests.
+const float defaultErrorThreshold = 1.0f/256.0f;
 
 
 std::string createConfig()
@@ -114,6 +116,7 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(64);
     test.setContext(processor, shaderDesc);
+    test.setErrorThreshold(defaultErrorThreshold);
 }
 
 OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
@@ -132,6 +135,7 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
     test.setContext(processor, shaderDesc);
+    test.setErrorThreshold(defaultErrorThreshold);
 }
 
 OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
@@ -153,6 +157,39 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
     config->sanityCheck();
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
+
+    // Change some default values...
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    shaderDesc->setPixelName("another_pixel_name");
+    shaderDesc->setFunctionName("another_func_name");
+
     test.setContext(processor, shaderDesc);
+    test.setErrorThreshold(defaultErrorThreshold);
+}
+
+OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
+{
+    std::string configStr = createConfig();
+    configStr +=
+        "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_3.spi1d, interpolation: linear}\n";
+
+    std::istringstream is;
+    is.str(configStr);
+
+    OCIO::ConstConfigRcPtr config = OCIO::Config::CreateFromStream(is);
+    config->sanityCheck();
+
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
+
+    // Change some default values...
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(processor, shaderDesc);
+    test.setErrorThreshold(defaultErrorThreshold);
 }

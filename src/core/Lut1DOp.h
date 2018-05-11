@@ -54,6 +54,7 @@ OCIO_NAMESPACE_ENTER
     struct Lut1D
     {
         static Lut1DRcPtr Create();
+        static Lut1DRcPtr CreateIdentity(BitDepth inputBitDepth, BitDepth outBitDepth);
         
         // This will compute the cacheid, and also
         // determine if the lut is a no-op.
@@ -77,11 +78,17 @@ OCIO_NAMESPACE_ENTER
         
         typedef std::vector<float> fv_t;
         fv_t luts[3];
-        
+
+        BitDepth inputBitDepth;
+        BitDepth outputBitDepth;
+
         std::string getCacheID() const;
         bool isNoOp() const;
         
         void unfinalize();
+
+        Lut1D & operator=(const Lut1D & l);
+
     private:
         Lut1D();
         
@@ -91,8 +98,6 @@ OCIO_NAMESPACE_ENTER
         
         void finalize() const;
     };
-    
-    typedef OCIO_SHARED_PTR<Lut1D> Lut1DRcPtr;
     
     // This generates an identity 1d lut, from 0.0 to 1.0
     void GenerateIdentityLut1D(float* img, int numElements, int numChannels);

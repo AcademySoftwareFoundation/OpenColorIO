@@ -41,235 +41,12 @@ OCIO_NAMESPACE_USING
 
 
 const int LUT3D_EDGE_SIZE = 32;
-const float g_epsilon = 1e-4f;
-
-
-OCIO_ADD_GPU_TEST(Lut3DOp, red_only_using_CSP_file_legacy_shader)
-{
-    // Used a format I know to create a 3D lut file.
-    //  Any other file format would have been good also.
-
-    std::ostringstream content;
-    content << "CSPLUTV100"                                  << "\n";
-    content << "3D"                                          << "\n";
-    content << ""                                            << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << ""                                            << "\n";
-    content << "2 2 2"                                       << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "1.0 0.0 0.0"                                 << "\n";
-    content << "1.0 0.0 0.0"                                 << "\n";
-    content << "1.0 0.0 0.0"                                 << "\n";
-    content << "1.0 0.0 0.0"                                 << "\n";
-
-
-    const std::string filename = createTempFile(".csp", content.str());
-
-    // Create the transform & set the unit test
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
-    test.setContext(file->createEditableCopy(), shaderDesc);
-}
-
-OCIO_ADD_GPU_TEST(Lut3DOp, green_only_using_CSP_file_legacy_shader)
-{
-    // Used a format I know to create a 3D lut file.
-    //  Any other file format would have been good also.
-
-    std::ostringstream content;
-    content << "CSPLUTV100"                                  << "\n";
-    content << "3D"                                          << "\n";
-    content << ""                                            << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << ""                                            << "\n";
-    content << "2 2 2"                                       << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 1.0 0.0"                                 << "\n";
-    content << "0.0 1.0 0.0"                                 << "\n";
-    content << "0.0 1.0 0.0"                                 << "\n";
-    content << "0.0 1.0 0.0"                                 << "\n";
-
-
-    const std::string filename = createTempFile(".csp", content.str());
-
-    // Create the transform & set the unit test
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
-    test.setContext(file->createEditableCopy(), shaderDesc);
-}
-
-OCIO_ADD_GPU_TEST(Lut3DOp, blue_only_using_CSP_file_legacy_shader)
-{
-    // Used a format I know to create a 3D lut file.
-    //  Any other file format would have been good also.
-
-    std::ostringstream content;
-    content << "CSPLUTV100"                                  << "\n";
-    content << "3D"                                          << "\n";
-    content << ""                                            << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << ""                                            << "\n";
-    content << "2 2 2"                                       << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 1.0"                                 << "\n";
-    content << "0.0 0.0 1.0"                                 << "\n";
-    content << "0.0 0.0 1.0"                                 << "\n";
-    content << "0.0 0.0 1.0"                                 << "\n";
-
-
-    const std::string filename = createTempFile(".csp", content.str());
-
-    // Create the transform & set the unit test
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
-    test.setContext(file->createEditableCopy(), shaderDesc);
-}
-
-
-OCIO_ADD_GPU_TEST(Lut3DOp, blue_only_using_CSP_file_generic_shader)
-{
-    // Used a format I know to create a 3D lut file.
-    //  Any other file format would have been good also.
-
-    std::ostringstream content;
-    content << "CSPLUTV100"                                  << "\n";
-    content << "3D"                                          << "\n";
-    content << ""                                            << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << ""                                            << "\n";
-    content << "2 2 2"                                       << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 0.0"                                 << "\n";
-    content << "0.0 0.0 1.0"                                 << "\n";
-    content << "0.0 0.0 1.0"                                 << "\n";
-    content << "0.0 0.0 1.0"                                 << "\n";
-    content << "0.0 0.0 1.0"                                 << "\n";
-
-
-    const std::string filename = createTempFile(".csp", content.str());
-
-    // Create the transform & set the unit test
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
-
-    test.setContext(file->createEditableCopy(), shaderDesc);
-}
-
-
-OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file_legacy_shader)
-{
-    // Used a format I know to create a 3D lut file.
-    //  Any other file format would have been good also.
-
-    std::ostringstream content;
-    content << "CSPLUTV100"                                  << "\n";
-    content << "3D"                                          << "\n";
-    content << ""                                            << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "2"                                           << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << "0.0 1.0"                                     << "\n";
-    content << ""                                            << "\n";
-    content << "2 2 2"                                       << "\n";
-    content << "0.100000 0.100000 0.100000"                  << "\n";
-    content << "1.100000 0.100000 0.100000"                  << "\n";
-    content << "0.100000 1.100000 0.100000"                  << "\n";
-    content << "1.100000 1.100000 0.100000"                  << "\n";
-    content << "0.100000 0.100000 1.100000"                  << "\n";
-    content << "1.100000 0.100000 1.100000"                  << "\n";
-    content << "0.100000 1.100000 1.100000"                  << "\n";
-    content << "1.100000 1.100000 1.100000"                  << "\n";
-
-
-    const std::string filename = createTempFile(".csp", content.str());
-
-    // Create the transform & set the unit test
-
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-
-    OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
-
-    test.setContext(file->createEditableCopy(), shaderDesc);
-}
 
 
 #ifdef OCIO_SOURCE_DIR
 
 
+// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
@@ -277,21 +54,54 @@ OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file_legacy_shader)
 static const std::string ociodir(STR(OCIO_SOURCE_DIR));
 
 
-OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file_generic_shader)
+namespace
 {
-    const std::string 
-        filename(ociodir + std::string("/src/core_tests/testfiles/lut3d_1.spi3d"));
+    OCIO::FileTransformRcPtr GetFileTransform(const std::string & filename)
+    {
+        const std::string 
+            filepath(ociodir + std::string("/src/core_tests/testfiles/") + filename);
 
-    OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
-    file->setSrc(filename.c_str());
-    file->setInterpolation(OCIO::INTERP_LINEAR);
-    file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+        OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
+        file->setSrc(filepath.c_str());
+        file->setInterpolation(OCIO::INTERP_LINEAR);
+        file->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+
+        return file;
+    }
+}
+
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_legacy_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateShaderDesc();
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(5e-4f);
+}
+
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_generic_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(5e-4f);
+}
+
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_nearest_generic_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
+    file->setInterpolation(OCIO::INTERP_NEAREST);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
 }
-
 
 #endif

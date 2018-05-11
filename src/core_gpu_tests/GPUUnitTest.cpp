@@ -48,67 +48,107 @@ namespace OCIO = OCIO_NAMESPACE;
 #endif
 
 
-#include <algorithm>
-#include <string>
 #include <sstream>
 #include <map>
 #include <iomanip>
 
 #include <stdlib.h>
 #include <string.h>
-#include <iomanip>
+
 
 #include "glsl.h"
 
 
+#if defined __APPLE__
+    #define F_ISNAN(a) __inline_isnanf(a)
+#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+    #define F_ISNAN(a) (_isnan(a)!=0)
+#else
+    #define F_ISNAN(a) __isnanf(a)
+#endif
+
+
+
 namespace Shader
 {
-    // Based on testings, the interpolation precision for GPU textures is 8-bits
-    // so it is the default error threshold for all GPU unit tests.
-    const float defaultErrorThreshold = 1.0f/256.0f;
+    // Default error threshold
+    const float defaultErrorThreshold = 1e-7f;
+
+    // In some occasions, MAX_FLOAT will be "rounded" to infinity on some GPU renderers.
+    // In order to avoid this issue, consider all number over/under a given threshold as
+    // equal for testing purposes.
+    #define LARGE_THRESHOLD    std::numeric_limits<float>::max()
 
     // Check if difference between floats f1 and f2 does not exceed eps
-    bool CompareFloats(float f1, float f2, float eps)
+    bool AbsoluteFloatComparison(float f1, float f2, float eps)
     {
       return ((f1 > f2)? f1 - f2: f2 - f1) <= eps;
+    }
+
+    // Relative comparison: check if the difference between value and expected
+    // relative to (divided by) expected does not exceed the eps.  A minimum
+    // expected value is used to limit the scaling of the difference and
+    // avoid large relative differences for small numbers.
+    bool RelativeFloatComparison(float value, float expected, float eps, float minExpected)
+    {
+        const float div = ( expected > 0 ) ?
+            ( (  expected < minExpected ) ? minExpected :  expected ) :
+            ( ( -expected < minExpected ) ? minExpected : -expected );
+
+        return ( ((value > expected) ? value - expected : expected - value) / div ) <= eps;
     }
 
     // Compute the absolute equality of two floats
     // a is the first float to compare
     // b is the first float to compare
     // epsilon is the maximum expected epsilon
-    bool Compare(float a, float b, float epsilon)
+    bool AbsoluteCompare(float a, float b, float epsilon)
     {
-        // In some occasions, MAX_FLOAT will be "rounded" to infinity on some GPU renderers.
-        // In order to avoid this issue, consider all number over/under a given threshold as
-        // equal for testing purposes.
-        #define LARGE_THRESHOLD    std::numeric_limits<float>::max()
-
         if ( ( (a >=  LARGE_THRESHOLD) && (b >=  LARGE_THRESHOLD) ) ||
              ( (a <= -LARGE_THRESHOLD) && (b <= -LARGE_THRESHOLD) ) ||
-             ( _isnan(a) && _isnan(b) ) )
+             ( F_ISNAN(a) && F_ISNAN(b) ) )
         {
             return true;
         }
 
-        #undef LARGE_THRESHOLD
+        return AbsoluteFloatComparison(a, b, epsilon);
+    }
 
-        return CompareFloats(a, b, epsilon);
+    // Compute the relative equality of two floats
+    // a is the first float to compare
+    // b is the first float to compare
+    // epsilon is the maximum expected epsilon
+    // expectedMinValue is the minimum expected value
+    bool RelativeCompare(float a, float b, float epsilon, float expectedMinValue)
+    {
+        if ( ( (a >=  LARGE_THRESHOLD) && (b >=  LARGE_THRESHOLD) ) ||
+             ( (a <= -LARGE_THRESHOLD) && (b <= -LARGE_THRESHOLD) ) ||
+             ( F_ISNAN(a) && F_ISNAN(b) ) )
+        {
+          return true;
+        }
+
+        return RelativeFloatComparison(a, b, epsilon, expectedMinValue);
     }
 }
 
 
-OCIOGPUTest::OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFunc test) 
+OCIOGPUTest::OCIOGPUTest(const std::string& testgroup, 
+                         const std::string& testname, 
+                         OCIOTestFunc test) 
     :   m_group(testgroup)
     ,   m_name(testname)
     ,   m_function(test)
     ,   m_errorThreshold(Shader::defaultErrorThreshold)
-    ,   m_useHDRMode(true)
+    ,   m_useWideRange(true)
+    ,   m_performRelativeComparison(false)
+    ,   m_expectedMinimalValue(1e-6f)
+    ,   m_verbose(false)
 {
 }
 
-void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr & transform, 
-                             OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc)
+void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform, 
+                             OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
 {
     if(m_processor.get()!=0x0)
     {
@@ -121,8 +161,8 @@ void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr & transform,
     m_processor      = config->getProcessor(transform);
 }
 
-void OCIOGPUTest::setContext(OCIO_NAMESPACE::ConstProcessorRcPtr & processor, 
-                             OCIO_NAMESPACE::GpuShaderDescRcPtr & shaderDesc)
+void OCIOGPUTest::setContext(OCIO_NAMESPACE::ConstProcessorRcPtr processor, 
+                             OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
 {
     if(m_processor.get()!=0x0)
     {
@@ -218,10 +258,10 @@ namespace
         glutDestroyWindow(g_win);
     }
 
-    void UpdateImageTexture(bool useHDR)
+    void UpdateImageTexture(bool useWideRange)
     {
-        const float min = useHDR ? -1.0f : 0.0f;
-        const float max = useHDR ? +2.0f : 1.0f;
+        const float min = useWideRange ? -1.0f : 0.0f;
+        const float max = useWideRange ? +2.0f : 1.0f;
         const float range = max - min;
 
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
@@ -238,38 +278,36 @@ namespace
             GL_RGBA, GL_FLOAT, &g_image[0]);
     }
 
-
-    // The main if the shader program hard-coded to accept the lut 3D smapler as input
-    const char * g_fragShaderText = ""
-    "\n"
-    "uniform sampler2D img;\n"
-    "\n"
-    "void main()\n"
-    "{\n"
-    "    vec4 col = texture2D(img, gl_TexCoord[0].st);\n"
-    "    gl_FragColor = OCIODisplay(col);\n"
-    "}\n";
-
-
-    void UpdateOCIOGLState(OCIO::ConstProcessorRcPtr & processor,
-                           OCIO::GpuShaderDescRcPtr & shaderDesc)
+    void UpdateOCIOGLState(OCIOGPUTest * test)
     {
+        OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
+        OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
+
         // Step 1: Create the legacy GPU shader description
         shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
-        shaderDesc->setFunctionName("OCIODisplay");
-        shaderDesc->setResourcePrefix("ocio_");
 
         // Step 2: Collect the shader program information for a specific processor    
         processor->extractGpuShaderInfo(shaderDesc);
 
         // Step 3: Use the helper OpenGL builder
         g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
+        g_oglBuilder->setVerbose(test->isVerbose());
 
         // Step 4: Allocate & upload all the LUTs
         g_oglBuilder->allocateAllTextures();
 
+        std::ostringstream main;
+        main << std::endl
+             << "uniform sampler2D img;" << std::endl
+             << std::endl
+             << "void main()" << std::endl
+             << "{" << std::endl
+             << "    vec4 col = texture2D(img, gl_TexCoord[0].st);" << std::endl
+             << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
+             << "}" << std::endl;
+
         // Step 5: Build the fragment shader program
-        g_oglBuilder->buildProgram(g_fragShaderText);
+        g_oglBuilder->buildProgram(main.str().c_str());
 
         // Step 6: Enable the fragment shader program, and all needed textures
         g_oglBuilder->useProgram();
@@ -278,8 +316,12 @@ namespace
     }
 
     // Validate the GPU processing against the CPU one
-    void ValidateImageTexture(OCIO::ConstProcessorRcPtr& processor, float epsilon)
+    void ValidateImageTexture(OCIOGPUTest * test)
     {
+        OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
+        const float epsilon = test->getErrorThreshold();
+        const float expectMinValue = test->getExpectedMinimalValue();
+
         // Step 1: Compute the output using the CPU engine
 
         std::vector<float> cppImage = g_image;    
@@ -293,13 +335,20 @@ namespace
         glReadPixels(0, 0, g_winWidth, g_winHeight, GL_RGBA, GL_FLOAT, (GLvoid*)&gpuImage[0]);
 
         // Step 3: Compare the two results
-        
+
         for(size_t idx=0; idx<(g_winWidth * g_winHeight); ++idx)
         {
-            if(!Shader::Compare(cppImage[4*idx+0], gpuImage[4*idx+0], epsilon) ||
-               !Shader::Compare(cppImage[4*idx+1], gpuImage[4*idx+1], epsilon) ||
-               !Shader::Compare(cppImage[4*idx+2], gpuImage[4*idx+2], epsilon) ||
-               !Shader::Compare(cppImage[4*idx+3], gpuImage[4*idx+3], epsilon))
+            const bool isFaulty 
+                = test->performRelativeComparison() 
+                    ? (!Shader::RelativeCompare(cppImage[4*idx+0], gpuImage[4*idx+0], epsilon, expectMinValue) ||
+                       !Shader::RelativeCompare(cppImage[4*idx+1], gpuImage[4*idx+1], epsilon, expectMinValue) ||
+                       !Shader::RelativeCompare(cppImage[4*idx+2], gpuImage[4*idx+2], epsilon, expectMinValue) ||
+                       !Shader::RelativeCompare(cppImage[4*idx+3], gpuImage[4*idx+3], epsilon, expectMinValue))
+                    : (!Shader::AbsoluteCompare(cppImage[4*idx+0], gpuImage[4*idx+0], epsilon) ||
+                       !Shader::AbsoluteCompare(cppImage[4*idx+1], gpuImage[4*idx+1], epsilon) ||
+                       !Shader::AbsoluteCompare(cppImage[4*idx+2], gpuImage[4*idx+2], epsilon) ||
+                       !Shader::AbsoluteCompare(cppImage[4*idx+3], gpuImage[4*idx+3], epsilon));
+            if(isFaulty)
             {
                 std::stringstream err;
                 err << std::setprecision(10)
@@ -412,17 +461,17 @@ int main(int, char **)
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 // Update the image texture
-                UpdateImageTexture(test->useHDRMode());
+                UpdateImageTexture(test->useWideRange());
 
                 // Update the GPU shader program
-                UpdateOCIOGLState(test->getProcessor(), test->getShaderDesc());
+                UpdateOCIOGLState(test);
 
                 // Process the image texture into the rendering buffer
                 Reshape();
                 Redisplay();
 
                 // Validate the processed image using the rendering buffer
-                ValidateImageTexture(test->getProcessor(), test->getErrorThreshold());
+                ValidateImageTexture(test);
             }
         }
         catch(OCIO::Exception & ex)

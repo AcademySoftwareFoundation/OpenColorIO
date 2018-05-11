@@ -33,32 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    float GetBitDepthMin(BitDepth in)
-    {
-        switch(in)
-        {
-            case BIT_DEPTH_UINT8:
-            case BIT_DEPTH_UINT10:
-            case BIT_DEPTH_UINT12:
-            case BIT_DEPTH_UINT14:
-            case BIT_DEPTH_UINT16:
-            case BIT_DEPTH_UINT32:
-            case BIT_DEPTH_F16:
-            case BIT_DEPTH_F32:
-                return 0.0f;
-
-            case BIT_DEPTH_UNKNOWN:
-            default:
-            {
-                std::string err("Bit depth is not supported: ");
-                err += BitDepthToString(in);
-                throw Exception(err.c_str());
-                break;
-            }
-        }
-    }
-
-    float GetBitDepthMax(BitDepth in)
+    float GetBitDepthMaxValue(BitDepth in)
     {
         switch(in)
         {
@@ -90,12 +65,6 @@ OCIO_NAMESPACE_ENTER
             }
         }
     }
-
-    float GetBitDepthRange(BitDepth in)
-    {
-        return GetBitDepthMax(in) - GetBitDepthMin(in);
-    }
-
 }
 OCIO_NAMESPACE_EXIT
 
@@ -109,33 +78,14 @@ OCIO_NAMESPACE_USING
 
 #include "UnitTest.h"
 
-OIIO_ADD_TEST(BitDepthUtils, GetBitDepthMin)
+OIIO_ADD_TEST(BitDepthUtils, GetBitDepthMaxValue)
 {
-    OIIO_CHECK_EQUAL(GetBitDepthMin(BIT_DEPTH_UINT8), 0.0f);
-    OIIO_CHECK_EQUAL(GetBitDepthMin(BIT_DEPTH_UINT16), 0.0f);
+    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_UINT8), 255.0f);
+    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_UINT16), 65535.0f);
 
-    OIIO_CHECK_EQUAL(GetBitDepthMin(BIT_DEPTH_F16), 0.0f);
-    OIIO_CHECK_EQUAL(GetBitDepthMin(BIT_DEPTH_F32), 0.0f);
+    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_F16), 1.0f);
+    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_F32), 1.0f);
 }
 
-
-OIIO_ADD_TEST(BitDepthUtils, GetBitDepthMax)
-{
-    OIIO_CHECK_EQUAL(GetBitDepthMax(BIT_DEPTH_UINT8), 255.0f);
-    OIIO_CHECK_EQUAL(GetBitDepthMax(BIT_DEPTH_UINT16), 65535.0f);
-
-    OIIO_CHECK_EQUAL(GetBitDepthMax(BIT_DEPTH_F16), 1.0f);
-    OIIO_CHECK_EQUAL(GetBitDepthMax(BIT_DEPTH_F32), 1.0f);
-}
-
-
-OIIO_ADD_TEST(BitDepthUtils, GetBitDepthRange)
-{
-    OIIO_CHECK_EQUAL(GetBitDepthRange(BIT_DEPTH_UINT8), 255.0f);
-    OIIO_CHECK_EQUAL(GetBitDepthRange(BIT_DEPTH_UINT16), 65535.0f);
-
-    OIIO_CHECK_EQUAL(GetBitDepthRange(BIT_DEPTH_F16), 1.0f);
-    OIIO_CHECK_EQUAL(GetBitDepthRange(BIT_DEPTH_F32), 1.0f);
-}
 
 #endif

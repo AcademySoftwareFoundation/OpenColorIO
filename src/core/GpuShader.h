@@ -86,6 +86,9 @@ OCIO_NAMESPACE_ENTER
 
     protected:
 
+        unsigned getTextureMaxWidth() const;
+        void setTextureMaxWidth(unsigned maxWidth);
+
         // Uniforms are not used by the legacy shader builder
         //
         unsigned getNumUniforms() const;
@@ -136,6 +139,9 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         static GpuShaderDescRcPtr Create();
+
+        unsigned getTextureMaxWidth() const;
+        void setTextureMaxWidth(unsigned maxWidth);
 
         // Accessors to the uniforms
         //

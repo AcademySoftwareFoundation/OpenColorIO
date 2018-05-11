@@ -739,26 +739,44 @@ OCIO_NAMESPACE_ENTER
                 throw Exception("Only 32F bit depth is supported for the GPU shader");
             }
 
-            std::ostringstream ss;
-            ss << shaderDesc->getResourcePrefix()
-               << std::string("lut3d_")
-               << shaderDesc->getNum3DTextures();
+            // TODO: Implement the tetrahedral interpolation
 
-            const std::string name(ss.str());
+            std::ostringstream resName;
+            resName << shaderDesc->getResourcePrefix()
+                    << std::string("lut3d_")
+                    << shaderDesc->getNum3DTextures();
 
-            const std::string decl(std::string("uniform sampler3D ") + name + ";\n");
-            shaderDesc->addToDeclareShaderCode(decl.c_str());
+            const std::string name(resName.str());
 
-            shaderDesc->add3DTexture(
-                name.c_str(), m_cacheID.c_str(), m_lut->size[0], m_interpolation, &m_lut->lut[0]);
+            shaderDesc->add3DTexture(GpuShaderText::getSamplerName(name).c_str(), 
+                                     m_cacheID.c_str(), m_lut->size[0], 
+                                     m_interpolation, &m_lut->lut[0]);
 
-            std::ostringstream code;
+            {
+                GpuShaderText ss(shaderDesc->getLanguage());
+                ss.declareTex3D(name);
+                shaderDesc->addToDeclareShaderCode(ss.string().c_str());
+            }
 
-            code << "    "
-                 << Write_sampleLut3D_rgb(
-                     shaderDesc->getPixelName(), name, m_lut->size[0], shaderDesc->getLanguage());
+            {
+                const float m = (float(m_lut->size[0])-1.0f) / float(m_lut->size[0]);
+                const float b = 1.0f / (2.0f * float(m_lut->size[0]));
 
-            shaderDesc->addToFunctionShaderCode(code.str().c_str());
+                GpuShaderText ss(shaderDesc->getLanguage());
+                ss.indent();
+
+                // vec3 coords = (inPixel.rgb * (dim-1.0f) + 0.5f) / dim
+
+                ss.newLine() << ss.vec3fDecl(name + "_coords") 
+                             << " = " << shaderDesc->getPixelName() << ".rgb * " 
+                             << ss.vec3fConst(m) << " + " << ss.vec3fConst(b) << ";";
+
+                ss.newLine() << shaderDesc->getPixelName() << ".rgb = " 
+                             << ss.sampleTex3D(name, name + "_coords") 
+                             << ".rgb;";
+
+                shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+            }
         }
     }
     

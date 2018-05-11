@@ -1337,9 +1337,9 @@ OCIO_NAMESPACE_ENTER
                                 UniformType type, void * value) = 0;
 
         //!cpp:function:: 1D lut related methods
+        virtual unsigned getTextureMaxWidth() const = 0;
+        virtual void setTextureMaxWidth(unsigned maxWidth) = 0;
         virtual unsigned getNumTextures() const = 0;
-        // .. note:: Pad the lut values to exactly fit the texture size.
-        //           The size is width * height * channels where channels is 3 (i.e. RGB).
         virtual void addTexture(
             const char * name, const char * id, unsigned width, unsigned height,
             TextureType channel, Interpolation interpolation,

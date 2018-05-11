@@ -203,54 +203,36 @@ OCIO_NAMESPACE_ENTER
     {
         void WriteShaderHeader(GpuShaderDescRcPtr & shaderDesc)
         {
-            const GpuLanguage lang(shaderDesc->getLanguage());
             const std::string fcnName(shaderDesc->getFunctionName());
 
-            std::ostringstream code;
-            code << "\n// Declaration of the OCIO shader function\n\n";
-            
-            if(lang == GPU_LANGUAGE_CG)
-            {
-                code << "half4 " << fcnName << "(in half4 inPixel) \n";
-            }
-            else if(lang == GPU_LANGUAGE_GLSL_1_0)
-            {
-                code << "vec4 " << fcnName << "(vec4 inPixel) \n";
-            }
-            else if(lang == GPU_LANGUAGE_GLSL_1_3)
-            {
-                code << "vec4 " << fcnName << "(in vec4 inPixel) \n";
-            }
-            else
-            {
-                throw Exception("Unsupported shader language.");
-            }
+            GpuShaderText ss(shaderDesc->getLanguage());
 
-            code << "{" << "\n";
-            
-            if(lang == GPU_LANGUAGE_CG)
-            {
-                code << "    half4 " << shaderDesc->getPixelName() << " = inPixel; \n";
-            }
-            else if(lang == GPU_LANGUAGE_GLSL_1_0 || lang == GPU_LANGUAGE_GLSL_1_3)
-            {
-                code << "    vec4 " << shaderDesc->getPixelName() << " = inPixel; \n";
-            }
-            else 
-            {
-                throw Exception("Unsupported shader language.");
-            }
+            ss.newLine();
+            ss.newLine() << "// Declaration of the OCIO shader function";
+            ss.newLine();
 
-            shaderDesc->addToFunctionHeaderShaderCode(code.str().c_str());
+            ss.newLine() << ss.vec4fKeyword() << " " << fcnName 
+                         << "(in "  << ss.vec4fKeyword() << " inPixel)";
+            ss.newLine() << "{";
+            ss.indent();
+            ss.newLine() << ss.vec4fKeyword() << " " 
+                         << shaderDesc->getPixelName() << " = inPixel;";
+
+            shaderDesc->addToFunctionHeaderShaderCode(ss.string().c_str());
         }
         
         
         void WriteShaderFooter(GpuShaderDescRcPtr & shaderDesc)
         {
-            std::ostringstream code;
-            code << "    return " << shaderDesc->getPixelName() << ";\n";
-            code << "}" << "\n\n";
-            shaderDesc->addToFunctionFooterShaderCode(code.str().c_str());
+            GpuShaderText ss(shaderDesc->getLanguage());
+
+            ss.newLine();
+            ss.indent();
+            ss.newLine() << "return " << shaderDesc->getPixelName() << ";";
+            ss.dedent();
+            ss.newLine() << "}";
+
+            shaderDesc->addToFunctionFooterShaderCode(ss.string().c_str());
         }
 
 
