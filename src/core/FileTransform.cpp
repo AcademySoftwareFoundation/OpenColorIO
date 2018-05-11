@@ -839,7 +839,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
     OIIO_CHECK_EQUAL(16, formatRegistry.getNumRawFormats());
     OIIO_CHECK_EQUAL(18, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
-    OIIO_CHECK_EQUAL(6, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
+    OIIO_CHECK_EQUAL(7, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
 
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("3dl", "flame"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cc", "ColorCorrection"));
