@@ -548,7 +548,7 @@ OIIO_ADD_TEST(FileFormatIridasCube, FormatInfo)
     OIIO_CHECK_EQUAL(1, formatInfoVec.size());
     OIIO_CHECK_EQUAL("iridas_cube", formatInfoVec[0].name);
     OIIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_ALL,
+    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
         formatInfoVec[0].capabilities);
 }
 
