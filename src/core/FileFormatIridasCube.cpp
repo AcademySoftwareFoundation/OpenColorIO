@@ -404,7 +404,7 @@ OCIO_NAMESPACE_ENTER
             ConstConfigRcPtr config = baker.getConfig();
             
             int cubeSize = baker.getCubeSize();
-            if (cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+            if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
             cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
             
             std::vector<float> cubeData;
@@ -429,14 +429,14 @@ OCIO_NAMESPACE_ENTER
             }
             inputToTarget->apply(cubeImg);
             
-            if (baker.getMetadata() != NULL)
+            if(baker.getMetadata() != NULL)
             {
                 std::string metadata = baker.getMetadata();
                 std::vector<std::string> metadatavec;
                 pystring::split(pystring::strip(metadata), metadatavec, "\n");
-                if (metadatavec.size() > 0)
+                if(metadatavec.size() > 0)
                 {
-                    for (size_t i = 0; i < metadatavec.size(); ++i)
+                    for(size_t i = 0; i < metadatavec.size(); ++i)
                     {
                         ostream << "# " << metadatavec[i] << "\n";
                     }
@@ -444,7 +444,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             ostream << "LUT_3D_SIZE " << cubeSize << "\n";
-            if (cubeSize < 2)
+            if(cubeSize < 2)
             {
                 throw Exception("Internal cube size exception");
             }
