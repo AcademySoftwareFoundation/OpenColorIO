@@ -26,38 +26,35 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-#ifndef INCLUDED_OCIO_OP_H
-#define INCLUDED_OCIO_OP_H
+#include <cstring>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include <sstream>
-#include <vector>
+#include "ExponentOps.h"
+#include "OpBuilders.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
-    struct AllocationData
+    CustomTransform::~CustomTransform()
+    { }
+
+    std::ostream& operator<< (std::ostream& os, const CustomTransform& t)
     {
-        Allocation allocation;
-        std::vector<float> vars;
-        
-        AllocationData():
-            allocation(ALLOCATION_UNIFORM)
-            {};
-        
-        std::string getCacheID() const;
-    };
+        os << t;
+        return os;
+    }
     
-    std::ostream& operator<< (std::ostream&, const AllocationData&);
     
-    std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
-    bool IsOpVecNoOp(const OpRcPtrVec & ops);
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
     
-    void FinalizeOpVec(OpRcPtrVec & opVec, bool optimize=true);
-    
-    void OptimizeOpVec(OpRcPtrVec & result);
+    void BuildCustomOps(OpRcPtrVec & ops,
+                        const Config& config,
+                        const ConstContextRcPtr & context,
+                        const CustomTransform & transform,
+                        TransformDirection dir)
+    {
+        transform.buildOps(ops, config, context, dir);
+    }
 }
 OCIO_NAMESPACE_EXIT
-
-#endif

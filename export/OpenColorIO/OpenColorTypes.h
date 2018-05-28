@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <limits>
 #include <string>
+#include <vector>
 
 /*!rst::
 C++ Types
@@ -126,6 +127,12 @@ OCIO_NAMESPACE_ENTER
     typedef OCIO_SHARED_PTR<const ColorSpaceTransform> ConstColorSpaceTransformRcPtr;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<ColorSpaceTransform> ColorSpaceTransformRcPtr;
+    
+    class OCIOEXPORT CustomTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const CustomTransform> ConstCustomTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<CustomTransform> CustomTransformRcPtr;
     
     class OCIOEXPORT DisplayTransform;
     //!cpp:type::
@@ -402,7 +409,106 @@ OCIO_NAMESPACE_ENTER
     //    this is a 1D HDR to LDR allocation. It is normally combined with
     //    another display transform in the host app for preview.
     extern OCIOEXPORT const char * ROLE_MATTE_PAINT;
+
+    /*!rst::
+     C++ Ops
+     **********
+
+     Only needed when creating custom transforms, which must be able to translate themselves into corresponding Ops.
+    */
     
+    class Op;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<Op> OpRcPtr;
+    //!cpp:type::
+    typedef std::vector<OpRcPtr> OpRcPtrVec;
+
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class:: 
+    class OCIOEXPORT Op
+    {
+        public:
+            virtual ~Op();
+            
+            virtual OpRcPtr clone() const = 0;
+            
+        	//!cpp:function::
+            // Returns short and printable debugging info.
+            virtual std::string getInfo() const = 0;
+            
+        	//!cpp:function::
+            // Return a caching ID.
+            // This should yield a string of not unreasonable length.
+            // It can only be called after finalize()
+            virtual std::string getCacheID() const = 0;
+            
+        	//!cpp:function::
+            // Is the processing a noop? I.e, does apply do nothing.
+            // (Even no-ops may define Allocation though.)
+            // This must be implemented in a manner where its valid to call
+            // *prior* to finalize. (Optimizers may make use of it)
+            virtual bool isNoOp() const = 0;
+            
+        	//!cpp:function::
+            // Is that Op of the same type as the current Op?
+            virtual bool isSameType(const OpRcPtr & op) const = 0;
+            
+        	//!cpp:function::
+            // Is that Op the inverse of the current Op?
+            virtual bool isInverse(const OpRcPtr & op) const = 0;
+            
+        	//!cpp:function::
+            // Can this Op be combined with the specified Op?
+            virtual bool canCombineWith(const OpRcPtr & op) const;
+            
+        	//!cpp:function::
+            // Return a vector of result ops, which correspond to
+            // this Op combined with secondOp.
+            //
+            // If the result is a noOp, it is valid for the resulting opsVec
+            // to be empty.
+            virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+            
+        	//!cpp:function::
+            // Do the individual RGBA channels influence each other?
+            virtual bool hasChannelCrosstalk() const = 0;
+            
+            virtual void dumpMetadata(ProcessorMetadataRcPtr & /*metadata*/) const
+            { }
+            
+        	//!cpp:function::
+            // This is called a single time after construction.
+            // Final pre-processing and safety checks should happen here,
+            // rather than in the constructor.
+            virtual void finalize() = 0;
+            
+        	//!cpp:function::
+            // Render the specified pixels.
+            //
+            // This must be safe to call in a multi-threaded context.
+            // Ops that have mutable data internally, or rely on external
+            // caching, must thus be appropriately mutexed.
+            virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
+            
+            
+        	//!cpp:function::
+            // Does this Op support GPU shader text generation?
+            virtual bool supportsGpuShader() const = 0;
+
+            // TODO: If temp variables are ever needed, also pass tempvar prefix.
+        	//!cpp:function::
+            // Translate the op into a GPU shader code.
+            virtual void writeGpuShader(std::ostream & shader,
+                                        const std::string & pixelName,
+                                        const GpuShaderDesc & shaderDesc) const = 0;
+            
+        private:
+            Op& operator= (const Op &);
+    };
+    
+    //!cpp:function::
+    extern std::ostream& operator<< (std::ostream&, const Op&);
 }
 OCIO_NAMESPACE_EXIT
 
