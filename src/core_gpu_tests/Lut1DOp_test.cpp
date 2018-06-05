@@ -44,15 +44,15 @@ OCIO_NAMESPACE_USING
 const int LUT3D_EDGE_SIZE = 32;
 
 
-#ifdef OCIO_SOURCE_DIR
-
+#ifndef OCIO_UNIT_TEST_FILES_DIR
+#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
+#endif
 
 // For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
-
-static const std::string ociodir(STR(OCIO_SOURCE_DIR));
+static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 
 namespace
@@ -60,7 +60,7 @@ namespace
     OCIO::FileTransformRcPtr GetFileTransform(const std::string & filename)
     {
         const std::string 
-            filepath(ociodir + std::string("/") + filename);
+            filepath(ocioTestFilesDir + std::string("/") + filename);
 
         OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
         file->setSrc(filepath.c_str());
@@ -316,5 +316,3 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
     test.setErrorThreshold(1e-4f);
 }
 */
-
-#endif

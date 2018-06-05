@@ -38,11 +38,15 @@ namespace OCIO = OCIO_NAMESPACE;
 OCIO_NAMESPACE_USING
 
 
+#ifndef OCIO_UNIT_TEST_FILES_DIR
+#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
+#endif
+
+// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
-
-static const std::string ociodir(STR(OCIO_SOURCE_DIR));
+static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 
 // Based on testings, the interpolation precision for GPU textures is 8-bits
@@ -52,8 +56,7 @@ const float defaultErrorThreshold = 1.0f/256.0f;
 
 std::string createConfig()
 {
-    const std::string search_path(
-        ociodir + std::string("/src/core_tests/testfiles/"));
+    const std::string search_path(ocioTestFilesDir + std::string("/"));
 
     std::string ocioConfigStr =
         "ocio_profile_version: 1\n"

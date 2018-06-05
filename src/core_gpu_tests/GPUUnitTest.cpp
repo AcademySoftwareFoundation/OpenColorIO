@@ -203,6 +203,7 @@ namespace
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         g_image.resize(numEntries);
+        memset(&g_image[0], 0, numEntries * sizeof(float));
 
         glGenTextures(1, &g_imageTexID);
 
@@ -215,6 +216,9 @@ namespace
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, g_winWidth, g_winHeight, 0,
+                     GL_RGBA, GL_FLOAT, &g_image[0]);
     }
 
     void Reshape()
