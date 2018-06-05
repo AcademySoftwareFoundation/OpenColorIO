@@ -51,10 +51,7 @@ OCIO_ADD_GPU_TEST(ExpTransform, ExpValue)
 {
     const float exp1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
     AddExpTest(test, TRANSFORM_DIR_FORWARD, exp1, 1e-6f);
-}
-
-OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_inverse)
-{
-    const float exp1[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
     AddExpTest(test, TRANSFORM_DIR_INVERSE, exp1, 1e-6f);
 }
+
+

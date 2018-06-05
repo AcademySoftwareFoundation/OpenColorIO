@@ -50,33 +50,14 @@ void AddLogTest(OCIOGPUTest & test, TransformDirection direction,
 OCIO_ADD_GPU_TEST(LogTransform, LogBase)
 {
     const float base10 = 10.0f;
-    AddLogTest(test, TRANSFORM_DIR_FORWARD, base10, 1e-5f);
-}
-
-
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_inverse)
-{
-    const float base10 = 10.0f;
-    AddLogTest(test, TRANSFORM_DIR_INVERSE, base10, 1e-4f);
-}
-
-
-OCIO_ADD_GPU_TEST(LogTransform, euler_constant)
-{
+    AddLogTest(test, TRANSFORM_DIR_FORWARD, base10, 1e-6f);
+    AddLogTest(test, TRANSFORM_DIR_INVERSE, base10, 1e-6f);
     const float eulerConstant = std::exp(1.0f);
-    AddLogTest(test, TRANSFORM_DIR_FORWARD, eulerConstant, 1e-5f);
-}
-
-
-OCIO_ADD_GPU_TEST(LogTransform, euler_constant_inverse)
-{
-    const float eulerConstant = std::exp(1.0f);
-    AddLogTest(test, TRANSFORM_DIR_INVERSE, eulerConstant, 1e-5f);
-}
-
-
-OCIO_ADD_GPU_TEST(LogTransform, base1_inverse)
-{
+    AddLogTest(test, TRANSFORM_DIR_FORWARD, eulerConstant, 1e-6f);
+    AddLogTest(test, TRANSFORM_DIR_INVERSE, eulerConstant, 1e-6f);
     const float base1 = 1.0f;
-    AddLogTest(test, TRANSFORM_DIR_INVERSE, base1, 1e-5f);
+    AddLogTest(test, TRANSFORM_DIR_INVERSE, base1, 1e-6f);
+    
 }
+
+
