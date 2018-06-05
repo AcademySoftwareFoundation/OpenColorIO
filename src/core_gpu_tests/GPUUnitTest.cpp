@@ -51,6 +51,7 @@ namespace OCIO = OCIO_NAMESPACE;
 #include <sstream>
 #include <map>
 #include <iomanip>
+#include <iostream>
 
 #include <stdlib.h>
 #include <string.h>

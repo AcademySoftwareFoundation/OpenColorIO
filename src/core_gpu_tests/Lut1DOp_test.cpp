@@ -60,7 +60,7 @@ namespace
     OCIO::FileTransformRcPtr GetFileTransform(const std::string & filename)
     {
         const std::string 
-            filepath(ociodir + std::string("/src/core_tests/testfiles/") + filename);
+            filepath(ociodir + std::string("/") + filename);
 
         OCIO::FileTransformRcPtr file = OCIO::FileTransform::Create();
         file->setSrc(filepath.c_str());
