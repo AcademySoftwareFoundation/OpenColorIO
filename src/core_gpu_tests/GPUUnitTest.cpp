@@ -55,6 +55,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 
 #include "glsl.h"

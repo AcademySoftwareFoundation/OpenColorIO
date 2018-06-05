@@ -53,7 +53,12 @@ namespace
         const GLenum glErr = glGetError();
         if(glErr!=GL_NO_ERROR)
         {
+#ifdef __APPLE__
+            // TODO: Improve the error message
+            throw OCIO::Exception("OpenGL Error");
+#else
             throw OCIO::Exception((const char*)gluErrorString(glErr));
+#endif
         }
     }
 
@@ -368,7 +373,7 @@ unsigned OpenGLBuilder::GetTextureMaxWidth()
     while(w>1)
     {
         glTexImage2D(GL_PROXY_TEXTURE_2D, 0, 
-                     GL_RGB32F, 
+                     GL_RGB32F_ARB, 
                      w, h, 0, 
                      GL_RGB, GL_FLOAT, NULL);
 
@@ -398,7 +403,7 @@ unsigned OpenGLBuilder::GetTextureMaxWidth()
             glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0,
                                      GL_TEXTURE_COMPONENTS, &format);
 
-            texValid = texValid && (GL_RGB32F==format);
+            texValid = texValid && (GL_RGB32F_ARB==format);
 
             while((glErr=glGetError()) != GL_NO_ERROR);
         }
