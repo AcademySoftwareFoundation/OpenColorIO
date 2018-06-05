@@ -1904,36 +1904,40 @@ OIIO_ADD_TEST(Lut1DOp, makeFastLut)
         OIIO_CHECK_EQUAL( res1->luts[0].size(), 4096 );
 
         OIIO_CHECK_CLOSE( res1->luts[0][0], 0.0f,            1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[1][0], 0.0f,    1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[2][0], 0.0f,           1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][0], 0.0f,            1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][0], 0.0f,            1e-6f );
 
         OIIO_CHECK_CLOSE( res1->luts[0][1], 0.000317143218f, 1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[1][1], 0.0f,    1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[2][1], 0.0f,    1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][1], 0.0f,            1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][1], 0.0f,            1e-6f );
 
         OIIO_CHECK_CLOSE( res1->luts[0][2], 0.000634286436f, 1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[1][2], 0.0f,    1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[2][2], 0.0f,    1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][2], 0.0f,            1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][2], 0.0f,            1e-6f );
 
         OIIO_CHECK_CLOSE( res1->luts[0][100], 0.0317143202f, 1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[1][100], 0.0f,  1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[2][100], 0.0f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][100], 0.0f,          1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][100], 0.0f,          1e-6f );
 
         OIIO_CHECK_CLOSE( res1->luts[0][300], 0.095142968f,  1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[1][300], 0.0f,  1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[2][300], 0.0f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][300], 0.0f,          1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][300], 0.0f,          1e-6f );
 
-        OIIO_CHECK_CLOSE( res1->luts[0][400], 0.126857281f, 1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[1][400], 0.0f,  1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[2][400], 0.0f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[0][400], 0.126857281f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][400], 0.0f,          1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][400], 0.0f,          1e-6f );
 
         OIIO_CHECK_CLOSE( res1->luts[0][600], 0.195028812f,  1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[1][600], 0.0378859341f,  1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[2][600], 0.0f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][600], 0.0378859341f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][600], 0.0f,          1e-6f );
 
-        OIIO_CHECK_CLOSE( res1->luts[0][900], 0.299686074f,   1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[0][900], 0.299686074f,  1e-6f );
         OIIO_CHECK_CLOSE( res1->luts[1][900], 0.142543197f,  1e-6f );
-        OIIO_CHECK_CLOSE( res1->luts[2][900], 0.0f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][900], 0.0f,          1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][2000], 0.68342936f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][2000], 0.526286483f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][2000], 0.340572208f, 1e-6f );
     }
 }
 
