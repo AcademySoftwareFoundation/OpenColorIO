@@ -372,4 +372,97 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose)
     }
 }
 
+OIIO_ADD_TEST(OpTools, Lut1D_compose__with_bit_depth)
+{
+    OCIO::Lut1DRcPtr lut1  = OCIO::Lut1D::Create();
+    lut1->inputBitDepth    =  OCIO::BIT_DEPTH_UINT8;
+    lut1->outputBitDepth   =  OCIO::BIT_DEPTH_UINT8;
+    lut1->luts[0].resize(2);
+    lut1->luts[1].resize(2);
+    lut1->luts[2].resize(2);
+
+    lut1->luts[0][0] =  64.0f; lut1->luts[1][0] =  64.0f; lut1->luts[2][0] =  64.0f;
+    lut1->luts[0][1] = 196.0f; lut1->luts[1][1] = 196.0f; lut1->luts[2][1] = 196.0f;
+
+    OCIO::Lut1DRcPtr lut2  = OCIO::Lut1D::Create();
+    lut2->inputBitDepth    = OCIO::BIT_DEPTH_UINT8;
+    lut2->outputBitDepth   = OCIO::BIT_DEPTH_F32;
+    lut2->luts[0].resize(32);
+    lut2->luts[1].resize(32);
+    lut2->luts[2].resize(32);
+
+    lut2->luts[0][ 0] = 0.0f;       lut2->luts[1][ 0] = 0.0f;       lut2->luts[2][ 0] = 0.0023303f;
+    lut2->luts[0][ 1] = 0.0f;       lut2->luts[1][ 1] = 0.00018689f;lut2->luts[2][ 1] = 0.0052544f;
+    lut2->luts[0][ 2] = 0.0f;       lut2->luts[1][ 2] = 0.0010572f; lut2->luts[2][ 2] = 0.0096338f;
+    lut2->luts[0][ 3] = 0.0f;       lut2->luts[1][ 3] = 0.0029134f; lut2->luts[2][ 3] = 0.015624f;
+    lut2->luts[0][ 4] = 0.00010081f;lut2->luts[1][ 4] = 0.0059806f; lut2->luts[2][ 4] = 0.023362f;
+    lut2->luts[0][ 5] = 0.00070343f;lut2->luts[1][ 5] = 0.010448f;  lut2->luts[2][ 5] = 0.032968f;
+    lut2->luts[0][ 6] = 0.002112f;  lut2->luts[1][ 6] = 0.016481f;  lut2->luts[2][ 6] = 0.044554f;
+    lut2->luts[0][ 7] = 0.0045628f; lut2->luts[1][ 7] = 0.024229f;  lut2->luts[2][ 7] = 0.05822f;
+    lut2->luts[0][ 8] = 0.0082598f; lut2->luts[1][ 8] = 0.033831f;  lut2->luts[2][ 8] = 0.074063f;
+    lut2->luts[0][ 9] = 0.013387f;  lut2->luts[1][ 9] = 0.045415f;  lut2->luts[2][ 9] = 0.092171f;
+    lut2->luts[0][10] = 0.020113f;  lut2->luts[1][10] = 0.059101f;  lut2->luts[2][10] = 0.11263f;
+    lut2->luts[0][11] = 0.028595f;  lut2->luts[1][11] = 0.075003f;  lut2->luts[2][11] = 0.13552f;
+    lut2->luts[0][12] = 0.038983f;  lut2->luts[1][12] = 0.093229f;  lut2->luts[2][12] = 0.16091f;
+    lut2->luts[0][13] = 0.051418f;  lut2->luts[1][13] = 0.11388f;   lut2->luts[2][13] = 0.18888f;
+    lut2->luts[0][14] = 0.066034f;  lut2->luts[1][14] = 0.13706f;   lut2->luts[2][14] = 0.2195f;
+    lut2->luts[0][15] = 0.082962f;  lut2->luts[1][15] = 0.16286f;   lut2->luts[2][15] = 0.25283f;
+    lut2->luts[0][16] = 0.10233f;   lut2->luts[1][16] = 0.19138f;   lut2->luts[2][16] = 0.28895f;
+    lut2->luts[0][17] = 0.12425f;   lut2->luts[1][17] = 0.2227f;    lut2->luts[2][17] = 0.3279f;
+    lut2->luts[0][18] = 0.14885f;   lut2->luts[1][18] = 0.25691f;   lut2->luts[2][18] = 0.36976f;
+    lut2->luts[0][19] = 0.17623f;   lut2->luts[1][19] = 0.29409f;   lut2->luts[2][19] = 0.41459f;
+    lut2->luts[0][20] = 0.20652f;   lut2->luts[1][20] = 0.33433f;   lut2->luts[2][20] = 0.46243f;
+    lut2->luts[0][21] = 0.23982f;   lut2->luts[1][21] = 0.3777f;    lut2->luts[2][21] = 0.51334f;
+    lut2->luts[0][22] = 0.27622f;   lut2->luts[1][22] = 0.42428f;   lut2->luts[2][22] = 0.56739f;
+    lut2->luts[0][23] = 0.31585f;   lut2->luts[1][23] = 0.47415f;   lut2->luts[2][23] = 0.62461f;
+    lut2->luts[0][24] = 0.35879f;   lut2->luts[1][24] = 0.52738f;   lut2->luts[2][24] = 0.68507f;
+    lut2->luts[0][25] = 0.40515f;   lut2->luts[1][25] = 0.58404f;   lut2->luts[2][25] = 0.74881f;
+    lut2->luts[0][26] = 0.45502f;   lut2->luts[1][26] = 0.64421f;   lut2->luts[2][26] = 0.81588f;
+    lut2->luts[0][27] = 0.5085f;    lut2->luts[1][27] = 0.70795f;   lut2->luts[2][27] = 0.88633f;
+    lut2->luts[0][28] = 0.56569f;   lut2->luts[1][28] = 0.77534f;   lut2->luts[2][28] = 0.96021f;
+    lut2->luts[0][29] = 0.62667f;   lut2->luts[1][29] = 0.84643f;   lut2->luts[2][29] = 1.0f;
+    lut2->luts[0][30] = 0.69154f;   lut2->luts[1][30] = 0.9213f;    lut2->luts[2][30] = 1.0f;
+    lut2->luts[0][31] = 0.76038f;   lut2->luts[1][31] = 1.0f;       lut2->luts[2][31] = 1.0f;
+
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW( 
+        OCIO::CreateLut1DOp(ops, lut2, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_CHECK_EQUAL(ops.size(), 1);
+
+    {
+        const OCIO::Lut1DRcPtr lut = OCIO::Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_NO);
+
+        OIIO_CHECK_EQUAL( lut->luts[0].size(), 2 );
+
+        OIIO_CHECK_CLOSE( lut->luts[0][0], 0.00744791f, 1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[1][0], 0.03172233f, 1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[2][0], 0.07058375f, 1e-6f );
+
+        OIIO_CHECK_CLOSE( lut->luts[0][1], 0.3513808f,  1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[1][1], 0.51819527f, 1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[2][1], 0.67463773f, 1e-6f );
+    }
+/*
+    TODO: To uncomment when the Op bit depth will be implemented
+
+    {
+        const OCIO::Lut1DRcPtr lut = Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_INDEPTH);
+
+        OIIO_CHECK_EQUAL( lut->luts[0].size(), 256 );
+
+        OIIO_CHECK_CLOSE( lut->luts[0][0], 0.00744791f, 1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[1][0], 0.03172233f, 1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[2][0], 0.07058375f, 1e-6f );
+
+        OIIO_CHECK_CLOSE( lut->luts[0][127], 0.0f, 1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[1][127], 0.0f, 1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[2][127], 0.0f, 1e-6f );
+
+        OIIO_CHECK_CLOSE( lut->luts[0][255], 0.3513808f,  1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[1][255], 0.51819527f, 1e-6f );
+        OIIO_CHECK_CLOSE( lut->luts[2][255], 0.67463773f, 1e-6f );
+    }
+*/
+}
+
 #endif // OCIO_UNIT_TEST
