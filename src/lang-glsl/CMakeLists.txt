@@ -20,7 +20,7 @@ set_target_properties(OCIOOpenGL
 )
 
 install(TARGETS OCIOOpenGL EXPORT OpenColorIO 
-        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/lang-glsl)
+        DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/share/lang-glsl/lib)
 
-install(FILES ${CMAKE_SOURCE_DIR}/glsl.h
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/lang-glsl/)
+install(FILES ${CMAKE_SOURCE_DIR}/src/lang-glsl/glsl.h
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/share/lang-glsl/include)
