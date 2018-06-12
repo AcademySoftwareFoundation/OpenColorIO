@@ -75,7 +75,7 @@ OCIO_NAMESPACE_ENTER
         lut->luts[2].resize(idealSize);
 
         const float stepValue
-            = GetBitDepthMaxValue(outputBitDepth) / (idealSize - 1.0f);
+            = GetBitDepthMaxValue(outputBitDepth) / (float(idealSize) - 1.0f);
 
         for(unsigned idx=0; idx<lut->luts[0].size(); ++idx)
         {
