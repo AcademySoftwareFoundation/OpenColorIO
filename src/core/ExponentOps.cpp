@@ -83,10 +83,8 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
         private:
             double m_exp4[4];
 
@@ -214,6 +212,8 @@ OCIO_NAMESPACE_ENTER
             {
                 cacheIDStream << m_exp4[i] << " ";
             }
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
         }
@@ -226,24 +226,30 @@ OCIO_NAMESPACE_ENTER
             ApplyClampExponent(rgbaBuffer, numPixels, exp);
         }
         
-        bool ExponentOp::supportsGpuShader() const
+        void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const 
         {
-            return true;
-        }
-        
-        void ExponentOp::writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const
-        {
-            float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
-                float(m_exp4[2]), float(m_exp4[3]) };
+            if(getInputBitDepth()!=BIT_DEPTH_F32 
+                || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported for the GPU shader");
+            }
 
-            GpuLanguage lang = shaderDesc.getLanguage();
-            float zerovec[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            const float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
+                                   float(m_exp4[2]), float(m_exp4[3]) };
 
-            shader << pixelName << " = pow(";
-            shader << "max(" << pixelName << ", " << GpuTextHalf4(zerovec, lang) << ")";
-            shader << ", " << GpuTextHalf4(exp, lang) << ");\n";
+            GpuShaderText ss(shaderDesc->getLanguage());
+            ss.indent();
+
+            // outColor = pow(max(outColor, 0.), exp);
+
+            ss.newLine()
+                << shaderDesc->getPixelName() 
+                << " = pow( "
+                << "max( " << shaderDesc->getPixelName() 
+                << ", " << ss.vec4fConst(0.0f) << " )"
+                << ", " << ss.vec4fConst(exp[0], exp[1], exp[2], exp[3]) << " );";
+
+            shaderDesc->addToFunctionShaderCode(ss.string().c_str());
         }
         
     }  // Anon namespace

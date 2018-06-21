@@ -32,6 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut1DOp.h"
 #include "MathUtils.h"
 #include "SSE.h"
+#include "GpuShaderUtils.h"
+#include "BitDepthUtils.h"
+#include "OpTools.h"
 
 #include <algorithm>
 #include <cmath>
@@ -40,9 +43,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    Lut1D::Lut1D() :
-        maxerror(std::numeric_limits<float>::min()),
-        errortype(ERROR_RELATIVE)
+    Lut1D::Lut1D()
+        :   maxerror(std::numeric_limits<float>::min())
+        ,   errortype(ERROR_RELATIVE)
+        ,   inputBitDepth(BIT_DEPTH_F32)
+        ,   outputBitDepth(BIT_DEPTH_F32)
+
     {
         for(int i=0; i<3; ++i)
         {
@@ -55,7 +61,61 @@ OCIO_NAMESPACE_ENTER
     {
         return Lut1DRcPtr(new Lut1D());
     }
-    
+
+    Lut1DRcPtr Lut1D::CreateIdentity(BitDepth inputBitDepth, BitDepth outputBitDepth)
+    {
+        Lut1DRcPtr lut      = Lut1D::Create();
+        lut->inputBitDepth  = inputBitDepth;
+        lut->outputBitDepth = outputBitDepth;
+
+        const unsigned idealSize = GetLutIdealSize(inputBitDepth);
+
+        lut->luts[0].resize(idealSize);
+        lut->luts[1].resize(idealSize);
+        lut->luts[2].resize(idealSize);
+
+        const float stepValue
+            = GetBitDepthMaxValue(outputBitDepth) / (float(idealSize) - 1.0f);
+
+        for(unsigned idx=0; idx<lut->luts[0].size(); ++idx)
+        {
+            const float ftemp = float(idx) * stepValue;
+            lut->luts[0][idx] = ftemp;
+            lut->luts[1][idx] = ftemp;
+            lut->luts[2][idx] = ftemp;
+        }
+
+        return lut;
+    }
+
+    Lut1D & Lut1D::operator=(const Lut1D & l)
+    {
+        if(this!=&l)
+        {
+            maxerror  = l.maxerror;
+            errortype = l.errortype;
+            
+            from_min[0] = l.from_min[0];
+            from_min[1] = l.from_min[1];
+            from_min[2] = l.from_min[2];
+
+            from_max[0] = l.from_max[0];
+            from_max[1] = l.from_max[1];
+            from_max[2] = l.from_max[2];
+            
+            luts[0] = l.luts[0];
+            luts[1] = l.luts[1];
+            luts[2] = l.luts[2];
+
+            inputBitDepth  = l.inputBitDepth;
+            outputBitDepth = l.outputBitDepth;
+
+            // Note: do not copy the mutex
+        }
+
+        return *this;
+    }
+
     
     namespace
     {
@@ -441,11 +501,113 @@ OCIO_NAMESPACE_ENTER
             }
         }
     
-    
+        void PadLutChannel(unsigned width,
+                           unsigned height,
+                           const std::vector<float> & channel,
+                           std::vector<float> & chn)
+        {
+            const unsigned currWidth = (unsigned)channel.size();
+
+            if (height>1)
+            {
+                // Fill the texture values
+                //
+                // Make the last texel of a given row the same as the first texel 
+                // of its next row.  This will preserve the continuity along row breaks 
+                // as long as the lookup position used by the sampler is based on (width-1) 
+                // to account for the 1 texel padding at the end of each row.
+
+                const unsigned step = width-1;
+                for(unsigned i=0 ; i<currWidth-step ; i+=step)
+                {
+                    chn.insert(chn.end(), &channel[i], &channel[i+step]);
+                    chn.push_back(channel[i+step]);
+                }
+
+                // If there are still texels to fill, add them to the texture data
+                const unsigned leftover = currWidth%step;
+                if (leftover > 0)
+                {
+                    chn.insert(chn.end(), &channel[currWidth-leftover], &channel[currWidth-1]);
+                    chn.push_back(channel[currWidth-1]);
+                }
+            }
+            else
+            {
+                chn = channel;
+            }
+
+            // Pad the remaining of the texture with the last LUT entry.
+            chn.insert(chn.end(), width*height-chn.size(), channel[currWidth-1]);
+        }
+
+        bool HasExtendedDomain(const Lut1DRcPtr & lut)
+        {
+            // The forward LUT is allowed to have entries outside the outDepth 
+            // (e.g. a 10i LUT is allowed to have values on [-20,1050] if it wants).
+            // This is called an extended range LUT and helps maximize accuracy 
+            // by allowing clamping to happen (if necessary) after the interpolation.
+            // The implication is that the inverse LUT needs to evaluate over 
+            // an extended domain.  Since this potentially requires a slower rendering 
+            // method for the Fast style, this method allows the renderers 
+            // to determine if this is necessary.
+
+            // TODO: To enhance when adding bit depth
+
+            // TODO: To enhance when adding half domain luts
+
+            // TODO: To enhance to support not monotonic luts
+
+            // The input bit depth describes the scaling of the LUT entries.
+            const float normalMin = 0.0f;
+            const float normalMax = GetBitDepthMaxValue(lut->inputBitDepth);
+
+            return lut->from_min[0]<normalMin
+                || lut->from_min[1]<normalMin 
+                || lut->from_min[2]<normalMin
+
+                || lut->from_max[0]>normalMax
+                || lut->from_max[1]>normalMax 
+                || lut->from_max[2]>normalMax;
+        }
+
+        // TODO: This function is not fully ported yet from SynColor 
+        //       and probably needs to be reworked for OCIO.
+        //
+        Lut1DRcPtr MakeLookupDomain(BitDepth incomingBitDepth)
+        {
+            const unsigned idealSize = GetLutIdealSize(incomingBitDepth);
+
+            Lut1DRcPtr lut(Lut1D::Create());
+            lut->inputBitDepth = BIT_DEPTH_F32;
+            lut->outputBitDepth = BIT_DEPTH_F32;
+            lut->luts[0].resize(idealSize);
+            lut->luts[1].resize(idealSize);
+            lut->luts[2].resize(idealSize);
+
+            const float stepValue 
+                = GetBitDepthMaxValue(BIT_DEPTH_F32) / (float(idealSize) - 1.0f);
+
+            for(unsigned idx=0; idx<idealSize; ++idx)
+            {
+                const float ftemp = float(idx) * stepValue;
+
+                lut->luts[0][idx] = ftemp;
+                lut->luts[1][idx] = ftemp;
+                lut->luts[2][idx] = ftemp;
+            }
+
+            return lut;
+        }
+
     }
     
     namespace
     {
+        class Lut1DOp;
+        typedef OCIO_SHARED_PTR<Lut1DOp> Lut1DOpRcPtr;
+        
+
         class Lut1DOp : public Op
         {
         public:
@@ -466,29 +628,32 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
-            
+            virtual bool supportedByLegacyShader() const { return false; }
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
+            virtual bool canCombineWith(const OpRcPtr & op) const;
+            virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+
+            Lut1DRcPtr makeFastLut1D(bool forGPU);
+
         private:
             const Lut1DRcPtr m_lut;
             Interpolation m_interpolation;
             TransformDirection m_direction;
-            
+
+            Lut1DRcPtr m_lut_gpu_apply;
             std::string m_cacheID;
         };
-        
-        typedef OCIO_SHARED_PTR<Lut1DOp> Lut1DOpRcPtr;
         
         
         Lut1DOp::Lut1DOp(const Lut1DRcPtr & lut,
                          Interpolation interpolation,
-                         TransformDirection direction):
-                            Op(),
-                            m_lut(lut),
-                            m_interpolation(interpolation),
-                            m_direction(direction)
+                         TransformDirection direction)
+            :   Op(lut->inputBitDepth, lut->outputBitDepth),
+                m_lut(lut),
+                m_interpolation(interpolation),
+                m_direction(direction),
+                m_lut_gpu_apply(lut)
         {
         }
         
@@ -539,7 +704,76 @@ OCIO_NAMESPACE_ENTER
         {
             return false;
         }
+
+        bool Lut1DOp::canCombineWith(const OpRcPtr & /*op*/) const
+        {
+            // TODO: To implement
+
+            return false;
+        }
         
+        void Lut1DOp::combineWith(OpRcPtrVec & /*ops*/,
+                                  const OpRcPtr & /*secondOp*/) const
+        {
+            // TODO: To implement
+
+            std::ostringstream os;
+            os << "Op: " << getInfo() << " cannot be combined. ";
+            os << "A type-specific combining function is not defined.";
+            throw Exception(os.str().c_str());
+        }   
+
+        // TODO: This function is not fully ported yet from SynColor 
+        //       and probably needs to be reworked for OCIO.
+        //
+        // The domain to use for the FastLut is a challenging problem since we don't
+        // know the input and output color space of the LUT.  In particular, we don't
+        // know if a half or normal domain would be better.  For now, we use a
+        // heuristic which is based on the original input bit-depth of the inverse LUT
+        // (the output bit-depth of the forward LUT).  (We preserve the original depth
+        // as a member since typically by the time this routine is called, the depth
+        // has been reset to 32f.)  However, there are situations where the origDepth
+        // is not reliable (e.g. a user creates a transform in Custom mode and exports it).
+        // Ultimately, the goal is to replace this with an automated algorithm that
+        // computes the best domain based on analysis of the curvature of the LUT.
+        //
+        Lut1DRcPtr Lut1DOp::makeFastLut1D(bool forGPU)
+        {
+            BitDepth depth(getInputBitDepth());
+
+            // For typical LUTs (e.g. gamma tables from ICC monitor profiles)
+            // we can use a smaller FastLUT on the GPU.
+            // Currently allowing 16f to be subsampled for GPU but using 16i as a way
+            // to indicate not to subsample certain LUTs (e.g. float-conversion LUTs).
+            if(forGPU && depth != BIT_DEPTH_UINT16)
+            {
+                // GPU will always interpolate rather than look-up.
+                // Use a smaller table for better efficiency.
+
+                // TODO: Investigate performance/quality trade-off.
+
+                depth = BIT_DEPTH_UINT12;
+            }
+
+            // But if the LUT has values outside [0,1], use a half-domain fastLUT.
+            if(HasExtendedDomain(m_lut))
+            {
+                depth = BIT_DEPTH_F16;
+            }
+
+            // Make a domain for the composed Lut1D.
+            Lut1DRcPtr newDomainLut = MakeLookupDomain(depth);
+
+            // Regardless of what depth is used to build the domain, set the in & out 
+            // to the actual depth so that scaling is done correctly.
+            newDomainLut->inputBitDepth  = getInputBitDepth();
+            newDomainLut->outputBitDepth = getInputBitDepth();
+
+            // To avoid impacting the current Op, clone it (i.e. the const data is shared)
+            OpRcPtr b = clone();
+            return Compose(newDomainLut, b, COMPOSE_RESAMPLE_NO);
+        }
+
         void Lut1DOp::finalize()
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
@@ -561,7 +795,8 @@ OCIO_NAMESPACE_ENTER
                     throw Exception("Cannot apply Lut1DOp, unspecified interpolation.");
                     break;
                 case INTERP_TETRAHEDRAL:
-                    throw Exception("Cannot apply Lut1DOp, tetrahedral interpolation is not allowed for 1d luts.");
+                    throw Exception(
+                        "Cannot apply Lut1DOp, tetrahedral interpolation is not allowed for 1d luts.");
                     break;
                 default:
                     throw Exception("Cannot apply Lut1DOp, invalid interpolation specified.");
@@ -571,15 +806,30 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception("Cannot apply lut1d op, no lut data provided.");
             }
-            
+
+            if(m_lut->luts[0].size()!=m_lut->luts[1].size()
+                || m_lut->luts[0].size()!=m_lut->luts[2].size())
+            {
+                throw Exception(
+                    "Cannot apply lut1d op, the LUT for each channel must have the same dimensions.");
+            }
+
             // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<Lut1DOp ";
             cacheIDStream << m_lut->getCacheID() << " ";
             cacheIDStream << InterpolationToString(m_interpolation) << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
+
+            if(m_direction == TRANSFORM_DIR_INVERSE)
+            {
+                // Compute a fast forward Lut 1D from an inverse Lut 1D
+                m_lut_gpu_apply = makeFastLut1D(true);
+            }
         }
         
         void Lut1DOp::apply(float* rgbaBuffer, long numPixels) const
@@ -611,17 +861,206 @@ OCIO_NAMESPACE_ENTER
                 }
             }
         }
-        
-        bool Lut1DOp::supportsGpuShader() const
+
+        void Lut1DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            return false;
-        }
-        
-        void Lut1DOp::writeGpuShader(std::ostream & /*shader*/,
-                                     const std::string & /*pixelName*/,
-                                     const GpuShaderDesc & /*shaderDesc*/) const
-        {
-            throw Exception("Lut1DOp does not support analytical shader generation.");
+            if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported for the GPU shader");
+            }
+
+            const unsigned defaultMaxWidth = shaderDesc->getTextureMaxWidth();
+
+            const unsigned length = unsigned(m_lut_gpu_apply->luts[0].size());
+            const unsigned width  = std::min(length, defaultMaxWidth);
+            const unsigned height = (length / defaultMaxWidth) + 1;
+
+            // Adjust LUT texture to allow for correct 2d linear interpolation, if needed.
+
+            std::vector<float> red;
+            PadLutChannel(width, height, m_lut_gpu_apply->luts[0], red);
+
+            std::vector<float> grn;
+            PadLutChannel(width, height, m_lut_gpu_apply->luts[1], grn);
+
+            std::vector<float> blu;
+            PadLutChannel(width, height, m_lut_gpu_apply->luts[2], blu);
+
+            const unsigned maxValues = width * height;
+
+            std::vector<float> rgb;
+            rgb.resize(maxValues * 3);
+
+            for(unsigned idx=0; idx<maxValues; ++idx)
+            {
+                rgb[3*idx+0] = red[idx];
+                rgb[3*idx+1] = grn[idx];
+                rgb[3*idx+2] = blu[idx];
+            }
+
+            // Register the RGB lut
+
+            std::ostringstream resName;
+            resName << shaderDesc->getResourcePrefix()
+                    << std::string("lut1d_")
+                    << shaderDesc->getNumTextures();
+
+            const std::string name(resName.str());
+
+            shaderDesc->addTexture(GpuShaderText::getSamplerName(name).c_str(),
+                                   m_cacheID.c_str(),
+                                   width, height, 
+                                   GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
+                                   m_interpolation, 
+                                   &rgb[0]);
+
+
+            float scale[3], offset[3];
+            bool somethingToDo = false;
+            for(unsigned i = 0; i < 3; ++i)
+            {
+                scale[i]  = 1.0f / (m_lut_gpu_apply->from_max[i] - m_lut_gpu_apply->from_min[i]);
+                offset[i] = -m_lut_gpu_apply->from_min[i] * scale[i];
+
+                if(m_direction == TRANSFORM_DIR_INVERSE)
+                {
+                    scale[i]  = 1.0f / scale[i];
+                    offset[i] = -offset[i];
+                }
+
+                somethingToDo |= (scale[i] != 1.f || offset[i] != 0.f);
+            }
+
+            // Add the lut code to the OCIO shader program
+
+            if(height>1)
+            {
+                // In case the 1D lut length exceeds the 1D texture maximum length
+                // a 2D texture is used.
+
+                {
+                    GpuShaderText ss(shaderDesc->getLanguage());
+                    ss.declareTex2D(name);
+                    shaderDesc->addToDeclareShaderCode(ss.string().c_str());
+                }
+
+                {
+                    GpuShaderText ss(shaderDesc->getLanguage());
+
+                    ss.newLine() << ss.vec2fKeyword() << " " << name << "_computePos(float f)";
+                    ss.newLine() << "{";
+                    ss.indent();
+
+                    // Need min() to protect against f > 1 causing a bogus x value.
+                    // min( f, 1.) * (dim - 1)
+                    ss.newLine() <<   "float dep = min(f, 1.0) * " << float(length-1) << ";";
+
+                    ss.newLine() <<   ss.vec2fDecl("retVal") << ";";
+                    // float(int( dep / (width-1) ))
+                    ss.newLine() <<   "retVal.y = float(int(dep / " << float(width-1) << "));";
+                    // dep - retVal.y * (width-1)
+                    ss.newLine() <<   "retVal.x = dep - retVal.y * " << float(width-1) << ";";
+
+                    // (retVal.x + 0.5) / width;
+                    ss.newLine() <<   "retVal.x = (retVal.x + 0.5) / " << float(width) << ";";
+                    // (retVal.x + 0.5) / height;
+                    ss.newLine() <<   "retVal.y = (retVal.y + 0.5) / " << float(height) << ";";
+                    ss.newLine() <<   "return retVal;";
+
+                    ss.dedent();
+                    ss.newLine() << "}";
+
+                    shaderDesc->addToHelperShaderCode(ss.string().c_str());
+                }
+
+                {
+                    GpuShaderText ss(shaderDesc->getLanguage());
+                    ss.indent();
+
+                    const std::string str(name + "_computePos(" + shaderDesc->getPixelName());
+
+                    if(somethingToDo && m_direction == TRANSFORM_DIR_FORWARD)
+                    {
+                        ss.newLine() << shaderDesc->getPixelName() << ".rgb = " 
+                                     << ss.vec3fConst(offset[0], offset[1], offset[2])
+                                     << " + " << shaderDesc->getPixelName() << ".rgb * " 
+                                     << ss.vec3fConst(scale[0], scale[1], scale[2]) 
+                                     << ";" ;
+                    }
+
+                    ss.newLine() << shaderDesc->getPixelName() << ".r = " 
+                                 << ss.sampleTex2D(name, str + ".r)") 
+                                 << ".r;";
+
+                    ss.newLine() << shaderDesc->getPixelName() << ".g = "
+                                 << ss.sampleTex2D(name, str + ".g)")
+                                 << ".g;";
+
+                    ss.newLine() << shaderDesc->getPixelName() << ".b = " 
+                                 << ss.sampleTex2D(name, str + ".b)")
+                                 << ".b;";
+
+                    if(somethingToDo && m_direction == TRANSFORM_DIR_INVERSE)
+                    {
+                        ss.newLine() << shaderDesc->getPixelName() << ".rgb = " 
+                                     << ss.vec3fConst(offset[0], offset[1], offset[2])
+                                     << " + " << shaderDesc->getPixelName() << ".rgb * " 
+                                     << ss.vec3fConst(scale[0], scale[1], scale[2]) 
+                                     << ";" ;
+                    }
+
+                    shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+                }
+            }
+            else
+            {
+                {
+                    GpuShaderText ss(shaderDesc->getLanguage());
+                    ss.declareTex1D(name);
+                    shaderDesc->addToDeclareShaderCode(ss.string().c_str());
+                }
+
+                {
+                    const float m = (float(length)-1.0f) / float(length);
+                    const float b = 1.0f / (2.0f * float(length));
+
+                    GpuShaderText ss(shaderDesc->getLanguage());
+                    ss.indent();
+
+                    if(somethingToDo && m_direction == TRANSFORM_DIR_FORWARD)
+                    {
+                        ss.newLine() << shaderDesc->getPixelName() << ".rgb = " 
+                                     << ss.vec3fConst(offset[0], offset[1], offset[2])
+                                     << " + " << shaderDesc->getPixelName() << ".rgb * " 
+                                     << ss.vec3fConst(scale[0], scale[1], scale[2]) 
+                                     << ";" ;
+                    }
+
+                    // vec3 coords = (inPixel.rgb * (dim-1.0f) + 0.5f) / dim
+
+                    ss.newLine() << ss.vec3fDecl(name + "_coords") 
+                                 << " = " << shaderDesc->getPixelName() << ".rgb * " 
+                                 << ss.vec3fConst(m) << " + " << ss.vec3fConst(b) << ";";
+
+                    ss.newLine() << shaderDesc->getPixelName() << ".r = " 
+                                 << ss.sampleTex1D(name, name + "_coords.r") << ".r;";
+                    ss.newLine() << shaderDesc->getPixelName() << ".g = " 
+                                 << ss.sampleTex1D(name, name + "_coords.g") << ".g;";
+                    ss.newLine() << shaderDesc->getPixelName() << ".b = " 
+                                 << ss.sampleTex1D(name, name + "_coords.b") << ".b;";
+
+                    if(somethingToDo && m_direction == TRANSFORM_DIR_INVERSE)
+                    {
+                        ss.newLine() << shaderDesc->getPixelName() << ".rgb = " 
+                                     << ss.vec3fConst(offset[0], offset[1], offset[2])
+                                     << " + " << shaderDesc->getPixelName() << ".rgb * " 
+                                     << ss.vec3fConst(scale[0], scale[1], scale[2]) 
+                                     << ";" ;
+                    }
+
+                    shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+                }
+            }
         }
     }
     
@@ -782,6 +1221,58 @@ OIIO_ADD_TEST(Lut1DOp, FiniteValue)
     for(int i=0; i <4; ++i)
     {
         OIIO_CHECK_CLOSE(inputBuffer_nearestinverse[i], outputBuffer_nearestinverse[i], 1e-5f);
+    }
+}
+
+
+OIIO_ADD_TEST(Lut1DOp, ArbitraryValue)
+{
+    OCIO::Lut1DRcPtr lut = OCIO::Lut1D::Create();
+    lut->from_min[0] = -0.25f;
+    lut->from_min[1] = -0.25f;
+    lut->from_min[2] = -0.25f;
+
+    lut->from_max[0] = +1.25f;
+    lut->from_max[1] = +1.25f;
+    lut->from_max[2] = +1.25f;
+
+    const int size = 256;
+    lut->luts[0].resize(size);
+    lut->luts[1].resize(size);
+    lut->luts[2].resize(size);
+
+    for(int i=0; i<size; ++i)
+    {
+        const float x = (float)i / (float)(size-1);
+        const float x2 = x*x;
+        
+        for(int c=0; c<3; ++c)
+        {
+            lut->luts[c][i] = x2;
+        }
+    }
+
+    const float inputBuffer_linearforward[16] 
+        = { -0.50f, -0.25f, -0.10f, 0.00f,
+             0.50f,  0.60f,  0.70f, 0.80f,
+             0.90f,  1.00f,  1.10f, 1.20f,
+             1.30f,  1.40f,  1.50f, 1.60f };
+
+    float outputBuffer_linearforward[16];
+    for(unsigned i=0; i<16; ++i) { outputBuffer_linearforward[i] = inputBuffer_linearforward[i]; }
+
+    const float outputBuffer_inv_linearforward[16] 
+        = { -0.25f, -0.25f, -0.10f, 0.00f,
+             0.50f,  0.60f,  0.70f, 0.80f,
+             0.90f,  1.00f,  1.10f, 1.20f,
+             1.25f,  1.25f,  1.25f, 1.60f };
+
+    OCIO::Lut1D_Linear(outputBuffer_linearforward, 4, *lut);
+    OCIO::Lut1D_LinearInverse(outputBuffer_linearforward, 4, *lut);
+
+    for(int i=0; i<16; ++i)
+    {
+        OIIO_CHECK_CLOSE(outputBuffer_linearforward[i], outputBuffer_inv_linearforward[i], 1e-5f);
     }
 }
 
@@ -1236,17 +1727,8 @@ OIIO_ADD_TEST(Lut1DOp, GPU)
     
     OCIO::FinalizeOpVec(ops);
     OIIO_CHECK_EQUAL(ops.size(), 1);
-    OIIO_CHECK_EQUAL(ops[0]->supportsGpuShader(), false);
-
-    std::ostringstream shader;
-    std::string pixelName = "";
-    OCIO::GpuShaderDesc shaderDesc;
-
-    OIIO_CHECK_THROW_WHAT(
-        ops[0]->writeGpuShader(shader, pixelName,shaderDesc),
-        OCIO::Exception, "does not support analytical shader generation");
+    OIIO_CHECK_EQUAL(ops[0]->supportedByLegacyShader(), false);
 }
-
 
 OIIO_ADD_TEST(Lut1DOp, IdentityLut1D)
 {
@@ -1272,7 +1754,191 @@ OIIO_ADD_TEST(Lut1DOp, IdentityLut1D)
         OIIO_CHECK_EQUAL(data[2*channels+c], 0.66666667f);
         OIIO_CHECK_EQUAL(data[3*channels+c], 1.0f);
     }
+}
 
+OIIO_ADD_TEST(Lut1DOp, padLutChannel_one_dimension)
+{
+    const unsigned width  = 15;
+
+    // Create a channel multi row and smaller than the expected texture size
+
+    std::vector<float> channel;
+    channel.resize(width - 5);
+
+    // Fill the channel
+
+    for(unsigned idx=0; idx<channel.size(); ++idx)
+    {
+        channel[idx] = float(idx);
+    }
+
+    // Pad the texture values
+
+    std::vector<float> chn;
+    OIIO_CHECK_NO_THROW( OCIO::PadLutChannel(width, 1, channel, chn) );
+
+    // Check the values
+
+    const float res[15] = { 0.0f,  1.0f,  2.0f,  3.0f,  4.0f,
+                            5.0f,  6.0f,  7.0f,  8.0f,  9.0f,
+                            9.0f,  9.0f,  9.0f,  9.0f,  9.0f, };
+    OIIO_CHECK_EQUAL(chn.size(), 15);
+    for(unsigned idx=0; idx<chn.size(); ++idx)
+    {
+        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+    }
+}
+
+OIIO_ADD_TEST(Lut1DOp, padLutChannel_two_dimensions)
+{
+    const unsigned width  = 5;
+    const unsigned height = 3;
+
+    // Create a channel multi row and smaller than the expected texture size
+
+    std::vector<float> channel;
+    channel.resize(width * (height-1) + 1);
+
+    // Fill the channel
+
+    for(unsigned idx=0; idx<channel.size(); ++idx)
+    {
+        channel[idx] = float(idx);
+    }
+
+    // Pad the texture values
+
+    std::vector<float> chn;
+    OIIO_CHECK_NO_THROW( OCIO::PadLutChannel(width, height, channel, chn) );
+
+    // Check the values
+
+    const float res[15] = { 0.0f,  1.0f,  2.0f,  3.0f,  4.0f,
+                            4.0f,  5.0f,  6.0f,  7.0f,  8.0f,
+                            8.0f,  9.0f, 10.0f, 10.0f, 10.0f };
+    OIIO_CHECK_EQUAL(chn.size(), 15);
+    for(unsigned idx=0; idx<15; ++idx)
+    {
+        OIIO_CHECK_EQUAL(chn[idx], res[idx]);
+    }
+}
+
+OIIO_ADD_TEST(Lut1DOp, GetLutIdealSize)
+{
+    OIIO_CHECK_EQUAL(OCIO::GetLutIdealSize(OCIO::BIT_DEPTH_UINT8), 256);
+    OIIO_CHECK_EQUAL(OCIO::GetLutIdealSize(OCIO::BIT_DEPTH_UINT16), 65536);
+
+    OIIO_CHECK_EQUAL(OCIO::GetLutIdealSize(OCIO::BIT_DEPTH_F16), 65536);
+    OIIO_CHECK_EQUAL(OCIO::GetLutIdealSize(OCIO::BIT_DEPTH_F32), 65536);
+}
+
+OIIO_ADD_TEST(Lut1DOp, makeFastLut)
+{
+    OCIO::Lut1DRcPtr lut1  = OCIO::Lut1D::Create();
+    lut1->luts[0].resize(8);
+    lut1->luts[1].resize(8);
+    lut1->luts[2].resize(8);
+
+    lut1->luts[0][0] = 0.00f; lut1->luts[1][0] = 0.12f; lut1->luts[2][0] = 0.25f;
+    lut1->luts[0][1] = 0.11f; lut1->luts[1][1] = 0.22f; lut1->luts[2][1] = 0.35f;
+    lut1->luts[0][2] = 0.21f; lut1->luts[1][2] = 0.32f; lut1->luts[2][2] = 0.45f;
+    lut1->luts[0][3] = 0.31f; lut1->luts[1][3] = 0.42f; lut1->luts[2][3] = 0.55f;
+    lut1->luts[0][4] = 0.41f; lut1->luts[1][4] = 0.52f; lut1->luts[2][4] = 0.65f;
+    lut1->luts[0][5] = 0.51f; lut1->luts[1][5] = 0.52f; lut1->luts[2][5] = 0.75f;
+    lut1->luts[0][6] = 0.61f; lut1->luts[1][6] = 0.72f; lut1->luts[2][6] = 0.85f;
+    lut1->luts[0][7] = 0.71f; lut1->luts[1][7] = 0.82f; lut1->luts[2][7] = 0.95f;
+
+    {
+        OCIO::OpRcPtrVec ops;
+        OIIO_CHECK_NO_THROW( 
+            CreateLut1DOp(ops, lut1, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD) );
+        OIIO_CHECK_EQUAL( ops.size(), 1 );
+
+        OCIO::Lut1DRcPtr res1 
+            = static_cast<OCIO::Lut1DOp*>(ops[0].get())->makeFastLut1D(true);
+
+        OIIO_CHECK_EQUAL( res1->luts[0].size(), 4096 );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][0], 0.0f,            1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][0], 0.119999997f,    1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][0], 0.25f,           1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][1], 0.000188037753f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][1], 0.120170936f,    1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][1], 0.250170946f,    1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][2], 0.000376068056f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][2], 0.120341875f,    1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][2], 0.250341892f,    1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][100], 0.0188034177f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][100], 0.137094021f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][100], 0.267094016f,  1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][300], 0.056410253f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][300], 0.171282053f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][300], 0.301282048f,  1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][400], 0.0752136782f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][400], 0.188376069f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][400], 0.318376064f,  1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][600], 0.112564094f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][600], 0.222564101f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][600], 0.352564096f,  1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][900], 0.16384615f,   1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][900], 0.273846149f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][900], 0.403846145f,  1e-6f );
+    }
+
+    {
+        OCIO::OpRcPtrVec ops;
+        OIIO_CHECK_NO_THROW( 
+            CreateLut1DOp(ops, lut1, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE) );
+        OIIO_CHECK_EQUAL( ops.size(), 1 );
+
+        OCIO::Lut1DRcPtr res1 
+            = static_cast<OCIO::Lut1DOp*>(ops[0].get())->makeFastLut1D(true);
+
+        OIIO_CHECK_EQUAL( res1->luts[0].size(), 4096 );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][0], 0.0f,            1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][0], 0.0f,            1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][0], 0.0f,            1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][1], 0.000317143218f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][1], 0.0f,            1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][1], 0.0f,            1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][2], 0.000634286436f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][2], 0.0f,            1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][2], 0.0f,            1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][100], 0.0317143202f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][100], 0.0f,          1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][100], 0.0f,          1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][300], 0.095142968f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][300], 0.0f,          1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][300], 0.0f,          1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][400], 0.126857281f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][400], 0.0f,          1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][400], 0.0f,          1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][600], 0.195028812f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][600], 0.0378859341f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][600], 0.0f,          1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][900], 0.299686074f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][900], 0.142543197f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][900], 0.0f,          1e-6f );
+
+        OIIO_CHECK_CLOSE( res1->luts[0][2000], 0.68342936f,  1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[1][2000], 0.526286483f, 1e-6f );
+        OIIO_CHECK_CLOSE( res1->luts[2][2000], 0.340572208f, 1e-6f );
+    }
 }
 
 #endif // OCIO_UNIT_TEST

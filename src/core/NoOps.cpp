@@ -58,11 +58,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() { }
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const { }
             
-            virtual bool supportsGpuShader() const { return true; }
-            virtual void writeGpuShader(std::ostream & /*shader*/,
-                                        const std::string & /*pixelName*/,
-                                        const GpuShaderDesc & /*shaderDesc*/) const
-            { }
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
         
             void getGpuAllocation(AllocationData & allocation) const;
             
@@ -137,7 +133,7 @@ OCIO_NAMESPACE_ENTER
                 // If it's the first, save it as our start.
                 // Otherwise, update the end.
                 
-                if(!opVec[i]->supportsGpuShader())
+                if(!opVec[i]->supportedByLegacyShader())
                 {
                     if(start<0)
                     {
@@ -270,7 +266,7 @@ OCIO_NAMESPACE_ENTER
         // All gpu pre ops must support analytical gpu shader generation
         for(unsigned int i=0; i<gpuPreOps.size(); ++i)
         {
-            if(!gpuPreOps[i]->supportsGpuShader())
+            if(!gpuPreOps[i]->supportedByLegacyShader())
             {
                 throw Exception("Partition failed check. One gpuPreOps op does not support GPU.");
             }
@@ -283,7 +279,7 @@ OCIO_NAMESPACE_ENTER
             bool requiresLattice = false;
             for(unsigned int i=0; i<gpuLatticeOps.size() && !requiresLattice; ++i)
             {
-                if (!gpuLatticeOps[i]->supportsGpuShader())
+                if (!gpuLatticeOps[i]->supportedByLegacyShader())
                 {
                     requiresLattice = true;
                 }
@@ -298,7 +294,7 @@ OCIO_NAMESPACE_ENTER
         // All gpu post ops must support analytical gpu shader generation
         for(unsigned int i=0; i<gpuPostOps.size(); ++i)
         {
-            if(!gpuPostOps[i]->supportsGpuShader())
+            if(!gpuPostOps[i]->supportedByLegacyShader())
             {
                 throw Exception("Partition failed check. One gpuPostOps op does not support GPU.");
             }
@@ -330,11 +326,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() {}
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
             
-            virtual bool supportsGpuShader() const { return true; }
-            virtual void writeGpuShader(std::ostream & /*shader*/,
-                                        const std::string & /*pixelName*/,
-                                        const GpuShaderDesc & /*shaderDesc*/) const
-            { }
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
             
         private:
             std::string m_fileReference;
@@ -400,11 +392,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize() {}
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const {}
             
-            virtual bool supportsGpuShader() const { return true; }
-            virtual void writeGpuShader(std::ostream & /*shader*/,
-                                        const std::string & /*pixelName*/,
-                                        const GpuShaderDesc & /*shaderDesc*/) const
-            { }
+            void extractGpuShaderInfo(GpuShaderDescRcPtr & /*shaderDesc*/) const {}
             
         private:
             std::string m_look;
@@ -701,7 +689,7 @@ OIIO_ADD_TEST(NoOps, AllocationOp)
 
     OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
     OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
-    OIIO_CHECK_EQUAL(clonedOp->supportsGpuShader(), true);
+    OIIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
 
 OIIO_ADD_TEST(NoOps, FileOp)
@@ -720,7 +708,7 @@ OIIO_ADD_TEST(NoOps, FileOp)
 
     OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
     OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
-    OIIO_CHECK_EQUAL(clonedOp->supportsGpuShader(), true);
+    OIIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
 
 OIIO_ADD_TEST(NoOps, LookOp)
@@ -739,7 +727,7 @@ OIIO_ADD_TEST(NoOps, LookOp)
 
     OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
     OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
-    OIIO_CHECK_EQUAL(clonedOp->supportsGpuShader(), true);
+    OIIO_CHECK_EQUAL(clonedOp->supportedByLegacyShader(), true);
 }
 
 #endif // OCIO_UNIT_TEST

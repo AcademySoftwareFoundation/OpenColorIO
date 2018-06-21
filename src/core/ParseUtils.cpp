@@ -205,8 +205,10 @@ OCIO_NAMESPACE_ENTER
     const char * GpuLanguageToString(GpuLanguage language)
     {
         if(language == GPU_LANGUAGE_CG) return "cg";
-        else if(language == GPU_LANGUAGE_GLSL_1_0) return "glsl_1.0";
-        else if(language == GPU_LANGUAGE_GLSL_1_3) return "glsl_1.3";
+        else if(language == GPU_LANGUAGE_GLSL_1_0)  return "glsl_1.0";
+        else if(language == GPU_LANGUAGE_GLSL_1_3)  return "glsl_1.3";
+        else if(language == GPU_LANGUAGE_GLSL_4_0)  return "glsl_4.0";
+        else if(language == GPU_LANGUAGE_HLSL_DX11) return "hlsl_dx11";
         return "unknown";
     }
     
@@ -216,6 +218,8 @@ OCIO_NAMESPACE_ENTER
         if(str == "cg") return GPU_LANGUAGE_CG;
         else if(str == "glsl_1.0") return GPU_LANGUAGE_GLSL_1_0;
         else if(str == "glsl_1.3") return GPU_LANGUAGE_GLSL_1_3;
+        else if(str == "glsl_4.0") return GPU_LANGUAGE_GLSL_4_0;
+        else if(str == "hlsl_dx11") return GPU_LANGUAGE_HLSL_DX11;
         return GPU_LANGUAGE_UNKNOWN;
     }
     

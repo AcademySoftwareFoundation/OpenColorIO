@@ -6,13 +6,13 @@ Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
 met:
 * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
+  notice, this list of conditions and the following disclaimer.
 * Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
 * Neither the name of Sony Pictures Imageworks nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -25,6 +25,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+
 
 #include <OpenColorIO/OpenColorIO.h>
 namespace OCIO = OCIO_NAMESPACE;
@@ -47,27 +48,131 @@ namespace OCIO = OCIO_NAMESPACE;
 #endif
 
 
-#include <algorithm>
-#include <string>
 #include <sstream>
 #include <map>
 #include <iomanip>
+#include <iostream>
 
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
+
+#include "glsl.h"
+
+
+#if defined __APPLE__
+    #define F_ISNAN(a) __inline_isnanf(a)
+#elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
+    #define F_ISNAN(a) (_isnan(a)!=0)
+#else
+    #define F_ISNAN(a) __isnanf(a)
+#endif
 
 
 
-OCIOGPUTest::OCIOGPUTest(const std::string& testgroup, const std::string& testname, OCIOTestFunc test) 
-    : _group(testgroup), _name(testname), _function(test), _errorThreshold(1e-8f)
+namespace Shader
+{
+    // Default error threshold
+    const float defaultErrorThreshold = 1e-7f;
+
+    // In some occasions, MAX_FLOAT will be "rounded" to infinity on some GPU renderers.
+    // In order to avoid this issue, consider all number over/under a given threshold as
+    // equal for testing purposes.
+    #define LARGE_THRESHOLD    std::numeric_limits<float>::max()
+
+    // Check if difference between floats f1 and f2 does not exceed eps
+    bool AbsoluteFloatComparison(float f1, float f2, float eps)
+    {
+      return ((f1 > f2)? f1 - f2: f2 - f1) <= eps;
+    }
+
+    // Relative comparison: check if the difference between value and expected
+    // relative to (divided by) expected does not exceed the eps.  A minimum
+    // expected value is used to limit the scaling of the difference and
+    // avoid large relative differences for small numbers.
+    bool RelativeFloatComparison(float value, float expected, float eps, float minExpected)
+    {
+        const float div = ( expected > 0 ) ?
+            ( (  expected < minExpected ) ? minExpected :  expected ) :
+            ( ( -expected < minExpected ) ? minExpected : -expected );
+
+        return ( ((value > expected) ? value - expected : expected - value) / div ) <= eps;
+    }
+
+    // Compute the absolute equality of two floats
+    // a is the first float to compare
+    // b is the first float to compare
+    // epsilon is the maximum expected epsilon
+    bool AbsoluteCompare(float a, float b, float epsilon)
+    {
+        if ( ( (a >=  LARGE_THRESHOLD) && (b >=  LARGE_THRESHOLD) ) ||
+             ( (a <= -LARGE_THRESHOLD) && (b <= -LARGE_THRESHOLD) ) ||
+             ( F_ISNAN(a) && F_ISNAN(b) ) )
+        {
+            return true;
+        }
+
+        return AbsoluteFloatComparison(a, b, epsilon);
+    }
+
+    // Compute the relative equality of two floats
+    // a is the first float to compare
+    // b is the first float to compare
+    // epsilon is the maximum expected epsilon
+    // expectedMinValue is the minimum expected value
+    bool RelativeCompare(float a, float b, float epsilon, float expectedMinValue)
+    {
+        if ( ( (a >=  LARGE_THRESHOLD) && (b >=  LARGE_THRESHOLD) ) ||
+             ( (a <= -LARGE_THRESHOLD) && (b <= -LARGE_THRESHOLD) ) ||
+             ( F_ISNAN(a) && F_ISNAN(b) ) )
+        {
+          return true;
+        }
+
+        return RelativeFloatComparison(a, b, epsilon, expectedMinValue);
+    }
+}
+
+
+OCIOGPUTest::OCIOGPUTest(const std::string& testgroup, 
+                         const std::string& testname, 
+                         OCIOTestFunc test) 
+    :   m_group(testgroup)
+    ,   m_name(testname)
+    ,   m_function(test)
+    ,   m_errorThreshold(Shader::defaultErrorThreshold)
+    ,   m_useWideRange(true)
+    ,   m_performRelativeComparison(false)
+    ,   m_expectedMinimalValue(1e-6f)
+    ,   m_verbose(false)
 {
 }
 
-void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform, float errorThreshold)
-{ 
+void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform, 
+                             OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
+{
+    if(m_processor.get()!=0x0)
+    {
+        throw OCIO_NAMESPACE::Exception("GPU Unit test already exists");
+    }
+
     OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
-    _processor = config->getProcessor(transform);
-    _errorThreshold = errorThreshold;
+
+    m_shaderDesc     = shaderDesc;
+    m_processor      = config->getProcessor(transform);
+}
+
+void OCIOGPUTest::setContext(OCIO_NAMESPACE::ConstProcessorRcPtr processor, 
+                             OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
+{
+    if(m_processor.get()!=0x0)
+    {
+        throw OCIO_NAMESPACE::Exception("GPU Unit test already exists");
+    }
+
+    m_shaderDesc     = shaderDesc;
+    m_processor      = processor;
 }
 
 
@@ -90,22 +195,16 @@ namespace
     const unsigned g_winHeight  = 256;
     const unsigned g_components = 4;
 
-    GLuint g_fragShader = 0;
-    GLuint g_program = 0;
+    OpenGLBuilderRcPtr g_oglBuilder;
 
     std::vector<float> g_image;
     GLuint g_imageTexID;
-
-    GLuint g_lut3dTexID;
-    const int LUT3D_EDGE_SIZE = 32;
-    std::vector<float> g_lut3d;
-    std::string g_lut3dcacheid;
-    std::string g_shadercacheid;
 
     void AllocateImageTexture()
     {
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         g_image.resize(numEntries);
+        memset(&g_image[0], 0, numEntries * sizeof(float));
 
         glGenTextures(1, &g_imageTexID);
 
@@ -118,24 +217,9 @@ namespace
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    }
 
-    void AllocateDefaultLut3D()
-    {
-        const unsigned num3Dentries = 3 * LUT3D_EDGE_SIZE * LUT3D_EDGE_SIZE * LUT3D_EDGE_SIZE;
-        g_lut3d.resize(num3Dentries);
-        
-        glGenTextures(1, &g_lut3dTexID);
-        
-        glActiveTexture(GL_TEXTURE2);
-        
-        glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
-
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, g_winWidth, g_winHeight, 0,
+                     GL_RGBA, GL_FLOAT, &g_image[0]);
     }
 
     void Reshape()
@@ -176,71 +260,15 @@ namespace
 
     void CleanUp(void)
     {
-        glDeleteShader(g_fragShader);
-        glDeleteProgram(g_program);
+        g_oglBuilder.reset();
         glutDestroyWindow(g_win);
     }
 
-    GLuint CompileShaderProgram(GLenum shaderType, const char *text)
+    void UpdateImageTexture(bool useWideRange)
     {
-        GLuint shader;
-        GLint stat;
-        
-        shader = glCreateShader(shaderType);
-        glShaderSource(shader, 1, (const GLchar **) &text, NULL);
-        glCompileShader(shader);
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &stat);
-        
-        if (!stat)
-        {
-            GLchar log[1000];
-            GLsizei len;
-            glGetShaderInfoLog(shader, 1000, &len, log);
-            log[len] = '\0';
-
-            std::string err("Shader compilation error: ");
-            err += log;
-            throw OCIO::Exception(err.c_str());
-        }
-        
-        return shader;
-    }
-
-    GLuint LinkShaderProgram(GLuint fragShader)
-    {
-        if (!fragShader) return 0;
-        
-        GLuint program = glCreateProgram();
-        
-        if (fragShader)
-            glAttachShader(program, fragShader);
-        
-        glLinkProgram(program);
-        
-        /* check link */
-        {
-            GLint stat;
-            glGetProgramiv(program, GL_LINK_STATUS, &stat);
-            if (!stat) {
-                GLchar log[1000];
-                GLsizei len;
-                glGetProgramInfoLog(program, 1000, &len, log);
-                log[len] = '\0';
-
-                std::string err("Shader link error: ");
-                err += log;
-                throw OCIO::Exception(err.c_str());
-            }
-        }
-        
-        return program;
-    }
-
-    void UpdateImageTexture()
-    {
-        static const float min = -1.0f;
-        static const float max = +2.0f;
-        static const float range = max - min;
+        const float min = useWideRange ? -1.0f : 0.0f;
+        const float max = useWideRange ? +2.0f : 1.0f;
+        const float range = max - min;
 
         const unsigned numEntries = g_winWidth * g_winHeight * g_components;
         const float step = range / numEntries;
@@ -256,65 +284,50 @@ namespace
             GL_RGBA, GL_FLOAT, &g_image[0]);
     }
 
-
-    // The main if the shader program hard-coded to accept the lut 3D smapler as input
-    const char * g_fragShaderText = ""
-    "\n"
-    "uniform sampler2D tex1;\n"
-    "uniform sampler3D tex2;\n"
-    "\n"
-    "void main()\n"
-    "{\n"
-    "    vec4 col = texture2D(tex1, gl_TexCoord[0].st);\n"
-    "    gl_FragColor = OCIODisplay(col, tex2);\n"
-    "}\n";
-
-
-    void UpdateOCIOGLState(OCIO::ConstProcessorRcPtr& processor)
+    void UpdateOCIOGLState(OCIOGPUTest * test)
     {
-        // Step 1: Create a GPU Shader Description
+        OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
+        OCIO::GpuShaderDescRcPtr & shaderDesc = test->getShaderDesc();
 
-        OCIO::GpuShaderDesc shaderDesc;
-        shaderDesc.setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
-        shaderDesc.setFunctionName("OCIODisplay");
-        shaderDesc.setLut3DEdgeLen(LUT3D_EDGE_SIZE);
-        
-        // Step 2: Compute the 3D LUT
+        // Step 1: Create the legacy GPU shader description
+        shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_3);
 
-        std::string lut3dCacheID = processor->getGpuLut3DCacheID(shaderDesc);
-        if(lut3dCacheID != g_lut3dcacheid)
-        {
-            g_lut3dcacheid = lut3dCacheID;
-            processor->getGpuLut3D(&g_lut3d[0], shaderDesc);
-            
-            glBindTexture(GL_TEXTURE_3D, g_lut3dTexID);
+        // Step 2: Collect the shader program information for a specific processor    
+        processor->extractGpuShaderInfo(shaderDesc);
 
-            glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB,
-                            LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE, LUT3D_EDGE_SIZE,
-                            0, GL_RGB,GL_FLOAT, &g_lut3d[0]);
-        }
-        
-        // Step 3: Compute the Shader
+        // Step 3: Use the helper OpenGL builder
+        g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
+        g_oglBuilder->setVerbose(test->isVerbose());
 
-        std::string shaderCacheID = processor->getGpuShaderTextCacheID(shaderDesc);
-        if(g_program == 0 || shaderCacheID != g_shadercacheid)
-        {
-            g_shadercacheid = shaderCacheID;
-            
-            std::ostringstream os;
-            os << processor->getGpuShaderText(shaderDesc) << "\n";
-            os << g_fragShaderText;
+        // Step 4: Allocate & upload all the LUTs
+        g_oglBuilder->allocateAllTextures();
 
-            if(g_fragShader) glDeleteShader(g_fragShader);
-            g_fragShader = CompileShaderProgram(GL_FRAGMENT_SHADER, os.str().c_str());
-            if(g_program) glDeleteProgram(g_program);
-            g_program = LinkShaderProgram(g_fragShader);
-        }
+        std::ostringstream main;
+        main << std::endl
+             << "uniform sampler2D img;" << std::endl
+             << std::endl
+             << "void main()" << std::endl
+             << "{" << std::endl
+             << "    vec4 col = texture2D(img, gl_TexCoord[0].st);" << std::endl
+             << "    gl_FragColor = " << shaderDesc->getFunctionName() << "(col);" << std::endl
+             << "}" << std::endl;
+
+        // Step 5: Build the fragment shader program
+        g_oglBuilder->buildProgram(main.str().c_str());
+
+        // Step 6: Enable the fragment shader program, and all needed textures
+        g_oglBuilder->useProgram();
+        glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "img"), 1);
+        g_oglBuilder->useAllTextures();
     }
 
     // Validate the GPU processing against the CPU one
-    void ValidateImageTexture(OCIO::ConstProcessorRcPtr& processor, float epsilon)
+    void ValidateImageTexture(OCIOGPUTest * test)
     {
+        OCIO::ConstProcessorRcPtr & processor = test->getProcessor();
+        const float epsilon = test->getErrorThreshold();
+        const float expectMinValue = test->getExpectedMinimalValue();
+
         // Step 1: Compute the output using the CPU engine
 
         std::vector<float> cppImage = g_image;    
@@ -328,27 +341,34 @@ namespace
         glReadPixels(0, 0, g_winWidth, g_winHeight, GL_RGBA, GL_FLOAT, (GLvoid*)&gpuImage[0]);
 
         // Step 3: Compare the two results
-        
+
         for(size_t idx=0; idx<(g_winWidth * g_winHeight); ++idx)
         {
-            if( (std::fabs(cppImage[4*idx+0]-gpuImage[4*idx+0]) > epsilon) ||
-                (std::fabs(cppImage[4*idx+1]-gpuImage[4*idx+1]) > epsilon) ||
-                (std::fabs(cppImage[4*idx+2]-gpuImage[4*idx+2]) > epsilon) ||
-                (std::fabs(cppImage[4*idx+3]-gpuImage[4*idx+3]) > epsilon) )
+            const bool isFaulty 
+                = test->performRelativeComparison() 
+                    ? (!Shader::RelativeCompare(cppImage[4*idx+0], gpuImage[4*idx+0], epsilon, expectMinValue) ||
+                       !Shader::RelativeCompare(cppImage[4*idx+1], gpuImage[4*idx+1], epsilon, expectMinValue) ||
+                       !Shader::RelativeCompare(cppImage[4*idx+2], gpuImage[4*idx+2], epsilon, expectMinValue) ||
+                       !Shader::RelativeCompare(cppImage[4*idx+3], gpuImage[4*idx+3], epsilon, expectMinValue))
+                    : (!Shader::AbsoluteCompare(cppImage[4*idx+0], gpuImage[4*idx+0], epsilon) ||
+                       !Shader::AbsoluteCompare(cppImage[4*idx+1], gpuImage[4*idx+1], epsilon) ||
+                       !Shader::AbsoluteCompare(cppImage[4*idx+2], gpuImage[4*idx+2], epsilon) ||
+                       !Shader::AbsoluteCompare(cppImage[4*idx+3], gpuImage[4*idx+3], epsilon));
+            if(isFaulty)
             {
                 std::stringstream err;
                 err << std::setprecision(10)
-                    << "Image[" << idx << "] form orig = {"
+                    << "\n\tfrom orig[" << idx << "] = {" 
                     << g_image[4*idx+0] << ", " << g_image[4*idx+1] << ", "
-                    << g_image[4*idx+2] << ", " << g_image[4*idx+3] << "}"
-                    << " to cpu = {"
+                    << g_image[4*idx+2] << ", " << g_image[4*idx+3] << "}\n"
+                    << "\tto  cpu = {"
                     << cppImage[4*idx+0] << ", " << cppImage[4*idx+1] << ", "
-                    << cppImage[4*idx+2] << ", " << cppImage[4*idx+3] << "}"
-                    << " and gpu = {"
+                    << cppImage[4*idx+2] << ", " << cppImage[4*idx+3] << "}\n"
+                    << "\tand gpu = {" 
                     << gpuImage[4*idx+0] << ", " << gpuImage[4*idx+1] << ", "
-                    << gpuImage[4*idx+2] << ", " << gpuImage[4*idx+3] << "}";
-
-                err << "\twith epsilon=" << epsilon;
+                    << gpuImage[4*idx+2] << ", " << gpuImage[4*idx+3] << "}\n"
+                    << "\twith epsilon=" 
+                    << epsilon;
                 throw OCIO::Exception(err.str().c_str());
             }
         }
@@ -394,8 +414,6 @@ int main(int, char **)
 
     AllocateImageTexture();
 
-    AllocateDefaultLut3D();
-
     // Step 3: Create the frame buffer and render buffer
 
     GLuint fboId;
@@ -415,7 +433,6 @@ int main(int, char **)
 
     // attach a texture to FBO color attachement point
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, g_imageTexID, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_3D, g_lut3dTexID, 0);
 
     // attach a renderbuffer to depth attachment point
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rboId);
@@ -430,39 +447,38 @@ int main(int, char **)
     const size_t numTests = tests.size();
     for(size_t idx=0; idx<numTests; ++idx)
     {
-        OCIOGPUTest* test = tests[idx];
-        test->setup();
-
         const unsigned curr_failures = failures;
- 
-        // Set the rendering destination to FBO
-        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-        
-        // Clear buffer
-        glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        std::cerr << "Test [" << test->group() << "] [" << test->name() << "] - ";
+     
+        OCIOGPUTest* test = tests[idx];
 
         try
         {
-            // Update the image texture
-            UpdateImageTexture();
+            std::cerr << "Test [" << test->group() << "] [" << test->name() << "] - ";
 
-            // Update the GPU shader program
-            UpdateOCIOGLState(test->getProcessor());
+            test->setup();
 
-            // Enable the shader program, and its textures
-            glUseProgram(g_program);
-            glUniform1i(glGetUniformLocation(g_program, "tex1"), 1);
-            glUniform1i(glGetUniformLocation(g_program, "tex2"), 2);
+            if(test->isValid())
+            {
+                // Set the rendering destination to FBO
+                glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+                
+                // Clear buffer
+                glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // Process the image texture into the rendering buffer
-            Reshape();
-            Redisplay();
+                // Update the image texture
+                UpdateImageTexture(test->useWideRange());
 
-            // Validate the processed image using the rendering buffer
-            ValidateImageTexture(test->getProcessor(), test->getErrorThreshold());
+                // Update the GPU shader program
+                UpdateOCIOGLState(test);
+
+                // Process the image texture into the rendering buffer
+                Reshape();
+                Redisplay();
+
+                // Validate the processed image using the rendering buffer
+                ValidateImageTexture(test);
+            }
         }
         catch(OCIO::Exception & ex)
         {
@@ -475,9 +491,14 @@ int main(int, char **)
             std::cerr << "FAILED - Unexpected error" << std::endl;
         }
 
-        if(curr_failures==failures)
+        if(curr_failures==failures && test->isValid())
         {
             std::cerr << "PASSED" << std::endl;
+        }
+        else if(!test->isValid())
+        {
+            ++failures;
+            std::cerr << "FAILED - Invalid test" << std::endl;
         }
 
         glUseProgram(0);
@@ -486,4 +507,6 @@ int main(int, char **)
     }
 
     std::cerr << std::endl << failures << " tests failed" << std::endl << std::endl;
+
+    return failures;
 }

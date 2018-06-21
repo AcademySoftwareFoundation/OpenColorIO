@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "GpuShader.h"
 #include "Mutex.h"
 
 OCIO_NAMESPACE_ENTER
@@ -39,14 +40,17 @@ OCIO_NAMESPACE_ENTER
     public:
         GpuLanguage language_;
         std::string functionName_;
-        int lut3DEdgeLen_;
+        std::string resourcePrefix_;
+        std::string pixelName_;
         
         mutable std::string cacheID_;
         mutable Mutex cacheIDMutex_;
         
-        Impl() :
-            language_(GPU_LANGUAGE_UNKNOWN),
-            lut3DEdgeLen_(0)
+        Impl()
+            :   language_(GPU_LANGUAGE_UNKNOWN)
+            ,   functionName_("OCIOMain")
+            ,   resourcePrefix_("ocio")
+            ,   pixelName_("outColor")
         {
         }
         
@@ -57,15 +61,26 @@ OCIO_NAMESPACE_ENTER
         {
             language_ = rhs.language_;
             functionName_ = rhs.functionName_;
-            lut3DEdgeLen_ = rhs.lut3DEdgeLen_;
+            resourcePrefix_ = rhs.resourcePrefix_;
+            pixelName_ = rhs.pixelName_;
             cacheID_ = rhs.cacheID_;
             return *this;
         }
     };
     
-    
+
+    GpuShaderDescRcPtr GpuShaderDesc::CreateLegacyShaderDesc(unsigned edgelen)
+    {
+        return LegacyGpuShaderDesc::Create(edgelen);
+    }
+
+    GpuShaderDescRcPtr GpuShaderDesc::CreateShaderDesc()
+    {
+        return GenericGpuShaderDesc::Create();
+    }
+
     GpuShaderDesc::GpuShaderDesc()
-    : m_impl(new GpuShaderDesc::Impl)
+        :   m_impl(new GpuShaderDesc::Impl)
     {
     }
     
@@ -100,18 +115,30 @@ OCIO_NAMESPACE_ENTER
         return getImpl()->functionName_.c_str();
     }
     
-    void GpuShaderDesc::setLut3DEdgeLen(int len)
+    void GpuShaderDesc::setResourcePrefix(const char * prefix)
     {
         AutoMutex lock(getImpl()->cacheIDMutex_);
-        getImpl()->lut3DEdgeLen_ = len;
-        getImpl()->cacheID_ = "";
+        getImpl()->resourcePrefix_ = prefix;
+        getImpl()->cacheID_    = "";
     }
-    
-    int GpuShaderDesc::getLut3DEdgeLen() const
+
+    const char * GpuShaderDesc::getResourcePrefix() const
     {
-        return getImpl()->lut3DEdgeLen_;
+        return getImpl()->resourcePrefix_.c_str();
     }
-    
+
+    void GpuShaderDesc::setPixelName(const char * name)
+    {
+        AutoMutex lock(getImpl()->cacheIDMutex_);
+        getImpl()->pixelName_ = name;
+        getImpl()->cacheID_   = "";
+    }
+
+    const char * GpuShaderDesc::getPixelName() const
+    {
+        return getImpl()->pixelName_.c_str();
+    }
+
     const char * GpuShaderDesc::getCacheID() const
     {
         AutoMutex lock(getImpl()->cacheIDMutex_);
@@ -121,7 +148,8 @@ OCIO_NAMESPACE_ENTER
             std::ostringstream os;
             os << GpuLanguageToString(getImpl()->language_) << " ";
             os << getImpl()->functionName_ << " ";
-            os << getImpl()->lut3DEdgeLen_;
+            os << getImpl()->resourcePrefix_ << " ";
+            os << getImpl()->pixelName_ << " ";
             getImpl()->cacheID_ = os.str();
         }
         

@@ -27,62 +27,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
+#ifndef INCLUDED_OCIO_OPTOOLS_H
+#define INCLUDED_OCIO_OPTOOLS_H
+
 #include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
 
-#include "GPUHelpers.h"
-
-
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-#undef WINDOWS
-#define WINDOWS
-#endif
+#include "Lut1DOp.h"
 
 
-
-#include <stdio.h>
-#include <fstream>
-
-#if !defined(WINDOWS)
-#include <sstream>
-#include <stdlib.h>
-#include <time.h>
-#endif
-
-
-std::string createTempFile(const std::string& fileExt, const std::string& fileContent)
+OCIO_NAMESPACE_ENTER
 {
-    std::string filename;
+    // Returns the ideal lut size based on a specific bit depth
+    unsigned GetLutIdealSize(BitDepth incomingBitDepth);
 
-#ifdef WINDOWS
-
-    char tmpFilename[L_tmpnam];
-    if(tmpnam_s(tmpFilename))
+    // Control behavior of Lut1D composition.
+    enum ComposeMethod
     {
-        throw OCIO::Exception("Could not create a temporary file");
-    }
+        COMPOSE_RESAMPLE_NO      = 0, // Preserve original domain
+        COMPOSE_RESAMPLE_INDEPTH = 1, // InDepth controls min size
+        COMPOSE_RESAMPLE_BIG     = 2  // Min size is 65536
+    };
 
-    filename = tmpFilename;
-    filename += fileExt;
-    
-#else
-
-    // Note: because of security issue, tmpnam could not be used
-
-    std::stringstream ss;
-    time_t t = time(NULL);
-    ss << rand_r((unsigned int*)&t);
-    std::string str = "/tmp/ocio";
-    str += ss.str();
-    str += fileExt;
-
-    filename = str;
+    // Use functional composition to generate a single op that 
+    // approximates the effect of the pair of ops.
+    Lut1DRcPtr Compose(const Lut1DRcPtr & A, const OpRcPtr & B, ComposeMethod compFlag);
+}
+OCIO_NAMESPACE_EXIT
 
 #endif
-
-    std::ofstream ofs(filename.c_str(), std::ios_base::out);
-    ofs << fileContent;
-    ofs.close();
-
-    return filename;
-}

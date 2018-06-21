@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HashUtils.h"
 #include "Lut3DOp.h"
 #include "MathUtils.h"
+#include "GpuShaderUtils.h"
 
 #include <cmath>
 #include <limits>
@@ -585,11 +586,9 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
-            
+            virtual bool supportedByLegacyShader() const { return false; }
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
         private:
             Lut3DRcPtr m_lut;
             Interpolation m_interpolation;
@@ -710,6 +709,8 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream << m_lut->getCacheID() << " ";
             cacheIDStream << InterpolationToString(m_interpolation) << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
         }
@@ -730,16 +731,52 @@ OCIO_NAMESPACE_ENTER
             }
         }
         
-        bool Lut3DOp::supportsGpuShader() const
+        void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            return false;
-        }
-        
-        void Lut3DOp::writeGpuShader(std::ostream & /*shader*/,
-                                     const std::string & /*pixelName*/,
-                                     const GpuShaderDesc & /*shaderDesc*/) const
-        {
-            throw Exception("Lut3DOp does not support analytical shader generation.");
+            if(getInputBitDepth()!=BIT_DEPTH_F32 
+                || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported for the GPU shader");
+            }
+
+            // TODO: Implement the tetrahedral interpolation
+
+            std::ostringstream resName;
+            resName << shaderDesc->getResourcePrefix()
+                    << std::string("lut3d_")
+                    << shaderDesc->getNum3DTextures();
+
+            const std::string name(resName.str());
+
+            shaderDesc->add3DTexture(GpuShaderText::getSamplerName(name).c_str(), 
+                                     m_cacheID.c_str(), m_lut->size[0], 
+                                     m_interpolation, &m_lut->lut[0]);
+
+            {
+                GpuShaderText ss(shaderDesc->getLanguage());
+                ss.declareTex3D(name);
+                shaderDesc->addToDeclareShaderCode(ss.string().c_str());
+            }
+
+            {
+                const float m = (float(m_lut->size[0])-1.0f) / float(m_lut->size[0]);
+                const float b = 1.0f / (2.0f * float(m_lut->size[0]));
+
+                GpuShaderText ss(shaderDesc->getLanguage());
+                ss.indent();
+
+                // vec3 coords = (inPixel.rgb * (dim-1.0f) + 0.5f) / dim
+
+                ss.newLine() << ss.vec3fDecl(name + "_coords") 
+                             << " = " << shaderDesc->getPixelName() << ".rgb * " 
+                             << ss.vec3fConst(m) << " + " << ss.vec3fConst(b) << ";";
+
+                ss.newLine() << shaderDesc->getPixelName() << ".rgb = " 
+                             << ss.sampleTex3D(name, name + "_coords") 
+                             << ".rgb;";
+
+                shaderDesc->addToFunctionShaderCode(ss.string().c_str());
+            }
         }
     }
     

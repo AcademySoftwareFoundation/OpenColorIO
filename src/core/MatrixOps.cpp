@@ -136,10 +136,7 @@ OCIO_NAMESPACE_ENTER
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
-            virtual bool supportsGpuShader() const;
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const;
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
         
         private:
             bool m_isNoOp;
@@ -393,6 +390,8 @@ OCIO_NAMESPACE_ENTER
             cacheIDStream << "<MatrixOffsetOp ";
             cacheIDStream << GetPrintableHash(digest) << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
+            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             
             m_cacheID = cacheIDStream.str();
@@ -449,47 +448,48 @@ OCIO_NAMESPACE_ENTER
             }
         } // Op::process
         
-        bool MatrixOffsetOp::supportsGpuShader() const
+        void MatrixOffsetOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            return true;
-        }
-        
-        void MatrixOffsetOp::writeGpuShader(std::ostream & shader,
-                                            const std::string & pixelName,
-                                            const GpuShaderDesc & shaderDesc) const
-        {
-            GpuLanguage lang = shaderDesc.getLanguage();
-            
+            if(getInputBitDepth()!=BIT_DEPTH_F32 
+                || getOutputBitDepth()!=BIT_DEPTH_F32)
+            {
+                throw Exception("Only 32F bit depth is supported for the GPU shader");
+            }
+
             // TODO: This should not act upon alpha,
             // since we dont apply it on the CPU?
             
+            GpuShaderText ss(shaderDesc->getLanguage());
+            ss.indent();
+
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
                 if(!m_m44IsIdentity)
                 {
                     if(m_m44IsDiagonal)
                     {
-                        shader << pixelName << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44);
-                        Write_half4(shader, scale, lang);
-                        shader << " * " << pixelName << ";\n";
+
+                        ss.newLine() << shaderDesc->getPixelName() << " = "
+                                     << ss.vec4fConst(scale[0], scale[1], scale[2], scale[3])
+                                     << " * " << shaderDesc->getPixelName()
+                                     << ";";
                     }
                     else
                     {
-                        shader << pixelName << " = ";
-                        Write_mtx_x_vec(shader,
-                                        GpuTextHalf4x4(m_m44, lang), pixelName,
-                                        lang);
-                        shader << ";\n";
+                        ss.newLine() << shaderDesc->getPixelName() << " = "
+                                     << ss.mat4fMul(m_m44, shaderDesc->getPixelName())
+                                     << ";";
                     }
                 }
                 
                 if(!m_offset4IsIdentity)
                 {
-                    shader << pixelName << " = ";
-                    Write_half4(shader, m_offset4, lang);
-                    shader << " + " << pixelName << ";\n";
+                    ss.newLine() << shaderDesc->getPixelName() << " = "
+                                 << ss.vec4fConst(m_offset4[0], m_offset4[1], m_offset4[2], m_offset4[3])
+                                 << " + " << shaderDesc->getPixelName()
+                                 << ";";
                 }
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
@@ -501,31 +501,34 @@ OCIO_NAMESPACE_ENTER
                                            -m_offset4[2],
                                            -m_offset4[3] };
                     
-                    shader << pixelName << " = ";
-                    Write_half4(shader, offset_inv, lang);
-                    shader << " + " << pixelName << ";\n";
+                    ss.newLine() << shaderDesc->getPixelName() << " = "
+                                 << ss.vec4fConst(offset_inv[0], offset_inv[1], offset_inv[2], offset_inv[3])
+                                 << " + " << shaderDesc->getPixelName()
+                                 << ";";
                 }
                 
                 if(!m_m44IsIdentity)
                 {
                     if(m_m44IsDiagonal)
                     {
-                        shader << pixelName << " = ";
                         float scale[4];
                         GetM44Diagonal(scale, m_m44_inv);
-                        Write_half4(shader, scale, lang);
-                        shader << " * " << pixelName << ";\n";
+
+                        ss.newLine() << shaderDesc->getPixelName() << " = "
+                                     << ss.vec4fConst(scale[0], scale[1], scale[2], scale[3])
+                                     << " * " << shaderDesc->getPixelName()
+                                     << ";";
                     }
                     else
                     {
-                        shader << pixelName << " = ";
-                        Write_mtx_x_vec(shader,
-                                        GpuTextHalf4x4(m_m44_inv, lang), pixelName,
-                                        lang);
-                        shader << ";\n";
+                        ss.newLine() << shaderDesc->getPixelName() << " = "
+                                     << ss.mat4fMul(m_m44_inv, shaderDesc->getPixelName())
+                                     << ";";
                     }
                 }
             }
+
+            shaderDesc->addToFunctionShaderCode(ss.string().c_str());
         }
         
     }  // Anon namespace

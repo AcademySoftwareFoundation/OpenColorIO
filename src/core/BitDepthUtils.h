@@ -6,13 +6,13 @@ Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
 met:
 * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
+  notice, this list of conditions and the following disclaimer.
 * Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
 * Neither the name of Sony Pictures Imageworks nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -26,35 +26,19 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
+#ifndef INCLUDED_OCIO_BIT_DEPTH_UTILS_H
+#define INCLUDED_OCIO_BIT_DEPTH_UTILS_H
+
 #include <OpenColorIO/OpenColorIO.h>
 
-
-namespace OCIO = OCIO_NAMESPACE;
-#include "GPUUnitTest.h"
-
-OCIO_NAMESPACE_USING
-
-
-// Helper method to build unit tests
-void AddExpTest(OCIOGPUTest & test, TransformDirection direction,
-    const float * value, float epsilon)
+OCIO_NAMESPACE_ENTER
 {
-    OCIO::ExponentTransformRcPtr exp = OCIO::ExponentTransform::Create();
-    exp->setDirection(direction);
-    exp->setValue(value);
+    // This is used for normalizing various integer bit-depths relative to float.
+    // 
+    float GetBitDepthMaxValue(BitDepth in);
 
-    test.setContext(exp->createEditableCopy(), epsilon);
 }
+OCIO_NAMESPACE_EXIT
 
-
-OCIO_ADD_GPU_TEST(ExpTransform, ExpValue)
-{
-    const float exp1[4] = { 2.0f, 2.0f, 2.0f, 1.0f };
-    AddExpTest(test, TRANSFORM_DIR_FORWARD, exp1, 1e-6f);
-}
-
-OCIO_ADD_GPU_TEST(ExpTransform, ExpValue_inverse)
-{
-    const float exp1[4] = { 1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f, 1.0f };
-    AddExpTest(test, TRANSFORM_DIR_INVERSE, exp1, 1e-6f);
-}
+#endif // INCLUDED_OCIO_BIT_DEPTH_UTILS_H

@@ -14,8 +14,10 @@ environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
       CMAKE_PLATFORM: "Visual Studio 12 2013 Win64"
+      USE_BOOST: ON
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
+      USE_BOOST: OFF
 
 install:
   - cinstall: python
@@ -27,7 +29,7 @@ build_script:
   - cmake 
     -G "%CMAKE_PLATFORM%"
     -DCMAKE_INSTALL_PREFIX=..\_install
-    -DOCIO_USE_BOOST_PTR=ON
+    -DOCIO_USE_BOOST_PTR=%USE_BOOST%
     -DCMAKE_BUILD_TYPE=%CONFIGURATION%
     ..
   - cmake --build . --target install --config %CONFIGURATION%

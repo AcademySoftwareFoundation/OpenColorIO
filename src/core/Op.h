@@ -117,16 +117,29 @@ OCIO_NAMESPACE_ENTER
             virtual void apply(float* rgbaBuffer, long numPixels) const = 0;
             
             
-            //! Does this op support gpu shader text generation
-            virtual bool supportsGpuShader() const = 0;
-            
-            // TODO: If temp variables are ever needed, also pass tempvar prefix.
-            virtual void writeGpuShader(std::ostream & shader,
-                                        const std::string & pixelName,
-                                        const GpuShaderDesc & shaderDesc) const = 0;
-            
+            // Is this op supported by the legacy shader text generator ?
+            virtual bool supportedByLegacyShader() const { return true; }
+
+            // Create & add the gpu shader information needed by the op
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const = 0;
+
+            virtual BitDepth getInputBitDepth() const;
+            virtual BitDepth getOutputBitDepth() const;
+
+            // To be implemented by each op to natively support 
+            // the input and output bit depths.
+            // For now, all ops are 32f by default.
+            virtual void setInputBitDepth(BitDepth /*bitdepth*/) {}
+            virtual void setOutputBitDepth(BitDepth /*bitdepth*/) {}
+
+        protected:
+            Op();
+            Op(BitDepth inputBitDepth, BitDepth outputBitDepth);
+
         private:
             Op& operator= (const Op &);
+            BitDepth m_inputBitDepth;
+            BitDepth m_outputBitDepth;
     };
     
     std::ostream& operator<< (std::ostream&, const Op&);

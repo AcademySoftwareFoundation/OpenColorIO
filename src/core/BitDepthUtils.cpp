@@ -28,61 +28,64 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include <OpenColorIO/OpenColorIO.h>
-namespace OCIO = OCIO_NAMESPACE;
 
-#include "GPUHelpers.h"
+#include "BitDepthUtils.h"
 
-
-#if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
-#undef WINDOWS
-#define WINDOWS
-#endif
-
-
-
-#include <stdio.h>
-#include <fstream>
-
-#if !defined(WINDOWS)
-#include <sstream>
-#include <stdlib.h>
-#include <time.h>
-#endif
-
-
-std::string createTempFile(const std::string& fileExt, const std::string& fileContent)
+OCIO_NAMESPACE_ENTER
 {
-    std::string filename;
-
-#ifdef WINDOWS
-
-    char tmpFilename[L_tmpnam];
-    if(tmpnam_s(tmpFilename))
+    float GetBitDepthMaxValue(BitDepth in)
     {
-        throw OCIO::Exception("Could not create a temporary file");
+        switch(in)
+        {
+            case BIT_DEPTH_UINT8:
+                return 255.0f;
+
+            case BIT_DEPTH_UINT10:
+                return 1023.0f;
+
+            case BIT_DEPTH_UINT12:
+                return 4095.0f;
+
+            case BIT_DEPTH_UINT16:
+                return 65535.0f;
+
+            case BIT_DEPTH_F16:
+            case BIT_DEPTH_F32:
+                return 1.0f;
+
+            case BIT_DEPTH_UNKNOWN:
+            case BIT_DEPTH_UINT14:
+            case BIT_DEPTH_UINT32:
+            default:
+            {
+                std::string err("Bit depth is not supported: ");
+                err += BitDepthToString(in);
+                throw Exception(err.c_str());
+                break;
+            }
+        }
     }
+}
+OCIO_NAMESPACE_EXIT
 
-    filename = tmpFilename;
-    filename += fileExt;
-    
-#else
 
-    // Note: because of security issue, tmpnam could not be used
 
-    std::stringstream ss;
-    time_t t = time(NULL);
-    ss << rand_r((unsigned int*)&t);
-    std::string str = "/tmp/ocio";
-    str += ss.str();
-    str += fileExt;
+///////////////////////////////////////////////////////////////////////////////
 
-    filename = str;
+#ifdef OCIO_UNIT_TEST
+
+OCIO_NAMESPACE_USING
+
+#include "UnitTest.h"
+
+OIIO_ADD_TEST(BitDepthUtils, GetBitDepthMaxValue)
+{
+    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_UINT8), 255.0f);
+    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_UINT16), 65535.0f);
+
+    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_F16), 1.0f);
+    OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_F32), 1.0f);
+}
+
 
 #endif
-
-    std::ofstream ofs(filename.c_str(), std::ios_base::out);
-    ofs << fileContent;
-    ofs.close();
-
-    return filename;
-}
