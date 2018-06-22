@@ -135,11 +135,6 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         ///
         
-        void GpuShaderDesc_deleter(PyOCIO_GpuShaderDesc *self, PyObject * /*args*/)
-        {
-            DeletePyObject<PyOCIO_GpuShaderDesc>(self);
-        }
-
         int PyOCIO_GpuShaderDesc_init(PyOCIO_GpuShaderDesc* self, PyObject * /*args*/, PyObject * /*kwds*/)
         {
             OCIO_PYTRY_ENTER()

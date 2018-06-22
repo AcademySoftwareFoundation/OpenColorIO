@@ -94,22 +94,6 @@ OCIO_NAMESPACE_ENTER
         void finalize();
     };
     
-    // TODO: Move these!
-    // TODO: Its not ideal that buildops requires a config to be passed around
-    // but the only alternative is to make build ops a function on it?
-    // and even if it were, what about the build calls it dispatches to...
-    
-    // TODO: all of the build op functions shouldnt take a LocalProcessor class
-    // Instead, they should take an abstract interface class that defines
-    // registerOp(OpRcPtr op), annotateColorSpace, finalizeOps, etc.
-    // of which LocalProcessor happens to be one example.
-    // Then the only location in the codebase that knows of LocalProcessor is
-    // in Config.cpp, which creates one.
-    
-    void BuildOps(OpRcPtrVec & ops,
-                  const Config & config,
-                  const ConstTransformRcPtr & transform,
-                  TransformDirection dir);
 }
 OCIO_NAMESPACE_EXIT
 

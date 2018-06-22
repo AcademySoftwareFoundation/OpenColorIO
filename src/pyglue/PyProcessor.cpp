@@ -66,7 +66,6 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_Processor_getMetadata(PyObject * self, PyObject *);
         PyObject * PyOCIO_Processor_applyRGB(PyObject * self, PyObject * args);
         PyObject * PyOCIO_Processor_applyRGBA(PyObject * self, PyObject * args);
-        PyObject * PyOCIO_Processor_getCpuCacheID(PyObject * self, PyObject *);
         
         ///////////////////////////////////////////////////////////////////////
         ///
@@ -139,55 +138,6 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     ///
-    
-    namespace
-    {
-        // TODO: The use of a dict, rather than a native class is not ideal
-        // in the next API revision, use a native type.
-        
-        void FillShaderDescFromPyDict(GpuShaderDesc & shaderDesc,
-                                      PyObject * dict)
-        {
-            if(!PyDict_Check(dict))
-            {
-                throw Exception("GpuShaderDesc must be a dict type.");
-            }
-            
-            PyObject *key, *value;
-            Py_ssize_t pos = 0;
-            
-            while (PyDict_Next(dict, &pos, &key, &value))
-            {
-                std::string keystr;
-                if(!GetStringFromPyObject(key, &keystr))
-                    throw Exception("GpuShaderDesc keys must be strings.");
-                
-                if(keystr == "language")
-                {
-                    GpuLanguage language = GPU_LANGUAGE_UNKNOWN; 
-                    if(ConvertPyObjectToGpuLanguage(value, &language) == 0)
-                        throw Exception("GpuShaderDesc language must be a GpuLanguage.");
-                    shaderDesc.setLanguage(language);
-                }
-                else if(keystr == "functionName")
-                {
-                    std::string functionName;
-                    if(!GetStringFromPyObject(value, &functionName))
-                        throw Exception("GpuShaderDesc functionName must be a string.");
-                    shaderDesc.setFunctionName(functionName.c_str());
-                }
-                else
-                {
-                    std::ostringstream os;
-                    os << "Unknown GpuShaderDesc key, '";
-                    os << keystr << "'. ";
-                    os << "Allowed keys: (";
-                    os << "'language', 'functionName', 'lut3DEdgeLen').";
-                    throw Exception(os.str().c_str());
-                }
-            }
-        }
-    }
     
     namespace
     {
@@ -283,14 +233,6 @@ OCIO_NAMESPACE_ENTER
             PackedImageDesc img(&data[0], long(data.size()/4), 1, 4);
             processor->apply(img);
             return CreatePyListFromFloatVector(data);
-            OCIO_PYTRY_EXIT(NULL)
-        }
-        
-        PyObject * PyOCIO_Processor_getCpuCacheID(PyObject * self, PyObject *)
-        {
-            OCIO_PYTRY_ENTER()
-            ConstProcessorRcPtr processor = GetConstProcessor(self);
-            return PyString_FromString(processor->getCpuCacheID());
             OCIO_PYTRY_EXIT(NULL)
         }
         
