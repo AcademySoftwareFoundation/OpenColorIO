@@ -791,6 +791,7 @@ OIIO_ADD_TEST(FileFormatICC, TestApply)
             0.188392f, 0.206965f, 0.343595f, 0.5f,
             1.210458f, 1.058761f, 4.003706f, 1.0f };
         const float error = 1e-5f;
+        const float error2 = 1e-4f;
 
         OCIO::OpRcPtrVec::size_type numOps = ops.size();
         for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
@@ -825,7 +826,7 @@ OIIO_ADD_TEST(FileFormatICC, TestApply)
         // compare results
         for (unsigned int i = 0; i<12; ++i)
         {
-            OIIO_CHECK_CLOSE(srcImage[i], bckImage[i], error);
+            OIIO_CHECK_CLOSE(srcImage[i], bckImage[i], error2);
         }
     }
 
