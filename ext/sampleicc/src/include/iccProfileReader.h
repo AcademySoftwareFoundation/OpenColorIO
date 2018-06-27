@@ -272,9 +272,10 @@ namespace SampleICC
             icUInt16Number res16;
             icUInt32Number res32;
 
-            icUInt32Number nHdrSize = sizeof(icTagTypeSignature) +
+            icUInt32Number nHdrSize = (icUInt32Number)(
+                sizeof(icTagTypeSignature) +
                 sizeof(icUInt32Number) +
-                2 * sizeof(icUInt16Number);
+                2 * sizeof(icUInt16Number));
 
             if (nHdrSize > size)
                 return false;
