@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ExponentOps.h"
 #include <sstream>
 
-#include "IccProfileReader.h"
+#include "iccProfileReader.h"
 
 /*
 Support for ICC profiles.
