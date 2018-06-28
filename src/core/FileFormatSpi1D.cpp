@@ -374,8 +374,8 @@ OIIO_ADD_TEST(FileFormatSpi1D, Test)
     const std::string spi1dFile(ocioTestFilesDir + std::string("/cpf.spi1d"));
     OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi1dFile));
 
-    OIIO_CHECK_NE(NULL, cachedFile.get());
-    OIIO_CHECK_NE(NULL, cachedFile->lut.get());
+    OIIO_CHECK_ASSERT((bool)cachedFile);
+    OIIO_CHECK_ASSERT((bool)(cachedFile->lut));
 
     OIIO_CHECK_EQUAL(0.0f, cachedFile->lut->from_min[0]);
     OIIO_CHECK_EQUAL(1.0f, cachedFile->lut->from_max[0]);
