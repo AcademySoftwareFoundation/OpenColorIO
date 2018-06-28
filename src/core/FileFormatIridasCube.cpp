@@ -392,7 +392,7 @@ OCIO_NAMESPACE_ENTER
                                     std::ostream & ostream) const
         {
             
-            int DEFAULT_CUBE_SIZE = 32;
+            static const int DEFAULT_CUBE_SIZE = 32;
             
             if(formatName != "iridas_cube")
             {
@@ -455,10 +455,9 @@ OCIO_NAMESPACE_ENTER
             ostream.precision(6);
             for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
             {
-                float r = cubeData[3*i+0];
-                float g = cubeData[3*i+1];
-                float b = cubeData[3*i+2];
-                ostream << r << " " << g << " " << b << "\n";
+                ostream << cubeData[3*i+0] << " "
+                        << cubeData[3*i+1] << " "
+                        << cubeData[3*i+2] << "\n";
             }
         }
         
