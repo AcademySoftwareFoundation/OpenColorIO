@@ -301,8 +301,8 @@ OIIO_ADD_TEST(FileFormatSpi3D, Test)
     const std::string spi3dFile(ocioTestFilesDir + std::string("/spi_ocio_srgb_test.spi3d"));
     OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi3dFile));
 
-    OIIO_CHECK_NE(NULL, cachedFile.get());
-    OIIO_CHECK_NE(NULL, cachedFile->lut.get());
+    OIIO_CHECK_ASSERT((bool)cachedFile);
+    OIIO_CHECK_ASSERT((bool)(cachedFile->lut));
 
     OIIO_CHECK_EQUAL(32, cachedFile->lut->size[0]);
     OIIO_CHECK_EQUAL(32, cachedFile->lut->size[1]);

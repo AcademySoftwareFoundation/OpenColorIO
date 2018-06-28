@@ -148,25 +148,29 @@ OCIO_NAMESPACE_ENTER
     
     int FileTransform::getNumFormats()
     {
-        return FormatRegistry::GetInstance().getNumFormats(FORMAT_CAPABILITY_READ);
+        return FormatRegistry::GetInstance().getNumFormats(
+            FORMAT_CAPABILITY_READ);
     }
     
     const char * FileTransform::getFormatNameByIndex(int index)
     {
-        return FormatRegistry::GetInstance().getFormatNameByIndex(FORMAT_CAPABILITY_READ, index);
+        return FormatRegistry::GetInstance().getFormatNameByIndex(
+            FORMAT_CAPABILITY_READ, index);
     }
     
     const char * FileTransform::getFormatExtensionByIndex(int index)
     {
-        return FormatRegistry::GetInstance().getFormatExtensionByIndex(FORMAT_CAPABILITY_READ, index);
+        return FormatRegistry::GetInstance().getFormatExtensionByIndex(
+            FORMAT_CAPABILITY_READ, index);
     }
     
     std::ostream& operator<< (std::ostream& os, const FileTransform& t)
     {
         os << "<FileTransform ";
-        os << "direction=" << TransformDirectionToString(t.getDirection()) << ", ";
-        os << "interpolation=" << InterpolationToString(t.getInterpolation()) << ", ";
-        os << "src=" << t.getSrc() << ", ";
+        os << "direction=";
+        os << TransformDirectionToString(t.getDirection()) << ", ";
+        os << "interpolation=" << InterpolationToString(t.getInterpolation());
+        os << ", src=" << t.getSrc() << ", ";
         os << "cccid=" << t.getCCCId();
         os << ">";
         
@@ -209,6 +213,7 @@ OCIO_NAMESPACE_ENTER
         registerFileFormat(CreateFileFormatCC());
         registerFileFormat(CreateFileFormatCSP());
         registerFileFormat(CreateFileFormatHDL());
+        registerFileFormat(CreateFileFormatICC());
         registerFileFormat(CreateFileFormatDiscreet1DL());
         registerFileFormat(CreateFileFormatIridasItx());
         registerFileFormat(CreateFileFormatIridasCube());
@@ -225,7 +230,8 @@ OCIO_NAMESPACE_ENTER
     {
     }
     
-    FileFormat* FormatRegistry::getFileFormatByName(const std::string & name) const
+    FileFormat* FormatRegistry::getFileFormatByName(
+        const std::string & name) const
     {
         FileFormatMap::const_iterator iter = m_formatsByName.find(
             pystring::lower(name));
@@ -263,7 +269,8 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "FileFormat Registry error. ";
-                os << "A file format does not define either reading or writing.";
+                os << "A file format does not define either";
+                os << " reading or writing.";
                 throw Exception(os.str().c_str());
             }
             
@@ -323,7 +330,8 @@ OCIO_NAMESPACE_ENTER
         return 0;
     }
     
-    const char * FormatRegistry::getFormatNameByIndex(int capability, int index) const
+    const char * FormatRegistry::getFormatNameByIndex(
+        int capability, int index) const
     {
         if(capability == FORMAT_CAPABILITY_READ)
         {
@@ -344,11 +352,13 @@ OCIO_NAMESPACE_ENTER
         return "";
     }
     
-    const char * FormatRegistry::getFormatExtensionByIndex(int capability, int index) const
+    const char * FormatRegistry::getFormatExtensionByIndex(
+        int capability, int index) const
     {
         if(capability == FORMAT_CAPABILITY_READ)
         {
-            if(index<0 || index>=static_cast<int>(m_readFormatExtensions.size()))
+            if(index<0 
+                || index>=static_cast<int>(m_readFormatExtensions.size()))
             {
                 return "";
             }
@@ -356,7 +366,8 @@ OCIO_NAMESPACE_ENTER
         }
         else if(capability == FORMAT_CAPABILITY_WRITE)
         {
-            if(index<0 || index>=static_cast<int>(m_writeFormatExtensions.size()))
+            if(index<0 
+                || index>=static_cast<int>(m_writeFormatExtensions.size()))
             {
                 return "";
             }
@@ -409,19 +420,6 @@ OCIO_NAMESPACE_ENTER
                 LogDebug(os.str());
             }
             
-            // Open the filePath
-            std::ifstream filestream;
-            filestream.open(filepath.c_str(), std::ios_base::in);
-            if (!filestream.good())
-            {
-                std::ostringstream os;
-                os << "The specified FileTransform srcfile, '";
-                os << filepath <<"', could not be opened. ";
-                os << "Please confirm the file exists with appropriate read";
-                os << " permissions.";
-                throw Exception(os.str().c_str());
-            }
-            
             // Try the initial format.
             std::string primaryErrorText;
             std::string root, extension, name;
@@ -434,15 +432,33 @@ OCIO_NAMESPACE_ENTER
             FormatRegistry & formatRegistry = FormatRegistry::GetInstance();
             
             FileFormatVector possibleFormats;
-            formatRegistry.getFileFormatForExtension(extension, possibleFormats);
+            formatRegistry.getFileFormatForExtension(
+                extension, possibleFormats);
             FileFormatVector::const_iterator endFormat = possibleFormats.end();
-            FileFormatVector::const_iterator itFormat = possibleFormats.begin();
+            FileFormatVector::const_iterator itFormat =
+                possibleFormats.begin();
             while(itFormat != endFormat)
             {
 
                 FileFormat * tryFormat = *itFormat;
+                std::ifstream filestream;
                 try
                 {
+                    // Open the filePath
+                    filestream.open(
+                        filepath.c_str(),
+                        tryFormat->IsBinary()
+                            ? std::ios_base::binary : std::ios_base::in);
+                    if (!filestream.good())
+                    {
+                        std::ostringstream os;
+                        os << "The specified FileTransform srcfile, '";
+                        os << filepath << "', could not be opened. ";
+                        os << "Please confirm the file exists with ";
+                        os << "appropriate read permissions.";
+                        throw Exception(os.str().c_str());
+                    }
+
                     CachedFileRcPtr cachedFile = tryFormat->Read(
                         filestream,
                         name);
@@ -457,10 +473,16 @@ OCIO_NAMESPACE_ENTER
                     
                     returnFormat = tryFormat;
                     returnCachedFile = cachedFile;
+                    filestream.close();
                     return;
                 }
                 catch(std::exception & e)
                 {
+                    if (filestream.is_open())
+                    {
+                        filestream.close();
+                    }
+
                     primaryErrorText += tryFormat->getName();
                     primaryErrorText += " failed with: '";
                     primaryErrorText = e.what();
@@ -474,15 +496,9 @@ OCIO_NAMESPACE_ENTER
                         os << ":  " << e.what();
                         LogDebug(os.str());
                     }
-
-                    filestream.clear();
-                    filestream.seekg(std::ifstream::beg);
                 }
                 ++itFormat;
             }
-            
-            filestream.clear();
-            filestream.seekg( std::ifstream::beg );
             
             // If this fails, try all other formats
             CachedFileRcPtr cachedFile;
@@ -500,8 +516,22 @@ OCIO_NAMESPACE_ENTER
                 if(itAlt != endFormat)
                     continue;
                 
+                std::ifstream filestream;
                 try
                 {
+                    filestream.open(filepath.c_str(), altFormat->IsBinary()
+                        ? std::ios_base::binary : std::ios_base::in);
+                    if (!filestream.good())
+                    {
+                        std::ostringstream os;
+                        os << "The specified FileTransform srcfile, '";
+                        os << filepath << "', could not be opened. ";
+                        os << "Please confirm the file exists with ";
+                        os << "appropriate read";
+                        os << " permissions.";
+                        throw Exception(os.str().c_str());
+                    }
+
                     cachedFile = altFormat->Read(filestream, name);
                     
                     if(IsDebugLoggingEnabled())
@@ -514,10 +544,16 @@ OCIO_NAMESPACE_ENTER
                     
                     returnFormat = altFormat;
                     returnCachedFile = cachedFile;
+                    filestream.close();
                     return;
                 }
                 catch(std::exception & e)
                 {
+                    if (filestream.is_open())
+                    {
+                        filestream.close();
+                    }
+
                     if(IsDebugLoggingEnabled())
                     {
                         std::ostringstream os;
@@ -527,9 +563,6 @@ OCIO_NAMESPACE_ENTER
                         LogDebug(os.str());
                     }
                 }
-                
-                filestream.clear();
-                filestream.seekg( std::ifstream::beg );
             }
             
             // No formats succeeded. Error out with a sensible message.
@@ -837,8 +870,8 @@ bool FormatExtensionFoundByName(const std::string & extension, const std::string
 OIIO_ADD_TEST(FileTransform, AllFormats)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
-    OIIO_CHECK_EQUAL(16, formatRegistry.getNumRawFormats());
-    OIIO_CHECK_EQUAL(18, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
+    OIIO_CHECK_EQUAL(17, formatRegistry.getNumRawFormats());
+    OIIO_CHECK_EQUAL(20, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
     OIIO_CHECK_EQUAL(6, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
 
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("3dl", "flame"));
@@ -849,6 +882,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cub", "truelight"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cube", "iridas_cube"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("itx", "iridas_itx"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("icc", "International Color Consortium profile"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("look", "iridas_look"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("lut", "houdini"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("lut", "Discreet 1D LUT"));
@@ -861,6 +895,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     // but only exposes one name using the getName() function.
     OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("3dl", "lustre"));
     OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("m3d", "pandora_m3d"));
+    OIIO_CHECK_ASSERT(!FormatNameFoundByExtension("icm", "Image Color Matching"));
 
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "flame"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("3dl", "lustre"));
@@ -871,6 +906,8 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cub", "truelight"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cube", "iridas_cube"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("itx", "iridas_itx"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("icc", "International Color Consortium profile"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("icm", "International Color Consortium profile"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("look", "iridas_look"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("lut", "houdini"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("lut", "Discreet 1D LUT"));

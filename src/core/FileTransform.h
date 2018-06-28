@@ -93,6 +93,12 @@ OCIO_NAMESPACE_ENTER
                                   const FileTransform & fileTransform,
                                   TransformDirection dir) const = 0;
         
+        // True if the file is a binary rather than text-based format.
+        virtual bool IsBinary() const
+        {
+            return false;
+        }
+
         // For logging purposes
         std::string getName() const;
     private:
@@ -146,6 +152,7 @@ OCIO_NAMESPACE_ENTER
     FileFormat * CreateFileFormatCC();
     FileFormat * CreateFileFormatCSP();
     FileFormat * CreateFileFormatHDL();
+    FileFormat * CreateFileFormatICC();
     FileFormat * CreateFileFormatDiscreet1DL();
     FileFormat * CreateFileFormatIridasItx();
     FileFormat * CreateFileFormatIridasCube();
