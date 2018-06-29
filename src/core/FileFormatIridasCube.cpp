@@ -26,6 +26,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <iterator>
@@ -123,6 +124,10 @@ OCIO_NAMESPACE_ENTER
                 std::istream & istream,
                 const std::string & fileName) const;
             
+            virtual void Write(const Baker & baker,
+                               const std::string & formatName,
+                               std::ostream & ostream) const;
+            
             virtual void BuildFileOps(OpRcPtrVec & ops,
                          const Config& config,
                          const ConstContextRcPtr & context,
@@ -160,7 +165,7 @@ OCIO_NAMESPACE_ENTER
             FormatInfo info;
             info.name = "iridas_cube";
             info.extension = "cube";
-            info.capabilities = FORMAT_CAPABILITY_READ;
+            info.capabilities = FORMAT_CAPABILITY_ALL;
             formatInfoVec.push_back(info);
         }
         
@@ -382,6 +387,80 @@ OCIO_NAMESPACE_ENTER
             return cachedFile;
         }
         
+        void LocalFileFormat::Write(const Baker & baker,
+                                    const std::string & formatName,
+                                    std::ostream & ostream) const
+        {
+            
+            static const int DEFAULT_CUBE_SIZE = 32;
+            
+            if(formatName != "iridas_cube")
+            {
+                std::ostringstream os;
+                os << "Unknown cube format name, '";
+                os << formatName << "'.";
+                throw Exception(os.str().c_str());
+            }
+            
+            ConstConfigRcPtr config = baker.getConfig();
+            
+            int cubeSize = baker.getCubeSize();
+            if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+            cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
+            
+            std::vector<float> cubeData;
+            cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+            GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
+            PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+            
+            // Apply our conversion from the input space to the output space.
+            ConstProcessorRcPtr inputToTarget;
+            std::string looks = baker.getLooks();
+            if(!looks.empty())
+            {
+                LookTransformRcPtr transform = LookTransform::Create();
+                transform->setLooks(looks.c_str());
+                transform->setSrc(baker.getInputSpace());
+                transform->setDst(baker.getTargetSpace());
+                inputToTarget = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
+            }
+            else
+            {
+                inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+            }
+            inputToTarget->apply(cubeImg);
+            
+            if(baker.getMetadata() != NULL)
+            {
+                std::string metadata = baker.getMetadata();
+                std::vector<std::string> metadatavec;
+                pystring::split(pystring::strip(metadata), metadatavec, "\n");
+                if(metadatavec.size() > 0)
+                {
+                    for(size_t i = 0; i < metadatavec.size(); ++i)
+                    {
+                        ostream << "# " << metadatavec[i] << "\n";
+                    }
+                    ostream << "\n";
+                }
+            }
+            ostream << "LUT_3D_SIZE " << cubeSize << "\n";
+            if(cubeSize < 2)
+            {
+                throw Exception("Internal cube size exception");
+            }
+            
+            // Set to a fixed 6 decimal precision
+            ostream.setf(std::ios::fixed, std::ios::floatfield);
+            ostream.precision(6);
+            for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+            {
+                ostream << cubeData[3*i+0] << " "
+                        << cubeData[3*i+1] << " "
+                        << cubeData[3*i+2] << "\n";
+            }
+        }
+        
         void
         LocalFileFormat::BuildFileOps(OpRcPtrVec & ops,
                                       const Config& /*config*/,
@@ -469,7 +548,7 @@ OIIO_ADD_TEST(FileFormatIridasCube, FormatInfo)
     OIIO_CHECK_EQUAL(1, formatInfoVec.size());
     OIIO_CHECK_EQUAL("iridas_cube", formatInfoVec[0].name);
     OIIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ,
+    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
         formatInfoVec[0].capabilities);
 }
 
@@ -598,6 +677,63 @@ OIIO_ADD_TEST(FileFormatIridasCube, ReadFailure)
             "1.0 1.0 1.0\n";
 
         OIIO_CHECK_THROW(ReadIridasCube(SAMPLE_ERROR), OCIO::Exception);
+    }
+}
+
+OIIO_ADD_TEST(FileFormatIridasCube, no_shaper)
+{
+    // check baker output
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("lnf");
+        cs->setFamily("lnf");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+        config->addColorSpace(cs);
+    }
+    
+    std::ostringstream bout;
+    bout << "# Alexa conversion LUT, logc2video. Full in/full out." << "\n";
+    bout << "# created by alexalutconv (2.11)"                      << "\n";
+    bout << ""                                                      << "\n";
+    bout << "LUT_3D_SIZE 2"                                         << "\n";
+    bout << "0.000000 0.000000 0.000000"                            << "\n";
+    bout << "1.000000 0.000000 0.000000"                            << "\n";
+    bout << "0.000000 1.000000 0.000000"                            << "\n";
+    bout << "1.000000 1.000000 0.000000"                            << "\n";
+    bout << "0.000000 0.000000 1.000000"                            << "\n";
+    bout << "1.000000 0.000000 1.000000"                            << "\n";
+    bout << "0.000000 1.000000 1.000000"                            << "\n";
+    bout << "1.000000 1.000000 1.000000"                            << "\n";
+    
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    std::ostringstream metadata;
+    metadata << "Alexa conversion LUT, logc2video. Full in/full out." << "\n";
+    metadata << "created by alexalutconv (2.11)" << "\n";
+    baker->setMetadata(metadata.str().c_str());
+    baker->setFormat("iridas_cube");
+    baker->setInputSpace("lnf");
+    baker->setTargetSpace("target");
+    baker->setCubeSize(2);
+    std::ostringstream output;
+    baker->bake(output);
+    
+    //
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(output.str(), osvec);
+    std::vector<std::string> resvec;
+    OCIO::pystring::splitlines(bout.str(), resvec);
+    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    for(unsigned int i = 0; i < resvec.size(); ++i)
+    {
+        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
     }
 }
 
