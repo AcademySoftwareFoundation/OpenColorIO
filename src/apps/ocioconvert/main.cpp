@@ -119,7 +119,7 @@ int main(int argc, const char **argv)
     std::cerr << "Loading " << inputimage << std::endl;
     try
     {
-        OIIO::ImageInput* f = OIIO::ImageInput::create(inputimage);
+        OIIO::ImageInput* f = (OIIO::ImageInput::create(inputimage)).get();
         if(!f)
         {
             std::cerr << "Could not create image input." << std::endl;
@@ -308,7 +308,7 @@ int main(int argc, const char **argv)
     // Write out the result
     try
     {
-        OIIO::ImageOutput* f = OIIO::ImageOutput::create(outputimage);
+        OIIO::ImageOutput* f = (OIIO::ImageOutput::create(outputimage)).get();
         if(!f)
         {
             std::cerr << "Could not create output input." << std::endl;
