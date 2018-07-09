@@ -105,9 +105,9 @@ a ``FileTransform``. For example, if we have ``af-123.cc`` in the
                  <Offset>0 0 0</Offset>
                  <Power>1 1 1</Power>
             </SOPNode>
-            <SATNode>
+            <SatNode>
                  <Saturation>1</Saturation>
-            </SATNode>
+            </SatNode>
       </ColorCorrection>
 
 
@@ -159,9 +159,9 @@ file containing the grade for all our shots:
                        <Offset>0 0 0</Offset>
                        <Power>1 1 1</Power>
                   </SOPNode>
-                  <SATNode>
+                  <SatNode>
                        <Saturation>1</Saturation>
-                  </SATNode>
+                  </SatNode>
             </ColorCorrection>
             <ColorCorrection id="mygrade">
                     <SOPNode>
@@ -169,9 +169,9 @@ file containing the grade for all our shots:
                          <Offset>0 0 0</Offset>
                          <Power>1 1 1</Power>
                     </SOPNode>
-                    <SATNode>
+                    <SatNode>
                          <Saturation>1</Saturation>
-                    </SATNode>
+                    </SatNode>
               </ColorCorrection>
     </ColorCorrectionCollection>
 
@@ -225,9 +225,9 @@ first create two grade files, ``grades_af.ccc``:
                        <Offset>0 0 0</Offset>
                        <Power>1 1 1</Power>
                   </SOPNode>
-                  <SATNode>
+                  <SatNode>
                        <Saturation>1</Saturation>
-                  </SATNode>
+                  </SatNode>
             </ColorCorrection>
             
           <ColorCorrection id="af/af-123/beauty">
@@ -236,9 +236,9 @@ first create two grade files, ``grades_af.ccc``:
                        <Offset>0 0 0</Offset>
                        <Power>1 1 1</Power>
                   </SOPNode>
-                  <SATNode>
+                  <SatNode>
                        <Saturation>0.8</Saturation>
-                  </SATNode>
+                  </SatNode>
             </ColorCorrection>
 
             <!-- More ColorCorrection's... -->
@@ -256,9 +256,9 @@ And ``grades_sg.ccc``:
                          <Offset>0 0 0</Offset>
                          <Power>1 1 1</Power>
                     </SOPNode>
-                    <SATNode>
+                    <SatNode>
                          <Saturation>1</Saturation>
-                    </SATNode>
+                    </SatNode>
               </ColorCorrection>
               
             <ColorCorrection id="sg/sg-432/beauty">
@@ -267,9 +267,9 @@ And ``grades_sg.ccc``:
                          <Offset>0 0 0</Offset>
                          <Power>1.2 0.9 1.5</Power>
                     </SOPNode>
-                    <SATNode>
+                    <SatNode>
                          <Saturation>1</Saturation>
-                    </SATNode>
+                    </SatNode>
               </ColorCorrection>
 
               <!-- More ColorCorrection's.. -->
