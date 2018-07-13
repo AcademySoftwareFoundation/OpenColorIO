@@ -212,6 +212,8 @@ OpenGLBuilder::OpenGLBuilder(const OCIO::GpuShaderDescRcPtr & shaderDesc)
 
 OpenGLBuilder::~OpenGLBuilder()
 {
+    deleteAllTextures();
+
     if(m_fragShader)
     {
         glDetachShader(m_program, m_fragShader);
@@ -230,7 +232,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 {
     deleteAllTextures();
 
-    m_startIndex = startIndex + 1;
+    m_startIndex = startIndex;
     unsigned currIndex = m_startIndex;
 
     // Process the 3D Luts first
@@ -388,7 +390,7 @@ unsigned OpenGLBuilder::GetTextureMaxWidth()
             }
         }
 
-#ifndef SYN_OSX
+#ifndef __APPLE__
         //
         // In case of Linux, if glTexImage2D() succeed
         //  glGetTexLevelParameteriv() could fail.
