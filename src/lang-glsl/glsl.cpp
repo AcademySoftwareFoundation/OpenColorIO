@@ -232,6 +232,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 {
     deleteAllTextures();
 
+    // This is the first available index for the textures
     m_startIndex = startIndex;
     unsigned currIndex = m_startIndex;
 
@@ -248,8 +249,17 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         OCIO::Interpolation interpolation = OCIO::INTERP_LINEAR;
         m_shaderDesc->get3DTexture(idx, name, uid, edgelen, interpolation);
 
+        if(!name || !*name || !uid || !*uid || edgelen==0)
+        {
+            throw OCIO::Exception("The texture data are corrupted");
+        }
+
         const float* values = 0x0;
         m_shaderDesc->get3DTextureValues(idx, values);
+        if(!values)
+        {
+            throw OCIO::Exception("The texture values are missing");
+        }
 
         // 2. Allocate the 3D lut
 
@@ -278,8 +288,17 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         OCIO::Interpolation interpolation = OCIO::INTERP_LINEAR;
         m_shaderDesc->getTexture(idx, name, uid, width, height, channel, interpolation);
 
-        const float * values   = 0x0;
+        if(!name || !*name || !uid || !*uid || width==0)
+        {
+            throw OCIO::Exception("The texture data are corrupted");
+        }
+
+        const float * values = 0x0;
         m_shaderDesc->getTextureValues(idx, values);
+        if(!values)
+        {
+            throw OCIO::Exception("The texture values are missing");
+        }
 
         // 2. Allocate the 1D lut (a 2D texture is needed to hold large luts)
 

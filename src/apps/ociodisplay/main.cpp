@@ -499,6 +499,10 @@ void UpdateOCIOGLState()
     g_oglBuilder->setVerbose(g_gpu);
 
     // Step 4: Allocate & upload all the LUTs
+    // 
+    // NB: The start index for the texture indices is 1 as one texture
+    //     was already created for the input image.
+    //     
     g_oglBuilder->allocateAllTextures(1);
     
     // Step 5: Build the fragment shader program
