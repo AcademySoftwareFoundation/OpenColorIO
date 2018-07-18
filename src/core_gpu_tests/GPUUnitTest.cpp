@@ -208,7 +208,7 @@ namespace
 
         glGenTextures(1, &g_imageTexID);
 
-        glActiveTexture(GL_TEXTURE1);
+        glActiveTexture(GL_TEXTURE0);
 
         glBindTexture(GL_TEXTURE_2D, g_imageTexID);
 
@@ -300,7 +300,7 @@ namespace
         g_oglBuilder->setVerbose(test->isVerbose());
 
         // Step 4: Allocate & upload all the LUTs
-        g_oglBuilder->allocateAllTextures();
+        g_oglBuilder->allocateAllTextures(1);
 
         std::ostringstream main;
         main << std::endl
@@ -317,7 +317,7 @@ namespace
 
         // Step 6: Enable the fragment shader program, and all needed textures
         g_oglBuilder->useProgram();
-        glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "img"), 1);
+        glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "img"), 0);
         g_oglBuilder->useAllTextures();
     }
 
@@ -410,7 +410,7 @@ int main(int, char **)
     glClearColor(0, 0, 0, 0);                        // background color
     glClearStencil(0);                               // clear stencil buffer
 
-    // Step 2: Allocate the needed textures
+    // Step 2: Allocate the texture that holds the image
 
     AllocateImageTexture();
 

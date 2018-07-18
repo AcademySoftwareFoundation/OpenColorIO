@@ -75,9 +75,9 @@ public:
     inline void setVerbose(bool verbose) { m_verbose = verbose; }
     inline bool isVerbose() const { return m_verbose; }
 
-    // Allocate & upload all the needed textures starting at the (zero based) index 1 by default
-    //  (i.e. the first index is reserved for the input image to process)
-    void allocateAllTextures(unsigned startIndex = 1);
+    // Allocate & upload all the needed textures
+    //  (i.e. the index is the first available index for any kind of textures)
+    void allocateAllTextures(unsigned startIndex);
     void useAllTextures();
 
     // Build the complete shader program which includes the OCIO shader program 

@@ -63,6 +63,7 @@ namespace OIIO = OIIO_NAMESPACE;
 
 bool g_verbose = false;
 bool g_gpu = false;
+bool g_ociov2 = false;
 std::string g_filename;
 
 
@@ -179,7 +180,7 @@ static void InitImageTexture(const char * filename)
         g_imageAspect = (float) texWidth / (float) texHeight;
     }
     
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, g_imageTexID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, texWidth, texHeight, 0,
         format, GL_FLOAT, &img[0]);
@@ -482,9 +483,10 @@ void UpdateOCIOGLState()
         return;
     }
     
-    // Step 1: Create the legacy GPU shader description
+    // Step 1: Create the appropriate GPU shader description
     OCIO::GpuShaderDescRcPtr shaderDesc 
-        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+        = g_ociov2 ? OCIO::GpuShaderDesc::CreateShaderDesc()
+                   : OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
     shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
     shaderDesc->setFunctionName("OCIODisplay");
     shaderDesc->setResourcePrefix("ocio_");
@@ -497,7 +499,11 @@ void UpdateOCIOGLState()
     g_oglBuilder->setVerbose(g_gpu);
 
     // Step 4: Allocate & upload all the LUTs
-    g_oglBuilder->allocateAllTextures();
+    // 
+    // NB: The start index for the texture indices is 1 as one texture
+    //     was already created for the input image.
+    //     
+    g_oglBuilder->allocateAllTextures(1);
     
     // Step 5: Build the fragment shader program
     g_oglBuilder->buildProgram(g_fragShaderText);
@@ -505,7 +511,7 @@ void UpdateOCIOGLState()
     // Step 6: Enable the fragment shader program, and all needed textures
     g_oglBuilder->useProgram();
     // The image texture
-    glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "tex1"), 1);
+    glUniform1i(glGetUniformLocation(g_oglBuilder->getProgramHandle(), "tex1"), 0);
     // The LUT textures
     g_oglBuilder->useAllTextures();
 }
@@ -677,6 +683,10 @@ void parseArguments(int argc, char **argv)
         {
             g_gpu = true;
         }
+        else if(0==strcmp(argv[i], "-ociov2"))
+        {
+            g_ociov2 = true;
+        }
         else if(0==strcmp(argv[i], "-h"))
         {
             std::cout << std::endl;
@@ -687,6 +697,7 @@ void parseArguments(int argc, char **argv)
             std::cout << "     -h      :  displays the help and exit" << std::endl;
             std::cout << "     -v      :  displays the color space information" << std::endl;
             std::cout << "     -gpu    :  displays the color space gpu information" << std::endl;
+            std::cout << "     -ociov2 :  use the generic gpu shader engine" << std::endl;
             std::cout << std::endl;
             exit(0);
         }
