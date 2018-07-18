@@ -256,7 +256,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         // 3. Keep the texture id & name for the later enabling
 
-        m_textureIds.push_back(std::make_pair(texId, name));
+        m_textureIds.push_back(TextureId(texId, name, GL_TEXTURE_3D));
 
         currIndex++;
     }
@@ -286,7 +286,8 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
 
         // 3. Keep the texture id & name for the later enabling
 
-        m_textureIds.push_back(std::make_pair(texId, name));
+        unsigned type = (height > 1) ? GL_TEXTURE_2D : GL_TEXTURE_1D;
+        m_textureIds.push_back(TextureId(texId, name, type));
         currIndex++;
     }
 }
@@ -296,8 +297,8 @@ void OpenGLBuilder::deleteAllTextures()
     const size_t max = m_textureIds.size();
     for(size_t idx=0; idx<max; ++idx)
     {
-        const std::pair<unsigned, std::string> data = m_textureIds[idx];
-        glDeleteTextures(1, &data.first);
+        const TextureId& data = m_textureIds[idx];
+        glDeleteTextures(1, &data.id);
     }
 
     m_textureIds.clear();
@@ -308,10 +309,12 @@ void OpenGLBuilder::useAllTextures()
     const size_t max = m_textureIds.size();
     for(size_t idx=0; idx<max; ++idx)
     {
-        const std::pair<unsigned, std::string> data = m_textureIds[idx];
+        const TextureId& data = m_textureIds[idx];
+        glActiveTexture(GL_TEXTURE0 + m_startIndex + idx);
+        glBindTexture(data.type, data.id);
         glUniform1i(
             glGetUniformLocation(m_program, 
-                                 data.second.c_str()), 
+                                 data.name.c_str()), 
                                  GLint(m_startIndex + idx) );
     }
 }
