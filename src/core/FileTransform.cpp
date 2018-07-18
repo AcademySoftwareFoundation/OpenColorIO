@@ -224,6 +224,7 @@ OCIO_NAMESPACE_ENTER
         registerFileFormat(CreateFileFormatSpiMtx());
         registerFileFormat(CreateFileFormatTruelight());
         registerFileFormat(CreateFileFormatVF());
+        registerFileFormat(CreateFileFormatCTF());
     }
     
     FormatRegistry::~FormatRegistry()
