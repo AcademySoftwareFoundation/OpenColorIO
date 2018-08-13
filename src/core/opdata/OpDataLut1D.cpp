@@ -517,8 +517,8 @@ OCIO_NAMESPACE_ENTER
             // hence, this could return false in unexpected cases.  However, one could argue
             // that those LUTs should not be optimized out as an identity anyway.
 
-            if (getOpType() == OpData::OpData::Lut1DType
-                && B.getOpType() == OpData::OpData::InvLut1DType)
+            if (getOpType() == OpData::Lut1DType
+                && B.getOpType() == OpData::InvLut1DType)
             {
                 // Need to check bit-depth because the array scaling is relative to it.
                 // (For LUT it is the out-depth, for INVLUT it is the in-depth.)
