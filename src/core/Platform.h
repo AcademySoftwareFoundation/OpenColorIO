@@ -132,12 +132,12 @@ OCIO_NAMESPACE_ENTER
 
     class _Mutex {
     public:
-	_Mutex()       { _mutex = CreateMutex(NULL, FALSE, NULL); }
-	~_Mutex()      { CloseHandle(_mutex); }
-	void lock()   { WaitForSingleObject(_mutex, INFINITE); }
-	void unlock() { ReleaseMutex(_mutex); }
+    	_Mutex()       { _mutex = CreateMutex(NULL, FALSE, NULL); }
+    	~_Mutex()      { CloseHandle(_mutex); }
+    	void lock()   { WaitForSingleObject(_mutex, INFINITE); }
+    	void unlock() { ReleaseMutex(_mutex); }
     private:
-	HANDLE _mutex;
+    	HANDLE _mutex;
     };
 
 #else
@@ -146,21 +146,42 @@ OCIO_NAMESPACE_ENTER
     // Note: Not recursive mutex implementation
 
     class _Mutex {
-     public:
-	_Mutex()      { pthread_mutex_init(&_mutex, 0); }
-	~_Mutex()     { pthread_mutex_destroy(&_mutex); }
-	void lock()   { pthread_mutex_lock(&_mutex); }
-	void unlock() { pthread_mutex_unlock(&_mutex); }
+    public:
+        _Mutex()      { pthread_mutex_init(&_mutex, 0); }
+        ~_Mutex()     { pthread_mutex_destroy(&_mutex); }
+        void lock()   { pthread_mutex_lock(&_mutex); }
+        void unlock() { pthread_mutex_unlock(&_mutex); }
     private:
-	pthread_mutex_t _mutex;
+      	pthread_mutex_t _mutex;
     };
 
 #endif // WINDOWS
 
-  namespace Platform
-  {
-    void getenv (const char* name, std::string& value);
-  }
+    namespace Platform
+    {
+        // Get an env. variable content
+        void Getenv(const char* name, std::string& value);
+
+        // Case insensitive string comparison
+        int Strcasecmp(const char* str1, const char* str2);
+
+        // Case insensitive string comparison for the nth first characters only
+        int Strncasecmp(const char* str1, const char* str2, size_t n);
+
+        // Allocates memory on a specified alignment boundary. Must use
+        // alignedFree to free the memory block.
+        // - size of the requested memory allocation.
+        // - param alignment value
+        // Returns a pointer to the memory block that was allocated
+        // An exception is thrown if an allocation error occurs.
+        void* AlignedMalloc(size_t size, size_t alignment);
+
+        // Frees a block of memory that was allocated with alignedMalloc.
+        // - memBlock A pointer to the memory block that was allocated by
+        //            alignedMalloc.
+        void AlignedFree(void* memBlock);
+
+    }
 
 }
 OCIO_NAMESPACE_EXIT

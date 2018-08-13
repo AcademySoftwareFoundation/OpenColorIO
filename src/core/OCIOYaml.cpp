@@ -61,6 +61,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LookTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::MatrixTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::RangeTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::TruelightTransform>;
 }
 #pragma GCC visibility pop
@@ -85,6 +86,7 @@ namespace YAML {
 #include "ParseUtils.h"
 #include "Display.h"
 #include "OCIOYaml.h"
+#include "opdata/OpDataMatrix.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -156,7 +158,16 @@ OCIO_NAMESPACE_ENTER
             x = node.as<float>();
 #endif
         }
-        
+
+        inline void load(const YAML::Node& node, double& x)
+        {
+#ifdef OLDYAML
+            node.Read<double>(x);
+#else
+            x = node.as<double>();
+#endif
+        }
+
         inline void load(const YAML::Node& node, std::string& x)
         {
 #ifdef OLDYAML
@@ -513,7 +524,7 @@ OCIO_NAMESPACE_ENTER
             {
                 out << YAML::Key << "sat" << YAML::Value << t->getSat();
             }
-            
+
             EmitBaseTransformKeyValues(out, t);
             out << YAML::EndMap;
         }
@@ -935,7 +946,11 @@ OCIO_NAMESPACE_ENTER
             
             std::vector<float> matrix(16, 0.0);
             t->getMatrix(&matrix[0]);
-            if(!IsM44Identity(&matrix[0]))
+
+            OpData::Matrix mat;
+            mat.setRGBAValues(&matrix[0]);
+            
+            if(!mat.isIdentity())
             {
                 out << YAML::Key << "matrix";
                 out << YAML::Value << YAML::Flow << matrix;
@@ -949,6 +964,96 @@ OCIO_NAMESPACE_ENTER
                 out << YAML::Value << YAML::Flow << offset;
             }
             
+            EmitBaseTransformKeyValues(out, t);
+            out << YAML::EndMap;
+        }
+        
+        // RangeTransform
+        
+        inline void load(const YAML::Node& node, RangeTransformRcPtr& t)
+        {
+            t = RangeTransform::Create();
+            
+            std::string key;
+            
+            for (Iterator iter = node.begin();
+                 iter != node.end();
+                 ++iter)
+            {
+                const YAML::Node& first = get_first(iter);
+                const YAML::Node& second = get_second(iter);
+                
+                load(first, key);
+                
+                if (second.Type() == YAML::NodeType::Null) continue;
+                
+                double floatVal;
+
+                // TODO: parsing could be more strict (same applies for other transforms)
+                // Could enforce that second is 1 float only and that keys
+                // are only there once.
+                if(key == "minInValue")
+                {
+                    load(second, floatVal);
+                    t->setMinInValue(floatVal);
+                }
+                else if(key == "maxInValue")
+                {
+                    load(second, floatVal);
+                    t->setMaxInValue(floatVal);
+                }
+                else if(key == "minOutValue")
+                {
+                    load(second, floatVal);
+                    t->setMinOutValue(floatVal);
+                }
+                else if(key == "maxOutValue")
+                {
+                    load(second, floatVal);
+                    t->setMaxOutValue(floatVal);
+                }
+                else if(key == "direction")
+                {
+                    TransformDirection val;
+                    load(second, val);
+                    t->setDirection(val);
+                }
+                else
+                {
+                    LogUnknownKeyWarning(node.Tag(), first);
+                }
+            }
+        }
+        
+        inline void save(YAML::Emitter& out, ConstRangeTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("RangeTransform");
+            out << YAML::Flow << YAML::BeginMap;
+            
+            if(t->hasMinInValue())
+            {
+                out << YAML::Key << "minInValue";
+                out << YAML::Value << YAML::Flow << t->getMinInValue();
+            }
+            
+            if(t->hasMaxInValue())
+            {
+                out << YAML::Key << "maxInValue";
+                out << YAML::Value << YAML::Flow << t->getMaxInValue();
+            }
+            
+            if(t->hasMinOutValue())
+            {
+                out << YAML::Key << "minOutValue";
+                out << YAML::Value << YAML::Flow << t->getMinOutValue();
+            }
+            
+            if(t->hasMaxOutValue())
+            {
+                out << YAML::Key << "maxOutValue";
+                out << YAML::Value << YAML::Flow << t->getMaxOutValue();
+            }
+
             EmitBaseTransformKeyValues(out, t);
             out << YAML::EndMap;
         }
@@ -1156,6 +1261,11 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
+            else if(type == "RangeTransform")  {
+                RangeTransformRcPtr temp;
+                load(node, temp);
+                t = temp;
+            }
             else if(type == "TruelightTransform")  {
                 TruelightTransformRcPtr temp;
                 load(node, temp);
@@ -1208,6 +1318,9 @@ OCIO_NAMESPACE_ENTER
             else if(ConstMatrixTransformRcPtr Matrix_tran = \
                 DynamicPtrCast<const MatrixTransform>(t))
                 save(out, Matrix_tran);
+            else if(ConstRangeTransformRcPtr Range_tran = \
+                DynamicPtrCast<const RangeTransform>(t))
+                save(out, Range_tran);
             else if(ConstTruelightTransformRcPtr Truelight_tran = \
                 DynamicPtrCast<const TruelightTransform>(t))
                 save(out, Truelight_tran);
@@ -1440,19 +1553,30 @@ OCIO_NAMESPACE_ENTER
             // check profile version
             int profile_version = 0;
 #ifdef OLDYAML
-            if(node.FindValue("ocio_profile_version") == NULL)
+            if(node.FindValue("ocio_profile_version") != NULL)
 #else
-            if(node["ocio_profile_version"] == NULL)
+            if(node["ocio_profile_version"] != NULL)
 #endif
+            {
+                load(node["ocio_profile_version"], profile_version);
+            }
+            else
             {
                 std::ostringstream os;
                 os << "The specified file ";
+                if(filename && *filename)
+                {
+                    os << " '" << filename << "' ";
+                }
                 os << "does not appear to be an OCIO configuration.";
                 throw Exception (os.str().c_str());
             }
-            
-            load(node["ocio_profile_version"], profile_version);
-            if(profile_version > 1)
+
+            try
+            {
+                c->setVersion((unsigned)profile_version);
+            }
+            catch(Exception & ex)
             {
                 std::ostringstream os;
                 os << "This .ocio config ";
@@ -1465,6 +1589,8 @@ OCIO_NAMESPACE_ENTER
                 os << "is not known to be able to load this profile. ";
                 os << "An attempt will be made, but there are no guarantees that the ";
                 os << "results will be accurate. Continue at your own risk.";
+                os << ex.what();
+
                 LogWarning(os.str());
             }
             
@@ -1686,7 +1812,7 @@ OCIO_NAMESPACE_ENTER
         {
             out << YAML::Block;
             out << YAML::BeginMap;
-            out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
+            out << YAML::Key << "ocio_profile_version" << YAML::Value << c->getVersion();
             out << YAML::Newline;
 #ifndef OLDYAML
             out << YAML::Newline;

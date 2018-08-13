@@ -106,6 +106,12 @@ OCIO_NAMESPACE_ENTER
                 pyobj = PyObject_New(PyOCIO_Transform,
                     (PyTypeObject * ) &PyOCIO_MatrixTransformType);
             }
+            else if(ConstRangeTransformRcPtr rangeTransform = \
+                DynamicPtrCast<const RangeTransform>(transform))
+            {
+                pyobj = PyObject_New(PyOCIO_Transform,
+                    (PyTypeObject * ) &PyOCIO_RangeTransformType);
+            }
             
             return pyobj;
         }

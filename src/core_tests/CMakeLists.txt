@@ -13,6 +13,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/ext/oiio/src/include
     ${CMAKE_SOURCE_DIR}/ext/sampleicc/src/include
     ${EXTERNAL_INCLUDE_DIRS}
+	${CMAKE_BINARY_DIR}/ext/ilmbasehalf
     )
 
 if(WIN32)
@@ -34,7 +35,10 @@ endif()
 
 
 ## do not link with OpenColorIO since we reuse the sources files to build this app (avoid double link definition)
-file( GLOB_RECURSE core_test_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp" )
+file( GLOB_RECURSE core_test_src_files 
+	${CMAKE_SOURCE_DIR}/src/core/*.cpp
+	${CMAKE_BINARY_DIR}/ext/ilmbasehalf/half.cpp)
+
 add_executable(ocio_core_tests ${EXTERNAL_OBJECTS} ${core_test_src_files})
 
 set_target_properties(ocio_core_tests PROPERTIES COMPILE_FLAGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
@@ -50,6 +54,8 @@ if(USE_EXTERNAL_YAML)
 else(USE_EXTERNAL_YAML)
     add_dependencies(ocio_core_tests YAML_CPP_LIB)
 endif(USE_EXTERNAL_YAML)
+
+add_dependencies(ocio_core_tests LIBEXPAT_LIB)
 
 if(EXTERNAL_LIBRARIES)
     target_link_libraries(ocio_core_tests ${EXTERNAL_LIBRARIES})

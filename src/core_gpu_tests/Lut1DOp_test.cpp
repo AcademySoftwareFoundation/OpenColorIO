@@ -230,6 +230,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_generic_shader)
 OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_nearest_generic_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_3.spi1d");
+    // TODO: INTERP_LINEAR is actually being used.
     file->setInterpolation(OCIO::INTERP_NEAREST);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -276,8 +277,6 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_generic_shader)
     test.setErrorThreshold(1e-4f);
 }
 
-/*
-    TODO: Uncomment when the Lut1D inverse is fully working.
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_generic_shader)
 {
@@ -289,7 +288,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_generic_shader)
     test.setContext(file->createEditableCopy(), shaderDesc);
     test.setErrorThreshold(1e-4f);
 }
-*/
+
 
 OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
 {
@@ -298,12 +297,10 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-3f);
     test.setRelativeComparison(true);
+    test.setErrorThreshold(1e-3f);
 }
 
-/*
-    TODO: Uncomment when the Lut1D inverse is fully working.
 
 OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
 {
@@ -315,4 +312,13 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
     test.setContext(file->createEditableCopy(), shaderDesc);
     test.setErrorThreshold(1e-4f);
 }
-*/
+
+OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_rgb_values_different)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut1d_comp.clf");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(5e-3f);
+}

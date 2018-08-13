@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "OpBuilders.h"
 #include "MatrixOps.h"
 #include "MathUtils.h"
+#include "opdata/OpDataMatrix.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -50,14 +51,15 @@ OCIO_NAMESPACE_ENTER
     class MatrixTransform::Impl
     {
     public:
-        TransformDirection dir_;
-        float matrix_[16];
-        float offset_[4];
-        
-        Impl() :
-            dir_(TRANSFORM_DIR_FORWARD)
+        OpData::OpDataMatrixRcPtr m_data;
+        TransformDirection m_direction;
+
+        Impl()
+            : m_data(new OpData::Matrix)
+            , m_direction(TRANSFORM_DIR_FORWARD)
         {
-            Identity(matrix_, offset_);
+            Identity(&(m_data->getArray().getValues()[0]),
+                     m_data->getOffsets().getValues());
         }
         
         ~Impl()
@@ -65,11 +67,17 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            memcpy(matrix_, rhs.matrix_, 16*sizeof(float));
-            memcpy(offset_, rhs.offset_, 4*sizeof(float));
+            if (this != &rhs)
+            {
+                m_direction = rhs.m_direction;
+                *m_data = *rhs.m_data;
+            }
             return *this;
         }
+
+    private:
+        Impl(const Impl&);
+
     };
     
     ///////////////////////////////////////////////////////////////////////////
@@ -96,28 +104,41 @@ OCIO_NAMESPACE_ENTER
     
     MatrixTransform& MatrixTransform::operator= (const MatrixTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
     TransformDirection MatrixTransform::getDirection() const
     {
-        return getImpl()->dir_;
+        return getImpl()->m_direction;
     }
     
     void MatrixTransform::setDirection(TransformDirection dir)
     {
-        getImpl()->dir_ = dir;
+        getImpl()->m_direction = dir;
     }
     
+    void MatrixTransform::validate() const
+    {
+        if (getImpl()->m_direction != TRANSFORM_DIR_FORWARD
+            && getImpl()->m_direction != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("MatrixTransform: invalid direction");
+        }
+        getImpl()->m_data->validate();
+    }
+
     bool MatrixTransform::equals(const MatrixTransform & other) const
     {
-        const float abserror = 1e-9f;
+        const double abserror = 1e-9f;
         
         for(int i=0; i<16; ++i)
         {
-            if(!equalWithAbsError(getImpl()->matrix_[i],
-                other.getImpl()->matrix_[i], abserror))
+            if(!equalWithAbsError(getImpl()->m_data->getArray()[i],
+                other.getImpl()->m_data->getArray()[i], abserror))
             {
                 return false;
             }
@@ -125,8 +146,8 @@ OCIO_NAMESPACE_ENTER
         
         for(int i=0; i<4; ++i)
         {
-            if(!equalWithAbsError(getImpl()->offset_[i],
-                other.getImpl()->offset_[i], abserror))
+            if(!equalWithAbsError(getImpl()->m_data->getOffsetValue(i),
+                other.getImpl()->m_data->getOffsetValue(i), abserror))
             {
                 return false;
             }
@@ -137,34 +158,60 @@ OCIO_NAMESPACE_ENTER
     
     void MatrixTransform::getValue(float * m44, float * offset4) const
     {
-        if(m44) memcpy(m44, getImpl()->matrix_, 16*sizeof(float));
-        if(offset4) memcpy(offset4, getImpl()->offset_, 4*sizeof(float));
+        getMatrix(m44);
+        getOffset(offset4);
     }
     
     void MatrixTransform::setValue(const float * m44, const float * offset4)
     {
-        if(m44) memcpy(getImpl()->matrix_, m44, 16*sizeof(float));
-        if(offset4) memcpy(getImpl()->offset_, offset4, 4*sizeof(float));
+        setMatrix(m44);
+        setOffset(offset4);
     }
     
     void MatrixTransform::setMatrix(const float * m44)
     {
-        if(m44) memcpy(getImpl()->matrix_, m44, 16*sizeof(float));
+        if (m44) getImpl()->m_data->setRGBAValues(m44);
     }
     
     void MatrixTransform::getMatrix(float * m44) const
     {
-        if(m44) memcpy(m44, getImpl()->matrix_, 16*sizeof(float));
+        if (m44)
+        {
+            const OpData::ArrayDouble::Values vals = getImpl()->m_data->getArray().getValues();
+            m44[0] = (float)vals[0];
+            m44[1] = (float)vals[1];
+            m44[2] = (float)vals[2];
+            m44[3] = (float)vals[3];
+            m44[4] = (float)vals[4];
+            m44[5] = (float)vals[5];
+            m44[6] = (float)vals[6];
+            m44[7] = (float)vals[7];
+            m44[8] = (float)vals[8];
+            m44[9] = (float)vals[9];
+            m44[10] = (float)vals[10];
+            m44[11] = (float)vals[11];
+            m44[12] = (float)vals[12];
+            m44[13] = (float)vals[13];
+            m44[14] = (float)vals[14];
+            m44[15] = (float)vals[15];
+        }
     }
     
     void MatrixTransform::setOffset(const float * offset4)
     {
-        if(offset4) memcpy(getImpl()->offset_, offset4, 4*sizeof(float));
+        if (offset4) getImpl()->m_data->setRGBAOffsets(offset4);
     }
     
     void MatrixTransform::getOffset(float * offset4) const
     {
-        if(offset4) memcpy(offset4, getImpl()->offset_, 4*sizeof(float));
+        if (offset4)
+        {
+            const double* vals = getImpl()->m_data->getOffsets().getValues();
+            offset4[0] = (float)vals[0];
+            offset4[1] = (float)vals[1];
+            offset4[2] = (float)vals[2];
+            offset4[3] = (float)vals[3];
+        }
     }
     
     /*
@@ -206,12 +253,12 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
-    
-    void MatrixTransform::Identity(float * m44, float * offset4)
+    template<typename T>
+    void IdentityT(T * m44, T * offset4)
     {
         if(m44)
         {
-            memset(m44, 0, 16*sizeof(float));
+            memset(m44, 0, 16*sizeof(T));
             m44[0] = 1.0f;
             m44[5] = 1.0f;
             m44[10] = 1.0f;
@@ -226,7 +273,16 @@ OCIO_NAMESPACE_ENTER
             offset4[3] = 0.0f;
         }
     }
-    
+
+    void MatrixTransform::Identity(float * m44, float * offset4)
+    {
+        IdentityT<float>(m44, offset4);
+    }
+    void MatrixTransform::Identity(double * m44, double * offset4)
+    {
+        IdentityT<double>(m44, offset4);
+    }
+
     void MatrixTransform::Sat(float * m44, float * offset4,
                               float sat, const float * lumaCoef3)
     {
@@ -376,10 +432,6 @@ OCIO_NAMESPACE_ENTER
         os << ">";
         return os;
     }
-        TransformDirection dir_;
-        float matrix_[16];
-        float offset_[4];
-        
     
     
     ///////////////////////////////////////////////////////////////////////////
@@ -403,3 +455,56 @@ OCIO_NAMESPACE_ENTER
     
 }
 OCIO_NAMESPACE_EXIT
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "UnitTest.h"
+
+
+OCIO_NAMESPACE_USING
+
+
+OIIO_ADD_TEST(MatrixTransform, Basic)
+{
+    OCIO::MatrixTransformRcPtr matrix = OCIO::MatrixTransform::Create();
+    OIIO_CHECK_EQUAL(matrix->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    float mat[16];
+    float off[4];
+    matrix->getValue(mat, off);
+    OIIO_CHECK_EQUAL(mat[0], 1.0f);
+    OIIO_CHECK_EQUAL(mat[1], 0.0f);
+    OIIO_CHECK_EQUAL(mat[2], 0.0f);
+    OIIO_CHECK_EQUAL(mat[3], 0.0f);
+
+    OIIO_CHECK_EQUAL(mat[4], 0.0f);
+    OIIO_CHECK_EQUAL(mat[5], 1.0f);
+    OIIO_CHECK_EQUAL(mat[6], 0.0f);
+    OIIO_CHECK_EQUAL(mat[7], 0.0f);
+    
+    OIIO_CHECK_EQUAL(mat[8], 0.0f);
+    OIIO_CHECK_EQUAL(mat[9], 0.0f);
+    OIIO_CHECK_EQUAL(mat[10], 1.0f);
+    OIIO_CHECK_EQUAL(mat[11], 0.0f);
+    
+    OIIO_CHECK_EQUAL(mat[12], 0.0f);
+    OIIO_CHECK_EQUAL(mat[13], 0.0f);
+    OIIO_CHECK_EQUAL(mat[14], 0.0f);
+    OIIO_CHECK_EQUAL(mat[15], 1.0f);
+
+    OIIO_CHECK_EQUAL(off[0], 0.0f);
+    OIIO_CHECK_EQUAL(off[1], 0.0f);
+    OIIO_CHECK_EQUAL(off[2], 0.0f);
+    OIIO_CHECK_EQUAL(off[3], 0.0f);
+
+    matrix->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(matrix->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
+
+
+}
+
+
+#endif

@@ -68,10 +68,13 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            src_ = rhs.src_;
-            dst_ = rhs.dst_;
-            looks_ = rhs.looks_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                src_ = rhs.src_;
+                dst_ = rhs.dst_;
+                looks_ = rhs.looks_;
+            }
             return *this;
         }
     };
@@ -100,7 +103,10 @@ OCIO_NAMESPACE_ENTER
     
     LookTransform& LookTransform::operator= (const LookTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -114,6 +120,17 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void LookTransform::validate() const
+    {
+        if (getImpl()->dir_ != TRANSFORM_DIR_FORWARD
+            && getImpl()->dir_ != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("LookTransform: invalid direction");
+        }
+
+        // TODO: Complete the validate
+    }
+
     const char * LookTransform::getSrc() const
     {
         return getImpl()->src_.c_str();

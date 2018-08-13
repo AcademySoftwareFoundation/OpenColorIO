@@ -613,7 +613,9 @@ OIIO_ADD_TEST(ParseUtils, ColorSpace)
     OIIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_TO_REFERENCE, resCSD);
     resCSD = OCIO::ColorSpaceDirectionFromString("from_reference");
     OIIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_FROM_REFERENCE, resCSD);
-    resCSD = OCIO::ColorSpaceDirectionFromString("unkwon");
+    resCSD = OCIO::ColorSpaceDirectionFromString("linear");
+    OIIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_UNKNOWN, resCSD);
+    resCSD = OCIO::ColorSpaceDirectionFromString("?");
     OIIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_UNKNOWN, resCSD);
     resCSD = OCIO::ColorSpaceDirectionFromString("");
     OIIO_CHECK_EQUAL(OCIO::COLORSPACE_DIR_UNKNOWN, resCSD);

@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CDLTransform.h"
 #include "ExponentOps.h"
 #include "MatrixOps.h"
+#include "CDLOps.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
@@ -560,7 +561,7 @@ OCIO_NAMESPACE_ENTER
         float sat_;
         std::string id_;
         std::string description_;
-        
+
         mutable std::string xml_;
         
         Impl() :
@@ -585,13 +586,16 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            
-            memcpy(sop_, rhs.sop_, sizeof(float)*9);
-            sat_ = rhs.sat_;
-            id_ = rhs.id_;
-            description_ = rhs.description_;
-            
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+
+                memcpy(sop_, rhs.sop_, sizeof(float) * 9);
+                sat_ = rhs.sat_;
+                id_ = rhs.id_;
+                description_ = rhs.description_;
+            }
+
             return *this;
         }
         
@@ -622,7 +626,10 @@ OCIO_NAMESPACE_ENTER
     
     CDLTransform& CDLTransform::operator= (const CDLTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -636,6 +643,19 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void CDLTransform::validate() const
+    {
+        if (getImpl()->dir_ != TRANSFORM_DIR_FORWARD
+            && getImpl()->dir_ != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("CDLTransform: invalid direction");
+        }
+        
+        // As the implementations between OCIO v1 and v2 are different 
+        // and the code should be fully backward compatible, 
+        // let the version specific implementation validate the CDL.
+    }
+
     const char * CDLTransform::getXML() const
     {
         getImpl()->xml_ = BuildXML(*this);
@@ -775,7 +795,7 @@ OCIO_NAMESPACE_ENTER
     {
         return getImpl()->description_.c_str();
     }
-    
+
     std::ostream& operator<< (std::ostream& os, const CDLTransform& t)
     {
         float sop[9];
@@ -798,7 +818,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     void BuildCDLOps(OpRcPtrVec & ops,
-                     const Config & /*config*/,
+                     const Config & config,
                      const CDLTransform & cdlTransform,
                      TransformDirection dir)
     {
@@ -814,35 +834,57 @@ OCIO_NAMESPACE_ENTER
         float lumaCoef3[] = { 1.0f, 1.0f, 1.0f };
         cdlTransform.getSatLumaCoefs(lumaCoef3);
         
-        float sat = cdlTransform.getSat();
+        const float sat = cdlTransform.getSat();
         
-        TransformDirection combinedDir = CombineTransformDirections(dir,
-                                                  cdlTransform.getDirection());
+        const TransformDirection combinedDir
+            = CombineTransformDirections(dir, cdlTransform.getDirection());
         
-        // TODO: Confirm ASC Sat math is correct.
-        // TODO: Handle Clamping conditions more explicitly
-        
-        if(combinedDir == TRANSFORM_DIR_FORWARD)
+        if(config.getVersion()==1)
         {
-            // 1) Scale + Offset
-            CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_FORWARD);
+            // TODO: Confirm ASC Sat math is correct.
+            // TODO: Handle Clamping conditions more explicitly
             
-            // 2) Power + Clamp
-            CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
-            
-            // 3) Saturation + Clamp
-            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+            if(combinedDir == TRANSFORM_DIR_FORWARD)
+            {
+                // 1) Scale + Offset
+                CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_FORWARD);
+                
+                // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+                //    ASC v1.2 spec since it also requires clamping at 1.)
+                CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
+                
+                // 3) Saturation (NB: Does not clamp at 0 and 1
+                //    as per ASC v1.2 spec)
+                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+            }
+            else if(combinedDir == TRANSFORM_DIR_INVERSE)
+            {
+                // 3) Saturation (NB: Does not clamp at 0 and 1
+                //    as per ASC v1.2 spec)
+                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
+                
+                // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+                //    ASC v1.2 spec since it also requires clamping at 1.)
+                CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
+                
+                // 1) Scale + Offset
+                CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_INVERSE);
+            }
         }
-        else if(combinedDir == TRANSFORM_DIR_INVERSE)
+        else
         {
-            // 3) Saturation + Clamp
-            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
-            
-            // 2) Power + Clamp
-            CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
-            
-            // 1) Scale + Offset
-            CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_INVERSE);
+            // Starting with the version 2, OCIO is now using the CDL Op.
+
+            const double s[3] = { scale4[0],  scale4[1],  scale4[2]  };
+            const double o[3] = { offset4[0], offset4[1], offset4[2] };
+            const double p[3] = { power4[0],  power4[1],  power4[2]  };
+
+            CreateCDLOp(ops, 
+                        combinedDir==TRANSFORM_DIR_FORWARD 
+                            ? OpData::CDL::CDL_V1_2_FWD
+                            : OpData::CDL::CDL_V1_2_REV,
+                        s, o, p, double(sat), 
+                        combinedDir);
         }
     }
 }

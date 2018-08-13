@@ -72,7 +72,13 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
+            virtual BitDepth getInputBitDepth() const;
+            virtual BitDepth getOutputBitDepth() const;
+            virtual void setInputBitDepth(BitDepth bitdepth);
+            virtual void setOutputBitDepth(BitDepth bitdepth);
+
             virtual bool isNoOp() const;
+            virtual bool isIdentity() const;
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
             
@@ -101,7 +107,8 @@ OCIO_NAMESPACE_ENTER
         {
             if(direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw Exception("Cannot create ExponentOp with unspecified transform direction.");
+                throw Exception(
+                    "Cannot create ExponentOp with unspecified transform direction.");
             }
             
             if(direction == TRANSFORM_DIR_INVERSE)
@@ -114,7 +121,9 @@ OCIO_NAMESPACE_ENTER
                     }
                     else
                     {
-                        throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
+                        throw Exception(
+                            "Cannot apply ExponentOp op, "\
+                            "Cannot apply 0.0 exponent in the inverse.");
                     }
                 }
             }
@@ -143,7 +152,34 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
         
+        BitDepth ExponentOp::getInputBitDepth() const
+        {
+            // TODO: To be implemented when OpData will be in
+            return BIT_DEPTH_F32;
+        }
+
+        BitDepth ExponentOp::getOutputBitDepth() const
+        {
+            // TODO: To be implemented when OpData will be in
+            return BIT_DEPTH_F32;
+        }
+
+        void ExponentOp::setInputBitDepth(BitDepth /*bitdepth*/)
+        {
+            // TODO: To be implemented when OpData will be in
+        }
+
+        void ExponentOp::setOutputBitDepth(BitDepth /*bitdepth*/)
+        {
+            // TODO: To be implemented when OpData will be in
+        }
+
         bool ExponentOp::isNoOp() const
+        {
+            return getInputBitDepth()==getOutputBitDepth() && isIdentity();
+        }
+
+        bool ExponentOp::isIdentity() const
         {
             return IsVecEqualToOneFlt(m_exp4, 4);
         }
@@ -221,8 +257,10 @@ OCIO_NAMESPACE_ENTER
         void ExponentOp::apply(float* rgbaBuffer, long numPixels) const
         {
             if(!rgbaBuffer) return;
-            float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
-                float(m_exp4[2]), float(m_exp4[3]) };
+
+            const float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
+                                   float(m_exp4[2]), float(m_exp4[3]) };
+
             ApplyClampExponent(rgbaBuffer, numPixels, exp);
         }
         
@@ -239,6 +277,10 @@ OCIO_NAMESPACE_ENTER
 
             GpuShaderText ss(shaderDesc->getLanguage());
             ss.indent();
+
+            ss.newLine() << "";
+            ss.newLine() << "// Add an Exponent processing";
+            ss.newLine() << "";
 
             // outColor = pow(max(outColor, 0.), exp);
 

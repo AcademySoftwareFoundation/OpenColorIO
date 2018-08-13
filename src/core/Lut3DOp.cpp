@@ -32,6 +32,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut3DOp.h"
 #include "MathUtils.h"
 #include "GpuShaderUtils.h"
+#include "MatrixOps.h"
+
+#include "opdata/OpDataInvLut3D.h"
+
+#include "cpu/CPULut3DOp.h"
+#include "cpu/CPUInvLut3DOp.h"
+#include "cpu/CPULutUtils.h"
 
 #include <cmath>
 #include <limits>
@@ -157,6 +164,7 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////
         // Nearest Forward
         
+#ifdef OCIO_UNIT_TEST
         void Lut3D_Nearest(float* rgbaBuffer, long numPixels, const Lut3D & lut)
         {
             float maxIndex[3];
@@ -290,9 +298,10 @@ OCIO_NAMESPACE_ENTER
                 rgbaBuffer += 4;
             }
         }
+#endif
     }
     
-    
+#ifdef OCIO_UNIT_TEST
     void Lut3D_Tetrahedral(float* rgbaBuffer, long numPixels, const Lut3D & lut)
     {
         // Tetrahedral interoplation, as described by:
@@ -510,14 +519,14 @@ OCIO_NAMESPACE_ENTER
             rgbaBuffer += 4;
         }
     }
-
+#endif
 
     void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels, Lut3DOrder lut3DOrder)
     {
         if(!img) return;
         if(numChannels < 3)
         {
-            throw Exception("Cannot generate idenitity 3d lut with less than 3 channels.");
+            throw Exception("Cannot generate idenitity 3d LUT with less than 3 channels.");
         }
         
         float c = 1.0f / ((float)edgeLen - 1.0f);
@@ -554,7 +563,7 @@ OCIO_NAMESPACE_ENTER
         if(dim*dim*dim != numPixels)
         {
             std::ostringstream os;
-            os << "Cannot infer 3D Lut size. ";
+            os << "Cannot infer 3D LUT size. ";
             os << numPixels << " element(s) does not correspond to a ";
             os << "unform cube edge length. (nearest edge length is ";
             os << dim << ").";
@@ -566,180 +575,225 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
+
         class Lut3DOp : public Op
         {
         public:
-            Lut3DOp(Lut3DRcPtr lut,
-                    Interpolation interpolation,
-                    TransformDirection direction);
+            Lut3DOp(OpData::OpDataLut3DRcPtr & data);
             virtual ~Lut3DOp();
-            
+
             virtual OpRcPtr clone() const;
-            
+
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
-            
+
+            virtual BitDepth getInputBitDepth() const;
+            virtual BitDepth getOutputBitDepth() const;
+            virtual void setInputBitDepth(BitDepth bitdepth);
+            virtual void setOutputBitDepth(BitDepth bitdepth);
+
             virtual bool isNoOp() const;
+            virtual bool isIdentity() const;
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
-            
+
             virtual bool supportedByLegacyShader() const { return false; }
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
+            OpData::OpDataLut3DRcPtr m_data;
+
         private:
-            Lut3DRcPtr m_lut;
-            Interpolation m_interpolation;
-            TransformDirection m_direction;
-            
-            // Set in finalize
+            // Lut3DOp does not record the direction. It can only be forward.
+
+            // The computed cache identifier
             std::string m_cacheID;
+            // The CPU processor
+            CPUOpRcPtr m_cpu;
+
+            Lut3DOp();
         };
-        
+
         typedef OCIO_SHARED_PTR<Lut3DOp> Lut3DOpRcPtr;
-        
-        
-        Lut3DOp::Lut3DOp(Lut3DRcPtr lut,
-                         Interpolation interpolation,
-                         TransformDirection direction):
-                            Op(),
-                            m_lut(lut),
-                            m_interpolation(interpolation),
-                            m_direction(direction)
+
+        class InvLut3DOp : public Op
+        {
+        public:
+            InvLut3DOp(OpData::OpDataInvLut3DRcPtr & data);
+            virtual ~InvLut3DOp();
+
+            virtual OpRcPtr clone() const;
+
+            virtual std::string getInfo() const;
+            virtual std::string getCacheID() const;
+
+            virtual BitDepth getInputBitDepth() const;
+            virtual BitDepth getOutputBitDepth() const;
+            virtual void setInputBitDepth(BitDepth bitdepth);
+            virtual void setOutputBitDepth(BitDepth bitdepth);
+
+            virtual bool isNoOp() const;
+            virtual bool isIdentity() const;
+            virtual bool isSameType(const OpRcPtr & op) const;
+            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool hasChannelCrosstalk() const;
+            virtual void finalize();
+            virtual void apply(float* rgbaBuffer, long numPixels) const;
+
+            virtual bool supportedByLegacyShader() const { return false; }
+            virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
+
+            OpData::OpDataInvLut3DRcPtr m_data;
+
+        private:
+            // InvLut3DOp does not record the direction. It can only be forward
+            // (ie an inverse Lut3DOp)
+
+            // The computed cache identifier
+            std::string m_cacheID;
+            // The CPU processor
+            CPUOpRcPtr m_cpu;
+
+            InvLut3DOp();
+        };
+
+        typedef OCIO_SHARED_PTR<InvLut3DOp> InvLut3DOpRcPtr;
+
+        Lut3DOp::Lut3DOp(OpData::OpDataLut3DRcPtr & data)
+            : Op()
+            , m_data(data)
+            , m_cpu(new CPUNoOp)
         {
         }
-        
+
+        Lut3DOp::~Lut3DOp()
+        {
+        }
+
         OpRcPtr Lut3DOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new Lut3DOp(m_lut, m_interpolation, m_direction));
-            return op;
+            OpData::OpDataLut3DRcPtr
+                lut(dynamic_cast<OpData::Lut3D*>(
+                    m_data->clone(OpData::OpData::DO_DEEP_COPY)));
+
+            return OpRcPtr(new Lut3DOp(lut));
         }
-        
-        Lut3DOp::~Lut3DOp()
-        { }
-        
+
         std::string Lut3DOp::getInfo() const
         {
             return "<Lut3DOp>";
         }
-        
+
         std::string Lut3DOp::getCacheID() const
         {
             return m_cacheID;
         }
-        
-        // TODO: compute real value for isNoOp
+
+        BitDepth Lut3DOp::getInputBitDepth() const
+        {
+            return m_data->getInputBitDepth();
+        }
+
+        BitDepth Lut3DOp::getOutputBitDepth() const
+        {
+            return m_data->getOutputBitDepth();
+        }
+
+        void Lut3DOp::setInputBitDepth(BitDepth bitdepth)
+        {
+            m_data->setInputBitDepth(bitdepth);
+        }
+
+        void Lut3DOp::setOutputBitDepth(BitDepth bitdepth)
+        {
+            m_data->setOutputBitDepth(bitdepth);
+        }
+
         bool Lut3DOp::isNoOp() const
         {
-            return false;
+            return m_data->isNoOp();
         }
-        
+
+        bool Lut3DOp::isIdentity() const
+        {
+            return m_data->isIdentity();
+        }
+
         bool Lut3DOp::isSameType(const OpRcPtr & op) const
         {
-            Lut3DOpRcPtr typedRcPtr = DynamicPtrCast<Lut3DOp>(op);
-            if(!typedRcPtr) return false;
-            return true;
+            // NB: InvLut3D and Lut3D have the same type.
+            //     One is the inverse of the other one.
+            const Lut3DOpRcPtr fwdTypedRcPtr = DynamicPtrCast<Lut3DOp>(op);
+            const InvLut3DOpRcPtr invTypedRcPtr = DynamicPtrCast<InvLut3DOp>(op);
+            return (bool)fwdTypedRcPtr || (bool)invTypedRcPtr;
         }
-        
+
         bool Lut3DOp::isInverse(const OpRcPtr & op) const
         {
-            Lut3DOpRcPtr typedRcPtr = DynamicPtrCast<Lut3DOp>(op);
-            if(!typedRcPtr) return false;
-            
-            if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
-                return false;
-            
-            return (m_lut->getCacheID() == typedRcPtr->m_lut->getCacheID());
+            InvLut3DOpRcPtr typedRcPtr = DynamicPtrCast<InvLut3DOp>(op);
+            if (typedRcPtr)
+            {
+                // m_data is OpData::Lut3D (and not OpData:InvLut3D)
+                // typedRcPtr->m_data is OpData:InvLut3D
+                return m_data->isInverse(*typedRcPtr->m_data);
+            }
+
+            return false;
         }
-        
-        // TODO: compute real value for hasChannelCrosstalk
+
         bool Lut3DOp::hasChannelCrosstalk() const
         {
-            return true;
+            return m_data->hasChannelCrosstalk();
         }
-        
+
         void Lut3DOp::finalize()
         {
-            if(m_direction != TRANSFORM_DIR_FORWARD)
-            {
-                std::ostringstream os;
-                os << "3D Luts can only be applied in the forward direction. ";
-                os << "(" << TransformDirectionToString(m_direction) << ")";
-                os << " specified.";
-                throw Exception(os.str().c_str());
-            }
-            
-            // Validate the requested interpolation type
-            switch(m_interpolation)
-            {
-                 // These are the allowed values.
-                case INTERP_NEAREST:
-                case INTERP_LINEAR:
-                case INTERP_TETRAHEDRAL:
-                    break;
-                case INTERP_BEST:
-                    m_interpolation = INTERP_LINEAR;
-                    break;
-                case INTERP_UNKNOWN:
-                    throw Exception("Cannot apply Lut3DOp, unspecified interpolation.");
-                    break;
-                default:
-                    throw Exception("Cannot apply Lut3DOp, invalid interpolation specified.");
-            }
-            
-            for(int i=0; i<3; ++i)
-            {
-                if(m_lut->size[i] == 0)
-                {
-                    throw Exception("Cannot apply Lut3DOp, lut object is empty.");
-                }
-                // TODO if from_min[i] == from_max[i]
-            }
-            
-            if(m_lut->size[0]*m_lut->size[1]*m_lut->size[2] * 3 != (int)m_lut->lut.size())
-            {
-                throw Exception("Cannot apply Lut3DOp, specified size does not match data.");
-            }
-            
-            // Create the cacheID
+            // TODO: Only the 32f processing is natively supported
+            m_data->setInputBitDepth(BIT_DEPTH_F32);
+            m_data->setOutputBitDepth(BIT_DEPTH_F32);
+
+            m_data->validate();
+
+            m_cpu = Lut3DRenderer::GetRenderer(m_data);
+
+
+            // Rebuild the cache identifier
+            //
+
+            md5_state_t state;
+            md5_byte_t digest[16];
+
+            md5_init(&state);
+            md5_append(&state,
+                (const md5_byte_t *)&(m_data->getArray().getValues()[0]),
+                (int)(m_data->getArray().getValues().size() * sizeof(float)));
+            md5_finish(&state, digest);
+
+            m_cacheID = GetPrintableHash(digest);
+
             std::ostringstream cacheIDStream;
-            cacheIDStream << "<Lut3DOp ";
-            cacheIDStream << m_lut->getCacheID() << " ";
-            cacheIDStream << InterpolationToString(m_interpolation) << " ";
-            cacheIDStream << TransformDirectionToString(m_direction) << " ";
-            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
-            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
+            cacheIDStream << "<Lut3D ";
+            cacheIDStream << GetPrintableHash(digest) << " ";
+            cacheIDStream << BitDepthToString(m_data->getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(m_data->getOutputBitDepth()) << " ";
             cacheIDStream << ">";
+
             m_cacheID = cacheIDStream.str();
         }
-        
+
         void Lut3DOp::apply(float* rgbaBuffer, long numPixels) const
         {
-            if(m_interpolation == INTERP_NEAREST)
-            {
-                Lut3D_Nearest(rgbaBuffer, numPixels, *m_lut);
-            }
-            else if(m_interpolation == INTERP_LINEAR)
-            {
-                Lut3D_Linear(rgbaBuffer, numPixels, *m_lut);
-            }
-            else if(m_interpolation == INTERP_TETRAHEDRAL)
-            {
-                Lut3D_Tetrahedral(rgbaBuffer, numPixels, *m_lut);
-            }
+            m_cpu->apply(rgbaBuffer, (unsigned int)numPixels);
         }
-        
+
         void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
         {
-            if(getInputBitDepth()!=BIT_DEPTH_F32 
-                || getOutputBitDepth()!=BIT_DEPTH_F32)
+            if(getInputBitDepth()!=BIT_DEPTH_F32 || getOutputBitDepth()!=BIT_DEPTH_F32)
             {
                 throw Exception("Only 32F bit depth is supported for the GPU shader");
             }
-
-            // TODO: Implement the tetrahedral interpolation
 
             std::ostringstream resName;
             resName << shaderDesc->getResourcePrefix()
@@ -748,9 +802,9 @@ OCIO_NAMESPACE_ENTER
 
             const std::string name(resName.str());
 
-            shaderDesc->add3DTexture(GpuShaderText::getSamplerName(name).c_str(), 
-                                     m_cacheID.c_str(), m_lut->size[0], 
-                                     m_interpolation, &m_lut->lut[0]);
+            shaderDesc->add3DTexture(GpuShaderText::getSamplerName(name).c_str(),
+                                     m_cacheID.c_str(), m_data->getGridSize(),
+                                     m_data->getConcreteInterpolation(), &m_data->getArray()[0]);
 
             {
                 GpuShaderText ss(shaderDesc->getLanguage());
@@ -758,26 +812,343 @@ OCIO_NAMESPACE_ENTER
                 shaderDesc->addToDeclareShaderCode(ss.string().c_str());
             }
 
-            {
-                const float m = (float(m_lut->size[0])-1.0f) / float(m_lut->size[0]);
-                const float b = 1.0f / (2.0f * float(m_lut->size[0]));
 
+            const float dim = (float)m_data->getGridSize();
+
+            // incr = 1/dim (amount needed to increment one index in the grid)
+            const float incr = 1.0f / dim;
+
+            {
                 GpuShaderText ss(shaderDesc->getLanguage());
                 ss.indent();
 
-                // vec3 coords = (inPixel.rgb * (dim-1.0f) + 0.5f) / dim
+                ss.newLine() << "";
+                ss.newLine() << "// Add a LUT 3D processing for " << name;
+                ss.newLine() << "";
 
-                ss.newLine() << ss.vec3fDecl(name + "_coords") 
-                             << " = " << shaderDesc->getPixelName() << ".rgb * " 
-                             << ss.vec3fConst(m) << " + " << ss.vec3fConst(b) << ";";
 
-                ss.newLine() << shaderDesc->getPixelName() << ".rgb = " 
-                             << ss.sampleTex3D(name, name + "_coords") 
-                             << ".rgb;";
+                // Tetrahedral interpolation
+                // The strategy is to use texture3d lookups with GL_NEAREST to fetch the
+                // 4 corners of the cube (v1,v2,v3,v4), compute the 4 barycentric weights
+                // (f1,f2,f3,f4), and then perform the interpolation manually.
+                // One side benefit of this is that we are not subject to the 8-bit
+                // quantization of the fractional weights that happens using GL_LINEAR.
+                if (m_data->getConcreteInterpolation() == INTERP_TETRAHEDRAL)
+                {
+                    ss.newLine() << "{";
+                    ss.indent();
+
+                    ss.newLine() << ss.vec3fDecl("coords") << " = "
+                                 << shaderDesc->getPixelName() << ".rgb * "
+                                 << ss.vec3fConst(dim - 1) << "; ";
+
+                    // baseInd is on [0,dim-1]
+                    ss.newLine() << ss.vec3fDecl("baseInd") << " = floor(coords);";
+
+                    // frac is on [0,1]
+                    ss.newLine() << ss.vec3fDecl("frac") << " = coords - baseInd;";
+
+                    // scale/offset baseInd onto [0,1] as usual for doing texture lookups
+                    // we use zyx to flip the order since blue varies most rapidly
+                    // in the grid array ordering
+                    ss.newLine() << ss.vec3fDecl("f1, f4") << ";";
+
+                    ss.newLine() << "baseInd = ( baseInd.zyx + " << ss.vec3fConst(0.5f) << " ) / " << ss.vec3fConst(dim) << ";";
+                    ss.newLine() << ss.vec3fDecl("v1") << " = " << ss.sampleTex3D(name, "baseInd") << ".rgb;";
+
+                    ss.newLine() << ss.vec3fDecl("nextInd") << " = baseInd + " << ss.vec3fConst(incr) << ";";
+                    ss.newLine() << ss.vec3fDecl("v4") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+
+                    ss.newLine() << "if (frac.r >= frac.g)";
+                    ss.newLine() << "{";
+                    ss.indent();
+                    ss.newLine() <<     "if (frac.g >= frac.b)";  // R > G > B
+                    ss.newLine() <<     "{";
+                    ss.indent();       
+                                            // Note that compared to the CPU version of the algorithm,
+                                            // we increment in inverted order since baseInd & nextInd
+                                            // are essentially BGR rather than RGB.
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(0.0f, 0.0f, incr) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, incr) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "f1 = " << ss.vec3fConst("1. - frac.r") << ";";
+                    ss.newLine() <<         "f4 = " << ss.vec3fConst("frac.b") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.r - frac.g") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.g - frac.b") << ";";
+                                            
+                    ss.newLine() <<         shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+                    ss.dedent();            
+                    ss.newLine() <<     "}";
+                    ss.newLine() <<     "else if (frac.r >= frac.b)";  // R > B > G
+                    ss.newLine() <<     "{";
+                    ss.indent();          
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(0.0f, 0.0f, incr) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, incr) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "f1 = " << ss.vec3fConst("1. - frac.r") << ";";
+                    ss.newLine() <<         "f4 = " << ss.vec3fConst("frac.g") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.r - frac.b") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.b - frac.g") << ";";
+                                            
+                    ss.newLine() <<         shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+                    ss.dedent();            
+                    ss.newLine() <<     "}";
+                    ss.newLine() <<     "else";  // B > R > G
+                    ss.newLine() <<     "{";
+                    ss.indent();        
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, 0.0f) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, incr) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "f1 = " << ss.vec3fConst("1. - frac.b") << ";";
+                    ss.newLine() <<         "f4 = " << ss.vec3fConst("frac.g") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.b - frac.r") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.r - frac.g") << ";";
+                                            
+                    ss.newLine() <<         shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+                    ss.dedent();            
+                    ss.newLine() <<     "}";
+                    ss.dedent();      
+                    ss.newLine() << "}";
+                    ss.newLine() << "else";
+                    ss.newLine() << "{";
+                    ss.indent();        
+                    ss.newLine() <<     "if (frac.g <= frac.b)";  // B > G > R
+                    ss.newLine() <<     "{";
+                    ss.indent();        
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, 0.0f) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(incr, incr, 0.0f) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "f1 = " << ss.vec3fConst("1. - frac.b") << ";";
+                    ss.newLine() <<         "f4 = " << ss.vec3fConst("frac.r") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.b - frac.g") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.g - frac.r") << ";";
+                                            
+                    ss.newLine() <<         shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+                    ss.dedent();          
+                    ss.newLine() <<     "}";
+                    ss.newLine() <<     "else if (frac.r >= frac.b)";  // G > R > B
+                    ss.newLine() <<     "{";
+                    ss.indent();        
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, 0.0f) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, incr) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "f1 = " << ss.vec3fConst("1. - frac.g") << ";";
+                    ss.newLine() <<         "f4 = " << ss.vec3fConst("frac.b") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.g - frac.r") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.r - frac.b") << ";";
+                                            
+                    ss.newLine() <<         shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+                    ss.dedent();            
+                    ss.newLine() <<     "}";
+                    ss.newLine() <<     "else";  // G > B > R
+                    ss.newLine() <<     "{";
+                    ss.indent();        
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, 0.0f) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "nextInd = baseInd + " << ss.vec3fConst(incr, incr, 0.0f) << ";";
+                    ss.newLine() <<         ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
+                                            
+                    ss.newLine() <<         "f1 = " << ss.vec3fConst("1. - frac.g") << ";";
+                    ss.newLine() <<         "f4 = " << ss.vec3fConst("frac.r") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.g - frac.b") << ";";
+                    ss.newLine() <<         ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.b - frac.r") << ";";
+                                            
+                    ss.newLine() <<         shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
+                    ss.dedent();            
+                    ss.newLine() <<     "}";
+                    ss.dedent();
+                    ss.newLine() << "}";
+
+                    ss.newLine() << shaderDesc->getPixelName()
+                                 << ".rgb = "
+                                 << shaderDesc->getPixelName()
+                                 << ".rgb + (f1 * v1) + (f4 * v4);";
+
+                    ss.dedent();
+                    ss.newLine() << "}";
+                }
+                else
+                {
+                    // Trilinear interpolation
+                    // Use texture3d and GL_LINEAR and the GPU's built-in trilinear algorithm.
+                    // Note that the fractional components are quantized to 8-bits on current
+                    // hardware, which introduces significant error with small grid sizes.
+
+                    ss.newLine() << ss.vec3fDecl(name + "_coords")
+                                 << " = (" << shaderDesc->getPixelName() << ".zyx * "
+                                 << ss.vec3fConst(dim - 1) << " + "
+                                 << ss.vec3fConst(0.5f) + ") / " 
+                                 << ss.vec3fConst(dim) << ";";
+
+                    ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
+                                 << ss.sampleTex3D(name, name + "_coords") << ".rgb;";
+                }
+                
 
                 shaderDesc->addToFunctionShaderCode(ss.string().c_str());
             }
+
         }
+
+
+        InvLut3DOp::InvLut3DOp(OpData::OpDataInvLut3DRcPtr & data)
+            : Op()
+            , m_data(data)
+            , m_cpu(new CPUNoOp)
+        {
+        }
+
+        InvLut3DOp::~InvLut3DOp()
+        {
+        }
+
+        OpRcPtr InvLut3DOp::clone() const
+        {
+            OpData::OpDataInvLut3DRcPtr
+                lut(dynamic_cast<OpData::InvLut3D*>(
+                    m_data->clone(OpData::OpData::DO_DEEP_COPY)));
+
+            return OpRcPtr(new InvLut3DOp(lut));
+        }
+
+        std::string InvLut3DOp::getInfo() const
+        {
+            return "<InvLut3DOp>";
+        }
+
+        std::string InvLut3DOp::getCacheID() const
+        {
+            return m_cacheID;
+        }
+
+        BitDepth InvLut3DOp::getInputBitDepth() const
+        {
+            return m_data->getInputBitDepth();
+        }
+
+        BitDepth InvLut3DOp::getOutputBitDepth() const
+        {
+            return m_data->getOutputBitDepth();
+        }
+
+        void InvLut3DOp::setInputBitDepth(BitDepth bitdepth)
+        {
+            m_data->setInputBitDepth(bitdepth);
+        }
+
+        void InvLut3DOp::setOutputBitDepth(BitDepth bitdepth)
+        {
+            m_data->setOutputBitDepth(bitdepth);
+        }
+
+        bool InvLut3DOp::isNoOp() const
+        {
+            return m_data->isNoOp();
+        }
+
+        bool InvLut3DOp::isIdentity() const
+        {
+            return m_data->isIdentity();
+        }
+
+        bool InvLut3DOp::isSameType(const OpRcPtr & op) const
+        {
+            // NB: InvLut3D and Lu31D have the same type.
+            //     One is the inverse of the other one.
+            const Lut3DOpRcPtr fwdTypedRcPtr = DynamicPtrCast<Lut3DOp>(op);
+            const InvLut3DOpRcPtr invTypedRcPtr = DynamicPtrCast<InvLut3DOp>(op);
+            return (bool)fwdTypedRcPtr || (bool)invTypedRcPtr;
+        }
+
+        bool InvLut3DOp::isInverse(const OpRcPtr & op) const
+        {
+            Lut3DOpRcPtr typedRcPtr = DynamicPtrCast<Lut3DOp>(op);
+            if (typedRcPtr)
+            {
+                // m_data is OpData::InvLut3D
+                // typedRcPtr->m_data is OpData:Lut3D (and not OpData:InvLut3D)
+                return m_data->isInverse(*typedRcPtr->m_data);
+            }
+
+            return false;
+        }
+
+        bool InvLut3DOp::hasChannelCrosstalk() const
+        {
+            return m_data->hasChannelCrosstalk();
+        }
+
+        void InvLut3DOp::finalize()
+        {
+            // Only the 32f processing is natively supported
+            m_data->setInputBitDepth(BIT_DEPTH_F32);
+            m_data->setOutputBitDepth(BIT_DEPTH_F32);
+
+            m_data->validate();
+
+            // Get the CPU engine
+            m_cpu = InvLut3DRenderer::GetRenderer(m_data);
+
+            // Rebuild the cache identifier
+            //
+
+            md5_state_t state;
+            md5_byte_t digest[16];
+
+            md5_init(&state);
+            md5_append(&state,
+                (const md5_byte_t *)&(m_data->getArray().getValues()[0]),
+                (int)(m_data->getArray().getValues().size() * sizeof(float)));
+            md5_finish(&state, digest);
+
+            m_cacheID = GetPrintableHash(digest);
+
+            std::ostringstream cacheIDStream;
+            cacheIDStream << "<InvLut1D ";
+            cacheIDStream << GetPrintableHash(digest) << " ";
+            cacheIDStream << BitDepthToString(m_data->getInputBitDepth()) << " ";
+            cacheIDStream << BitDepthToString(m_data->getOutputBitDepth()) << " ";
+            cacheIDStream << ">";
+
+            m_cacheID = cacheIDStream.str();
+        }
+
+        void InvLut3DOp::apply(float* rgbaBuffer, long numPixels) const
+        {
+            m_cpu->apply(rgbaBuffer, (unsigned int)numPixels);
+        }
+
+        void InvLut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
+        {
+            OpData::OpDataLut3DRcPtr
+                newLut = InvLutUtil::makeFastLut3D(m_data);
+
+            OpRcPtrVec ops;
+            CreateLut3DOp(ops, newLut, TRANSFORM_DIR_FORWARD);
+            if (ops.size() != 1)
+            {
+                throw Exception("Cannot apply Lut3DOp, optimization failed.");
+            }
+            ops[0]->finalize();
+            ops[0]->extractGpuShaderInfo(shaderDesc);
+        }
+
     }
     
     void CreateLut3DOp(OpRcPtrVec & ops,
@@ -785,8 +1156,136 @@ OCIO_NAMESPACE_ENTER
                        Interpolation interpolation,
                        TransformDirection direction)
     {
-        ops.push_back( Lut3DOpRcPtr(new Lut3DOp(lut, interpolation, direction)) );
+        if (direction != TRANSFORM_DIR_FORWARD
+            && direction != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("Cannot apply Lut3DOp op, "
+                "unspecified transform direction.");
+        }
+        if (interpolation != INTERP_NEAREST
+            && interpolation != INTERP_LINEAR
+            && interpolation != INTERP_TETRAHEDRAL
+            && interpolation != INTERP_DEFAULT
+            && interpolation != INTERP_BEST)
+        {
+            throw Exception("Cannot apply LUT 3D op, "
+                "invalid interpolation specified.");
+        }
+        if (!lut || lut->size[0]<2 
+            || lut->size[0] != lut->size[1]
+            || lut->size[0] != lut->size[2])
+        {
+            throw Exception("Cannot apply Lut3DOp op, "
+                "invalid lut specified.");
+        }
+
+        // TODO: code assumes that LUT coming in are LUT3DORDER_FAST_RED
+        // Need to transform to Blue fast for OpData::Lut3D
+        unsigned lutSize = (unsigned)lut->size[0];
+        OpData::OpDataLut3DRcPtr lutBF(new OpData::Lut3D(lutSize));
+        lutBF->setInterpolation(interpolation);
+
+        OpData::Array & lutArray = lutBF->getArray();
+
+        for (unsigned b = 0; b < lutSize; ++b)
+        {
+            for (unsigned g = 0; g < lutSize; ++g)
+            {
+                for (unsigned r = 0; r < lutSize; ++r)
+                {
+                    // OpData::Lut3D Array index. b changes fastest.
+                    const unsigned arrayIdx = 3 * ((r*lutSize + g)*lutSize + b);
+
+                    // Lut3D struct index. r changes fastest.
+                    const unsigned ocioIdx = 3 * ((b*lutSize + g)*lutSize + r);
+
+                    lutArray[arrayIdx] = lut->lut[ocioIdx];
+                    lutArray[arrayIdx + 1] = lut->lut[ocioIdx + 1];
+                    lutArray[arrayIdx + 2] = lut->lut[ocioIdx + 2];
+                }
+            }
+        }
+
+        if (direction == TRANSFORM_DIR_FORWARD)
+        {
+            CreateMatrixOp(ops, lut->from_min, lut->from_max, TRANSFORM_DIR_FORWARD);
+            CreateLut3DOp(ops, lutBF, TRANSFORM_DIR_FORWARD);
+        }
+        else
+        {
+            CreateLut3DOp(ops, lutBF, TRANSFORM_DIR_INVERSE);
+            CreateMatrixOp(ops, lut->from_min, lut->from_max, TRANSFORM_DIR_INVERSE);
+        }
     }
+
+
+    void CreateLut3DOp(OpRcPtrVec & ops,
+        OpData::OpDataLut3DRcPtr & lut,
+        TransformDirection direction)
+    {
+        if (lut->isNoOp()) return;
+
+        if (direction != TRANSFORM_DIR_FORWARD
+            && direction != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("Cannot apply Lut3DOp op, "
+                "unspecified transform direction.");
+        }
+
+        if (lut->getOpType() != OpData::OpData::Lut3DType)
+        {
+            if (lut->getOpType() == OpData::OpData::InvLut3DType)
+            {
+                OpData::OpDataInvLut3DRcPtr typedRcPtr
+                    = DynamicPtrCast<OpData::InvLut3D>(lut);
+                CreateInvLut3DOp(ops, typedRcPtr, direction);
+                return;
+            }
+            throw Exception("Cannot apply Lut3DOp op, "
+                "Not a forward LUT 3D data");
+        }
+
+        if (direction == TRANSFORM_DIR_FORWARD)
+        {
+            ops.push_back(OpRcPtr(new Lut3DOp(lut)));
+        }
+        else
+        {
+            OpData::OpDataInvLut3DRcPtr data(new OpData::InvLut3D(*lut));
+            ops.push_back(OpRcPtr(new InvLut3DOp(data)));
+        }
+    }
+
+    void CreateInvLut3DOp(OpRcPtrVec & ops,
+        OpData::OpDataInvLut3DRcPtr & lut,
+        TransformDirection direction)
+    {
+        if (lut->isNoOp()) return;
+
+        if (direction != TRANSFORM_DIR_FORWARD
+            && direction != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("Cannot apply Lut3DOp op, "
+                "unspecified transform direction.");
+        }
+
+        if (lut->getOpType() != OpData::OpData::InvLut3DType)
+        {
+            throw Exception("Cannot apply InvLut3DOp op, "
+                "Not a inverse LUT 3D data");
+        }
+
+        if (direction == TRANSFORM_DIR_FORWARD)
+        {
+            ops.push_back(OpRcPtr(new InvLut3DOp(lut)));
+        }
+        else
+        {
+            OpData::OpDataLut3DRcPtr data(new OpData::Lut3D(*lut));
+            ops.push_back(OpRcPtr(new Lut3DOp(data)));
+        }
+    }
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -802,8 +1301,10 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
+#include "OpBuilders.h"
+#include "opdata/OpDataTools.h"
 
-OIIO_ADD_TEST(Lut3DOp, NanInfValueCheck)
+OIIO_ADD_TEST(Lut3DOpStruct, NanInfValueCheck)
 {
     OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
     
@@ -842,7 +1343,7 @@ OIIO_ADD_TEST(Lut3DOp, NanInfValueCheck)
 }
 
 
-OIIO_ADD_TEST(Lut3DOp, ValueCheck)
+OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
 {
     const float error = 1e-5f;
 
@@ -913,7 +1414,7 @@ OIIO_ADD_TEST(Lut3DOp, ValueCheck)
 
 
 
-OIIO_ADD_TEST(Lut3DOp, InverseComparisonCheck)
+OIIO_ADD_TEST(Lut3DOpStruct, InverseComparisonCheck)
 {
     OCIO::Lut3DRcPtr lut_a = OCIO::Lut3D::Create();
     lut_a->from_min[0] = 0.0f;
@@ -936,9 +1437,9 @@ OIIO_ADD_TEST(Lut3DOp, InverseComparisonCheck)
     lut_b->from_max[0] = 1.0f;
     lut_b->from_max[1] = 1.0f;
     lut_b->from_max[2] = 1.0f;
-    lut_b->size[0] = 32;
-    lut_b->size[1] = 32;
-    lut_b->size[2] = 32;
+    lut_b->size[0] = 16;
+    lut_b->size[1] = 16;
+    lut_b->size[2] = 16;
     lut_b->lut.resize(lut_b->size[0]*lut_b->size[1]*lut_b->size[2]*3);
     OIIO_CHECK_NO_THROW(GenerateIdentityLut3D(
         &lut_b->lut[0], lut_b->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
@@ -946,81 +1447,83 @@ OIIO_ADD_TEST(Lut3DOp, InverseComparisonCheck)
     OCIO::OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
         lut_a, OCIO::INTERP_NEAREST, OCIO::TRANSFORM_DIR_FORWARD));
-    // inverse Lut3D can't be finalized;
     OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
         lut_a, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
+
+    // Add Matrix and LUT
     OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
         lut_b, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD));
+    
+    // Add LUT and Matrix
     OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
         lut_b, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
     
-    OIIO_CHECK_EQUAL(ops.size(), 4);
+    OIIO_CHECK_EQUAL(ops.size(), 6);
     
     OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[2]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]->clone()));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[4]->clone()));
     
     OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[1]), true);
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
     OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[3]), false);
-    OIIO_CHECK_EQUAL( ops[2]->isInverse(ops[3]), true);
+    
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[4]), false);
+    OIIO_CHECK_EQUAL( ops[3]->isInverse(ops[4]), true);
 }
-
 
 OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
 {
-    /*
+/*
     OCIO::Lut3D lut;
-    
+
     lut.from_min[0] = 0.0f;
     lut.from_min[1] = 0.0f;
     lut.from_min[2] = 0.0f;
-    
+
     lut.from_max[0] = 1.0f;
     lut.from_max[1] = 1.0f;
     lut.from_max[2] = 1.0f;
-    
+
     lut.size[0] = 32;
     lut.size[1] = 32;
     lut.size[2] = 32;
-    
-    lut.lut.resize(lut.size[0]*lut.size[1]*lut.size[2]*3);
+
+    lut.lut.resize(lut.size[0]*lut.size[1]*?lut.size[2]*3);
     GenerateIdentityLut3D(&lut.lut[0], lut.size[0], 3, OCIO::LUT3DORDER_FAST_RED);
-    
+
     std::vector<float> img;
     int xres = 2048;
     int yres = 1;
     int channels = 4;
     img.resize(xres*yres*channels);
-    
+
     srand48(0);
-    
+
     // create random values from -0.05 to 1.05
     // (To simulate clipping performance)
-    
+
     for(unsigned int i=0; i<img.size(); ++i)
     {
         float uniform = (float)drand48();
         img[i] = uniform*1.1f - 0.05f;
     }
-    
+
     timeval t;
     gettimeofday(&t, 0);
     double starttime = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;
-    
+
     int numloops = 1024;
     for(int i=0; i<numloops; ++i)
     {
-        //OCIO::Lut3D_Nearest(&img[0], xres*yres, lut);
+        ?//OCIO::Lut3D_Nearest(&img[0], xres*yres, lut);
         OCIO::Lut3D_Linear(&img[0], xres*yres, lut);
     }
-    
+
     gettimeofday(&t, 0);
     double endtime = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;
     double totaltime_a = (endtime-starttime)/numloops;
-    
-    printf("Linear: %0.1f ms  - %0.1f fps\n", totaltime_a*1000.0, 1.0/totaltime_a);
+
+    printf("Linear: ?%0.1f ms  - ?%0.1f fps\n", totaltime_a*1000.0, 1.0/totaltime_a);
 
 
     // Tetrahedral
@@ -1036,16 +1539,16 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
     endtime = (double) t.tv_sec + (double) t.tv_usec / 1000000.0;
     double totaltime_b = (endtime-starttime)/numloops;
 
-    printf("Tetra: %0.1f ms  - %0.1f fps\n", totaltime_b*1000.0, 1.0/totaltime_b);
+    printf("Tetra: ?%0.1f ms  - ?%0.1f fps\n", totaltime_b*1000.0, 1.0/totaltime_b);
 
     double speed_diff = totaltime_a/totaltime_b;
-    printf("Tetra is %.04f speed of Linear\n", speed_diff);
-    */
+    printf("Tetra is ?%.04f speed of Linear\n", speed_diff);
+*/
 }
 
-OIIO_ADD_TEST(Lut3DOp, ThrowLut)
+OIIO_ADD_TEST(Lut3DOpStruct, ThrowLut)
 {
-    // std::string Lut3D::getCacheID() const when lut is empty
+    // std::string Lut3D::getCacheID() const when LUT is empty
     OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
     OIIO_CHECK_THROW_WHAT(lut->getCacheID(), OCIO::Exception, "invalid Lut3D");
 
@@ -1067,10 +1570,10 @@ OIIO_ADD_TEST(Lut3DOp, ThrowLut)
 
     // Get3DLutEdgeLenFromNumPixels with not cubic size
     OIIO_CHECK_THROW_WHAT(OCIO::Get3DLutEdgeLenFromNumPixels(10),
-        OCIO::Exception, "Cannot infer 3D Lut size");
+        OCIO::Exception, "Cannot infer 3D LUT size");
 }
 
-OIIO_ADD_TEST(Lut3DOp, ThrowLutOp)
+OIIO_ADD_TEST(Lut3DOpStruct, ThrowLutOp)
 {
     OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
     lut->size[0] = 3;
@@ -1086,36 +1589,18 @@ OIIO_ADD_TEST(Lut3DOp, ThrowLutOp)
         lut, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
     OIIO_CHECK_EQUAL(ops.size(), 1);
 
-    // Inverse is not handled
-    OIIO_CHECK_THROW_WHAT(ops[0]->finalize(), OCIO::Exception, "forward direction");
+    // Inverse
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
     ops.clear();
 
     // only valid interpolation
-    OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
-        lut, OCIO::INTERP_UNKNOWN, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 1);
-
-    OIIO_CHECK_THROW_WHAT(ops[0]->finalize(), OCIO::Exception, "unspecified interpolation");
+    OIIO_CHECK_THROW_WHAT(CreateLut3DOp(ops,
+        lut, OCIO::INTERP_UNKNOWN, OCIO::TRANSFORM_DIR_FORWARD), OCIO::Exception, "invalid interpolation");
     ops.clear();
 
-    OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
-        lut, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 1);
-    
-    // 0 size in R, G or B
-    for (int i = 0; i < 3; ++i)
-    {
-        lut->size[i] = 0;
-        OIIO_CHECK_THROW_WHAT(ops[0]->finalize(), OCIO::Exception, "lut object is empty");
-        lut->size[i] = 3;
-    }
-
-    // missmatch lut size
-    lut->lut.resize(lut->lut.size() + 1);
-    OIIO_CHECK_THROW_WHAT(ops[0]->finalize(), OCIO::Exception, "specified size does not match data");
 }
 
-OIIO_ADD_TEST(Lut3DOp, cacheID)
+OIIO_ADD_TEST(Lut3DOpStruct, cacheID)
 {
     OCIO::OpRcPtrVec ops;
     for (int i = 0; i < 2; ++i)
@@ -1139,14 +1624,14 @@ OIIO_ADD_TEST(Lut3DOp, cacheID)
 
     const std::string cacheID = ops[0]->getCacheID();
     OIIO_CHECK_EQUAL(cacheID.empty(), false);
-    // same lut have the same cacheID
+    // same LUT have the same cacheID
     OIIO_CHECK_EQUAL(cacheID, ops[1]->getCacheID());
 }
 
-OIIO_ADD_TEST(Lut3DOp, EdgeLenFromNumPixels)
+OIIO_ADD_TEST(Lut3DOpStruct, EdgeLenFromNumPixels)
 {
     OIIO_CHECK_THROW_WHAT(OCIO::Get3DLutEdgeLenFromNumPixels(10),
-        OCIO::Exception, "Cannot infer 3D Lut size");
+        OCIO::Exception, "Cannot infer 3D LUT size");
     int expectedRes = 33;
     int res = 0;
     OIIO_CHECK_NO_THROW(res = OCIO::Get3DLutEdgeLenFromNumPixels(
@@ -1159,7 +1644,7 @@ OIIO_ADD_TEST(Lut3DOp, EdgeLenFromNumPixels)
     OIIO_CHECK_EQUAL(res, expectedRes);
 }
 
-OIIO_ADD_TEST(Lut3DOp, Lut3DOrder)
+OIIO_ADD_TEST(Lut3DOpStruct, Lut3DOrder)
 {
     OCIO::Lut3DRcPtr lut_r = OCIO::Lut3D::Create();
 
@@ -1234,5 +1719,607 @@ OIIO_ADD_TEST(Lut3DOp, Lut3DOrder)
     OIIO_CHECK_EQUAL(lut_b->lut[78], 1.0f);
 
 }
+
+OIIO_ADD_TEST(Lut3DOp, ConvertLut)
+{
+    OCIO::Lut3DRcPtr lut_r = OCIO::Lut3D::Create();
+
+    lut_r->from_min[0] = 0.0f;
+    lut_r->from_min[1] = 0.0f;
+    lut_r->from_min[2] = 0.0f;
+
+    lut_r->from_max[0] = 1.0f;
+    lut_r->from_max[1] = 1.0f;
+    lut_r->from_max[2] = 1.0f;
+
+    lut_r->size[0] = 3;
+    lut_r->size[1] = 3;
+    lut_r->size[2] = 3;
+
+    lut_r->lut.resize(lut_r->size[0] * lut_r->size[1] * lut_r->size[2] * 3);
+
+    OIIO_CHECK_NO_THROW(GenerateIdentityLut3D(
+        &lut_r->lut[0], lut_r->size[0], 3, OCIO::LUT3DORDER_FAST_RED));
+
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
+        lut_r, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD));
+
+    const OCIO::Lut3DOpRcPtr pLB = OCIO::DynamicPtrCast<OCIO::Lut3DOp>(ops[0]);
+
+    // first 3 values have blue changing
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[2], 0.0f);
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[5], 0.5f);
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[8], 1.0f);
+    // red is all 0     
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[0], 0.0f);
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[3], 0.0f);
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[6], 0.0f);
+    // last 3 values have blue changing
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[74], 0.0f);
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[77], 0.5f);
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[80], 1.0f);
+    // red is all 1     
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[72], 1.0f);
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[75], 1.0f);
+    OIIO_CHECK_EQUAL(pLB->m_data->getArray().getValues()[78], 1.0f);
+}
+
+#ifndef OCIO_UNIT_TEST_FILES_DIR
+#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
+#endif
+
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
+static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
+
+
+void BuildOps(const std::string & fileName,
+    OCIO::OpRcPtrVec & fileOps)
+{
+    // This example uses a profile with a 1024-entry LUT for the TRC.
+    const std::string filePath(ocioTestFilesDir + "/" + fileName);
+
+    // Create a FileTransform
+    OCIO::FileTransformRcPtr pFileTransform
+        = OCIO::FileTransform::Create();
+    // A transform file does not define any interpolation (contrary to config
+    // file), this is to avoid exception when creating the operation.
+    pFileTransform->setInterpolation(OCIO::INTERP_BEST);
+    pFileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
+    pFileTransform->setSrc(filePath.c_str());
+
+    // Create empty Config to use
+    OCIO::ConfigRcPtr pConfig = OCIO::Config::Create();
+
+    OCIO::ContextRcPtr pContext = OCIO::Context::Create();
+
+    OCIO::BuildFileOps(fileOps, *(pConfig.get()), pContext,
+        *(pFileTransform.get()), OCIO::TRANSFORM_DIR_FORWARD);
+}
+
+OIIO_ADD_TEST(Lut3DOp, Lut3D_compose)
+{
+    const std::string fileNameLut3d("lut3d_bizarre.clf");
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(BuildOps(fileNameLut3d, ops));
+    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, false));
+    OIIO_CHECK_EQUAL(2, ops.size());
+
+    OIIO_CHECK_EQUAL("<FileNoOp>", ops[0]->getInfo());
+    OIIO_CHECK_EQUAL("<Lut3DOp>", ops[1]->getInfo());
+
+    const std::string fileNameLut3d2("lut3d_example.clf");
+    OIIO_CHECK_NO_THROW(BuildOps(fileNameLut3d2, ops));
+
+    // TODO: BitDepth support: this is currently switching ops to 32F
+    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops, false));
+
+    OIIO_CHECK_EQUAL(4, ops.size());
+
+    OIIO_CHECK_EQUAL("<FileNoOp>", ops[2]->getInfo());
+    OIIO_CHECK_EQUAL("<Lut3DOp>", ops[3]->getInfo());
+
+    const OCIO::Lut3DOpRcPtr pL0 = OCIO::DynamicPtrCast<OCIO::Lut3DOp>(ops[1]);
+    const OCIO::Lut3DOpRcPtr pL1 = OCIO::DynamicPtrCast<OCIO::Lut3DOp>(ops[3]);
+
+    OCIO::OpData::OpDataLut3DRcPtr pComposed = OCIO::OpData::Compose(pL0->m_data, pL1->m_data);
+
+    const float error = 1e-6f;
+
+    OIIO_CHECK_EQUAL(pComposed->getArray().getLength(), 17);
+    OIIO_CHECK_CLOSE(pComposed->getArray().getValues()[6], 0.0f, error);
+    OIIO_CHECK_CLOSE(pComposed->getArray().getValues()[7], 0.0100250980f, error);
+    OIIO_CHECK_CLOSE(pComposed->getArray().getValues()[8], 0.0644531101f, error);
+    
+    OIIO_CHECK_CLOSE(pComposed->getArray().getValues()[8289], 0.3781897128f, error);
+    OIIO_CHECK_CLOSE(pComposed->getArray().getValues()[8290], 0.5108838081f, error);
+    OIIO_CHECK_CLOSE(pComposed->getArray().getValues()[8291], 0.5439114571f, error);
+
+    OIIO_CHECK_CLOSE(pComposed->getArray().getValues()[14736], 0.9995302558f, error);
+    OIIO_CHECK_CLOSE(pComposed->getArray().getValues()[14737], 0.9941929579f, error);
+    OIIO_CHECK_CLOSE(pComposed->getArray().getValues()[14738], 0.9985907078f, error);
+
+    // TODO: when bitdepth support is available:
+    // Check that if the connecting bit-depths don't match, it's an exception.
+/*    try
+    {
+    // Tried to do this with a shared ptr but it prevented the catch from being called.
+    std::auto_ptr<Color::Lut3DOp> pLe(Color::TransformTools::compose(*pL1, *pL0));
+    }
+    catch (Color::Exception )
+    {
+    return;
+    }
+    BOOST_CHECK(false);*/
+}
+
+
+OIIO_ADD_TEST(Lut3DOp, CPURendererLut3D)
+{
+    const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_F32;
+
+    // By default, this constructor creates an 'identity LUT'
+    OCIO::OpData::OpDataLut3DRcPtr
+        lutData(
+            new OCIO::OpData::Lut3D(bitDepth, bitDepth,
+                "", "", OCIO::OpData::Descriptions(),
+                OCIO::INTERP_LINEAR, 33));
+
+    OCIO::Lut3DOp lut(lutData);
+
+    OIIO_CHECK_NO_THROW(lut.finalize());
+    OIIO_CHECK_ASSERT(lut.m_data->isIdentity());
+    OIIO_CHECK_ASSERT(false == lut.isNoOp());
+
+    const float step = OCIO::OpData::GetValueStepSize(
+        lut.m_data->getInputBitDepth(),
+        lut.m_data->getArray().getLength());
+    
+    float myImage[8] = { 0.0f, 0.0f, 0.0f, 1.0f,
+                         0.0f, 0.0f, step, 1.0f };
+
+    {
+        OIIO_CHECK_NO_THROW(lut.apply(myImage, 2));
+
+        OIIO_CHECK_EQUAL(myImage[0], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[1], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[2], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[3], 1.0f);
+
+        OIIO_CHECK_EQUAL(myImage[4], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[5], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[6], step);
+        OIIO_CHECK_EQUAL(myImage[7], 1.0f);
+    }
+
+    // No more an 'identity LUT 3D'
+    const float arbitraryVal = 0.123456f;
+    lut.m_data->getArray()[5] = arbitraryVal;
+
+    OIIO_CHECK_NO_THROW(lut.finalize());
+    OIIO_CHECK_ASSERT(!lut.m_data->isIdentity());
+    OIIO_CHECK_ASSERT(!lut.isNoOp());
+
+    {
+        OIIO_CHECK_NO_THROW(lut.apply(myImage, 2));
+
+        OIIO_CHECK_EQUAL(myImage[0], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[1], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[2], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[3], 1.0f);
+
+        OIIO_CHECK_EQUAL(myImage[4], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[5], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[6], arbitraryVal);
+        OIIO_CHECK_EQUAL(myImage[7], 1.0f);
+    }
+
+    // Change interpolation
+    lut.m_data->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+    OIIO_CHECK_NO_THROW(lut.finalize());
+    OIIO_CHECK_ASSERT(!lut.m_data->isIdentity());
+    OIIO_CHECK_ASSERT(!lut.isNoOp());
+
+    {
+        OIIO_CHECK_NO_THROW(lut.apply(myImage, 2));
+
+        OIIO_CHECK_EQUAL(myImage[0], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[1], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[2], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[3], 1.0f);
+
+        OIIO_CHECK_EQUAL(myImage[4], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[5], 0.0f);
+        OIIO_CHECK_EQUAL(myImage[6], arbitraryVal);
+        OIIO_CHECK_EQUAL(myImage[7], 1.0f);
+    }
+
+}
+
+/*BOOST_AUTO_TEST_CASE(CPURendererLUT3D_Blue)
+{
+    const std::string filename("/lut3d_blue.xml");
+
+    Color::XMLTransformReader reader;
+
+    try
+    {
+        reader.parseFile(path + filename);
+    }
+    catch (Color::Exception e)
+    {
+        BOOST_ERROR(e.getErrorString());
+    }
+
+    const boost::shared_ptr<Color::Transform>& pTransform
+        = reader.getTransform();
+    BOOST_REQUIRE(pTransform.use_count() == 1);
+
+    const Color::Lut3DOp* pL
+        = dynamic_cast<const Color::Lut3DOp*>(pTransform.get()->getOps().get(0));
+
+    SYNCOLOR::PixelFormat pf = SYNCOLOR::PF_RGBA_16i;
+
+    const uint16_t step
+        = (uint16_t)(Color::Op::getValueStepSize(GET_BIT_DEPTH(pf),
+            pL->getArray().getLength()));
+
+    uint16_t myImage[] = { 0,    0,    0,    0,
+        step, 0,    0,    0,
+        0,    step, 0,    0,
+        0,    0,    step, 0,
+        step, step, step, 0 };
+
+    pRenderer->finalize(pTransform, pf, pf);
+
+    pRenderer->apply(myImage, myImage,
+        SYNCOLOR::ROI(5, 1),
+        0, 0);
+
+    BOOST_CHECK_EQUAL(myImage[0], 0);
+    BOOST_CHECK_EQUAL(myImage[1], 0);
+    BOOST_CHECK_EQUAL(myImage[2], 0);
+    BOOST_CHECK_EQUAL(myImage[3], 0);
+
+    BOOST_CHECK_EQUAL(myImage[4], 0);
+    BOOST_CHECK_EQUAL(myImage[5], 0);
+    BOOST_CHECK_EQUAL(myImage[6], 0);
+    BOOST_CHECK_EQUAL(myImage[7], 0);
+
+    BOOST_CHECK_EQUAL(myImage[8], 0);
+    BOOST_CHECK_EQUAL(myImage[9], 0);
+    BOOST_CHECK_EQUAL(myImage[10], 0);
+    BOOST_CHECK_EQUAL(myImage[11], 0);
+
+    BOOST_CHECK_EQUAL(myImage[12], 0);
+    BOOST_CHECK_EQUAL(myImage[13], 0);
+    BOOST_CHECK_EQUAL(myImage[14], step);
+    BOOST_CHECK_EQUAL(myImage[15], 0);
+
+    BOOST_CHECK_EQUAL(myImage[16], 0);
+    BOOST_CHECK_EQUAL(myImage[17], 0);
+    BOOST_CHECK_EQUAL(myImage[18], step);
+    BOOST_CHECK_EQUAL(myImage[19], 0);
+}
+
+BOOST_AUTO_TEST_CASE(CPURendererLUT3D_Green)
+{
+    const std::string filename("/lut3d_green.xml");
+
+    Color::XMLTransformReader reader;
+
+    try
+    {
+        reader.parseFile(path + filename);
+    }
+    catch (Color::Exception e)
+    {
+        BOOST_ERROR(e.getErrorString());
+    }
+
+    const boost::shared_ptr<Color::Transform>& pTransform
+        = reader.getTransform();
+    BOOST_REQUIRE(pTransform.use_count() == 1);
+
+    const Color::Lut3DOp* pL
+        = dynamic_cast<const Color::Lut3DOp*>(pTransform.get()->getOps().get(0));
+
+    const SYNCOLOR::BitDepth inBD = SYNCOLOR::BIT_DEPTH_16i;
+    const SYNCOLOR::BitDepth outBD = SYNCOLOR::BIT_DEPTH_32f;
+
+    const uint16_t step
+        = (uint16_t)(Color::Op::getValueStepSize(inBD,
+            pL->getArray().getLength()));
+
+    uint16_t myImage[] = { 0,    0,    0,    0,
+        step, 0,    0,    0,
+        0,    step, 0,    0,
+        0,    0,    step, 0,
+        step, step, step, 0 };
+
+    float resImage[] = { -1., -1., -1., -1.,
+        -1., -1., -1., -1.,
+        -1., -1., -1., -1.,
+        -1., -1., -1., -1.,
+        -1., -1., -1., -1. };
+
+    pRenderer->finalize(
+        pTransform,
+        (SYNCOLOR::PixelFormat)(Color::Utils::PXL_LAYOUT_RGBA | inBD),
+        (SYNCOLOR::PixelFormat)(Color::Utils::PXL_LAYOUT_RGBA | outBD));
+
+    pRenderer->apply(myImage, resImage,
+        SYNCOLOR::ROI(5, 1),
+        0, 0);
+
+    const float scaleFactor
+        = SYNCOLOR::getBitDepthValueRange(outBD)
+        / SYNCOLOR::getBitDepthValueRange(inBD);
+
+    BOOST_CHECK_EQUAL(resImage[0], 0.f);
+    BOOST_CHECK_EQUAL(resImage[1], 0.f);
+    BOOST_CHECK_EQUAL(resImage[2], 0.f);
+    BOOST_CHECK_EQUAL(resImage[3], 0.f);
+
+    BOOST_CHECK_EQUAL(resImage[4], 0.f);
+    BOOST_CHECK_EQUAL(resImage[5], 0.f);
+    BOOST_CHECK_EQUAL(resImage[6], 0.f);
+    BOOST_CHECK_EQUAL(resImage[7], 0.f);
+
+    BOOST_CHECK_EQUAL(resImage[8], 0.f);
+    BOOST_CHECK_EQUAL(resImage[9], (float)step * scaleFactor);
+    BOOST_CHECK_EQUAL(resImage[10], 0.f);
+    BOOST_CHECK_EQUAL(resImage[11], 0.f);
+
+    BOOST_CHECK_EQUAL(resImage[12], 0.f);
+    BOOST_CHECK_EQUAL(resImage[13], 0.f);
+    BOOST_CHECK_EQUAL(resImage[14], 0.f);
+    BOOST_CHECK_EQUAL(resImage[15], 0.f);
+
+    BOOST_CHECK_EQUAL(resImage[16], 0.f);
+    BOOST_CHECK_EQUAL(resImage[17], (float)step * scaleFactor);
+    BOOST_CHECK_EQUAL(resImage[18], 0.f);
+    BOOST_CHECK_EQUAL(resImage[19], 0.f);
+}
+
+BOOST_AUTO_TEST_CASE(CPURendererLUT3D_Red)
+{
+    const std::string filename("/lut3d_red.xml");
+
+    Color::XMLTransformReader reader;
+
+    try
+    {
+        reader.parseFile(path + filename);
+    }
+    catch (Color::Exception e)
+    {
+        BOOST_ERROR(e.getErrorString());
+    }
+
+    const boost::shared_ptr<Color::Transform>& pTransform
+        = reader.getTransform();
+    BOOST_REQUIRE(pTransform.use_count() == 1);
+
+    const Color::Lut3DOp* pL
+        = dynamic_cast<const Color::Lut3DOp*>(pTransform.get()->getOps().get(0));
+
+    const SYNCOLOR::BitDepth inBD = SYNCOLOR::BIT_DEPTH_32f;
+    const SYNCOLOR::BitDepth outBD = SYNCOLOR::BIT_DEPTH_16i;
+
+    const float step
+        = (Color::Op::getValueStepSize(inBD,
+            pL->getArray().getLength()));
+
+    float myImage[] = { 0,    0,    0,    0,
+        step, 0,    0,    0,
+        0,    step, 0,    0,
+        0,    0,    step, 0,
+        step, step, step, 0 };
+
+    uint16_t resImage[] = { (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1,
+        (uint16_t)-1, (uint16_t)-1, (uint16_t)-1, (uint16_t)-1 };
+
+    pRenderer->finalize(
+        pTransform,
+        (SYNCOLOR::PixelFormat)(Color::Utils::PXL_LAYOUT_RGBA | inBD),
+        (SYNCOLOR::PixelFormat)(Color::Utils::PXL_LAYOUT_RGBA | outBD));
+
+    pRenderer->apply(myImage, resImage,
+        SYNCOLOR::ROI(5, 1),
+        0, 0);
+
+    const float scaleFactor
+        = SYNCOLOR::getBitDepthValueRange(outBD)
+        / SYNCOLOR::getBitDepthValueRange(inBD);
+
+    BOOST_CHECK_EQUAL(resImage[0], 0);
+    BOOST_CHECK_EQUAL(resImage[1], 0);
+    BOOST_CHECK_EQUAL(resImage[2], 0);
+    BOOST_CHECK_EQUAL(resImage[3], 0);
+
+    BOOST_CHECK_EQUAL(resImage[4], roundf(step * scaleFactor));
+    BOOST_CHECK_EQUAL(resImage[5], 0);
+    BOOST_CHECK_EQUAL(resImage[6], 0);
+    BOOST_CHECK_EQUAL(resImage[7], 0);
+
+    BOOST_CHECK_EQUAL(resImage[8], 0);
+    BOOST_CHECK_EQUAL(resImage[9], 0);
+    BOOST_CHECK_EQUAL(resImage[10], 0);
+    BOOST_CHECK_EQUAL(resImage[11], 0);
+
+    BOOST_CHECK_EQUAL(resImage[12], 0);
+    BOOST_CHECK_EQUAL(resImage[13], 0);
+    BOOST_CHECK_EQUAL(resImage[14], 0);
+    BOOST_CHECK_EQUAL(resImage[15], 0);
+
+    BOOST_CHECK_EQUAL(resImage[16], roundf(step * scaleFactor));
+    BOOST_CHECK_EQUAL(resImage[17], 0);
+    BOOST_CHECK_EQUAL(resImage[18], 0);
+    BOOST_CHECK_EQUAL(resImage[19], 0);
+}*/
+
+OIIO_ADD_TEST(Lut3DOp, CPURendererInvLut3D)
+{
+    const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_F32;
+    const std::string fileName("lut3d_example.clf");
+    OCIO::OpRcPtrVec ops;
+
+    OIIO_CHECK_NO_THROW(BuildOps(fileName, ops));
+
+    // TODO: BitDepth support: this is currently switching ops to 32F
+    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops));
+    OIIO_CHECK_EQUAL(1, ops.size());
+
+    OCIO::Lut3DOp* fwdLut
+        = dynamic_cast<OCIO::Lut3DOp*>(ops[0].get());
+
+    // Inversion is based on tetrahedral interpolation, so need to make sure 
+    // the forward evals are also tetrahedral.
+    fwdLut->m_data->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+    
+    OCIO::OpData::OpDataVec opDataVec;
+    fwdLut->m_data->inverse(opDataVec);
+    OCIO::OpData::OpDataInvLut3DRcPtr invLutData(dynamic_cast<OCIO::OpData::InvLut3D*>(opDataVec.remove(0)));
+    OCIO::InvLut3DOp invLut(invLutData);
+
+    // inverse the inverse
+    invLutData->inverse(opDataVec);
+    OCIO::OpData::OpDataLut3DRcPtr invInvLutData(dynamic_cast<OCIO::OpData::Lut3D*>(opDataVec.remove(0)));
+    OCIO::Lut3DOp invInvLut(invInvLutData);
+
+    // Default InvStyle should be 'FAST' but we test the 'EXACT' InvStyle first
+    OIIO_CHECK_EQUAL(invLutData->getInvStyle(), OCIO::OpData::InvLut3D::FAST);
+    invLutData->setInvStyle(OCIO::OpData::InvLut3D::EXACT);
+
+    const float inImage[] = {
+        0.1f, 0.25f, 0.7f, 0.f,
+        0.66f, 0.25f, 0.81f, 0.5f,
+        //0.18f, 0.80f, 0.45f, 1.f }; // this one is easier to get correct
+        0.18f, 0.99f, 0.45f, 1.f };   // setting G way up on the s-curve is harder
+
+    float bufferImage[12];
+    unsigned i = 0;
+    for (i = 0; i < 12; ++i)
+    {
+        bufferImage[i] = inImage[i];
+    }
+
+    float bufferImageClone[12];
+    for (i = 0; i < 12; ++i)
+    {
+        bufferImageClone[i] = bufferImage[i];
+    }
+
+    float bufferImageClone2[12];
+    for (i = 0; i < 12; ++i)
+    {
+        bufferImageClone2[i] = bufferImage[i];
+    }
+
+    // Apply forward LUT.
+    OIIO_CHECK_NO_THROW(fwdLut->finalize());
+    OIIO_CHECK_NO_THROW(fwdLut->apply(bufferImage, 3));
+
+    // clone and verify clone is giving same results
+    OCIO::OpRcPtr fwdLutCloned = fwdLut->clone();
+    OIIO_CHECK_NO_THROW(fwdLutCloned->finalize());
+    OIIO_CHECK_NO_THROW(fwdLutCloned->apply(bufferImageClone, 3));
+    const float error = 1e-6f;
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(bufferImageClone[i], bufferImage[i], error);
+    }
+
+    // Inverse of inverse is the same as forward
+    OIIO_CHECK_NO_THROW(invInvLut.finalize());
+    OIIO_CHECK_NO_THROW(invInvLut.apply(bufferImageClone2, 3));
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(bufferImageClone2[i], bufferImage[i], error);
+    }
+
+    float outImage1[12];
+    for (i = 0; i < 12; ++i)
+    {
+        outImage1[i] = bufferImage[i];
+    }
+
+    for (i = 0; i < 12; ++i)
+    {
+        bufferImageClone[i] = bufferImage[i];
+    }
+
+    // Apply inverse LUT.
+    OIIO_CHECK_NO_THROW(invLut.finalize());
+    OIIO_CHECK_NO_THROW(invLut.apply(bufferImage, 3));
+
+    // clone the inverse and do same transform
+    OCIO::OpRcPtr invLutCloned = invLut.clone();
+    OIIO_CHECK_NO_THROW(invLutCloned->finalize());
+    OIIO_CHECK_NO_THROW(invLutCloned->apply(bufferImageClone, 3));
+
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(bufferImageClone[i], bufferImage[i], error);
+    }
+
+    // Need to do another foward/inverse cycle.  This is due to precision issues.
+    // Also, some LUTs have flat or virtually flat areas so the inverse is not unique.
+    // The first inverse does not match the source, but the fact that it winds up
+    // in the same place after another cycle verifies that it is as good an inverse
+    // for this particular LUT as the original input.  In other words, when the
+    // forward LUT has a small derivative, precision issues imply that there will
+    // be a range of inverses which should be considered valid.
+    OIIO_CHECK_NO_THROW(fwdLut->apply(bufferImage, 3));
+
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(outImage1[i], bufferImage[i], error);
+    }
+
+    // Repeat with style = FAST.
+    invLut.m_data->setInvStyle(OCIO::OpData::InvLut3D::FAST);
+
+    for (i = 0; i < 12; ++i)
+    {
+        bufferImage[i] = outImage1[i];
+    }
+
+    // Apply inverse LUT.
+    OIIO_CHECK_NO_THROW(invLut.finalize());
+    OIIO_CHECK_NO_THROW(invLut.apply(bufferImage, 3));
+
+    OIIO_CHECK_NO_THROW(fwdLut->apply(bufferImage, 3));
+
+    // Note that, even more than with Lut1D, the FAST inv Lut3D renderer is not exact.
+    // It is expected that a fairly loose tolerance must be used here.
+    const float errorLoose = 0.015f;
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(outImage1[i], bufferImage[i], errorLoose);
+    }
+
+    // Test clamping of large values in EXACT mode.
+    // (No need to test FAST mode since the forward LUT eval clamps inputs to the input domain.)
+    invLut.m_data->setInvStyle(OCIO::OpData::InvLut3D::EXACT);
+
+    bufferImage[0] = 100.f;
+
+    OIIO_CHECK_NO_THROW(invLut.finalize());
+    OIIO_CHECK_NO_THROW(invLut.apply(bufferImage, 1));
+
+    // This tests that extreme large values get inverted.
+    // (If no inverse is found, apply() currently returns zeros.)
+    OIIO_CHECK_ASSERT(bufferImage[0] > 0.5f);
+
+}
+
+
 
 #endif // OCIO_UNIT_TEST

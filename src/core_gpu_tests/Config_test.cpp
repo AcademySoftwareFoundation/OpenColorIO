@@ -49,11 +49,6 @@ OCIO_NAMESPACE_USING
 static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 
-// Based on testings, the interpolation precision for GPU textures is 8-bits
-// so it is the default error threshold for all GPU unit tests.
-const float defaultErrorThreshold = 1.0f/256.0f;
-
-
 std::string createConfig()
 {
     const std::string search_path(ocioTestFilesDir + std::string("/"));
@@ -118,11 +113,14 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(64);
-    test.setContext(processor, shaderDesc);
-    test.setErrorThreshold(defaultErrorThreshold);
+    test.setContextProcessor(processor, shaderDesc);
+
+    test.setWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(1e-3f);
 }
 
-OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
+OCIO_ADD_GPU_TEST(Config, several_1D_luts)
 {
     std::string configStr = createConfig();
     configStr +=
@@ -137,21 +135,24 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(processor, shaderDesc);
-    test.setErrorThreshold(defaultErrorThreshold);
+    test.setContextProcessor(processor, shaderDesc);
+
+    test.setWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(1e-6f);
 }
 
-OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
+OCIO_ADD_GPU_TEST(Config, arbitrary)
 {
     std::string configStr = createConfig();
     configStr +=
         "        - !<FileTransform> {src: lut1d_1.spi1d, interpolation: linear}\n"
         "        - !<FileTransform> {src: lut1d_2.spi1d, interpolation: linear}\n"
         "        - !<LogTransform> {base: 10}\n"
-        "        - !<MatrixTransform> {matrix: [0.075573, 0.022197,  0.00223,  0, "\
-                                               "0.005901, 0.096928, -0.002829, 0, "\
-                                               "0.016134, 0.007406,  0.07646,  0, "\
-                                               "0,        0,         0,        1]}\n";
+        "        - !<MatrixTransform> {matrix: [0.07557378, 0.02219778,  0.00223078,  0, "\
+                                               "0.00590178, 0.09692878, -0.00282978,  0, "\
+                                               "0.01613478, 0.00740678,  0.07646078,  0, "\
+                                               "0,          0,           0,           1]}\n";
 
     std::istringstream is;
     is.str(configStr);
@@ -166,11 +167,15 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
     shaderDesc->setPixelName("another_pixel_name");
     shaderDesc->setFunctionName("another_func_name");
 
-    test.setContext(processor, shaderDesc);
-    test.setErrorThreshold(defaultErrorThreshold);
+    test.setContextProcessor(processor, shaderDesc);
+
+    test.setWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(1e-5f); // because Log precision is 1e-5f, refer to LopOps_Test.cpp
 }
 
-OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
+// The test only validates that several textures could now be handled.
+OCIO_ADD_GPU_TEST(Config, several_luts)
 {
     std::string configStr = createConfig();
     configStr +=
@@ -190,9 +195,46 @@ OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
 
-    // Change some default values...
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    test.setContext(processor, shaderDesc);
-    test.setErrorThreshold(defaultErrorThreshold);
+    test.setContextProcessor(processor, shaderDesc);
+
+    test.setWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(1e-6f);
+}
+
+
+// The test only validates that op shader programs do no conflict.
+OCIO_ADD_GPU_TEST(Config, several_ops)
+{
+    std::string configStr = createConfig();
+    configStr +=
+        "        - !<FileTransform> {src: lut1d_hue_adjust_test.ctf}\n"
+        "        - !<FileTransform> {src: lut1d_hue_adjust_test.ctf}\n"
+        "        - !<FileTransform> {src: lut1d_4.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut1d_4.spi1d, interpolation: linear}\n"
+        "        - !<FileTransform> {src: lut3d_example.clf, interpolation: tetrahedral}\n"
+        "        - !<FileTransform> {src: lut3d_example.clf, interpolation: tetrahedral}\n"
+        "        - !<CDLTransform> { slope: [1.1, 1, 1], offset: [0, 0.5, 0], "\
+                                    "power: [1, 1, 1.3], sat: 1.2}\n"
+        "        - !<CDLTransform> { slope: [1.2, 1, 1], offset: [0, 0.7, 0], "\
+                                    "power: [1, 1, 1.4], sat: 1.5}\n";
+
+    std::istringstream is;
+    is.str(configStr);
+
+    OCIO::ConfigRcPtr config = OCIO::Config::CreateFromStream(is)->createEditableCopy();
+    config->setVersion(2);
+    config->sanityCheck();
+
+    OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContextProcessor(processor, shaderDesc);
+
+    test.setWideRange(true);
+    test.setRelativeComparison(false);
+    test.setErrorThreshold(1e-5f);
 }

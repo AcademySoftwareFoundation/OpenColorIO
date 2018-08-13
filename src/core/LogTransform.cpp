@@ -64,8 +64,11 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            base_ = rhs.base_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                base_ = rhs.base_;
+            }
             return *this;
         }
     };
@@ -93,7 +96,10 @@ OCIO_NAMESPACE_ENTER
     
     LogTransform& LogTransform::operator= (const LogTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -107,7 +113,16 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
-    
+    void LogTransform::validate() const
+    {
+        if (getImpl()->dir_ != TRANSFORM_DIR_FORWARD
+            && getImpl()->dir_ != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("LogTransform: invalid direction");
+        }
+        // TODO: Complete the validate
+    }
+
     float LogTransform::getBase() const
     {
         return getImpl()->base_;

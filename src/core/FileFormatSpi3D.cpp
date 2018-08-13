@@ -119,7 +119,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Error parsing .spi3d file (";
                 os << fileName;
                 os << ").  ";
-                os << "Lut does not appear to be valid spilut format. ";
+                os << "LUT does not appear to be valid spilut format. ";
                 os << "Expected 'SPILUT'.  Found: '" << lineBuffer << "'.";
                 throw Exception(os.str().c_str());
             }
@@ -136,7 +136,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Error parsing .spi3d file (";
                 os << fileName;
                 os << "). ";
-                os << "Error while reading lut size. Found: '";
+                os << "Error while reading LUT size. Found: '";
                 os << lineBuffer << "'.";
                 throw Exception(os.str().c_str());
             }
@@ -186,9 +186,9 @@ OCIO_NAMESPACE_ENTER
                         os << fileName;
                         os << "). ";
                         os << "Data is invalid. ";
-                        os << "A lut entry is specified (";
+                        os << "A LUT entry is specified (";
                         os << rIndex << " " << gIndex << " " << bIndex;
-                        os << " that falls outside of the cube.";
+                        os << ") that falls outside of the cube.";
                         throw Exception(os.str().c_str());
                     }
 
@@ -334,7 +334,7 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
     {
         // Validate stream can be read with no error.
         // Then stream will be altered to introduce errors.
-        const std::string SAMPLE_ERROR =
+        const std::string SAMPLE_NO_ERROR =
             "SPILUT 1.0\n"
             "3 3\n"
             "2 2 2\n"
@@ -347,7 +347,7 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_NO_THROW(ReadSpi3d(SAMPLE_ERROR));
+        OIIO_CHECK_NO_THROW(ReadSpi3d(SAMPLE_NO_ERROR));
     }
     {
         // Wrong first line
@@ -364,7 +364,9 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW(ReadSpi3d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Expected 'SPILUT'");
     }
     {
         // 3 line is not 3 ints
@@ -381,7 +383,9 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW(ReadSpi3d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Error while reading LUT size");
     }
     {
         // index out of range
@@ -398,7 +402,9 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW(ReadSpi3d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "that falls outside of the cube");
     }
     {
         // Not enough entries
@@ -414,7 +420,9 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW(ReadSpi3d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Not enough entries found");
     }
 }
 

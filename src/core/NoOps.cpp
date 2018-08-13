@@ -51,7 +51,13 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const { return "<AllocationNoOp>"; }
             virtual std::string getCacheID() const { return ""; }
             
+            virtual BitDepth getInputBitDepth() const { return BIT_DEPTH_F32; }
+            virtual BitDepth getOutputBitDepth() const { return BIT_DEPTH_F32; }
+            virtual void setInputBitDepth(BitDepth) {}
+            virtual void setOutputBitDepth(BitDepth) {}
+
             virtual bool isNoOp() const { return true; }
+            virtual bool isIdentity() const { return true; }
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const { return false; }
@@ -199,7 +205,7 @@ OCIO_NAMESPACE_ENTER
                                     &gpuLut3DOpEndIndex,
                                     ops);
         
-        // Write the entire shader using only shader text (3d lut is unused)
+        // Write the entire shader using only shader text (3d LUT is unused)
         if(gpuLut3DOpStartIndex == -1 && gpuLut3DOpEndIndex == -1)
         {
             for(unsigned int i=0; i<ops.size(); ++i)
@@ -317,7 +323,13 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const { return "<FileNoOp>"; }
             virtual std::string getCacheID() const { return ""; }
             
+            virtual BitDepth getInputBitDepth() const { return BIT_DEPTH_F32; }
+            virtual BitDepth getOutputBitDepth() const { return BIT_DEPTH_F32; }
+            virtual void setInputBitDepth(BitDepth) {}
+            virtual void setOutputBitDepth(BitDepth) {}
+
             virtual bool isNoOp() const { return true; }
+            virtual bool isIdentity() const { return true; }
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const { return false; }
@@ -383,7 +395,13 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const { return "<LookNoOp>"; }
             virtual std::string getCacheID() const { return ""; }
             
+            virtual BitDepth getInputBitDepth() const { return BIT_DEPTH_F32; }
+            virtual BitDepth getOutputBitDepth() const { return BIT_DEPTH_F32; }
+            virtual void setInputBitDepth(BitDepth) {}
+            virtual void setOutputBitDepth(BitDepth) {}
+
             virtual bool isNoOp() const { return true; }
+            virtual bool isIdentity() const { return true; }
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const { return false; }
@@ -463,7 +481,7 @@ void CreateGenericScaleOp(OpRcPtrVec & ops)
 
 void CreateGenericLutOp(OpRcPtrVec & ops)
 {
-    // Make a lut that squares the input
+    // Make a LUT that squares the input
     Lut1DRcPtr lut = Lut1D::Create();
     {
         lut->from_min[0] = 0.0f;

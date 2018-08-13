@@ -64,15 +64,15 @@ namespace
 
     void SetTextureParameters(GLenum textureType, OCIO::Interpolation interpolation)
     {
-        if(interpolation==OCIO::INTERP_NEAREST)
-        {
-            glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
-        else
+        if(interpolation==OCIO::INTERP_LINEAR)
         {
             glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+        else
+        {
+            glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
 
         glTexParameteri(textureType, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

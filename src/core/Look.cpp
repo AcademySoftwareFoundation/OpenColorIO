@@ -61,16 +61,18 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            name_ = rhs.name_;
-            processSpace_ = rhs.processSpace_;
-            description_ = rhs.description_;
-            
-            transform_ = rhs.transform_;
-            if(transform_) transform_ = transform_->createEditableCopy();
-            
-            inverseTransform_ = rhs.inverseTransform_;
-            if(inverseTransform_) inverseTransform_ = inverseTransform_->createEditableCopy();
-            
+            if (this != &rhs)
+            {
+                name_ = rhs.name_;
+                processSpace_ = rhs.processSpace_;
+                description_ = rhs.description_;
+
+                transform_ = rhs.transform_;
+                if (transform_) transform_ = transform_->createEditableCopy();
+
+                inverseTransform_ = rhs.inverseTransform_;
+                if (inverseTransform_) inverseTransform_ = inverseTransform_->createEditableCopy();
+            }
             return *this;
         }
     };

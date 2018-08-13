@@ -235,7 +235,6 @@ OCIO_NAMESPACE_ENTER
             return CreatePyListFromFloatVector(data);
             OCIO_PYTRY_EXIT(NULL)
         }
-        
     }
     
 }

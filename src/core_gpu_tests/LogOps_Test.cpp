@@ -37,10 +37,7 @@ namespace OCIO = OCIO_NAMESPACE;
 OCIO_NAMESPACE_USING
 
 
-const int LUT3D_EDGE_SIZE = 64;
-
-const float g_epsilon = 1e-5f;
-const float g_epsilon_inverse = 1e-4f;
+const int LUT3D_EDGE_SIZE = 16;
 
 
 // Helper method to build unit tests
@@ -54,119 +51,143 @@ void AddLogTest(OCIOGPUTest & test,
     log->setDirection(direction);
     log->setBase(base);
 
+    test.setWideRange(true);
+    test.setRelativeComparison(false);
     test.setErrorThreshold(epsilon);
 
     test.setContext(log->createEditableCopy(), shaderDesc);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_10)
+OCIO_ADD_GPU_TEST(LogOp, base_10_legacy_shader)
 {
     const float base10 = 10.0f;
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, base10, g_epsilon);
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, base10, 1e-5f);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_inverse)
+OCIO_ADD_GPU_TEST(LogOp, base_10_inverse_legacy_shader)
 {
     const float base10 = 10.0f;
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base10, g_epsilon_inverse);
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base10, 1e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_generic_shader)
+OCIO_ADD_GPU_TEST(LogOp, base_10)
 {
     const float base10 = 10.0f;
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, base10, g_epsilon);
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, base10, 1e-5f);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_10_inverse_generic_shader)
+OCIO_ADD_GPU_TEST(LogOp, base_10_inverse)
 {
     const float base10 = 10.0f;
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base10, g_epsilon_inverse);
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base10, 1e-4f);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler)
+OCIO_ADD_GPU_TEST(LogOp, base_euler_legacy_shader)
 {
     const float eulerConstant = expf(1.0f);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, eulerConstant, g_epsilon);
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, eulerConstant, 1e-5f);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_inverse)
+OCIO_ADD_GPU_TEST(LogOp, base_euler_inverse_legacy_shader)
 {
     const float eulerConstant = expf(1.0f);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, eulerConstant, g_epsilon_inverse);
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, eulerConstant, 1e-5f);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_generic_shader)
+OCIO_ADD_GPU_TEST(LogOp, base_euler)
 {
     const float eulerConstant = expf(1.0f);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, eulerConstant, g_epsilon);
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, eulerConstant, 1e-5f);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_euler_inverse_generic_shader)
+OCIO_ADD_GPU_TEST(LogOp, base_euler_inverse)
 {
     const float eulerConstant = expf(1.0f);
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, eulerConstant, g_epsilon_inverse);
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, eulerConstant, 1e-5f);
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_1_inverse)
+OCIO_ADD_GPU_TEST(LogOp, base_2_legacy_shader)
 {
-    const float base1 = 1.0f;
+    const float base2 = 2.0f;
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base1, g_epsilon);   
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, base2, 1e-5f);   
 }
 
 
-OCIO_ADD_GPU_TEST(LogTransform, LogBase_1_inverse_generic_shader)
+OCIO_ADD_GPU_TEST(LogOp, base_2)
 {
-    const float base1 = 1.0f;
+    const float base2 = 2.0f;
 
     OCIO::GpuShaderDescRcPtr shaderDesc 
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base1, g_epsilon);   
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_FORWARD, base2, 1e-5f);   
+}
+
+
+OCIO_ADD_GPU_TEST(LogOp, base_2_inverse_legacy_shader)
+{
+    const float base2 = 2.0f;
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base2, 1e-5f);   
+}
+
+
+OCIO_ADD_GPU_TEST(LogOp, base_2_inverse)
+{
+    const float base2 = 2.0f;
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    AddLogTest(test, shaderDesc, TRANSFORM_DIR_INVERSE, base2, 1e-5f);   
 }
 
 

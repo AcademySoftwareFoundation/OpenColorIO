@@ -70,6 +70,7 @@ colorspaces:
 """
     
     def setUp(self):
+        """ TODO: Reimplement a GPU unit tests in Python """
 
         osx_hack = ''
         if osname=="Darwin":

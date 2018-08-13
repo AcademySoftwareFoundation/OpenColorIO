@@ -75,14 +75,17 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            config_      = rhs.config_;
-            formatName_  = rhs.formatName_;
-            inputSpace_  = rhs.inputSpace_;
-            shaperSpace_ = rhs.shaperSpace_;
-            looks_        = rhs.looks_;
-            targetSpace_ = rhs.targetSpace_;
-            shapersize_  = rhs.shapersize_;
-            cubesize_    = rhs.cubesize_;
+            if (this != &rhs)
+            {
+                config_ = rhs.config_;
+                formatName_ = rhs.formatName_;
+                inputSpace_ = rhs.inputSpace_;
+                shaperSpace_ = rhs.shaperSpace_;
+                looks_ = rhs.looks_;
+                targetSpace_ = rhs.targetSpace_;
+                shapersize_ = rhs.shapersize_;
+                cubesize_ = rhs.cubesize_;
+            }
             return *this;
         }
     };
@@ -251,11 +254,11 @@ OCIO_NAMESPACE_ENTER
         //   at least set
         // - check limits of shaper and target, throw exception if we can't
         //   write that much data in x format
-        // - check that the shaper is 1D transform only, throw excpetion
+        // - check that the shaper is 1D transform only, throw exception
         // - check the file format supports shapers, 1D and 3D
         // - add some checks to make sure we are monotonic
         // - deal with the case of writing out non cube formats (1D only)
-        // - do a compare between ocio transform and output lut transform
+        // - do a compare between ocio transform and output LUT transform
         //   throw error if we going beyond tolerance
         //
     }

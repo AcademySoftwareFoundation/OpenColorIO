@@ -173,6 +173,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
     
+    class OCIOEXPORT RangeTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const RangeTransform> ConstRangeTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
+    
     class OCIOEXPORT TruelightTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const TruelightTransform> ConstTruelightTransformRcPtr;
@@ -222,11 +228,17 @@ OCIO_NAMESPACE_ENTER
     // context (for example, using tetrahedral interpolationon 1D luts)
     // an exception will be throw.
     //
+    // INTERP_DEFAULT will choose the default interpolation type for the requested
+    // context:
+    //
+    // Lut1D INTERP_DEFAULT: LINEAR
+    // Lut3D INTERP_DEFAULT: LINEAR
+    // 
     // INTERP_BEST will choose the best interpolation type for the requested
     // context:
     //
-    // Lut1D INTERP_BEST: LINEAR
-    // Lut3D INTERP_BEST: LINEAR
+    // Lut1D INTERP_BEST: CUBIC
+    // Lut3D INTERP_BEST: TETRAHEDRAL
     //
     // Note: INTERP_BEST is subject to change in minor releases, so if you
     // care about locking off on a specific interpolation type, we'd recommend
@@ -238,6 +250,11 @@ OCIO_NAMESPACE_ENTER
         INTERP_NEAREST = 1,     //! nearest neighbor in all dimensions
         INTERP_LINEAR = 2,      //! linear interpolation in all dimensions
         INTERP_TETRAHEDRAL = 3, //! tetrahedral interpolation in all directions
+
+        INTERP_CUBIC = 4,       //! cubic interpolation's algorithm
+
+        INTERP_DEFAULT = 254,   //! the default interpolation type
+
         INTERP_BEST = 255       //! the 'best' suitable interpolation type
     };
     

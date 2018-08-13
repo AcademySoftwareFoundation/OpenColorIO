@@ -70,17 +70,20 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            configroot_ = rhs.configroot_;
-            profile_ = rhs.profile_;
-            camera_ = rhs.camera_;
-            inputdisplay_ = rhs.inputdisplay_;
-            recorder_ = rhs.recorder_;
-            print_ = rhs.print_;
-            lamp_ = rhs.lamp_;
-            outputcamera_ = rhs.outputcamera_;
-            display_ = rhs.display_;
-            cubeinput_ = rhs.cubeinput_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                configroot_ = rhs.configroot_;
+                profile_ = rhs.profile_;
+                camera_ = rhs.camera_;
+                inputdisplay_ = rhs.inputdisplay_;
+                recorder_ = rhs.recorder_;
+                print_ = rhs.print_;
+                lamp_ = rhs.lamp_;
+                outputcamera_ = rhs.outputcamera_;
+                display_ = rhs.display_;
+                cubeinput_ = rhs.cubeinput_;
+            }
             return *this;
         }
     };
@@ -117,7 +120,10 @@ OCIO_NAMESPACE_ENTER
     
     TruelightTransform& TruelightTransform::operator= (const TruelightTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -131,6 +137,16 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void TruelightTransform::validate() const
+    {
+        if (getImpl()->dir_ != TRANSFORM_DIR_FORWARD
+            && getImpl()->dir_ != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("TruelightTransform: invalid direction");
+        }
+        // TODO:
+    }
+
     void TruelightTransform::setConfigRoot(const char * configroot)
     {
         getImpl()->configroot_ = configroot;

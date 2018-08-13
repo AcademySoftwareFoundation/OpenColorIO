@@ -934,6 +934,26 @@ Keys:
 * ``direction``
 
 
+
+``RangeTransform``
++++++++++++++++++++
+
+Applies an affine transform (scale & offset) with clamp values to min/max bounds.
+
+Keys:
+
+* ``minInValue``
+* ``maxInValue``
+* ``minOutValue``
+* ``maxOutValue``
+* ``direction``
+
+.. note::
+
+    The limit values contain the float values of the input minimum and maximum, 
+    and the output minimum and maximum in an arbitrary order.
+
+
 ``TruelightTransform``
 ++++++++++++++++++++++
 

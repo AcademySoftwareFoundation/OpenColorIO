@@ -71,10 +71,13 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            src_ = rhs.src_;
-            cccid_ = rhs.cccid_;
-            interp_ = rhs.interp_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                src_ = rhs.src_;
+                cccid_ = rhs.cccid_;
+                interp_ = rhs.interp_;
+            }
             return *this;
         }
     };
@@ -102,7 +105,10 @@ OCIO_NAMESPACE_ENTER
     
     FileTransform& FileTransform::operator= (const FileTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -116,6 +122,17 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void FileTransform::validate() const
+    {
+        if (getImpl()->dir_ != TRANSFORM_DIR_FORWARD
+            && getImpl()->dir_ != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("FileTransform: invalid direction");
+        }
+
+        // TODO: Complete the validate
+    }
+
     const char * FileTransform::getSrc() const
     {
         return getImpl()->src_.c_str();
@@ -211,6 +228,7 @@ OCIO_NAMESPACE_ENTER
         registerFileFormat(CreateFileFormatCCC());
         registerFileFormat(CreateFileFormatCDL());
         registerFileFormat(CreateFileFormatCC());
+        registerFileFormat(CreateFileFormatCLF());
         registerFileFormat(CreateFileFormatCSP());
         registerFileFormat(CreateFileFormatHDL());
         registerFileFormat(CreateFileFormatICC());
@@ -461,7 +479,7 @@ OCIO_NAMESPACE_ENTER
 
                     CachedFileRcPtr cachedFile = tryFormat->Read(
                         filestream,
-                        name);
+                        filepath);
                     
                     if(IsDebugLoggingEnabled())
                     {
@@ -737,26 +755,6 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include <algorithm>
 
-void LoadTransformFile(const std::string & filePath)
-{
-    // Create a FileTransform
-    OCIO::FileTransformRcPtr pFileTransform
-        = OCIO::FileTransform::Create();
-    //! A tranform file does not define any interpolation (contrary to config
-    //! file), this is to avoid exception when creating the operation.
-    pFileTransform->setInterpolation(OCIO::INTERP_LINEAR);
-    pFileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-    pFileTransform->setSrc(filePath.c_str());
-
-    // Create empty Config to use
-    OCIO::ConfigRcPtr pConfig = OCIO::Config::Create();
-
-    // Get the processor corresponding to the transform
-    OCIO::ConstProcessorRcPtr pProcessor
-        = pConfig->getProcessor(pFileTransform);
-
-}
-
 #ifndef OCIO_UNIT_TEST_FILES_DIR
 #error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
 #endif
@@ -766,31 +764,75 @@ void LoadTransformFile(const std::string & filePath)
 
 static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
+
+void LoadTransformFile(const std::string & fileName, OCIO::TransformDirection dir)
+{
+    const std::string filePath(ocioTestFilesDir + "/" + fileName);
+
+    // Create a FileTransform
+    OCIO::FileTransformRcPtr pFileTransform
+        = OCIO::FileTransform::Create();
+    
+    pFileTransform->setInterpolation(OCIO::INTERP_LINEAR);
+    pFileTransform->setDirection(dir);
+    pFileTransform->setSrc(filePath.c_str());
+
+    // Create empty Config to use
+    OCIO::ConfigRcPtr pConfig = OCIO::Config::Create();
+
+    // Get the processor corresponding to the transform
+    OCIO::ConstProcessorRcPtr pProcessor
+        = pConfig->getProcessor(pFileTransform);
+
+    float img[4] = { 0.1f, 0.4f, 0.9f, 0.0f };
+    pProcessor->applyRGBA(&img[0]);
+}
+
 OIIO_ADD_TEST(FileTransform, LoadFileOK)
 {
-    // Discreet 1D Lut
-    const std::string discreetLut(ocioTestFilesDir
-        + std::string("/logtolin_8to8.lut"));
-    OIIO_CHECK_NO_THROW(LoadTransformFile(discreetLut));
+    // Discreet 1D LUT
+    const std::string discreetLut("logtolin_8to8.lut");
+    OIIO_CHECK_NO_THROW(LoadTransformFile(discreetLut, OCIO::TRANSFORM_DIR_FORWARD));
 
     // Houdini 1D LUT
-    const std::string houdiniLut(ocioTestFilesDir
-        + std::string("/sRGB.lut"));
-    OIIO_CHECK_NO_THROW(LoadTransformFile(houdiniLut));
+    const std::string houdiniLut("sRGB.lut");
+    OIIO_CHECK_NO_THROW(LoadTransformFile(houdiniLut, OCIO::TRANSFORM_DIR_FORWARD));
 
     // Discreet 3D LUT file
-    const std::string discree3DtLut(ocioTestFilesDir
-        + std::string("/discreet-3d-lut.3dl"));
-    OIIO_CHECK_NO_THROW(LoadTransformFile(discree3DtLut));
+    const std::string discree3DtLut("discreet-3d-lut.3dl");
+    OIIO_CHECK_NO_THROW(LoadTransformFile(discree3DtLut, OCIO::TRANSFORM_DIR_FORWARD));
 
     // 3D LUT file
-    const std::string crosstalk3DtLut(ocioTestFilesDir
-        + std::string("/crosstalk.3dl"));
-    OIIO_CHECK_NO_THROW(LoadTransformFile(crosstalk3DtLut));
+    const std::string crosstalk3DtLut("crosstalk.3dl");
+    OIIO_CHECK_NO_THROW(LoadTransformFile(crosstalk3DtLut, OCIO::TRANSFORM_DIR_FORWARD));
 
-    const std::string lustre3DtLut(ocioTestFilesDir
-        + std::string("/lustre_33x33x33.3dl"));
-    OIIO_CHECK_NO_THROW(LoadTransformFile(lustre3DtLut));
+    const std::string lustre3DtLut("lustre_33x33x33.3dl");
+    OIIO_CHECK_NO_THROW(LoadTransformFile(lustre3DtLut, OCIO::TRANSFORM_DIR_FORWARD));
+
+    // Color transform file (same parser as clf)
+    {
+        const std::string colTransform("lut3d_17x17x17_32f_12i.ctf");
+        OIIO_CHECK_NO_THROW(LoadTransformFile(colTransform, OCIO::TRANSFORM_DIR_FORWARD));
+    }
+
+    // Common LUT Format with only one range
+    {
+        const std::string colTransform("range.clf");
+        OIIO_CHECK_NO_THROW(
+            LoadTransformFile(colTransform, OCIO::TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(
+            LoadTransformFile(colTransform, OCIO::TRANSFORM_DIR_INVERSE));
+    }
+
+    // Matrix clf
+    {
+        const std::string colTransform("matrix_example.clf");
+        OIIO_CHECK_NO_THROW(
+            LoadTransformFile(colTransform, OCIO::TRANSFORM_DIR_FORWARD));
+        OIIO_CHECK_NO_THROW(
+            LoadTransformFile(colTransform, OCIO::TRANSFORM_DIR_INVERSE));
+
+    }
 }
 
 OIIO_ADD_TEST(FileTransform, LoadFileFail)
@@ -798,30 +840,37 @@ OIIO_ADD_TEST(FileTransform, LoadFileFail)
     // Legacy Lustre 1D LUT files. Similar to supported formats but actually
     // are different formats.
     // Test that they are correctly recognized as unreadable. 
-    // TODO - validate exception being thrown
     {
-        const std::string lustreOldLut(ocioTestFilesDir
-            + std::string("/legacy_slog_to_log_v3_lustre.lut"));
-        OIIO_CHECK_THROW(LoadTransformFile(lustreOldLut), OCIO::Exception);
+        const std::string lustreOldLut("legacy_slog_to_log_v3_lustre.lut");
+        OIIO_CHECK_THROW_WHAT(
+            LoadTransformFile(lustreOldLut, OCIO::TRANSFORM_DIR_FORWARD),
+            OCIO::Exception,
+            "Syntax error reading LUT");
     }
     {
-        const std::string lustreOldLut(ocioTestFilesDir
-            + std::string("/legacy_flmlk_desat.lut"));
-        OIIO_CHECK_THROW(LoadTransformFile(lustreOldLut), OCIO::Exception);
-    }
-
-    // Color transform file
-    {
-        const std::string colTransform(ocioTestFilesDir
-            + std::string("/example-3d-lut.ctf"));
-        OIIO_CHECK_THROW(LoadTransformFile(colTransform), OCIO::Exception);
+        const std::string lustreOldLut("legacy_flmlk_desat.lut");
+        OIIO_CHECK_THROW_WHAT(
+            LoadTransformFile(lustreOldLut, OCIO::TRANSFORM_DIR_FORWARD),
+            OCIO::Exception,
+            "Syntax error reading LUT");
     }
 
     // Invalid file
     {
-        const std::string unKnown(ocioTestFilesDir
-            + std::string("/error_unknown_format.txt"));
-        OIIO_CHECK_THROW(LoadTransformFile(unKnown), OCIO::Exception);
+        const std::string unKnown("error_unknown_format.txt");
+        OIIO_CHECK_THROW_WHAT(
+            LoadTransformFile(unKnown, OCIO::TRANSFORM_DIR_FORWARD),
+            OCIO::Exception,
+            "could not be loaded");
+    }
+
+    // Missing file
+    {
+        const std::string unKnown("missingfile.missing");
+        OIIO_CHECK_THROW_WHAT(
+            LoadTransformFile(unKnown, OCIO::TRANSFORM_DIR_FORWARD),
+            OCIO::Exception,
+            "could not be located");
     }
 }
 
@@ -870,14 +919,15 @@ bool FormatExtensionFoundByName(const std::string & extension, const std::string
 OIIO_ADD_TEST(FileTransform, AllFormats)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
-    OIIO_CHECK_EQUAL(17, formatRegistry.getNumRawFormats());
-    OIIO_CHECK_EQUAL(20, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
+    OIIO_CHECK_EQUAL(18, formatRegistry.getNumRawFormats());
+    OIIO_CHECK_EQUAL(21, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
     OIIO_CHECK_EQUAL(7, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
 
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("3dl", "flame"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cc", "ColorCorrection"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("ccc", "ColorCorrectionCollection"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cdl", "ColorDecisionList"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("clf", "Academy/ASC Common LUT Format"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("csp", "cinespace"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cub", "truelight"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cube", "iridas_cube"));
@@ -902,6 +952,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cc", "ColorCorrection"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("ccc", "ColorCorrectionCollection"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cdl", "ColorDecisionList"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("clf", "Academy/ASC Common LUT Format"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("csp", "cinespace"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cub", "truelight"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cube", "iridas_cube"));

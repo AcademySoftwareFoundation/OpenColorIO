@@ -67,6 +67,12 @@ struct AddTest { AddTest(OIIOTest* test); };
                        << "FAILED: " << #x << "\n"),                    \
             (void)++unit_test_failures))
 
+#define OIIO_CHECK_ASSERT_MESSAGE(x, M)                                 \
+    ((x) ? ((void)0)                                                    \
+         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
+                       << "FAILED: " << M << "\n"),                     \
+            (void)++unit_test_failures))
+
 #define OIIO_CHECK_EQUAL(x,y)                                           \
     (((x) == (y)) ? ((void)0)                                           \
          : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
@@ -147,11 +153,11 @@ struct AddTest { AddTest(OIIOTest* test); };
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
             << "FAILED: exception thrown from " << #S << ": \""         \
             << ex.what() << "\"\n";                                     \
-        ++unit_test_failures;                                           \
+        throw ex;                                                       \
     } catch (...) {                                                     \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
         << "FAILED: exception thrown from " << #S <<"\n";               \
-        ++unit_test_failures; }
+        throw OCIO_NAMESPACE::Exception("Unexpect error"); }
 
 #define OIIO_ADD_TEST(group, name)                                      \
     static void oiiotest_##group##_##name();                            \
@@ -166,13 +172,25 @@ struct AddTest { AddTest(OIIOTest* test); };
         static std::vector<OIIOTest*> oiio_unit_tests;                  \
         return oiio_unit_tests; }                                       \
     AddTest::AddTest(OIIOTest* test){GetUnitTests().push_back(test);};  \
-    OIIO_TEST_SETUP(); \
+    OIIO_TEST_SETUP();                                                  \
     int main(int, char **) { std::cerr << "\n" << #app <<"\n\n";        \
-        for(size_t i = 0; i < GetUnitTests().size(); ++i) {             \
-            int _tmp = unit_test_failures; GetUnitTests()[i]->function(); \
-            std::cerr << "Test [" << GetUnitTests()[i]->group << "] [" << GetUnitTests()[i]->name << "] - "; \
-            std::cerr << (_tmp == unit_test_failures ? "PASSED" : "FAILED") << "\n"; } \
-        std::cerr << "\n" << unit_test_failures << " tests failed\n\n";   \
+        const size_t numTests = GetUnitTests().size();                  \
+        for(size_t i = 0; i < numTests; ++i) {                          \
+            int _tmp = unit_test_failures;                              \
+            try { GetUnitTests()[i]->function();                        \
+            } catch(OCIO_NAMESPACE::Exception & ex) {                   \
+                std::cout << "FAILED: " << ex.what() << std::endl;      \
+                ++unit_test_failures;                                   \
+            } catch(...) { ++unit_test_failures; }                      \
+            std::string name(GetUnitTests()[i]->group);                 \
+            name += " / " + GetUnitTests()[i]->name;                    \
+            std::cerr << "[" << std::right << std::setw(3)              \
+                      << (i+1) << "/" << numTests << "] ["              \
+                      << std::left << std::setw(50)                     \
+                      << name << "] - "                                 \
+                      << (_tmp == unit_test_failures ? "PASSED" : "FAILED") \
+                      << std::endl; }                                   \
+        std::cerr << "\n" << unit_test_failures << " tests failed\n\n"; \
         return unit_test_failures; }
 
 #endif /* OPENCOLORIO_UNITTEST_H */
