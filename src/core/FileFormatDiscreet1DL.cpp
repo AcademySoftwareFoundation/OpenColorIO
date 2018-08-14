@@ -540,7 +540,13 @@ OCIO_NAMESPACE_ENTER
                 return IM_LUT_UNKNOWN_BITS_PERCHANNEL;
             }
 
-            std::string lowerFileName(pystring::lower(fileName));
+            // keep just the file name. Path might include "to"
+            std::string root, extension, name;
+            pystring::os::path::splitext(root, extension, fileName);
+
+            name = pystring::os::path::basename(root);
+
+            std::string lowerFileName(pystring::lower(name));
 
             // Get the export depth from the LUT name.  Look for a bit depth
             // after the "to" string. (ex: 12to10log).
