@@ -79,7 +79,7 @@ public:
     }
 
     // Append a description string
-    void appendDescription(const std::string& desc)
+    void appendDescription(const std::string& /*desc*/)
     {
     }
 
