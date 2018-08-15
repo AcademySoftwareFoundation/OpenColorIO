@@ -36,66 +36,66 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-    // Private namespace to the CTF sub-directory
-    namespace CTF
-    {
-        // Private namespace for the xml reader utils
-        namespace Reader
-        {
+// Private namespace to the CTF sub-directory
+namespace CTF
+{
+// Private namespace for the xml reader utils
+namespace Reader
+{
 
-            // Class for Transform
-            class TransformElt : public ContainerElt
-            {
-            public:
-                // Constructor
-                TransformElt(const std::string& name,
-                             unsigned xmlLineNumber,
-                             const std::string& xmlFile,
-                             bool isCLF
-                );
+// Class for Transform
+class TransformElt : public ContainerElt
+{
+public:
+    // Constructor
+    TransformElt(const std::string& name,
+                    unsigned xmlLineNumber,
+                    const std::string& xmlFile,
+                    bool isCLF
+    );
 
-                // Destructor
-                ~TransformElt();
+    // Destructor
+    ~TransformElt();
 
-                // Get the element's identifier
-                const std::string& getIdentifier() const;
+    // Get the element's identifier
+    const std::string& getIdentifier() const;
 
-                // Start the parsing of the element
-                void start(const char **atts);
+    // Start the parsing of the element
+    void start(const char **atts);
 
-                // End the parsing of the element
-                void end();
+    // End the parsing of the element
+    void end();
 
-                // Append a description string
-                void appendDescription(const std::string& desc);
+    // Append a description string
+    void appendDescription(const std::string& desc);
 
-                // Get its parent which is a Transform
-                const TransformPtr& getTransform() const;
+    // Get its parent which is a Transform
+    const TransformPtr& getTransform() const;
 
-                // Get the element's type name
-                const std::string& getTypeName() const;
+    // Get the element's type name
+    const std::string& getTypeName() const;
 
-                // Set the current transform CTF version
-                void setVersion(const Version& ver);
+    // Set the current transform CTF version
+    void setVersion(const Version& ver);
                 
-                void setCLFVersion(const Version& ver);
+    void setCLFVersion(const Version& ver);
 
-                // Get current xml transform version
-                virtual const Version& getVersion() const;
+    // Get current xml transform version
+    virtual const Version& getVersion() const;
 
-            private:
-                // No default Constructor
-                TransformElt();
+private:
+    // No default Constructor
+    TransformElt();
 
-                // The associated Transform
-                TransformPtr m_transform;
-                // is it a clf file
-                bool m_isCLF;
-            };
+    // The associated Transform
+    TransformPtr m_transform;
+    // is it a clf file
+    bool m_isCLF;
+};
 
-        } // exit Reader namespace
+} // exit Reader namespace
 
-    } // exit CTF namespace
+} // exit CTF namespace
 
 }
 OCIO_NAMESPACE_EXIT

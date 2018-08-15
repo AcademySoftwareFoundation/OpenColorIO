@@ -32,191 +32,191 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    namespace OpData
+namespace OpData
+{
+
+// Find a given name on a list of metadata items.
+// The template parameter ITERATOR can be used to return
+// a constant or modifiable iterator.
+// - items the list of metadata items
+// - name the metadata item name to search
+// Return the iterator to the item found, or items.end() otherwise
+template<typename ITERATOR, typename CONTAINER>
+    ITERATOR findItem(CONTAINER& items, const std::string& name)
+{
+    ITERATOR end = items.end();
+    for (ITERATOR it = items.begin(); it != end; ++it)
     {
-
-        // Find a given name on a list of metadata items.
-        // The template parameter ITERATOR can be used to return
-        // a constant or modifiable iterator.
-        // - items the list of metadata items
-        // - name the metadata item name to search
-        // Return the iterator to the item found, or items.end() otherwise
-        template<typename ITERATOR, typename CONTAINER>
-            ITERATOR findItem(CONTAINER& items, const std::string& name)
+        if (it->getName() == name)
         {
-            ITERATOR end = items.end();
-            for (ITERATOR it = items.begin(); it != end; ++it)
-            {
-                if (it->getName() == name)
-                {
-                    return it;
-                }
-            }
-            return end;
+            return it;
         }
+    }
+    return end;
+}
 
-        Metadata::Metadata(const std::string& name)
-            :   m_name(name)
+Metadata::Metadata(const std::string& name)
+    :   m_name(name)
+{
+    if (name.empty())
+    {
+        throw Exception("Metadata with empty name.");
+    }
+}
+
+Metadata::Metadata(const Metadata& other)
+    :   m_name(other.m_name),
+        m_value(other.m_value),
+        m_attributes(other.m_attributes),
+        m_items(other.m_items)
+{
+}
+
+const std::string& Metadata::getName() const
+{
+    return m_name;
+}
+
+const std::string& Metadata::getValue() const
+{
+    if (!isLeaf())
+    {
+        std::stringstream os;
+        os << "Metadata should be a leaf '";
+        os << getName().c_str();
+        os << "'.";
+        throw Exception(os.str().c_str());
+    }
+    return m_value;
+}
+
+const Metadata::Attributes& Metadata::getAttributes() const
+{
+    return m_attributes;
+}
+
+void Metadata::addAttribute(const Attribute& attribute)
+{
+    // If this attribute already exists, overwrite the value. 
+    // Otherwise, add the new attribute. This ensures that we do not 
+    // have the same attribute twice.
+    Attributes::iterator it = m_attributes.begin();
+    const Attributes::iterator itEnd = m_attributes.end();
+
+    for (; it != itEnd; ++it)
+    {
+        if (it->first == attribute.first)
         {
-            if (name.empty())
-            {
-                throw Exception("Metadata with empty name.");
-            }
+            it->second = attribute.second;
+            return;
         }
+    }
 
-        Metadata::Metadata(const Metadata& other)
-            :   m_name(other.m_name),
-                m_value(other.m_value),
-                m_attributes(other.m_attributes),
-                m_items(other.m_items)
-        {
-        }
+    m_attributes.push_back(attribute);
+}
 
-        const std::string& Metadata::getName() const
-        {
-            return m_name;
-        }
+Metadata::MetadataList Metadata::getItems() const
+{
+    if (isLeaf())
+    {
+        std::ostringstream os;
+        os << "Metadata should be a container '";
+        os << getName().c_str();
+        os << "'.";
+        throw Exception(os.str().c_str());
+    }
+    return m_items;
+}
 
-        const std::string& Metadata::getValue() const
-        {
-            if (!isLeaf())
-            {
-                std::stringstream os;
-                os << "Metadata should be a leaf '";
-                os << getName().c_str();
-                os << "'.";
-                throw Exception(os.str().c_str());
-            }
-            return m_value;
-        }
+Metadata::NameList Metadata::getItemsNames() const
+{
+    NameList names;
+    for (MetadataList::const_iterator it = m_items.begin(), 
+                                        end = m_items.end(); it != end; ++it)
+    {
+        names.push_back(it->getName());
+    }
+    return names;
+}
 
-        const Metadata::Attributes& Metadata::getAttributes() const
-        {
-            return m_attributes;
-        }
+bool Metadata::isLeaf() const
+{
+    return m_items.empty();
+}
 
-        void Metadata::addAttribute(const Attribute& attribute)
-        {
-            // If this attribute already exists, overwrite the value. 
-            // Otherwise, add the new attribute. This ensures that we do not 
-            // have the same attribute twice.
-            Attributes::iterator it = m_attributes.begin();
-            const Attributes::iterator itEnd = m_attributes.end();
+bool Metadata::isEmpty() const
+{
+    return m_value.empty() && m_items.empty();
+}
 
-            for (; it != itEnd; ++it)
-            {
-                if (it->first == attribute.first)
-                {
-                    it->second = attribute.second;
-                    return;
-                }
-            }
+void Metadata::clear()
+{
+    m_attributes.clear();
+    m_value = "";
+    m_items.clear();
+}
 
-            m_attributes.push_back(attribute);
-        }
+void Metadata::remove(const std::string & itemName)
+{
+    MetadataList::iterator 
+        it = findItem<MetadataList::iterator>(m_items, itemName);
+    if (it == m_items.end())
+    {
+        std::ostringstream os;
+        os << "Metadata element not found '";
+        os << itemName.c_str();
+        os << "'.";
+        throw Exception(os.str().c_str());
+    }
+    m_items.erase(it);
+}
 
-        Metadata::MetadataList Metadata::getItems() const
-        {
-            if (isLeaf())
-            {
-                std::ostringstream os;
-                os << "Metadata should be a container '";
-                os << getName().c_str();
-                os << "'.";
-                throw Exception(os.str().c_str());
-            }
-            return m_items;
-        }
+Metadata& Metadata::operator[](const std::string & itemName)
+{
+    MetadataList::iterator 
+        it = findItem<MetadataList::iterator>(m_items, itemName);
+    if (it == m_items.end())
+    {
+        m_items.push_back(Metadata(itemName));
+        m_value = "";
+        return m_items.back();
+    }
+    return *it;
+}
 
-        Metadata::NameList Metadata::getItemsNames() const
-        {
-            NameList names;
-            for (MetadataList::const_iterator it = m_items.begin(), 
-                                             end = m_items.end(); it != end; ++it)
-            {
-                names.push_back(it->getName());
-            }
-            return names;
-        }
+const Metadata& Metadata::operator[](const std::string & itemName) const
+{
+    MetadataList::const_iterator 
+        it = findItem<MetadataList::const_iterator>(m_items, itemName);
+    if (it == m_items.end()) {
+        std::ostringstream os;
+        os << "Metadata element not found '";
+        os << itemName.c_str();
+        os << "'.";
+        throw Exception(os.str().c_str());
+    }
+    return *it;
+}
 
-        bool Metadata::isLeaf() const
-        {
-            return m_items.empty();
-        }
+Metadata& Metadata::operator=(const std::string & value)
+{
+    m_value = value;
+    m_items.clear();
+    return *this;
+}
 
-        bool Metadata::isEmpty() const
-        {
-            return m_value.empty() && m_items.empty();
-        }
-
-        void Metadata::clear()
-        {
-            m_attributes.clear();
-            m_value = "";
-            m_items.clear();
-        }
-
-        void Metadata::remove(const std::string & itemName)
-        {
-            MetadataList::iterator 
-                it = findItem<MetadataList::iterator>(m_items, itemName);
-            if (it == m_items.end())
-            {
-                std::ostringstream os;
-                os << "Metadata element not found '";
-                os << itemName.c_str();
-                os << "'.";
-                throw Exception(os.str().c_str());
-            }
-            m_items.erase(it);
-        }
-
-        Metadata& Metadata::operator[](const std::string & itemName)
-        {
-            MetadataList::iterator 
-                it = findItem<MetadataList::iterator>(m_items, itemName);
-            if (it == m_items.end())
-            {
-                m_items.push_back(Metadata(itemName));
-                m_value = "";
-                return m_items.back();
-            }
-            return *it;
-        }
-
-        const Metadata& Metadata::operator[](const std::string & itemName) const
-        {
-            MetadataList::const_iterator 
-                it = findItem<MetadataList::const_iterator>(m_items, itemName);
-            if (it == m_items.end()) {
-                std::ostringstream os;
-                os << "Metadata element not found '";
-                os << itemName.c_str();
-                os << "'.";
-                throw Exception(os.str().c_str());
-            }
-            return *it;
-        }
-
-        Metadata& Metadata::operator=(const std::string & value)
-        {
-            m_value = value;
-            m_items.clear();
-            return *this;
-        }
-
-        Metadata& Metadata::operator=(const Metadata & rhs)
-        {
-            if (this != &rhs)
-            {
-                m_name       = rhs.m_name;
-                m_value      = rhs.m_value;
-                m_attributes = rhs.m_attributes;
-                m_items      = rhs.m_items;
-            }
-            return *this;
-        }
-    } // exit OpData namespace
+Metadata& Metadata::operator=(const Metadata & rhs)
+{
+    if (this != &rhs)
+    {
+        m_name       = rhs.m_name;
+        m_value      = rhs.m_value;
+        m_attributes = rhs.m_attributes;
+        m_items      = rhs.m_items;
+    }
+    return *this;
+}
+} // exit OpData namespace
 }
 OCIO_NAMESPACE_EXIT
 

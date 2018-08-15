@@ -42,45 +42,106 @@ namespace CTF
 namespace Reader
 {
 
-    // Class for the description's element
-    class DescriptionElt : public PlainElt
-    {
-    public:
-        // Constructor
-        DescriptionElt(const std::string& name,
-                       ContainerElt* pParent,
-                       unsigned xmlLineNumber,
-                       const std::string& xmlFile
-        );
+// Class for the description's element
+class DescriptionElt : public PlainElt
+{
+public:
+    // Constructor
+    DescriptionElt(const std::string& name,
+                    ContainerElt* pParent,
+                    unsigned xmlLineNumber,
+                    const std::string& xmlFile
+    );
 
-        // Destructor
-        ~DescriptionElt();
+    // Destructor
+    ~DescriptionElt();
 
-        // Start the parsing of the element
-        void start(const char **atts);
+    // Start the parsing of the element
+    void start(const char **atts);
 
-        // End the parsing of the element
-        void end();
+    // End the parsing of the element
+    void end();
 
-        // Set the data's element
-        // - str the string
-        // - len is the string length
-        // - xmlLine the location
-        void setRawData(const char* str, size_t len, unsigned xmlLine);
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
 
-    private:
-        // No default Constructor
-        DescriptionElt();
+private:
+    // No default Constructor
+    DescriptionElt();
 
-        // The description string currently built
-        std::string m_description;
-        // true if the description was changed when reading
-        bool m_changed;
+    // The description string currently built
+    std::string m_description;
+    // true if the description was changed when reading
+    bool m_changed;
 
-    };
+};
+
+// Class for the Input Descriptor's element
+class InputDescriptorElt : public PlainElt
+{
+public:
+    // Constructor
+    InputDescriptorElt(const std::string& name,
+        ContainerElt* pParent,
+        unsigned xmlLineNumber,
+        const std::string& xmlFile
+    );
+
+    // Destructor
+    ~InputDescriptorElt();
+
+    // Start the parsing of the element
+    void start(const char **atts);
+
+    // End the parsing of the element
+    void end();
+
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
+
+private:
+    // No default Constructor
+    InputDescriptorElt();
+};
+
+// Class for the Output Descriptor's element
+class OutputDescriptorElt : public PlainElt
+{
+public:
+    // Constructor
+    OutputDescriptorElt(const std::string& name,
+        ContainerElt* pParent,
+        unsigned xmlLineNumber,
+        const std::string& xmlFile
+    );
+
+    // Destructor
+    ~OutputDescriptorElt();
+
+    // Start the parsing of the element
+    void start(const char **atts);
+
+    // End the parsing of the element
+    void end();
+
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
+
+private:
+    // No default Constructor
+    OutputDescriptorElt();
+};
 
 } // exit Reader namespace
-
 } // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT

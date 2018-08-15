@@ -35,289 +35,289 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+OpDataVec::OpDataVec()
+{
+}
+
+OpDataVec::OpDataVec(const OpDataVec & v)
+{
+    *this = v;
+}
+
+OpDataVec::~OpDataVec()
+{
+    freeContent();
+}
+
+OpDataVec & OpDataVec::operator=(const OpDataVec & ops)
+{
+    if (this != &ops)
     {
-        OpDataVec::OpDataVec()
+        freeContent();
+        *this += ops;
+    }
+    return *this;
+}
+
+void OpDataVec::append(OpData * op)
+{
+    if(!op)
+    {
+        throw Exception("Invalid Op");
+    }
+
+    m_content.push_back(op);
+
+    const size_t sz = m_content.size();
+    if (sz > 1)
+    {
+        m_content[sz - 1]->setInputBitDepth(m_content[sz - 2]->getOutputBitDepth());
+    }
+}
+
+void OpDataVec::prepend(OpData * op)
+{
+    if(!op)
+    {
+        throw Exception("Invalid Op");
+    }
+
+    m_content.insert(m_content.begin(), op);
+
+    if(m_content.size()>1)
+    {
+        m_content[1]->setInputBitDepth(m_content[0]->getOutputBitDepth());
+    }
+}
+
+void OpDataVec::insert(OpData * op, const unsigned idx)
+{
+    if(!op)
+    {
+        throw Exception("Invalid Op");
+    }
+
+    size_t sz = m_content.size();
+    if(idx > sz)
+    {
+        throw Exception("Index is out of range");
+    }
+
+    m_content.insert(m_content.begin() + idx, op);
+    sz++;
+
+    // Set input bit-depth of the new one to match the output
+    //  of the previous op.
+    if (idx > 0)
+    {
+        m_content[ idx ]->setInputBitDepth(
+                                m_content[ idx - 1 ]->getOutputBitDepth());
+    }
+
+    // Set input bit-depth of following op to match the output of the new one.
+    if (idx < sz - 1)
+    {
+        m_content[ idx + 1 ]->setInputBitDepth(
+                                m_content[ idx ]->getOutputBitDepth());
+    }
+}
+
+void OpDataVec::replace(OpData * op, const unsigned idx)
+{
+    if(!op)
+    {
+        throw Exception("Invalid Op");
+    }
+
+    const size_t sz = m_content.size();
+    if(idx >= sz)
+    {
+        throw Exception("Index is out of range");
+    }
+
+    // Free the op that was at idx.
+    delete m_content[idx];
+
+    // Insert new op at idx.
+    m_content[idx] = op;
+
+    // Set input bit-depth of the new one to match the output
+    //  of the previous op.
+    if (idx > 0)
+    {
+        m_content[ idx ]->setInputBitDepth(m_content[ idx - 1 ]->getOutputBitDepth());
+    }
+
+    // Set input bit-depth of following op to match the output of the new one.
+    if (idx < sz - 1)
+    {
+        m_content[ idx + 1 ]->setInputBitDepth(m_content[ idx ]->getOutputBitDepth());
+    }
+}
+
+void OpDataVec::erase(const unsigned idx)
+{
+    delete remove(idx);
+}
+
+OpData * OpDataVec::remove(const unsigned idx)
+{
+    const size_t sz = m_content.size();
+    if(idx >= sz)
+    {
+        throw Exception("Index is out of range");
+    }
+
+    OpData * removedOp = m_content[idx];
+
+    // Shift any ops after idx left.
+    // Change the size to sz - 1.
+    m_content.erase( m_content.begin() + idx );
+
+    // Make the bit-depths align at the new interface.
+    if ( idx > 0 && idx < sz - 1 )
+    {
+        m_content[ idx ]->setInputBitDepth(
+                                m_content[ idx - 1 ]->getOutputBitDepth());
+    }
+
+    return removedOp;
+}
+
+OpDataVec & OpDataVec::operator+=(const OpDataVec& rhs)
+{
+    const size_t rhsSize = rhs.m_content.size();
+    if(rhsSize==0) return *this;
+
+    const size_t currSize = m_content.size();
+    const size_t newSize = currSize + rhsSize;
+
+    m_content.resize(newSize);
+
+    OpData * pOp = rhs.m_content[0]->clone(OpData::DO_SHALLOW_COPY);
+    if(currSize>0)
+    {
+        pOp->setInputBitDepth(m_content[currSize-1]->getOutputBitDepth());
+    }
+    m_content[currSize] = pOp;
+
+    for(size_t i=1; i<rhsSize; ++i)
+    {
+        m_content[currSize+i] = rhs.m_content[i]->clone(OpData::DO_SHALLOW_COPY);
+    }
+
+    return *this;
+}
+
+bool OpDataVec::empty() const
+{
+    return m_content.empty();
+}
+
+unsigned OpDataVec::size() const
+{
+    return (unsigned)m_content.size();
+}
+
+const OpData * OpDataVec::get(unsigned idx) const
+{
+    if(idx>=m_content.size())
+    {
+        throw Exception("Index is out of range");
+    }
+    return m_content[idx];
+}
+
+OpData * OpDataVec::get(unsigned idx)
+{
+    if(idx>=m_content.size())
+    {
+        throw Exception("Index is out of range");
+    }
+    return m_content[idx];
+}
+
+void OpDataVec::freeContent()
+{
+    const size_t max = m_content.size();
+    for(size_t i=0; i<max; ++i)
+    {
+        delete m_content[i];
+    }
+    m_content.clear();
+}
+
+void OpDataVec::validate() const
+{
+    BitDepth bitdepth = BIT_DEPTH_UNKNOWN;
+
+    const size_t max = m_content.size();
+    for(size_t i=0; i<max; ++i)
+    {
+        const OpData * pOp = m_content[i];
+
+        pOp->validate();
+
+        if(i>0 && bitdepth!=pOp->getInputBitDepth())
         {
+            std::ostringstream os;
+            os << "Bitdepth missmatch between ops";
+            os << "'. Op " << i - 1;
+            os << " (" << m_content[i - 1]->getOpTypeName();
+            os << ") output bitdepth is ";
+            os << bitdepth << ". Op " << i;
+            os << " (" << pOp->getOpTypeName();
+            os << ") intput bitdepth is ";
+            os << pOp->getInputBitDepth();
+            throw Exception(os.str().c_str());
         }
 
-        OpDataVec::OpDataVec(const OpDataVec & v)
-        {
-            *this = v;
-        }
+        bitdepth = pOp->getOutputBitDepth();
+    }
+}
 
-        OpDataVec::~OpDataVec()
-        {
-            freeContent();
-        }
+bool OpDataVec::operator==(const OpDataVec & other) const
+{
+    if (this == &other) return true;
 
-        OpDataVec & OpDataVec::operator=(const OpDataVec & ops)
-        {
-            if (this != &ops)
-            {
-                freeContent();
-                *this += ops;
-            }
-            return *this;
-        }
+    const size_t max = m_content.size();
+    if (max != other.m_content.size()) return false;
 
-        void OpDataVec::append(OpData * op)
-        {
-            if(!op)
-            {
-                throw Exception("Invalid Op");
-            }
+    for (unsigned i=0;i<max;i++)
+    {
+        if (m_content[i] == other.m_content[i]) continue;
+        if (!(*m_content[i] == *(other.m_content[i]))) return false;
+    }
 
-            m_content.push_back(op);
+    return true;
+}
 
-            const size_t sz = m_content.size();
-            if (sz > 1)
-            {
-                m_content[sz - 1]->setInputBitDepth(m_content[sz - 2]->getOutputBitDepth());
-            }
-        }
+void OpDataVec::inverse(OpDataVec & invOps) const
+{
+    const int max = static_cast<int>(m_content.size());
+    for(int idx= max -1 ; idx>=0 ; --idx)
+    {
+        const OpData * op = m_content[idx];
+        // Append new ops required to compute the inverse 
+        // of this op to the end of the invOps list
+        op->inverse(invOps);
+    }
+}
 
-        void OpDataVec::prepend(OpData * op)
-        {
-            if(!op)
-            {
-                throw Exception("Invalid Op");
-            }
+void OpDataVec::clone(OpDataVec & ops, OpData::CloneType type) const
+{
+    const unsigned max = static_cast<unsigned>(m_content.size());
+    for(unsigned idx=0; idx<max; ++idx)
+    {
+        const OpData * op = m_content[idx];
+        ops.append(op->clone(type));
+    }
+}
 
-            m_content.insert(m_content.begin(), op);
-
-            if(m_content.size()>1)
-            {
-                m_content[1]->setInputBitDepth(m_content[0]->getOutputBitDepth());
-            }
-        }
-
-        void OpDataVec::insert(OpData * op, const unsigned idx)
-        {
-            if(!op)
-            {
-                throw Exception("Invalid Op");
-            }
-
-            size_t sz = m_content.size();
-            if(idx > sz)
-            {
-                throw Exception("Index is out of range");
-            }
-
-            m_content.insert(m_content.begin() + idx, op);
-            sz++;
-
-            // Set input bit-depth of the new one to match the output
-            //  of the previous op.
-            if (idx > 0)
-            {
-                m_content[ idx ]->setInputBitDepth(
-                                       m_content[ idx - 1 ]->getOutputBitDepth());
-            }
-
-            // Set input bit-depth of following op to match the output of the new one.
-            if (idx < sz - 1)
-            {
-                m_content[ idx + 1 ]->setInputBitDepth(
-                                        m_content[ idx ]->getOutputBitDepth());
-            }
-        }
-
-        void OpDataVec::replace(OpData * op, const unsigned idx)
-        {
-            if(!op)
-            {
-                throw Exception("Invalid Op");
-            }
-
-            const size_t sz = m_content.size();
-            if(idx >= sz)
-            {
-                throw Exception("Index is out of range");
-            }
-
-            // Free the op that was at idx.
-            delete m_content[idx];
-
-            // Insert new op at idx.
-            m_content[idx] = op;
-
-            // Set input bit-depth of the new one to match the output
-            //  of the previous op.
-            if (idx > 0)
-            {
-                m_content[ idx ]->setInputBitDepth(m_content[ idx - 1 ]->getOutputBitDepth());
-            }
-
-            // Set input bit-depth of following op to match the output of the new one.
-            if (idx < sz - 1)
-            {
-                m_content[ idx + 1 ]->setInputBitDepth(m_content[ idx ]->getOutputBitDepth());
-            }
-        }
-
-        void OpDataVec::erase(const unsigned idx)
-        {
-            delete remove(idx);
-        }
-
-        OpData * OpDataVec::remove(const unsigned idx)
-        {
-            const size_t sz = m_content.size();
-            if(idx >= sz)
-            {
-                throw Exception("Index is out of range");
-            }
-
-            OpData * removedOp = m_content[idx];
-
-            // Shift any ops after idx left.
-            // Change the size to sz - 1.
-            m_content.erase( m_content.begin() + idx );
-
-            // Make the bit-depths align at the new interface.
-            if ( idx > 0 && idx < sz - 1 )
-            {
-                m_content[ idx ]->setInputBitDepth(
-                                        m_content[ idx - 1 ]->getOutputBitDepth());
-            }
-
-            return removedOp;
-        }
-
-        OpDataVec & OpDataVec::operator+=(const OpDataVec& rhs)
-        {
-            const size_t rhsSize = rhs.m_content.size();
-            if(rhsSize==0) return *this;
-
-            const size_t currSize = m_content.size();
-            const size_t newSize = currSize + rhsSize;
-
-            m_content.resize(newSize);
-
-            OpData * pOp = rhs.m_content[0]->clone(OpData::DO_SHALLOW_COPY);
-            if(currSize>0)
-            {
-                pOp->setInputBitDepth(m_content[currSize-1]->getOutputBitDepth());
-            }
-            m_content[currSize] = pOp;
-
-            for(size_t i=1; i<rhsSize; ++i)
-            {
-                m_content[currSize+i] = rhs.m_content[i]->clone(OpData::DO_SHALLOW_COPY);
-            }
-
-            return *this;
-        }
-
-        bool OpDataVec::empty() const
-        {
-            return m_content.empty();
-        }
-
-        unsigned OpDataVec::size() const
-        {
-            return (unsigned)m_content.size();
-        }
-
-        const OpData * OpDataVec::get(unsigned idx) const
-        {
-            if(idx>=m_content.size())
-            {
-                throw Exception("Index is out of range");
-            }
-            return m_content[idx];
-        }
-
-        OpData * OpDataVec::get(unsigned idx)
-        {
-            if(idx>=m_content.size())
-            {
-                throw Exception("Index is out of range");
-            }
-            return m_content[idx];
-        }
-
-        void OpDataVec::freeContent()
-        {
-            const size_t max = m_content.size();
-            for(size_t i=0; i<max; ++i)
-            {
-               delete m_content[i];
-            }
-            m_content.clear();
-        }
-
-        void OpDataVec::validate() const
-        {
-            BitDepth bitdepth = BIT_DEPTH_UNKNOWN;
-
-            const size_t max = m_content.size();
-            for(size_t i=0; i<max; ++i)
-            {
-                const OpData * pOp = m_content[i];
-
-                pOp->validate();
-
-                if(i>0 && bitdepth!=pOp->getInputBitDepth())
-                {
-                    std::ostringstream os;
-                    os << "Bitdepth missmatch between ops";
-                    os << "'. Op " << i - 1;
-                    os << " (" << m_content[i - 1]->getOpTypeName();
-                    os << ") output bitdepth is ";
-                    os << bitdepth << ". Op " << i;
-                    os << " (" << pOp->getOpTypeName();
-                    os << ") intput bitdepth is ";
-                    os << pOp->getInputBitDepth();
-                    throw Exception(os.str().c_str());
-                }
-
-                bitdepth = pOp->getOutputBitDepth();
-            }
-        }
-
-        bool OpDataVec::operator==(const OpDataVec & other) const
-        {
-            if (this == &other) return true;
-
-            const size_t max = m_content.size();
-            if (max != other.m_content.size()) return false;
-
-            for (unsigned i=0;i<max;i++)
-            {
-                if (m_content[i] == other.m_content[i]) continue;
-                if (!(*m_content[i] == *(other.m_content[i]))) return false;
-            }
-
-            return true;
-        }
-
-        void OpDataVec::inverse(OpDataVec & invOps) const
-        {
-            const int max = static_cast<int>(m_content.size());
-            for(int idx= max -1 ; idx>=0 ; --idx)
-            {
-                const OpData * op = m_content[idx];
-                // Append new ops required to compute the inverse 
-                // of this op to the end of the invOps list
-                op->inverse(invOps);
-            }
-        }
-
-        void OpDataVec::clone(OpDataVec & ops, OpData::CloneType type) const
-        {
-            const unsigned max = static_cast<unsigned>(m_content.size());
-            for(unsigned idx=0; idx<max; ++idx)
-            {
-                const OpData * op = m_content[idx];
-                ops.append(op->clone(type));
-            }
-        }
-
-    } // exit OpData namespace
+} // exit OpData namespace
 }
 OCIO_NAMESPACE_EXIT
 

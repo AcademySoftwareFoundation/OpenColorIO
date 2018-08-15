@@ -36,54 +36,90 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+// Private namespace to the CTF sub-directory
+namespace CTF
+{
+// Private namespace for the xml reader utils
+namespace Reader
+{
+// Class holding the array management
+class ArrayMgt
+{
+public:
+    // hold the array dimensions
+    typedef std::vector<unsigned> Dimensions;
 
-    // Private namespace to the CTF sub-directory
-    namespace CTF
+public:
+    // Constructor
+    ArrayMgt();
+    // Destructor
+    virtual ~ArrayMgt();
+
+    // Set the status
+    virtual void setCompleted(bool status)
     {
-        // Private namespace for the xml reader utils
-        namespace Reader
-        {
-            class ArrayElt : public PlainElt
-            {
-            public:
-                // Constructor
-                ArrayElt(const std::string& name,
-                         ContainerElt* pParent,
-                         unsigned xmlLineNumber,
-                         const std::string& xmlFile
-                );
-                // Destructor
-                ~ArrayElt();
+        m_completed = status;
+    }
 
-                // Start the parsing of the element
-                void start(const char **atts);
+    // Is the status flagged as completed
+    bool isCompleted()
+    {
+        return m_completed;
+    }
 
-                // End the parsing of the element
-                void end();
+    // Update the array dimensions
+    // - dims holds the array dimensions
+    // returns the resized array
+    virtual OpData::ArrayBase* updateDimension(const Dimensions& dims) = 0;
 
-                // Set the data's element
-                // - str the string
-                // - len is the string length
-                // - xmlLine the location
-                void setRawData(const char* str, size_t len, unsigned xmlLine);
+    // Finalize the array data origanization
+    // - position is the position of the last value found
+    virtual void finalize(unsigned position) = 0;
 
-                // Get the element's type name
-                const std::string& getTypeName() const;
-
-            private:
-                // no default contructor
-                ArrayElt();
-
-                // The array to fill (pointer not owned)
-                OpData::ArrayBase* m_array;
-                // The current position to fill
-                unsigned m_position;
-            };
-
-    } // exit Reader namespace
+private:
+    bool m_completed; // The completion status
+};
 
 
-    } // exit CTF namespace
+class ArrayElt : public PlainElt
+{
+public:
+    // Constructor
+    ArrayElt(const std::string& name,
+                ContainerElt* pParent,
+                unsigned xmlLineNumber,
+                const std::string& xmlFile
+    );
+    // Destructor
+    ~ArrayElt();
+
+    // Start the parsing of the element
+    void start(const char **atts);
+
+    // End the parsing of the element
+    void end();
+
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
+
+    // Get the element's type name
+    const std::string& getTypeName() const;
+
+private:
+    // no default contructor
+    ArrayElt();
+
+    // The array to fill (pointer not owned)
+    OpData::ArrayBase* m_array;
+    // The current position to fill
+    unsigned m_position;
+};
+
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 

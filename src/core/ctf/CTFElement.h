@@ -43,84 +43,84 @@ namespace CTF
 namespace Reader
 {
 
-    // Base class for all elements possible in the AMPAS common LUT
-    // format XML
-    class Element
+// Base class for all elements possible in the AMPAS common LUT
+// format XML
+class Element
+{
+public:
+    // Constructor
+    Element(const std::string& name,
+            unsigned xmlLineNumber,
+            const std::string& xmlFile
+    );
+
+    // Destructor
+    virtual ~Element();
+
+    // Start the parsing of the element
+    virtual void start(const char **atts) = 0;
+
+    // End the parsing of the element
+    virtual void end() = 0;
+
+    // Is it a container which means if it can hold other elements
+    virtual bool isContainer() const = 0;
+
+    // Get the element's name
+    const std::string& getName() const
     {
-    public:
-        // Constructor
-        Element(const std::string& name,
-                unsigned xmlLineNumber,
-                const std::string& xmlFile
-        );
+        return m_name;
+    }
 
-        // Destructor
-        virtual ~Element();
+    // Get the element's identifier
+    virtual const std::string& getIdentifier() const = 0;
 
-        // Start the parsing of the element
-        virtual void start(const char **atts) = 0;
+    // Get the element's location (line number)
+    unsigned getXmLineNumber() const
+    {
+        return m_xmlLineNumber;
+    }
 
-        // End the parsing of the element
-        virtual void end() = 0;
+    // Get the xml file name
+    const std::string& getXmlFile() const;
 
-        // Is it a container which means if it can hold other elements
-        virtual bool isContainer() const = 0;
+    // Is it a dummy element
+    virtual bool isDummy() const
+    {
+        return false;
+    }
 
-        // Get the element's name
-        const std::string& getName() const
-        {
-            return m_name;
-        }
+    // Get the element's type name
+    virtual const std::string& getTypeName() const = 0;
 
-        // Get the element's identifier
-        virtual const std::string& getIdentifier() const = 0;
+    // Set the element context
+    // - name is the element name
+    // - xmlLineNumber is the line number in the xml file
+    // - xmlFile is the xml fiel name
+    void setContext(const std::string& name,
+                    unsigned xmlLineNumber,
+                    const std::string& xmlFile);
 
-        // Get the element's location (line number)
-        unsigned getXmLineNumber() const
-        {
-            return m_xmlLineNumber;
-        }
-
-        // Get the xml file name
-        const std::string& getXmlFile() const;
-
-        // Is it a dummy element
-        virtual bool isDummy() const
-        {
-            return false;
-        }
-
-        // Get the element's type name
-        virtual const std::string& getTypeName() const = 0;
-
-        // Set the element context
-        // - name is the element name
-        // - xmlLineNumber is the line number in the xml file
-        // - xmlFile is the xml fiel name
-        void setContext(const std::string& name,
-                        unsigned xmlLineNumber,
-                        const std::string& xmlFile);
-
-    protected:
-        void Throw(const std::string & error) const;
+protected:
+    void Throw(const std::string & error) const;
 
 
-    private:
-        std::string m_name;       // The name
-        unsigned m_xmlLineNumber; // The location
-        std::string m_xmlFile;    // The xml file
+private:
+    std::string m_name;       // The name
+    unsigned m_xmlLineNumber; // The location
+    std::string m_xmlFile;    // The xml file
 
-    private:
-        // No default constructor
-        Element();
+private:
+    // No default constructor
+    Element();
 
-        // Copy constructor is forbidden
-        Element(const Element&);
+    // Copy constructor is forbidden
+    Element(const Element&);
 
-        // Operator = is forbidden
-        Element& operator=(const Element&);
+    // Operator = is forbidden
+    Element& operator=(const Element&);
 
-    };
+};
 
 } // exit Reader namespace
 

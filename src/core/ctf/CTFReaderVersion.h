@@ -37,104 +37,104 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the CTF sub-directory
-    namespace CTF
+// Private namespace to the CTF sub-directory
+namespace CTF
+{
+class Version
+{
+public:
+    // Will throw if versionString is not formatted like a version
+    static void ReadVersion(const std::string & versionString, Version & versionOut);
+
+    Version()
+        : m_major(0)
+        , m_minor(0)
+        , m_revision(0)
     {
-        class Version
-        {
-        public:
-            // Will throw if versionString is not formatted like a version
-            static void ReadVersion(const std::string & versionString, Version & versionOut);
-
-            Version()
-                : m_major(0)
-                , m_minor(0)
-                , m_revision(0)
-            {
-            }
-            Version(int major, int minor, int revision)
-                : m_major(major)
-                , m_minor(minor)
-                , m_revision(revision)
-            {
-            }
-            Version(int major, int minor)
-                : m_major(major)
-                , m_minor(minor)
-                , m_revision(0)
-            {
-            }
-
-            Version(const Version &otherVersion)
-                : m_major(otherVersion.m_major)
-                , m_minor(otherVersion.m_minor)
-                , m_revision(otherVersion.m_revision)
-            {
-            }
-
-            Version & operator=(const Version &rhs);
-
-            bool operator<(const Version &rhs) const;
-            bool operator<=(const Version &rhs) const;
-            bool operator==(const Version &rhs) const;
-
-            ~Version() {}
-
-            friend std::ostream& operator<< (std::ostream& stream, const Version& rhs)
-            {
-                stream << rhs.m_major;
-                if (rhs.m_minor != 0 || rhs.m_revision != 0)
-                {
-                    stream << "." << rhs.m_minor;
-                    if (rhs.m_revision != 0)
-                    {
-                        stream << "." << rhs.m_revision;
-                    }
-                }
-                return stream;
-            }
-
-        private:
-            int m_major;
-            int m_minor;
-            int m_revision;
-        };
-
-        //
-        // Process List Version
-        //
-
-        // Version 1.2 2012 initial Autodesk version
-        static const Version CTF_PROCESS_LIST_VERSION_1_2 = Version(1, 2);
-
-        // Version 1.3 2012-12 revised matrix
-        static const Version CTF_PROCESS_LIST_VERSION_1_3 = Version(1, 3);
-
-        // Version 1.4 2013-07 adds ACES v0.2
-        static const Version CTF_PROCESS_LIST_VERSION_1_4 = Version(1, 4);
-
-        // Version 1.5 2014-01 adds ACES v0.7
-        static const Version CTF_PROCESS_LIST_VERSION_1_5 = Version(1, 5);
-
-        // Version 1.6 2014-05 adds functionOp, invLut3D
-        static const Version CTF_PROCESS_LIST_VERSION_1_6 = Version(1, 6);
-
-        // Version 1.7 2015-01 adds 'invert' flag to referenceOp and to the transform,
-        // adds 1.0 styles to ACES op, adds CLF support (IndexMap, alt. Range, CDL styles)
-        static const Version CTF_PROCESS_LIST_VERSION_1_7 = Version(1, 7);
-
-        // Version 1.8 2017-10 adds FunctionOp as a valid element in CTF files,
-        // adds grading ops and new dynamic parameter framework
-        static const Version CTF_PROCESS_LIST_VERSION_1_8 = Version(1, 8);
-
-        // TODO: follow CTF format changes
-        // static const Version CTF_PROCESS_LIST_VERSION_1_9 = Version(1, 9);
-
-        // .. Add new version before this line
-        //     and do not forget to update the following line
-        static const Version CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_1_8;
-
     }
+    Version(int major, int minor, int revision)
+        : m_major(major)
+        , m_minor(minor)
+        , m_revision(revision)
+    {
+    }
+    Version(int major, int minor)
+        : m_major(major)
+        , m_minor(minor)
+        , m_revision(0)
+    {
+    }
+
+    Version(const Version &otherVersion)
+        : m_major(otherVersion.m_major)
+        , m_minor(otherVersion.m_minor)
+        , m_revision(otherVersion.m_revision)
+    {
+    }
+
+    Version & operator=(const Version &rhs);
+
+    bool operator<(const Version &rhs) const;
+    bool operator<=(const Version &rhs) const;
+    bool operator==(const Version &rhs) const;
+
+    ~Version() {}
+
+    friend std::ostream& operator<< (std::ostream& stream, const Version& rhs)
+    {
+        stream << rhs.m_major;
+        if (rhs.m_minor != 0 || rhs.m_revision != 0)
+        {
+            stream << "." << rhs.m_minor;
+            if (rhs.m_revision != 0)
+            {
+                stream << "." << rhs.m_revision;
+            }
+        }
+        return stream;
+    }
+
+private:
+    int m_major;
+    int m_minor;
+    int m_revision;
+};
+
+//
+// Process List Version
+//
+
+// Version 1.2 2012 initial Autodesk version
+static const Version CTF_PROCESS_LIST_VERSION_1_2 = Version(1, 2);
+
+// Version 1.3 2012-12 revised matrix
+static const Version CTF_PROCESS_LIST_VERSION_1_3 = Version(1, 3);
+
+// Version 1.4 2013-07 adds ACES v0.2
+static const Version CTF_PROCESS_LIST_VERSION_1_4 = Version(1, 4);
+
+// Version 1.5 2014-01 adds ACES v0.7
+static const Version CTF_PROCESS_LIST_VERSION_1_5 = Version(1, 5);
+
+// Version 1.6 2014-05 adds functionOp, invLut3D
+static const Version CTF_PROCESS_LIST_VERSION_1_6 = Version(1, 6);
+
+// Version 1.7 2015-01 adds 'invert' flag to referenceOp and to the transform,
+// adds 1.0 styles to ACES op, adds CLF support (IndexMap, alt. Range, CDL styles)
+static const Version CTF_PROCESS_LIST_VERSION_1_7 = Version(1, 7);
+
+// Version 1.8 2017-10 adds FunctionOp as a valid element in CTF files,
+// adds grading ops and new dynamic parameter framework
+static const Version CTF_PROCESS_LIST_VERSION_1_8 = Version(1, 8);
+
+// TODO: follow CTF format changes
+// static const Version CTF_PROCESS_LIST_VERSION_1_9 = Version(1, 9);
+
+// .. Add new version before this line
+//     and do not forget to update the following line
+static const Version CTF_PROCESS_LIST_VERSION = CTF_PROCESS_LIST_VERSION_1_8;
+
+}
 
 
 //

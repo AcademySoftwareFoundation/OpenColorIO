@@ -42,115 +42,115 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-    // Private namespace to the CTF sub-directory
-    namespace CTF
+// Private namespace to the CTF sub-directory
+namespace CTF
+{
+// Private namespace for the CTF reader utils
+namespace Reader
+{
+class Transform
+{
+public:
+    Transform();
+
+    ~Transform()
     {
-        // Private namespace for the CTF reader utils
-        namespace Reader
-        {
-            class Transform
-            {
-            public:
-                Transform();
+    }
+    const std::string& getId() const
+    {
+        return m_id;
+    }
+    void setId(const char* id)
+    {
+        m_id = id;
+    }
+    const std::string& getName() const
+    {
+        return m_name;
+    }
+    void setName(const char* name)
+    {
+        m_name = name;
+    }
+    const std::string& getInverseOfId() const
+    {
+        return m_inverseOfId;
+    }
+    void setInverseOfId(const char* id)
+    {
+        m_inverseOfId = id;
+    }
+    OpData::Metadata& getInfo()
+    {
+        return m_info;
+    }
+    const OpData::OpDataVec & getOps() const
+    {
+        return m_ops;
+    }
+    OpData::OpDataVec & getOps()
+    {
+        return m_ops;
+    }
+    const OpData::Descriptions& getDescriptions() const
+    {
+        return m_descriptions;
+    }
+    OpData::Descriptions& getDescriptions()
+    {
+        return m_descriptions;
+    }
 
-                ~Transform()
-                {
-                }
-                const std::string& getId() const
-                {
-                    return m_id;
-                }
-                void setId(const char* id)
-                {
-                    m_id = id;
-                }
-                const std::string& getName() const
-                {
-                    return m_name;
-                }
-                void setName(const char* name)
-                {
-                    m_name = name;
-                }
-                const std::string& getInverseOfId() const
-                {
-                    return m_inverseOfId;
-                }
-                void setInverseOfId(const char* id)
-                {
-                    m_inverseOfId = id;
-                }
-                OpData::Metadata& getInfo()
-                {
-                    return m_info;
-                }
-                const OpData::OpDataVec & getOps() const
-                {
-                    return m_ops;
-                }
-                OpData::OpDataVec & getOps()
-                {
-                    return m_ops;
-                }
-                const OpData::Descriptions& getDescriptions() const
-                {
-                    return m_descriptions;
-                }
-                OpData::Descriptions& getDescriptions()
-                {
-                    return m_descriptions;
-                }
+    const std::string& getInputDescriptor() const
+    {
+        return m_inDescriptor;
+    }
 
-                const std::string& getInputDescriptor() const
-                {
-                    return m_inDescriptor;
-                }
+    void setInputDescriptor(const std::string& in)
+    {
+        m_inDescriptor = in;
+    }
 
-                void setInputDescriptor(const std::string& in)
-                {
-                    m_inDescriptor = in;
-                }
+    const std::string& getOutputDescriptor() const
+    {
+        return m_outDescriptor;
+    }
 
-                const std::string& getOutputDescriptor() const
-                {
-                    return m_outDescriptor;
-                }
+    void setOutputDescriptor(const std::string& out)
+    {
+        m_outDescriptor = out;
+    }
 
-                void setOutputDescriptor(const std::string& out)
-                {
-                    m_outDescriptor = out;
-                }
+    void setCTFVersion(const Version & ver);
+    void setCLFVersion(const Version & ver);
 
-                void setCTFVersion(const Version & ver);
-                void setCLFVersion(const Version & ver);
+    const Version & getCTFVersion() const;
 
-                const Version & getCTFVersion() const;
+    void validate();
 
-                void validate();
-
-            private:
-                std::string m_id;
-                std::string m_name;
-                std::string m_inverseOfId;
-                std::string m_inDescriptor;
-                std::string m_outDescriptor;
-                OpData::Metadata m_info;
-                OpData::OpDataVec m_ops;
-                OpData::Descriptions m_descriptions;
+private:
+    std::string m_id;
+    std::string m_name;
+    std::string m_inverseOfId;
+    std::string m_inDescriptor;
+    std::string m_outDescriptor;
+    OpData::Metadata m_info;
+    OpData::OpDataVec m_ops;
+    OpData::Descriptions m_descriptions;
                 
-                // CTF version used even for CLF files.
-                // CLF versions <= 2.0 are interpreted as CTF version 1.7
-                Version m_version;
+    // CTF version used even for CLF files.
+    // CLF versions <= 2.0 are interpreted as CTF version 1.7
+    Version m_version;
 
-                // Orginal CLF version (for reference)
-                Version m_versionCLF;
+    // Orginal CLF version (for reference)
+    Version m_versionCLF;
 
-            };
+};
 
-            typedef OCIO_SHARED_PTR<Transform> TransformPtr;
+typedef OCIO_SHARED_PTR<Transform> TransformPtr;
 
-        } // exit Reader namespace
-    } // exit CTF namespace
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 

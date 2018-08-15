@@ -40,952 +40,952 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+
+Matrix::Offsets::Offsets()
+{
+    memset(m_values, 0, 4 * sizeof(double));
+}
+
+Matrix::Offsets::Offsets(const Offsets& o)
+{
+    memcpy(m_values, o.m_values, 4 * sizeof(double));
+}
+
+Matrix::Offsets::~Offsets()
+{
+}
+
+Matrix::Offsets& Matrix::Offsets::operator=(const Offsets& o)
+{
+    if (this != &o)
     {
+        memcpy(m_values, o.m_values, 4 * sizeof(double));
+    }
+    return *this;
+}
 
-        Matrix::Offsets::Offsets()
+void Matrix::Offsets::setRGBValues(const float* v3)
+{
+    if (!v3)
+    {
+        throw Exception("Matrix: setRGBValues NULL pointer.");
+    }
+
+    m_values[0] = v3[0];
+    m_values[1] = v3[1];
+    m_values[2] = v3[2];
+    m_values[3] = 0.;
+}
+
+void Matrix::Offsets::setRGBAValues(const float* v4)
+{
+    if (!v4)
+    {
+        throw Exception("Matrix: setRGBAValues NULL pointer.");
+    }
+
+    m_values[0] = v4[0];
+    m_values[1] = v4[1];
+    m_values[2] = v4[2];
+    m_values[3] = v4[3];
+}
+
+bool Matrix::Offsets::operator==(const Offsets& o) const
+{
+    return (memcmp(m_values, o.m_values, 4 * sizeof(double)) == 0);
+}
+
+bool Matrix::Offsets::isNotNull() const
+{
+    static const double zero4[] = { 0., 0., 0., 0. };
+    return (memcmp(m_values, zero4, 4 * sizeof(double)) != 0);
+}
+
+void Matrix::Offsets::scale(double s)
+{
+    for (unsigned int i = 0; i < 4; ++i)
+    {
+        m_values[i] *= s;
+    }
+}
+
+Matrix::MatrixArray::MatrixArray(BitDepth inBitDepth,
+                                    BitDepth outBitDepth,
+                                    unsigned dimension,
+                                    unsigned numColorComponents)
+    : m_inBitDepth(inBitDepth)
+    , m_outBitDepth(outBitDepth)
+{
+    resize(dimension, numColorComponents);
+    fill();
+}
+
+Matrix::MatrixArray::~MatrixArray()
+{
+}
+
+Matrix::MatrixArray& Matrix::MatrixArray::operator=(const ArrayDouble& a)
+{
+    if (this == &a) return *this;
+
+    *(ArrayDouble*)this = a;
+
+    validate();
+
+    return *this;
+}
+
+Matrix::MatrixArrayPtr
+    Matrix::MatrixArray::inner(const MatrixArray& B) const
+{
+    // Use operator= to make sure we have a 4x4 copy
+    // of the original matrices.
+    MatrixArray A_4x4 = *this;
+    MatrixArray B_4x4 = B;
+    const ArrayDouble::Values& Avals = A_4x4.getValues();
+    const ArrayDouble::Values& Bvals = B_4x4.getValues();
+    const unsigned dim = 4;
+
+    MatrixArrayPtr OutPtr(new MatrixArray(
+        BIT_DEPTH_F32,
+        BIT_DEPTH_F32,
+        dim,
+        4));
+    ArrayDouble::Values& Ovals = OutPtr->getValues();
+
+    // Note: The matrix elements are stored in the vector
+    // in row-major order,
+    // [ a00, a01, a02, a03, a10, a11, a12, a13, a20, ... a44 ];
+    for (unsigned row = 0; row<dim; ++row)
+    {
+        for (unsigned col = 0; col<dim; ++col)
         {
-            memset(m_values, 0, 4 * sizeof(double));
-        }
-
-        Matrix::Offsets::Offsets(const Offsets& o)
-        {
-            memcpy(m_values, o.m_values, 4 * sizeof(double));
-        }
-
-        Matrix::Offsets::~Offsets()
-        {
-        }
-
-        Matrix::Offsets& Matrix::Offsets::operator=(const Offsets& o)
-        {
-            if (this != &o)
-            {
-                memcpy(m_values, o.m_values, 4 * sizeof(double));
-            }
-            return *this;
-        }
-
-        void Matrix::Offsets::setRGBValues(const float* v3)
-        {
-            if (!v3)
-            {
-                throw Exception("Matrix: setRGBValues NULL pointer.");
-            }
-
-            m_values[0] = v3[0];
-            m_values[1] = v3[1];
-            m_values[2] = v3[2];
-            m_values[3] = 0.;
-        }
-
-        void Matrix::Offsets::setRGBAValues(const float* v4)
-        {
-            if (!v4)
-            {
-                throw Exception("Matrix: setRGBAValues NULL pointer.");
-            }
-
-            m_values[0] = v4[0];
-            m_values[1] = v4[1];
-            m_values[2] = v4[2];
-            m_values[3] = v4[3];
-        }
-
-        bool Matrix::Offsets::operator==(const Offsets& o) const
-        {
-            return (memcmp(m_values, o.m_values, 4 * sizeof(double)) == 0);
-        }
-
-        bool Matrix::Offsets::isNotNull() const
-        {
-            static const double zero4[] = { 0., 0., 0., 0. };
-            return (memcmp(m_values, zero4, 4 * sizeof(double)) != 0);
-        }
-
-        void Matrix::Offsets::scale(double s)
-        {
-            for (unsigned int i = 0; i < 4; ++i)
-            {
-                m_values[i] *= s;
-            }
-        }
-
-        Matrix::MatrixArray::MatrixArray(BitDepth inBitDepth,
-                                         BitDepth outBitDepth,
-                                         unsigned dimension,
-                                         unsigned numColorComponents)
-            : m_inBitDepth(inBitDepth)
-            , m_outBitDepth(outBitDepth)
-        {
-            resize(dimension, numColorComponents);
-            fill();
-        }
-
-        Matrix::MatrixArray::~MatrixArray()
-        {
-        }
-
-        Matrix::MatrixArray& Matrix::MatrixArray::operator=(const ArrayDouble& a)
-        {
-            if (this == &a) return *this;
-
-            *(ArrayDouble*)this = a;
-
-            validate();
-
-            return *this;
-        }
-
-        Matrix::MatrixArrayPtr
-            Matrix::MatrixArray::inner(const MatrixArray& B) const
-        {
-            // Use operator= to make sure we have a 4x4 copy
-            // of the original matrices.
-            MatrixArray A_4x4 = *this;
-            MatrixArray B_4x4 = B;
-            const ArrayDouble::Values& Avals = A_4x4.getValues();
-            const ArrayDouble::Values& Bvals = B_4x4.getValues();
-            const unsigned dim = 4;
-
-            MatrixArrayPtr OutPtr(new MatrixArray(
-                BIT_DEPTH_F32,
-                BIT_DEPTH_F32,
-                dim,
-                4));
-            ArrayDouble::Values& Ovals = OutPtr->getValues();
-
-            // Note: The matrix elements are stored in the vector
-            // in row-major order,
-            // [ a00, a01, a02, a03, a10, a11, a12, a13, a20, ... a44 ];
-            for (unsigned row = 0; row<dim; ++row)
-            {
-                for (unsigned col = 0; col<dim; ++col)
-                {
-                    double accum = 0.;
-                    for (unsigned i = 0; i<dim; ++i)
-                    {
-                        accum += Avals[row * dim + i] * Bvals[i * dim + col];
-                    }
-                    Ovals[row * dim + col] = accum;
-                }
-            }
-
-            return OutPtr;
-        }
-
-        void Matrix::MatrixArray::inner(const Matrix::Offsets& b,
-                                        Offsets& out) const
-        {
-            const unsigned dim = getLength();
-            const ArrayDouble::Values& Avals = getValues();
-
+            double accum = 0.;
             for (unsigned i = 0; i<dim; ++i)
             {
-                double accum = 0.;
-                for (unsigned j = 0; j<dim; ++j)
-                {
-                    accum += Avals[i * dim + j] * b[j];
-                }
-                out[i] = accum;
+                accum += Avals[row * dim + i] * Bvals[i * dim + col];
+            }
+            Ovals[row * dim + col] = accum;
+        }
+    }
+
+    return OutPtr;
+}
+
+void Matrix::MatrixArray::inner(const Matrix::Offsets& b,
+                                Offsets& out) const
+{
+    const unsigned dim = getLength();
+    const ArrayDouble::Values& Avals = getValues();
+
+    for (unsigned i = 0; i<dim; ++i)
+    {
+        double accum = 0.;
+        for (unsigned j = 0; j<dim; ++j)
+        {
+            accum += Avals[i * dim + j] * b[j];
+        }
+        out[i] = accum;
+    }
+}
+
+Matrix::MatrixArrayPtr
+    Matrix::MatrixArray::inverse() const
+{
+    // Call validate to ensure that the matrix is 4x4,
+    // will be expanded if only 3x3
+    validate();
+
+    MatrixArray t(*this);
+
+    const unsigned dim = 4;
+    // Create a new matrix array, with swapped input/output bitdepths
+    // The new matrix is initialized as identity
+    MatrixArrayPtr invPtr(new MatrixArray(
+        m_outBitDepth,
+        m_inBitDepth,
+        dim,
+        4));
+    MatrixArray & s = *invPtr;
+
+    // Inversion starts with identity (without bit depth scaling)
+    s[0] = 1.;
+    s[5] = 1.;
+    s[10] = 1.;
+    s[15] = 1.;
+
+    // From Imath
+    // Code copied from Matrix44<T>::gjInverse (bool singExc) const in ImathMatrix.h
+
+    // Forward elimination
+
+    for (int i = 0; i < 3; i++)
+    {
+        int pivot = i;
+
+        double pivotsize = t[i*dim + i];
+
+        if (pivotsize < 0)
+            pivotsize = -pivotsize;
+
+        for (int j = i + 1; j < 4; j++)
+        {
+            double tmp = t[j*dim + i];
+
+            if (tmp < 0.0)
+                tmp = -tmp;
+
+            if (tmp > pivotsize)
+            {
+                pivot = j;
+                pivotsize = tmp;
             }
         }
 
-        Matrix::MatrixArrayPtr
-            Matrix::MatrixArray::inverse() const
+        if (pivotsize == 0.0)
         {
-            // Call validate to ensure that the matrix is 4x4,
-            // will be expanded if only 3x3
-            validate();
+            throw Exception("Singular Matrix can't be inverted.");
+        }
 
-            MatrixArray t(*this);
-
-            const unsigned dim = 4;
-            // Create a new matrix array, with swapped input/output bitdepths
-            // The new matrix is initialized as identity
-            MatrixArrayPtr invPtr(new MatrixArray(
-                m_outBitDepth,
-                m_inBitDepth,
-                dim,
-                4));
-            MatrixArray & s = *invPtr;
-
-            // Inversion starts with identity (without bit depth scaling)
-            s[0] = 1.;
-            s[5] = 1.;
-            s[10] = 1.;
-            s[15] = 1.;
-
-            // From Imath
-            // Code copied from Matrix44<T>::gjInverse (bool singExc) const in ImathMatrix.h
-
-            // Forward elimination
-
-            for (int i = 0; i < 3; i++)
+        if (pivot != i)
+        {
+            for (int j = 0; j < 4; j++)
             {
-                int pivot = i;
+                double tmp;
 
-                double pivotsize = t[i*dim + i];
+                tmp = t[i*dim + j];
+                t[i*dim + j] = t[pivot*dim + j];
+                t[pivot*dim + j] = tmp;
 
-                if (pivotsize < 0)
-                    pivotsize = -pivotsize;
-
-                for (int j = i + 1; j < 4; j++)
-                {
-                    double tmp = t[j*dim + i];
-
-                    if (tmp < 0.0)
-                        tmp = -tmp;
-
-                    if (tmp > pivotsize)
-                    {
-                        pivot = j;
-                        pivotsize = tmp;
-                    }
-                }
-
-                if (pivotsize == 0.0)
-                {
-                    throw Exception("Singular Matrix can't be inverted.");
-                }
-
-                if (pivot != i)
-                {
-                    for (int j = 0; j < 4; j++)
-                    {
-                        double tmp;
-
-                        tmp = t[i*dim + j];
-                        t[i*dim + j] = t[pivot*dim + j];
-                        t[pivot*dim + j] = tmp;
-
-                        tmp = s[i*dim + j];
-                        s[i*dim + j] = s[pivot*dim + j];
-                        s[pivot*dim + j] = tmp;
-                    }
-                }
-
-                for (int j = i + 1; j < 4; j++)
-                {
-                    double f = t[j*dim + i] / t[i*dim + i];
-
-                    for (int k = 0; k < 4; k++)
-                    {
-                        t[j*dim + k] -= f * t[i*dim + k];
-                        s[j*dim + k] -= f * s[i*dim + k];
-                    }
-                }
+                tmp = s[i*dim + j];
+                s[i*dim + j] = s[pivot*dim + j];
+                s[pivot*dim + j] = tmp;
             }
+        }
 
-            // Backward substitution
+        for (int j = i + 1; j < 4; j++)
+        {
+            double f = t[j*dim + i] / t[i*dim + i];
 
-            for (int i = 3; i >= 0; --i)
+            for (int k = 0; k < 4; k++)
             {
-                double f;
+                t[j*dim + k] -= f * t[i*dim + k];
+                s[j*dim + k] -= f * s[i*dim + k];
+            }
+        }
+    }
+
+    // Backward substitution
+
+    for (int i = 3; i >= 0; --i)
+    {
+        double f;
                 
-                // TODO: Perhaps change to throw even if f is near
-                //       zero (nearly singular).
-                if ((f = t[i*dim + i]) == 0.0)
-                {
-                    throw Exception("Singular Matrix can't be inverted.");
-                }
+        // TODO: Perhaps change to throw even if f is near
+        //       zero (nearly singular).
+        if ((f = t[i*dim + i]) == 0.0)
+        {
+            throw Exception("Singular Matrix can't be inverted.");
+        }
 
-                for (int j = 0; j < 4; j++)
-                {
-                    t[i*dim + j] /= f;
-                    s[i*dim + j] /= f;
-                }
+        for (int j = 0; j < 4; j++)
+        {
+            t[i*dim + j] /= f;
+            s[i*dim + j] /= f;
+        }
 
-                for (int j = 0; j < i; j++)
-                {
-                    f = t[j*dim + i];
+        for (int j = 0; j < i; j++)
+        {
+            f = t[j*dim + i];
 
-                    for (int k = 0; k < 4; k++)
-                    {
-                        t[j*dim + k] -= f * t[i*dim + k];
-                        s[j*dim + k] -= f * s[i*dim + k];
-                    }
+            for (int k = 0; k < 4; k++)
+            {
+                t[j*dim + k] -= f * t[i*dim + k];
+                s[j*dim + k] -= f * s[i*dim + k];
+            }
+        }
+    }
+
+    return invPtr;
+}
+
+unsigned Matrix::MatrixArray::getNumValues() const
+{
+    return getLength() * getLength();
+}
+
+bool Matrix::MatrixArray::isIdentity() const
+{
+    const unsigned dim = getLength();
+    const ArrayDouble::Values& values = getValues();
+
+    for (unsigned i = 0; i<dim; ++i)
+    {
+        for (unsigned j = 0; j<dim; ++j)
+        {
+            if (i == j)
+            {
+                if (values[i*dim + j] != 1.0)  // Strict comparison intended
+                {
+                    return false;
                 }
             }
-
-            return invPtr;
-        }
-
-        unsigned Matrix::MatrixArray::getNumValues() const
-        {
-            return getLength() * getLength();
-        }
-
-        bool Matrix::MatrixArray::isIdentity() const
-        {
-            const unsigned dim = getLength();
-            const ArrayDouble::Values& values = getValues();
-
-            for (unsigned i = 0; i<dim; ++i)
+            else
             {
-                for (unsigned j = 0; j<dim; ++j)
+                if (values[i*dim + j] != 0.0)  // Strict comparison intended
                 {
-                    if (i == j)
-                    {
-                        if (values[i*dim + j] != 1.0)  // Strict comparison intended
-                        {
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        if (values[i*dim + j] != 0.0)  // Strict comparison intended
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        void Matrix::MatrixArray::fill()
-        {
-            const unsigned dim = getLength();
-            ArrayDouble::Values& values = getValues();
-
-            const double scaleFactor
-                = (double)GetBitDepthMaxValue(m_outBitDepth)
-                / (double)GetBitDepthMaxValue(m_inBitDepth);
-
-            memset(&values[0], 0, values.size() * sizeof(double));
-
-            for (unsigned i = 0; i<dim; ++i)
-            {
-                for (unsigned j = 0; j<dim; ++j)
-                {
-                    if (i == j)
-                    {
-                        values[i*dim + j] = scaleFactor;
-                    }
+                    return false;
                 }
             }
         }
+    }
 
-        void Matrix::MatrixArray::expandFrom3x3To4x4()
+    return true;
+}
+
+void Matrix::MatrixArray::fill()
+{
+    const unsigned dim = getLength();
+    ArrayDouble::Values& values = getValues();
+
+    const double scaleFactor
+        = (double)GetBitDepthMaxValue(m_outBitDepth)
+        / (double)GetBitDepthMaxValue(m_inBitDepth);
+
+    memset(&values[0], 0, values.size() * sizeof(double));
+
+    for (unsigned i = 0; i<dim; ++i)
+    {
+        for (unsigned j = 0; j<dim; ++j)
         {
-            const Values oldValues = getValues();
-
-            resize(4, 4);
-            Values& v = getValues();
-
-            v[0] = oldValues[0];
-            v[1] = oldValues[1];
-            v[2] = oldValues[2];
-            v[3] = 0.0;
-
-            v[4] = oldValues[3];
-            v[5] = oldValues[4];
-            v[6] = oldValues[5];
-            v[7] = 0.0;
-
-            v[8] = oldValues[6];
-            v[9] = oldValues[7];
-            v[10] = oldValues[8];
-            v[11] = 0.0;
-
-            const double scaleFactor
-                = (double)GetBitDepthMaxValue(m_outBitDepth)
-                / (double)GetBitDepthMaxValue(m_inBitDepth);
-
-            v[12] = 0.0;
-            v[13] = 0.0;
-            v[14] = 0.0;
-            v[15] = scaleFactor;
-        }
-
-        void Matrix::MatrixArray::setRGBValues(const float* values)
-        {
-            Values& v = getValues();
-
-            v[0] = values[0];
-            v[1] = values[1];
-            v[2] = values[2];
-            v[3] = 0.0;
-
-            v[4] = values[3];
-            v[5] = values[4];
-            v[6] = values[5];
-            v[7] = 0.0;
-
-            v[8] = values[6];
-            v[9] = values[7];
-            v[10] = values[8];
-            v[11] = 0.0;
-
-            const double scaleFactor
-                = (double)GetBitDepthMaxValue(m_outBitDepth)
-                / (double)GetBitDepthMaxValue(m_inBitDepth);
-
-            v[12] = 0.0;
-            v[13] = 0.0;
-            v[14] = 0.0;
-            v[15] = scaleFactor;
-        }
-
-        void Matrix::MatrixArray::setRGBAValues(const float* values)
-        {
-            Values& v = getValues();
-
-            v[0] = values[0];
-            v[1] = values[1];
-            v[2] = values[2];
-            v[3] = values[3];
-
-            v[4] = values[4];
-            v[5] = values[5];
-            v[6] = values[6];
-            v[7] = values[7];
-
-            v[8] = values[8];
-            v[9] = values[9];
-            v[10] = values[10];
-            v[11] = values[11];
-
-            v[12] = values[12];
-            v[13] = values[13];
-            v[14] = values[14];
-            v[15] = values[15];
-        }
-
-        void Matrix::MatrixArray::setRGBAValues(const double* values)
-        {
-            Values& v = getValues();
-            memcpy(&v[0], values, 16 * sizeof(double));
-        }
-
-        void Matrix::MatrixArray::validate() const
-        {
-            ArrayDouble::validate();
-
-            // A 4x4 matrix is the canonical form, convert if it is only a 3x3.
-            if (getLength() == 3)
+            if (i == j)
             {
-                const_cast<MatrixArray*>(this)->expandFrom3x3To4x4();
+                values[i*dim + j] = scaleFactor;
             }
-            else if (getLength() != 4)
+        }
+    }
+}
+
+void Matrix::MatrixArray::expandFrom3x3To4x4()
+{
+    const Values oldValues = getValues();
+
+    resize(4, 4);
+    Values& v = getValues();
+
+    v[0] = oldValues[0];
+    v[1] = oldValues[1];
+    v[2] = oldValues[2];
+    v[3] = 0.0;
+
+    v[4] = oldValues[3];
+    v[5] = oldValues[4];
+    v[6] = oldValues[5];
+    v[7] = 0.0;
+
+    v[8] = oldValues[6];
+    v[9] = oldValues[7];
+    v[10] = oldValues[8];
+    v[11] = 0.0;
+
+    const double scaleFactor
+        = (double)GetBitDepthMaxValue(m_outBitDepth)
+        / (double)GetBitDepthMaxValue(m_inBitDepth);
+
+    v[12] = 0.0;
+    v[13] = 0.0;
+    v[14] = 0.0;
+    v[15] = scaleFactor;
+}
+
+void Matrix::MatrixArray::setRGBValues(const float* values)
+{
+    Values& v = getValues();
+
+    v[0] = values[0];
+    v[1] = values[1];
+    v[2] = values[2];
+    v[3] = 0.0;
+
+    v[4] = values[3];
+    v[5] = values[4];
+    v[6] = values[5];
+    v[7] = 0.0;
+
+    v[8] = values[6];
+    v[9] = values[7];
+    v[10] = values[8];
+    v[11] = 0.0;
+
+    const double scaleFactor
+        = (double)GetBitDepthMaxValue(m_outBitDepth)
+        / (double)GetBitDepthMaxValue(m_inBitDepth);
+
+    v[12] = 0.0;
+    v[13] = 0.0;
+    v[14] = 0.0;
+    v[15] = scaleFactor;
+}
+
+void Matrix::MatrixArray::setRGBAValues(const float* values)
+{
+    Values& v = getValues();
+
+    v[0] = values[0];
+    v[1] = values[1];
+    v[2] = values[2];
+    v[3] = values[3];
+
+    v[4] = values[4];
+    v[5] = values[5];
+    v[6] = values[6];
+    v[7] = values[7];
+
+    v[8] = values[8];
+    v[9] = values[9];
+    v[10] = values[10];
+    v[11] = values[11];
+
+    v[12] = values[12];
+    v[13] = values[13];
+    v[14] = values[14];
+    v[15] = values[15];
+}
+
+void Matrix::MatrixArray::setRGBAValues(const double* values)
+{
+    Values& v = getValues();
+    memcpy(&v[0], values, 16 * sizeof(double));
+}
+
+void Matrix::MatrixArray::validate() const
+{
+    ArrayDouble::validate();
+
+    // A 4x4 matrix is the canonical form, convert if it is only a 3x3.
+    if (getLength() == 3)
+    {
+        const_cast<MatrixArray*>(this)->expandFrom3x3To4x4();
+    }
+    else if (getLength() != 4)
+    {
+        throw Exception("Matrix: array content issue.");
+    }
+
+    if (getNumColorComponents() != 4)
+    {
+        throw Exception("Matrix: Dimensions must be 4x4.");
+    }
+}
+
+
+void Matrix::MatrixArray::setOutputBitDepth(BitDepth out)
+{
+    // Scale factor is max_new_depth/max_old_depth
+    const double scaleFactor
+        = (double)GetBitDepthMaxValue(out)
+        / (double)GetBitDepthMaxValue(m_outBitDepth);
+
+    // Save the new outputbitdepth
+    m_outBitDepth = out;
+
+    // Scale the values
+    Values& v = getValues();
+    const size_t size = v.size();
+
+    for (unsigned i = 0; i < size; ++i) {
+        v[i] *= scaleFactor;
+    }
+}
+
+void Matrix::MatrixArray::setInputBitDepth(BitDepth in)
+{
+    // Scale factor is max_old_depth/max_new_depth
+    const double scaleFactor
+        = (double)GetBitDepthMaxValue(m_inBitDepth)
+        / (double)GetBitDepthMaxValue(in);
+
+    // Save the new inputbitdepth
+    m_inBitDepth = in;
+
+    // Scale the values
+    Values& v = getValues();
+    const size_t size = v.size();
+
+    for (unsigned i = 0; i < size; ++i) {
+        v[i] *= scaleFactor;
+    }
+}
+
+////////////////////////////////////////////////
+
+Matrix::Matrix()
+    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
+{
+}
+
+Matrix::Matrix(BitDepth inBitDepth,
+                BitDepth outBitDepth)
+    : OpData(inBitDepth, outBitDepth)
+    , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
+{
+}
+
+Matrix::Matrix(BitDepth inBitDepth,
+                BitDepth outBitDepth,
+                const std::string& id,
+                const std::string& name,
+                const Descriptions& descriptions)
+    : OpData(inBitDepth, outBitDepth, id, name, descriptions)
+    , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
+{
+}
+
+Matrix::~Matrix()
+{
+}
+
+OpData* Matrix::clone(CloneType) const
+{
+    return new Matrix(*this);
+}
+
+const std::string& Matrix::getOpTypeName() const
+{
+    static const std::string type("Matrix");
+    return type;
+}
+
+OpData::OpType Matrix::getOpType() const
+{
+    return OpData::MatrixType;
+}
+
+void Matrix::setArrayValue(unsigned index, double value)
+{
+    m_array.getValues()[index] = value;
+}
+
+void  Matrix::setRGBValues(const float* values)
+{
+    m_array.setRGBValues(values);
+}
+
+void  Matrix::setRGBAValues(const float* values)
+{
+    m_array.setRGBAValues(values);
+}
+
+void Matrix::setRGBAValues(const double* values)
+{
+    m_array.setRGBAValues(values);
+}
+
+void Matrix::validate() const
+{
+    OpData::validate();
+
+    try
+    {
+        m_array.validate();
+    }
+    catch (Exception& e)
+    {
+        std::ostringstream oss;
+        oss << "Matrix array content issue: ";
+        oss << e.what();
+
+        throw Exception(oss.str().c_str());
+    }
+
+    if (m_array.getNumColorComponents() != 4)
+    {
+        throw Exception("Matrix: missing color component.");
+    }
+
+    if (m_array.getLength() != 4)
+    {
+        throw Exception("Matrix: array content issue.");
+    }
+}
+
+// We do a number of exact floating-point comparisons in the following
+// methods. Note that this op may be used to do very fine adjustments
+// to pixels. Therefore it is problematic to attempt to judge values
+// passed in from a user's transform as to whether they are "close enough"
+// to e.g. 1 or 0. However, we still want to allow a matrix and its
+// inverse to be composed and be able to call the result an identity
+// (recognizing it won't quite be). Therefore, the strategy here is to do
+// exact compares on users files but to "clean up" matrices as part of
+// composition to make this work in practice. The concept is that the
+// tolerances are moved to where errors are introduced rather than
+// indiscriminately applying them to all user ops.
+
+// Since "Identity" has a generic meaning for all ops, we use the Matlab
+// term "Eye" to refer to the case where the array coefficients are 1 on
+// the diagonal an 0 elsewhere.
+bool Matrix::isEye() const
+{
+    return m_array.isIdentity();
+}
+
+// For all ops, an "Identity" is an op that only does bit-depth conversion
+// and is therefore a candidate for the optimizer to remove.
+bool Matrix::isIdentity() const
+{
+    if (hasOffsets() || hasAlpha() || !isDiagonal())
+    {
+        return false;
+    }
+
+    return isMatrixIdentity();
+}
+         
+bool Matrix::isMatrixIdentity() const
+{
+    // Now check the diagonal elements
+    const double scaleFactor
+        = (double)GetBitDepthMaxValue(getOutputBitDepth())
+        / (double)GetBitDepthMaxValue(getInputBitDepth());
+
+    const double maxDiff = scaleFactor * 1e-6;
+
+    const ArrayDouble& a = getArray();
+    const ArrayDouble::Values& m = a.getValues();
+    const unsigned dim = a.getLength();
+
+    for (unsigned i = 0; i<dim; ++i)
+    {
+        for (unsigned j = 0; j<dim; ++j)
+        {
+            if (i == j)
             {
-                throw Exception("Matrix: array content issue.");
-            }
-
-            if (getNumColorComponents() != 4)
-            {
-                throw Exception("Matrix: Dimensions must be 4x4.");
-            }
-        }
-
-
-        void Matrix::MatrixArray::setOutputBitDepth(BitDepth out)
-        {
-            // Scale factor is max_new_depth/max_old_depth
-            const double scaleFactor
-                = (double)GetBitDepthMaxValue(out)
-                / (double)GetBitDepthMaxValue(m_outBitDepth);
-
-            // Save the new outputbitdepth
-            m_outBitDepth = out;
-
-            // Scale the values
-            Values& v = getValues();
-            const size_t size = v.size();
-
-            for (unsigned i = 0; i < size; ++i) {
-                v[i] *= scaleFactor;
+                if (!equalWithAbsError(m[i*dim + j],
+                                        scaleFactor,
+                                        maxDiff))
+                {
+                    return false;
+                }
             }
         }
+    }
 
-        void Matrix::MatrixArray::setInputBitDepth(BitDepth in)
+    return true;
+}
+
+bool Matrix::isDiagonal() const
+{
+    const ArrayDouble& a = getArray();
+    const ArrayDouble::Values& m = a.getValues();
+    const unsigned max = a.getNumValues();
+    const unsigned dim = a.getLength();
+
+    for (unsigned idx = 0; idx<max; ++idx)
+    {
+        if ((idx % (dim + 1)) != 0) // Not on the diagonal
         {
-            // Scale factor is max_old_depth/max_new_depth
-            const double scaleFactor
-                = (double)GetBitDepthMaxValue(m_inBitDepth)
-                / (double)GetBitDepthMaxValue(in);
-
-            // Save the new inputbitdepth
-            m_inBitDepth = in;
-
-            // Scale the values
-            Values& v = getValues();
-            const size_t size = v.size();
-
-            for (unsigned i = 0; i < size; ++i) {
-                v[i] *= scaleFactor;
-            }
-        }
-
-        ////////////////////////////////////////////////
-
-        Matrix::Matrix()
-            : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-            , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
-        {
-        }
-
-        Matrix::Matrix(BitDepth inBitDepth,
-                       BitDepth outBitDepth)
-            : OpData(inBitDepth, outBitDepth)
-            , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
-        {
-        }
-
-        Matrix::Matrix(BitDepth inBitDepth,
-                       BitDepth outBitDepth,
-                       const std::string& id,
-                       const std::string& name,
-                       const Descriptions& descriptions)
-            : OpData(inBitDepth, outBitDepth, id, name, descriptions)
-            , m_array(getInputBitDepth(), getOutputBitDepth(), 4, 4)
-        {
-        }
-
-        Matrix::~Matrix()
-        {
-        }
-
-        OpData* Matrix::clone(CloneType) const
-        {
-            return new Matrix(*this);
-        }
-
-        const std::string& Matrix::getOpTypeName() const
-        {
-            static const std::string type("Matrix");
-            return type;
-        }
-
-        OpData::OpType Matrix::getOpType() const
-        {
-            return OpData::MatrixType;
-        }
-
-        void Matrix::setArrayValue(unsigned index, double value)
-        {
-            m_array.getValues()[index] = value;
-        }
-
-        void  Matrix::setRGBValues(const float* values)
-        {
-            m_array.setRGBValues(values);
-        }
-
-        void  Matrix::setRGBAValues(const float* values)
-        {
-            m_array.setRGBAValues(values);
-        }
-
-        void Matrix::setRGBAValues(const double* values)
-        {
-            m_array.setRGBAValues(values);
-        }
-
-        void Matrix::validate() const
-        {
-            OpData::validate();
-
-            try
-            {
-                m_array.validate();
-            }
-            catch (Exception& e)
-            {
-                std::ostringstream oss;
-                oss << "Matrix array content issue: ";
-                oss << e.what();
-
-                throw Exception(oss.str().c_str());
-            }
-
-            if (m_array.getNumColorComponents() != 4)
-            {
-                throw Exception("Matrix: missing color component.");
-            }
-
-            if (m_array.getLength() != 4)
-            {
-                throw Exception("Matrix: array content issue.");
-            }
-        }
-
-        // We do a number of exact floating-point comparisons in the following
-        // methods. Note that this op may be used to do very fine adjustments
-        // to pixels. Therefore it is problematic to attempt to judge values
-        // passed in from a user's transform as to whether they are "close enough"
-        // to e.g. 1 or 0. However, we still want to allow a matrix and its
-        // inverse to be composed and be able to call the result an identity
-        // (recognizing it won't quite be). Therefore, the strategy here is to do
-        // exact compares on users files but to "clean up" matrices as part of
-        // composition to make this work in practice. The concept is that the
-        // tolerances are moved to where errors are introduced rather than
-        // indiscriminately applying them to all user ops.
-
-        // Since "Identity" has a generic meaning for all ops, we use the Matlab
-        // term "Eye" to refer to the case where the array coefficients are 1 on
-        // the diagonal an 0 elsewhere.
-        bool Matrix::isEye() const
-        {
-            return m_array.isIdentity();
-        }
-
-        // For all ops, an "Identity" is an op that only does bit-depth conversion
-        // and is therefore a candidate for the optimizer to remove.
-        bool Matrix::isIdentity() const
-        {
-            if (hasOffsets() || hasAlpha() || !isDiagonal())
+            if (m[idx] != 0.0) // Strict comparison intended
             {
                 return false;
             }
-
-            return isMatrixIdentity();
         }
-         
-        bool Matrix::isMatrixIdentity() const
+    }
+
+    return true;
+}
+
+bool Matrix::hasAlpha() const
+{
+    const ArrayDouble& a = getArray();
+    const ArrayDouble::Values& m = a.getValues();
+
+    // Now check the diagonal elements
+    const double scaleFactor
+        = (double)GetBitDepthMaxValue(getOutputBitDepth())
+        / (double)GetBitDepthMaxValue(getInputBitDepth());
+    const double maxDiff = scaleFactor * 1e-6;
+
+    return
+
+        // Last column
+        (m[3] != 0.0) || // Strict comparison intended
+        (m[7] != 0.0) ||
+        (m[11] != 0.0) ||
+
+        // Diagonal
+        !equalWithAbsError(m[15], scaleFactor, maxDiff) ||
+
+        // Bottom row
+        (m[12] != 0.0) || // Strict comparison intended
+        (m[13] != 0.0) ||
+        (m[14] != 0.0);
+}
+
+Matrix* Matrix::CreateDiagonalMatrix(
+    BitDepth inBitDepth,
+    BitDepth outBitDepth,
+    double diagValue)
+{
+    // Create a matrix with no offset
+    Matrix* pM = new Matrix(inBitDepth, outBitDepth);
+    pM->setName("Diagonal matrix");
+
+    pM->validate();
+
+    pM->setArrayValue(0, diagValue);
+    pM->setArrayValue(5, diagValue);
+    pM->setArrayValue(10, diagValue);
+    pM->setArrayValue(15, diagValue);
+
+    return pM;
+}
+
+double Matrix::getOffsetValue(unsigned index) const
+{
+    const unsigned dim = getArray().getLength();
+    if (index >= dim)
+    {
+        // TODO: should never happen. Consider assert.
+        std::ostringstream oss;
+        oss << "Matrix array content issue: '";
+        oss << getMeaningfullIdentifier().c_str();
+        oss << "' offset index out of range '";
+        oss << index;
+        oss << "'. ";
+
+        throw Exception(oss.str().c_str());
+    }
+
+    return m_offsets[index];
+}
+
+void Matrix::setOffsetValue(unsigned index, double value)
+{
+    const unsigned dim = getArray().getLength();
+    if (index >= dim)
+    {
+        // TODO: should never happen. Consider assert.
+        std::ostringstream oss;
+        oss << "Matrix array content issue: '";
+        oss << getMeaningfullIdentifier().c_str();
+        oss << "' offset index out of range '";
+        oss << index;
+        oss << "'. ";
+
+        throw Exception(oss.str().c_str());
+    }
+
+    m_offsets[index] = value;
+}
+
+void Matrix::setOutputBitDepth(BitDepth out)
+{
+    // Scale factor is max_new_depth/max_old_depth
+    const double scaleFactor
+        = (double)GetBitDepthMaxValue(out)
+        / (double)GetBitDepthMaxValue(getOutputBitDepth());
+
+    // Call parent to set the outputbitdepth
+    OpData::setOutputBitDepth(out);
+
+    // set new outputbitdepth to the array
+    m_array.setOutputBitDepth(out);
+
+    // Scale the offsets
+    m_offsets.scale(scaleFactor);
+}
+
+void Matrix::setInputBitDepth(BitDepth in)
+{
+    // Call parent to set the inputbitdepth
+    OpData::setInputBitDepth(in);
+
+    // set new outputbitdepth to the array
+    m_array.setInputBitDepth(in);
+}
+
+OpDataMatrixRcPtr Matrix::compose(const Matrix& B) const
+{
+    if (getOutputBitDepth() != B.getInputBitDepth())
+    {
+        std::ostringstream oss;
+        oss << "Matrix bitdepth missmatch between '";
+        oss << getMeaningfullIdentifier();
+        oss << "' and '";
+        oss << B.getMeaningfullIdentifier();
+        oss << "'. ";
+
+        throw Exception(oss.str().c_str());
+    }
+
+    // Ensure that both matrices will have the right dimension (ie. 4x4)
+    if (m_array.getLength() != 4 || B.m_array.getLength() != 4)
+    {
+        // TODO: should never happen. Consider assert.
+        throw Exception("Matrix: array content issue.");
+    }
+
+    Descriptions newDesc = getDescriptions();
+    newDesc += B.getDescriptions();
+    OpDataMatrixRcPtr Out(
+        new Matrix(getInputBitDepth(), B.getOutputBitDepth()));
+    Out->setId(getId() + B.getId());
+    Out->setName(getName() + B.getName());
+    Out->getDescriptions() = newDesc;
+    // TODO: May want to revisit how the metadata is set.
+
+    // By definition, A.compose(B) implies that op A precedes op B
+    // in the opList. The LUT format coefficients follow matrix math:
+    // vec2 = A x vec1 where A is 3x3 and vec is 3x1.
+    // So the composite operation in matrix form is vec2 = B x A x vec1.
+    // Hence we compute B x A rather than A x B.
+
+    MatrixArrayPtr OutPtr = B.m_array.inner(this->m_array);
+
+    Out->getArray() = *OutPtr.get();
+
+    // Compute matrix B times offsets from A.
+
+    Matrix::Offsets offs;
+
+    B.m_array.inner(getOffsets(), offs);
+
+    const unsigned dim = this->m_array.getLength();
+
+    // Determine overall scaling of the offsets prior to any catastrophic
+    // cancellation that may occur during the add.
+    double val, max_val = 0.;
+    for (unsigned i = 0; i<dim; ++i)
+    {
+        val = fabs(offs[i]);
+        max_val = max_val > val ? max_val : val;
+        val = fabs(B.getOffsets()[i]);
+        max_val = max_val > val ? max_val : val;
+    }
+
+    // Add offsets from B.
+    for (unsigned i = 0; i<dim; ++i)
+    {
+        offs[i] += B.getOffsets()[i];
+    }
+
+    Out->setOffsets(offs);
+
+    // To enable use of strict float comparisons above, we adjust the
+    // result so that values very near integers become exactly integers.
+    Out->cleanUp(max_val);
+
+    return Out;
+}
+
+void Matrix::cleanUp(double offsetScale)
+{
+    const ArrayDouble& a = getArray();
+    const ArrayDouble::Values& m = a.getValues();
+    const unsigned dim = a.getLength();
+
+    // Estimate the magnitude of the matrix
+    double max_val = 0.;
+    for (unsigned i = 0; i<dim; ++i)
+    {
+        for (unsigned j = 0; j<dim; ++j)
         {
-            // Now check the diagonal elements
-            const double scaleFactor
-                = (double)GetBitDepthMaxValue(getOutputBitDepth())
-                / (double)GetBitDepthMaxValue(getInputBitDepth());
-
-            const double maxDiff = scaleFactor * 1e-6;
-
-            const ArrayDouble& a = getArray();
-            const ArrayDouble::Values& m = a.getValues();
-            const unsigned dim = a.getLength();
-
-            for (unsigned i = 0; i<dim; ++i)
-            {
-                for (unsigned j = 0; j<dim; ++j)
-                {
-                    if (i == j)
-                    {
-                        if (!equalWithAbsError(m[i*dim + j],
-                                               scaleFactor,
-                                               maxDiff))
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            return true;
+            const double val = fabs(m[i * dim + j]);
+            max_val = max_val > val ? max_val : val;
         }
+    }
 
-        bool Matrix::isDiagonal() const
+    // Determine an absolute tolerance
+    const double scale = max_val > 1e-4 ? max_val : 1e-4;
+    const double abs_tol = scale * 1e-6;
+
+    // Replace values that are close to integers by exact values
+    for (unsigned i = 0; i<dim; ++i)
+    {
+        for (unsigned j = 0; j<dim; ++j)
         {
-            const ArrayDouble& a = getArray();
-            const ArrayDouble::Values& m = a.getValues();
-            const unsigned max = a.getNumValues();
-            const unsigned dim = a.getLength();
-
-            for (unsigned idx = 0; idx<max; ++idx)
+            const double val = m[i * dim + j];
+            const double round_val = round(val);
+            const double diff = fabs(val - round_val);
+            if (diff < abs_tol)
             {
-                if ((idx % (dim + 1)) != 0) // Not on the diagonal
-                {
-                    if (m[idx] != 0.0) // Strict comparison intended
-                    {
-                        return false;
-                    }
-                }
+                setArrayValue(i * dim + j, round_val);
             }
-
-            return true;
         }
+    }
 
-        bool Matrix::hasAlpha() const
+    // Do likewise for the offsets
+    const double scale2 = offsetScale > 1e-4 ? offsetScale : 1e-4;
+    const double abs_tol2 = scale2 * 1e-6;
+
+    for (unsigned i = 0; i<dim; ++i)
+    {
+        const double val = getOffsets()[i];
+        const double round_val = round(val);
+        const double diff = fabs(val - round_val);
+        if (diff < abs_tol2)
         {
-            const ArrayDouble& a = getArray();
-            const ArrayDouble::Values& m = a.getValues();
-
-            // Now check the diagonal elements
-            const double scaleFactor
-                = (double)GetBitDepthMaxValue(getOutputBitDepth())
-                / (double)GetBitDepthMaxValue(getInputBitDepth());
-            const double maxDiff = scaleFactor * 1e-6;
-
-            return
-
-                // Last column
-                (m[3] != 0.0) || // Strict comparison intended
-                (m[7] != 0.0) ||
-                (m[11] != 0.0) ||
-
-                // Diagonal
-                !equalWithAbsError(m[15], scaleFactor, maxDiff) ||
-
-                // Bottom row
-                (m[12] != 0.0) || // Strict comparison intended
-                (m[13] != 0.0) ||
-                (m[14] != 0.0);
+            setOffsetValue(i, round_val);
         }
+    }
+}
 
-        Matrix* Matrix::CreateDiagonalMatrix(
-            BitDepth inBitDepth,
-            BitDepth outBitDepth,
-            double diagValue)
-        {
-            // Create a matrix with no offset
-            Matrix* pM = new Matrix(inBitDepth, outBitDepth);
-            pM->setName("Diagonal matrix");
+bool Matrix::operator==(const OpData& other) const
+{
+    if (this == &other) return true;
+    if (getOpType() != other.getOpType()) return false;
 
-            pM->validate();
+    const Matrix* mop = static_cast<const Matrix*>(&other);
 
-            pM->setArrayValue(0, diagValue);
-            pM->setArrayValue(5, diagValue);
-            pM->setArrayValue(10, diagValue);
-            pM->setArrayValue(15, diagValue);
+    return (OpData::operator==(other) &&
+        m_array == mop->m_array &&
+        m_offsets == mop->m_offsets);
+}
 
-            return pM;
-        }
+void Matrix::inverse(OpDataVec & v) const
+{
+    // Get the inverse matrix
+    MatrixArrayPtr invMatrixArray = m_array.inverse();
+    // MatrixArray::inverse() will throw for singular matrices
 
-        double Matrix::getOffsetValue(unsigned index) const
-        {
-            const unsigned dim = getArray().getLength();
-            if (index >= dim)
-            {
-                // TODO: should never happen. Consider assert.
-                std::ostringstream oss;
-                oss << "Matrix array content issue: '";
-                oss << getMeaningfullIdentifier().c_str();
-                oss << "' offset index out of range '";
-                oss << index;
-                oss << "'. ";
+    // Calculate the inverse offset
+    const Offsets& offsets = getOffsets();
+    Matrix::Offsets invOffsets;
+    if (offsets.isNotNull())
+    {
+        invMatrixArray->inner(offsets, invOffsets);
+        invOffsets.scale(-1);
+    }
 
-                throw Exception(oss.str().c_str());
-            }
+    Matrix* invOp = 0x0;
+    try
+    {
+        invOp = new Matrix(getOutputBitDepth(), getInputBitDepth());
+        invOp->setRGBAValues(&(invMatrixArray->getValues()[0]));
+        invOp->setOffsets(invOffsets);
+    }
+    catch (const Exception& e)
+    {
+        delete invOp;
+        throw e;
+    }
 
-            return m_offsets[index];
-        }
+    // No need to call validate(), the invOp will have proper dimension,
+    // bitdepths, matrix and offets values.
 
-        void Matrix::setOffsetValue(unsigned index, double value)
-        {
-            const unsigned dim = getArray().getLength();
-            if (index >= dim)
-            {
-                // TODO: should never happen. Consider assert.
-                std::ostringstream oss;
-                oss << "Matrix array content issue: '";
-                oss << getMeaningfullIdentifier().c_str();
-                oss << "' offset index out of range '";
-                oss << index;
-                oss << "'. ";
+    v.append(invOp);
+}
 
-                throw Exception(oss.str().c_str());
-            }
-
-            m_offsets[index] = value;
-        }
-
-        void Matrix::setOutputBitDepth(BitDepth out)
-        {
-            // Scale factor is max_new_depth/max_old_depth
-            const double scaleFactor
-                = (double)GetBitDepthMaxValue(out)
-                / (double)GetBitDepthMaxValue(getOutputBitDepth());
-
-            // Call parent to set the outputbitdepth
-            OpData::setOutputBitDepth(out);
-
-            // set new outputbitdepth to the array
-            m_array.setOutputBitDepth(out);
-
-            // Scale the offsets
-            m_offsets.scale(scaleFactor);
-        }
-
-        void Matrix::setInputBitDepth(BitDepth in)
-        {
-            // Call parent to set the inputbitdepth
-            OpData::setInputBitDepth(in);
-
-            // set new outputbitdepth to the array
-            m_array.setInputBitDepth(in);
-        }
-
-        OpDataMatrixRcPtr Matrix::compose(const Matrix& B) const
-        {
-            if (getOutputBitDepth() != B.getInputBitDepth())
-            {
-                std::ostringstream oss;
-                oss << "Matrix bitdepth missmatch between '";
-                oss << getMeaningfullIdentifier();
-                oss << "' and '";
-                oss << B.getMeaningfullIdentifier();
-                oss << "'. ";
-
-                throw Exception(oss.str().c_str());
-            }
-
-            // Ensure that both matrices will have the right dimension (ie. 4x4)
-            if (m_array.getLength() != 4 || B.m_array.getLength() != 4)
-            {
-                // TODO: should never happen. Consider assert.
-                throw Exception("Matrix: array content issue.");
-            }
-
-            Descriptions newDesc = getDescriptions();
-            newDesc += B.getDescriptions();
-            OpDataMatrixRcPtr Out(
-                new Matrix(getInputBitDepth(), B.getOutputBitDepth()));
-            Out->setId(getId() + B.getId());
-            Out->setName(getName() + B.getName());
-            Out->getDescriptions() = newDesc;
-            // TODO: May want to revisit how the metadata is set.
-
-            // By definition, A.compose(B) implies that op A precedes op B
-            // in the opList. The LUT format coefficients follow matrix math:
-            // vec2 = A x vec1 where A is 3x3 and vec is 3x1.
-            // So the composite operation in matrix form is vec2 = B x A x vec1.
-            // Hence we compute B x A rather than A x B.
-
-            MatrixArrayPtr OutPtr = B.m_array.inner(this->m_array);
-
-            Out->getArray() = *OutPtr.get();
-
-            // Compute matrix B times offsets from A.
-
-            Matrix::Offsets offs;
-
-            B.m_array.inner(getOffsets(), offs);
-
-            const unsigned dim = this->m_array.getLength();
-
-            // Determine overall scaling of the offsets prior to any catastrophic
-            // cancellation that may occur during the add.
-            double val, max_val = 0.;
-            for (unsigned i = 0; i<dim; ++i)
-            {
-                val = fabs(offs[i]);
-                max_val = max_val > val ? max_val : val;
-                val = fabs(B.getOffsets()[i]);
-                max_val = max_val > val ? max_val : val;
-            }
-
-            // Add offsets from B.
-            for (unsigned i = 0; i<dim; ++i)
-            {
-                offs[i] += B.getOffsets()[i];
-            }
-
-            Out->setOffsets(offs);
-
-            // To enable use of strict float comparisons above, we adjust the
-            // result so that values very near integers become exactly integers.
-            Out->cleanUp(max_val);
-
-            return Out;
-        }
-
-        void Matrix::cleanUp(double offsetScale)
-        {
-            const ArrayDouble& a = getArray();
-            const ArrayDouble::Values& m = a.getValues();
-            const unsigned dim = a.getLength();
-
-            // Estimate the magnitude of the matrix
-            double max_val = 0.;
-            for (unsigned i = 0; i<dim; ++i)
-            {
-                for (unsigned j = 0; j<dim; ++j)
-                {
-                    const double val = fabs(m[i * dim + j]);
-                    max_val = max_val > val ? max_val : val;
-                }
-            }
-
-            // Determine an absolute tolerance
-            const double scale = max_val > 1e-4 ? max_val : 1e-4;
-            const double abs_tol = scale * 1e-6;
-
-            // Replace values that are close to integers by exact values
-            for (unsigned i = 0; i<dim; ++i)
-            {
-                for (unsigned j = 0; j<dim; ++j)
-                {
-                    const double val = m[i * dim + j];
-                    const double round_val = round(val);
-                    const double diff = fabs(val - round_val);
-                    if (diff < abs_tol)
-                    {
-                        setArrayValue(i * dim + j, round_val);
-                    }
-                }
-            }
-
-            // Do likewise for the offsets
-            const double scale2 = offsetScale > 1e-4 ? offsetScale : 1e-4;
-            const double abs_tol2 = scale2 * 1e-6;
-
-            for (unsigned i = 0; i<dim; ++i)
-            {
-                const double val = getOffsets()[i];
-                const double round_val = round(val);
-                const double diff = fabs(val - round_val);
-                if (diff < abs_tol2)
-                {
-                    setOffsetValue(i, round_val);
-                }
-            }
-        }
-
-        bool Matrix::operator==(const OpData& other) const
-        {
-            if (this == &other) return true;
-            if (getOpType() != other.getOpType()) return false;
-
-            const Matrix* mop = static_cast<const Matrix*>(&other);
-
-            return (OpData::operator==(other) &&
-                m_array == mop->m_array &&
-                m_offsets == mop->m_offsets);
-        }
-
-        void Matrix::inverse(OpDataVec & v) const
-        {
-            // Get the inverse matrix
-            MatrixArrayPtr invMatrixArray = m_array.inverse();
-            // MatrixArray::inverse() will throw for singular matrices
-
-            // Calculate the inverse offset
-            const Offsets& offsets = getOffsets();
-            Matrix::Offsets invOffsets;
-            if (offsets.isNotNull())
-            {
-                invMatrixArray->inner(offsets, invOffsets);
-                invOffsets.scale(-1);
-            }
-
-            Matrix* invOp = 0x0;
-            try
-            {
-                invOp = new Matrix(getOutputBitDepth(), getInputBitDepth());
-                invOp->setRGBAValues(&(invMatrixArray->getValues()[0]));
-                invOp->setOffsets(invOffsets);
-            }
-            catch (const Exception& e)
-            {
-                delete invOp;
-                throw e;
-            }
-
-            // No need to call validate(), the invOp will have proper dimension,
-            // bitdepths, matrix and offets values.
-
-            v.append(invOp);
-        }
-
-        std::auto_ptr<OpData> Matrix::getIdentityReplacement() const
-        {
-            return std::auto_ptr<OpData>(
-                new Matrix(getInputBitDepth(), getOutputBitDepth()));
-        }
-    } // exit OpData namespace
+std::auto_ptr<OpData> Matrix::getIdentityReplacement() const
+{
+    return std::auto_ptr<OpData>(
+        new Matrix(getInputBitDepth(), getOutputBitDepth()));
+}
+} // exit OpData namespace
 }
 OCIO_NAMESPACE_EXIT
 

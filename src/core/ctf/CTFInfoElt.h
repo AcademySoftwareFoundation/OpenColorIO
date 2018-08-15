@@ -30,7 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_CTFINFOELT_H
 #define INCLUDED_OCIO_CTFINFOELT_H
 
-#include "CTFMetadataElt.h"
+#include "CTFComplexElt.h"
+#include "../opdata/OpDataMetadata.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -41,37 +42,76 @@ namespace CTF
 // Private namespace for the xml reader utils
 namespace Reader
 {
+class MetadataElt : public ComplexElt
+{
+public:
+    // Constructor
+    // - name the element name
+    // - pParent the element parent
+    // - xmlLineNumber the location
+    // - xmlFile the XML file
+    MetadataElt(const std::string& name,
+        ContainerElt* pParent,
+        unsigned xmlLineNumber,
+        const std::string& xmlFile);
 
-    class InfoElt : public MetadataElt
-    {
-    public:
-        // Constructor
-        // - name the element name
-        // - pParent the element parent
-        // - xmlLineNumber the location
-        // - xmlFile the XML file
-        InfoElt(const std::string& name,
-                ContainerElt* pParent,
-                unsigned xmlLineNumber,
-                const std::string& xmlFile);
+    // Destructor
+    virtual ~MetadataElt();
 
-        // Destructor
-        virtual ~InfoElt();
+    // Get the element's identifier
+    const std::string& getIdentifier() const;
 
-        // Start the parsing of the element
-        virtual void start(const char **atts);
+    // Start the parsing of the element
+    void start(const char **atts);
 
-        // End the parsing of the element
-        virtual void end();
+    // End the parsing of the element
+    virtual void end();
+
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
+
+    // Get the element's metadata
+    OpData::Metadata& getMetadata() { return m_metadata; }
+
+protected:
+    OpData::Metadata m_metadata;
+
+private:
+    // No default Constructor
+    MetadataElt();
+};
+
+class InfoElt : public MetadataElt
+{
+public:
+    // Constructor
+    // - name the element name
+    // - pParent the element parent
+    // - xmlLineNumber the location
+    // - xmlFile the XML file
+    InfoElt(const std::string& name,
+            ContainerElt* pParent,
+            unsigned xmlLineNumber,
+            const std::string& xmlFile);
+
+    // Destructor
+    virtual ~InfoElt();
+
+    // Start the parsing of the element
+    virtual void start(const char **atts);
+
+    // End the parsing of the element
+    virtual void end();
     
-    private:
-        // No default constructor
-        InfoElt();
-    };
-
+private:
+    // No default constructor
+    InfoElt();
+};
 
 } // exit Reader namespace
-
 } // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT

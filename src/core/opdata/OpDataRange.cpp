@@ -41,747 +41,747 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+Range::Range()
+    :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    ,   m_minInValue(Range::EmptyValue())
+    ,   m_maxInValue(Range::EmptyValue())
+    ,   m_minOutValue(Range::EmptyValue())
+    ,   m_maxOutValue(Range::EmptyValue())
+
+    ,   m_scale(0.)
+    ,   m_offset(0.)
+    ,   m_lowBound(0.)
+    ,   m_highBound(0.)
+    ,   m_alphaScale(0.)
+{
+}
+
+Range::Range(const IndexMapping& pIM, BitDepth inDepth, unsigned len)
+    :   OpData(inDepth, BIT_DEPTH_F32)
+    ,   m_minInValue(Range::EmptyValue())
+    ,   m_maxInValue(Range::EmptyValue())
+    ,   m_minOutValue(Range::EmptyValue())
+    ,   m_maxOutValue(Range::EmptyValue())
+    ,   m_scale(0.)
+    ,   m_offset(0.)
+    ,   m_lowBound(0.)
+    ,   m_highBound(0.)
+    ,   m_alphaScale(0.)
+{
+    if (pIM.getDimension() != 2)
     {
-        Range::Range()
-            :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-            ,   m_minInValue(Range::EmptyValue())
-            ,   m_maxInValue(Range::EmptyValue())
-            ,   m_minOutValue(Range::EmptyValue())
-            ,   m_maxOutValue(Range::EmptyValue())
+        throw Exception("CTF parsing error. IndexMap must have two entries.");
+    }
 
-            ,   m_scale(0.)
-            ,   m_offset(0.)
-            ,   m_lowBound(0.)
-            ,   m_highBound(0.)
-            ,   m_alphaScale(0.)
+    float first, second;
+    pIM.getPair(0u, first, second);
+
+    // The first half of the pair is scaled to the LUT's input bit depth.
+    m_minInValue = first;
+    // The second half is scaled to the number of entries in the LUT.
+    m_minOutValue = second / (float)(len - 1u);
+
+    // Note: The CLF spec does not say how to handle out-of-range values.
+    // E.g., a user could specify an index longer than the LUT length.
+    // For now, we are not preventing this (no harm is done since those values
+    // are already clipped safely on input to the LUT renderers).
+
+    pIM.getPair(1u, first, second);
+    m_maxInValue = first;
+    m_maxOutValue = second / (float)(len - 1u);
+
+    validate();
+
+    // The maxOutValues are scaled for 32f, so call the Range version to
+    // set the depth and rescale values if necessary.  Note we are prepping
+    // things for the input depth of the LUT (which follows the range).
+    setOutputBitDepth(inDepth);
+}
+
+Range::Range(BitDepth inBitDepth,
+                BitDepth outBitDepth,
+                double minInValue,
+                double maxInValue,
+                double minOutValue,
+                double maxOutValue)
+    :   OpData(inBitDepth, outBitDepth)
+    ,   m_minInValue(minInValue)
+    ,   m_maxInValue(maxInValue)
+    ,   m_minOutValue(minOutValue)
+    ,   m_maxOutValue(maxOutValue)
+    ,   m_scale(0.)
+    ,   m_offset(0.)
+    ,   m_lowBound(0.)
+    ,   m_highBound(0.)
+    ,   m_alphaScale(0.)
+{
+    validate();
+}
+
+Range::Range(BitDepth inBitDepth,
+                BitDepth outBitDepth,
+                const std::string & id,
+                const std::string & name,
+                const Descriptions & descriptions,
+                double minInValue,
+                double maxInValue,
+                double minOutValue,
+                double maxOutValue)
+    :   OpData(inBitDepth, outBitDepth, id, name, descriptions)
+    ,   m_minInValue(minInValue)
+    ,   m_maxInValue(maxInValue)
+    ,   m_minOutValue(minOutValue)
+    ,   m_maxOutValue(maxOutValue)
+    ,   m_scale(0.)
+    ,   m_offset(0.)
+    ,   m_lowBound(0.)
+    ,   m_highBound(0.)
+    ,   m_alphaScale(0.)
+{
+    validate();
+}
+
+Range::~Range()
+{
+}
+
+
+const std::string& Range::getOpTypeName() const
+{
+    static const std::string type("Range");
+    return type;
+}
+
+
+void Range::setMinInValue(double value)
+{
+    m_minInValue = value;
+}
+
+bool Range::hasMinInValue() const 
+{
+    return !isnan((float)m_minInValue);
+}
+
+void Range::unsetMinInValue()
+{
+    m_minInValue = EmptyValue(); 
+}
+
+
+void Range::setMaxInValue(double value)
+{
+    m_maxInValue = value;
+}
+
+bool Range::hasMaxInValue() const 
+{
+    return !isnan((float)m_maxInValue);
+}
+
+void Range::unsetMaxInValue()
+{
+    m_maxInValue = EmptyValue(); 
+}
+
+
+void Range::setMinOutValue(double value)
+{
+    m_minOutValue = value;
+}
+
+bool Range::hasMinOutValue() const 
+{
+    return !isnan((float)m_minOutValue);
+}
+
+void Range::unsetMinOutValue()
+{
+    m_minOutValue = EmptyValue(); 
+}
+
+
+void Range::setMaxOutValue(double value)
+{
+    m_maxOutValue = value;
+}
+
+bool Range::hasMaxOutValue() const 
+{
+    return !isnan((float)m_maxOutValue);
+}
+
+void Range::unsetMaxOutValue()
+{
+    m_maxOutValue = EmptyValue(); 
+}
+
+
+// Important: The spec allows max/min elements to be missing.  When this 
+// happens, we set the member variables to NaN.  The interpretation of this
+// is that no clamping is requested at that bound.  The use of the NaN
+// technique is not exposed outside this module.
+double Range::EmptyValue()
+{
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+void Range::validate() const
+{
+    OpData::validate();
+
+    // NB: Need to allow vals to exceed normal integer range
+    // to allow lossless setting of bit-depth from float-->int-->float.
+
+    // If in_min or out_min is not empty, so must the other half be.
+    if (isnan((float)m_minInValue))
+    {
+        if (!isnan((float)m_minOutValue))
         {
+            throw Exception(
+                "In and out minimum limits must be both set or both missing in Range.");
         }
-
-        Range::Range(const IndexMapping& pIM, BitDepth inDepth, unsigned len)
-            :   OpData(inDepth, BIT_DEPTH_F32)
-            ,   m_minInValue(Range::EmptyValue())
-            ,   m_maxInValue(Range::EmptyValue())
-            ,   m_minOutValue(Range::EmptyValue())
-            ,   m_maxOutValue(Range::EmptyValue())
-            ,   m_scale(0.)
-            ,   m_offset(0.)
-            ,   m_lowBound(0.)
-            ,   m_highBound(0.)
-            ,   m_alphaScale(0.)
+    }
+    else
+    {
+        if (isnan((float)m_minOutValue))
         {
-            if (pIM.getDimension() != 2)
-            {
-                throw Exception("CTF parsing error. IndexMap must have two entries.");
-            }
-
-            float first, second;
-            pIM.getPair(0u, first, second);
-
-            // The first half of the pair is scaled to the LUT's input bit depth.
-            m_minInValue = first;
-            // The second half is scaled to the number of entries in the LUT.
-            m_minOutValue = second / (float)(len - 1u);
-
-            // Note: The CLF spec does not say how to handle out-of-range values.
-            // E.g., a user could specify an index longer than the LUT length.
-            // For now, we are not preventing this (no harm is done since those values
-            // are already clipped safely on input to the LUT renderers).
-
-            pIM.getPair(1u, first, second);
-            m_maxInValue = first;
-            m_maxOutValue = second / (float)(len - 1u);
-
-            validate();
-
-            // The maxOutValues are scaled for 32f, so call the Range version to
-            // set the depth and rescale values if necessary.  Note we are prepping
-            // things for the input depth of the LUT (which follows the range).
-            setOutputBitDepth(inDepth);
+            throw Exception(
+                "In and out minimum limits must be both set or both missing in Range.");
         }
+    }
 
-        Range::Range(BitDepth inBitDepth,
-                     BitDepth outBitDepth,
-                     double minInValue,
-                     double maxInValue,
-                     double minOutValue,
-                     double maxOutValue)
-            :   OpData(inBitDepth, outBitDepth)
-            ,   m_minInValue(minInValue)
-            ,   m_maxInValue(maxInValue)
-            ,   m_minOutValue(minOutValue)
-            ,   m_maxOutValue(maxOutValue)
-            ,   m_scale(0.)
-            ,   m_offset(0.)
-            ,   m_lowBound(0.)
-            ,   m_highBound(0.)
-            ,   m_alphaScale(0.)
+    if (isnan((float)m_maxInValue))
+    {
+        if (!isnan((float)m_maxOutValue))
         {
-            validate();
+            throw Exception(
+                "In and out maximum limits must be both set or both missing in Range.");
         }
-
-        Range::Range(BitDepth inBitDepth,
-                     BitDepth outBitDepth,
-                     const std::string & id,
-                     const std::string & name,
-                     const Descriptions & descriptions,
-                     double minInValue,
-                     double maxInValue,
-                     double minOutValue,
-                     double maxOutValue)
-            :   OpData(inBitDepth, outBitDepth, id, name, descriptions)
-            ,   m_minInValue(minInValue)
-            ,   m_maxInValue(maxInValue)
-            ,   m_minOutValue(minOutValue)
-            ,   m_maxOutValue(maxOutValue)
-            ,   m_scale(0.)
-            ,   m_offset(0.)
-            ,   m_lowBound(0.)
-            ,   m_highBound(0.)
-            ,   m_alphaScale(0.)
+    }
+    else
+    {
+        if (isnan((float)m_maxOutValue))
         {
-            validate();
+            throw Exception(
+                "In and out maximum limits must be both set or both missing in Range.");
         }
+    }
 
-        Range::~Range()
+    // Currently not allowing polarity inversion so enforce max > min.
+    if (!isnan((float)m_minInValue) && !isnan((float)m_maxInValue))
+    {
+        if (m_minInValue > m_maxInValue)
         {
+            throw Exception(
+                "Range maximum input value is less than minimum input value");
         }
-
-
-        const std::string& Range::getOpTypeName() const
+        if (m_minOutValue > m_maxOutValue)
         {
-            static const std::string type("Range");
-            return type;
+            throw Exception(
+                "Range maximum output value is less than minimum output value");
         }
-
-
-        void Range::setMinInValue(double value)
-        {
-            m_minInValue = value;
-        }
-
-        bool Range::hasMinInValue() const 
-        {
-            return !isnan((float)m_minInValue);
-        }
-
-        void Range::unsetMinInValue()
-        {
-            m_minInValue = EmptyValue(); 
-        }
-
-
-        void Range::setMaxInValue(double value)
-        {
-            m_maxInValue = value;
-        }
-
-        bool Range::hasMaxInValue() const 
-        {
-            return !isnan((float)m_maxInValue);
-        }
-
-        void Range::unsetMaxInValue()
-        {
-            m_maxInValue = EmptyValue(); 
-        }
-
-
-        void Range::setMinOutValue(double value)
-        {
-            m_minOutValue = value;
-        }
-
-        bool Range::hasMinOutValue() const 
-        {
-            return !isnan((float)m_minOutValue);
-        }
-
-        void Range::unsetMinOutValue()
-        {
-            m_minOutValue = EmptyValue(); 
-        }
-
-
-        void Range::setMaxOutValue(double value)
-        {
-            m_maxOutValue = value;
-        }
-
-        bool Range::hasMaxOutValue() const 
-        {
-            return !isnan((float)m_maxOutValue);
-        }
-
-        void Range::unsetMaxOutValue()
-        {
-            m_maxOutValue = EmptyValue(); 
-        }
-
-
-        // Important: The spec allows max/min elements to be missing.  When this 
-        // happens, we set the member variables to NaN.  The interpretation of this
-        // is that no clamping is requested at that bound.  The use of the NaN
-        // technique is not exposed outside this module.
-        double Range::EmptyValue()
-        {
-            return std::numeric_limits<double>::quiet_NaN();
-        }
-
-        void Range::validate() const
-        {
-            OpData::validate();
-
-            // NB: Need to allow vals to exceed normal integer range
-            // to allow lossless setting of bit-depth from float-->int-->float.
-
-            // If in_min or out_min is not empty, so must the other half be.
-            if (isnan((float)m_minInValue))
-            {
-                if (!isnan((float)m_minOutValue))
-                {
-                    throw Exception(
-                        "In and out minimum limits must be both set or both missing in Range.");
-                }
-            }
-            else
-            {
-                if (isnan((float)m_minOutValue))
-                {
-                    throw Exception(
-                        "In and out minimum limits must be both set or both missing in Range.");
-                }
-            }
-
-            if (isnan((float)m_maxInValue))
-            {
-                if (!isnan((float)m_maxOutValue))
-                {
-                    throw Exception(
-                        "In and out maximum limits must be both set or both missing in Range.");
-                }
-            }
-            else
-            {
-                if (isnan((float)m_maxOutValue))
-                {
-                    throw Exception(
-                        "In and out maximum limits must be both set or both missing in Range.");
-                }
-            }
-
-            // Currently not allowing polarity inversion so enforce max > min.
-            if (!isnan((float)m_minInValue) && !isnan((float)m_maxInValue))
-            {
-                if (m_minInValue > m_maxInValue)
-                {
-                    throw Exception(
-                        "Range maximum input value is less than minimum input value");
-                }
-                if (m_minOutValue > m_maxOutValue)
-                {
-                    throw Exception(
-                        "Range maximum output value is less than minimum output value");
-                }
-            }
+    }
             
-            // Complete the initialization of the object.
-            fillScaleOffset();  // This also validates that maxIn - minIn != 0.
-            fillBounds();
+    // Complete the initialization of the object.
+    fillScaleOffset();  // This also validates that maxIn - minIn != 0.
+    fillBounds();
+}
+
+bool Range::isIdentity() const
+{
+    // Note that a range op may scale but not clip or vice versa.
+    // E.g. 32f --> 32f with non-empty min or max does not scale.
+    // 8i --> 16f with empty min & max does not clip.
+
+    // If clipping was requested then the op is not classified as an identity.  
+    // This is potentially confusing since the equivalent 1d-LUT would be.
+    // However, although it is acceptable to replace an identity LUT with Range,
+    // it is not acceptable to omit the Range since then optimization may cause
+    // a color change (due to omitting the clip).
+
+    // Originally used "if (minClips() || maxClips())" here but the problem with
+    // that is that isIdentity() then becomes a function of the current bit-depths.
+    // Although the new approach will say false for some ranges that are currently 
+    // identities, the advantage is that as ops are inserted/deleted and the
+    // surrounding bit-depths change, this function will be consistent.
+    if ( ! minIsEmpty() || ! maxIsEmpty() )
+    {
+        return false;
+    }
+
+    if (scales(true))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Range::isClamping() const
+{
+    // TODO: isClamping has been added to avoid clamping ops to be optimized.
+    //       this is a trivial implementation.
+    return (!minIsEmpty() || !maxIsEmpty());
+}
+
+std::auto_ptr<OpData> Range::getIdentityReplacement() const
+{
+    return std::auto_ptr<OpData>(
+        new Matrix(getInputBitDepth(), getOutputBitDepth()));
+}
+
+bool Range::isClampIdentity() const
+{
+    // No scale or offset allowed.
+    if (scales(true))
+    {
+        return false;
+    }
+
+    // If there is clamping, it does not enter into the standard domain.
+    // (Considered using minClips() & maxClips() here, but did not want
+    //  the result to be bit-depth dependent.)
+
+    if ( !minIsEmpty() && m_minInValue > 0.0f )
+    {
+        return false;
+    }
+
+    if ( !maxIsEmpty() && m_maxInValue < GetBitDepthMaxValue( getInputBitDepth() ) )
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Range::clampsToLutDomain() const
+{
+    if ( minIsEmpty() || m_minInValue < 0.0f )
+    {
+        return false;
+    }
+
+    if ( maxIsEmpty() || m_maxInValue > GetBitDepthMaxValue( getInputBitDepth() ) )
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool Range::isClampNegs() const
+{
+    return  maxIsEmpty() && ! minIsEmpty() && m_minInValue == 0.0f;
+}
+
+bool Range::FloatsDiffer(double x1, double x2)
+{
+    // Hybrid absolute/relative comparison.  Tolerances are chosen based on the
+    // expected use-cases for the Range op.
+
+    bool different = false;
+
+    if ( fabs(x1) < 1e-3 )
+    {
+        different = fabs( x1 - x2 ) > 1e-6;  // absolute error near zero
+    }
+    else
+    {
+        different = fabs( 1.0 - (x2 / x1) ) > 1e-6; // relative error otherwise
+    }
+
+    return different;
+}
+
+bool Range::scales(bool ignoreBitDepth) const
+{
+    // Check if offset is non-zero or scale is not unity.
+
+    // Offset is likely to be zero, so cannot do a relative comparison.
+    if ( fabs(m_offset) > 1e-6 )
+    {
+        return true;
+    }
+
+    double aim_scale = 1.0;
+    if (ignoreBitDepth)
+    {
+        aim_scale 
+            = GetBitDepthMaxValue(getOutputBitDepth()) 
+                / GetBitDepthMaxValue(getInputBitDepth());
+    }
+
+    // AlphaScale may range from 1/65535 to 65535 and Scale even more, however
+    // scale is also allowed to be 0, so neither relative or absolute comparison
+    // is approprite for all cases.
+    if ( FloatsDiffer(m_scale, aim_scale) || 
+            FloatsDiffer(m_alphaScale, aim_scale) )
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void Range::setInputBitDepth(BitDepth d)
+{
+    const double scaleFactor 
+        = GetBitDepthMaxValue(d) 
+            / GetBitDepthMaxValue(getInputBitDepth());
+
+    // Call parent to set the input bitdepth
+    OpData::setInputBitDepth(d);
+
+    // NB: This may result in int values that are out of range, however,
+    // cannot clip them.  Also, empties always have to remain empties.
+    // (Need to keep this operation lossless.)
+
+    if (!minIsEmpty())
+    {
+        m_minInValue *= scaleFactor;
+    }
+    if (!maxIsEmpty())
+    {
+        m_maxInValue *= scaleFactor;
+    }
+
+    fillScaleOffset();
+    fillBounds();
+}
+
+void Range::setOutputBitDepth(BitDepth d)
+{
+    const double scaleFactor
+        = GetBitDepthMaxValue(d) 
+            / GetBitDepthMaxValue(getOutputBitDepth());
+
+    // Call parent to set the outputbit depth
+    OpData::setOutputBitDepth(d);
+
+    if (!minIsEmpty())
+    {
+        m_minOutValue *= scaleFactor;
+    }
+    if (!maxIsEmpty())
+    {
+        m_maxOutValue *= scaleFactor;
+    }
+
+    fillScaleOffset();
+    fillBounds();
+}
+
+bool Range::minIsEmpty() const
+{
+    // NB: Validation ensures out is not empty if in is not.
+    return isnan((float)m_minInValue) != 0;
+}
+
+bool Range::maxIsEmpty() const
+{
+    // NB: Validation ensures out is not empty if in is not.
+    return isnan((float)m_maxInValue) != 0;
+}
+
+bool Range::minClips() const
+{
+    return !isnan((float)m_lowBound);
+}
+
+bool Range::maxClips() const
+{
+    return !isnan((float)m_highBound);
+}
+
+void Range::fillScaleOffset() const
+{
+
+    // Convert: out = ( in - minIn) * scale + minOut
+    // to the model: out = in * scale + offset
+
+    // Note that scaling is required for bit-depth conversion 
+    // in addition to whatever range remapping the min/max imply.
+
+    // The case where only one bound clamps and the other is empty
+    // is potentially ambiguous regarding how to calculate scale & offset.
+    // We set scale to whatever is needed for the bit-depth conversion
+    // and set offset such that the requested bound is mapped as requested.
+    m_scale 
+        = GetBitDepthMaxValue(getOutputBitDepth()) 
+            / GetBitDepthMaxValue(getInputBitDepth());
+
+    m_alphaScale = m_scale;
+    if (minIsEmpty())
+    {
+        if (maxIsEmpty())     // Op is just a bit-depth conversion
+        {
+            m_offset = 0.f;
+        }
+        else                  // Bottom unlimited but top clamps
+        {
+            m_offset = m_maxOutValue - m_scale * m_maxInValue;
+        }
+    }
+    else
+    {
+        if (maxIsEmpty())     // Top unlimited but bottom clamps
+        {
+            m_offset = m_minOutValue - m_scale * m_minInValue;
+        }
+        else                  // Both ends clamp
+        {
+            double denom = m_maxInValue - m_minInValue;
+            if (fabs(denom) < 1e-6)
+            {
+                throw Exception("Range maxInValue is too close to minInValue");
+            }
+            // NB: Allowing out min == max as it could be useful to create a constant.
+            m_scale = (m_maxOutValue - m_minOutValue) / denom;
+            m_offset = m_minOutValue - m_scale * m_minInValue;
+        }
+    }
+}
+
+void Range::fillBounds() const
+{
+    m_lowBound  = clipOverride(true);
+    m_highBound = clipOverride(false);
+}
+
+double Range::clipOverride(bool isLower) const
+{
+    // Unfortunately, the semantics of the Range op is quite complicated.
+    //
+    // If the max or min are not empty, then clipping has been requested.
+    // However, this method determines whether it is actually required.
+    // It is required if there are elements of the input domain that
+    // after scaling/offset do not fit in the output range.
+    // 
+    // Sometimes you need to add a clip even if none was requested (float-->int),
+    // and sometimes you want to remove the clip (for efficiency) since even
+    // though it was requested, it is not necessary.
+    //
+    // The clip calculated here is what is applied to the output (after scaling).
+
+    // IMPORTANT: This code assumes that if the input is an integer type
+    // that values are limited to that domain.  Given the float processing
+    // being done (e.g. on GPU) this may not be a safe assumption.
+
+    double inBnd;
+    double outBnd;
+    double orig;
+    bool emptyOrig;
+
+    if (isLower)    // working on the low bound
+    {
+        inBnd = 0.;
+        outBnd = 0.;
+        orig = m_minOutValue;
+        emptyOrig = minIsEmpty();
+    }
+    else            // working on the high bound
+    {
+        inBnd = GetBitDepthMaxValue(getInputBitDepth());
+        outBnd = GetBitDepthMaxValue(getOutputBitDepth());
+        orig = m_maxOutValue;
+        emptyOrig = maxIsEmpty();
+    }
+
+    if (emptyOrig)  // no clipping requested, any needed?
+    {
+        // For float output depths, if it's not requested it's not needed.
+        // (One might ask about 32f-->16f, however half.h takes care of this
+        //  anyway, so to do it here is unnecessary.)
+        // For integer output depths, we may over-ride ...
+        if (!IsFloatBitDepth(getOutputBitDepth()))
+        {
+            // Float to int always requires clipping.
+            if (IsFloatBitDepth(getInputBitDepth()))
+            {
+                return outBnd;    // over-ride with boundary of integer range
+            }
+            // The int to int case could require clipping.  This could happen if
+            // the bound other than this one is not empty and induces an offset.
+            else
+            {
+                if (wouldClip(inBnd))
+                {
+                    return outBnd;  // over-ride with boundary of integer range
+                }
+            }
+        }
+    }
+
+    else            // clipping requested, but is it needed?
+    {
+        // For float input depths, if it's requested, it is required.
+        // For integer inputs, we may over-ride ...
+        if (!IsFloatBitDepth(getInputBitDepth()))
+        {
+            // For any out depth, if the int. domain bnds don't clip, nothing's req'd.
+            if (!wouldClip(inBnd))
+            {
+                return Range::EmptyValue();  // over-ride by removing the clip
+            }
         }
 
-        bool Range::isIdentity() const
+        // Since it is necessary to allow the min/max to exceed the integer bounds,
+        // may need to over-ride to respect the current output depth.
+        if (!IsFloatBitDepth(getOutputBitDepth()))
         {
-            // Note that a range op may scale but not clip or vice versa.
-            // E.g. 32f --> 32f with non-empty min or max does not scale.
-            // 8i --> 16f with empty min & max does not clip.
-
-            // If clipping was requested then the op is not classified as an identity.  
-            // This is potentially confusing since the equivalent 1d-LUT would be.
-            // However, although it is acceptable to replace an identity LUT with Range,
-            // it is not acceptable to omit the Range since then optimization may cause
-            // a color change (due to omitting the clip).
-
-            // Originally used "if (minClips() || maxClips())" here but the problem with
-            // that is that isIdentity() then becomes a function of the current bit-depths.
-            // Although the new approach will say false for some ranges that are currently 
-            // identities, the advantage is that as ops are inserted/deleted and the
-            // surrounding bit-depths change, this function will be consistent.
-            if ( ! minIsEmpty() || ! maxIsEmpty() )
+            if (isLower)
             {
-                return false;
-            }
-
-            if (scales(true))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        bool Range::isClamping() const
-        {
-            // TODO: isClamping has been added to avoid clamping ops to be optimized.
-            //       this is a trivial implementation.
-            return (!minIsEmpty() || !maxIsEmpty());
-        }
-
-        std::auto_ptr<OpData> Range::getIdentityReplacement() const
-        {
-            return std::auto_ptr<OpData>(
-                new Matrix(getInputBitDepth(), getOutputBitDepth()));
-        }
-
-        bool Range::isClampIdentity() const
-        {
-            // No scale or offset allowed.
-            if (scales(true))
-            {
-                return false;
-            }
-
-            // If there is clamping, it does not enter into the standard domain.
-            // (Considered using minClips() & maxClips() here, but did not want
-            //  the result to be bit-depth dependent.)
-
-            if ( !minIsEmpty() && m_minInValue > 0.0f )
-            {
-                return false;
-            }
-
-            if ( !maxIsEmpty() && m_maxInValue < GetBitDepthMaxValue( getInputBitDepth() ) )
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        bool Range::clampsToLutDomain() const
-        {
-            if ( minIsEmpty() || m_minInValue < 0.0f )
-            {
-                return false;
-            }
-
-            if ( maxIsEmpty() || m_maxInValue > GetBitDepthMaxValue( getInputBitDepth() ) )
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        bool Range::isClampNegs() const
-        {
-            return  maxIsEmpty() && ! minIsEmpty() && m_minInValue == 0.0f;
-        }
-
-        bool Range::FloatsDiffer(double x1, double x2)
-        {
-            // Hybrid absolute/relative comparison.  Tolerances are chosen based on the
-            // expected use-cases for the Range op.
-
-            bool different = false;
-
-            if ( fabs(x1) < 1e-3 )
-            {
-                different = fabs( x1 - x2 ) > 1e-6;  // absolute error near zero
+                if (orig < outBnd)
+                {
+                    return outBnd;  // over-ride by tightening to the integer range
+                }
             }
             else
             {
-                different = fabs( 1.0 - (x2 / x1) ) > 1e-6; // relative error otherwise
-            }
-
-            return different;
-        }
-
-        bool Range::scales(bool ignoreBitDepth) const
-        {
-            // Check if offset is non-zero or scale is not unity.
-
-            // Offset is likely to be zero, so cannot do a relative comparison.
-            if ( fabs(m_offset) > 1e-6 )
-            {
-                return true;
-            }
-
-            double aim_scale = 1.0;
-            if (ignoreBitDepth)
-            {
-                aim_scale 
-                    = GetBitDepthMaxValue(getOutputBitDepth()) 
-                        / GetBitDepthMaxValue(getInputBitDepth());
-            }
-
-            // AlphaScale may range from 1/65535 to 65535 and Scale even more, however
-            // scale is also allowed to be 0, so neither relative or absolute comparison
-            // is approprite for all cases.
-            if ( FloatsDiffer(m_scale, aim_scale) || 
-                 FloatsDiffer(m_alphaScale, aim_scale) )
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        void Range::setInputBitDepth(BitDepth d)
-        {
-            const double scaleFactor 
-                = GetBitDepthMaxValue(d) 
-                    / GetBitDepthMaxValue(getInputBitDepth());
-
-            // Call parent to set the input bitdepth
-            OpData::setInputBitDepth(d);
-
-            // NB: This may result in int values that are out of range, however,
-            // cannot clip them.  Also, empties always have to remain empties.
-            // (Need to keep this operation lossless.)
-
-            if (!minIsEmpty())
-            {
-                m_minInValue *= scaleFactor;
-            }
-            if (!maxIsEmpty())
-            {
-                m_maxInValue *= scaleFactor;
-            }
-
-            fillScaleOffset();
-            fillBounds();
-        }
-
-        void Range::setOutputBitDepth(BitDepth d)
-        {
-            const double scaleFactor
-                = GetBitDepthMaxValue(d) 
-                    / GetBitDepthMaxValue(getOutputBitDepth());
-
-            // Call parent to set the outputbit depth
-            OpData::setOutputBitDepth(d);
-
-            if (!minIsEmpty())
-            {
-                m_minOutValue *= scaleFactor;
-            }
-            if (!maxIsEmpty())
-            {
-                m_maxOutValue *= scaleFactor;
-            }
-
-            fillScaleOffset();
-            fillBounds();
-        }
-
-        bool Range::minIsEmpty() const
-        {
-            // NB: Validation ensures out is not empty if in is not.
-            return isnan((float)m_minInValue) != 0;
-        }
-
-        bool Range::maxIsEmpty() const
-        {
-            // NB: Validation ensures out is not empty if in is not.
-            return isnan((float)m_maxInValue) != 0;
-        }
-
-        bool Range::minClips() const
-        {
-            return !isnan((float)m_lowBound);
-        }
-
-        bool Range::maxClips() const
-        {
-            return !isnan((float)m_highBound);
-        }
-
-        void Range::fillScaleOffset() const
-        {
-
-            // Convert: out = ( in - minIn) * scale + minOut
-            // to the model: out = in * scale + offset
-
-            // Note that scaling is required for bit-depth conversion 
-            // in addition to whatever range remapping the min/max imply.
-
-            // The case where only one bound clamps and the other is empty
-            // is potentially ambiguous regarding how to calculate scale & offset.
-            // We set scale to whatever is needed for the bit-depth conversion
-            // and set offset such that the requested bound is mapped as requested.
-            m_scale 
-                = GetBitDepthMaxValue(getOutputBitDepth()) 
-                    / GetBitDepthMaxValue(getInputBitDepth());
-
-            m_alphaScale = m_scale;
-            if (minIsEmpty())
-            {
-                if (maxIsEmpty())     // Op is just a bit-depth conversion
+                if (orig > outBnd)
                 {
-                    m_offset = 0.f;
-                }
-                else                  // Bottom unlimited but top clamps
-                {
-                    m_offset = m_maxOutValue - m_scale * m_maxInValue;
-                }
-            }
-            else
-            {
-                if (maxIsEmpty())     // Top unlimited but bottom clamps
-                {
-                    m_offset = m_minOutValue - m_scale * m_minInValue;
-                }
-                else                  // Both ends clamp
-                {
-                    double denom = m_maxInValue - m_minInValue;
-                    if (fabs(denom) < 1e-6)
-                    {
-                        throw Exception("Range maxInValue is too close to minInValue");
-                    }
-                    // NB: Allowing out min == max as it could be useful to create a constant.
-                    m_scale = (m_maxOutValue - m_minOutValue) / denom;
-                    m_offset = m_minOutValue - m_scale * m_minInValue;
+                    return outBnd;  // over-ride by tightening to the integer range
                 }
             }
         }
+    }
 
-        void Range::fillBounds() const
-        {
-            m_lowBound  = clipOverride(true);
-            m_highBound = clipOverride(false);
-        }
+    return orig;            // an over-ride was not necessary
+}
 
-        double Range::clipOverride(bool isLower) const
-        {
-            // Unfortunately, the semantics of the Range op is quite complicated.
-            //
-            // If the max or min are not empty, then clipping has been requested.
-            // However, this method determines whether it is actually required.
-            // It is required if there are elements of the input domain that
-            // after scaling/offset do not fit in the output range.
-            // 
-            // Sometimes you need to add a clip even if none was requested (float-->int),
-            // and sometimes you want to remove the clip (for efficiency) since even
-            // though it was requested, it is not necessary.
-            //
-            // The clip calculated here is what is applied to the output (after scaling).
+bool Range::wouldClip(double val) const
+{
+    // It may seem like this could be done by simply comparing val
+    // to minIn and maxIn.  However, since these must be allowed
+    // to be outside the normal integer domain, it is more complicated.
+    // Also note that even if out min/max are less than full range,
+    // no clipping may actually be required.
 
-            // IMPORTANT: This code assumes that if the input is an integer type
-            // that values are limited to that domain.  Given the float processing
-            // being done (e.g. on GPU) this may not be a safe assumption.
+    // Map in domain to out range.
+    double out = val * m_scale + m_offset;
 
-            double inBnd;
-            double outBnd;
-            double orig;
-            bool emptyOrig;
+    // Apply clipping, if any.
+    double out_lim = out;
+    if (!minIsEmpty())
+    {
+        out_lim = (out_lim < m_minOutValue) ? m_minOutValue : out_lim;
+    }
+    if (!maxIsEmpty())
+    {
+        out_lim = (out_lim > m_maxOutValue) ? m_maxOutValue : out_lim;
+    }
 
-            if (isLower)    // working on the low bound
-            {
-                inBnd = 0.;
-                outBnd = 0.;
-                orig = m_minOutValue;
-                emptyOrig = minIsEmpty();
-            }
-            else            // working on the high bound
-            {
-                inBnd = GetBitDepthMaxValue(getInputBitDepth());
-                outBnd = GetBitDepthMaxValue(getOutputBitDepth());
-                orig = m_maxOutValue;
-                emptyOrig = maxIsEmpty();
-            }
+    // Additional clipping implied by integer out depths.
+    if (!IsFloatBitDepth(getOutputBitDepth()))
+    {
+        out_lim = clamp(out_lim, 0., (double)GetBitDepthMaxValue(getOutputBitDepth()));
+    }
 
-            if (emptyOrig)  // no clipping requested, any needed?
-            {
-                // For float output depths, if it's not requested it's not needed.
-                // (One might ask about 32f-->16f, however half.h takes care of this
-                //  anyway, so to do it here is unnecessary.)
-                // For integer output depths, we may over-ride ...
-                if (!IsFloatBitDepth(getOutputBitDepth()))
-                {
-                    // Float to int always requires clipping.
-                    if (IsFloatBitDepth(getInputBitDepth()))
-                    {
-                        return outBnd;    // over-ride with boundary of integer range
-                    }
-                    // The int to int case could require clipping.  This could happen if
-                    // the bound other than this one is not empty and induces an offset.
-                    else
-                    {
-                        if (wouldClip(inBnd))
-                        {
-                            return outBnd;  // over-ride with boundary of integer range
-                        }
-                    }
-                }
-            }
+    // Check if clipping altered the output.
+    return FloatsDiffer(out, out_lim);
+}
 
-            else            // clipping requested, but is it needed?
-            {
-                // For float input depths, if it's requested, it is required.
-                // For integer inputs, we may over-ride ...
-                if (!IsFloatBitDepth(getInputBitDepth()))
-                {
-                    // For any out depth, if the int. domain bnds don't clip, nothing's req'd.
-                    if (!wouldClip(inBnd))
-                    {
-                        return Range::EmptyValue();  // over-ride by removing the clip
-                    }
-                }
+Matrix* Range::convertToMatrix() const
+{
+    std::auto_ptr<Matrix> mtx(new Matrix(getInputBitDepth(),
+        getOutputBitDepth()));
 
-                // Since it is necessary to allow the min/max to exceed the integer bounds,
-                // may need to over-ride to respect the current output depth.
-                if (!IsFloatBitDepth(getOutputBitDepth()))
-                {
-                    if (isLower)
-                    {
-                        if (orig < outBnd)
-                        {
-                            return outBnd;  // over-ride by tightening to the integer range
-                        }
-                    }
-                    else
-                    {
-                        if (orig > outBnd)
-                        {
-                            return outBnd;  // over-ride by tightening to the integer range
-                        }
-                    }
-                }
-            }
+    const float scale = getScale();
+    const float coefs[9] = { scale, 0.f, 0.f, 0.f, scale, 0.f, 0.f, 0.f, scale };
+    mtx->setRGBValues(coefs);
 
-            return orig;            // an over-ride was not necessary
-        }
+    const float offset = getOffset();
+    const float offs[3] = { offset, offset, offset };
+    mtx->setRGBOffsets(offs);
 
-        bool Range::wouldClip(double val) const
-        {
-            // It may seem like this could be done by simply comparing val
-            // to minIn and maxIn.  However, since these must be allowed
-            // to be outside the normal integer domain, it is more complicated.
-            // Also note that even if out min/max are less than full range,
-            // no clipping may actually be required.
+    mtx->validate();
 
-            // Map in domain to out range.
-            double out = val * m_scale + m_offset;
+    return mtx.release();
+}
 
-            // Apply clipping, if any.
-            double out_lim = out;
-            if (!minIsEmpty())
-            {
-                out_lim = (out_lim < m_minOutValue) ? m_minOutValue : out_lim;
-            }
-            if (!maxIsEmpty())
-            {
-                out_lim = (out_lim > m_maxOutValue) ? m_maxOutValue : out_lim;
-            }
+bool Range::operator==(const OpData& other) const
+{
+    if (this == &other) return true;
 
-            // Additional clipping implied by integer out depths.
-            if (!IsFloatBitDepth(getOutputBitDepth()))
-            {
-                out_lim = clamp(out_lim, 0., (double)GetBitDepthMaxValue(getOutputBitDepth()));
-            }
+    if (getOpType() != other.getOpType()) return false;
 
-            // Check if clipping altered the output.
-            return FloatsDiffer(out, out_lim);
-        }
+    const Range* rop = static_cast<const Range*>(&other);
 
-        Matrix* Range::convertToMatrix() const
-        {
-            std::auto_ptr<Matrix> mtx(new Matrix(getInputBitDepth(),
-                getOutputBitDepth()));
+    if (!(OpData::operator==(other))) return false;
 
-            const float scale = getScale();
-            const float coefs[9] = { scale, 0.f, 0.f, 0.f, scale, 0.f, 0.f, 0.f, scale };
-            mtx->setRGBValues(coefs);
+    if ( (minIsEmpty() != rop->minIsEmpty()) || 
+            (maxIsEmpty() != rop->maxIsEmpty()) )
+    {
+        return false;
+    }
 
-            const float offset = getOffset();
-            const float offs[3] = { offset, offset, offset };
-            mtx->setRGBOffsets(offs);
+    if (!minIsEmpty() && !rop->minIsEmpty() &&
+        ( FloatsDiffer(m_minInValue, rop->m_minInValue) ||
+            FloatsDiffer(m_minOutValue, rop->m_minOutValue) ) )
+    {
+        return false;
+    }
 
-            mtx->validate();
+    if (!maxIsEmpty() && !rop->maxIsEmpty() &&
+        ( FloatsDiffer(m_maxInValue, rop->m_maxInValue) ||
+            FloatsDiffer(m_maxOutValue, rop->m_maxOutValue) ) )
+    {
+        return false;
+    }
 
-            return mtx.release();
-        }
+    return true;
+}
 
-        bool Range::operator==(const OpData& other) const
-        {
-            if (this == &other) return true;
+OpData * Range::clone(CloneType) const
+{
+    return new Range(getInputBitDepth(),
+                        getOutputBitDepth(),
+                        getId(),
+                        getName(),
+                        getDescriptions(),
+                        m_minInValue,
+                        m_maxInValue,
+                        m_minOutValue,
+                        m_maxOutValue);
+}
 
-            if (getOpType() != other.getOpType()) return false;
+void Range::inverse(OpDataVec & ops) const
+{
+    // Inverse swaps min/max values.
+    // The min/max "include" the scale factor, but since in/out scale are also
+    // swapped, no need to rescale the min/max.
 
-            const Range* rop = static_cast<const Range*>(&other);
+    std::auto_ptr<Range> invOp( new Range(getOutputBitDepth(),
+                                            getInputBitDepth(),
+                                            m_minOutValue,
+                                            m_maxOutValue,
+                                            m_minInValue,
+                                            m_maxInValue) );
+    invOp->validate();
 
-            if (!(OpData::operator==(other))) return false;
+    ops.append(invOp.release());
+}
 
-            if ( (minIsEmpty() != rop->minIsEmpty()) || 
-                 (maxIsEmpty() != rop->maxIsEmpty()) )
-            {
-                return false;
-            }
+bool Range::isInverse(const OpDataRangeRcPtr & /*r*/) const
+{
+    // TODO: To be implemented...
+    return false;
+}
 
-            if (!minIsEmpty() && !rop->minIsEmpty() &&
-               ( FloatsDiffer(m_minInValue, rop->m_minInValue) ||
-                 FloatsDiffer(m_minOutValue, rop->m_minOutValue) ) )
-            {
-                return false;
-            }
+OpDataRcPtr Range::compose(const OpDataRcPtr & /*r*/) const
+{
+    throw Exception("TODO");
+    return OpDataRangeRcPtr(new Range(getInputBitDepth(), getOutputBitDepth(),
+        getMinInValue(), getMaxInValue(),
+        getMinOutValue(), getMaxOutValue()));
+}
 
-            if (!maxIsEmpty() && !rop->maxIsEmpty() &&
-               ( FloatsDiffer(m_maxInValue, rop->m_maxInValue) ||
-                 FloatsDiffer(m_maxOutValue, rop->m_maxOutValue) ) )
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        OpData * Range::clone(CloneType) const
-        {
-            return new Range(getInputBitDepth(),
-                             getOutputBitDepth(),
-                             getId(),
-                             getName(),
-                             getDescriptions(),
-                             m_minInValue,
-                             m_maxInValue,
-                             m_minOutValue,
-                             m_maxOutValue);
-        }
-
-        void Range::inverse(OpDataVec & ops) const
-        {
-            // Inverse swaps min/max values.
-            // The min/max "include" the scale factor, but since in/out scale are also
-            // swapped, no need to rescale the min/max.
-
-            std::auto_ptr<Range> invOp( new Range(getOutputBitDepth(),
-                                                  getInputBitDepth(),
-                                                  m_minOutValue,
-                                                  m_maxOutValue,
-                                                  m_minInValue,
-                                                  m_maxInValue) );
-            invOp->validate();
-
-            ops.append(invOp.release());
-        }
-
-        bool Range::isInverse(const OpDataRangeRcPtr & /*r*/) const
-        {
-            // TODO: To be implemented...
-            return false;
-        }
-
-        OpDataRcPtr Range::compose(const OpDataRcPtr & /*r*/) const
-        {
-            throw Exception("TODO");
-            return OpDataRangeRcPtr(new Range(getInputBitDepth(), getOutputBitDepth(),
-                getMinInValue(), getMaxInValue(),
-                getMinOutValue(), getMaxOutValue()));
-        }
-
-    } // exit OpData namespace
+} // exit OpData namespace
 }
 OCIO_NAMESPACE_EXIT
 

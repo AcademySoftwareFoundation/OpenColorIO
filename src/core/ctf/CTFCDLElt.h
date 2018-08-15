@@ -36,242 +36,241 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+namespace OpData
+{
 
-    namespace OpData
-    {
-        // Forward declare
-        class OpData;
-        class CDL;
+// Forward declare
+class OpData;
+class CDL;
+
+}
+
+// Private namespace to the CTF sub-directory
+namespace CTF
+{
+// Private namespace for the xml reader utils
+namespace Reader
+{
+
+// Class for CDL
+class CDLElt : public OpElt
+{
+public:
+    // Constructor
+    CDLElt();
+
+    // Destructor
+    ~CDLElt();
+
+    // Start the parsing of the element
+    virtual void start(const char **atts);
+
+    // End the parsing of the element
+    virtual void end();
+
+    // Get the associated OpData
+    OpData::OpData* getOp() const;
+
+    // Get the associated CDL
+    OpData::CDL* getCDLOp() const
+    { 
+        return m_cdlOp;
     }
 
+protected:
+    OpData::CDL* m_cdlOp; // The associated CDL
+};
 
-    // Private namespace to the CTF sub-directory
-    namespace CTF
-    {
-        // Private namespace for the xml reader utils
-        namespace Reader
-        {
+// Class for CDL v1.7
+class CDLElt_1_7 : public CDLElt
+{
+public:
+    // Constructor
+    CDLElt_1_7();
 
-            // Class for CDL
-            class CDLElt : public OpElt
-            {
-            public:
-                // Constructor
-                CDLElt();
+    // Destructor
+    ~CDLElt_1_7();
 
-                // Destructor
-                ~CDLElt();
+    // Start the parsing of the element
+    // - atts The attributes
+    virtual void start(const char **atts);
+};
 
-                // Start the parsing of the element
-                virtual void start(const char **atts);
+// Base class for the SatNode element
+class SatNodeBaseElt : public ComplexElt
+{
+public:
+    // Constructor
+    SatNodeBaseElt(const std::string& name,
+                    ContainerElt* pParent,
+                    unsigned xmlLineNumber,
+                    const std::string& xmlFile
+    );
 
-                // End the parsing of the element
-                virtual void end();
+    // Start the parsing of the element
+    void start(const char **atts);
 
-                // Get the associated OpData
-                OpData::OpData* getOp() const;
+    // End the parsing of the element
+    void end();
 
-                // Get the associated CDL
-                OpData::CDL* getCDLOp() const
-                { 
-                    return m_cdlOp;
-                }
+    // Append a description string
+    // The description is added directly to the CDLOp
+    // in the parent element
+    void appendDescription(const std::string& desc);
 
-            protected:
-                OpData::CDL* m_cdlOp; // The associated CDL
-            };
+    // Get the associated CDL
+    virtual OpData::CDL* getCDLOp() const = 0;
 
-            // Class for CDL v1.7
-            class CDLElt_1_7 : public CDLElt
-            {
-            public:
-                // Constructor
-                CDLElt_1_7();
+private:
+    // No default Constructor
+    SatNodeBaseElt();
+};
 
-                // Destructor
-                ~CDLElt_1_7();
+// Class for the SatNode element in CTF schema
+class SatNodeElt : public SatNodeBaseElt
+{
+public:
+    // Constructor
+    SatNodeElt(const std::string& name,
+                ContainerElt* pParent,
+                unsigned xmlLineNumber,
+                const std::string& xmlFile
+    );
 
-                // Start the parsing of the element
-                // - atts The attributes
-                virtual void start(const char **atts);
-            };
+    // Get the associated CDL
+    virtual OpData::CDL* getCDLOp() const;
 
-            // Base class for the SatNode element
-            class SatNodeBaseElt : public ComplexElt
-            {
-            public:
-                // Constructor
-                SatNodeBaseElt(const std::string& name,
-                               ContainerElt* pParent,
-                               unsigned xmlLineNumber,
-                               const std::string& xmlFile
-                );
+private:
+    // No default Constructor
+    SatNodeElt();
+};
 
-                // Start the parsing of the element
-                void start(const char **atts);
+// Class for the CDL Saturation element
+class SaturationElt : public PlainElt
+{
+public:
+    // Constructor
+    SaturationElt(const std::string& name,
+                    ContainerElt* pParent,
+                    unsigned xmlLineNumber,
+                    const std::string& xmlFile
+    );
 
-                // End the parsing of the element
-                void end();
+    // Destructor
+    ~SaturationElt();
 
-                // Append a description string
-                // The description is added directly to the CDLOp
-                // in the parent element
-                void appendDescription(const std::string& desc);
+    // Start the parsing of the element
+    void start(const char **atts);
 
-                // Get the associated CDL
-                virtual OpData::CDL* getCDLOp() const = 0;
+    // End the parsing of the element
+    void end();
 
-            private:
-                // No default Constructor
-                SatNodeBaseElt();
-            };
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
 
-            // Class for the SatNode element in CTF schema
-            class SatNodeElt : public SatNodeBaseElt
-            {
-            public:
-                // Constructor
-                SatNodeElt(const std::string& name,
-                           ContainerElt* pParent,
-                           unsigned xmlLineNumber,
-                           const std::string& xmlFile
-                );
+private:
+    // No default Constructor
+    SaturationElt();
 
-                // Get the associated CDL
-                virtual OpData::CDL* getCDLOp() const;
+    std::string m_contentData; // The tag content data
+};
 
-            private:
-                // No default Constructor
-                SatNodeElt();
-            };
+// Base class for the SOPNode element
+class SOPNodeBaseElt : public ComplexElt
+{
+public:
+    // Constructor
+    SOPNodeBaseElt(const std::string& name,
+                    ContainerElt* pParent,
+                    unsigned xmlLineNumber,
+                    const std::string& xmlFile
+    );
 
-            // Class for the CDL Saturation element
-            class SaturationElt : public PlainElt
-            {
-            public:
-                // Constructor
-                SaturationElt(const std::string& name,
-                             ContainerElt* pParent,
-                             unsigned xmlLineNumber,
-                             const std::string& xmlFile
-                );
+    // Start the parsing of the element
+    void start(const char **atts);
 
-                // Destructor
-                ~SaturationElt();
+    // End the parsing of the element
+    void end();
 
-                // Start the parsing of the element
-                void start(const char **atts);
+    // Append a description string
+    // The description is added directly to the CDLOp in
+    // the parent element
+    void appendDescription(const std::string& desc);
 
-                // End the parsing of the element
-                void end();
+    // Get the associated CDL
+    virtual OpData::CDL* getCDLOp() const = 0;
 
-                // Set the data's element
-                // - str the string
-                // - len is the string length
-                // - xmlLine the location
-                void setRawData(const char* str, size_t len, unsigned xmlLine);
+    void setIsSlopeInit(bool status) { m_isSlopeInit = status; }
+    void setIsOffsetInit(bool status) { m_isOffsetInit = status; }
+    void setIsPowerInit(bool status) { m_isPowerInit = status; }
 
-            private:
-                // No default Constructor
-                SaturationElt();
+private:
+    // No default Constructor
+    SOPNodeBaseElt();
 
-                std::string m_contentData; // The tag content data
-            };
+    bool m_isSlopeInit;
+    bool m_isOffsetInit;
+    bool m_isPowerInit;
+};
 
-            // Base class for the SOPNode element
-            class SOPNodeBaseElt : public ComplexElt
-            {
-            public:
-                // Constructor
-                SOPNodeBaseElt(const std::string& name,
-                               ContainerElt* pParent,
-                               unsigned xmlLineNumber,
-                               const std::string& xmlFile
-                );
+// Class for the SOPNode element in CTF schema
+class SOPNodeElt : public SOPNodeBaseElt
+{
+public:
+    // Constructor
+    SOPNodeElt(const std::string& name,   
+                ContainerElt* pParent,     
+                unsigned xmlLineNumber,    
+                const std::string& xmlFile 
+    );
 
-                // Start the parsing of the element
-                void start(const char **atts);
+    // Get the associated CDL
+    virtual OpData::CDL* getCDLOp() const;
 
-                // End the parsing of the element
-                void end();
+private:
+    // No default Constructor
+    SOPNodeElt();
 
-                // Append a description string
-                // The description is added directly to the CDLOp in
-                // the parent element
-                void appendDescription(const std::string& desc);
+};
 
-                // Get the associated CDL
-                virtual OpData::CDL* getCDLOp() const = 0;
+// Class for the slope, offset and power elements
+class SOPValueElt : public PlainElt
+{
+public:
+    // Constructor
+    SOPValueElt(const std::string& name,   
+                ContainerElt* pParent,     
+                unsigned xmlLineNumber,    
+                const std::string& xmlFile 
+    );
 
-                void setIsSlopeInit(bool status) { m_isSlopeInit = status; }
-                void setIsOffsetInit(bool status) { m_isOffsetInit = status; }
-                void setIsPowerInit(bool status) { m_isPowerInit = status; }
+    // Destructor
+    ~SOPValueElt();
 
-            private:
-                // No default Constructor
-                SOPNodeBaseElt();
+    // Start the parsing of the element
+    void start(const char **atts);
 
-                bool m_isSlopeInit;
-                bool m_isOffsetInit;
-                bool m_isPowerInit;
-            };
+    // End the parsing of the element
+    void end();
 
-            // Class for the SOPNode element in CTF schema
-            class SOPNodeElt : public SOPNodeBaseElt
-            {
-            public:
-                // Constructor
-                SOPNodeElt(const std::string& name,   
-                           ContainerElt* pParent,     
-                           unsigned xmlLineNumber,    
-                           const std::string& xmlFile 
-                );
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
 
-                // Get the associated CDL
-                virtual OpData::CDL* getCDLOp() const;
+private:
+    // No default Constructor
+    SOPValueElt();
 
-            private:
-                // No default Constructor
-                SOPNodeElt();
+    std::string m_contentData; // The tag content data
+};
 
-            };
-
-            // Class for the slope, offset and power elements
-            class SOPValueElt : public PlainElt
-            {
-            public:
-                // Constructor
-                SOPValueElt(const std::string& name,   
-                            ContainerElt* pParent,     
-                            unsigned xmlLineNumber,    
-                            const std::string& xmlFile 
-                );
-
-                // Destructor
-                ~SOPValueElt();
-
-                // Start the parsing of the element
-                void start(const char **atts);
-
-                // End the parsing of the element
-                void end();
-
-                // Set the data's element
-                // - str the string
-                // - len is the string length
-                // - xmlLine the location
-                void setRawData(const char* str, size_t len, unsigned xmlLine);
-
-            private:
-                // No default Constructor
-                SOPValueElt();
-
-                std::string m_contentData; // The tag content data
-            };
-
-
-        } // exit Reader namespace
-    } // exit CTF namespace
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 

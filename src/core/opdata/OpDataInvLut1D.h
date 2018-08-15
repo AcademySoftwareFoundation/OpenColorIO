@@ -46,125 +46,125 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+class InvLut1D;
+typedef OCIO_SHARED_PTR<InvLut1D> OpDataInvLut1DRcPtr;
+
+// The class represents an invert 1D LUT process node
+class InvLut1D : public Lut1D
+{
+public:
+    // Enumeration of the inverse lut1d styles.
+    enum InvStyle
     {
-        class InvLut1D;
-        typedef OCIO_SHARED_PTR<InvLut1D> OpDataInvLut1DRcPtr;
+        EXACT = 0,  // Exact, but slow, inverse processing
+        FAST        // Fast, but approximate, inverse processing
+    };
 
-        // The class represents an invert 1D LUT process node
-        class InvLut1D : public Lut1D
-        {
-        public:
-            // Enumeration of the inverse lut1d styles.
-            enum InvStyle
-            {
-                EXACT = 0,  // Exact, but slow, inverse processing
-                FAST        // Fast, but approximate, inverse processing
-            };
+    // Holds the properties of a color component
+    struct ComponentProperties
+    {
+        ComponentProperties() 
+            : isIncreasing(false)
+            , startDomain(0)
+            , endDomain(0)
+            , negStartDomain(0)
+            , negEndDomain(0) {}
 
-            // Holds the properties of a color component
-            struct ComponentProperties
-            {
-                ComponentProperties() 
-                    : isIncreasing(false)
-                    , startDomain(0)
-                    , endDomain(0)
-                    , negStartDomain(0)
-                    , negEndDomain(0) {}
+        bool isIncreasing;       // represents the overall increasing state
+        unsigned startDomain;    // is the lowest index such that LUT[start] != LUT[start+1].
+        unsigned endDomain;      // is the highest index such that LUT[end-1] != LUT[end].
+        unsigned negStartDomain; // startDomain for half-domain negative values
+        unsigned negEndDomain;   // endDomain for half-domain negative values
+    };
 
-                bool isIncreasing;       // represents the overall increasing state
-                unsigned startDomain;    // is the lowest index such that LUT[start] != LUT[start+1].
-                unsigned endDomain;      // is the highest index such that LUT[end-1] != LUT[end].
-                unsigned negStartDomain; // startDomain for half-domain negative values
-                unsigned negEndDomain;   // endDomain for half-domain negative values
-            };
+    // Get InvStyle from its name
+    // - str is the string representation of the style name
+    // Return the enumeration value.
+    static InvStyle GetInvStyle(const char * str);
 
-            // Get InvStyle from its name
-            // - str is the string representation of the style name
-            // Return the enumeration value.
-            static InvStyle GetInvStyle(const char * str);
+    // Get the string name for the enumeration
+    // - invStyle is the enum value
+    // Return the string representation
+    static const char * GetInvStyleName(InvStyle invStyle);
 
-            // Get the string name for the enumeration
-            // - invStyle is the enum value
-            // Return the string representation
-            static const char * GetInvStyleName(InvStyle invStyle);
+    // Constructor
+    InvLut1D();
 
-            // Constructor
-            InvLut1D();
+    InvLut1D(BitDepth inBitDepth, BitDepth outBitDepth, HalfFlags halfFlags);
 
-            InvLut1D(BitDepth inBitDepth, BitDepth outBitDepth, HalfFlags halfFlags);
+    // Constructor
+    //  - fwdLut1DOp is the original 1D LUT forward operation
+    InvLut1D(const Lut1D & fwdLut1D);
 
-            // Constructor
-            //  - fwdLut1DOp is the original 1D LUT forward operation
-            InvLut1D(const Lut1D & fwdLut1D);
+    // Used by XML reader.  After initializing members as a Lut1D,
+    // this method is used to finish creating an InvLut1D.
+    void initializeFromLut1D();
 
-            // Used by XML reader.  After initializing members as a Lut1D,
-            // this method is used to finish creating an InvLut1D.
-            void initializeFromLut1D();
+    // Destructor
+    virtual ~InvLut1D();
 
-            // Destructor
-            virtual ~InvLut1D();
+    inline OpType getOpType() const { return OpData::InvLut1DType; }
 
-            inline OpType getOpType() const { return OpData::InvLut1DType; }
+    const std::string& getOpTypeName() const;
 
-            const std::string& getOpTypeName() const;
+    OpData * clone(CloneType type) const;
 
-            OpData * clone(CloneType type) const;
+    virtual void inverse(OpDataVec & ops) const;
 
-            virtual void inverse(OpDataVec & ops) const;
+    inline InvStyle getInvStyle() const { return m_invStyle; }
 
-            inline InvStyle getInvStyle() const { return m_invStyle; }
+    void setInvStyle(InvStyle style);
 
-            void setInvStyle(InvStyle style);
+    void setInputBitDepth(BitDepth in);
 
-            void setInputBitDepth(BitDepth in);
+    void setOutputBitDepth(BitDepth out);
 
-            void setOutputBitDepth(BitDepth out);
-
-            // Get properties of the red component
-            inline const ComponentProperties & getRedProperties() const
-            {
-                return m_componentProperties[0];
-            }
-
-            // Get properties of the green component
-            inline const ComponentProperties & getGreenProperties() const
-            {
-                return m_componentProperties[1];
-            }
-
-            // Get properties of the blue component
-            inline const ComponentProperties & getBlueProperties() const
-            {
-                return m_componentProperties[2];
-            }
-
-            // Determine if the inverse LUT needs to handle values outside
-            // the normal domain: e.g. [0,1023] for 10i or [0.,1.] for 16f.
-            // (This is true if the forward LUT had an extended range.)
-            // Return true if the Op has an extended domain
-            bool hasExtendedDomain() const;
-
-            inline BitDepth getOriginalInDepth() const { return m_origInDepth; }
-
-        private:
-            // Make the array monotonic and prepare params for the renderer.
-            void prepareArray();
-
-        private:
-            // Inverse computation style
-            InvStyle m_invStyle;
-
-            // Properties of each color components
-            ComponentProperties m_componentProperties[3];
-
-            // The original input bit-depth when the object was created.
-            // Note: This is hopefully only needed temporarily.
-            //       Used in InvLutUtil::makeFastLut1D.
-            BitDepth m_origInDepth;
-        };
+    // Get properties of the red component
+    inline const ComponentProperties & getRedProperties() const
+    {
+        return m_componentProperties[0];
     }
+
+    // Get properties of the green component
+    inline const ComponentProperties & getGreenProperties() const
+    {
+        return m_componentProperties[1];
+    }
+
+    // Get properties of the blue component
+    inline const ComponentProperties & getBlueProperties() const
+    {
+        return m_componentProperties[2];
+    }
+
+    // Determine if the inverse LUT needs to handle values outside
+    // the normal domain: e.g. [0,1023] for 10i or [0.,1.] for 16f.
+    // (This is true if the forward LUT had an extended range.)
+    // Return true if the Op has an extended domain
+    bool hasExtendedDomain() const;
+
+    inline BitDepth getOriginalInDepth() const { return m_origInDepth; }
+
+private:
+    // Make the array monotonic and prepare params for the renderer.
+    void prepareArray();
+
+private:
+    // Inverse computation style
+    InvStyle m_invStyle;
+
+    // Properties of each color components
+    ComponentProperties m_componentProperties[3];
+
+    // The original input bit-depth when the object was created.
+    // Note: This is hopefully only needed temporarily.
+    //       Used in InvLutUtil::makeFastLut1D.
+    BitDepth m_origInDepth;
+};
+}
 }
 OCIO_NAMESPACE_EXIT
 

@@ -27,7 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "CTFArrayElt.h"
-#include "CTFArrayMgt.h"
 #include "CTFOpElt.h"
 #include "CTFReaderUtils.h"
 #include "../opdata/OpDataArray.h"
@@ -43,6 +42,15 @@ namespace CTF
 // Private namespace for the xml reader utils
 namespace Reader
 {
+
+ArrayMgt::ArrayMgt()
+    : m_completed(false)
+{
+}
+
+ArrayMgt::~ArrayMgt()
+{
+}
 
 ArrayElt::ArrayElt(const std::string& name,
                    ContainerElt* pParent,

@@ -31,64 +31,62 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_CTF_INVLUT3DELT_H
 
 #include "CTFOpElt.h"
-#include "CTFArrayMgt.h"
-#include "CTFIndexMapMgt.h"
+#include "CTFArrayElt.h"
+#include "CTFIndexMapElt.h"
 
 #include "../opdata/OpDataInvLut3D.h"
 
-
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the CTF sub-directory
-    namespace CTF
-    {
-        // Private namespace for the xml reader utils
-        namespace Reader
-        {
-            // Class for Color::InvLut1D
-            class InvLut3DElt : public OpElt, public ArrayMgt
-            {
-            public:
-                // Constructor
-                InvLut3DElt();
-                // Destructor
-                ~InvLut3DElt();
+// Private namespace to the CTF sub-directory
+namespace CTF
+{
+// Private namespace for the xml reader utils
+namespace Reader
+{
+class InvLut3DElt : public OpElt, public ArrayMgt
+{
+public:
+    // Constructor
+    InvLut3DElt();
+    // Destructor
+    ~InvLut3DElt();
 
-                // Start the parsing of the element
-                virtual void start(const char **atts);
+    // Start the parsing of the element
+    virtual void start(const char **atts);
 
-                // End the parsing of the element
-                virtual void end();
+    // End the parsing of the element
+    virtual void end();
 
-                // Get the associated Color::Op
-                // Return The Op
-                OpData::OpData * getOp() const { return m_pInvLut; }
+    // Get the associated Color::Op
+    // Return The Op
+    OpData::OpData * getOp() const { return m_pInvLut; }
 
-                // Get the associated Color::InvLut1DOp
-                // Return The Color::invLut1DOp
-                OpData::InvLut3D * getLut() const { return m_pInvLut; }
+    // Get the associated Color::InvLut1DOp
+    // Return The Color::invLut1DOp
+    OpData::InvLut3D * getLut() const { return m_pInvLut; }
 
-                // Update the array dimensions
-                // - dims are the array dimensions
-                // returns the resized array
-                virtual OpData::ArrayBase * updateDimension(const Dimensions & dims);
+    // Update the array dimensions
+    // - dims are the array dimensions
+    // returns the resized array
+    virtual OpData::ArrayBase * updateDimension(const Dimensions & dims);
 
-                // Finalize the array data origanization
-                // - position is the position of the last value found
-                virtual void finalize(unsigned position);
+    // Finalize the array data origanization
+    // - position is the position of the last value found
+    virtual void finalize(unsigned position);
 
-            protected:
-                // Convert the interpolation string to its enum's value
-                // - str is the interpolation algorithm name
-                // Return the enum's value
-                Interpolation getInterpolation(const std::string & str);
+protected:
+    // Convert the interpolation string to its enum's value
+    // - str is the interpolation algorithm name
+    // Return the enum's value
+    Interpolation getInterpolation(const std::string & str);
         
-            private:
-                OpData::InvLut3D * m_pInvLut;
-            };
+private:
+    OpData::InvLut3D * m_pInvLut;
+};
 
-        } // exit Reader namespace
-    } // exit CTF namespace
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 

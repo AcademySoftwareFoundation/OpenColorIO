@@ -38,105 +38,105 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace CTF
+// Private namespace to the OpData sub-directory
+namespace CTF
+{
+// Private namespace for the xml reader utils
+namespace Reader
+{
+InvLut3DElt::InvLut3DElt()
+    :   m_pInvLut(new OpData::InvLut3D)
+{
+}
+
+InvLut3DElt::~InvLut3DElt()
+{
+    // Do not delete m_pInvLut (caller owns it now).
+    m_pInvLut = 0x0;
+}
+
+void InvLut3DElt::start(const char **atts)
+{
+    OpElt::start(atts);
+
+    // As the 'interpolation' element is optional,
+    // set the value to default behavior
+    m_pInvLut->setInterpolation(INTERP_DEFAULT);
+
+    unsigned i = 0;
+    while(atts[i])
     {
-        // Private namespace for the xml reader utils
-        namespace Reader
+        if(0==Platform::Strcasecmp(ATTR_INTERPOLATION, atts[i]))
         {
-            InvLut3DElt::InvLut3DElt()
-                :   m_pInvLut(new OpData::InvLut3D)
+            try
             {
+                m_pInvLut->setInterpolation(
+                    OpData::Lut3D::getInterpolation(atts[i + 1]));
             }
-
-            InvLut3DElt::~InvLut3DElt()
+            catch (const std::exception& e)
             {
-                // Do not delete m_pInvLut (caller owns it now).
-                m_pInvLut = 0x0;
+                Throw(e.what());
             }
+        }
 
-            void InvLut3DElt::start(const char **atts)
-            {
-                OpElt::start(atts);
+        i += 2;
+    }
+}
 
-                // As the 'interpolation' element is optional,
-                // set the value to default behavior
-                m_pInvLut->setInterpolation(INTERP_DEFAULT);
+void InvLut3DElt::end()
+{
+    OpElt::end();
+    m_pInvLut->validate();
+}
 
-                unsigned i = 0;
-                while(atts[i])
-                {
-                    if(0==Platform::Strcasecmp(ATTR_INTERPOLATION, atts[i]))
-                    {
-                        try
-                        {
-                            m_pInvLut->setInterpolation(
-                                OpData::Lut3D::getInterpolation(atts[i + 1]));
-                        }
-                        catch (const std::exception& e)
-                        {
-                            Throw(e.what());
-                        }
-                    }
+OpData::ArrayBase * InvLut3DElt::updateDimension(const Dimensions & dims)
+{
+    if(dims.size()!=4)
+    {
+        return 0x0;
+    }
 
-                    i += 2;
-                }
-            }
+    const size_t max = (dims.empty() ? 0 : (dims.size()-1));
+    const unsigned numColorComponents = dims[max];
 
-            void InvLut3DElt::end()
-            {
-                OpElt::end();
-                m_pInvLut->validate();
-            }
+    if (dims[3] != 3 || dims[1] != dims[0] || dims[2] != dims[0])
+    {
+        return 0x0;
+    }
 
-            OpData::ArrayBase * InvLut3DElt::updateDimension(const Dimensions & dims)
-            {
-                if(dims.size()!=4)
-                {
-                    return 0x0;
-                }
+    OpData::Array* pArray = &m_pInvLut->getArray();
+    pArray->resize(dims[0], numColorComponents);
+    return pArray;
+}
 
-                const size_t max = (dims.empty() ? 0 : (dims.size()-1));
-                const unsigned numColorComponents = dims[max];
+void InvLut3DElt::finalize(unsigned position)
+{
+    OpData::Array* pArray = &m_pInvLut->getArray();
 
-                if (dims[3] != 3 || dims[1] != dims[0] || dims[2] != dims[0])
-                {
-                    return 0x0;
-                }
+    if(pArray->getNumValues()!=position)
+    {
+        std::ostringstream arg;
+        arg << "Expected ";
+        arg << pArray->getLength() << "x";
+        arg << pArray->getLength() << "x";
+        arg << pArray->getLength() << "x";
+        arg << pArray->getNumColorComponents();
+        arg << " Array values, found ";
+        arg << position << ". ";
+        Throw(arg.str());
+    }
 
-                OpData::Array* pArray = &m_pInvLut->getArray();
-                pArray->resize(dims[0], numColorComponents);
-                return pArray;
-            }
+    pArray->validate();
 
-            void InvLut3DElt::finalize(unsigned position)
-            {
-                OpData::Array* pArray = &m_pInvLut->getArray();
+    // At this point, we have created the complete Lut3D base class.
+    // Now finish initializing as an InvLut3D.
+    m_pInvLut->initializeFromLut3D();
 
-                if(pArray->getNumValues()!=position)
-                {
-                    std::ostringstream arg;
-                    arg << "Expected ";
-                    arg << pArray->getLength() << "x";
-                    arg << pArray->getLength() << "x";
-                    arg << pArray->getLength() << "x";
-                    arg << pArray->getNumColorComponents();
-                    arg << " Array values, found ";
-                    arg << position << ". ";
-                    Throw(arg.str());
-                }
+    setCompleted(true);
+}
 
-                pArray->validate();
-
-                // At this point, we have created the complete Lut3D base class.
-                // Now finish initializing as an InvLut3D.
-                m_pInvLut->initializeFromLut3D();
-
-                setCompleted(true);
-            }
-
-        } // exit Reader namespace
-    } // exit CTF namespace
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 

@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "CTFIndexMapElt.h"
 #include "CTFReaderUtils.h"
-#include "CTFIndexMapMgt.h"
 #include "CTFContainerElt.h"
 #include "CTFOpElt.h"
 #include "../opdata/OpDataIndexMapping.h"

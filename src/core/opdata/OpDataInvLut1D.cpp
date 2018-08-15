@@ -39,415 +39,415 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace
 {
-    // Names of each inv lut1d op styles
-    static const char kEXACT[] = "exact";
-    static const char kFAST[]  = "fast";
+// Names of each inv lut1d op styles
+static const char kEXACT[] = "exact";
+static const char kFAST[]  = "fast";
 }
 
 OCIO_NAMESPACE_ENTER
 {
-    namespace OpData
+namespace OpData
+{
+InvLut1D::InvStyle InvLut1D::GetInvStyle(const char * str)
+{
+    if(str && *str)
     {
-        InvLut1D::InvStyle InvLut1D::GetInvStyle(const char * str)
+        if(0==Platform::Strcasecmp(str, kEXACT))
         {
-            if(str && *str)
-            {
-                if(0==Platform::Strcasecmp(str, kEXACT))
-                {
-                    return EXACT;
-                }
-                else if(0==Platform::Strcasecmp(str, kFAST))
-                {
-                    return FAST;
-                }
-
-                std::string err("Unknown LUT 1D inverse style: ");
-                err += str;
-                throw Exception(err.c_str());
-            }
-
-            throw Exception("Invalid LUT 1D inverse style");
             return EXACT;
         }
-
-        const char * InvLut1D::GetInvStyleName(InvLut1D::InvStyle invStyle)
+        else if(0==Platform::Strcasecmp(str, kFAST))
         {
-            switch(invStyle)
+            return FAST;
+        }
+
+        std::string err("Unknown LUT 1D inverse style: ");
+        err += str;
+        throw Exception(err.c_str());
+    }
+
+    throw Exception("Invalid LUT 1D inverse style");
+    return EXACT;
+}
+
+const char * InvLut1D::GetInvStyleName(InvLut1D::InvStyle invStyle)
+{
+    switch(invStyle)
+    {
+        case EXACT:
+        {
+            return kEXACT;
+            break;
+        }
+        case FAST:
+        {
+            return kFAST;
+            break;
+        }
+    }
+
+    throw Exception("Invalid LUT 1D inverse style");
+    return "";
+}
+
+InvLut1D::InvLut1D()
+    :   Lut1D(2)
+    ,   m_invStyle(InvLut1D::FAST)
+    ,   m_origInDepth(BIT_DEPTH_UNKNOWN)
+{
+}
+
+InvLut1D::InvLut1D(BitDepth inBitDepth, BitDepth outBitDepth, HalfFlags halfFlags)
+    :   Lut1D(inBitDepth, outBitDepth, halfFlags)
+    ,   m_invStyle(InvLut1D::FAST)
+    ,   m_origInDepth(BIT_DEPTH_UNKNOWN)
+{
+    m_origInDepth = getInputBitDepth();
+}
+
+InvLut1D::InvLut1D(const Lut1D & fwdLut1D)
+    :   Lut1D(fwdLut1D)
+    ,   m_invStyle(InvLut1D::FAST)
+    ,   m_origInDepth(BIT_DEPTH_UNKNOWN)
+{
+    // Swap input/output bitdepths
+    // Note: Call for Op::set*BitDepth() in order to only swap the bitdepths
+    //       without any rescaling
+    const BitDepth in = getInputBitDepth();
+    OpData::setInputBitDepth(getOutputBitDepth());
+    OpData::setOutputBitDepth(in);
+
+    initializeFromLut1D();
+}
+
+void InvLut1D::initializeFromLut1D()
+{
+    // This routine is to be called (e.g. in XML reader) once the base forward Lut1D
+    // has been created and then sets up what is needed for the invLut1D.
+
+    // Note that if the original LUT had a half domain, the invLut needs to as
+    // well so that the appropriate evaluation algorithm is called.
+
+    m_origInDepth = getInputBitDepth();
+
+    prepareArray();
+}
+
+InvLut1D::~InvLut1D()
+{
+}
+
+OpData * InvLut1D::clone(CloneType) const
+{
+    return new InvLut1D(*this);
+}
+
+void InvLut1D::inverse(OpDataVec & ops) const
+{
+    std::auto_ptr<Lut1D> invOp(new Lut1D(*this));
+
+    // Swap input/output bitdepths
+    // Note: Call for Op::set*BitDepth() in order to only swap 
+    //       the bitdepths without any rescaling
+
+    invOp->OpData::setInputBitDepth(getOutputBitDepth());
+    invOp->OpData::setOutputBitDepth(getInputBitDepth());
+
+    // Validation is currently deferred until the finalize call.
+
+    ops.append(invOp.release());
+}
+
+const std::string& InvLut1D::getOpTypeName() const
+{
+    static const std::string type("Inverse LUT 1D");
+    return type;
+}
+
+void InvLut1D::setInputBitDepth(BitDepth in)
+{
+    // Recall that our array is for the LUT to be inverted, so this method
+    // is similar to set OUT depth for the original LUT.
+
+    // Scale factor is max_new_depth/max_old_depth
+    const float scaleFactor
+        = GetBitDepthMaxValue(in)
+            / GetBitDepthMaxValue(getInputBitDepth());
+
+    // Call parent to set the intputBitdepth
+    OpData::setInputBitDepth(in);
+
+    // Scale array by scaleFactor, 
+    // don't scale if scaleFactor = 1.0f
+    if (scaleFactor != 1.0f)
+    {
+        Array::Values & arrayVals = getArray().getValues();
+        const size_t size = arrayVals.size();
+
+        for (unsigned i = 0; i < size; i++)
+        {
+            arrayVals[i] *= scaleFactor;
+        }
+    }
+}
+
+void InvLut1D::setOutputBitDepth(BitDepth out)
+{
+    // (Analogous to set IN depth on the original LUT.)
+
+    // Note: bypass Lut1DOp::setOutputBitDepth() override
+    OpData::setOutputBitDepth(out);
+}
+
+void InvLut1D::setInvStyle(InvStyle style)
+{
+    m_invStyle = style;
+}
+
+bool InvLut1D::hasExtendedDomain() const
+{
+    // The forward LUT is allowed to have entries outside the outDepth (e.g. a 10i
+    // LUT is allowed to have values on [-20,1050] if it wants).  This is called
+    // an extended range LUT and helps maximize accuracy by allowing clamping to
+    // happen (if necessary) after the interpolation.  The implication is
+    // that the inverse LUT needs to evaluate over an extended domain.  Since
+    // this potentially requires a slower rendering method for the Fast style,
+    // this method allows the renderers to determine if this is necessary.
+
+    // Note that it is the range (output) of the forward LUT that determines the
+    // need for an extended domain on the inverse LUT.  Whether the forward LUT
+    // has a half domain does not matter.  E.g., a Lustre float-conversion LUT
+    // has a half domain but outputs integers within [0,65535] so the inverse 
+    // actually wants a normal 16i domain.
+
+    const unsigned length = getArray().getLength();
+    const unsigned maxChannels = getArray().getMaxColorComponents();
+    const unsigned activeChannels = getArray().getNumColorComponents();
+    const Array::Values& values = getArray().getValues();
+
+    // As noted elsewhere, the InBitDepth describes the scaling of the LUT entries.
+    const float normalMin = 0.0f;
+    const float normalMax = GetBitDepthMaxValue(getInputBitDepth());
+
+    unsigned minInd = 0;
+    unsigned maxInd = length - 1;
+    if(isInputHalfDomain())
+    {
+        minInd = 64511u;  // last value before -inf
+        maxInd = 31743u;  // last value before +inf
+    }
+
+    // prepareArray has made the LUT either non-increasing or non-decreasing,
+    // so the min and max values will be either the first or last LUT entries.
+    for(unsigned c = 0; c < activeChannels; ++c)
+    {
+        if(m_componentProperties[c].isIncreasing)
+        {
+            if( values[ minInd * maxChannels + c] < normalMin || 
+                values[ maxInd * maxChannels + c] > normalMax )
             {
-                case EXACT:
-                {
-                    return kEXACT;
-                    break;
-                }
-                case FAST:
-                {
-                    return kFAST;
-                    break;
-                }
+                return true;
             }
-
-            throw Exception("Invalid LUT 1D inverse style");
-            return "";
         }
-
-        InvLut1D::InvLut1D()
-            :   Lut1D(2)
-            ,   m_invStyle(InvLut1D::FAST)
-            ,   m_origInDepth(BIT_DEPTH_UNKNOWN)
+        else
         {
-        }
-
-        InvLut1D::InvLut1D(BitDepth inBitDepth, BitDepth outBitDepth, HalfFlags halfFlags)
-            :   Lut1D(inBitDepth, outBitDepth, halfFlags)
-            ,   m_invStyle(InvLut1D::FAST)
-            ,   m_origInDepth(BIT_DEPTH_UNKNOWN)
-        {
-            m_origInDepth = getInputBitDepth();
-        }
-
-        InvLut1D::InvLut1D(const Lut1D & fwdLut1D)
-            :   Lut1D(fwdLut1D)
-            ,   m_invStyle(InvLut1D::FAST)
-            ,   m_origInDepth(BIT_DEPTH_UNKNOWN)
-        {
-            // Swap input/output bitdepths
-            // Note: Call for Op::set*BitDepth() in order to only swap the bitdepths
-            //       without any rescaling
-            const BitDepth in = getInputBitDepth();
-            OpData::setInputBitDepth(getOutputBitDepth());
-            OpData::setOutputBitDepth(in);
-
-            initializeFromLut1D();
-        }
-
-        void InvLut1D::initializeFromLut1D()
-        {
-            // This routine is to be called (e.g. in XML reader) once the base forward Lut1D
-            // has been created and then sets up what is needed for the invLut1D.
-
-            // Note that if the original LUT had a half domain, the invLut needs to as
-            // well so that the appropriate evaluation algorithm is called.
-
-            m_origInDepth = getInputBitDepth();
-
-            prepareArray();
-        }
-
-        InvLut1D::~InvLut1D()
-        {
-        }
-
-        OpData * InvLut1D::clone(CloneType) const
-        {
-            return new InvLut1D(*this);
-        }
-
-        void InvLut1D::inverse(OpDataVec & ops) const
-        {
-            std::auto_ptr<Lut1D> invOp(new Lut1D(*this));
-
-            // Swap input/output bitdepths
-            // Note: Call for Op::set*BitDepth() in order to only swap 
-            //       the bitdepths without any rescaling
-
-            invOp->OpData::setInputBitDepth(getOutputBitDepth());
-            invOp->OpData::setOutputBitDepth(getInputBitDepth());
-
-            // Validation is currently deferred until the finalize call.
-
-            ops.append(invOp.release());
-        }
-
-        const std::string& InvLut1D::getOpTypeName() const
-        {
-            static const std::string type("Inverse LUT 1D");
-            return type;
-        }
-
-        void InvLut1D::setInputBitDepth(BitDepth in)
-        {
-            // Recall that our array is for the LUT to be inverted, so this method
-            // is similar to set OUT depth for the original LUT.
-
-            // Scale factor is max_new_depth/max_old_depth
-            const float scaleFactor
-                = GetBitDepthMaxValue(in)
-                    / GetBitDepthMaxValue(getInputBitDepth());
-
-            // Call parent to set the intputBitdepth
-            OpData::setInputBitDepth(in);
-
-            // Scale array by scaleFactor, 
-            // don't scale if scaleFactor = 1.0f
-            if (scaleFactor != 1.0f)
+            if( values[ minInd * maxChannels + c] > normalMax || 
+                values[ maxInd * maxChannels + c] < normalMin )
             {
-                Array::Values & arrayVals = getArray().getValues();
-                const size_t size = arrayVals.size();
-
-                for (unsigned i = 0; i < size; i++)
-                {
-                    arrayVals[i] *= scaleFactor;
-                }
-            }
-        }
-
-        void InvLut1D::setOutputBitDepth(BitDepth out)
-        {
-            // (Analogous to set IN depth on the original LUT.)
-
-            // Note: bypass Lut1DOp::setOutputBitDepth() override
-            OpData::setOutputBitDepth(out);
-        }
-
-        void InvLut1D::setInvStyle(InvStyle style)
-        {
-            m_invStyle = style;
-        }
-
-        bool InvLut1D::hasExtendedDomain() const
-        {
-            // The forward LUT is allowed to have entries outside the outDepth (e.g. a 10i
-            // LUT is allowed to have values on [-20,1050] if it wants).  This is called
-            // an extended range LUT and helps maximize accuracy by allowing clamping to
-            // happen (if necessary) after the interpolation.  The implication is
-            // that the inverse LUT needs to evaluate over an extended domain.  Since
-            // this potentially requires a slower rendering method for the Fast style,
-            // this method allows the renderers to determine if this is necessary.
-
-            // Note that it is the range (output) of the forward LUT that determines the
-            // need for an extended domain on the inverse LUT.  Whether the forward LUT
-            // has a half domain does not matter.  E.g., a Lustre float-conversion LUT
-            // has a half domain but outputs integers within [0,65535] so the inverse 
-            // actually wants a normal 16i domain.
-
-            const unsigned length = getArray().getLength();
-            const unsigned maxChannels = getArray().getMaxColorComponents();
-            const unsigned activeChannels = getArray().getNumColorComponents();
-            const Array::Values& values = getArray().getValues();
-
-            // As noted elsewhere, the InBitDepth describes the scaling of the LUT entries.
-            const float normalMin = 0.0f;
-            const float normalMax = GetBitDepthMaxValue(getInputBitDepth());
-
-            unsigned minInd = 0;
-            unsigned maxInd = length - 1;
-            if(isInputHalfDomain())
-            {
-                minInd = 64511u;  // last value before -inf
-                maxInd = 31743u;  // last value before +inf
-            }
-
-            // prepareArray has made the LUT either non-increasing or non-decreasing,
-            // so the min and max values will be either the first or last LUT entries.
-            for(unsigned c = 0; c < activeChannels; ++c)
-            {
-                if(m_componentProperties[c].isIncreasing)
-                {
-                    if( values[ minInd * maxChannels + c] < normalMin || 
-                        values[ maxInd * maxChannels + c] > normalMax )
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    if( values[ minInd * maxChannels + c] > normalMax || 
-                        values[ maxInd * maxChannels + c] < normalMin )
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        // NB: The half domain includes pos/neg infinity and NaNs.  
-        // The prepareArray makes the LUT monotonic to ensure a unique inverse and
-        // determines an effective domain to handle flat spots at the ends nicely.
-        // It's not clear how the NaN part of the domain should be included in the
-        // monotonicity constraints, furthermore there are 2048 NaNs that could each
-        // potentially have different values.  For now, the inversion algorithm and
-        // the pre-processing ignore the NaN part of the domain.
-
-        void InvLut1D::prepareArray()
-        {
-            // Note: The data allocated for the array is length*getMaxColorComponents()
-            const unsigned length = getArray().getLength();
-            const unsigned maxChannels = getArray().getMaxColorComponents();
-            const unsigned activeChannels = getArray().getNumColorComponents();
-            Array::Values& values = getArray().getValues();
-
-            for(unsigned c = 0; c < activeChannels; ++c)
-            {
-                // Determine if the LUT is overall increasing or decreasing.
-                // The heuristic used is to compare first and last entries.
-                // (Note flat LUTs (arbitrarily) have isIncreasing == false.)
-                unsigned lowInd = c;
-                unsigned highInd = (length-1) * maxChannels + c;
-                if(isInputHalfDomain())
-                {
-                    // For half-domain LUTs, I am concerned that customer LUTs may not
-                    // correctly populate the whole domain, so using -HALF_MAX and +HALF_MAX
-                    // could potentially give unreliable results.  Just using 0 and 1 for now.
-                    lowInd  = 0u * maxChannels + c;      // 0.0
-                    highInd = 15360u * maxChannels + c;  // 15360 == 1.0
-                }
-
-                {
-                    m_componentProperties[c].isIncreasing
-                        = ( values[lowInd] < values[highInd] );
-                }
-
-                // Flatten reversals
-                // (If the LUT has a reversal, there is not a unique inverse.
-                //  Furthermore we require sorted values for the exact eval algorithm.)
-                {
-                    bool isIncreasing = m_componentProperties[c].isIncreasing;
-
-                    if( ! isInputHalfDomain() )
-                    {
-                        float prevValue = values[c];
-                        for(unsigned idx = c + maxChannels; 
-                                idx < length * maxChannels; 
-                                idx += maxChannels)
-                        {
-                            if( isIncreasing != (values[idx] > prevValue) )
-                            {
-                                values[idx] = prevValue;
-                            }
-                            else
-                            {
-                                prevValue = values[idx];
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Do positive numbers.
-                        unsigned startInd = 0u * maxChannels + c; // 0 == +zero
-                        unsigned endInd = 31744u * maxChannels;   // 31744 == +infinity
-                        float prevValue = values[startInd];
-                        for(unsigned idx = startInd + maxChannels; 
-                                idx <= endInd; 
-                                idx += maxChannels)
-                        {
-                            if( isIncreasing != (values[idx] > prevValue) ) 
-                            {
-                                values[idx] = prevValue;
-                            }
-                            else 
-                            {
-                                prevValue = values[idx];
-                            }
-                        }
-
-                        // Do negative numbers.
-                        isIncreasing = ! isIncreasing;
-                        startInd = 32768u * maxChannels + c;      // 32768 == -zero
-                        endInd = 64512u * maxChannels;            // 64512 == -infinity
-                        prevValue = values[c];  // prev value for -0 is +0 (disallow overlaps)
-                        for(unsigned idx = startInd; idx <= endInd; idx += maxChannels)
-                        {
-                            if( isIncreasing != (values[idx] > prevValue) )
-                            {
-                                values[idx] = prevValue;
-                            }
-                            else
-                            {
-                                prevValue = values[idx];
-                            }
-                        }
-                    }
-                }
-
-                // Determine effective domain from the starting/ending flat spots
-                // (If the LUT begins or ends with a flat spot, the inverse should be the
-                //  value nearest the center of the LUT.)
-                // For constant LUTs, the end domain == start domain == 0.
-                {
-                    if(!isInputHalfDomain())
-                    {
-                        unsigned endDomain = length - 1;
-                        const float endValue = values[endDomain * maxChannels + c];
-                        while( endDomain > 0
-                                && values[ (endDomain-1) * maxChannels + c] == endValue )
-                        {
-                            --endDomain;
-                        }
-
-                        unsigned startDomain = 0;
-                        const float startValue = values[startDomain * maxChannels + c];
-                        // Note that this works for both increasing and decreasing LUTs
-                        // since there is no reqmt that startValue < endValue.
-                        while( startDomain < endDomain
-                                &&  values[ (startDomain+1) * maxChannels + c] == startValue )
-                        {
-                            ++startDomain;
-                        }
-
-                        m_componentProperties[c].startDomain = startDomain;
-                        m_componentProperties[c].endDomain = endDomain;
-                    }
-                    else
-                    {
-                        // Question: Should the value for infinity be considered for interpolation?
-                        // The advantage is that in theory, if infinity is mapped to some value
-                        // by the forward LUT, you could restore that value to infinity in the inverse.
-                        // This does seem to work in EXACT mode (e.g. CPURendererInvLUT1DHalf_fclut unit test).
-                        // The problem is that in FAST mode, there are Infs in the fast LUT
-                        // and these seem to make the value for both inf and 65504 a NaN.
-                        // Limiting the effective domain allows 65504 to invert correctly.
-                        unsigned endDomain = 31743u;    // +65504 = largest half value < inf
-                        const float endValue = values[endDomain * maxChannels + c];
-                        while( endDomain > 0
-                                && values[ (endDomain-1) * maxChannels + c] == endValue )
-                        {
-                            --endDomain;
-                        }
-
-                        unsigned startDomain = 0;       // positive zero
-                        const float startValue = values[startDomain * maxChannels + c];
-                        // Note that this works for both increasing and decreasing LUTs
-                        // since there is no reqmt that startValue < endValue.
-                        while( startDomain < endDomain
-                                &&  values[ (startDomain+1) * maxChannels + c] == startValue )
-                        {
-                            ++startDomain;
-                        }
-
-                        m_componentProperties[c].startDomain = startDomain;
-                        m_componentProperties[c].endDomain = endDomain;
-
-                        // Negative half of domain has its own start/end.
-                        unsigned negEndDomain = 64511u;  // -65504 = last value before neg inf
-                        const float negEndValue = values[negEndDomain * maxChannels + c];
-                        while( negEndDomain > 32768u     // negative zero
-                                && values[ (negEndDomain-1) * maxChannels + c] == negEndValue )
-                        {
-                            --negEndDomain;
-                        }
-
-                        unsigned negStartDomain = 32768u; // negative zero
-                        const float negStartValue = values[negStartDomain * maxChannels + c];
-                        while( negStartDomain < negEndDomain
-                                && values[ (negStartDomain+1) * maxChannels + c] == negStartValue )
-                        {
-                            ++negStartDomain;
-                        }
-
-                        m_componentProperties[c].negStartDomain = negStartDomain;
-                        m_componentProperties[c].negEndDomain = negEndDomain;
-                    }
-                }
-            }
-
-            if(activeChannels == 1)
-            {
-                m_componentProperties[2] = m_componentProperties[1] = m_componentProperties[0];
+                return true;
             }
         }
     }
+
+    return false;
+}
+
+// NB: The half domain includes pos/neg infinity and NaNs.  
+// The prepareArray makes the LUT monotonic to ensure a unique inverse and
+// determines an effective domain to handle flat spots at the ends nicely.
+// It's not clear how the NaN part of the domain should be included in the
+// monotonicity constraints, furthermore there are 2048 NaNs that could each
+// potentially have different values.  For now, the inversion algorithm and
+// the pre-processing ignore the NaN part of the domain.
+
+void InvLut1D::prepareArray()
+{
+    // Note: The data allocated for the array is length*getMaxColorComponents()
+    const unsigned length = getArray().getLength();
+    const unsigned maxChannels = getArray().getMaxColorComponents();
+    const unsigned activeChannels = getArray().getNumColorComponents();
+    Array::Values& values = getArray().getValues();
+
+    for(unsigned c = 0; c < activeChannels; ++c)
+    {
+        // Determine if the LUT is overall increasing or decreasing.
+        // The heuristic used is to compare first and last entries.
+        // (Note flat LUTs (arbitrarily) have isIncreasing == false.)
+        unsigned lowInd = c;
+        unsigned highInd = (length-1) * maxChannels + c;
+        if(isInputHalfDomain())
+        {
+            // For half-domain LUTs, I am concerned that customer LUTs may not
+            // correctly populate the whole domain, so using -HALF_MAX and +HALF_MAX
+            // could potentially give unreliable results.  Just using 0 and 1 for now.
+            lowInd  = 0u * maxChannels + c;      // 0.0
+            highInd = 15360u * maxChannels + c;  // 15360 == 1.0
+        }
+
+        {
+            m_componentProperties[c].isIncreasing
+                = ( values[lowInd] < values[highInd] );
+        }
+
+        // Flatten reversals
+        // (If the LUT has a reversal, there is not a unique inverse.
+        //  Furthermore we require sorted values for the exact eval algorithm.)
+        {
+            bool isIncreasing = m_componentProperties[c].isIncreasing;
+
+            if( ! isInputHalfDomain() )
+            {
+                float prevValue = values[c];
+                for(unsigned idx = c + maxChannels; 
+                        idx < length * maxChannels; 
+                        idx += maxChannels)
+                {
+                    if( isIncreasing != (values[idx] > prevValue) )
+                    {
+                        values[idx] = prevValue;
+                    }
+                    else
+                    {
+                        prevValue = values[idx];
+                    }
+                }
+            }
+            else
+            {
+                // Do positive numbers.
+                unsigned startInd = 0u * maxChannels + c; // 0 == +zero
+                unsigned endInd = 31744u * maxChannels;   // 31744 == +infinity
+                float prevValue = values[startInd];
+                for(unsigned idx = startInd + maxChannels; 
+                        idx <= endInd; 
+                        idx += maxChannels)
+                {
+                    if( isIncreasing != (values[idx] > prevValue) ) 
+                    {
+                        values[idx] = prevValue;
+                    }
+                    else 
+                    {
+                        prevValue = values[idx];
+                    }
+                }
+
+                // Do negative numbers.
+                isIncreasing = ! isIncreasing;
+                startInd = 32768u * maxChannels + c;      // 32768 == -zero
+                endInd = 64512u * maxChannels;            // 64512 == -infinity
+                prevValue = values[c];  // prev value for -0 is +0 (disallow overlaps)
+                for(unsigned idx = startInd; idx <= endInd; idx += maxChannels)
+                {
+                    if( isIncreasing != (values[idx] > prevValue) )
+                    {
+                        values[idx] = prevValue;
+                    }
+                    else
+                    {
+                        prevValue = values[idx];
+                    }
+                }
+            }
+        }
+
+        // Determine effective domain from the starting/ending flat spots
+        // (If the LUT begins or ends with a flat spot, the inverse should be the
+        //  value nearest the center of the LUT.)
+        // For constant LUTs, the end domain == start domain == 0.
+        {
+            if(!isInputHalfDomain())
+            {
+                unsigned endDomain = length - 1;
+                const float endValue = values[endDomain * maxChannels + c];
+                while( endDomain > 0
+                        && values[ (endDomain-1) * maxChannels + c] == endValue )
+                {
+                    --endDomain;
+                }
+
+                unsigned startDomain = 0;
+                const float startValue = values[startDomain * maxChannels + c];
+                // Note that this works for both increasing and decreasing LUTs
+                // since there is no reqmt that startValue < endValue.
+                while( startDomain < endDomain
+                        &&  values[ (startDomain+1) * maxChannels + c] == startValue )
+                {
+                    ++startDomain;
+                }
+
+                m_componentProperties[c].startDomain = startDomain;
+                m_componentProperties[c].endDomain = endDomain;
+            }
+            else
+            {
+                // Question: Should the value for infinity be considered for interpolation?
+                // The advantage is that in theory, if infinity is mapped to some value
+                // by the forward LUT, you could restore that value to infinity in the inverse.
+                // This does seem to work in EXACT mode (e.g. CPURendererInvLUT1DHalf_fclut unit test).
+                // The problem is that in FAST mode, there are Infs in the fast LUT
+                // and these seem to make the value for both inf and 65504 a NaN.
+                // Limiting the effective domain allows 65504 to invert correctly.
+                unsigned endDomain = 31743u;    // +65504 = largest half value < inf
+                const float endValue = values[endDomain * maxChannels + c];
+                while( endDomain > 0
+                        && values[ (endDomain-1) * maxChannels + c] == endValue )
+                {
+                    --endDomain;
+                }
+
+                unsigned startDomain = 0;       // positive zero
+                const float startValue = values[startDomain * maxChannels + c];
+                // Note that this works for both increasing and decreasing LUTs
+                // since there is no reqmt that startValue < endValue.
+                while( startDomain < endDomain
+                        &&  values[ (startDomain+1) * maxChannels + c] == startValue )
+                {
+                    ++startDomain;
+                }
+
+                m_componentProperties[c].startDomain = startDomain;
+                m_componentProperties[c].endDomain = endDomain;
+
+                // Negative half of domain has its own start/end.
+                unsigned negEndDomain = 64511u;  // -65504 = last value before neg inf
+                const float negEndValue = values[negEndDomain * maxChannels + c];
+                while( negEndDomain > 32768u     // negative zero
+                        && values[ (negEndDomain-1) * maxChannels + c] == negEndValue )
+                {
+                    --negEndDomain;
+                }
+
+                unsigned negStartDomain = 32768u; // negative zero
+                const float negStartValue = values[negStartDomain * maxChannels + c];
+                while( negStartDomain < negEndDomain
+                        && values[ (negStartDomain+1) * maxChannels + c] == negStartValue )
+                {
+                    ++negStartDomain;
+                }
+
+                m_componentProperties[c].negStartDomain = negStartDomain;
+                m_componentProperties[c].negEndDomain = negEndDomain;
+            }
+        }
+    }
+
+    if(activeChannels == 1)
+    {
+        m_componentProperties[2] = m_componentProperties[1] = m_componentProperties[0];
+    }
+}
+}
 }
 OCIO_NAMESPACE_EXIT
 

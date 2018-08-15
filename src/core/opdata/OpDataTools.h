@@ -39,39 +39,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
-    {
-        // Get the step size which is the smallest step between
-        // two consecutive values in a LUT 1D or LUT 3D
-        float GetValueStepSize(BitDepth bDepth, unsigned dimension);
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+// Get the step size which is the smallest step between
+// two consecutive values in a LUT 1D or LUT 3D
+float GetValueStepSize(BitDepth bDepth, unsigned dimension);
 
-        // Returns the ideal LUT size based on a specific bit depth
-        unsigned GetLutIdealSize(BitDepth incomingBitDepth);
+// Returns the ideal LUT size based on a specific bit depth
+unsigned GetLutIdealSize(BitDepth incomingBitDepth);
 
-        // Control behavior of Lut1D composition.
-        enum ComposeMethod
-        {
-            COMPOSE_RESAMPLE_NO      = 0, // Preserve original domain
-            COMPOSE_RESAMPLE_INDEPTH = 1, // InDepth controls min size
-            COMPOSE_RESAMPLE_BIG     = 2  // Min size is 65536
-        };
+// Control behavior of Lut1D composition.
+enum ComposeMethod
+{
+    COMPOSE_RESAMPLE_NO      = 0, // Preserve original domain
+    COMPOSE_RESAMPLE_INDEPTH = 1, // InDepth controls min size
+    COMPOSE_RESAMPLE_BIG     = 2  // Min size is 65536
+};
 
-        // Use functional composition to generate a single op that 
-        // approximates the effect of the pair of ops.
-        // 
-        // IMPORTANT: Unless you really know what you're doing, you must call 
-        // OpData::Lut1D::mayCompose before using this function.
-        // 
-        OpDataLut1DRcPtr Compose(const OpDataLut1DRcPtr & A, 
-                                 const OpDataLut1DRcPtr & B, 
-                                 ComposeMethod compFlag);
+// Use functional composition to generate a single op that 
+// approximates the effect of the pair of ops.
+// 
+// IMPORTANT: Unless you really know what you're doing, you must call 
+// OpData::Lut1D::mayCompose before using this function.
+// 
+OpDataLut1DRcPtr Compose(const OpDataLut1DRcPtr & A, 
+                            const OpDataLut1DRcPtr & B, 
+                            ComposeMethod compFlag);
 
-        // Use functional composition to generate a single op that 
-        // approximates the effect of the pair of ops.
-        OpDataLut3DRcPtr Compose(const OpDataLut3DRcPtr & A,
-                                 const OpDataLut3DRcPtr & B);
-    }
+// Use functional composition to generate a single op that 
+// approximates the effect of the pair of ops.
+OpDataLut3DRcPtr Compose(const OpDataLut3DRcPtr & A,
+                            const OpDataLut3DRcPtr & B);
+}
 }
 OCIO_NAMESPACE_EXIT
 

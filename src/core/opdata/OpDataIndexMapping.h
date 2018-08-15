@@ -36,83 +36,83 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
-    {
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
 
-        // The class represents the index mapping for a LUT
-        // This class defines a list that is the new mapping of input 
-        // code values (inValues) to index positions (n) in a LUT.
-        // 
-        // TODO: This is an initial implementation to just do the minimal
-        //       required for CLF support.  We may add more later.
-        //
-        // TODO: Although the Lut1D/Lut3D classes have an IndexMap instance,
-        //       our current implementation converts a map into a separate
-        //       Range op when the file is read.  If we ever want to use
-        //       the IndexMap as part of the LUT, we need to update the LUT
-        //       code so that resizing, setting bit-depth, cloning, etc.
-        //       also make necessary adjustments to the IndexMap.
-        //
-        class IndexMapping
-        {
-        public:
-            // Type definition of one entry of a component color
-            typedef std::pair<float,float> Data;
+// The class represents the index mapping for a LUT
+// This class defines a list that is the new mapping of input 
+// code values (inValues) to index positions (n) in a LUT.
+// 
+// TODO: This is an initial implementation to just do the minimal
+//       required for CLF support.  We may add more later.
+//
+// TODO: Although the Lut1D/Lut3D classes have an IndexMap instance,
+//       our current implementation converts a map into a separate
+//       Range op when the file is read.  If we ever want to use
+//       the IndexMap as part of the LUT, we need to update the LUT
+//       code so that resizing, setting bit-depth, cloning, etc.
+//       also make necessary adjustments to the IndexMap.
+//
+class IndexMapping
+{
+public:
+    // Type definition of one entry of a component color
+    typedef std::pair<float,float> Data;
 
-            // Type definition of one component color
-            typedef std::vector<Data> ComponentData;
+    // Type definition of one component color
+    typedef std::vector<Data> ComponentData;
 
-            // Type definition of the three component colors
-            typedef ComponentData Indices[3];
+    // Type definition of the three component colors
+    typedef ComponentData Indices[3];
 
-        public:
-            // Constructor
-            explicit IndexMapping(
-                unsigned dimension // Dimension
-                );
+public:
+    // Constructor
+    explicit IndexMapping(
+        unsigned dimension // Dimension
+        );
 
-            // Destructor
-            virtual ~IndexMapping();
+    // Destructor
+    virtual ~IndexMapping();
 
-            // Get the dimension
-            unsigned getDimension() const;
+    // Get the dimension
+    unsigned getDimension() const;
 
-            // Resize the array content
-            // - newDimension the new number of _pairs_ of index data
-            void resize(unsigned newDimension);
+    // Resize the array content
+    // - newDimension the new number of _pairs_ of index data
+    void resize(unsigned newDimension);
 
-            // Get the indices
-            const Indices& getIndices() const;
+    // Get the indices
+    const Indices& getIndices() const;
 
-            // Get the selected component colors
-            unsigned getComponents() const;
+    // Get the selected component colors
+    unsigned getComponents() const;
 
-            // Get a pair of values
-            // - index the index of the pair to get
-            // - first the first value
-            // - second the second value
-            void getPair(unsigned index, float& first, float& second) const;
+    // Get a pair of values
+    // - index the index of the pair to get
+    // - first the first value
+    // - second the second value
+    void getPair(unsigned index, float& first, float& second) const;
 
-            // Set a pair of values
-            // - index the index of the pair to set
-            // - first the first value
-            // - second the second value
-            void setPair(unsigned index, float first, float second);
+    // Set a pair of values
+    // - index the index of the pair to set
+    // - first the first value
+    // - second the second value
+    void setPair(unsigned index, float first, float second);
 
-            // Validate the state of the instance
-            void validate() const;
+    // Validate the state of the instance
+    void validate() const;
 
-            // Check if an IndexMapping is equal to this instance.
-            // - other is the other IndexMapping to compare with.
-            // Return true if they are equal, false otherwise
-            bool operator==(const IndexMapping& other) const;
+    // Check if an IndexMapping is equal to this instance.
+    // - other is the other IndexMapping to compare with.
+    // Return true if they are equal, false otherwise
+    bool operator==(const IndexMapping& other) const;
 
-        private:
-            unsigned m_Dimension; // Dimension
-            Indices m_Indices;    // All values
-        };
-    }
+private:
+    unsigned m_Dimension; // Dimension
+    Indices m_Indices;    // All values
+};
+}
 }
 OCIO_NAMESPACE_EXIT
 

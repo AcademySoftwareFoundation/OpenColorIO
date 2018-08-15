@@ -196,7 +196,6 @@ void RangeValueElt::setRawData(const char* s, size_t len, unsigned)
     }
 }
 
-
 } // exit Reader namespace
 } // exit CTF namespace
 }

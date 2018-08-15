@@ -38,111 +38,111 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    namespace OpData
+namespace OpData
+{
+
+InvLut3D::InvLut3D()
+    :   Lut3D(2)
+    ,   m_invStyle(InvLut3D::FAST)
+{
+}
+
+InvLut3D::InvLut3D(const Lut3D & fwdLut3D)
+    :   Lut3D(fwdLut3D)
+    ,   m_invStyle(InvLut3D::FAST)
+{
+    // Swap input/output bitdepths
+    // Note: Call for Op::set*BitDepth() in order to only swap the bitdepths
+    //       without any rescaling
+    const BitDepth in = getInputBitDepth();
+    OpData::setInputBitDepth(getOutputBitDepth());
+    OpData::setOutputBitDepth(in);
+
+    initializeFromLut3D();
+}
+
+void InvLut3D::initializeFromLut3D()
+{
+    // This routine is to be called (e.g. in XML reader) once the base forward Lut3D
+    // has been created and then sets up what is needed for the invLut3D.
+
+    // TODO: Check LUT for invertibility.
+}
+
+InvLut3D::~InvLut3D()
+{
+}
+
+OpData * InvLut3D::clone(CloneType) const
+{
+    return new InvLut3D(*this);
+}
+
+void InvLut3D::inverse(OpDataVec & ops) const
+{
+    // OpData validation will be done when transform finalize is called.
+
+    std::auto_ptr<Lut3D> invOp(new Lut3D(*this));
+
+    // Swap input/output bitdepths
+    // Note: Call for Op::set*BitDepth() in order to only swap 
+    //       the bitdepths without any rescaling
+
+    invOp->OpData::setInputBitDepth(getOutputBitDepth());
+    invOp->OpData::setOutputBitDepth(getInputBitDepth());
+            
+    // Validation is currently deferred until the finalize call.
+            
+    ops.append(invOp.release());
+}
+
+const std::string& InvLut3D::getOpTypeName() const
+{
+    static const std::string type("Inverse LUT 3D");
+    return type;
+}
+
+void InvLut3D::setInputBitDepth(BitDepth in)
+{
+    // Recall that our array is for the LUT to be inverted, so this method
+    // is similar to set OUT depth for the original LUT.
+
+    // Scale factor is max_new_depth/max_old_depth
+    const float scaleFactor
+        = GetBitDepthMaxValue(in)
+            / GetBitDepthMaxValue(getInputBitDepth());
+
+    // Call parent to set the intputBitdepth
+    OpData::setInputBitDepth(in);
+
+    // Scale array by scaleFactor, 
+    // don't scale if scaleFactor = 1.0f
+    if (scaleFactor != 1.0f)
     {
+        Array::Values & arrayVals = getArray().getValues();
+        const size_t size = arrayVals.size();
 
-        InvLut3D::InvLut3D()
-            :   Lut3D(2)
-            ,   m_invStyle(InvLut3D::FAST)
+        for (unsigned i = 0; i < size; i++)
         {
+            arrayVals[i] *= scaleFactor;
         }
-
-        InvLut3D::InvLut3D(const Lut3D & fwdLut3D)
-            :   Lut3D(fwdLut3D)
-            ,   m_invStyle(InvLut3D::FAST)
-        {
-            // Swap input/output bitdepths
-            // Note: Call for Op::set*BitDepth() in order to only swap the bitdepths
-            //       without any rescaling
-            const BitDepth in = getInputBitDepth();
-            OpData::setInputBitDepth(getOutputBitDepth());
-            OpData::setOutputBitDepth(in);
-
-            initializeFromLut3D();
-        }
-
-        void InvLut3D::initializeFromLut3D()
-        {
-            // This routine is to be called (e.g. in XML reader) once the base forward Lut3D
-            // has been created and then sets up what is needed for the invLut3D.
-
-            // TODO: Check LUT for invertibility.
-        }
-
-        InvLut3D::~InvLut3D()
-        {
-        }
-
-        OpData * InvLut3D::clone(CloneType) const
-        {
-            return new InvLut3D(*this);
-        }
-
-        void InvLut3D::inverse(OpDataVec & ops) const
-        {
-            // OpData validation will be done when transform finalize is called.
-
-            std::auto_ptr<Lut3D> invOp(new Lut3D(*this));
-
-            // Swap input/output bitdepths
-            // Note: Call for Op::set*BitDepth() in order to only swap 
-            //       the bitdepths without any rescaling
-
-            invOp->OpData::setInputBitDepth(getOutputBitDepth());
-            invOp->OpData::setOutputBitDepth(getInputBitDepth());
-            
-            // Validation is currently deferred until the finalize call.
-            
-            ops.append(invOp.release());
-        }
-
-        const std::string& InvLut3D::getOpTypeName() const
-        {
-            static const std::string type("Inverse LUT 3D");
-            return type;
-        }
-
-        void InvLut3D::setInputBitDepth(BitDepth in)
-        {
-            // Recall that our array is for the LUT to be inverted, so this method
-            // is similar to set OUT depth for the original LUT.
-
-            // Scale factor is max_new_depth/max_old_depth
-            const float scaleFactor
-                = GetBitDepthMaxValue(in)
-                    / GetBitDepthMaxValue(getInputBitDepth());
-
-            // Call parent to set the intputBitdepth
-            OpData::setInputBitDepth(in);
-
-            // Scale array by scaleFactor, 
-            // don't scale if scaleFactor = 1.0f
-            if (scaleFactor != 1.0f)
-            {
-                Array::Values & arrayVals = getArray().getValues();
-                const size_t size = arrayVals.size();
-
-                for (unsigned i = 0; i < size; i++)
-                {
-                    arrayVals[i] *= scaleFactor;
-                }
-            }
-        }
-
-        void InvLut3D::setOutputBitDepth(BitDepth out)
-        {
-            // (Analogous to set IN depth on the original LUT.)
-
-            // Note: bypass Lut1DOp::setOutputBitDepth() override
-            OpData::setOutputBitDepth(out);
-        }
-
-        void InvLut3D::setInvStyle(InvStyle style)
-        {
-            m_invStyle = style;
-        }
-
     }
+}
+
+void InvLut3D::setOutputBitDepth(BitDepth out)
+{
+    // (Analogous to set IN depth on the original LUT.)
+
+    // Note: bypass Lut1DOp::setOutputBitDepth() override
+    OpData::setOutputBitDepth(out);
+}
+
+void InvLut3D::setInvStyle(InvStyle style)
+{
+    m_invStyle = style;
+}
+
+}
 }
 OCIO_NAMESPACE_EXIT
 

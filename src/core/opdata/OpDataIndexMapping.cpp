@@ -30,86 +30,86 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+IndexMapping::IndexMapping(unsigned dimension)
+    : m_Dimension(dimension)
+{
+    resize(m_Dimension);
+}
+
+IndexMapping::~IndexMapping()
+{
+}
+
+void IndexMapping::resize(unsigned dimension)
+{
+    // TODO: Should we try to disallow really large dimensions?
+    m_Dimension = dimension;
+    // Currently only supporting one index map per LUT.
+    m_Indices[0].resize(dimension);
+}
+
+unsigned IndexMapping::getDimension() const
+{
+    return m_Dimension;
+}
+
+const IndexMapping::Indices& IndexMapping::getIndices() const
+{
+    return m_Indices;
+}
+
+unsigned IndexMapping::getComponents() const
+{
+    return 3;
+}
+
+void IndexMapping::getPair(unsigned index, float& first, float& second) const
+{
+    // TODO: Have an assert here to check valid index?
+    first  = m_Indices[0][index].first;
+    second = m_Indices[0][index].second;
+}
+
+void IndexMapping::setPair(unsigned index, float first, float second)
+{
+    m_Indices[0][index].first  = first;
+    m_Indices[0][index].second = second;
+}
+
+void IndexMapping::validate() const
+{
+    // Check that both halves of the index map is increasing.
+    // For now we are not validating that the index is within the length
+    // of the LUT since the LUT renderer will safely handle that situation.
+    float first, second, prevFirst, prevSecond;
+    for (unsigned i = 1; i < m_Dimension; ++i)
     {
-        IndexMapping::IndexMapping(unsigned dimension)
-            : m_Dimension(dimension)
+        getPair(i, first, second);
+        getPair(i - 1, prevFirst, prevSecond);
+        if (first <= prevFirst || second <= prevSecond)
         {
-            resize(m_Dimension);
-        }
-
-        IndexMapping::~IndexMapping()
-        {
-        }
-
-        void IndexMapping::resize(unsigned dimension)
-        {
-            // TODO: Should we try to disallow really large dimensions?
-            m_Dimension = dimension;
-            // Currently only supporting one index map per LUT.
-            m_Indices[0].resize(dimension);
-        }
-
-        unsigned IndexMapping::getDimension() const
-        {
-            return m_Dimension;
-        }
-
-        const IndexMapping::Indices& IndexMapping::getIndices() const
-        {
-            return m_Indices;
-        }
-
-        unsigned IndexMapping::getComponents() const
-        {
-            return 3;
-        }
-
-        void IndexMapping::getPair(unsigned index, float& first, float& second) const
-        {
-            // TODO: Have an assert here to check valid index?
-            first  = m_Indices[0][index].first;
-            second = m_Indices[0][index].second;
-        }
-
-        void IndexMapping::setPair(unsigned index, float first, float second)
-        {
-            m_Indices[0][index].first  = first;
-            m_Indices[0][index].second = second;
-        }
-
-        void IndexMapping::validate() const
-        {
-            // Check that both halves of the index map is increasing.
-            // For now we are not validating that the index is within the length
-            // of the LUT since the LUT renderer will safely handle that situation.
-            float first, second, prevFirst, prevSecond;
-            for (unsigned i = 1; i < m_Dimension; ++i)
-            {
-                getPair(i, first, second);
-                getPair(i - 1, prevFirst, prevSecond);
-                if (first <= prevFirst || second <= prevSecond)
-                {
-                    throw Exception("Index values must be increasing");
-                }
-            }
-        }
-
-        bool IndexMapping::operator==(const IndexMapping& other) const
-        {
-            if (this == &other) return true;
-
-            if (m_Dimension != other.m_Dimension) return false;
-
-            for (unsigned i = 0; i < getComponents(); i++)
-            {
-                if (m_Indices[i] != other.m_Indices[i]) return false;
-            }
-
-            return true;
+            throw Exception("Index values must be increasing");
         }
     }
+}
+
+bool IndexMapping::operator==(const IndexMapping& other) const
+{
+    if (this == &other) return true;
+
+    if (m_Dimension != other.m_Dimension) return false;
+
+    for (unsigned i = 0; i < getComponents(); i++)
+    {
+        if (m_Indices[i] != other.m_Indices[i]) return false;
+    }
+
+    return true;
+}
+}
 }
 OCIO_NAMESPACE_EXIT
 

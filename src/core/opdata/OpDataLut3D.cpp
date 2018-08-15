@@ -42,367 +42,367 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+unsigned Lut3D::maxSupportedLength = 129;
+
+Interpolation Lut3D::getInterpolation(const char* str)
+{
+    if (str && *str)
     {
-        unsigned Lut3D::maxSupportedLength = 129;
-
-        Interpolation Lut3D::getInterpolation(const char* str)
+        if (0 == strcmp(str, "trilinear"))
         {
-            if (str && *str)
-            {
-                if (0 == strcmp(str, "trilinear"))
-                {
-                    return INTERP_LINEAR;
-                }
-                else if (0 == strcmp(str, "tetrahedral"))
-                {
-                    return INTERP_TETRAHEDRAL;
-                }
-                else if (0 == strcmp(str, "4pt tetrahedral"))
-                {
-                    return INTERP_TETRAHEDRAL;
-                }
-                else if (0 == strcmp(str, "default"))
-                {
-                    return INTERP_DEFAULT;
-                }
-
-                std::ostringstream oss;
-                oss << "3D LUT interpolation not recongnized: ";
-                oss << str;
-
-                throw Exception(oss.str().c_str());
-            }
-
-            throw Exception("3D LUT missing interpolation value.");
+            return INTERP_LINEAR;
+        }
+        else if (0 == strcmp(str, "tetrahedral"))
+        {
+            return INTERP_TETRAHEDRAL;
+        }
+        else if (0 == strcmp(str, "4pt tetrahedral"))
+        {
+            return INTERP_TETRAHEDRAL;
+        }
+        else if (0 == strcmp(str, "default"))
+        {
+            return INTERP_DEFAULT;
         }
 
-        Lut3D::Lut3DArray::Lut3DArray(unsigned length,
-                                     BitDepth outBitDepth)
+        std::ostringstream oss;
+        oss << "3D LUT interpolation not recongnized: ";
+        oss << str;
+
+        throw Exception(oss.str().c_str());
+    }
+
+    throw Exception("3D LUT missing interpolation value.");
+}
+
+Lut3D::Lut3DArray::Lut3DArray(unsigned length,
+                                BitDepth outBitDepth)
+{
+    resize(length, getMaxColorComponents());
+    fill(outBitDepth);
+}
+
+Lut3D::Lut3DArray::~Lut3DArray()
+{
+}
+
+Lut3D::Lut3DArray& Lut3D::Lut3DArray::operator=(const Array& a)
+{
+    if (this != &a)
+    {
+        *(Array*)this = a;
+    }
+    return *this;
+}
+
+void Lut3D::Lut3DArray::fill(BitDepth outBitDepth)
+{
+    const unsigned length = getLength();
+    const unsigned maxChannels = getMaxColorComponents();
+
+    Array::Values& values = getValues();
+
+    const float stepValue 
+        = GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
+
+    const unsigned maxEntries = length*length*length;
+
+    for (unsigned idx = 0; idx<maxEntries; idx++)
+    {
+        values[maxChannels*idx + 0] = (float)((idx / length / length) % length) * stepValue;
+        values[maxChannels*idx + 1] = (float)((idx / length) % length) * stepValue;
+        values[maxChannels*idx + 2] = (float)(idx%length) * stepValue;
+    }
+}
+
+bool Lut3D::Lut3DArray::isIdentity(BitDepth outBitDepth) const
+{
+    const unsigned length = getLength();
+    const Array::Values & values = getValues();
+
+    // As an identity LUT shall not change color component values,
+    // aside from possibly a scaling for bit-depth conversion.
+
+    const float stepSize = GetValueStepSize(outBitDepth, length);
+
+    const unsigned maxEntries = length*length*length;
+
+    for(unsigned i=0; i<maxEntries; i++)
+    {
+        // TODO: Use equalWithSafeRelError to account for outBitDepth
+        if(!equalWithAbsError(values[3*i+0],
+                                (float)((i/ length / length)% length) * stepSize,
+                                0.0001f))
         {
-            resize(length, getMaxColorComponents());
-            fill(outBitDepth);
-        }
-
-        Lut3D::Lut3DArray::~Lut3DArray()
-        {
-        }
-
-        Lut3D::Lut3DArray& Lut3D::Lut3DArray::operator=(const Array& a)
-        {
-            if (this != &a)
-            {
-                *(Array*)this = a;
-            }
-            return *this;
-        }
-
-        void Lut3D::Lut3DArray::fill(BitDepth outBitDepth)
-        {
-            const unsigned length = getLength();
-            const unsigned maxChannels = getMaxColorComponents();
-
-            Array::Values& values = getValues();
-
-            const float stepValue 
-                = GetBitDepthMaxValue(outBitDepth) / ((float)length - 1.0f);
-
-            const unsigned maxEntries = length*length*length;
-
-            for (unsigned idx = 0; idx<maxEntries; idx++)
-            {
-                values[maxChannels*idx + 0] = (float)((idx / length / length) % length) * stepValue;
-                values[maxChannels*idx + 1] = (float)((idx / length) % length) * stepValue;
-                values[maxChannels*idx + 2] = (float)(idx%length) * stepValue;
-            }
-        }
-
-        bool Lut3D::Lut3DArray::isIdentity(BitDepth outBitDepth) const
-        {
-            const unsigned length = getLength();
-            const Array::Values & values = getValues();
-
-            // As an identity LUT shall not change color component values,
-            // aside from possibly a scaling for bit-depth conversion.
-
-            const float stepSize = GetValueStepSize(outBitDepth, length);
-
-            const unsigned maxEntries = length*length*length;
-
-            for(unsigned i=0; i<maxEntries; i++)
-            {
-                // TODO: Use equalWithSafeRelError to account for outBitDepth
-                if(!equalWithAbsError(values[3*i+0],
-                                      (float)((i/ length / length)% length) * stepSize,
-                                      0.0001f))
-                {
-                    return false;
-                }
-
-                if(!equalWithAbsError(values[3*i+1],
-                                      (float)((i/ length)% length) * stepSize,
-                                      0.0001f))
-                {
-                    return false;
-                }
-
-                if(!equalWithAbsError(values[3*i+2],
-                                      (float)(i%length) * stepSize,
-                                      0.0001f))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        unsigned Lut3D::Lut3DArray::getNumValues() const
-        {
-            const unsigned numEntries = getLength()*getLength()*getLength();
-            return numEntries*getMaxColorComponents();
-        }
-
-        void Lut3D::Lut3DArray::getRGB(unsigned i, unsigned j, unsigned k, float* RGB) const
-        {
-            const unsigned length = getLength();
-            const unsigned maxChannels = getMaxColorComponents();
-            const Array::Values& values = getValues();
-            // Array order matches ctf order: channels vary most rapidly, then B, G, R.
-            unsigned offset = (i*length*length + j*length + k) * maxChannels;
-            RGB[0] = values[offset];
-            RGB[1] = values[++offset];
-            RGB[2] = values[++offset];
-        }
-
-        void Lut3D::Lut3DArray::setRGB(unsigned i, unsigned j, unsigned k, float* RGB)
-        {
-            const unsigned length = getLength();
-            const unsigned maxChannels = getMaxColorComponents();
-            Array::Values& values = getValues();
-            // Array order matches ctf order: channels vary most rapidly, then B, G, R.
-            unsigned offset = (i*length*length + j*length + k) * maxChannels;
-            values[offset] = RGB[0];
-            values[++offset] = RGB[1];
-            values[++offset] = RGB[2];
-        }
-
-        Lut3D::Lut3D(unsigned gridSize)
-            :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-            ,   m_interpolation(INTERP_DEFAULT)
-            ,   m_array(gridSize, getOutputBitDepth())
-        {
-        }
-
-        Lut3D::Lut3D(BitDepth inBitDepth,
-                     BitDepth outBitDepth,
-                     const std::string& id,
-                     const std::string& name,
-                     const Descriptions& descriptions,
-                     Interpolation interpolation,
-                     unsigned gridSize)
-            :   OpData(inBitDepth, outBitDepth, id, name, descriptions)
-            ,   m_interpolation(interpolation)
-            ,   m_array(gridSize, getOutputBitDepth())
-        {
-        }
-
-        Lut3D::~Lut3D()
-        {
-        }
-
-        const std::string& Lut3D::getOpTypeName() const
-        {
-            static const std::string type("LUT 3D");
-            return type;
-        }
-
-        void Lut3D::setInterpolation(Interpolation algo)
-        {
-            m_interpolation = algo;
-        }
-
-        Interpolation Lut3D::getConcreteInterpolation() const
-        {
-            if (m_interpolation == INTERP_BEST
-                || m_interpolation == INTERP_TETRAHEDRAL)
-            {
-                return INTERP_TETRAHEDRAL;
-            }
-            if (m_interpolation == INTERP_DEFAULT
-                || m_interpolation == INTERP_LINEAR)
-            {
-                return INTERP_LINEAR;
-            }
-
-            // TODO: currently INTERP_NEAREST is not implemented.
-            // This is a regression for OCIO v1.
-            if (m_interpolation == INTERP_NEAREST)
-            {
-                return INTERP_LINEAR;
-            }
-            
-            return m_interpolation;
-        }
-
-        void Lut3D::validate() const
-        {
-            if(getInputBitDepth()==BIT_DEPTH_UNKNOWN)
-            {
-                throw Exception("Unknown bit depth");
-            }
-
-            if(getOutputBitDepth()==BIT_DEPTH_UNKNOWN)
-            {
-                throw Exception("Unknown bit depth");
-            }
-
-            Interpolation interp = getConcreteInterpolation();
-            if (interp != INTERP_LINEAR && interp != INTERP_TETRAHEDRAL)
-            {
-                const std::string i = InterpolationToString(getInterpolation());
-                std::string err = "Unsupported interpolation algorithm: " + i;
-                throw Exception(err.c_str());
-            }
-
-            OpData::validate();
-
-            try
-            {
-                getArray().validate();
-            }
-            catch (Exception& e)
-            {
-                std::ostringstream oss;
-                oss << "Lut3D content array issue: ";
-                oss << e.what();
-
-                throw Exception(oss.str().c_str());
-            }
-
-            if (getArray().getNumColorComponents() != 3)
-            {
-                throw Exception("Lut3D has an incorrect number of color components. ");
-            }
-
-            if (getArray().getLength()>maxSupportedLength)
-            {
-                std::ostringstream oss;
-                oss << "Lut3D length: ";
-                oss << getArray().getLength();
-                oss << " is not supported. ";
-
-                throw Exception(oss.str().c_str());
-            }
-        }
-
-        bool Lut3D::isIdentity() const
-        {
-            return m_array.isIdentity(getOutputBitDepth());
-        }
-
-        void Lut3D::setOutputBitDepth(BitDepth out) 
-        {
-            // Scale factor is max_new_depth/max_old_depth
-            const float scaleFactor
-                = GetBitDepthMaxValue(out)
-                    / GetBitDepthMaxValue(getOutputBitDepth());
-
-            // Call parent to set the outputbitdepth
-            OpData::setOutputBitDepth(out);
-
-            // Scale array by scaleFactor,
-            // don't scale if scaleFactor = 1.0f
-            if (!equalWithAbsError(scaleFactor, 1.0f, 0.00001f))
-            {
-                Array::Values& arrayVals = m_array.getValues();
-                const size_t size = arrayVals.size();
-
-                for (unsigned i = 0; i < size; i++)
-                {
-                    arrayVals[i] *= scaleFactor;
-                }
-            }
-        }
-
-        std::auto_ptr<OpData> Lut3D::getIdentityReplacement() const
-        {
-            const BitDepth inBD = getInputBitDepth();
-            const BitDepth outBD = getOutputBitDepth();
-
-            return 
-                std::auto_ptr<OpData>(new Range(inBD,
-                                                outBD,
-                                                0.,
-                                                GetBitDepthMaxValue(inBD),
-                                                0.,
-                                                GetBitDepthMaxValue(outBD)));
-        }
-
-        bool Lut3D::haveEqualBasics(const Lut3D & B) const
-        {
-            // Question:  Should interpolation style be considered?
-            return (m_array == B.m_array);
-        }
-
-        bool Lut3D::operator==(const OpData & other) const
-        {
-            if (this == &other) return true;
-
-            if (getOpType() != other.getOpType()) return false;
-
-            const Lut3D* lop = static_cast<const Lut3D*>(&other);
-
-            if ( ! haveEqualBasics(*lop) ) return false;
-
-            return (OpData::operator==(other) &&
-                    m_interpolation == lop->m_interpolation);
-        }
-
-        OpData * Lut3D::clone(CloneType /*type*/) const
-        {
-            return new Lut3D(*this);
-        }
-
-        void Lut3D::inverse(OpDataVec & ops) const
-        {
-            std::auto_ptr<InvLut3D> invOp(new InvLut3D(*this));
-            ops.append(invOp.release());
-        }
-
-        bool Lut3D::isInverse(const Lut3D& B) const
-        {
-            if (getOpType() == OpData::Lut3DType && B.getOpType() == OpData::InvLut3DType)
-            {
-                // Need to check bit-depth because the array scaling is relative to it.
-                // (For LUT it is the out-depth, for INVLUT it is the in-depth.)
-                // Note that we use MaxValue so that 16f and 32f are considered the same.
-
-                // In the LUT-->INVLUT case this will typically be true anyway.
-                if (GetBitDepthMaxValue(getOutputBitDepth()) !=
-                    GetBitDepthMaxValue(B.getInputBitDepth()))
-                    return false;
-
-                // Test the core parts such as array, half domain, and hue adjust while
-                // ignoring superficial differences such as in/out bit-depth.
-                return haveEqualBasics(B);
-            }
-            else if (getOpType() == OpData::InvLut3DType && B.getOpType() == OpData::Lut3DType)
-            {
-                // TODO: Harmonize array bit-depths to allow a proper array comparison.
-
-                // In the INVLUT-->LUT case this could easily not be true even if the
-                // pair are actually inverses.
-                if (GetBitDepthMaxValue(getInputBitDepth()) !=
-                    GetBitDepthMaxValue(B.getOutputBitDepth()))
-                    return false;
-
-                return haveEqualBasics(B);
-            }
             return false;
         }
 
-    } // exit OpData namespace
+        if(!equalWithAbsError(values[3*i+1],
+                                (float)((i/ length)% length) * stepSize,
+                                0.0001f))
+        {
+            return false;
+        }
+
+        if(!equalWithAbsError(values[3*i+2],
+                                (float)(i%length) * stepSize,
+                                0.0001f))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+unsigned Lut3D::Lut3DArray::getNumValues() const
+{
+    const unsigned numEntries = getLength()*getLength()*getLength();
+    return numEntries*getMaxColorComponents();
+}
+
+void Lut3D::Lut3DArray::getRGB(unsigned i, unsigned j, unsigned k, float* RGB) const
+{
+    const unsigned length = getLength();
+    const unsigned maxChannels = getMaxColorComponents();
+    const Array::Values& values = getValues();
+    // Array order matches ctf order: channels vary most rapidly, then B, G, R.
+    unsigned offset = (i*length*length + j*length + k) * maxChannels;
+    RGB[0] = values[offset];
+    RGB[1] = values[++offset];
+    RGB[2] = values[++offset];
+}
+
+void Lut3D::Lut3DArray::setRGB(unsigned i, unsigned j, unsigned k, float* RGB)
+{
+    const unsigned length = getLength();
+    const unsigned maxChannels = getMaxColorComponents();
+    Array::Values& values = getValues();
+    // Array order matches ctf order: channels vary most rapidly, then B, G, R.
+    unsigned offset = (i*length*length + j*length + k) * maxChannels;
+    values[offset] = RGB[0];
+    values[++offset] = RGB[1];
+    values[++offset] = RGB[2];
+}
+
+Lut3D::Lut3D(unsigned gridSize)
+    :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    ,   m_interpolation(INTERP_DEFAULT)
+    ,   m_array(gridSize, getOutputBitDepth())
+{
+}
+
+Lut3D::Lut3D(BitDepth inBitDepth,
+                BitDepth outBitDepth,
+                const std::string& id,
+                const std::string& name,
+                const Descriptions& descriptions,
+                Interpolation interpolation,
+                unsigned gridSize)
+    :   OpData(inBitDepth, outBitDepth, id, name, descriptions)
+    ,   m_interpolation(interpolation)
+    ,   m_array(gridSize, getOutputBitDepth())
+{
+}
+
+Lut3D::~Lut3D()
+{
+}
+
+const std::string& Lut3D::getOpTypeName() const
+{
+    static const std::string type("LUT 3D");
+    return type;
+}
+
+void Lut3D::setInterpolation(Interpolation algo)
+{
+    m_interpolation = algo;
+}
+
+Interpolation Lut3D::getConcreteInterpolation() const
+{
+    if (m_interpolation == INTERP_BEST
+        || m_interpolation == INTERP_TETRAHEDRAL)
+    {
+        return INTERP_TETRAHEDRAL;
+    }
+    if (m_interpolation == INTERP_DEFAULT
+        || m_interpolation == INTERP_LINEAR)
+    {
+        return INTERP_LINEAR;
+    }
+
+    // TODO: currently INTERP_NEAREST is not implemented.
+    // This is a regression for OCIO v1.
+    if (m_interpolation == INTERP_NEAREST)
+    {
+        return INTERP_LINEAR;
+    }
+            
+    return m_interpolation;
+}
+
+void Lut3D::validate() const
+{
+    if(getInputBitDepth()==BIT_DEPTH_UNKNOWN)
+    {
+        throw Exception("Unknown bit depth");
+    }
+
+    if(getOutputBitDepth()==BIT_DEPTH_UNKNOWN)
+    {
+        throw Exception("Unknown bit depth");
+    }
+
+    Interpolation interp = getConcreteInterpolation();
+    if (interp != INTERP_LINEAR && interp != INTERP_TETRAHEDRAL)
+    {
+        const std::string i = InterpolationToString(getInterpolation());
+        std::string err = "Unsupported interpolation algorithm: " + i;
+        throw Exception(err.c_str());
+    }
+
+    OpData::validate();
+
+    try
+    {
+        getArray().validate();
+    }
+    catch (Exception& e)
+    {
+        std::ostringstream oss;
+        oss << "Lut3D content array issue: ";
+        oss << e.what();
+
+        throw Exception(oss.str().c_str());
+    }
+
+    if (getArray().getNumColorComponents() != 3)
+    {
+        throw Exception("Lut3D has an incorrect number of color components. ");
+    }
+
+    if (getArray().getLength()>maxSupportedLength)
+    {
+        std::ostringstream oss;
+        oss << "Lut3D length: ";
+        oss << getArray().getLength();
+        oss << " is not supported. ";
+
+        throw Exception(oss.str().c_str());
+    }
+}
+
+bool Lut3D::isIdentity() const
+{
+    return m_array.isIdentity(getOutputBitDepth());
+}
+
+void Lut3D::setOutputBitDepth(BitDepth out) 
+{
+    // Scale factor is max_new_depth/max_old_depth
+    const float scaleFactor
+        = GetBitDepthMaxValue(out)
+            / GetBitDepthMaxValue(getOutputBitDepth());
+
+    // Call parent to set the outputbitdepth
+    OpData::setOutputBitDepth(out);
+
+    // Scale array by scaleFactor,
+    // don't scale if scaleFactor = 1.0f
+    if (!equalWithAbsError(scaleFactor, 1.0f, 0.00001f))
+    {
+        Array::Values& arrayVals = m_array.getValues();
+        const size_t size = arrayVals.size();
+
+        for (unsigned i = 0; i < size; i++)
+        {
+            arrayVals[i] *= scaleFactor;
+        }
+    }
+}
+
+std::auto_ptr<OpData> Lut3D::getIdentityReplacement() const
+{
+    const BitDepth inBD = getInputBitDepth();
+    const BitDepth outBD = getOutputBitDepth();
+
+    return 
+        std::auto_ptr<OpData>(new Range(inBD,
+                                        outBD,
+                                        0.,
+                                        GetBitDepthMaxValue(inBD),
+                                        0.,
+                                        GetBitDepthMaxValue(outBD)));
+}
+
+bool Lut3D::haveEqualBasics(const Lut3D & B) const
+{
+    // Question:  Should interpolation style be considered?
+    return (m_array == B.m_array);
+}
+
+bool Lut3D::operator==(const OpData & other) const
+{
+    if (this == &other) return true;
+
+    if (getOpType() != other.getOpType()) return false;
+
+    const Lut3D* lop = static_cast<const Lut3D*>(&other);
+
+    if ( ! haveEqualBasics(*lop) ) return false;
+
+    return (OpData::operator==(other) &&
+            m_interpolation == lop->m_interpolation);
+}
+
+OpData * Lut3D::clone(CloneType /*type*/) const
+{
+    return new Lut3D(*this);
+}
+
+void Lut3D::inverse(OpDataVec & ops) const
+{
+    std::auto_ptr<InvLut3D> invOp(new InvLut3D(*this));
+    ops.append(invOp.release());
+}
+
+bool Lut3D::isInverse(const Lut3D& B) const
+{
+    if (getOpType() == OpData::Lut3DType && B.getOpType() == OpData::InvLut3DType)
+    {
+        // Need to check bit-depth because the array scaling is relative to it.
+        // (For LUT it is the out-depth, for INVLUT it is the in-depth.)
+        // Note that we use MaxValue so that 16f and 32f are considered the same.
+
+        // In the LUT-->INVLUT case this will typically be true anyway.
+        if (GetBitDepthMaxValue(getOutputBitDepth()) !=
+            GetBitDepthMaxValue(B.getInputBitDepth()))
+            return false;
+
+        // Test the core parts such as array, half domain, and hue adjust while
+        // ignoring superficial differences such as in/out bit-depth.
+        return haveEqualBasics(B);
+    }
+    else if (getOpType() == OpData::InvLut3DType && B.getOpType() == OpData::Lut3DType)
+    {
+        // TODO: Harmonize array bit-depths to allow a proper array comparison.
+
+        // In the INVLUT-->LUT case this could easily not be true even if the
+        // pair are actually inverses.
+        if (GetBitDepthMaxValue(getInputBitDepth()) !=
+            GetBitDepthMaxValue(B.getOutputBitDepth()))
+            return false;
+
+        return haveEqualBasics(B);
+    }
+    return false;
+}
+
+} // exit OpData namespace
 }
 OCIO_NAMESPACE_EXIT
 

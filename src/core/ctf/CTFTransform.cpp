@@ -33,154 +33,152 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-
-    // Private namespace to the CTF sub-directory
-    namespace CTF
+// Private namespace to the CTF sub-directory
+namespace CTF
+{
+void Version::ReadVersion(const std::string & versionString, Version & versionOut)
+{
+    int numDot = 0;
+    int numInt = 0;
+    bool canBeDot = false;
+    std::string::const_iterator it = versionString.begin();
+    while (it != versionString.end())
     {
-
-        void Version::ReadVersion(const std::string & versionString, Version & versionOut)
+        if (::isdigit(*it))
         {
-            int numDot = 0;
-            int numInt = 0;
-            bool canBeDot = false;
-            std::string::const_iterator it = versionString.begin();
-            while (it != versionString.end())
-            {
-                if (::isdigit(*it))
-                {
-                    numInt = numDot + 1;
-                    canBeDot = true;
-                    ++it;
-                }
-                else if (it[0] == '.' && canBeDot)
-                {
-                    canBeDot = false;
-                    numDot += 1;
-                    ++it;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            if (versionString.empty()
-                || it != versionString.end()
-                || numInt == 0
-                || numInt > 3
-                || numInt == numDot)
-            {
-                std::ostringstream os;
-                os << "'";
-                os << versionString;
-                os << "' is not a valid version. ";
-                os << "Expecting MAJOR[.MINOR[.REVISION]] ";
-                throw Exception(os.str().c_str());
-            }
-
-            versionOut.m_major = 0;
-            versionOut.m_minor = 0;
-            versionOut.m_revision = 0;
-
-            sscanf(versionString.c_str(), "%d.%d.%d",
-                   &versionOut.m_major,
-                   &versionOut.m_minor,
-                   &versionOut.m_revision);
+            numInt = numDot + 1;
+            canBeDot = true;
+            ++it;
         }
-
-        Version & Version::operator=(const Version &rhs)
+        else if (it[0] == '.' && canBeDot)
         {
-            if (this != &rhs)
-            {
-                m_major = rhs.m_major;
-                m_minor = rhs.m_minor;
-                m_revision = rhs.m_revision;
-            }
-            return *this;
+            canBeDot = false;
+            numDot += 1;
+            ++it;
         }
-
-        bool Version::operator==(const Version &rhs) const
+        else
         {
-            if (this == &rhs) return true;
-
-            return m_major == rhs.m_major
-                && m_minor == rhs.m_minor
-                && m_revision == rhs.m_revision;
+            break;
         }
+    }
+    if (versionString.empty()
+        || it != versionString.end()
+        || numInt == 0
+        || numInt > 3
+        || numInt == numDot)
+    {
+        std::ostringstream os;
+        os << "'";
+        os << versionString;
+        os << "' is not a valid version. ";
+        os << "Expecting MAJOR[.MINOR[.REVISION]] ";
+        throw Exception(os.str().c_str());
+    }
 
-        bool Version::operator<=(const Version &rhs) const
+    versionOut.m_major = 0;
+    versionOut.m_minor = 0;
+    versionOut.m_revision = 0;
+
+    sscanf(versionString.c_str(), "%d.%d.%d",
+            &versionOut.m_major,
+            &versionOut.m_minor,
+            &versionOut.m_revision);
+}
+
+Version & Version::operator=(const Version &rhs)
+{
+    if (this != &rhs)
+    {
+        m_major = rhs.m_major;
+        m_minor = rhs.m_minor;
+        m_revision = rhs.m_revision;
+    }
+    return *this;
+}
+
+bool Version::operator==(const Version &rhs) const
+{
+    if (this == &rhs) return true;
+
+    return m_major == rhs.m_major
+        && m_minor == rhs.m_minor
+        && m_revision == rhs.m_revision;
+}
+
+bool Version::operator<=(const Version &rhs) const
+{
+    if (*this == rhs)
+    {
+        return true;
+    }
+    return *this < rhs;
+}
+
+bool Version::operator<(const Version &rhs) const
+{
+    if (this == &rhs) return false;
+
+    if (m_major < rhs.m_major)
+    {
+        return true;
+    }
+    else if (m_major > rhs.m_major)
+    {
+        return false;
+    }
+    else
+    {
+        if (m_minor < rhs.m_minor)
         {
-            if (*this == rhs)
+            return true;
+        }
+        else if (m_minor > rhs.m_minor)
+        {
+            return false;
+        }
+        else
+        {
+            if (m_revision < rhs.m_revision)
             {
                 return true;
             }
-            return *this < rhs;
+            return false;
         }
+    }
+}
 
-        bool Version::operator<(const Version &rhs) const
-        {
-            if (this == &rhs) return false;
+// Private namespace for the xml reader utils
+namespace Reader
+{
+Transform::Transform()
+    : m_info("Info")
+    , m_version(CTF_PROCESS_LIST_VERSION)
+    , m_versionCLF(0, 0)
+{
+}
 
-            if (m_major < rhs.m_major)
-            {
-                return true;
-            }
-            else if (m_major > rhs.m_major)
-            {
-                return false;
-            }
-            else
-            {
-                if (m_minor < rhs.m_minor)
-                {
-                    return true;
-                }
-                else if (m_minor > rhs.m_minor)
-                {
-                    return false;
-                }
-                else
-                {
-                    if (m_revision < rhs.m_revision)
-                    {
-                        return true;
-                    }
-                    return false;
-                }
-            }
-        }
+void Transform::setCTFVersion(const Version& ver)
+{
+    m_version = ver;
+}
 
-        // Private namespace for the xml reader utils
-        namespace Reader
-        {
-            Transform::Transform()
-                : m_info("Info")
-                , m_version(CTF_PROCESS_LIST_VERSION)
-                , m_versionCLF(0, 0)
-            {
-            }
+void Transform::setCLFVersion(const Version& ver)
+{
+    m_versionCLF = ver;
+}
 
-            void Transform::setCTFVersion(const Version& ver)
-            {
-                m_version = ver;
-            }
+const Version& Transform::getCTFVersion() const
+{
+    return m_version;
+}
 
-            void Transform::setCLFVersion(const Version& ver)
-            {
-                m_versionCLF = ver;
-            }
+void Transform::validate()
+{
+    m_ops.validate();
+}
 
-            const Version& Transform::getCTFVersion() const
-            {
-                return m_version;
-            }
-
-            void Transform::validate()
-            {
-                m_ops.validate();
-            }
-
-        } // exit Reader namespace
-    } // exit CTF namespace
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 

@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "CTFDescriptionElt.h"
 #include "CTFContainerElt.h"
+#include "CTFTransformElt.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -74,6 +75,69 @@ void DescriptionElt::setRawData(const char* str,
     m_changed = true;
 }
 
+InputDescriptorElt::InputDescriptorElt(const std::string& name,
+    ContainerElt* pParent,
+    unsigned xmlLineNumber,
+    const std::string& xmlFile)
+    : PlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+InputDescriptorElt::~InputDescriptorElt()
+{
+}
+
+void InputDescriptorElt::start(const char **)
+{
+}
+
+void InputDescriptorElt::end()
+{
+}
+
+void InputDescriptorElt::setRawData(const char* str,
+    size_t len,
+    unsigned /*xmlLine*/)
+{
+    TransformElt* pTransform
+        = dynamic_cast<TransformElt*>(getParent());
+
+    std::string s = pTransform->getTransform()->getInputDescriptor();
+    s += std::string(str, len);
+
+    pTransform->getTransform()->setInputDescriptor(s);
+}
+
+OutputDescriptorElt::OutputDescriptorElt(const std::string& name,
+    ContainerElt* pParent,
+    unsigned xmlLineNumber,
+    const std::string& xmlFile)
+    : PlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+OutputDescriptorElt::~OutputDescriptorElt()
+{
+}
+
+void OutputDescriptorElt::start(const char **)
+{
+}
+
+void OutputDescriptorElt::end()
+{
+}
+
+void OutputDescriptorElt::setRawData(const char* str, size_t len, unsigned)
+{
+    TransformElt* pTransform
+        = dynamic_cast<TransformElt*>(getParent());
+
+    std::string s = pTransform->getTransform()->getOutputDescriptor();
+    s += std::string(str, len);
+
+    pTransform->getTransform()->setOutputDescriptor(s);
+}
 
 } // exit Reader namespace
 } // exit CTF namespace

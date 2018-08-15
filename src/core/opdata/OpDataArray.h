@@ -37,195 +37,195 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+class ArrayBase
+{
+public:
+    ArrayBase() {}
+    virtual ~ArrayBase() {}
+    virtual void setDoubleValue(unsigned index, double value) = 0;
+    virtual unsigned getLength() const = 0;
+    virtual unsigned getNumColorComponents() const = 0;
+
+    // Get the number of values in the array
+    virtual unsigned getNumValues() const = 0;
+
+};
+// The class represents the array for a 3by1D LUT and a 3D LUT
+// or a matrix.
+template<typename T> class ArrayT : public ArrayBase
+{
+public:
+    // Type definition for the list of all of the values of all the entries 
+    // that make up the data needed to compute the color operation.
+    typedef std::vector<T> Values;
+
+public:
+    // Constructor
+    ArrayT()
+        : m_length(0)
+        , m_numColorComponents(0)
     {
-        class ArrayBase
-        {
-        public:
-            ArrayBase() {}
-            virtual ~ArrayBase() {}
-            virtual void setDoubleValue(unsigned index, double value) = 0;
-            virtual unsigned getLength() const = 0;
-            virtual unsigned getNumColorComponents() const = 0;
-
-            // Get the number of values in the array
-            virtual unsigned getNumValues() const = 0;
-
-        };
-        // The class represents the array for a 3by1D LUT and a 3D LUT
-        // or a matrix.
-        template<typename T> class ArrayT : public ArrayBase
-        {
-        public:
-            // Type definition for the list of all of the values of all the entries 
-            // that make up the data needed to compute the color operation.
-            typedef std::vector<T> Values;
-
-        public:
-            // Constructor
-            ArrayT()
-                : m_length(0)
-                , m_numColorComponents(0)
-            {
-            }
-
-            // Destructor
-            virtual ~ArrayT()
-            {
-            }
-
-            void resize(unsigned length, unsigned numColorComponents)
-            {
-                m_length = length;
-                m_numColorComponents = numColorComponents;
-                m_data.resize(getNumValues());
-            }
-
-            void setLength(unsigned length)
-            {
-                if (m_length != length)
-                {
-                    m_length = length;
-                    m_data.resize(getNumValues());
-                }
-            }
-
-            unsigned getLength() const
-            {
-                return m_length;
-            }
-
-            unsigned getNumColorComponents() const
-            {
-                return m_numColorComponents;
-            }
-
-            void setNumColorComponents(unsigned numColorComponents)
-            {
-                if (m_numColorComponents != numColorComponents)
-                {
-                    m_numColorComponents = numColorComponents;
-                    m_data.resize(getNumValues());
-                }
-            }
-
-            void adjustColorComponentNumber()
-            {
-                if (m_numColorComponents == 3)
-                {
-                    bool sameCoeff = true;
-                    for (unsigned idx = 0; idx < m_length && sameCoeff; ++idx)
-                    {
-                        if (m_data[idx * 3] != m_data[idx * 3 + 1]
-                            || m_data[idx * 3] != m_data[idx * 3 + 2])
-                        {
-                            sameCoeff = false;
-                        }
-                    }
-
-                    if (sameCoeff)
-                    {
-                        m_numColorComponents = 1;  // But keep the three values...
-                    }
-                }
-            }
-
-            unsigned getMaxColorComponents() const
-            {
-                return 3;
-            }
-
-            const Values& getValues() const
-            {
-                return m_data;
-            }
-
-            Values& getValues()
-            {
-                return m_data;
-            }
-
-            inline const T& operator[](unsigned index) const
-            {
-                return m_data[index];
-            }
-
-            inline T& operator[](unsigned index)
-            {
-                return m_data[index];
-            }
-
-            // Validate the state of the instance
-            virtual void validate() const
-            {
-                if (getLength() == 0)
-                {
-                    throw Exception("Array content is empty.");
-                }
-
-                if (m_data.size() != getNumValues())
-                {
-                    throw Exception(
-                        "Array content does not have the expected number of values.");
-                }
-            }
-
-            // Check if the array is the same
-            bool operator==(const ArrayT& a) const
-            {
-                return (m_length == a.m_length)
-                    && (m_numColorComponents == a.m_numColorComponents)
-                    && (m_data == a.m_data);
-            }
-
-
-        protected:
-            unsigned m_length;             // The size of the array
-            unsigned m_numColorComponents; // The selected number of color components
-            Values   m_data;               // All values
-        };
-
-        class Array : public ArrayT<float>
-        {
-        public:
-
-            Array() : ArrayT<float>()
-            {
-            }
-
-            virtual ~Array()
-            {
-            }
-
-            virtual void setDoubleValue(unsigned index, double value)
-            {
-                m_data[index] = (float)value;
-            }
-
-
-        };
-
-        class ArrayDouble : public ArrayT<double>
-        {
-        public:
-
-            ArrayDouble() : ArrayT<double>()
-            {
-            }
-
-            virtual ~ArrayDouble()
-            {
-            }
-
-            virtual void setDoubleValue(unsigned index, double value)
-            {
-                m_data[index] = value;
-            }
-
-
-        };
     }
+
+    // Destructor
+    virtual ~ArrayT()
+    {
+    }
+
+    void resize(unsigned length, unsigned numColorComponents)
+    {
+        m_length = length;
+        m_numColorComponents = numColorComponents;
+        m_data.resize(getNumValues());
+    }
+
+    void setLength(unsigned length)
+    {
+        if (m_length != length)
+        {
+            m_length = length;
+            m_data.resize(getNumValues());
+        }
+    }
+
+    unsigned getLength() const
+    {
+        return m_length;
+    }
+
+    unsigned getNumColorComponents() const
+    {
+        return m_numColorComponents;
+    }
+
+    void setNumColorComponents(unsigned numColorComponents)
+    {
+        if (m_numColorComponents != numColorComponents)
+        {
+            m_numColorComponents = numColorComponents;
+            m_data.resize(getNumValues());
+        }
+    }
+
+    void adjustColorComponentNumber()
+    {
+        if (m_numColorComponents == 3)
+        {
+            bool sameCoeff = true;
+            for (unsigned idx = 0; idx < m_length && sameCoeff; ++idx)
+            {
+                if (m_data[idx * 3] != m_data[idx * 3 + 1]
+                    || m_data[idx * 3] != m_data[idx * 3 + 2])
+                {
+                    sameCoeff = false;
+                }
+            }
+
+            if (sameCoeff)
+            {
+                m_numColorComponents = 1;  // But keep the three values...
+            }
+        }
+    }
+
+    unsigned getMaxColorComponents() const
+    {
+        return 3;
+    }
+
+    const Values& getValues() const
+    {
+        return m_data;
+    }
+
+    Values& getValues()
+    {
+        return m_data;
+    }
+
+    inline const T& operator[](unsigned index) const
+    {
+        return m_data[index];
+    }
+
+    inline T& operator[](unsigned index)
+    {
+        return m_data[index];
+    }
+
+    // Validate the state of the instance
+    virtual void validate() const
+    {
+        if (getLength() == 0)
+        {
+            throw Exception("Array content is empty.");
+        }
+
+        if (m_data.size() != getNumValues())
+        {
+            throw Exception(
+                "Array content does not have the expected number of values.");
+        }
+    }
+
+    // Check if the array is the same
+    bool operator==(const ArrayT& a) const
+    {
+        return (m_length == a.m_length)
+            && (m_numColorComponents == a.m_numColorComponents)
+            && (m_data == a.m_data);
+    }
+
+
+protected:
+    unsigned m_length;             // The size of the array
+    unsigned m_numColorComponents; // The selected number of color components
+    Values   m_data;               // All values
+};
+
+class Array : public ArrayT<float>
+{
+public:
+
+    Array() : ArrayT<float>()
+    {
+    }
+
+    virtual ~Array()
+    {
+    }
+
+    virtual void setDoubleValue(unsigned index, double value)
+    {
+        m_data[index] = (float)value;
+    }
+
+
+};
+
+class ArrayDouble : public ArrayT<double>
+{
+public:
+
+    ArrayDouble() : ArrayT<double>()
+    {
+    }
+
+    virtual ~ArrayDouble()
+    {
+    }
+
+    virtual void setDoubleValue(unsigned index, double value)
+    {
+        m_data[index] = value;
+    }
+
+
+};
+}
 }
 OCIO_NAMESPACE_EXIT
 

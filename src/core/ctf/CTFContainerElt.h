@@ -46,40 +46,47 @@ namespace CTF
 namespace Reader
 {
 
-    // Base class for element that could contain sub-elements
-    class ContainerElt : public Element
+// Base class for element that could contain sub-elements
+class ContainerElt : public Element
+{
+public:
+    // Constructor
+    // - name is the element's name
+    // - xmlLineNumber is the element's location in the XML file
+    // - xmlFile is the element's XML file name
+    ContainerElt(const std::string& name,
+                    unsigned xmlLineNumber,
+                    const std::string& xmlFile)
+        : Element(name, xmlLineNumber, xmlFile)
     {
-    public:
-        // Constructor
-        // - name is the element's name
-        // - xmlLineNumber is the element's location in the XML file
-        // - xmlFile is the element's XML file name
-        ContainerElt(const std::string& name,
-                     unsigned xmlLineNumber,
-                     const std::string& xmlFile
-        );
+    }
 
-        // Destructor
-        virtual ~ContainerElt();
+    // Destructor
+    virtual ~ContainerElt()
+    {
+    }
 
-        // Is it a container which means if it can hold other elements
-        bool isContainer() const
-        {
-            return true;
-        }
+    // Is it a container which means if it can hold other elements
+    bool isContainer() const
+    {
+        return true;
+    }
 
-        // Append a description string
-        virtual void appendDescription(const std::string& desc) = 0;
+    // Append a description string
+    virtual void appendDescription(const std::string& desc) = 0;
 
-        // Get the current xml transform version
-        virtual const Version & getVersion() const;
+    // Get the current xml transform version
+    virtual const Version & getVersion() const
+    {
+        return CTF_PROCESS_LIST_VERSION;
+    }
 
-    private:
-        // No default Constructor
-        ContainerElt();
+private:
+    // No default Constructor
+    ContainerElt();
 
 
-    };
+};
 
 } // exit Reader namespace
 } // exit CTF namespace

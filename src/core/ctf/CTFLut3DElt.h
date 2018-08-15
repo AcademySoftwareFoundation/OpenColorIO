@@ -31,8 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_CTFLUT3DELT_H
 
 #include "CTFOpElt.h"
-#include "CTFArrayMgt.h"
-#include "CTFIndexMapMgt.h"
+#include "CTFArrayElt.h"
+#include "CTFIndexMapElt.h"
 #include "../opdata/OpDataLut3D.h"
 #include "../opdata/OpDataIndexMapping.h"
 
@@ -45,73 +45,72 @@ namespace CTF
 // Private namespace for the xml reader utils
 namespace Reader
 {
-    // Class for Lut3DData
-    class Lut3DElt : public OpElt, public ArrayMgt, public IndexMapMgt
+// Class for Lut3DData
+class Lut3DElt : public OpElt, public ArrayMgt, public IndexMapMgt
+{
+public:
+    // Constructor
+    Lut3DElt();
+
+    // Destructor
+    ~Lut3DElt();
+
+    // Start the parsing of the element
+    virtual void start(const char **atts);
+
+    // End the parsing of the element
+    virtual void end();
+
+    // Get the associated OpData
+    OpData::OpData* getOp() const;
+
+    // Get the associated Lut3D
+    OpData::Lut3D* getLut() const
     {
-    public:
-        // Constructor
-        Lut3DElt();
+        return m_lut;
+    }
 
-        // Destructor
-        ~Lut3DElt();
+    // Update the array dimensions
+    // - dims are the array dimensions
+    // returns the resized array
+    virtual OpData::ArrayBase* updateDimension(const Dimensions& dims);
 
-        // Start the parsing of the element
-        virtual void start(const char **atts);
+    // Finalize the array data origanization
+    // - position is the position of the last value found
+    virtual void finalize(unsigned position);
 
-        // End the parsing of the element
-        virtual void end();
+    // Update the array dimensions
+    // - dims holds the desired array dimensions
+    // Returns the resized array
+    virtual OpData::IndexMapping* updateDimensionIM(const DimensionsIM& dims);
 
-        // Get the associated OpData
-        OpData::OpData* getOp() const;
+    // Finalize the array data origanization
+    // - position is the position of the last value found
+    virtual void finalizeIM(unsigned position);
 
-        // Get the associated Lut3D
-        OpData::Lut3D* getLut() const
-        {
-            return m_lut;
-        }
+protected:
+    // Convert the interpolation string to its enum's value
+    // - str is the interpolation algorithm
+    Interpolation getInterpolation(const std::string & str);
 
-        // Update the array dimensions
-        // - dims are the array dimensions
-        // returns the resized array
-        virtual OpData::ArrayBase* updateDimension(const Dimensions& dims);
+protected:
+    OpData::Lut3D* m_lut; // The associated Lut3D
+    OpData::IndexMapping m_indexMapping;
+};
 
-        // Finalize the array data origanization
-        // - position is the position of the last value found
-        virtual void finalize(unsigned position);
-
-        // Update the array dimensions
-        // - dims holds the desired array dimensions
-        // Returns the resized array
-        virtual OpData::IndexMapping* updateDimensionIM(const DimensionsIM& dims);
-
-        // Finalize the array data origanization
-        // - position is the position of the last value found
-        virtual void finalizeIM(unsigned position);
-
-    protected:
-        // Convert the interpolation string to its enum's value
-        // - str is the interpolation algorithm
-        Interpolation getInterpolation(const std::string & str);
-
-    protected:
-        OpData::Lut3D* m_lut; // The associated Lut3D
-        OpData::IndexMapping m_indexMapping;
-    };
-
-    // Class for Lut3D version Xml transform version 1.7
-    class Lut3DElt_1_7 : public Lut3DElt
-    {
-    public:
-        // Constructor
-        Lut3DElt_1_7() : Lut3DElt() {}
+// Class for Lut3D version Xml transform version 1.7
+class Lut3DElt_1_7 : public Lut3DElt
+{
+public:
+    // Constructor
+    Lut3DElt_1_7() : Lut3DElt() {}
         
-        // Destructor
-        ~Lut3DElt_1_7() {}
+    // Destructor
+    ~Lut3DElt_1_7() {}
 
-        // End the parsing of the element
-        void end();
-    };
-
+    // End the parsing of the element
+    void end();
+};
 
 } // exit Reader namespace
 } // exit CTF namespace

@@ -37,127 +37,126 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../BitDepthUtils.h"
 #include <sstream>
 
-
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+OpData::OpData(BitDepth inBitDepth,
+                BitDepth outBitDepth)
+    :   m_inBitDepth(inBitDepth)
+    ,   m_outBitDepth(outBitDepth)
+{
+}
+
+OpData::OpData(BitDepth inBitDepth,
+                BitDepth outBitDepth,
+                const std::string& id,
+                const std::string& name,
+                const Descriptions& descriptions)
+    :   m_id(id)
+    ,   m_name(name)
+    ,   m_inBitDepth(inBitDepth)
+    ,   m_outBitDepth(outBitDepth)
+    ,   m_descriptions(descriptions)
+{
+}
+
+OpData::OpData(const OpData& rhs)
+{
+    *this = rhs;
+}
+
+OpData& OpData::operator=(const OpData& rhs)
+{
+    if (this != &rhs)
     {
-        OpData::OpData(BitDepth inBitDepth,
-                       BitDepth outBitDepth)
-            :   m_inBitDepth(inBitDepth)
-            ,   m_outBitDepth(outBitDepth)
+        m_inBitDepth = rhs.m_inBitDepth;
+        m_outBitDepth = rhs.m_outBitDepth;
+        m_id = rhs.m_id;
+        m_name = rhs.m_name;
+        m_descriptions = rhs.m_descriptions;
+
+        /* TODO: BypassProperty will be added later
+        if (this != &rhs)
         {
-        }
+        setBypass(rhs.getBypass());
+        }*/
+    }
 
-        OpData::OpData(BitDepth inBitDepth,
-                       BitDepth outBitDepth,
-                       const std::string& id,
-                       const std::string& name,
-                       const Descriptions& descriptions)
-            :   m_id(id)
-            ,   m_name(name)
-            ,   m_inBitDepth(inBitDepth)
-            ,   m_outBitDepth(outBitDepth)
-            ,   m_descriptions(descriptions)
-        {
-        }
+    return *this;
+}
 
-        OpData::OpData(const OpData& rhs)
-        {
-            *this = rhs;
-        }
+OpData::~OpData()
+{
+}
 
-        OpData& OpData::operator=(const OpData& rhs)
-        {
-            if (this != &rhs)
-            {
-                m_inBitDepth = rhs.m_inBitDepth;
-                m_outBitDepth = rhs.m_outBitDepth;
-                m_id = rhs.m_id;
-                m_name = rhs.m_name;
-                m_descriptions = rhs.m_descriptions;
+void OpData::setId(const std::string& id)
+{
+    m_id = id;
+}
 
-                /* TODO: BypassProperty will be added later
-                if (this != &rhs)
-                {
-                setBypass(rhs.getBypass());
-                }*/
-            }
+void OpData::setName(const std::string& name)
+{
+    m_name = name;
+}
 
-            return *this;
-        }
+void OpData::setInputBitDepth(BitDepth in)
+{
+    m_inBitDepth = in;
+}
 
-        OpData::~OpData()
-        {
-        }
+void OpData::setOutputBitDepth(BitDepth out)
+{
+    m_outBitDepth = out;
+}
 
-        void OpData::setId(const std::string& id)
-        {
-            m_id = id;
-        }
+void OpData::validate() const
+{
+    if (getInputBitDepth() == BIT_DEPTH_UNKNOWN)
+    {
+        throw Exception("OpData missing 'InBitDepth' attribute.");
+    }
 
-        void OpData::setName(const std::string& name)
-        {
-            m_name = name;
-        }
-
-        void OpData::setInputBitDepth(BitDepth in)
-        {
-            m_inBitDepth = in;
-        }
-
-        void OpData::setOutputBitDepth(BitDepth out)
-        {
-            m_outBitDepth = out;
-        }
-
-        void OpData::validate() const
-        {
-            if (getInputBitDepth() == BIT_DEPTH_UNKNOWN)
-            {
-                throw Exception("OpData missing 'InBitDepth' attribute.");
-            }
-
-            if (getOutputBitDepth() == BIT_DEPTH_UNKNOWN)
-            {
-                throw Exception("OpData missing 'OutBitDepth' attribute.");
-            }
-        }
+    if (getOutputBitDepth() == BIT_DEPTH_UNKNOWN)
+    {
+        throw Exception("OpData missing 'OutBitDepth' attribute.");
+    }
+}
 
 
-        bool OpData::isNoOp() const
-        {
-            return (getInputBitDepth() == getOutputBitDepth()) && isIdentity() && !isClamping();
-        }
+bool OpData::isNoOp() const
+{
+    return (getInputBitDepth() == getOutputBitDepth()) && isIdentity() && !isClamping();
+}
 
-        const std::string& OpData::getMeaningfullIdentifier() const
-        {
-            if (!getName().empty())
-            {
-                return getName();
-            }
+const std::string& OpData::getMeaningfullIdentifier() const
+{
+    if (!getName().empty())
+    {
+        return getName();
+    }
 
-            if (!getId().empty())
-            {
-                return getId();
-            }
+    if (!getId().empty())
+    {
+        return getId();
+    }
 
-            return getOpTypeName();
-        }
+    return getOpTypeName();
+}
 
-        bool OpData::operator==(const OpData& other) const
-        {
-            if (this == &other) return true;
+bool OpData::operator==(const OpData& other) const
+{
+    if (this == &other) return true;
 
-            return (m_inBitDepth == other.m_inBitDepth && 
-                    m_outBitDepth == other.m_outBitDepth &&
-                    m_id == other.m_id &&
-                    m_name == other.m_name &&
-                    m_descriptions == other.m_descriptions);
-        }
+    return (m_inBitDepth == other.m_inBitDepth && 
+            m_outBitDepth == other.m_outBitDepth &&
+            m_id == other.m_id &&
+            m_name == other.m_name &&
+            m_descriptions == other.m_descriptions);
+}
 
-    } // exit OpData namespace
+} // exit OpData namespace
 }
 OCIO_NAMESPACE_EXIT
 

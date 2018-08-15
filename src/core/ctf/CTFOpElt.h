@@ -44,57 +44,55 @@ namespace CTF
 namespace Reader
 {
 
-
-    // Base class for the OpData Element
-    class OpElt : public ContainerElt
-    {
-    public:
-        // Constructor
-        OpElt();
+// Base class for the OpData Element
+class OpElt : public ContainerElt
+{
+public:
+    // Constructor
+    OpElt();
         
-        // Destructor
-        ~OpElt();
+    // Destructor
+    ~OpElt();
 
-        // Set the current context
-        void setContext(const std::string& name,
-                        const TransformPtr& pTransform,
-                        unsigned xmlLineNumber,
-                        const std::string& xmlFile
-        );
+    // Set the current context
+    void setContext(const std::string& name,
+                    const TransformPtr& pTransform,
+                    unsigned xmlLineNumber,
+                    const std::string& xmlFile
+    );
 
-        // Get the element's identifier
-        const std::string& getIdentifier() const;
+    // Get the element's identifier
+    const std::string& getIdentifier() const;
 
-        // Get the associated OpData
-        virtual OpData::OpData* getOp() const = 0;
+    // Get the associated OpData
+    virtual OpData::OpData* getOp() const = 0;
 
-        // Append a description string
-        void appendDescription(const std::string& desc);
+    // Append a description string
+    void appendDescription(const std::string& desc);
 
-        // Start the parsing of the element
-        void start(const char **atts);
+    // Start the parsing of the element
+    void start(const char **atts);
         
-        // End the parsing of the element
-        virtual void end();
+    // End the parsing of the element
+    virtual void end();
 
-        // Get the element's type name
-        const std::string& getTypeName() const;
+    // Get the element's type name
+    const std::string& getTypeName() const;
 
-        // Get the right reader using its type and
-        // the xml transform version
-        // - type is the container type
-        // - version is the requested version
-        static OpElt* getReader(OpData::OpData::OpType type,
-                                const Version& version);
+    // Get the right reader using its type and
+    // the xml transform version
+    // - type is the container type
+    // - version is the requested version
+    static OpElt* getReader(OpData::OpData::OpType type,
+                            const Version& version);
 
-    protected:
-        // Convert the bit depth string to its enum's value
-        static BitDepth getBitDepth(const std::string& str);
+protected:
+    // Convert the bit depth string to its enum's value
+    static BitDepth getBitDepth(const std::string& str);
 
-    protected:
-        TransformPtr m_transform;  // The parent
-    };
-
+protected:
+    TransformPtr m_transform;  // The parent
+};
 
 } // exit Reader namespace
 } // exit CTF namespace

@@ -37,76 +37,76 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+// Class containing one or more human readable descriptions
+class Descriptions
+{
+public:
+    // Description list type
+    typedef std::vector<std::string> List;
+
+public:
+    // Constructor
+    Descriptions();
+
+    // Destructor
+    ~Descriptions();
+
+    // Assign a Color::Descriptions
+    // - desc the description to copy.
+    // Return the instance itself
+    Descriptions& operator=(const Descriptions& rhs)
     {
-        // Class containing one or more human readable descriptions
-        class Descriptions
+        if (this != &rhs)
         {
-        public:
-            // Description list type
-            typedef std::vector<std::string> List;
+            m_descriptions = rhs.m_descriptions;
+        }
+        return *this;
+    }
 
-        public:
-            // Constructor
-            Descriptions();
+    // Append descriptions
+    // - d is descriptions to append
+    // Return itself
+    Descriptions& operator +=(const Descriptions& d)
+    {
+        if (this != &d)
+        {
+            m_descriptions.insert(m_descriptions.end(),
+                                    d.m_descriptions.begin(),
+                                    d.m_descriptions.end());
+        }
+        return *this;
+    }
 
-            // Destructor
-            ~Descriptions();
+    // Append a human readable description
+    // - d is the description to append
+    // Return itself
+    Descriptions& operator +=(const std::string& d)
+    {
+        m_descriptions.push_back(d);
+        return *this;
+    }
 
-            // Assign a Color::Descriptions
-            // - desc the description to copy.
-            // Return the instance itself
-            Descriptions& operator=(const Descriptions& rhs)
-            {
-                if (this != &rhs)
-                {
-                    m_descriptions = rhs.m_descriptions;
-                }
-                return *this;
-            }
+    // Check if a Descriptions is equal to this instance.
+    // - other is the other Descriptions to compare with.
+    // Return true if they are equal, false otherwise
+    bool operator==(const Descriptions& other) const
+    {
+        if (this == &other) return true;
+        return (m_descriptions == other.m_descriptions);
+    }
 
-            // Append descriptions
-            // - d is descriptions to append
-            // Return itself
-            Descriptions& operator +=(const Descriptions& d)
-            {
-                if (this != &d)
-                {
-                    m_descriptions.insert(m_descriptions.end(),
-                                         d.m_descriptions.begin(),
-                                         d.m_descriptions.end());
-                }
-                return *this;
-            }
+    // Return the list of accumulated descriptions.
+    const List& getList() const { return m_descriptions; }
 
-            // Append a human readable description
-            // - d is the description to append
-            // Return itself
-            Descriptions& operator +=(const std::string& d)
-            {
-                m_descriptions.push_back(d);
-                return *this;
-            }
+private:
+    List m_descriptions; // Contains all descriptions
 
-            // Check if a Descriptions is equal to this instance.
-            // - other is the other Descriptions to compare with.
-            // Return true if they are equal, false otherwise
-            bool operator==(const Descriptions& other) const
-            {
-                if (this == &other) return true;
-                return (m_descriptions == other.m_descriptions);
-            }
-
-            // Return the list of accumulated descriptions.
-            const List& getList() const { return m_descriptions; }
-
-        private:
-            List m_descriptions; // Contains all descriptions
-
-            // Copy constructor and assignation operator are fine
-        };
-    } // exit OpData namespace
+    // Copy constructor and assignation operator are fine
+};
+} // exit OpData namespace
 }
 OCIO_NAMESPACE_EXIT
 

@@ -40,46 +40,63 @@ namespace CTF
 // Private namespace for the xml reader utils
 namespace Reader
 {
-    class ContainerElt;
+class ContainerElt;
 
-    // Base class for all basic elements
-    class PlainElt : public Element
+// Base class for all basic elements
+class PlainElt : public Element
+{
+public:
+    // Constructor
+    PlainElt(const std::string& name,
+                ContainerElt* pParent,
+                unsigned xmlLineNumber,
+                const std::string& xmlFile)
+        : Element(name, xmlLineNumber, xmlFile)
+        , m_parent(pParent)
     {
-    public:
-        // Constructor
-        PlainElt(const std::string& name,
-                 ContainerElt* pParent,
-                 unsigned xmlLineNumber,
-                 const std::string& xmlFile
-        );
+    }
 
-        // Destructor
-        ~PlainElt();
+    // Destructor
+    ~PlainElt()
+    {
+    }
 
-        // Set the data's element
-        virtual void setRawData(const char* str,
-                                size_t len,
-                                unsigned xmlLine
-        ) = 0;
+    // Set the data's element
+    virtual void setRawData(const char* str,
+                            size_t len,
+                            unsigned xmlLine
+    ) = 0;
 
-        // Is it a container which means if it can hold other elements
-        bool isContainer() const;
+    // Is it a container which means if it can hold other elements
+    bool isContainer() const
+    {
+        return false;
+    }
 
-        // Is it a container which means if it can hold other elements
-        ContainerElt* getParent() const;
+    // Is it a container which means if it can hold other elements
+    ContainerElt* getParent() const
+    {
+        return m_parent;
+    }
 
-        // Get the element's identifier
-        const std::string& getIdentifier() const;
+    // Get the element's identifier
+    const std::string& getIdentifier() const
+    {
+        return getName();
+    }
 
-        // Get the element's type name
-        const std::string& getTypeName() const;
+    // Get the element's type name
+    const std::string& getTypeName() const
+    {
+        return getName();
+    }
 
-    private:
-        // No default Constructor
-        PlainElt();
+private:
+    // No default Constructor
+    PlainElt();
 
-        ContainerElt* m_parent; // The element's parent
-    };
+    ContainerElt* m_parent; // The element's parent
+};
 
 } // exit Reader namespace
 } // exit CTF namespace

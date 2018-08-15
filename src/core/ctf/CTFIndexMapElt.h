@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_CTFINDEXMAPELT_H
 
 #include "CTFPlainElt.h"
+#include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -47,47 +48,90 @@ namespace CTF
 namespace Reader
 {
 
-    class IndexMapElt : public PlainElt
-    {
-    public:
-        // Constructor
-        IndexMapElt(const std::string& name,
-                    ContainerElt* pParent,
-                    unsigned xmlLineNumber,
-                    const std::string& xmlFile
-        );
+class IndexMapElt : public PlainElt
+{
+public:
+    // Constructor
+    IndexMapElt(const std::string& name,
+                ContainerElt* pParent,
+                unsigned xmlLineNumber,
+                const std::string& xmlFile
+    );
         
-        // Destructor
-        ~IndexMapElt();
+    // Destructor
+    ~IndexMapElt();
 
-        // Start the parsing of the element
-        void start(const char **atts);
+    // Start the parsing of the element
+    void start(const char **atts);
 
-        // End the parsing of the element
-        void end();
+    // End the parsing of the element
+    void end();
 
-        // Set the data's element
-        // - str the string
-        // - len is the string length
-        // - xmlLine the location
-        void setRawData(const char* str, size_t len, unsigned xmlLine);
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
 
-        // Get the element's type name
-        const std::string& getTypeName() const;
+    // Get the element's type name
+    const std::string& getTypeName() const;
 
-    private:
-        // No default contructor
-        IndexMapElt();
+private:
+    // No default contructor
+    IndexMapElt();
 
-        // The array to fill (pointer not owned)
-        OpData::IndexMapping* m_indexMap;
-        // The current position to fill
-        unsigned m_position;
-    };
+    // The array to fill (pointer not owned)
+    OpData::IndexMapping* m_indexMap;
+    // The current position to fill
+    unsigned m_position;
+};
+
+// Class to track creation of IndexMaps
+// TODO: Reassess design in relation to ArrayMgt
+class IndexMapMgt
+{
+public:
+    // Hold the array dimensions
+    typedef std::vector<unsigned> DimensionsIM;
+
+public:
+    // Constructor
+    IndexMapMgt()
+        : m_completed(false)
+    {
+    }
+
+    // Destructor
+    virtual ~IndexMapMgt()
+    {
+    }
+
+    // Set the status
+    virtual void setCompletedIM(bool status)
+    {
+        m_completed = status;
+    }
+
+    // Is the status flagged as completed
+    bool isCompletedIM()
+    {
+        return m_completed;
+    }
+
+    // Update the array dimensions
+    // - dims holds the desired array dimensions
+    // Returns the resized array
+    virtual OpData::IndexMapping* updateDimensionIM(const DimensionsIM& dims) = 0;
+
+    // Finalize the array data origanization
+    // - position is the position of the last value found
+    virtual void finalizeIM(unsigned position) = 0;
+
+private:
+    bool m_completed; //The completion status
+};
 
 } // exit Reader namespace
-
-
 } // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT

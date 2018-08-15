@@ -117,6 +117,50 @@ void InfoElt::end()
     }
 }
 
+MetadataElt::MetadataElt(const std::string& name,
+    ContainerElt* pParent,
+    unsigned xmlLineNumber,
+    const std::string& xmlFile)
+    : ComplexElt(name, pParent, xmlLineNumber, xmlFile)
+    , m_metadata(name)
+{
+}
+
+MetadataElt::~MetadataElt()
+{
+}
+
+void MetadataElt::start(const char ** atts)
+{
+    unsigned i = 0;
+    while (atts[i] && *atts[i])
+    {
+        if (atts[i + 1] && *atts[i + 1])
+        {
+            m_metadata.addAttribute(OpData::Metadata::Attribute(atts[i], atts[i + 1]));
+        }
+        i += 2;
+    }
+}
+
+void MetadataElt::end()
+{
+    MetadataElt* pMetadataElt = dynamic_cast<MetadataElt*>(getParent());
+    if (pMetadataElt)
+    {
+        pMetadataElt->getMetadata()[getName()] = m_metadata;
+    }
+}
+
+const std::string& MetadataElt::getIdentifier() const
+{
+    return getName();
+}
+
+void MetadataElt::setRawData(const char* str, size_t len, unsigned)
+{
+    m_metadata = m_metadata.getValue() + std::string(str, len);
+}
 
 } // exit Reader namespace
 } // exit CTF namespace

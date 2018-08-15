@@ -26,8 +26,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "OpDataCDL.h"
@@ -39,367 +37,365 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <sstream>
 
-
-
 OCIO_NAMESPACE_ENTER
 {
-    namespace OpData
-    {
-        static const CDL::ChannelParams kOneParams(1.0);
-        static const CDL::ChannelParams kZeroParams(0.0);
+namespace OpData
+{
+static const CDL::ChannelParams kOneParams(1.0);
+static const CDL::ChannelParams kZeroParams(0.0);
 
-        static const char V1_2_FWD_NAME[] = "v1.2_Fwd";
-        static const char V1_2_REV_NAME[] = "v1.2_Rev";
-        static const char NO_CLAMP_FWD_NAME[] = "noClampFwd";
-        static const char NO_CLAMP_REV_NAME[] = "noClampRev";
+static const char V1_2_FWD_NAME[] = "v1.2_Fwd";
+static const char V1_2_REV_NAME[] = "v1.2_Rev";
+static const char NO_CLAMP_FWD_NAME[] = "noClampFwd";
+static const char NO_CLAMP_REV_NAME[] = "noClampRev";
 
-        CDL::CDLStyle CDL::GetCDLStyle(const char* name)
-        {
+CDL::CDLStyle CDL::GetCDLStyle(const char* name)
+{
 
 // Get the style enum  of the CDL from the name stored
 // in the "name" variable.
 #define RETURN_STYLE_FROM_NAME(CDL_STYLE_NAME, CDL_STYLE)      \
-    if( 0==Platform::Strcasecmp(name, CDL_STYLE_NAME) )        \
-    {                                                          \
-        return CDL_STYLE;                                      \
-    }
+if( 0==Platform::Strcasecmp(name, CDL_STYLE_NAME) )        \
+{                                                          \
+return CDL_STYLE;                                      \
+}
 
-            if (name && *name)
-            {
-                RETURN_STYLE_FROM_NAME(V1_2_FWD_NAME, CDL_V1_2_FWD);
-                RETURN_STYLE_FROM_NAME(V1_2_REV_NAME, CDL_V1_2_REV);
-                RETURN_STYLE_FROM_NAME(NO_CLAMP_FWD_NAME, CDL_NO_CLAMP_FWD);
-                RETURN_STYLE_FROM_NAME(NO_CLAMP_REV_NAME, CDL_NO_CLAMP_REV);
-            }
+    if (name && *name)
+    {
+        RETURN_STYLE_FROM_NAME(V1_2_FWD_NAME, CDL_V1_2_FWD);
+        RETURN_STYLE_FROM_NAME(V1_2_REV_NAME, CDL_V1_2_REV);
+        RETURN_STYLE_FROM_NAME(NO_CLAMP_FWD_NAME, CDL_NO_CLAMP_FWD);
+        RETURN_STYLE_FROM_NAME(NO_CLAMP_REV_NAME, CDL_NO_CLAMP_REV);
+    }
 
 #undef RETURN_STYLE_FROM_NAME
 
-            throw Exception("Unknown style for CDL.");
-        }
+    throw Exception("Unknown style for CDL.");
+}
 
-        const char* CDL::GetCDLStyleName(CDL::CDLStyle style)
-        {
-            // Get the name of the CDL style from the enum stored
-            // in the "style" variable
-            switch (style)
-            {
-                case CDL_V1_2_FWD:     return V1_2_FWD_NAME;
-                case CDL_V1_2_REV:     return V1_2_REV_NAME;
-                case CDL_NO_CLAMP_FWD: return NO_CLAMP_FWD_NAME;
-                case CDL_NO_CLAMP_REV: return NO_CLAMP_REV_NAME;
-            }
+const char* CDL::GetCDLStyleName(CDL::CDLStyle style)
+{
+    // Get the name of the CDL style from the enum stored
+    // in the "style" variable
+    switch (style)
+    {
+        case CDL_V1_2_FWD:     return V1_2_FWD_NAME;
+        case CDL_V1_2_REV:     return V1_2_REV_NAME;
+        case CDL_NO_CLAMP_FWD: return NO_CLAMP_FWD_NAME;
+        case CDL_NO_CLAMP_REV: return NO_CLAMP_REV_NAME;
+    }
 
-            throw Exception("Unknown style for CDL.");
+    throw Exception("Unknown style for CDL.");
 
-            return 0x0;
-        }
+    return 0x0;
+}
 
-        CDL::CDL()
-            :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
-            ,   m_cdlStyle(GetDefaultStyle())
-            ,   m_slopeParams(1.0)
-            ,   m_offsetParams(0.0)
-            ,   m_powerParams(1.0)
-            ,   m_saturation(1.0)
-        {
-        }
+CDL::CDL()
+    :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    ,   m_cdlStyle(GetDefaultStyle())
+    ,   m_slopeParams(1.0)
+    ,   m_offsetParams(0.0)
+    ,   m_powerParams(1.0)
+    ,   m_saturation(1.0)
+{
+}
 
-        CDL::CDL(BitDepth inBitDepth,
-                 BitDepth outBitDepth,
-                 const std::string& id,
-                 const std::string& name,
-                 const Descriptions& descriptions,
-                 const CDL::CDLStyle& style,
-                 const ChannelParams& slopeParams,
-                 const ChannelParams& offsetParams,
-                 const ChannelParams& powerParams,
-                 const double saturation)
-            :   OpData(inBitDepth, outBitDepth, id, name, descriptions)
-            ,   m_cdlStyle(style)
-            ,   m_slopeParams(slopeParams)
-            ,   m_offsetParams(offsetParams)
-            ,   m_powerParams(powerParams)
-            ,   m_saturation(saturation)
-        {
-            validate();
-        }
-
-        CDL::CDL(BitDepth inBitDepth,
-                 BitDepth outBitDepth,
-                 const CDL::CDLStyle& style,
-                 const ChannelParams& slopeParams,
-                 const ChannelParams& offsetParams,
-                 const ChannelParams& powerParams,
-                 const double saturation)
-            :   OpData(inBitDepth, outBitDepth)
-            ,   m_cdlStyle(style)
-            ,   m_slopeParams(slopeParams)
-            ,   m_offsetParams(offsetParams)
-            ,   m_powerParams(powerParams)
-            ,   m_saturation(saturation)
-        {
-            validate();
-        }
-
-        CDL::~CDL()
-        {
-        }
-
-        const std::string& CDL::getOpTypeName() const
-        {
-            static const std::string type("ASC CDL");
-            return type;
-        }
-
-        bool CDL::operator==(const OpData& other) const
-        {
-            if (this == &other) return true;
-            if (getOpType() != other.getOpType()) return false;
-
-            const CDL* cdl = static_cast<const CDL*>(&other);
-
-            return OpData::operator==(other) 
-                && m_cdlStyle     == cdl->m_cdlStyle 
-                && m_slopeParams  == cdl->m_slopeParams
-                && m_offsetParams == cdl->m_offsetParams
-                && m_powerParams  == cdl->m_powerParams
-                && m_saturation   == cdl->m_saturation;
-        }
-
-        void CDL::setCDLStyle(const CDL::CDLStyle& style)
-        {
-            m_cdlStyle = style;
-        }
-
-        void CDL::setSlopeParams(const ChannelParams& slopeParams)
-        {
-            m_slopeParams = slopeParams;
-        }
-
-        void CDL::setOffsetParams(const ChannelParams& offsetParams)
-        {
-            m_offsetParams = offsetParams;
-        }
-
-        void CDL::setPowerParams(const ChannelParams& powerParams)
-        {
-            m_powerParams = powerParams;
-        }
-
-        void CDL::setSaturation(const double saturation)
-        {
-            m_saturation = saturation;
-        }
-
-        // Validate if a parameter is greater than or equal to threshold value
-        void validateGreaterEqual(const char * name, 
-                                  const double value, 
-                                  const double threshold)
-        {
-            if (!(value >= threshold))
-            {
-                std::ostringstream oss;
-                oss << "CDL: Invalid '";
-                oss << name;
-                oss << "' " << value;
-                oss << " should be greater than ";
-                oss << threshold << ".";
-                throw Exception(oss.str().c_str());
-            }
-        }
-
-        // Validate if a parameter is greater than a threshold value
-        void validateGreaterThan(const char * name, 
-                                 const double value, 
-                                 const double threshold)
-        {
-            if (!(value > threshold))
-            {
-                std::ostringstream oss;
-                oss << "CDL: Invalid '";
-                oss << name;
-                oss << "' " << value;
-                oss << " should be greater than ";
-                oss << threshold << ".";
-                throw Exception(oss.str().c_str());
-            }
-        }
-
-        typedef void(*parameter_validation_function)(const char *, 
-                                                     const double, 
-                                                     const double);
-
-        template<parameter_validation_function fnVal>
-        void validateChannelParams(const char * name, 
-                                   const CDL::ChannelParams& params,
-                                   double threshold)
-        {
-            for (unsigned i = 0; i < 3; ++i)
-            {
-                fnVal(name, params[i], threshold);
-            }
-        }
-
-        // Validate number of SOP parameters and saturation
-        // The ASC v1.2 spec 2009-05-04 places the following restrictions:
-        //   slope >= 0, power > 0, sat >= 0, (offset unbounded).
-        void validateParams(const CDL::ChannelParams& slopeParams,
-            const CDL::ChannelParams& powerParams,
+CDL::CDL(BitDepth inBitDepth,
+            BitDepth outBitDepth,
+            const std::string& id,
+            const std::string& name,
+            const Descriptions& descriptions,
+            const CDL::CDLStyle& style,
+            const ChannelParams& slopeParams,
+            const ChannelParams& offsetParams,
+            const ChannelParams& powerParams,
             const double saturation)
+    :   OpData(inBitDepth, outBitDepth, id, name, descriptions)
+    ,   m_cdlStyle(style)
+    ,   m_slopeParams(slopeParams)
+    ,   m_offsetParams(offsetParams)
+    ,   m_powerParams(powerParams)
+    ,   m_saturation(saturation)
+{
+    validate();
+}
+
+CDL::CDL(BitDepth inBitDepth,
+            BitDepth outBitDepth,
+            const CDL::CDLStyle& style,
+            const ChannelParams& slopeParams,
+            const ChannelParams& offsetParams,
+            const ChannelParams& powerParams,
+            const double saturation)
+    :   OpData(inBitDepth, outBitDepth)
+    ,   m_cdlStyle(style)
+    ,   m_slopeParams(slopeParams)
+    ,   m_offsetParams(offsetParams)
+    ,   m_powerParams(powerParams)
+    ,   m_saturation(saturation)
+{
+    validate();
+}
+
+CDL::~CDL()
+{
+}
+
+const std::string& CDL::getOpTypeName() const
+{
+    static const std::string type("ASC CDL");
+    return type;
+}
+
+bool CDL::operator==(const OpData& other) const
+{
+    if (this == &other) return true;
+    if (getOpType() != other.getOpType()) return false;
+
+    const CDL* cdl = static_cast<const CDL*>(&other);
+
+    return OpData::operator==(other) 
+        && m_cdlStyle     == cdl->m_cdlStyle 
+        && m_slopeParams  == cdl->m_slopeParams
+        && m_offsetParams == cdl->m_offsetParams
+        && m_powerParams  == cdl->m_powerParams
+        && m_saturation   == cdl->m_saturation;
+}
+
+void CDL::setCDLStyle(const CDL::CDLStyle& style)
+{
+    m_cdlStyle = style;
+}
+
+void CDL::setSlopeParams(const ChannelParams& slopeParams)
+{
+    m_slopeParams = slopeParams;
+}
+
+void CDL::setOffsetParams(const ChannelParams& offsetParams)
+{
+    m_offsetParams = offsetParams;
+}
+
+void CDL::setPowerParams(const ChannelParams& powerParams)
+{
+    m_powerParams = powerParams;
+}
+
+void CDL::setSaturation(const double saturation)
+{
+    m_saturation = saturation;
+}
+
+// Validate if a parameter is greater than or equal to threshold value
+void validateGreaterEqual(const char * name, 
+                            const double value, 
+                            const double threshold)
+{
+    if (!(value >= threshold))
+    {
+        std::ostringstream oss;
+        oss << "CDL: Invalid '";
+        oss << name;
+        oss << "' " << value;
+        oss << " should be greater than ";
+        oss << threshold << ".";
+        throw Exception(oss.str().c_str());
+    }
+}
+
+// Validate if a parameter is greater than a threshold value
+void validateGreaterThan(const char * name, 
+                            const double value, 
+                            const double threshold)
+{
+    if (!(value > threshold))
+    {
+        std::ostringstream oss;
+        oss << "CDL: Invalid '";
+        oss << name;
+        oss << "' " << value;
+        oss << " should be greater than ";
+        oss << threshold << ".";
+        throw Exception(oss.str().c_str());
+    }
+}
+
+typedef void(*parameter_validation_function)(const char *, 
+                                                const double, 
+                                                const double);
+
+template<parameter_validation_function fnVal>
+void validateChannelParams(const char * name, 
+                            const CDL::ChannelParams& params,
+                            double threshold)
+{
+    for (unsigned i = 0; i < 3; ++i)
+    {
+        fnVal(name, params[i], threshold);
+    }
+}
+
+// Validate number of SOP parameters and saturation
+// The ASC v1.2 spec 2009-05-04 places the following restrictions:
+//   slope >= 0, power > 0, sat >= 0, (offset unbounded).
+void validateParams(const CDL::ChannelParams& slopeParams,
+    const CDL::ChannelParams& powerParams,
+    const double saturation)
+{
+    // slope >= 0
+    validateChannelParams<validateGreaterEqual>("slope", slopeParams, 0.0);
+
+    // power > 0
+    validateChannelParams<validateGreaterThan>("power", powerParams, 0.0);
+
+    // saturation >= 0
+    validateGreaterEqual("saturation", saturation, 0.0);
+}
+
+bool CDL::isIdentity() const
+{
+    return  m_slopeParams == kOneParams &&
+            m_offsetParams == kZeroParams &&
+            m_powerParams == kOneParams &&
+            m_saturation == 1.0;
+}
+
+std::auto_ptr<OpData> CDL::getIdentityReplacement() const
+{
+    std::auto_ptr<OpData> op;
+    switch(getCDLStyle())
+    {
+        // These clamp values below 0 -- replace with range.
+        case CDL_V1_2_FWD:
+        case CDL_V1_2_REV:
         {
-            // slope >= 0
-            validateChannelParams<validateGreaterEqual>("slope", slopeParams, 0.0);
-
-            // power > 0
-            validateChannelParams<validateGreaterThan>("power", powerParams, 0.0);
-
-            // saturation >= 0
-            validateGreaterEqual("saturation", saturation, 0.0);
+            op.reset(new Range(getInputBitDepth(),
+                                getOutputBitDepth(),
+                                0.,
+                                Range::EmptyValue(), // don't clamp high end
+                                0.,
+                                Range::EmptyValue()));
+            break;
         }
 
-        bool CDL::isIdentity() const
+        // These pass through the full range of values -- replace with matrix.
+        case CDL_NO_CLAMP_FWD:
+        case CDL_NO_CLAMP_REV:
         {
-            return  m_slopeParams == kOneParams &&
-                    m_offsetParams == kZeroParams &&
-                    m_powerParams == kOneParams &&
-                    m_saturation == 1.0;
+            op.reset(new Matrix(getInputBitDepth(), getOutputBitDepth()));
+            break;
         }
+    }
+    return op;
+}
 
-        std::auto_ptr<OpData> CDL::getIdentityReplacement() const
-        {
-            std::auto_ptr<OpData> op;
-            switch(getCDLStyle())
-            {
-                // These clamp values below 0 -- replace with range.
-                case CDL_V1_2_FWD:
-                case CDL_V1_2_REV:
-                {
-                    op.reset(new Range(getInputBitDepth(),
-                                       getOutputBitDepth(),
-                                       0.,
-                                       Range::EmptyValue(), // don't clamp high end
-                                       0.,
-                                       Range::EmptyValue()));
-                    break;
-                }
+bool CDL::hasChannelCrosstalk() const
+{
+    return m_saturation != 1.0;
+}
 
-                // These pass through the full range of values -- replace with matrix.
-                case CDL_NO_CLAMP_FWD:
-                case CDL_NO_CLAMP_REV:
-                {
-                    op.reset(new Matrix(getInputBitDepth(), getOutputBitDepth()));
-                    break;
-                }
-            }
-            return op;
-        }
+void CDL::validate() const
+{
+    OpData::validate();
 
-        bool CDL::hasChannelCrosstalk() const
-        {
-            return m_saturation != 1.0;
-        }
+    validateParams(m_slopeParams, m_powerParams, m_saturation);
+}
 
-        void CDL::validate() const
-        {
-            OpData::validate();
+std::string CDL::getSlopeString() const
+{
+    return GetChannelParametersString(m_slopeParams);
+}
 
-            validateParams(m_slopeParams, m_powerParams, m_saturation);
-        }
+std::string CDL::getOffsetString() const
+{
+    return GetChannelParametersString(m_offsetParams);
+}
 
-        std::string CDL::getSlopeString() const
-        {
-            return GetChannelParametersString(m_slopeParams);
-        }
+std::string CDL::getPowerString() const
+{
+    return GetChannelParametersString(m_powerParams);
+}
 
-        std::string CDL::getOffsetString() const
-        {
-            return GetChannelParametersString(m_offsetParams);
-        }
+std::string CDL::getSaturationString() const
+{
+    std::ostringstream oss;
+    oss << m_saturation;
+    return oss.str();
+}
 
-        std::string CDL::getPowerString() const
-        {
-            return GetChannelParametersString(m_powerParams);
-        }
+bool CDL::isReverse() const
+{
+    // Return a boolean status based on the enum stored in the "style" variable.
+    const CDL::CDLStyle style = getCDLStyle();
+    switch (style)
+    {
+        case CDL::CDL_V1_2_FWD:     return false;
+        case CDL::CDL_V1_2_REV:     return true;
+        case CDL::CDL_NO_CLAMP_FWD: return false;
+        case CDL::CDL_NO_CLAMP_REV: return true;
+    }
+    return false;
+}
 
-        std::string CDL::getSaturationString() const
-        {
-            std::ostringstream oss;
-            oss << m_saturation;
-            return oss.str();
-        }
+bool CDL::isClamping() const
+{
+    // Return a boolean status based on the enum stored in the "style" variable.
+    const CDL::CDLStyle style = getCDLStyle();
+    switch (style)
+    {
+        case CDL::CDL_V1_2_FWD:     return true;
+        case CDL::CDL_V1_2_REV:     return true;
+        case CDL::CDL_NO_CLAMP_FWD: return false;
+        case CDL::CDL_NO_CLAMP_REV: return false;
+    }
+    return false;
+}
 
-        bool CDL::isReverse() const
-        {
-            // Return a boolean status based on the enum stored in the "style" variable.
-            const CDL::CDLStyle style = getCDLStyle();
-            switch (style)
-            {
-                case CDL::CDL_V1_2_FWD:     return false;
-                case CDL::CDL_V1_2_REV:     return true;
-                case CDL::CDL_NO_CLAMP_FWD: return false;
-                case CDL::CDL_NO_CLAMP_REV: return true;
-            }
-            return false;
-        }
+std::string CDL::GetChannelParametersString(ChannelParams params)
+{
+    std::ostringstream oss;
+    oss << params[0] << ", " << params[1] << ", " << params[2];
+    return oss.str();
+}
 
-        bool CDL::isClamping() const
-        {
-            // Return a boolean status based on the enum stored in the "style" variable.
-            const CDL::CDLStyle style = getCDLStyle();
-            switch (style)
-            {
-                case CDL::CDL_V1_2_FWD:     return true;
-                case CDL::CDL_V1_2_REV:     return true;
-                case CDL::CDL_NO_CLAMP_FWD: return false;
-                case CDL::CDL_NO_CLAMP_REV: return false;
-            }
-            return false;
-        }
+OpData * CDL::clone(CloneType) const
+{
+    return new CDL(*this);
+}
 
-        std::string CDL::GetChannelParametersString(ChannelParams params)
-        {
-            std::ostringstream oss;
-            oss << params[0] << ", " << params[1] << ", " << params[2];
-            return oss.str();
-        }
+void CDL::inverse(OpDataVec & v) const
+{
+    std::auto_ptr<CDL> cdl(new CDL(getOutputBitDepth(),
+                                    getInputBitDepth(),
+                                    getCDLStyle(),
+                                    getSlopeParams(),
+                                    getOffsetParams(),
+                                    getPowerParams(),
+                                    getSaturation()));
+    switch(cdl->getCDLStyle())
+    {
+        case CDL_V1_2_FWD: cdl->setCDLStyle(CDL_V1_2_REV); break;
+        case CDL_V1_2_REV: cdl->setCDLStyle(CDL_V1_2_FWD); break;
+        case CDL_NO_CLAMP_FWD: cdl->setCDLStyle(CDL_NO_CLAMP_REV); break;
+        case CDL_NO_CLAMP_REV: cdl->setCDLStyle(CDL_NO_CLAMP_FWD); break;
+    }
+    v.append(cdl.release());
+}
 
-        OpData * CDL::clone(CloneType) const
-        {
-            return new CDL(*this);
-        }
+bool CDL::isInverse(const OpDataCDLRcPtr & /*r*/) const
+{
+    // TODO: To be implemented
+    return false;
+}
 
-        void CDL::inverse(OpDataVec & v) const
-        {
-            std::auto_ptr<CDL> cdl(new CDL(getOutputBitDepth(),
-                                           getInputBitDepth(),
-                                           getCDLStyle(),
-                                           getSlopeParams(),
-                                           getOffsetParams(),
-                                           getPowerParams(),
-                                           getSaturation()));
-            switch(cdl->getCDLStyle())
-            {
-                case CDL_V1_2_FWD: cdl->setCDLStyle(CDL_V1_2_REV); break;
-                case CDL_V1_2_REV: cdl->setCDLStyle(CDL_V1_2_FWD); break;
-                case CDL_NO_CLAMP_FWD: cdl->setCDLStyle(CDL_NO_CLAMP_REV); break;
-                case CDL_NO_CLAMP_REV: cdl->setCDLStyle(CDL_NO_CLAMP_FWD); break;
-            }
-            v.append(cdl.release());
-        }
+OpDataCDLRcPtr CDL::compose(const OpDataCDLRcPtr & /*r*/) const
+{
+    // TODO: To be implemented
+    return OpDataCDLRcPtr(new CDL);
+}
 
-        bool CDL::isInverse(const OpDataCDLRcPtr & /*r*/) const
-        {
-            // TODO: To be implemented
-            return false;
-        }
-
-        OpDataCDLRcPtr CDL::compose(const OpDataCDLRcPtr & /*r*/) const
-        {
-            // TODO: To be implemented
-            return OpDataCDLRcPtr(new CDL);
-        }
-
-    } // exit OpData namespace
+} // exit OpData namespace
 }
 OCIO_NAMESPACE_EXIT
 

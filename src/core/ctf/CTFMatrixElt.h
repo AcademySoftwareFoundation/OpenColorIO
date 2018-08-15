@@ -31,83 +31,81 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_CTFMATRIXELT_H
 
 #include "CTFOpElt.h"
-#include "CTFArrayMgt.h"
+#include "CTFArrayElt.h"
 #include "../opdata/OpDataMatrix.h"
 
 OCIO_NAMESPACE_ENTER
 {
+// Private namespace to the CTF sub-directory
+namespace CTF
+{
+// Private namespace for the xml reader utils
+namespace Reader
+{
+// Class for Matrix
+class MatrixElt : public OpElt, public ArrayMgt
+{
+public:
+    // Constructor
+    MatrixElt();
+        
+    // Destructor
+    ~MatrixElt();
 
-    // Private namespace to the CTF sub-directory
-    namespace CTF
+    // Start the parsing of the element
+    virtual void start(const char **atts);
+
+    // End the parsing of the element
+    virtual void end();
+
+    // Get the associated OpData
+    OpData::OpData* getOp() const;
+
+    // Get the associated Matrix
+    OpData::Matrix* getMatrix() const
     {
-        // Private namespace for the xml reader utils
-        namespace Reader
-        {
-            // Class for Matrix
-            class MatrixElt : public OpElt, public ArrayMgt
-            {
-            public:
-                // Constructor
-                MatrixElt();
+        return m_matrix;
+    }
+
+    // Update the array dimensions
+    // - dims are the array dimensions
+    // returns the resized array
+    virtual OpData::ArrayBase* updateDimension(const Dimensions& dims);
+
+    // Finalize the array data origanization
+    // - position is the position of the last value found
+    virtual void finalize(unsigned position);
+
+protected:
+    // Helper method to convert Matrix data from 1.2 to latest
+    void convert_1_2_to_Latest();
+
+private:
+    OpData::Matrix* m_matrix; // The associated Matrix
+};
+
+// Class for Matrix version Xml transform version 1.3
+class MatrixElt_1_3 : public MatrixElt
+{
+public:
+    // Constructor
+    MatrixElt_1_3() : MatrixElt() {}
         
-                // Destructor
-                ~MatrixElt();
+    // Destructor
+    ~MatrixElt_1_3() {}
 
-                // Start the parsing of the element
-                virtual void start(const char **atts);
+    // Update the array dimensions
+    // - dims are the array dimensions
+    // returns the resized array
+    virtual OpData::ArrayBase* updateDimension(const Dimensions& dims);
 
-                // End the parsing of the element
-                virtual void end();
+    // Finalize the array data origanization
+    // - position is the position of the last value found
+    virtual void finalize(unsigned position);
+};
 
-                // Get the associated OpData
-                OpData::OpData* getOp() const;
-
-                // Get the associated Matrix
-                OpData::Matrix* getMatrix() const
-                {
-                    return m_matrix;
-                }
-
-                // Update the array dimensions
-                // - dims are the array dimensions
-                // returns the resized array
-                virtual OpData::ArrayBase* updateDimension(const Dimensions& dims);
-
-                // Finalize the array data origanization
-                // - position is the position of the last value found
-                virtual void finalize(unsigned position);
-
-            protected:
-                // Helper method to convert Matrix data from 1.2 to latest
-                void convert_1_2_to_Latest();
-
-            private:
-                OpData::Matrix* m_matrix; // The associated Matrix
-            };
-
-            // Class for Matrix version Xml transform version 1.3
-            class MatrixElt_1_3 : public MatrixElt
-            {
-            public:
-                // Constructor
-                MatrixElt_1_3() : MatrixElt() {}
-        
-                // Destructor
-                ~MatrixElt_1_3() {}
-
-                // Update the array dimensions
-                // - dims are the array dimensions
-                // returns the resized array
-                virtual OpData::ArrayBase* updateDimension(const Dimensions& dims);
-
-                // Finalize the array data origanization
-                // - position is the position of the last value found
-                virtual void finalize(unsigned position);
-            };
-
-        } // exit Reader namespace
-
-    } // exit CTF namespace
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 

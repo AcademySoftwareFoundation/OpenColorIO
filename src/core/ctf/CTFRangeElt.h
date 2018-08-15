@@ -38,9 +38,9 @@ OCIO_NAMESPACE_ENTER
 
 namespace OpData
 {
-    // Forward declare
-    class OpData;
-    class Range;
+// Forward declare
+class OpData;
+class Range;
 }
 
 // Private namespace to the CTF sub-directory
@@ -50,81 +50,81 @@ namespace CTF
 namespace Reader
 {
     
-    // Class for Range
-    class RangeElt : public OpElt
-    {
-    public:
-        // Constructor
-        RangeElt();
+// Class for Range
+class RangeElt : public OpElt
+{
+public:
+    // Constructor
+    RangeElt();
         
-        // Destructor
-        ~RangeElt();
+    // Destructor
+    ~RangeElt();
 
-        // Start the parsing of the element
-        virtual void start(const char **atts);
+    // Start the parsing of the element
+    virtual void start(const char **atts);
         
-        // End the parsing of the element
-        virtual void end();
+    // End the parsing of the element
+    virtual void end();
 
-        // Get the associated OpData
-        OpData::OpData* getOp() const;
+    // Get the associated OpData
+    OpData::OpData* getOp() const;
         
-        // Get the associated Range
-        OpData::Range* getRange() const
-        {
-            return m_range;
-        }
-
-    protected:
-        OpData::Range* m_range; // The associated Range
-    };
-
-    // Class for Range v1.7
-    class RangeElt_1_7 : public RangeElt
+    // Get the associated Range
+    OpData::Range* getRange() const
     {
-    public:
-        // Constructor
-        RangeElt_1_7();
+        return m_range;
+    }
 
-        // Destructor
-        ~RangeElt_1_7();
+protected:
+    OpData::Range* m_range; // The associated Range
+};
 
-        // Start the parsing of the element
-        virtual void start(const char **atts);
+// Class for Range v1.7
+class RangeElt_1_7 : public RangeElt
+{
+public:
+    // Constructor
+    RangeElt_1_7();
 
-        // End the parsing of the element
-        virtual void end();
+    // Destructor
+    ~RangeElt_1_7();
 
-    private:
-        bool m_isNoClamp;
-    };
+    // Start the parsing of the element
+    virtual void start(const char **atts);
 
-    // Class for the Range minInValue, etc. elements
-    class RangeValueElt : public PlainElt
-    {
-    public:
-        // Constructor
-        RangeValueElt(const std::string& name,
-                      ContainerElt* pParent,
-                      unsigned xmlLineNumber,
-                      const std::string& xmlFile
-        );
+    // End the parsing of the element
+    virtual void end();
 
-        // Destructor
-        ~RangeValueElt();
+private:
+    bool m_isNoClamp;
+};
 
-        // Start the parsing of the element
-        void start(const char **atts);
+// Class for the Range minInValue, etc. elements
+class RangeValueElt : public PlainElt
+{
+public:
+    // Constructor
+    RangeValueElt(const std::string& name,
+                    ContainerElt* pParent,
+                    unsigned xmlLineNumber,
+                    const std::string& xmlFile
+    );
 
-        // End the parsing of the element
-        void end();
+    // Destructor
+    ~RangeValueElt();
 
-        // Set the data's element
-        // - str the string
-        // - len is the string length
-        // - xmlLine the location
-        void setRawData(const char* str, size_t len, unsigned xmlLine);
-    };
+    // Start the parsing of the element
+    void start(const char **atts);
+
+    // End the parsing of the element
+    void end();
+
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
+};
 
 } // exit Reader namespace
 } // exit CTF namespace

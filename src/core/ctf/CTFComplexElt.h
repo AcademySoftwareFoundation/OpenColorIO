@@ -42,47 +42,53 @@ namespace CTF
 namespace Reader
 {
 
-
-    // Base class for nested elements
-    class ComplexElt : public ContainerElt
+// Base class for nested elements
+class ComplexElt : public ContainerElt
+{
+public:
+    // Constructor
+    ComplexElt(const std::string& name,
+                ContainerElt* pParent,
+                unsigned xmlLineNumber,
+                const std::string& xmlFile)
+        : ContainerElt(name, xmlLineNumber, xmlFile)
+        , m_parent(pParent)
     {
-    public:
-        // Constructor
-        ComplexElt(const std::string& name,
-                   ContainerElt* pParent,
-                   unsigned xmlLineNumber,
-                   const std::string& xmlFile
-        );
+    }
 
-        // Destructor
-        ~ComplexElt();
+    // Destructor
+    ~ComplexElt()
+    {
+    }
 
-        ContainerElt* getParent() const
-        {
-            return m_parent;
-        }
+    ContainerElt* getParent() const
+    {
+        return m_parent;
+    }
 
-        // Get the element's identifier
-        const std::string& getIdentifier() const
-        {
-            return getName();
-        }
+    // Get the element's identifier
+    const std::string& getIdentifier() const
+    {
+        return getName();
+    }
 
-        // Get the element's type name
-        const std::string& getTypeName() const
-        {
-            return getName();
-        }
+    // Get the element's type name
+    const std::string& getTypeName() const
+    {
+        return getName();
+    }
 
-        // Append a description string
-        void appendDescription(const std::string& desc);
+    // Append a description string
+    void appendDescription(const std::string& desc)
+    {
+    }
 
-    private:
-        // No default contructor
-        ComplexElt();
+private:
+    // No default contructor
+    ComplexElt();
 
-        ContainerElt* m_parent; // The element's parent
-    };
+    ContainerElt* m_parent; // The element's parent
+};
 
 } // exit Reader namespace
 } // exit CTF namespace

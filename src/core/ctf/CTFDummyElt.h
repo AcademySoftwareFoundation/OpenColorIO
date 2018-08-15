@@ -44,74 +44,74 @@ namespace CTF
 namespace Reader
 {
 
-    // Class Dummy to address unknwon Element
-    class DummyElt : public PlainElt
+// Class Dummy to address unknwon Element
+class DummyElt : public PlainElt
+{
+    // Class Dummy to address unexpected parent for the DummyElt
+    class DummyParent : public ContainerElt
     {
-        // Class Dummy to address unexpected parent for the DummyElt
-        class DummyParent : public ContainerElt
-        {
-        public:
-            // Contructor
-            DummyParent(const Element* pParent);
-
-            // Destructor
-            ~DummyParent();
-
-            // Append a description string
-            void appendDescription(const std::string& desc);
-
-            // Get the element's identifier
-            const std::string& getIdentifier() const;
-
-            // Start the parsing of the element
-            void start(const char **atts);
-
-            // End the parsing of the element
-            void end();
-
-            // Get the element's type name
-            const std::string& getTypeName() const;
-        };
-
     public:
-        // Constructor
-        DummyElt(const std::string& name,
-                 const Element* pParent,
-                 unsigned xmlLineNumber,
-                 const std::string& xmlFile,
-                 const char* msg
-        );
+        // Contructor
+        DummyParent(const Element* pParent);
 
         // Destructor
-        virtual ~DummyElt();
+        ~DummyParent();
+
+        // Append a description string
+        void appendDescription(const std::string& desc);
 
         // Get the element's identifier
         const std::string& getIdentifier() const;
 
         // Start the parsing of the element
         void start(const char **atts);
-        
+
         // End the parsing of the element
         void end();
 
-        // Set the data's element
-        // - str the string
-        // - len is the string length
-        // - xmlLine the location
-        void setRawData(const char* str, size_t len, unsigned xmlLine);
-
-        // Is it a dummy element?
-        bool isDummy() const
-        {
-            return true;
-        }
-
-    private:
-        // No default Constructor
-        DummyElt();
-
-        std::vector<std::string> m_rawData; // The parsed raw data
+        // Get the element's type name
+        const std::string& getTypeName() const;
     };
+
+public:
+    // Constructor
+    DummyElt(const std::string& name,
+                const Element* pParent,
+                unsigned xmlLineNumber,
+                const std::string& xmlFile,
+                const char* msg
+    );
+
+    // Destructor
+    virtual ~DummyElt();
+
+    // Get the element's identifier
+    const std::string& getIdentifier() const;
+
+    // Start the parsing of the element
+    void start(const char **atts);
+        
+    // End the parsing of the element
+    void end();
+
+    // Set the data's element
+    // - str the string
+    // - len is the string length
+    // - xmlLine the location
+    void setRawData(const char* str, size_t len, unsigned xmlLine);
+
+    // Is it a dummy element?
+    bool isDummy() const
+    {
+        return true;
+    }
+
+private:
+    // No default Constructor
+    DummyElt();
+
+    std::vector<std::string> m_rawData; // The parsed raw data
+};
 
 } // exit Reader namespace
 } // exit CTF namespace

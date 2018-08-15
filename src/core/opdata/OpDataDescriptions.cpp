@@ -35,14 +35,13 @@ OCIO_NAMESPACE_ENTER
 namespace OpData
 {
 
-    Descriptions::Descriptions()
-    {
-    }
+Descriptions::Descriptions()
+{
+}
 
-    Descriptions::~Descriptions()
-    {
-    }
-
+Descriptions::~Descriptions()
+{
+}
 
 } // exit OpData namespace
 

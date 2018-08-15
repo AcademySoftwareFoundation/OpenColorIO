@@ -38,175 +38,175 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace CTF
+// Private namespace to the OpData sub-directory
+namespace CTF
+{
+// Private namespace for the xml reader utils
+namespace Reader
+{
+InvLut1DElt::InvLut1DElt()
+    :   m_pInvLut(new OpData::InvLut1D)
+{
+}
+
+InvLut1DElt::~InvLut1DElt()
+{
+    // Do not delete m_pInvLut (caller owns it now).
+    m_pInvLut = 0x0;
+}
+
+void InvLut1DElt::start(const char **atts)
+{
+    OpElt::start(atts);
+
+    // As the 'interpolation' element is optional,
+    // set the value to default behavior
+    m_pInvLut->setInterpolation(INTERP_DEFAULT);
+
+    unsigned i = 0;
+    while(atts[i])
     {
-        // Private namespace for the xml reader utils
-        namespace Reader
+        if(0==Platform::Strcasecmp(ATTR_INTERPOLATION, atts[i]))
         {
-            InvLut1DElt::InvLut1DElt()
-                :   m_pInvLut(new OpData::InvLut1D)
+            try
             {
+                m_pInvLut->setInterpolation(
+                    OpData::Lut1D::getInterpolation(atts[i + 1]));
+            }
+            catch (const std::exception & e)
+            {
+                Throw(e.what());
+            }
+        }
+
+        if(0==Platform::Strcasecmp(ATTR_HALF_DOMAIN, atts[i]))
+        {
+            if (0 != Platform::Strcasecmp("true", atts[i+1]))
+            {
+                std::ostringstream oss;
+                oss << "Unknown halfDomain value: '" << atts[i + 1];
+                oss << "' while parsing InvLut1D. ";
+                Throw(oss.str());
             }
 
-            InvLut1DElt::~InvLut1DElt()
+            m_pInvLut->setInputHalfDomain(true);
+        }
+
+        if(0==Platform::Strcasecmp(ATTR_RAW_HALFS, atts[i]))
+        {
+            if (0 != Platform::Strcasecmp("true", atts[i+1]))
             {
-                // Do not delete m_pInvLut (caller owns it now).
-                m_pInvLut = 0x0;
+                std::ostringstream oss;
+                oss << "Unknown rawHalfs value: '" << atts[i + 1];
+                oss << "' while parsing InvLut1D. ";
+                Throw(oss.str());
             }
 
-            void InvLut1DElt::start(const char **atts)
+            m_pInvLut->setOutputRawHalfs(true);
+        }
+
+        if(0==Platform::Strcasecmp(ATTR_HUE_ADJUST, atts[i]))
+        {
+            if (0 != Platform::Strcasecmp("dw3", atts[i+1]))
             {
-                OpElt::start(atts);
-
-                // As the 'interpolation' element is optional,
-                // set the value to default behavior
-                m_pInvLut->setInterpolation(INTERP_DEFAULT);
-
-                unsigned i = 0;
-                while(atts[i])
-                {
-                    if(0==Platform::Strcasecmp(ATTR_INTERPOLATION, atts[i]))
-                    {
-                        try
-                        {
-                            m_pInvLut->setInterpolation(
-                                OpData::Lut1D::getInterpolation(atts[i + 1]));
-                        }
-                        catch (const std::exception & e)
-                        {
-                            Throw(e.what());
-                        }
-                    }
-
-                    if(0==Platform::Strcasecmp(ATTR_HALF_DOMAIN, atts[i]))
-                    {
-                        if (0 != Platform::Strcasecmp("true", atts[i+1]))
-                        {
-                            std::ostringstream oss;
-                            oss << "Unknown halfDomain value: '" << atts[i + 1];
-                            oss << "' while parsing InvLut1D. ";
-                            Throw(oss.str());
-                        }
-
-                        m_pInvLut->setInputHalfDomain(true);
-                    }
-
-                    if(0==Platform::Strcasecmp(ATTR_RAW_HALFS, atts[i]))
-                    {
-                        if (0 != Platform::Strcasecmp("true", atts[i+1]))
-                        {
-                            std::ostringstream oss;
-                            oss << "Unknown rawHalfs value: '" << atts[i + 1];
-                            oss << "' while parsing InvLut1D. ";
-                            Throw(oss.str());
-                        }
-
-                        m_pInvLut->setOutputRawHalfs(true);
-                    }
-
-                    if(0==Platform::Strcasecmp(ATTR_HUE_ADJUST, atts[i]))
-                    {
-                        if (0 != Platform::Strcasecmp("dw3", atts[i+1]))
-                        {
-                            std::ostringstream oss;
-                            oss << "Unknown hueAdjust value: '" << atts[i + 1];
-                            oss << "' while parsing InvLut1D. ";
-                            Throw(oss.str());
-                        }
-
-                        m_pInvLut->setHueAdjust(OpData::Lut1D::HUE_DW3);
-                    }
-
-                    i += 2;
-                }
+                std::ostringstream oss;
+                oss << "Unknown hueAdjust value: '" << atts[i + 1];
+                oss << "' while parsing InvLut1D. ";
+                Throw(oss.str());
             }
 
-            void InvLut1DElt::end()
+            m_pInvLut->setHueAdjust(OpData::Lut1D::HUE_DW3);
+        }
+
+        i += 2;
+    }
+}
+
+void InvLut1DElt::end()
+{
+    OpElt::end();
+    m_pInvLut->validate();
+}
+
+OpData::ArrayBase * InvLut1DElt::updateDimension(const Dimensions & dims)
+{
+    if(dims.size()!=2)
+    {
+        return 0x0;
+    }
+
+    const size_t max = (dims.empty() ? 0 : (dims.size()-1));
+    const unsigned numColorComponents = dims[max];
+
+    if(dims[1]!=3 && dims[1]!=1)
+    {
+        return 0x0;
+    }
+
+    OpData::Array* pArray = &m_pInvLut->getArray();
+    pArray->resize(dims[0], numColorComponents);
+    return pArray;
+}
+
+void InvLut1DElt::finalize(unsigned position)
+{
+    OpData::Array* pArray = &m_pInvLut->getArray();
+
+    // Convert half bits to float values if needed
+    if(m_pInvLut->isOutputRawHalfs())
+    {
+        const size_t maxValues = pArray->getNumValues();
+        for(size_t i=0; i<maxValues; ++i)
+        {
+            pArray->getValues()[i] 
+                = ConvertHalfBitsToFloat((unsigned short)pArray->getValues()[i]);
+        }
+    }
+
+    if(pArray->getNumValues()!=position)
+    {
+        const unsigned numColorComponents = pArray->getNumColorComponents();
+        const unsigned maxColorComponents = pArray->getMaxColorComponents();
+
+        const unsigned dimensions = pArray->getLength();
+
+        if( numColorComponents != 1 || position != dimensions )
+        {
+            std::ostringstream arg;
+            arg << "Expected ";
+            arg << dimensions;
+            arg << "x" << numColorComponents;
+            arg << " Array values, found ";
+            arg << position << ". ";
+            Throw(arg.str());
+        }
+
+        // Convert a 1D LUT to a 3by1D LUT
+        // (duplicate values from the Red to the Green and Blue)
+        const unsigned numLuts = maxColorComponents;
+
+        // \todo Should improve Lut1DOp so that the copy is unnecessary.
+        for(signed i=(dimensions-1); i>=0; --i)
+        {
+            for(unsigned j=0; j<numLuts; ++j)
             {
-                OpElt::end();
-                m_pInvLut->validate();
+                pArray->getValues()[(i*numLuts)+j]
+                    = pArray->getValues()[i];
             }
+        }
+    }
 
-            OpData::ArrayBase * InvLut1DElt::updateDimension(const Dimensions & dims)
-            {
-                if(dims.size()!=2)
-                {
-                    return 0x0;
-                }
+    pArray->validate();
 
-                const size_t max = (dims.empty() ? 0 : (dims.size()-1));
-                const unsigned numColorComponents = dims[max];
+    // At this point, we have created the complete Lut1D base class.
+    // Now finish initializing as an InvLut1D.
+    m_pInvLut->initializeFromLut1D();
 
-                if(dims[1]!=3 && dims[1]!=1)
-                {
-                    return 0x0;
-                }
+    setCompleted(true);
+}
 
-                OpData::Array* pArray = &m_pInvLut->getArray();
-                pArray->resize(dims[0], numColorComponents);
-                return pArray;
-            }
-
-            void InvLut1DElt::finalize(unsigned position)
-            {
-                OpData::Array* pArray = &m_pInvLut->getArray();
-
-                // Convert half bits to float values if needed
-                if(m_pInvLut->isOutputRawHalfs())
-                {
-                    const size_t maxValues = pArray->getNumValues();
-                    for(size_t i=0; i<maxValues; ++i)
-                    {
-                        pArray->getValues()[i] 
-                            = ConvertHalfBitsToFloat((unsigned short)pArray->getValues()[i]);
-                    }
-                }
-
-                if(pArray->getNumValues()!=position)
-                {
-                    const unsigned numColorComponents = pArray->getNumColorComponents();
-                    const unsigned maxColorComponents = pArray->getMaxColorComponents();
-
-                    const unsigned dimensions = pArray->getLength();
-
-                    if( numColorComponents != 1 || position != dimensions )
-                    {
-                        std::ostringstream arg;
-                        arg << "Expected ";
-                        arg << dimensions;
-                        arg << "x" << numColorComponents;
-                        arg << " Array values, found ";
-                        arg << position << ". ";
-                        Throw(arg.str());
-                    }
-
-                    // Convert a 1D LUT to a 3by1D LUT
-                    // (duplicate values from the Red to the Green and Blue)
-                    const unsigned numLuts = maxColorComponents;
-
-                    // \todo Should improve Lut1DOp so that the copy is unnecessary.
-                    for(signed i=(dimensions-1); i>=0; --i)
-                    {
-                        for(unsigned j=0; j<numLuts; ++j)
-                        {
-                            pArray->getValues()[(i*numLuts)+j]
-                                = pArray->getValues()[i];
-                        }
-                    }
-                }
-
-                pArray->validate();
-
-                // At this point, we have created the complete Lut1D base class.
-                // Now finish initializing as an InvLut1D.
-                m_pInvLut->initializeFromLut1D();
-
-                setCompleted(true);
-            }
-
-        } // exit Reader namespace
-    } // exit CTF namespace
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 

@@ -44,59 +44,59 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the OpData sub-directory
-    namespace OpData
+// Private namespace to the OpData sub-directory
+namespace OpData
+{
+// The class represents an invert 3D LUT process node
+class InvLut3D : public Lut3D
+{
+public:
+    // Enumeration of the inverse 3D LUT styles.
+    enum InvStyle
     {
-        // The class represents an invert 3D LUT process node
-        class InvLut3D : public Lut3D
-        {
-        public:
-            // Enumeration of the inverse 3D LUT styles.
-            enum InvStyle
-            {
-                EXACT = 0,  // Exact, but slow, inverse processing
-                FAST        // Fast, but approximate, inverse processing
-            };
+        EXACT = 0,  // Exact, but slow, inverse processing
+        FAST        // Fast, but approximate, inverse processing
+    };
 
-            // Constructor
-            InvLut3D();
+    // Constructor
+    InvLut3D();
 
-            // Constructor
-            //  - fwdLut3DOp is the original 3D LUT forward operation
-            InvLut3D(const Lut3D & fwdLut3D);
+    // Constructor
+    //  - fwdLut3DOp is the original 3D LUT forward operation
+    InvLut3D(const Lut3D & fwdLut3D);
 
-            // Used by XML reader.  After initializing members as a Lut3D,
-            // this method is used to finish creating an InvLut3D.
-            void initializeFromLut3D();
+    // Used by XML reader.  After initializing members as a Lut3D,
+    // this method is used to finish creating an InvLut3D.
+    void initializeFromLut3D();
 
-            // Destructor
-            virtual ~InvLut3D();
+    // Destructor
+    virtual ~InvLut3D();
 
-            inline OpType getOpType() const { return OpData::InvLut3DType; }
+    inline OpType getOpType() const { return OpData::InvLut3DType; }
 
-            const std::string& getOpTypeName() const;
+    const std::string& getOpTypeName() const;
 
-            OpData * clone(CloneType type) const;
+    OpData * clone(CloneType type) const;
 
-            // Get the Op inverse
-            virtual void inverse(OpDataVec & ops) const;
+    // Get the Op inverse
+    virtual void inverse(OpDataVec & ops) const;
 
-            inline InvStyle getInvStyle() const { return m_invStyle; }
+    inline InvStyle getInvStyle() const { return m_invStyle; }
 
-            void setInvStyle(InvStyle style);
+    void setInvStyle(InvStyle style);
 
-            void setInputBitDepth(BitDepth in);
+    void setInputBitDepth(BitDepth in);
 
-            void setOutputBitDepth(BitDepth out);
+    void setOutputBitDepth(BitDepth out);
 
-        private:
-            // Inverse computation style
-            InvStyle m_invStyle;
-        };
+private:
+    // Inverse computation style
+    InvStyle m_invStyle;
+};
 
-        typedef OCIO_SHARED_PTR<InvLut3D> OpDataInvLut3DRcPtr;
+typedef OCIO_SHARED_PTR<InvLut3D> OpDataInvLut3DRcPtr;
 
-    }
+}
 }
 OCIO_NAMESPACE_EXIT
 

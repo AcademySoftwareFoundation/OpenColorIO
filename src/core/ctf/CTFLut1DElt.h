@@ -31,97 +31,97 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INCLUDED_OCIO_CTFLUT1DELT_H
 
 #include "CTFOpElt.h"
-#include "CTFArrayMgt.h"
-#include "CTFIndexMapMgt.h"
+#include "CTFArrayElt.h"
+#include "CTFIndexMapElt.h"
 #include "../opdata/OpDataLut1D.h"
 #include "../opdata/OpDataIndexMapping.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    // Private namespace to the CTF sub-directory
-    namespace CTF
+// Private namespace to the CTF sub-directory
+namespace CTF
+{
+// Private namespace for the xml reader utils
+namespace Reader
+{
+
+// Class for Lut1DData
+class Lut1DElt : public OpElt, public ArrayMgt, public IndexMapMgt
+{
+public:
+    // Constructor
+    Lut1DElt();
+    // Destructor
+    ~Lut1DElt();
+
+    // Start the parsing of the element
+    virtual void start(const char **atts);
+
+    // End the parsing of the element
+    virtual void end();
+
+    // Get the associated OpData
+    OpData::OpData* getOp() const;
+
+    // Get the associated Lut1D
+    OpData::Lut1D* getLut() const
     {
-        // Private namespace for the xml reader utils
-        namespace Reader
-        {
+        return m_lut;
+    }
 
-            // Class for Lut1DData
-            class Lut1DElt : public OpElt, public ArrayMgt, public IndexMapMgt
-            {
-            public:
-                // Constructor
-                Lut1DElt();
-                // Destructor
-                ~Lut1DElt();
+    // Update the array dimensions
+    // - dims are the array dimensions
+    // returns the resized array
+    virtual OpData::ArrayBase* updateDimension(const Dimensions& dims);
 
-                // Start the parsing of the element
-                virtual void start(const char **atts);
+    // Finalize the array data origanization
+    // - position is the position of the last value found
+    virtual void finalize(unsigned position);
 
-                // End the parsing of the element
-                virtual void end();
+    // Update the IndexMap dimensions
+    // - dims holds the desired IndexMap dimensions
+    // Returns the resized IndexMap
+    virtual OpData::IndexMapping* updateDimensionIM(const DimensionsIM& dims);
 
-                // Get the associated OpData
-                OpData::OpData* getOp() const;
+    // Finalize the IndexMap data origanization
+    // - 'position' is the position of the last value found
+    virtual void finalizeIM(unsigned position);
 
-                // Get the associated Lut1D
-                OpData::Lut1D* getLut() const
-                {
-                    return m_lut;
-                }
+protected:
+    OpData::Lut1D* m_lut; // The associated Lut1D
+    OpData::IndexMapping m_indexMapping;
+};
 
-                // Update the array dimensions
-                // - dims are the array dimensions
-                // returns the resized array
-                virtual OpData::ArrayBase* updateDimension(const Dimensions& dims);
+// Class for Lut1D version Xml transform version 1.4
+class Lut1DElt_1_4 : public Lut1DElt
+{
+public:
+    // Constructor
+    Lut1DElt_1_4() : Lut1DElt() {}
 
-                // Finalize the array data origanization
-                // - position is the position of the last value found
-                virtual void finalize(unsigned position);
+    // Destructor
+    ~Lut1DElt_1_4() {}
 
-                // Update the IndexMap dimensions
-                // - dims holds the desired IndexMap dimensions
-                // Returns the resized IndexMap
-                virtual OpData::IndexMapping* updateDimensionIM(const DimensionsIM& dims);
+    // Start the parsing of the element
+    virtual void start(const char **atts);
+};
 
-                // Finalize the IndexMap data origanization
-                // - 'position' is the position of the last value found
-                virtual void finalizeIM(unsigned position);
-
-            protected:
-                OpData::Lut1D* m_lut; // The associated Lut1D
-                OpData::IndexMapping m_indexMapping;
-            };
-
-            // Class for Lut1D version Xml transform version 1.4
-            class Lut1DElt_1_4 : public Lut1DElt
-            {
-            public:
-                // Constructor
-                Lut1DElt_1_4() : Lut1DElt() {}
-
-                // Destructor
-                ~Lut1DElt_1_4() {}
-
-                // Start the parsing of the element
-                virtual void start(const char **atts);
-            };
-
-            // Class for Lut1D version Xml transform version 1.7
-            class Lut1DElt_1_7 : public Lut1DElt_1_4
-            {
-            public:
-                // Constructor
-                Lut1DElt_1_7() : Lut1DElt_1_4() {}
+// Class for Lut1D version Xml transform version 1.7
+class Lut1DElt_1_7 : public Lut1DElt_1_4
+{
+public:
+    // Constructor
+    Lut1DElt_1_7() : Lut1DElt_1_4() {}
         
-                // Destructor
-                ~Lut1DElt_1_7() {}
+    // Destructor
+    ~Lut1DElt_1_7() {}
 
-                // End the parsing of the element
-                void end();
-            };
+    // End the parsing of the element
+    void end();
+};
 
-        } // exit Reader namespace
-    } // exit CTF namespace
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 

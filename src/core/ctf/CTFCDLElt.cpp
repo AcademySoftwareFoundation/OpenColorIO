@@ -33,334 +33,333 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+// Private namespace to the OpData sub-directory
+namespace CTF
+{
+// Private namespace for the xml reader utils
+namespace Reader
+{
 
-    // Private namespace to the OpData sub-directory
-    namespace CTF
+CDLElt::CDLElt()
+    : OpElt()
+    , m_cdlOp(new OpData::CDL)
+{
+    // CDL op is already initialized to identity
+}
+
+CDLElt::~CDLElt()
+{
+    // Do not delete m_cdlOp
+    m_cdlOp = 0x0;
+}
+
+void CDLElt::start(const char **atts)
+{
+    OpElt::start(atts);
+
+    bool isStyleFound = false;
+    for (unsigned i = 0; atts[i]; i += 2)
     {
-        // Private namespace for the xml reader utils
-        namespace Reader
+        if (0 == Platform::Strcasecmp(ATTR_CDL_STYLE, atts[i]))
         {
-
-        CDLElt::CDLElt()
-            : OpElt()
-            , m_cdlOp(new OpData::CDL)
-        {
-            // CDL op is already initialized to identity
+            // Unrecognized CDL styles will throw an exception
+            m_cdlOp->setCDLStyle(OpData::CDL::GetCDLStyle(atts[i + 1]));
+            isStyleFound = true;
         }
+    }
 
-        CDLElt::~CDLElt()
+    if (!isStyleFound)
+    {
+        Throw("CTF CDL parsing. Required attribute 'style' is missing. ");
+    }
+}
+
+void CDLElt::end()
+{
+    OpElt::end();
+
+    // Validate the end result
+    m_cdlOp->validate();
+}
+
+OpData::OpData* CDLElt::getOp() const
+{
+    return m_cdlOp;
+}
+
+CDLElt_1_7::CDLElt_1_7()
+    : CDLElt()
+{
+}
+
+CDLElt_1_7::~CDLElt_1_7()
+{
+}
+
+void CDLElt_1_7::start(const char **atts)
+{
+    OpElt::start(atts);
+
+    bool isStyleFound = false;
+    for (unsigned i = 0; atts[i]; i += 2)
+    {
+        if (0 == Platform::Strcasecmp(ATTR_CDL_STYLE, atts[i]))
         {
-            // Do not delete m_cdlOp
-            m_cdlOp = 0x0;
-        }
-
-        void CDLElt::start(const char **atts)
-        {
-            OpElt::start(atts);
-
-            bool isStyleFound = false;
-            for (unsigned i = 0; atts[i]; i += 2)
+            // Translate CLF styles into CTF styles.
+            if (0 == Platform::Strcasecmp("Fwd", atts[i + 1]))
             {
-                if (0 == Platform::Strcasecmp(ATTR_CDL_STYLE, atts[i]))
-                {
-                    // Unrecognized CDL styles will throw an exception
-                    m_cdlOp->setCDLStyle(OpData::CDL::GetCDLStyle(atts[i + 1]));
-                    isStyleFound = true;
-                }
+                m_cdlOp->setCDLStyle(OpData::CDL::CDL_V1_2_FWD);
+                isStyleFound = true;
+            }
+            else if (0 == Platform::Strcasecmp("Rev", atts[i + 1]))
+            {
+                m_cdlOp->setCDLStyle(OpData::CDL::CDL_V1_2_REV);
+                isStyleFound = true;
+            }
+            else if (0 == Platform::Strcasecmp("FwdNoClamp", atts[i + 1]))
+            {
+                m_cdlOp->setCDLStyle(OpData::CDL::CDL_NO_CLAMP_FWD);
+                isStyleFound = true;
+            }
+            else if (0 == Platform::Strcasecmp("RevNoClamp", atts[i + 1]))
+            {
+                m_cdlOp->setCDLStyle(OpData::CDL::CDL_NO_CLAMP_REV);
+                isStyleFound = true;
             }
 
-            if (!isStyleFound)
+            // Otherwise try interpreting as a CTF style.
+            else
             {
-                Throw("CTF CDL parsing. Required attribute 'style' is missing. ");
+                // Unrecognized CDL styles will throw an exception
+                m_cdlOp->setCDLStyle(OpData::CDL::GetCDLStyle(atts[i + 1]));
+                isStyleFound = true;
             }
         }
+    }
 
-        void CDLElt::end()
-        {
-            OpElt::end();
+    if (!isStyleFound)
+    {
+        Throw("CTF CDL parsing. Required attribute 'style' is missing. ");
+    }
+}
 
-            // Validate the end result
-            m_cdlOp->validate();
-        }
+SOPNodeBaseElt::SOPNodeBaseElt(const std::string& name,
+                                ContainerElt* pParent,
+                                unsigned xmlLineNumber,
+                                const std::string& xmlFile)
+    : ComplexElt(name, pParent, xmlLineNumber, xmlFile)
+    , m_isSlopeInit(false)
+    , m_isOffsetInit(false)
+    , m_isPowerInit(false)
+{
+}
 
-        OpData::OpData* CDLElt::getOp() const
-        {
-            return m_cdlOp;
-        }
+void SOPNodeBaseElt::start(const char**)
+{
+    m_isSlopeInit = m_isOffsetInit = m_isPowerInit = false;
+}
 
-        CDLElt_1_7::CDLElt_1_7()
-            : CDLElt()
-        {
-        }
+void SOPNodeBaseElt::end()
+{
+    if (!m_isSlopeInit)
+    {
+        Throw("CTF CDL parsing. Required node 'Slope' is missing. ");
+    }
 
-        CDLElt_1_7::~CDLElt_1_7()
-        {
-        }
+    if (!m_isOffsetInit)
+    {
+        Throw("CTF CDL parsing. Required node 'Offset' is missing. ");
+    }
 
-        void CDLElt_1_7::start(const char **atts)
-        {
-            OpElt::start(atts);
+    if (!m_isPowerInit)
+    {
+        Throw("CTF CDL parsing. Required node 'Power' is missing. ");
+    }
+}
 
-            bool isStyleFound = false;
-            for (unsigned i = 0; atts[i]; i += 2)
-            {
-                if (0 == Platform::Strcasecmp(ATTR_CDL_STYLE, atts[i]))
-                {
-                    // Translate CLF styles into CTF styles.
-                    if (0 == Platform::Strcasecmp("Fwd", atts[i + 1]))
-                    {
-                        m_cdlOp->setCDLStyle(OpData::CDL::CDL_V1_2_FWD);
-                        isStyleFound = true;
-                    }
-                    else if (0 == Platform::Strcasecmp("Rev", atts[i + 1]))
-                    {
-                        m_cdlOp->setCDLStyle(OpData::CDL::CDL_V1_2_REV);
-                        isStyleFound = true;
-                    }
-                    else if (0 == Platform::Strcasecmp("FwdNoClamp", atts[i + 1]))
-                    {
-                        m_cdlOp->setCDLStyle(OpData::CDL::CDL_NO_CLAMP_FWD);
-                        isStyleFound = true;
-                    }
-                    else if (0 == Platform::Strcasecmp("RevNoClamp", atts[i + 1]))
-                    {
-                        m_cdlOp->setCDLStyle(OpData::CDL::CDL_NO_CLAMP_REV);
-                        isStyleFound = true;
-                    }
+void SOPNodeBaseElt::appendDescription(const std::string& desc)
+{
+    getCDLOp()->getDescriptions() += desc;
+}
 
-                    // Otherwise try interpreting as a CTF style.
-                    else
-                    {
-                        // Unrecognized CDL styles will throw an exception
-                        m_cdlOp->setCDLStyle(OpData::CDL::GetCDLStyle(atts[i + 1]));
-                        isStyleFound = true;
-                    }
-                }
-            }
+SOPNodeElt::SOPNodeElt(const std::string& name,
+                        ContainerElt* pParent,
+                        unsigned xmlLineNumber,
+                        const std::string& xmlFile)
+    : SOPNodeBaseElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
 
-            if (!isStyleFound)
-            {
-                Throw("CTF CDL parsing. Required attribute 'style' is missing. ");
-            }
-        }
+OpData::CDL* SOPNodeElt::getCDLOp() const
+{
+    return static_cast<CDLElt*>(getParent())->getCDLOp();
+}
 
-        SOPNodeBaseElt::SOPNodeBaseElt(const std::string& name,
-                                       ContainerElt* pParent,
-                                       unsigned xmlLineNumber,
-                                       const std::string& xmlFile)
-            : ComplexElt(name, pParent, xmlLineNumber, xmlFile)
-            , m_isSlopeInit(false)
-            , m_isOffsetInit(false)
-            , m_isPowerInit(false)
-        {
-        }
+SOPValueElt::SOPValueElt(const std::string& name,
+                            ContainerElt* pParent,
+                            unsigned xmlLineNumber,
+                            const std::string& xmlFile)
+    : PlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
 
-        void SOPNodeBaseElt::start(const char**)
-        {
-            m_isSlopeInit = m_isOffsetInit = m_isPowerInit = false;
-        }
+SOPValueElt::~SOPValueElt()
+{
+}
 
-        void SOPNodeBaseElt::end()
-        {
-            if (!m_isSlopeInit)
-            {
-                Throw("CTF CDL parsing. Required node 'Slope' is missing. ");
-            }
+void SOPValueElt::start(const char**)
+{
+    m_contentData = "";
+}
 
-            if (!m_isOffsetInit)
-            {
-                Throw("CTF CDL parsing. Required node 'Offset' is missing. ");
-            }
+void SOPValueElt::end()
+{
+    Trim(m_contentData);
 
-            if (!m_isPowerInit)
-            {
-                Throw("CTF CDL parsing. Required node 'Power' is missing. ");
-            }
-        }
+    std::vector<double> data;
 
-        void SOPNodeBaseElt::appendDescription(const std::string& desc)
-        {
-            getCDLOp()->getDescriptions() += desc;
-        }
+    try
+    {
+        data = GetNumbers<double>(m_contentData.c_str(), m_contentData.size());
+    }
+    catch (Exception&)
+    {
+        const std::string s = TruncateString(m_contentData.c_str(), m_contentData.size());
+        std::ostringstream oss;
+        oss << "Illegal values '";
+        oss << s;
+        oss << "' in ";
+        oss << getTypeName();
+        Throw(oss.str());
+    }
 
-        SOPNodeElt::SOPNodeElt(const std::string& name,
-                               ContainerElt* pParent,
-                               unsigned xmlLineNumber,
-                               const std::string& xmlFile)
-            : SOPNodeBaseElt(name, pParent, xmlLineNumber, xmlFile)
-        {
-        }
+    if (data.size() != 3)
+    {
+        Throw("SOPNode: 3 values required.");
+    }
 
-        OpData::CDL* SOPNodeElt::getCDLOp() const
-        {
-            return static_cast<CDLElt*>(getParent())->getCDLOp();
-        }
+    SOPNodeBaseElt* pSOPNodeElt = dynamic_cast<SOPNodeBaseElt*>(getParent());
+    OpData::CDL* pCDL = pSOPNodeElt->getCDLOp();
 
-        SOPValueElt::SOPValueElt(const std::string& name,
-                                 ContainerElt* pParent,
-                                 unsigned xmlLineNumber,
-                                 const std::string& xmlFile)
-            : PlainElt(name, pParent, xmlLineNumber, xmlFile)
-        {
-        }
+    if (0 == Platform::Strcasecmp(getName().c_str(), CTF::TAG_SLOPE))
+    {
+        pCDL->setSlopeParams(OpData::CDL::ChannelParams(data[0], data[1], data[2]));
+        pSOPNodeElt->setIsSlopeInit(true);
+    }
+    else if (0 == Platform::Strcasecmp(getName().c_str(), CTF::TAG_OFFSET))
+    {
+        pCDL->setOffsetParams(OpData::CDL::ChannelParams(data[0], data[1], data[2]));
+        pSOPNodeElt->setIsOffsetInit(true);
+    }
+    else if (0 == Platform::Strcasecmp(getName().c_str(), CTF::TAG_POWER))
+    {
+        pCDL->setPowerParams(OpData::CDL::ChannelParams(data[0], data[1], data[2]));
+        pSOPNodeElt->setIsPowerInit(true);
+    }
+}
 
-        SOPValueElt::~SOPValueElt()
-        {
-        }
-
-        void SOPValueElt::start(const char**)
-        {
-            m_contentData = "";
-        }
-
-        void SOPValueElt::end()
-        {
-            Trim(m_contentData);
-
-            std::vector<double> data;
-
-            try
-            {
-                data = GetNumbers<double>(m_contentData.c_str(), m_contentData.size());
-            }
-            catch (Exception&)
-            {
-                const std::string s = TruncateString(m_contentData.c_str(), m_contentData.size());
-                std::ostringstream oss;
-                oss << "Illegal values '";
-                oss << s;
-                oss << "' in ";
-                oss << getTypeName();
-                Throw(oss.str());
-            }
-
-            if (data.size() != 3)
-            {
-                Throw("SOPNode: 3 values required.");
-            }
-
-            SOPNodeBaseElt* pSOPNodeElt = dynamic_cast<SOPNodeBaseElt*>(getParent());
-            OpData::CDL* pCDL = pSOPNodeElt->getCDLOp();
-
-            if (0 == Platform::Strcasecmp(getName().c_str(), CTF::TAG_SLOPE))
-            {
-                pCDL->setSlopeParams(OpData::CDL::ChannelParams(data[0], data[1], data[2]));
-                pSOPNodeElt->setIsSlopeInit(true);
-            }
-            else if (0 == Platform::Strcasecmp(getName().c_str(), CTF::TAG_OFFSET))
-            {
-                pCDL->setOffsetParams(OpData::CDL::ChannelParams(data[0], data[1], data[2]));
-                pSOPNodeElt->setIsOffsetInit(true);
-            }
-            else if (0 == Platform::Strcasecmp(getName().c_str(), CTF::TAG_POWER))
-            {
-                pCDL->setPowerParams(OpData::CDL::ChannelParams(data[0], data[1], data[2]));
-                pSOPNodeElt->setIsPowerInit(true);
-            }
-        }
-
-        void SOPValueElt::setRawData(const char* str, size_t len, unsigned)
-        {
-            m_contentData += std::string(str, len) + " ";
-        }
+void SOPValueElt::setRawData(const char* str, size_t len, unsigned)
+{
+    m_contentData += std::string(str, len) + " ";
+}
 
 
-        SatNodeBaseElt::SatNodeBaseElt(const std::string& name,
-                                       ContainerElt* pParent,
-                                       unsigned xmlLineNumber,
-                                       const std::string& xmlFile)
-            : ComplexElt(name, pParent, xmlLineNumber, xmlFile)
-        {
-        }
+SatNodeBaseElt::SatNodeBaseElt(const std::string& name,
+                                ContainerElt* pParent,
+                                unsigned xmlLineNumber,
+                                const std::string& xmlFile)
+    : ComplexElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
 
-        void SatNodeBaseElt::start(const char**)
-        {
-        }
+void SatNodeBaseElt::start(const char**)
+{
+}
 
-        void SatNodeBaseElt::end()
-        {
-        }
+void SatNodeBaseElt::end()
+{
+}
 
-        void SatNodeBaseElt::appendDescription(const std::string& desc)
-        {
-            getCDLOp()->getDescriptions() += desc;
-        }
-
-
-        SatNodeElt::SatNodeElt(const std::string& name,
-                               ContainerElt* pParent,
-                               unsigned xmlLineNumber,
-                               const std::string& xmlFile)
-            : SatNodeBaseElt(name, pParent, xmlLineNumber, xmlFile)
-        {
-        }
-
-        OpData::CDL* SatNodeElt::getCDLOp() const
-        {
-            return static_cast<CDLElt*>(getParent())->getCDLOp();
-        }
+void SatNodeBaseElt::appendDescription(const std::string& desc)
+{
+    getCDLOp()->getDescriptions() += desc;
+}
 
 
-        SaturationElt::SaturationElt(const std::string& name,
-                                     ContainerElt* pParent,
-                                     unsigned xmlLineNumber,
-                                     const std::string& xmlFile)
-            : PlainElt(name, pParent, xmlLineNumber, xmlFile)
-        {
-        }
+SatNodeElt::SatNodeElt(const std::string& name,
+                        ContainerElt* pParent,
+                        unsigned xmlLineNumber,
+                        const std::string& xmlFile)
+    : SatNodeBaseElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
 
-        SaturationElt::~SaturationElt()
-        {
-        }
-
-        void SaturationElt::start(const char** /* atts */)
-        {
-            m_contentData = "";
-        }
-
-        void SaturationElt::end()
-        {
-            Trim(m_contentData);
-
-            std::vector<double> data;
-
-            try
-            {
-                data = GetNumbers<double>(m_contentData.c_str(), m_contentData.size());
-            }
-            catch (Exception& /* ce */)
-            {
-                const std::string s = TruncateString(m_contentData.c_str(), m_contentData.size());
-                std::ostringstream oss;
-                oss << "Illegal values '";
-                oss << s;
-                oss << "' in ";
-                oss << getTypeName();
-                Throw(oss.str());
-            }
-
-            if (data.size() != 1)
-            {
-                Throw("SatNode: non-single value. ");
-            }
-
-            SatNodeBaseElt* pSatNodeElt = dynamic_cast<SatNodeBaseElt*>(getParent());
-            OpData::CDL* pCDL = pSatNodeElt->getCDLOp();
-
-            if (0 == Platform::Strcasecmp(getName().c_str(), CTF::TAG_SATURATION))
-            {
-                pCDL->setSaturation(data[0]);
-            }
-        }
-
-        void SaturationElt::setRawData(const char* str, size_t len, unsigned)
-        {
-            m_contentData += std::string(str, len) + " ";
-        }
+OpData::CDL* SatNodeElt::getCDLOp() const
+{
+    return static_cast<CDLElt*>(getParent())->getCDLOp();
+}
 
 
-        } // exit Reader namespace
-    } // exit CTF namespace
+SaturationElt::SaturationElt(const std::string& name,
+                                ContainerElt* pParent,
+                                unsigned xmlLineNumber,
+                                const std::string& xmlFile)
+    : PlainElt(name, pParent, xmlLineNumber, xmlFile)
+{
+}
+
+SaturationElt::~SaturationElt()
+{
+}
+
+void SaturationElt::start(const char** /* atts */)
+{
+    m_contentData = "";
+}
+
+void SaturationElt::end()
+{
+    Trim(m_contentData);
+
+    std::vector<double> data;
+
+    try
+    {
+        data = GetNumbers<double>(m_contentData.c_str(), m_contentData.size());
+    }
+    catch (Exception& /* ce */)
+    {
+        const std::string s = TruncateString(m_contentData.c_str(), m_contentData.size());
+        std::ostringstream oss;
+        oss << "Illegal values '";
+        oss << s;
+        oss << "' in ";
+        oss << getTypeName();
+        Throw(oss.str());
+    }
+
+    if (data.size() != 1)
+    {
+        Throw("SatNode: non-single value. ");
+    }
+
+    SatNodeBaseElt* pSatNodeElt = dynamic_cast<SatNodeBaseElt*>(getParent());
+    OpData::CDL* pCDL = pSatNodeElt->getCDLOp();
+
+    if (0 == Platform::Strcasecmp(getName().c_str(), CTF::TAG_SATURATION))
+    {
+        pCDL->setSaturation(data[0]);
+    }
+}
+
+void SaturationElt::setRawData(const char* str, size_t len, unsigned)
+{
+    m_contentData += std::string(str, len) + " ";
+}
+
+
+} // exit Reader namespace
+} // exit CTF namespace
 }
 OCIO_NAMESPACE_EXIT
 
