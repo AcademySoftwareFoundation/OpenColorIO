@@ -219,6 +219,11 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         ConfigRcPtr createEditableCopy() const;
+
+        //!cppfunction:: Get the configuration version
+        unsigned getVersion() const;
+        //!cppfunction:: Set the configuration version
+        void setVersion(unsigned version);
         
         //!cpp:function::
         // This will throw an exception if the config is malformed. The most

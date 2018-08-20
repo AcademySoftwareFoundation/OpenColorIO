@@ -48,7 +48,7 @@ OCIO_NAMESPACE_ENTER
         
         // These 3 op vecs represent the 3 stages in our gpu pipe.
         // 1) preprocess shader text
-        // 2) 3d lut process lookup
+        // 2) 3d LUT process lookup
         // 3) postprocess shader text
         
         OpRcPtrVec m_gpuOpsHwPreProcess;

@@ -43,7 +43,7 @@ OCIO_NAMESPACE_USING
 const int LUT3D_EDGE_SIZE = 32;
 
 
-const float g_epsilon = 1e-4f;
+const float g_epsilon = 1e-3f;
 
 
 OCIO_ADD_GPU_TEST(Lut3DOp, red_only_using_CSP_file_legacy_shader)
@@ -332,10 +332,92 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_generic_shader)
 OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_nearest_generic_shader)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
-    file->setInterpolation(OCIO::INTERP_NEAREST);
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+    
+    // TODO: nearest is not implemented but tetrahedral is using
+    // GPU texture nearest interpolation.
+    file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_identity_ctf_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_identity_32f.clf");
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    // TODO: Small luts not being resampled for now, such error threshold is expected
+    //       The legacy shader has a better error threashold because 
+    //       it converts all luts in one 3d lut of dimension LUT3D_EDGE_SIZE
+    //       which performs a resampling of small luts.
+    test.setErrorThreshold(1e-2f);
 }
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_3_clf_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_3x3x3_32f.clf");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_17_clf_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_17x17x17_32f_12i.ctf");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+
+    // TODO: Small luts not being resampled for now, such error threshold is expected
+    //       The legacy shader has a better error threashold because 
+    //       it converts all luts in one 3d lut of dimension LUT3D_EDGE_SIZE
+    //       which performs a resampling of small luts.
+    test.setErrorThreshold(1e-3f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_17_tetra_clf_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_tetra_17x17x17_32f_12i.ctf");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3lut3d_bizarre_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre.clf");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+
+    // TODO: Small luts not being resampled for now, such error threshold is expected
+    //       The legacy shader has a better error threashold because 
+    //       it converts all luts in one 3d lut of dimension LUT3D_EDGE_SIZE
+    //       which performs a resampling of small luts.
+    test.setErrorThreshold(1e-2f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3lut3d_bizarre_tetra_shader)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre_tetra.clf");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+
+    test.setErrorThreshold(1e-6f);
+}
+
+// TODO: Test biggest 3D LUT (OpData::Lut3D::maxSupportedLength)
 

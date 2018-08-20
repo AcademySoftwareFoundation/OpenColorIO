@@ -150,6 +150,7 @@ OCIO_NAMESPACE_ENTER
     FileFormat * CreateFileFormatCCC();
     FileFormat * CreateFileFormatCDL();
     FileFormat * CreateFileFormatCC();
+    FileFormat * CreateFileFormatCLF();
     FileFormat * CreateFileFormatCSP();
     FileFormat * CreateFileFormatHDL();
     FileFormat * CreateFileFormatICC();

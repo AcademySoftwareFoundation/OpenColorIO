@@ -402,7 +402,7 @@ OCIO_NAMESPACE_ENTER
         Even though it's not immediately apparent, almost every function
         in the Abstract Objects Layer,
         http://www.python.org/doc/2.5/api/abstract.html
-        can set a global excpetion under certain circumstances.
+        can set a global exception under certain circumstances.
         
         For example, calling the equivalent of int( obj ) will set
         an exception if the object cannot be casted (such as None),

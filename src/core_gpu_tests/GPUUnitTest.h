@@ -47,23 +47,27 @@ class OCIOGPUTest
         inline const std::string& group() const  { return m_group; }
         inline const std::string& name() const  { return m_name; }
 
+        void setContext(OCIO_NAMESPACE::ConstConfigRcPtr config,
+                        OCIO_NAMESPACE::TransformRcPtr transform, 
+                        OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc);
+
         void setContext(OCIO_NAMESPACE::TransformRcPtr transform, 
                         OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc);
 
-        void setContext(OCIO_NAMESPACE::ConstProcessorRcPtr processor, 
-                        OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc);
+        void setContextProcessor(OCIO_NAMESPACE::ConstProcessorRcPtr processor, 
+                                 OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc);
 
         inline OCIO_NAMESPACE::ConstProcessorRcPtr & getProcessor() { return m_processor; }
         inline OCIO_NAMESPACE::GpuShaderDescRcPtr & getShaderDesc() { return m_shaderDesc; }
 
         // Use or not a wide range image
-        inline bool useWideRange() const { return m_useWideRange; }
+        inline bool getWideRange() const { return m_useWideRange; }
         inline void setWideRange(bool use) { m_useWideRange = use; }
 
         inline float getErrorThreshold() const { return m_errorThreshold; }
         inline void setErrorThreshold(float error) { m_errorThreshold = error; }
 
-        inline bool performRelativeComparison() const { return m_performRelativeComparison; }
+        inline bool getRelativeComparison() const { return m_performRelativeComparison; }
         inline void setRelativeComparison(bool relCompare) { m_performRelativeComparison = relCompare; }
 
         // This is the lower bound for the value that is divided into the absolute error 

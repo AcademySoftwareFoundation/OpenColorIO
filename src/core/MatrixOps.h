@@ -33,13 +33,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
+#include "opdata/OpDataMatrix.h"
+
 
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
     // Use whichever is most convenient; they are equally efficient
-    
+
+    void CreateMatrixOp(OpRcPtrVec & ops,
+                        const float * from_min3,
+                        const float * from_max3,
+                        TransformDirection direction);
+
     void CreateScaleOp(OpRcPtrVec & ops,
                        const float * scale4,
                        TransformDirection direction);
@@ -69,9 +76,12 @@ OCIO_NAMESPACE_ENTER
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);
-    // Used by tests
-    void CreateIdentifyOp(OpRcPtrVec & ops,
-                          TransformDirection direction);
+
+    // Creates a MatrixOp from an OpData::Matrix
+    void CreateMatrixOp(OpRcPtrVec & ops,
+                        OpData::OpDataMatrixRcPtr & matrix,
+                        TransformDirection direction);
+
 }
 OCIO_NAMESPACE_EXIT
 

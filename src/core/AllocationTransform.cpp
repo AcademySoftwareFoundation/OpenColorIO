@@ -65,9 +65,12 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            allocation_ = rhs.allocation_;
-            vars_ = rhs.vars_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                allocation_ = rhs.allocation_;
+                vars_ = rhs.vars_;
+            }
             return *this;
         }
     };
@@ -95,7 +98,10 @@ OCIO_NAMESPACE_ENTER
     
     AllocationTransform& AllocationTransform::operator= (const AllocationTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -109,6 +115,20 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void AllocationTransform::validate() const
+    {
+        if (getImpl()->dir_ != TRANSFORM_DIR_FORWARD
+            && getImpl()->dir_ != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("AllocationTransform: invalid direction");
+        }
+
+        if (getImpl()->allocation_ != ALLOCATION_UNIFORM
+            && getImpl()->allocation_ != ALLOCATION_LG2)
+        {
+            throw Exception("AllocationTransform: invalid allocation type");
+        }
+    }
     
     Allocation AllocationTransform::getAllocation() const
     {

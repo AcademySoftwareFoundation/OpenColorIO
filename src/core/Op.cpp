@@ -29,21 +29,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
+#include "RangeOps.h"
+#include "MatrixOps.h"
+#include "CDLOps.h"
+#include "Lut1DOp.h"
+#include "Lut3DOp.h"
+
 #include "pystring/pystring.h"
 
 #include <sstream>
 #include <cstring>
 
+
 OCIO_NAMESPACE_ENTER
 {
     Op::Op()
-        :   m_inputBitDepth(BIT_DEPTH_F32)
-        ,   m_outputBitDepth(BIT_DEPTH_F32)
-    { }
-
-    Op::Op(BitDepth inputBitDepth, BitDepth outputBitDepth)
-        :   m_inputBitDepth(inputBitDepth)
-        ,   m_outputBitDepth(outputBitDepth)
     { }
 
     Op::~Op()
@@ -63,16 +63,6 @@ OCIO_NAMESPACE_ENTER
         throw Exception(os.str().c_str());
     }
     
-    BitDepth Op::getInputBitDepth() const 
-    {
-        return m_inputBitDepth; 
-    }
-
-    BitDepth Op::getOutputBitDepth() const 
-    {
-        return m_outputBitDepth;
-    }
-
     std::ostream& operator<< (std::ostream & os, const Op & op)
     {
         os << op.getInfo();
@@ -143,6 +133,109 @@ OCIO_NAMESPACE_ENTER
             ops[i]->finalize();
         }
     }
+
+    void CreateOpVecFromOpData(OpRcPtrVec & ops, 
+                               const OpData::OpData & opData, 
+                               TransformDirection dir)
+    {
+        switch(opData.getOpType())
+        {
+            case OpData::OpData::RangeType:
+            {
+                OpData::OpDataRangeRcPtr 
+                    range(static_cast<OpData::Range*>(
+                        opData.clone(OpData::OpData::DO_DEEP_COPY)));
+
+                CreateRangeOp(ops, range, dir);
+                break;
+            }
+
+            case OpData::OpData::MatrixType:
+            {
+                OpData::OpDataMatrixRcPtr
+                    matrix(static_cast<OpData::Matrix*>(
+                        opData.clone(OpData::OpData::DO_DEEP_COPY)));
+
+                CreateMatrixOp(ops, matrix, dir);
+                break;
+            }
+
+            case OpData::OpData::CDLType:
+            {
+                OpData::OpDataCDLRcPtr
+                    cdl(static_cast<OpData::CDL*>(
+                        opData.clone(OpData::OpData::DO_DEEP_COPY)));
+
+                CreateCDLOp(ops, cdl, dir);
+                break;
+            }
+
+            case OpData::OpData::Lut1DType:
+            {
+                OpData::OpDataLut1DRcPtr
+                    lut(static_cast<OpData::Lut1D*>(
+                        opData.clone(OpData::OpData::DO_DEEP_COPY)));
+
+                CreateLut1DOp(ops, lut, dir);
+                break;
+            }
+
+            case OpData::OpData::InvLut1DType:
+            {
+                OpData::OpDataInvLut1DRcPtr
+                    lut(static_cast<OpData::InvLut1D*>(
+                        opData.clone(OpData::OpData::DO_DEEP_COPY)));
+
+                CreateInvLut1DOp(ops, lut, dir);
+                break;
+            }
+
+            case OpData::OpData::Lut3DType:
+            {
+                OpData::OpDataLut3DRcPtr
+                    lut(static_cast<OpData::Lut3D*>(
+                        opData.clone(OpData::OpData::DO_DEEP_COPY)));
+
+                CreateLut3DOp(ops, lut, dir);
+                break;
+            }
+
+            case OpData::OpData::InvLut3DType:
+            {
+                OpData::OpDataInvLut3DRcPtr
+                    lut(static_cast<OpData::InvLut3D*>(
+                        opData.clone(OpData::OpData::DO_DEEP_COPY)));
+
+                CreateInvLut3DOp(ops, lut, dir);
+                break;
+            }
+
+            // TODO: Add the other ops when ready
+            default:
+                throw Exception("OpData is not supported");
+        }           
+    }
+
+    void CreateOpVecFromOpDataVec(OpRcPtrVec & ops, 
+                                  const OpData::OpDataVec & opDataVec, 
+                                  TransformDirection dir)
+    {
+        if(dir==TRANSFORM_DIR_FORWARD)
+        {
+            for(unsigned idx = 0; idx<opDataVec.size(); ++idx)            
+            {
+                CreateOpVecFromOpData(ops, *opDataVec.get(idx), dir);
+            }
+        }
+        else
+        {
+            for(int idx = (int)opDataVec.size()-1; idx>=0; --idx)            
+            {
+                CreateOpVecFromOpData(ops, *opDataVec.get(idx), dir);
+            }
+        }
+    }
+
 }
 OCIO_NAMESPACE_EXIT
 

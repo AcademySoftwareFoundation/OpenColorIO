@@ -128,7 +128,13 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
+            virtual BitDepth getInputBitDepth() const;
+            virtual BitDepth getOutputBitDepth() const;
+            virtual void setInputBitDepth(BitDepth bitdepth);
+            virtual void setOutputBitDepth(BitDepth bitdepth);
+
             virtual bool isNoOp() const;
+            virtual bool isIdentity() const;
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
@@ -161,9 +167,10 @@ OCIO_NAMESPACE_ENTER
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw Exception("Cannot apply LogOp op, unspecified transform direction.");
+                throw Exception(
+                    "Cannot create LogOp with unspecified transform direction.");
             }
-            
+
             memcpy(m_k, k, sizeof(float)*3);
             memcpy(m_m, m, sizeof(float)*3);
             memcpy(m_b, b, sizeof(float)*3);
@@ -190,11 +197,40 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
         
+        BitDepth LogOp::getInputBitDepth() const
+        {
+            // TODO: To be implemented when OpDataLog will be in
+            return BIT_DEPTH_F32;
+        }
+
+        BitDepth LogOp::getOutputBitDepth() const
+        {
+            // TODO: To be implemented when OpDataLog will be in
+            return BIT_DEPTH_F32;
+        }
+
+        void LogOp::setInputBitDepth(BitDepth /*bitdepth*/)
+        {
+            // TODO: To be implemented when OpDataLog will be in
+        }
+
+        void LogOp::setOutputBitDepth(BitDepth /*bitdepth*/)
+        {
+            // TODO: To be implemented when OpDataLog will be in
+        }
+
         bool LogOp::isNoOp() const
         {
+            // TODO: To be implemented when OpDataLog is ready
             return false;
         }
-        
+
+        bool LogOp::isIdentity() const
+        {
+            // TODO: To be implemented when OpDataLog is ready
+            return false;
+        }
+
         bool LogOp::isSameType(const OpRcPtr & op) const
         {
             LogOpRcPtr typedRcPtr = DynamicPtrCast<LogOp>(op);
@@ -287,6 +323,14 @@ OCIO_NAMESPACE_ENTER
                 throw Exception("Only 32F bit depth is supported for the GPU shader");
             }
 
+
+            GpuShaderText ss(shaderDesc->getLanguage());
+            ss.indent();
+
+            ss.newLine() << "";
+            ss.newLine() << "// Add a Log processing";
+            ss.newLine() << "";
+
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
                 // Lin To Log
@@ -304,16 +348,13 @@ OCIO_NAMESPACE_ENTER
                 // TODO: Switch to f32 for internal Cg processing?
                 if(shaderDesc->getLanguage() == GPU_LANGUAGE_CG)
                 {
-                    clampMin = static_cast<float>(GetHalfNormMin());
+                    clampMin = static_cast<float>(HALF_NRM_MIN);
                 }
                 
                 // Decompose into 2 steps
                 // 1) clamp(mx+b)
                 // 2) knew * log(x) + kb
                 
-                GpuShaderText ss(shaderDesc->getLanguage());
-                ss.indent();
-
                 ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
                              << "max(" << ss.vec3fConst(clampMin) << ", "
                              << ss.vec3fConst(m_m[0], m_m[1], m_m[2]) << " * "
@@ -324,8 +365,6 @@ OCIO_NAMESPACE_ENTER
                              << ss.vec3fConst(knew[0], knew[1], knew[2]) << " * "
                              << "log(" << shaderDesc->getPixelName() << ".rgb) + "
                              << ss.vec3fConst(m_kb[0], m_kb[1], m_kb[2]) << ";";
-
-                shaderDesc->addToFunctionShaderCode(ss.string().c_str());
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
@@ -342,9 +381,6 @@ OCIO_NAMESPACE_ENTER
                 // 2) pow(base, x)
                 // 3) minv * (x - b)
 
-                GpuShaderText ss(shaderDesc->getLanguage());
-                ss.indent();
-
                 ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
                              << ss.vec3fConst(kinv[0], kinv[1], kinv[2]) << " * ("
                              << shaderDesc->getPixelName() << ".rgb - "
@@ -358,9 +394,9 @@ OCIO_NAMESPACE_ENTER
                              << ss.vec3fConst(minv[0], minv[1], minv[2]) << " * ("
                              << shaderDesc->getPixelName() << ".rgb - "
                              << ss.vec3fConst(m_b[0], m_b[1], m_b[2]) << ");";
-
-                shaderDesc->addToFunctionShaderCode(ss.string().c_str());
             }
+
+            shaderDesc->addToFunctionShaderCode(ss.string().c_str());
         }
         
     }  // Anon namespace

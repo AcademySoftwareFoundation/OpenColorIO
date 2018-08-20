@@ -28,6 +28,10 @@ option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" UNIX)
 
+# Building ocioconvert with GPU also requires OPENGL_FOUND, GLUT_FOUND and GLEW_FOUND
+# If they are missing, ocioconvert will be built without the GPU option
+option(OCIO_BUILD_CONVERT_WITH_GPU "Specify whether to build ocioconvert with gpu option" ON)
+
 # Use boost's shared_ptr by default on Windows (as <VS2010 doesn't have it),
 # Use std::tr1::shared_ptr by default on other platforms
 option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" WIN32)
@@ -246,7 +250,56 @@ else(USE_EXTERNAL_TINYXML)
     endif()
     set_target_properties(TINYXML_LIB PROPERTIES FOLDER External)
 endif(USE_EXTERNAL_TINYXML)
-    
+
+###############################################################################
+### libexpat ###
+
+set(LIBEXPAT_VERSION 2_2_5)
+set(LIBEXPAT_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
+if(CMAKE_TOOLCHAIN_FILE)
+    set(LIBEXPAT_CMAKE_ARGS ${LIBEXPAT_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
+endif()
+
+set(LIBEXPAT_CMAKE_ARGS ${LIBEXPAT_CMAKE_ARGS} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+set(LIBEXPAT_ZIPFILE     "${CMAKE_SOURCE_DIR}/ext/expat_${LIBEXPAT_VERSION}.tar.gz")
+set(LIBEXPAT_PATCHFILE   "${CMAKE_SOURCE_DIR}/ext/expat_${LIBEXPAT_VERSION}.patch")
+set(LIBEXPAT_SOURCE_DIR  "${CMAKE_BINARY_DIR}/ext")
+## Create our LIBEXPAT_LIB target
+mark_as_advanced(LIBEXPAT_OBJECT_LIB_EMBEDDED) ## two ways to build with libexpat (objects embedded or static transitive link)
+find_package(Git REQUIRED) ## in order to apply patch (for crossplateform compatibility)
+
+ExternalProject_Add(libexpat_extract
+    URL             ${LIBEXPAT_ZIPFILE}
+    SOURCE_DIR      ${LIBEXPAT_SOURCE_DIR}/expat
+    PATCH_COMMAND   ${GIT_EXECUTABLE} apply --ignore-whitespace ${LIBEXPAT_PATCHFILE}
+    CONFIGURE_COMMAND "" # Disable all other steps
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+)
+ExternalProject_Add(libexpat
+    DOWNLOAD_COMMAND "" # Disable download step
+    SOURCE_DIR      ${LIBEXPAT_SOURCE_DIR}/expat/expat  # cmakelists.txt is in a sub directory
+    BINARY_DIR      ext/build/libexpat
+    CMAKE_ARGS      ${LIBEXPAT_CMAKE_ARGS}
+)
+
+add_dependencies(libexpat libexpat_extract)
+
+add_library(LIBEXPAT_LIB STATIC IMPORTED)
+
+if(WIN32)
+    set(LIBEXPAT_STATIC_DEBUG_LIBRARIES     ${PROJECT_BINARY_DIR}/ext/dist/lib/expatd.lib)
+    set(LIBEXPAT_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/expat.lib)
+    set_property(TARGET LIBEXPAT_LIB PROPERTY IMPORTED_LOCATION_DEBUG   ${LIBEXPAT_STATIC_DEBUG_LIBRARIES})
+    set_property(TARGET LIBEXPAT_LIB PROPERTY IMPORTED_LOCATION_RELEASE ${LIBEXPAT_STATIC_OPTIMIZED_LIBRARIES})
+else()
+    set(LIBEXPAT_STATIC_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libexpat.a)
+    set_property(TARGET LIBEXPAT_LIB PROPERTY IMPORTED_LOCATION ${LIBEXPAT_STATIC_LIBRARIES})
+endif()
+add_dependencies(LIBEXPAT_LIB libexpat)
+list(APPEND EXTERNAL_LIBRARIES LIBEXPAT_LIB)
+set_target_properties(LIBEXPAT_LIB PROPERTIES FOLDER External)
+
 ###############################################################################
 ### YAML ###
 
@@ -368,6 +421,18 @@ endif(USE_EXTERNAL_YAML)
 if(YAML_CPP_VERSION VERSION_LESS "0.5.0")
     set(YAML_CPP_COMPILE_FLAGS "-DOLDYAML")
 endif()
+
+###############################################################################
+### ilmbase half ###
+
+# Extract test files 
+execute_process(
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/ext/ilmbasehalf
+)
+execute_process(
+	COMMAND ${CMAKE_COMMAND} -E tar xvz ${CMAKE_SOURCE_DIR}/ext/ilmbasehalf-2.2.1.tar.gz
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/ext/ilmbasehalf
+)
 
 ###############################################################################
 ### Externals ###

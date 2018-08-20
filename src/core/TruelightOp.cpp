@@ -66,7 +66,13 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
+            virtual BitDepth getInputBitDepth() const { return BIT_DEPTH_F32; }
+            virtual BitDepth getOutputBitDepth() const { return BIT_DEPTH_F32; }
+            virtual void setInputBitDepth(BitDepth) {}
+            virtual void setOutputBitDepth(BitDepth) {}
+
             virtual bool isNoOp() const;
+            virtual bool isIdentity() const;
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
@@ -118,7 +124,8 @@ OCIO_NAMESPACE_ENTER
             
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw Exception("Cannot apply TruelightOp op, unspecified transform direction.");
+                throw Exception(
+                    "Cannot create TruelightOp with unspecified transform direction.");
             }
             
             std::string _tmp = pystring::lower(cubeinput);
@@ -211,6 +218,12 @@ OCIO_NAMESPACE_ENTER
         {
             return false;
         }
+
+        bool TruelightOp::isIdentity() const
+        {
+            return false;
+        }
+
         bool TruelightOp::isSameType(const OpRcPtr & /*op*/) const
         {
             // TODO: TruelightOp::isSameType

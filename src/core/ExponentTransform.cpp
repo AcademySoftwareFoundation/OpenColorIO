@@ -67,8 +67,11 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            memcpy(value_, rhs.value_, 4*sizeof(float));
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                memcpy(value_, rhs.value_, 4 * sizeof(float));
+            }
             return *this;
         }
     };
@@ -97,7 +100,10 @@ OCIO_NAMESPACE_ENTER
     
     ExponentTransform& ExponentTransform::operator= (const ExponentTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -111,6 +117,17 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void ExponentTransform::validate() const
+    {
+        if (getImpl()->dir_ != TRANSFORM_DIR_FORWARD
+            && getImpl()->dir_ != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("ExponentTransform: invalid direction");
+        }
+
+        // TODO: Complete the validate by using the OpDataExponent validate
+    }
+
     void ExponentTransform::setValue(const float * vec4)
     {
         if(vec4) memcpy(getImpl()->value_, vec4, 4*sizeof(float));

@@ -146,6 +146,7 @@ OCIO_NAMESPACE_ENTER
     extern PyTypeObject PyOCIO_LogTransformType;
     extern PyTypeObject PyOCIO_LookTransformType;
     extern PyTypeObject PyOCIO_MatrixTransformType;
+    extern PyTypeObject PyOCIO_RangeTransformType;
     
     ///////////////////////////////////////////////////////////////////////////
     

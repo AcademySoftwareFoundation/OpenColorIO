@@ -12,6 +12,7 @@ from ColorSpaceTest import *
 from GpuShaderDescTest import *
 from Baker import *
 from TransformsTest import *
+from RangeTransformTest import *
 
 class FooTest(unittest.TestCase):
     
@@ -34,10 +35,13 @@ def suite():
     suite.addTest(BakerTest("test_interface"))
     # PackedImageDesc
     # PlanarImageDesc
+    suite.addTest(RangeTransformTest("test_interface"))
+    suite.addTest(RangeTransformTest("test_equality"))
+    suite.addTest(RangeTransformTest("test_validation"))
     return suite
 
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
+    runner = unittest.TextTestRunner(verbosity=2)
     test_suite = suite()
     result = runner.run(test_suite)
     if result.wasSuccessful() == False:

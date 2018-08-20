@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "opdata/OpDataVec.h"
+
 #include <sstream>
 #include <vector>
 
@@ -62,6 +64,14 @@ OCIO_NAMESPACE_ENTER
     
     void OptimizeOpVec(OpRcPtrVec & result);
     
+    void CreateOpVecFromOpData(OpRcPtrVec & ops, 
+                               const OpData::OpData & opData, 
+                               TransformDirection dir);
+
+    void CreateOpVecFromOpDataVec(OpRcPtrVec & ops, 
+                                  const OpData::OpDataVec & opDataVec, 
+                                  TransformDirection dir);
+
     class Op
     {
         public:
@@ -69,20 +79,29 @@ OCIO_NAMESPACE_ENTER
             
             virtual OpRcPtr clone() const = 0;
             
-            //! Something short, and printable.
-            //  The type of stuff you'd want to see in debugging.
+            // Something short, and printable.
+            // The type of stuff you'd want to see in debugging.
             virtual std::string getInfo() const = 0;
             
-            //! This should yield a string of not unreasonable length.
-            //! It can only be called after finalize()
+            // This should yield a string of not unreasonable length.
+            // It can only be called after finalize()
             virtual std::string getCacheID() const = 0;
             
-            //! Is the processing a noop? I.e, does apply do nothing.
-            //! (Even no-ops may define Allocation though.)
-            //! This must be implmented in a manner where its valid to call
-            //! *prior* to finalize. (Optimizers may make use of it)
+            // Is the processing a noop? I.e, does apply do nothing.
+            // (Even no-ops may define Allocation though.)
+            // This must be implmented in a manner where its valid to call
+            // *prior* to finalize. (Optimizers may make use of it)
+            //
+            // A "no-op" is an op where inBitDepth==outBitDepth and isIdentity
+            // is true, therefore the output pixels will be unchanged.
             virtual bool isNoOp() const = 0;
-            
+
+            // An identity is an op that only does bit-depth conversion.
+            // Each op will overload this with the appropriate calculation.
+            // An op where isIdentity() is true will typically be removed
+            // during the optimization process.
+            virtual bool isIdentity() const = 0;
+
             virtual bool isSameType(const OpRcPtr & op) const = 0;
             
             virtual bool isInverse(const OpRcPtr & op) const = 0;
@@ -123,23 +142,17 @@ OCIO_NAMESPACE_ENTER
             // Create & add the gpu shader information needed by the op
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const = 0;
 
-            virtual BitDepth getInputBitDepth() const;
-            virtual BitDepth getOutputBitDepth() const;
+            virtual BitDepth getInputBitDepth() const = 0;
+            virtual BitDepth getOutputBitDepth() const = 0;
 
-            // To be implemented by each op to natively support 
-            // the input and output bit depths.
-            // For now, all ops are 32f by default.
-            virtual void setInputBitDepth(BitDepth /*bitdepth*/) {}
-            virtual void setOutputBitDepth(BitDepth /*bitdepth*/) {}
+            virtual void setInputBitDepth(BitDepth bitdepth) = 0;
+            virtual void setOutputBitDepth(BitDepth bitdepth) = 0;
 
         protected:
             Op();
-            Op(BitDepth inputBitDepth, BitDepth outputBitDepth);
 
         private:
             Op& operator= (const Op &);
-            BitDepth m_inputBitDepth;
-            BitDepth m_outputBitDepth;
     };
     
     std::ostream& operator<< (std::ostream&, const Op&);

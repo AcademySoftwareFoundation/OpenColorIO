@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Mutex.h"
 #include "Op.h"
+#include "opdata/OpDataLut3D.h"
+#include "opdata/OpDataInvLut3D.h"
 
 #include <vector>
 
@@ -84,7 +86,7 @@ OCIO_NAMESPACE_ENTER
         return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
     }
     
-    // What is the preferred order for the lut3d?
+    // What is the preferred order for the 3D LUT?
     // I.e., are the first two entries change along
     // the blue direction, or the red direction?
     // OpenGL expects 'red'
@@ -102,12 +104,19 @@ OCIO_NAMESPACE_ENTER
     // cuberoot is not exact.
     int Get3DLutEdgeLenFromNumPixels(int numPixels);
     
-    
-    
     void CreateLut3DOp(OpRcPtrVec & ops,
                        Lut3DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);
+
+    void CreateLut3DOp(OpRcPtrVec & ops,
+                       OpData::OpDataLut3DRcPtr & lut,
+                       TransformDirection direction);
+
+    void CreateInvLut3DOp(OpRcPtrVec & ops,
+                          OpData::OpDataInvLut3DRcPtr & lut,
+                          TransformDirection direction);
+
 }
 OCIO_NAMESPACE_EXIT
 

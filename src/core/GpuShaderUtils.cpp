@@ -52,6 +52,19 @@ OCIO_NAMESPACE_ENTER
         return oss.str();
     }
 
+    std::string getFloatString(double v, GpuLanguage lang)
+    {
+        const float value = (lang == GPU_LANGUAGE_CG) ? float(ClampToNormHalf(v)) : (float)v;
+
+        float integerpart = 0.0f;
+        const float fracpart = modff(value, &integerpart);
+
+        std::ostringstream oss;
+        oss.precision(16);
+        oss << value << ((fracpart == 0.0f) ? "." : "");
+        return oss.str();
+    }
+
     template<int N>
     std::string getVecKeyword(GpuLanguage lang)
     {
@@ -169,8 +182,8 @@ OCIO_NAMESPACE_ENTER
         return kw.str();
     }
 
-    template<int N>
-    std::string getMatrixValues(const float * mtx, GpuLanguage lang, bool transpose)
+    template<typename T, int N>
+    std::string getMatrixValues(const T * mtx, GpuLanguage lang, bool transpose)
     {
         std::string vals;
 
@@ -229,7 +242,10 @@ OCIO_NAMESPACE_ENTER
 
     GpuShaderText::GpuShaderLine& GpuShaderText::GpuShaderLine::operator=(const GpuShaderText::GpuShaderLine& rhs)
     {
-        m_text = rhs.m_text;
+        if (this != &rhs)
+        {
+            m_text = rhs.m_text;
+        }
         return *this;
     }
 
@@ -291,7 +307,7 @@ OCIO_NAMESPACE_ENTER
         }
 
         newLine() << (m_lang==GPU_LANGUAGE_CG ? "half " : "float ") 
-                  << name << " = " << v;
+                  << name << " = " << v << ";";
     }
 
     std::string GpuShaderText::vec2fKeyword() const
@@ -363,7 +379,7 @@ OCIO_NAMESPACE_ENTER
                                   const std::string & y,
                                   const std::string & z)
     {
-        newLine() << vec3fDecl(name) << " = " << vec3fConst(x, y, z);
+        newLine() << vec3fDecl(name) << " = " << vec3fConst(x, y, z) << ";";
     }
 
     std::string GpuShaderText::vec4fKeyword() const
@@ -432,7 +448,7 @@ OCIO_NAMESPACE_ENTER
                                   const std::string& z,
                                   const std::string& w)
     {
-        newLine() << vec4fDecl(name) << " = " << vec4fConst(x, y, z, w);
+        newLine() << vec4fDecl(name) << " = " << vec4fConst(x, y, z, w) << ";";
     }
 
     std::string GpuShaderText::getSamplerName(const std::string& textureName)
@@ -506,52 +522,7 @@ OCIO_NAMESPACE_ENTER
         return getTexSample<3>(m_lang, textureName, getSamplerName(textureName), coords);
     }
 
-    std::string GpuShaderText::mat3fMul(const float * m3x3,
-                                        const std::string & vecName) const
-    {
-        if(vecName.empty())
-        {
-           throw Exception("Gpu variable name is empty");
-        }
-
-        std::ostringstream kw;
-        switch(m_lang)
-        {
-            case GPU_LANGUAGE_GLSL_1_0:
-            case GPU_LANGUAGE_GLSL_1_3:
-            case GPU_LANGUAGE_GLSL_4_0:
-            {
-                // OpenGL shader program requests a transpose matrix
-                kw << "mat3("
-                   << getMatrixValues<3>(m3x3, m_lang, true) 
-                   << ") * " << vecName;
-
-                break;
-            }
-            case GPU_LANGUAGE_CG:
-            {
-                kw << "mul(half3x3(" 
-                   << getMatrixValues<3>(m3x3, m_lang, false)
-                   << "), " << vecName << ")";
-                break;
-            }
-            case GPU_LANGUAGE_HLSL_DX11:
-            {
-                kw << "mul(" << vecName 
-                   << ", float3x3(" << getMatrixValues<3>(m3x3, m_lang, true) << "))";
-                break;
-            }
-
-            case GPU_LANGUAGE_UNKNOWN:
-            default:
-            {
-                throw Exception("Unknown Gpu shader language");
-            }
-        }
-        return kw.str();
-    }
-
-    std::string GpuShaderText::mat4fMul(const float * m4x4, 
+    std::string GpuShaderText::mat4fMul(const double * m4x4, 
                                      const std::string & vecName) const
     {
         if (vecName.empty())
@@ -568,19 +539,19 @@ OCIO_NAMESPACE_ENTER
             {
                 // OpenGL shader program requests a transposed matrix
                 kw << "mat4(" 
-                   << getMatrixValues<4>(m4x4, m_lang, true) << ") * " << vecName;
+                   << getMatrixValues<double, 4>(m4x4, m_lang, true) << ") * " << vecName;
                 break;
             }
             case GPU_LANGUAGE_CG:
             {
                 kw << "mul(half4x4(" 
-                   << getMatrixValues<4>(m4x4, m_lang, false) << "), " << vecName << ")";
+                   << getMatrixValues<double, 4>(m4x4, m_lang, false) << "), " << vecName << ")";
                 break;
             }
             case GPU_LANGUAGE_HLSL_DX11:
             {
                 kw << "mul(" << vecName 
-                   << ", float4x4(" << getMatrixValues<4>(m4x4, m_lang, true) << "))";
+                   << ", float4x4(" << getMatrixValues<double, 4>(m4x4, m_lang, true) << "))";
                 break;
             }
 

@@ -61,9 +61,12 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            src_ = rhs.src_;
-            dst_ = rhs.dst_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                src_ = rhs.src_;
+                dst_ = rhs.dst_;
+            }
             return *this;
         }
     };
@@ -92,7 +95,10 @@ OCIO_NAMESPACE_ENTER
     
     ColorSpaceTransform& ColorSpaceTransform::operator= (const ColorSpaceTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -106,6 +112,17 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void ColorSpaceTransform::validate() const
+    {
+        if (getImpl()->dir_ != TRANSFORM_DIR_FORWARD
+            && getImpl()->dir_ != TRANSFORM_DIR_INVERSE)
+        {
+            throw Exception("ColorSpaceTransform: invalid direction");
+        }
+
+        // TODO: Complete the validate by adding the src & dst color space name validation
+    }
+
     const char * ColorSpaceTransform::getSrc() const
     {
         return getImpl()->src_.c_str();

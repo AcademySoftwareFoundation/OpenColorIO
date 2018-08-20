@@ -7,10 +7,13 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/ext/oiio/src/include
     ${CMAKE_SOURCE_DIR}/ext/sampleicc/src/include
     ${EXTERNAL_INCLUDE_DIRS}
+	${CMAKE_BINARY_DIR}/ext/ilmbasehalf
 )
 
-file(GLOB_RECURSE core_src_files "${CMAKE_SOURCE_DIR}/src/core/*.cpp")
-file(GLOB_RECURSE core_export_headers "${CMAKE_SOURCE_DIR}/export/OpenColorIO/*.h")
+file(GLOB_RECURSE core_src_files
+	${CMAKE_SOURCE_DIR}/src/core/*.cpp
+	${CMAKE_BINARY_DIR}/ext/ilmbasehalf/half.cpp)
+file(GLOB_RECURSE core_export_headers ${CMAKE_SOURCE_DIR}/export/OpenColorIO/*.h)
 
 message(STATUS "Create OpenColorABI.h from OpenColorABI.h.in")
 configure_file(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorABI.h.in
@@ -44,6 +47,8 @@ if(OCIO_BUILD_SHARED)
     else(USE_EXTERNAL_YAML)
         add_dependencies(OpenColorIO YAML_CPP_LIB)
     endif()
+
+	add_dependencies(OpenColorIO LIBEXPAT_LIB)
 
     if(EXTERNAL_LIBRARIES)
         target_link_libraries(OpenColorIO ${EXTERNAL_LIBRARIES})
@@ -83,6 +88,8 @@ if(OCIO_BUILD_STATIC)
         target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_LIBRARIES})
     endif()
     
+	add_dependencies(OpenColorIO LIBEXPAT_LIB)
+
 	set_target_properties(OpenColorIO_STATIC PROPERTIES COMPILE_DEFINITIONS "OpenColorIO_STATIC")
     set_target_properties(OpenColorIO_STATIC PROPERTIES
         OUTPUT_NAME                 OpenColorIO

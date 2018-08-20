@@ -48,7 +48,7 @@ OCIO_NAMESPACE_ENTER
 
     //!rst:: //////////////////////////////////////////////////////////////////
     
-    //!cpp:class:: 
+    //!cpp:class:: Base class for all Transform classes
     class OCIOEXPORT Transform
     {
     public:
@@ -57,7 +57,10 @@ OCIO_NAMESPACE_ENTER
         
         virtual TransformDirection getDirection() const = 0;
         virtual void setDirection(TransformDirection dir) = 0;
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const = 0;
+
     private:
         Transform& operator= (const Transform &);
     };
@@ -84,6 +87,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         Allocation getAllocation() const;
         //!cpp:function::
@@ -95,7 +101,7 @@ OCIO_NAMESPACE_ENTER
         void getVars(float * vars) const;
         //!cpp:function::
         void setVars(int numvars, const float * vars);
-    
+
     private:
         AllocationTransform();
         AllocationTransform(const AllocationTransform &);
@@ -144,7 +150,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+       
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         bool equals(const ConstCDLTransformRcPtr & other) const;
         
@@ -205,7 +214,7 @@ OCIO_NAMESPACE_ENTER
         void setDescription(const char * desc);
         //!cpp:function::
         const char * getDescription() const;
-    
+
     private:
         CDLTransform();
         CDLTransform(const CDLTransform &);
@@ -243,6 +252,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         const char * getSrc() const;
         //!cpp:function::
@@ -290,9 +302,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
-        
-        
-        
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function:: Step 0. Specify the incoming color space
         void setInputColorSpaceName(const char * name);
         //!cpp:function::
@@ -396,6 +408,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         void setValue(const float * vec4);
         //!cpp:function::
@@ -438,6 +453,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         const char * getSrc() const;
         //!cpp:function::
@@ -450,7 +468,8 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         Interpolation getInterpolation() const;
-        //!cpp:function::
+        //!cpp:function:: set the file transform interpolation style. Style will be used
+        // if the file format does not provide interpolation styles.
         void setInterpolation(Interpolation interp);
         
         //!cpp:function:: get the number of lut readers
@@ -500,6 +519,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         ConstTransformRcPtr getTransform(int index) const;
         
@@ -553,6 +575,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         void setBase(float val);
         //!cpp:function::
@@ -597,6 +622,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         const char * getSrc() const;
         //!cpp:function::
@@ -654,6 +682,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         bool equals(const MatrixTransform & other) const;
         
@@ -687,7 +718,10 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         static void Identity(float * m44, float * offset4);
-        
+
+        //!cpp:function::
+        static void Identity(double * m44, double * offset4);
+
         //!cpp:function::
         static void Sat(float * m44, float * offset4,
                         float sat, const float * lumaCoef3);
@@ -720,6 +754,101 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const MatrixTransform&);
     
+
+    //!rst:: //////////////////////////////////////////////////////////////////
+    
+    //!cpp:class:: Represents a range transform
+    //
+    // The Range is used to apply an affine transform (scale & offset) with
+    // clamp values to min/max bounds on all color components except the alpha.
+    // The scale and offset values are computed from the input and output bounds.
+    // 
+    // .. note::
+    //    Refer to section 7.2.4 in specification S-2014-006
+    //    "A Common File Format for Look-Up Tables" from the
+    //    Academy of Motion Picture Arts and Sciences and 
+    //    the American Society of Cinematographers.
+    // 
+    // .. note::
+    //    The "noClamp" style described in the specification (S-2014-006.pdf)
+    //    is implemented in OCIO as a Matrix rather than a Range.
+    //
+    class OCIOEXPORT RangeTransform : public Transform
+    {
+    public:
+        //!cpp:function:: Creates an instance of RangeTransform.
+        static RangeTransformRcPtr Create();
+        
+        //!cpp:function:: Creates a copy of this.
+        virtual TransformRcPtr createEditableCopy() const;
+        
+        //!cpp:function:: Get Transform direction.
+        virtual TransformDirection getDirection() const;
+        //!cpp:function:: Set Transform direction.
+        virtual void setDirection(TransformDirection dir);
+        
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
+        //!cpp:function:: Checks if this equals other.
+        bool equals(const RangeTransform & other) const;
+
+        //!cpp:function:: Set the minimum value for the input.
+        void setMinInValue(double val);
+        //!cpp:function:: Get the minimum value for the input.
+        double getMinInValue() const;
+        //!cpp:function:: Is the minimum value for the input set?
+        bool hasMinInValue() const;
+        //!cpp:function:: Unset the minimum value for the input
+        void unsetMinInValue();
+
+        //!cpp:function:: Set the maximum value for the input.
+        void setMaxInValue(double val);
+        //!cpp:function:: Get the maximum value for the input.
+        double getMaxInValue() const;
+        //!cpp:function:: Is the maximum value for the input set?
+        bool hasMaxInValue() const;
+        //!cpp:function:: Unset the maximum value for the input.
+        void unsetMaxInValue();
+
+        //!cpp:function:: Set the minimum value for the output.
+        void setMinOutValue(double val);
+        //!cpp:function:: Get the minimum value for the output.
+        double getMinOutValue() const;
+        //!cpp:function:: Is the minimum value for the output set?
+        bool hasMinOutValue() const;
+        //!cpp:function:: Unset the minimum value for the output.
+        void unsetMinOutValue();
+
+        //!cpp:function:: Set the maximum value for the output.
+        void setMaxOutValue(double val);
+        //!cpp:function:: Get the maximum value for the output.
+        double getMaxOutValue() const;
+        //!cpp:function:: Is the maximum value for the output set?
+        bool hasMaxOutValue() const;
+        //!cpp:function:: Unset the maximum value for the output.
+        void unsetMaxOutValue();
+
+    private:
+        RangeTransform();
+        RangeTransform(const RangeTransform &);
+        virtual ~RangeTransform();
+        
+        RangeTransform& operator= (const RangeTransform &);
+        
+        static void deleter(RangeTransform* t);
+        
+        class Impl;
+        friend class Impl;
+        Impl * m_impl;
+        Impl * getImpl() { return m_impl; }
+        const Impl * getImpl() const { return m_impl; }
+    };
+    
+    //!cpp:function::
+    extern OCIOEXPORT std::ostream& operator<< (std::ostream&, const RangeTransform&);
+
+    
     //!rst:: //////////////////////////////////////////////////////////////////
     
     //!cpp:class:: Truelight transform using its API
@@ -737,6 +866,9 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
         
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         void setConfigRoot(const char * configroot);
         //!cpp:function::
