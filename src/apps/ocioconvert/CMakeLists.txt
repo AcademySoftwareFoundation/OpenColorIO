@@ -11,6 +11,10 @@ if (OIIO_FOUND)
     
     add_executable(ocioconvert ${share_src_files} main.cpp)
     
+    if(OIIO_VERSION AND NOT ${OIIO_VERSION} VERSION_LESS 1.8.5)
+        set_property(TARGET ocioconvert PROPERTY CXX_STANDARD 11)
+    endif()
+    
     set_target_properties(ocioconvert PROPERTIES COMPILE_FLAGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
 
     target_link_libraries(ocioconvert ${OIIO_LIBRARIES} ${CMAKE_DL_LIBS})

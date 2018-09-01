@@ -92,6 +92,25 @@ MACRO(OCIOFindOpenImageIO)
         /opt/local/lib
         DOC "The OIIO library")
 
+    if(OIIO_INCLUDES AND EXISTS "${OIIO_INCLUDES}/OpenImageIO/oiioversion.h")
+        file(STRINGS ${OIIO_INCLUDES}/OpenImageIO/oiioversion.h
+            MAJOR
+            REGEX
+            "#define OIIO_VERSION_MAJOR.*$")
+        file(STRINGS ${OIIO_INCLUDES}/OpenImageIO/oiioversion.h
+            MINOR
+            REGEX
+            "#define OIIO_VERSION_MINOR.*$")
+        file(STRINGS ${OIIO_INCLUDES}/OpenImageIO/oiioversion.h
+            PATCH
+            REGEX
+            "#define OIIO_VERSION_PATCH.*$")
+        string(REGEX MATCHALL "[0-9]+" MAJOR ${MAJOR})
+        string(REGEX MATCHALL "[0-9]+" MINOR ${MINOR})
+        string(REGEX MATCHALL "[0-9]+" PATCH ${PATCH})
+        set(OIIO_VERSION "${MAJOR}.${MINOR}.${PATCH}")
+    endif()
+
     if(OIIO_INCLUDES AND OIIO_LIBRARIES)
         set(OIIO_FOUND TRUE)
         message(STATUS "Found OIIO library ${OIIO_LIBRARIES}")
