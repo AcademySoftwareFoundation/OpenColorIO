@@ -728,6 +728,51 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
         OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_ERROR));
     }
     {
+        // Validate stream can be read with no error.
+        // Then stream will be altered to introduce errors.
+        const std::string SAMPLE_ERROR =
+            "LUT_1D_SIZE 6\n"
+            "LUT_1D_INPUT_RANGE 0.0 1.0\n"
+            "LUT_3D_SIZE 3\n"
+            "LUT_3D_INPUT_RANGE 0.0 1.0\n"
+            
+            "1.0 1.0 1.0\n"
+            "0.8 0.8 0.8\n"
+            "0.6 0.6 0.6\n"
+            "0.4 0.4 0.4\n"
+            "0.2 0.2 0.2\n"
+            "0.0 0.0 0.0\n"
+            "1.0 1.0 1.0\n"
+            "0.5 1.0 1.0\n"
+            "0.0 1.0 1.0\n"
+            "1.0 0.5 1.0\n"
+            "0.5 0.5 1.0\n"
+            "0.0 0.5 1.0\n"
+            "1.0 0.0 1.0\n"
+            "0.5 0.0 1.0\n"
+            "0.0 0.0 1.0\n"
+            "1.0 1.0 0.5\n"
+            "0.5 1.0 0.5\n"
+            "0.0 1.0 0.5\n"
+            "1.0 0.5 0.5\n"
+            "0.5 0.5 0.5\n"
+            "0.0 0.5 0.5\n"
+            "1.0 0.0 0.5\n"
+            "0.5 0.0 0.5\n"
+            "0.0 0.0 0.5\n"
+            "1.0 1.0 0.0\n"
+            "0.5 1.0 0.0\n"
+            "0.0 1.0 0.0\n"
+            "1.0 0.5 0.0\n"
+            "0.5 0.5 0.0\n"
+            "0.0 0.5 0.0\n"
+            "1.0 0.0 0.0\n"
+            "0.5 0.0 0.0\n"
+            "0.0 0.0 0.0\n";
+
+        OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_ERROR));
+    }
+    {
         // Wrong LUT_3D_SIZE tag
         const std::string SAMPLE_ERROR =
             "LUT_3D_SIZE 2 2\n"
