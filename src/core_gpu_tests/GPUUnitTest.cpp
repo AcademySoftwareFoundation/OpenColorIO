@@ -79,26 +79,32 @@ namespace Shader
     // In some occasions, MAX_FLOAT will be "rounded" to infinity on some GPU renderers.
     // In order to avoid this issue, consider all number over/under a given threshold as
     // equal for testing purposes.
-    #define LARGE_THRESHOLD    std::numeric_limits<float>::max()
+    const float largeThreshold = std::numeric_limits<float>::max();
 
-    // Check if difference between floats f1 and f2 does not exceed eps
-    bool AbsoluteFloatComparison(float f1, float f2, float eps)
+    // Code copied from core/MathUtils.h
+    inline bool EqualWithAbsError(float x1, float x2, float e)
     {
-      return ((f1 > f2)? f1 - f2: f2 - f1) <= eps;
+        return ((x1 > x2) ? x1 - x2 : x2 - x1) <= e;
     }
 
     // Relative comparison: check if the difference between value and expected
     // relative to (divided by) expected does not exceed the eps.  A minimum
     // expected value is used to limit the scaling of the difference and
     // avoid large relative differences for small numbers.
-    bool RelativeFloatComparison(float value, float expected, float eps, float minExpected)
+    inline bool EqualWithSafeRelError(float value,
+                                      float expected,
+                                      float eps,
+                                      float minExpected)
     {
-        const float div = ( expected > 0 ) ?
-            ( (  expected < minExpected ) ? minExpected :  expected ) :
-            ( ( -expected < minExpected ) ? minExpected : -expected );
+        const float div = (expected > 0.0f) ?
+            ((expected < minExpected) ? minExpected : expected) :
+            ((-expected < minExpected) ? minExpected : -expected);
 
-        return ( ((value > expected) ? value - expected : expected - value) / div ) <= eps;
+        return (
+            ((value > expected) ? value - expected : expected - value)
+            / div) <= eps;
     }
+    // end of copy from core/MathUtils.h
 
     // Compute the absolute equality of two floats
     // a is the first float to compare
@@ -106,14 +112,14 @@ namespace Shader
     // epsilon is the maximum expected epsilon
     bool AbsoluteCompare(float a, float b, float epsilon)
     {
-        if ( ( (a >=  LARGE_THRESHOLD) && (b >=  LARGE_THRESHOLD) ) ||
-             ( (a <= -LARGE_THRESHOLD) && (b <= -LARGE_THRESHOLD) ) ||
+        if ( ( (a >=  largeThreshold) && (b >=  largeThreshold) ) ||
+             ( (a <= -largeThreshold) && (b <= -largeThreshold) ) ||
              ( F_ISNAN(a) && F_ISNAN(b) ) )
         {
             return true;
         }
 
-        return AbsoluteFloatComparison(a, b, epsilon);
+        return EqualWithAbsError(a, b, epsilon);
     }
 
     // Compute the relative equality of two floats
@@ -123,14 +129,14 @@ namespace Shader
     // expectedMinValue is the minimum expected value
     bool RelativeCompare(float a, float b, float epsilon, float expectedMinValue)
     {
-        if ( ( (a >=  LARGE_THRESHOLD) && (b >=  LARGE_THRESHOLD) ) ||
-             ( (a <= -LARGE_THRESHOLD) && (b <= -LARGE_THRESHOLD) ) ||
+        if ( ( (a >=  largeThreshold) && (b >=  largeThreshold) ) ||
+             ( (a <= -largeThreshold) && (b <= -largeThreshold) ) ||
              ( F_ISNAN(a) && F_ISNAN(b) ) )
         {
           return true;
         }
 
-        return RelativeFloatComparison(a, b, epsilon, expectedMinValue);
+        return EqualWithSafeRelError(a, b, epsilon, expectedMinValue);
     }
 }
 
@@ -345,7 +351,7 @@ namespace
         for(size_t idx=0; idx<(g_winWidth * g_winHeight); ++idx)
         {
             const bool isFaulty 
-                = test->performRelativeComparison() 
+                = test->getRelativeComparison()
                     ? (!Shader::RelativeCompare(cppImage[4*idx+0], gpuImage[4*idx+0], epsilon, expectMinValue) ||
                        !Shader::RelativeCompare(cppImage[4*idx+1], gpuImage[4*idx+1], epsilon, expectMinValue) ||
                        !Shader::RelativeCompare(cppImage[4*idx+2], gpuImage[4*idx+2], epsilon, expectMinValue) ||
@@ -443,6 +449,8 @@ int main(int, char **)
 
     unsigned failures = 0;
 
+    std::cerr << "\n OpenColorIO_Core_GPU_Unit_Tests\n\n";
+
     const UnitTests & tests = GetUnitTests();
     const size_t numTests = tests.size();
     for(size_t idx=0; idx<numTests; ++idx)
@@ -453,9 +461,16 @@ int main(int, char **)
 
         try
         {
-            std::cerr << "Test [" << test->group() << "] [" << test->name() << "] - ";
-
             test->setup();
+
+            std::string name(test->group());
+            name += " / " + test->name();
+
+            std::cerr << "[" 
+                      << std::right << std::setw(3)
+                      << (idx+1) << "/" << numTests << "] ["
+                      << std::left << std::setw(50)
+                      << name << "] - ";
 
             if(test->isValid())
             {
@@ -467,7 +482,7 @@ int main(int, char **)
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 // Update the image texture
-                UpdateImageTexture(test->useWideRange());
+                UpdateImageTexture(test->getWideRange());
 
                 // Update the GPU shader program
                 UpdateOCIOGLState(test);

@@ -671,18 +671,18 @@ OIIO_ADD_TEST(MatrixOps, Scale)
     OpRcPtrVec ops;
     const float scale[] = { 1.1f, 1.3f, 0.3f, 1.0f };
     OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
 
     std::string cacheID = ops[0]->getCacheID();
-    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+    OIIO_REQUIRE_ASSERT(cacheID.empty());
 
     OIIO_CHECK_NO_THROW(ops[0]->finalize());
 
     cacheID = ops[0]->getCacheID();
-    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+    OIIO_REQUIRE_ASSERT(!cacheID.empty());
 
     OIIO_CHECK_NO_THROW(CreateScaleOp(ops, scale, TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
     const unsigned NB_PIXELS = 3;
