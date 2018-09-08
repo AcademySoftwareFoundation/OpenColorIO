@@ -728,7 +728,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     // Get input value of 1.0 in shaper space, as this
                     // is the higest value that is transformed by the
-                    // cube (e.g for a generic lin-to-log trasnform,
+                    // cube (e.g for a generic lin-to-log transform,
                     // what the log value 1.0 is in linear).
                     ConstProcessorRcPtr shaperToInputProc = config->getProcessor(
                         shaperSpace.c_str(),
@@ -796,7 +796,7 @@ OCIO_NAMESPACE_ENTER
                 else
                 {
                     // No prelut, so cube goes from input-to-target
-                  cubeProc = inputToTargetProc;
+                    cubeProc = inputToTargetProc;
                 }
 
                 
