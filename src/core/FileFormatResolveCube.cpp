@@ -280,7 +280,6 @@ OCIO_NAMESPACE_ENTER
             std::istream & istream,
             const std::string & fileName) const
         {
-            LogInfo("Reading Resolve .cube LUT");
             
             // this shouldn't happen
             if(!istream)
@@ -460,7 +459,6 @@ OCIO_NAMESPACE_ENTER
                 // Reformat 1D data
                 if(size1d>0)
                 {
-                    LogInfo("Has 1D");
                     cachedFile->has1D = true;
                     
                     for(size_t i=0; i<3; ++i)
@@ -496,7 +494,6 @@ OCIO_NAMESPACE_ENTER
             }
             if(has3d)
             {
-                LogInfo("Has 3D");
                 cachedFile->has3D = true;
                 
                 if(size3d*size3d*size3d 
