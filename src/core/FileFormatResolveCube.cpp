@@ -907,19 +907,6 @@ namespace OCIO = OCIO_NAMESPACE;
 #include "UnitTest.h"
 #include <fstream>
 
-OIIO_ADD_TEST(FileFormatResolveCube, FormatInfo)
-{
-    OCIO::FormatInfoVec formatInfoVec;
-    OCIO::LocalFileFormat tester;
-    tester.GetFormatInfo(formatInfoVec);
-
-    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
-    OIIO_CHECK_EQUAL("resolve_cube", formatInfoVec[0].name);
-    OIIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
-    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
-        formatInfoVec[0].capabilities);
-}
-
 OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
 {
     std::istringstream is;
@@ -933,71 +920,96 @@ OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)
     return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
 }
 
+OIIO_ADD_TEST(FileFormatResolveCube, FormatInfo)
+{
+    OCIO::FormatInfoVec formatInfoVec;
+    OCIO::LocalFileFormat tester;
+    tester.GetFormatInfo(formatInfoVec);
+
+    OIIO_CHECK_EQUAL(1, formatInfoVec.size());
+    OIIO_CHECK_EQUAL("resolve_cube", formatInfoVec[0].name);
+    OIIO_CHECK_EQUAL("cube", formatInfoVec[0].extension);
+    OIIO_CHECK_EQUAL(OCIO::FORMAT_CAPABILITY_READ | OCIO::FORMAT_CAPABILITY_WRITE,
+        formatInfoVec[0].capabilities);
+}
+
+OIIO_ADD_TEST(FileFormatResolveCube, Read1D)
+{
+    const std::string SAMPLE =
+        "LUT_1D_SIZE 2\n"
+        "LUT_1D_INPUT_RANGE 0.0 1.0\n"
+
+        "0.0 0.0 0.0\n"
+        "1.0 0.0 0.0\n";
+
+    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
+}
+
+OIIO_ADD_TEST(FileFormatResolveCube, Read3D)
+{
+    const std::string SAMPLE =
+        "LUT_3D_SIZE 2\n"
+        "LUT_3D_INPUT_RANGE 0.0 1.0\n"
+
+        "0.0 0.0 0.0\n"
+        "1.0 0.0 0.0\n"
+        "0.0 1.0 0.0\n"
+        "1.0 1.0 0.0\n"
+        "0.0 0.0 1.0\n"
+        "1.0 0.0 1.0\n"
+        "0.0 1.0 1.0\n"
+        "1.0 1.0 1.0\n";
+
+    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
+}
+
+OIIO_ADD_TEST(FileFormatResolveCube, Read1D3D)
+{
+    const std::string SAMPLE =
+        "LUT_1D_SIZE 6\n"
+        "LUT_1D_INPUT_RANGE 0.0 1.0\n"
+        "LUT_3D_SIZE 3\n"
+        "LUT_3D_INPUT_RANGE 0.0 1.0\n"
+        
+        "1.0 1.0 1.0\n"
+        "0.8 0.8 0.8\n"
+        "0.6 0.6 0.6\n"
+        "0.4 0.4 0.4\n"
+        "0.2 0.2 0.2\n"
+        "0.0 0.0 0.0\n"
+        "1.0 1.0 1.0\n"
+        "0.5 1.0 1.0\n"
+        "0.0 1.0 1.0\n"
+        "1.0 0.5 1.0\n"
+        "0.5 0.5 1.0\n"
+        "0.0 0.5 1.0\n"
+        "1.0 0.0 1.0\n"
+        "0.5 0.0 1.0\n"
+        "0.0 0.0 1.0\n"
+        "1.0 1.0 0.5\n"
+        "0.5 1.0 0.5\n"
+        "0.0 1.0 0.5\n"
+        "1.0 0.5 0.5\n"
+        "0.5 0.5 0.5\n"
+        "0.0 0.5 0.5\n"
+        "1.0 0.0 0.5\n"
+        "0.5 0.0 0.5\n"
+        "0.0 0.0 0.5\n"
+        "1.0 1.0 0.0\n"
+        "0.5 1.0 0.0\n"
+        "0.0 1.0 0.0\n"
+        "1.0 0.5 0.0\n"
+        "0.5 0.5 0.0\n"
+        "0.0 0.5 0.0\n"
+        "1.0 0.0 0.0\n"
+        "0.5 0.0 0.0\n"
+        "0.0 0.0 0.0\n";
+
+    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
+}
+
 OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
 {
-    {
-        // Validate stream can be read with no error.
-        // Then stream will be altered to introduce errors.
-        const std::string SAMPLE_ERROR =
-            "LUT_3D_SIZE 2\n"
-            "LUT_3D_INPUT_RANGE 0.0 1.0\n"
-
-            "0.0 0.0 0.0\n"
-            "1.0 0.0 0.0\n"
-            "0.0 1.0 0.0\n"
-            "1.0 1.0 0.0\n"
-            "0.0 0.0 1.0\n"
-            "1.0 0.0 1.0\n"
-            "0.0 1.0 1.0\n"
-            "1.0 1.0 1.0\n";
-
-        OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_ERROR));
-    }
-    {
-        // Validate stream can be read with no error.
-        // Then stream will be altered to introduce errors.
-        const std::string SAMPLE_ERROR =
-            "LUT_1D_SIZE 6\n"
-            "LUT_1D_INPUT_RANGE 0.0 1.0\n"
-            "LUT_3D_SIZE 3\n"
-            "LUT_3D_INPUT_RANGE 0.0 1.0\n"
-            
-            "1.0 1.0 1.0\n"
-            "0.8 0.8 0.8\n"
-            "0.6 0.6 0.6\n"
-            "0.4 0.4 0.4\n"
-            "0.2 0.2 0.2\n"
-            "0.0 0.0 0.0\n"
-            "1.0 1.0 1.0\n"
-            "0.5 1.0 1.0\n"
-            "0.0 1.0 1.0\n"
-            "1.0 0.5 1.0\n"
-            "0.5 0.5 1.0\n"
-            "0.0 0.5 1.0\n"
-            "1.0 0.0 1.0\n"
-            "0.5 0.0 1.0\n"
-            "0.0 0.0 1.0\n"
-            "1.0 1.0 0.5\n"
-            "0.5 1.0 0.5\n"
-            "0.0 1.0 0.5\n"
-            "1.0 0.5 0.5\n"
-            "0.5 0.5 0.5\n"
-            "0.0 0.5 0.5\n"
-            "1.0 0.0 0.5\n"
-            "0.5 0.0 0.5\n"
-            "0.0 0.0 0.5\n"
-            "1.0 1.0 0.0\n"
-            "0.5 1.0 0.0\n"
-            "0.0 1.0 0.0\n"
-            "1.0 0.5 0.0\n"
-            "0.5 0.5 0.0\n"
-            "0.0 0.5 0.0\n"
-            "1.0 0.0 0.0\n"
-            "0.5 0.0 0.0\n"
-            "0.0 0.0 0.0\n";
-
-        OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_ERROR));
-    }
     {
         // Wrong LUT_3D_SIZE tag
         const std::string SAMPLE_ERROR =
@@ -1087,14 +1099,13 @@ OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
     }
 }
 
-OIIO_ADD_TEST(FileFormatResolveCube, no_shaper)
+OIIO_ADD_TEST(FileFormatResolveCube, Bake1D)
 {
-    // check baker output
     OCIO::ConfigRcPtr config = OCIO::Config::Create();
     {
         OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
-        cs->setName("lnf");
-        cs->setFamily("lnf");
+        cs->setName("input");
+        cs->setFamily("input");
         config->addColorSpace(cs);
         config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
     }
@@ -1106,28 +1117,163 @@ OIIO_ADD_TEST(FileFormatResolveCube, no_shaper)
     }
     
     std::ostringstream bout;
-    bout << "# Alexa conversion LUT, logc2video. Full in/full out." << "\n";
-    bout << "# created by alexalutconv (2.11)"                      << "\n";
+    bout << "# "                                                    << "\n";
+    bout << ""                                                      << "\n";
+    bout << "LUT_1D_SIZE 2"                                         << "\n";
+    bout << "LUT_1D_INPUT_RANGE 0.0 1.0"                            << "\n";
+    bout << "0.000000 0.000000 0.000000"                            << "\n";
+    bout << "1.000000 1.000000 1.000000"                            << "\n";
+    
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setFormat("resolve_cube");
+    baker->setInputSpace("input");
+    baker->setTargetSpace("target");
+    baker->setCubeSize(2);
+    std::ostringstream output;
+    baker->bake(output);
+    
+    //
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(output.str(), osvec);
+    std::vector<std::string> resvec;
+    OCIO::pystring::splitlines(bout.str(), resvec);
+    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    for(unsigned int i = 0; i < resvec.size(); ++i)
+    {
+        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+    }
+}
+
+OIIO_ADD_TEST(FileFormatResolveCube, Bake3D)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("input");
+        cs->setFamily("input");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+        
+        // Set saturation to cause channel crosstalk, making a 3D LUT
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        transform1->setSat(0.5f);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        
+        config->addColorSpace(cs);
+    }
+    
+    std::ostringstream bout;
+    bout << "# OpenColorIO Test Line 1"                             << "\n";
+    bout << "# OpenColorIO Test Line 2"                             << "\n";
     bout << ""                                                      << "\n";
     bout << "LUT_3D_SIZE 2"                                         << "\n";
+    bout << "LUT_3D_INPUT_RANGE 0.0 1.0"                            << "\n";
     bout << "0.000000 0.000000 0.000000"                            << "\n";
-    bout << "1.000000 0.000000 0.000000"                            << "\n";
-    bout << "0.000000 1.000000 0.000000"                            << "\n";
-    bout << "1.000000 1.000000 0.000000"                            << "\n";
-    bout << "0.000000 0.000000 1.000000"                            << "\n";
-    bout << "1.000000 0.000000 1.000000"                            << "\n";
-    bout << "0.000000 1.000000 1.000000"                            << "\n";
+    bout << "0.606300 0.106300 0.106300"                            << "\n";
+    bout << "0.357600 0.857600 0.357600"                            << "\n";
+    bout << "0.963900 0.963900 0.463900"                            << "\n";
+    bout << "0.036100 0.036100 0.536100"                            << "\n";
+    bout << "0.642400 0.142400 0.642400"                            << "\n";
+    bout << "0.393700 0.893700 0.893700"                            << "\n";
     bout << "1.000000 1.000000 1.000000"                            << "\n";
     
     OCIO::BakerRcPtr baker = OCIO::Baker::Create();
     baker->setConfig(config);
     std::ostringstream metadata;
-    metadata << "Alexa conversion LUT, logc2video. Full in/full out." << "\n";
-    metadata << "created by alexalutconv (2.11)" << "\n";
+    metadata << "OpenColorIO Test Line 1\n";
+    metadata << "OpenColorIO Test Line 2\n";
     baker->setMetadata(metadata.str().c_str());
     baker->setFormat("resolve_cube");
-    baker->setInputSpace("lnf");
+    baker->setInputSpace("input");
     baker->setTargetSpace("target");
+    baker->setCubeSize(2);
+    std::ostringstream output;
+    baker->bake(output);
+    
+    //
+    std::vector<std::string> osvec;
+    OCIO::pystring::splitlines(output.str(), osvec);
+    std::vector<std::string> resvec;
+    OCIO::pystring::splitlines(bout.str(), resvec);
+    OIIO_CHECK_EQUAL(osvec.size(), resvec.size());
+    for(unsigned int i = 0; i < resvec.size(); ++i)
+    {
+        OIIO_CHECK_EQUAL(osvec[i], resvec[i]);
+    }
+}
+
+OIIO_ADD_TEST(FileFormatResolveCube, Bake1D3D)
+{
+    OCIO::ConfigRcPtr config = OCIO::Config::Create();
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("input");
+        cs->setFamily("input");
+        config->addColorSpace(cs);
+        config->setRole(OCIO::ROLE_REFERENCE, cs->getName());
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("shaper");
+        cs->setFamily("shaper");
+        OCIO::ExponentTransformRcPtr transform1 = OCIO::ExponentTransform::Create();
+        float test[4] = {2.2f, 2.2f, 2.2f, 1.0f};
+        transform1->setValue(test);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_TO_REFERENCE);
+        config->addColorSpace(cs);
+    }
+    {
+        OCIO::ColorSpaceRcPtr cs = OCIO::ColorSpace::Create();
+        cs->setName("target");
+        cs->setFamily("target");
+        
+        // Set saturation to cause channel crosstalk, making a 3D LUT
+        OCIO::CDLTransformRcPtr transform1 = OCIO::CDLTransform::Create();
+        transform1->setSat(0.5f);
+        cs->setTransform(transform1, OCIO::COLORSPACE_DIR_FROM_REFERENCE);
+        
+        config->addColorSpace(cs);
+    }
+    
+    std::ostringstream bout;
+    bout << "# "                                                    << "\n";
+    bout << ""                                                      << "\n";
+    bout << "LUT_1D_SIZE 10"                                        << "\n";
+    bout << "LUT_1D_INPUT_RANGE 0.000000 1.000000"                  << "\n";
+    bout << "LUT_3D_SIZE 2"                                         << "\n";
+    bout << "LUT_3D_INPUT_RANGE 0.0 1.0"                            << "\n";
+    bout << "0.000000 0.000000 0.000000"                            << "\n";
+    bout << "0.368344 0.368344 0.368344"                            << "\n";
+    bout << "0.504760 0.504760 0.504760"                            << "\n";
+    bout << "0.606913 0.606913 0.606913"                            << "\n";
+    bout << "0.691699 0.691699 0.691699"                            << "\n";
+    bout << "0.765539 0.765539 0.765539"                            << "\n";
+    bout << "0.831684 0.831684 0.831684"                            << "\n";
+    bout << "0.892049 0.892049 0.892049"                            << "\n";
+    bout << "0.947870 0.947870 0.947870"                            << "\n";
+    bout << "1.000000 1.000000 1.000000"                            << "\n";
+    bout << "0.000000 0.000000 0.000000"                            << "\n";
+    bout << "0.606300 0.106300 0.106300"                            << "\n";
+    bout << "0.357600 0.857600 0.357600"                            << "\n";
+    bout << "0.963900 0.963900 0.463900"                            << "\n";
+    bout << "0.036100 0.036100 0.536100"                            << "\n";
+    bout << "0.642400 0.142400 0.642400"                            << "\n";
+    bout << "0.393700 0.893700 0.893700"                            << "\n";
+    bout << "1.000000 1.000000 1.000000"                            << "\n";
+    
+    OCIO::BakerRcPtr baker = OCIO::Baker::Create();
+    baker->setConfig(config);
+    baker->setFormat("resolve_cube");
+    baker->setInputSpace("input");
+    baker->setShaperSpace("shaper");
+    baker->setTargetSpace("target");
+    baker->setShaperSize(10);
     baker->setCubeSize(2);
     std::ostringstream output;
     baker->bake(output);
