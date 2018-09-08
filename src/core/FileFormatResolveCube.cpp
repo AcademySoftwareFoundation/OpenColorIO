@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Lut1DOp.h"
 #include "Lut3DOp.h"
 #include "ParseUtils.h"
+#include "MathUtils.h"
 #include "Logging.h"
 #include "pystring/pystring.h"
 
@@ -532,7 +533,9 @@ OCIO_NAMESPACE_ENTER
                                     std::ostream & ostream) const
         {
             
-            static const int DEFAULT_CUBE_SIZE = 33;
+            const int DEFAULT_1D_SIZE = 4096;
+            const int DEFAULT_SHAPER_SIZE = 4096;
+            const int DEFAULT_3D_SIZE = 64;
             
             if(formatName != "resolve_cube")
             {
@@ -542,34 +545,226 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
+            //
+            // Initialize config and data
+            //
+            
             ConstConfigRcPtr config = baker.getConfig();
             
+            int onedSize = baker.getCubeSize();
+            if(onedSize==-1) onedSize = DEFAULT_1D_SIZE;
+            if(onedSize<2)
+            {
+                std::ostringstream os;
+                os << "1D LUT size must be higher than 2 (was " << onedSize << ")";
+                throw Exception(os.str().c_str());
+            }
+            
             int cubeSize = baker.getCubeSize();
-            if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
+            if(cubeSize==-1) cubeSize = DEFAULT_3D_SIZE;
             cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
             
-            std::vector<float> cubeData;
-            cubeData.resize(cubeSize*cubeSize*cubeSize*3);
-            GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
-            PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+            int shaperSize = baker.getShaperSize();
+            if(shaperSize<0) shaperSize = DEFAULT_SHAPER_SIZE;
+            if(shaperSize<2)
+            {
+                std::ostringstream os;
+                os << "A shaper space ('" << baker.getShaperSpace() << "') has";
+                os << " been specified, so the shaper size must be 2 or larger";
+                throw Exception(os.str().c_str());
+            }
             
-            // Apply our conversion from the input space to the output space.
-            ConstProcessorRcPtr inputToTarget;
-            std::string looks = baker.getLooks();
-            if(!looks.empty())
+            // Get spaces from baker
+            const std::string shaperSpace = baker.getShaperSpace();
+            const std::string inputSpace = baker.getInputSpace();
+            const std::string targetSpace = baker.getTargetSpace();
+            const std::string looks = baker.getLooks();
+            
+            //
+            // Determine required LUT type
+            //
+            
+            const int CUBE_1D = 1; // 1D LUT version number
+            const int CUBE_3D = 2; // 3D LUT version number
+            const int CUBE_1D_3D = 3; // 3D LUT with 1D prelut
+            
+            ConstProcessorRcPtr inputToTargetProc;
+            if (!looks.empty())
             {
                 LookTransformRcPtr transform = LookTransform::Create();
                 transform->setLooks(looks.c_str());
-                transform->setSrc(baker.getInputSpace());
-                transform->setDst(baker.getTargetSpace());
-                inputToTarget = config->getProcessor(transform, TRANSFORM_DIR_FORWARD);
+                transform->setSrc(inputSpace.c_str());
+                transform->setDst(targetSpace.c_str());
+                inputToTargetProc = config->getProcessor(transform,
+                    TRANSFORM_DIR_FORWARD);
             }
             else
             {
-                inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
+                inputToTargetProc = config->getProcessor(
+                    inputSpace.c_str(),
+                    targetSpace.c_str());
             }
-            inputToTarget->apply(cubeImg);
             
+            int required_lut = -1;
+            
+            if(inputToTargetProc->hasChannelCrosstalk())
+            {
+                if(shaperSpace.empty())
+                {
+                    // Has crosstalk, but no shaper, so need 3D LUT
+                    required_lut = CUBE_3D;
+                }
+                else
+                {
+                    // Crosstalk with shaper-space
+                    required_lut = CUBE_1D_3D;
+                }
+            }
+            else
+            {
+                // No crosstalk
+                required_lut = CUBE_1D;
+            }
+
+            if(required_lut == -1)
+            {
+                // Unnecessary paranoia
+                throw Exception(
+                    "Internal logic error, LUT type was not determined");
+            }
+            
+            //
+            // Generate Shaper
+            //
+            
+            std::vector<float> shaperData;
+            
+            float fromInStart = 0;
+            float fromInEnd = 1;
+            
+            if(required_lut == CUBE_1D_3D)
+            {
+                // TODO: Later we only grab the green channel for the prelut,
+                // should ensure the prelut is monochromatic somehow?
+                
+                ConstProcessorRcPtr inputToShaperProc = config->getProcessor(
+                    inputSpace.c_str(),
+                    shaperSpace.c_str());
+                
+                if(inputToShaperProc->hasChannelCrosstalk())
+                {
+                    // TODO: Automatically turn shaper into
+                    // non-crosstalked version?
+                    std::ostringstream os;
+                    os << "The specified shaperSpace, '" << baker.getShaperSpace();
+                    os << "' has channel crosstalk, which is not appropriate for";
+                    os << " shapers. Please select an alternate shaper space or";
+                    os << " omit this option.";
+                    throw Exception(os.str().c_str());
+                }
+                
+                // Calculate min/max value
+                {
+                    // Get input value of 1.0 in shaper space, as this
+                    // is the higest value that is transformed by the
+                    // cube (e.g for a generic lin-to-log transform,
+                    // what the log value 1.0 is in linear).
+                    ConstProcessorRcPtr shaperToInputProc = config->getProcessor(
+                        shaperSpace.c_str(),
+                        inputSpace.c_str());
+
+                    float minval[3] = {0.0f, 0.0f, 0.0f};
+                    float maxval[3] = {1.0f, 1.0f, 1.0f};
+
+                    shaperToInputProc->applyRGB(minval);
+                    shaperToInputProc->applyRGB(maxval);
+                    
+                    // Grab green channel, as this is the one used later
+                    fromInStart = minval[1];
+                    fromInEnd = maxval[1];
+                }
+
+                // Generate the identity shaper values, then apply the transform.
+                // Shaper is linearly sampled from fromInStart to fromInEnd
+                shaperData.resize(shaperSize*3);
+                
+                for (int i = 0; i < shaperSize; ++i)
+                {
+                    const float x = (float)(double(i) / double(shaperSize - 1));
+                    float cur_value = lerpf(fromInStart, fromInEnd, x);
+
+                    shaperData[3*i+0] = cur_value;
+                    shaperData[3*i+1] = cur_value;
+                    shaperData[3*i+2] = cur_value;
+                }
+                
+                PackedImageDesc shaperImg(&shaperData[0], shaperSize, 1, 3);
+                inputToShaperProc->apply(shaperImg);
+            }
+            
+            //
+            // Generate 3DLUT
+            //
+            
+            std::vector<float> cubeData;
+            if(required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
+            {
+                cubeData.resize(cubeSize*cubeSize*cubeSize*3);
+                GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
+                PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
+                
+                ConstProcessorRcPtr cubeProc;
+                if(required_lut == CUBE_1D_3D)
+                {
+                    // Shaper goes from input-to-shaper, so cube goes from shaper-to-target
+                    if (!looks.empty())
+                    {
+                        LookTransformRcPtr transform = LookTransform::Create();
+                        transform->setLooks(looks.c_str());
+                        transform->setSrc(shaperSpace.c_str());
+                        transform->setDst(targetSpace.c_str());
+                        cubeProc = config->getProcessor(transform,
+                            TRANSFORM_DIR_FORWARD);
+                    }
+                    else
+                    {
+                        cubeProc = config->getProcessor(shaperSpace.c_str(),
+                                                        targetSpace.c_str());
+                    }
+                }
+                else
+                {
+                    // No shaper, so cube goes from input-to-target
+                    cubeProc = inputToTargetProc;
+                }
+
+                
+                cubeProc->apply(cubeImg);
+            }
+            
+            //
+            // Generate 1DLUT
+            //
+            
+            std::vector<float> onedData;
+            if(required_lut == CUBE_1D)
+            {
+                onedData.resize(onedSize * 3);
+                GenerateIdentityLut1D(&onedData[0], onedSize, 3);
+                PackedImageDesc onedImg(&onedData[0], onedSize, 1, 3);
+                
+                inputToTargetProc->apply(onedImg);
+            }
+            
+            //
+            // Write LUT
+            //
+            
+            // Set to a fixed 6 decimal precision
+            ostream.setf(std::ios::fixed, std::ios::floatfield);
+            ostream.precision(6);
+            
+            // Comments
             if(baker.getMetadata() != NULL)
             {
                 std::string metadata = baker.getMetadata();
@@ -584,20 +779,53 @@ OCIO_NAMESPACE_ENTER
                     ostream << "\n";
                 }
             }
-            ostream << "LUT_3D_SIZE " << cubeSize << "\n";
-            if(cubeSize < 2)
+            
+            // Header
+            if(required_lut == CUBE_1D)
             {
-                throw Exception("Internal cube size exception");
+                ostream << "LUT_1D_SIZE " << onedSize << "\n";
+                ostream << "LUT_1D_INPUT_RANGE 0.0 1.0\n";
+            }
+            else if(required_lut == CUBE_1D_3D)
+            {
+                ostream << "LUT_1D_SIZE " << shaperSize << "\n";
+                ostream << "LUT_1D_INPUT_RANGE " << fromInStart << " " << fromInEnd << "\n";
+            }
+            if(required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
+            {
+                ostream << "LUT_3D_SIZE " << cubeSize << "\n";
+                ostream << "LUT_3D_INPUT_RANGE 0.0 1.0\n";
             }
             
-            // Set to a fixed 6 decimal precision
-            ostream.setf(std::ios::fixed, std::ios::floatfield);
-            ostream.precision(6);
-            for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+            // Write 1D data
+            if(required_lut == CUBE_1D)
             {
-                ostream << cubeData[3*i+0] << " "
-                        << cubeData[3*i+1] << " "
-                        << cubeData[3*i+2] << "\n";
+                for(int i=0; i<onedSize; ++i)
+                {
+                    ostream << onedData[3*i+0] << " "
+                            << onedData[3*i+1] << " "
+                            << onedData[3*i+2] << "\n";
+                }
+            }
+            else if(required_lut == CUBE_1D_3D)
+            {
+                for(int i=0; i<shaperSize; ++i)
+                {
+                    ostream << shaperData[3*i+0] << " "
+                            << shaperData[3*i+1] << " "
+                            << shaperData[3*i+2] << "\n";
+                }
+            }
+            
+            // Write 3D data
+            if(required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
+            {
+                for(int i=0; i<cubeSize*cubeSize*cubeSize; ++i)
+                {
+                    ostream << cubeData[3*i+0] << " "
+                            << cubeData[3*i+1] << " "
+                            << cubeData[3*i+2] << "\n";
+                }
             }
         }
         
