@@ -17,15 +17,15 @@ configure_file(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorABI.h.in
     ${CMAKE_BINARY_DIR}/export/OpenColorABI.h @ONLY)
 list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorABI.h)
 
-# Process all warnings as errors
-
-if(WIN32)
-    # On debug mode there are other kinds of warning...
-    if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} /WX")
+if(OCIO_WARNING_AS_ERROR)
+    if(WIN32)
+        # On debug mode there are other kinds of warning...
+        if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+            set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} /WX")
+        endif()
+    else()
+        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -Werror")
     endif()
-else()
-    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -Werror")
 endif()
 
 # SHARED

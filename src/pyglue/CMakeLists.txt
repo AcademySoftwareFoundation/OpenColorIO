@@ -20,10 +20,11 @@ if(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
 endif()
 
-# Process all warnings as errors
 # Unfortunately Windows still has a warning
-if(UNIX)
+if(OCIO_WARNING_AS_ERROR)
+  if(UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+  endif()
 endif()
 
 find_package(PythonLibs)

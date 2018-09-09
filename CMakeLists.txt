@@ -13,6 +13,7 @@ endif()
 ### GLOBAL ###
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+option(OCIO_WARNING_AS_ERROR "Set build error level for CI testing" OFF)
 option(OCIO_BUILD_SHARED "Set to OFF to disable building the shared core library" ON)
 option(OCIO_BUILD_STATIC "Set to OFF to disable building the static core library" ON)
 option(OCIO_BUILD_TRUELIGHT "Set to OFF to disable truelight" ON)
