@@ -7,14 +7,14 @@ if(CMAKE_FIRST_RUN)
     message(STATUS "Python ${PYTHON_VERSION} okay (UCS: ${PYTHON_UCS}), will build the Python bindings against ${PYTHON_INCLUDE}")
     message(STATUS "Python variant path is ${PYTHON_VARIANT_PATH}")
 endif()
-    
+
 if(CMAKE_COMPILER_IS_GNUCXX)
     # Python breaks strict-aliasing rules. Disable the warning here.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-strict-aliasing -Wno-missing-field-initializers")
 endif()
 
 if(WIN32)
-    # Mute a design issue where the Exception public class inherits 
+    # Mute a design issue where the Exception public class inherits
     # from a STL Exception. STL classes are never supposed to
     # be exported among different dynamic libraries.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
@@ -75,7 +75,7 @@ if(WIN32)
 endif()
 
 if(OCIO_PYGLUE_LINK OR WIN32)
-    # Windows always need the python library, 
+    # Windows always need the python library,
     #  refer to https://docs.python.org/3/extending/windows.html#a-cookbook-approach
     message(STATUS "Linking python bindings against: ${PYTHON_LIBRARY}")
     message(STATUS "Python library dirs: ${PYTHON_LIBRARY_DIRS}")
@@ -84,9 +84,9 @@ if(OCIO_PYGLUE_LINK OR WIN32)
 endif()
 
 # PyOpenColorIO so serves dual roles:
-# - First, to provide the C API function necessary to act as a cpython module, 
+# - First, to provide the C API function necessary to act as a cpython module,
 #   (extern "C" PyMODINIT_FUNC initPyOpenColorIO(void)
-# - Second, to act as a normal shared library, providing the C++ API functions 
+# - Second, to act as a normal shared library, providing the C++ API functions
 #   to convert between C++ and python representation of the OCIO object.
 #
 # To fulfill this second role, as a shared libary, we must continue to define

@@ -204,7 +204,7 @@ else(USE_EXTERNAL_TINYXML)
     endif()
     mark_as_advanced(TINYXML_OBJECT_LIB_EMBEDDED) ## two way to build with tinyxml (objects embedded or static transitive link)
     if(TINYXML_OBJECT_LIB_EMBEDDED)
-        set(tinyxml_sources ${TINYXML_SOURCE_DIR}/tinyxml/tinystr.cpp       ${TINYXML_SOURCE_DIR}/tinyxml/tinyxml.cpp 
+        set(tinyxml_sources ${TINYXML_SOURCE_DIR}/tinyxml/tinystr.cpp       ${TINYXML_SOURCE_DIR}/tinyxml/tinyxml.cpp
                             ${TINYXML_SOURCE_DIR}/tinyxml/tinyxmlerror.cpp  ${TINYXML_SOURCE_DIR}/tinyxml/tinyxmlparser.cpp )
         set(tinyxml_headers ${TINYXML_SOURCE_DIR}/tinyxml/tinystr.h         ${TINYXML_SOURCE_DIR}/tinyxml/tinyxml.h )
         add_custom_command(                                 ## will be done at build time
@@ -217,7 +217,7 @@ else(USE_EXTERNAL_TINYXML)
         )
         include_directories(BEFORE ${TINYXML_SOURCE_DIR}/tinyxml) ## needed to build correctly
         add_library(TINYXML_LIB OBJECT ${tinyxml_sources})
-        ## embedded tinyxml objects files (no static link needed anymore) 
+        ## embedded tinyxml objects files (no static link needed anymore)
         ## => great news when build staticaly since we do not want another client project have to link also with tinyxml when he want to use this project
         ## => could be problematic if the client project use another version of tinyxml... In this case build tinyxml as shared lib with all projects could be a solution
         ## => TODO: so maybe provide a simple cmake way to build 3rdParty as shared and auto install with this project ?
@@ -247,7 +247,7 @@ else(USE_EXTERNAL_TINYXML)
     endif()
     set_target_properties(TINYXML_LIB PROPERTIES FOLDER External)
 endif(USE_EXTERNAL_TINYXML)
-    
+
 ###############################################################################
 ### YAML ###
 
@@ -315,8 +315,8 @@ else(USE_EXTERNAL_YAML) ## provide 2 ways to build this dependency
         message("Force disable YAML_CPP_OBJECT_LIB_EMBEDDED feature due to CMake Version less than 2.8.8")
     endif()
     mark_as_advanced(YAML_CPP_OBJECT_LIB_EMBEDDED)
-    if(YAML_CPP_OBJECT_LIB_EMBEDDED)        
-        ## generated at extraction level dir, with (use git bash or cygwin under windows): 
+    if(YAML_CPP_OBJECT_LIB_EMBEDDED)
+        ## generated at extraction level dir, with (use git bash or cygwin under windows):
         ## find yaml-cpp -type f \( -name "*.h" -o -name "*.cpp" \) -not \( -path "*/test/*" -o -path "*/util/*" \) > yaml-cpp-sourcesList.txt
         ## this will exclude test and util paths since we want YAML_CPP_BUILD_TOOLS:BOOL=OFF (see externalProject cmake args)
         file(STRINGS ${YAML_CPP_SRCLISTFILE} YAML_CPP_SRCLISTFILE_CONTENT)
@@ -335,9 +335,9 @@ else(USE_EXTERNAL_YAML) ## provide 2 ways to build this dependency
         add_library(YAML_CPP_LIB OBJECT ${yamlcpp_sources})
         ## embedded yaml-cpp objects files (no static link needed anymore)
         ## => great news when build statically since we do not want another client project have to link also with yaml-cpp when he want to use this project
-        ## => could be problematic if the client project use another version of yaml-cpp... In this case build yaml-cpp as shared lib with all projects could be a solution 
+        ## => could be problematic if the client project use another version of yaml-cpp... In this case build yaml-cpp as shared lib with all projects could be a solution
         ## => TODO: so maybe provide a simple cmake way to build 3rdParty as shared and auto install with this project ?
-        list(APPEND EXTERNAL_OBJECTS $<TARGET_OBJECTS:YAML_CPP_LIB>) 
+        list(APPEND EXTERNAL_OBJECTS $<TARGET_OBJECTS:YAML_CPP_LIB>)
     else()
         find_package(Git REQUIRED) ## in order to apply patch (for crossplateform compatibility)
         ExternalProject_Add(YAML_CPP_LOCAL
@@ -503,14 +503,14 @@ if(OCIO_BUILD_APPS AND (OCIO_BUILD_STATIC OR OCIO_BUILD_SHARED) )
 
     # Try to find OpenImageIO (OIIO) and OpenGL stuff
     OCIOFindOpenImageIO()
-    
+
     if(OIIO_FOUND)
         add_subdirectory(src/apps/ocioconvert)
         add_subdirectory(src/apps/ociolutimage)
     else()
         messageonce("Not building ocioconvert/ociolutimage. Requirement(s) found: OIIO:${OIIO_FOUND}")
     endif()
-    
+
     # ociodisplay, displays color-transformed images (uses OpenImageIO,
     # and OpenGL)
     if(OPENGL_FOUND AND GLUT_FOUND AND GLEW_FOUND AND OIIO_FOUND)
@@ -520,13 +520,13 @@ if(OCIO_BUILD_APPS AND (OCIO_BUILD_STATIC OR OCIO_BUILD_SHARED) )
         ## on windows, if you use STATIC version, do not forget to use : GEW_BUILD=GLEW_STATIC preprocessor definition
         messageonce("Not building ociodisplay. Requirement(s) found, OpenGL:${OPENGL_FOUND}, GLUT:${GLUT_FOUND}, GLEW:${GLEW_FOUND}, OIIO:${OIIO_FOUND}")
     endif()
-    
+
     # ociocheck: verifies an OCIO config
     add_subdirectory(src/apps/ociocheck)
-    
+
     # ociobakelut writes out luts
     add_subdirectory(src/apps/ociobakelut)
-    
+
 else()
     message(STATUS "Disable build of apps. See cmake options : OCIO_BUILD_APPS and OCIO_BUILD_SHARED/OCIO_BUILD_STATIC (required)")
 endif()
@@ -649,12 +649,12 @@ install(EXPORT OpenColorIO DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/OpenColorIO
 file(WRITE "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake"
     "
     get_filename_component(OpenColorIO_DIR \"\${CMAKE_CURRENT_LIST_FILE}\" PATH)
-    
+
     ## include
     set(OpenColorIO_INCLUDE_DIR     \"\${OpenColorIO_DIR}/include\")
     set(OpenColorIO_INCLUDE_DIRS    \"\${OpenColorIO_INCLUDE_DIR}\")
     message(STATUS OpenColorIO_INCLUDE_DIRS=\${OpenColorIO_INCLUDE_DIRS})
-    
+
     ## targets libraries + associated definitions
     if(NOT TARGET OpenColorIO)
         include(\"\${OpenColorIO_DIR}/${CMAKE_INSTALL_LIBDIR}/cmake/OpenColorIO/OpenColorIO.cmake\") ## thanks to imported target
@@ -675,7 +675,7 @@ file(WRITE "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake"
     endif()
     set(OpenColorIO_LIBRARIES \${OpenColorIO_LIBRARY})
     message(STATUS OpenColorIO_LIBRARIES=\${OpenColorIO_LIBRARIES})
-    
+
     ## display available preprocessor definition to use
     if(OCIO_COMPILE_DEFINITIONS)
         message(STATUS \"OCIO_COMPILE_DEFINITIONS=\")
@@ -683,7 +683,7 @@ file(WRITE "${CMAKE_BINARY_DIR}/OpenColorIOConfig.cmake"
             message(STATUS \"   \${OCIO_DEF}\")
         endforeach()
     endif()
-    
+
     ## found
     if(OpenColorIO_INCLUDE_DIRS AND OpenColorIO_LIBRARIES)
         set(OpenColorIO_FOUND ON)
