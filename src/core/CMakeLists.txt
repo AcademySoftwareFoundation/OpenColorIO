@@ -17,15 +17,15 @@ configure_file(${CMAKE_SOURCE_DIR}/export/OpenColorIO/OpenColorABI.h.in
     ${CMAKE_BINARY_DIR}/export/OpenColorABI.h @ONLY)
 list(APPEND core_export_headers ${CMAKE_BINARY_DIR}/export/OpenColorABI.h)
 
-# Process all warnings as errors
-
-if(WIN32)
-    # On debug mode there are other kinds of warning...
-    if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} /WX")
+if(OCIO_WARNING_AS_ERROR)
+    if(WIN32)
+        # On debug mode there are other kinds of warning...
+        if("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+            set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} /WX")
+        endif()
+    else()
+        set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -Werror")
     endif()
-else()
-    set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} -Werror")
 endif()
 
 # SHARED
@@ -50,7 +50,7 @@ if(OCIO_BUILD_SHARED)
     endif()
 
     if(WIN32)
-        # Mute a design issue where the Exception public class inherits 
+        # Mute a design issue where the Exception public class inherits
         # from a STL Exception. STL classes are never supposed to
         # be exported among different dynamic libraries.
         set(EXTERNAL_COMPILE_FLAGS "${EXTERNAL_COMPILE_FLAGS} /wd4275")
@@ -60,13 +60,13 @@ if(OCIO_BUILD_SHARED)
         OUTPUT_NAME OpenColorIO
         COMPILE_FLAGS   "${EXTERNAL_COMPILE_FLAGS}"
         LINK_FLAGS      "${EXTERNAL_LINK_FLAGS}")
-    
+
     message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
     set_target_properties(OpenColorIO PROPERTIES
         VERSION ${OCIO_VERSION}
         SOVERSION ${SOVERSION})
-    
-    install(TARGETS OpenColorIO EXPORT OpenColorIO 
+
+    install(TARGETS OpenColorIO EXPORT OpenColorIO
         ARCHIVE DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX}
         LIBRARY DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib${LIB_SUFFIX}
         RUNTIME DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/bin
@@ -82,19 +82,19 @@ if(OCIO_BUILD_STATIC)
     if(EXTERNAL_LIBRARIES)
         target_link_libraries(OpenColorIO_STATIC ${EXTERNAL_LIBRARIES})
     endif()
-    
+
 	set_target_properties(OpenColorIO_STATIC PROPERTIES COMPILE_DEFINITIONS "OpenColorIO_STATIC")
     set_target_properties(OpenColorIO_STATIC PROPERTIES
         OUTPUT_NAME                 OpenColorIO
         ARCHIVE_OUTPUT_DIRECTORY    "${CMAKE_CURRENT_BINARY_DIR}/static"
         COMPILE_FLAGS               "${EXTERNAL_COMPILE_FLAGS}"
         LINK_FLAGS                  "${EXTERNAL_LINK_FLAGS}")
-    
+
     message(STATUS "Setting OCIO SOVERSION to: ${SOVERSION}")
     set_target_properties(OpenColorIO_STATIC PROPERTIES
         VERSION ${OCIO_VERSION}
         SOVERSION ${SOVERSION})
-    
+
     install(TARGETS OpenColorIO_STATIC EXPORT OpenColorIO ARCHIVE DESTINATION ${CMAKE_INSTALL_EXEC_PREFIX}/lib/static)
 endif()
 
