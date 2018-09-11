@@ -224,6 +224,7 @@ OCIO_NAMESPACE_ENTER
         registerFileFormat(CreateFileFormatSpiMtx());
         registerFileFormat(CreateFileFormatTruelight());
         registerFileFormat(CreateFileFormatVF());
+        registerFileFormat(CreateFileFormatResolveCube());
     }
     
     FormatRegistry::~FormatRegistry()
@@ -870,9 +871,9 @@ bool FormatExtensionFoundByName(const std::string & extension, const std::string
 OIIO_ADD_TEST(FileTransform, AllFormats)
 {
     OCIO::FormatRegistry & formatRegistry = OCIO::FormatRegistry::GetInstance();
-    OIIO_CHECK_EQUAL(17, formatRegistry.getNumRawFormats());
-    OIIO_CHECK_EQUAL(20, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
-    OIIO_CHECK_EQUAL(7, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
+    OIIO_CHECK_EQUAL(18, formatRegistry.getNumRawFormats());
+    OIIO_CHECK_EQUAL(21, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_READ));
+    OIIO_CHECK_EQUAL(8, formatRegistry.getNumFormats(OCIO::FORMAT_CAPABILITY_WRITE));
 
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("3dl", "flame"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cc", "ColorCorrection"));
@@ -881,6 +882,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("csp", "cinespace"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cub", "truelight"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cube", "iridas_cube"));
+    OIIO_CHECK_ASSERT(FormatNameFoundByExtension("cube", "resolve_cube"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("itx", "iridas_itx"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("icc", "International Color Consortium profile"));
     OIIO_CHECK_ASSERT(FormatNameFoundByExtension("look", "iridas_look"));
@@ -905,6 +907,7 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("csp", "cinespace"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cub", "truelight"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cube", "iridas_cube"));
+    OIIO_CHECK_ASSERT(FormatExtensionFoundByName("cube", "resolve_cube"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("itx", "iridas_itx"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("icc", "International Color Consortium profile"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("icm", "International Color Consortium profile"));
