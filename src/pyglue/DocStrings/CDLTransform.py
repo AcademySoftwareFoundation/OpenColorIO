@@ -9,7 +9,7 @@ class CDLTransform:
     def CreateFromFile(self, src, cccid):
         pass
     
-    def equals(self):
+    def equals(self, cdl):
         pass
         
     def getXML(self):

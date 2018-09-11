@@ -224,7 +224,7 @@ OCIO_NAMESPACE_ENTER
             if(sat >= 0.0f) ptr->setSat(sat);
             if(direction) ptr->setDirection(TransformDirectionFromString(direction));
             if(id) ptr->setID(id);
-            if(id) ptr->setDescription(description);
+            if(description) ptr->setDescription(description);
             return ret;
             OCIO_PYTRY_EXIT(-1)
         }

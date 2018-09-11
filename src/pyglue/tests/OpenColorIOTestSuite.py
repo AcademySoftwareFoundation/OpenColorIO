@@ -37,7 +37,7 @@ def suite():
     return suite
 
 if __name__ == '__main__':
-    runner = unittest.TextTestRunner()
+    runner = unittest.TextTestRunner(verbosity=2)
     test_suite = suite()
     result = runner.run(test_suite)
     if result.wasSuccessful() == False:

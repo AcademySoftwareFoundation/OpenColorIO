@@ -61,10 +61,30 @@ struct AddTest { AddTest(OIIOTest* test); };
 /// prints an error message indicating the module and line where the
 /// error occurred, but does NOT abort.  This is helpful for unit tests
 /// where we do not want one failure.
+/// 
+/// OIIO_REQUIRE_* macros checks if the conditions is met, and if not,
+/// prints an error message indicating the module and line where the
+/// error occurred, but does abort.  This is helpful for unit tests
+/// where we have to fail as following code would be not testable.
+/// 
 #define OIIO_CHECK_ASSERT(x)                                            \
     ((x) ? ((void)0)                                                    \
          : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
                        << "FAILED: " << #x << "\n"),                    \
+            (void)++unit_test_failures))
+
+#define OIIO_REQUIRE_ASSERT(x)                                          \
+    if(!(x)) {                                                          \
+        std::stringstream ss;                                           \
+        ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
+           << "FAILED: " << #x << "\n";                                 \
+        ++unit_test_failures;                                           \
+        throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
+
+#define OIIO_CHECK_ASSERT_MESSAGE(x, M)                                 \
+    ((x) ? ((void)0)                                                    \
+         : ((std::cout << __FILE__ << ":" << __LINE__ << ":\n"          \
+                       << "FAILED: " << M << "\n"),                     \
             (void)++unit_test_failures))
 
 #define OIIO_CHECK_EQUAL(x,y)                                           \
@@ -73,6 +93,15 @@ struct AddTest { AddTest(OIIOTest* test); };
              << "FAILED: " << #x << " == " << #y << "\n"                \
              << "\tvalues were '" << (x) << "' and '" << (y) << "'\n"), \
             (void)++unit_test_failures))
+
+#define OIIO_REQUIRE_EQUAL(x,y)                                         \
+    if((x)!=(y)) {                                                      \
+        std::stringstream ss;                                           \
+        ss <<  __FILE__ << ":" << __LINE__ << ":\n"                     \
+           << "FAILED: " << #x << " == " << #y << "\n"                  \
+           << "\tvalues were '" << (x) << "' and '" << (y) << "'\n";    \
+        ++unit_test_failures;                                           \
+        throw OCIO_NAMESPACE::Exception(ss.str().c_str()); }
 
 #define OIIO_CHECK_NE(x,y)                                              \
     (((x) != (y)) ? ((void)0)                                           \
@@ -123,9 +152,9 @@ struct AddTest { AddTest(OIIOTest* test); };
         << "FAILED: " << #E << " is expected to be thrown\n";           \
         ++unit_test_failures; }
 
-// Check that an exception E is thrown and that what() contains W
-// When a function can throw different exceptions this can be used
-// to verify that the right one is thrown.
+/// Check that an exception E is thrown and that what() contains W
+/// When a function can throw different exceptions this can be used
+/// to verify that the right one is thrown.
 #define OIIO_CHECK_THROW_WHAT(S, E, W)                                  \
     try { S; throw "throwanything"; } catch (E const& ex) {             \
         std::string what(ex.what());                                    \
@@ -143,7 +172,7 @@ struct AddTest { AddTest(OIIOTest* test); };
 #define OIIO_CHECK_NO_THROW(S)                                          \
     try {                                                               \
         S;                                                              \
-    } catch (OCIO_NAMESPACE::Exception & ex ) {                         \
+    } catch (std::exception & ex ) {                                    \
         std::cout << __FILE__ << ":" << __LINE__ << ":\n"               \
             << "FAILED: exception thrown from " << #S << ": \""         \
             << ex.what() << "\"\n";                                     \
@@ -166,13 +195,26 @@ struct AddTest { AddTest(OIIOTest* test); };
         static std::vector<OIIOTest*> oiio_unit_tests;                  \
         return oiio_unit_tests; }                                       \
     AddTest::AddTest(OIIOTest* test){GetUnitTests().push_back(test);};  \
-    OIIO_TEST_SETUP(); \
+    OIIO_TEST_SETUP();                                                  \
     int main(int, char **) { std::cerr << "\n" << #app <<"\n\n";        \
-        for(size_t i = 0; i < GetUnitTests().size(); ++i) {             \
-            int _tmp = unit_test_failures; GetUnitTests()[i]->function(); \
-            std::cerr << "Test [" << GetUnitTests()[i]->group << "] [" << GetUnitTests()[i]->name << "] - "; \
-            std::cerr << (_tmp == unit_test_failures ? "PASSED" : "FAILED") << "\n"; } \
-        std::cerr << "\n" << unit_test_failures << " tests failed\n\n";   \
+        const size_t numTests = GetUnitTests().size();                  \
+        for(size_t i = 0; i < numTests; ++i) {                          \
+            int _tmp = unit_test_failures;                              \
+            try {                                                       \
+                GetUnitTests()[i]->function();                          \
+            } catch(std::exception & ex) {                              \
+                std::cout << "FAILED: " << ex.what() << std::endl;      \
+                ++unit_test_failures;                                   \
+            } catch(...) { ++unit_test_failures; }                      \
+            std::string name(GetUnitTests()[i]->group);                 \
+            name += " / " + GetUnitTests()[i]->name;                    \
+            std::cerr << "[" << std::right << std::setw(3)              \
+                      << (i+1) << "/" << numTests << "] ["              \
+                      << std::left << std::setw(50)                     \
+                      << name << "] - "                                 \
+                      << (_tmp == unit_test_failures ? "PASSED" : "FAILED") \
+                      << std::endl; }                                   \
+        std::cerr << "\n" << unit_test_failures << " tests failed\n\n"; \
         return unit_test_failures; }
 
 #endif /* OPENCOLORIO_UNITTEST_H */
