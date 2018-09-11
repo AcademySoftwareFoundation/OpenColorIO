@@ -75,14 +75,17 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            config_      = rhs.config_;
-            formatName_  = rhs.formatName_;
-            inputSpace_  = rhs.inputSpace_;
-            shaperSpace_ = rhs.shaperSpace_;
-            looks_        = rhs.looks_;
-            targetSpace_ = rhs.targetSpace_;
-            shapersize_  = rhs.shapersize_;
-            cubesize_    = rhs.cubesize_;
+            if (this != &rhs)
+            {
+                config_ = rhs.config_;
+                formatName_ = rhs.formatName_;
+                inputSpace_ = rhs.inputSpace_;
+                shaperSpace_ = rhs.shaperSpace_;
+                looks_ = rhs.looks_;
+                targetSpace_ = rhs.targetSpace_;
+                shapersize_ = rhs.shapersize_;
+                cubesize_ = rhs.cubesize_;
+            }
             return *this;
         }
     };

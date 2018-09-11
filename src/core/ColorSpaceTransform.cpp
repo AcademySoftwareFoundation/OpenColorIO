@@ -61,9 +61,12 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            src_ = rhs.src_;
-            dst_ = rhs.dst_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                src_ = rhs.src_;
+                dst_ = rhs.dst_;
+            }
             return *this;
         }
     };
@@ -92,7 +95,10 @@ OCIO_NAMESPACE_ENTER
     
     ColorSpaceTransform& ColorSpaceTransform::operator= (const ColorSpaceTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     

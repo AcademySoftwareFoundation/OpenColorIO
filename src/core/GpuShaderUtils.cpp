@@ -229,7 +229,10 @@ OCIO_NAMESPACE_ENTER
 
     GpuShaderText::GpuShaderLine& GpuShaderText::GpuShaderLine::operator=(const GpuShaderText::GpuShaderLine& rhs)
     {
-        m_text = rhs.m_text;
+        if (this != &rhs)
+        {
+            m_text = rhs.m_text;
+        }
         return *this;
     }
 
