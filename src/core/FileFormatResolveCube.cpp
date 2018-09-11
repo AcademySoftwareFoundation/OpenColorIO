@@ -781,10 +781,14 @@ OCIO_NAMESPACE_ENTER
             }
             
             // Header
+            // Note about LUT_ND_INPUT_RANGE tags :
+            // These tags are optional and will default to the 0..1 range,
+            // not wrting them explicitly allow for wider compatibility
+            // with parser based on other cube specification (eg. Iridas_Itx)
             if(required_lut == CUBE_1D)
             {
                 ostream << "LUT_1D_SIZE " << onedSize << "\n";
-                ostream << "LUT_1D_INPUT_RANGE 0.0 1.0\n";
+                //ostream << "LUT_1D_INPUT_RANGE 0.0 1.0\n";
             }
             else if(required_lut == CUBE_1D_3D)
             {
@@ -794,7 +798,7 @@ OCIO_NAMESPACE_ENTER
             if(required_lut == CUBE_3D || required_lut == CUBE_1D_3D)
             {
                 ostream << "LUT_3D_SIZE " << cubeSize << "\n";
-                ostream << "LUT_3D_INPUT_RANGE 0.0 1.0\n";
+                //ostream << "LUT_3D_INPUT_RANGE 0.0 1.0\n";
             }
             
             // Write 1D data
@@ -1008,6 +1012,49 @@ OIIO_ADD_TEST(FileFormatResolveCube, Read1D3D)
     OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE));
 }
 
+OIIO_ADD_TEST(FileFormatResolveCube, ReadDefaultRange)
+{
+    const std::string SAMPLE_1D =
+        "LUT_1D_SIZE 2\n"
+
+        "0.0 0.0 0.0\n"
+        "1.0 0.0 0.0\n";
+
+    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_1D));
+    
+    const std::string SAMPLE_3D =
+        "LUT_3D_SIZE 2\n"
+
+        "0.0 0.0 0.0\n"
+        "1.0 0.0 0.0\n"
+        "0.0 1.0 0.0\n"
+        "1.0 1.0 0.0\n"
+        "0.0 0.0 1.0\n"
+        "1.0 0.0 1.0\n"
+        "0.0 1.0 1.0\n"
+        "1.0 1.0 1.0\n";
+
+    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_3D));
+    
+    const std::string SAMPLE_1D3D =
+        "LUT_1D_SIZE 2\n"
+        "LUT_3D_SIZE 2\n"
+        
+        "0.0 0.0 0.0\n"
+        "1.0 1.0 1.0\n"
+        "0.0 0.0 0.0\n"
+        "1.0 0.0 0.0\n"
+        "0.0 1.0 0.0\n"
+        "1.0 1.0 0.0\n"
+        "0.0 0.0 1.0\n"
+        "1.0 0.0 1.0\n"
+        "0.0 1.0 1.0\n"
+        "1.0 1.0 1.0\n";
+
+    OIIO_CHECK_NO_THROW(ReadResolveCube(SAMPLE_1D3D));
+}
+
+
 OIIO_ADD_TEST(FileFormatResolveCube, ReadFailure)
 {
     {
@@ -1120,7 +1167,6 @@ OIIO_ADD_TEST(FileFormatResolveCube, Bake1D)
     bout << "# "                                                    << "\n";
     bout << ""                                                      << "\n";
     bout << "LUT_1D_SIZE 2"                                         << "\n";
-    bout << "LUT_1D_INPUT_RANGE 0.0 1.0"                            << "\n";
     bout << "0.000000 0.000000 0.000000"                            << "\n";
     bout << "1.000000 1.000000 1.000000"                            << "\n";
     
@@ -1173,7 +1219,6 @@ OIIO_ADD_TEST(FileFormatResolveCube, Bake3D)
     bout << "# OpenColorIO Test Line 2"                             << "\n";
     bout << ""                                                      << "\n";
     bout << "LUT_3D_SIZE 2"                                         << "\n";
-    bout << "LUT_3D_INPUT_RANGE 0.0 1.0"                            << "\n";
     bout << "0.000000 0.000000 0.000000"                            << "\n";
     bout << "0.606300 0.106300 0.106300"                            << "\n";
     bout << "0.357600 0.857600 0.357600"                            << "\n";
@@ -1247,7 +1292,6 @@ OIIO_ADD_TEST(FileFormatResolveCube, Bake1D3D)
     bout << "LUT_1D_SIZE 10"                                        << "\n";
     bout << "LUT_1D_INPUT_RANGE 0.000000 1.000000"                  << "\n";
     bout << "LUT_3D_SIZE 2"                                         << "\n";
-    bout << "LUT_3D_INPUT_RANGE 0.0 1.0"                            << "\n";
     bout << "0.000000 0.000000 0.000000"                            << "\n";
     bout << "0.368344 0.368344 0.368344"                            << "\n";
     bout << "0.504760 0.504760 0.504760"                            << "\n";
