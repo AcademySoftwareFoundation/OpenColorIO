@@ -317,12 +317,12 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
     {
         // Validate stream can be read with no error.
         // Then stream will be altered to introduce errors.
-        const std::string SAMPLE_ERROR =
+        const std::string SAMPLE_NO_ERROR =
             "1.0 0.0 0.0 0.0\n"
             "0.0 1.0 0.0 0.0\n"
             "0.0 0.0 1.0 0.0\n";
 
-        OIIO_CHECK_NO_THROW(ReadSpiMtx(SAMPLE_ERROR));
+        OIIO_CHECK_NO_THROW(ReadSpiMtx(SAMPLE_NO_ERROR));
     }
     {
         // Wrong number of elements
@@ -331,7 +331,9 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
             "0.0 1.0 0.0\n"
             "0.0 0.0 1.0\n";
 
-        OIIO_CHECK_THROW(ReadSpiMtx(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "File must contain 12 float entries");
     }
     {
         // Some elements can' t be read as float
@@ -340,7 +342,9 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadFailure)
             "0.0 error 0.0 0.0\n"
             "0.0 0.0 1.0 0.0\n";
 
-        OIIO_CHECK_THROW(ReadSpiMtx(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpiMtx(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "File must contain all float entries");
     }
 }
 

@@ -40,17 +40,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 #include <sstream>
 
-/*
-// Discreet's Flame Lut Format
-// Use a loose interpretation of the format to allow other 3d luts that look
+// Discreet's Flame LUT Format
+// Use a loose interpretation of the format to allow other 3D LUTs that look
 // similar, but dont strictly adhere to the real definition.
 
 // If line starts with text or # skip it
-// If line is a bunch of ints (more than 3) , it's the 1d shaper lut
+// If line is a bunch of ints (more than 3) , it's the 1D shaper LUT
 
 // All remaining lines of size 3 int are data
 // cube size is determined from num entries
-// The bit depth of the shaper lut and the 3d lut need not be the same.
+// The bit depth of the shaper LUT and the 3D LUT need not be the same.
+/*
 
 Example 1, FLAME
 # Comment here
@@ -158,12 +158,12 @@ OCIO_NAMESPACE_ENTER
         
         
         
-        // We use the maximum value found in the lut to infer
+        // We use the maximum value found in the LUT to infer
         // the bit depth.  While this is fugly. We dont believe
         // there is a better way, looking at the file, to
         // determine this.
         //
-        // Note:  We allow for 2x overshoot in the luts.
+        // Note:  We allow for 2x overshoot in the LUTs.
         // As we dont allow for odd bit depths, this isnt a big deal.
         // So sizes from 1/2 max - 2x max are valid 
         //
@@ -229,7 +229,7 @@ OCIO_NAMESPACE_ENTER
             
             int lut3dmax = 0;
 
-            // Parse the file 3d lut data to an int array
+            // Parse the file 3D LUT data to an int array
             {
                 const int MAX_LINE_SIZE = 4096;
                 char lineBuffer[MAX_LINE_SIZE];
@@ -277,7 +277,7 @@ OCIO_NAMESPACE_ENTER
                     }
                     
                     // If we've found more than 3 ints, and dont have
-                    // a shaper lut yet, we've got it!
+                    // a shaper LUT yet, we've got it!
                     if(tmpData.size()>3)
                     {
                         if (rawshaper.empty())
@@ -289,22 +289,22 @@ OCIO_NAMESPACE_ENTER
                         }
                         else
                         {
-                            // format error, more than 1 shaper lut
+                            // format error, more than 1 shaper LUT
                             std::ostringstream os;
                             os << "Error parsing .3dl file. ";
-                            os << "Appears to contain more than 1 shaper lut.";
+                            os << "Appears to contain more than 1 shaper LUT.";
                             os << "Line (" << lineNumber << "): '";
                             os << lineBuffer << "'.";
                             throw Exception(os.str().c_str());
                         }
                     }
-                    // If we've found 3 ints, add it to our 3dlut.
+                    // If we've found 3 ints, add it to our 3D LUT.
                     else if(tmpData.size() == 3)
                     {
                         raw3d.push_back(tmpData[0]);
                         raw3d.push_back(tmpData[1]);
                         raw3d.push_back(tmpData[2]);
-                        // Find the maximum shaper lut value to infer bit-depth
+                        // Find the maximum shaper LUT value to infer bit-depth
                         lut3dmax = std::max(lut3dmax, tmpData[0]);
                         lut3dmax = std::max(lut3dmax, tmpData[1]);
                         lut3dmax = std::max(lut3dmax, tmpData[2]);
@@ -326,7 +326,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Error parsing .3dl file. ";
-                os << "Does not appear to contain a valid shaper lut or a 3D lut.";
+                os << "Does not appear to contain a valid shaper LUT or a 3D LUT.";
                 throw Exception(os.str().c_str());
             }
             
@@ -336,17 +336,17 @@ OCIO_NAMESPACE_ENTER
             // it's possible that other formats will accidentally be able to be read
             // mistakenly as .3dl files.  We can exclude a huge segement of these mis-reads
             // by screening for files that use float represenations.  I.e., if the MAX
-            // value of the lut is a small number (such as <128.0) it's likely not an integer
+            // value of the LUT is a small number (such as <128.0) it's likely not an integer
             // format, and thus not a likely 3DL file.
             
             const int FORMAT3DL_CODEVALUE_LOWEST_PLAUSIBLE_MAXINT = 128;
             
-            // Interpret the shaper lut
+            // Interpret the shaper LUT
             if(!rawshaper.empty())
             {
                 cachedFile->has1D = true;
                 
-                // Find the maximum shaper lut value to infer bit-depth
+                // Find the maximum shaper LUT value to infer bit-depth
                 int shapermax = 0;
                 for(unsigned int i=0; i<rawshaper.size(); ++i)
                 {
@@ -357,8 +357,8 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Error parsing .3dl file. ";
-                    os << "The maximum shaper lut value, " << shapermax;
-                    os << ", is unreasonably low. This lut is probably not a .3dl ";
+                    os << "The maximum shaper LUT value, " << shapermax;
+                    os << ", is unreasonably low. This LUT is probably not a .3dl ";
                     os << "file, but instead a related format that shares a similar ";
                     os << "structure.";
                     
@@ -370,7 +370,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Error parsing .3dl file. ";
-                    os << "The maximum shaper lut value, " << shapermax;
+                    os << "The maximum shaper LUT value, " << shapermax;
                     os << ", does not correspond to any likely bit depth. ";
                     os << "Please confirm source file is valid.";
                     throw Exception(os.str().c_str());
@@ -390,7 +390,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 // The error threshold will be 2 code values. This will allow
-                // shaper luts which use different int conversions (round vs. floor)
+                // shaper LUTs which use different int conversions (round vs. floor)
                 // to both be optimized.
                 // Required: Abs Tolerance
                 
@@ -411,8 +411,8 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Error parsing .3dl file.";
-                    os << "The maximum 3d lut value, " << lut3dmax;
-                    os << ", is unreasonably low. This lut is probably not a .3dl ";
+                    os << "The maximum 3D LUT value, " << lut3dmax;
+                    os << ", is unreasonably low. This LUT is probably not a .3dl ";
                     os << "file, but instead a related format that shares a similar ";
                     os << "structure.";
                     
@@ -424,7 +424,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     std::ostringstream os;
                     os << "Error parsing .3dl file.";
-                    os << "The maximum 3d lut value, " << lut3dmax;
+                    os << "The maximum 3D LUT value, " << lut3dmax;
                     os << ", does not correspond to any likely bit depth. ";
                     os << "Please confirm source file is valid.";
                     throw Exception(os.str().c_str());
@@ -433,7 +433,7 @@ OCIO_NAMESPACE_ENTER
                 int bitdepthmax = GetMaxValueFromIntegerBitDepth(lut3dbitdepth);
                 float scale = 1.0f / static_cast<float>(bitdepthmax);
                 
-                // Interpret the int array as a 3dlut
+                // Interpret the int array as a 3D LUT
                 int lutEdgeLen = Get3DLutEdgeLenFromNumPixels((int)raw3d.size()/3);
                 
                 // Reformat 3D data
@@ -449,7 +449,7 @@ OCIO_NAMESPACE_ENTER
                     {
                         for (int rIndex = 0; rIndex<lutEdgeLen; ++rIndex)
                         {
-                            // In file, lut is blue fastest
+                            // In file, LUT is blue fastest
                             int i = GetLut3DIndex_BlueFast(rIndex, gIndex, bIndex,
                                 lutEdgeLen, lutEdgeLen, lutEdgeLen);
 
@@ -837,7 +837,7 @@ OIIO_ADD_TEST(FileFormat3DL, TestLoad)
     OIIO_CHECK_EQUAL(17, lutFile->lut3D->size[1]);
     OIIO_CHECK_EQUAL(17, lutFile->lut3D->size[2]);
     OIIO_CHECK_EQUAL(17*17*17*3, lutFile->lut3D->lut.size());
-    // lut is R fast, file is B fast ([3..5] is [867..869] in file)
+    // LUT is R fast, file is B fast ([3..5] is [867..869] in file)
     OIIO_CHECK_EQUAL(0.00854700897f, lutFile->lut3D->lut[3]);
     OIIO_CHECK_EQUAL(0.00244200253f, lutFile->lut3D->lut[4]);
     OIIO_CHECK_EQUAL(0.00708180759f, lutFile->lut3D->lut[5]);
@@ -848,8 +848,9 @@ OIIO_ADD_TEST(FileFormat3DL, TestLoad)
     const std::string discree3DtLutFail(ocioTestFilesDir
         + std::string("/error_truncated_file.3dl"));
 
-    OIIO_CHECK_THROW(LoadLutFile(discree3DtLutFail),
-        OCIO::Exception);
+    OIIO_CHECK_THROW_WHAT(LoadLutFile(discree3DtLutFail),
+                          OCIO::Exception,
+                          "Cannot infer 3D LUT size");
 
 }
 

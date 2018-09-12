@@ -251,11 +251,11 @@ OCIO_NAMESPACE_ENTER
         //   at least set
         // - check limits of shaper and target, throw exception if we can't
         //   write that much data in x format
-        // - check that the shaper is 1D transform only, throw excpetion
+        // - check that the shaper is 1D transform only, throw exception
         // - check the file format supports shapers, 1D and 3D
         // - add some checks to make sure we are monotonic
         // - deal with the case of writing out non cube formats (1D only)
-        // - do a compare between ocio transform and output lut transform
+        // - do a compare between OCIO transform and output LUT transform
         //   throw error if we going beyond tolerance
         //
     }

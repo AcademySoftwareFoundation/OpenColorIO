@@ -335,7 +335,7 @@ namespace
         
         for (unsigned int i = 0; i < searchpaths.size(); ++i)
         {
-            // Make an attempt to find the lut in one of the search paths
+            // Make an attempt to find the LUT in one of the search paths
             std::string fullpath = pystring::os::path::join(searchpaths[i], filename);
             std::string expandedfullpath = EnvExpand(fullpath, getImpl()->envMap_);
             if(FileExists(expandedfullpath))

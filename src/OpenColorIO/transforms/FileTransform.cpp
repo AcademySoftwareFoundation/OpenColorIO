@@ -769,7 +769,7 @@ static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 OIIO_ADD_TEST(FileTransform, LoadFileOK)
 {
-    // Discreet 1D Lut
+    // Discreet 1D LUT
     const std::string discreetLut(ocioTestFilesDir
         + std::string("/logtolin_8to8.lut"));
     OIIO_CHECK_NO_THROW(LoadTransformFile(discreetLut));
