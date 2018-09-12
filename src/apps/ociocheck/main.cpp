@@ -96,7 +96,7 @@ int main(int argc, const char **argv)
         }
         else
         {
-            std::cout << "ERROR: You must specify an input ocio configuration ";
+            std::cout << "ERROR: You must specify an input .ocio configuration ";
             std::cout << "(either with --iconfig or $OCIO).\n";
             ap.usage ();
             std::cout << DESC_STRING;

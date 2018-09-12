@@ -63,7 +63,7 @@ OCIO_NAMESPACE_ENTER
         // Gamma
         float mGammaRGB[4];
 
-        // Lut 1d
+        // 1D LUT
         Lut1DRcPtr lut;
     };
 
@@ -611,7 +611,7 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
         OIIO_CHECK_EQUAL(0.0f, tmp[2]);
         OIIO_CHECK_EQUAL(1.0f, tmp[3]);
 
-        // Knowing the lut has 1024 elements
+        // Knowing the LUT has 1024 elements
         // and is inverted, verify values for a given index
         // are converted to index * step
         const float error = 1e-6f;
@@ -625,7 +625,8 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
         OIIO_CHECK_CLOSE(200.0f / 1023.0f, tmp[1], error);
         OIIO_CHECK_CLOSE(200.0f / 1023.0f, tmp[2], error);
 
-        // Get cached file to access lut size
+
+        // Get cached file to access LUT size
         OIIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
         OIIO_CHECK_ASSERT((bool)iccFile);
@@ -637,6 +638,10 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
         OIIO_CHECK_EQUAL(1024, iccFile->lut->luts[0].size());
         OIIO_CHECK_EQUAL(1024, iccFile->lut->luts[1].size());
         OIIO_CHECK_EQUAL(1024, iccFile->lut->luts[2].size());
+
+        OIIO_CHECK_EQUAL(0.0317235067f, iccFile->lut->luts[0][200]);
+        OIIO_CHECK_EQUAL(0.0317235067f, iccFile->lut->luts[1][200]);
+        OIIO_CHECK_EQUAL(0.0317235067f, iccFile->lut->luts[2][200]);
     }
 
     {

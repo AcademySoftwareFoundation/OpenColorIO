@@ -199,7 +199,7 @@ OCIO_NAMESPACE_ENTER
                                     &gpuLut3DOpEndIndex,
                                     ops);
         
-        // Write the entire shader using only shader text (3d lut is unused)
+        // Write the entire shader using only shader text (3D LUT is unused)
         if(gpuLut3DOpStartIndex == -1 && gpuLut3DOpEndIndex == -1)
         {
             for(unsigned int i=0; i<ops.size(); ++i)
@@ -207,7 +207,7 @@ OCIO_NAMESPACE_ENTER
                 gpuPreOps.push_back( ops[i]->clone() );
             }
         }
-        // Analytical -> 3dlut -> analytical
+        // Analytical -> 3D LUT -> analytical
         else
         {
             // Handle analytical shader block before start index.
@@ -463,7 +463,7 @@ void CreateGenericScaleOp(OpRcPtrVec & ops)
 
 void CreateGenericLutOp(OpRcPtrVec & ops)
 {
-    // Make a lut that squares the input
+    // Make a LUT that squares the input
     Lut1DRcPtr lut = Lut1D::Create();
     {
         lut->from_min[0] = 0.0f;

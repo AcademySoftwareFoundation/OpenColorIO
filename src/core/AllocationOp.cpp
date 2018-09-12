@@ -26,12 +26,12 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <OpenColorIO/OpenColorIO.h>
 #include "AllocationOp.h"
 #include "LogOps.h"
 #include "MatrixOps.h"
 #include "Op.h"
 
-#include <OpenColorIO/OpenColorIO.h>
 #include <string.h>
 
 OCIO_NAMESPACE_ENTER

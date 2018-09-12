@@ -97,7 +97,7 @@ OCIO_NAMESPACE_ENTER
     {
         if (A->outputBitDepth != B[0]->getInputBitDepth())
         {
-            throw Exception("A bit depth mismatch forbids the composition of luts");
+            throw Exception("A bit depth mismatch forbids the composition of LUTs");
         }
 
         OpRcPtrVec ops;
@@ -173,7 +173,7 @@ OCIO_NAMESPACE_ENTER
     {
         if (A->outputBitDepth != B->getInputBitDepth())
         {
-            throw Exception("A bit depth mismatch forbids the composition of luts");
+            throw Exception("A bit depth mismatch forbids the composition of LUTs");
         }
 
         OpRcPtrVec ops;
