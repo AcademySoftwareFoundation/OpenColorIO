@@ -104,7 +104,7 @@ void Generate(int cubesize, int maxwidth,
         else
         {
             std::ostringstream os;
-            os << "You must specify an .ocio configuration ";
+            os << "You must specify an OCIO configuration ";
             os << "(either with --config or $OCIO).";
             throw Exception(os.str().c_str());
         }

@@ -275,7 +275,7 @@ int main (int argc, const char* argv[])
         }
         else
         {
-            std::cerr << "ERROR: You must specify an input .ocio configuration ";
+            std::cerr << "ERROR: You must specify an input OCIO configuration ";
             std::cerr << "(either with --iconfig or $OCIO).\n\n";
             ap.usage ();
             return 1;
