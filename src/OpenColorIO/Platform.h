@@ -124,43 +124,43 @@ OCIO_NAMESPACE_ENTER
 //       In the meantime, hardcode to x86
 #define OCIO_LITTLE_ENDIAN 1  // This is correct on x86
 
-    /*
-     * Mutex classes
-     */
+/*
+ * Mutex classes
+ */
 
 #ifdef WINDOWS
 
-    class _Mutex {
-    public:
+class _Mutex {
+public:
 	_Mutex()       { _mutex = CreateMutex(NULL, FALSE, NULL); }
 	~_Mutex()      { CloseHandle(_mutex); }
 	void lock()   { WaitForSingleObject(_mutex, INFINITE); }
 	void unlock() { ReleaseMutex(_mutex); }
     private:
 	HANDLE _mutex;
-    };
+};
 
 #else
-    // assume linux/unix/posix
+// assume linux/unix/posix
 
-    // Note: Not recursive mutex implementation
+// Note: Not recursive mutex implementation
 
-    class _Mutex {
-     public:
+class _Mutex {
+public:
 	_Mutex()      { pthread_mutex_init(&_mutex, 0); }
 	~_Mutex()     { pthread_mutex_destroy(&_mutex); }
 	void lock()   { pthread_mutex_lock(&_mutex); }
 	void unlock() { pthread_mutex_unlock(&_mutex); }
     private:
 	pthread_mutex_t _mutex;
-    };
+};
 
 #endif // WINDOWS
 
-  namespace Platform
-  {
-    void getenv (const char* name, std::string& value);
-  }
+namespace Platform
+{
+void getenv (const char* name, std::string& value);
+}
 
 }
 OCIO_NAMESPACE_EXIT
