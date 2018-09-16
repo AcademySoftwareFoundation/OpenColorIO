@@ -253,7 +253,7 @@ endif(USE_EXTERNAL_TINYXML)
 
 if(USE_EXTERNAL_YAML)
     # Set minimum yaml version for non-patched sources.
-    set(YAML_VERSION_MIN "0.3.0")
+    set(YAML_VERSION_MIN "0.6.2")
     include(FindPkgConfig)
     pkg_check_modules(PC_YAML_CPP REQUIRED QUIET yaml-cpp)
     find_path(YAML_CPP_INCLUDE_DIR yaml-cpp/yaml.h
@@ -274,31 +274,13 @@ if(USE_EXTERNAL_YAML)
     mark_as_advanced(YAML_CPP_INCLUDE_DIR YAML_CPP_LIBRARY YAML-CPP_FOUND)
 
     if(YAML_CPP_FOUND)
-        if(YAML_CPP_VERSION VERSION_GREATER "0.5.0")
-            # Need to also get the boost headers here, as yaml-cpp 0.5.0+ requires them.
-            # Don't bother doing this step if we are already including the boost headers for shared_ptr
-            if(NOT OCIO_USE_BOOST_PTR)
-                set(Boost_ADDITIONAL_VERSIONS "1.49" "1.45" "1.44" "1.43" "1.43.0" "1.42"
-                                              "1.42.0" "1.41" "1.41.0" "1.40"
-                                              "1.40.0" "1.39" "1.39.0" "1.38"
-                                              "1.38.0" "1.37" "1.37.0" "1.34.1"
-                                              "1_34_1")
-                set(Boost_USE_MULTITHREADED ON)
-                find_package(Boost 1.34)
-                if(NOT Boost_FOUND)
-                    message(FATAL_ERROR "Error: Detected system yaml-cpp version ${YAML_CPP_VERSION} is greater than 0.5.0, and therefore requires boost, but a boost installation could not be found.")
-                endif()
-
-                set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
-            endif()
-        endif()
         set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
     else(YAML_CPP_FOUND)
         message(FATAL_ERROR "ERROR: System yaml-cpp library was not found. Make sure the library is installed and the pkg-config file exists.")
     endif(YAML_CPP_FOUND)
 else(USE_EXTERNAL_YAML) ## provide 2 ways to build this dependency
-    set(YAML_CPP_VERSION 0.3.0)
-    set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE -DOCIO_INLINES_HIDDEN:BOOL=${OCIO_INLINES_HIDDEN})
+    set(YAML_CPP_VERSION 0.6.2)
+    set(YAML_CPP_CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/ext/dist -DYAML_CPP_BUILD_TOOLS=OFF -DYAML_CPP_BUILD_TESTS=OFF )
     if(CMAKE_TOOLCHAIN_FILE)
         set(YAML_CPP_CMAKE_ARGS ${YAML_CPP_CMAKE_ARGS} -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE})
     endif()
@@ -307,68 +289,34 @@ else(USE_EXTERNAL_YAML) ## provide 2 ways to build this dependency
     set(YAML_CPP_SOURCE_DIR     "${CMAKE_BINARY_DIR}/ext")
     set(YAML_CPP_PATCHFILE      "${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}.patch")
     set(YAML_CPP_SRCLISTFILE    "${CMAKE_SOURCE_DIR}/ext/yaml-cpp-${YAML_CPP_VERSION}-sourcesList.txt") ## see cmd line for this generated file bellow
+
     ## Create our YAML_CPP_LIB target
-    if(CMAKE_VERSION VERSION_GREATER "2.8.7")
-        option(YAML_CPP_OBJECT_LIB_EMBEDDED ${OCIO_BUILD_STATIC} "directly embedded yaml-cpp 3rdParty lib into our resulting static lib, no link needed anymore")
+    find_package(Git REQUIRED)
+    ExternalProject_Add(YAML_CPP_LOCAL
+        URL             ${YAML_CPP_ZIPFILE}
+        SOURCE_DIR      ${YAML_CPP_SOURCE_DIR}/yaml-cpp
+        PATCH_COMMAND   ${GIT_EXECUTABLE} init && ${GIT_EXECUTABLE} apply --ignore-whitespace ${YAML_CPP_PATCHFILE}
+        BINARY_DIR      ext/build/yaml-cpp
+        INSTALL_DIR     ext/dist
+        CMAKE_ARGS      ${YAML_CPP_CMAKE_ARGS}
+    )
+    set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
+    set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
+    add_library(YAML_CPP_LIB STATIC IMPORTED)
+    if(WIN32)
+        set(YAML_CPP_STATIC_DEBUG_LIBRARIES     ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmdd.lib)
+        set(YAML_CPP_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmd.lib)
+        set_property(TARGET YAML_CPP_LIB PROPERTY IMPORTED_LOCATION_DEBUG   ${YAML_CPP_STATIC_DEBUG_LIBRARIES})
+        set_property(TARGET YAML_CPP_LIB PROPERTY IMPORTED_LOCATION_RELEASE ${YAML_CPP_STATIC_OPTIMIZED_LIBRARIES})
     else()
-        set(YAML_CPP_OBJECT_LIB_EMBEDDED OFF CACHE BOOL "directly embedded yaml-cpp 3rdParty object lib into our resulting static lib, no link needed anymore" FORCE)
-        message("Force disable YAML_CPP_OBJECT_LIB_EMBEDDED feature due to CMake Version less than 2.8.8")
+        set(YAML_CPP_STATIC_GENERAL_LIBRARIES           ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
+        set_property(TARGET YAML_CPP_LIB PROPERTY IMPORTED_LOCATION ${YAML_CPP_STATIC_GENERAL_LIBRARIES})
     endif()
-    mark_as_advanced(YAML_CPP_OBJECT_LIB_EMBEDDED)
-    if(YAML_CPP_OBJECT_LIB_EMBEDDED)
-        ## generated at extraction level dir, with (use git bash or cygwin under windows):
-        ## find yaml-cpp -type f \( -name "*.h" -o -name "*.cpp" \) -not \( -path "*/test/*" -o -path "*/util/*" \) > yaml-cpp-sourcesList.txt
-        ## this will exclude test and util paths since we want YAML_CPP_BUILD_TOOLS:BOOL=OFF (see externalProject cmake args)
-        file(STRINGS ${YAML_CPP_SRCLISTFILE} YAML_CPP_SRCLISTFILE_CONTENT)
-        foreach(yamlsrc ${YAML_CPP_SRCLISTFILE_CONTENT})
-            list(APPEND yamlcpp_sources ${YAML_CPP_SOURCE_DIR}/${yamlsrc})  ## get absolute filepath
-        endforeach()
-        include_directories(BEFORE ${YAML_CPP_SOURCE_DIR}/yaml-cpp/include) ## needed to build correctly
-        add_custom_command(             ## will be done at build time
-            OUTPUT ${yamlcpp_sources}   ## expected output files
-            COMMAND ${CMAKE_COMMAND} -E tar xzf ${YAML_CPP_ZIPFILE}
-            DEPENDS ${YAML_CPP_ZIPFILE}
-            WORKING_DIRECTORY ${YAML_CPP_SOURCE_DIR}
-            COMMENT "Unpacking ${YAML_CPP_ZIPFILE} to ${YAML_CPP_SOURCE_DIR}"
-            VERBATIM
-        )
-        add_library(YAML_CPP_LIB OBJECT ${yamlcpp_sources})
-        ## embedded yaml-cpp objects files (no static link needed anymore)
-        ## => great news when build statically since we do not want another client project have to link also with yaml-cpp when he want to use this project
-        ## => could be problematic if the client project use another version of yaml-cpp... In this case build yaml-cpp as shared lib with all projects could be a solution
-        ## => TODO: so maybe provide a simple cmake way to build 3rdParty as shared and auto install with this project ?
-        list(APPEND EXTERNAL_OBJECTS $<TARGET_OBJECTS:YAML_CPP_LIB>)
-    else()
-        find_package(Git REQUIRED) ## in order to apply patch (for crossplateform compatibility)
-        ExternalProject_Add(YAML_CPP_LOCAL
-            URL             ${YAML_CPP_ZIPFILE}
-            SOURCE_DIR      ${YAML_CPP_SOURCE_DIR}/yaml-cpp
-            PATCH_COMMAND   ${GIT_EXECUTABLE} apply --ignore-whitespace ${YAML_CPP_PATCHFILE}
-            BINARY_DIR      ext/build/yaml-cpp
-            INSTALL_DIR     ext/dist
-            CMAKE_ARGS      ${YAML_CPP_CMAKE_ARGS}
-        )
-        set(YAML_CPP_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/ext/dist/include)
-        set(YAML_CPP_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/ext/dist/lib)
-        add_library(YAML_CPP_LIB STATIC IMPORTED)
-        if(WIN32)
-            set(YAML_CPP_STATIC_DEBUG_LIBRARIES     ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmdd.lib)
-            set(YAML_CPP_STATIC_OPTIMIZED_LIBRARIES ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cppmd.lib)
-            set_property(TARGET YAML_CPP_LIB PROPERTY IMPORTED_LOCATION_DEBUG   ${YAML_CPP_STATIC_DEBUG_LIBRARIES})
-            set_property(TARGET YAML_CPP_LIB PROPERTY IMPORTED_LOCATION_RELEASE ${YAML_CPP_STATIC_OPTIMIZED_LIBRARIES})
-        else()
-            set(YAML_CPP_STATIC_GENERAL_LIBRARIES           ${PROJECT_BINARY_DIR}/ext/dist/lib/libyaml-cpp.a)
-            set_property(TARGET YAML_CPP_LIB PROPERTY IMPORTED_LOCATION ${YAML_CPP_STATIC_GENERAL_LIBRARIES})
-        endif()
-        add_dependencies(YAML_CPP_LIB  YAML_CPP_LOCAL)
-        list(APPEND EXTERNAL_LIBRARIES YAML_CPP_LIB)
-    endif()
+    add_dependencies(YAML_CPP_LIB  YAML_CPP_LOCAL)
+    list(APPEND EXTERNAL_LIBRARIES YAML_CPP_LIB)
+
     set_target_properties(YAML_CPP_LIB PROPERTIES FOLDER External)
 endif(USE_EXTERNAL_YAML)
-
-if(YAML_CPP_VERSION VERSION_LESS "0.5.0")
-    set(YAML_CPP_COMPILE_FLAGS "-DOLDYAML")
-endif()
 
 ###############################################################################
 ### Externals ###
