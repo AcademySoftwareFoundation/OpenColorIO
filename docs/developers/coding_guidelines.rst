@@ -93,7 +93,7 @@ Misc. Rules
 
 * Use const whenever it makes sense to do so.
 
-* The use of Boost is not allowed, except for unit_test_framework and shared_ptr.
+* The use of Boost is not allowed
 
 * Default function arguments are not allowed.
 

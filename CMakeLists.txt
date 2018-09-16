@@ -29,10 +29,6 @@ option(OCIO_STATIC_JNIGLUE "Specify whether to statically link ocio to the java 
 option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations" ON)
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" UNIX)
 
-# Use boost's shared_ptr by default on Windows (as <VS2010 doesn't have it),
-# Use std::tr1::shared_ptr by default on other platforms
-option(OCIO_USE_BOOST_PTR "Set to ON to enable boost shared_ptr (necessary when tr1 is not available)" WIN32)
-
 option(OCIO_PYGLUE_LINK "If ON, link the Python module to the core shared library" OFF)
 option(OCIO_PYGLUE_RESPECT_ABI "If ON, the Python module install path includes Python UCS version" OFF)
 option(OCIO_PYGLUE_SONAME "If ON, soname/soversion will be set for Python module library" OFF)
@@ -101,27 +97,6 @@ messageonce("Setting Namespace to: ${OCIO_NAMESPACE}")
 if(NOT CMAKE_INSTALL_EXEC_PREFIX)
     messageonce("Exec prefix not specified, defaulting to ${CMAKE_INSTALL_PREFIX}")
     set(CMAKE_INSTALL_EXEC_PREFIX ${CMAKE_INSTALL_PREFIX})
-endif()
-
-messageonce("Use Boost Ptr: ${OCIO_USE_BOOST_PTR}")
-if(OCIO_USE_BOOST_PTR)
-    set(Boost_ADDITIONAL_VERSIONS "1.49" "1.45" "1.44" "1.43" "1.43.0" "1.42"
-                                  "1.42.0" "1.41" "1.41.0" "1.40"
-                                  "1.40.0" "1.39" "1.39.0" "1.38"
-                                  "1.38.0" "1.37" "1.37.0" "1.34.1"
-                                  "1_34_1")
-    set(Boost_USE_MULTITHREADED ON)
-    find_package(Boost 1.34)
-    if(NOT Boost_FOUND)
-        message(FATAL_ERROR "OCIO_USE_BOOST_PTR is specified, but a boost installation could not be found.")
-    else()
-        set(OCIO_USE_BOOST_PTR 1)
-    endif()
-
-    set(EXTERNAL_INCLUDE_DIRS ${EXTERNAL_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
-    # set(EXTERNAL_LIBRARIES ${EXTERNAL_LIBRARIES} ${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
-else()
-    set(OCIO_USE_BOOST_PTR 0)
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
