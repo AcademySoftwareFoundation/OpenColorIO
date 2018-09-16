@@ -30,6 +30,7 @@ build_script:
     -G "%CMAKE_PLATFORM%"
     -DCMAKE_INSTALL_PREFIX=..\_install
     -DOCIO_USE_BOOST_PTR=%USE_BOOST%
+    -DOCIO_WARNING_AS_ERROR=ON
     -DCMAKE_BUILD_TYPE=%CONFIGURATION%
     ..
   - cmake --build . --target install --config %CONFIGURATION%
