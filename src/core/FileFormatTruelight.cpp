@@ -508,7 +508,7 @@ OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
     
     float result[4*3] = { 0.05f, 0.2f, 0.3f, 0.0f,
                           0.50f, 0.5f, 0.123456f, 0.0f,
-                          0.0f, 1.5f, 0.5f, 0.0f };
+                          0.0f, 1.0f, 0.5f, 0.0f };
     
     OCIO::OpRcPtrVec ops;
     if(lut->has1D)
@@ -530,7 +530,7 @@ OIIO_ADD_TEST(FileFormatTruelight, ShaperAndLut3D)
         ops[i]->apply(data, 3);
     }
     
-    for(int i=0; i<3; ++i)
+    for(int i=0; i<4*3; ++i)
     {
         OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
     }
@@ -600,7 +600,7 @@ OIIO_ADD_TEST(FileFormatTruelight, Shaper)
         ops[i]->apply(data, 3);
     }
     
-    for(int i=0; i<3; ++i)
+    for(int i=0; i<4*3; ++i)
     {
         OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
     }
@@ -665,7 +665,7 @@ OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
     
     float result[4*3] = { 0.05f, 0.2f, 0.3f, 0.0f,
                           0.50f, 0.5f, 0.123456f, 0.0f,
-                          0.0f, 1.5f, 0.5f, 0.0f };
+                          0.0f, 1.0f, 0.5f, 0.0f };
     
     OCIO::OpRcPtrVec ops;
     if(lut->has1D)
@@ -687,7 +687,7 @@ OIIO_ADD_TEST(FileFormatTruelight, Lut3D)
         ops[i]->apply(data, 3);
     }
     
-    for(int i=0; i<3; ++i)
+    for(int i=0; i<4*3; ++i)
     {
         OIIO_CHECK_CLOSE( data[i], result[i], 1.0e-6 );
     }
