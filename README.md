@@ -4,6 +4,8 @@ OpenColorIO
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Build Status](https://travis-ci.org/imageworks/OpenColorIO.svg?branch=master)](https://travis-ci.org/imageworks/OpenColorIO)
 [![Windows Build Status](https://ci.appveyor.com/api/projects/status/fidyv9jkxeigyd2a/branch/master?svg=true)]()
+[![Code Quality: Cpp](https://img.shields.io/lgtm/grade/cpp/g/imageworks/OpenColorIO.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/imageworks/OpenColorIO/context:cpp)
+[![Total Alerts](https://img.shields.io/lgtm/alerts/g/imageworks/OpenColorIO.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/imageworks/OpenColorIO/alerts)
 
 Introduction
 ------------
