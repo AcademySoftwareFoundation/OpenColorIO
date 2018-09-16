@@ -43,22 +43,12 @@ add_library(PyOpenColorIO MODULE ${pyglue_src_files} ${CMAKE_BINARY_DIR}/src/pyg
 
 add_definitions(-DPYOCIO_NAME=PyOpenColorIO)
 
-if(OCIO_USE_BOOST_PTR)
-    include_directories(
-        ${CMAKE_SOURCE_DIR}/export/
-        ${CMAKE_BINARY_DIR}/export/
-        ${CMAKE_CURRENT_BINARY_DIR}
-        ${PYTHON_INCLUDE}
-        ${Boost_INCLUDE_DIR}
-    )
-else()
-    include_directories(
-        ${CMAKE_SOURCE_DIR}/export/
-        ${CMAKE_BINARY_DIR}/export/
-        ${CMAKE_CURRENT_BINARY_DIR}
-        ${PYTHON_INCLUDE}
-    )
-endif()
+include_directories(
+    ${CMAKE_SOURCE_DIR}/export/
+    ${CMAKE_BINARY_DIR}/export/
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${PYTHON_INCLUDE}
+)
 
 # Exclude the 'lib' prefix from the name.
 if(NOT OCIO_PYGLUE_LIB_PREFIX)

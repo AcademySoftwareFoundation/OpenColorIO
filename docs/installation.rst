@@ -137,7 +137,6 @@ for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`_
 
     set CMAKE_PATH=D:\OpenSource\cmake-3.9.3
     set PYTHON_PATH=C:\Python27
-    set BOOST_ROOT=D:\SolidAngle\boost_1_55_0
 
     set PATH=D:\Tools\cygwin64\bin;%CMAKE_PATH%\bin;%PYTHON_PATH%;%PATH%
 
@@ -201,7 +200,6 @@ for compiling on Windows as provided by `@hodoulp <https://github.com/hodoulp>`_
 
     echo *******
     echo *********************************************
-    echo boost    = %BOOST_ROOT%
     echo cmake    = %CMAKE_PATH%
     echo *******
     if not "%GITBRANCH%" == "" echo branch  = %GITBRANCH%

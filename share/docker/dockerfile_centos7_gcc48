@@ -38,14 +38,6 @@ RUN mkdir /home/download && \
     wget -O truelight-4.0.7863_64.run --post-data 'access=public&download=truelight/4_0/truelight-4.0.7863_64.run&last_page=/support/customer-login/truelight_sp/truelight_40.php' https://www.filmlight.ltd.uk/resources/download.php && \
     sh truelight-4.0.7863_64.run
 
-# Install Boost
-RUN cd /home/download && \
-    wget https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz && \
-    tar -xzf boost_1_61_0.tar.gz && \
-    cd boost_1_61_0 && \
-    sh bootstrap.sh && \
-    ./b2 install --prefix=/usr/local
-
 # Install OpenEXR
 RUN mkdir /home/git && \
     cd /home/git && \

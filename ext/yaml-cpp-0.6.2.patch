@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d2d8810..4673458 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -177,7 +177,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR
+ 	#
+ 	set(GCC_EXTRA_OPTIONS "")
+ 	#
+-	if(BUILD_SHARED_LIBS)
++	if(UNIX)
+ 		set(GCC_EXTRA_OPTIONS "${GCC_EXTRA_OPTIONS} -fPIC")
+ 	endif()
+ 	#

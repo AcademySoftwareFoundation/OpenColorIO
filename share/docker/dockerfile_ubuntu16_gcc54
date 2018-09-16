@@ -30,16 +30,6 @@ RUN cd /home/devel/download && \
     wget -q -O truelight-4.0.7863_64.run --post-data 'access=public&download=truelight/4_0/truelight-4.0.7863_64.run&last_page=/support/customer-login/truelight_sp/truelight_40.php' https://www.filmlight.ltd.uk/resources/download.php && \
     sh truelight-4.0.7863_64.run
 
-
-# Install Boost library
-RUN cd /home/devel/download && \
-    wget -q https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz && \
-    tar -xzf boost_1_61_0.tar.gz && \
-    cd boost_1_61_0 && \
-    sh bootstrap.sh && \
-    ./b2 install -j2 variant=release --with-system --with-regex --with-filesystem --with-thread --with-python --prefix=/usr/local
-
-
 # Install OpenERX & Ilmbase
 RUN cd /home/devel/git && \
     git clone https://github.com/openexr/openexr.git -b v2.2.1 && \
@@ -55,7 +45,7 @@ RUN cd /home/devel/git && \
     make install -j2
 
 
-# Install OpenImageIO 
+# Install OpenImageIO
 RUN cd /home/devel/git && \
     git clone https://github.com/OpenImageIO/oiio.git -b RB-1.7 && \
     cd /home/devel/git/oiio && \
