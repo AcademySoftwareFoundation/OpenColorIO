@@ -204,7 +204,7 @@ else(USE_EXTERNAL_TINYXML)
         ExternalProject_Add(tinyxml
             URL             ${TINYXML_ZIPFILE}
             SOURCE_DIR      ${TINYXML_SOURCE_DIR}/tinyxml
-            PATCH_COMMAND   ${GIT_EXECUTABLE} apply --ignore-whitespace ${TINYXML_PATCHFILE}
+            PATCH_COMMAND   ${GIT_EXECUTABLE} init && ${GIT_EXECUTABLE} apply --ignore-whitespace ${TINYXML_PATCHFILE}
             BINARY_DIR      ext/build/tinyxml
             INSTALL_DIR     ext/dist
             CMAKE_ARGS      ${TINYXML_CMAKE_ARGS}
