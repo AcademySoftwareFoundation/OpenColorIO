@@ -1,7 +1,8 @@
 project(OpenColorIO)
-set(OCIO_VERSION_MAJOR 1)
-set(OCIO_VERSION_MINOR 1)
+set(OCIO_VERSION_MAJOR 2)
+set(OCIO_VERSION_MINOR 0)
 set(OCIO_VERSION_PATCH 0)
+set(OCIO_VERSION_RELEASE_TYPE "dev")  # "dev" for master or "" for any official release
 
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/share/cmake)
@@ -46,7 +47,7 @@ endif()
 
 # This does not include the SOVERSION override, on purpose, so that the
 # OCIO_VERSION value will be an accurate reflection of the underlying library version.
-set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PATCH}")
+set(OCIO_VERSION "${OCIO_VERSION_MAJOR}.${OCIO_VERSION_MINOR}.${OCIO_VERSION_PATCH}${OCIO_VERSION_RELEASE_TYPE}")
 
 if(NOT SOVERSION)
     set(SOVERSION ${OCIO_VERSION_MAJOR} CACHE STRING "Set the SO version in the SO name of the output library")
