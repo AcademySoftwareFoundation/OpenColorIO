@@ -11,6 +11,10 @@ if (OIIO_FOUND)
     )
 
     add_executable(ociodisplay main.cpp)
+    
+    if(OIIO_VERSION AND NOT ${OIIO_VERSION} VERSION_LESS 1.8.5)
+        set_property(TARGET ociodisplay PROPERTY CXX_STANDARD 11)
+    endif()
 
     # set_target_properties(ociodisplay PROPERTIES INSTALL_RPATH ${OIIO_LIBRARIES} )
     set_target_properties(ociodisplay PROPERTIES COMPILE_FLAGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
