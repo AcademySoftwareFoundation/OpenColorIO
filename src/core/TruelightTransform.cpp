@@ -131,6 +131,13 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void TruelightTransform::validate() const
+    {
+        Transform::validate();
+
+        // TODO: Improve TruelightTransform::validate()
+    }
+
     void TruelightTransform::setConfigRoot(const char * configroot)
     {
         getImpl()->configroot_ = configroot;

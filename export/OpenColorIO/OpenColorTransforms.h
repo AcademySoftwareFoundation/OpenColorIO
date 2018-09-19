@@ -48,7 +48,7 @@ OCIO_NAMESPACE_ENTER
 
     //!rst:: //////////////////////////////////////////////////////////////////
     
-    //!cpp:class:: 
+    //!cpp:class:: Base class for all the transform classes
     class OCIOEXPORT Transform
     {
     public:
@@ -57,7 +57,10 @@ OCIO_NAMESPACE_ENTER
         
         virtual TransformDirection getDirection() const = 0;
         virtual void setDirection(TransformDirection dir) = 0;
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
     private:
         Transform& operator= (const Transform &);
     };
@@ -83,7 +86,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         Allocation getAllocation() const;
         //!cpp:function::
@@ -144,7 +150,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+       
         //!cpp:function::
         bool equals(const ConstCDLTransformRcPtr & other) const;
         
@@ -242,7 +251,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         const char * getSrc() const;
         //!cpp:function::
@@ -289,10 +301,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
-        
-        
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+       
         //!cpp:function:: Step 0. Specify the incoming color space
         void setInputColorSpaceName(const char * name);
         //!cpp:function::
@@ -395,7 +407,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         void setValue(const float * vec4);
         //!cpp:function::
@@ -437,7 +452,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         const char * getSrc() const;
         //!cpp:function::
@@ -499,7 +517,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         ConstTransformRcPtr getTransform(int index) const;
         
@@ -552,7 +573,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         void setBase(float val);
         //!cpp:function::
@@ -596,7 +620,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         const char * getSrc() const;
         //!cpp:function::
@@ -653,7 +680,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         bool equals(const MatrixTransform & other) const;
         
@@ -736,7 +766,10 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function::
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Will throw if data is not valid.
+        virtual void validate() const;
+
         //!cpp:function::
         void setConfigRoot(const char * configroot);
         //!cpp:function::
