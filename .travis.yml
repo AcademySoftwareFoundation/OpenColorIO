@@ -21,7 +21,7 @@ matrix:
       osx_image: xcode9.1
 
 env:
-  - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=yes -DOCIO_BUILD_DOCS=yes -DOCIO_WARNING_AS_ERROR=yes"
+  - OPTIONS="-DCMAKE_BUILD_TYPE=Release -DOCIO_BUILD_TESTS=ON -DOCIO_BUILD_GPU_TESTS=OFF -DOCIO_BUILD_DOCS=ON -DOCIO_WARNING_AS_ERROR=ON"
 
 # Install missing packages
 before_install:
@@ -47,8 +47,7 @@ script:
   - cd _build
   - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
   - cmake --build . --target install
-  - cmake --build . --target MainTests
-  - cmake --build . --target PYTests
+  - cmake --build . --target test -- CTEST_OUTPUT_ON_FAILURE=TRUE
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake --build . --target pdf; fi
 
 deploy:

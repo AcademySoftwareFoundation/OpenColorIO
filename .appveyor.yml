@@ -8,16 +8,11 @@ platform:
     - x64
    
 environment:
-  global:
-      CMAKE_PREFIX_PATH: C:/Libraries/boost
-      BOOST_ROOT: 'C:\Libraries\boost'
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
       CMAKE_PLATFORM: "Visual Studio 12 2013 Win64"
-      USE_BOOST: ON
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
-      USE_BOOST: OFF
 
 install:
   - cinstall: python
@@ -29,12 +24,13 @@ build_script:
   - cmake 
     -G "%CMAKE_PLATFORM%"
     -DCMAKE_INSTALL_PREFIX=..\_install
-    -DOCIO_USE_BOOST_PTR=%USE_BOOST%
+    -DOCIO_BUILD_TESTS=ON
+    -DOCIO_BUILD_GPU_TESTS=OFF
     -DOCIO_WARNING_AS_ERROR=ON
     -DCMAKE_BUILD_TYPE=%CONFIGURATION%
     ..
   - cmake --build . --target install --config %CONFIGURATION%
-  - cmake --build . --target MainTests --config %CONFIGURATION%
+  - cmake --build . --target test -- CTEST_OUTPUT_ON_FAILURE=TRUE
 
 matrix:
     fast_finish: true
