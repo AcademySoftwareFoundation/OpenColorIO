@@ -1,17 +1,5 @@
 include(ExternalProject)
 
-set(LIB_RT_SUFFIX "")
-if (MSVC)
-	set(LIB_RT_SUFFIX "md")
-	if(NOT ${MSVC_SHARED_RT}) # User wants to have static runtime libraries (/MT, /ML)
-		if(${MSVC_STHREADED_RT}) # User wants to have old single-threaded static runtime libraries
-			set(LIB_RT_SUFFIX "ml")
-		else()
-			set(LIB_RT_SUFFIX "mt")
-		endif()
-	endif()
-endif()
-
 ######################################################################
 # Patch
 add_custom_target(patch)
@@ -105,8 +93,7 @@ else()
 		EXCLUDE_FROM_ALL TRUE
 	)
 	set(YAMLCPP_INCLUDE_DIRS "${YAML_CPP_INSTALL_DIR}/include")
-	set(YAMLCPP_LIBNAME "libyaml-cpp${LIB_RT_SUFFIX}")
-	set(YAMLCPP_LIBRARY "${YAML_CPP_INSTALL_DIR}/lib/${YAMLCPP_LIBNAME}${CMAKE_STATIC_LIBRARY_SUFFIX}")
+	set(YAMLCPP_LIBRARY "${YAML_CPP_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
 	file(MAKE_DIRECTORY ${YAMLCPP_INCLUDE_DIRS}) # Hack to let imported target be built from ExternalProject_Add
 	add_dependencies(Yaml-cpp patch)
 	add_dependencies(yamlcpp Yaml-cpp)
