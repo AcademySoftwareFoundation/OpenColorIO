@@ -801,7 +801,7 @@ OCIO_NAMESPACE_EXIT
 #endif
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
+#include "unittest.h"
 
 OIIO_ADD_TEST(Lut3DOp, NanInfValueCheck)
 {

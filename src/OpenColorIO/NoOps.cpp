@@ -442,7 +442,7 @@ OCIO_NAMESPACE_EXIT
 OCIO_NAMESPACE_USING
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "UnitTest.h"
+#include "unittest.h"
 #include "Lut1DOp.h"
 #include "MatrixOps.h"
 

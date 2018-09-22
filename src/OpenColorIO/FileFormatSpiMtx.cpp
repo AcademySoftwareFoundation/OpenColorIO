@@ -203,7 +203,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
+#include "unittest.h"
 #include <fstream>
 
 OIIO_ADD_TEST(FileFormatSpiMtx, FormatInfo)

@@ -233,7 +233,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
+#include "unittest.h"
 
 #include "ExponentOps.h"
 #include "LogOps.h"

@@ -470,7 +470,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 
-#include "UnitTest.h"
+#include "unittest.h"
 
 OIIO_ADD_TEST(ParseUtils, BoolString)
 {

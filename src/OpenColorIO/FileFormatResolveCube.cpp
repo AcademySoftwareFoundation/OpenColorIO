@@ -908,7 +908,7 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "UnitTest.h"
+#include "unittest.h"
 #include <fstream>
 
 OCIO::LocalCachedFileRcPtr ReadResolveCube(const std::string & fileContent)

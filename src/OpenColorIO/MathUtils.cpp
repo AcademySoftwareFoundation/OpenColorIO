@@ -359,7 +359,7 @@ OCIO_NAMESPACE_EXIT
 
 OCIO_NAMESPACE_USING
 
-#include "UnitTest.h"
+#include "unittest.h"
 
 namespace
 {

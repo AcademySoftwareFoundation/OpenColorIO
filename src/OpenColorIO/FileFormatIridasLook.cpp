@@ -417,7 +417,7 @@ OCIO_NAMESPACE_EXIT
 
 #ifdef OCIO_UNIT_TEST
 
-#include "UnitTest.h"
+#include "unittest.h"
 
 OCIO_NAMESPACE_USING
 
