@@ -268,15 +268,29 @@ int main(int argc, const char* argv[]){
 				elems.erase(elems.begin());
 			}
 			std::string stripped = filepath_join(elems);
-			std::fstream target(stripped, std::ios::binary | std::ios::in | std::ios::out);
-			if (not target) {
+			std::string backup_filepath = stripped + ".orig";
+
+			// Make a backup of our original file
+			std::fstream src(stripped, std::ios::binary | std::ios::in);
+			if (src) {
+				// make a copy of the original file
+				std::fstream backup(backup_filepath, std::ios::binary | std::ios::trunc | std::ios::out);
+				if (not backup) {
+					std::cerr << backup_filepath << std::endl;
+					throw std::runtime_error("could not create temp backup");
+				}
+				backup << src.rdbuf();
+				src.close();
+				src = std::fstream(backup_filepath, std::ios::binary | std::ios::in);
+				if (not src) {
+						std::cerr << backup_filepath << std::endl;
+						throw std::runtime_error("could not read backup file");
+				}
+			}
+			else {
 				if (patch.type == Patch::DiffType::DIFF) {
-					target = std::fstream(stripped, std::ios::binary | std::ios::trunc | std::ios::in | std::ios::out);
-					if (not target) {
-						std::stringstream ss;
-						ss << "Failed to create new output file '" << stripped << "'" << std::endl;
-						throw std::runtime_error(ss.str().c_str());
-					}
+					// Non existing inputs are not an error for DIFF types. They are new files to be made
+					src = std::fstream();
 				}
 				else {
 					std::stringstream ss;
@@ -285,26 +299,24 @@ int main(int argc, const char* argv[]){
 					throw std::runtime_error(ss.str().c_str());
 				}
 			}
-			// make a copy of the original file
-			std::string backup_filepath = stripped + ".orig";
-			std::fstream backup(backup_filepath, std::ios::binary | std::ios::trunc | std::ios::in | std::ios::out);
-			if (not backup) {
-				std::cerr << backup_filepath << std::endl;
-				throw std::runtime_error("could not create temp backup");
+
+			std::fstream dst = std::fstream(stripped, std::ios::binary | std::ios::trunc | std::ios::out);
+			if (not dst) {
+				std::stringstream ss;
+				ss << "Failed to create new output file '" << stripped << "'" << std::endl;
+				throw std::runtime_error(ss.str().c_str());
 			}
-			backup << target.rdbuf();
 
-
-			target.seekg(0); target.seekp(0);
-			backup.seekg(0); backup.seekp(0);
+			src.seekg(0);
+			dst.seekp(0);
 			try {
-				apply_patch(patch, backup, target);
+				apply_patch(patch, src, dst);
 				std::cout << "Successfully patched '" << stripped << "'" << std::endl;
 			}
 			catch (std::exception& e) {
-				target.seekg(0); target.seekp(0);
-				backup.seekg(0); backup.seekp(0);
-				target << backup.rdbuf();
+				src.seekg(0);
+				dst.seekp(0);
+				dst << src.rdbuf();
 				std::remove(backup_filepath.c_str());
 				throw e;
 			}
