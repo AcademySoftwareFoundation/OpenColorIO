@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Lut1DOp.h"
+#include "ops/Lut1D/Lut1DOp.h"
 
 
 OCIO_NAMESPACE_ENTER

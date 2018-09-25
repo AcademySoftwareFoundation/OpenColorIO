@@ -15,7 +15,7 @@ environment:
       CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
 
 install:
-  - cinstall: python
+  - cinst: python2
   
 build_script:
   - echo Running cmake...
@@ -28,9 +28,12 @@ build_script:
     -DOCIO_BUILD_GPU_TESTS=OFF
     -DOCIO_WARNING_AS_ERROR=ON
     -DCMAKE_BUILD_TYPE=%CONFIGURATION%
+    -DPYTHON_LIBRARY=C:\Python27-x64\libs\python27.lib
+    -DPYTHON_INCLUDE_DIR=C:\Python27-x64\include
+    -DPYTHON_EXECUTABLE=C:\Python27-x64\python.exe
     ..
   - cmake --build . --target install --config %CONFIGURATION%
-  - cmake --build . --target test -- CTEST_OUTPUT_ON_FAILURE=TRUE
+  - ctest -V
 
 matrix:
     fast_finish: true

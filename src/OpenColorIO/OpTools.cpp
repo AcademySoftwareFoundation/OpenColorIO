@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "OpTools.h"
 #include "BitDepthUtils.h"
-#include "MatrixOps.h"
+#include "ops/Matrix/MatrixOps.h"
 
 
 OCIO_NAMESPACE_ENTER

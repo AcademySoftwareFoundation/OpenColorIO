@@ -1,6 +1,6 @@
 include(ExternalProject)
 
-find_package(PythonInterp REQUIRED)
+find_package(PythonInterp 2.7 REQUIRED)
 if(NOT OCIO_BUILD_PYTHON)
 	message(FATAL_ERROR "Doc generation requires that the python bindings be built")
 endif()

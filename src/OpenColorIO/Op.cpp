@@ -150,9 +150,9 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include "MatrixOps.h"
-#include "LogOps.h"
-#include "NoOps.h"
+#include "ops/Matrix/MatrixOps.h"
+#include "ops/Log/LogOps.h"
+#include "ops/NoOp/NoOps.h"
 
 OCIO_NAMESPACE_USING
 

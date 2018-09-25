@@ -1,31 +1,10 @@
+# The presence of OpenImageIO allows additional ocio apps to be built.
+# These apps may also require the building of openglbuilder from utils
+# but because the builder also needs GLEW, we only conditionally build
+# this lib
+find_package(OpenImageIO QUIET)
+
+add_subdirectory(apps)
+add_subdirectory(bindings)
 add_subdirectory(OpenColorIO)
-add_subdirectory(pystring)
-if(OCIO_BUILD_GPU_TESTS)
-	add_subdirectory(openglbuilder)
-endif()
-
-if(OCIO_BUILD_JAVA)
-	add_subdirectory(java)
-endif()
-
-if(OCIO_BUILD_PYTHON)
-	add_subdirectory(python)
-endif()
-
-if(OCIO_BUILD_APPS)
-	add_subdirectory(util)
-	add_subdirectory(ociobakelut)
-	add_subdirectory(ociocheck)
-
-	find_package(OpenImageIO QUIET)
-	if(OIIO_FOUND)
-		if(NOT TARGET openglbuilder)
-			add_subdirectory(openglbuilder)
-		endif()
-		add_subdirectory(ociolutimage)
-		add_subdirectory(ocioconvert)
-		add_subdirectory(ociodisplay)
-	else()
-		message(WARNING "OIIO Not found. Skipping build for ociolutimage, ocioconvert and ociodisplay")
-	endif()
-endif()
+add_subdirectory(utils)

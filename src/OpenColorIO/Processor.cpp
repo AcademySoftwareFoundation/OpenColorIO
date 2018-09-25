@@ -28,13 +28,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "AllocationOp.h"
+#include "ops/Allocation/AllocationOp.h"
 #include "GpuShader.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "Logging.h"
-#include "Lut3DOp.h"
-#include "NoOps.h"
+#include "ops/Lut3D/Lut3DOp.h"
+#include "ops/NoOp/NoOps.h"
 #include "OpBuilders.h"
 #include "Processor.h"
 #include "ScanlineHelper.h"

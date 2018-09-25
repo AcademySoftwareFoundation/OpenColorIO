@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.1)
-project(OpenColorIO VERSION 1.2.0)
+cmake_minimum_required(VERSION 3.10)
+project(OpenColorIO VERSION 2.0.0)
 enable_testing()
 
 set(CMAKE_CXX_STANDARD 11)
@@ -18,7 +18,7 @@ endif()
 option(BUILD_SHARED_LIBS "Set to OFF to build static libraries" ON)
 option(OCIO_BUILD_APPS "Set to OFF to disable command-line apps" ON)
 option(OCIO_BUILD_NUKE "Set to OFF to disable building nuke plugins" ON)
-option(OCIO_BUILD_DOCS "Specify whether to build documentation" ${UNIX})
+option(OCIO_BUILD_DOCS "Specify whether to build documentation" OFF)
 option(OCIO_BUILD_TESTS "Specify whether to build unittests" ON)
 option(OCIO_BUILD_GPU_TESTS "Specify whether to build gpu unittests" ON)
 
@@ -77,11 +77,10 @@ endif()
 ###############################################################################
 # Progress to other sources
 
+add_subdirectory(tests)
 add_subdirectory(include)
 add_subdirectory(ext)
 add_subdirectory(src)
 if(OCIO_BUILD_DOCS)
 	add_subdirectory(docs)
 endif()
-add_subdirectory(testdata)
-add_subdirectory(tests)

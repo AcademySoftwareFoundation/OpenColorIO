@@ -6,7 +6,9 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 	add_executable(${TEST_BINARY} ${SOURCES})
 	target_compile_definitions(${TEST_BINARY}
 		PRIVATE
-			-DOCIO_UNIT_TEST
+			OCIO_UNIT_TEST
+			OpenColorIO_SKIP_IMPORTS
+
 	)
 	target_link_libraries(${TEST_BINARY}
 		PUBLIC
@@ -34,63 +36,54 @@ endfunction(add_ocio_test)
 # but for now, we will maintain the status quo and copy all from the
 # OpenColorIO target
 set(SOURCES
-	AllocationOp.cpp
-	AllocationTransform.cpp
 	Baker.cpp
 	BitDepthUtils.cpp
 	Caching.cpp
-	CDLTransform.cpp
 	ColorSpace.cpp
-	ColorSpaceTransform.cpp
 	Config.cpp
 	Context.cpp
 	Display.cpp
-	DisplayTransform.cpp
 	Exception.cpp
-	ExponentOps.cpp
-	ExponentTransform.cpp
-	FileFormat3DL.cpp
-	FileFormatCCC.cpp
-	FileFormatCC.cpp
-	FileFormatCDL.cpp
-	FileFormatCSP.cpp
-	FileFormatDiscreet1DL.cpp
-	FileFormatHDL.cpp
-	FileFormatICC.cpp
-	FileFormatIridasCube.cpp
-	FileFormatIridasItx.cpp
-	FileFormatIridasLook.cpp
-	FileFormatPandora.cpp
-	FileFormatResolveCube.cpp
-	FileFormatSpi1D.cpp
-	FileFormatSpi3D.cpp
-	FileFormatSpiMtx.cpp
-	FileFormatTruelight.cpp
-	FileFormatVF.cpp
-	FileTransform.cpp
+	fileformats/FileFormat3DL.cpp
+	fileformats/FileFormatCCC.cpp
+	fileformats/FileFormatCC.cpp
+	fileformats/FileFormatCDL.cpp
+	fileformats/FileFormatCSP.cpp
+	fileformats/FileFormatDiscreet1DL.cpp
+	fileformats/FileFormatHDL.cpp
+	fileformats/FileFormatICC.cpp
+	fileformats/FileFormatIridasCube.cpp
+	fileformats/FileFormatIridasItx.cpp
+	fileformats/FileFormatIridasLook.cpp
+	fileformats/FileFormatPandora.cpp
+	fileformats/FileFormatResolveCube.cpp
+	fileformats/FileFormatSpi1D.cpp
+	fileformats/FileFormatSpi3D.cpp
+	fileformats/FileFormatSpiMtx.cpp
+	fileformats/FileFormatTruelight.cpp
+	fileformats/FileFormatVF.cpp
 	GpuShader.cpp
 	GpuShaderDesc.cpp
 	GpuShaderUtils.cpp
-	GroupTransform.cpp
 	HashUtils.cpp
 	ImageDesc.cpp
 	ImagePacking.cpp
 	Logging.cpp
-	LogOps.cpp
-	LogTransform.cpp
 	Look.cpp
 	LookParse.cpp
-	LookTransform.cpp
-	Lut1DOp.cpp
-	Lut3DOp.cpp
 	MathUtils.cpp
-	MatrixOps.cpp
-	MatrixTransform.cpp
 	md5/md5.cpp
-	NoOps.cpp
 	OCIOYaml.cpp
 	Op.cpp
 	OpOptimizers.cpp
+	ops/Allocation/AllocationOp.cpp
+	ops/Exponent/ExponentOps.cpp
+	ops/Log/LogOps.cpp
+	ops/Lut1D/Lut1DOp.cpp
+	ops/Lut3D/Lut3DOp.cpp
+	ops/Matrix/MatrixOps.cpp
+	ops/NoOp/NoOps.cpp
+	ops/Truelight/TruelightOp.cpp
 	OpTools.cpp
 	ParseUtils.cpp
 	PathUtils.cpp
@@ -98,8 +91,17 @@ set(SOURCES
 	Processor.cpp
 	ScanlineHelper.cpp
 	Transform.cpp
-	TruelightOp.cpp
-	TruelightTransform.cpp
+	transforms/AllocationTransform.cpp
+	transforms/CDLTransform.cpp
+	transforms/ColorSpaceTransform.cpp
+	transforms/DisplayTransform.cpp
+	transforms/ExponentTransform.cpp
+	transforms/FileTransform.cpp
+	transforms/GroupTransform.cpp
+	transforms/LogTransform.cpp
+	transforms/LookTransform.cpp
+	transforms/MatrixTransform.cpp
+	transforms/TruelightTransform.cpp
 	UnitTest.cpp
 )
 

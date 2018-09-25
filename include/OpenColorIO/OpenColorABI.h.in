@@ -66,7 +66,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     #endif
 #elif defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
     // Windows requires you to export from the main library and then import in any others
-	#ifndef OpenColorIO_STATIC
+	#ifndef OpenColorIO_SKIP_IMPORTS
 		#if defined OpenColorIO_EXPORTS
 			#define OCIOEXPORT __declspec(dllexport)
 		#else

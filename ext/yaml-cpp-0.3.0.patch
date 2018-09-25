@@ -1,6 +1,6 @@
 diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt
---- yaml-cpp.orig/CMakeLists.txt	2018-09-22 09:52:48.0000000000 -0000
-+++ yaml-cpp/CMakeLists.txt	2018-09-22 15:05:55.0000000000 -0000
+--- yaml-cpp.orig/CMakeLists.txt	2012-01-21 08:52:48.000000000 +0000
++++ yaml-cpp/CMakeLists.txt	2018-09-24 21:49:22.000000000 +0100
 @@ -151,53 +151,6 @@
  
  # Microsoft VisualC++ specialities
@@ -79,7 +79,7 @@ diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt
  )
  
  
-@@ -235,28 +183,25 @@
+@@ -235,10 +183,18 @@
  	${contrib_private_headers}
  )
  
@@ -90,7 +90,6 @@ diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt
 +    set(YAML_COMPILE_FLAGS "${YAML_COMPILE_FLAGS} -fvisibility-inlines-hidden")
 +endif()
 +
-+
  set_target_properties(yaml-cpp PROPERTIES
  	VERSION "${YAML_CPP_VERSION}"
  	SOVERSION "${YAML_CPP_VERSION_MAJOR}.${YAML_CPP_VERSION_MINOR}"
@@ -99,11 +98,10 @@ diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt
  )
  
  if(IPHONE)
- 	set_target_properties(yaml-cpp PROPERTIES
- 		XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "3.0"
+@@ -247,17 +203,6 @@
  	)
--endif()
--
+ endif()
+ 
 -if(MSVC)
 -	if(NOT BUILD_SHARED_LIBS)
 -		# correct library names
@@ -114,12 +112,13 @@ diff -Naur yaml-cpp.orig/CMakeLists.txt yaml-cpp/CMakeLists.txt
 -			RELWITHDEBINFO_POSTFIX "${LIB_TARGET_SUFFIX}"
 -		)
 -	endif()
- endif()
+-endif()
  
  install(TARGETS yaml-cpp ${_INSTALL_DESTINATIONS})
+ install(
 diff -Naur yaml-cpp.orig/include/yaml-cpp/binary.h yaml-cpp/include/yaml-cpp/binary.h
---- yaml-cpp.orig/include/yaml-cpp/binary.h	2018-09-22 09:52:48.0000000000 -0000
-+++ yaml-cpp/include/yaml-cpp/binary.h	2018-09-22 15:05:55.0000000000 -0000
+--- yaml-cpp.orig/include/yaml-cpp/binary.h	2012-01-21 08:52:48.000000000 +0000
++++ yaml-cpp/include/yaml-cpp/binary.h	2018-09-24 21:46:01.000000000 +0100
 @@ -18,7 +18,7 @@
      class Binary {
      public:
@@ -130,8 +129,8 @@ diff -Naur yaml-cpp.orig/include/yaml-cpp/binary.h yaml-cpp/include/yaml-cpp/bin
          bool owned() const { return !m_unownedData; }
          std::size_t size() const { return owned() ? m_data.size() : m_unownedSize; }
 diff -Naur yaml-cpp.orig/src/scanner.h yaml-cpp/src/scanner.h
---- yaml-cpp.orig/src/scanner.h	2018-09-22 09:52:48.0000000000 -0000
-+++ yaml-cpp/src/scanner.h	2018-09-22 15:05:55.0000000000 -0000
+--- yaml-cpp.orig/src/scanner.h	2012-01-21 08:52:48.000000000 +0000
++++ yaml-cpp/src/scanner.h	2018-09-24 21:46:01.000000000 +0100
 @@ -57,7 +57,7 @@
  		
  		bool InFlowContext() const { return !m_flows.empty(); }

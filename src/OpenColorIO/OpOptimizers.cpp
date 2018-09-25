@@ -235,11 +235,11 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 
-#include "ExponentOps.h"
-#include "LogOps.h"
-#include "Lut1DOp.h"
-#include "Lut3DOp.h"
-#include "MatrixOps.h"
+#include "ops/Exponent/ExponentOps.h"
+#include "ops/Log/LogOps.h"
+#include "ops/Lut1D/Lut1DOp.h"
+#include "ops/Lut3D/Lut3DOp.h"
+#include "ops/Matrix/MatrixOps.h"
 
 OIIO_ADD_TEST(OpOptimizers, RemoveInverseOps)
 {
