@@ -443,6 +443,16 @@ OCIO_NAMESPACE_ENTER
         getImpl()->functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
     }
 
+    void LegacyGpuShaderDesc::clearHeaderShaderCode()
+    {
+        getImpl()->functionHeader.resize(0);
+    }
+
+    void LegacyGpuShaderDesc::clearFooterShaderCode()
+    {
+        getImpl()->functionFooter.resize(0);
+    }
+
     void LegacyGpuShaderDesc::createShaderText(
         const char * shaderDeclarations, const char * shaderHelperMethods,
         const char * shaderFunctionHeader, const char * shaderFunctionBody,
@@ -609,6 +619,17 @@ OCIO_NAMESPACE_ENTER
     void GenericGpuShaderDesc::addToFunctionFooterShaderCode(const char * shaderCode)
     {
         getImpl()->functionFooter += (shaderCode && *shaderCode) ? shaderCode : "";
+    }
+
+
+    void GenericGpuShaderDesc::clearHeaderShaderCode()
+    {
+        getImpl()->functionHeader.resize(0);
+    }
+
+    void GenericGpuShaderDesc::clearFooterShaderCode()
+    {
+        getImpl()->functionFooter.resize(0);
     }
 
     void GenericGpuShaderDesc::createShaderText(

@@ -1379,7 +1379,7 @@ OCIO_NAMESPACE_ENTER
         // .. code-block:: cpp
         //    
         //    // All global declarations
-        //    uniform sampled3D tex3;
+        //    uniform sampler3D tex3;
         //
         //    // All helper methods
         //    vec3 computePosition(vec3 color)
@@ -1404,6 +1404,8 @@ OCIO_NAMESPACE_ENTER
         virtual void addToFunctionHeaderShaderCode(const char * shaderCode) = 0;
         virtual void addToFunctionShaderCode(const char * shaderCode) = 0;
         virtual void addToFunctionFooterShaderCode(const char * shaderCode) = 0;
+        virtual void clearHeaderShaderCode() = 0;
+        virtual void clearFooterShaderCode() = 0;
 
         //!cpp:function:: Create the OCIO shader program
         //

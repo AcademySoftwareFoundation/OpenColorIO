@@ -201,6 +201,16 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
+        void ClearShaderHeader(GpuShaderDescRcPtr & shaderDesc)
+        {
+            shaderDesc->clearHeaderShaderCode();
+        }
+
+        void ClearShaderFooter(GpuShaderDescRcPtr & shaderDesc)
+        {
+            shaderDesc->clearFooterShaderCode();
+        }
+
         void WriteShaderHeader(GpuShaderDescRcPtr & shaderDesc)
         {
             const std::string fcnName(shaderDesc->getFunctionName());

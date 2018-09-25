@@ -76,6 +76,8 @@ OCIO_NAMESPACE_ENTER
         void addToFunctionHeaderShaderCode(const char * shaderCode);
         void addToFunctionShaderCode(const char * shaderCode);
         void addToFunctionFooterShaderCode(const char * shaderCode);
+        void clearHeaderShaderCode();
+        void clearFooterShaderCode();
 
         // Method called to build the complete shader program
         void createShaderText(const char * shaderDeclarations,
@@ -186,6 +188,8 @@ OCIO_NAMESPACE_ENTER
         void addToFunctionHeaderShaderCode(const char * shaderCode);
         void addToFunctionShaderCode(const char * shaderCode);
         void addToFunctionFooterShaderCode(const char * shaderCode);
+        void clearHeaderShaderCode();
+        void clearFooterShaderCode();
 
         // Method called to build the complete shader program
         void createShaderText(const char * shaderDeclarations, 
