@@ -108,8 +108,31 @@ OCIO_NAMESPACE_ENTER
     {
         getImpl()->dir_ = dir;
     }
-    
-    
+
+    void AllocationTransform::validate() const
+    {
+        Transform::validate();
+
+        if (getImpl()->allocation_ == ALLOCATION_UNIFORM)
+        {
+            if(getImpl()->vars_.size()!=2 && getImpl()->vars_.size()!=0)
+            {
+                throw Exception("AllocationTransform: wrong number of values for the uniform allocation");
+            }
+        }
+        else if (getImpl()->allocation_ == ALLOCATION_LG2)
+        {
+            if(getImpl()->vars_.size()!=3 && getImpl()->vars_.size()!=2 && getImpl()->vars_.size()!=0)
+            {
+                throw Exception("AllocationTransform: wrong number of values for the logarithmic allocation");
+            }
+        }
+        else
+        {
+            throw Exception("AllocationTransform: invalid allocation type");
+        }
+    }
+
     Allocation AllocationTransform::getAllocation() const
     {
         return getImpl()->allocation_;
@@ -194,3 +217,37 @@ OCIO_NAMESPACE_ENTER
     }
 }
 OCIO_NAMESPACE_EXIT
+
+
+#ifdef OCIO_UNIT_TEST
+
+namespace OCIO = OCIO_NAMESPACE;
+#include "unittest.h"
+
+OIIO_ADD_TEST(AllocationTransform, allocation)
+{
+    OCIO::AllocationTransformRcPtr al = OCIO::AllocationTransform::Create();
+
+    al->setAllocation(OCIO::ALLOCATION_UNIFORM);
+    OIIO_CHECK_NO_THROW(al->validate());
+
+    std::vector<float> envs(2, 0.0f);
+    al->setVars(static_cast<int>(envs.size()), &envs[0]);
+    OIIO_CHECK_NO_THROW(al->validate());
+
+    envs.push_back(0.01f);
+    al->setVars(static_cast<int>(envs.size()), &envs[0]);
+    OIIO_CHECK_THROW(al->validate(), OCIO::Exception);
+
+    al->setAllocation(OCIO::ALLOCATION_LG2);
+    OIIO_CHECK_NO_THROW(al->validate());
+
+    envs.push_back(0.1f);
+    al->setVars(static_cast<int>(envs.size()), &envs[0]);
+    OIIO_CHECK_THROW(al->validate(), OCIO::Exception);
+
+    al->setVars(0, 0x0);
+    OIIO_CHECK_NO_THROW(al->validate());
+}
+
+#endif

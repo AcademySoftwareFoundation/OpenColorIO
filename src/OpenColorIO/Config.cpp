@@ -172,23 +172,24 @@ OCIO_NAMESPACE_ENTER
     }
     
     void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
-                                 const ConstTransformRcPtr & transform)
+                                 const ConstTransformRcPtr & transform,
+                                 const ConstContextRcPtr & context)
     {
         if(!transform) return;
-        
+
         if(ConstGroupTransformRcPtr groupTransform = \
             DynamicPtrCast<const GroupTransform>(transform))
         {
             for(int i=0; i<groupTransform->size(); ++i)
             {
-                GetColorSpaceReferences(colorSpaceNames, groupTransform->getTransform(i));
+                GetColorSpaceReferences(colorSpaceNames, groupTransform->getTransform(i), context);
             }
         }
         else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
             DynamicPtrCast<const ColorSpaceTransform>(transform))
         {
-            colorSpaceNames.insert(colorSpaceTransform->getSrc());
-            colorSpaceNames.insert(colorSpaceTransform->getDst());
+            colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getSrc()));
+            colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getDst()));
         }
         else if(ConstDisplayTransformRcPtr displayTransform = \
             DynamicPtrCast<const DisplayTransform>(transform))
@@ -198,8 +199,8 @@ OCIO_NAMESPACE_ENTER
         else if(ConstLookTransformRcPtr lookTransform = \
             DynamicPtrCast<const LookTransform>(transform))
         {
-            colorSpaceNames.insert(colorSpaceTransform->getSrc());
-            colorSpaceNames.insert(colorSpaceTransform->getDst());
+            colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getSrc()));
+            colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getDst()));
         }
     }
     
@@ -210,7 +211,8 @@ OCIO_NAMESPACE_ENTER
     {
         if(csname.empty()) return false;
         
-        std::string csnamelower = pystring::lower(csname);
+        const std::string csnamelower = pystring::lower(csname);
+
         for(unsigned int i = 0; i < colorspaces.size(); ++i)
         {
             if(csnamelower == pystring::lower(colorspaces[i]->getName()))
@@ -425,8 +427,7 @@ OCIO_NAMESPACE_ENTER
         
         getImpl()->sanity_ = SANITY_INSANE;
         getImpl()->sanitytext_ = "";
-        
-        
+
         ///// COLORSPACES
         StringSet existingColorSpaces;
         
@@ -463,7 +464,21 @@ OCIO_NAMESPACE_ENTER
                 getImpl()->sanitytext_ = os.str();
                 throw Exception(getImpl()->sanitytext_.c_str());
             }
-            
+
+            ConstTransformRcPtr toTrans 
+                = getImpl()->colorspaces_[i]->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+            if (toTrans)
+            {
+                toTrans->validate();
+            }
+
+            ConstTransformRcPtr fromTrans 
+                = getImpl()->colorspaces_[i]->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+            if (fromTrans)
+            {
+                fromTrans->validate();
+            }
+
             existingColorSpaces.insert(namelower);
         }
         
@@ -584,15 +599,18 @@ OCIO_NAMESPACE_ENTER
         }
         
         // Confirm for all Transforms that reference internal colorspaces,
-        // the named space exists
+        // the named space exists and that all Transforms are valid.
         {
             ConstTransformVec allTransforms;
             getImpl()->getAllIntenalTransforms(allTransforms);
             
             std::set<std::string> colorSpaceNames;
-            for(unsigned int i=0; i<colorSpaceNames.size(); ++i)
+            for(unsigned int i=0; i<allTransforms.size(); ++i)
             {
-                GetColorSpaceReferences(colorSpaceNames, allTransforms[i]);
+                allTransforms[i]->validate();
+
+                ConstContextRcPtr context = getCurrentContext();       
+                GetColorSpaceReferences(colorSpaceNames, allTransforms[i], context);
             }
             
             for(std::set<std::string>::iterator iter = colorSpaceNames.begin();
@@ -650,9 +668,15 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(getImpl()->sanitytext_.c_str());
             }
         }
-        
-        
-        
+
+        // Validate all transforms
+        ConstTransformVec allTransforms;
+        getImpl()->getAllIntenalTransforms(allTransforms);
+         for (unsigned int i = 0; i<allTransforms.size(); ++i)
+        {
+            allTransforms[i]->validate();
+        }
+
         // Everything is groovy.
         getImpl()->sanity_ = SANITY_SANE;
     }
@@ -2017,28 +2041,54 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
         "    bitdepth: unknown\n"
         "    isdata: false\n"
         "    allocation: uniform\n"
-        "    allocationvars: [-0.125, 1.125]\n"
-        "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $CAMERARAW}\n";
+        "    allocationvars: [-0.125, 1.125]\n";
 
 
     {
         // Test when the env. variable is missing
 
+        const std::string 
+            myConfigStr = MY_OCIO_CONFIG
+                + "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $MISSING_ENV}\n";
+
         std::istringstream is;
-        is.str(MY_OCIO_CONFIG);
+        is.str(myConfigStr);
 
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
+        OIIO_CHECK_THROW(config->sanityCheck(), OCIO::Exception);
         OIIO_CHECK_THROW(config->getProcessor("raw", "lgh"), OCIO::Exception);
     }
 
     {
-        const std::string env("CAMERARAW=lnh");
+        // Test when the env. variable exists but its content is wrong
+        const std::string env("OCIO_TEST=FaultyColorSpaceName");
         putenv(const_cast<char*>(env.c_str()));
 
+        const std::string 
+            myConfigStr = MY_OCIO_CONFIG
+                + "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $OCIO_TEST}\n";
+
         std::istringstream is;
-        is.str(MY_OCIO_CONFIG);
+        is.str(myConfigStr);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW(config->sanityCheck(), OCIO::Exception);
+        OIIO_CHECK_THROW(config->getProcessor("raw", "lgh"), OCIO::Exception);
+    }
+
+    {
+        // Test when the env. variable exists and its content is right
+        const std::string env("OCIO_TEST=lnh");
+        putenv(const_cast<char*>(env.c_str()));
+
+        const std::string 
+            myConfigStr = MY_OCIO_CONFIG
+                + "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $OCIO_TEST}\n";
+
+        std::istringstream is;
+        is.str(myConfigStr);
 
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
@@ -2047,25 +2097,16 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
     }
 
     {
-        // Test when the env. variable content is wrong
-
-        const std::string env("CAMERARAW=FaultyColorSpaceName");
+        // Check that the serialization preserves the env. variable
+        const std::string env("OCIO_TEST=lnh");
         putenv(const_cast<char*>(env.c_str()));
 
-        std::istringstream is;
-        is.str(MY_OCIO_CONFIG);
-
-        OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
-        OIIO_CHECK_THROW(config->getProcessor("raw", "lgh"), OCIO::Exception);
-    }
-
-    {
-        // Check that the serialization preserves the env. variable
+        const std::string 
+            myConfigStr = MY_OCIO_CONFIG
+                + "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $OCIO_TEST}\n";
 
         std::istringstream is;
-        is.str(MY_OCIO_CONFIG);
+        is.str(myConfigStr);
 
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
@@ -2073,7 +2114,7 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
 
         std::stringstream ss;
         ss << *config.get();
-        OIIO_CHECK_EQUAL(ss.str(), MY_OCIO_CONFIG);
+        OIIO_CHECK_EQUAL(ss.str(), myConfigStr);
     }
 }
 
