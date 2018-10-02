@@ -108,7 +108,8 @@ typedef __int64 FilePos;
 #define fseeko _fseeki64
 #define ftello _ftelli64
 
-inline double log2(double x) {
+inline double log2(double x)
+{
     return log(x) * 1.4426950408889634; 
 }
 
@@ -132,12 +133,12 @@ OCIO_NAMESPACE_ENTER
 
 class _Mutex {
 public:
-	_Mutex()       { _mutex = CreateMutex(NULL, FALSE, NULL); }
-	~_Mutex()      { CloseHandle(_mutex); }
-	void lock()   { WaitForSingleObject(_mutex, INFINITE); }
-	void unlock() { ReleaseMutex(_mutex); }
-    private:
-	HANDLE _mutex;
+    _Mutex()      { _mutex = CreateMutex(NULL, FALSE, NULL); }
+    ~_Mutex()     { CloseHandle(_mutex); }
+    void lock()   { WaitForSingleObject(_mutex, INFINITE); }
+    void unlock() { ReleaseMutex(_mutex); }
+private:
+    HANDLE _mutex;
 };
 
 #else
@@ -147,12 +148,12 @@ public:
 
 class _Mutex {
 public:
-	_Mutex()      { pthread_mutex_init(&_mutex, 0); }
-	~_Mutex()     { pthread_mutex_destroy(&_mutex); }
-	void lock()   { pthread_mutex_lock(&_mutex); }
-	void unlock() { pthread_mutex_unlock(&_mutex); }
-    private:
-	pthread_mutex_t _mutex;
+    _Mutex()      { pthread_mutex_init(&_mutex, 0); }
+    ~_Mutex()     { pthread_mutex_destroy(&_mutex); }
+    void lock()   { pthread_mutex_lock(&_mutex); }
+    void unlock() { pthread_mutex_unlock(&_mutex); }
+private:
+    pthread_mutex_t _mutex;
 };
 
 #endif // WINDOWS
