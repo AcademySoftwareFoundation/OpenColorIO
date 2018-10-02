@@ -826,9 +826,9 @@ OIIO_ADD_TEST(GpuShader, legacy_shader)
 
         OIIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
         OIIO_CHECK_THROW_WHAT(shaderDesc->addTexture("lut1", "1234", width, height, 
-                                                OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
-                                                OCIO::INTERP_TETRAHEDRAL,
-                                                &values[0]), 
+                                                     OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
+                                                     OCIO::INTERP_TETRAHEDRAL,
+                                                     &values[0]), 
                               OCIO::Exception,
                               "1D LUTs are not supported");
 
@@ -888,8 +888,8 @@ OIIO_ADD_TEST(GpuShader, legacy_shader)
         // Only one 3D LUT
 
         OIIO_CHECK_THROW_WHAT(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
-                                                  OCIO::INTERP_TETRAHEDRAL,
-                                                  &values[0]),
+                                                       OCIO::INTERP_TETRAHEDRAL,
+                                                       &values[0]),
                               OCIO::Exception,
                               "only one 3D texture allowed");
 
