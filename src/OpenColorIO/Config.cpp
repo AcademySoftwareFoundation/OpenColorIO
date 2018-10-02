@@ -295,7 +295,8 @@ OCIO_NAMESPACE_ENTER
                 colorspaces_.reserve(rhs.colorspaces_.size());
                 for(unsigned int i=0; i<rhs.colorspaces_.size(); ++i)
                 {
-                    colorspaces_.push_back(rhs.colorspaces_[i]->createEditableCopy());
+                    colorspaces_.push_back(
+                        rhs.colorspaces_[i]->createEditableCopy());
                 }
                 
                 // Deep copy the looks
@@ -303,7 +304,8 @@ OCIO_NAMESPACE_ENTER
                 looksList_.reserve(rhs.looksList_.size());
                 for(unsigned int i=0; i<rhs.looksList_.size(); ++i)
                 {
-                    looksList_.push_back(rhs.looksList_[i]->createEditableCopy());
+                    looksList_.push_back(
+                        rhs.looksList_[i]->createEditableCopy());
                 }
                 
                 // Assignment operator will suffice for these
@@ -324,7 +326,7 @@ OCIO_NAMESPACE_ENTER
                 sanitytext_ = rhs.sanitytext_;
                 
                 cacheids_ = rhs.cacheids_;
-                cacheidnocontext_ = cacheidnocontext_;
+                cacheidnocontext_ = rhs.cacheidnocontext_;
             }
             return *this;
         }
