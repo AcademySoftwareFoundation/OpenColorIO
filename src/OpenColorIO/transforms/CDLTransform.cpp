@@ -560,7 +560,7 @@ OCIO_NAMESPACE_ENTER
         float sat_;
         std::string id_;
         std::string description_;
-        
+
         mutable std::string xml_;
         
         Impl() :
@@ -585,13 +585,16 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            
-            memcpy(sop_, rhs.sop_, sizeof(float)*9);
-            sat_ = rhs.sat_;
-            id_ = rhs.id_;
-            description_ = rhs.description_;
-            
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+
+                memcpy(sop_, rhs.sop_, sizeof(float) * 9);
+                sat_ = rhs.sat_;
+                id_ = rhs.id_;
+                description_ = rhs.description_;
+            }
+
             return *this;
         }
         
@@ -622,7 +625,10 @@ OCIO_NAMESPACE_ENTER
     
     CDLTransform& CDLTransform::operator= (const CDLTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     

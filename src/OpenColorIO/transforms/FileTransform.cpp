@@ -71,10 +71,13 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            src_ = rhs.src_;
-            cccid_ = rhs.cccid_;
-            interp_ = rhs.interp_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                src_ = rhs.src_;
+                cccid_ = rhs.cccid_;
+                interp_ = rhs.interp_;
+            }
             return *this;
         }
     };
@@ -102,7 +105,10 @@ OCIO_NAMESPACE_ENTER
     
     FileTransform& FileTransform::operator= (const FileTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
