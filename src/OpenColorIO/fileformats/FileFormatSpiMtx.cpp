@@ -252,7 +252,7 @@ OIIO_ADD_TEST(FileFormatSpiMtx, Test)
     const std::string spiMtxFile(ocioTestFilesDir + std::string("/camera_to_aces.spimtx"));
     OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spiMtxFile));
 
-    OIIO_CHECK_NE(NULL, cachedFile.get());
+    OIIO_REQUIRE_ASSERT((bool)cachedFile);
     OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[0]);
     OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[1]);
     OIIO_CHECK_EQUAL(0.0f, cachedFile->offset4[2]);
@@ -304,7 +304,7 @@ OIIO_ADD_TEST(FileFormatSpiMtx, ReadOffset)
 
         OCIO::LocalCachedFileRcPtr cachedFile;
         OIIO_CHECK_NO_THROW(cachedFile = ReadSpiMtx(SAMPLE_FILE));
-        OIIO_CHECK_NE(NULL, cachedFile.get());
+        OIIO_REQUIRE_ASSERT((bool)cachedFile);
         OIIO_CHECK_EQUAL(0.1f, cachedFile->offset4[0]);
         OIIO_CHECK_EQUAL(0.5f, cachedFile->offset4[1]);
         OIIO_CHECK_EQUAL(1.0f, cachedFile->offset4[2]);
