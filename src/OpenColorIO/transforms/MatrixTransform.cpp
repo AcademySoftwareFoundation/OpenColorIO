@@ -63,8 +63,11 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            Matrix::operator=(rhs);
-            dir_ = rhs.dir_;
+            if (this != &rhs)
+            {
+                Matrix::operator=(rhs);
+                dir_ = rhs.dir_;
+            }
             return *this;
         }
 
@@ -96,7 +99,10 @@ OCIO_NAMESPACE_ENTER
     
     MatrixTransform& MatrixTransform::operator= (const MatrixTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     

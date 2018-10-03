@@ -59,11 +59,14 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            language_ = rhs.language_;
-            functionName_ = rhs.functionName_;
-            resourcePrefix_ = rhs.resourcePrefix_;
-            pixelName_ = rhs.pixelName_;
-            cacheID_ = rhs.cacheID_;
+            if (this != &rhs)
+            {
+                language_ = rhs.language_;
+                functionName_ = rhs.functionName_;
+                resourcePrefix_ = rhs.resourcePrefix_;
+                pixelName_ = rhs.pixelName_;
+                cacheID_ = rhs.cacheID_;
+            }
             return *this;
         }
     };

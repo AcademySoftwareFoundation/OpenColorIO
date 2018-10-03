@@ -63,8 +63,11 @@ OCIO_NAMESPACE_ENTER
 
         Impl& operator = (const Impl & rhs)
         {
-            Log::operator=(rhs);
-            dir_ = rhs.dir_;
+            if (this != &rhs)
+            {
+                Log::operator=(rhs);
+                dir_ = rhs.dir_;
+            }
             return *this;
         }
 
@@ -95,7 +98,10 @@ OCIO_NAMESPACE_ENTER
     
     LogTransform& LogTransform::operator= (const LogTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     

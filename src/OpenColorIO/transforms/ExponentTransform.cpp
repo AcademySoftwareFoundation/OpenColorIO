@@ -62,8 +62,11 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            Exponent::operator=(rhs);
-            dir_ = rhs.dir_;
+            if (this != &rhs)
+            {
+                Exponent::operator=(rhs);
+                dir_ = rhs.dir_;
+            }
             return *this;
         }
 
@@ -95,7 +98,10 @@ OCIO_NAMESPACE_ENTER
     
     ExponentTransform& ExponentTransform::operator= (const ExponentTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
