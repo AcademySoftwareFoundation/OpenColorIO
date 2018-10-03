@@ -6,6 +6,14 @@ set(SOURCES
 )
 
 add_executable(ocioconvert ${SOURCES})
+
+if(NOT BUILD_SHARED_LIBS)
+    target_compile_definitions(ocioconvert
+        PRIVATE
+        OpenColorIO_SKIP_IMPORTS
+    )
+endif()
+
 target_include_directories(ocioconvert 
 	SYSTEM
 	PRIVATE

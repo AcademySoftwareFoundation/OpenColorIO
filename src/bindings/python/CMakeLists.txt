@@ -55,6 +55,13 @@ if(WIN32)
 	)
 endif()
 
+if(NOT BUILD_SHARED_LIBS)
+    target_compile_definitions(PyOpenColorIO
+        PRIVATE
+        OpenColorIO_SKIP_IMPORTS
+    )
+endif()
+
 # OSX demands that the linker resolve all symbols at build time
 # we pass this flag to allow dynamic linking
 if(APPLE)
