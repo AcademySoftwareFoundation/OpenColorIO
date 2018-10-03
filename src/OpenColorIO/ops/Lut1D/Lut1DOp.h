@@ -32,27 +32,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Mutex.h"
 #include "Op.h"
 
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-    // TODO: turn into a class instead of a struct?
-    
-    enum ErrorType
-    {
-        ERROR_ABSOLUTE = 1,
-        ERROR_RELATIVE
-    };
-    
-    
-    struct Lut1D;
+  
+    class Lut1D;
     typedef OCIO_SHARED_PTR<Lut1D> Lut1DRcPtr;
     
-    struct Lut1D
+    class Lut1D : public OpData
     {
+    public:
+        enum ErrorType
+        {
+            ERROR_ABSOLUTE = 1,
+            ERROR_RELATIVE
+        };   
+    
         static Lut1DRcPtr Create();
         static Lut1DRcPtr CreateIdentity(BitDepth inputBitDepth, BitDepth outBitDepth);
         
@@ -79,11 +77,10 @@ OCIO_NAMESPACE_ENTER
         typedef std::vector<float> fv_t;
         fv_t luts[3];
 
-        BitDepth inputBitDepth;
-        BitDepth outputBitDepth;
+        virtual Type getType() const { return Lut1DType; }
 
-        std::string getCacheID() const;
-        bool isNoOp() const;
+        virtual bool isIdentity() const;
+        virtual bool hasChannelCrosstalk() const { return false; }
         
         void unfinalize();
 
@@ -92,11 +89,9 @@ OCIO_NAMESPACE_ENTER
     private:
         Lut1D();
         
-        mutable std::string m_cacheID;
-        mutable bool m_isNoOp;
-        mutable Mutex m_mutex;
+        mutable bool m_isIdentity;
         
-        void finalize() const;
+        virtual std::string finalize() const;
     };
     
     // This generates an identity 1d lut, from 0.0 to 1.0

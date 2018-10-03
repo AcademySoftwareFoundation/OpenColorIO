@@ -626,7 +626,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 prelut_ptr->maxerror = 1e-6f;
-                prelut_ptr->errortype = ERROR_RELATIVE;
+                prelut_ptr->errortype = Lut1D::ERROR_RELATIVE;
                 
                 cachedFile->prelut = prelut_ptr;
             }
@@ -634,7 +634,7 @@ OCIO_NAMESPACE_ENTER
             if(csptype == "1D")
             {
                 lut1d_ptr->maxerror = 0.0f;
-                lut1d_ptr->errortype = ERROR_RELATIVE;
+                lut1d_ptr->errortype = Lut1D::ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
             else if (csptype == "3D")

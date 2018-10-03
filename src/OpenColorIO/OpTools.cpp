@@ -95,7 +95,7 @@ OCIO_NAMESPACE_ENTER
     //
     Lut1DRcPtr Compose(const Lut1DRcPtr & A, const OpRcPtrVec & B)
     {
-        if (A->outputBitDepth != B[0]->getInputBitDepth())
+        if (A->getOutputBitDepth() != B[0]->getInputBitDepth())
         {
             throw Exception("A bit depth mismatch forbids the composition of luts");
         }
@@ -113,7 +113,7 @@ OCIO_NAMESPACE_ENTER
         // append set depth and the finalize set depth cancel out and we
         // are left with our desired scale being applied.
 
-        const float iScale = 1.f / GetBitDepthMaxValue(A->outputBitDepth);
+        const float iScale = 1.f / GetBitDepthMaxValue(A->getOutputBitDepth());
         const float iScale4[4] = { iScale, iScale, iScale, iScale };
         CreateScaleOp(ops, iScale4, TRANSFORM_DIR_FORWARD);
 
@@ -153,8 +153,8 @@ OCIO_NAMESPACE_ENTER
         }
 
         Lut1DRcPtr lut(Lut1D::Create());
-        lut->inputBitDepth  = A->inputBitDepth;
-        lut->outputBitDepth = B[B.size()-1]->getOutputBitDepth();
+        lut->setInputBitDepth(A->getInputBitDepth());
+        lut->setOutputBitDepth(B[B.size()-1]->getOutputBitDepth());
         lut->luts[0].resize(newLength);
         lut->luts[1].resize(newLength);
         lut->luts[2].resize(newLength);
@@ -171,7 +171,7 @@ OCIO_NAMESPACE_ENTER
 
     Lut1DRcPtr Compose(const Lut1DRcPtr & A, const OpRcPtr & B, ComposeMethod compFlag)
     {
-        if (A->outputBitDepth != B->getInputBitDepth())
+        if (A->getOutputBitDepth() != B->getInputBitDepth())
         {
             throw Exception("A bit depth mismatch forbids the composition of luts");
         }
@@ -199,7 +199,7 @@ OCIO_NAMESPACE_ENTER
                 // reset to be higher, we will have thrown away needed precision.
                 // RESAMPLE_BIG is designed to avoid that problem but it has a
                 // performance cost.
-                resampleDepth = A->inputBitDepth;
+                resampleDepth = A->getInputBitDepth();
                 min_size = GetLutIdealSize(resampleDepth);
                 break;
             }
@@ -231,7 +231,7 @@ OCIO_NAMESPACE_ENTER
 
             // TODO: Should not need to create a new LUT object for this.
             //       Perhaps add a utility function to be shared with the constructor.
-            domain = Lut1D::CreateIdentity(resampleDepth, A->inputBitDepth);
+            domain = Lut1D::CreateIdentity(resampleDepth, A->getInputBitDepth());
 
             // Interpolate through both LUTs in this case (resample).
             CreateLut1DOp(ops, A, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
@@ -258,9 +258,9 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OIIO_ADD_TEST(OpTools, Lut1D_compose)
 {
-    OCIO::Lut1DRcPtr lut1  = OCIO::Lut1D::Create();
-    lut1->inputBitDepth    =  OCIO::BIT_DEPTH_F32;
-    lut1->outputBitDepth   =  OCIO::BIT_DEPTH_F32;
+    OCIO::Lut1DRcPtr lut1
+        = OCIO::Lut1D::CreateIdentity(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
+
     lut1->luts[0].resize(8);
     lut1->luts[1].resize(8);
     lut1->luts[2].resize(8);
@@ -274,9 +274,9 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose)
     lut1->luts[0][6] = 0.926671f; lut1->luts[1][6] = 0.846431f; lut1->luts[2][6] = 1.0f;
     lut1->luts[0][7] = 1.0f;      lut1->luts[1][7] = 1.0f;      lut1->luts[2][7] = 1.0f;
 
-    OCIO::Lut1DRcPtr lut2  = OCIO::Lut1D::Create();
-    lut2->inputBitDepth    = OCIO::BIT_DEPTH_F32;
-    lut2->outputBitDepth   = OCIO::BIT_DEPTH_F32;
+    OCIO::Lut1DRcPtr lut2
+        = OCIO::Lut1D::CreateIdentity(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
+
     lut2->luts[0].resize(8);
     lut2->luts[1].resize(8);
     lut2->luts[2].resize(8);
@@ -374,9 +374,8 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose)
 
 OIIO_ADD_TEST(OpTools, Lut1D_compose__with_bit_depth)
 {
-    OCIO::Lut1DRcPtr lut1  = OCIO::Lut1D::Create();
-    lut1->inputBitDepth    =  OCIO::BIT_DEPTH_UINT8;
-    lut1->outputBitDepth   =  OCIO::BIT_DEPTH_UINT8;
+    OCIO::Lut1DRcPtr lut1 
+        = OCIO::Lut1D::CreateIdentity(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
     lut1->luts[0].resize(2);
     lut1->luts[1].resize(2);
     lut1->luts[2].resize(2);
@@ -384,9 +383,8 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose__with_bit_depth)
     lut1->luts[0][0] =  64.0f; lut1->luts[1][0] =  64.0f; lut1->luts[2][0] =  64.0f;
     lut1->luts[0][1] = 196.0f; lut1->luts[1][1] = 196.0f; lut1->luts[2][1] = 196.0f;
 
-    OCIO::Lut1DRcPtr lut2  = OCIO::Lut1D::Create();
-    lut2->inputBitDepth    = OCIO::BIT_DEPTH_UINT8;
-    lut2->outputBitDepth   = OCIO::BIT_DEPTH_F32;
+    OCIO::Lut1DRcPtr lut2
+        = OCIO::Lut1D::CreateIdentity(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F32);
     lut2->luts[0].resize(32);
     lut2->luts[1].resize(32);
     lut2->luts[2].resize(32);

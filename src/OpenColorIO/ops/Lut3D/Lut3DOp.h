@@ -32,20 +32,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Mutex.h"
 #include "Op.h"
 
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-    // TODO: turn into a class instead of a struct?
-    
-    struct Lut3D;
+    class Lut3D;
     typedef OCIO_SHARED_PTR<Lut3D> Lut3DRcPtr;
     
-    struct Lut3D
+    class Lut3D : public OpData
     {
+    public:
         static Lut3DRcPtr Create();
         
         float from_min[3];
@@ -55,12 +53,15 @@ OCIO_NAMESPACE_ENTER
         typedef std::vector<float> fv_t;
         fv_t lut;
         
-        std::string getCacheID() const;
-        
+        virtual Type getType() const { return Lut3DType; }
+
+        virtual bool isIdentity() const;
+        virtual bool hasChannelCrosstalk() const;
+
     private:
         Lut3D();
-        mutable std::string m_cacheID;
-        mutable Mutex m_cacheidMutex;
+        
+        virtual std::string finalize() const;
     };
     
     // RGB channel ordering.

@@ -506,7 +506,7 @@ OCIO_NAMESPACE_ENTER
                 lut1d_ptr->luts[1] = lut_iter->second;
                 lut1d_ptr->luts[2] = lut_iter->second;
                 lut1d_ptr->maxerror = 0.0f;
-                lut1d_ptr->errortype = ERROR_RELATIVE;
+                lut1d_ptr->errortype = Lut1D::ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
 
@@ -569,7 +569,7 @@ OCIO_NAMESPACE_ENTER
                 lut1d_ptr->luts[1] = lut_iter->second;
                 lut1d_ptr->luts[2] = lut_iter->second;
                 lut1d_ptr->maxerror = 0.0f;
-                lut1d_ptr->errortype = ERROR_RELATIVE;
+                lut1d_ptr->errortype = Lut1D::ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
 

@@ -379,6 +379,14 @@ OCIO_NAMESPACE_ENTER
                           getFloatString(w, m_lang));
     }
 
+    std::string GpuShaderText::vec4fConst(const double x, const double y, const double z, const double w) const
+    {
+        return vec4fConst(getFloatString(float(x), m_lang), 
+                          getFloatString(float(y), m_lang), 
+                          getFloatString(float(z), m_lang),
+                          getFloatString(float(w), m_lang));
+    }
+
     std::string GpuShaderText::vec4fConst(const std::string& x, 
                                           const std::string& y,
                                           const std::string& z,

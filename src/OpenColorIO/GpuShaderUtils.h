@@ -135,6 +135,7 @@ OCIO_NAMESPACE_ENTER
         std::string vec4fKeyword() const;
         // Get the string for creating constant vector with four elements
         std::string vec4fConst(float x, float y, float z, float w) const;
+        std::string vec4fConst(double x, double y, double z, double w) const;
         // Get the string for creating constant vector with four elements
         std::string vec4fConst(const std::string& x, const std::string& y,
                                const std::string& z, const std::string& w) const;

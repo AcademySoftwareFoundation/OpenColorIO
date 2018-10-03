@@ -283,7 +283,7 @@ OCIO_NAMESPACE_ENTER
                 // 0.000001 not equal
                 
                 cachedFile->lut1D->maxerror = 1e-5f;
-                cachedFile->lut1D->errortype = ERROR_RELATIVE;
+                cachedFile->lut1D->errortype = Lut1D::ERROR_RELATIVE;
             }
             
             // Reformat 3D data

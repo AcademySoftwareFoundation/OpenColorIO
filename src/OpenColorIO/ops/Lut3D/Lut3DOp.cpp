@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
     Lut3D::Lut3D()
+        :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     {
         for(int i=0; i<3; ++i)
         {
@@ -55,15 +56,22 @@ OCIO_NAMESPACE_ENTER
         return Lut3DRcPtr(new Lut3D());
     }
 
-    std::string Lut3D::getCacheID() const
+    // TODO: compute real value for isIdentity
+    bool Lut3D::isIdentity() const
     {
-        AutoMutex lock(m_cacheidMutex);
+        return false;
+    }
         
+    // TODO: compute real value for hasChannelCrosstalk
+    bool Lut3D::hasChannelCrosstalk() const
+    {
+        return true;
+    }
+        
+    std::string Lut3D::finalize() const
+    {
         if(lut.empty())
             throw Exception("Cannot compute cacheID of invalid Lut3D");
-        
-        if(!m_cacheID.empty())
-            return m_cacheID;
         
         md5_state_t state;
         md5_byte_t digest[16];
@@ -77,9 +85,7 @@ OCIO_NAMESPACE_ENTER
         
         md5_finish(&state, digest);
         
-        m_cacheID = GetPrintableHash(digest);
-        
-        return m_cacheID;
+        return GetPrintableHash(digest);
     }
     
     
@@ -579,18 +585,19 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
-            virtual bool isNoOp() const;
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
-            virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool supportedByLegacyShader() const { return false; }
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
+        protected:
+            Lut3DRcPtr lut() { return DynamicPtrCast<Lut3D>(data()); }
+            const Lut3DRcPtr lut() const { return DynamicPtrCast<Lut3D>(data()); }
+
         private:
-            Lut3DRcPtr m_lut;
             Interpolation m_interpolation;
             TransformDirection m_direction;
             
@@ -605,15 +612,15 @@ OCIO_NAMESPACE_ENTER
                          Interpolation interpolation,
                          TransformDirection direction):
                             Op(),
-                            m_lut(lut),
                             m_interpolation(interpolation),
                             m_direction(direction)
         {
+            data() = lut;
         }
         
         OpRcPtr Lut3DOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new Lut3DOp(m_lut, m_interpolation, m_direction));
+            OpRcPtr op = OpRcPtr(new Lut3DOp(lut(), m_interpolation, m_direction));
             return op;
         }
         
@@ -628,12 +635,6 @@ OCIO_NAMESPACE_ENTER
         std::string Lut3DOp::getCacheID() const
         {
             return m_cacheID;
-        }
-        
-        // TODO: compute real value for isNoOp
-        bool Lut3DOp::isNoOp() const
-        {
-            return false;
         }
         
         bool Lut3DOp::isSameType(const OpRcPtr & op) const
@@ -651,13 +652,7 @@ OCIO_NAMESPACE_ENTER
             if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
                 return false;
             
-            return (m_lut->getCacheID() == typedRcPtr->m_lut->getCacheID());
-        }
-        
-        // TODO: compute real value for hasChannelCrosstalk
-        bool Lut3DOp::hasChannelCrosstalk() const
-        {
-            return true;
+            return (lut()->getCacheID() == typedRcPtr->lut()->getCacheID());
         }
         
         void Lut3DOp::finalize()
@@ -691,14 +686,14 @@ OCIO_NAMESPACE_ENTER
             
             for(int i=0; i<3; ++i)
             {
-                if(m_lut->size[i] == 0)
+                if(lut()->size[i] == 0)
                 {
                     throw Exception("Cannot apply Lut3DOp, lut object is empty.");
                 }
                 // TODO if from_min[i] == from_max[i]
             }
             
-            if(m_lut->size[0]*m_lut->size[1]*m_lut->size[2] * 3 != (int)m_lut->lut.size())
+            if(lut()->size[0]*lut()->size[1]*lut()->size[2] * 3 != (int)lut()->lut.size())
             {
                 throw Exception("Cannot apply Lut3DOp, specified size does not match data.");
             }
@@ -706,7 +701,7 @@ OCIO_NAMESPACE_ENTER
             // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<Lut3DOp ";
-            cacheIDStream << m_lut->getCacheID() << " ";
+            cacheIDStream << lut()->getCacheID() << " ";
             cacheIDStream << InterpolationToString(m_interpolation) << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
             cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
@@ -719,15 +714,15 @@ OCIO_NAMESPACE_ENTER
         {
             if(m_interpolation == INTERP_NEAREST)
             {
-                Lut3D_Nearest(rgbaBuffer, numPixels, *m_lut);
+                Lut3D_Nearest(rgbaBuffer, numPixels, *lut());
             }
             else if(m_interpolation == INTERP_LINEAR)
             {
-                Lut3D_Linear(rgbaBuffer, numPixels, *m_lut);
+                Lut3D_Linear(rgbaBuffer, numPixels, *lut());
             }
             else if(m_interpolation == INTERP_TETRAHEDRAL)
             {
-                Lut3D_Tetrahedral(rgbaBuffer, numPixels, *m_lut);
+                Lut3D_Tetrahedral(rgbaBuffer, numPixels, *lut());
             }
         }
         
@@ -749,8 +744,8 @@ OCIO_NAMESPACE_ENTER
             const std::string name(resName.str());
 
             shaderDesc->add3DTexture(GpuShaderText::getSamplerName(name).c_str(), 
-                                     m_cacheID.c_str(), m_lut->size[0], 
-                                     m_interpolation, &m_lut->lut[0]);
+                                     m_cacheID.c_str(), lut()->size[0], 
+                                     m_interpolation, &lut()->lut[0]);
 
             {
                 GpuShaderText ss(shaderDesc->getLanguage());
@@ -759,8 +754,8 @@ OCIO_NAMESPACE_ENTER
             }
 
             {
-                const float m = (float(m_lut->size[0])-1.0f) / float(m_lut->size[0]);
-                const float b = 1.0f / (2.0f * float(m_lut->size[0]));
+                const float m = (float(lut()->size[0])-1.0f) / float(lut()->size[0]);
+                const float b = 1.0f / (2.0f * float(lut()->size[0]));
 
                 GpuShaderText ss(shaderDesc->getLanguage());
                 ss.indent();

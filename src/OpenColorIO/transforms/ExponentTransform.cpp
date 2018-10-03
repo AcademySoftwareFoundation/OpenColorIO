@@ -47,30 +47,28 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    class ExponentTransform::Impl
+    class ExponentTransform::Impl : public Exponent
     {
     public:
         TransformDirection dir_;
-        float value_[4];
         
         Impl() :
+            Exponent(),
             dir_(TRANSFORM_DIR_FORWARD)
-        {
-            for(int i=0; i<4; ++i)
-            {
-                value_[i] = 1.0f;
-            }
-        }
+        { }
         
         ~Impl()
         { }
         
         Impl& operator= (const Impl & rhs)
         {
+            Exponent::operator=(rhs);
             dir_ = rhs.dir_;
-            memcpy(value_, rhs.value_, 4*sizeof(float));
             return *this;
         }
+
+    private:        
+        Impl(const Impl & rhs);
     };
     
     ///////////////////////////////////////////////////////////////////////////
@@ -113,12 +111,24 @@ OCIO_NAMESPACE_ENTER
     
     void ExponentTransform::setValue(const float * vec4)
     {
-        if(vec4) memcpy(getImpl()->value_, vec4, 4*sizeof(float));
+        if(vec4)
+        {
+            for(unsigned i=0; i<4; ++i)
+            {
+                getImpl()->m_exp4[i] = vec4[i];
+            }
+        }
     }
     
     void ExponentTransform::getValue(float * vec4) const
     {
-        if(vec4) memcpy(vec4, getImpl()->value_, 4*sizeof(float));
+        if(vec4)
+        {
+            for(unsigned i=0; i<4; ++i)
+            {
+                vec4[i] = float(getImpl()->m_exp4[i]);
+            }
+        }
     }
     
     std::ostream& operator<< (std::ostream& os, const ExponentTransform& t)
