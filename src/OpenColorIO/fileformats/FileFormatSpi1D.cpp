@@ -326,7 +326,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include <fstream>
+#include "UnitTestFiles.h"
 
 OIIO_ADD_TEST(FileFormatSpi1D, FormatInfo)
 {
@@ -341,37 +341,16 @@ OIIO_ADD_TEST(FileFormatSpi1D, FormatInfo)
         formatInfoVec[0].capabilities);
 }
 
-OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & filePath)
+OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
 {
-    // Open the filePath
-    std::ifstream filestream;
-    filestream.open(filePath.c_str(), std::ios_base::in);
-
-    std::string root, extension, name;
-    OCIO::pystring::os::path::splitext(root, extension, filePath);
-
-    name = OCIO::pystring::os::path::basename(root);
-
-    // Read file
-    OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(filestream, name);
-
-    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    return OCIO::LoadTestFile<OCIO::LocalFileFormat, OCIO::LocalCachedFile>(
+        fileName, std::ios_base::in);
 }
-
-#ifndef OCIO_UNIT_TEST_FILES_DIR
-#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
-#endif
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 OIIO_ADD_TEST(FileFormatSpi1D, Test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    const std::string spi1dFile(ocioTestFilesDir + std::string("/cpf.spi1d"));
+    const std::string spi1dFile("cpf.spi1d");
     OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi1dFile));
 
     OIIO_CHECK_ASSERT((bool)cachedFile);

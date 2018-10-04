@@ -741,11 +741,14 @@ OCIO_NAMESPACE_EXIT
 #ifdef OCIO_UNIT_TEST
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
 #include <algorithm>
+#include "unittest.h"
+#include "UnitTestFiles.h"
 
-void LoadTransformFile(const std::string & filePath)
+void LoadTransformFile(const std::string & fileName)
 {
+    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/"
+                               + fileName);
     // Create a FileTransform
     OCIO::FileTransformRcPtr pFileTransform
         = OCIO::FileTransform::Create();
@@ -764,39 +767,25 @@ void LoadTransformFile(const std::string & filePath)
 
 }
 
-#ifndef OCIO_UNIT_TEST_FILES_DIR
-#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
-#endif
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
-
 OIIO_ADD_TEST(FileTransform, LoadFileOK)
 {
     // Discreet 1D Lut
-    const std::string discreetLut(ocioTestFilesDir
-        + std::string("/logtolin_8to8.lut"));
+    const std::string discreetLut("logtolin_8to8.lut");
     OIIO_CHECK_NO_THROW(LoadTransformFile(discreetLut));
 
     // Houdini 1D LUT
-    const std::string houdiniLut(ocioTestFilesDir
-        + std::string("/sRGB.lut"));
+    const std::string houdiniLut("sRGB.lut");
     OIIO_CHECK_NO_THROW(LoadTransformFile(houdiniLut));
 
     // Discreet 3D LUT file
-    const std::string discree3DtLut(ocioTestFilesDir
-        + std::string("/discreet-3d-lut.3dl"));
+    const std::string discree3DtLut("discreet-3d-lut.3dl");
     OIIO_CHECK_NO_THROW(LoadTransformFile(discree3DtLut));
 
     // 3D LUT file
-    const std::string crosstalk3DtLut(ocioTestFilesDir
-        + std::string("/crosstalk.3dl"));
+    const std::string crosstalk3DtLut("crosstalk.3dl");
     OIIO_CHECK_NO_THROW(LoadTransformFile(crosstalk3DtLut));
 
-    const std::string lustre3DtLut(ocioTestFilesDir
-        + std::string("/lustre_33x33x33.3dl"));
+    const std::string lustre3DtLut("lustre_33x33x33.3dl");
     OIIO_CHECK_NO_THROW(LoadTransformFile(lustre3DtLut));
 }
 
@@ -807,27 +796,23 @@ OIIO_ADD_TEST(FileTransform, LoadFileFail)
     // Test that they are correctly recognized as unreadable. 
     // TODO - validate exception being thrown
     {
-        const std::string lustreOldLut(ocioTestFilesDir
-            + std::string("/legacy_slog_to_log_v3_lustre.lut"));
+        const std::string lustreOldLut("legacy_slog_to_log_v3_lustre.lut");
         OIIO_CHECK_THROW(LoadTransformFile(lustreOldLut), OCIO::Exception);
     }
     {
-        const std::string lustreOldLut(ocioTestFilesDir
-            + std::string("/legacy_flmlk_desat.lut"));
+        const std::string lustreOldLut("legacy_flmlk_desat.lut");
         OIIO_CHECK_THROW(LoadTransformFile(lustreOldLut), OCIO::Exception);
     }
 
     // Color transform file
     {
-        const std::string colTransform(ocioTestFilesDir
-            + std::string("/example-3d-lut.ctf"));
+        const std::string colTransform("example-3d-lut.ctf");
         OIIO_CHECK_THROW(LoadTransformFile(colTransform), OCIO::Exception);
     }
 
     // Invalid file
     {
-        const std::string unKnown(ocioTestFilesDir
-            + std::string("/error_unknown_format.txt"));
+        const std::string unKnown("error_unknown_format.txt");
         OIIO_CHECK_THROW(LoadTransformFile(unKnown), OCIO::Exception);
     }
 }
