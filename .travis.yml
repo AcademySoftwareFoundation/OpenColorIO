@@ -28,7 +28,6 @@ before_install:
   # Linux ones
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       sudo apt-get update -qq;
-      sudo apt-get install -y -qq texlive-full;
       sudo apt-get install -y -qq freeglut3-dev libglew-dev libxmu-dev libxi-dev;
       mkdir ${TRAVIS_BUILD_DIR}/_cmake;
       wget https://cmake.org/files/v3.12/cmake-3.12.2-Linux-x86_64.sh;
@@ -58,7 +57,6 @@ script:
   - cmake .. -DCMAKE_INSTALL_PREFIX=../_install $OPTIONS
   - cmake --build . --target install
   - ctest -V
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake --build . --target pdf; fi
 
 deploy:
   provider: pages
