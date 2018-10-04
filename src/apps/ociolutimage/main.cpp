@@ -104,7 +104,7 @@ void Generate(int cubesize, int maxwidth,
         else
         {
             std::ostringstream os;
-            os << "You must specify an ocio configuration ";
+            os << "You must specify an OCIO configuration ";
             os << "(either with --config or $OCIO).";
             throw Exception(os.str().c_str());
         }
@@ -176,7 +176,7 @@ void Extract(int cubesize, int maxwidth,
     
     if(spec.width*spec.height<lut3DNumPixels)
     {
-        throw Exception("Image is not large enough to contain expected 3dlut.");
+        throw Exception("Image is not large enough to contain expected 3D LUT.");
     }
     
     // TODO: confirm no data window?
@@ -202,7 +202,7 @@ void Extract(int cubesize, int maxwidth,
     
     img.resize(lut3DNumPixels*3);
     
-    // Write the output lut
+    // Write the output LUT
     WriteLut3D(outputfile, &img[0], cubesize);
 }
 
@@ -222,13 +222,13 @@ int main (int argc, const char* argv[])
     
     // TODO: Add optional allocation transform instead of colorconvert
     ArgParse ap;
-    ap.options("ociolutimage -- Convert a 3dlut to or from an image\n\n"
+    ap.options("ociolutimage -- Convert a 3D LUT to or from an image\n\n"
                "usage:  ociolutimage [options] <OUTPUTFILE.LUT>\n\n"
                "example:  ociolutimage --generate --output lut.exr\n"
                "example:  ociolutimage --extract --input lut.exr --output output.spi3d\n",
                "<SEPARATOR>", "",
                "--generate", &generate, "Generate a lattice image",
-               "--extract", &extract, "Extract a 3dlut from an input image",
+               "--extract", &extract, "Extract a 3D LUT from an input image",
                "<SEPARATOR>", "",
                "--cubesize %d", &cubesize, "Size of the cube (default: 32)",
                "--maxwidth %d", &maxwidth, "Specify maximum width of the image (default: 2048)",
@@ -282,12 +282,12 @@ int main (int argc, const char* argv[])
         }
         catch(std::exception & e)
         {
-            std::cerr << "Error extracting lut: " << e.what() << std::endl;
+            std::cerr << "Error extracting LUT: " << e.what() << std::endl;
             exit(1);
         }
         catch(...)
         {
-            std::cerr << "Error extracting lut. An unknown error occurred.\n";
+            std::cerr << "Error extracting LUT. An unknown error occurred.\n";
             exit(1);
         }
     }
@@ -317,7 +317,7 @@ void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
     if(!img) return;
     if(numChannels < 3)
     {
-        throw Exception("Cannot generate idenitity 3d lut with less than 3 channels.");
+        throw Exception("Cannot generate identity 3D LUT with less than 3 channels.");
     }
     
     float c = 1.0f / ((float)edgeLen - 1.0f);

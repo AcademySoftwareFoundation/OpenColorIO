@@ -69,18 +69,18 @@ OCIO_NAMESPACE_ENTER
             
             virtual OpRcPtr clone() const = 0;
             
-            //! Something short, and printable.
-            //  The type of stuff you'd want to see in debugging.
+            // Something short, and printable.
+            // The type of stuff you'd want to see in debugging.
             virtual std::string getInfo() const = 0;
             
-            //! This should yield a string of not unreasonable length.
-            //! It can only be called after finalize()
+            // This should yield a string of not unreasonable length.
+            // It can only be called after finalize()
             virtual std::string getCacheID() const = 0;
             
-            //! Is the processing a noop? I.e, does apply do nothing.
-            //! (Even no-ops may define Allocation though.)
-            //! This must be implmented in a manner where its valid to call
-            //! *prior* to finalize. (Optimizers may make use of it)
+            // Is the processing a noop? I.e, does apply do nothing.
+            // (Even no-ops may define Allocation though.)
+            // This must be implemented in a manner where its valid to
+            // call *prior* to finalize. (Optimizers may make use of it)
             virtual bool isNoOp() const = 0;
             
             virtual bool isSameType(const OpRcPtr & op) const = 0;
