@@ -34,42 +34,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-    namespace Platform
-    {
-        // Unlike the ::getenv(), the method does not use any static buffer 
-        // for the Windows platform only. *nix platforms are still using
-        // the ::getenv method, but reducing the static vairable usage.
-        // 
-        void getenv (const char* name, std::string& value)
-        {
+namespace Platform
+{
+// Unlike the ::getenv(), the method does not use any static buffer 
+// for the Windows platform only. *nix platforms are still using
+// the ::getenv method, but reducing the static vairable usage.
+// 
+void getenv (const char* name, std::string& value)
+{
 #ifdef WINDOWS
-            // To remove the security compilation warning, the _dupenv_s method
-            // must be used (instead of the getenv). The improvement is that
-            // the buffer length is now under control to mitigate buffer overflow attacks.
-            //
-            char * val;
-            size_t len = 0;
-            // At least _dupenv_s validates the memory size by returning ENOMEM
-            //  in case of allocation size issue.
-            const errno_t err = ::_dupenv_s(&val, &len, name);
-            if(err!=0 || len==0 || !val || !*val)
-            {
-                if(val) free(val);
-                value.resize(0);
-            }
-            else
-            {
-                value.resize(len+1);
-                ::snprintf(&value[0], len, "%s", val);
-                if(val) free(val);
-            }
+    // To remove the security compilation warning, the _dupenv_s method
+    // must be used (instead of the getenv). The improvement is that
+    // the buffer length is now under control to mitigate buffer overflow attacks.
+    //
+    char * val;
+    size_t len = 0;
+    // At least _dupenv_s validates the memory size by returning ENOMEM
+    //  in case of allocation size issue.
+    const errno_t err = ::_dupenv_s(&val, &len, name);
+    if(err!=0 || len==0 || !val || !*val)
+    {
+        if(val) free(val);
+        value.resize(0);
+    }
+    else
+    {
+        value.resize(len+1);
+        ::snprintf(&value[0], len, "%s", val);
+        if(val) free(val);
+    }
 #else
-            const char* val = ::getenv(name);
-            value = (val && *val) ? val : "";
+    const char* val = ::getenv(name);
+    value = (val && *val) ? val : "";
 #endif 
-        }
+}
 
-    }//namespace platform
+}//namespace platform
 
 }
 OCIO_NAMESPACE_EXIT
