@@ -75,7 +75,7 @@ public class ConfigTest extends TestCase {
     + "out_pixel = pow(max(out_pixel, vec4(0, 0, 0, 0)), vec4(0.909091, 0.909091, 0.909091, 1));\n"
     + "out_pixel = vec4(-0.1, -0.3, -0.4, -0) + out_pixel;\n"
     + "out_pixel = pow(max(out_pixel, vec4(0, 0, 0, 0)), vec4(0.454545, 0.454545, 0.454545, 1));\n"
-    + "// OSX segfault work-around: Force a no-op sampling of the 3d lut.\n"
+    + "// OSX segfault work-around: Force a no-op sampling of the 3D LUT.\n"
     + "texture3D(lut3d, 0.96875 * out_pixel.rgb + 0.015625).rgb;\n"
     + "return out_pixel;\n"
     + "}\n"
