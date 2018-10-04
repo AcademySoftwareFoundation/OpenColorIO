@@ -675,11 +675,15 @@ OCIO_NAMESPACE_ENTER
         
         CachedFileRcPtr LocalFileFormat::Read(
             std::istream & istream,
-            const std::string & fileName) const
+            const std::string & filePath) const
         {
             Lut1dUtils::IMLutStruct *discreetLut1d = 0x0;
             int errline;
             std::string errorLine;
+            std::string root, extension, fileName;
+            pystring::os::path::splitext(root, extension, filePath);
+            fileName = pystring::os::path::basename(root);
+
             const int status = Lut1dUtils::IMLutGet(
                 istream,
                 fileName,
@@ -690,7 +694,7 @@ OCIO_NAMESPACE_ENTER
             {
                 std::ostringstream os;
                 os << "Error parsing .lut file (";
-                os << fileName.c_str() << ") ";
+                os << filePath.c_str() << ") ";
                 os << "using Discreet 1D LUT reader. ";
                 os << "Error is: " << Lut1dUtils::IMLutErrorStr(status);
                 if (Lut1dUtils::IMLUT_ERR_SYNTAX == status)
@@ -779,7 +783,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include <fstream>
+#include "UnitTestFiles.h"
 
 #ifdef WINDOWS
 #define stringCopy(to, from, size) strcpy_s(to, size, from);
@@ -827,37 +831,16 @@ OIIO_ADD_TEST(FileFormatD1DL, TestStringUtil)
     TestToolsStripEndNewLine("\rb", "\rb");
 }
 
-OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & filePath)
+OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
 {
-    // Open the filePath
-    std::ifstream filestream;
-    filestream.open(filePath.c_str(), std::ios_base::in);
-    
-    std::string root, extension, name;
-    OCIO::pystring::os::path::splitext(root, extension, filePath);
-
-    name = OCIO::pystring::os::path::basename(root);
-
-    // Read file
-    OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(filestream, name);
-
-    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    return OCIO::LoadTestFile<OCIO::LocalFileFormat, OCIO::LocalCachedFile>(
+        fileName, std::ios_base::in);
 }
-
-#ifndef OCIO_UNIT_TEST_FILES_DIR
-#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
-#endif
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 OIIO_ADD_TEST(FileFormatD1DL, Test)
 {
     OCIO::LocalCachedFileRcPtr lutFile;
-    const std::string discreetLut(ocioTestFilesDir + std::string("/logtolin_8to8.lut"));
+    const std::string discreetLut("logtolin_8to8.lut");
     OIIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut));
 
     // Current implementation of Discreet 1D LUT is converting table to floats
@@ -884,8 +867,7 @@ OIIO_ADD_TEST(FileFormatD1DL, Test)
         OIIO_CHECK_EQUAL(1.0f, lutFile->lut1D->luts[c][202]);
     }
 
-    const std::string discreetLut1216fp(ocioTestFilesDir
-        + std::string("/Test_12to16fp.lut"));
+    const std::string discreetLut1216fp("Test_12to16fp.lut");
     OIIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut1216fp));
 
     // Current implementation of Discreet 1D LUT is converting table to floats
@@ -905,18 +887,15 @@ OIIO_ADD_TEST(FileFormatD1DL, Test)
 
 
     // Half float are not handled as source yet.
-    const std::string discreetLut16fp16fp(ocioTestFilesDir
-        + std::string("/photo_default_16fpto16fp.lut"));
+    const std::string discreetLut16fp16fp("photo_default_16fpto16fp.lut");
     OIIO_CHECK_THROW(LoadLutFile(discreetLut16fp16fp), OCIO::Exception);
 
     // Half float are not handled yet.
-    const std::string discreetLut16fp12(ocioTestFilesDir
-        + std::string("/Test_16fpto12.lut"));
+    const std::string discreetLut16fp12("Test_16fpto12.lut");
     OIIO_CHECK_THROW(LoadLutFile(discreetLut16fp12), OCIO::Exception);
 
     // Bad file.
-    const std::string truncatedLut(ocioTestFilesDir
-        + std::string("/error_truncated_file.lut"));
+    const std::string truncatedLut("error_truncated_file.lut");
     OIIO_CHECK_THROW(LoadLutFile(truncatedLut), OCIO::Exception);
 }
 

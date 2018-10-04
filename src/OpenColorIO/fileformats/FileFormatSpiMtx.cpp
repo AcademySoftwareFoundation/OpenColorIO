@@ -204,7 +204,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include <fstream>
+#include "UnitTestFiles.h"
 
 OIIO_ADD_TEST(FileFormatSpiMtx, FormatInfo)
 {
@@ -219,37 +219,16 @@ OIIO_ADD_TEST(FileFormatSpiMtx, FormatInfo)
         formatInfoVec[0].capabilities);
 }
 
-OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & filePath)
+OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
 {
-    // Open the filePath
-    std::ifstream filestream;
-    filestream.open(filePath.c_str(), std::ios_base::in);
-
-    std::string root, extension, name;
-    OCIO::pystring::os::path::splitext(root, extension, filePath);
-
-    name = OCIO::pystring::os::path::basename(root);
-
-    // Read file
-    OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(filestream, name);
-
-    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    return OCIO::LoadTestFile<OCIO::LocalFileFormat, OCIO::LocalCachedFile>(
+        fileName, std::ios_base::in);
 }
-
-#ifndef OCIO_UNIT_TEST_FILES_DIR
-#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
-#endif
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 OIIO_ADD_TEST(FileFormatSpiMtx, Test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    const std::string spiMtxFile(ocioTestFilesDir + std::string("/camera_to_aces.spimtx"));
+    const std::string spiMtxFile("camera_to_aces.spimtx");
     OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spiMtxFile));
 
     OIIO_CHECK_NE(NULL, cachedFile.get());
