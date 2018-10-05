@@ -32,9 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     http://www.sidefx.com/docs/hdk11.0/hdk_io_lut.html
     
     Types:
-      - 1D Lut (partial support)
-      - 3D Lut
-      - 3D Lut with 1D Prelut
+      - 1D LUT (partial support)
+      - 3D LUT
+      - 3D LUT with 1D Prelut
     
     TODO:
         - Add support for other 1D types (R, G, B, A, RGB, RGBA, All)
@@ -180,7 +180,7 @@ OCIO_NAMESPACE_ENTER
                     }
                     else
                     {
-                        // Named lut, e.g "Pre {"
+                        // Named LUT, e.g "Pre {"
                         inlut = true;
                         lutname = pystring::lower(word);
 
@@ -309,7 +309,7 @@ OCIO_NAMESPACE_ENTER
             
             // this shouldn't happen
             if (!istream)
-                throw Exception ("file stream empty when trying to read Houdini lut");
+                throw Exception ("file stream empty when trying to read Houdini LUT");
 
             //
             CachedFileHDLRcPtr cachedFile = CachedFileHDLRcPtr (new CachedFileHDL ());

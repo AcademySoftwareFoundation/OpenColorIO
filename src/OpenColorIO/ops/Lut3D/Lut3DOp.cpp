@@ -523,7 +523,7 @@ OCIO_NAMESPACE_ENTER
         if(!img) return;
         if(numChannels < 3)
         {
-            throw Exception("Cannot generate idenitity 3d lut with less than 3 channels.");
+            throw Exception("Cannot generate idenitity 3D LUT with less than 3 channels.");
         }
         
         float c = 1.0f / ((float)edgeLen - 1.0f);
@@ -560,7 +560,7 @@ OCIO_NAMESPACE_ENTER
         if(dim*dim*dim != numPixels)
         {
             std::ostringstream os;
-            os << "Cannot infer 3D Lut size. ";
+            os << "Cannot infer 3D LUT size. ";
             os << numPixels << " element(s) does not correspond to a ";
             os << "unform cube edge length. (nearest edge length is ";
             os << dim << ").";
@@ -660,7 +660,7 @@ OCIO_NAMESPACE_ENTER
             if(m_direction != TRANSFORM_DIR_FORWARD)
             {
                 std::ostringstream os;
-                os << "3D Luts can only be applied in the forward direction. ";
+                os << "3D LUTs can only be applied in the forward direction. ";
                 os << "(" << TransformDirectionToString(m_direction) << ")";
                 os << " specified.";
                 throw Exception(os.str().c_str());
@@ -688,7 +688,7 @@ OCIO_NAMESPACE_ENTER
             {
                 if(lut()->size[i] == 0)
                 {
-                    throw Exception("Cannot apply Lut3DOp, lut object is empty.");
+                    throw Exception("Cannot apply Lut3DOp, LUT object is empty.");
                 }
                 // TODO if from_min[i] == from_max[i]
             }
@@ -941,7 +941,7 @@ OIIO_ADD_TEST(Lut3DOp, InverseComparisonCheck)
     OCIO::OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
         lut_a, OCIO::INTERP_NEAREST, OCIO::TRANSFORM_DIR_FORWARD));
-    // inverse Lut3D can't be finalized;
+    // inverse 3D LUT can't be finalized;
     OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
         lut_a, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
     OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
@@ -1040,7 +1040,7 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
 
 OIIO_ADD_TEST(Lut3DOp, ThrowLut)
 {
-    // std::string Lut3D::getCacheID() const when lut is empty
+    // std::string Lut3D::getCacheID() const when LUT is empty
     OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
     OIIO_CHECK_THROW_WHAT(lut->getCacheID(), OCIO::Exception, "invalid Lut3D");
 
@@ -1062,7 +1062,7 @@ OIIO_ADD_TEST(Lut3DOp, ThrowLut)
 
     // Get3DLutEdgeLenFromNumPixels with not cubic size
     OIIO_CHECK_THROW_WHAT(OCIO::Get3DLutEdgeLenFromNumPixels(10),
-        OCIO::Exception, "Cannot infer 3D Lut size");
+        OCIO::Exception, "Cannot infer 3D LUT size");
 }
 
 OIIO_ADD_TEST(Lut3DOp, ThrowLutOp)
@@ -1101,11 +1101,11 @@ OIIO_ADD_TEST(Lut3DOp, ThrowLutOp)
     for (int i = 0; i < 3; ++i)
     {
         lut->size[i] = 0;
-        OIIO_CHECK_THROW_WHAT(ops[0]->finalize(), OCIO::Exception, "lut object is empty");
+        OIIO_CHECK_THROW_WHAT(ops[0]->finalize(), OCIO::Exception, "LUT object is empty");
         lut->size[i] = 3;
     }
 
-    // missmatch lut size
+    // Mismatched LUT size
     lut->lut.resize(lut->lut.size() + 1);
     OIIO_CHECK_THROW_WHAT(ops[0]->finalize(), OCIO::Exception, "specified size does not match data");
 }
@@ -1134,14 +1134,14 @@ OIIO_ADD_TEST(Lut3DOp, cacheID)
 
     const std::string cacheID = ops[0]->getCacheID();
     OIIO_CHECK_EQUAL(cacheID.empty(), false);
-    // same lut have the same cacheID
+    // Identical LUTs have the same cacheID
     OIIO_CHECK_EQUAL(cacheID, ops[1]->getCacheID());
 }
 
 OIIO_ADD_TEST(Lut3DOp, EdgeLenFromNumPixels)
 {
     OIIO_CHECK_THROW_WHAT(OCIO::Get3DLutEdgeLenFromNumPixels(10),
-        OCIO::Exception, "Cannot infer 3D Lut size");
+        OCIO::Exception, "Cannot infer 3D LUT size");
     int expectedRes = 33;
     int res = 0;
     OIIO_CHECK_NO_THROW(res = OCIO::Get3DLutEdgeLenFromNumPixels(
