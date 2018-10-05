@@ -125,7 +125,7 @@ OCIO_NAMESPACE_ENTER
             // this shouldn't happen
             if(!istream)
             {
-                throw Exception ("File stream empty when trying to read .vf lut");
+                throw Exception ("File stream empty when trying to read .vf LUT");
             }
             
             // Validate the file type
@@ -214,11 +214,11 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             
-            // Interpret the parsed data, validate lut sizes
+            // Interpret the parsed data, validate LUT sizes
             if(size3d[0]*size3d[1]*size3d[2] != static_cast<int>(raw3d.size()/3))
             {
                 std::ostringstream os;
-                os << "Incorrect number of lut3d entries. ";
+                os << "Incorrect number of 3D LUT entries. ";
                 os << "Found " << raw3d.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
                 ThrowErrorMessage(
                     os.str().c_str(),
@@ -228,14 +228,14 @@ OCIO_NAMESPACE_ENTER
             if(size3d[0]*size3d[1]*size3d[2] == 0)
             {
                 ThrowErrorMessage(
-                    "No 3D Lut entries found.",
+                    "No 3D LUT entries found.",
                     fileName, -1, "");
             }
             
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
             // Setup the global matrix.
-            // (Nuke pre-scales this by the 3dlut size, so we must undo that here)
+            // (Nuke pre-scales this by the 3D LUT size, so we must undo that here)
             if(global_transform.size() == 16)
             {
                 for(int i=0; i<4; ++i)
@@ -262,7 +262,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     for (int rIndex = 0; rIndex<size3d[0]; ++rIndex)
                     {
-                        // In file, lut is blue fastest
+                        // In file, LUT is blue fastest
                         int i = GetLut3DIndex_BlueFast(rIndex, gIndex, bIndex,
                             size3d[0], size3d[1], size3d[2]);
                         
@@ -372,7 +372,7 @@ OIIO_ADD_TEST(FileFormatVF, ReadFailure)
     {
         // Validate stream can be read with no error.
         // Then stream will be altered to introduce errors.
-        const std::string SAMPLE_ERROR =
+        const std::string SAMPLE_NO_ERROR =
             "#Inventor V2.1 ascii\n"
             "grid_size 2 2 2\n"
             "global_transform 1 0 0 0  0 1 0 0  0 0 1 0  0 0 0 1 \n"
@@ -386,7 +386,7 @@ OIIO_ADD_TEST(FileFormatVF, ReadFailure)
             "1 1 0\n"
             "1 1 1\n";
 
-        OIIO_CHECK_NO_THROW(ReadVF(SAMPLE_ERROR));
+        OIIO_CHECK_NO_THROW(ReadVF(SAMPLE_NO_ERROR));
     }
     {
         // Too much data
@@ -405,7 +405,9 @@ OIIO_ADD_TEST(FileFormatVF, ReadFailure)
             "1 1 0\n"
             "1 1 1\n";
 
-        OIIO_CHECK_THROW(ReadVF(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadVF(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Incorrect number of 3D LUT entries");
     }
 }
 

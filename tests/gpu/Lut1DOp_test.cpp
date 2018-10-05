@@ -277,7 +277,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_generic_shader)
 }
 
 /*
-    TODO: Uncomment when the Lut1D inverse is fully working.
+    TODO: Uncomment when the 1D LUT inverse is fully working.
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_generic_shader)
 {
@@ -303,7 +303,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
 }
 
 /*
-    TODO: Uncomment when the Lut1D inverse is fully working.
+    TODO: Uncomment when the 1D LUT inverse is fully working.
 
 OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
 {

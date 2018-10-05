@@ -769,7 +769,7 @@ void LoadTransformFile(const std::string & fileName)
 
 OIIO_ADD_TEST(FileTransform, LoadFileOK)
 {
-    // Discreet 1D Lut
+    // Discreet 1D LUT
     const std::string discreetLut("logtolin_8to8.lut");
     OIIO_CHECK_NO_THROW(LoadTransformFile(discreetLut));
 
