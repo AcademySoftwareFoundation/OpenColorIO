@@ -875,8 +875,9 @@ OCIO_NAMESPACE_ENTER
         // convert the filename to lowercase.
         std::string fullstr = pystring::lower(std::string(str));
         
-        // See if it matches a lut name.
-        // This is the position of the RIGHT end of the colorspace substring, not the left
+        // See if it matches a LUT name.
+        // This is the position of the RIGHT end of the colorspace substring,
+        // not the left
         int rightMostColorPos=-1;
         std::string rightMostColorspace = "";
         int rightMostColorSpaceIndex = -1;
@@ -891,8 +892,9 @@ OCIO_NAMESPACE_ENTER
             if(colorspacePos < 0)
                 continue;
             
-            // If we have found a match, move the pointer over to the right end of the substring
-            // This will allow us to find the longest name that matches the rightmost colorspace
+            // If we have found a match, move the pointer over to the right end
+            // of the substring.  This will allow us to find the longest name
+            // that matches the rightmost colorspace
             colorspacePos += (int)csname.size();
             
             if ( (colorspacePos > rightMostColorPos) ||
@@ -1368,7 +1370,7 @@ OCIO_NAMESPACE_ENTER
         return getProcessor(context, srcName, dstName);
     }
     
-    //! Names can be colorspace name or role name
+    // Names can be colorspace name or role name
     ConstProcessorRcPtr Config::getProcessor(const ConstContextRcPtr & context,
                                              const char * srcName,
                                              const char * dstName) const
