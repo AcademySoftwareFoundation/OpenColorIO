@@ -73,7 +73,7 @@ colorspaces:
         osx_hack = ''
         if osname=="Darwin":
             osx_hack = """
-// OSX segfault work-around: Force a no-op sampling of the 3d lut.
+// OSX segfault work-around: Force a no-op sampling of the 3D LUT.
 texture3D(lut3d, 0.96875 * out_pixel.rgb + 0.015625).rgb;"""
 
         self.GLSLResult = """
