@@ -67,8 +67,11 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            memcpy(value_, rhs.value_, 4*sizeof(float));
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                memcpy(value_, rhs.value_, 4 * sizeof(float));
+            }
             return *this;
         }
     };
@@ -97,7 +100,10 @@ OCIO_NAMESPACE_ENTER
     
     ExponentTransform& ExponentTransform::operator= (const ExponentTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     

@@ -113,7 +113,7 @@ namespace
             if(width > get1dLutMaxWidth())
             {
                 std::stringstream ss;
-                ss  << "1d Lut size exceeds the maximum: "
+                ss  << "1D LUT size exceeds the maximum: "
                     << width << " > " << get1dLutMaxWidth();
                 throw OCIO_NAMESPACE::Exception(ss.str().c_str());
             }
@@ -131,7 +131,7 @@ namespace
             if(index >= textures.size())
             {
                 std::ostringstream ss;
-                ss << "1D Lut access error: index = " << index
+                ss << "1D LUT access error: index = " << index
                    << " where size = " << textures.size();
                 throw OCIO_NAMESPACE::Exception(ss.str().c_str());
             }
@@ -150,7 +150,7 @@ namespace
             if(index >= textures.size())
             {
                 std::ostringstream ss;
-                ss << "1D Lut access error: index = " << index
+                ss << "1D LUT access error: index = " << index
                    << " where size = " << textures.size();
                 throw OCIO_NAMESPACE::Exception(ss.str().c_str());
             }
@@ -165,7 +165,7 @@ namespace
             if(dimension > get3dLutMaxDimension())
             {
                 std::stringstream ss;
-                ss  << "3d Lut dimension exceeds the maximum: "
+                ss  << "3D LUT dimension exceeds the maximum: "
                     << dimension << " > " << get3dLutMaxDimension();
                 throw OCIO_NAMESPACE::Exception(ss.str().c_str());
             }
@@ -184,7 +184,7 @@ namespace
             if(index >= textures3D.size())
             {
                 std::ostringstream ss;
-                ss << "3D Lut access error: index = " << index
+                ss << "3D LUT access error: index = " << index
                    << " where size = " << textures3D.size();
                 throw OCIO_NAMESPACE::Exception(ss.str().c_str());
             }
@@ -201,7 +201,7 @@ namespace
             if(index >= textures3D.size())
             {
                 std::ostringstream ss;
-                ss << "3D Lut access error: index = " << index
+                ss << "3D LUT access error: index = " << index
                    << " where size = " << textures3D.size();
                 throw OCIO_NAMESPACE::Exception(ss.str().c_str());
             }
@@ -333,13 +333,13 @@ OCIO_NAMESPACE_ENTER
 
     unsigned LegacyGpuShaderDesc::getTextureMaxWidth() const 
     {
-        throw Exception("1D luts are not supported");
+        throw Exception("1D LUTs are not supported");
         return 0;
     }
 
     void LegacyGpuShaderDesc::setTextureMaxWidth(unsigned)
     {
-        throw Exception("1D luts are not supported");
+        throw Exception("1D LUTs are not supported");
     }
 
     unsigned LegacyGpuShaderDesc::getNumTextures() const
@@ -351,19 +351,19 @@ OCIO_NAMESPACE_ENTER
         const char *, const char *, unsigned, unsigned,
         TextureType, Interpolation, float *)
     {
-        throw Exception("1D luts are not supported");
+        throw Exception("1D LUTs are not supported");
     }
 
     void LegacyGpuShaderDesc::getTexture(
         unsigned, const char *&, const char *&, 
         unsigned &, unsigned &, TextureType &, Interpolation &) const
     {
-        throw Exception("1D luts are not supported");
+        throw Exception("1D LUTs are not supported");
     }
 
     void LegacyGpuShaderDesc::getTextureValues(unsigned, const float *&) const
     {
-        throw Exception("1D luts are not supported");
+        throw Exception("1D LUTs are not supported");
     }
 
     unsigned LegacyGpuShaderDesc::getNum3DTextures() const
@@ -703,7 +703,9 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
         OIIO_CHECK_EQUAL(OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, t);
         OIIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OIIO_CHECK_THROW(shaderDesc->getTexture(1, name, id, w, h, t, i), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->getTexture(1, name, id, w, h, t, i),
+                              OCIO::Exception,
+                              "1D LUT access error");
 
         const float * vals = 0x0;
         OIIO_CHECK_NO_THROW(shaderDesc->getTextureValues(0, vals));
@@ -713,9 +715,11 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
             OIIO_CHECK_EQUAL(values[idx], vals[idx]);
         }
 
-        OIIO_CHECK_THROW(shaderDesc->getTextureValues(1, vals), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->getTextureValues(1, vals),
+                              OCIO::Exception,
+                              "1D LUT access error");
 
-        // Support several 1D Luts
+        // Support several 1D LUTs
 
         OIIO_CHECK_NO_THROW(shaderDesc->addTexture("lut2", "1234", width, height, 
                                                    OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
@@ -726,7 +730,9 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
 
         OIIO_CHECK_NO_THROW(shaderDesc->getTextureValues(0, vals));
         OIIO_CHECK_NO_THROW(shaderDesc->getTextureValues(1, vals));
-        OIIO_CHECK_THROW(shaderDesc->getTextureValues(2, vals), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->getTextureValues(2, vals),
+                              OCIO::Exception,
+                              "1D LUT access error");
     }
 
     {
@@ -755,7 +761,9 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
         OIIO_CHECK_EQUAL(edgelen, e);
         OIIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OIIO_CHECK_THROW(shaderDesc->get3DTexture(1, name, id, e, i), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, name, id, e, i),
+                              OCIO::Exception,
+                              "3D LUT access error");
 
         const float * vals = 0x0;
         OIIO_CHECK_NO_THROW(shaderDesc->get3DTextureValues(0, vals));
@@ -765,9 +773,11 @@ OIIO_ADD_TEST(GpuShader, generic_shader)
             OIIO_CHECK_EQUAL(values[idx], vals[idx]);
         }
 
-        OIIO_CHECK_THROW(shaderDesc->get3DTextureValues(1, vals), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->get3DTextureValues(1, vals),
+                              OCIO::Exception,
+                              "3D LUT access error");
 
-        // Supports several 3D Luts
+        // Supports several 3D LUTs
 
         OIIO_CHECK_NO_THROW(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
                                                      OCIO::INTERP_TETRAHEDRAL,
@@ -815,11 +825,12 @@ OIIO_ADD_TEST(GpuShader, legacy_shader)
         float values[size];
 
         OIIO_CHECK_EQUAL(shaderDesc->getNumTextures(), 0U);
-        OIIO_CHECK_THROW(shaderDesc->addTexture("lut1", "1234", width, height, 
-                                                OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
-                                                OCIO::INTERP_TETRAHEDRAL,
-                                                &values[0]), 
-                         OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->addTexture("lut1", "1234", width, height, 
+                                                     OCIO::GpuShaderDesc::TEXTURE_RGB_CHANNEL, 
+                                                     OCIO::INTERP_TETRAHEDRAL,
+                                                     &values[0]), 
+                              OCIO::Exception,
+                              "1D LUTs are not supported");
 
         const char * name = 0x0;
         const char * id = 0x0;
@@ -828,7 +839,9 @@ OIIO_ADD_TEST(GpuShader, legacy_shader)
         OCIO::GpuShaderDesc::TextureType t = OCIO::GpuShaderDesc::TEXTURE_RED_CHANNEL;
         OCIO::Interpolation i = OCIO::INTERP_UNKNOWN;
 
-        OIIO_CHECK_THROW(shaderDesc->getTexture(0, name, id, w, h, t, i), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->getTexture(0, name, id, w, h, t, i),
+                              OCIO::Exception,
+                              "1D LUTs are not supported");
     }
 
     {
@@ -856,7 +869,9 @@ OIIO_ADD_TEST(GpuShader, legacy_shader)
         OIIO_CHECK_EQUAL(edgelen, e);
         OIIO_CHECK_EQUAL(OCIO::INTERP_TETRAHEDRAL, i);
 
-        OIIO_CHECK_THROW(shaderDesc->get3DTexture(1, name, id, e, i), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->get3DTexture(1, name, id, e, i),
+                              OCIO::Exception,
+                              "3D LUT access error");
 
         const float * vals = 0x0;
         OIIO_CHECK_NO_THROW(shaderDesc->get3DTextureValues(0, vals));
@@ -866,14 +881,17 @@ OIIO_ADD_TEST(GpuShader, legacy_shader)
             OIIO_CHECK_EQUAL(values[idx], vals[idx]);
         }
 
-        OIIO_CHECK_THROW(shaderDesc->get3DTextureValues(1, vals), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->get3DTextureValues(1, vals),
+                              OCIO::Exception,
+                              "3D LUT access error");
 
-        // Only one 3D Lut
+        // Only one 3D LUT
 
-        OIIO_CHECK_THROW(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
-                                                  OCIO::INTERP_TETRAHEDRAL,
-                                                  &values[0]),
-                         OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(shaderDesc->add3DTexture("lut1", "1234", edgelen, 
+                                                       OCIO::INTERP_TETRAHEDRAL,
+                                                       &values[0]),
+                              OCIO::Exception,
+                              "only one 3D texture allowed");
 
     }
 }

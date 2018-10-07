@@ -90,7 +90,7 @@ OCIO_NAMESPACE_ENTER
             const std::string & lineContent)
         {
             std::ostringstream os;
-            os << "Error parsing Pandora lut file (";
+            os << "Error parsing Pandora LUT file (";
             os << fileName;
             os << ").  ";
             if (-1 != line)
@@ -126,7 +126,8 @@ OCIO_NAMESPACE_ENTER
             // this shouldn't happen
             if(!istream)
             {
-                throw Exception ("File stream empty when trying to read Pandora lut");
+                throw Exception ("File stream empty when trying "
+                                 "to read Pandora LUT");
             }
             
             // Validate the file type
@@ -149,7 +150,8 @@ OCIO_NAMESPACE_ENTER
                     ++lineNumber;
 
                     // Strip, lowercase, and split the line
-                    pystring::split(pystring::lower(pystring::strip(line)), parts);
+                    pystring::split(pystring::lower(pystring::strip(line)),
+                                    parts);
                     if(parts.empty()) continue;
                     
                     // Skip all lines starting with '#'
@@ -157,10 +159,11 @@ OCIO_NAMESPACE_ENTER
                     
                     if(parts[0] == "channel")
                     {
-                        if(parts.size() != 2 || pystring::lower(parts[1]) != "3d")
+                        if(parts.size() != 2 
+                            || pystring::lower(parts[1]) != "3d")
                         {
                             ThrowErrorMessage(
-                                "Only 3d luts are currently supported "
+                                "Only 3D LUTs are currently supported "
                                 "(channel: 3d).",
                                 fileName,
                                 lineNumber,
@@ -184,7 +187,9 @@ OCIO_NAMESPACE_ENTER
                     }
                     else if(parts[0] == "out")
                     {
-                        if(parts.size() != 2 || !StringToInt( &outputBitDepthMaxValue, parts[1].c_str()))
+                        if(parts.size() != 2 
+                            || !StringToInt(&outputBitDepthMaxValue,
+                                            parts[1].c_str()))
                         {
                             ThrowErrorMessage(
                                 "Malformed 'out' tag.",
@@ -195,10 +200,11 @@ OCIO_NAMESPACE_ENTER
                     }
                     else if(parts[0] == "format")
                     {
-                        if(parts.size() != 2 || pystring::lower(parts[1]) != "lut")
+                        if(parts.size() != 2 
+                            || pystring::lower(parts[1]) != "lut")
                         {
                             ThrowErrorMessage(
-                                "Only luts are currently supported "
+                                "Only LUTs are currently supported "
                                 "(format: lut).",
                                 fileName,
                                 lineNumber,
@@ -213,7 +219,7 @@ OCIO_NAMESPACE_ENTER
                            pystring::lower(parts[3]) != "blue")
                         {
                             ThrowErrorMessage(
-                                "Only rgb luts are currently supported "
+                                "Only rgb LUTs are currently supported "
                                 "(values: red green blue).",
                                 fileName,
                                 lineNumber,
@@ -240,12 +246,13 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             
-            // Interpret the parsed data, validate lut sizes
+            // Interpret the parsed data, validate LUT sizes
             if(lutEdgeLen*lutEdgeLen*lutEdgeLen != static_cast<int>(raw3d.size()/3))
             {
                 std::ostringstream os;
-                os << "Incorrect number of lut3d entries. ";
-                os << "Found " << raw3d.size() / 3 << ", expected " << lutEdgeLen*lutEdgeLen*lutEdgeLen << ".";
+                os << "Incorrect number of 3D LUT entries. ";
+                os << "Found " << raw3d.size() / 3 << ", expected ";
+                os << lutEdgeLen*lutEdgeLen*lutEdgeLen << ".";
                 ThrowErrorMessage(
                     os.str().c_str(),
                     fileName, -1, "");
@@ -254,7 +261,7 @@ OCIO_NAMESPACE_ENTER
             if(lutEdgeLen*lutEdgeLen*lutEdgeLen == 0)
             {
                 ThrowErrorMessage(
-                    "No 3D Lut entries found.",
+                    "No 3D LUT entries found.",
                     fileName, -1, "");
             }
             
@@ -282,7 +289,7 @@ OCIO_NAMESPACE_ENTER
                 {
                     for (int rIndex = 0; rIndex<lutEdgeLen; ++rIndex)
                     {
-                        // In file, lut is blue fastest
+                        // In file, LUT is blue fastest
                         int i = GetLut3DIndex_BlueFast(rIndex, gIndex, bIndex,
                                                       lutEdgeLen, lutEdgeLen, lutEdgeLen);
                         cachedFile->lut3D->lut.push_back(static_cast<float>(raw3d[i+0]) * scale);
@@ -309,7 +316,7 @@ OCIO_NAMESPACE_ENTER
             if(!cachedFile)
             {
                 std::ostringstream os;
-                os << "Cannot build Truelight .cub Op. Invalid cache type.";
+                os << "Cannot build Pandora LUT. Invalid cache type.";
                 throw Exception(os.str().c_str());
             }
             
@@ -382,7 +389,7 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
     {
         // Validate stream can be read with no error.
         // Then stream will be altered to introduce errors.
-        const std::string SAMPLE_ERROR =
+        const std::string SAMPLE_NO_ERROR =
             "channel 3d\n"
             "in 8\n"
             "out 256\n"
@@ -397,7 +404,7 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "6 255 255   0\n"
             "7 255 255 255\n";
 
-        OIIO_CHECK_NO_THROW(ReadPandora(SAMPLE_ERROR));
+        OIIO_CHECK_NO_THROW(ReadPandora(SAMPLE_NO_ERROR));
     }
     {
         // Wrong channel tag
@@ -416,10 +423,12 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "6 255 255   0\n"
             "7 255 255 255\n";
 
-        OIIO_CHECK_THROW(ReadPandora(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Only 3D LUTs are currently supported");
     }
     {
-        // No value spec
+        // No value spec (LUT will not be read)
         const std::string SAMPLE_ERROR =
             "channel 3d\n"
             "in 8\n"
@@ -434,12 +443,14 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "6 255 255   0\n"
             "7 255 255 255\n";
 
-        OIIO_CHECK_THROW(ReadPandora(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Incorrect number of 3D LUT entries");
     }
     {
         // Wrong entry
         const std::string SAMPLE_ERROR =
-            "channel 2d\n"
+            "channel 3d\n"
             "in 8\n"
             "out 256\n"
             "format lut\n"
@@ -453,12 +464,14 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "6 255 255   0\n"
             "7 255 255 255\n";
 
-        OIIO_CHECK_THROW(ReadPandora(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Expected to find 4 integers");
     }
     {
         // Wrong number of entries
         const std::string SAMPLE_ERROR =
-            "channel 2d\n"
+            "channel 3d\n"
             "in 8\n"
             "out 256\n"
             "format lut\n"
@@ -473,7 +486,9 @@ OIIO_ADD_TEST(FileFormatPandora, ReadFailure)
             "7 255 255   0\n"
             "8 255 255 255\n";
 
-        OIIO_CHECK_THROW(ReadPandora(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadPandora(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Incorrect number of 3D LUT entries");
     }
 }
 

@@ -410,7 +410,7 @@ int main(int argc, const char **argv)
     std::cerr << "Loading " << inputimage << std::endl;
     try
     {
-        OIIO::ImageInput* f = OIIO::ImageInput::create(inputimage);
+        auto f = OIIO::ImageInput::create(inputimage);
         if(!f)
         {
             std::cerr << "Could not create image input." << std::endl;
@@ -434,7 +434,9 @@ int main(int argc, const char **argv)
         memset(&img[0], 0, imgwidth*imgheight*components*sizeof(float));
         
         f->read_image(OIIO::TypeDesc::TypeFloat, &img[0]);
-        delete f;
+#if OIIO_VERSION < 10903
+        OIIO::ImageInput::destroy(f);
+#endif
         
         std::vector<int> kchannels;
         //parse --ch argument
@@ -622,7 +624,7 @@ int main(int argc, const char **argv)
     // Write out the result
     try
     {
-        OIIO::ImageOutput* f = OIIO::ImageOutput::create(outputimage);
+        auto f = OIIO::ImageOutput::create(outputimage);
         if(!f)
         {
             std::cerr << "Could not create output input." << std::endl;
@@ -632,7 +634,9 @@ int main(int argc, const char **argv)
         f->open(outputimage, spec);
         f->write_image(OIIO::TypeDesc::FLOAT, &img[0]);
         f->close();
-        delete f;
+#if OIIO_VERSION < 10903
+        OIIO::ImageInput::destroy(f);
+#endif
     }
     catch(...)
     {
