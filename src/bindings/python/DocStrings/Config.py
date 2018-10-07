@@ -117,7 +117,7 @@ class Config:
         will be incorporated into the cacheID. While the contents of the files
         are not read, the file system is queried for relavent information
         (mtime, inode) so that the :py:class:`PyOpenColorIO.Config`'s cacheID
-        will change when the underlying luts are updated.
+        will change when the underlying LUTs are updated.
         
         If a context is not provided, the current Context will be used. If a
         null context is provided, file references will not be taken into

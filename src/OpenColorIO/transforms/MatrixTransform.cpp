@@ -65,9 +65,12 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            memcpy(matrix_, rhs.matrix_, 16*sizeof(float));
-            memcpy(offset_, rhs.offset_, 4*sizeof(float));
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                memcpy(matrix_, rhs.matrix_, 16 * sizeof(float));
+                memcpy(offset_, rhs.offset_, 4 * sizeof(float));
+            }
             return *this;
         }
     };
@@ -96,7 +99,10 @@ OCIO_NAMESPACE_ENTER
     
     MatrixTransform& MatrixTransform::operator= (const MatrixTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     

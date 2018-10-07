@@ -41,9 +41,6 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
-#if (OIIO_VERSION < 10100)
-namespace OIIO = OIIO_NAMESPACE;
-#endif
 
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
@@ -104,7 +101,7 @@ static void InitImageTexture(const char * filename)
         std::cout << "loading: " << filename << std::endl;
         try
         {
-            OIIO::ImageInput* f = OIIO::ImageInput::create(filename);
+            auto f = OIIO::ImageInput::create(filename);
             if(!f)
             {
                 std::cerr << "Could not create image input." << std::endl;
@@ -135,7 +132,9 @@ static void InitImageTexture(const char * filename)
                 OIIO::TypeDesc::TypeFloat, 
 #endif
                 &img[0]);
+#if OIIO_VERSION < 10903
             OIIO::ImageInput::destroy(f);
+#endif
         }
         catch(...)
         {

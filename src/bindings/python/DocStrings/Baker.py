@@ -2,10 +2,10 @@
 class Baker:
     """
     In certain situations it is necessary to serialize transforms into
-    a variety of application specific lut formats. The Baker can be
-    used to create lut formats that ocio supports for writing.
+    a variety of application specific LUT formats. The Baker can be
+    used to create lut formats that OCIO supports for writing.
 
-    **Usage Example:** *Bake a houdini sRGB viewer lut*
+    **Usage Example:** *Bake a houdini sRGB viewer LUT*
 
     .. code-block:: python
 
@@ -14,7 +14,7 @@ class Baker:
         baker = OCIO.Baker()
         baker.setConfig(config)
         baker.setFormat('houdini')  # set the houdini type
-        baker.setType('3D')  # we want a 3D lut
+        baker.setType('3D')  # we want a 3D LUT
         baker.setInputSpace('lnf')
         baker.setShaperSpace('log')
         baker.setTargetSpace('sRGB')
@@ -23,8 +23,8 @@ class Baker:
             lutFile.write(out)
 
     .. note::
-        Except for icc profiles, this interface can be used in place of
-        *ociobakelut* for lut file creation.
+        Except for ICC profiles, this interface can be used in place of
+        *ociobakelut* for LUT file creation.
 
     """
     def __init__(self):
@@ -80,7 +80,7 @@ class Baker:
         """
         setFormat(formatName)
 
-        Set the lut output format.
+        Set the LUT output format.
 
         Any registered file format *with write capability* is supported
         by Baker. Available formats can be queried programmatically via
@@ -102,7 +102,7 @@ class Baker:
         """
         getFormat()
 
-        Get the lut output format.
+        Get the LUT output format.
 
         :return: format name
         :rtype: string
@@ -113,7 +113,7 @@ class Baker:
         """
         setType(type)
 
-        Set the lut output type (1D or 3D).
+        Set the LUT output type (1D or 3D).
 
         :param type: type name (e.g. '3D')
         :type type: string
@@ -124,7 +124,7 @@ class Baker:
         """
         getType()
 
-        Get the lut output type.
+        Get the LUT output type.
 
         :return: type name
         :rtype: string
@@ -135,7 +135,7 @@ class Baker:
         """
         setMetadata(metadata)
 
-        Set *optional* meta data for luts that support it.
+        Set *optional* meta data for LUTs that support it.
 
         :param metadata: meta data text
         :type metadata: string
@@ -157,7 +157,7 @@ class Baker:
         """
         setInputSpace(inputSpace)
 
-        Set the input :py:class:`PyOpenColorIO.ColorSpace` that the lut
+        Set the input :py:class:`PyOpenColorIO.ColorSpace` that the LUT
         will be applied to.
 
         :param inputSpace: input ColorSpace name
@@ -256,7 +256,7 @@ class Baker:
         setTargetSpace(targetSpace)
 
         Set the target :py:class:`PyOpenColorIO.ColorSpace` for the
-        lut.
+        LUT.
 
         :param targetSpace: target ColorSpace name
         :type targetSpace: string
@@ -323,9 +323,9 @@ class Baker:
         """
         bake()
 
-        Bake the lut into a string and return it.
+        Bake the LUT into a string and return it.
 
-        :return: formatted lut data
+        :return: formatted LUT data
         :rtype: string
         """
         pass
@@ -334,7 +334,7 @@ class Baker:
         """
         getNumFormats()
 
-        Get the number of lut writers.
+        Get the number of LUT writers.
 
         :return: format count
         :rtype: int
@@ -345,7 +345,7 @@ class Baker:
         """
         getFormatNameByIndex(index)
 
-        Get the lut writer name at index. Return an empty string if an
+        Get the LUT writer name at index. Return an empty string if an
         invalid index is specified.
 
         :param index: format index
@@ -359,7 +359,7 @@ class Baker:
         """
         getFormatExtensionByIndex(index)
 
-        Get the lut writer file extension at index. Return an empty
+        Get the LUT writer file extension at index. Return an empty
         string if an invalid index is specified.
 
         :param index: format index

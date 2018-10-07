@@ -48,8 +48,7 @@ const float g_epsilon = 1e-4f;
 
 OCIO_ADD_GPU_TEST(Lut3DOp, red_only_using_CSP_file_legacy_shader)
 {
-    // Used a format I know to create a 3D lut file.
-    //  Any other file format would have been good also.
+    // Any other 3D LUT file format would have been good also.
 
     std::ostringstream content;
     content << "CSPLUTV100"                                  << "\n";
@@ -93,8 +92,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, red_only_using_CSP_file_legacy_shader)
 
 OCIO_ADD_GPU_TEST(Lut3DOp, green_only_using_CSP_file_legacy_shader)
 {
-    // Used a format I know to create a 3D lut file.
-    //  Any other file format would have been good also.
+    // Any other 3D LUT file format would have been good also.
 
     std::ostringstream content;
     content << "CSPLUTV100"                                  << "\n";
@@ -138,8 +136,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, green_only_using_CSP_file_legacy_shader)
 
 OCIO_ADD_GPU_TEST(Lut3DOp, blue_only_using_CSP_file_legacy_shader)
 {
-    // Used a format I know to create a 3D lut file.
-    //  Any other file format would have been good also.
+    // Any other 3D LUT file format would have been good also.
 
     std::ostringstream content;
     content << "CSPLUTV100"                                  << "\n";
@@ -184,8 +181,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, blue_only_using_CSP_file_legacy_shader)
 
 OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file_legacy_shader)
 {
-    // Used a format I know to create a 3D lut file.
-    //  Any other file format would have been good also.
+    // Any other 3D LUT file format would have been good also.
 
     std::ostringstream content;
     content << "CSPLUTV100"                                  << "\n";
@@ -268,10 +264,10 @@ OCIO_ADD_GPU_TEST(Lut3DOp, arbitrary_using_CSP_file)
 
     test.setContext(file->createEditableCopy(), shaderDesc);
 
-    // TODO: Small luts not being resampled for now, such error threshold is expected
+    // TODO: Small LUTs not being resampled for now, such error threshold is expected
     //       The legacy shader has a better error threashold because 
-    //       it converts all luts in one 3d lut of dimension LUT3D_EDGE_SIZE
-    //       which performs a resampling of small luts.
+    //       it converts all LUTs in one 3D LUT of dimension LUT3D_EDGE_SIZE
+    //       which performs a resampling of small LUTs.
     test.setErrorThreshold(1e-2f);
 }
 

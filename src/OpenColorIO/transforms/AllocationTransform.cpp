@@ -65,9 +65,12 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            allocation_ = rhs.allocation_;
-            vars_ = rhs.vars_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                allocation_ = rhs.allocation_;
+                vars_ = rhs.vars_;
+            }
             return *this;
         }
     };
@@ -95,7 +98,10 @@ OCIO_NAMESPACE_ENTER
     
     AllocationTransform& AllocationTransform::operator= (const AllocationTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     

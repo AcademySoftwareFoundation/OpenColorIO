@@ -39,7 +39,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 
 const char * DESC_STRING = "\n\n"
-"ociocheck is useful to validate that the specified .ocio configuration\n"
+"ociocheck is useful to validate that the specified OCIO configuration\n"
 "is valid, and that all the color transforms are defined.\n"
 "For example, it is possible that the configuration may reference\n"
 "lookup tables that do not exist. ociocheck will find these cases.\n\n"
@@ -96,7 +96,7 @@ int main(int argc, const char **argv)
         }
         else
         {
-            std::cout << "ERROR: You must specify an input ocio configuration ";
+            std::cout << "ERROR: You must specify an input OCIO configuration ";
             std::cout << "(either with --iconfig or $OCIO).\n";
             ap.usage ();
             std::cout << DESC_STRING;

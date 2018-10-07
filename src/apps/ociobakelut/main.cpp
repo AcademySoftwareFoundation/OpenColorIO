@@ -77,7 +77,7 @@ int main (int argc, const char* argv[])
     
     // What are the allowed baker output formats?
     std::ostringstream formats;
-    formats << "the lut format to bake: ";
+    formats << "the LUT format to bake: ";
     for(int i=0; i<OCIO::Baker::getNumFormats(); ++i)
     {
         if(i!=0) formats << ", ";
@@ -92,7 +92,7 @@ int main (int argc, const char* argv[])
     float dummyf1, dummyf2, dummyf3;
     
     ArgParse ap;
-    ap.options("ociobakelut -- create a new LUT or icc profile from an OCIO config or lut file(s)\n\n"
+    ap.options("ociobakelut -- create a new LUT or ICC profile from an OCIO config or LUT file(s)\n\n"
                "usage:  ociobakelut [options] <OUTPUTFILE.LUT>\n\n"
                "example:  ociobakelut --inputspace lg10 --outputspace srgb8 --format flame lg_to_srgb.3dl\n"
                "example:  ociobakelut --lut filmlut.3dl --lut calibration.3dl --format flame display.3dl\n"
@@ -109,7 +109,7 @@ int main (int argc, const char* argv[])
                "--iconfig %s", &inputconfig, "Input .ocio configuration file (default: $OCIO)\n",
                "<SEPARATOR>", "Config-Free LUT Baking",
                "<SEPARATOR>", "    (all options can be specified multiple times, each is applied in order)",
-               "--cccid %s", &dummystr, "Specify a CCCId for any following luts",
+               "--cccid %s", &dummystr, "Specify a CCCId for any following LUTs",
                "--lut %s", &dummystr, "Specify a LUT (forward direction)",
                "--invlut %s", &dummystr, "Specify a LUT (inverse direction)",
                "--slope %f %f %f", &dummyf1, &dummyf2, &dummyf3, "slope",
@@ -125,9 +125,9 @@ int main (int argc, const char* argv[])
                "--v", &verbose, "Verbose",
                "--help", &help, "Print help message\n",
                "<SEPARATOR>", "ICC Options",
-               //"--cubesize %d", &cubesize, "size of the icc CLUT cube (default: 32)",
+               //"--cubesize %d", &cubesize, "size of the ICC CLUT cube (default: 32)",
                "--whitepoint %d", &whitepointtemp, "whitepoint for the profile (default: 6505)",
-               "--displayicc %s", &displayicc , "an icc profile which matches the OCIO profiles target display",
+               "--displayicc %s", &displayicc , "an ICC profile which matches the OCIO profiles target display",
                "--description %s", &description , "a meaningful description, this will show up in UI like photoshop (defaults to \"filename.icc\")",
                "--copyright %s", &copyright , "a copyright field (default: \"No copyright. Use freely.\"\n",
                // TODO: add --metadata option
@@ -256,7 +256,7 @@ int main (int argc, const char* argv[])
         
         if(format.empty())
         {
-            std::cerr << "\nERROR: You must specify the lut format using --format.\n\n";
+            std::cerr << "\nERROR: You must specify the LUT format using --format.\n\n";
             std::cerr << "See --help for more info." << std::endl;
             return 1;
         }
@@ -275,7 +275,7 @@ int main (int argc, const char* argv[])
         }
         else
         {
-            std::cerr << "ERROR: You must specify an input ocio configuration ";
+            std::cerr << "ERROR: You must specify an input OCIO configuration ";
             std::cerr << "(either with --iconfig or $OCIO).\n\n";
             ap.usage ();
             return 1;
@@ -302,14 +302,14 @@ int main (int argc, const char* argv[])
             
             if(usestdout)
             {
-                std::cerr << "\nERROR: --stdout not supported when writing icc profiles.\n\n";
+                std::cerr << "\nERROR: --stdout not supported when writing ICC profiles.\n\n";
                 std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
             
             if(outputfile.empty())
             {
-                std::cerr << "ERROR: you need to specify a output icc path\n";
+                std::cerr << "ERROR: you need to specify a output ICC path\n";
                 std::cerr << "See --help for more info." << std::endl;
                 return 1;
             }
@@ -347,7 +347,7 @@ int main (int argc, const char* argv[])
         
             OCIO::BakerRcPtr baker = OCIO::Baker::Create();
             
-            // setup the baker for our lut type
+            // setup the baker for our LUT type
             baker->setConfig(config);
             baker->setFormat(format.c_str());
             baker->setInputSpace(inputspace.c_str());
@@ -357,11 +357,11 @@ int main (int argc, const char* argv[])
             if(shapersize!=-1) baker->setShaperSize(shapersize);
             if(cubesize!=-1) baker->setCubeSize(cubesize);
             
-            // output lut
+            // output LUT
             std::ostringstream output;
             
             if(!usestdout && verbose)
-                std::cout << "[OpenColorIO INFO]: Baking '" << format << "' lut" << std::endl;
+                std::cout << "[OpenColorIO INFO]: Baking '" << format << "' LUT" << std::endl;
             
             if(usestdout)
             {
