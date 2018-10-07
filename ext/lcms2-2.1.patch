@@ -1,5 +1,6 @@
---- CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
-+++ CMakeLists.txt	2015-03-12 00:52:50.095773400 +0100
+diff -Naur lcms2-2.1.orig/CMakeLists.txt lcms2-2.1/CMakeLists.txt
+--- lcms2-2.1.orig/CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ lcms2-2.1/CMakeLists.txt	2015-03-12 00:52:50.095773400 +0100
 @@ -0,0 +1,51 @@
 +project(lcms2)
 +

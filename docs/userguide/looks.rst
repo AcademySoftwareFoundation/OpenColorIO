@@ -16,7 +16,7 @@ Looks are defined similarly to colorspaces, you specify a name and a
 transform (possibly a GroupTransform containing several other
 transforms), and optionally an inverse transform.
 
-Where looks differ from colorspace definions are in how they are
+Where looks differ from colorspace definitions are in how they are
 applied. With a look, you also specify the "process space" - the
 colorspace in which the transform is applied.
 
@@ -141,7 +141,7 @@ also use this for multiple levels (show, shot, etc).
 Advanced option: If some shots use .cc files, and some use 3d-luts
 currently there's no simple way to handle this. What we'd recommend as a
 work around is to label all of your files with the same extension (such as
-.cc), and then rely on OCIO's resiliance to misnamed lut files to just load
+.cc), and then rely on OCIO's resilience to misnamed lut files to just load
 them anyways. Caveat: this only works in 1.0.1+ (commit sha-1: 6da3411ced)
 
 Advanced option: In the Nuke OCIO nodes, you often want to preview

@@ -1,0 +1,13 @@
+if(OCIO_BUILD_APPS)
+	add_subdirectory(apputils)
+	add_subdirectory(ociobakelut)
+	add_subdirectory(ociocheck)
+
+	if(TARGET OpenImageIO)
+		add_subdirectory(ociolutimage)
+		add_subdirectory(ocioconvert)
+		add_subdirectory(ociodisplay)
+	else()
+		message(WARNING "OIIO Not found. Skipping build for ociolutimage, ocioconvert and ociodisplay")
+	endif()
+endif()

@@ -30,7 +30,7 @@ OCIO search path, which includes the resource path (e.g
 ``${SHOT}.spi1d``)
 
 This is a simplified example, to demonstrate the context
-feature. Typically this "contextual LUT" would be used in conjuction
+feature. Typically this "contextual LUT" would be used in conjunction
 with other LUT's (e.g before a scene-linear to log transform, followed
 by a 3D film emulation LUT), this will be covered in
 :ref:`context_per_shot_grade`
