@@ -141,6 +141,13 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void DisplayTransform::validate() const
+    {
+        Transform::validate();
+
+        // TODO: Improve DisplayTransform::validate()
+    }
+
     void DisplayTransform::setInputColorSpaceName(const char * name)
     {
         getImpl()->inputColorSpaceName_ = name;

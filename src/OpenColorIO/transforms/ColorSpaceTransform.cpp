@@ -112,6 +112,21 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void ColorSpaceTransform::validate() const
+    {
+        Transform::validate();
+
+        if (getImpl()->src_.empty())
+        {
+            throw Exception("ColorSpaceTransform: empty source color space name");
+        }
+
+        if (getImpl()->dst_.empty())
+        {
+            throw Exception("ColorSpaceTransform: empty destination color space name");
+        }
+    }
+
     const char * ColorSpaceTransform::getSrc() const
     {
         return getImpl()->src_.c_str();

@@ -116,6 +116,18 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void MatrixTransform::validate() const
+    {
+        Transform::validate();
+
+        // TODO: Uncomment in upcoming PR that contains the OpData validate.
+        //       getImpl()->data_->validate()
+        //       
+        //       OpData classes are the enhancement of some existing 
+        //       structures (like Lut1D and Lut3D) by encapsulating
+        //       all the data and adding high-level behaviors.
+    }
+
     bool MatrixTransform::equals(const MatrixTransform & other) const
     {
         const float abserror = 1e-9f;

@@ -1438,21 +1438,60 @@ OCIO_NAMESPACE_ENTER
         {
             
             // check profile version
-            int profile_version = 0;
+            int profile_major_version = 0;
+            int profile_minor_version = 0;
+
+            bool faulty_version
 #ifdef OLDYAML
-            if(node.FindValue("ocio_profile_version") == NULL)
+             = node.FindValue("ocio_profile_version") == NULL;
 #else
-            if(node["ocio_profile_version"] == NULL)
+             = node["ocio_profile_version"] == NULL;
 #endif
+
+            std::string version;
+            std::vector< std::string > results;
+
+            if(!faulty_version)
+            {
+                load(node["ocio_profile_version"], version);
+
+                pystring::split(version, results, ".");
+
+                if(results.size()==1)
+                {
+                    profile_major_version = atoi(results[0].c_str());
+                    profile_minor_version = 0;
+                }
+                else if(results.size()==2)
+                {
+                    profile_major_version = atoi(results[0].c_str());
+                    profile_minor_version = atoi(results[1].c_str());
+                }
+                else
+                {
+                    faulty_version = true;
+                }
+            }
+
+            if(faulty_version)
             {
                 std::ostringstream os;
-                os << "The specified file ";
-                os << "does not appear to be an OCIO configuration.";
+
+                os << "The specified OCIO configuration file "
+                   << ((filename && *filename) ? filename : "<null> ")
+                   << "does not appear to have a valid version "
+                   << (version.empty() ? "<null>" : version)
+                   << ".";
+
                 throw Exception (os.str().c_str());
             }
-            
-            load(node["ocio_profile_version"], profile_version);
-            if(profile_version > 1)
+
+            try
+            {
+                c->setMajorVersion((unsigned int)profile_major_version);
+                c->setMinorVersion((unsigned int)profile_minor_version);
+            }
+            catch(Exception & ex)
             {
                 std::ostringstream os;
                 os << "This .ocio config ";
@@ -1460,14 +1499,20 @@ OCIO_NAMESPACE_ENTER
                 {
                     os << " '" << filename << "' ";
                 }
-                os << "is version " << profile_version << ". ";
+
+                os << "is version " << profile_major_version 
+                   << "." << profile_minor_version
+                   << ". ";
+
                 os << "This version of the OpenColorIO library (" << OCIO_VERSION ") ";
                 os << "is not known to be able to load this profile. ";
                 os << "An attempt will be made, but there are no guarantees that the ";
                 os << "results will be accurate. Continue at your own risk.";
+                os << std::endl << ex.what();
+
                 LogWarning(os.str());
             }
-            
+
             std::string key, stringval;
             bool boolval = false;
             EnvironmentMode mode = ENV_ENVIRONMENT_LOAD_ALL;
@@ -1684,9 +1729,16 @@ OCIO_NAMESPACE_ENTER
         
         inline void save(YAML::Emitter& out, const Config* c)
         {
+            std::stringstream ss;
+            ss << c->getMajorVersion();
+            if(c->getMinorVersion()!=0)
+            {
+                ss << "." << c->getMinorVersion();
+            }
+
             out << YAML::Block;
             out << YAML::BeginMap;
-            out << YAML::Key << "ocio_profile_version" << YAML::Value << 1;
+            out << YAML::Key << "ocio_profile_version" << YAML::Value << ss.str();
             out << YAML::Newline;
 #ifndef OLDYAML
             out << YAML::Newline;
