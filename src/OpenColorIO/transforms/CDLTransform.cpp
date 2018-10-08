@@ -642,6 +642,18 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void CDLTransform::validate() const
+    {
+        Transform::validate();
+
+        // TODO: Uncomment in upcoming PR that contains the OpData validate.
+        //       getImpl()->data_->validate()
+        //       
+        //       OpData classes are the enhancement of some existing 
+        //       structures (like Lut1D and Lut3D) by encapsulating
+        //       all the data and adding high-level behaviors.
+    }
+
     const char * CDLTransform::getXML() const
     {
         getImpl()->xml_ = BuildXML(*this);
