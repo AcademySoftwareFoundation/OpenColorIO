@@ -225,9 +225,14 @@ OCIO_NAMESPACE_ENTER
         
     } // namespace
     
+    static const unsigned FirstSupportedMajorVersion_ = 1;
+    static const unsigned LastSupportedMajorVersion_  = 2;
+
     class Config::Impl
     {
     public:
+        unsigned int majorVersion_;
+        unsigned int minorVersion_;
         StringMap env_;
         ContextRcPtr context_;
         std::string description_;
@@ -259,6 +264,8 @@ OCIO_NAMESPACE_ENTER
         OCIOYaml io_;
         
         Impl() : 
+            majorVersion_(FirstSupportedMajorVersion_),
+            minorVersion_(0),
             context_(Context::Create()),
             strictParsing_(true),
             sanity_(SANITY_UNKNOWN)
@@ -286,6 +293,9 @@ OCIO_NAMESPACE_ENTER
         {
             if(this!=&rhs)
             {
+                majorVersion_ = rhs.majorVersion_;
+                minorVersion_ = rhs.minorVersion_;
+
                 env_ = rhs.env_;
                 context_ = rhs.context_->createEditableCopy();
                 description_ = rhs.description_;
@@ -410,6 +420,38 @@ OCIO_NAMESPACE_ENTER
         m_impl = NULL;
     }
     
+    unsigned Config::getMajorVersion() const
+    {
+        return m_impl->majorVersion_;
+    }
+
+    void Config::setMajorVersion(unsigned int version)
+    {
+        if(version <  FirstSupportedMajorVersion_
+            || version >  LastSupportedMajorVersion_)
+        {
+            std::ostringstream os;
+             os << "The version is " << version 
+                << " where supported versions start at " 
+                << FirstSupportedMajorVersion_
+                << " and end at "
+                << LastSupportedMajorVersion_
+                << ".";
+             throw Exception(os.str().c_str());
+        }
+         m_impl->majorVersion_ = version;
+    }
+
+    unsigned Config::getMinorVersion() const
+    {
+        return m_impl->minorVersion_;
+    }
+
+    void Config::setMinorVersion(unsigned int version)
+    {
+         m_impl->minorVersion_ = version;
+    }
+
     ConfigRcPtr Config::createEditableCopy() const
     {
         ConfigRcPtr config = Config::Create();
@@ -2079,6 +2121,81 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
         ss << *config.get();
         OIIO_CHECK_EQUAL(ss.str(), MY_OCIO_CONFIG);
     }
+}
+
+OIIO_ADD_TEST(Config, Version)
+{
+    const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 2\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "      name: raw\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConfigRcPtr config;
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OIIO_CHECK_NO_THROW(config->setMajorVersion(1));
+    OIIO_CHECK_THROW(config->setMajorVersion(20000), OCIO::Exception);
+
+    {
+        OIIO_CHECK_NO_THROW(config->setMinorVersion(2));
+        OIIO_CHECK_NO_THROW(config->setMinorVersion(20));
+
+        std::stringstream ss;
+        ss << *config.get();   
+        OCIO::pystring::startswith(
+            OCIO::pystring::lower(ss.str()), "ocio_profile_version: 2.20");
+    }
+
+    {
+        OIIO_CHECK_NO_THROW(config->setMinorVersion(0));
+
+        std::stringstream ss;
+        ss << *config.get();   
+        OCIO::pystring::startswith(
+            OCIO::pystring::lower(ss.str()), "ocio_profile_version: 2");
+    }
+
+    {
+        OIIO_CHECK_NO_THROW(config->setMinorVersion(1));
+
+        std::stringstream ss;
+        ss << *config.get();   
+        OCIO::pystring::startswith(
+            OCIO::pystring::lower(ss.str()), "ocio_profile_version: 1");
+    }
+}
+
+OIIO_ADD_TEST(Config, Version_faulty_1)
+{
+    const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 2.0.1\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "      name: raw\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_THROW(config = OCIO::Config::CreateFromStream(is), OCIO::Exception);
 }
 
 #endif // OCIO_UNIT_TEST
