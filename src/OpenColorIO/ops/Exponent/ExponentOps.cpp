@@ -45,7 +45,7 @@ OCIO_NAMESPACE_ENTER
         const int FLOAT_DECIMALS = 7;
     }
 
-    Exponent::Exponent()
+    ExponentOpData::ExponentOpData()
         :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     {
         for(unsigned i=0; i<4; ++i)
@@ -54,13 +54,13 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
-    Exponent::Exponent(const double * exp4)
+    ExponentOpData::ExponentOpData(const double * exp4)
         :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     {
         memcpy(m_exp4, exp4, 4*sizeof(double)); 
     }
 
-    Exponent & Exponent::operator = (const Exponent & rhs)
+    ExponentOpData & ExponentOpData::operator = (const ExponentOpData & rhs)
     {
         if(this!=&rhs)
         {
@@ -70,15 +70,15 @@ OCIO_NAMESPACE_ENTER
         return *this;
     }
 
-    bool Exponent::isIdentity() const
+    bool ExponentOpData::isIdentity() const
     {
         return IsVecEqualToOneFlt(m_exp4, 4);
     }
 
-    std::string Exponent::finalize() const
+    std::string ExponentOpData::finalize() const
     {
         std::ostringstream cacheIDStream;
-        cacheIDStream << "<ExponentOp ";
+        cacheIDStream << "<ExponentOpData ";
         cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
         for(int i=0; i<4; ++i)
         {
@@ -92,7 +92,7 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
         void ApplyClampExponent(float* rgbaBuffer, long numPixels,
-                                const ExponentRcPtr & exp)
+                                const ExponentOpDataRcPtr & exp)
         {
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
@@ -132,8 +132,8 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
         protected:
-            ExponentRcPtr exp() { return DynamicPtrCast<Exponent>(data()); }
-            const ExponentRcPtr exp() const { return DynamicPtrCast<Exponent>(data()); }
+            ExponentOpDataRcPtr exp() { return DynamicPtrCast<ExponentOpData>(data()); }
+            const ExponentOpDataRcPtr exp() const { return DynamicPtrCast<ExponentOpData>(data()); }
 
         private:
             // Set in finalize
@@ -168,11 +168,11 @@ OCIO_NAMESPACE_ENTER
                     }
                 }
 
-                data().reset(new Exponent(values));
+                data().reset(new ExponentOpData(values));
             }
             else
             {
-                data().reset(new Exponent(exp4));
+                data().reset(new ExponentOpData(exp4));
             }
         }
         

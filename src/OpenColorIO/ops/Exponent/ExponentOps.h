@@ -38,17 +38,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    class Exponent;
-    typedef OCIO_SHARED_PTR<Exponent> ExponentRcPtr;
+    class ExponentOpData;
+    typedef OCIO_SHARED_PTR<ExponentOpData> ExponentOpDataRcPtr;
 
-    class Exponent : public OpData
+    class ExponentOpData : public OpData
     {
     public:
-        Exponent();
-        Exponent(const double * exp4);
-        virtual ~Exponent() {}
+        ExponentOpData();
+        ExponentOpData(const double * exp4);
+        virtual ~ExponentOpData() {}
 
-        Exponent & operator = (const Exponent & rhs);
+        ExponentOpData & operator = (const ExponentOpData & rhs);
 
         virtual Type getType() const { return ExponentType; }
 

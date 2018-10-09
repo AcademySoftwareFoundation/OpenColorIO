@@ -51,7 +51,7 @@ OCIO_NAMESPACE_ENTER
         float kb[3] = { 0.0f, 0.0f, 0.0f };
     }
 
-    Log::Log(float base)
+    LogOpData::LogOpData(float base)
         :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     {           
         memcpy(m_k,    DefaultValues::k,    sizeof(float)*3);
@@ -64,11 +64,11 @@ OCIO_NAMESPACE_ENTER
         m_base[2] = base;
     }
 
-    Log::Log(const float * k,
-             const float * m,
-             const float * b,
-             const float * base,
-             const float * kb)
+    LogOpData::LogOpData(const float * k,
+                         const float * m,
+                         const float * b,
+                         const float * base,
+                         const float * kb)
         :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     {           
         memcpy(m_k,    k,    sizeof(float)*3);
@@ -78,7 +78,7 @@ OCIO_NAMESPACE_ENTER
         memcpy(m_kb,   kb,   sizeof(float)*3);
     }
 
-    Log & Log::operator = (const Log & rhs)
+    LogOpData & LogOpData::operator = (const LogOpData & rhs)
     {
         if(this!=&rhs)
         {
@@ -92,10 +92,10 @@ OCIO_NAMESPACE_ENTER
         return *this;
     }
 
-    std::string Log::finalize() const
+    std::string LogOpData::finalize() const
     {
         std::ostringstream cacheIDStream;
-        cacheIDStream << "<LogOp ";
+        cacheIDStream << "<LogOpData ";
         cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
         for(int i=0; i<3; ++i)
         {
@@ -118,7 +118,7 @@ OCIO_NAMESPACE_ENTER
         // the caller is responsible for base != 1.0
         // TODO: pull the precomputation into the caller?
         
-        void ApplyLinToLog(float* rgbaBuffer, long numPixels, const LogRcPtr & log)
+        void ApplyLinToLog(float* rgbaBuffer, long numPixels, const LogOpDataRcPtr & log)
         {
             // We account for the change of base by rolling the multiplier
             // in with 'k'
@@ -141,7 +141,7 @@ OCIO_NAMESPACE_ENTER
         // the caller is responsible for k != 0
         // TODO: pull the precomputation into the caller?
         
-        void ApplyLogToLin(float* rgbaBuffer, long numPixels, const LogRcPtr & log)
+        void ApplyLogToLin(float* rgbaBuffer, long numPixels, const LogOpDataRcPtr & log)
         {
             const float kinv[3] = { 1.0f / log->m_k[0],
                                     1.0f / log->m_k[1],
@@ -202,8 +202,8 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
             
         protected:
-            LogRcPtr log() { return DynamicPtrCast<Log>(data()); }
-            const LogRcPtr log() const { return DynamicPtrCast<Log>(data()); }
+            LogOpDataRcPtr log() { return DynamicPtrCast<LogOpData>(data()); }
+            const LogOpDataRcPtr log() const { return DynamicPtrCast<LogOpData>(data()); }
 
         private:
             TransformDirection m_direction;
@@ -222,7 +222,7 @@ OCIO_NAMESPACE_ENTER
                 throw Exception("Cannot apply LogOp op, unspecified transform direction.");
             }
 
-            data().reset(new Log(base));
+            data().reset(new LogOpData(base));
         }
         
         LogOp::LogOp(const float * k,
@@ -239,7 +239,7 @@ OCIO_NAMESPACE_ENTER
                 throw Exception("Cannot apply LogOp op, unspecified transform direction.");
             }
 
-            data().reset(new Log(k, m, b, base, kb));
+            data().reset(new LogOpData(k, m, b, base, kb));
         }
         
         OpRcPtr LogOp::clone() const

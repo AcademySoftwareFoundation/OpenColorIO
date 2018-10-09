@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    Matrix::Matrix()
+    MatrixOpData::MatrixOpData()
         :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     {
         memset(m_m44, 0, 16*sizeof(float));
@@ -51,14 +51,14 @@ OCIO_NAMESPACE_ENTER
         memset(m_offset4, 0, 4*sizeof(float));
     }
 
-    Matrix::Matrix(const float * m44, const float * offset4)
+    MatrixOpData::MatrixOpData(const float * m44, const float * offset4)
         :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
     {           
         memcpy(m_m44, m44, 16*sizeof(float));
         memcpy(m_offset4, offset4, 4*sizeof(float));
     }
         
-    Matrix & Matrix::operator = (const Matrix & rhs)
+    MatrixOpData & MatrixOpData::operator = (const MatrixOpData & rhs)
     {
         if(this!=&rhs)
         {
@@ -69,34 +69,34 @@ OCIO_NAMESPACE_ENTER
         return *this;
     }
 
-    bool Matrix::isIdentity() const
+    bool MatrixOpData::isIdentity() const
     {
         // This Op will be a NoOp if and only if both the offset and matrix
         // are identity. This hold true no matter what the direction is.
         return !hasOffsets() && isMatrixIdentity();
     }
 
-    bool Matrix::hasChannelCrosstalk() const
+    bool MatrixOpData::hasChannelCrosstalk() const
     {
         return !IsM44Diagonal(m_m44);
     }
 
-    bool Matrix::hasOffsets() const
+    bool MatrixOpData::hasOffsets() const
     {
         return !IsVecEqualToZero(m_offset4, 4);
     }
 
-    bool Matrix::isMatrixIdentity() const
+    bool MatrixOpData::isMatrixIdentity() const
     {
         return IsM44Identity(m_m44);
     }
 
-    bool Matrix::isMatrixDiagonal() const
+    bool MatrixOpData::isMatrixDiagonal() const
     {
         return IsM44Diagonal(m_m44);
     }
     
-    std::string Matrix::finalize() const
+    std::string MatrixOpData::finalize() const
     {
         md5_state_t state;
         md5_byte_t digest[16];
@@ -230,8 +230,8 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
         
         protected:
-            MatrixRcPtr matrix() { return DynamicPtrCast<Matrix>(data()); }
-            const MatrixRcPtr matrix() const { return DynamicPtrCast<Matrix>(data()); }
+            MatrixOpDataRcPtr matrix() { return DynamicPtrCast<MatrixOpData>(data()); }
+            const MatrixOpDataRcPtr matrix() const { return DynamicPtrCast<MatrixOpData>(data()); }
 
         private:
             TransformDirection m_direction;
@@ -258,7 +258,7 @@ OCIO_NAMESPACE_ENTER
 
             memset(m_m44_inv, 0, 16*sizeof(float));
             
-            data().reset(new Matrix(m44, offset4));
+            data().reset(new MatrixOpData(m44, offset4));
         }
         
         OpRcPtr MatrixOffsetOp::clone() const

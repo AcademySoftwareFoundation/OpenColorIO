@@ -47,13 +47,13 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    class ExponentTransform::Impl : public Exponent
+    class ExponentTransform::Impl : public ExponentOpData
     {
     public:
         TransformDirection dir_;
         
         Impl() :
-            Exponent(),
+            ExponentOpData(),
             dir_(TRANSFORM_DIR_FORWARD)
         { }
         
@@ -62,7 +62,7 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            Exponent::operator=(rhs);
+            ExponentOpData::operator=(rhs);
             dir_ = rhs.dir_;
             return *this;
         }

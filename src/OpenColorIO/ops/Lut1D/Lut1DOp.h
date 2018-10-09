@@ -39,10 +39,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
   
-    class Lut1D;
-    typedef OCIO_SHARED_PTR<Lut1D> Lut1DRcPtr;
+    class Lut1DOpData;
+    typedef OCIO_SHARED_PTR<Lut1DOpData> Lut1DOpDataRcPtr;
     
-    class Lut1D : public OpData
+    class Lut1DOpData : public OpData
     {
     public:
         enum ErrorType
@@ -51,8 +51,8 @@ OCIO_NAMESPACE_ENTER
             ERROR_RELATIVE
         };   
     
-        static Lut1DRcPtr Create();
-        static Lut1DRcPtr CreateIdentity(BitDepth inputBitDepth, BitDepth outBitDepth);
+        static Lut1DOpDataRcPtr Create();
+        static Lut1DOpDataRcPtr CreateIdentity(BitDepth inputBitDepth, BitDepth outBitDepth);
         
         // This will compute the cacheid, and also
         // determine if the lut is a no-op.
@@ -84,10 +84,10 @@ OCIO_NAMESPACE_ENTER
         
         void unfinalize();
 
-        Lut1D & operator=(const Lut1D & l);
+        Lut1DOpData & operator=(const Lut1DOpData & l);
 
     private:
-        Lut1D();
+        Lut1DOpData();
         
         mutable bool m_isIdentity;
         
@@ -98,7 +98,7 @@ OCIO_NAMESPACE_ENTER
     void GenerateIdentityLut1D(float* img, int numElements, int numChannels);
     
     void CreateLut1DOp(OpRcPtrVec & ops,
-                       const Lut1DRcPtr & lut,
+                       const Lut1DOpDataRcPtr & lut,
                        Interpolation interpolation,
                        TransformDirection direction);
 }

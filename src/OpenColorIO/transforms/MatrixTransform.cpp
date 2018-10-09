@@ -47,13 +47,13 @@ OCIO_NAMESPACE_ENTER
         delete t;
     }
     
-    class MatrixTransform::Impl : public Matrix
+    class MatrixTransform::Impl : public MatrixOpData
     {
     public:
         TransformDirection dir_;
         
         Impl() :
-            Matrix(),
+            MatrixOpData(),
             dir_(TRANSFORM_DIR_FORWARD)
         {
         }
@@ -63,7 +63,7 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            Matrix::operator=(rhs);
+            MatrixOpData::operator=(rhs);
             dir_ = rhs.dir_;
             return *this;
         }

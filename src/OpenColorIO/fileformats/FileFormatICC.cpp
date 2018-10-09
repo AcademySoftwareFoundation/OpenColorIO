@@ -64,7 +64,7 @@ OCIO_NAMESPACE_ENTER
         float mGammaRGB[4];
 
         // Lut 1d
-        Lut1DRcPtr lut;
+        Lut1DOpDataRcPtr lut;
     };
 
     typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -350,7 +350,7 @@ OCIO_NAMESPACE_ENTER
                 // normalized by 65535 to interpret them as [0,1].
                 // The LUT will be inverted to convert output-linear values
                 // into values that may be sent to the display.
-                cachedFile->lut = Lut1D::Create();
+                cachedFile->lut = Lut1DOpData::Create();
                 cachedFile->lut->luts[0] = red->GetCurve();
                 cachedFile->lut->luts[1] = green->GetCurve();
                 cachedFile->lut->luts[2] = blue->GetCurve();

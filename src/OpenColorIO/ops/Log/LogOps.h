@@ -38,21 +38,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    class Log;
-    typedef OCIO_SHARED_PTR<Log> LogRcPtr;
+    class LogOpData;
+    typedef OCIO_SHARED_PTR<LogOpData> LogOpDataRcPtr;
 
-    class Log : public OpData
+    class LogOpData : public OpData
     {
     public:
-        Log(float base);
-        Log(const float * k,
-            const float * m,
-            const float * b,
-            const float * base,
-            const float * kb);
-        virtual ~Log() {}
+        LogOpData(float base);
+        LogOpData(const float * k,
+                  const float * m,
+                  const float * b,
+                  const float * base,
+                  const float * kb);
+        virtual ~LogOpData() {}
 
-        Log & operator = (const Log & rhs);
+        LogOpData & operator = (const LogOpData & rhs);
 
         virtual Type getType() const { return LogType; }
 

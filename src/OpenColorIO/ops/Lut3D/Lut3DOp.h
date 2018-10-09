@@ -38,13 +38,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    class Lut3D;
-    typedef OCIO_SHARED_PTR<Lut3D> Lut3DRcPtr;
+    class Lut3DOpData;
+    typedef OCIO_SHARED_PTR<Lut3DOpData> Lut3DOpDataRcPtr;
     
-    class Lut3D : public OpData
+    class Lut3DOpData : public OpData
     {
     public:
-        static Lut3DRcPtr Create();
+        static Lut3DOpDataRcPtr Create();
         
         float from_min[3];
         float from_max[3];
@@ -59,7 +59,7 @@ OCIO_NAMESPACE_ENTER
         virtual bool hasChannelCrosstalk() const;
 
     private:
-        Lut3D();
+        Lut3DOpData();
         
         virtual std::string finalize() const;
     };
@@ -106,7 +106,7 @@ OCIO_NAMESPACE_ENTER
     
     
     void CreateLut3DOp(OpRcPtrVec & ops,
-                       Lut3DRcPtr lut,
+                       Lut3DOpDataRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);
 }

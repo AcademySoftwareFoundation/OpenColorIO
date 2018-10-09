@@ -628,11 +628,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile ()
             {
-                lut1D = Lut1D::Create();
+                lut1D = Lut1DOpData::Create();
             };
             ~LocalCachedFile() {};
             
-            Lut1DRcPtr lut1D;
+            Lut1DOpDataRcPtr lut1D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -728,7 +728,7 @@ OCIO_NAMESPACE_ENTER
             // Same as 3dl
             const int FORMAT1DL_SHAPER_CODEVALUE_TOLERANCE = 2;
             cachedFile->lut1D->maxerror = FORMAT1DL_SHAPER_CODEVALUE_TOLERANCE/maxVal[0];
-            cachedFile->lut1D->errortype = Lut1D::ERROR_ABSOLUTE;
+            cachedFile->lut1D->errortype = Lut1DOpData::ERROR_ABSOLUTE;
 
             Lut1dUtils::IMLutFree(&discreetLut1d);
             return cachedFile;
@@ -860,7 +860,7 @@ OIIO_ADD_TEST(FileFormatD1DL, Test)
     OIIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut));
 
     // Current implementation of Discreet 1D LUT is converting table to floats
-    OIIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
+    OIIO_CHECK_EQUAL(OCIO::Lut1DOpData::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
     OIIO_CHECK_EQUAL(0.00784313772f, lutFile->lut1D->maxerror);
 
     for (int c = 0; c < 3; ++c) {
@@ -888,7 +888,7 @@ OIIO_ADD_TEST(FileFormatD1DL, Test)
     OIIO_CHECK_NO_THROW(lutFile = LoadLutFile(discreetLut1216fp));
 
     // Current implementation of Discreet 1D LUT is converting table to floats
-    OIIO_CHECK_EQUAL(OCIO::Lut1D::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
+    OIIO_CHECK_EQUAL(OCIO::Lut1DOpData::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
     OIIO_CHECK_EQUAL(3.05180438e-05f, lutFile->lut1D->maxerror);
 
     for (int c = 0; c < 3; ++c) {

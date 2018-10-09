@@ -93,7 +93,7 @@ OCIO_NAMESPACE_ENTER
     // Note2: Unlike compose(Lut1DOp,Lut1DOp), this function does not try to resize
     //        the first LUT (A), so the caller needs to create a suitable domain.
     //
-    Lut1DRcPtr Compose(const Lut1DRcPtr & A, const OpRcPtrVec & B)
+    Lut1DOpDataRcPtr Compose(const Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
     {
         if (A->getOutputBitDepth() != B[0]->getInputBitDepth())
         {
@@ -152,7 +152,7 @@ OCIO_NAMESPACE_ENTER
             ops[i]->apply(&in[0], (unsigned)newLength);
         }
 
-        Lut1DRcPtr lut(Lut1D::Create());
+        Lut1DOpDataRcPtr lut(Lut1DOpData::Create());
         lut->setInputBitDepth(A->getInputBitDepth());
         lut->setOutputBitDepth(B[B.size()-1]->getOutputBitDepth());
         lut->luts[0].resize(newLength);
@@ -169,7 +169,7 @@ OCIO_NAMESPACE_ENTER
         return lut;
     }
 
-    Lut1DRcPtr Compose(const Lut1DRcPtr & A, const OpRcPtr & B, ComposeMethod compFlag)
+    Lut1DOpDataRcPtr Compose(const Lut1DOpDataRcPtr & A, const OpRcPtr & B, ComposeMethod compFlag)
     {
         if (A->getOutputBitDepth() != B->getInputBitDepth())
         {
@@ -218,7 +218,7 @@ OCIO_NAMESPACE_ENTER
         const bool goodDomain = Asz >= min_size;
         const bool useOrigDomain = compFlag == COMPOSE_RESAMPLE_NO;
 
-        Lut1DRcPtr domain;
+        Lut1DOpDataRcPtr domain;
 
         if ( goodDomain || useOrigDomain )
         {
@@ -231,7 +231,7 @@ OCIO_NAMESPACE_ENTER
 
             // TODO: Should not need to create a new LUT object for this.
             //       Perhaps add a utility function to be shared with the constructor.
-            domain = Lut1D::CreateIdentity(resampleDepth, A->getInputBitDepth());
+            domain = Lut1DOpData::CreateIdentity(resampleDepth, A->getInputBitDepth());
 
             // Interpolate through both LUTs in this case (resample).
             CreateLut1DOp(ops, A, INTERP_LINEAR, TRANSFORM_DIR_FORWARD);
@@ -258,8 +258,8 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OIIO_ADD_TEST(OpTools, Lut1D_compose)
 {
-    OCIO::Lut1DRcPtr lut1
-        = OCIO::Lut1D::CreateIdentity(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
+    OCIO::Lut1DOpDataRcPtr lut1
+        = OCIO::Lut1DOpData::CreateIdentity(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
 
     lut1->luts[0].resize(8);
     lut1->luts[1].resize(8);
@@ -274,8 +274,8 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose)
     lut1->luts[0][6] = 0.926671f; lut1->luts[1][6] = 0.846431f; lut1->luts[2][6] = 1.0f;
     lut1->luts[0][7] = 1.0f;      lut1->luts[1][7] = 1.0f;      lut1->luts[2][7] = 1.0f;
 
-    OCIO::Lut1DRcPtr lut2
-        = OCIO::Lut1D::CreateIdentity(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
+    OCIO::Lut1DOpDataRcPtr lut2
+        = OCIO::Lut1DOpData::CreateIdentity(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32);
 
     lut2->luts[0].resize(8);
     lut2->luts[1].resize(8);
@@ -296,7 +296,7 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose)
     OIIO_CHECK_EQUAL(ops.size(), 1);
 
     {
-        const OCIO::Lut1DRcPtr lut = OCIO::Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_NO);
+        const OCIO::Lut1DOpDataRcPtr lut = OCIO::Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_NO);
 
         OIIO_CHECK_EQUAL( lut->luts[0].size(), 8 );
 
@@ -330,7 +330,7 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose)
     }
 
     {
-        const OCIO::Lut1DRcPtr lut = Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_INDEPTH);
+        const OCIO::Lut1DOpDataRcPtr lut = Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_INDEPTH);
 
         OIIO_CHECK_EQUAL( lut->luts[0].size(), 65536 );
 
@@ -374,8 +374,8 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose)
 
 OIIO_ADD_TEST(OpTools, Lut1D_compose__with_bit_depth)
 {
-    OCIO::Lut1DRcPtr lut1 
-        = OCIO::Lut1D::CreateIdentity(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
+    OCIO::Lut1DOpDataRcPtr lut1 
+        = OCIO::Lut1DOpData::CreateIdentity(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT8);
     lut1->luts[0].resize(2);
     lut1->luts[1].resize(2);
     lut1->luts[2].resize(2);
@@ -383,8 +383,8 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose__with_bit_depth)
     lut1->luts[0][0] =  64.0f; lut1->luts[1][0] =  64.0f; lut1->luts[2][0] =  64.0f;
     lut1->luts[0][1] = 196.0f; lut1->luts[1][1] = 196.0f; lut1->luts[2][1] = 196.0f;
 
-    OCIO::Lut1DRcPtr lut2
-        = OCIO::Lut1D::CreateIdentity(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F32);
+    OCIO::Lut1DOpDataRcPtr lut2
+        = OCIO::Lut1DOpData::CreateIdentity(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F32);
     lut2->luts[0].resize(32);
     lut2->luts[1].resize(32);
     lut2->luts[2].resize(32);
@@ -428,7 +428,7 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose__with_bit_depth)
     OIIO_CHECK_EQUAL(ops.size(), 1);
 
     {
-        const OCIO::Lut1DRcPtr lut = OCIO::Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_NO);
+        const OCIO::Lut1DOpDataRcPtr lut = OCIO::Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_NO);
 
         OIIO_CHECK_EQUAL( lut->luts[0].size(), 2 );
 
@@ -444,7 +444,7 @@ OIIO_ADD_TEST(OpTools, Lut1D_compose__with_bit_depth)
     TODO: To uncomment when the Op bit depth will be implemented
 
     {
-        const OCIO::Lut1DRcPtr lut = Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_INDEPTH);
+        const OCIO::Lut1DOpDataRcPtr lut = Compose(lut1, ops[0], OCIO::COMPOSE_RESAMPLE_INDEPTH);
 
         OIIO_CHECK_EQUAL( lut->luts[0].size(), 256 );
 

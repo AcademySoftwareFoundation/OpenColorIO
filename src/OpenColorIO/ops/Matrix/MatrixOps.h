@@ -38,17 +38,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    class Matrix;
-    typedef OCIO_SHARED_PTR<Matrix> MatrixRcPtr;
+    class MatrixOpData;
+    typedef OCIO_SHARED_PTR<MatrixOpData> MatrixOpDataRcPtr;
 
-    class Matrix : public OpData
+    class MatrixOpData : public OpData
     {
     public:
-        Matrix();
-        Matrix(const float * m44, const float * offset4);
-        virtual ~Matrix() {}
+        MatrixOpData();
+        MatrixOpData(const float * m44, const float * offset4);
+        virtual ~MatrixOpData() {}
 
-        Matrix & operator = (const Matrix & rhs);
+        MatrixOpData & operator = (const MatrixOpData & rhs);
 
         virtual Type getType() const { return MatrixType; }
 

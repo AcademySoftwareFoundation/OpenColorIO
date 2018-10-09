@@ -48,13 +48,13 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    class LogTransform::Impl : public Log
+    class LogTransform::Impl : public LogOpData
     {
     public:
         TransformDirection dir_;
         
         Impl() :
-            Log(2.0f),
+            LogOpData(2.0f),
             dir_(TRANSFORM_DIR_FORWARD)
         { }
         
@@ -63,7 +63,7 @@ OCIO_NAMESPACE_ENTER
 
         Impl& operator = (const Impl & rhs)
         {
-            Log::operator=(rhs);
+            LogOpData::operator=(rhs);
             dir_ = rhs.dir_;
             return *this;
         }
