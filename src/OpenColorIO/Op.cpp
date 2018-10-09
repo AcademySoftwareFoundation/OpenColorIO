@@ -36,14 +36,81 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    Op::Op()
-        :   m_inputBitDepth(BIT_DEPTH_F32)
-        ,   m_outputBitDepth(BIT_DEPTH_F32)
+    OpData::OpData(BitDepth inBitDepth,
+                   BitDepth outBitDepth)
+        :   m_inBitDepth(inBitDepth)
+        ,   m_outBitDepth(outBitDepth)
     { }
 
-    Op::Op(BitDepth inputBitDepth, BitDepth outputBitDepth)
-        :   m_inputBitDepth(inputBitDepth)
-        ,   m_outputBitDepth(outputBitDepth)
+    OpData::OpData(const OpData & rhs)
+    {
+        *this = rhs;
+    }
+
+    OpData& OpData::operator=(const OpData & rhs)
+    {
+        if (this != &rhs)
+        {
+            m_inBitDepth = rhs.m_inBitDepth;
+            m_outBitDepth = rhs.m_outBitDepth;
+        }
+
+        return *this;
+    }
+
+    OpData::~OpData()
+    { }
+
+    void OpData::setInputBitDepth(BitDepth in)
+    {
+        m_inBitDepth = in;
+    }
+
+    void OpData::setOutputBitDepth(BitDepth out)
+    {
+        m_outBitDepth = out;
+    }
+
+    void OpData::validate() const
+    {
+        if (getInputBitDepth() == BIT_DEPTH_UNKNOWN)
+        {
+            throw Exception("OpData missing 'Input Bit Depth' value.");
+        }
+
+        if (getOutputBitDepth() == BIT_DEPTH_UNKNOWN)
+        {
+            throw Exception("OpData missing 'Output Bit Depth' value.");
+        }
+    }
+
+    bool OpData::isNoOp() const
+    {
+        return (getInputBitDepth() == getOutputBitDepth()) && isIdentity();
+    }
+
+    bool OpData::operator==(const OpData& other) const
+    {
+        if (this == &other) return true;
+
+        return (m_inBitDepth == other.m_inBitDepth && 
+                m_outBitDepth == other.m_outBitDepth);
+    }
+
+    std::string OpData::getCacheID() const
+    {
+        AutoMutex lock(m_mutex);
+
+        if(!m_cacheID.empty())
+            return m_cacheID;
+
+        m_cacheID = finalize();
+
+        return m_cacheID;
+    }
+    
+
+    Op::Op()
     { }
 
     Op::~Op()
@@ -63,16 +130,6 @@ OCIO_NAMESPACE_ENTER
         throw Exception(os.str().c_str());
     }
     
-    BitDepth Op::getInputBitDepth() const 
-    {
-        return m_inputBitDepth; 
-    }
-
-    BitDepth Op::getOutputBitDepth() const 
-    {
-        return m_outputBitDepth;
-    }
-
     std::ostream& operator<< (std::ostream & os, const Op & op)
     {
         os << op.getInfo();

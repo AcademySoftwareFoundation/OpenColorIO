@@ -48,29 +48,31 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    class LogTransform::Impl
+    class LogTransform::Impl : public LogOpData
     {
     public:
         TransformDirection dir_;
-        float base_;
         
         Impl() :
-            dir_(TRANSFORM_DIR_FORWARD),
-            base_(2.0)
+            LogOpData(2.0f),
+            dir_(TRANSFORM_DIR_FORWARD)
         { }
         
         ~Impl()
         { }
-        
-        Impl& operator= (const Impl & rhs)
+
+        Impl& operator = (const Impl & rhs)
         {
             if (this != &rhs)
             {
+                LogOpData::operator=(rhs);
                 dir_ = rhs.dir_;
-                base_ = rhs.base_;
             }
             return *this;
         }
+
+    private:        
+        Impl(const Impl & rhs);
     };
     
     ///////////////////////////////////////////////////////////////////////////
@@ -127,12 +129,14 @@ OCIO_NAMESPACE_ENTER
 
     float LogTransform::getBase() const
     {
-        return getImpl()->base_;
+        return getImpl()->m_base[0];
     }
     
     void LogTransform::setBase(float val)
     {
-        getImpl()->base_ = val;
+        getImpl()->m_base[0] = val;
+        getImpl()->m_base[1] = val;
+        getImpl()->m_base[2] = val;
     }
     
     std::ostream& operator<< (std::ostream& os, const LogTransform& t)
@@ -157,18 +161,7 @@ OCIO_NAMESPACE_ENTER
         TransformDirection combinedDir = CombineTransformDirections(dir,
                                                   transform.getDirection());
         
-        float basescalar = transform.getBase();
-        float base[3] = { basescalar, basescalar, basescalar };
-        
-        float k[3] = { 1.0f, 1.0f, 1.0f };
-        float m[3] = { 1.0f, 1.0f, 1.0f };
-        float b[3] = { 0.0f, 0.0f, 0.0f };
-        float kb[3] = { 0.0f, 0.0f, 0.0f };
-        
-        // output = k * log(mx+b, base) + kb
-        CreateLogOp(ops,
-                    k, m, b, base, kb,
-                    combinedDir);
+        CreateLogOp(ops, transform.getBase(), combinedDir);
     }
 }
 OCIO_NAMESPACE_EXIT
