@@ -85,7 +85,7 @@ OCIO_NAMESPACE_ENTER
         return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
     }
     
-    // What is the preferred order for the lut3d?
+    // What is the preferred order for the 3D LUT?
     // I.e., are the first two entries change along
     // the blue direction, or the red direction?
     // OpenGL expects 'red'

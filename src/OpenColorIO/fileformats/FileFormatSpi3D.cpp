@@ -119,7 +119,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Error parsing .spi3d file (";
                 os << fileName;
                 os << ").  ";
-                os << "Lut does not appear to be valid spilut format. ";
+                os << "LUT does not appear to be valid spilut format. ";
                 os << "Expected 'SPILUT'.  Found: '" << lineBuffer << "'.";
                 throw Exception(os.str().c_str());
             }
@@ -136,7 +136,7 @@ OCIO_NAMESPACE_ENTER
                 os << "Error parsing .spi3d file (";
                 os << fileName;
                 os << "). ";
-                os << "Error while reading lut size. Found: '";
+                os << "Error while reading LUT size. Found: '";
                 os << lineBuffer << "'.";
                 throw Exception(os.str().c_str());
             }
@@ -186,9 +186,9 @@ OCIO_NAMESPACE_ENTER
                         os << fileName;
                         os << "). ";
                         os << "Data is invalid. ";
-                        os << "A lut entry is specified (";
+                        os << "A LUT entry is specified (";
                         os << rIndex << " " << gIndex << " " << bIndex;
-                        os << " that falls outside of the cube.";
+                        os << ") that falls outside of the cube.";
                         throw Exception(os.str().c_str());
                     }
 
@@ -253,7 +253,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include <fstream>
+#include "UnitTestFiles.h"
 
 OIIO_ADD_TEST(FileFormatSpi3D, FormatInfo)
 {
@@ -268,37 +268,16 @@ OIIO_ADD_TEST(FileFormatSpi3D, FormatInfo)
         formatInfoVec[0].capabilities);
 }
 
-OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & filePath)
+OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
 {
-    // Open the filePath
-    std::ifstream filestream;
-    filestream.open(filePath.c_str(), std::ios_base::in);
-
-    std::string root, extension, name;
-    OCIO::pystring::os::path::splitext(root, extension, filePath);
-
-    name = OCIO::pystring::os::path::basename(root);
-
-    // Read file
-    OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(filestream, name);
-
-    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    return OCIO::LoadTestFile<OCIO::LocalFileFormat, OCIO::LocalCachedFile>(
+        fileName, std::ios_base::in);
 }
-
-#ifndef OCIO_UNIT_TEST_FILES_DIR
-#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
-#endif
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 OIIO_ADD_TEST(FileFormatSpi3D, Test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    const std::string spi3dFile(ocioTestFilesDir + std::string("/spi_ocio_srgb_test.spi3d"));
+    const std::string spi3dFile("spi_ocio_srgb_test.spi3d");
     OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi3dFile));
 
     OIIO_CHECK_ASSERT((bool)cachedFile);
@@ -334,7 +313,7 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
     {
         // Validate stream can be read with no error.
         // Then stream will be altered to introduce errors.
-        const std::string SAMPLE_ERROR =
+        const std::string SAMPLE_NO_ERROR =
             "SPILUT 1.0\n"
             "3 3\n"
             "2 2 2\n"
@@ -347,7 +326,7 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_NO_THROW(ReadSpi3d(SAMPLE_ERROR));
+        OIIO_CHECK_NO_THROW(ReadSpi3d(SAMPLE_NO_ERROR));
     }
     {
         // Wrong first line
@@ -364,7 +343,9 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW(ReadSpi3d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Expected 'SPILUT'");
     }
     {
         // 3 line is not 3 ints
@@ -381,7 +362,9 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW(ReadSpi3d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Error while reading LUT size");
     }
     {
         // index out of range
@@ -398,7 +381,9 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW(ReadSpi3d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "that falls outside of the cube");
     }
     {
         // Not enough entries
@@ -414,7 +399,9 @@ OIIO_ADD_TEST(FileFormatSpi3D, ReadFailure)
             "1 1 0 0.6 0.7 0.1\n"
             "1 1 1 0.6 0.7 0.7\n";
 
-        OIIO_CHECK_THROW(ReadSpi3d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi3d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Not enough entries found");
     }
 }
 

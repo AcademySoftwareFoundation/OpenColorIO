@@ -55,10 +55,10 @@ OCIO_NAMESPACE_ENTER
         static Lut1DOpDataRcPtr CreateIdentity(BitDepth inputBitDepth, BitDepth outBitDepth);
         
         // This will compute the cacheid, and also
-        // determine if the lut is a no-op.
-        // If this lut is being read in from float ASCII text
+        // determine if the LUT is a no-op.
+        // If this LUT is being read in from float ASCII text
         // a value of 1e-5 is preferable.
-        // If this lut is being read in from integer ASCII
+        // If this LUT is being read in from integer ASCII
         // representation, the value will depend on the LSB
         // at the specified integer precision.
         // Example: reading 10-bit ints? Use 2/1023.0
@@ -94,7 +94,7 @@ OCIO_NAMESPACE_ENTER
         virtual std::string finalize() const;
     };
     
-    // This generates an identity 1d lut, from 0.0 to 1.0
+    // This generates an identity 1D LUT, from 0.0 to 1.0
     void GenerateIdentityLut1D(float* img, int numElements, int numChannels);
     
     void CreateLut1DOp(OpRcPtrVec & ops,

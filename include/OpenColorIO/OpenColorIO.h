@@ -219,7 +219,19 @@ OCIO_NAMESPACE_ENTER
         
         //!cpp:function::
         ConfigRcPtr createEditableCopy() const;
+
+        //!cpp:function:: Get the configuration major version
+        unsigned int getMajorVersion() const;
+
+        //!cpp:function:: Set the configuration major version
+        void setMajorVersion(unsigned int major);
+
+        //!cpp:function:: Get the configuration minor version
+        unsigned int getMinorVersion() const;
         
+        //!cpp:function:: Set the configuration minor version
+        void setMinorVersion(unsigned int minor);
+
         //!cpp:function::
         // This will throw an exception if the config is malformed. The most
         // common error occurs when references are made to colorspaces that do not

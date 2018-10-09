@@ -542,9 +542,9 @@ OCIO_NAMESPACE_ENTER
 
             // TODO: To enhance when adding bit depth
 
-            // TODO: To enhance when adding half domain luts
+            // TODO: To enhance when adding half domain LUTs
 
-            // TODO: To enhance to support not monotonic luts
+            // TODO: To enhance to support non-monotonic LUTs
 
             // The input bit depth describes the scaling of the LUT entries.
             const float normalMin = 0.0f;
@@ -737,7 +737,7 @@ OCIO_NAMESPACE_ENTER
                 depth = BIT_DEPTH_F16;
             }
 
-            // Make a domain for the composed Lut1D.
+            // Make a domain for the composed 1D LUT.
             Lut1DOpDataRcPtr newDomainLut = MakeLookupDomain(depth);
 
             // Regardless of what depth is used to build the domain, set the in & out 
@@ -754,7 +754,7 @@ OCIO_NAMESPACE_ENTER
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
-                throw Exception("Cannot apply lut1d op, unspecified transform direction.");
+                throw Exception("Cannot apply Lut1DOp, unspecified transform direction.");
             }
             
             // Validate the requested interpolation type
@@ -772,7 +772,7 @@ OCIO_NAMESPACE_ENTER
                     break;
                 case INTERP_TETRAHEDRAL:
                     throw Exception(
-                        "Cannot apply Lut1DOp, tetrahedral interpolation is not allowed for 1d luts.");
+                        "Cannot apply Lut1DOp, tetrahedral interpolation is not allowed for 1D LUTs.");
                     break;
                 default:
                     throw Exception("Cannot apply Lut1DOp, invalid interpolation specified.");
@@ -780,14 +780,14 @@ OCIO_NAMESPACE_ENTER
             
             if(lut()->luts[0].empty() || lut()->luts[1].empty() || lut()->luts[2].empty())
             {
-                throw Exception("Cannot apply lut1d op, no lut data provided.");
+                throw Exception("Cannot apply Lut1DOp, no LUT data provided.");
             }
 
             if(lut()->luts[0].size()!=lut()->luts[1].size()
                 || lut()->luts[0].size()!=lut()->luts[2].size())
             {
                 throw Exception(
-                    "Cannot apply lut1d op, the LUT for each channel must have the same dimensions.");
+                    "Cannot apply Lut1DOp, the LUT for each channel must have the same dimensions.");
             }
 
             // Create the cacheID
@@ -803,7 +803,7 @@ OCIO_NAMESPACE_ENTER
 
             if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                // Compute a fast forward Lut 1D from an inverse Lut 1D
+                // Compute a fast forward LUT 1D from an inverse LUT 1D
                 m_lut_gpu_apply = makeFastLut1D(true);
             }
         }
@@ -874,7 +874,7 @@ OCIO_NAMESPACE_ENTER
                 rgb[3*idx+2] = blu[idx];
             }
 
-            // Register the RGB lut
+            // Register the RGB LUT
 
             std::ostringstream resName;
             resName << shaderDesc->getResourcePrefix()
@@ -907,11 +907,11 @@ OCIO_NAMESPACE_ENTER
                 somethingToDo |= (scale[i] != 1.f || offset[i] != 0.f);
             }
 
-            // Add the lut code to the OCIO shader program
+            // Add the LUT code to the OCIO shader program
 
             if(height>1)
             {
-                // In case the 1D lut length exceeds the 1D texture maximum length
+                // In case the 1D LUT length exceeds the 1D texture maximum length
                 // a 2D texture is used.
 
                 {
@@ -1047,7 +1047,7 @@ OCIO_NAMESPACE_ENTER
     {
         if(lut->isNoOp()) return;
         
-        // TODO: Detect if lut1d can be exactly approximated as y = mx + b
+        // TODO: Detect if 1D LUT can be exactly approximated as y = mx + b
         // If so, return a mtx instead.
         
         ops.push_back( OpRcPtr(new Lut1DOp(lut, interpolation, direction)) );
@@ -1083,7 +1083,7 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OIIO_ADD_TEST(Lut1DOp, NoOp)
 {
-    // Make an identity lut
+    // Make an identity LUT
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
     lut->from_min[0] = 0.0f;
     lut->from_min[1] = 0.0f;
@@ -1120,7 +1120,7 @@ OIIO_ADD_TEST(Lut1DOp, NoOp)
         OCIO::INTERP_NEAREST, OCIO::TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 0);
     
-    // Edit the lut
+    // Edit the LUT
     // These should NOT be identity
     lut->unfinalize();
     lut->luts[0][125] += 1e-3f;
@@ -1139,7 +1139,7 @@ OIIO_ADD_TEST(Lut1DOp, NoOp)
 
 OIIO_ADD_TEST(Lut1DOp, FiniteValue)
 {
-    // Make a lut that squares the input
+    // Make a LUT that squares the input
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
     lut->from_min[0] = 0.0f;
     lut->from_min[1] = 0.0f;
@@ -1301,7 +1301,7 @@ OIIO_ADD_TEST(Lut1DOp, ExtrapolationErrors)
 
 OIIO_ADD_TEST(Lut1DOp, Inverse)
 {
-    // Make a lut that squares the input
+    // Make a LUT that squares the input
     OCIO::Lut1DOpDataRcPtr lut_a = OCIO::Lut1DOpData::Create();
     {
     lut_a->from_min[0] = 0.0f;
@@ -1325,7 +1325,7 @@ OIIO_ADD_TEST(Lut1DOp, Inverse)
     lut_a->errortype = OCIO::Lut1DOpData::ERROR_RELATIVE;
     }
     
-    // Make another lut
+    // Make another LUT
     OCIO::Lut1DOpDataRcPtr lut_b = OCIO::Lut1DOpData::Create();
     {
     lut_b->from_min[0] = 0.5f;
@@ -1393,7 +1393,7 @@ OIIO_ADD_TEST(Lut1DOp, Inverse)
 #ifdef USE_SSE
 OIIO_ADD_TEST(Lut1DOp, SSE)
 {
-    // Make a lut that squares the input
+    // Make a LUT that squares the input
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
     lut->from_min[0] = 0.0f;
     lut->from_min[1] = 0.0f;
@@ -1484,7 +1484,7 @@ OIIO_ADD_TEST(Lut1DOp, SSE)
 
 OIIO_ADD_TEST(Lut1DOp, NanInf)
 {
-    // Make a lut that squares the input
+    // Make a LUT that squares the input
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
     lut->from_min[0] = 0.0f;
     lut->from_min[1] = 0.0f;
@@ -1587,7 +1587,7 @@ OIIO_ADD_TEST(Lut1DOp, NanInf)
 
 OIIO_ADD_TEST(Lut1DOp, ThrowNoOp)
 {
-    // Make an identity lut
+    // Make an identity LUT
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
     lut->from_min[0] = 0.0f;
     lut->from_min[1] = 0.0f;
@@ -1665,7 +1665,7 @@ OIIO_ADD_TEST(Lut1DOp, ThrowOp)
         OCIO::Exception, "unspecified interpolation");
     ops.clear();
 
-    // INTERP_TETRAHEDRAL not allowed for 1d lut.
+    // INTERP_TETRAHEDRAL not allowed for 1D LUT.
     OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut,
         OCIO::INTERP_TETRAHEDRAL, OCIO::TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_EQUAL(ops.size(), 1);
@@ -1678,7 +1678,7 @@ OIIO_ADD_TEST(Lut1DOp, ThrowOp)
     OIIO_CHECK_EQUAL(ops.size(), 1);
     lut->luts[0].clear();
     OIIO_CHECK_THROW_WHAT(ops[0]->finalize(),
-        OCIO::Exception, "no lut data provided");
+        OCIO::Exception, "no LUT data provided");
 }
 
 OIIO_ADD_TEST(Lut1DOp, GPU)

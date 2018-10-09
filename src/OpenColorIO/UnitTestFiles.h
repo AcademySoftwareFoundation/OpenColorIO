@@ -26,38 +26,43 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef INCLUDED_OCIO_UNITTESTFILES_H
+#define INCLUDED_OCIO_UNITTESTFILES_H
+
 #ifdef OCIO_UNIT_TEST
 
-#ifndef WIN32
-#pragma GCC visibility push(default)
-#endif
-
-#include <unittest.h> // OIIO unit tests header
-OIIO_TEST_APP(OpenColorIO_Core_Unit_Tests)
-
-#ifndef WIN32
-#pragma GCC visibility pop
-#endif
+#include <fstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "UnitTestFiles.h"
+#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
-#ifndef OCIO_UNIT_TEST_FILES_DIR
-#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
-#endif
 
-// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
-#define _STR(x) #x
-#define STR(x) _STR(x)
+const char * getTestFilesDir();
 
-static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
+class CachedFile;
 
-const char * getTestFilesDir()
+template <class LocalFileFormat, class LocalCachedFile>
+OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
+    const std::string & fileName, std::ios_base::openmode mode)
 {
-    return ocioTestFilesDir.c_str();
+    const std::string filePath(std::string(getTestFilesDir()) + "/"
+                               + fileName);
+
+    // Open the filePath
+    std::ifstream filestream;
+    filestream.open(filePath.c_str(), mode);
+
+    std::string root, extension, name;
+    pystring::os::path::splitext(root, extension, filePath);
+
+    // Read file
+    LocalFileFormat tester;
+    OCIO_SHARED_PTR<CachedFile> cachedFile = tester.Read(filestream, filePath);
+
+    return DynamicPtrCast<LocalCachedFile>(cachedFile);
 }
 
 }
@@ -65,3 +70,5 @@ OCIO_NAMESPACE_EXIT
 
 
 #endif // OCIO_UNIT_TEST
+
+#endif // INCLUDED_OCIO_UNITTEST_H

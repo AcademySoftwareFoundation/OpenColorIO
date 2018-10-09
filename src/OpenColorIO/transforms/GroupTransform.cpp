@@ -65,15 +65,17 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            
-            vec_.clear();
-            
-            for(unsigned int i=0; i<rhs.vec_.size(); ++i)
+            if (this != &rhs)
             {
-                vec_.push_back(rhs.vec_[i]->createEditableCopy());
+                dir_ = rhs.dir_;
+
+                vec_.clear();
+
+                for (unsigned int i = 0; i < rhs.vec_.size(); ++i)
+                {
+                    vec_.push_back(rhs.vec_[i]->createEditableCopy());
+                }
             }
-            
             return *this;
         }
     };
@@ -121,6 +123,16 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void GroupTransform::validate() const
+    {
+        Transform::validate();
+
+        for (int i = 0; i<size(); ++i)
+        {
+            getTransform(i)->validate();
+        }
+    }
+
     int GroupTransform::size() const
     {
         return static_cast<int>(getImpl()->vec_.size());

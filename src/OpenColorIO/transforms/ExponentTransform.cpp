@@ -62,8 +62,11 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            ExponentOpData::operator=(rhs);
-            dir_ = rhs.dir_;
+            if (this != &rhs)
+            {
+                ExponentOpData::operator=(rhs);
+                dir_ = rhs.dir_;
+            }
             return *this;
         }
 
@@ -95,7 +98,10 @@ OCIO_NAMESPACE_ENTER
     
     ExponentTransform& ExponentTransform::operator= (const ExponentTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -109,6 +115,18 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void ExponentTransform::validate() const
+    {
+        Transform::validate();
+
+        // TODO: Uncomment in upcoming PR that contains the OpData validate.
+        //       getImpl()->data_->validate()
+        //       
+        //       OpData classes are the enhancement of some existing 
+        //       structures (like Lut1D and Lut3D) by encapsulating
+        //       all the data and adding high-level behaviors.
+    }
+
     void ExponentTransform::setValue(const float * vec4)
     {
         if(vec4)

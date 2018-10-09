@@ -260,7 +260,7 @@ OCIO_NAMESPACE_ENTER
 
             lut->lut.resize(lut3DNumPixels*3);
             
-            // Allocate 3dlut image, RGBA
+            // Allocate 3D LUT image, RGBA
             std::vector<float> lut3D(lut3DNumPixels*4);
             GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_RED);
             
