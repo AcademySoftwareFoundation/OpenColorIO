@@ -38,6 +38,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    class ExponentOpData;
+    typedef OCIO_SHARED_PTR<ExponentOpData> ExponentOpDataRcPtr;
+
+    class ExponentOpData : public OpData
+    {
+    public:
+        ExponentOpData();
+        ExponentOpData(const double * exp4);
+        virtual ~ExponentOpData() {}
+
+        ExponentOpData & operator = (const ExponentOpData & rhs);
+
+        virtual Type getType() const { return ExponentType; }
+
+        virtual bool isIdentity() const;
+
+        virtual bool hasChannelCrosstalk() const { return false; }
+
+        double m_exp4[4];
+
+    protected:
+        virtual std::string finalize() const;
+    };
+
     // If the exponent is 1.0, this will return without clamping
     // Otherwise, will be clamped between [0.0, inf]
     

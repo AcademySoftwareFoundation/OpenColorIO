@@ -60,11 +60,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile()
             {
-                lut = Lut1D::Create();
+                lut = Lut1DOpData::Create();
             };
             ~LocalCachedFile() {};
             
-            Lut1DRcPtr lut;
+            Lut1DOpDataRcPtr lut;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -111,7 +111,7 @@ OCIO_NAMESPACE_ENTER
             std::istream & istream,
             const std::string & fileName ) const
         {
-            Lut1DRcPtr lut1d = Lut1D::Create();
+            Lut1DOpDataRcPtr lut1d = Lut1DOpData::Create();
 
             // Parse Header Info
             int lut_size = -1;
@@ -263,7 +263,7 @@ OCIO_NAMESPACE_ENTER
             // 0.0
             // 0.000001 not equal
             lut1d->maxerror = 1e-5f;
-            lut1d->errortype = ERROR_RELATIVE;
+            lut1d->errortype = Lut1DOpData::ERROR_RELATIVE;
 
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             cachedFile->lut = lut1d;
@@ -372,7 +372,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, Test)
     OIIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[2][1970]);
 
     OIIO_CHECK_EQUAL(1e-5f, cachedFile->lut->maxerror);
-    OIIO_CHECK_EQUAL(OCIO::ERROR_RELATIVE, cachedFile->lut->errortype);
+    OIIO_CHECK_EQUAL(OCIO::Lut1DOpData::ERROR_RELATIVE, cachedFile->lut->errortype);
 }
 
 void ReadSpi1d(const std::string & fileContent)

@@ -119,7 +119,22 @@ OCIO_NAMESPACE_ENTER
     {
         getImpl()->dir_ = dir;
     }
-    
+
+    void LookTransform::validate() const
+    {
+        Transform::validate();
+
+        if (getImpl()->src_.empty())
+        {
+            throw Exception("LookTransform: empty source color space name");
+        }
+
+        if (getImpl()->dst_.empty())
+        {
+            throw Exception("LookTransform: empty destination color space name");
+        }
+    }
+
     const char * LookTransform::getSrc() const
     {
         return getImpl()->src_.c_str();

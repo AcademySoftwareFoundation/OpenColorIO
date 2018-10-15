@@ -114,15 +114,15 @@ OCIO_NAMESPACE_ENTER
                 has1D(false),
                 has3D(false)
             {
-                lut1D = Lut1D::Create();
-                lut3D = Lut3D::Create();
+                lut1D = Lut1DOpData::Create();
+                lut3D = Lut3DOpData::Create();
             };
             ~LocalCachedFile() {};
             
             bool has1D;
             bool has3D;
-            Lut1DRcPtr lut1D;
-            Lut3DRcPtr lut3D;
+            Lut1DOpDataRcPtr lut1D;
+            Lut3DOpDataRcPtr lut3D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -396,7 +396,7 @@ OCIO_NAMESPACE_ENTER
                 
                 const int FORMAT3DL_SHAPER_CODEVALUE_TOLERANCE = 2;
                 cachedFile->lut1D->maxerror = FORMAT3DL_SHAPER_CODEVALUE_TOLERANCE*scale;
-                cachedFile->lut1D->errortype = ERROR_ABSOLUTE;
+                cachedFile->lut1D->errortype = Lut1DOpData::ERROR_ABSOLUTE;
             }
             
             
@@ -802,7 +802,7 @@ OIIO_ADD_TEST(FileFormat3DL, TestLoad)
 
     OIIO_CHECK_ASSERT(lutFile->has1D);
     OIIO_CHECK_ASSERT(lutFile->has3D);
-    OIIO_CHECK_EQUAL(OCIO::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
+    OIIO_CHECK_EQUAL(OCIO::Lut1DOpData::ERROR_ABSOLUTE, lutFile->lut1D->errortype);
     OIIO_CHECK_EQUAL(0.00195503421f, lutFile->lut1D->maxerror);
     OIIO_CHECK_EQUAL(0.0f, lutFile->lut1D->from_min[1]);
     OIIO_CHECK_EQUAL(1.0f, lutFile->lut1D->from_max[1]);

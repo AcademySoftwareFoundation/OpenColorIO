@@ -253,7 +253,7 @@ OCIO_NAMESPACE_ENTER
             const unsigned lut3DEdgeLen   = edgelen;
             const unsigned lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
 
-            Lut3DRcPtr lut = Lut3D::Create();
+            Lut3DOpDataRcPtr lut = Lut3DOpData::Create();
             lut->size[0] = lut3DEdgeLen;
             lut->size[1] = lut3DEdgeLen;
             lut->size[2] = lut3DEdgeLen;

@@ -121,7 +121,17 @@ OCIO_NAMESPACE_ENTER
     {
         getImpl()->dir_ = dir;
     }
-    
+
+    void FileTransform::validate() const
+    {
+        Transform::validate();
+
+        if (getImpl()->src_.empty())
+        {
+            throw Exception("FileTransform: empty file path");
+        }
+    }
+
     const char * FileTransform::getSrc() const
     {
         return getImpl()->src_.c_str();
@@ -912,6 +922,17 @@ OIIO_ADD_TEST(FileTransform, AllFormats)
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("spimtx", "spimtx"));
     OIIO_CHECK_ASSERT(FormatExtensionFoundByName("vf", "nukevf"));
 
+}
+
+OIIO_ADD_TEST(FileTransform, validate)
+{
+    OCIO::FileTransformRcPtr tr = OCIO::FileTransform::Create();
+
+    tr->setSrc("example-3d-lut.ctf");
+    OIIO_CHECK_NO_THROW(tr->validate());
+
+    tr->setSrc("");
+    OIIO_CHECK_THROW(tr->validate(), OCIO::Exception);
 }
 
 
