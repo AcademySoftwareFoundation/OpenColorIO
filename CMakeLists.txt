@@ -35,7 +35,6 @@ option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-h
 # External linking
 
 option(USE_EXTERNAL_YAML "Use system installed yaml-cpp library." OFF)
-option(USE_EXTERNAL_TINYXML "Use system installed tinyxml library." OFF)
 option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
 
 ###############################################################################

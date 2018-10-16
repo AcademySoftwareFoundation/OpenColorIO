@@ -161,6 +161,10 @@ private:
 namespace Platform
 {
 void getenv (const char* name, std::string& value);
+
+// Case insensitive string comparison for the nth first characters only
+int Strncasecmp(const char* str1, const char* str2, size_t n);
+
 }
 
 }

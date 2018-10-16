@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,48 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef INCLUDED_OCIO_FILEFORMATS_CDL_CDLPARSER_H
+#define INCLUDED_OCIO_FILEFORMATS_CDL_CDLPARSER_H
 
-#ifndef INCLUDED_OCIO_CDLTRANSFORM_H
-#define INCLUDED_OCIO_CDLTRANSFORM_H
-
-#include <map>
-#include <vector>
+#include <string>
+#include <istream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "transforms/CDLTransform.h"
+
 OCIO_NAMESPACE_ENTER
 {
-    typedef std::map<std::string,CDLTransformRcPtr> CDLTransformMap;
-    typedef std::vector<CDLTransformRcPtr> CDLTransformVec;
-    
-    void ClearCDLTransformFileCache();
-    
-    void LoadCDL(CDLTransform * cdl, const char * xml);
-    
+
+class CDLParser
+{
+public:
+    CDLParser(const std::string& xmlFile);
+    virtual ~CDLParser();
+
+    void parse(std::istream & istream) const;
+
+    // Can be called after parse
+    void getCDLTransforms(CDLTransformMap & transformMap,
+                          CDLTransformVec & transformVec) const;
+
+    // Can be called after parse
+    void getCDLTransform(CDLTransformRcPtr & transform) const;
+
+    bool isCC() const;
+    bool isCCC() const;
+
+private:
+    // The hidden implementation's declaration
+    class Impl;
+    Impl * m_impl; 
+
+    CDLParser() = delete;
+    CDLParser(const CDLParser&) = delete;
+    CDLParser& operator=(const CDLParser&) = delete;
+};
+
+
 }
 OCIO_NAMESPACE_EXIT
 
