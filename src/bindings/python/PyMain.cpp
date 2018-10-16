@@ -202,6 +202,7 @@ MOD_INIT(PyOpenColorIO)
         OCIO::AddObjectToModule(OCIO::PyOCIO_LogTransformType, "LogTransform", m);
         OCIO::AddObjectToModule(OCIO::PyOCIO_LookTransformType, "LookTransform", m);
         OCIO::AddObjectToModule(OCIO::PyOCIO_MatrixTransformType, "MatrixTransform", m);
+        OCIO::AddObjectToModule(OCIO::PyOCIO_RangeTransformType, "RangeTransform", m);
     }
 
     return MOD_SUCCESS_VAL(m);

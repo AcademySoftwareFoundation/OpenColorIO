@@ -932,6 +932,26 @@ Keys:
 * ``direction``
 
 
+``RangeTransform``
++++++++++++++++++++
+
+Applies an affine transform (scale & offset) and clamps values to min/max bounds.
+
+Keys:
+
+* ``minInValue``
+* ``maxInValue``
+* ``minOutValue``
+* ``maxOutValue``
+* ``direction``
+
+.. note::
+
+    If a minInValue is present, then minOutValue must also be present and the result 
+    is clamped at the low end. Similarly, if maxInValue is present, then maxOutValue 
+    must also be present and the result is clamped at the high end.
+
+
 ``TruelightTransform``
 ++++++++++++++++++++++
 

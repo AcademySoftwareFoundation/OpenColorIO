@@ -111,6 +111,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildMatrixOps(ops, config, *matrixTransform, dir);
         }
+        else if(ConstRangeTransformRcPtr rangeTransform = \
+            DynamicPtrCast<const RangeTransform>(transform))
+        {
+            BuildRangeOps(ops, config, *rangeTransform, dir);
+        }
         else if(ConstTruelightTransformRcPtr truelightTransform = \
             DynamicPtrCast<const TruelightTransform>(transform))
         {
@@ -179,6 +184,11 @@ OCIO_NAMESPACE_ENTER
             dynamic_cast<const MatrixTransform*>(t))
         {
             os << *matrixTransform;
+        }
+        else if(const RangeTransform * rangeTransform = \
+            dynamic_cast<const RangeTransform*>(t))
+        {
+            os << *rangeTransform;
         }
         else if(const TruelightTransform * truelightTransform = \
             dynamic_cast<const TruelightTransform*>(t))

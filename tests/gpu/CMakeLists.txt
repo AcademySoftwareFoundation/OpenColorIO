@@ -11,6 +11,7 @@ set(SOURCES
 	Lut1DOp_test.cpp
 	Lut3DOp_test.cpp
 	MatrixOps_test.cpp
+	RangeOps_test.cpp
 )
 
 add_executable(test_gpu_exec ${SOURCES})

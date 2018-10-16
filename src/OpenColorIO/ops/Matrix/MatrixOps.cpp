@@ -27,15 +27,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "GpuShaderUtils.h"
-#include "HashUtils.h"
-#include "ops/Matrix/MatrixOps.h"
-#include "MathUtils.h"
-
 #include <cstring>
 #include <sstream>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "BitDepthUtils.h"
+#include "GpuShaderUtils.h"
+#include "HashUtils.h"
+#include "MathUtils.h"
+#include "ops/Matrix/MatrixOps.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -47,6 +49,22 @@ OCIO_NAMESPACE_ENTER
         m_m44[ 5] = 1.0f;
         m_m44[10] = 1.0f;
         m_m44[15] = 1.0f;
+
+        memset(m_offset4, 0, 4*sizeof(float));
+    }
+
+    MatrixOpData::MatrixOpData(BitDepth inBitDepth, BitDepth outBitDepth)
+        :   OpData(inBitDepth, outBitDepth)
+    {
+        const float scaleFactor
+            = GetBitDepthMaxValue(outBitDepth)
+                / GetBitDepthMaxValue(inBitDepth);
+
+        memset(m_m44, 0, 16*sizeof(float));
+        m_m44[ 0] = scaleFactor;
+        m_m44[ 5] = scaleFactor;
+        m_m44[10] = scaleFactor;
+        m_m44[15] = scaleFactor;
 
         memset(m_offset4, 0, 4*sizeof(float));
     }
