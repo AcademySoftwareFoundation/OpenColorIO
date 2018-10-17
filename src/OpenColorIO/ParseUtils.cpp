@@ -514,8 +514,8 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OIIO_ADD_TEST(ParseUtils, XMLText)
 {
-    const std::string in("abc \" def ' ghi < jkl > mnop & é1234â");
-    const std::string ref("abc &quot; def &apos; ghi &lt; jkl &gt; mnop &amp; é1234â");
+    const std::string in("abc \" def ' ghi < jkl > mnop & efg");
+    const std::string ref("abc &quot; def &apos; ghi &lt; jkl &gt; mnop &amp; efg");
 
     std::string out1 = OCIO::ConvertSpecialCharToXmlToken(in);
     OIIO_CHECK_EQUAL(out1, ref);
