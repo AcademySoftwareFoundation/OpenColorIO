@@ -621,9 +621,9 @@ MatrixOpDataRcPtr RangeOpData::convertToMatrix() const
 
     const float offset = (float)getOffset();
     mtx->m_offset4[0] = offset;
-    mtx->m_offset4[0] = offset;
-    mtx->m_offset4[0] = offset;
-    mtx->m_offset4[0] = 0.f;
+    mtx->m_offset4[1] = offset;
+    mtx->m_offset4[2] = offset;
+    mtx->m_offset4[3] = 0.f;
 
     mtx->validate();
 
