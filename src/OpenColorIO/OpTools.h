@@ -37,10 +37,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // Returns the ideal lut size based on a specific bit depth
+    // Returns the ideal LUT size based on a specific bit depth
     unsigned GetLutIdealSize(BitDepth incomingBitDepth);
 
-    // Control behavior of Lut1D composition.
+    // Control behavior of 1D LUT composition.
     enum ComposeMethod
     {
         COMPOSE_RESAMPLE_NO      = 0, // Preserve original domain
@@ -50,7 +50,7 @@ OCIO_NAMESPACE_ENTER
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
-    Lut1DRcPtr Compose(const Lut1DRcPtr & A, const OpRcPtr & B, ComposeMethod compFlag);
+    Lut1DOpDataRcPtr Compose(const Lut1DOpDataRcPtr & A, const OpRcPtr & B, ComposeMethod compFlag);
 }
 OCIO_NAMESPACE_EXIT
 

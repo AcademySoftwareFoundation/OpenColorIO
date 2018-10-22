@@ -24,6 +24,7 @@ target_include_directories(ocioconvert
 target_link_libraries(ocioconvert
 	PRIVATE 
 		apputils
+		openglbuilder
 	PUBLIC
 		OpenColorIO
 		OpenImageIO

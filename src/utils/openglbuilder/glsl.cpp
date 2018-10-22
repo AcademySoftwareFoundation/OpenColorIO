@@ -236,12 +236,12 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
     m_startIndex = startIndex;
     unsigned currIndex = m_startIndex;
 
-    // Process the 3D Luts first
+    // Process the 3D LUT first
 
     const unsigned maxTexture3D = m_shaderDesc->getNum3DTextures();
     for(unsigned idx=0; idx<maxTexture3D; ++idx)
     {
-        // 1. Get the information of the 3D lut
+        // 1. Get the information of the 3D LUT
 
         const char* name = 0x0;
         const char* uid  = 0x0;
@@ -261,7 +261,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
             throw OCIO::Exception("The texture values are missing");
         }
 
-        // 2. Allocate the 3D lut
+        // 2. Allocate the 3D LUT
 
         unsigned texId = 0;
         AllocateTexture3D(currIndex, texId, interpolation, edgelen, values);
@@ -273,12 +273,12 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
         currIndex++;
     }
 
-    // Process the 1D luts
+    // Process the 1D LUTs
 
     const unsigned maxTexture2D = m_shaderDesc->getNumTextures();
     for(unsigned idx=0; idx<maxTexture2D; ++idx)
     {
-        // 1. Get the information of the 1D lut
+        // 1. Get the information of the 1D LUT
 
         const char* name = 0x0;
         const char* uid  = 0x0;
@@ -300,7 +300,7 @@ void OpenGLBuilder::allocateAllTextures(unsigned startIndex)
             throw OCIO::Exception("The texture values are missing");
         }
 
-        // 2. Allocate the 1D lut (a 2D texture is needed to hold large luts)
+        // 2. Allocate the 1D LUT (a 2D texture is needed to hold large LUTs)
 
         unsigned texId = 0;
         AllocateTexture2D(currIndex, texId, width, height, interpolation, values);

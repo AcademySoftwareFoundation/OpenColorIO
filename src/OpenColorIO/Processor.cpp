@@ -253,14 +253,14 @@ OCIO_NAMESPACE_ENTER
             const unsigned lut3DEdgeLen   = edgelen;
             const unsigned lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
 
-            Lut3DRcPtr lut = Lut3D::Create();
+            Lut3DOpDataRcPtr lut = Lut3DOpData::Create();
             lut->size[0] = lut3DEdgeLen;
             lut->size[1] = lut3DEdgeLen;
             lut->size[2] = lut3DEdgeLen;
 
             lut->lut.resize(lut3DNumPixels*3);
             
-            // Allocate 3dlut image, RGBA
+            // Allocate 3D LUT image, RGBA
             std::vector<float> lut3D(lut3DNumPixels*4);
             GenerateIdentityLut3D(&lut3D[0], lut3DEdgeLen, 4, LUT3DORDER_FAST_RED);
             

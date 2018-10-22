@@ -316,18 +316,18 @@ OCIO_NAMESPACE_ENTER
                 csptype("unknown"),
                 metadata("none")
             {
-                prelut = Lut1D::Create();
-                lut1D = Lut1D::Create();
-                lut3D = Lut3D::Create();
+                prelut = Lut1DOpData::Create();
+                lut1D = Lut1DOpData::Create();
+                lut3D = Lut3DOpData::Create();
             };
             ~CachedFileCSP() {};
             
             bool hasprelut;
             std::string csptype;
             std::string metadata;
-            Lut1DRcPtr prelut;
-            Lut1DRcPtr lut1D;
-            Lut3DRcPtr lut3D;
+            Lut1DOpDataRcPtr prelut;
+            Lut1DOpDataRcPtr lut1D;
+            Lut3DOpDataRcPtr lut3D;
         };
         typedef OCIO_SHARED_PTR<CachedFileCSP> CachedFileCSPRcPtr;
         
@@ -390,30 +390,30 @@ OCIO_NAMESPACE_ENTER
             // this shouldn't happen
             if (!istream)
             {
-                throw Exception ("file stream empty when trying to read csp lut");
+                throw Exception ("file stream empty when trying to read csp LUT");
             }
             
-            Lut1DRcPtr prelut_ptr = Lut1D::Create();
-            Lut1DRcPtr lut1d_ptr = Lut1D::Create();
-            Lut3DRcPtr lut3d_ptr = Lut3D::Create();
+            Lut1DOpDataRcPtr prelut_ptr = Lut1DOpData::Create();
+            Lut1DOpDataRcPtr lut1d_ptr = Lut1DOpData::Create();
+            Lut3DOpDataRcPtr lut3d_ptr = Lut3DOpData::Create();
 
-            // try and read the lut header
+            // try and read the LUT header
             std::string line;
             nextline (istream, line);
             if (!startswithU(line, "CSPLUTV100"))
             {
                 std::ostringstream os;
-                os << "Lut doesn't seem to be a csp file, expected 'CSPLUTV100'.";
+                os << "LUT doesn't seem to be a csp file, expected 'CSPLUTV100'.";
                 os << "First line: '" << line << "'.";
                 throw Exception(os.str().c_str());
             }
 
-            // next line tells us if we are reading a 1D or 3D lut
+            // next line tells us if we are reading a 1D or 3D LUT
             nextline (istream, line);
             if (!startswithU(line, "1D") && !startswithU(line, "3D"))
             {
                 std::ostringstream os;
-                os << "Unsupported CSP lut type. Require 1D or 3D. ";
+                os << "Unsupported CSP LUT type. Require 1D or 3D. ";
                 os << "Found, '" << line << "'.";
                 throw Exception(os.str().c_str());
             }
@@ -509,7 +509,7 @@ OCIO_NAMESPACE_ENTER
             if (csptype == "1D")
             {
 
-                // how many 1D lut points do we have
+                // how many 1D LUT points do we have
                 nextline (istream, line);
                 int points1D = atoi (line.c_str());
 
@@ -532,7 +532,7 @@ OCIO_NAMESPACE_ENTER
                     nextline (istream, line);
                     if (sscanf (line.c_str(), "%f %f %f",
                         &lp[0], &lp[1], &lp[2]) != 3) {
-                        throw Exception ("malformed 1D csp lut");
+                        throw Exception ("malformed 1D csp LUT");
                     }
 
                     // store each channel
@@ -551,7 +551,7 @@ OCIO_NAMESPACE_ENTER
                     &lut3d_ptr->size[0],
                     &lut3d_ptr->size[1],
                     &lut3d_ptr->size[2]) != 3 ) {
-                    throw Exception("malformed 3D csp lut, couldn't read cube size");
+                    throw Exception("malformed 3D csp LUT, couldn't read cube size");
                 }
                 
                 
@@ -570,7 +570,7 @@ OCIO_NAMESPACE_ENTER
                        &lut3d_ptr->lut[3*i+2]) != 3 )
                     {
                         std::ostringstream os;
-                        os << "Malformed 3D csp lut, couldn't read cube row (";
+                        os << "Malformed 3D csp LUT, couldn't read cube row (";
                         os << i << "): " << line << " .";
                         throw Exception(os.str().c_str());
                     }
@@ -602,11 +602,11 @@ OCIO_NAMESPACE_ENTER
                         cprelut_raw->values[i] = prelut_out[c][i];
                     }
                     
-                    // Create interpolater, to resample to simple 1D lut
+                    // Create interpolater, to resample to simple 1D LUT
                     rsr_Interpolator1D * interpolater =
                         rsr_Interpolator1D_createFromRaw(cprelut_raw);
                     
-                    // Resample into 1D lut
+                    // Resample into 1D LUT
                     // TODO: Fancy spline analysis to determine required number of samples
                     prelut_ptr->from_min[c] = from_min;
                     prelut_ptr->from_max[c] = from_max;
@@ -626,7 +626,7 @@ OCIO_NAMESPACE_ENTER
                 }
                 
                 prelut_ptr->maxerror = 1e-6f;
-                prelut_ptr->errortype = ERROR_RELATIVE;
+                prelut_ptr->errortype = Lut1DOpData::ERROR_RELATIVE;
                 
                 cachedFile->prelut = prelut_ptr;
             }
@@ -634,7 +634,7 @@ OCIO_NAMESPACE_ENTER
             if(csptype == "1D")
             {
                 lut1d_ptr->maxerror = 0.0f;
-                lut1d_ptr->errortype = ERROR_RELATIVE;
+                lut1d_ptr->errortype = Lut1DOpData::ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
             else if (csptype == "3D")
@@ -655,7 +655,7 @@ OCIO_NAMESPACE_ENTER
             
             ConstConfigRcPtr config = baker.getConfig();
             
-            // TODO: Add 1d/3d lut writing switch, using hasChannelCrosstalk
+            // TODO: Add 1D/3D LUT writing switch, using hasChannelCrosstalk
             int cubeSize = baker.getCubeSize();
             if(cubeSize==-1) cubeSize = DEFAULT_CUBE_SIZE;
             cubeSize = std::max(2, cubeSize); // smallest cube is 2x2x2
@@ -772,7 +772,7 @@ OCIO_NAMESPACE_ENTER
                 shaperToInput->apply(shaperInImg);
                 shaperToInput->apply(cubeImg);
                 
-                // Apply the 3d lut to the remainder (from the input to the output)
+                // Apply the 3D LUT to the remainder (from the input to the output)
                 ConstProcessorRcPtr inputToTarget;
                 if (!looks.empty())
                 {

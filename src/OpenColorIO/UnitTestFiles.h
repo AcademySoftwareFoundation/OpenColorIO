@@ -26,49 +26,49 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef INCLUDED_OCIO_UNITTESTFILES_H
+#define INCLUDED_OCIO_UNITTESTFILES_H
 
-#ifndef INCLUDED_OCIO_EXPONENTOP_H
-#define INCLUDED_OCIO_EXPONENTOP_H
+#ifdef OCIO_UNIT_TEST
+
+#include <fstream>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Op.h"
-
-#include <vector>
+#include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    class ExponentOpData;
-    typedef OCIO_SHARED_PTR<ExponentOpData> ExponentOpDataRcPtr;
 
-    class ExponentOpData : public OpData
-    {
-    public:
-        ExponentOpData();
-        ExponentOpData(const double * exp4);
-        virtual ~ExponentOpData() {}
+const char * getTestFilesDir();
 
-        ExponentOpData & operator = (const ExponentOpData & rhs);
+class CachedFile;
 
-        virtual Type getType() const { return ExponentType; }
+template <class LocalFileFormat, class LocalCachedFile>
+OCIO_SHARED_PTR<LocalCachedFile> LoadTestFile(
+    const std::string & fileName, std::ios_base::openmode mode)
+{
+    const std::string filePath(std::string(getTestFilesDir()) + "/"
+                               + fileName);
 
-        virtual bool isIdentity() const;
+    // Open the filePath
+    std::ifstream filestream;
+    filestream.open(filePath.c_str(), mode);
 
-        virtual bool hasChannelCrosstalk() const { return false; }
+    std::string root, extension, name;
+    pystring::os::path::splitext(root, extension, filePath);
 
-        double m_exp4[4];
+    // Read file
+    LocalFileFormat tester;
+    OCIO_SHARED_PTR<CachedFile> cachedFile = tester.Read(filestream, filePath);
 
-    protected:
-        virtual std::string finalize() const;
-    };
+    return DynamicPtrCast<LocalCachedFile>(cachedFile);
+}
 
-    // If the exponent is 1.0, this will return without clamping
-    // Otherwise, will be clamped between [0.0, inf]
-    
-    void CreateExponentOp(OpRcPtrVec & ops,
-                          const float * exponent4,
-                          TransformDirection direction);
 }
 OCIO_NAMESPACE_EXIT
 
-#endif
+
+#endif // OCIO_UNIT_TEST
+
+#endif // INCLUDED_OCIO_UNITTEST_H

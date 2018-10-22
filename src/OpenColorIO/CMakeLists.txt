@@ -81,6 +81,7 @@ target_link_libraries(OpenColorIO
 		yamlcpp
 		pystring
 		sampleicc
+		ilmbase
 )
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO

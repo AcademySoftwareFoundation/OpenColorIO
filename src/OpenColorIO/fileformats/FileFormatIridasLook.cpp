@@ -158,11 +158,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile ()
             {
-                lut3D = Lut3D::Create();
+                lut3D = Lut3DOpData::Create();
             };
             ~LocalCachedFile() {};
 
-            Lut3DRcPtr lut3D;
+            Lut3DOpDataRcPtr lut3D;
         };
 
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -356,8 +356,8 @@ OCIO_NAMESPACE_ENTER
             if((size_3d*size_3d*size_3d)*3 != static_cast<int>(raw.size()))
             {
                 std::ostringstream os;
-                os << "Parse error in Iridas .look lut. ";
-                os << "Incorrect number of lut3d entries. ";
+                os << "Parse error in Iridas .look LUT. ";
+                os << "Incorrect number of 3D LUT entries. ";
                 os << "Found " << raw.size() << " values, expected " << (size_3d*size_3d*size_3d)*3 << ".";
                 throw Exception(os.str().c_str());
             }

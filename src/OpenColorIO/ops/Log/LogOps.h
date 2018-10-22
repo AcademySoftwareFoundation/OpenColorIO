@@ -38,6 +38,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    class LogOpData;
+    typedef OCIO_SHARED_PTR<LogOpData> LogOpDataRcPtr;
+
+    class LogOpData : public OpData
+    {
+    public:
+        LogOpData(float base);
+        LogOpData(const float * k,
+                  const float * m,
+                  const float * b,
+                  const float * base,
+                  const float * kb);
+        virtual ~LogOpData() {}
+
+        LogOpData & operator = (const LogOpData & rhs);
+
+        virtual Type getType() const { return LogType; }
+
+        virtual bool isIdentity() const { return false; }
+
+        virtual bool hasChannelCrosstalk() const { return false; }
+
+        float m_k[3];
+        float m_m[3];
+        float m_b[3];
+        float m_base[3];
+        float m_kb[3];
+
+    protected:
+        virtual std::string finalize() const;
+    };
+
     // output = k * log(mx+b, base) + kb
     // This does not affect alpha
     // In the forward direction this is lin->log
@@ -50,6 +82,8 @@ OCIO_NAMESPACE_ENTER
                      const float * base,
                      const float * kb,
                      TransformDirection direction);
+
+    void CreateLogOp(OpRcPtrVec & ops, float base, TransformDirection direction);
     
 }
 OCIO_NAMESPACE_EXIT

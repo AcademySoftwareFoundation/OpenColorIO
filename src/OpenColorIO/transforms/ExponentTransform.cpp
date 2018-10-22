@@ -47,30 +47,31 @@ OCIO_NAMESPACE_ENTER
     }
     
     
-    class ExponentTransform::Impl
+    class ExponentTransform::Impl : public ExponentOpData
     {
     public:
         TransformDirection dir_;
-        float value_[4];
         
         Impl() :
+            ExponentOpData(),
             dir_(TRANSFORM_DIR_FORWARD)
-        {
-            for(int i=0; i<4; ++i)
-            {
-                value_[i] = 1.0f;
-            }
-        }
+        { }
         
         ~Impl()
         { }
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            memcpy(value_, rhs.value_, 4*sizeof(float));
+            if (this != &rhs)
+            {
+                ExponentOpData::operator=(rhs);
+                dir_ = rhs.dir_;
+            }
             return *this;
         }
+
+    private:        
+        Impl(const Impl & rhs);
     };
     
     ///////////////////////////////////////////////////////////////////////////
@@ -97,7 +98,10 @@ OCIO_NAMESPACE_ENTER
     
     ExponentTransform& ExponentTransform::operator= (const ExponentTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -111,14 +115,38 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void ExponentTransform::validate() const
+    {
+        Transform::validate();
+
+        // TODO: Uncomment in upcoming PR that contains the OpData validate.
+        //       getImpl()->data_->validate()
+        //       
+        //       OpData classes are the enhancement of some existing 
+        //       structures (like Lut1D and Lut3D) by encapsulating
+        //       all the data and adding high-level behaviors.
+    }
+
     void ExponentTransform::setValue(const float * vec4)
     {
-        if(vec4) memcpy(getImpl()->value_, vec4, 4*sizeof(float));
+        if(vec4)
+        {
+            for(unsigned i=0; i<4; ++i)
+            {
+                getImpl()->m_exp4[i] = vec4[i];
+            }
+        }
     }
     
     void ExponentTransform::getValue(float * vec4) const
     {
-        if(vec4) memcpy(vec4, getImpl()->value_, 4*sizeof(float));
+        if(vec4)
+        {
+            for(unsigned i=0; i<4; ++i)
+            {
+                vec4[i] = float(getImpl()->m_exp4[i]);
+            }
+        }
     }
     
     std::ostream& operator<< (std::ostream& os, const ExponentTransform& t)

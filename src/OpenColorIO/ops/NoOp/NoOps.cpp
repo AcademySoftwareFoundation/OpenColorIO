@@ -39,11 +39,28 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
+        class NoOp : public OpData
+        {
+        public:
+            NoOp() : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32) { }
+
+            virtual Type getType() const { return NoOpType; }
+            virtual bool isIdentity() const { return true; }
+            virtual bool hasChannelCrosstalk() const { return false; }
+
+        protected:
+            virtual std::string finalize() const { return ""; }
+        };
+
         class AllocationNoOp : public Op
         {
         public:
             AllocationNoOp(const AllocationData & allocationData):
-                m_allocationData(allocationData) {}
+                m_allocationData(allocationData)
+            { 
+                data().reset(new NoOp()); 
+            }
+
             virtual ~AllocationNoOp() {}
             
             virtual OpRcPtr clone() const;
@@ -51,10 +68,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const { return "<AllocationNoOp>"; }
             virtual std::string getCacheID() const { return ""; }
             
-            virtual bool isNoOp() const { return true; }
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
-            virtual bool hasChannelCrosstalk() const { return false; }
             virtual void finalize() { }
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const { }
             
@@ -199,7 +214,7 @@ OCIO_NAMESPACE_ENTER
                                     &gpuLut3DOpEndIndex,
                                     ops);
         
-        // Write the entire shader using only shader text (3d lut is unused)
+        // Write the entire shader using only shader text (3D LUT is unused)
         if(gpuLut3DOpStartIndex == -1 && gpuLut3DOpEndIndex == -1)
         {
             for(unsigned int i=0; i<ops.size(); ++i)
@@ -207,7 +222,7 @@ OCIO_NAMESPACE_ENTER
                 gpuPreOps.push_back( ops[i]->clone() );
             }
         }
-        // Analytical -> 3dlut -> analytical
+        // Analytical -> 3D LUT -> analytical
         else
         {
             // Handle analytical shader block before start index.
@@ -309,7 +324,11 @@ OCIO_NAMESPACE_ENTER
         {
         public:
             FileNoOp(const std::string & fileReference):
-                m_fileReference(fileReference) {}
+                m_fileReference(fileReference)
+            { 
+                data().reset(new NoOp()); 
+            }
+
             virtual ~FileNoOp() {}
             
             virtual OpRcPtr clone() const;
@@ -317,10 +336,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const { return "<FileNoOp>"; }
             virtual std::string getCacheID() const { return ""; }
             
-            virtual bool isNoOp() const { return true; }
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
-            virtual bool hasChannelCrosstalk() const { return false; }
             virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
             
             virtual void finalize() {}
@@ -375,7 +392,11 @@ OCIO_NAMESPACE_ENTER
         {
         public:
             LookNoOp(const std::string & look):
-                m_look(look) {}
+                m_look(look)
+            { 
+                data().reset(new NoOp()); 
+            }
+
             virtual ~LookNoOp() {}
             
             virtual OpRcPtr clone() const;
@@ -383,10 +404,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const { return "<LookNoOp>"; }
             virtual std::string getCacheID() const { return ""; }
             
-            virtual bool isNoOp() const { return true; }
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
-            virtual bool hasChannelCrosstalk() const { return false; }
             virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
             
             virtual void finalize() {}
@@ -463,8 +482,8 @@ void CreateGenericScaleOp(OpRcPtrVec & ops)
 
 void CreateGenericLutOp(OpRcPtrVec & ops)
 {
-    // Make a lut that squares the input
-    Lut1DRcPtr lut = Lut1D::Create();
+    // Make a LUT that squares the input
+    Lut1DOpDataRcPtr lut = Lut1DOpData::Create();
     {
         lut->from_min[0] = 0.0f;
         lut->from_min[1] = 0.0f;

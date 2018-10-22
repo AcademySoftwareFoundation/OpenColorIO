@@ -51,7 +51,7 @@ OCIO_NAMESPACE_ENTER
 
         unsigned getEdgelen() const;
 
-        // Accessors to the 3D textures built from 3D Luts
+        // Accessors to the 3D textures built from 3D LUT
         //
         unsigned getNum3DTextures() const;
         void add3DTexture(const char * name, const char * id, unsigned edgelen, 
@@ -132,7 +132,7 @@ OCIO_NAMESPACE_ENTER
     // 
     // The class holds all the information to build a shader program without baking
     // the color transform. It mainly means that the processor could contain 
-    // several 1D or 3D luts.
+    // several 1D or 3D LUTs.
     // 
 
     class GenericGpuShaderDesc : public GpuShaderDesc
@@ -151,7 +151,7 @@ OCIO_NAMESPACE_ENTER
         void addUniform(
             unsigned index, const char * name, UniformType type, void * value);
 
-        // Accessors to the 1D & 2D textures built from 1D Luts
+        // Accessors to the 1D & 2D textures built from 1D LUT
         //
         unsigned getNumTextures() const;
         void addTexture(const char * name, const char * id, unsigned width, unsigned height,
@@ -161,7 +161,7 @@ OCIO_NAMESPACE_ENTER
                         TextureType & channel, Interpolation & interpolation) const;
         void getTextureValues(unsigned index, const float *& values) const;
 
-        // Accessors to the 3D textures built from 3D Luts
+        // Accessors to the 3D textures built from 3D LUT
         //
         unsigned getNum3DTextures() const;
         void add3DTexture(const char * name, const char * id, unsigned edgelen, 

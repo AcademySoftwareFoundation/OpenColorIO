@@ -39,4 +39,29 @@ OIIO_TEST_APP(OpenColorIO_Core_Unit_Tests)
 #pragma GCC visibility pop
 #endif
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "UnitTestFiles.h"
+
+OCIO_NAMESPACE_ENTER
+{
+#ifndef OCIO_UNIT_TEST_FILES_DIR
+#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
+#endif
+
+// For explanation, refer to https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html 
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
+static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
+
+const char * getTestFilesDir()
+{
+    return ocioTestFilesDir.c_str();
+}
+
+}
+OCIO_NAMESPACE_EXIT
+
+
 #endif // OCIO_UNIT_TEST
