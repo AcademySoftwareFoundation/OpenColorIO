@@ -129,7 +129,7 @@ else()
 		message(WARNING " Building STATIC libOpenColorIO using the in-built LCMS2. LCMS2's symbols are NOT included in the output binary!")
 	endif()
 
-	set(LCMS2_INCLUDE_DIRS "${LCMS2_INSTALL_DIR}/include")
+	set(LCMS2_INCLUDE_DIRS "${LCMS2_INSTALL_DIR}/include/lcms2")
 	set(LCMS2_LIBRARY ${LCMS2_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lcms2${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 	ExternalProject_Add(LCMS2
@@ -145,6 +145,40 @@ else()
 endif()
 set_property(TARGET lcms2 PROPERTY IMPORTED_LOCATION ${LCMS2_LIBRARY})
 set_property(TARGET lcms2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${LCMS2_INCLUDE_DIRS})
+
+
+######################################################################
+# ILMBASE (HALF PART ONLY)
+
+add_library(ilmbase UNKNOWN IMPORTED GLOBAL)
+set(ILMBASE_INSTALL_DIR "${CMAKE_BINARY_DIR}/ext/dist")
+set(ILMBASE_CMAKE_ARGS
+	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+	-DBUILD_SHARED_LIBS:BOOL=OFF
+	-DCMAKE_INSTALL_PREFIX=${ILMBASE_INSTALL_DIR}
+)
+
+if(NOT BUILD_SHARED_LIBS)
+	#TODO: Find a way to merge in the static libs when built with internal ilmbase
+	message(WARNING " Building STATIC libOpenColorIO using the in-built ILMBASE. ILMBASE's symbols are NOT included in the output binary!")
+endif()
+
+set(ILMBASE_INCLUDE_DIRS "${ILMBASE_INSTALL_DIR}/include/ilmbase")
+set(ILMBASE_LIBRARY ${ILMBASE_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ilmbase${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+ExternalProject_Add(ILMBASE
+	URL "${CMAKE_SOURCE_DIR}/ext/ilmbasehalf-2.2.1.tar.gz"
+	PATCH_COMMAND ${PATCH_COMMAND} -f -p 1 < "${CMAKE_SOURCE_DIR}/ext/ilmbasehalf-2.2.1.patch"
+	BINARY_DIR "${CMAKE_BINARY_DIR}/ext/build/ilmbase"
+	BUILD_BYPRODUCTS "${ILMBASE_LIBRARY}"
+	INSTALL_DIR "${ILMBASE_INSTALL_DIR}"
+	CMAKE_ARGS ${ILMBASE_CMAKE_ARGS}
+)
+file(MAKE_DIRECTORY ${ILMBASE_INCLUDE_DIRS}) # Hack to let imported target be built from ExternalProject_Add
+add_dependencies(ilmbase ILMBASE)
+
+set_property(TARGET ilmbase PROPERTY IMPORTED_LOCATION ${ILMBASE_LIBRARY})
+set_property(TARGET ilmbase PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${ILMBASE_INCLUDE_DIRS})
 
 
 ######################################################################

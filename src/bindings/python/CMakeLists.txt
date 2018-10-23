@@ -23,6 +23,7 @@ set(SOURCES
 	PyMatrixTransform.cpp
 	PyProcessor.cpp
 	PyProcessorMetadata.cpp
+	PyRangeTransform.cpp
 	PyTransform.cpp
 	PyUtil.cpp
 )

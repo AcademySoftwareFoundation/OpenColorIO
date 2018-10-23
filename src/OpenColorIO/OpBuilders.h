@@ -115,6 +115,11 @@ OCIO_NAMESPACE_ENTER
                         const MatrixTransform & transform,
                         TransformDirection dir);
     
+    void BuildRangeOps(OpRcPtrVec & ops,
+                       const Config& config,
+                       const RangeTransform & transform,
+                       TransformDirection dir);
+
     void BuildTruelightOps(OpRcPtrVec & ops,
                            const Config & config,
                            const TruelightTransform & transform,

@@ -45,6 +45,8 @@ OCIO_NAMESPACE_ENTER
     {
     public:
         MatrixOpData();
+        // Create a scale matrix from the input to output value range
+        MatrixOpData(BitDepth inBitDepth, BitDepth outBitDepth);
         MatrixOpData(const float * m44, const float * offset4);
         virtual ~MatrixOpData() {}
 

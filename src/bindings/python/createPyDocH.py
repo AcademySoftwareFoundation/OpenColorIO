@@ -79,6 +79,7 @@ if __name__ == "__main__":
     fileh.write("%s\n" % GetDocStrings(LogTransform))
     fileh.write("%s\n" % GetDocStrings(LookTransform))
     fileh.write("%s\n" % GetDocStrings(MatrixTransform))
+    fileh.write("%s\n" % GetDocStrings(RangeTransform))
     fileh.write("\n")
     fileh.write("}\n")
     fileh.write("OCIO_NAMESPACE_EXIT\n")

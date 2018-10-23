@@ -48,6 +48,9 @@ set(SOURCES
 	ops/Lut3D/Lut3DOp.cpp
 	ops/Matrix/MatrixOps.cpp
 	ops/NoOp/NoOps.cpp
+	ops/Range/RangeOpCPU.cpp
+	ops/Range/RangeOpData.cpp
+	ops/Range/RangeOps.cpp
 	ops/Truelight/TruelightOp.cpp
 	OpTools.cpp
 	ParseUtils.cpp
@@ -66,6 +69,7 @@ set(SOURCES
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
 	transforms/MatrixTransform.cpp
+	transforms/RangeTransform.cpp
 	transforms/TruelightTransform.cpp
 	UnitTest.cpp
 )
@@ -83,6 +87,7 @@ target_link_libraries(OpenColorIO
 		pystring
 		sampleicc
 		libexpat
+		ilmbase
 )
 if(NOT BUILD_SHARED_LIBS)
 	target_compile_definitions(OpenColorIO

@@ -30,9 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "MathUtils.h"
 #include "OpBuilders.h"
 #include "ops/Matrix/MatrixOps.h"
-#include "MathUtils.h"
 
 
 OCIO_NAMESPACE_ENTER
