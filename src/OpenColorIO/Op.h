@@ -52,6 +52,37 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const AllocationData&);
+
+
+    class OpCPU;
+    typedef OCIO_SHARED_PTR<OpCPU> OpCPURcPtr;
+
+
+    // OpCPU is a helper class to define the CPU pixel processing method signature.
+    // Ops may define several optimized renderers tailored to the needs of a given set 
+    // of op parameters.
+    // For example, in the Range op, if the parameters do not require clamping 
+    // at the high end, a renderer that skips that clamp may be called.
+    // The CPU renderer to use for a given op instance is decided during finalization.
+    // 
+    class OpCPU
+    {
+    public:
+        OpCPU() {}
+        virtual ~OpCPU() {}
+
+        virtual void apply(float * rgbaBuffer, long numPixels) const = 0;
+    };
+
+    // This class is to be used when no processing is needed.
+    class NoOpCPU : public OpCPU
+    {
+    public:
+        NoOpCPU() : OpCPU() {}
+
+        virtual void apply(float *, long) const { };
+    };
+
     
     class OpData;
     typedef OCIO_SHARED_PTR<OpData> OpDataRcPtr;
@@ -98,6 +129,7 @@ OCIO_NAMESPACE_ENTER
             MatrixType,       // A matrix
             LogType,          // A log
             ExponentType,     // An exponent
+            RangeType,        // A range
 
             NoOpType
         };
