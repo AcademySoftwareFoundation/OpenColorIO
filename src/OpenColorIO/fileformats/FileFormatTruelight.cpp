@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // FL-TL-TN-0388-TLCubeFormat2.0.pdf
 //
 // Known deficiency in implementation:
-// 1D shaper luts (InputLUT) using integer encodings (vs float) are not supported.
+// 1D shaper LUTs (InputLUT) using integer encodings (vs float) are not supported.
 // How to we determine if the input is integer? MaxVal?  Or do we look for a decimal-point?
 // How about scientific notation? (which is explicitly allowed?)
 
@@ -67,15 +67,15 @@ OCIO_NAMESPACE_ENTER
                 has1D(false),
                 has3D(false)
             {
-                lut1D = Lut1D::Create();
-                lut3D = Lut3D::Create();
+                lut1D = Lut1DOpData::Create();
+                lut3D = Lut3DOpData::Create();
             };
             ~LocalCachedFile() {};
             
             bool has1D;
             bool has3D;
-            Lut1DRcPtr lut1D;
-            Lut3DRcPtr lut3D;
+            Lut1DOpDataRcPtr lut1D;
+            Lut3DOpDataRcPtr lut3D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -123,7 +123,7 @@ OCIO_NAMESPACE_ENTER
             // this shouldn't happen
             if(!istream)
             {
-                throw Exception ("File stream empty when trying to read Truelight .cub lut");
+                throw Exception ("File stream empty when trying to read Truelight .cub LUT");
             }
             
             // Validate the file type
@@ -131,7 +131,7 @@ OCIO_NAMESPACE_ENTER
             if(!nextline(istream, line) || 
                !pystring::startswith(pystring::lower(line), "# truelight cube"))
             {
-                throw Exception("Lut doesn't seem to be a Truelight .cub lut.");
+                throw Exception("LUT doesn't seem to be a Truelight .cub LUT.");
             }
             
             // Parse the file
@@ -165,7 +165,7 @@ OCIO_NAMESPACE_ENTER
                                !StringToInt( &size3d[1], parts[3].c_str()) ||
                                !StringToInt( &size3d[2], parts[4].c_str()))
                             {
-                                throw Exception("Malformed width tag in Truelight .cub lut.");
+                                throw Exception("Malformed width tag in Truelight .cub LUT.");
                             }
                             
                             raw3d.reserve(3*size3d[0]*size3d[1]*size3d[2]);
@@ -175,7 +175,7 @@ OCIO_NAMESPACE_ENTER
                             if(parts.size() != 3 || 
                                !StringToInt( &size1d, parts[2].c_str()))
                             {
-                                throw Exception("Malformed lutlength tag in Truelight .cub lut.");
+                                throw Exception("Malformed lutlength tag in Truelight .cub LUT.");
                             }
                             raw1d.reserve(3*size1d);
                         }
@@ -221,12 +221,12 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             
-            // Interpret the parsed data, validate lut sizes
+            // Interpret the parsed data, validate LUT sizes
             
             if(size1d != static_cast<int>(raw1d.size()/3))
             {
                 std::ostringstream os;
-                os << "Parse error in Truelight .cub lut. ";
+                os << "Parse error in Truelight .cub LUT. ";
                 os << "Incorrect number of lut1d entries. ";
                 os << "Found " << raw1d.size()/3 << ", expected " << size1d << ".";
                 throw Exception(os.str().c_str());
@@ -235,8 +235,8 @@ OCIO_NAMESPACE_ENTER
             if(size3d[0]*size3d[1]*size3d[2] != static_cast<int>(raw3d.size()/3))
             {
                 std::ostringstream os;
-                os << "Parse error in Truelight .cub lut. ";
-                os << "Incorrect number of lut3d entries. ";
+                os << "Parse error in Truelight .cub LUT. ";
+                os << "Incorrect number of 3D LUT entries. ";
                 os << "Found " << raw3d.size()/3 << ", expected " << size3d[0]*size3d[1]*size3d[2] << ".";
                 throw Exception(os.str().c_str());
             }
@@ -252,8 +252,8 @@ OCIO_NAMESPACE_ENTER
             {
                 for(int channel=0; channel<3; ++channel)
                 {
-                    // Determine the scale factor for the 1d lut. Example:
-                    // The inputlut feeding a 6x6x6 3dlut should be scaled from 0.0-5.0.
+                    // Determine the scale factor for the 1D LUT. Example:
+                    // The inputlut feeding a 6x6x6 3D LUT should be scaled from 0.0-5.0.
                     // Beware: Nuke Truelight Writer (at least 6.3 and before) is busted
                     // and does this scaling incorrectly.
                     
@@ -274,7 +274,7 @@ OCIO_NAMESPACE_ENTER
                 // are written out with 6 decimal places of precision.  This is
                 // a bit aggressive, I.e., changes in the 6th decimal place will
                 // be considered roundoff error, but changes in the 5th decimal
-                // will be considered lut 'intent'.
+                // will be considered LUT 'intent'.
                 // 1.0
                 // 1.000005 equal to 1.0
                 // 1.000007 equal to 1.0
@@ -283,7 +283,7 @@ OCIO_NAMESPACE_ENTER
                 // 0.000001 not equal
                 
                 cachedFile->lut1D->maxerror = 1e-5f;
-                cachedFile->lut1D->errortype = ERROR_RELATIVE;
+                cachedFile->lut1D->errortype = Lut1DOpData::ERROR_RELATIVE;
             }
             
             // Reformat 3D data
@@ -318,7 +318,7 @@ OCIO_NAMESPACE_ENTER
             GenerateIdentityLut3D(&cubeData[0], cubeSize, 3, LUT3DORDER_FAST_RED);
             PackedImageDesc cubeImg(&cubeData[0], cubeSize*cubeSize*cubeSize, 1, 3);
             
-            // Apply processor to lut data
+            // Apply processor to LUT data
             ConstProcessorRcPtr inputToTarget;
             inputToTarget = config->getProcessor(baker.getInputSpace(), baker.getTargetSpace());
             inputToTarget->apply(cubeImg);
@@ -337,8 +337,8 @@ OCIO_NAMESPACE_ENTER
             ostream << "\n";
 
 
-            // Write the shaper lut
-            // (We are just going to use a unity lut)
+            // Write the shaper LUT
+            // (We are just going to use a unity LUT)
             ostream << "# InputLUT\n";
             ostream << std::setprecision(6) << std::fixed;
             float v = 0.0f;

@@ -31,4 +31,4 @@ diff -Naur tinyxml.orig/CMakeLists.txt tinyxml/CMakeLists.txt
 +    DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 +install(FILES
 +    tinyxml.h tinystr.h
-+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
++    DESTINATION ${CMAKE_INSTALL_PREFIX}/include/tinyxml)

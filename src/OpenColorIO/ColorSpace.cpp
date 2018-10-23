@@ -78,23 +78,28 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            name_ = rhs.name_;
-            family_ = rhs.family_;
-            equalityGroup_ = rhs.equalityGroup_;
-            description_ = rhs.description_;
-            bitDepth_ = rhs.bitDepth_;
-            isData_ = rhs.isData_;
-            allocation_ = rhs.allocation_;
-            allocationVars_ = rhs.allocationVars_;
-            
-            toRefTransform_ = rhs.toRefTransform_;
-            if(toRefTransform_) toRefTransform_ = toRefTransform_->createEditableCopy();
-            
-            fromRefTransform_ = rhs.fromRefTransform_;
-            if(fromRefTransform_) fromRefTransform_ = fromRefTransform_->createEditableCopy();
-            
-            toRefSpecified_ = rhs.toRefSpecified_;
-            fromRefSpecified_ = rhs.fromRefSpecified_;
+            if (this != &rhs)
+            {
+                name_ = rhs.name_;
+                family_ = rhs.family_;
+                equalityGroup_ = rhs.equalityGroup_;
+                description_ = rhs.description_;
+                bitDepth_ = rhs.bitDepth_;
+                isData_ = rhs.isData_;
+                allocation_ = rhs.allocation_;
+                allocationVars_ = rhs.allocationVars_;
+
+                toRefTransform_ = rhs.toRefTransform_?
+                    rhs.toRefTransform_->createEditableCopy()
+                    : rhs.toRefTransform_;
+
+                fromRefTransform_ = rhs.fromRefTransform_?
+                    rhs.fromRefTransform_->createEditableCopy()
+                    : rhs.fromRefTransform_;
+
+                toRefSpecified_ = rhs.toRefSpecified_;
+                fromRefSpecified_ = rhs.fromRefSpecified_;
+            }
             return *this;
         }
     };

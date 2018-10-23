@@ -229,7 +229,10 @@ OCIO_NAMESPACE_ENTER
 
     GpuShaderText::GpuShaderLine& GpuShaderText::GpuShaderLine::operator=(const GpuShaderText::GpuShaderLine& rhs)
     {
-        m_text = rhs.m_text;
+        if (this != &rhs)
+        {
+            m_text = rhs.m_text;
+        }
         return *this;
     }
 
@@ -377,6 +380,14 @@ OCIO_NAMESPACE_ENTER
                           getFloatString(y, m_lang), 
                           getFloatString(z, m_lang),
                           getFloatString(w, m_lang));
+    }
+
+    std::string GpuShaderText::vec4fConst(const double x, const double y, const double z, const double w) const
+    {
+        return vec4fConst(getFloatString(float(x), m_lang), 
+                          getFloatString(float(y), m_lang), 
+                          getFloatString(float(z), m_lang),
+                          getFloatString(float(w), m_lang));
     }
 
     std::string GpuShaderText::vec4fConst(const std::string& x, 

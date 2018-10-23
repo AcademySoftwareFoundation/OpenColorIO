@@ -71,27 +71,30 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            inputColorSpaceName_ = rhs.inputColorSpaceName_;
-            
-            linearCC_ = rhs.linearCC_;
-            if(linearCC_) linearCC_ = linearCC_->createEditableCopy();
-            
-            colorTimingCC_ = rhs.colorTimingCC_;
-            if(colorTimingCC_) colorTimingCC_ = colorTimingCC_->createEditableCopy();
-            
-            channelView_ = rhs.channelView_;
-            if(channelView_) channelView_ = channelView_->createEditableCopy();
-            
-            display_ = rhs.display_;
-            view_ = rhs.view_;
-            
-            displayCC_ = rhs.displayCC_;
-            if(displayCC_) displayCC_ = displayCC_->createEditableCopy();
-            
-            looksOverride_ = rhs.looksOverride_;
-            looksOverrideEnabled_ = rhs.looksOverrideEnabled_;
-            
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                inputColorSpaceName_ = rhs.inputColorSpaceName_;
+
+                linearCC_ = rhs.linearCC_?
+                    rhs.linearCC_->createEditableCopy() : rhs.linearCC_;
+
+                colorTimingCC_ = rhs.colorTimingCC_?
+                    rhs.colorTimingCC_->createEditableCopy()
+                    : rhs.colorTimingCC_;
+
+                channelView_ = rhs.channelView_?
+                    rhs.channelView_->createEditableCopy() : rhs.channelView_;
+
+                display_ = rhs.display_;
+                view_ = rhs.view_;
+
+                displayCC_ = rhs.displayCC_?
+                    rhs.displayCC_->createEditableCopy() : rhs.displayCC_;
+
+                looksOverride_ = rhs.looksOverride_;
+                looksOverrideEnabled_ = rhs.looksOverrideEnabled_;
+            }
             return *this;
         }
     };
@@ -121,7 +124,10 @@ OCIO_NAMESPACE_ENTER
     
     DisplayTransform& DisplayTransform::operator= (const DisplayTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -135,6 +141,13 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void DisplayTransform::validate() const
+    {
+        Transform::validate();
+
+        // TODO: Improve DisplayTransform::validate()
+    }
+
     void DisplayTransform::setInputColorSpaceName(const char * name)
     {
         getImpl()->inputColorSpaceName_ = name;

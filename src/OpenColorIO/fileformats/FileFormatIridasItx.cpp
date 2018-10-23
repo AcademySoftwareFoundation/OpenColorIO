@@ -74,11 +74,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile ()
             {
-                lut3D = Lut3D::Create();
+                lut3D = Lut3DOpData::Create();
             };
             ~LocalCachedFile() {};
             
-            Lut3DRcPtr lut3D;
+            Lut3DOpDataRcPtr lut3D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -151,7 +151,7 @@ OCIO_NAMESPACE_ENTER
             // this shouldn't happen
             if(!istream)
             {
-                throw Exception ("File stream empty when trying to read Iridas .itx lut");
+                throw Exception ("File stream empty when trying to read Iridas .itx LUT");
             }
             
             // Parse the file
@@ -218,7 +218,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
             
-            // Interpret the parsed data, validate lut sizes
+            // Interpret the parsed data, validate LUT sizes
             LocalCachedFileRcPtr cachedFile 
                 = LocalCachedFileRcPtr(new LocalCachedFile());
             
@@ -228,7 +228,7 @@ OCIO_NAMESPACE_ENTER
                     != static_cast<int>(raw.size()/3))
                 {
                     std::ostringstream os;
-                    os << "Incorrect number of lut3d entries. ";
+                    os << "Incorrect number of 3D LUT entries. ";
                     os << "Found " << raw.size() / 3 << ", expected ";
                     os << size3d[0] * size3d[1] * size3d[2] << ".";
                     ThrowErrorMessage(
@@ -245,7 +245,7 @@ OCIO_NAMESPACE_ENTER
             else
             {
                 ThrowErrorMessage(
-                    "No 3D lut found.",
+                    "No 3D LUT found.",
                     fileName, -1, "");
             }
             
@@ -395,7 +395,7 @@ OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
     {
         // Validate stream can be read with no error.
         // Then stream will be altered to introduce errors.
-        const std::string SAMPLE_ERROR =
+        const std::string SAMPLE_NO_ERROR =
             "LUT_3D_SIZE 2\n"
 
             "0.0 0.0 0.0\n"
@@ -407,7 +407,7 @@ OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_NO_THROW(ReadIridasItx(SAMPLE_ERROR));
+        OIIO_CHECK_NO_THROW(ReadIridasItx(SAMPLE_NO_ERROR));
     }
     {
         // Wrong LUT_3D_SIZE tag
@@ -423,7 +423,9 @@ OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW(ReadIridasItx(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadIridasItx(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Malformed LUT_3D_SIZE tag");
     }
     {
         // Unexpected tag
@@ -440,7 +442,9 @@ OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW(ReadIridasItx(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadIridasItx(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Malformed color triples specified");
     }
     {
         // Wrong number of entries
@@ -458,7 +462,9 @@ OIIO_ADD_TEST(FileFormatIridasItx, ReadFailure)
             "0.0 1.0 1.0\n"
             "1.0 1.0 1.0\n";
 
-        OIIO_CHECK_THROW(ReadIridasItx(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadIridasItx(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Incorrect number of 3D LUT entries");
     }
 }
 

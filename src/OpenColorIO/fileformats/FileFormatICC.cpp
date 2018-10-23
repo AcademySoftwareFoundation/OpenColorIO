@@ -63,8 +63,8 @@ OCIO_NAMESPACE_ENTER
         // Gamma
         float mGammaRGB[4];
 
-        // Lut 1d
-        Lut1DRcPtr lut;
+        // 1D LUT
+        Lut1DOpDataRcPtr lut;
     };
 
     typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -350,7 +350,7 @@ OCIO_NAMESPACE_ENTER
                 // normalized by 65535 to interpret them as [0,1].
                 // The LUT will be inverted to convert output-linear values
                 // into values that may be sent to the display.
-                cachedFile->lut = Lut1D::Create();
+                cachedFile->lut = Lut1DOpData::Create();
                 cachedFile->lut->luts[0] = red->GetCurve();
                 cachedFile->lut->luts[1] = green->GetCurve();
                 cachedFile->lut->luts[2] = blue->GetCurve();
@@ -466,7 +466,7 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 #include "OpBuilders.h"
-#include <fstream>
+#include "UnitTestFiles.h"
 
 OIIO_ADD_TEST(FileFormatICC, Types)
 {
@@ -480,28 +480,19 @@ OIIO_ADD_TEST(FileFormatICC, Types)
     OIIO_CHECK_EQUAL(4, sizeof(icS15Fixed16Number));
 }
 
-OCIO::LocalCachedFileRcPtr LoadICCFile(const std::string & filePath)
+OCIO::LocalCachedFileRcPtr LoadICCFile(const std::string & fileName)
 {
-    // Open the filePath
-    std::ifstream filestream;
-    filestream.open(filePath.c_str(), std::ios_base::binary);
-
-    std::string root, extension, name;
-    OCIO::pystring::os::path::splitext(root, extension, filePath);
-
-    name = OCIO::pystring::os::path::basename(root);
-
-    // Read file
-    OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(filestream, name);
-
-    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    return OCIO::LoadTestFile<OCIO::LocalFileFormat, OCIO::LocalCachedFile>(
+        fileName, std::ios_base::binary);
 }
 
-void BuildOps(const std::string & filePath,
-    OCIO::OpRcPtrVec & fileOps,
-    OCIO::TransformDirection dir)
+void BuildOps(const std::string & fileName,
+              OCIO::OpRcPtrVec & fileOps,
+              OCIO::TransformDirection dir)
 {
+    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/"
+                               + fileName);
+
     // Create a FileTransform
     OCIO::FileTransformRcPtr pFileTransform
         = OCIO::FileTransform::Create();
@@ -520,22 +511,12 @@ void BuildOps(const std::string & filePath,
         *(pFileTransform.get()), dir);
 }
 
-#ifndef OCIO_UNIT_TEST_FILES_DIR
-#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
-#endif
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
-
 OIIO_ADD_TEST(FileFormatICC, TestFile)
 {
     OCIO::LocalCachedFileRcPtr iccFile;
     {
         // This example uses a profile with a 1024-entry LUT for the TRC.
-        const std::string iccFileName(ocioTestFilesDir +
-            std::string("/sRGB_Color_Space_Profile.icm"));
+        const std::string iccFileName("sRGB_Color_Space_Profile.icm");
         OCIO::OpRcPtrVec ops;
         OIIO_CHECK_NO_THROW(BuildOps(iccFileName, ops,
             OCIO::TRANSFORM_DIR_INVERSE));
@@ -611,7 +592,7 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
         OIIO_CHECK_EQUAL(0.0f, tmp[2]);
         OIIO_CHECK_EQUAL(1.0f, tmp[3]);
 
-        // Knowing the lut has 1024 elements
+        // Knowing the LUT has 1024 elements
         // and is inverted, verify values for a given index
         // are converted to index * step
         const float error = 1e-6f;
@@ -625,7 +606,8 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
         OIIO_CHECK_CLOSE(200.0f / 1023.0f, tmp[1], error);
         OIIO_CHECK_CLOSE(200.0f / 1023.0f, tmp[2], error);
 
-        // Get cached file to access lut size
+
+        // Get cached file to access LUT size
         OIIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
         OIIO_CHECK_ASSERT((bool)iccFile);
@@ -637,13 +619,16 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
         OIIO_CHECK_EQUAL(1024, iccFile->lut->luts[0].size());
         OIIO_CHECK_EQUAL(1024, iccFile->lut->luts[1].size());
         OIIO_CHECK_EQUAL(1024, iccFile->lut->luts[2].size());
+
+        OIIO_CHECK_EQUAL(0.0317235067f, iccFile->lut->luts[0][200]);
+        OIIO_CHECK_EQUAL(0.0317235067f, iccFile->lut->luts[1][200]);
+        OIIO_CHECK_EQUAL(0.0317235067f, iccFile->lut->luts[2][200]);
     }
 
     {
         // This test uses a profile where the TRC is a 1-entry curve,
         // to be interpreted as a gamma value.
-        const std::string iccFileName(ocioTestFilesDir +
-            std::string("/AdobeRGB1998.icc"));
+        const std::string iccFileName("AdobeRGB1998.icc");
         OIIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
         OIIO_CHECK_ASSERT((bool)iccFile);
@@ -678,8 +663,7 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
     {
         // This test uses a profile where the TRC is 
         // a parametric curve of type 0 (a single gamma value).
-        const std::string iccFileName(ocioTestFilesDir +
-            std::string("/LM-1760W.icc"));
+        const std::string iccFileName("LM-1760W.icc");
         OIIO_CHECK_NO_THROW(iccFile = LoadICCFile(iccFileName));
 
         OIIO_CHECK_ASSERT((bool)iccFile);
@@ -715,8 +699,7 @@ OIIO_ADD_TEST(FileFormatICC, TestFile)
 OIIO_ADD_TEST(FileFormatICC, TestApply)
 {
     {
-        const std::string iccFileName(ocioTestFilesDir +
-            std::string("/sRGB_Color_Space_Profile.icm"));
+        const std::string iccFileName("sRGB_Color_Space_Profile.icm");
         OCIO::OpRcPtrVec ops;
         OIIO_CHECK_NO_THROW(BuildOps(iccFileName, ops,
             OCIO::TRANSFORM_DIR_FORWARD));
@@ -773,8 +756,7 @@ OIIO_ADD_TEST(FileFormatICC, TestApply)
     }
 
     {
-        const std::string iccFileName(ocioTestFilesDir +
-            std::string("/LM-1760W.icc"));
+        const std::string iccFileName("LM-1760W.icc");
         OCIO::OpRcPtrVec ops;
         OIIO_CHECK_NO_THROW(BuildOps(iccFileName, ops,
             OCIO::TRANSFORM_DIR_FORWARD));

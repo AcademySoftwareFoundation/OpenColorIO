@@ -32,21 +32,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Mutex.h"
 #include "Op.h"
 
 #include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
-    // TODO: turn into a class instead of a struct?
+    class Lut3DOpData;
+    typedef OCIO_SHARED_PTR<Lut3DOpData> Lut3DOpDataRcPtr;
     
-    struct Lut3D;
-    typedef OCIO_SHARED_PTR<Lut3D> Lut3DRcPtr;
-    
-    struct Lut3D
+    class Lut3DOpData : public OpData
     {
-        static Lut3DRcPtr Create();
+    public:
+        static Lut3DOpDataRcPtr Create();
         
         float from_min[3];
         float from_max[3];
@@ -55,12 +53,15 @@ OCIO_NAMESPACE_ENTER
         typedef std::vector<float> fv_t;
         fv_t lut;
         
-        std::string getCacheID() const;
-        
+        virtual Type getType() const { return Lut3DType; }
+
+        virtual bool isIdentity() const;
+        virtual bool hasChannelCrosstalk() const;
+
     private:
-        Lut3D();
-        mutable std::string m_cacheID;
-        mutable Mutex m_cacheidMutex;
+        Lut3DOpData();
+        
+        virtual std::string finalize() const;
     };
     
     // RGB channel ordering.
@@ -84,7 +85,7 @@ OCIO_NAMESPACE_ENTER
         return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
     }
     
-    // What is the preferred order for the lut3d?
+    // What is the preferred order for the 3D LUT?
     // I.e., are the first two entries change along
     // the blue direction, or the red direction?
     // OpenGL expects 'red'
@@ -105,7 +106,7 @@ OCIO_NAMESPACE_ENTER
     
     
     void CreateLut3DOp(OpRcPtrVec & ops,
-                       Lut3DRcPtr lut,
+                       Lut3DOpDataRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);
 }

@@ -68,10 +68,13 @@ OCIO_NAMESPACE_ENTER
         
         Impl& operator= (const Impl & rhs)
         {
-            dir_ = rhs.dir_;
-            src_ = rhs.src_;
-            dst_ = rhs.dst_;
-            looks_ = rhs.looks_;
+            if (this != &rhs)
+            {
+                dir_ = rhs.dir_;
+                src_ = rhs.src_;
+                dst_ = rhs.dst_;
+                looks_ = rhs.looks_;
+            }
             return *this;
         }
     };
@@ -100,7 +103,10 @@ OCIO_NAMESPACE_ENTER
     
     LookTransform& LookTransform::operator= (const LookTransform & rhs)
     {
-        *m_impl = *rhs.m_impl;
+        if (this != &rhs)
+        {
+            *m_impl = *rhs.m_impl;
+        }
         return *this;
     }
     
@@ -113,7 +119,22 @@ OCIO_NAMESPACE_ENTER
     {
         getImpl()->dir_ = dir;
     }
-    
+
+    void LookTransform::validate() const
+    {
+        Transform::validate();
+
+        if (getImpl()->src_.empty())
+        {
+            throw Exception("LookTransform: empty source color space name");
+        }
+
+        if (getImpl()->dst_.empty())
+        {
+            throw Exception("LookTransform: empty destination color space name");
+        }
+    }
+
     const char * LookTransform::getSrc() const
     {
         return getImpl()->src_.c_str();

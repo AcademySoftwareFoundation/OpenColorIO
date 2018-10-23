@@ -60,11 +60,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile()
             {
-                lut = Lut1D::Create();
+                lut = Lut1DOpData::Create();
             };
             ~LocalCachedFile() {};
             
-            Lut1DRcPtr lut;
+            Lut1DOpDataRcPtr lut;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -111,7 +111,7 @@ OCIO_NAMESPACE_ENTER
             std::istream & istream,
             const std::string & fileName ) const
         {
-            Lut1DRcPtr lut1d = Lut1D::Create();
+            Lut1DOpDataRcPtr lut1d = Lut1DOpData::Create();
 
             // Parse Header Info
             int lut_size = -1;
@@ -255,7 +255,7 @@ OCIO_NAMESPACE_ENTER
             // are written out with 6 decimal places of precision.  This is
             // a bit aggressive, I.e., changes in the 6th decimal place will
             // be considered roundoff error, but changes in the 5th decimal
-            // will be considered lut 'intent'.
+            // will be considered LUT 'intent'.
             // 1.0
             // 1.000005 equal to 1.0
             // 1.000007 equal to 1.0
@@ -263,7 +263,7 @@ OCIO_NAMESPACE_ENTER
             // 0.0
             // 0.000001 not equal
             lut1d->maxerror = 1e-5f;
-            lut1d->errortype = ERROR_RELATIVE;
+            lut1d->errortype = Lut1DOpData::ERROR_RELATIVE;
 
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             cachedFile->lut = lut1d;
@@ -326,7 +326,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include <fstream>
+#include "UnitTestFiles.h"
 
 OIIO_ADD_TEST(FileFormatSpi1D, FormatInfo)
 {
@@ -341,37 +341,16 @@ OIIO_ADD_TEST(FileFormatSpi1D, FormatInfo)
         formatInfoVec[0].capabilities);
 }
 
-OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & filePath)
+OCIO::LocalCachedFileRcPtr LoadLutFile(const std::string & fileName)
 {
-    // Open the filePath
-    std::ifstream filestream;
-    filestream.open(filePath.c_str(), std::ios_base::in);
-
-    std::string root, extension, name;
-    OCIO::pystring::os::path::splitext(root, extension, filePath);
-
-    name = OCIO::pystring::os::path::basename(root);
-
-    // Read file
-    OCIO::LocalFileFormat tester;
-    OCIO::CachedFileRcPtr cachedFile = tester.Read(filestream, name);
-
-    return OCIO::DynamicPtrCast<OCIO::LocalCachedFile>(cachedFile);
+    return OCIO::LoadTestFile<OCIO::LocalFileFormat, OCIO::LocalCachedFile>(
+        fileName, std::ios_base::in);
 }
-
-#ifndef OCIO_UNIT_TEST_FILES_DIR
-#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
-#endif
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 
 OIIO_ADD_TEST(FileFormatSpi1D, Test)
 {
     OCIO::LocalCachedFileRcPtr cachedFile;
-    const std::string spi1dFile(ocioTestFilesDir + std::string("/cpf.spi1d"));
+    const std::string spi1dFile("cpf.spi1d");
     OIIO_CHECK_NO_THROW(cachedFile = LoadLutFile(spi1dFile));
 
     OIIO_CHECK_ASSERT((bool)cachedFile);
@@ -393,7 +372,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, Test)
     OIIO_CHECK_EQUAL(4.511920005404118f, cachedFile->lut->luts[2][1970]);
 
     OIIO_CHECK_EQUAL(1e-5f, cachedFile->lut->maxerror);
-    OIIO_CHECK_EQUAL(OCIO::ERROR_RELATIVE, cachedFile->lut->errortype);
+    OIIO_CHECK_EQUAL(OCIO::Lut1DOpData::ERROR_RELATIVE, cachedFile->lut->errortype);
 }
 
 void ReadSpi1d(const std::string & fileContent)
@@ -412,7 +391,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
     {
         // Validate stream can be read with no error.
         // Then stream will be altered to introduce errors.
-        const std::string SAMPLE_ERROR =
+        const std::string SAMPLE_NO_ERROR =
             "Version 1\n"
             "From 0.0 1.0\n"
             "Length 2\n"
@@ -422,7 +401,7 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_NO_THROW(ReadSpi1d(SAMPLE_ERROR));
+        OIIO_CHECK_NO_THROW(ReadSpi1d(SAMPLE_NO_ERROR));
     }
     {
         // Version missing
@@ -435,7 +414,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Could not find 'Version' Tag");
     }
     {
         // Version is not 1
@@ -449,7 +430,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Only format version 1 supported");
     }
     {
         // Version can't be scanned
@@ -463,7 +446,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Invalid 'Version' Tag");
     }
     {
         // Version case is wrong
@@ -477,7 +462,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Could not find 'Version' Tag");
     }
     {
         // From does not specify 2 floats
@@ -491,7 +478,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Invalid 'From' Tag");
     }
     {
         // Length is missing
@@ -504,7 +493,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Could not find 'Length' Tag");
     }
     {
         // Length can't be read
@@ -518,7 +509,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Invalid 'Length' Tag");
     }
     {
         // Component is missing
@@ -531,7 +524,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Could not find 'Components' Tag");
     }
     {
         // Component can't be read
@@ -545,7 +540,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Invalid 'Components' Tag");
     }
     {
         // Component not 1 or 2 or 3
@@ -559,10 +556,12 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "1.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Components must be [1,2,3]");
     }
     {
-        // Lut too short
+        // LUT too short
         const std::string SAMPLE_ERROR =
             "Version 1\n"
             "From 0.0 1.0\n"
@@ -572,7 +571,9 @@ OIIO_ADD_TEST(FileFormatSpi1D, ReadFailure)
             "0.0\n"
             "}\n";
 
-        OIIO_CHECK_THROW(ReadSpi1d(SAMPLE_ERROR), OCIO::Exception);
+        OIIO_CHECK_THROW_WHAT(ReadSpi1d(SAMPLE_ERROR),
+                              OCIO::Exception,
+                              "Not enough entries found");
     }
 }
 

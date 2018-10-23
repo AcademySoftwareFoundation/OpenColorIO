@@ -41,9 +41,6 @@ namespace OCIO = OCIO_NAMESPACE;
 
 #include <OpenImageIO/imageio.h>
 #include <OpenImageIO/typedesc.h>
-#if (OIIO_VERSION < 10100)
-namespace OIIO = OIIO_NAMESPACE;
-#endif
 
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
@@ -61,9 +58,10 @@ namespace OIIO = OIIO_NAMESPACE;
 
 #include "glsl.h"
 
-bool g_verbose = false;
-bool g_gpu = false;
-bool g_ociov2 = false;
+bool g_verbose   = false;
+bool g_gpulegacy = false;
+bool g_gpuinfo   = false;
+
 std::string g_filename;
 
 
@@ -104,7 +102,7 @@ static void InitImageTexture(const char * filename)
         std::cout << "loading: " << filename << std::endl;
         try
         {
-            OIIO::ImageInput* f = OIIO::ImageInput::create(filename);
+            auto f = OIIO::ImageInput::create(filename);
             if(!f)
             {
                 std::cerr << "Could not create image input." << std::endl;
@@ -135,7 +133,9 @@ static void InitImageTexture(const char * filename)
                 OIIO::TypeDesc::TypeFloat, 
 #endif
                 &img[0]);
+#if OIIO_VERSION < 10903
             OIIO::ImageInput::destroy(f);
+#endif
         }
         catch(...)
         {
@@ -182,7 +182,7 @@ static void InitImageTexture(const char * filename)
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, g_imageTexID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F_ARB, texWidth, texHeight, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, texWidth, texHeight, 0,
         format, GL_FLOAT, &img[0]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -485,8 +485,8 @@ void UpdateOCIOGLState()
     
     // Step 1: Create the appropriate GPU shader description
     OCIO::GpuShaderDescRcPtr shaderDesc 
-        = g_ociov2 ? OCIO::GpuShaderDesc::CreateShaderDesc()
-                   : OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
+        = g_gpulegacy ? OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE)
+                      : OCIO::GpuShaderDesc::CreateShaderDesc();
     shaderDesc->setLanguage(OCIO::GPU_LANGUAGE_GLSL_1_0);
     shaderDesc->setFunctionName("OCIODisplay");
     shaderDesc->setResourcePrefix("ocio_");
@@ -496,7 +496,7 @@ void UpdateOCIOGLState()
 
     // Step 3: Use the helper OpenGL builder
     g_oglBuilder = OpenGLBuilder::Create(shaderDesc);
-    g_oglBuilder->setVerbose(g_gpu);
+    g_oglBuilder->setVerbose(g_gpuinfo);
 
     // Step 4: Allocate & upload all the LUTs
     // 
@@ -679,13 +679,13 @@ void parseArguments(int argc, char **argv)
         {
             g_verbose = true;
         }
-        else if(0==strcmp(argv[i], "-gpu"))
+        else if(0==strcmp(argv[i], "-gpulegacy"))
         {
-            g_gpu = true;
+            g_gpulegacy = true;
         }
-        else if(0==strcmp(argv[i], "-ociov2"))
+        else if(0==strcmp(argv[i], "-gpuinfo"))
         {
-            g_ociov2 = true;
+            g_gpuinfo = true;
         }
         else if(0==strcmp(argv[i], "-h"))
         {
@@ -694,11 +694,11 @@ void parseArguments(int argc, char **argv)
             std::cout << "  ociodisplay [OPTIONS] [image]  where" << std::endl;
             std::cout << std::endl;
             std::cout << "  OPTIONS:" << std::endl;
-            std::cout << "     -h      :  displays the help and exit" << std::endl;
-            std::cout << "     -v      :  displays the color space information" << std::endl;
-            std::cout << "     -gpu    :  displays the color space gpu information" << std::endl;
-            std::cout << "     -ociov2 :  use the generic gpu shader engine" << std::endl;
-            std::cout << std::endl;
+            std::cout << "     -h         :  displays the help and exit" << std::endl;
+            std::cout << "     -v         :  displays the color space information" << std::endl;
+            std::cout << "     -gpulegacy :  use the legacy (i.e. baked) GPU color processing" << std::endl;
+            std::cout << "     -gpuinfo   :  output the OCIO shader program" << std::endl;
+             std::cout << std::endl;
             exit(0);
         }
         else
