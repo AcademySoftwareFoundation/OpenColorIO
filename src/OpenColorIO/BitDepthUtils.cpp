@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    static const std::string errBDNotSupported("Bit depth is not supported: ");
+
     float GetBitDepthMaxValue(BitDepth in)
     {
         switch(in)
@@ -58,7 +60,35 @@ OCIO_NAMESPACE_ENTER
             case BIT_DEPTH_UINT32:
             default:
             {
-                std::string err("Bit depth is not supported: ");
+                std::string err(errBDNotSupported);
+                err += BitDepthToString(in);
+                throw Exception(err.c_str());
+                break;
+            }
+        }
+    }
+
+
+    bool IsFloatBitDepth(BitDepth in)
+    {
+        switch(in)
+        {
+            case BIT_DEPTH_UINT8:
+            case BIT_DEPTH_UINT10:
+            case BIT_DEPTH_UINT12:
+            case BIT_DEPTH_UINT14:
+            case BIT_DEPTH_UINT16:
+            case BIT_DEPTH_UINT32:
+                return false;
+
+            case BIT_DEPTH_F16:
+            case BIT_DEPTH_F32:
+                return true;
+
+            case BIT_DEPTH_UNKNOWN:
+            default:
+            {
+                std::string err(errBDNotSupported);
                 err += BitDepthToString(in);
                 throw Exception(err.c_str());
                 break;
@@ -85,7 +115,25 @@ OIIO_ADD_TEST(BitDepthUtils, GetBitDepthMaxValue)
 
     OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_F16), 1.0f);
     OIIO_CHECK_EQUAL(GetBitDepthMaxValue(BIT_DEPTH_F32), 1.0f);
+
+    OIIO_CHECK_THROW_WHAT(
+        GetBitDepthMaxValue((BitDepth)42), Exception, "not supported");
 }
 
+OIIO_ADD_TEST(BitDepthUtils, IsFloatBitDepth)
+{
+    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT8));
+    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT10));
+    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT12));
+    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT14));
+    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT16));
+    OIIO_CHECK_ASSERT(!IsFloatBitDepth(BIT_DEPTH_UINT32));
+    
+    OIIO_CHECK_ASSERT(IsFloatBitDepth(BIT_DEPTH_F16));
+    OIIO_CHECK_ASSERT(IsFloatBitDepth(BIT_DEPTH_F32));
+
+    OIIO_CHECK_THROW_WHAT(
+        IsFloatBitDepth((BitDepth)42), Exception, "not supported");
+}
 
 #endif
