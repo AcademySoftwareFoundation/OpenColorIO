@@ -3,6 +3,14 @@ set(SOURCES
 )
 
 add_executable(ociocheck ${SOURCES})
+
+if(NOT BUILD_SHARED_LIBS)
+    target_compile_definitions(ociocheck
+        PRIVATE
+        OpenColorIO_SKIP_IMPORTS
+    )
+endif()
+
 target_link_libraries(ociocheck PRIVATE OpenColorIO apputils)
 
 install(TARGETS ociocheck

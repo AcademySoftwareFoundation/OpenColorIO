@@ -94,6 +94,11 @@ if(NOT BUILD_SHARED_LIBS)
 		PRIVATE
 		OpenColorIO_SKIP_IMPORTS
 	)
+else()
+	target_compile_definitions(OpenColorIO
+		PRIVATE
+		OpenColorIO_EXPORTS
+	)
 endif()
 
 if(OCIO_USE_SSE)
