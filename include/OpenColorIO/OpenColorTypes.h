@@ -173,6 +173,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<MatrixTransform> MatrixTransformRcPtr;
     
+    class OCIOEXPORT RangeTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const RangeTransform> ConstRangeTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<RangeTransform> RangeTransformRcPtr;
+    
     class OCIOEXPORT TruelightTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const TruelightTransform> ConstTruelightTransformRcPtr;
