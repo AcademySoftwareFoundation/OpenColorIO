@@ -202,8 +202,7 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
             
         protected:
-            LogOpDataRcPtr log() { return DynamicPtrCast<LogOpData>(data()); }
-            const LogOpDataRcPtr log() const { return DynamicPtrCast<LogOpData>(data()); }
+            const LogOpDataRcPtr log() const { return DynamicPtrCast<LogOpData>(const_data()); }
 
         private:
             TransformDirection m_direction;

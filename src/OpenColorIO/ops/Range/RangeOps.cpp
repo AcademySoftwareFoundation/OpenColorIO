@@ -81,7 +81,7 @@ public:
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
 protected:
-    const RangeOpDataRcPtr rangeData() const { return DynamicPtrCast<RangeOpData>(data()); }
+    const RangeOpDataRcPtr rangeData() const { return DynamicPtrCast<RangeOpData>(const_data()); }
 
 private:            
     // The range direction
@@ -324,6 +324,16 @@ void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDire
 
 void CreateRangeOp(OpRcPtrVec & ops, 
                    double minInValue, double maxInValue,
+                   double minOutValue, double maxOutValue)
+{
+    CreateRangeOp(ops, 
+                  minInValue, maxInValue,
+                  minOutValue, maxOutValue,
+                  TRANSFORM_DIR_FORWARD);
+}
+
+void CreateRangeOp(OpRcPtrVec & ops, 
+                   double minInValue, double maxInValue,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction)
 {
@@ -512,10 +522,10 @@ OIIO_ADD_TEST(RangeOps, combining)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f);
     OIIO_CHECK_EQUAL(ops.size(), 1);
     OIIO_CHECK_NO_THROW(ops[0]->finalize());
-    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f);
     OIIO_CHECK_EQUAL(ops.size(), 2);
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
@@ -530,7 +540,7 @@ OIIO_ADD_TEST(RangeOps, combiningInverse)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f);
     OIIO_CHECK_EQUAL(ops.size(), 1);
     OIIO_CHECK_NO_THROW(ops[0]->finalize());
     OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f, OCIO::TRANSFORM_DIR_INVERSE);
@@ -548,15 +558,15 @@ OIIO_ADD_TEST(RangeOps, inverse)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f, OCIO::TRANSFORM_DIR_FORWARD);
-    OIIO_CHECK_EQUAL(ops.size(), 1);
+    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f);
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
     // Skip finalize so that inverse direction is kept
     OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f, OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
 
     const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
-    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 3);
+    OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_FORWARD));
+    OIIO_REQUIRE_EQUAL(ops.size(), 3);
 
     OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
     OIIO_CHECK_ASSERT(!ops[0]->isSameType(ops[2]));

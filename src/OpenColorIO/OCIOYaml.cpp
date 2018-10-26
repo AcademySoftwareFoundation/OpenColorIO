@@ -1007,11 +1007,17 @@ OCIO_NAMESPACE_ENTER
                     load(second, val);
                     t->setMaxOutValue(val);
                 }
+                else if(key == "style")
+                {
+                    std::string style;
+                    load(second, style);
+                    t->setStyle(RangeStyleFromString(style.c_str()));
+                }
                 else if(key == "direction")
                 {
-                    TransformDirection val;
-                    load(second, val);
-                    t->setDirection(val);
+                    TransformDirection dir;
+                    load(second, dir);
+                    t->setDirection(dir);
                 }
                 else
                 {
@@ -1047,6 +1053,12 @@ OCIO_NAMESPACE_ENTER
             {
                 out << YAML::Key << "maxOutValue";
                 out << YAML::Value << YAML::Flow << t->getMaxOutValue();
+            }
+
+            if(t->getStyle()!=RANGE_CLAMP)
+            {
+                out << YAML::Key << "style";
+                out << YAML::Value << YAML::Flow << RangeStyleToString(t->getStyle());
             }
 
             EmitBaseTransformKeyValues(out, t);

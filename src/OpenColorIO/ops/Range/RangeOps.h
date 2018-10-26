@@ -50,9 +50,12 @@ void CreateRangeOp(OpRcPtrVec & ops,
 // Create a range op from its input and output bounds
 void CreateRangeOp(OpRcPtrVec & ops, 
                    double minInValue, double maxInValue,
+                   double minOutValue, double maxOutValue);
+
+void CreateRangeOp(OpRcPtrVec & ops, 
+                   double minInValue, double maxInValue,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction);
-
 }
 OCIO_NAMESPACE_EXIT
 
