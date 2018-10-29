@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,21 +27,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_BIT_DEPTH_UTILS_H
-#define INCLUDED_OCIO_BIT_DEPTH_UTILS_H
+#ifndef INCLUDED_OCIO_RANGE_H
+#define INCLUDED_OCIO_RANGE_H
+
+
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Op.h"
+#include "ops/Range/RangeOpData.h"
+
+
 OCIO_NAMESPACE_ENTER
 {
+    
+// Create a range op from an OpData Range
+void CreateRangeOp(OpRcPtrVec & ops, 
+                   RangeOpDataRcPtr & rangeData,
+                   TransformDirection direction);
 
-// This is used for normalizing various integer bit-depths relative to float.
-float GetBitDepthMaxValue(BitDepth in);
-
-// True if the bit depth is a float
-bool IsFloatBitDepth(BitDepth in);
+// Create a range op from its input and output bounds
+void CreateRangeOp(OpRcPtrVec & ops, 
+                   double minInValue, double maxInValue,
+                   double minOutValue, double maxOutValue,
+                   TransformDirection direction);
 
 }
 OCIO_NAMESPACE_EXIT
 
-#endif // INCLUDED_OCIO_BIT_DEPTH_UTILS_H
+#endif

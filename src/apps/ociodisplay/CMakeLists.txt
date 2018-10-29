@@ -6,6 +6,14 @@ set(SOURCES
 )
 
 add_executable(ociodisplay ${SOURCES})
+
+if(NOT BUILD_SHARED_LIBS)
+    target_compile_definitions(ociodisplay
+        PRIVATE
+        OpenColorIO_SKIP_IMPORTS
+    )
+endif()
+
 target_include_directories(ociodisplay 
 	SYSTEM
 	PRIVATE
