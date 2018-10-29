@@ -26,6 +26,7 @@ from ColorSpaceTest import *
 from GpuShaderDescTest import *
 from Baker import *
 from TransformsTest import *
+from CDLTransformTest import *
 from RangeTransformTest import *
 
 class FooTest(unittest.TestCase):
@@ -42,6 +43,10 @@ def suite():
     suite.addTest(ContextTest("test_interface"))
     suite.addTest(LookTest("test_interface"))
     suite.addTest(ColorSpaceTest("test_interface"))
+    suite.addTest(TransformsTest("test_interface"))
+    suite.addTest(CDLTransformTest("test_interface"))
+    suite.addTest(CDLTransformTest("test_equality"))
+    suite.addTest(CDLTransformTest("test_validation"))
     suite.addTest(RangeTransformTest("test_interface"))
     suite.addTest(RangeTransformTest("test_equality"))
     suite.addTest(RangeTransformTest("test_validation"))

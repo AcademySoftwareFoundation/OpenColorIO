@@ -221,6 +221,11 @@ void RangeOpData::validate() const
     fillBounds();
 }
 
+bool RangeOpData::isNoOp() const
+{
+    return (getInputBitDepth() == getOutputBitDepth()) && isIdentity();
+}
+
 bool RangeOpData::isIdentity() const
 {
     // Note that a range op may scale but not clip or vice versa.
@@ -663,10 +668,9 @@ bool RangeOpData::operator==(const OpData & other) const
     return true;
 }
 
-bool RangeOpData::isInverse(const RangeOpDataRcPtr & /*r*/) const
+bool RangeOpData::isInverse(const RangeOpDataRcPtr & r) const
 {
-    // TODO: To be implemented...
-    return false;
+    return *r == *inverse();
 }
 
 RangeOpDataRcPtr RangeOpData::inverse() const
@@ -686,9 +690,13 @@ RangeOpDataRcPtr RangeOpData::inverse() const
     return invOp;
 }
 
-std::string RangeOpData::finalize() const
+void RangeOpData::finalize()
 {
+    AutoMutex lock(m_mutex);
+
     std::ostringstream cacheIDStream;
+    cacheIDStream << getId();
+
     cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
 
     cacheIDStream << m_minInValue;
@@ -696,7 +704,7 @@ std::string RangeOpData::finalize() const
     cacheIDStream << m_minOutValue;
     cacheIDStream << m_maxOutValue;
 
-    return cacheIDStream.str();
+    m_cacheID = cacheIDStream.str();
 }
 
 }
@@ -715,10 +723,10 @@ OIIO_ADD_TEST(RangeOpData, accessors)
     {
     OCIO::RangeOpData r;
     
-    OIIO_CHECK_ASSERT(isnan((float)r.getMinInValue()));
-    OIIO_CHECK_ASSERT(isnan((float)r.getMaxInValue()));
-    OIIO_CHECK_ASSERT(isnan((float)r.getMinOutValue()));
-    OIIO_CHECK_ASSERT(isnan((float)r.getMaxOutValue()));
+    OIIO_CHECK_ASSERT(OCIO::isnan((float)r.getMinInValue()));
+    OIIO_CHECK_ASSERT(OCIO::isnan((float)r.getMaxInValue()));
+    OIIO_CHECK_ASSERT(OCIO::isnan((float)r.getMinOutValue()));
+    OIIO_CHECK_ASSERT(OCIO::isnan((float)r.getMaxOutValue()));
 
     double minVal = 1.0;
     double maxVal = 10.0;
@@ -1063,20 +1071,20 @@ namespace
         OIIO_CHECK_EQUAL(invOp->getOutputBitDepth(), in);
 
         // The min/max values should be swapped.
-        if (isnan(revMinIn))
-            OIIO_CHECK_ASSERT(isnan(invOp->getMinInValue()));
+        if (OCIO::isnan(revMinIn))
+            OIIO_CHECK_ASSERT(OCIO::isnan(invOp->getMinInValue()));
         else
             OIIO_CHECK_EQUAL(invOp->getMinInValue(), revMinIn);
-        if (isnan(revMaxIn))
-            OIIO_CHECK_ASSERT(isnan(invOp->getMaxInValue()));
+        if (OCIO::isnan(revMaxIn))
+            OIIO_CHECK_ASSERT(OCIO::isnan(invOp->getMaxInValue()));
         else
             OIIO_CHECK_EQUAL(invOp->getMaxInValue(), revMaxIn);
-        if (isnan(revMinOut))
-            OIIO_CHECK_ASSERT(isnan(invOp->getMinOutValue()));
+        if (OCIO::isnan(revMinOut))
+            OIIO_CHECK_ASSERT(OCIO::isnan(invOp->getMinOutValue()));
         else
             OIIO_CHECK_EQUAL(invOp->getMinOutValue(), revMinOut);
-        if (isnan(revMaxOut))
-            OIIO_CHECK_ASSERT(isnan(invOp->getMaxOutValue()));
+        if (OCIO::isnan(revMaxOut))
+            OIIO_CHECK_ASSERT(OCIO::isnan(invOp->getMaxOutValue()));
         else
             OIIO_CHECK_EQUAL(invOp->getMaxOutValue(), revMaxOut);
 
@@ -1091,13 +1099,13 @@ namespace
         // Want in == (in * fwdScale + fwdOffset) * revScale + revOffset
         // in == in * fwdScale * revScale + fwdOffset * revScale + revOffset
         // in == in * 1. + 0.
-        OIIO_CHECK_ASSERT(!OCIO::floatsDiffer( 1.0f, fwdScale * revScale, 10, false));
+        OIIO_CHECK_ASSERT(!OCIO::FloatsDiffer( 1.0f, fwdScale * revScale, 10, false));
 
         //OIIO_CHECK_ASSERT(!OCIO::floatsDiffer(
         //     0.0f, fwdOffset * revScale + revOffset, 100000, false));
         // The above is correct but we lose too much precision in the subtraction
         // so rearrange the compare as follows to allow a tighter tolerance.
-        OIIO_CHECK_ASSERT(!OCIO::floatsDiffer(fwdOffset * revScale, -revOffset, 500, false));
+        OIIO_CHECK_ASSERT(!OCIO::FloatsDiffer(fwdOffset * revScale, -revOffset, 500, false));
     }
 }
 
@@ -1122,6 +1130,33 @@ OIIO_ADD_TEST(RangeOpData, inverse)
     checkInverse(OCIO::BIT_DEPTH_UINT10, OCIO::BIT_DEPTH_UINT8,
                  64., 940., 32., 235.,
                  32., 235., 64., 940.);
+}
+
+OIIO_ADD_TEST(RangeOpData, computed_identifier)
+{
+    std::string id1, id2;
+
+    OCIO::RangeOpData range(OCIO::BIT_DEPTH_F32, OCIO::BIT_DEPTH_F32,
+                            0.0f, 1.0f, 0.5f, 1.5f);
+    OIIO_CHECK_NO_THROW( range.finalize() );
+    OIIO_CHECK_NO_THROW( id1 = range.getCacheID() );
+
+    OIIO_CHECK_NO_THROW( range.unsetMaxInValue() ); 
+    OIIO_CHECK_NO_THROW( range.unsetMaxOutValue() ); 
+    OIIO_CHECK_NO_THROW( range.finalize() );
+    OIIO_CHECK_NO_THROW( id2 = range.getCacheID() );
+
+    OIIO_CHECK_ASSERT( id1 != id2 );
+
+    OIIO_CHECK_NO_THROW( range.unsetMinInValue() ); 
+    OIIO_CHECK_NO_THROW( range.unsetMinOutValue() ); 
+    OIIO_CHECK_NO_THROW( range.finalize() );
+    OIIO_CHECK_NO_THROW( id1 = range.getCacheID() );
+
+    OIIO_CHECK_ASSERT( id1 != id2 );
+
+    OIIO_CHECK_NO_THROW( id2 = range.getCacheID() );
+    OIIO_CHECK_ASSERT( id1 == id2 );
 }
 
 #endif

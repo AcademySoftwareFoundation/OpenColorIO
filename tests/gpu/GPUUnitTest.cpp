@@ -158,19 +158,19 @@ OCIOGPUTest::OCIOGPUTest(const std::string& testgroup,
 void OCIOGPUTest::setContext(OCIO_NAMESPACE::TransformRcPtr transform, 
                              OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
 {
-    if(m_processor.get()!=0x0)
-    {
-        throw OCIO_NAMESPACE::Exception("GPU Unit test already exists");
-    }
-
     OCIO_NAMESPACE::ConfigRcPtr config = OCIO_NAMESPACE::Config::Create();
-
-    m_shaderDesc     = shaderDesc;
-    m_processor      = config->getProcessor(transform);
+    setContext(config, transform, shaderDesc);
 }
 
-void OCIOGPUTest::setContext(OCIO_NAMESPACE::ConstProcessorRcPtr processor, 
+void OCIOGPUTest::setContext(OCIO_NAMESPACE::ConstConfigRcPtr config,
+                             OCIO_NAMESPACE::TransformRcPtr transform, 
                              OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
+{
+    setContextProcessor(config->getProcessor(transform), shaderDesc);
+}
+
+void OCIOGPUTest::setContextProcessor(OCIO_NAMESPACE::ConstProcessorRcPtr processor,
+                                      OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc)
 {
     if(m_processor.get()!=0x0)
     {

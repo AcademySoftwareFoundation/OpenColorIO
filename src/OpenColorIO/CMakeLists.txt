@@ -40,6 +40,9 @@ set(SOURCES
 	Op.cpp
 	OpOptimizers.cpp
 	ops/Allocation/AllocationOp.cpp
+	ops/CDL/CDLOpCPU.cpp
+	ops/CDL/CDLOpData.cpp
+	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp

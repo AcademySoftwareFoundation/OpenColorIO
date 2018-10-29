@@ -36,9 +36,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    OpData::OpData(BitDepth inBitDepth,
-                   BitDepth outBitDepth)
+    OpData::OpData(BitDepth inBitDepth, BitDepth outBitDepth)
         :   m_inBitDepth(inBitDepth)
+        ,   m_outBitDepth(outBitDepth)
+    { }
+
+    OpData::OpData(BitDepth inBitDepth, BitDepth outBitDepth,
+                   const std::string & id, 
+                   const Descriptions & desc)
+        :   m_id(id)
+        ,   m_descriptions(desc)
+        ,   m_inBitDepth(inBitDepth)
         ,   m_outBitDepth(outBitDepth)
     { }
 
@@ -51,8 +59,10 @@ OCIO_NAMESPACE_ENTER
     {
         if (this != &rhs)
         {
-            m_inBitDepth = rhs.m_inBitDepth;
-            m_outBitDepth = rhs.m_outBitDepth;
+            m_id           = rhs.m_id;
+            m_descriptions = rhs.m_descriptions;
+            m_inBitDepth   = rhs.m_inBitDepth;
+            m_outBitDepth  = rhs.m_outBitDepth;
         }
 
         return *this;
@@ -60,16 +70,6 @@ OCIO_NAMESPACE_ENTER
 
     OpData::~OpData()
     { }
-
-    void OpData::setInputBitDepth(BitDepth in)
-    {
-        m_inBitDepth = in;
-    }
-
-    void OpData::setOutputBitDepth(BitDepth out)
-    {
-        m_outBitDepth = out;
-    }
 
     void OpData::validate() const
     {
@@ -84,31 +84,16 @@ OCIO_NAMESPACE_ENTER
         }
     }
 
-    bool OpData::isNoOp() const
-    {
-        return (getInputBitDepth() == getOutputBitDepth()) && isIdentity();
-    }
-
     bool OpData::operator==(const OpData& other) const
     {
         if (this == &other) return true;
 
-        return (m_inBitDepth == other.m_inBitDepth && 
+        return (m_id == other.m_id &&
+                m_descriptions == other.m_descriptions &&
+                m_inBitDepth == other.m_inBitDepth && 
                 m_outBitDepth == other.m_outBitDepth);
     }
 
-    std::string OpData::getCacheID() const
-    {
-        AutoMutex lock(m_mutex);
-
-        if(!m_cacheID.empty())
-            return m_cacheID;
-
-        m_cacheID = finalize();
-
-        return m_cacheID;
-    }
-    
 
     Op::Op()
     { }
@@ -432,6 +417,27 @@ OIIO_ADD_TEST(FinalizeOpVec, OptimizeCombine)
             OIIO_CHECK_CLOSE(tmp2[i], tmp[i], error);
         }
     }
+}
+
+OIIO_ADD_TEST(Descriptions, basic)
+{
+    OCIO::OpData::Descriptions desc1;
+    OIIO_CHECK_ASSERT( desc1 == desc1 );
+
+    OCIO::OpData::Descriptions desc2("My dummy comment");
+    OIIO_CHECK_ASSERT( desc1 != desc2 );
+    OIIO_CHECK_ASSERT( desc2 != desc1 );
+    OIIO_REQUIRE_EQUAL( desc2.size(), 1);
+    OIIO_CHECK_EQUAL(desc2[0], std::string("My dummy comment"));
+
+    OIIO_CHECK_NO_THROW( desc1 = desc2 );
+    OIIO_CHECK_ASSERT( desc1 == desc2 );
+    OIIO_CHECK_ASSERT( desc2 == desc1 );
+
+    OIIO_CHECK_NO_THROW( desc2 += "My second dummy comment" );
+    OIIO_REQUIRE_EQUAL( desc2.size(), 2);
+    OIIO_CHECK_ASSERT( desc1 != desc2 );
+    OIIO_CHECK_ASSERT( desc2 != desc1 );
 }
 
 #endif

@@ -40,7 +40,7 @@ namespace Platform
 // for the Windows platform only. *nix platforms are still using
 // the ::getenv method, but reducing the static vairable usage.
 // 
-void getenv (const char* name, std::string& value)
+void Getenv (const char* name, std::string& value)
 {
 #ifdef WINDOWS
     // To remove the security compilation warning, the _dupenv_s method
@@ -69,6 +69,24 @@ void getenv (const char* name, std::string& value)
 #endif 
 }
 
+int Strcasecmp(const char * str1, const char * str2)
+{
+#ifdef WINDOWS
+    return ::_stricmp(str1, str2);
+#else
+    return ::strcasecmp(str1, str2);
+#endif
+}
+
+int Strncasecmp(const char * str1, const char * str2, size_t n)
+{
+#ifdef WINDOWS
+    return ::_strnicmp(str1, str2, n);
+#else
+    return ::strncasecmp(str1, str2, n);
+#endif
+}
+
 }//namespace platform
 
 }
@@ -83,43 +101,42 @@ namespace OCIO = OCIO_NAMESPACE;
 
 OIIO_ADD_TEST(Platform, getenv)
 {
-    {
-        std::string env;
-        OCIO::Platform::getenv("NotExistingEnvVariable", env);
-        OIIO_CHECK_ASSERT(env.empty());
-    }
+    std::string env;
+    OCIO::Platform::Getenv("NotExistingEnvVariable", env);
+    OIIO_CHECK_ASSERT(env.empty());
 
-    {
-        std::string env;
-        OCIO::Platform::getenv("PATH", env);
-        OIIO_CHECK_ASSERT(!env.empty());
-    }
+    OCIO::Platform::Getenv("PATH", env);
+    OIIO_CHECK_ASSERT(!env.empty());
 
-    {
-        std::string env;
-        OCIO::Platform::getenv("PATH", env);
-        OCIO::Platform::getenv("NotExistingEnvVariable", env);
-        OIIO_CHECK_ASSERT(env.empty());
-    }
+    OCIO::Platform::Getenv("NotExistingEnvVariable", env);
+    OIIO_CHECK_ASSERT(env.empty());
 
-    {
-        std::string env;
-        OCIO::Platform::getenv("NotExistingEnvVariable", env);
-        OCIO::Platform::getenv("PATH", env);
-        OIIO_CHECK_ASSERT(!env.empty());
-    }
+    OCIO::Platform::Getenv("PATH", env);
+    OIIO_CHECK_ASSERT(!env.empty());
 }
 
 OIIO_ADD_TEST(Platform, putenv)
 {
-    {
-        const std::string value("MY_DUMMY_ENV=SomeValue");
-        ::putenv(const_cast<char*>(value.c_str()));
-        std::string env;
-        OCIO::Platform::getenv("MY_DUMMY_ENV", env);
-        OIIO_CHECK_ASSERT(!env.empty());
-        OIIO_CHECK_ASSERT(0==strcmp("SomeValue", env.c_str()));
-    }
+    const std::string value("MY_DUMMY_ENV=SomeValue");
+    ::putenv(const_cast<char*>(value.c_str()));
+    std::string env;
+    OCIO::Platform::Getenv("MY_DUMMY_ENV", env);
+    OIIO_CHECK_ASSERT(!env.empty());
+    OIIO_CHECK_ASSERT(0==strcmp("SomeValue", env.c_str()));
+}
+
+OIIO_ADD_TEST(Platform, string_compare)
+{
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp("TtOoPp", "TtOoPp"));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strcasecmp("TtOoPp", "ttOoPp"));
+    OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp("TtOoPp", "tOoPp"));
+    OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp("TtOoPp", "TtOoPp1"));
+
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strncasecmp("TtOoPp", "TtOoPp", 2));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strncasecmp("TtOoPp", "ttOoPp", 2));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strncasecmp("TtOoPp", "ttOOOO", 2));
+    OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp("TtOoPp", "tOoPp"));
+    OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp("TtOoPp", "TOoPp"));
 }
 
 #endif // OCIO_UNIT_TEST

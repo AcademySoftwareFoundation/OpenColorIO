@@ -27,9 +27,14 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 				"${CMAKE_SOURCE_DIR}/src/OpenColorIO"
 		)
 	endif(PRIVATE_INCLUDES)
+	if(OCIO_USE_SSE)
+		target_compile_definitions(${TEST_BINARY}
+			PRIVATE
+				USE_SSE
+		)
+	endif(OCIO_USE_SSE)
 	add_test(${TEST_NAME} ${TEST_BINARY})
 endfunction(add_ocio_test)
-
 
 
 # Eventually we will factor out each test into it's own executable
@@ -77,6 +82,9 @@ set(SOURCES
 	Op.cpp
 	OpOptimizers.cpp
 	ops/Allocation/AllocationOp.cpp
+	ops/CDL/CDLOpCPU.cpp
+	ops/CDL/CDLOpData.cpp
+	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
@@ -93,6 +101,7 @@ set(SOURCES
 	Platform.cpp
 	Processor.cpp
 	ScanlineHelper.cpp
+	SSE.cpp
 	Transform.cpp
 	transforms/AllocationTransform.cpp
 	transforms/CDLTransform.cpp

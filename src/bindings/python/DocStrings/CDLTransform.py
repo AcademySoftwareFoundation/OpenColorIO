@@ -6,12 +6,28 @@ class CDLTransform:
     def __init__(self):
         pass
     
+    def equals(self, cdl):
+        """
+        equals(cdl)
+        
+        :param cdl: a cdl transform
+        :type cdl: :py:class:`PyOpenColorIO.CDLTransform`
+
+        Returns True if cdl is equal to :py:class:`PyOpenColorIO.CDLTransform`.
+        """
+        pass
+
+    def validate(self):
+        """
+        validate()
+        
+        Throw if :py:class:`PyOpenColorIO.CDLTransform` contains illegal parameters.
+        """
+        pass
+
     def CreateFromFile(self, src, cccid):
         pass
     
-    def equals(self, cdl):
-        pass
-        
     def getXML(self):
         pass
         

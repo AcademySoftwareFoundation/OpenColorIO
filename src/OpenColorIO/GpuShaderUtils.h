@@ -177,10 +177,9 @@ OCIO_NAMESPACE_ENTER
         // Matrix multiplication helpers
         //
 
-        // Get the string for multiplying a 3x3 matrix and a three-element vector
-        std::string mat3fMul(const float * m3x3, const std::string& vecName) const;
         // Get the string for multiplying a 4x4 matrix and a four-element vector
-        std::string mat4fMul(const float * m4x4, const std::string& vecName) const;
+        std::string mat4fMul(const float * m4x4, const std::string & vecName) const;
+        std::string mat4fMul(const double * m4x4, const std::string & vecName) const;
 
         //
         // Special function helpers

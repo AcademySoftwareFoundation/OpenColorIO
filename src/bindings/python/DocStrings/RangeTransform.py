@@ -21,7 +21,7 @@ class RangeTransform:
         """
         validate()
         
-        Throw if :py:class:`PyOpenColorIO.RangeTransform` is not valid.
+        Throw if :py:class:`PyOpenColorIO.RangeTransform` contains illegal parameters.
         """
         pass
 
