@@ -75,7 +75,7 @@ void XmlReaderElement::throwMessage(const std::string & error) const
     os << "Error parsing file (";
     os << getXmlFile().c_str() << "). ";
     os << "Error is: " << error.c_str();
-    os << " At line (" << getXmLineNumber() << ")";
+    os << " At line (" << getXmlLineNumber() << ")";
     throw Exception(os.str().c_str());
 }
 
@@ -97,9 +97,9 @@ XmlReaderDummyElt::XmlReaderDummyElt(const std::string& name,
 {
     std::ostringstream oss;
     oss << "Ignore element '" << getName().c_str();
-    oss << "' (line " << getXmLineNumber() << ") ";
+    oss << "' (line " << getXmlLineNumber() << ") ";
     oss << "where its parent is '" << getParent()->getName().c_str();
-    oss << "' (line " << getParent()->getXmLineNumber() << ") ";
+    oss << "' (line " << getParent()->getXmlLineNumber() << ") ";
     oss << (msg ? msg : "");
     oss << ": " << getXmlFile().c_str();
 
@@ -222,7 +222,7 @@ void XmlReaderElementStack::clear()
 std::string XmlReaderElementStack::dump() const
 {
     std::ostringstream errMsg;
-    errMsg << "CTF stack is ";
+    errMsg << "CDL parsing stack is ";
 
     const unsigned max = (const unsigned)m_elms.size();
     for (unsigned i = 0; i<max; ++i)
@@ -235,7 +235,7 @@ std::string XmlReaderElementStack::dump() const
             errMsg << m_elms[i]->getIdentifier();
         }
         errMsg << " at line=";
-        errMsg << m_elms[i]->getXmLineNumber();
+        errMsg << m_elms[i]->getXmlLineNumber();
         errMsg << "] ";
     }
 
@@ -749,7 +749,7 @@ OIIO_ADD_TEST(CDLReader, Trim)
     }
 }
 
-OIIO_ADD_TEST(CTFReaderUtil, ParseNumber)
+OIIO_ADD_TEST(CDLReader, ParseNumber)
 {
     float data = 0.0f;
     {
@@ -988,7 +988,7 @@ OIIO_ADD_TEST(CTFReaderUtil, ParseNumber)
     }
 }
 
-OIIO_ADD_TEST(CTFReaderUtil, FindSubString)
+OIIO_ADD_TEST(CDLReader, FindSubString)
 {
     {
         //                  012345678901234

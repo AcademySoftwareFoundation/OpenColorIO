@@ -472,7 +472,7 @@ OCIO_NAMESPACE_ENTER
                 }
             }
 
-            unsigned getXmLineNumber() const
+            unsigned getXmlLineNumber() const
             {
                 return m_lineNumber;
             }

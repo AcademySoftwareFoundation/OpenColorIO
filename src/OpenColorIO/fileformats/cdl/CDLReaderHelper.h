@@ -130,7 +130,7 @@ public:
 
     virtual const std::string& getIdentifier() const = 0;
 
-    unsigned getXmLineNumber() const
+    unsigned getXmlLineNumber() const
     {
         return m_xmlLineNumber;
     }
@@ -258,7 +258,7 @@ class XmlReaderDummyElt : public XmlReaderPlainElt
     public:
         DummyParent(ConstElementRcPtr pParent)
             : XmlReaderContainerElt(pParent.get() ? pParent->getName() : "",
-                                    pParent.get() ? pParent->getXmLineNumber() : 0,
+                                    pParent.get() ? pParent->getXmlLineNumber() : 0,
                                     pParent.get() ? pParent->getXmlFile() : "")
         {
         }
@@ -583,17 +583,17 @@ public:
     {
         if (!m_isSlopeInit)
         {
-            throwMessage("CTF CDL parsing. Required node 'Slope' is missing. ");
+            throwMessage("Required node 'Slope' is missing. ");
         }
 
         if (!m_isOffsetInit)
         {
-            throwMessage("CTF CDL parsing. Required node 'Offset' is missing. ");
+            throwMessage("Required node 'Offset' is missing. ");
         }
 
         if (!m_isPowerInit)
         {
-            throwMessage("CTF CDL parsing. Required node 'Power' is missing. ");
+            throwMessage("Required node 'Power' is missing. ");
         }
     }
 
