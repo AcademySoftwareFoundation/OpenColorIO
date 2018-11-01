@@ -26,7 +26,6 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Platform.h"
@@ -67,6 +66,15 @@ void getenv (const char* name, std::string& value)
     const char* val = ::getenv(name);
     value = (val && *val) ? val : "";
 #endif 
+}
+
+int Strncasecmp(const char * str1, const char * str2, size_t n)
+{
+#ifdef WINDOWS
+    return ::_strnicmp(str1, str2, n);
+#else
+    return ::strncasecmp(str1, str2, n);
+#endif
 }
 
 }//namespace platform
@@ -122,4 +130,13 @@ OIIO_ADD_TEST(Platform, putenv)
     }
 }
 
+OIIO_ADD_TEST(Platform, StringCompare)
+{
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strncasecmp("TtOoPp", "TtOoPp", 6));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strncasecmp("TtOoPp", "ttOoPp", 6));
+    OIIO_CHECK_EQUAL(0, OCIO::Platform::Strncasecmp("TtOoPp", "ttOOOO", 4));
+    OIIO_CHECK_NE(0, OCIO::Platform::Strncasecmp("TtOoPp", "atOOOO", 2));
+}
+
 #endif // OCIO_UNIT_TEST
+
