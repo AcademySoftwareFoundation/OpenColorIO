@@ -28,10 +28,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <fstream>
 #include <sstream>
-#include <tinyxml.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/cdl/CDLParser.h"
 #include "CDLTransform.h"
 #include "ops/Exponent/ExponentOps.h"
 #include "ops/Matrix/MatrixOps.h"
@@ -45,257 +45,46 @@ OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        /*
-            "<ColorCorrection id=''>"
-            " <SOPNode>"
-            "  <Description/> "
-            "  <Slope>1 1 1</Slope> "
-            "  <Offset>0 0 0</Offset> "
-            "  <Power>1 1 1</Power> "
-            " </SOPNode> "
-            " <SatNode>"
-            "  <Saturation> 1 </Saturation> "
-            " </SatNode> "
-            " </ColorCorrection>";
+
+ /*
+<ColorCorrection id="shot 042">
+    <SOPNode>
+        <Description>Cool look for forest scenes</Description>
+        <Slope>1 1 1</Slope>
+        <Offset>0 0 0</Offset>
+        <Power>1 1 1</Power>
+    </SOPNode>
+    <SatNode>
+        <Saturation>1</Saturation>
+    </SatNode>
+</ColorCorrection>
         
-        */
-        
-        // http://ticpp.googlecode.com/svn/docs/ticpp_8h-source.html#l01670
-        
-        void SetTiXmlText( TiXmlElement* element, const char * value)
-        {
-            if ( element->NoChildren() )
-            {
-                element->LinkEndChild( new TiXmlText( value ) );
-            }
-            else
-            {
-                if ( 0 == element->GetText() )
-                {
-                    element->InsertBeforeChild( element->FirstChild(), TiXmlText( value ) );
-                }
-                else
-                {
-                    // There already is text, so change it
-                    element->FirstChild()->SetValue( value );
-                }
-            }
-        }
+ */
         
         std::string BuildXML(const CDLTransform & cdl)
         {
-            TiXmlDocument doc;
-            
-            // TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "", "" );
-            TiXmlElement * root = new TiXmlElement( "ColorCorrection" );
-            doc.LinkEndChild( root );
-            root->SetAttribute("id", cdl.getID());
-            
-            TiXmlElement * sop = new TiXmlElement( "SOPNode" );
-            root->LinkEndChild( sop );
-            
-            TiXmlElement * desc = new TiXmlElement( "Description" );
-            sop->LinkEndChild( desc );
-            SetTiXmlText(desc, cdl.getDescription());
-            
-            TiXmlElement * slope = new TiXmlElement( "Slope" );
-            sop->LinkEndChild( slope );
+            std::ostringstream os;
+            std::string id(ConvertSpecialCharToXmlToken(cdl.getID()));
+            os << "<ColorCorrection id=\"" << id << "\">\n";
+            os << "    <SOPNode>\n";
+            std::string desc(ConvertSpecialCharToXmlToken(cdl.getDescription()));
+            os << "        <Description>" << desc << "</Description>\n";
             float slopeval[3];
             cdl.getSlope(slopeval);
-            SetTiXmlText(slope, FloatVecToString(slopeval, 3).c_str());
-            
-            TiXmlElement * offset = new TiXmlElement( "Offset" );
-            sop->LinkEndChild( offset );
+            os << "        <Slope>" << FloatVecToString(slopeval, 3) << "</Slope>\n";
             float offsetval[3];
             cdl.getOffset(offsetval);
-            SetTiXmlText(offset, FloatVecToString(offsetval, 3).c_str());
-            
-            TiXmlElement * power = new TiXmlElement( "Power" );
-            sop->LinkEndChild( power );
+            os << "        <Offset>" << FloatVecToString(offsetval, 3)  << "</Offset>\n";
             float powerval[3];
             cdl.getPower(powerval);
-            SetTiXmlText(power, FloatVecToString(powerval, 3).c_str());
-            
-            TiXmlElement * sat = new TiXmlElement( "SatNode" );
-            root->LinkEndChild( sat );
-            
-            TiXmlElement * saturation = new TiXmlElement( "Saturation" );
-            sat->LinkEndChild( saturation );
-            SetTiXmlText(saturation, FloatToString(cdl.getSat()).c_str());
-            
-            TiXmlPrinter printer;
-            printer.SetStreamPrinting();
-            doc.Accept( &printer );
-            return printer.Str();
-        }
-    }
-    
-    void LoadCDL(CDLTransform * cdl, TiXmlElement * root)
-    {
-        if(!cdl) return;
-        
-        if(!root)
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << "Null root element.";
-            throw Exception(os.str().c_str());
-        }
-        
-        if(std::string(root->Value()) != "ColorCorrection")
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << "Root element is type '" << root->Value() << "', ";
-            os << "ColorCorrection expected.";
-            throw Exception(os.str().c_str());
-        }
-        
-        TiXmlHandle handle( root );
-        
-        const char * id = root->Attribute("id");
-        if(!id) id = "";
-        
-        cdl->setID(id);
-        
-        TiXmlElement* desc = handle.FirstChild( "SOPNode" ).FirstChild("Description").ToElement();
-        if(desc)
-        {
-            const char * text = desc->GetText();
-            if(text) cdl->setDescription(text);
-        }
-        
-        std::vector<std::string> lineParts;
-        std::vector<float> floatArray;
-        
-        TiXmlElement* slope = handle.FirstChild( "SOPNode" ).FirstChild("Slope").ToElement();
-        if(slope)
-        {
-            const char * text = slope->GetText();
-            if(text)
-            {
-                pystring::split(pystring::strip(text), lineParts);
-                if((lineParts.size() != 3) || (!StringVecToFloatVec(floatArray, lineParts)))
-                {
-                    std::ostringstream os;
-                    os << "Error loading CDL xml. ";
-                    os << id << ".SOPNode.Slope text '";
-                    os << text << "' is not convertible to 3 floats.";
-                    throw Exception(os.str().c_str());
-                }
-                cdl->setSlope(&floatArray[0]);
-            }
-        }
-        
-        TiXmlElement* offset = handle.FirstChild( "SOPNode" ).FirstChild("Offset").ToElement();
-        if(offset)
-        {
-            const char * text = offset->GetText();
-            if(text)
-            {
-                pystring::split(pystring::strip(text), lineParts);
-                if((lineParts.size() != 3) || (!StringVecToFloatVec(floatArray, lineParts)))
-                {
-                    std::ostringstream os;
-                    os << "Error loading CDL xml. ";
-                    os << id << ".SOPNode.Offset text '";
-                    os << text << "' is not convertible to 3 floats.";
-                    throw Exception(os.str().c_str());
-                }
-                cdl->setOffset(&floatArray[0]);
-            }
-        }
-        
-        TiXmlElement* power = handle.FirstChild( "SOPNode" ).FirstChild("Power").ToElement();
-        if(power)
-        {
-            const char * text = power->GetText();
-            if(text)
-            {
-                pystring::split(pystring::strip(text), lineParts);
-                if((lineParts.size() != 3) || (!StringVecToFloatVec(floatArray, lineParts)))
-                {
-                    std::ostringstream os;
-                    os << "Error loading CDL xml. ";
-                    os << id << ".SOPNode.Power text '";
-                    os << text << "' is not convertible to 3 floats.";
-                    throw Exception(os.str().c_str());
-                }
-                cdl->setPower(&floatArray[0]);
-            }
-        }
-        
-        TiXmlElement* sat = handle.FirstChild( "SatNode" ).FirstChild("Saturation").ToElement();
-        if(sat)
-        {
-            const char * text = sat->GetText();
-            if(text)
-            {
-                float satval = 1.0f;
-                if(!StringToFloat(&satval, text))
-                {
-                    std::ostringstream os;
-                    os << "Error loading CDL xml. ";
-                    os << id << ".SatNode.Saturation text '";
-                    os << text << "' is not convertible to float.";
-                    throw Exception(os.str().c_str());
-                }
-                cdl->setSat(satval);
-            }
-        }
-    }
-    
-    void GetCDLTransforms(CDLTransformMap & transformMap,
-                          CDLTransformVec & transformVec,
-                          TiXmlElement * cccRootElement)
-    {
-        if(!cccRootElement)
-        {
-            std::ostringstream os;
-            os << "GetCDLTransforms Error. ";
-            os << "Null cccRootElement.";
-            throw Exception(os.str().c_str());
-        }
-        
-        std::string rootElementType(cccRootElement->Value());
-        bool isCDL = (rootElementType == "ColorDecisionList");
-        const char* container = isCDL ? "ColorDecision" : "ColorCorrection";
-        
-        if(!isCDL && rootElementType != "ColorCorrectionCollection")
-        {
-            std::ostringstream os;
-            os << "GetCDLTransforms Error. ";
-            os << "Root element is type '" << rootElementType << "', ";
-            os << "ColorDecisionList or ColorCorrectionCollection expected.";
-            throw Exception(os.str().c_str());
-        }
-        
-        TiXmlNode * child = cccRootElement->FirstChild(container);
-        while(child)
-        {
-            TiXmlNode * xmlNode= (isCDL) ? child->FirstChild("ColorCorrection") : child;
-            CDLTransformRcPtr transform = CDLTransform::Create();
-            LoadCDL(transform.get(), xmlNode->ToElement());
-            
-            transformVec.push_back(transform);
-            
-            std::string id = transform->getID();
-            if(!id.empty())
-            {
-                CDLTransformMap::iterator iter = transformMap.find(id);
-                if(iter != transformMap.end())
-                {
-                    std::ostringstream os;
-                    os << "Error loading ccc xml. ";
-                    os << "Duplicate elements with '" << id << "' found. ";
-                    os << "If id is specified, it must be unique.";
-                    throw Exception(os.str().c_str());
-                }
-                
-                transformMap[id] = transform;
-            }
-            
-            child = child->NextSibling(container);
+            os << "        <Power>" << FloatVecToString(powerval, 3)  << "</Power>\n";
+            os << "    </SOPNode>\n";
+            os << "    <SatNode>\n";
+            os << "        <Saturation>" << FloatToString(cdl.getSat()) << "</Saturation>\n";
+            os << "    </SatNode>\n";
+            os << "</ColorCorrection>";
+
+            return os.str();
         }
     }
     
@@ -309,28 +98,32 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        TiXmlDocument doc;
-        doc.Parse(xml);
-        
-        if(doc.Error())
+        std::string xmlstring(xml);
+        std::istringstream istream(xmlstring);
+
+        CDLParser parser("xml string");
+        parser.parse(istream);
+
+        if (!parser.isCC())
         {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << doc.ErrorDesc() << " (line ";
-            os << doc.ErrorRow() << ", character ";
-            os << doc.ErrorCol() << ")";
-            throw Exception(os.str().c_str());
+            throw Exception("Error loading CDL xml. ColorCorrection expected.");
         }
-        
-        if(!doc.RootElement())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml, ";
-            os << "please confirm the xml is valid.";
-            throw Exception(os.str().c_str());
-        }
-        
-        LoadCDL(cdl, doc.RootElement()->ToElement());
+
+        CDLTransformRcPtr cdlRcPtr = CDLTransform::Create();
+        parser.getCDLTransform(cdlRcPtr);
+
+        cdl->setID(cdlRcPtr->getID());
+        cdl->setDescription(cdlRcPtr->getDescription());
+        float slope[3] = { 0.f, 0.f, 0.f };
+        cdlRcPtr->getSlope(slope);
+        cdl->setSlope(slope);
+        float offset[3] = { 0.f, 0.f, 0.f };
+        cdlRcPtr->getOffset(offset);
+        cdl->setOffset(offset);
+        float power[3] = { 0.f, 0.f, 0.f };
+        cdlRcPtr->getPower(offset);
+        cdl->setPower(offset);
+        cdl->setSat(cdlRcPtr->getSat());
     }
     
     CDLTransformRcPtr CDLTransform::Create()
@@ -433,61 +226,26 @@ OCIO_NAMESPACE_ENTER
             throw Exception (os.str().c_str());
         }
         
-        // Read the file into a string.
-        std::ostringstream rawdata;
-        rawdata << istream.rdbuf();
-        std::string xml = rawdata.str();
-        
-        if(xml.empty())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << "The specified source file, '";
-            os << src << "' appears to be empty.";
-            throw Exception(os.str().c_str());
-        }
-        
-        TiXmlDocument doc;
-        doc.Parse(xml.c_str());
-        
-        if(doc.Error())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml from file '";
-            os << src << "'. ";
-            os << doc.ErrorDesc() << " (line ";
-            os << doc.ErrorRow() << ", character ";
-            os << doc.ErrorCol() << ")";
-            throw Exception(os.str().c_str());
-        }
-        
-        if(!doc.RootElement())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml from file '";
-            os << src << "'. ";
-            os << "Please confirm the xml is valid.";
-            throw Exception(os.str().c_str());
-        }
-        
-        std::string rootValue = doc.RootElement()->Value();
-        if(rootValue == "ColorCorrection")
+        CDLParser parser(src);
+        parser.parse(istream);
+
+        if (parser.isCC())
         {
             // Load a single ColorCorrection into the cache
             CDLTransformRcPtr cdl = CDLTransform::Create();
-            LoadCDL(cdl.get(), doc.RootElement()->ToElement());
-            
+            parser.getCDLTransform(cdl);
+
             cccid = "";
             g_cacheSrcIsCC[src] = true;
             g_cache[GetCDLLocalCacheKey(src, cccid)] = cdl;
         }
-        else if(rootValue == "ColorCorrectionCollection")
+        else if(parser.isCCC())
         {
             // Load all CCs from the ColorCorrectionCollection
             // into the cache
             CDLTransformMap transformMap;
             CDLTransformVec transformVec;
-            GetCDLTransforms(transformMap, transformVec, doc.RootElement());
+            parser.getCDLTransforms(transformMap, transformVec);
             
             if(transformVec.empty())
             {
@@ -903,16 +661,17 @@ OIIO_ADD_TEST(CDLTransform, CreateFromCCFile)
     }
 
     const std::string expectedOutXML(
-        "<ColorCorrection id=\"foo\">"
-        "<SOPNode>"
-        "<Description>this is a description</Description>"
-        "<Slope>1.1 1.2 1.3</Slope>"
-        "<Offset>2.1 2.2 2.3</Offset>"
-        "<Power>3.1 3.2 3.3</Power>"
-        "</SOPNode>"
-        "<SatNode>"
-        "<Saturation>0.7</Saturation>"
-        "</SatNode></ColorCorrection>");
+        "<ColorCorrection id=\"foo\">\n"
+        "    <SOPNode>\n"
+        "        <Description>this is a description</Description>\n"
+        "        <Slope>1.1 1.2 1.3</Slope>\n"
+        "        <Offset>2.1 2.2 2.3</Offset>\n"
+        "        <Power>3.1 3.2 3.3</Power>\n"
+        "    </SOPNode>\n"
+        "    <SatNode>\n"
+        "        <Saturation>0.7</Saturation>\n"
+        "    </SatNode>\n"
+        "</ColorCorrection>");
     std::string outXML(transform->getXML());
     OIIO_CHECK_EQUAL(expectedOutXML, outXML);
 
@@ -1014,6 +773,32 @@ OIIO_ADD_TEST(CDLTransform, CreateFromCCCFileFailure)
         OIIO_CHECK_THROW_WHAT(
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "42"),
             OCIO::Exception, "could not be loaded from the src file");
+    }
+}
+
+OIIO_ADD_TEST(CDLTransform, EscapeXML)
+{
+    const std::string inputXML(
+        "<ColorCorrection id=\"Esc &lt; &amp; &quot; &apos; &gt;\">\n"
+        "    <SOPNode>\n"
+        "        <Description>These: &lt; &amp; &quot; &apos; &gt; are escape chars</Description>\n"
+        "        <Slope>1.1 1.2 1.3</Slope>\n"
+        "        <Offset>2.1 2.2 2.3</Offset>\n"
+        "        <Power>3.1 3.2 3.3</Power>\n"
+        "    </SOPNode>\n"
+        "    <SatNode>\n"
+        "        <Saturation>0.7</Saturation>\n"
+        "    </SatNode>\n"
+        "</ColorCorrection>");
+
+    // parse again using setXML
+    OCIO::CDLTransformRcPtr transformCDL = OCIO::CDLTransform::Create();
+    transformCDL->setXML(inputXML.c_str());
+    {
+        std::string idStr(transformCDL->getID());
+        OIIO_CHECK_EQUAL("Esc < & \" ' >", idStr);
+        std::string descStr(transformCDL->getDescription());
+        OIIO_CHECK_EQUAL("These: < & \" ' > are escape chars", descStr);
     }
 }
 
