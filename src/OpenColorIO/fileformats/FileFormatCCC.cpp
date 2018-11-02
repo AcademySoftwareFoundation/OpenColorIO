@@ -27,10 +27,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include <map>
-#include <tinyxml.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/cdl/CDLParser.h"
 #include "transforms/CDLTransform.h"
 #include "transforms/FileTransform.h"
 #include "OpBuilders.h"
@@ -54,9 +54,6 @@ OCIO_NAMESPACE_ENTER
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        typedef OCIO_SHARED_PTR<TiXmlDocument> TiXmlDocumentRcPtr;
-        
-        
         
         class LocalFileFormat : public FileFormat
         {
@@ -92,30 +89,16 @@ OCIO_NAMESPACE_ENTER
         
         CachedFileRcPtr LocalFileFormat::Read(
             std::istream & istream,
-            const std::string & /* fileName unused */) const
+            const std::string & fileName) const
         {
-            std::ostringstream rawdata;
-            rawdata << istream.rdbuf();
-            
+            CDLParser parser(fileName);
+            parser.parse(istream);
+
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
-            TiXmlDocumentRcPtr doc = TiXmlDocumentRcPtr(new TiXmlDocument());
-            doc->Parse(rawdata.str().c_str());
-            
-            if(doc->Error())
-            {
-                std::ostringstream os;
-                os << "XML Parse Error. ";
-                os << doc->ErrorDesc() << " (line ";
-                os << doc->ErrorRow() << ", character ";
-                os << doc->ErrorCol() << ")";
-                throw Exception(os.str().c_str());
-            }
-            
-            TiXmlElement* rootElement = doc->RootElement();
-            GetCDLTransforms(cachedFile->transformMap,
-                             cachedFile->transformVec,
-                             rootElement);
+            parser.getCDLTransforms(cachedFile->transformMap,
+                                    cachedFile->transformVec);
+
             return cachedFile;
         }
         

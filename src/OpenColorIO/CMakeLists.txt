@@ -7,6 +7,8 @@ set(SOURCES
 	Context.cpp
 	Display.cpp
 	Exception.cpp
+	fileformats/cdl/CDLParser.cpp
+	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/FileFormat3DL.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
@@ -81,10 +83,10 @@ target_link_libraries(OpenColorIO
 	PUBLIC 
 		public_api
 	PRIVATE
-		tinyxml
 		yamlcpp
 		pystring
 		sampleicc
+		libexpat
 		ilmbase
 )
 if(NOT BUILD_SHARED_LIBS)
@@ -103,6 +105,14 @@ if(OCIO_USE_SSE)
 	target_compile_definitions(OpenColorIO
 		PRIVATE
 			USE_SSE
+	)
+endif()
+if(WIN32)
+	# A windows application linking to eXpat static libraries must
+    # have the global macro XML_STATIC defined
+	target_compile_definitions(OpenColorIO
+		PRIVATE
+			XML_STATIC
 	)
 endif()
 if(MSVC)
