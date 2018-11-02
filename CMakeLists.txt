@@ -7,7 +7,6 @@ project(OpenColorIO
 
 # "dev" for master or "" for any official release
 set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
-set(OpenColorIO_VERSION "${OpenColorIO_VERSION_MAJOR}.${OpenColorIO_VERSION_MINOR}.${OpenColorIO_VERSION_PATCH}${OpenColorIO_VERSION_RELEASE_TYPE}")
 
 enable_testing()
 
@@ -50,7 +49,7 @@ option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
 # Versioning
 
 if(NOT SOVERSION)
-	set(SOVERSION "${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}${OpenColorIO_VERSION_RELEASE_TYPE}" CACHE STRING "Set the SO version in the SO name of the output library")
+	set(SOVERSION "${OpenColorIO_VERSION_MAJOR}.${OpenColorIO_VERSION_MINOR}" CACHE STRING "Set the SO version in the SO name of the output library")
 endif()
 
 ###############################################################################
