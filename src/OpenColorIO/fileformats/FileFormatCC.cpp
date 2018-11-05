@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/cdl/CDLParser.h"
 #include "transforms/FileTransform.h"
 #include "OpBuilders.h"
 
@@ -88,16 +89,15 @@ OCIO_NAMESPACE_ENTER
         
         CachedFileRcPtr LocalFileFormat::Read(
             std::istream & istream,
-            const std::string & /* fileName unused */) const
+            const std::string & fileName) const
         {
-            std::ostringstream rawdata;
-            rawdata << istream.rdbuf();
-            
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
             
             try
             {
-                cachedFile->transform->setXML(rawdata.str().c_str());
+                CDLParser parser(fileName);
+                parser.parse(istream);
+                parser.getCDLTransform(cachedFile->transform);
             }
             catch(Exception & e)
             {
@@ -235,8 +235,8 @@ OIIO_ADD_TEST(FileFormatCC, TestCC_SATNode)
     OCIO::LocalCachedFileRcPtr ccFile;
     OIIO_CHECK_NO_THROW(ccFile = LoadCCFile(fileName));
 
-    // "SATNode" is not recognized. Default value is returned.
-    OIIO_CHECK_EQUAL(1.0f, ccFile->transform->getSat());
+    // "SATNode" is recognized.
+    OIIO_CHECK_EQUAL(0.42f, ccFile->transform->getSat());
 }
 
 OIIO_ADD_TEST(FileFormatCC, TestCC_ASC_SAT)

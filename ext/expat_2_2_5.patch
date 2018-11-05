@@ -1,0 +1,49 @@
+diff -Naur libexpat-R_2_2_5/CMakeLists.txt expat_patch/CMakeLists.txt
+--- libexpat-R_2_2_5/CMakeLists.txt	2017-11-01 10:47:55.000000000 -0400
++++ expat_patch/CMakeLists.txt	2018-06-26 16:40:13.185314600 -0400
+@@ -10,10 +10,12 @@
+ set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
+ set(PACKAGE_TARNAME "${PACKAGE_NAME}")
+ 
++set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
++
+ if(WINCE)
+     set(BUILD_tools_default OFF)
+ else()
+-    set(BUILD_tools_default ON)
++    set(BUILD_tools_default OFF)
+ endif()
+ if(MSVC OR NOT BUILD_tools_default)
+     set(BUILD_doc_default OFF)
+@@ -27,9 +29,9 @@
+ endif()
+ 
+ option(BUILD_tools "build the xmlwf tool for expat library" ${BUILD_tools_default})
+-option(BUILD_examples "build the examples for expat library" ON)
+-option(BUILD_tests "build the tests for expat library" ON)
+-option(BUILD_shared "build a shared expat library" ON)
++option(BUILD_examples "build the examples for expat library" OFF)
++option(BUILD_tests "build the tests for expat library" OFF)
++option(BUILD_shared "build a shared expat library" OFF)
+ option(BUILD_doc "build man page for xmlwf" ${BUILD_doc_default})
+ option(USE_libbsd "utilize libbsd (for arc4random_buf)" OFF)
+ option(INSTALL "install expat files in cmake install target" ON)
+@@ -75,6 +77,9 @@
+ if(FLAG_NO_STRICT_ALIASING)
+     set(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -fno-strict-aliasing")
+ endif()
++if(UNIX)
++    set(EXTRA_COMPILE_FLAGS "${EXTRA_COMPILE_FLAGS} -fPIC")
++endif()
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_COMPILE_FLAGS}")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_COMPILE_FLAGS}")
+ 
+@@ -139,7 +144,7 @@
+ set(includedir "\${prefix}/include")
+ configure_file(expat.pc.in ${CMAKE_CURRENT_BINARY_DIR}/expat.pc)
+ 
+-expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION include)
++expat_install(FILES lib/expat.h lib/expat_external.h DESTINATION include/expat)
+ expat_install(FILES ${CMAKE_CURRENT_BINARY_DIR}/expat.pc DESTINATION lib/pkgconfig)
+ 
+ if(BUILD_tools)
