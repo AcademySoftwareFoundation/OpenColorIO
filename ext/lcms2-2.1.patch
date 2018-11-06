@@ -51,5 +51,5 @@ diff -Naur lcms2-2.1.orig/CMakeLists.txt lcms2-2.1/CMakeLists.txt
 +		RUNTIME         DESTINATION		bin
 +        LIBRARY         DESTINATION     lib
 +        ARCHIVE         DESTINATION     lib
-+        PUBLIC_HEADER	DESTINATION     include
++        PUBLIC_HEADER	DESTINATION     include/lcms2
 +)

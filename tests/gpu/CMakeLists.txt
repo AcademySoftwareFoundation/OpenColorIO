@@ -11,6 +11,7 @@ set(SOURCES
 	Lut1DOp_test.cpp
 	Lut3DOp_test.cpp
 	MatrixOps_test.cpp
+	RangeOps_test.cpp
 )
 
 add_executable(test_gpu_exec ${SOURCES})
@@ -20,6 +21,14 @@ target_include_directories(test_gpu_exec
 		${GLEW_INCLUDE_DIRS}
 		${GLUT_INCLUDE_DIR}
 )
+
+if(NOT BUILD_SHARED_LIBS)
+	target_compile_definitions(test_gpu_exec
+		PRIVATE
+		OpenColorIO_SKIP_IMPORTS
+	)
+endif()
+
 target_link_libraries(test_gpu_exec
 	PRIVATE
 		OpenColorIO

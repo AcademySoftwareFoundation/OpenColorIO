@@ -38,6 +38,41 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    class MatrixOpData;
+    typedef OCIO_SHARED_PTR<MatrixOpData> MatrixOpDataRcPtr;
+
+    class MatrixOpData : public OpData
+    {
+    public:
+        MatrixOpData();
+        // Create a scale matrix from the input to output value range
+        MatrixOpData(BitDepth inBitDepth, BitDepth outBitDepth);
+        MatrixOpData(const float * m44, const float * offset4);
+        virtual ~MatrixOpData() {}
+
+        MatrixOpData & operator = (const MatrixOpData & rhs);
+
+        virtual Type getType() const { return MatrixType; }
+
+        // Determine whether the output of the op mixes R, G, B channels.
+        // For example, Rout = 5*Rin is channel independent, but Rout = Rin + Gin
+        // is not.  Note that the property may depend on the op parameters,
+        // so, e.g. MatrixOps may sometimes return true and other times false.
+        // returns true if the op's output does not combine input channels
+        virtual bool hasChannelCrosstalk() const;
+
+        virtual bool isIdentity() const;
+        virtual bool hasOffsets() const;
+        virtual bool isMatrixIdentity() const;
+        virtual bool isMatrixDiagonal() const;
+
+        float m_m44[16];
+        float m_offset4[4];
+
+    private:
+        virtual std::string finalize() const;
+    };
+
     // Use whichever is most convenient; they are equally efficient
     
     void CreateScaleOp(OpRcPtrVec & ops,
@@ -69,9 +104,6 @@ OCIO_NAMESPACE_ENTER
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);
-    // Used by tests
-    void CreateIdentifyOp(OpRcPtrVec & ops,
-                          TransformDirection direction);
 }
 OCIO_NAMESPACE_EXIT
 

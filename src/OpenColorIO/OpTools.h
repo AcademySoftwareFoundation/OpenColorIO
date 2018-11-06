@@ -50,7 +50,7 @@ OCIO_NAMESPACE_ENTER
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
-    Lut1DRcPtr Compose(const Lut1DRcPtr & A, const OpRcPtr & B, ComposeMethod compFlag);
+    Lut1DOpDataRcPtr Compose(const Lut1DOpDataRcPtr & A, const OpRcPtr & B, ComposeMethod compFlag);
 }
 OCIO_NAMESPACE_EXIT
 

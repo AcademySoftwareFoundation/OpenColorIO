@@ -14,12 +14,12 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 		PUBLIC
 			public_api
 		PRIVATE
-			tinyxml
 			yamlcpp
 			pystring
 			sampleicc
 			oiio_unittest
 			unittest_data
+			libexpat
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
@@ -27,6 +27,25 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 				"${CMAKE_SOURCE_DIR}/src/OpenColorIO"
 		)
 	endif(PRIVATE_INCLUDES)
+	
+	if(OCIO_USE_SSE)
+		target_compile_definitions(${TEST_BINARY}
+			PRIVATE
+				USE_SSE
+		)
+	endif()
+	if(WIN32)
+		# A windows application linking to eXpat static libraries must
+		# have the global macro XML_STATIC defined
+		target_compile_definitions(${TEST_BINARY}
+			PRIVATE
+				XML_STATIC
+		)
+	endif()
+	if(MSVC)
+		# Because our Exceptions derive from std::runtime_error we can safely disable this warning
+		set_target_properties(${TEST_BINARY} PROPERTIES COMPILE_FLAGS "/wd4275")
+	endif()
 	add_test(${TEST_NAME} ${TEST_BINARY})
 endfunction(add_ocio_test)
 
@@ -44,6 +63,8 @@ set(SOURCES
 	Context.cpp
 	Display.cpp
 	Exception.cpp
+	fileformats/cdl/CDLParser.cpp
+	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/FileFormat3DL.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
@@ -83,6 +104,9 @@ set(SOURCES
 	ops/Lut3D/Lut3DOp.cpp
 	ops/Matrix/MatrixOps.cpp
 	ops/NoOp/NoOps.cpp
+	ops/Range/RangeOpCPU.cpp
+	ops/Range/RangeOpData.cpp
+	ops/Range/RangeOps.cpp
 	ops/Truelight/TruelightOp.cpp
 	OpTools.cpp
 	ParseUtils.cpp
@@ -101,6 +125,7 @@ set(SOURCES
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp
 	transforms/MatrixTransform.cpp
+	transforms/RangeTransform.cpp
 	transforms/TruelightTransform.cpp
 	UnitTest.cpp
 )

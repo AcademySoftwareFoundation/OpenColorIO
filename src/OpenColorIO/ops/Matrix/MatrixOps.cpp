@@ -27,23 +27,120 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-/*
-    Made by Autodesk Inc. under the terms of the OpenColorIO BSD 3 Clause License
-*/
-
-
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "GpuShaderUtils.h"
-#include "HashUtils.h"
-#include "ops/Matrix/MatrixOps.h"
-#include "MathUtils.h"
-
 #include <cstring>
 #include <sstream>
 
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "BitDepthUtils.h"
+#include "GpuShaderUtils.h"
+#include "HashUtils.h"
+#include "MathUtils.h"
+#include "ops/Matrix/MatrixOps.h"
+
+
 OCIO_NAMESPACE_ENTER
 {
+    MatrixOpData::MatrixOpData()
+        :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    {
+        memset(m_m44, 0, 16*sizeof(float));
+        m_m44[ 0] = 1.0f;
+        m_m44[ 5] = 1.0f;
+        m_m44[10] = 1.0f;
+        m_m44[15] = 1.0f;
+
+        memset(m_offset4, 0, 4*sizeof(float));
+    }
+
+    MatrixOpData::MatrixOpData(BitDepth inBitDepth, BitDepth outBitDepth)
+        :   OpData(inBitDepth, outBitDepth)
+    {
+        const float scaleFactor
+            = GetBitDepthMaxValue(outBitDepth)
+                / GetBitDepthMaxValue(inBitDepth);
+
+        memset(m_m44, 0, 16*sizeof(float));
+        m_m44[ 0] = scaleFactor;
+        m_m44[ 5] = scaleFactor;
+        m_m44[10] = scaleFactor;
+        m_m44[15] = scaleFactor;
+
+        memset(m_offset4, 0, 4*sizeof(float));
+    }
+
+    MatrixOpData::MatrixOpData(const float * m44, const float * offset4)
+        :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    {           
+        memcpy(m_m44, m44, 16*sizeof(float));
+        memcpy(m_offset4, offset4, 4*sizeof(float));
+    }
+        
+    MatrixOpData & MatrixOpData::operator = (const MatrixOpData & rhs)
+    {
+        if(this!=&rhs)
+        {
+            memcpy(m_m44,     rhs.m_m44,     sizeof(float)*16);
+            memcpy(m_offset4, rhs.m_offset4, sizeof(float)*4);
+        }
+
+        return *this;
+    }
+
+    bool MatrixOpData::isIdentity() const
+    {
+        // This Op will be a NoOp if and only if both the offset and matrix
+        // are identity. This hold true no matter what the direction is.
+        return !hasOffsets() && isMatrixIdentity();
+    }
+
+    bool MatrixOpData::hasChannelCrosstalk() const
+    {
+        return !IsM44Diagonal(m_m44);
+    }
+
+    bool MatrixOpData::hasOffsets() const
+    {
+        return !IsVecEqualToZero(m_offset4, 4);
+    }
+
+    bool MatrixOpData::isMatrixIdentity() const
+    {
+        return IsM44Identity(m_m44);
+    }
+
+    bool MatrixOpData::isMatrixDiagonal() const
+    {
+        return IsM44Diagonal(m_m44);
+    }
+    
+    std::string MatrixOpData::finalize() const
+    {
+        md5_state_t state;
+        md5_byte_t digest[16];
+        
+        md5_init(&state);
+        md5_append(&state, (const md5_byte_t *)m_m44, (int)(16*sizeof(float)));
+        md5_append(&state, (const md5_byte_t *)m_offset4, (int)(4*sizeof(float)));
+        md5_finish(&state, digest);
+        
+        return GetPrintableHash(digest);
+    }
+
+    
+    
+    
+    
+    
+    ///////////////////////////////////////////////////////////////////////////
+    
+    
+    
+    
+    
+    
+    
+    
     namespace
     {
         void ApplyScale(float* rgbaBuffer, long numPixels,
@@ -113,6 +210,20 @@ OCIO_NAMESPACE_ENTER
     
     namespace
     {
+
+        // The class represents the Matrix Op
+        //
+        // The class specifies a matrix transformation to be applied to
+        // the input values. The input and output of a matrix are always
+        // 4-component values.
+        // An offset vector is also applied to the result.
+        // The output values are calculated using the row-major order convention:
+        // 
+        // Rout = a[0][0]*Rin + a[0][1]*Gin + a[0][2]*Bin + a[0][3]*Ain + o[0];
+        // Gout = a[1][0]*Rin + a[1][1]*Gin + a[1][2]*Bin + a[1][3]*Ain + o[1];
+        // Bout = a[2][0]*Rin + a[2][1]*Gin + a[2][2]*Bin + a[2][3]*Ain + o[2];
+        // Aout = a[3][0]*Rin + a[3][1]*Gin + a[3][2]*Bin + a[3][3]*Ain + o[3];
+
         class MatrixOffsetOp : public Op
         {
         public:
@@ -126,28 +237,24 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
-            virtual bool isNoOp() const;
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
             virtual bool canCombineWith(const OpRcPtr & op) const;
             virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
             
-            virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
         
+        protected:
+            MatrixOpDataRcPtr matrix() { return DynamicPtrCast<MatrixOpData>(data()); }
+            const MatrixOpDataRcPtr matrix() const { return DynamicPtrCast<MatrixOpData>(data()); }
+
         private:
-            bool m_isNoOp;
-            float m_m44[16];
-            float m_offset4[4];
             TransformDirection m_direction;
             
             // Set in finalize
-            bool m_m44IsIdentity;
-            bool m_m44IsDiagonal;
-            bool m_offset4IsIdentity;
             float m_m44_inv[16];
             std::string m_cacheID;
         };
@@ -160,31 +267,21 @@ OCIO_NAMESPACE_ENTER
                                        const float * offset4,
                                        TransformDirection direction):
                                        Op(),
-                                       m_isNoOp(false),
-                                       m_direction(direction),
-                                       m_m44IsIdentity(false),
-                                       m_offset4IsIdentity(false)
+                                       m_direction(direction)
         {
             if(m_direction == TRANSFORM_DIR_UNKNOWN)
             {
                 throw Exception("Cannot apply MatrixOffsetOp op, unspecified transform direction.");
             }
-            
-            memcpy(m_m44, m44, 16*sizeof(float));
-            memcpy(m_offset4, offset4, 4*sizeof(float));
-            
+
             memset(m_m44_inv, 0, 16*sizeof(float));
             
-            // This Op will be a NoOp if and old if both the offset and matrix
-            // are identity. This hold true no matter what the direction is,
-            // so we can compute this ahead of time.
-            m_isNoOp = (IsVecEqualToZero(m_offset4, 4) && IsM44Identity(m_m44));
+            data().reset(new MatrixOpData(m44, offset4));
         }
         
         OpRcPtr MatrixOffsetOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new MatrixOffsetOp(m_m44, m_offset4, m_direction));
-            return op;
+            return OpRcPtr(new MatrixOffsetOp(matrix()->m_m44, matrix()->m_offset4, m_direction));
         }
         
         MatrixOffsetOp::~MatrixOffsetOp()
@@ -198,11 +295,6 @@ OCIO_NAMESPACE_ENTER
         std::string MatrixOffsetOp::getCacheID() const
         {
             return m_cacheID;
-        }
-        
-        bool MatrixOffsetOp::isNoOp() const
-        {
-            return m_isNoOp;
         }
         
         bool MatrixOffsetOp::isSameType(const OpRcPtr & op) const
@@ -221,9 +313,9 @@ OCIO_NAMESPACE_ENTER
                 return false;
             
             float error = std::numeric_limits<float>::min();
-            if(!VecsEqualWithRelError(m_m44, 16, typedRcPtr->m_m44, 16, error))
+            if(!VecsEqualWithRelError(matrix()->m_m44, 16, typedRcPtr->matrix()->m_m44, 16, error))
                 return false;
-            if(!VecsEqualWithRelError(m_offset4, 4,typedRcPtr->m_offset4, 4, error))
+            if(!VecsEqualWithRelError(matrix()->m_offset4, 4,typedRcPtr->matrix()->m_offset4, 4, error))
                 return false;
             
             return true;
@@ -252,8 +344,8 @@ OCIO_NAMESPACE_ENTER
                 typedRcPtr->m_direction == TRANSFORM_DIR_FORWARD)
             {
                 GetMxbCombine(mout, vout,
-                              m_m44, m_offset4,
-                              typedRcPtr->m_m44, typedRcPtr->m_offset4);
+                              matrix()->m_m44, matrix()->m_offset4,
+                              typedRcPtr->matrix()->m_m44, typedRcPtr->matrix()->m_offset4);
             }
             else if(m_direction == TRANSFORM_DIR_FORWARD &&
                     typedRcPtr->m_direction == TRANSFORM_DIR_INVERSE)
@@ -261,21 +353,21 @@ OCIO_NAMESPACE_ENTER
                 float minv2[16];
                 float vinv2[4];
                 
-                if(!GetMxbInverse(minv2, vinv2, typedRcPtr->m_m44, typedRcPtr->m_offset4))
+                if(!GetMxbInverse(minv2, vinv2, typedRcPtr->matrix()->m_m44, typedRcPtr->matrix()->m_offset4))
                 {
                     std::ostringstream os;
                     os << "Cannot invert second MatrixOffsetOp op. ";
                     os << "Matrix inverse does not exist for (";
                     for(int i=0; i<16; ++i)
                     {
-                        os << typedRcPtr->m_m44[i] << " ";
+                        os << typedRcPtr->matrix()->m_m44[i] << " ";
                     }
                     os << ").";
                     throw Exception(os.str().c_str());
                 }
                 
                 GetMxbCombine(mout, vout,
-                              m_m44, m_offset4,
+                              matrix()->m_m44, matrix()->m_offset4,
                               minv2, vinv2);
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE &&
@@ -284,14 +376,14 @@ OCIO_NAMESPACE_ENTER
                 float minv1[16];
                 float vinv1[4];
                 
-                if(!GetMxbInverse(minv1, vinv1, m_m44, m_offset4))
+                if(!GetMxbInverse(minv1, vinv1, matrix()->m_m44, matrix()->m_offset4))
                 {
                     std::ostringstream os;
                     os << "Cannot invert primary MatrixOffsetOp op. ";
                     os << "Matrix inverse does not exist for (";
                     for(int i=0; i<16; ++i)
                     {
-                        os << m_m44[i] << " ";
+                        os << matrix()->m_m44[i] << " ";
                     }
                     os << ").";
                     throw Exception(os.str().c_str());
@@ -299,7 +391,7 @@ OCIO_NAMESPACE_ENTER
                 
                 GetMxbCombine(mout, vout,
                               minv1, vinv1,
-                              typedRcPtr->m_m44, typedRcPtr->m_offset4);
+                              typedRcPtr->matrix()->m_m44, typedRcPtr->matrix()->m_offset4);
                 
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE &&
@@ -310,27 +402,27 @@ OCIO_NAMESPACE_ENTER
                 float minv2[16];
                 float vinv2[4];
                 
-                if(!GetMxbInverse(minv1, vinv1, m_m44, m_offset4))
+                if(!GetMxbInverse(minv1, vinv1, matrix()->m_m44, matrix()->m_offset4))
                 {
                     std::ostringstream os;
                     os << "Cannot invert primary MatrixOffsetOp op. ";
                     os << "Matrix inverse does not exist for (";
                     for(int i=0; i<16; ++i)
                     {
-                        os << m_m44[i] << " ";
+                        os << matrix()->m_m44[i] << " ";
                     }
                     os << ").";
                     throw Exception(os.str().c_str());
                 }
                 
-                if(!GetMxbInverse(minv2, vinv2, typedRcPtr->m_m44, typedRcPtr->m_offset4))
+                if(!GetMxbInverse(minv2, vinv2, typedRcPtr->matrix()->m_m44, typedRcPtr->matrix()->m_offset4))
                 {
                     std::ostringstream os;
                     os << "Cannot invert second MatrixOffsetOp op. ";
                     os << "Matrix inverse does not exist for (";
                     for(int i=0; i<16; ++i)
                     {
-                        os << typedRcPtr->m_m44[i] << " ";
+                        os << typedRcPtr->matrix()->m_m44[i] << " ";
                     }
                     os << ").";
                     throw Exception(os.str().c_str());
@@ -354,41 +446,25 @@ OCIO_NAMESPACE_ENTER
                                  TRANSFORM_DIR_FORWARD);
         }
         
-        bool MatrixOffsetOp::hasChannelCrosstalk() const
-        {
-            return (!m_m44IsDiagonal);
-        }
-        
         void MatrixOffsetOp::finalize()
         {
-            m_offset4IsIdentity = IsVecEqualToZero(m_offset4, 4);
-            m_m44IsIdentity = IsM44Identity(m_m44);
-            m_m44IsDiagonal = IsM44Diagonal(m_m44);
-            
             if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                if(!GetM44Inverse(m_m44_inv, m_m44))
+                if(!GetM44Inverse(m_m44_inv, matrix()->m_m44))
                 {
                     std::ostringstream os;
                     os << "Cannot apply MatrixOffsetOp op. ";
                     os << "Matrix inverse does not exist for m44 (";
-                    for(int i=0; i<16; ++i) os << m_m44[i] << " ";
+                    for(int i=0; i<16; ++i) os << matrix()->m_m44[i] << " ";
                     os << ").";
                     throw Exception(os.str().c_str());
                 }
             }
             
             // Create the cacheID
-            md5_state_t state;
-            md5_byte_t digest[16];
-            md5_init(&state);
-            md5_append(&state, (const md5_byte_t *)m_m44,     (int)(16*sizeof(float)));
-            md5_append(&state, (const md5_byte_t *)m_offset4, (int)(4*sizeof(float)));
-            md5_finish(&state, digest);
-            
             std::ostringstream cacheIDStream;
             cacheIDStream << "<MatrixOffsetOp ";
-            cacheIDStream << GetPrintableHash(digest) << " ";
+            cacheIDStream << matrix()->getCacheID() << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
             cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
             cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
@@ -401,40 +477,40 @@ OCIO_NAMESPACE_ENTER
         {
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
-                if(!m_m44IsIdentity)
+                if(!matrix()->isMatrixIdentity())
                 {
-                    if(m_m44IsDiagonal)
+                    if(matrix()->isMatrixDiagonal())
                     {
                         float scale[4];
-                        GetM44Diagonal(scale, m_m44);
+                        GetM44Diagonal(scale, matrix()->m_m44);
                         ApplyScale(rgbaBuffer, numPixels, scale);
                     }
                     else
                     {
-                        ApplyMatrix(rgbaBuffer, numPixels, m_m44);
+                        ApplyMatrix(rgbaBuffer, numPixels, matrix()->m_m44);
                     }
                 }
                 
-                if(!m_offset4IsIdentity)
+                if(matrix()->hasOffsets())
                 {
-                    ApplyOffset(rgbaBuffer, numPixels, m_offset4);
+                    ApplyOffset(rgbaBuffer, numPixels, matrix()->m_offset4);
                 }
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                if(!m_offset4IsIdentity)
+                if(matrix()->hasOffsets())
                 {
-                    float offset_inv[] = { -m_offset4[0],
-                                           -m_offset4[1],
-                                           -m_offset4[2],
-                                           -m_offset4[3] };
+                    float offset_inv[] = { -matrix()->m_offset4[0],
+                                           -matrix()->m_offset4[1],
+                                           -matrix()->m_offset4[2],
+                                           -matrix()->m_offset4[3] };
                     
                     ApplyOffset(rgbaBuffer, numPixels, offset_inv);
                 }
                 
-                if(!m_m44IsIdentity)
+                if(!matrix()->isMatrixIdentity())
                 {
-                    if(m_m44IsDiagonal)
+                    if(matrix()->isMatrixDiagonal())
                     {
                         float scale[4];
                         GetM44Diagonal(scale, m_m44_inv);
@@ -464,12 +540,12 @@ OCIO_NAMESPACE_ENTER
 
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
-                if(!m_m44IsIdentity)
+                if(!matrix()->isMatrixIdentity())
                 {
-                    if(m_m44IsDiagonal)
+                    if(matrix()->isMatrixDiagonal())
                     {
                         float scale[4];
-                        GetM44Diagonal(scale, m_m44);
+                        GetM44Diagonal(scale, matrix()->m_m44);
 
                         ss.newLine() << shaderDesc->getPixelName() << " = "
                                      << ss.vec4fConst(scale[0], scale[1], scale[2], scale[3])
@@ -479,27 +555,28 @@ OCIO_NAMESPACE_ENTER
                     else
                     {
                         ss.newLine() << shaderDesc->getPixelName() << " = "
-                                     << ss.mat4fMul(m_m44, shaderDesc->getPixelName())
+                                     << ss.mat4fMul(matrix()->m_m44, shaderDesc->getPixelName())
                                      << ";";
                     }
                 }
                 
-                if(!m_offset4IsIdentity)
+                if(matrix()->hasOffsets())
                 {
                     ss.newLine() << shaderDesc->getPixelName() << " = "
-                                 << ss.vec4fConst(m_offset4[0], m_offset4[1], m_offset4[2], m_offset4[3])
+                                 << ss.vec4fConst(matrix()->m_offset4[0], matrix()->m_offset4[1], 
+                                                  matrix()->m_offset4[2], matrix()->m_offset4[3])
                                  << " + " << shaderDesc->getPixelName()
                                  << ";";
                 }
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                if(!m_offset4IsIdentity)
+                if(matrix()->hasOffsets())
                 {
-                    float offset_inv[] = { -m_offset4[0],
-                                           -m_offset4[1],
-                                           -m_offset4[2],
-                                           -m_offset4[3] };
+                    float offset_inv[] = { -matrix()->m_offset4[0],
+                                           -matrix()->m_offset4[1],
+                                           -matrix()->m_offset4[2],
+                                           -matrix()->m_offset4[3] };
                     
                     ss.newLine() << shaderDesc->getPixelName() << " = "
                                  << ss.vec4fConst(offset_inv[0], offset_inv[1], offset_inv[2], offset_inv[3])
@@ -507,9 +584,9 @@ OCIO_NAMESPACE_ENTER
                                  << ";";
                 }
                 
-                if(!m_m44IsIdentity)
+                if(!matrix()->isMatrixIdentity())
                 {
-                    if(m_m44IsDiagonal)
+                    if(matrix()->isMatrixDiagonal())
                     {
                         float scale[4];
                         GetM44Diagonal(scale, m_m44_inv);

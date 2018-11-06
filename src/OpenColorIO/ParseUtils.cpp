@@ -37,6 +37,46 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+
+    struct Element
+    {
+        std::string str;
+        char c;
+    };
+    static struct Element elts[]
+        = { { "&quot;", '"' },
+            { "&apos;", '\''},
+            { "&lt;",   '<' },
+            { "&gt;",   '>' },
+            { "&amp;",  '&' },
+            { "",       ' ' } };
+
+    std::string ConvertSpecialCharToXmlToken(const std::string& str)
+    {
+        std::string res;
+        for (std::string::const_iterator it(str.begin());
+            it != str.end();
+            it++)
+        {
+            bool found = false;
+            for (unsigned idx = 0; !elts[idx].str.empty(); ++idx)
+            {
+                const Element& elt = elts[idx];
+                if (*it == elt.c)
+                {
+                    found = true;
+                    res += elt.str;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                res += *it;
+            }
+        }
+        return res;
+    }
+
     const char * BoolToString(bool val)
     {
         if(val) return "true";
@@ -471,6 +511,15 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 
 #include "unittest.h"
+
+OIIO_ADD_TEST(ParseUtils, XMLText)
+{
+    const std::string in("abc \" def ' ghi < jkl > mnop & efg");
+    const std::string ref("abc &quot; def &apos; ghi &lt; jkl &gt; mnop &amp; efg");
+
+    std::string out1 = OCIO::ConvertSpecialCharToXmlToken(in);
+    OIIO_CHECK_EQUAL(out1, ref);
+}
 
 OIIO_ADD_TEST(ParseUtils, BoolString)
 {

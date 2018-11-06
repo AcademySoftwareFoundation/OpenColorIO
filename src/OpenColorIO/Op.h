@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "Mutex.h"
+
 #include <sstream>
 #include <vector>
 
@@ -50,6 +52,137 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const AllocationData&);
+
+
+    class OpCPU;
+    typedef OCIO_SHARED_PTR<OpCPU> OpCPURcPtr;
+
+
+    // OpCPU is a helper class to define the CPU pixel processing method signature.
+    // Ops may define several optimized renderers tailored to the needs of a given set 
+    // of op parameters.
+    // For example, in the Range op, if the parameters do not require clamping 
+    // at the high end, a renderer that skips that clamp may be called.
+    // The CPU renderer to use for a given op instance is decided during finalization.
+    // 
+    class OpCPU
+    {
+    public:
+        OpCPU() {}
+        virtual ~OpCPU() {}
+
+        virtual void apply(float * rgbaBuffer, long numPixels) const = 0;
+    };
+
+    // This class is to be used when no processing is needed.
+    class NoOpCPU : public OpCPU
+    {
+    public:
+        NoOpCPU() : OpCPU() {}
+
+        virtual void apply(float *, long) const { };
+    };
+
+    
+    class OpData;
+    typedef OCIO_SHARED_PTR<OpData> OpDataRcPtr;
+
+
+    // The OpData class is a helper class to hold the data part of an Op 
+    // with some basic behaviors (i.e. isNoop(), isIdentity() …). The Op class 
+    // holds an OpData and offers high-level behaviors such as op's combinations, 
+    // CPU processing and GPU code generator.
+    // 
+    // As the specialized Ops are private classes, operations between different 
+    // Op types could not all be done. A 'Read-only' access to the data part of 
+    // an Op allows to question its data, to cast to the specialized OpData 
+    // (to have finer knowledge) and to apply any optimization rules.
+    // 
+    // For example, one optimization is to remove from the color transformation 
+    // an identity Range (but still clamping) followed by any arbitrary LUT 1D 
+    // except if the LUT is a half domain one (i.e. the input domain is 
+    // all possible 16-bit floating-point values so there is not clamping). 
+    // It means that the methods Range::canCombineWith() and Range::combineWith() 
+    // have to question the LUT Op with a ‘not generic’ call (i.e. isInputHalfDomain()).
+    // 
+    // The design is to have a read-only access to the OpData of the Op, and
+    // the ability to cast in any specialized OpData classes.
+    // 
+    // In contrast to several file format readers which could only read 1D 
+    // and/or 3D LUT's, the CLF file format (i.e. Common LUT Format from ACES) 
+    // read a list of arbitrary ops. As the specialized Ops are private classes, 
+    // data must be stored in intermediate structures. The 1D and 3D LUT's 
+    // already having such a structure, all the other Ops need a dedicated one. 
+    // 
+    // The design is to avoid code duplication by using the OpData for the Op 
+    // and the Transform.
+    // 
+    class OpData
+    {
+    public:
+
+        // Enumeration of all possible operator types
+        enum Type
+        {
+            Lut1DType,        // A 1D LUT
+            Lut3DType,        // A 3D LUT
+            MatrixType,       // A matrix
+            LogType,          // A log
+            ExponentType,     // An exponent
+            RangeType,        // A range
+
+            NoOpType
+        };
+
+    public:
+        OpData(BitDepth inBitDepth, BitDepth outBitDepth);
+        OpData(const OpData& rhs);
+        OpData& operator=(const OpData& rhs);
+        virtual ~OpData();
+
+        inline BitDepth getInputBitDepth() const { return m_inBitDepth; }
+        virtual void setInputBitDepth(BitDepth in);
+
+        inline BitDepth getOutputBitDepth() const { return m_outBitDepth; }
+        virtual void setOutputBitDepth(BitDepth out);
+
+        virtual void validate() const;
+
+        virtual Type getType() const = 0;
+
+        // A "no-op" is an op where inBitDepth==outBitDepth 
+        // and isIdentity is true, therefore the output pixels
+        // will be unchanged.
+        virtual bool isNoOp() const;
+
+        // An identity is an op that only does bit-depth conversion
+        // and/or clamping.
+        // Each op will overload this with the appropriate calculation.
+        // An op where isIdentity() is true will typically be removed
+        // or replaced during the optimization process.
+        virtual bool isIdentity() const = 0;
+
+        // Determine whether the output of the op mixes R, G, B channels.
+        // For example, Rout = 5*Rin is channel independent, but Rout = Rin + Gin
+        // is not.  Note that the property may depend on the op parameters,
+        // so, e.g. MatrixOps may sometimes return true and other times false.
+        // returns true if the op's output does not combine input channels
+        virtual bool hasChannelCrosstalk() const = 0;
+
+        virtual bool operator==(const OpData& other) const;
+
+        virtual std::string getCacheID() const;
+
+    protected:           
+        virtual std::string finalize() const = 0;
+
+        mutable std::string m_cacheID;
+        mutable Mutex m_mutex;
+
+    private:
+        BitDepth m_inBitDepth;
+        BitDepth m_outBitDepth;
+    };
     
     class Op;
     typedef OCIO_SHARED_PTR<Op> OpRcPtr;
@@ -81,7 +214,9 @@ OCIO_NAMESPACE_ENTER
             // (Even no-ops may define Allocation though.)
             // This must be implemented in a manner where its valid to
             // call *prior* to finalize. (Optimizers may make use of it)
-            virtual bool isNoOp() const = 0;
+            virtual bool isNoOp() const { return m_data->isNoOp(); }
+
+            virtual bool isIdentity() const { return m_data->isIdentity(); }
             
             virtual bool isSameType(const OpRcPtr & op) const = 0;
             
@@ -97,7 +232,7 @@ OCIO_NAMESPACE_ENTER
             
             virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
             
-            virtual bool hasChannelCrosstalk() const = 0;
+            virtual bool hasChannelCrosstalk() const { return m_data->hasChannelCrosstalk(); }
             
             virtual void dumpMetadata(ProcessorMetadataRcPtr & /*metadata*/) const
             { }
@@ -123,23 +258,22 @@ OCIO_NAMESPACE_ENTER
             // Create & add the gpu shader information needed by the op
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const = 0;
 
-            virtual BitDepth getInputBitDepth() const;
-            virtual BitDepth getOutputBitDepth() const;
+            virtual BitDepth getInputBitDepth() const { return m_data->getInputBitDepth(); }
+            virtual BitDepth getOutputBitDepth() const { return m_data->getOutputBitDepth(); }
 
-            // To be implemented by each op to natively support 
-            // the input and output bit depths.
-            // For now, all ops are 32f by default.
-            virtual void setInputBitDepth(BitDepth /*bitdepth*/) {}
-            virtual void setOutputBitDepth(BitDepth /*bitdepth*/) {}
+            virtual void setInputBitDepth(BitDepth bitdepth) { m_data->setInputBitDepth(bitdepth); }
+            virtual void setOutputBitDepth(BitDepth bitdepth) { m_data->setOutputBitDepth(bitdepth); }
+
+            const OpDataRcPtr & data() const { return m_data; }
 
         protected:
             Op();
-            Op(BitDepth inputBitDepth, BitDepth outputBitDepth);
+            OpDataRcPtr & data() { return m_data; }
 
         private:
+            Op(const Op &);
             Op& operator= (const Op &);
-            BitDepth m_inputBitDepth;
-            BitDepth m_outputBitDepth;
+            OpDataRcPtr m_data;
     };
     
     std::ostream& operator<< (std::ostream&, const Op&);

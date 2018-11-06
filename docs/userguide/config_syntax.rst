@@ -45,11 +45,9 @@ Required.
 
 By convention, the profile starts with ``ocio_profile_version``.
 
-This is an integer, specifying which version of the OCIO config syntax
-is used.
+This is a string, specifying which version of the OCIO config syntax is used.
 
-Currently there is only one OCIO profile version, so the value is
-always ``1`` (one)
+The currently supported version strings are ``1`` and ``2``.
 
 .. code-block:: yaml
 
@@ -932,6 +930,26 @@ Keys:
 * ``matrix``
 * ``offset``
 * ``direction``
+
+
+``RangeTransform``
++++++++++++++++++++
+
+Applies an affine transform (scale & offset) and clamps values to min/max bounds.
+
+Keys:
+
+* ``minInValue``
+* ``maxInValue``
+* ``minOutValue``
+* ``maxOutValue``
+* ``direction``
+
+.. note::
+
+    If a minInValue is present, then minOutValue must also be present and the result 
+    is clamped at the low end. Similarly, if maxInValue is present, then maxOutValue 
+    must also be present and the result is clamped at the high end.
 
 
 ``TruelightTransform``

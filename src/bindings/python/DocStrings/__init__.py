@@ -24,3 +24,4 @@ from .GroupTransform import GroupTransform
 from .LogTransform import LogTransform
 from .LookTransform import LookTransform
 from .MatrixTransform import MatrixTransform
+from .RangeTransform import RangeTransform

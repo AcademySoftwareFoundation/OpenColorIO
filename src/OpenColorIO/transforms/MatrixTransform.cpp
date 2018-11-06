@@ -30,9 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "MathUtils.h"
 #include "OpBuilders.h"
 #include "ops/Matrix/MatrixOps.h"
-#include "MathUtils.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -47,17 +47,15 @@ OCIO_NAMESPACE_ENTER
         delete t;
     }
     
-    class MatrixTransform::Impl
+    class MatrixTransform::Impl : public MatrixOpData
     {
     public:
         TransformDirection dir_;
-        float matrix_[16];
-        float offset_[4];
         
         Impl() :
+            MatrixOpData(),
             dir_(TRANSFORM_DIR_FORWARD)
         {
-            Identity(matrix_, offset_);
         }
         
         ~Impl()
@@ -67,12 +65,14 @@ OCIO_NAMESPACE_ENTER
         {
             if (this != &rhs)
             {
+                MatrixOpData::operator=(rhs);
                 dir_ = rhs.dir_;
-                memcpy(matrix_, rhs.matrix_, 16 * sizeof(float));
-                memcpy(offset_, rhs.offset_, 4 * sizeof(float));
             }
             return *this;
         }
+
+    private:        
+        Impl(const Impl & rhs);
     };
     
     ///////////////////////////////////////////////////////////////////////////
@@ -116,14 +116,26 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void MatrixTransform::validate() const
+    {
+        Transform::validate();
+
+        // TODO: Uncomment in upcoming PR that contains the OpData validate.
+        //       getImpl()->data_->validate()
+        //       
+        //       OpData classes are the enhancement of some existing 
+        //       structures (like Lut1D and Lut3D) by encapsulating
+        //       all the data and adding high-level behaviors.
+    }
+
     bool MatrixTransform::equals(const MatrixTransform & other) const
     {
         const float abserror = 1e-9f;
         
         for(int i=0; i<16; ++i)
         {
-            if(!equalWithAbsError(getImpl()->matrix_[i],
-                other.getImpl()->matrix_[i], abserror))
+            if(!equalWithAbsError(getImpl()->m_m44[i],
+                other.getImpl()->m_m44[i], abserror))
             {
                 return false;
             }
@@ -131,8 +143,8 @@ OCIO_NAMESPACE_ENTER
         
         for(int i=0; i<4; ++i)
         {
-            if(!equalWithAbsError(getImpl()->offset_[i],
-                other.getImpl()->offset_[i], abserror))
+            if(!equalWithAbsError(getImpl()->m_offset4[i],
+                other.getImpl()->m_offset4[i], abserror))
             {
                 return false;
             }
@@ -143,34 +155,34 @@ OCIO_NAMESPACE_ENTER
     
     void MatrixTransform::getValue(float * m44, float * offset4) const
     {
-        if(m44) memcpy(m44, getImpl()->matrix_, 16*sizeof(float));
-        if(offset4) memcpy(offset4, getImpl()->offset_, 4*sizeof(float));
+        if(m44) memcpy(m44, getImpl()->m_m44, 16*sizeof(float));
+        if(offset4) memcpy(offset4, getImpl()->m_offset4, 4*sizeof(float));
     }
     
     void MatrixTransform::setValue(const float * m44, const float * offset4)
     {
-        if(m44) memcpy(getImpl()->matrix_, m44, 16*sizeof(float));
-        if(offset4) memcpy(getImpl()->offset_, offset4, 4*sizeof(float));
+        if(m44) memcpy(getImpl()->m_m44, m44, 16*sizeof(float));
+        if(offset4) memcpy(getImpl()->m_offset4, offset4, 4*sizeof(float));
     }
     
     void MatrixTransform::setMatrix(const float * m44)
     {
-        if(m44) memcpy(getImpl()->matrix_, m44, 16*sizeof(float));
+        if(m44) memcpy(getImpl()->m_m44, m44, 16*sizeof(float));
     }
     
     void MatrixTransform::getMatrix(float * m44) const
     {
-        if(m44) memcpy(m44, getImpl()->matrix_, 16*sizeof(float));
+        if(m44) memcpy(m44, getImpl()->m_m44, 16*sizeof(float));
     }
     
     void MatrixTransform::setOffset(const float * offset4)
     {
-        if(offset4) memcpy(getImpl()->offset_, offset4, 4*sizeof(float));
+        if(offset4) memcpy(getImpl()->m_offset4, offset4, 4*sizeof(float));
     }
     
     void MatrixTransform::getOffset(float * offset4) const
     {
-        if(offset4) memcpy(offset4, getImpl()->offset_, 4*sizeof(float));
+        if(offset4) memcpy(offset4, getImpl()->m_offset4, 4*sizeof(float));
     }
     
     /*
@@ -382,9 +394,6 @@ OCIO_NAMESPACE_ENTER
         os << ">";
         return os;
     }
-        TransformDirection dir_;
-        float matrix_[16];
-        float offset_[4];
         
     
     

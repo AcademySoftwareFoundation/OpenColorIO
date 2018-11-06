@@ -23,6 +23,7 @@ set(SOURCES
 	PyMatrixTransform.cpp
 	PyProcessor.cpp
 	PyProcessorMetadata.cpp
+	PyRangeTransform.cpp
 	PyTransform.cpp
 	PyUtil.cpp
 )
@@ -53,6 +54,13 @@ if(WIN32)
 	set_target_properties(PyOpenColorIO PROPERTIES
 		COMPILE_FLAGS "/wd4275"
 	)
+endif()
+
+if(NOT BUILD_SHARED_LIBS)
+    target_compile_definitions(PyOpenColorIO
+        PRIVATE
+        OpenColorIO_SKIP_IMPORTS
+    )
 endif()
 
 # OSX demands that the linker resolve all symbols at build time

@@ -172,23 +172,24 @@ OCIO_NAMESPACE_ENTER
     }
     
     void GetColorSpaceReferences(std::set<std::string> & colorSpaceNames,
-                                 const ConstTransformRcPtr & transform)
+                                 const ConstTransformRcPtr & transform,
+                                 const ConstContextRcPtr & context)
     {
         if(!transform) return;
-        
+
         if(ConstGroupTransformRcPtr groupTransform = \
             DynamicPtrCast<const GroupTransform>(transform))
         {
             for(int i=0; i<groupTransform->size(); ++i)
             {
-                GetColorSpaceReferences(colorSpaceNames, groupTransform->getTransform(i));
+                GetColorSpaceReferences(colorSpaceNames, groupTransform->getTransform(i), context);
             }
         }
         else if(ConstColorSpaceTransformRcPtr colorSpaceTransform = \
             DynamicPtrCast<const ColorSpaceTransform>(transform))
         {
-            colorSpaceNames.insert(colorSpaceTransform->getSrc());
-            colorSpaceNames.insert(colorSpaceTransform->getDst());
+            colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getSrc()));
+            colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getDst()));
         }
         else if(ConstDisplayTransformRcPtr displayTransform = \
             DynamicPtrCast<const DisplayTransform>(transform))
@@ -198,8 +199,8 @@ OCIO_NAMESPACE_ENTER
         else if(ConstLookTransformRcPtr lookTransform = \
             DynamicPtrCast<const LookTransform>(transform))
         {
-            colorSpaceNames.insert(colorSpaceTransform->getSrc());
-            colorSpaceNames.insert(colorSpaceTransform->getDst());
+            colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getSrc()));
+            colorSpaceNames.insert(context->resolveStringVar(colorSpaceTransform->getDst()));
         }
     }
     
@@ -210,7 +211,8 @@ OCIO_NAMESPACE_ENTER
     {
         if(csname.empty()) return false;
         
-        std::string csnamelower = pystring::lower(csname);
+        const std::string csnamelower = pystring::lower(csname);
+
         for(unsigned int i = 0; i < colorspaces.size(); ++i)
         {
             if(csnamelower == pystring::lower(colorspaces[i]->getName()))
@@ -225,9 +227,14 @@ OCIO_NAMESPACE_ENTER
         
     } // namespace
     
+    static const unsigned FirstSupportedMajorVersion_ = 1;
+    static const unsigned LastSupportedMajorVersion_  = 2;
+
     class Config::Impl
     {
     public:
+        unsigned int majorVersion_;
+        unsigned int minorVersion_;
         StringMap env_;
         ContextRcPtr context_;
         std::string description_;
@@ -259,6 +266,8 @@ OCIO_NAMESPACE_ENTER
         OCIOYaml io_;
         
         Impl() : 
+            majorVersion_(FirstSupportedMajorVersion_),
+            minorVersion_(0),
             context_(Context::Create()),
             strictParsing_(true),
             sanity_(SANITY_UNKNOWN)
@@ -286,6 +295,9 @@ OCIO_NAMESPACE_ENTER
         {
             if(this!=&rhs)
             {
+                majorVersion_ = rhs.majorVersion_;
+                minorVersion_ = rhs.minorVersion_;
+
                 env_ = rhs.env_;
                 context_ = rhs.context_->createEditableCopy();
                 description_ = rhs.description_;
@@ -410,6 +422,38 @@ OCIO_NAMESPACE_ENTER
         m_impl = NULL;
     }
     
+    unsigned Config::getMajorVersion() const
+    {
+        return m_impl->majorVersion_;
+    }
+
+    void Config::setMajorVersion(unsigned int version)
+    {
+        if(version <  FirstSupportedMajorVersion_
+            || version >  LastSupportedMajorVersion_)
+        {
+            std::ostringstream os;
+             os << "The version is " << version 
+                << " where supported versions start at " 
+                << FirstSupportedMajorVersion_
+                << " and end at "
+                << LastSupportedMajorVersion_
+                << ".";
+             throw Exception(os.str().c_str());
+        }
+         m_impl->majorVersion_ = version;
+    }
+
+    unsigned Config::getMinorVersion() const
+    {
+        return m_impl->minorVersion_;
+    }
+
+    void Config::setMinorVersion(unsigned int version)
+    {
+         m_impl->minorVersion_ = version;
+    }
+
     ConfigRcPtr Config::createEditableCopy() const
     {
         ConfigRcPtr config = Config::Create();
@@ -427,8 +471,7 @@ OCIO_NAMESPACE_ENTER
         
         getImpl()->sanity_ = SANITY_INSANE;
         getImpl()->sanitytext_ = "";
-        
-        
+
         ///// COLORSPACES
         StringSet existingColorSpaces;
         
@@ -465,7 +508,21 @@ OCIO_NAMESPACE_ENTER
                 getImpl()->sanitytext_ = os.str();
                 throw Exception(getImpl()->sanitytext_.c_str());
             }
-            
+
+            ConstTransformRcPtr toTrans 
+                = getImpl()->colorspaces_[i]->getTransform(COLORSPACE_DIR_TO_REFERENCE);
+            if (toTrans)
+            {
+                toTrans->validate();
+            }
+
+            ConstTransformRcPtr fromTrans 
+                = getImpl()->colorspaces_[i]->getTransform(COLORSPACE_DIR_FROM_REFERENCE);
+            if (fromTrans)
+            {
+                fromTrans->validate();
+            }
+
             existingColorSpaces.insert(namelower);
         }
         
@@ -586,15 +643,18 @@ OCIO_NAMESPACE_ENTER
         }
         
         // Confirm for all Transforms that reference internal colorspaces,
-        // the named space exists
+        // the named space exists and that all Transforms are valid.
         {
             ConstTransformVec allTransforms;
             getImpl()->getAllIntenalTransforms(allTransforms);
             
             std::set<std::string> colorSpaceNames;
-            for(unsigned int i=0; i<colorSpaceNames.size(); ++i)
+            for(unsigned int i=0; i<allTransforms.size(); ++i)
             {
-                GetColorSpaceReferences(colorSpaceNames, allTransforms[i]);
+                allTransforms[i]->validate();
+
+                ConstContextRcPtr context = getCurrentContext();       
+                GetColorSpaceReferences(colorSpaceNames, allTransforms[i], context);
             }
             
             for(std::set<std::string>::iterator iter = colorSpaceNames.begin();
@@ -652,9 +712,15 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(getImpl()->sanitytext_.c_str());
             }
         }
-        
-        
-        
+
+        // Validate all transforms
+        ConstTransformVec allTransforms;
+        getImpl()->getAllIntenalTransforms(allTransforms);
+         for (unsigned int i = 0; i<allTransforms.size(); ++i)
+        {
+            allTransforms[i]->validate();
+        }
+
         // Everything is groovy.
         getImpl()->sanity_ = SANITY_SANE;
     }
@@ -2021,28 +2087,54 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
         "    bitdepth: unknown\n"
         "    isdata: false\n"
         "    allocation: uniform\n"
-        "    allocationvars: [-0.125, 1.125]\n"
-        "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $CAMERARAW}\n";
+        "    allocationvars: [-0.125, 1.125]\n";
 
 
     {
         // Test when the env. variable is missing
 
+        const std::string 
+            myConfigStr = MY_OCIO_CONFIG
+                + "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $MISSING_ENV}\n";
+
         std::istringstream is;
-        is.str(MY_OCIO_CONFIG);
+        is.str(myConfigStr);
 
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
+        OIIO_CHECK_THROW(config->sanityCheck(), OCIO::Exception);
         OIIO_CHECK_THROW(config->getProcessor("raw", "lgh"), OCIO::Exception);
     }
 
     {
-        const std::string env("CAMERARAW=lnh");
+        // Test when the env. variable exists but its content is wrong
+        const std::string env("OCIO_TEST=FaultyColorSpaceName");
         putenv(const_cast<char*>(env.c_str()));
 
+        const std::string 
+            myConfigStr = MY_OCIO_CONFIG
+                + "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $OCIO_TEST}\n";
+
         std::istringstream is;
-        is.str(MY_OCIO_CONFIG);
+        is.str(myConfigStr);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW(config->sanityCheck(), OCIO::Exception);
+        OIIO_CHECK_THROW(config->getProcessor("raw", "lgh"), OCIO::Exception);
+    }
+
+    {
+        // Test when the env. variable exists and its content is right
+        const std::string env("OCIO_TEST=lnh");
+        putenv(const_cast<char*>(env.c_str()));
+
+        const std::string 
+            myConfigStr = MY_OCIO_CONFIG
+                + "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $OCIO_TEST}\n";
+
+        std::istringstream is;
+        is.str(myConfigStr);
 
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
@@ -2051,25 +2143,16 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
     }
 
     {
-        // Test when the env. variable content is wrong
-
-        const std::string env("CAMERARAW=FaultyColorSpaceName");
+        // Check that the serialization preserves the env. variable
+        const std::string env("OCIO_TEST=lnh");
         putenv(const_cast<char*>(env.c_str()));
 
-        std::istringstream is;
-        is.str(MY_OCIO_CONFIG);
-
-        OCIO::ConstConfigRcPtr config;
-        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
-        OIIO_CHECK_NO_THROW(config->sanityCheck());
-        OIIO_CHECK_THROW(config->getProcessor("raw", "lgh"), OCIO::Exception);
-    }
-
-    {
-        // Check that the serialization preserves the env. variable
+        const std::string 
+            myConfigStr = MY_OCIO_CONFIG
+                + "    from_reference: !<ColorSpaceTransform> {src: raw, dst: $OCIO_TEST}\n";
 
         std::istringstream is;
-        is.str(MY_OCIO_CONFIG);
+        is.str(myConfigStr);
 
         OCIO::ConstConfigRcPtr config;
         OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
@@ -2077,8 +2160,331 @@ OIIO_ADD_TEST(Config, Env_colorspace_name)
 
         std::stringstream ss;
         ss << *config.get();
-        OIIO_CHECK_EQUAL(ss.str(), MY_OCIO_CONFIG);
+        OIIO_CHECK_EQUAL(ss.str(), myConfigStr);
     }
+}
+
+OIIO_ADD_TEST(Config, Version)
+{
+    const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 2\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "      name: raw\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConfigRcPtr config;
+    OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is)->createEditableCopy());
+    
+    OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+    OIIO_CHECK_NO_THROW(config->setMajorVersion(1));
+    OIIO_CHECK_THROW(config->setMajorVersion(20000), OCIO::Exception);
+
+    {
+        OIIO_CHECK_NO_THROW(config->setMinorVersion(2));
+        OIIO_CHECK_NO_THROW(config->setMinorVersion(20));
+
+        std::stringstream ss;
+        ss << *config.get();   
+        OCIO::pystring::startswith(
+            OCIO::pystring::lower(ss.str()), "ocio_profile_version: 2.20");
+    }
+
+    {
+        OIIO_CHECK_NO_THROW(config->setMinorVersion(0));
+
+        std::stringstream ss;
+        ss << *config.get();   
+        OCIO::pystring::startswith(
+            OCIO::pystring::lower(ss.str()), "ocio_profile_version: 2");
+    }
+
+    {
+        OIIO_CHECK_NO_THROW(config->setMinorVersion(1));
+
+        std::stringstream ss;
+        ss << *config.get();   
+        OCIO::pystring::startswith(
+            OCIO::pystring::lower(ss.str()), "ocio_profile_version: 1");
+    }
+}
+
+OIIO_ADD_TEST(Config, Version_faulty_1)
+{
+    const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 2.0.1\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "      name: raw\n"
+        "strictparsing: false\n"
+        "roles:\n"
+        "  default: raw\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "  - !<View> {name: Raw, colorspace: raw}\n"
+        "\n";
+    
+    std::istringstream is;
+    is.str(SIMPLE_PROFILE);
+    OCIO::ConstConfigRcPtr config;
+    OIIO_CHECK_THROW(config = OCIO::Config::CreateFromStream(is), OCIO::Exception);
+}
+
+OIIO_ADD_TEST(Config, Range)
+{
+    const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 1\n"
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: lnh\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: lnh\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> "
+            "{minInValue: 0, maxOutValue: 1}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(), 
+                              OCIO::Exception, 
+                              "must be both set or both missing");
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // maxInValue has 2 values, only the first one is read.
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "maxInValue: 1.05  10, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string strEndSaved =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string strSaved = SIMPLE_PROFILE + strEndSaved;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        // Re-serialize and test that it matches the expected text.
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), strSaved);
+    }
+
+    {
+        // maxInValue & maxOutValue have no value, they will not be defined.
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "maxInValue: , minOutValue: 0.0009, maxOutValue: }\n";
+        const std::string strEndSaved =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "minOutValue: 0.0009}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string strSaved = SIMPLE_PROFILE + strEndSaved;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        // Re-serialize and test that it matches the expected text.
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), strSaved);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> "
+            "{minInValue: 0.12345678901234, maxOutValue: 1.23456789012345}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(),
+            OCIO::Exception,
+            "must be both set or both missing");
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        // Re-serialize and test that it matches the original text.
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minOutValue: 0.0009, "
+            "maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(),
+                              OCIO::Exception,
+                              "must be both set or both missing");
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<RangeTransform> {minInValue: -0.01, maxInValue: 1.05, "
+            "minOutValue: 0.0009, maxOutValue: 2.5}\n"
+            "        - !<RangeTransform> {minOutValue: 0.0009, maxOutValue: 2.1}\n"
+            "        - !<RangeTransform> {minOutValue: 0.1, maxOutValue: 0.9}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(),
+                              OCIO::Exception,
+                              "must be both set or both missing");
+
+        // Re-serialize and test that it matches the original text.
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    // Some faulty cases
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            // missing { (and mInValue is wrong -> that's a warning)
+            "        - !<RangeTransform> mInValue: -0.01, maxInValue: 1.05, "
+            "minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "Loading the OCIO profile failed");
+    }
+
+    {
+        const std::string strEnd =
+            // The comma is missing after the minInValue value.
+            "    from_reference: !<RangeTransform> {minInValue: -0.01 "
+            "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "Loading the OCIO profile failed");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            // The comma is missing between the minOutValue value and
+            // the maxOutValue tag.
+            "maxInValue: 1.05, minOutValue: 0.0009maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "Loading the OCIO profile failed");
+    }
+
 }
 
 #endif // OCIO_UNIT_TEST

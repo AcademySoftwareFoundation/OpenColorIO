@@ -44,15 +44,16 @@ class TransformsTest(unittest.TestCase):
 
         ### CDLTransform ###
         cdl = OCIO.CDLTransform()
-        CC = "<ColorCorrection id=\"foo\">"
-        CC += "<SOPNode>"
-        CC += "<Description>this is a descipt</Description>"
-        CC += "<Slope>1.1 1.2 1.3</Slope><Offset>2.1 2.2 2.3</Offset>"
-        CC += "<Power>3.1 3.2 3.3</Power>"
-        CC += "</SOPNode>"
-        CC += "<SatNode>"
-        CC += "<Saturation>0.7</Saturation>"
-        CC += "</SatNode>"
+        CC = "<ColorCorrection id=\"foo\">\n"
+        CC += "    <SOPNode>\n"
+        CC += "        <Description>this is a description</Description>\n"
+        CC += "        <Slope>1.1 1.2 1.3</Slope>\n"
+        CC += "        <Offset>2.1 2.2 2.3</Offset>\n"
+        CC += "        <Power>3.1 3.2 3.3</Power>\n"
+        CC += "    </SOPNode>\n"
+        CC += "    <SatNode>\n"
+        CC += "        <Saturation>0.7</Saturation>\n"
+        CC += "    </SatNode>\n"
         CC += "</ColorCorrection>"
         # Don't want to deal with getting the correct path so this runs
         #cdlfile = OCIO.CDLTransform().CreateFromFile("../OpenColorIO/src/jniglue/tests/org/OpenColorIO/test.cc", "foo")
@@ -66,16 +67,17 @@ class TransformsTest(unittest.TestCase):
         cdl.setOffset([1.1, 1.2, 1.3])
         cdl.setPower([2.1, 2.2, 2.3])
         cdl.setSat(0.5)
-        CC2 = "<ColorCorrection id=\"foo\">"
-        CC2 += "<SOPNode>"
-        CC2 += "<Description>this is a descipt</Description>"
-        CC2 += "<Slope>0.1 0.2 0.3</Slope>"
-        CC2 += "<Offset>1.1 1.2 1.3</Offset>"
-        CC2 += "<Power>2.1 2.2 2.3</Power>"
-        CC2 += "</SOPNode>"
-        CC2 += "<SatNode>"
-        CC2 += "<Saturation>0.5</Saturation>"
-        CC2 += "</SatNode>""</ColorCorrection>"
+        CC2 = "<ColorCorrection id=\"foo\">\n"
+        CC2 += "    <SOPNode>\n"
+        CC2 += "        <Description>this is a description</Description>\n"
+        CC2 += "        <Slope>0.1 0.2 0.3</Slope>\n"
+        CC2 += "        <Offset>1.1 1.2 1.3</Offset>\n"
+        CC2 += "        <Power>2.1 2.2 2.3</Power>\n"
+        CC2 += "    </SOPNode>\n"
+        CC2 += "    <SatNode>\n"
+        CC2 += "        <Saturation>0.5</Saturation>\n"
+        CC2 += "    </SatNode>\n"
+        CC2 += "</ColorCorrection>"
         self.assertEqual(CC2, cdl.getXML())
         cdl.setSOP([1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9])
         newsop = cdl.getSOP()

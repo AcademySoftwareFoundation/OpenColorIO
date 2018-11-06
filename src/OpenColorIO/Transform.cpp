@@ -32,13 +32,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Processor.h"
 
 #include <sstream>
+#include <typeinfo>
 
 OCIO_NAMESPACE_ENTER
 {
     Transform::~Transform()
     { }
-    
-    
+
+    void Transform::validate() const
+    { 
+        if (getDirection() != TRANSFORM_DIR_FORWARD
+            && getDirection() != TRANSFORM_DIR_INVERSE)
+        {
+            std::string err(typeid(*this).name());
+            err += ": invalid direction";
+
+            throw Exception(err.c_str());
+        }
+    }
+
     void BuildOps(OpRcPtrVec & ops,
                   const Config & config,
                   const ConstContextRcPtr & context,
@@ -99,6 +111,11 @@ OCIO_NAMESPACE_ENTER
         {
             BuildMatrixOps(ops, config, *matrixTransform, dir);
         }
+        else if(ConstRangeTransformRcPtr rangeTransform = \
+            DynamicPtrCast<const RangeTransform>(transform))
+        {
+            BuildRangeOps(ops, config, *rangeTransform, dir);
+        }
         else if(ConstTruelightTransformRcPtr truelightTransform = \
             DynamicPtrCast<const TruelightTransform>(transform))
         {
@@ -106,9 +123,11 @@ OCIO_NAMESPACE_ENTER
         }
         else
         {
-            std::ostringstream os;
-            os << "Unknown transform type for Op Creation.";
-            throw Exception(os.str().c_str());
+            std::ostringstream error;
+            error << "Unknown transform type for creation: "
+                  << typeid(transform).name();
+
+            throw Exception(error.str().c_str());
         }
     }
     
@@ -166,6 +185,11 @@ OCIO_NAMESPACE_ENTER
         {
             os << *matrixTransform;
         }
+        else if(const RangeTransform * rangeTransform = \
+            dynamic_cast<const RangeTransform*>(t))
+        {
+            os << *rangeTransform;
+        }
         else if(const TruelightTransform * truelightTransform = \
             dynamic_cast<const TruelightTransform*>(t))
         {
@@ -174,8 +198,11 @@ OCIO_NAMESPACE_ENTER
         else
         {
             std::ostringstream error;
-            os << "Unknown transform type for serialization.";
+            error << "Unknown transform type for serialization: "
+                  << typeid(transform).name();
+
             throw Exception(error.str().c_str());
+
         }
         
         return os;

@@ -60,11 +60,11 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile()
             {
-                lut = Lut3D::Create();
+                lut = Lut3DOpData::Create();
             };
             ~LocalCachedFile() {};
             
-            Lut3DRcPtr lut;
+            Lut3DOpDataRcPtr lut;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -109,7 +109,7 @@ OCIO_NAMESPACE_ENTER
             const int MAX_LINE_SIZE = 4096;
             char lineBuffer[MAX_LINE_SIZE];
 
-            Lut3DRcPtr lut3d = Lut3D::Create();
+            Lut3DOpDataRcPtr lut3d = Lut3DOpData::Create();
 
             // Read header information
             istream.getline(lineBuffer, MAX_LINE_SIZE);

@@ -33,31 +33,79 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "HashUtils.h"
 #include "ExponentOps.h"
 #include "GpuShaderUtils.h"
 #include "MathUtils.h"
 
 OCIO_NAMESPACE_ENTER
 {
+    namespace DefaultValues
+    {
+        const int FLOAT_DECIMALS = 7;
+    }
+
+    ExponentOpData::ExponentOpData()
+        :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    {
+        for(unsigned i=0; i<4; ++i)
+        {
+            m_exp4[i] = 1.0;
+        }
+    }
+
+    ExponentOpData::ExponentOpData(const double * exp4)
+        :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    {
+        memcpy(m_exp4, exp4, 4*sizeof(double)); 
+    }
+
+    ExponentOpData & ExponentOpData::operator = (const ExponentOpData & rhs)
+    {
+        if(this!=&rhs)
+        {
+            memcpy(m_exp4, rhs.m_exp4, sizeof(double)*4);
+        }
+
+        return *this;
+    }
+
+    bool ExponentOpData::isIdentity() const
+    {
+        return IsVecEqualToOneFlt(m_exp4, 4);
+    }
+
+    std::string ExponentOpData::finalize() const
+    {
+        std::ostringstream cacheIDStream;
+        cacheIDStream << "<ExponentOpData ";
+        cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
+        for(int i=0; i<4; ++i)
+        {
+            cacheIDStream << m_exp4[i] << " ";
+        }
+
+        return cacheIDStream.str();
+    }
+
+
     namespace
     {
         void ApplyClampExponent(float* rgbaBuffer, long numPixels,
-                                const float* exp4)
+                                const ExponentOpDataRcPtr & exp)
         {
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
-                rgbaBuffer[0] = powf( std::max(0.0f, rgbaBuffer[0]), exp4[0]);
-                rgbaBuffer[1] = powf( std::max(0.0f, rgbaBuffer[1]), exp4[1]);
-                rgbaBuffer[2] = powf( std::max(0.0f, rgbaBuffer[2]), exp4[2]);
-                rgbaBuffer[3] = powf( std::max(0.0f, rgbaBuffer[3]), exp4[3]);
+                rgbaBuffer[0] = powf( std::max(0.0f, rgbaBuffer[0]), float(exp->m_exp4[0]));
+                rgbaBuffer[1] = powf( std::max(0.0f, rgbaBuffer[1]), float(exp->m_exp4[1]));
+                rgbaBuffer[2] = powf( std::max(0.0f, rgbaBuffer[2]), float(exp->m_exp4[2]));
+                rgbaBuffer[3] = powf( std::max(0.0f, rgbaBuffer[3]), float(exp->m_exp4[3]));
                 rgbaBuffer += 4;
             }
         }
-        
-        const int FLOAT_DECIMALS = 7;
     }
     
-    
+   
     namespace
     {
         class ExponentOp : public Op
@@ -72,22 +120,22 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const;
             virtual std::string getCacheID() const;
             
-            virtual bool isNoOp() const;
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
             
             virtual bool canCombineWith(const OpRcPtr & op) const;
             virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
             
-            virtual bool hasChannelCrosstalk() const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
-        private:
-            double m_exp4[4];
+        protected:
+            ExponentOpDataRcPtr exp() { return DynamicPtrCast<ExponentOpData>(data()); }
+            const ExponentOpDataRcPtr exp() const { return DynamicPtrCast<ExponentOpData>(data()); }
 
+        private:
             // Set in finalize
             std::string m_cacheID;
         };
@@ -106,27 +154,31 @@ OCIO_NAMESPACE_ENTER
             
             if(direction == TRANSFORM_DIR_INVERSE)
             {
+                double values[4];
+
                 for(int i=0; i<4; ++i)
                 {
                     if(!IsScalarEqualToZeroFlt(exp4[i]))
                     {
-                        m_exp4[i] = 1.0 / exp4[i];
+                        values[i] = 1.0 / exp4[i];
                     }
                     else
                     {
                         throw Exception("Cannot apply ExponentOp op, Cannot apply 0.0 exponent in the inverse.");
                     }
                 }
+
+                data().reset(new ExponentOpData(values));
             }
             else
             {
-                memcpy(m_exp4, exp4, 4*sizeof(double));
+                data().reset(new ExponentOpData(exp4));
             }
         }
         
         OpRcPtr ExponentOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new ExponentOp(m_exp4, TRANSFORM_DIR_FORWARD));
+            OpRcPtr op = OpRcPtr(new ExponentOp(exp()->m_exp4, TRANSFORM_DIR_FORWARD));
             return op;
         }
         
@@ -143,11 +195,6 @@ OCIO_NAMESPACE_ENTER
             return m_cacheID;
         }
         
-        bool ExponentOp::isNoOp() const
-        {
-            return IsVecEqualToOneFlt(m_exp4, 4);
-        }
-
         bool ExponentOp::isSameType(const OpRcPtr & op) const
         {
             ExponentOpRcPtr typedRcPtr = DynamicPtrCast<ExponentOp>(op);
@@ -160,10 +207,10 @@ OCIO_NAMESPACE_ENTER
             ExponentOpRcPtr typedRcPtr = DynamicPtrCast<ExponentOp>(op);
             if(!typedRcPtr) return false;
             
-            double combined[4] = { m_exp4[0]*typedRcPtr->m_exp4[0],
-                                   m_exp4[1]*typedRcPtr->m_exp4[1],
-                                   m_exp4[2]*typedRcPtr->m_exp4[2],
-                                   m_exp4[3]*typedRcPtr->m_exp4[3] };
+            double combined[4] = { exp()->m_exp4[0]*typedRcPtr->exp()->m_exp4[0],
+                                   exp()->m_exp4[1]*typedRcPtr->exp()->m_exp4[1],
+                                   exp()->m_exp4[2]*typedRcPtr->exp()->m_exp4[2],
+                                   exp()->m_exp4[3]*typedRcPtr->exp()->m_exp4[3] };
             
             return IsVecEqualToOneFlt(combined, 4);
         }
@@ -184,10 +231,10 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            double combined[4] = { m_exp4[0]*typedRcPtr->m_exp4[0],
-                                   m_exp4[1]*typedRcPtr->m_exp4[1],
-                                   m_exp4[2]*typedRcPtr->m_exp4[2],
-                                   m_exp4[3]*typedRcPtr->m_exp4[3] };
+            double combined[4] = { exp()->m_exp4[0]*typedRcPtr->exp()->m_exp4[0],
+                                   exp()->m_exp4[1]*typedRcPtr->exp()->m_exp4[1],
+                                   exp()->m_exp4[2]*typedRcPtr->exp()->m_exp4[2],
+                                   exp()->m_exp4[3]*typedRcPtr->exp()->m_exp4[3] };
 
             if(!IsVecEqualToOneFlt(combined, 4))
             {
@@ -197,21 +244,12 @@ OCIO_NAMESPACE_ENTER
             }
         }
 
-        bool ExponentOp::hasChannelCrosstalk() const
-        {
-            return false;
-        }
-        
         void ExponentOp::finalize()
         {
             // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<ExponentOp ";
-            cacheIDStream.precision(FLOAT_DECIMALS);
-            for(int i=0; i<4; ++i)
-            {
-                cacheIDStream << m_exp4[i] << " ";
-            }
+            cacheIDStream << exp()->getCacheID() << " ";
             cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
             cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
@@ -221,9 +259,7 @@ OCIO_NAMESPACE_ENTER
         void ExponentOp::apply(float* rgbaBuffer, long numPixels) const
         {
             if(!rgbaBuffer) return;
-            float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
-                float(m_exp4[2]), float(m_exp4[3]) };
-            ApplyClampExponent(rgbaBuffer, numPixels, exp);
+            ApplyClampExponent(rgbaBuffer, numPixels, exp());
         }
         
         void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const 
@@ -233,9 +269,6 @@ OCIO_NAMESPACE_ENTER
             {
                 throw Exception("Only 32F bit depth is supported for the GPU shader");
             }
-
-            const float exp[4] = { float(m_exp4[0]), float(m_exp4[1]),
-                                   float(m_exp4[2]), float(m_exp4[3]) };
 
             GpuShaderText ss(shaderDesc->getLanguage());
             ss.indent();
@@ -247,7 +280,8 @@ OCIO_NAMESPACE_ENTER
                 << " = pow( "
                 << "max( " << shaderDesc->getPixelName() 
                 << ", " << ss.vec4fConst(0.0f) << " )"
-                << ", " << ss.vec4fConst(exp[0], exp[1], exp[2], exp[3]) << " );";
+                << ", " << ss.vec4fConst(exp()->m_exp4[0], exp()->m_exp4[1], 
+                                         exp()->m_exp4[2], exp()->m_exp4[3]) << " );";
 
             shaderDesc->addToFunctionShaderCode(ss.string().c_str());
         }

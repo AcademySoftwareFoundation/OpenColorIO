@@ -123,6 +123,16 @@ OCIO_NAMESPACE_ENTER
         getImpl()->dir_ = dir;
     }
     
+    void GroupTransform::validate() const
+    {
+        Transform::validate();
+
+        for (int i = 0; i<size(); ++i)
+        {
+            getTransform(i)->validate();
+        }
+    }
+
     int GroupTransform::size() const
     {
         return static_cast<int>(getImpl()->vec_.size());
