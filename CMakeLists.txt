@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
-project(OpenColorIO VERSION 2.0.0)
+
+project(OpenColorIO 
+	VERSION 2.0.0
+	HOMEPAGE_URL http://opencolorio.org/
+	LANGUAGES CXX C)
+
+# "dev" for master or "" for any official release
+set(OpenColorIO_VERSION_RELEASE_TYPE "dev")
+
 enable_testing()
 
 set(CMAKE_CXX_STANDARD 11)
@@ -41,7 +49,7 @@ option(USE_EXTERNAL_LCMS "Use system install lcms2 library." OFF)
 # Versioning
 
 if(NOT SOVERSION)
-	set(SOVERSION "${OpenColorIO_VERSION_MAJOR}_${OpenColorIO_VERSION_MINOR}" CACHE STRING "Set the SO version in the SO name of the output library")
+	set(SOVERSION "${OpenColorIO_VERSION_MAJOR}.${OpenColorIO_VERSION_MINOR}" CACHE STRING "Set the SO version in the SO name of the output library")
 endif()
 
 ###############################################################################
