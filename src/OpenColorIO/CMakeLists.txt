@@ -120,8 +120,12 @@ if(MSVC)
 	set_target_properties(OpenColorIO PROPERTIES COMPILE_FLAGS "/wd4275")
 endif()
 
+set_target_properties(OpenColorIO PROPERTIES
+    VERSION ${OpenColorIO_VERSION}
+    SOVERSION ${SOVERSION})
+
 install(TARGETS OpenColorIO
 	LIBRARY DESTINATION lib
-	RUNTIME DESTINATION lib
+	RUNTIME DESTINATION bin
 	ARCHIVE DESTINATION lib
 )
