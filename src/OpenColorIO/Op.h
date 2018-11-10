@@ -264,7 +264,7 @@ OCIO_NAMESPACE_ENTER
             virtual void setInputBitDepth(BitDepth bitdepth) { m_data->setInputBitDepth(bitdepth); }
             virtual void setOutputBitDepth(BitDepth bitdepth) { m_data->setOutputBitDepth(bitdepth); }
 
-            const OpDataRcPtr & data() const { return m_data; }
+            const OpDataRcPtr & const_data() const { return m_data; }
 
         protected:
             Op();

@@ -8,10 +8,15 @@ class RangeTransformTest(unittest.TestCase):
     def test_interface(self):
 
         rt = OCIO.RangeTransform()
+        self.assertEqual(rt.getStyle(), "Clamp")
         self.assertEqual(rt.hasMinInValue(), False)
         self.assertEqual(rt.hasMaxInValue(), False)
         self.assertEqual(rt.hasMinOutValue(), False)
         self.assertEqual(rt.hasMaxOutValue(), False)
+
+        rt.setStyle("noClamp")
+        self.assertEqual(rt.getStyle(), "noClamp")
+        rt.setStyle("Clamp")
 
         rt.setMinInValue(0.12301234)
         self.assertEqual(0.12301234, rt.getMinInValue())

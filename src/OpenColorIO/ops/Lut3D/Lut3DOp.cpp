@@ -594,8 +594,7 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
         protected:
-            Lut3DOpDataRcPtr lut() { return DynamicPtrCast<Lut3DOpData>(data()); }
-            const Lut3DOpDataRcPtr lut() const { return DynamicPtrCast<Lut3DOpData>(data()); }
+            const Lut3DOpDataRcPtr lut() const { return DynamicPtrCast<Lut3DOpData>(const_data()); }
 
         private:
             Interpolation m_interpolation;

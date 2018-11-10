@@ -55,23 +55,35 @@ class RangeTransform::Impl : public RangeOpData
 public:
     Impl() 
         :   RangeOpData()
-        ,   m_direction(TRANSFORM_DIR_FORWARD) 
+        ,   m_direction(TRANSFORM_DIR_FORWARD)
+        ,   m_style(RANGE_CLAMP)
     {
     }
 
     ~Impl() {}
 
-    Impl& operator= (const Impl & rhs)
+    Impl& operator=(const Impl & rhs)
     {
         if(this!=&rhs)
         {
             RangeOpData::operator=(rhs);
-            m_direction = rhs.m_direction;
+            m_direction  = rhs.m_direction;
+            m_style      = rhs.m_style;
         }
         return *this;
     }
 
+    bool equals(const Impl & rhs) const
+    {
+        if(this==&rhs) return true;
+
+        return RangeOpData::operator==(rhs)
+            && m_direction == rhs.m_direction
+            && m_style     == rhs.m_style;
+    }
+
     TransformDirection m_direction;
+    RangeStyle         m_style;
 
 private:
     Impl(const Impl&);
@@ -118,6 +130,16 @@ void RangeTransform::setDirection(TransformDirection dir)
     getImpl()->m_direction = dir;
 }
 
+RangeStyle RangeTransform::getStyle() const
+{
+    return getImpl()->m_style;
+}
+
+void RangeTransform::setStyle(RangeStyle style)
+{
+    getImpl()->m_style = style;
+}
+
 void RangeTransform::validate() const
 {
     Transform::validate();
@@ -126,8 +148,7 @@ void RangeTransform::validate() const
 
 bool RangeTransform::equals(const RangeTransform & other) const
 {
-    return *(getImpl()) == *(other.getImpl())
-        && getImpl()->m_direction == other.getImpl()->m_direction;
+    return getImpl()->equals(*other.getImpl());
 }
 
 void RangeTransform::setMinInValue(double val)
@@ -218,10 +239,11 @@ std::ostream& operator<< (std::ostream& os, const RangeTransform& t)
 {
     os << "<RangeTransform ";
     os << "direction=" << TransformDirectionToString(t.getDirection());
-    if(t.hasMinInValue())  os << ", " << "minInValue="  << t.getMinInValue();
-    if(t.hasMaxInValue())  os << ", " << "maxInValue="  << t.getMaxInValue();
-    if(t.hasMinOutValue()) os << ", " << "minOutValue=" << t.getMinOutValue();
-    if(t.hasMaxOutValue()) os << ", " << "maxOutValue=" << t.getMaxOutValue();
+    if(t.getStyle()!=RANGE_CLAMP) os << ", style="       << RangeStyleToString(t.getStyle());
+    if(t.hasMinInValue())         os << ", minInValue="  << t.getMinInValue();
+    if(t.hasMaxInValue())         os << ", maxInValue="  << t.getMaxInValue();
+    if(t.hasMinOutValue())        os << ", minOutValue=" << t.getMinOutValue();
+    if(t.hasMaxOutValue())        os << ", maxOutValue=" << t.getMaxOutValue();
     os << ">";
     return os;
 }
@@ -238,10 +260,22 @@ void BuildRangeOps(OpRcPtrVec & ops,
     const TransformDirection combinedDir 
         = CombineTransformDirections(dir, transform.getDirection());
 
-    CreateRangeOp(ops, 
-                  transform.getMinInValue(), transform.getMaxInValue(), 
-                  transform.getMinOutValue(), transform.getMaxOutValue(),
-                  combinedDir);
+    if(transform.getStyle()==RANGE_CLAMP)
+    {
+        CreateRangeOp(ops, 
+                      transform.getMinInValue(), transform.getMaxInValue(), 
+                      transform.getMinOutValue(), transform.getMaxOutValue(),
+                      combinedDir);
+    }
+    else
+    {
+        const RangeOpData r(BIT_DEPTH_F32, BIT_DEPTH_F32, 
+                            transform.getMinInValue(), transform.getMaxInValue(), 
+                            transform.getMinOutValue(), transform.getMaxOutValue());
+        MatrixOpDataRcPtr m = r.convertToMatrix();
+
+        CreateMatrixOffsetOp(ops, m->m_m44, m->m_offset4, combinedDir);
+    }
 }
     
 }
@@ -264,6 +298,7 @@ OIIO_ADD_TEST(RangeTransform, basic)
 {
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
     OIIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
     OIIO_CHECK_ASSERT(!range->hasMinInValue());
     OIIO_CHECK_ASSERT(!range->hasMaxInValue());
     OIIO_CHECK_ASSERT(!range->hasMinOutValue());
@@ -272,6 +307,9 @@ OIIO_ADD_TEST(RangeTransform, basic)
     range->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     OIIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
+    range->setStyle(OCIO::RANGE_NO_CLAMP);
+    OIIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_NO_CLAMP);
+
     range->setMinInValue(-0.5f);
     OIIO_CHECK_EQUAL(range->getMinInValue(), -0.5f);
     OIIO_CHECK_ASSERT(range->hasMinInValue());
@@ -279,6 +317,7 @@ OIIO_ADD_TEST(RangeTransform, basic)
     OCIO::RangeTransformRcPtr range2 = OCIO::RangeTransform::Create();
     range2->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
     range2->setMinInValue(-0.5f);
+    range2->setStyle(OCIO::RANGE_NO_CLAMP);
     OIIO_CHECK_ASSERT(range2->equals(*range));
 
     range2->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
@@ -328,6 +367,71 @@ OIIO_ADD_TEST(RangeTransform, basic)
     OIIO_CHECK_ASSERT(!range2->hasMaxInValue());
     OIIO_CHECK_ASSERT(!range2->hasMinOutValue());
     OIIO_CHECK_ASSERT(!range2->hasMaxOutValue());
+}
+
+
+OIIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
+{
+    ConfigRcPtr config = Config::Create();
+    OCIO::OpRcPtrVec ops;
+
+    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
+    OIIO_CHECK_EQUAL(range->getDirection(), OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_EQUAL(range->getStyle(), OCIO::RANGE_CLAMP);
+    OIIO_CHECK_ASSERT(!range->hasMinInValue());
+    OIIO_CHECK_ASSERT(!range->hasMaxInValue());
+    OIIO_CHECK_ASSERT(!range->hasMinOutValue());
+    OIIO_CHECK_ASSERT(!range->hasMaxOutValue());
+
+    range->setMinInValue(0.0f);
+    range->setMaxInValue(0.5f);
+    range->setMinOutValue(0.5f);
+    range->setMaxOutValue(1.5f);
+
+    // Test the resulting Range Op
+
+    OIIO_CHECK_NO_THROW(
+        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OIIO_CHECK_EQUAL(ops[0]->const_data()->getType(), OCIO::OpData::RangeType);
+
+    OCIO::RangeOpDataRcPtr rangeData
+        = DynamicPtrCast<OCIO::RangeOpData>(ops[0]->const_data());
+
+    OIIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
+    OIIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
+    OIIO_CHECK_EQUAL(rangeData->getMinOutValue(), range->getMinOutValue());
+    OIIO_CHECK_EQUAL(rangeData->getMaxOutValue(), range->getMaxOutValue());
+
+    // Test the resulting Matrix Op
+
+    range->setStyle(OCIO::RANGE_NO_CLAMP);
+
+    OIIO_CHECK_NO_THROW(
+        BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OIIO_REQUIRE_EQUAL(ops[1]->const_data()->getType(), OCIO::OpData::MatrixType);
+
+    OCIO::MatrixOpDataRcPtr matrixData
+        = DynamicPtrCast<OCIO::MatrixOpData>(ops[1]->const_data());
+
+    OIIO_CHECK_EQUAL(matrixData->m_offset4[0], rangeData->getOffset());
+
+    OIIO_CHECK_EQUAL(matrixData->m_offset4[0], 0.5f);
+    OIIO_CHECK_EQUAL(matrixData->m_offset4[1], 0.5f);
+    OIIO_CHECK_EQUAL(matrixData->m_offset4[2], 0.5f);
+    OIIO_CHECK_EQUAL(matrixData->m_offset4[3], 0.0f);
+
+    OIIO_CHECK_ASSERT(matrixData->isMatrixDiagonal());
+
+    OIIO_CHECK_EQUAL(matrixData->m_m44[0], rangeData->getScale());
+
+    OIIO_CHECK_EQUAL(matrixData->m_m44[ 0], 2.0f);
+    OIIO_CHECK_EQUAL(matrixData->m_m44[ 5], 2.0f);
+    OIIO_CHECK_EQUAL(matrixData->m_m44[10], 2.0f);
+    OIIO_CHECK_EQUAL(matrixData->m_m44[15], 1.0f);
 }
 
 #endif
