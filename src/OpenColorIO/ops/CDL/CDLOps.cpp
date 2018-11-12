@@ -86,7 +86,7 @@ public:
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
 protected:
-    const CDLOpDataRcPtr cdlData() const { return DynamicPtrCast<CDLOpData>(data()); }
+    const CDLOpDataRcPtr cdlData() const { return DynamicPtrCast<CDLOpData>(const_data()); }
 
 private:
     TransformDirection m_direction;
