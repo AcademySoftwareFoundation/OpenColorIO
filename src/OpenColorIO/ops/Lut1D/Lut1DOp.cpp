@@ -637,7 +637,7 @@ OCIO_NAMESPACE_ENTER
             Lut1DOpDataRcPtr makeFastLut1D(bool forGPU);
 
         protected:
-            const Lut1DOpDataRcPtr lutData() const { return DynamicPtrCast<Lut1DOpData>(data()); }
+            const Lut1DOpDataRcPtr lutData() const { return DynamicPtrCast<Lut1DOpData>(const_data()); }
 
         private:
             Interpolation m_interpolation;

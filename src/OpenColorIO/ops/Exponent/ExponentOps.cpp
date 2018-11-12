@@ -139,7 +139,7 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
         protected:
-            const ExponentOpDataRcPtr expData() const { return DynamicPtrCast<ExponentOpData>(data()); }
+            const ExponentOpDataRcPtr expData() const { return DynamicPtrCast<ExponentOpData>(const_data()); }
         };
         
         typedef OCIO_SHARED_PTR<ExponentOp> ExponentOpRcPtr;

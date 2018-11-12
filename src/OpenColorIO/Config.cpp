@@ -2239,9 +2239,9 @@ OIIO_ADD_TEST(Config, Version_faulty_1)
     OIIO_CHECK_THROW(config = OCIO::Config::CreateFromStream(is), OCIO::Exception);
 }
 
-OIIO_ADD_TEST(Config, Range)
+OIIO_ADD_TEST(Config, range_serialization)
 {
-    const std::string SIMPLE_PROFILE =
+    static const std::string SIMPLE_PROFILE =
         "ocio_profile_version: 1\n"
         "\n"
         "search_path: luts\n"
@@ -2295,6 +2295,104 @@ OIIO_ADD_TEST(Config, Range)
 
     {
         const std::string strEnd =
+            "    from_reference: !<RangeTransform> {direction: inverse}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {style: noClamp}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {style: noClamp, direction: inverse}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Test Range with clamp style (i.e. default one)
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
+            "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
+            "direction: inverse}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Test Range with clamp style
+        const std::string in_strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
+            "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
+            "style: Clamp, direction: inverse}\n";
+        const std::string in_str = SIMPLE_PROFILE + in_strEnd;
+
+        std::istringstream is;
+        is.str(in_str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        // Clamp style is not saved
+        const std::string out_strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
+            "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
+            "direction: inverse}\n";
+        const std::string out_str = SIMPLE_PROFILE + out_strEnd;
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), out_str);
+    }
+
+    {
+        const std::string strEnd =
             "    from_reference: !<RangeTransform> "
             "{minInValue: 0, maxOutValue: 1}\n";
         const std::string str = SIMPLE_PROFILE + strEnd;
@@ -2313,7 +2411,7 @@ OIIO_ADD_TEST(Config, Range)
     }
 
     {
-        // maxInValue has 2 values, only the first one is read.
+        // maxInValue has an illegal second number.
         const std::string strEnd =
             "    from_reference: !<RangeTransform> {minInValue: -0.01, "
             "maxInValue: 1.05  10, minOutValue: 0.0009, maxOutValue: 2.5}\n";

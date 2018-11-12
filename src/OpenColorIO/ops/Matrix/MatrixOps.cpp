@@ -258,7 +258,7 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
         
         protected:
-            const MatrixOpDataRcPtr matrixData() const { return DynamicPtrCast<MatrixOpData>(data()); }
+            const MatrixOpDataRcPtr matrix() const { return DynamicPtrCast<MatrixOpData>(const_data()); }
 
         private:
             TransformDirection m_direction;

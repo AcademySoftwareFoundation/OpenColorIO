@@ -124,9 +124,41 @@ OCIO_ADD_GPU_TEST(RangeOp, arbitrary_1)
     test.setContext(range->createEditableCopy(), shaderDesc);
 }
 
+OCIO_ADD_GPU_TEST(RangeOp, arbitrary_1_no_clamp)
+{
+    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
+    range->setStyle(OCIO::RANGE_NO_CLAMP);
+    range->setMinInValue (0.4000202f);
+    range->setMaxInValue (0.6000502f);
+    range->setMinOutValue(0.4000601f);
+    range->setMaxOutValue(0.6000801f);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setErrorThreshold(g_epsilon);
+    test.setContext(range->createEditableCopy(), shaderDesc);
+}
+
 OCIO_ADD_GPU_TEST(RangeOp, arbitrary_2)
 {
     OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
+    range->setMinInValue(-0.010201f);
+    range->setMaxInValue (0.601102f);
+    range->setMinOutValue(0.209803f);
+    range->setMaxOutValue(1.600208f);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc 
+        = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setErrorThreshold(g_epsilon);
+    test.setContext(range->createEditableCopy(), shaderDesc);
+}
+
+OCIO_ADD_GPU_TEST(RangeOp, arbitrary_2_no_clamp)
+{
+    OCIO::RangeTransformRcPtr range = OCIO::RangeTransform::Create();
+    range->setStyle(OCIO::RANGE_NO_CLAMP);
     range->setMinInValue(-0.010201f);
     range->setMaxInValue (0.601102f);
     range->setMinOutValue(0.209803f);

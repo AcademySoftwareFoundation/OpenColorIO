@@ -54,6 +54,9 @@ OCIO_NAMESPACE_ENTER
         PyObject * PyOCIO_RangeTransform_equals(PyObject * self, PyObject * args);
         PyObject * PyOCIO_RangeTransform_validate(PyObject * self);
 
+        PyObject * PyOCIO_RangeTransform_getStyle(PyObject * self);
+        PyObject * PyOCIO_RangeTransform_setStyle(PyObject * self,  PyObject * args);
+
         PyObject * PyOCIO_RangeTransform_getMinInValue(PyObject * self);
         PyObject * PyOCIO_RangeTransform_setMinInValue(PyObject * self,  PyObject * args);
         PyObject * PyOCIO_RangeTransform_hasMinInValue(PyObject * self);
@@ -82,6 +85,11 @@ OCIO_NAMESPACE_ENTER
             PyOCIO_RangeTransform_equals, METH_VARARGS, RANGETRANSFORM_EQUALS__DOC__ },
             { "validate",
             (PyCFunction) PyOCIO_RangeTransform_validate, METH_NOARGS, RANGETRANSFORM_VALIDATE__DOC__ },
+
+            { "getStyle",
+            (PyCFunction) PyOCIO_RangeTransform_getStyle, METH_NOARGS, RANGETRANSFORM_GETSTYLE__DOC__ },
+            { "setStyle",
+            PyOCIO_RangeTransform_setStyle, METH_VARARGS, RANGETRANSFORM_SETSTYLE__DOC__ },
 
             { "getMinInValue",
             (PyCFunction) PyOCIO_RangeTransform_getMinInValue, METH_NOARGS, RANGETRANSFORM_GETMININVALUE__DOC__ },
@@ -188,8 +196,8 @@ OCIO_NAMESPACE_ENTER
             double maxOutValue  = ptr->getMaxOutValue();
             // Parse the bound values
             static const char *kwlist[] 
-                = { "minInValue", "maxInValue", "minOutValue", "maxOutValue", "direction", NULL };
-            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|dddds",
+                = { "minInValue", "maxInValue", "minOutValue", "maxOutValue", "style", "direction", NULL };
+            if(!PyArg_ParseTupleAndKeywords(args, kwds, "|ddddss",
                 const_cast<char **>(kwlist),
                 &direction, &minInValue, &maxInValue, &minOutValue, &maxOutValue)) return -1;
             // Set the bound values
@@ -221,6 +229,25 @@ OCIO_NAMESPACE_ENTER
             OCIO_PYTRY_ENTER()
             RangeTransformRcPtr transform = GetEditableRangeTransform(self);
             transform->validate();
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_RangeTransform_getStyle(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstRangeTransformRcPtr transform = GetConstRangeTransform(self);
+            return PyString_FromString(RangeStyleToString(transform->getStyle()));
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
+        PyObject * PyOCIO_RangeTransform_setStyle(PyObject * self, PyObject * args)
+        {
+            OCIO_PYTRY_ENTER()
+            const char * style = nullptr;
+            if (!PyArg_ParseTuple(args, "s:setStyle", &style)) return NULL;
+            RangeTransformRcPtr transform = GetEditableRangeTransform(self);
+            transform->setStyle(RangeStyleFromString(style));
             Py_RETURN_NONE;
             OCIO_PYTRY_EXIT(NULL)
         }

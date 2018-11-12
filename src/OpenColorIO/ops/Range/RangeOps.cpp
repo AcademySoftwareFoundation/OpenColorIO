@@ -80,7 +80,7 @@ public:
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
 protected:
-    const RangeOpDataRcPtr rangeData() const { return DynamicPtrCast<RangeOpData>(data()); }
+    const RangeOpDataRcPtr rangeData() const { return DynamicPtrCast<RangeOpData>(const_data()); }
 
 private:            
     // The range direction
@@ -316,6 +316,16 @@ void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDire
 
 void CreateRangeOp(OpRcPtrVec & ops, 
                    double minInValue, double maxInValue,
+                   double minOutValue, double maxOutValue)
+{
+    CreateRangeOp(ops, 
+                  minInValue, maxInValue,
+                  minOutValue, maxOutValue,
+                  TRANSFORM_DIR_FORWARD);
+}
+
+void CreateRangeOp(OpRcPtrVec & ops, 
+                   double minInValue, double maxInValue,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction)
 {
@@ -507,10 +517,10 @@ OIIO_ADD_TEST(RangeOps, combining)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f);
     OIIO_CHECK_EQUAL(ops.size(), 1);
     OIIO_CHECK_NO_THROW(ops[0]->finalize());
-    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f);
     OIIO_CHECK_EQUAL(ops.size(), 2);
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
@@ -525,10 +535,10 @@ OIIO_ADD_TEST(RangeOps, combining_with_inverse)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5);
     OIIO_CHECK_EQUAL(ops.size(), 1);
     OIIO_CHECK_NO_THROW(ops[0]->finalize());
-    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_INVERSE);
     OIIO_CHECK_EQUAL(ops.size(), 2);
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
@@ -589,10 +599,10 @@ OIIO_ADD_TEST(RangeOps, computed_identifier)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::CreateRangeOp(ops, 0.1f, 1.0f, 0.3f, 1.9f, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::CreateRangeOp(ops, 0.1f, 1.0f, 0.3f, 1.9f, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_INVERSE);
     for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(); }
 
     OIIO_REQUIRE_EQUAL(ops.size(), 4);

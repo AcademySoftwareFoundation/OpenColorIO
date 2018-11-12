@@ -279,6 +279,21 @@ OCIO_NAMESPACE_ENTER
         return ENV_ENVIRONMENT_UNKNOWN;
     }
     
+    const char * RangeStyleToString(RangeStyle style)
+    {
+        if(style == RANGE_NO_CLAMP) return "noClamp";
+        else if(style == RANGE_CLAMP) return "Clamp";
+        return "Clamp";
+    }
+    
+    RangeStyle RangeStyleFromString(const char * style)
+    {
+        std::string str = pystring::lower(style);
+        if(str == "noclamp") return RANGE_NO_CLAMP;
+        else if(str == "clamp") return RANGE_CLAMP;
+        return RANGE_CLAMP;
+    }
+    
     const char * ROLE_DEFAULT = "default";
     const char * ROLE_REFERENCE = "reference";
     const char * ROLE_DATA = "data";
