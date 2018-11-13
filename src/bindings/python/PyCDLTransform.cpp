@@ -48,8 +48,10 @@ OCIO_NAMESPACE_ENTER
         ///
         
         int PyOCIO_CDLTransform_init(PyOCIO_Transform * self, PyObject * args, PyObject * kwds); 
-        PyObject * PyOCIO_CDLTransform_CreateFromFile(PyObject * self, PyObject * args);
         PyObject * PyOCIO_CDLTransform_equals(PyObject * self, PyObject * args);
+        PyObject * PyOCIO_CDLTransform_validate(PyObject * self);
+
+        PyObject * PyOCIO_CDLTransform_CreateFromFile(PyObject * self, PyObject * args);
         PyObject * PyOCIO_CDLTransform_getXML(PyObject * self, PyObject *);
         PyObject * PyOCIO_CDLTransform_setXML(PyObject * self, PyObject * args);
         PyObject * PyOCIO_CDLTransform_getSlope(PyObject * self, PyObject *);
@@ -72,10 +74,12 @@ OCIO_NAMESPACE_ENTER
         ///
         
         PyMethodDef PyOCIO_CDLTransform_methods[] = {
-            { "CreateFromFile",
-            PyOCIO_CDLTransform_CreateFromFile, METH_VARARGS, CDLTRANSFORM_CREATEFROMFILE__DOC__ },
             { "equals",
             PyOCIO_CDLTransform_equals, METH_VARARGS, CDLTRANSFORM_EQUALS__DOC__ },
+            { "validate",
+            (PyCFunction) PyOCIO_CDLTransform_validate, METH_NOARGS, CDLTRANSFORM_VALIDATE__DOC__ },
+            { "CreateFromFile",
+            PyOCIO_CDLTransform_CreateFromFile, METH_VARARGS, CDLTRANSFORM_CREATEFROMFILE__DOC__ },
             { "getXML",
             (PyCFunction) PyOCIO_CDLTransform_getXML, METH_NOARGS, CDLTRANSFORM_GETXML__DOC__ },
             { "setXML",
@@ -245,13 +249,22 @@ OCIO_NAMESPACE_ENTER
             PyObject* pyother = 0;
             if (!PyArg_ParseTuple(args, "O:equals", &pyother)) return NULL;
             ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
-            if(IsPyOCIOType(pyother, PyOCIO_CDLTransformType))
+            if(!IsPyOCIOType(pyother, PyOCIO_CDLTransformType))
                 return PyBool_FromLong(false);
             ConstCDLTransformRcPtr other = GetConstCDLTransform(pyother);
             return PyBool_FromLong(transform->equals(other));
             OCIO_PYTRY_EXIT(NULL)
         }
         
+        PyObject * PyOCIO_CDLTransform_validate(PyObject * self)
+        {
+            OCIO_PYTRY_ENTER()
+            ConstCDLTransformRcPtr transform = GetConstCDLTransform(self);
+            transform->validate();
+            Py_RETURN_NONE;
+            OCIO_PYTRY_EXIT(NULL)
+        }
+
         PyObject * PyOCIO_CDLTransform_getXML(PyObject * self, PyObject *)
         {
             OCIO_PYTRY_ENTER()

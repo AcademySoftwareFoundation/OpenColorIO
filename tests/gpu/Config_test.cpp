@@ -118,7 +118,7 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_legacy_shader)
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
     OCIO::GpuShaderDescRcPtr shaderDesc
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(64);
-    test.setContext(processor, shaderDesc);
+    test.setContextProcessor(processor, shaderDesc);
     test.setErrorThreshold(defaultErrorThreshold);
 }
 
@@ -137,7 +137,7 @@ OCIO_ADD_GPU_TEST(Config, several_1D_luts_generic_shader)
 
     OCIO::ConstProcessorRcPtr processor = config->getProcessor("raw", "lgh");
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
-    test.setContext(processor, shaderDesc);
+    test.setContextProcessor(processor, shaderDesc);
     test.setErrorThreshold(defaultErrorThreshold);
 }
 
@@ -166,8 +166,9 @@ OCIO_ADD_GPU_TEST(Config, arbitrary_generic_shader)
     shaderDesc->setPixelName("another_pixel_name");
     shaderDesc->setFunctionName("another_func_name");
 
-    test.setContext(processor, shaderDesc);
-    test.setErrorThreshold(defaultErrorThreshold);
+    test.setContextProcessor(processor, shaderDesc);
+    // TODO: To be investigated when the new LUT 1D OpData will be in
+    test.setErrorThreshold(5e-3f);
 }
 
 OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
@@ -193,6 +194,6 @@ OCIO_ADD_GPU_TEST(Config, several_luts_generic_shader)
     // Change some default values...
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
-    test.setContext(processor, shaderDesc);
+    test.setContextProcessor(processor, shaderDesc);
     test.setErrorThreshold(defaultErrorThreshold);
 }

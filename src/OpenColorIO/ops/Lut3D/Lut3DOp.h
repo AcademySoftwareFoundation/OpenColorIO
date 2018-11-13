@@ -53,15 +53,21 @@ OCIO_NAMESPACE_ENTER
         typedef std::vector<float> fv_t;
         fv_t lut;
         
-        virtual Type getType() const { return Lut3DType; }
+        virtual Type getType() const override { return Lut3DType; }
 
-        virtual bool isIdentity() const;
-        virtual bool hasChannelCrosstalk() const;
+        virtual bool isNoOp() const override;
+        virtual bool isIdentity() const override;
+        virtual bool hasChannelCrosstalk() const override;
+        
+        virtual void finalize() override;
+        void unfinalize();
+
+        virtual std::string getCacheID() const override;
 
     private:
         Lut3DOpData();
-        
-        virtual std::string finalize() const;
+
+        mutable bool m_isIdentity;
     };
     
     // RGB channel ordering.

@@ -67,7 +67,6 @@ public:
     virtual OpRcPtr clone() const;
     
     virtual std::string getInfo() const;
-    virtual std::string getCacheID() const;
     
     virtual bool isIdentity() const;
     virtual bool isSameType(const OpRcPtr & op) const;
@@ -86,8 +85,6 @@ protected:
 private:            
     // The range direction
     TransformDirection m_direction;
-    // The computed cache identifier
-    std::string m_cacheID;
     // The CPU processor
     OpCPURcPtr m_cpu;
 };
@@ -151,11 +148,6 @@ std::string RangeOp::getInfo() const
     return "<RangeOp>";
 }
 
-std::string RangeOp::getCacheID() const
-{
-    return m_cacheID;
-}
-
 bool RangeOp::isIdentity() const
 {
     return rangeData()->isIdentity();
@@ -172,10 +164,9 @@ bool RangeOp::isInverse(const OpRcPtr & op) const
     RangeOpRcPtr typedRcPtr = DynamicPtrCast<RangeOp>(op);
     if(!typedRcPtr) return false;
 
-    if(GetInverseTransformDirection(m_direction)==typedRcPtr->m_direction
-        && *rangeData()==*(typedRcPtr->rangeData()))
+    if(GetInverseTransformDirection(m_direction)==typedRcPtr->m_direction)
     {
-        return true;
+        return *rangeData()==*(typedRcPtr->rangeData());
     }
 
     return rangeData()->isInverse(typedRcPtr->rangeData());
@@ -211,6 +202,7 @@ void RangeOp::finalize()
     rangeData()->setOutputBitDepth(BIT_DEPTH_F32);
 
     rangeData()->validate();
+    rangeData()->finalize();
 
     m_cpu = RangeOpCPU::GetRenderer(rangeData());
 
@@ -219,8 +211,6 @@ void RangeOp::finalize()
     cacheIDStream << "<RangeOp ";
     cacheIDStream << rangeData()->getCacheID() << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
-    cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
-    cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
     cacheIDStream << ">";
     
     m_cacheID = cacheIDStream.str();
@@ -318,6 +308,8 @@ void RangeOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
 
 void CreateRangeOp(OpRcPtrVec & ops, RangeOpDataRcPtr & rangeData, TransformDirection direction)
 {
+    if(rangeData->isNoOp()) return;
+
     ops.push_back(RangeOpRcPtr(new RangeOp(rangeData, direction)));
 }
 
@@ -337,8 +329,11 @@ void CreateRangeOp(OpRcPtrVec & ops,
                    double minOutValue, double maxOutValue,
                    TransformDirection direction)
 {
-    ops.push_back(RangeOpRcPtr(
-        new RangeOp(minInValue, maxInValue, minOutValue, maxOutValue, direction)));
+    RangeOpDataRcPtr rangeData(
+        new RangeOpData(BIT_DEPTH_F32, BIT_DEPTH_F32,
+                        minInValue, maxInValue, minOutValue, maxOutValue));
+
+    CreateRangeOp(ops, rangeData, direction);
 }
 
 }
@@ -536,14 +531,14 @@ OIIO_ADD_TEST(RangeOps, combining)
 
 }
 
-OIIO_ADD_TEST(RangeOps, combiningInverse)
+OIIO_ADD_TEST(RangeOps, combining_with_inverse)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f);
+    OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5);
     OIIO_CHECK_EQUAL(ops.size(), 1);
     OIIO_CHECK_NO_THROW(ops[0]->finalize());
-    OCIO::CreateRangeOp(ops, 0.0f, 1.0f, 0.5f, 1.5f, OCIO::TRANSFORM_DIR_INVERSE);
+    OCIO::CreateRangeOp(ops, 0., 1., 0.5, 1.5, OCIO::TRANSFORM_DIR_INVERSE);
     OIIO_CHECK_EQUAL(ops.size(), 2);
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
@@ -554,27 +549,75 @@ OIIO_ADD_TEST(RangeOps, combiningInverse)
 
 }
 
-OIIO_ADD_TEST(RangeOps, inverse)
+OIIO_ADD_TEST(RangeOps, is_inverse)
 {
     OCIO::OpRcPtrVec ops;
 
-    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f);
-    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_EQUAL(ops.size(), 1);
     // Skip finalize so that inverse direction is kept
-    OCIO::CreateRangeOp(ops, 0.0f, 0.5f, 0.5f, 1.0f, OCIO::TRANSFORM_DIR_INVERSE);
-    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1., OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(ops.size(), 2);
 
     const float offset[] = { 1.1f, -1.3f, 0.3f, 0.0f };
     OIIO_CHECK_NO_THROW(CreateOffsetOp(ops, offset, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    OIIO_CHECK_EQUAL(ops.size(), 3);
 
     OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
     OIIO_CHECK_ASSERT(!ops[0]->isSameType(ops[2]));
 
     OIIO_CHECK_ASSERT(!ops[0]->isInverse(ops[2]));
     OIIO_CHECK_ASSERT(!ops[0]->isInverse(ops[0]));
-    // Inverse based on op direction
+
+    // Inverse based on Op direction
+
     OIIO_CHECK_ASSERT(ops[0]->isInverse(ops[1]));
+
+    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(ops.size(), 4);
+
+    OIIO_CHECK_ASSERT(!ops[0]->isInverse(ops[3]));
+    OIIO_CHECK_ASSERT(!ops[2]->isInverse(ops[3]));
+
+    OCIO::CreateRangeOp(ops, 0.000002, 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
+    OIIO_CHECK_EQUAL(ops.size(), 5);
+
+    OIIO_CHECK_ASSERT(!ops[0]->isInverse(ops[4]));
+    OIIO_CHECK_ASSERT(!ops[2]->isInverse(ops[4]));
+    OIIO_CHECK_ASSERT(ops[3]->isInverse(ops[4]));
+
+    OCIO::CreateRangeOp(ops, 0.5, 1., 0.000002, 0.5, OCIO::TRANSFORM_DIR_INVERSE);
+    OIIO_CHECK_EQUAL(ops.size(), 6);
+
+    OIIO_CHECK_ASSERT(!ops[0]->isInverse(ops[5]));
+    OIIO_CHECK_ASSERT(!ops[2]->isInverse(ops[5]));
+    OIIO_CHECK_ASSERT(ops[3]->isInverse(ops[5]));
+    OIIO_CHECK_ASSERT(!ops[4]->isInverse(ops[5]));
+}
+
+OIIO_ADD_TEST(RangeOps, computed_identifier)
+{
+    OCIO::OpRcPtrVec ops;
+
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0., 0.5, 0.5, 1.0, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_FORWARD);
+    OCIO::CreateRangeOp(ops, 0.1, 1., 0.3, 1.9, OCIO::TRANSFORM_DIR_INVERSE);
+    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(); }
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 4);
+
+    OIIO_CHECK_ASSERT(ops[0]->getCacheID() == ops[1]->getCacheID());
+    OIIO_CHECK_ASSERT(ops[0]->getCacheID() != ops[2]->getCacheID());
+    OIIO_CHECK_ASSERT(ops[1]->getCacheID() != ops[2]->getCacheID());
+    OIIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[3]->getCacheID());
+
+    OCIO::CreateRangeOp(ops, 0.1f, 1.0f, 0.3f, 1.90001f, OCIO::TRANSFORM_DIR_FORWARD);
+    for(OCIO::OpRcPtrVec::reference op : ops) { op->finalize(); }
+
+    OIIO_REQUIRE_EQUAL(ops.size(), 5);
+    OIIO_CHECK_ASSERT(ops[2]->getCacheID() != ops[4]->getCacheID());
+    OIIO_CHECK_ASSERT(ops[3]->getCacheID() != ops[4]->getCacheID());
 }
 
 #endif

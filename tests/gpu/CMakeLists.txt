@@ -3,6 +3,7 @@ find_package(GLEW REQUIRED)
 find_package(GLUT REQUIRED)
 
 set(SOURCES
+	CDLOps_test.cpp
 	Config_test.cpp
 	ExpOps_Test.cpp
 	GPUHelpers.cpp

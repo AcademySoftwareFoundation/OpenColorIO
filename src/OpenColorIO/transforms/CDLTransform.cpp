@@ -33,13 +33,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "fileformats/cdl/CDLParser.h"
 #include "CDLTransform.h"
-#include "ops/Exponent/ExponentOps.h"
-#include "ops/Matrix/MatrixOps.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
+#include "ops/CDL/CDLOps.h"
+#include "ops/Exponent/ExponentOps.h"
+#include "ops/Matrix/MatrixOps.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
@@ -309,53 +311,34 @@ OCIO_NAMESPACE_ENTER
         delete t;
     }
     
-    class CDLTransform::Impl
+    class CDLTransform::Impl : public CDLOpData
     {
-    public:
-        TransformDirection dir_;
-        
-        float sop_[9];
-        float sat_;
-        std::string id_;
-        std::string description_;
-
-        mutable std::string xml_;
-        
-        Impl() :
-            dir_(TRANSFORM_DIR_FORWARD),
-            sat_(1.0f)
+    public:       
+        Impl() 
+            :   CDLOpData()
+            ,   m_direction(TRANSFORM_DIR_FORWARD)
         {
-            sop_[0] = 1.0f;
-            sop_[1] = 1.0f;
-            sop_[2] = 1.0f;
-            sop_[3] = 0.0f;
-            sop_[4] = 0.0f;
-            sop_[5] = 0.0f;
-            sop_[6] = 1.0f;
-            sop_[7] = 1.0f;
-            sop_[8] = 1.0f;
         }
         
-        ~Impl()
-        {
-        
-        }
+        ~Impl() { }
         
         Impl& operator= (const Impl & rhs)
         {
             if (this != &rhs)
             {
-                dir_ = rhs.dir_;
-
-                memcpy(sop_, rhs.sop_, sizeof(float) * 9);
-                sat_ = rhs.sat_;
-                id_ = rhs.id_;
-                description_ = rhs.description_;
+                m_direction = rhs.m_direction;
+                CDLOpData::operator=(rhs);
             }
 
             return *this;
         }
-        
+
+        TransformDirection m_direction;
+
+        mutable std::string m_xml;
+
+    private:
+        Impl(const Impl&);
     };
     
     
@@ -392,30 +375,24 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection CDLTransform::getDirection() const
     {
-        return getImpl()->dir_;
+        return getImpl()->m_direction;
     }
     
     void CDLTransform::setDirection(TransformDirection dir)
     {
-        getImpl()->dir_ = dir;
+        getImpl()->m_direction = dir;
     }
     
     void CDLTransform::validate() const
     {
         Transform::validate();
-
-        // TODO: Uncomment in upcoming PR that contains the OpData validate.
-        //       getImpl()->data_->validate()
-        //       
-        //       OpData classes are the enhancement of some existing 
-        //       structures (like Lut1D and Lut3D) by encapsulating
-        //       all the data and adding high-level behaviors.
+        getImpl()->validate();
     }
 
     const char * CDLTransform::getXML() const
     {
-        getImpl()->xml_ = BuildXML(*this);
-        return getImpl()->xml_.c_str();
+        getImpl()->m_xml = BuildXML(*this);
+        return getImpl()->m_xml.c_str();
     }
     
     void CDLTransform::setXML(const char * xml)
@@ -425,94 +402,137 @@ OCIO_NAMESPACE_ENTER
     
     // We use this approach, rather than comparing XML to get around the
     // case where setXML with extra data was provided.
-    
+
     bool CDLTransform::equals(const ConstCDLTransformRcPtr & other) const
     {
         if(!other) return false;
         
-        if(getImpl()->dir_ != other->getImpl()->dir_) return false;
-        
-        const float abserror = 1e-9f;
-        
-        for(int i=0; i<9; ++i)
-        {
-            if(!equalWithAbsError(getImpl()->sop_[i], other->getImpl()->sop_[i], abserror))
-            {
-                return false;
-            }
-        }
-        
-        if(!equalWithAbsError(getImpl()->sat_, other->getImpl()->sat_, abserror))
-        {
-            return false;
-        }
-        
-        if(getImpl()->id_ != other->getImpl()->id_)
-        {
-            return false;
-        }
-        
-        if(getImpl()->description_ != other->getImpl()->description_)
-        {
-            return false;
-        }
-        
-        return true;
+        // NB: A tolerance of 1e-9 is used when comparing the parameters.
+        return *(getImpl()) == *(other->getImpl())
+            && getImpl()->m_direction == other->getImpl()->m_direction;
     }
     
     void CDLTransform::setSlope(const float * rgb)
     {
-        memcpy(&getImpl()->sop_[0], rgb, sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setSlopeParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
     
     void CDLTransform::getSlope(float * rgb) const
     {
-        memcpy(rgb, &getImpl()->sop_[0], sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & params = getImpl()->getSlopeParams();
+        rgb[0] = (float)params[0];
+        rgb[1] = (float)params[1];
+        rgb[2] = (float)params[2];
     }
 
     void CDLTransform::setOffset(const float * rgb)
     {
-        memcpy(&getImpl()->sop_[3], rgb, sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setOffsetParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
     
     void CDLTransform::getOffset(float * rgb) const
     {
-        memcpy(rgb, &getImpl()->sop_[3], sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & params = getImpl()->getOffsetParams();
+        rgb[0] = (float)params[0];
+        rgb[1] = (float)params[1];
+        rgb[2] = (float)params[2];
     }
 
     void CDLTransform::setPower(const float * rgb)
     {
-        memcpy(&getImpl()->sop_[6], rgb, sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setPowerParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
     
     void CDLTransform::getPower(float * rgb) const
     {
-        memcpy(rgb, &getImpl()->sop_[6], sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & params = getImpl()->getPowerParams();
+        rgb[0] = (float)params[0];
+        rgb[1] = (float)params[1];
+        rgb[2] = (float)params[2];
     }
 
     void CDLTransform::setSOP(const float * vec9)
     {
-        memcpy(&getImpl()->sop_, vec9, sizeof(float)*9);
+        if(!vec9)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setSlopeParams(CDLOpData::ChannelParams(vec9[0], vec9[1], vec9[2]));
+        getImpl()->setOffsetParams(CDLOpData::ChannelParams(vec9[3], vec9[4], vec9[5]));
+        getImpl()->setPowerParams(CDLOpData::ChannelParams(vec9[6], vec9[7], vec9[8]));
     }
     
     void CDLTransform::getSOP(float * vec9) const
     {
-        memcpy(vec9, &getImpl()->sop_, sizeof(float)*9);
+        if(!vec9)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & slopes = getImpl()->getSlopeParams();
+        vec9[0] = (float)slopes[0];
+        vec9[1] = (float)slopes[1];
+        vec9[2] = (float)slopes[2];
+
+        const CDLOpData::ChannelParams & offsets = getImpl()->getOffsetParams();
+        vec9[3] = (float)offsets[0];
+        vec9[4] = (float)offsets[1];
+        vec9[5] = (float)offsets[2];
+
+        const CDLOpData::ChannelParams & powers = getImpl()->getPowerParams();
+        vec9[6] = (float)powers[0];
+        vec9[7] = (float)powers[1];
+        vec9[8] = (float)powers[2];
     }
 
     void CDLTransform::setSat(float sat)
     {
-        getImpl()->sat_ = sat;
+        getImpl()->setSaturation((double)sat);
     }
     
     float CDLTransform::getSat() const
     {
-        return getImpl()->sat_;
+        return (float)getImpl()->getSaturation();
     }
 
     void CDLTransform::getSatLumaCoefs(float * rgb) const
     {
-        if(!rgb) return;
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
         rgb[0] = 0.2126f;
         rgb[1] = 0.7152f;
         rgb[2] = 0.0722f;
@@ -520,36 +540,25 @@ OCIO_NAMESPACE_ENTER
     
     void CDLTransform::setID(const char * id)
     {
-        if(id)
-        {
-            getImpl()->id_ = id;
-        }
-        else
-        {
-            getImpl()->id_ = "";
-        }
+        getImpl()->setId(id ? id : "");
     }
     
     const char * CDLTransform::getID() const
     {
-        return getImpl()->id_.c_str();
+        return getImpl()->getId().c_str();
     }
     
     void CDLTransform::setDescription(const char * desc)
     {
-        if(desc)
-        {
-            getImpl()->description_ = desc;
-        }
-        else
-        {
-            getImpl()->description_ = "";
-        }
+        getImpl()->setDescriptions(OpData::Descriptions(desc ? desc : ""));
     }
     
     const char * CDLTransform::getDescription() const
     {
-        return getImpl()->description_.c_str();
+        if(getImpl()->getDescriptions().empty())
+            return "";
+
+        return getImpl()->getDescriptions()[0].c_str();
     }
     
     std::ostream& operator<< (std::ostream& os, const CDLTransform& t)
@@ -574,7 +583,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     void BuildCDLOps(OpRcPtrVec & ops,
-                     const Config & /*config*/,
+                     const Config & config,
                      const CDLTransform & cdlTransform,
                      TransformDirection dir)
     {
@@ -595,30 +604,52 @@ OCIO_NAMESPACE_ENTER
         TransformDirection combinedDir = CombineTransformDirections(dir,
                                                   cdlTransform.getDirection());
         
-        // TODO: Confirm ASC Sat math is correct.
-        // TODO: Handle Clamping conditions more explicitly
-        
-        if(combinedDir == TRANSFORM_DIR_FORWARD)
+        if(config.getMajorVersion()==1)
         {
-            // 1) Scale + Offset
-            CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_FORWARD);
-            
-            // 2) Power + Clamp
-            CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
-            
-            // 3) Saturation + Clamp
-            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+            if(combinedDir == TRANSFORM_DIR_FORWARD)
+            {
+                // 1) Scale + Offset
+                CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_FORWARD);
+                
+                // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+                //    ASC v1.2 spec since it also requires clamping at 1.)
+                CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
+                
+                // 3) Saturation (NB: Does not clamp at 0 and 1
+                //    as per ASC v1.2 spec)
+                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+            }
+            else if(combinedDir == TRANSFORM_DIR_INVERSE)
+            {
+                // 3) Saturation (NB: Does not clamp at 0 and 1
+                //    as per ASC v1.2 spec)
+                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
+                
+                // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+                //    ASC v1.2 spec since it also requires clamping at 1.)
+                CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
+                
+                // 1) Scale + Offset
+                CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_INVERSE);
+            }
         }
-        else if(combinedDir == TRANSFORM_DIR_INVERSE)
+        else
         {
-            // 3) Saturation + Clamp
-            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
-            
-            // 2) Power + Clamp
-            CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
-            
-            // 1) Scale + Offset
-            CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_INVERSE);
+            // Starting with the version 2, OCIO is now using a CDL Op
+            //   complying with the Common LUT Format (i.e. CLF) specification.
+
+            const double s[3] = { scale4[0],  scale4[1],  scale4[2]  };
+            const double o[3] = { offset4[0], offset4[1], offset4[2] };
+            const double p[3] = { power4[0],  power4[1],  power4[2]  };
+
+            CreateCDLOp(ops, 
+                        cdlTransform.getID(),
+                        OpData::Descriptions(cdlTransform.getDescription()),
+                        combinedDir==TRANSFORM_DIR_FORWARD 
+                            ? CDLOpData::CDL_V1_2_FWD
+                            : CDLOpData::CDL_V1_2_REV,
+                        s, o, p, double(sat), 
+                        combinedDir);
         }
     }
 }
@@ -629,6 +660,23 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 #include "UnitTestFiles.h"
+
+OIIO_ADD_TEST(CDLTransform, equality)
+{
+    const OCIO::CDLTransformRcPtr cdl1 = OCIO::CDLTransform::Create();
+    const OCIO::CDLTransformRcPtr cdl2 = OCIO::CDLTransform::Create();
+
+    OIIO_CHECK_ASSERT(cdl1->equals(cdl1));
+    OIIO_CHECK_ASSERT(cdl1->equals(cdl2));
+    OIIO_CHECK_ASSERT(cdl2->equals(cdl1));
+
+    const OCIO::CDLTransformRcPtr cdl3 = OCIO::CDLTransform::Create();
+    cdl3->setSat(cdl3->getSat()+0.002f);
+
+    OIIO_CHECK_ASSERT(!cdl1->equals(cdl3));
+    OIIO_CHECK_ASSERT(!cdl2->equals(cdl3));
+    OIIO_CHECK_ASSERT(cdl3->equals(cdl3));
+}
 
 OIIO_ADD_TEST(CDLTransform, CreateFromCCFile)
 {

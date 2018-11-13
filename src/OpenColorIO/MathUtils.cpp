@@ -43,22 +43,22 @@ namespace
 
 bool IsScalarEqualToZero(float v)
 {
-    return equalWithAbsError(v, 0.0f, FLTMIN);
+    return EqualWithAbsError(v, 0.0f, FLTMIN);
 }
 
 bool IsScalarEqualToZeroFlt(double v)
 {
-    return equalWithAbsError(float(v), 0.0f, FLTMIN);
+    return EqualWithAbsError(float(v), 0.0f, FLTMIN);
 }
 
 bool IsScalarEqualToOne(float v)
 {
-    return equalWithAbsError(v, 1.0f, FLTMIN);
+    return EqualWithAbsError(v, 1.0f, FLTMIN);
 }
 
 bool IsScalarEqualToOneFlt(double v)
 {
-    return equalWithAbsError(float(v), 1.0f, FLTMIN);
+    return EqualWithAbsError(float(v), 1.0f, FLTMIN);
 }
 
 float GetSafeScalarInverse(float v, float defaultValue)
@@ -119,7 +119,7 @@ bool VecsEqualWithRelError(const float* v1, int size1,
     if(size1 != size2) return false;
     for(int i=0; i<size1; ++i)
     {
-        if(!equalWithRelError(v1[i], v2[i], e)) return false;
+        if(!EqualWithRelError(v1[i], v2[i], e)) return false;
     }
     
     return true;
@@ -438,7 +438,7 @@ inline float addULP(const float f, const int ulp)
 //      |    -NaN    | Negative floats | Negative denorms | Positive denorms | Positive floats |    NaN    |
 //      +------------+-----------------+------------------+------------------+-----------------+-----------+
 //
-inline int floatForCompare(const unsigned floatBits)
+inline int FloatForCompare(const unsigned floatBits)
 {
     return floatBits < 0x80000000 ? (0x80000000 + floatBits) : (0x80000000 - (floatBits & 0x7FFFFFFF));
 }
@@ -474,7 +474,7 @@ inline int floatForCompare(const unsigned floatBits)
 //      |    -NaN    | Negative floats | Positive floats |    NaN    |
 //      +------------+-----------------+-----------------+-----------+
 //
-inline int floatForCompareCompressDenorms(const unsigned floatBits)
+inline int FloatForCompareCompressDenorms(const unsigned floatBits)
 {
     const int absi = (floatBits & 0x7FFFFFFF);
     if (absi < 0x00800000)
@@ -487,7 +487,7 @@ inline int floatForCompareCompressDenorms(const unsigned floatBits)
     }
 }
 
-inline void extractFloatComponents(const unsigned floatBits, unsigned& sign,
+inline void ExtractFloatComponents(const unsigned floatBits, unsigned& sign,
                                    unsigned& exponent, unsigned& mantissa)
 {
     mantissa = floatBits & 0x007FFFFF;
@@ -496,15 +496,15 @@ inline void extractFloatComponents(const unsigned floatBits, unsigned& sign,
     sign = signExp >> 8;
 }
 
-bool floatsDiffer(const float expected, const float actual,
+bool FloatsDiffer(const float expected, const float actual,
                   const int tolerance, const bool compressDenorms)
 {
-    const unsigned expectedBits = floatAsInt(expected);
-    const unsigned actualBits = floatAsInt(actual);
+    const unsigned expectedBits = FloatAsInt(expected);
+    const unsigned actualBits = FloatAsInt(actual);
 
     unsigned es, ee, em, as, ae, am;
-    extractFloatComponents(expectedBits, es, ee, em);
-    extractFloatComponents(actualBits, as, ae, am);
+    ExtractFloatComponents(expectedBits, es, ee, em);
+    ExtractFloatComponents(actualBits, as, ae, am);
 
     const bool isExpectedSpecial = (ee == 0xFF);
     const bool isActualSpecial = (ae == 0xFF);
@@ -548,13 +548,13 @@ bool floatsDiffer(const float expected, const float actual,
     int expectedBitsComp, actualBitsComp;
     if (compressDenorms)
     {
-        expectedBitsComp = floatForCompareCompressDenorms(expectedBits);
-        actualBitsComp = floatForCompareCompressDenorms(actualBits);
+        expectedBitsComp = FloatForCompareCompressDenorms(expectedBits);
+        actualBitsComp = FloatForCompareCompressDenorms(actualBits);
     }
     else
     {
-        expectedBitsComp = floatForCompare(expectedBits);
-        actualBitsComp = floatForCompare(actualBits);
+        expectedBitsComp = FloatForCompare(expectedBits);
+        actualBitsComp = FloatForCompare(actualBits);
     }
 
     return abs(expectedBitsComp - actualBitsComp) > tolerance;
@@ -834,8 +834,7 @@ OIIO_ADD_TEST(MathUtils, mxb_invert)
 }
 
 
-//
-// Infrastructure for testing floatsDiffer()
+// Infrastructure for testing FloatsDiffer()
 //
 #define KEEP_DENORMS      false
 #define COMPRESS_DENORMS  true
@@ -867,10 +866,10 @@ const float posrandom =  12.345f;
 const float negrandom = -12.345f;
 
 // Helper macros to declare float variables close to a reference value.
-// We use these variables to validate the threshold comparison of floatsDiffer.
+// We use these variables to validate the threshold comparison of FloatsDiffer.
 //
 #define DECLARE_FLOAT(VAR_NAME, REFERENCE, ULP) \
-  const float VAR_NAME = addULP(REFERENCE, ULP)
+  const float VAR_NAME = AddULP(REFERENCE, ULP)
 
 #define DECLARE_FLOAT_PLUS_ULP(VAR_PREFIX, REFERENCE, ULP1, ULP2, ULP3, ULP4, ULP5, ULP6) \
   DECLARE_FLOAT(VAR_PREFIX##ULP1, REFERENCE, ULP1); \
@@ -943,9 +942,9 @@ std::string getErrorMessageDifferent(const float a,
 {
     std::ostringstream oss;
     oss << "The values " << a << " "
-        << "(" << std::hex << std::showbase << floatAsInt(a) << std::dec << ") "
+        << "(" << std::hex << std::showbase << FloatAsInt(a) << std::dec << ") "
         << "and " << b << " "
-        << "(" << std::hex << std::showbase << floatAsInt(b) << std::dec << ") "
+        << "(" << std::hex << std::showbase << FloatAsInt(b) << std::dec << ") "
         << "are expected to be DIFFERENT within a tolerance of " << tolerance << " ULPs "
         << ( compressDenorms ? "(when compressing denormalized numbers)."
                              : "(when keeping denormalized numbers)." );
@@ -956,10 +955,10 @@ std::string getErrorMessageDifferent(const float a,
 void checkFloatsAreDifferent(const float ref, const int tolerance, const bool compressDenorms,
                              const float a)
 {
-    TEST_CHECK_MESSAGE(floatsDiffer(ref, a, tolerance, compressDenorms),
+    TEST_CHECK_MESSAGE(FloatsDiffer(ref, a, tolerance, compressDenorms),
                        getErrorMessageDifferent(ref, a, tolerance, compressDenorms) );
 
-    TEST_CHECK_MESSAGE(floatsDiffer(a, ref, tolerance, compressDenorms),
+    TEST_CHECK_MESSAGE(FloatsDiffer(a, ref, tolerance, compressDenorms),
                        getErrorMessageDifferent(a, ref, tolerance, compressDenorms) );
 }
 
@@ -1010,9 +1009,9 @@ std::string getErrorMessageClose(const float a, const float b, const int toleran
 {
     std::ostringstream oss;
     oss << "The values " << a << " "
-        << "(" << std::hex << std::showbase << floatAsInt(a) << std::dec << ") "
+        << "(" << std::hex << std::showbase << FloatAsInt(a) << std::dec << ") "
         << "and " << b << " "
-        << "(" << std::hex << std::showbase << floatAsInt(b) << std::dec << ") "
+        << "(" << std::hex << std::showbase << FloatAsInt(b) << std::dec << ") "
         << "are expected to be CLOSE within a tolerance of " << tolerance << " ULPs "
         << ( compressDenorms ? "(when compressing denormalized numbers)."
                              : "(when keeping denormalized numbers)." );
@@ -1023,15 +1022,15 @@ std::string getErrorMessageClose(const float a, const float b, const int toleran
 void checkFloatsAreClose(const float ref, const int tolerance, const bool compressDenorms,
                          const float a)
 {
-    TEST_CHECK_MESSAGE(!floatsDiffer(ref, a, tolerance, compressDenorms),
+    TEST_CHECK_MESSAGE(!FloatsDiffer(ref, a, tolerance, compressDenorms),
                        getErrorMessageClose(ref, a, tolerance, compressDenorms) );
 
-    TEST_CHECK_MESSAGE(!floatsDiffer(a, ref, tolerance, compressDenorms),
+    TEST_CHECK_MESSAGE(!FloatsDiffer(a, ref, tolerance, compressDenorms),
                        getErrorMessageClose(a, ref, tolerance, compressDenorms) );
 }
 
 void checkFloatsAreClose(const float ref, const int tolerance, const bool compressDenorms,
-                       const float a, const float b)
+                         const float a, const float b)
 {
     checkFloatsAreClose(ref, tolerance, compressDenorms, a);
     checkFloatsAreClose(ref, tolerance, compressDenorms, b);
@@ -1076,9 +1075,9 @@ std::string getErrorMessageEqual(const float a, const float b, const bool compre
 {
     std::ostringstream oss;
     oss << "The values " << a << " "
-        << "(" << std::hex << std::showbase << floatAsInt(a) << std::dec << ") "
+        << "(" << std::hex << std::showbase << FloatAsInt(a) << std::dec << ") "
         << "and " << b << " "
-        << "(" << std::hex << std::showbase << floatAsInt(b) << std::dec << ") "
+        << "(" << std::hex << std::showbase << FloatAsInt(b) << std::dec << ") "
         << "are expected to be EQUAL "
         << ( compressDenorms ? "(when compressing denormalized numbers)."
                              : "(when keeping denormalized numbers)." );
@@ -1088,10 +1087,10 @@ std::string getErrorMessageEqual(const float a, const float b, const bool compre
 
 void checkFloatsAreEqual(const float ref, const bool compressDenorms, const float a)
 {
-    TEST_CHECK_MESSAGE(!floatsDiffer(ref, a, 0, compressDenorms),
+    TEST_CHECK_MESSAGE(!FloatsDiffer(ref, a, 0, compressDenorms),
                        getErrorMessageEqual(ref, a, compressDenorms) );
 
-    TEST_CHECK_MESSAGE(!floatsDiffer(a, ref, 0, compressDenorms),
+    TEST_CHECK_MESSAGE(!FloatsDiffer(a, ref, 0, compressDenorms),
                        getErrorMessageEqual(a, ref, compressDenorms) );
 }
 

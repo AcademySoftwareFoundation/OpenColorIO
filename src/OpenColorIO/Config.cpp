@@ -273,11 +273,11 @@ OCIO_NAMESPACE_ENTER
             sanity_(SANITY_UNKNOWN)
         {
             std::string activeDisplays;
-            Platform::getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
+            Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
             SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays.c_str());
             
             std::string activeViews;
-            Platform::getenv(OCIO_ACTIVE_VIEWS_ENVVAR, activeViews);
+            Platform::Getenv(OCIO_ACTIVE_VIEWS_ENVVAR, activeViews);
             SplitStringEnvStyle(activeViewsEnvOverride_, activeViews.c_str());
             
             defaultLumaCoefs_.resize(3);
@@ -369,7 +369,7 @@ OCIO_NAMESPACE_ENTER
     ConstConfigRcPtr Config::CreateFromEnv()
     {
         std::string file;
-        Platform::getenv(OCIO_CONFIG_ENVVAR, file);
+        Platform::Getenv(OCIO_CONFIG_ENVVAR, file);
         if(!file.empty()) return CreateFromFile(file.c_str());
         
         std::ostringstream os;
