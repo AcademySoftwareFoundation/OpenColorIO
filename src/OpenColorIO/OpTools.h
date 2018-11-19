@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
     // Returns the ideal LUT size based on a specific bit depth
-    unsigned GetLutIdealSize(BitDepth incomingBitDepth);
+    unsigned long GetLutIdealSize(BitDepth incomingBitDepth);
 
     // Control behavior of 1D LUT composition.
     enum ComposeMethod

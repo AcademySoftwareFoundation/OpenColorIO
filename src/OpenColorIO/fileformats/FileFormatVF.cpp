@@ -33,11 +33,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "transforms/FileTransform.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Matrix/MatrixOps.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
+#include "transforms/FileTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -49,12 +49,13 @@ OCIO_NAMESPACE_ENTER
             LocalCachedFile () :
                 useMatrix(false)
             {
-                lut3D = Lut3DOpData::Create();
+                lut3D = Lut3D::Create();
                 memset(m44, 0, 16*sizeof(float));
             };
             ~LocalCachedFile() {};
             
-            Lut3DOpDataRcPtr lut3D;
+            // TODO: switch opdata
+            Lut3DRcPtr lut3D;
             float m44[16];
             bool useMatrix;
         };

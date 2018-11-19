@@ -145,6 +145,23 @@ double ClampToNormHalf(double val)
     return val;
 }
 
+float SanitizeFloat(float f)
+{
+    if (f == -std::numeric_limits<float>::infinity())
+    {
+        return -std::numeric_limits<float>::max();
+    }
+    else if (f == std::numeric_limits<float>::infinity())
+    {
+        return std::numeric_limits<float>::max();
+    }
+    else if (isnan(f))
+    {
+        return 0.0f;
+    }
+    return f;
+}
+
 bool IsM44Identity(const float* m44)
 {
     int index=0;

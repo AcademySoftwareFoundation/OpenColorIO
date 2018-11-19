@@ -43,9 +43,6 @@ OCIO_NAMESPACE_USING
 const int LUT3D_EDGE_SIZE = 32;
 
 
-const float g_epsilon = 1e-4f;
-
-
 OCIO_ADD_GPU_TEST(Lut3DOp, red_only_using_CSP_file_legacy_shader)
 {
     // Any other 3D LUT file format would have been good also.
@@ -87,7 +84,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, red_only_using_CSP_file_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(g_epsilon);
+    test.setErrorThreshold(2e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut3DOp, green_only_using_CSP_file_legacy_shader)
@@ -131,7 +128,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, green_only_using_CSP_file_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(g_epsilon);
+    test.setErrorThreshold(2e-4f);
 }
 
 OCIO_ADD_GPU_TEST(Lut3DOp, blue_only_using_CSP_file_legacy_shader)
@@ -175,7 +172,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, blue_only_using_CSP_file_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(g_epsilon);
+    test.setErrorThreshold(2e-4f);
 }
 
 
@@ -314,8 +311,9 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_legacy_shader)
 }
 
 
-OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_generic_shader)
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_linear)
 {
+    // Linear interpolation
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
@@ -324,14 +322,93 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_generic_shader)
     test.setErrorThreshold(5e-4f);
 }
 
-
-OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_nearest_generic_shader)
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_tetra)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
-    file->setInterpolation(OCIO::INTERP_NEAREST);
+    file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
 
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-6f);
 }
 
+OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_linear)
+{
+    // The test uses the FAST style of inverse on both CPU and GPU.
+    // The FAST style uses EXACT inversion to build an approximate inverse
+    // that may be applied as a forward Lut3D.  
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
+    file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1.2e-3f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_tetra)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_1.spi3d");
+    file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    // Note: Currently the interpolation style is ignored when applying the
+    // inverse LUT, so this test produces the same result as the previous one.
+    file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1.2e-3f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_linear)
+{
+    // Linear interpolation
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre.spi3d");
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-2f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_tetra)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre.spi3d");
+    file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(1e-6f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_bizarre_linear)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre.spi3d");
+    file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(3e-4f);
+}
+
+OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_bizarre_tetra)
+{
+    OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre.spi3d");
+    file->setDirection(OCIO::TRANSFORM_DIR_INVERSE);
+    file->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+
+    OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
+
+    test.setContext(file->createEditableCopy(), shaderDesc);
+    test.setErrorThreshold(3e-4f);
+}
+
+
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererLut3D_File2_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererLut3D_File3_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererLut3D_File4_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererInvLut3D_File1_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererBiggestSupportedLut3D_test

@@ -169,6 +169,14 @@ int Strcasecmp(const char* str1, const char* str2);
 // Case insensitive string comparison for the nth first characters only
 int Strncasecmp(const char* str1, const char* str2, size_t n);
 
+// Allocates memory on a specified alignment boundary. Must use
+// AlignedFree to free the memory block.
+// An exception is thrown if an allocation error occurs.
+void* AlignedMalloc(size_t size, size_t alignment);
+
+// Frees a block of memory that was allocated with alignedMalloc.
+void AlignedFree(void* memBlock);
+
 }
 
 }

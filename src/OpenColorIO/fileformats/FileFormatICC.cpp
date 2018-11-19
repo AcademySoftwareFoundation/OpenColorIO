@@ -486,31 +486,6 @@ OCIO::LocalCachedFileRcPtr LoadICCFile(const std::string & fileName)
         fileName, std::ios_base::binary);
 }
 
-void BuildOps(const std::string & fileName,
-              OCIO::OpRcPtrVec & fileOps,
-              OCIO::TransformDirection dir)
-{
-    const std::string filePath(std::string(OCIO::getTestFilesDir()) + "/"
-                               + fileName);
-
-    // Create a FileTransform
-    OCIO::FileTransformRcPtr pFileTransform
-        = OCIO::FileTransform::Create();
-    // A transform file does not define any interpolation (contrary to config
-    // file), this is to avoid exception when creating the operation.
-    pFileTransform->setInterpolation(OCIO::INTERP_LINEAR);
-    pFileTransform->setDirection(OCIO::TRANSFORM_DIR_FORWARD);
-    pFileTransform->setSrc(filePath.c_str());
-
-    // Create empty Config to use
-    OCIO::ConfigRcPtr pConfig = OCIO::Config::Create();
-
-    OCIO::ContextRcPtr pContext = OCIO::Context::Create();
-
-    OCIO::BuildFileOps(fileOps, *(pConfig.get()), pContext,
-        *(pFileTransform.get()), dir);
-}
-
 OIIO_ADD_TEST(FileFormatICC, TestFile)
 {
     OCIO::LocalCachedFileRcPtr iccFile;

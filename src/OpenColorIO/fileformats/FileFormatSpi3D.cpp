@@ -26,14 +26,14 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "transforms/FileTransform.h"
-#include "ops/Lut3D/Lut3DOp.h"
-#include "pystring/pystring.h"
-
 #include <cstdio>
 #include <sstream>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "ops/Lut3D/Lut3DOp.h"
+#include "pystring/pystring.h"
+#include "transforms/FileTransform.h"
 
 /*
 SPILUT 1.0
@@ -60,11 +60,12 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile()
             {
-                lut = Lut3DOpData::Create();
+                lut = Lut3D::Create();
             };
             ~LocalCachedFile() {};
             
-            Lut3DOpDataRcPtr lut;
+            // TODO: switch opdata
+            Lut3DRcPtr lut;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
@@ -109,7 +110,8 @@ OCIO_NAMESPACE_ENTER
             const int MAX_LINE_SIZE = 4096;
             char lineBuffer[MAX_LINE_SIZE];
 
-            Lut3DOpDataRcPtr lut3d = Lut3DOpData::Create();
+            // TODO: switch opdata
+            Lut3DRcPtr lut3d = Lut3D::Create();
 
             // Read header information
             istream.getline(lineBuffer, MAX_LINE_SIZE);
