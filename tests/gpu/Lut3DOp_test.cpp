@@ -369,6 +369,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_linear)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    // This is due to the fact that the LUT is small and to
+    // the GPU 8-bit index quantization.
     test.setErrorThreshold(1e-2f);
 }
 
