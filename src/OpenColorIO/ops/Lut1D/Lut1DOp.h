@@ -41,7 +41,8 @@ OCIO_NAMESPACE_ENTER
   
     class Lut1DOpData;
     typedef OCIO_SHARED_PTR<Lut1DOpData> Lut1DOpDataRcPtr;
-    
+    typedef OCIO_SHARED_PTR<const Lut1DOpData> ConstLut1DOpDataRcPtr;
+
     class Lut1DOpData : public OpData
     {
     public:

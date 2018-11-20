@@ -182,8 +182,9 @@ OIIO_ADD_TEST(AllocationOps, Create)
     ops.clear();
     OIIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_EQUAL(ops.size(), 1);
-    OIIO_CHECK_EQUAL(forwardFitOp->isInverse(ops[0]), true);
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OIIO_CHECK_EQUAL(forwardFitOp->isInverse(op0), true);
     ops.clear();
 
     allocData.allocation = ALLOCATION_LG2;
@@ -192,13 +193,14 @@ OIIO_ADD_TEST(AllocationOps, Create)
     allocData.vars.clear();
     OIIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO::ConstOpRcPtr op1 = ops[1];
     // second op is a fit transform
-    OIIO_CHECK_EQUAL(forwardFitOp->isSameType(ops[1]), true);
+    OIIO_CHECK_EQUAL(forwardFitOp->isSameType(op1), true);
     OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops));
-    OIIO_CHECK_EQUAL(ops.size(), 2);
-    const OpRcPtr defaultLogOp = ops[0];
-    const OpRcPtr defaultFitOp = ops[1];
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    ConstOpRcPtr defaultLogOp = ops[0];
+    ConstOpRcPtr defaultFitOp = ops[1];
 
     const float error = 1e-6f;
     const unsigned NB_PIXELS = 3;
@@ -240,9 +242,11 @@ OIIO_ADD_TEST(AllocationOps, Create)
 
     OIIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_EQUAL(ops.size(), 2);
-    OIIO_CHECK_EQUAL(defaultFitOp->isInverse(ops[0]), true);
-    OIIO_CHECK_EQUAL(defaultLogOp->isInverse(ops[1]), true);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    op0 = ops[0];
+    op1 = ops[1];
+    OIIO_CHECK_EQUAL(defaultFitOp->isInverse(op0), true);
+    OIIO_CHECK_EQUAL(defaultLogOp->isInverse(op1), true);
 
     ops.clear();
     OIIO_CHECK_THROW_WHAT(
@@ -256,13 +260,15 @@ OIIO_ADD_TEST(AllocationOps, Create)
 
     OIIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 1);
-    OIIO_CHECK_EQUAL(defaultLogOp->isSameType(ops[0]), true);
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    op0 = ops[0];
+    OIIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
     ops.clear();
     OIIO_CHECK_NO_THROW(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_EQUAL(ops.size(), 1);
-    OIIO_CHECK_EQUAL(defaultLogOp->isSameType(ops[0]), true);
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+    op0 = ops[0];
+    OIIO_CHECK_EQUAL(defaultLogOp->isSameType(op0), true);
     ops.clear();
     OIIO_CHECK_THROW_WHAT(
         CreateAllocationOps(ops, allocData, TRANSFORM_DIR_UNKNOWN),

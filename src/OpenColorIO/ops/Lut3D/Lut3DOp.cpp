@@ -614,8 +614,8 @@ OCIO_NAMESPACE_ENTER
             
             virtual std::string getInfo() const;
             
-            virtual bool isSameType(const OpRcPtr & op) const;
-            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool isSameType(ConstOpRcPtr & op) const;
+            virtual bool isInverse(ConstOpRcPtr & op) const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
@@ -623,7 +623,8 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
         protected:
-            const Lut3DOpDataRcPtr lutData() const { return DynamicPtrCast<Lut3DOpData>(const_data()); }
+            ConstLut3DOpDataRcPtr lutData() const { return DynamicPtrCast<const Lut3DOpData>(data()); }
+            Lut3DOpDataRcPtr lutData() { return DynamicPtrCast<Lut3DOpData>(data()); }
 
         private:
             Interpolation m_interpolation;
@@ -631,7 +632,7 @@ OCIO_NAMESPACE_ENTER
         };
         
         typedef OCIO_SHARED_PTR<Lut3DOp> Lut3DOpRcPtr;
-        
+        typedef OCIO_SHARED_PTR<const Lut3DOp> ConstLut3DOpRcPtr;
         
         Lut3DOp::Lut3DOp(Lut3DOpDataRcPtr lut,
                          Interpolation interpolation,
@@ -645,8 +646,10 @@ OCIO_NAMESPACE_ENTER
         
         OpRcPtr Lut3DOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new Lut3DOp(lutData(), m_interpolation, m_direction));
-            return op;
+            Lut3DOpDataRcPtr clonedData = Lut3DOpData::Create();
+            *clonedData = *lutData();
+
+            return std::make_shared<Lut3DOp>(clonedData, m_interpolation, m_direction);
         }
         
         Lut3DOp::~Lut3DOp()
@@ -657,16 +660,16 @@ OCIO_NAMESPACE_ENTER
             return "<Lut3DOp>";
         }
         
-        bool Lut3DOp::isSameType(const OpRcPtr & op) const
+        bool Lut3DOp::isSameType(ConstOpRcPtr & op) const
         {
-            Lut3DOpRcPtr typedRcPtr = DynamicPtrCast<Lut3DOp>(op);
+            ConstLut3DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut3DOp>(op);
             if(!typedRcPtr) return false;
             return true;
         }
         
-        bool Lut3DOp::isInverse(const OpRcPtr & op) const
+        bool Lut3DOp::isInverse(ConstOpRcPtr & op) const
         {
-            Lut3DOpRcPtr typedRcPtr = DynamicPtrCast<Lut3DOp>(op);
+            ConstLut3DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut3DOp>(op);
             if(!typedRcPtr) return false;
             
             if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
@@ -971,17 +974,22 @@ OIIO_ADD_TEST(Lut3DOp, InverseComparisonCheck)
     OIIO_CHECK_NO_THROW(CreateLut3DOp(ops,
         lut_b, OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
     
-    OIIO_CHECK_EQUAL(ops.size(), 4);
+    OIIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+    OCIO::ConstOpRcPtr op2 = ops[2];
+    OCIO::ConstOpRcPtr op3 = ops[3];
 
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[2]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]->clone()));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op1));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op2));
+    OCIO::ConstOpRcPtr op3Cloned = ops[3]->clone();
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op3Cloned));
     
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[1]), true);
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[3]), false);
-    OIIO_CHECK_EQUAL( ops[2]->isInverse(ops[3]), true);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(op1), true);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(op2), false);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(op2), false);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(op3), false);
+    OIIO_CHECK_EQUAL( ops[2]->isInverse(op3), true);
 }
 
 
