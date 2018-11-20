@@ -18,60 +18,10 @@ are Contributors who have earned the ability to modify source code,
 documentation, or other technical artifacts to the project. Upon becoming
 Committers, they become members of the OCIO leadership team.
 
-Their privileges include but are not limited to:
+Their privileges include, but are not limited to:
 
 * Commit access to the OpenColorIO repository
 * Moderator status on all communication channels
-
-Modifications of the contents of the OpenColorIO repository are made on a
-collaborative basis. Anyone with a GitHub account may propose a modification via
-pull request and it will be considered by the project Committers.
-
-Pull requests must meet a minimum number of Committer approvals prior to being
-merged. Rather than having a hard rule for all PRs, the requirement is based on
-the complexity and risk of the proposed changes, factoring in the length of
-time the PR has been open to discussion. The following guidelines outline the
-project's established approval rules for merging:
-
-* Core design decisions, large new features, or anything that might be perceived
-as changing the overall direction of the project should be discussed at length
-in the mail list before any PR is submitted, in order to: solicit feedback, try
-to get as much consensus as possible, and alert all the stakeholders to be on
-the lookout for the eventual PR when it appears.
-
-* Small changes (bug fixes, docs, tests, cleanups) can be approved and merged by
-a single Committer.
-
-* Big changes that can alter behavior, add major features, or present a high
-degree of risk should be signed off by TWO Committers, ideally one of whom
-should be the "owner" for that section of the codebase (if a specific owner
-has been designated). If the person submitting the PR is him/herself the "owner"
-of that section of the codebase, then only one additional Committer approval is
-sufficient. But in either case, a 48 hour minimum is helpful to give everybody a
-chance to see it, unless it's a critical emergency fix (which would probably put
-it in the previous "small fix" category, rather than a "big feature").
-
-* Escape valve: big changes can nonetheless be merged by a single Committer if
-the PR has been open for over two weeks without any unaddressed objections from
-other Committers. At some point, we have to assume that the people who know and
-care are monitoring the PRs and that an extended period without objections is
-really assent.
-
-Approval must be from Committers who are not authors of the change. If one or
-more Committers oppose a proposed change, then the change cannot be accepted
-unless:
-
-* Discussions and/or additional changes result in no Committers objecting to the
-change. Previously-objecting Committers do not necessarily have to sign-off on
-the change, but they should not be opposed to it.
-
-* The change is escalated to the TSC and the TSC votes to approve the change.
-This should only happen if disagreements between Committers cannot be resolved
-through discussion.
-
-Committers may opt to elevate significant or controversial modifications to the
-TSC by assigning the `tsc-review` label to a pull request or issue. The TSC
-should serve as the final arbiter where required.
 
 ### Committer Activities
 
@@ -87,7 +37,7 @@ The TSC periodically reviews the Committer list to identify inactive Committers.
 Past Committers are typically given Emeritus status. Emeriti may request that
 the TSC restore them to active Committer status.
 
-## Committer Nominations
+### Committer Nominations
 
 Any existing Committer can nominate an individual making significant and
 valuable contributions to the OpenColorIO project to become a new Committer.
@@ -95,7 +45,7 @@ valuable contributions to the OpenColorIO project to become a new Committer.
 To nominate a new Committer, open an issue in the OCIO repository, with a
 summary of the nominee's contributions.
 
-If there are no objections raised by any Committers one week after the issue is
+If there are no objections raised by any Committers two weeks after the issue is
 opened, the nomination will be considered as accepted. Should there be any
 objections against the nomination, the TSC is responsible for working with the
 individuals involved and finding a resolution. The nomination must be approved
@@ -114,7 +64,7 @@ directly.
 
 A subset of the Committers forms the Technical Steering Committee (TSC), which
 has final authority over this project. As defined in the project charter, TSC
-responsibilities include, but not limited to:
+responsibilities include, but are not limited to:
 
 * Coordinating technical direction of the Project
 * Project governance and process (including this policy)
@@ -128,7 +78,7 @@ communities
 matters relating to the code base that affect multiple projects
 * Coordinating any marketing, events, or communications regarding the project
 
-Within the TSC are three elected leadership roles to be held by its members and
+Within the TSC are two elected leadership roles to be held by its members and
 voted on annually. Any TSC member can express interest in serving in a role, or
 nominate another member to serve. There are no term limits, and one person may
 hold multiple roles simultaneously. Should a TSC member resign from a leadership
@@ -143,14 +93,15 @@ providing oversight to project administration.
 technical decisions, and is responsible for avoiding "design by committee"
 pitfalls.
 
-* ASWF TAC Representative: This position represents the project at all ASWF
-(Academy Software Foundation) TAC (Technical Advisory Council) meetings.
+At the time of election, the TSC will also agree upon which of these two leaders
+will serve as the OpenColorIO ASWF (Academy Software Foundation) TAC (Technical
+Advisory Council) representative for the term. This member represents the
+project at all ASWF TAC meetings.
 
 ### TSC Leaders
 
 * Chair: TBD
 * Chief Architect: TBD
-* ASWF TAC Representative: TBD
 
 ### TSC Members
 

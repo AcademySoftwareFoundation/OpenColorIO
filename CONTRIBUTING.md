@@ -25,12 +25,9 @@ and general color questions.
 
 * [Slack](https://opencolorio.slack.com):
 The OpenColorIO Slack group is where developers and expert users go to have
-real-time communication around OCIO. This group is invitation only, but we’re
-quite lackadaisical in our barrier for entry. Simply put, if you just have
-a quick question it's not worth joining, but if you want to start actively
-participating and communicating more “casually” with project developers, this is
-the place for you. Please request an invitation on the ocio-dev email list
-mentioned above.
+real-time communication around OCIO. The group is invitation only, but just
+email us and we'll add anyone who is interested in participating in the
+discussion.
 
 * [GitHub Issues](https://github.com/imageworks/OpenColorIO/issues):
 GitHub **issues** are a great place to start a conversation! Issues aren’t
@@ -120,7 +117,58 @@ for merging after all builds have succeeded.
 who may discuss, offer constructive feedback, request changes, or approve
 the work.
 
-7. Upon receiving the required number of Committer approvals (as outlined in
-[GOVERNANCE.md](https://github.com/imageworks/OpenColorIO/blob/master/GOVERNANCE.md#committers)),
-a Committer other than the PR contributor may squash and merge changes into the
-master branch.
+7. Upon receiving the required number of Committer approvals (as outlined
+in [Required Approvals](#required-approvals)), a Committer other than the PR
+contributor may squash and merge changes into the master branch.
+
+## Required Approvals
+
+Modifications of the contents of the OpenColorIO repository are made on a
+collaborative basis. Anyone with a GitHub account may propose a modification via
+pull request and it will be considered by the project Committers.
+
+Pull requests must meet a minimum number of Committer approvals prior to being
+merged. Rather than having a hard rule for all PRs, the requirement is based on
+the complexity and risk of the proposed changes, factoring in the length of
+time the PR has been open to discussion. The following guidelines outline the
+project's established approval rules for merging:
+
+* Core design decisions, large new features, or anything that might be perceived
+as changing the overall direction of the project should be discussed at length
+in the mail list before any PR is submitted, in order to: solicit feedback, try
+to get as much consensus as possible, and alert all the stakeholders to be on
+the lookout for the eventual PR when it appears.
+
+* Small changes (bug fixes, docs, tests, cleanups) can be approved and merged by
+a single Committer.
+
+* Big changes that can alter behavior, add major features, or present a high
+degree of risk should be signed off by TWO Committers, ideally one of whom
+should be the "owner" for that section of the codebase (if a specific owner
+has been designated). If the person submitting the PR is him/herself the "owner"
+of that section of the codebase, then only one additional Committer approval is
+sufficient. But in either case, a 48 hour minimum is helpful to give everybody a
+chance to see it, unless it's a critical emergency fix (which would probably put
+it in the previous "small fix" category, rather than a "big feature").
+
+* Escape valve: big changes can nonetheless be merged by a single Committer if
+the PR has been open for over two weeks without any unaddressed objections from
+other Committers. At some point, we have to assume that the people who know and
+care are monitoring the PRs and that an extended period without objections is
+really assent.
+
+Approval must be from Committers who are not authors of the change. If one or
+more Committers oppose a proposed change, then the change cannot be accepted
+unless:
+
+* Discussions and/or additional changes result in no Committers objecting to the
+change. Previously-objecting Committers do not necessarily have to sign-off on
+the change, but they should not be opposed to it.
+
+* The change is escalated to the TSC and the TSC votes to approve the change.
+This should only happen if disagreements between Committers cannot be resolved
+through discussion.
+
+Committers may opt to elevate significant or controversial modifications to the
+TSC by assigning the `tsc-review` label to a pull request or issue. The TSC
+should serve as the final arbiter where required.
