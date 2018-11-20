@@ -744,7 +744,8 @@ OCIO_NAMESPACE_ENTER
             }
 
             // But if the LUT has values outside [0,1], use a half-domain fastLUT.
-            if(HasExtendedDomain(lutData()))
+            ConstLut1DOpDataRcPtr lutOpData = lutData();
+            if(HasExtendedDomain(lutOpData))
             {
                 depth = BIT_DEPTH_F16;
             }

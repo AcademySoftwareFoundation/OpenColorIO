@@ -171,7 +171,8 @@ bool RangeOp::isInverse(ConstOpRcPtr & op) const
         return *rangeData()==*(typedRcPtr->rangeData());
     }
 
-    return rangeData()->isInverse(typedRcPtr->rangeData());
+    ConstRangeOpDataRcPtr rangeOpData = typedRcPtr->rangeData();
+    return rangeData()->isInverse(rangeOpData);
 }
 
 bool RangeOp::canCombineWith(ConstOpRcPtr & /*op*/) const
@@ -207,7 +208,8 @@ void RangeOp::finalize()
     rangeData()->validate();
     rangeData()->finalize();
 
-    m_cpu = RangeOpCPU::GetRenderer(constThis.rangeData());
+    ConstRangeOpDataRcPtr rangeOpData = constThis.rangeData();
+    m_cpu = RangeOpCPU::GetRenderer(rangeOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;

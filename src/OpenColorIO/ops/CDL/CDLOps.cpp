@@ -197,7 +197,8 @@ bool CDLOp::isInverse(ConstOpRcPtr & op) const
         return *cdlData()==*typedRcPtr->cdlData();
     }
 
-    return cdlData()->isInverse(typedRcPtr->cdlData());
+    ConstCDLOpDataRcPtr cdlOpData = typedRcPtr->cdlData();
+    return cdlData()->isInverse(cdlOpData);
 }
 
 bool CDLOp::canCombineWith(ConstOpRcPtr & /*op*/) const
@@ -237,7 +238,8 @@ void CDLOp::finalize()
     cdlData()->validate();
     cdlData()->finalize();
 
-    m_cpu = CDLOpCPU::GetRenderer(constThis.cdlData());
+    ConstCDLOpDataRcPtr cdlOpData = constThis.cdlData();
+    m_cpu = CDLOpCPU::GetRenderer(cdlOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -269,7 +271,8 @@ void CDLOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
     }
 
     RenderParams params;
-    params.update(cdlData());
+    ConstCDLOpDataRcPtr cdlOpData = cdlData();
+    params.update(cdlOpData);
 
     const float * slope    = params.getSlope();
     const float * offset   = params.getOffset();

@@ -259,7 +259,8 @@ OCIO_NAMESPACE_ENTER
         void ExponentOp::apply(float* rgbaBuffer, long numPixels) const
         {
             if(!rgbaBuffer) return;
-            ApplyClampExponent(rgbaBuffer, numPixels, expData());
+            ConstExponentOpDataRcPtr expOpData = expData();
+            ApplyClampExponent(rgbaBuffer, numPixels, expOpData);
         }
         
         void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const 

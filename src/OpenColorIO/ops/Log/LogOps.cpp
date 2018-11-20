@@ -317,13 +317,14 @@ OCIO_NAMESPACE_ENTER
         
         void LogOp::apply(float* rgbaBuffer, long numPixels) const
         {
+            ConstLogOpDataRcPtr logOpData = logData();
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
-                ApplyLinToLog(rgbaBuffer, numPixels, logData());
+                ApplyLinToLog(rgbaBuffer, numPixels, logOpData);
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                ApplyLogToLin(rgbaBuffer, numPixels, logData());
+                ApplyLogToLin(rgbaBuffer, numPixels, logOpData);
             }
         } // Op::process
         

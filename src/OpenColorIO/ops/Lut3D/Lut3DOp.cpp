@@ -735,17 +735,18 @@ OCIO_NAMESPACE_ENTER
         
         void Lut3DOp::apply(float* rgbaBuffer, long numPixels) const
         {
+            ConstLut3DOpDataRcPtr lutOpData = lutData();
             if(m_interpolation == INTERP_NEAREST)
             {
-                Lut3D_Nearest(rgbaBuffer, numPixels, *lutData());
+                Lut3D_Nearest(rgbaBuffer, numPixels, *lutOpData);
             }
             else if(m_interpolation == INTERP_LINEAR)
             {
-                Lut3D_Linear(rgbaBuffer, numPixels, *lutData());
+                Lut3D_Linear(rgbaBuffer, numPixels, *lutOpData);
             }
             else if(m_interpolation == INTERP_TETRAHEDRAL)
             {
-                Lut3D_Tetrahedral(rgbaBuffer, numPixels, *lutData());
+                Lut3D_Tetrahedral(rgbaBuffer, numPixels, *lutOpData);
             }
         }
         
