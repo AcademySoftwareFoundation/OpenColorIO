@@ -40,6 +40,7 @@ set(SOURCES
 	BitDepthUtils.cpp
 	Caching.cpp
 	ColorSpace.cpp
+	ColorSpaceSet.cpp
 	Config.cpp
 	Context.cpp
 	Display.cpp

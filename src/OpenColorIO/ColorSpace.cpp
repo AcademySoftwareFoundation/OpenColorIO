@@ -175,7 +175,34 @@ OCIO_NAMESPACE_ENTER
     {
         getImpl()->bitDepth_ = bitDepth;
     }
-    
+
+    bool ColorSpace::hasCategory(const char * category)
+    {
+        return false;
+    }
+
+    void ColorSpace::addCategory(const char * category)
+    {
+    }
+
+    void ColorSpace::removeCategory(const char * category)
+    {
+    }
+
+    int ColorSpace::getNumCategories(const char * category)
+    {
+        return -1;
+    }
+
+    const char * ColorSpace::getCategory(int index)
+    {
+        return "";
+    }
+
+    void ColorSpace::clearCategories()
+    {
+    }
+
     bool ColorSpace::isData() const
     {
         return getImpl()->isData_;

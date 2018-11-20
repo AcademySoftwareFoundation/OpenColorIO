@@ -842,6 +842,11 @@ OCIO_NAMESPACE_ENTER
     
     ///////////////////////////////////////////////////////////////////////////
     
+    ConstColorSpaceSetRcPtr Config::getColorSpaces(const char * criteria) const
+    {
+        return ColorSpaceSet::Create();
+    }
+
     int Config::getNumColorSpaces() const
     {
         return static_cast<int>(getImpl()->colorspaces_.size());
