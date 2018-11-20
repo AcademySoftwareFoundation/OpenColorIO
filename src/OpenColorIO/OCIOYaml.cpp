@@ -61,6 +61,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LookTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::MatrixTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::RangeTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::TruelightTransform>;
 }
 #pragma GCC visibility pop
@@ -154,6 +155,15 @@ OCIO_NAMESPACE_ENTER
             node.Read<float>(x);
 #else
             x = node.as<float>();
+#endif
+        }
+        
+        inline void load(const YAML::Node& node, double& x)
+        {
+#ifdef OLDYAML
+            node.Read<double>(x);
+#else
+            x = node.as<double>();
 #endif
         }
         
@@ -953,6 +963,108 @@ OCIO_NAMESPACE_ENTER
             out << YAML::EndMap;
         }
         
+        // RangeTransform
+        
+        inline void load(const YAML::Node& node, RangeTransformRcPtr& t)
+        {
+            t = RangeTransform::Create();
+            
+            std::string key;
+            
+            for (Iterator iter = node.begin();
+                 iter != node.end();
+                 ++iter)
+            {
+                const YAML::Node& first = get_first(iter);
+                const YAML::Node& second = get_second(iter);
+                
+                load(first, key);
+                
+                if (second.Type() == YAML::NodeType::Null) continue;
+                
+                double val = 0.0f;
+
+                // TODO: parsing could be more strict (same applies for other transforms)
+                // Could enforce that second is 1 float only and that keys
+                // are only there once.
+                if(key == "minInValue")
+                {
+                    load(second, val);
+                    t->setMinInValue(val);
+                }
+                else if(key == "maxInValue")
+                {
+                    load(second, val);
+                    t->setMaxInValue(val);
+                }
+                else if(key == "minOutValue")
+                {
+                    load(second, val);
+                    t->setMinOutValue(val);
+                }
+                else if(key == "maxOutValue")
+                {
+                    load(second, val);
+                    t->setMaxOutValue(val);
+                }
+                else if(key == "style")
+                {
+                    std::string style;
+                    load(second, style);
+                    t->setStyle(RangeStyleFromString(style.c_str()));
+                }
+                else if(key == "direction")
+                {
+                    TransformDirection dir;
+                    load(second, dir);
+                    t->setDirection(dir);
+                }
+                else
+                {
+                    LogUnknownKeyWarning(node.Tag(), first);
+                }
+            }
+        }
+        
+        inline void save(YAML::Emitter& out, ConstRangeTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("RangeTransform");
+            out << YAML::Flow << YAML::BeginMap;
+            
+            if(t->hasMinInValue())
+            {
+                out << YAML::Key << "minInValue";
+                out << YAML::Value << YAML::Flow << t->getMinInValue();
+            }
+            
+            if(t->hasMaxInValue())
+            {
+                out << YAML::Key << "maxInValue";
+                out << YAML::Value << YAML::Flow << t->getMaxInValue();
+            }
+            
+            if(t->hasMinOutValue())
+            {
+                out << YAML::Key << "minOutValue";
+                out << YAML::Value << YAML::Flow << t->getMinOutValue();
+            }
+            
+            if(t->hasMaxOutValue())
+            {
+                out << YAML::Key << "maxOutValue";
+                out << YAML::Value << YAML::Flow << t->getMaxOutValue();
+            }
+
+            if(t->getStyle()!=RANGE_CLAMP)
+            {
+                out << YAML::Key << "style";
+                out << YAML::Value << YAML::Flow << RangeStyleToString(t->getStyle());
+            }
+
+            EmitBaseTransformKeyValues(out, t);
+            out << YAML::EndMap;
+        }
+        
         // TruelightTransform
         
         inline void load(const YAML::Node& node, TruelightTransformRcPtr& t)
@@ -1156,6 +1268,11 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
+            else if(type == "RangeTransform")  {
+                RangeTransformRcPtr temp;
+                load(node, temp);
+                t = temp;
+            }
             else if(type == "TruelightTransform")  {
                 TruelightTransformRcPtr temp;
                 load(node, temp);
@@ -1208,6 +1325,9 @@ OCIO_NAMESPACE_ENTER
             else if(ConstMatrixTransformRcPtr Matrix_tran = \
                 DynamicPtrCast<const MatrixTransform>(t))
                 save(out, Matrix_tran);
+            else if(ConstRangeTransformRcPtr Range_tran = \
+                DynamicPtrCast<const RangeTransform>(t))
+                save(out, Range_tran);
             else if(ConstTruelightTransformRcPtr Truelight_tran = \
                 DynamicPtrCast<const TruelightTransform>(t))
                 save(out, Truelight_tran);

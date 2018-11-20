@@ -70,22 +70,30 @@ OCIO_NAMESPACE_ENTER
         return *this;
     }
 
+    bool ExponentOpData::isNoOp() const
+    {
+        return (getInputBitDepth() == getOutputBitDepth()) && isIdentity();
+    }
+
     bool ExponentOpData::isIdentity() const
     {
         return IsVecEqualToOneFlt(m_exp4, 4);
     }
 
-    std::string ExponentOpData::finalize() const
+    void ExponentOpData::finalize()
     {
+        AutoMutex lock(m_mutex);
+
         std::ostringstream cacheIDStream;
-        cacheIDStream << "<ExponentOpData ";
+        cacheIDStream << getId();
+
         cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
         for(int i=0; i<4; ++i)
         {
             cacheIDStream << m_exp4[i] << " ";
         }
 
-        return cacheIDStream.str();
+        m_cacheID = cacheIDStream.str();
     }
 
 
@@ -118,7 +126,6 @@ OCIO_NAMESPACE_ENTER
             virtual OpRcPtr clone() const;
             
             virtual std::string getInfo() const;
-            virtual std::string getCacheID() const;
             
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
@@ -132,12 +139,7 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
         protected:
-            ExponentOpDataRcPtr exp() { return DynamicPtrCast<ExponentOpData>(data()); }
-            const ExponentOpDataRcPtr exp() const { return DynamicPtrCast<ExponentOpData>(data()); }
-
-        private:
-            // Set in finalize
-            std::string m_cacheID;
+            const ExponentOpDataRcPtr expData() const { return DynamicPtrCast<ExponentOpData>(const_data()); }
         };
         
         typedef OCIO_SHARED_PTR<ExponentOp> ExponentOpRcPtr;
@@ -178,8 +180,7 @@ OCIO_NAMESPACE_ENTER
         
         OpRcPtr ExponentOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new ExponentOp(exp()->m_exp4, TRANSFORM_DIR_FORWARD));
-            return op;
+            return OpRcPtr(new ExponentOp(expData()->m_exp4, TRANSFORM_DIR_FORWARD));
         }
         
         ExponentOp::~ExponentOp()
@@ -188,11 +189,6 @@ OCIO_NAMESPACE_ENTER
         std::string ExponentOp::getInfo() const
         {
             return "<ExponentOp>";
-        }
-        
-        std::string ExponentOp::getCacheID() const
-        {
-            return m_cacheID;
         }
         
         bool ExponentOp::isSameType(const OpRcPtr & op) const
@@ -207,10 +203,11 @@ OCIO_NAMESPACE_ENTER
             ExponentOpRcPtr typedRcPtr = DynamicPtrCast<ExponentOp>(op);
             if(!typedRcPtr) return false;
             
-            double combined[4] = { exp()->m_exp4[0]*typedRcPtr->exp()->m_exp4[0],
-                                   exp()->m_exp4[1]*typedRcPtr->exp()->m_exp4[1],
-                                   exp()->m_exp4[2]*typedRcPtr->exp()->m_exp4[2],
-                                   exp()->m_exp4[3]*typedRcPtr->exp()->m_exp4[3] };
+            double combined[4] 
+                = { expData()->m_exp4[0]*typedRcPtr->expData()->m_exp4[0],
+                    expData()->m_exp4[1]*typedRcPtr->expData()->m_exp4[1],
+                    expData()->m_exp4[2]*typedRcPtr->expData()->m_exp4[2],
+                    expData()->m_exp4[3]*typedRcPtr->expData()->m_exp4[3] };
             
             return IsVecEqualToOneFlt(combined, 4);
         }
@@ -231,10 +228,11 @@ OCIO_NAMESPACE_ENTER
                 throw Exception(os.str().c_str());
             }
             
-            double combined[4] = { exp()->m_exp4[0]*typedRcPtr->exp()->m_exp4[0],
-                                   exp()->m_exp4[1]*typedRcPtr->exp()->m_exp4[1],
-                                   exp()->m_exp4[2]*typedRcPtr->exp()->m_exp4[2],
-                                   exp()->m_exp4[3]*typedRcPtr->exp()->m_exp4[3] };
+            const double combined[4] 
+                = { expData()->m_exp4[0]*typedRcPtr->expData()->m_exp4[0],
+                    expData()->m_exp4[1]*typedRcPtr->expData()->m_exp4[1],
+                    expData()->m_exp4[2]*typedRcPtr->expData()->m_exp4[2],
+                    expData()->m_exp4[3]*typedRcPtr->expData()->m_exp4[3] };
 
             if(!IsVecEqualToOneFlt(combined, 4))
             {
@@ -246,12 +244,12 @@ OCIO_NAMESPACE_ENTER
 
         void ExponentOp::finalize()
         {
+            expData()->finalize();
+
             // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<ExponentOp ";
-            cacheIDStream << exp()->getCacheID() << " ";
-            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
-            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
+            cacheIDStream << expData()->getCacheID() << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
         }
@@ -259,7 +257,7 @@ OCIO_NAMESPACE_ENTER
         void ExponentOp::apply(float* rgbaBuffer, long numPixels) const
         {
             if(!rgbaBuffer) return;
-            ApplyClampExponent(rgbaBuffer, numPixels, exp());
+            ApplyClampExponent(rgbaBuffer, numPixels, expData());
         }
         
         void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const 
@@ -280,8 +278,8 @@ OCIO_NAMESPACE_ENTER
                 << " = pow( "
                 << "max( " << shaderDesc->getPixelName() 
                 << ", " << ss.vec4fConst(0.0f) << " )"
-                << ", " << ss.vec4fConst(exp()->m_exp4[0], exp()->m_exp4[1], 
-                                         exp()->m_exp4[2], exp()->m_exp4[3]) << " );";
+                << ", " << ss.vec4fConst(expData()->m_exp4[0], expData()->m_exp4[1], 
+                                         expData()->m_exp4[2], expData()->m_exp4[3]) << " );";
 
             shaderDesc->addToFunctionShaderCode(ss.string().c_str());
         }
@@ -297,7 +295,7 @@ OCIO_NAMESPACE_ENTER
         bool expIsIdentity = IsVecEqualToOne(exp4, 4);
         if(expIsIdentity) return;
         double d_exp[4] = { double(exp4[0]), double(exp4[1]),
-                double(exp4[2]), double(exp4[3]) };
+                            double(exp4[2]), double(exp4[3]) };
         ops.push_back( ExponentOpRcPtr(new ExponentOp(d_exp, direction)) );
     }
 }

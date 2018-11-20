@@ -28,9 +28,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdio>
 #include <cstring>
-#include <iterator>
 
-#include <tinyxml.h>
+#include <expat/expat.h>
+
+#include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -150,7 +151,352 @@ OCIO_NAMESPACE_ENTER
             return true;
         }
     }
-    
+
+    namespace
+    {
+        class XMLParserHelper
+        {
+        public:
+            XMLParserHelper(const std::string & fileName)
+                : m_parser(XML_ParserCreate(NULL))
+                , m_fileName(fileName)
+                , m_ignoring(0)
+                , m_inLook(false)
+                , m_inLut(false)
+                , m_inMask(false)
+                , m_size(false)
+                , m_data(false)
+                , m_lutSize(0)
+                , m_lutString("")
+            {
+                XML_SetUserData(m_parser, this);
+                XML_SetElementHandler(m_parser, StartElementHandler, EndElementHandler);
+                XML_SetCharacterDataHandler(m_parser, CharacterDataHandler);
+            }
+            ~XMLParserHelper()
+            {
+                XML_ParserFree(m_parser);
+            }
+
+            void Parse(std::istream & istream)
+            {
+                std::string line;
+                m_lineNumber = 0;
+                while (istream.good())
+                {
+                    std::getline(istream, line);
+                    ++m_lineNumber;
+
+                    Parse(line);
+                }
+            }
+            void Parse(const std::string & buffer)
+            {
+                int done = 0;
+
+                do
+                {
+                    if (XML_STATUS_ERROR == XML_Parse(m_parser, buffer.c_str(), (int)buffer.size(), done))
+                    {
+                        XML_Error eXpatErrorCode = XML_GetErrorCode(m_parser);
+                        if (eXpatErrorCode == XML_ERROR_TAG_MISMATCH)
+                        {
+                            Throw("XML parsing error (unbalanced element tags)");
+                        }
+                        else
+                        {
+                            std::string error("XML parsing error: ");
+                            error += XML_ErrorString(XML_GetErrorCode(m_parser));
+                            Throw(error);
+                        }
+                    }
+                } while (done);
+
+            }
+
+            void getLut(int & lutSize, std::vector<float> & lut) const
+            {
+                if (m_lutString.size() % 8 != 0)
+                {
+                    std::ostringstream os;
+                    os << "Error parsing Iridas Look file (";
+                    os << m_fileName.c_str() << "). ";
+                    os << "Number of characters in 'data' must be multiple of 8. ";
+                    os << m_lutString.size() << " elements found.";
+                    throw Exception(os.str().c_str());
+                }
+
+                lutSize = m_lutSize;
+                int expactedVectorSize = 3 * (lutSize*lutSize*lutSize);
+                lut.reserve(expactedVectorSize);
+
+                const char * ascii = m_lutString.c_str();
+                float fval = 0.0f;
+                for (unsigned int i = 0; i<m_lutString.size() / 8; ++i)
+                {
+                    if (!hexasciitofloat(fval, &ascii[8 * i]))
+                    {
+                        std::ostringstream os;
+                        os << "Error parsing Iridas Look file (";
+                        os << m_fileName.c_str() << "). ";
+                        os << "Non-hex characters found in 'data' block ";
+                        os << "at index '" << (8 * i) << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    lut.push_back(fval);
+                }
+
+                if (expactedVectorSize != static_cast<int>(lut.size()))
+                {
+                    std::ostringstream os;
+                    os << "Error parsing Iridas Look file (";
+                    os << m_fileName.c_str() << "). ";
+                    os << "Incorrect number of lut3d entries. ";
+                    os << "Found " << lut.size() << " values, expected " << expactedVectorSize << ".";
+                    throw Exception(os.str().c_str());
+                }
+
+            }
+
+        private:
+
+            void Throw(const std::string & error) const
+            {
+                std::ostringstream os;
+                os << "Error parsing Iridas Look file (";
+                os << m_fileName.c_str() << "). ";
+                os << "Error is: " << error.c_str();
+                os << ". At line (" << m_lineNumber << ")";
+                throw Exception(os.str().c_str());
+            }
+
+            XMLParserHelper() {};
+
+            // Start the parsing of one element
+            static void StartElementHandler(void *userData,
+                const XML_Char *name,
+                const XML_Char **atts)
+            {
+                XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+
+                if (!pImpl || !name || !*name)
+                {
+                    if (!pImpl)
+                    {
+                        throw Exception("Internal Iridas Look parser error.");
+                    }
+                    else
+                    {
+                        pImpl->Throw("Internal error");
+                    }
+                }
+
+                if (pImpl->m_ignoring > 0)
+                {
+                    pImpl->m_ignoring += 1;
+
+                    if (pImpl->m_inMask)
+                    {
+                        // Non-empty mask
+                        pImpl->Throw("Cannot load .look LUT containing mask");
+                    }
+                }
+                else
+                {
+                    if (0 == strcmp(name, "look"))
+                    {
+                        if (pImpl->m_inLook)
+                        {
+                            pImpl->Throw("<look> node can not be inside "
+                                         "a <look> node");
+                        }
+                        else
+                        {
+                            pImpl->m_inLook = true;
+                        }
+                    }
+                    else
+                    {
+                        if (!pImpl->m_inLook)
+                        {
+                            pImpl->Throw("Expecting root node to be a look node");
+                        }
+                        else
+                        {
+                            if (!pImpl->m_inLut)
+                            {
+
+                                if (0 == strcmp(name, "LUT"))
+                                {
+                                    pImpl->m_inLut = true;
+                                }
+                                else if (0 == strcmp(name, "mask"))
+                                {
+                                    pImpl->m_inMask = true;
+                                    pImpl->m_ignoring += 1;
+                                }
+                                else
+                                {
+                                    pImpl->m_ignoring += 1;
+                                }
+                            }
+                            else
+                            {
+                                if (0 == strcmp(name, "size"))
+                                {
+                                    pImpl->m_size = true;
+                                }
+                                else if (0 == strcmp(name, "data"))
+                                {
+                                    pImpl->m_data = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // End the parsing of one element
+            static void EndElementHandler(void *userData,
+                const XML_Char *name)
+            {
+                XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+                if (!pImpl || !name || !*name)
+                {
+                    throw Exception("XML internal parsing error.");
+                }
+
+                if (pImpl->m_ignoring > 0)
+                {
+                    pImpl->m_ignoring -= 1;
+                }
+                else
+                {
+                    if (pImpl->m_size)
+                    {
+                        if (0 != strcmp(name, "size"))
+                        {
+                            pImpl->Throw("Expecting <size> end");
+                        }
+                        // reading size
+                        pImpl->m_size = false;
+                    }
+                    else if (pImpl->m_data)
+                    {
+                        if (0 != strcmp(name, "data"))
+                        {
+                            pImpl->Throw("Expecting <data> end");
+                        }
+                        // reading data
+                        pImpl->m_data = false;
+                    }
+                    else if (pImpl->m_inLut)
+                    {
+                        if (0 != strcmp(name, "LUT"))
+                        {
+                            pImpl->Throw("Expecting <LUT> end");
+                        }
+                        // reading lut finished
+                        pImpl->m_inLut = false;
+                    }
+                    else if (pImpl->m_inLook)
+                    {
+                        if (0 != strcmp(name, "look"))
+                        {
+                            pImpl->Throw("Expecting <look> end");
+                        }
+                        // reading look finished
+                        pImpl->m_inLook = false;
+                    }
+                    else if (pImpl->m_inMask)
+                    {
+                        if (0 != strcmp(name, "mask"))
+                        {
+                            pImpl->Throw("Expecting <mask> end");
+                        }
+                        // reading mask finished
+                        pImpl->m_inMask = false;
+                    }
+                }
+            }
+
+            // Handle of strings within an element
+            static void CharacterDataHandler(void *userData,
+                const XML_Char *s,
+                int len)
+            {
+                XMLParserHelper * pImpl = (XMLParserHelper*)userData;
+                if (!pImpl)
+                {
+                    throw Exception("XML internal parsing error.");
+                }
+
+                if (len == 0) return;
+
+                if (len<0 || !s || !*s)
+                {
+                    pImpl->Throw("XML parsing error: attribute illegal");
+                }
+
+                if (pImpl->m_size)
+                {
+                    std::string size_raw = std::string(s, len);
+                    std::string size_clean = pystring::strip(size_raw, "'\" "); // strip quotes and space
+
+                    char* endptr = 0;
+                    int size_3d = static_cast<int>(strtol(size_clean.c_str(), &endptr, 10));
+
+                    if (*endptr)
+                    {
+                        // strtol didn't consume entire string, there was
+                        // remaining data, thus did not contain a single integer
+                        std::ostringstream os;
+                        os << "Invalid LUT size value: '" << size_raw;
+                        os << "'. Expected quoted integer";
+                        pImpl->Throw(os.str().c_str());
+                    }
+                    pImpl->m_lutSize = size_3d;
+                }
+                else if (pImpl->m_data)
+                {
+                    // TODO: Possible parsing improvement: string copies
+                    //       could be avoided.
+                    // Remove spaces, quotes and newlines
+                    std::string what(s, len);
+                    what = pystring::replace(what, " ", "");
+                    what = pystring::replace(what, "\"", "");
+                    what = pystring::replace(what, "'", "");
+                    what = pystring::replace(what, "\n", "");
+                    // Append to lut string
+                    pImpl->m_lutString += what;
+                }
+            }
+
+            unsigned getXmlLineNumber() const
+            {
+                return m_lineNumber;
+            }
+
+            const std::string& getXmlFilename() const
+            {
+                return m_fileName;
+            }
+
+            XML_Parser m_parser;
+            unsigned m_lineNumber;
+            std::string m_fileName;
+            int m_ignoring;
+            bool m_inLook;
+            bool m_inLut;
+            bool m_inMask;
+            bool m_size;
+            bool m_data;
+            int m_lutSize;
+            std::string m_lutString;
+        };
+
+    }
+
     namespace
     {
         class LocalCachedFile : public CachedFile
@@ -166,8 +512,6 @@ OCIO_NAMESPACE_ENTER
         };
 
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
-        typedef OCIO_SHARED_PTR<TiXmlDocument> TiXmlDocumentRcPtr;
-
 
         class LocalFileFormat : public FileFormat
         {
@@ -201,172 +545,23 @@ OCIO_NAMESPACE_ENTER
         CachedFileRcPtr
         LocalFileFormat::Read(
             std::istream & istream,
-            const std::string & /* fileName unused */) const
+            const std::string & fileName) const
         {
-
-            // Get root element from XML file
-            TiXmlDocumentRcPtr doc;
-            TiXmlElement* rootElement;
-
-            {
-                std::ostringstream rawdata;
-                rawdata << istream.rdbuf();
-
-                doc = TiXmlDocumentRcPtr(new TiXmlDocument());
-                doc->Parse(rawdata.str().c_str());
-
-                if(doc->Error())
-                {
-                    std::ostringstream os;
-                    os << "XML Parse Error. ";
-                    os << doc->ErrorDesc() << " (line ";
-                    os << doc->ErrorRow() << ", character ";
-                    os << doc->ErrorCol() << ")";
-                    throw Exception(os.str().c_str());
-                }
-
-                // Check for blank file
-                rootElement = doc->RootElement();
-                if(!rootElement)
-                {
-                    std::ostringstream os;
-                    os << "Error loading xml. Null root element.";
-                    throw Exception(os.str().c_str());
-                }
-            }
-
-            // Check root element is <look>
-            if(std::string(rootElement->Value()) != "look")
-            {
-                std::ostringstream os;
-                os << "Error loading .look LUT. ";
-                os << "Root element is type '" << rootElement->Value() << "', ";
-                os << "expected 'look'.";
-                throw Exception(os.str().c_str());
-            }
-
-            // Fail to load file if it contains a <mask> section
-            if(rootElement->FirstChild("mask") && rootElement->FirstChild("mask")->FirstChild())
-            {
-                // If root element contains "mask" child, and it is
-                // not empty, throw exception
-                std::ostringstream os;
-                os << "Cannot load .look LUT containing mask";
-                throw Exception(os.str().c_str());
-            }
-
-            // Get <LUT> section
+            XMLParserHelper parser(fileName);
+            parser.Parse(istream);
 
             // TODO: There is a LUT1D section in some .look files,
             // which we could use if available. Need to check
             // assumption that it is only written for 1D transforms,
             // and it matches the desired output
-            TiXmlNode* lutsection = rootElement->FirstChild("LUT");
-
-            if(!lutsection)
-            {
-                std::ostringstream os;
-                os << "Error loading .look LUT. ";
-                os << "Could not find required 'LUT' section.";
-                throw Exception(os.str().c_str());
-            }
-
-            // Get 3D LUT size
-            int size_3d = -1;
-
-            {
-                // Get size from <look><LUT><size>'123'</size></LUT></look>
-                TiXmlNode* elemsize = lutsection->FirstChild("size");
-                if(!elemsize)
-                {
-                    std::ostringstream os;
-                    os << "Error loading .look LUT. ";
-                    os << "LUT section did not contain 'size'.";
-                    throw Exception(os.str().c_str());
-                }
-
-                std::string size_raw = std::string(elemsize->ToElement()->GetText());
-                std::string size_clean = pystring::strip(size_raw, "'\" "); // strip quotes and space
-
-                char* endptr = 0;
-                size_3d = static_cast<int>(strtol(size_clean.c_str(), &endptr, 10));
-
-                if(*endptr)
-                {
-                    // strtol didn't consume entire string, there was
-                    // remaining data, thus did not contain a single interger
-                    std::ostringstream os;
-                    os << "Invalid LUT size value: '" << size_raw;
-                    os << "'. Expected quoted integer.";
-                    throw Exception(os.str().c_str());
-                }
-            }
-
-            // Grab raw 3D data
-            std::vector<float> raw;
-            {
-                TiXmlNode* dataelem = lutsection->FirstChild("data");
-                if(!dataelem)
-                {
-                    std::ostringstream os;
-                    os << "Error loading .look LUT. ";
-                    os << "LUT section did not contain 'data'.";
-                    throw Exception(os.str().c_str());
-                }
-
-                raw.reserve(3*(size_3d*size_3d*size_3d));
-
-                std::string what = dataelem->ToElement()->GetText();
-
-                // Remove spaces, quotes and newlines
-                what = pystring::replace(what, " ", "");
-                what = pystring::replace(what, "\"", "");
-                what = pystring::replace(what, "'", "");
-                what = pystring::replace(what, "\n", "");
-                
-                if(what.size() % 8 != 0)
-                {
-                    std::ostringstream os;
-                    os << "Error loading .look LUT. ";
-                    os << "Number of characters in 'data' must be multiple of 8. ";
-                    os << what.size() << " elements found.";
-                    throw Exception(os.str().c_str());
-                }
-                
-                const char * ascii = what.c_str();
-                float fval = 0.0f;
-                for(unsigned int i=0; i<what.size()/8; ++i)
-                {
-                    if(!hexasciitofloat(fval, &ascii[8*i]))
-                    {
-                        std::ostringstream os;
-                        os << "Error loading .look LUT. ";
-                        os << "Non-hex characters found in 'data' block ";
-                        os << "at index '" << (8*i) << "'.";
-                        throw Exception(os.str().c_str());
-                    }
-                    raw.push_back(fval);
-                }
-            }
-
 
             // Validate LUT sizes, and create cached file object
             LocalCachedFileRcPtr cachedFile = LocalCachedFileRcPtr(new LocalCachedFile());
 
-            if((size_3d*size_3d*size_3d)*3 != static_cast<int>(raw.size()))
-            {
-                std::ostringstream os;
-                os << "Parse error in Iridas .look LUT. ";
-                os << "Incorrect number of 3D LUT entries. ";
-                os << "Found " << raw.size() << " values, expected " << (size_3d*size_3d*size_3d)*3 << ".";
-                throw Exception(os.str().c_str());
-            }
+            parser.getLut(cachedFile->lut3D->size[0], cachedFile->lut3D->lut);
 
-            // Reformat 3D data
-            cachedFile->lut3D->size[0] = size_3d;
-            cachedFile->lut3D->size[1] = size_3d;
-            cachedFile->lut3D->size[2] = size_3d;
-            cachedFile->lut3D->lut = raw;
+            cachedFile->lut3D->size[1] = cachedFile->lut3D->size[0];
+            cachedFile->lut3D->size[2] = cachedFile->lut3D->size[0];
 
             return cachedFile;
         }
@@ -1344,19 +1539,12 @@ OIIO_ADD_TEST(FileFormatIridasLook, fail_on_mask)
 
     // Read file
     LocalFileFormat tester;
-    try
-    {
-        std::string emptyString;
-        CachedFileRcPtr cachedFile = tester.Read(infile, emptyString);
-        OIIO_CHECK_ASSERT(false); // Fail test if previous line doesn't throw Exception
-    }
-    catch(Exception& e)
-    {
-        // Check exception message is correct error (not something
-        // like "cannot parse LUT data")
-        std::string expected_error = "Cannot load .look LUT containing mask";
-        OIIO_CHECK_EQUAL(e.what(), expected_error);
-    }
+    std::string emptyString;
+
+    OIIO_CHECK_THROW_WHAT(
+        tester.Read(infile, emptyString),
+        Exception, "Cannot load .look LUT containing mask");
 
 }
+
 #endif // OCIO_UNIT_TEST

@@ -52,6 +52,37 @@ OCIO_NAMESPACE_ENTER
     };
     
     std::ostream& operator<< (std::ostream&, const AllocationData&);
+
+
+    class OpCPU;
+    typedef OCIO_SHARED_PTR<OpCPU> OpCPURcPtr;
+
+
+    // OpCPU is a helper class to define the CPU pixel processing method signature.
+    // Ops may define several optimized renderers tailored to the needs of a given set 
+    // of op parameters.
+    // For example, in the Range op, if the parameters do not require clamping 
+    // at the high end, a renderer that skips that clamp may be called.
+    // The CPU renderer to use for a given op instance is decided during finalization.
+    // 
+    class OpCPU
+    {
+    public:
+        OpCPU() {}
+        virtual ~OpCPU() {}
+
+        virtual void apply(float * rgbaBuffer, long numPixels) const = 0;
+    };
+
+    // This class is to be used when no processing is needed.
+    class NoOpCPU : public OpCPU
+    {
+    public:
+        NoOpCPU() : OpCPU() {}
+
+        virtual void apply(float *, long) const { };
+    };
+
     
     class OpData;
     typedef OCIO_SHARED_PTR<OpData> OpDataRcPtr;
@@ -98,21 +129,82 @@ OCIO_NAMESPACE_ENTER
             MatrixType,       // A matrix
             LogType,          // A log
             ExponentType,     // An exponent
+            RangeType,        // A range
+            CDLType,          // A Color Decision List (aka CDL)
 
             NoOpType
         };
 
+        class Descriptions
+        {
+            typedef std::vector<std::string> List;
+            List m_descriptions;
+
+        public:
+            typedef typename List::size_type size_type;
+
+            typedef typename List::reference reference;
+            typedef typename List::const_reference const_reference;
+
+            typedef typename List::iterator iterator;
+            typedef typename List::const_iterator const_iterator;
+
+            Descriptions() = default;
+
+            Descriptions(const_reference str)
+            {
+                m_descriptions.push_back(str);
+            }
+
+            inline bool empty() const noexcept { return m_descriptions.empty(); }
+            size_type size() const noexcept { return m_descriptions.size(); }
+
+            Descriptions & operator+=(const_reference str)
+            {
+                m_descriptions.push_back(str);
+                return *this;
+            }
+
+            bool operator==(const Descriptions & other) const noexcept
+            {
+                if (this == &other) return true;
+                return (m_descriptions == other.m_descriptions);
+            }
+
+            bool operator!=(const Descriptions & other) const noexcept
+            {
+                return !(*this==other);
+            }
+
+            iterator begin() noexcept { return m_descriptions.begin(); }
+            const_iterator begin() const noexcept { return m_descriptions.begin(); }
+            const_iterator end() const noexcept { return m_descriptions.end(); }
+
+            reference operator[] (size_type n) { return m_descriptions[n]; }
+            const_reference operator[] (size_type n) const { return m_descriptions[n]; }
+        };
+
     public:
         OpData(BitDepth inBitDepth, BitDepth outBitDepth);
+        OpData(BitDepth inBitDepth, BitDepth outBitDepth,
+               const std::string & id, 
+               const Descriptions & desc);
         OpData(const OpData& rhs);
         OpData& operator=(const OpData& rhs);
         virtual ~OpData();
 
+        inline const std::string & getId() const { return m_id; }
+        void setId(const std::string & id) { m_id = id; }
+
+        inline const Descriptions & getDescriptions() const { return m_descriptions; }
+        inline Descriptions & getDescriptions() { return m_descriptions; }
+        void setDescriptions(const Descriptions & desc) { m_descriptions = desc; }
+
         inline BitDepth getInputBitDepth() const { return m_inBitDepth; }
-        virtual void setInputBitDepth(BitDepth in);
+        virtual void setInputBitDepth(BitDepth in) { m_inBitDepth = in; }
 
         inline BitDepth getOutputBitDepth() const { return m_outBitDepth; }
-        virtual void setOutputBitDepth(BitDepth out);
+        virtual void setOutputBitDepth(BitDepth out) { m_outBitDepth = out; }
 
         virtual void validate() const;
 
@@ -121,7 +213,7 @@ OCIO_NAMESPACE_ENTER
         // A "no-op" is an op where inBitDepth==outBitDepth 
         // and isIdentity is true, therefore the output pixels
         // will be unchanged.
-        virtual bool isNoOp() const;
+        virtual bool isNoOp() const = 0;
 
         // An identity is an op that only does bit-depth conversion
         // and/or clamping.
@@ -139,15 +231,19 @@ OCIO_NAMESPACE_ENTER
 
         virtual bool operator==(const OpData& other) const;
 
-        virtual std::string getCacheID() const;
+        virtual void finalize() = 0;
 
-    protected:           
-        virtual std::string finalize() const = 0;
+        // OpData::finalize() updates the cache identitifer,
+        // and Op::finalize() consumes it to compute the Op cache identifier.
+        virtual std::string getCacheID() const { return m_cacheID; }
 
-        mutable std::string m_cacheID;
+    protected:
         mutable Mutex m_mutex;
+        mutable std::string m_cacheID;
 
     private:
+        std::string m_id;
+        Descriptions m_descriptions;
         BitDepth m_inBitDepth;
         BitDepth m_outBitDepth;
     };
@@ -176,8 +272,7 @@ OCIO_NAMESPACE_ENTER
             
             // This should yield a string of not unreasonable length.
             // It can only be called after finalize()
-            virtual std::string getCacheID() const = 0;
-            
+            virtual std::string getCacheID() const { return m_cacheID; }            
             // Is the processing a noop? I.e, does apply do nothing.
             // (Even no-ops may define Allocation though.)
             // This must be implemented in a manner where its valid to
@@ -232,11 +327,13 @@ OCIO_NAMESPACE_ENTER
             virtual void setInputBitDepth(BitDepth bitdepth) { m_data->setInputBitDepth(bitdepth); }
             virtual void setOutputBitDepth(BitDepth bitdepth) { m_data->setOutputBitDepth(bitdepth); }
 
-            const OpDataRcPtr & data() const { return m_data; }
+            const OpDataRcPtr & const_data() const { return m_data; }
 
         protected:
             Op();
             OpDataRcPtr & data() { return m_data; }
+
+            std::string m_cacheID;
 
         private:
             Op(const Op &);

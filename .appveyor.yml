@@ -1,5 +1,5 @@
 version: '{branch}-{build}'
-image: Visual Studio 2013
+image: Visual Studio 2015
 clone_folder: C:\source\ocio
 test: auto
 configuration:
@@ -9,10 +9,12 @@ platform:
    
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-      CMAKE_PLATFORM: "Visual Studio 12 2013 Win64"
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
+      OCIO_BUILD_LIB: ON
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      CMAKE_PLATFORM: "Visual Studio 14 2015 Win64"
+      OCIO_BUILD_LIB: OFF
 
 install:
   - cinst: python2
@@ -24,6 +26,7 @@ build_script:
   - cmake 
     -G "%CMAKE_PLATFORM%"
     -DCMAKE_INSTALL_PREFIX=..\_install
+    -DBUILD_SHARED_LIBS=%OCIO_BUILD_LIB%
     -DOCIO_BUILD_TESTS=ON
     -DOCIO_BUILD_GPU_TESTS=OFF
     -DOCIO_WARNING_AS_ERROR=ON

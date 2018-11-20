@@ -273,11 +273,11 @@ OCIO_NAMESPACE_ENTER
             sanity_(SANITY_UNKNOWN)
         {
             std::string activeDisplays;
-            Platform::getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
+            Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
             SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays.c_str());
             
             std::string activeViews;
-            Platform::getenv(OCIO_ACTIVE_VIEWS_ENVVAR, activeViews);
+            Platform::Getenv(OCIO_ACTIVE_VIEWS_ENVVAR, activeViews);
             SplitStringEnvStyle(activeViewsEnvOverride_, activeViews.c_str());
             
             defaultLumaCoefs_.resize(3);
@@ -369,7 +369,7 @@ OCIO_NAMESPACE_ENTER
     ConstConfigRcPtr Config::CreateFromEnv()
     {
         std::string file;
-        Platform::getenv(OCIO_CONFIG_ENVVAR, file);
+        Platform::Getenv(OCIO_CONFIG_ENVVAR, file);
         if(!file.empty()) return CreateFromFile(file.c_str());
         
         std::ostringstream os;
@@ -2242,6 +2242,352 @@ OIIO_ADD_TEST(Config, Version_faulty_1)
     is.str(SIMPLE_PROFILE);
     OCIO::ConstConfigRcPtr config;
     OIIO_CHECK_THROW(config = OCIO::Config::CreateFromStream(is), OCIO::Exception);
+}
+
+OIIO_ADD_TEST(Config, range_serialization)
+{
+    static const std::string SIMPLE_PROFILE =
+        "ocio_profile_version: 1\n"
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: lnh\n"
+        "\n"
+        "displays:\n"
+        "  sRGB:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n"
+        "active_displays: []\n"
+        "active_views: []\n"
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: lnh\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {direction: inverse}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {style: noClamp}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {style: noClamp, direction: inverse}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Test Range with clamp style (i.e. default one)
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
+            "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
+            "direction: inverse}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // Test Range with clamp style
+        const std::string in_strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
+            "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
+            "style: Clamp, direction: inverse}\n";
+        const std::string in_str = SIMPLE_PROFILE + in_strEnd;
+
+        std::istringstream is;
+        is.str(in_str);
+
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        // Clamp style is not saved
+        const std::string out_strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.0109, "
+            "maxInValue: 1.0505, minOutValue: 0.0009, maxOutValue: 2.5001, "
+            "direction: inverse}\n";
+        const std::string out_str = SIMPLE_PROFILE + out_strEnd;
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), out_str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> "
+            "{minInValue: 0, maxOutValue: 1}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(), 
+                              OCIO::Exception, 
+                              "must be both set or both missing");
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        // maxInValue has an illegal second number.
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "maxInValue: 1.05  10, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string strEndSaved =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string strSaved = SIMPLE_PROFILE + strEndSaved;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        // Re-serialize and test that it matches the expected text.
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), strSaved);
+    }
+
+    {
+        // maxInValue & maxOutValue have no value, they will not be defined.
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "maxInValue: , minOutValue: 0.0009, maxOutValue: }\n";
+        const std::string strEndSaved =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "minOutValue: 0.0009}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+        const std::string strSaved = SIMPLE_PROFILE + strEndSaved;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        // Re-serialize and test that it matches the expected text.
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), strSaved);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> "
+            "{minInValue: 0.12345678901234, maxOutValue: 1.23456789012345}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(),
+            OCIO::Exception,
+            "must be both set or both missing");
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_NO_THROW(config->sanityCheck());
+
+        // Re-serialize and test that it matches the original text.
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minOutValue: 0.0009, "
+            "maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(),
+                              OCIO::Exception,
+                              "must be both set or both missing");
+
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            "        - !<RangeTransform> {minInValue: -0.01, maxInValue: 1.05, "
+            "minOutValue: 0.0009, maxOutValue: 2.5}\n"
+            "        - !<RangeTransform> {minOutValue: 0.0009, maxOutValue: 2.1}\n"
+            "        - !<RangeTransform> {minOutValue: 0.1, maxOutValue: 0.9}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_THROW_WHAT(config->sanityCheck(),
+                              OCIO::Exception,
+                              "must be both set or both missing");
+
+        // Re-serialize and test that it matches the original text.
+        std::stringstream ss;
+        ss << *config.get();
+        OIIO_CHECK_EQUAL(ss.str(), str);
+    }
+
+    // Some faulty cases
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<GroupTransform>\n"
+            "      children:\n"
+            // missing { (and mInValue is wrong -> that's a warning)
+            "        - !<RangeTransform> mInValue: -0.01, maxInValue: 1.05, "
+            "minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "Loading the OCIO profile failed");
+    }
+
+    {
+        const std::string strEnd =
+            // The comma is missing after the minInValue value.
+            "    from_reference: !<RangeTransform> {minInValue: -0.01 "
+            "maxInValue: 1.05, minOutValue: 0.0009, maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "Loading the OCIO profile failed");
+    }
+
+    {
+        const std::string strEnd =
+            "    from_reference: !<RangeTransform> {minInValue: -0.01, "
+            // The comma is missing between the minOutValue value and
+            // the maxOutValue tag.
+            "maxInValue: 1.05, minOutValue: 0.0009maxOutValue: 2.5}\n";
+        const std::string str = SIMPLE_PROFILE + strEnd;
+
+        std::istringstream is;
+        is.str(str);
+        OIIO_CHECK_THROW_WHAT(OCIO::Config::CreateFromStream(is),
+                              OCIO::Exception,
+                              "Loading the OCIO profile failed");
+    }
+
 }
 
 #endif // OCIO_UNIT_TEST

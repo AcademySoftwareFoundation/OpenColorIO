@@ -34,9 +34,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    // This is used for normalizing various integer bit-depths relative to float.
-    // 
-    float GetBitDepthMaxValue(BitDepth in);
+
+// This is used for normalizing various integer bit-depths relative to float.
+float GetBitDepthMaxValue(BitDepth in);
+
+// True if the bit depth is a float
+bool IsFloatBitDepth(BitDepth in);
 
 }
 OCIO_NAMESPACE_EXIT

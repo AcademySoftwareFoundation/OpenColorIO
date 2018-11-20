@@ -7,6 +7,14 @@ set(SOURCES
 
 add_library(openglbuilder STATIC ${SOURCES})
 set_target_properties(openglbuilder PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+if(NOT BUILD_SHARED_LIBS)
+    target_compile_definitions(openglbuilder
+        PRIVATE
+        OpenColorIO_SKIP_IMPORTS
+    )
+endif()
+
 target_include_directories(openglbuilder
 	PUBLIC
 		${CMAKE_CURRENT_SOURCE_DIR}

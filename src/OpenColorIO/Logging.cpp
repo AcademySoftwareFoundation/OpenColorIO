@@ -58,7 +58,7 @@ OCIO_NAMESPACE_ENTER
             g_initialized = true;
             
             std::string levelstr;
-            Platform::getenv(OCIO_LOGGING_LEVEL_ENVVAR, levelstr);
+            Platform::Getenv(OCIO_LOGGING_LEVEL_ENVVAR, levelstr);
             if(!levelstr.empty())
             {
                 g_loggingOverride = true;

@@ -30,9 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "MathUtils.h"
 #include "OpBuilders.h"
 #include "ops/Matrix/MatrixOps.h"
-#include "MathUtils.h"
 
 
 OCIO_NAMESPACE_ENTER
@@ -134,8 +134,8 @@ OCIO_NAMESPACE_ENTER
         
         for(int i=0; i<16; ++i)
         {
-            if(!equalWithAbsError(getImpl()->m_m44[i],
-                other.getImpl()->m_m44[i], abserror))
+            if(!EqualWithAbsError(getImpl()->m_m44[i],
+                                  other.getImpl()->m_m44[i], abserror))
             {
                 return false;
             }
@@ -143,8 +143,8 @@ OCIO_NAMESPACE_ENTER
         
         for(int i=0; i<4; ++i)
         {
-            if(!equalWithAbsError(getImpl()->m_offset4[i],
-                other.getImpl()->m_offset4[i], abserror))
+            if(!EqualWithAbsError(getImpl()->m_offset4[i],
+                                  other.getImpl()->m_offset4[i], abserror))
             {
                 return false;
             }
