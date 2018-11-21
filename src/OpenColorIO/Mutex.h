@@ -32,9 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include <mutex> 
-
-
-#include "Platform.h"
+#include <assert.h>
 
 
 /** For internal use only */
