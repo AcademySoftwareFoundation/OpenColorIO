@@ -97,7 +97,7 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(const Lut3DOpDataRcPtr & lut)
     // style of forward evalutation.
     // TODO: Although this seems like the "correct" thing to do, it does
     // not seem to help accuracy (and is slower).  To investigate ...
-    //newLut->setInterpolation(SYNCOLOR::LUT3D_ALGO_TETRAHEDRAL);
+    //newLut->setInterpolation(INTERP_TETRAHEDRAL);
 
     return newLut;
 }
