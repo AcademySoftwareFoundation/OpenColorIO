@@ -174,7 +174,7 @@ int Strncasecmp(const char* str1, const char* str2, size_t n);
 // An exception is thrown if an allocation error occurs.
 void* AlignedMalloc(size_t size, size_t alignment);
 
-// Frees a block of memory that was allocated with alignedMalloc.
+// Frees a block of memory that was allocated with AlignedMalloc.
 void AlignedFree(void* memBlock);
 
 }
