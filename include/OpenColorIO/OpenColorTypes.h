@@ -225,7 +225,7 @@ OCIO_NAMESPACE_ENTER
     //
     // Specify the interpolation type to use
     // If the specified interpolation type is not supported in the requested
-    // context (for example, using tetrahedral interpolationon 1D luts)
+    // context (for example, using tetrahedral interpolationon 1D LUTs)
     // an exception will be thrown.
     //
     // INTERP_DEFAULT will choose the default interpolation type for the requested
@@ -238,13 +238,14 @@ OCIO_NAMESPACE_ENTER
     // context:
     //
     // 1D LUT INTERP_BEST: LINEAR
-    // Note: The tetrahedral method is always used when inverting 3D LUTs.
     // 3D LUT INTERP_BEST: TETRAHEDRAL
     //
     // Note: INTERP_BEST is subject to change in minor releases, so if you
     // care about locking off on a specific interpolation type, we'd recommend
     // directly specifying it.
-    
+    //
+    // Note: The tetrahedral method is always used when inverting 3D LUTs.
+    //
     enum Interpolation
     {
         INTERP_UNKNOWN = 0,
