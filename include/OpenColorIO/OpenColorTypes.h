@@ -238,6 +238,7 @@ OCIO_NAMESPACE_ENTER
     // context:
     //
     // 1D LUT INTERP_BEST: LINEAR
+    // Note: The tetrahedral method is always used when inverting 3D LUTs.
     // 3D LUT INTERP_BEST: TETRAHEDRAL
     //
     // Note: INTERP_BEST is subject to change in minor releases, so if you
