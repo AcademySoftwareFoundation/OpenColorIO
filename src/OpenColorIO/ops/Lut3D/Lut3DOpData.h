@@ -46,10 +46,18 @@ class Lut3DOpData : public OpData
 public:
 
     // Enumeration of the inverse 3D LUT styles.
+    // There are two inversion algorithms provided for 3D LUT, an exact
+    // method (that assumes use of tetrahedral in the forward direction)
+    // and a fast method that bakes the inverse out as another forward
+    // 3D LUT. The exact method is currently unavailable on the GPU.
+    // Both methods assume that the input and output to the 3D LUT are
+    // roughly perceptually uniform. Values outside the range of the
+    // forward 3D LUT are clamped to someplace on the exterior surface
+    // of the 3D LUT.
     enum InvStyle
     {
-        INV_EXACT = 0,  // Exact, but slow, inverse processing
-        INV_FAST        // Fast, but approximate, inverse processing
+        INV_EXACT = 0,
+        INV_FAST
     };
 
     // The maximum grid size supported for a 3D LUT.
