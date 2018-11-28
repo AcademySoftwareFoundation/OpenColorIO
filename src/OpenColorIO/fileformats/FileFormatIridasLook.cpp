@@ -28,9 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdio>
 #include <cstring>
-
 #include <expat/expat.h>
-
 #include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -38,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ParseUtils.h"
+#include "Platform.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
 
