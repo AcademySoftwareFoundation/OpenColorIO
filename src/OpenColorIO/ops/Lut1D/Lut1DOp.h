@@ -77,21 +77,23 @@ OCIO_NAMESPACE_ENTER
         typedef std::vector<float> fv_t;
         fv_t luts[3];
 
-        virtual Type getType() const { return Lut1DType; }
+        virtual Type getType() const override { return Lut1DType; }
 
-        virtual bool isIdentity() const;
-        virtual bool hasChannelCrosstalk() const { return false; }
+        virtual bool isNoOp() const override;
+        virtual bool isIdentity() const override;
+        virtual bool hasChannelCrosstalk() const override { return false; }
         
+        Lut1DOpData & operator=(const Lut1DOpData & l);
+
+        virtual void finalize() override;
         void unfinalize();
 
-        Lut1DOpData & operator=(const Lut1DOpData & l);
+        virtual std::string getCacheID() const override;
 
     private:
         Lut1DOpData();
-        
+
         mutable bool m_isIdentity;
-        
-        virtual std::string finalize() const;
     };
     
     // This generates an identity 1D LUT, from 0.0 to 1.0

@@ -28,274 +28,65 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <fstream>
 #include <sstream>
-#include <tinyxml.h>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "fileformats/cdl/CDLParser.h"
 #include "CDLTransform.h"
-#include "ops/Exponent/ExponentOps.h"
-#include "ops/Matrix/MatrixOps.h"
 #include "MathUtils.h"
 #include "Mutex.h"
 #include "OpBuilders.h"
+#include "ops/CDL/CDLOps.h"
+#include "ops/Exponent/ExponentOps.h"
+#include "ops/Matrix/MatrixOps.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
     namespace
     {
-        /*
-            "<ColorCorrection id=''>"
-            " <SOPNode>"
-            "  <Description/> "
-            "  <Slope>1 1 1</Slope> "
-            "  <Offset>0 0 0</Offset> "
-            "  <Power>1 1 1</Power> "
-            " </SOPNode> "
-            " <SatNode>"
-            "  <Saturation> 1 </Saturation> "
-            " </SatNode> "
-            " </ColorCorrection>";
+
+ /*
+<ColorCorrection id="shot 042">
+    <SOPNode>
+        <Description>Cool look for forest scenes</Description>
+        <Slope>1 1 1</Slope>
+        <Offset>0 0 0</Offset>
+        <Power>1 1 1</Power>
+    </SOPNode>
+    <SatNode>
+        <Saturation>1</Saturation>
+    </SatNode>
+</ColorCorrection>
         
-        */
-        
-        // http://ticpp.googlecode.com/svn/docs/ticpp_8h-source.html#l01670
-        
-        void SetTiXmlText( TiXmlElement* element, const char * value)
-        {
-            if ( element->NoChildren() )
-            {
-                element->LinkEndChild( new TiXmlText( value ) );
-            }
-            else
-            {
-                if ( 0 == element->GetText() )
-                {
-                    element->InsertBeforeChild( element->FirstChild(), TiXmlText( value ) );
-                }
-                else
-                {
-                    // There already is text, so change it
-                    element->FirstChild()->SetValue( value );
-                }
-            }
-        }
+ */
         
         std::string BuildXML(const CDLTransform & cdl)
         {
-            TiXmlDocument doc;
-            
-            // TiXmlDeclaration * decl = new TiXmlDeclaration( "1.0", "", "" );
-            TiXmlElement * root = new TiXmlElement( "ColorCorrection" );
-            doc.LinkEndChild( root );
-            root->SetAttribute("id", cdl.getID());
-            
-            TiXmlElement * sop = new TiXmlElement( "SOPNode" );
-            root->LinkEndChild( sop );
-            
-            TiXmlElement * desc = new TiXmlElement( "Description" );
-            sop->LinkEndChild( desc );
-            SetTiXmlText(desc, cdl.getDescription());
-            
-            TiXmlElement * slope = new TiXmlElement( "Slope" );
-            sop->LinkEndChild( slope );
+            std::ostringstream os;
+            std::string id(ConvertSpecialCharToXmlToken(cdl.getID()));
+            os << "<ColorCorrection id=\"" << id << "\">\n";
+            os << "    <SOPNode>\n";
+            std::string desc(ConvertSpecialCharToXmlToken(cdl.getDescription()));
+            os << "        <Description>" << desc << "</Description>\n";
             float slopeval[3];
             cdl.getSlope(slopeval);
-            SetTiXmlText(slope, FloatVecToString(slopeval, 3).c_str());
-            
-            TiXmlElement * offset = new TiXmlElement( "Offset" );
-            sop->LinkEndChild( offset );
+            os << "        <Slope>" << FloatVecToString(slopeval, 3) << "</Slope>\n";
             float offsetval[3];
             cdl.getOffset(offsetval);
-            SetTiXmlText(offset, FloatVecToString(offsetval, 3).c_str());
-            
-            TiXmlElement * power = new TiXmlElement( "Power" );
-            sop->LinkEndChild( power );
+            os << "        <Offset>" << FloatVecToString(offsetval, 3)  << "</Offset>\n";
             float powerval[3];
             cdl.getPower(powerval);
-            SetTiXmlText(power, FloatVecToString(powerval, 3).c_str());
-            
-            TiXmlElement * sat = new TiXmlElement( "SatNode" );
-            root->LinkEndChild( sat );
-            
-            TiXmlElement * saturation = new TiXmlElement( "Saturation" );
-            sat->LinkEndChild( saturation );
-            SetTiXmlText(saturation, FloatToString(cdl.getSat()).c_str());
-            
-            TiXmlPrinter printer;
-            printer.SetStreamPrinting();
-            doc.Accept( &printer );
-            return printer.Str();
-        }
-    }
-    
-    void LoadCDL(CDLTransform * cdl, TiXmlElement * root)
-    {
-        if(!cdl) return;
-        
-        if(!root)
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << "Null root element.";
-            throw Exception(os.str().c_str());
-        }
-        
-        if(std::string(root->Value()) != "ColorCorrection")
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << "Root element is type '" << root->Value() << "', ";
-            os << "ColorCorrection expected.";
-            throw Exception(os.str().c_str());
-        }
-        
-        TiXmlHandle handle( root );
-        
-        const char * id = root->Attribute("id");
-        if(!id) id = "";
-        
-        cdl->setID(id);
-        
-        TiXmlElement* desc = handle.FirstChild( "SOPNode" ).FirstChild("Description").ToElement();
-        if(desc)
-        {
-            const char * text = desc->GetText();
-            if(text) cdl->setDescription(text);
-        }
-        
-        std::vector<std::string> lineParts;
-        std::vector<float> floatArray;
-        
-        TiXmlElement* slope = handle.FirstChild( "SOPNode" ).FirstChild("Slope").ToElement();
-        if(slope)
-        {
-            const char * text = slope->GetText();
-            if(text)
-            {
-                pystring::split(pystring::strip(text), lineParts);
-                if((lineParts.size() != 3) || (!StringVecToFloatVec(floatArray, lineParts)))
-                {
-                    std::ostringstream os;
-                    os << "Error loading CDL xml. ";
-                    os << id << ".SOPNode.Slope text '";
-                    os << text << "' is not convertible to 3 floats.";
-                    throw Exception(os.str().c_str());
-                }
-                cdl->setSlope(&floatArray[0]);
-            }
-        }
-        
-        TiXmlElement* offset = handle.FirstChild( "SOPNode" ).FirstChild("Offset").ToElement();
-        if(offset)
-        {
-            const char * text = offset->GetText();
-            if(text)
-            {
-                pystring::split(pystring::strip(text), lineParts);
-                if((lineParts.size() != 3) || (!StringVecToFloatVec(floatArray, lineParts)))
-                {
-                    std::ostringstream os;
-                    os << "Error loading CDL xml. ";
-                    os << id << ".SOPNode.Offset text '";
-                    os << text << "' is not convertible to 3 floats.";
-                    throw Exception(os.str().c_str());
-                }
-                cdl->setOffset(&floatArray[0]);
-            }
-        }
-        
-        TiXmlElement* power = handle.FirstChild( "SOPNode" ).FirstChild("Power").ToElement();
-        if(power)
-        {
-            const char * text = power->GetText();
-            if(text)
-            {
-                pystring::split(pystring::strip(text), lineParts);
-                if((lineParts.size() != 3) || (!StringVecToFloatVec(floatArray, lineParts)))
-                {
-                    std::ostringstream os;
-                    os << "Error loading CDL xml. ";
-                    os << id << ".SOPNode.Power text '";
-                    os << text << "' is not convertible to 3 floats.";
-                    throw Exception(os.str().c_str());
-                }
-                cdl->setPower(&floatArray[0]);
-            }
-        }
-        
-        TiXmlElement* sat = handle.FirstChild( "SatNode" ).FirstChild("Saturation").ToElement();
-        if(sat)
-        {
-            const char * text = sat->GetText();
-            if(text)
-            {
-                float satval = 1.0f;
-                if(!StringToFloat(&satval, text))
-                {
-                    std::ostringstream os;
-                    os << "Error loading CDL xml. ";
-                    os << id << ".SatNode.Saturation text '";
-                    os << text << "' is not convertible to float.";
-                    throw Exception(os.str().c_str());
-                }
-                cdl->setSat(satval);
-            }
-        }
-    }
-    
-    void GetCDLTransforms(CDLTransformMap & transformMap,
-                          CDLTransformVec & transformVec,
-                          TiXmlElement * cccRootElement)
-    {
-        if(!cccRootElement)
-        {
-            std::ostringstream os;
-            os << "GetCDLTransforms Error. ";
-            os << "Null cccRootElement.";
-            throw Exception(os.str().c_str());
-        }
-        
-        std::string rootElementType(cccRootElement->Value());
-        bool isCDL = (rootElementType == "ColorDecisionList");
-        const char* container = isCDL ? "ColorDecision" : "ColorCorrection";
-        
-        if(!isCDL && rootElementType != "ColorCorrectionCollection")
-        {
-            std::ostringstream os;
-            os << "GetCDLTransforms Error. ";
-            os << "Root element is type '" << rootElementType << "', ";
-            os << "ColorDecisionList or ColorCorrectionCollection expected.";
-            throw Exception(os.str().c_str());
-        }
-        
-        TiXmlNode * child = cccRootElement->FirstChild(container);
-        while(child)
-        {
-            TiXmlNode * xmlNode= (isCDL) ? child->FirstChild("ColorCorrection") : child;
-            CDLTransformRcPtr transform = CDLTransform::Create();
-            LoadCDL(transform.get(), xmlNode->ToElement());
-            
-            transformVec.push_back(transform);
-            
-            std::string id = transform->getID();
-            if(!id.empty())
-            {
-                CDLTransformMap::iterator iter = transformMap.find(id);
-                if(iter != transformMap.end())
-                {
-                    std::ostringstream os;
-                    os << "Error loading ccc xml. ";
-                    os << "Duplicate elements with '" << id << "' found. ";
-                    os << "If id is specified, it must be unique.";
-                    throw Exception(os.str().c_str());
-                }
-                
-                transformMap[id] = transform;
-            }
-            
-            child = child->NextSibling(container);
+            os << "        <Power>" << FloatVecToString(powerval, 3)  << "</Power>\n";
+            os << "    </SOPNode>\n";
+            os << "    <SatNode>\n";
+            os << "        <Saturation>" << FloatToString(cdl.getSat()) << "</Saturation>\n";
+            os << "    </SatNode>\n";
+            os << "</ColorCorrection>";
+
+            return os.str();
         }
     }
     
@@ -309,28 +100,32 @@ OCIO_NAMESPACE_ENTER
             throw Exception(os.str().c_str());
         }
         
-        TiXmlDocument doc;
-        doc.Parse(xml);
-        
-        if(doc.Error())
+        std::string xmlstring(xml);
+        std::istringstream istream(xmlstring);
+
+        CDLParser parser("xml string");
+        parser.parse(istream);
+
+        if (!parser.isCC())
         {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << doc.ErrorDesc() << " (line ";
-            os << doc.ErrorRow() << ", character ";
-            os << doc.ErrorCol() << ")";
-            throw Exception(os.str().c_str());
+            throw Exception("Error loading CDL xml. ColorCorrection expected.");
         }
-        
-        if(!doc.RootElement())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml, ";
-            os << "please confirm the xml is valid.";
-            throw Exception(os.str().c_str());
-        }
-        
-        LoadCDL(cdl, doc.RootElement()->ToElement());
+
+        CDLTransformRcPtr cdlRcPtr = CDLTransform::Create();
+        parser.getCDLTransform(cdlRcPtr);
+
+        cdl->setID(cdlRcPtr->getID());
+        cdl->setDescription(cdlRcPtr->getDescription());
+        float slope[3] = { 0.f, 0.f, 0.f };
+        cdlRcPtr->getSlope(slope);
+        cdl->setSlope(slope);
+        float offset[3] = { 0.f, 0.f, 0.f };
+        cdlRcPtr->getOffset(offset);
+        cdl->setOffset(offset);
+        float power[3] = { 0.f, 0.f, 0.f };
+        cdlRcPtr->getPower(offset);
+        cdl->setPower(offset);
+        cdl->setSat(cdlRcPtr->getSat());
     }
     
     CDLTransformRcPtr CDLTransform::Create()
@@ -433,61 +228,26 @@ OCIO_NAMESPACE_ENTER
             throw Exception (os.str().c_str());
         }
         
-        // Read the file into a string.
-        std::ostringstream rawdata;
-        rawdata << istream.rdbuf();
-        std::string xml = rawdata.str();
-        
-        if(xml.empty())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml. ";
-            os << "The specified source file, '";
-            os << src << "' appears to be empty.";
-            throw Exception(os.str().c_str());
-        }
-        
-        TiXmlDocument doc;
-        doc.Parse(xml.c_str());
-        
-        if(doc.Error())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml from file '";
-            os << src << "'. ";
-            os << doc.ErrorDesc() << " (line ";
-            os << doc.ErrorRow() << ", character ";
-            os << doc.ErrorCol() << ")";
-            throw Exception(os.str().c_str());
-        }
-        
-        if(!doc.RootElement())
-        {
-            std::ostringstream os;
-            os << "Error loading CDL xml from file '";
-            os << src << "'. ";
-            os << "Please confirm the xml is valid.";
-            throw Exception(os.str().c_str());
-        }
-        
-        std::string rootValue = doc.RootElement()->Value();
-        if(rootValue == "ColorCorrection")
+        CDLParser parser(src);
+        parser.parse(istream);
+
+        if (parser.isCC())
         {
             // Load a single ColorCorrection into the cache
             CDLTransformRcPtr cdl = CDLTransform::Create();
-            LoadCDL(cdl.get(), doc.RootElement()->ToElement());
-            
+            parser.getCDLTransform(cdl);
+
             cccid = "";
             g_cacheSrcIsCC[src] = true;
             g_cache[GetCDLLocalCacheKey(src, cccid)] = cdl;
         }
-        else if(rootValue == "ColorCorrectionCollection")
+        else if(parser.isCCC())
         {
             // Load all CCs from the ColorCorrectionCollection
             // into the cache
             CDLTransformMap transformMap;
             CDLTransformVec transformVec;
-            GetCDLTransforms(transformMap, transformVec, doc.RootElement());
+            parser.getCDLTransforms(transformMap, transformVec);
             
             if(transformVec.empty())
             {
@@ -551,53 +311,34 @@ OCIO_NAMESPACE_ENTER
         delete t;
     }
     
-    class CDLTransform::Impl
+    class CDLTransform::Impl : public CDLOpData
     {
-    public:
-        TransformDirection dir_;
-        
-        float sop_[9];
-        float sat_;
-        std::string id_;
-        std::string description_;
-
-        mutable std::string xml_;
-        
-        Impl() :
-            dir_(TRANSFORM_DIR_FORWARD),
-            sat_(1.0f)
+    public:       
+        Impl() 
+            :   CDLOpData()
+            ,   m_direction(TRANSFORM_DIR_FORWARD)
         {
-            sop_[0] = 1.0f;
-            sop_[1] = 1.0f;
-            sop_[2] = 1.0f;
-            sop_[3] = 0.0f;
-            sop_[4] = 0.0f;
-            sop_[5] = 0.0f;
-            sop_[6] = 1.0f;
-            sop_[7] = 1.0f;
-            sop_[8] = 1.0f;
         }
         
-        ~Impl()
-        {
-        
-        }
+        ~Impl() { }
         
         Impl& operator= (const Impl & rhs)
         {
             if (this != &rhs)
             {
-                dir_ = rhs.dir_;
-
-                memcpy(sop_, rhs.sop_, sizeof(float) * 9);
-                sat_ = rhs.sat_;
-                id_ = rhs.id_;
-                description_ = rhs.description_;
+                m_direction = rhs.m_direction;
+                CDLOpData::operator=(rhs);
             }
 
             return *this;
         }
-        
+
+        TransformDirection m_direction;
+
+        mutable std::string m_xml;
+
+    private:
+        Impl(const Impl&);
     };
     
     
@@ -634,30 +375,24 @@ OCIO_NAMESPACE_ENTER
     
     TransformDirection CDLTransform::getDirection() const
     {
-        return getImpl()->dir_;
+        return getImpl()->m_direction;
     }
     
     void CDLTransform::setDirection(TransformDirection dir)
     {
-        getImpl()->dir_ = dir;
+        getImpl()->m_direction = dir;
     }
     
     void CDLTransform::validate() const
     {
         Transform::validate();
-
-        // TODO: Uncomment in upcoming PR that contains the OpData validate.
-        //       getImpl()->data_->validate()
-        //       
-        //       OpData classes are the enhancement of some existing 
-        //       structures (like Lut1D and Lut3D) by encapsulating
-        //       all the data and adding high-level behaviors.
+        getImpl()->validate();
     }
 
     const char * CDLTransform::getXML() const
     {
-        getImpl()->xml_ = BuildXML(*this);
-        return getImpl()->xml_.c_str();
+        getImpl()->m_xml = BuildXML(*this);
+        return getImpl()->m_xml.c_str();
     }
     
     void CDLTransform::setXML(const char * xml)
@@ -667,94 +402,137 @@ OCIO_NAMESPACE_ENTER
     
     // We use this approach, rather than comparing XML to get around the
     // case where setXML with extra data was provided.
-    
+
     bool CDLTransform::equals(const ConstCDLTransformRcPtr & other) const
     {
         if(!other) return false;
         
-        if(getImpl()->dir_ != other->getImpl()->dir_) return false;
-        
-        const float abserror = 1e-9f;
-        
-        for(int i=0; i<9; ++i)
-        {
-            if(!equalWithAbsError(getImpl()->sop_[i], other->getImpl()->sop_[i], abserror))
-            {
-                return false;
-            }
-        }
-        
-        if(!equalWithAbsError(getImpl()->sat_, other->getImpl()->sat_, abserror))
-        {
-            return false;
-        }
-        
-        if(getImpl()->id_ != other->getImpl()->id_)
-        {
-            return false;
-        }
-        
-        if(getImpl()->description_ != other->getImpl()->description_)
-        {
-            return false;
-        }
-        
-        return true;
+        // NB: A tolerance of 1e-9 is used when comparing the parameters.
+        return *(getImpl()) == *(other->getImpl())
+            && getImpl()->m_direction == other->getImpl()->m_direction;
     }
     
     void CDLTransform::setSlope(const float * rgb)
     {
-        memcpy(&getImpl()->sop_[0], rgb, sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setSlopeParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
     
     void CDLTransform::getSlope(float * rgb) const
     {
-        memcpy(rgb, &getImpl()->sop_[0], sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & params = getImpl()->getSlopeParams();
+        rgb[0] = (float)params[0];
+        rgb[1] = (float)params[1];
+        rgb[2] = (float)params[2];
     }
 
     void CDLTransform::setOffset(const float * rgb)
     {
-        memcpy(&getImpl()->sop_[3], rgb, sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setOffsetParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
     
     void CDLTransform::getOffset(float * rgb) const
     {
-        memcpy(rgb, &getImpl()->sop_[3], sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & params = getImpl()->getOffsetParams();
+        rgb[0] = (float)params[0];
+        rgb[1] = (float)params[1];
+        rgb[2] = (float)params[2];
     }
 
     void CDLTransform::setPower(const float * rgb)
     {
-        memcpy(&getImpl()->sop_[6], rgb, sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setPowerParams(CDLOpData::ChannelParams(rgb[0], rgb[1], rgb[2]));
     }
     
     void CDLTransform::getPower(float * rgb) const
     {
-        memcpy(rgb, &getImpl()->sop_[6], sizeof(float)*3);
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & params = getImpl()->getPowerParams();
+        rgb[0] = (float)params[0];
+        rgb[1] = (float)params[1];
+        rgb[2] = (float)params[2];
     }
 
     void CDLTransform::setSOP(const float * vec9)
     {
-        memcpy(&getImpl()->sop_, vec9, sizeof(float)*9);
+        if(!vec9)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        getImpl()->setSlopeParams(CDLOpData::ChannelParams(vec9[0], vec9[1], vec9[2]));
+        getImpl()->setOffsetParams(CDLOpData::ChannelParams(vec9[3], vec9[4], vec9[5]));
+        getImpl()->setPowerParams(CDLOpData::ChannelParams(vec9[6], vec9[7], vec9[8]));
     }
     
     void CDLTransform::getSOP(float * vec9) const
     {
-        memcpy(vec9, &getImpl()->sop_, sizeof(float)*9);
+        if(!vec9)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
+        const CDLOpData::ChannelParams & slopes = getImpl()->getSlopeParams();
+        vec9[0] = (float)slopes[0];
+        vec9[1] = (float)slopes[1];
+        vec9[2] = (float)slopes[2];
+
+        const CDLOpData::ChannelParams & offsets = getImpl()->getOffsetParams();
+        vec9[3] = (float)offsets[0];
+        vec9[4] = (float)offsets[1];
+        vec9[5] = (float)offsets[2];
+
+        const CDLOpData::ChannelParams & powers = getImpl()->getPowerParams();
+        vec9[6] = (float)powers[0];
+        vec9[7] = (float)powers[1];
+        vec9[8] = (float)powers[2];
     }
 
     void CDLTransform::setSat(float sat)
     {
-        getImpl()->sat_ = sat;
+        getImpl()->setSaturation((double)sat);
     }
     
     float CDLTransform::getSat() const
     {
-        return getImpl()->sat_;
+        return (float)getImpl()->getSaturation();
     }
 
     void CDLTransform::getSatLumaCoefs(float * rgb) const
     {
-        if(!rgb) return;
+        if(!rgb)
+        {
+            throw Exception("CDLTransform: Invalid input pointer");
+        }
+
         rgb[0] = 0.2126f;
         rgb[1] = 0.7152f;
         rgb[2] = 0.0722f;
@@ -762,36 +540,25 @@ OCIO_NAMESPACE_ENTER
     
     void CDLTransform::setID(const char * id)
     {
-        if(id)
-        {
-            getImpl()->id_ = id;
-        }
-        else
-        {
-            getImpl()->id_ = "";
-        }
+        getImpl()->setId(id ? id : "");
     }
     
     const char * CDLTransform::getID() const
     {
-        return getImpl()->id_.c_str();
+        return getImpl()->getId().c_str();
     }
     
     void CDLTransform::setDescription(const char * desc)
     {
-        if(desc)
-        {
-            getImpl()->description_ = desc;
-        }
-        else
-        {
-            getImpl()->description_ = "";
-        }
+        getImpl()->setDescriptions(OpData::Descriptions(desc ? desc : ""));
     }
     
     const char * CDLTransform::getDescription() const
     {
-        return getImpl()->description_.c_str();
+        if(getImpl()->getDescriptions().empty())
+            return "";
+
+        return getImpl()->getDescriptions()[0].c_str();
     }
     
     std::ostream& operator<< (std::ostream& os, const CDLTransform& t)
@@ -816,7 +583,7 @@ OCIO_NAMESPACE_ENTER
     ///////////////////////////////////////////////////////////////////////////
     
     void BuildCDLOps(OpRcPtrVec & ops,
-                     const Config & /*config*/,
+                     const Config & config,
                      const CDLTransform & cdlTransform,
                      TransformDirection dir)
     {
@@ -837,30 +604,52 @@ OCIO_NAMESPACE_ENTER
         TransformDirection combinedDir = CombineTransformDirections(dir,
                                                   cdlTransform.getDirection());
         
-        // TODO: Confirm ASC Sat math is correct.
-        // TODO: Handle Clamping conditions more explicitly
-        
-        if(combinedDir == TRANSFORM_DIR_FORWARD)
+        if(config.getMajorVersion()==1)
         {
-            // 1) Scale + Offset
-            CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_FORWARD);
-            
-            // 2) Power + Clamp
-            CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
-            
-            // 3) Saturation + Clamp
-            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+            if(combinedDir == TRANSFORM_DIR_FORWARD)
+            {
+                // 1) Scale + Offset
+                CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_FORWARD);
+                
+                // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+                //    ASC v1.2 spec since it also requires clamping at 1.)
+                CreateExponentOp(ops, power4, TRANSFORM_DIR_FORWARD);
+                
+                // 3) Saturation (NB: Does not clamp at 0 and 1
+                //    as per ASC v1.2 spec)
+                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_FORWARD);
+            }
+            else if(combinedDir == TRANSFORM_DIR_INVERSE)
+            {
+                // 3) Saturation (NB: Does not clamp at 0 and 1
+                //    as per ASC v1.2 spec)
+                CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
+                
+                // 2) Power + Clamp at 0 (NB: This is not in accord with the 
+                //    ASC v1.2 spec since it also requires clamping at 1.)
+                CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
+                
+                // 1) Scale + Offset
+                CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_INVERSE);
+            }
         }
-        else if(combinedDir == TRANSFORM_DIR_INVERSE)
+        else
         {
-            // 3) Saturation + Clamp
-            CreateSaturationOp(ops, sat, lumaCoef3, TRANSFORM_DIR_INVERSE);
-            
-            // 2) Power + Clamp
-            CreateExponentOp(ops, power4, TRANSFORM_DIR_INVERSE);
-            
-            // 1) Scale + Offset
-            CreateScaleOffsetOp(ops, scale4, offset4, TRANSFORM_DIR_INVERSE);
+            // Starting with the version 2, OCIO is now using a CDL Op
+            //   complying with the Common LUT Format (i.e. CLF) specification.
+
+            const double s[3] = { scale4[0],  scale4[1],  scale4[2]  };
+            const double o[3] = { offset4[0], offset4[1], offset4[2] };
+            const double p[3] = { power4[0],  power4[1],  power4[2]  };
+
+            CreateCDLOp(ops, 
+                        cdlTransform.getID(),
+                        OpData::Descriptions(cdlTransform.getDescription()),
+                        combinedDir==TRANSFORM_DIR_FORWARD 
+                            ? CDLOpData::CDL_V1_2_FWD
+                            : CDLOpData::CDL_V1_2_REV,
+                        s, o, p, double(sat), 
+                        combinedDir);
         }
     }
 }
@@ -871,6 +660,23 @@ OCIO_NAMESPACE_EXIT
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
 #include "UnitTestFiles.h"
+
+OIIO_ADD_TEST(CDLTransform, equality)
+{
+    const OCIO::CDLTransformRcPtr cdl1 = OCIO::CDLTransform::Create();
+    const OCIO::CDLTransformRcPtr cdl2 = OCIO::CDLTransform::Create();
+
+    OIIO_CHECK_ASSERT(cdl1->equals(cdl1));
+    OIIO_CHECK_ASSERT(cdl1->equals(cdl2));
+    OIIO_CHECK_ASSERT(cdl2->equals(cdl1));
+
+    const OCIO::CDLTransformRcPtr cdl3 = OCIO::CDLTransform::Create();
+    cdl3->setSat(cdl3->getSat()+0.002f);
+
+    OIIO_CHECK_ASSERT(!cdl1->equals(cdl3));
+    OIIO_CHECK_ASSERT(!cdl2->equals(cdl3));
+    OIIO_CHECK_ASSERT(cdl3->equals(cdl3));
+}
 
 OIIO_ADD_TEST(CDLTransform, CreateFromCCFile)
 {
@@ -903,16 +709,17 @@ OIIO_ADD_TEST(CDLTransform, CreateFromCCFile)
     }
 
     const std::string expectedOutXML(
-        "<ColorCorrection id=\"foo\">"
-        "<SOPNode>"
-        "<Description>this is a description</Description>"
-        "<Slope>1.1 1.2 1.3</Slope>"
-        "<Offset>2.1 2.2 2.3</Offset>"
-        "<Power>3.1 3.2 3.3</Power>"
-        "</SOPNode>"
-        "<SatNode>"
-        "<Saturation>0.7</Saturation>"
-        "</SatNode></ColorCorrection>");
+        "<ColorCorrection id=\"foo\">\n"
+        "    <SOPNode>\n"
+        "        <Description>this is a description</Description>\n"
+        "        <Slope>1.1 1.2 1.3</Slope>\n"
+        "        <Offset>2.1 2.2 2.3</Offset>\n"
+        "        <Power>3.1 3.2 3.3</Power>\n"
+        "    </SOPNode>\n"
+        "    <SatNode>\n"
+        "        <Saturation>0.7</Saturation>\n"
+        "    </SatNode>\n"
+        "</ColorCorrection>");
     std::string outXML(transform->getXML());
     OIIO_CHECK_EQUAL(expectedOutXML, outXML);
 
@@ -1014,6 +821,32 @@ OIIO_ADD_TEST(CDLTransform, CreateFromCCCFileFailure)
         OIIO_CHECK_THROW_WHAT(
             OCIO::CDLTransform::CreateFromFile(filePath.c_str(), "42"),
             OCIO::Exception, "could not be loaded from the src file");
+    }
+}
+
+OIIO_ADD_TEST(CDLTransform, EscapeXML)
+{
+    const std::string inputXML(
+        "<ColorCorrection id=\"Esc &lt; &amp; &quot; &apos; &gt;\">\n"
+        "    <SOPNode>\n"
+        "        <Description>These: &lt; &amp; &quot; &apos; &gt; are escape chars</Description>\n"
+        "        <Slope>1.1 1.2 1.3</Slope>\n"
+        "        <Offset>2.1 2.2 2.3</Offset>\n"
+        "        <Power>3.1 3.2 3.3</Power>\n"
+        "    </SOPNode>\n"
+        "    <SatNode>\n"
+        "        <Saturation>0.7</Saturation>\n"
+        "    </SatNode>\n"
+        "</ColorCorrection>");
+
+    // parse again using setXML
+    OCIO::CDLTransformRcPtr transformCDL = OCIO::CDLTransform::Create();
+    transformCDL->setXML(inputXML.c_str());
+    {
+        std::string idStr(transformCDL->getID());
+        OIIO_CHECK_EQUAL("Esc < & \" ' >", idStr);
+        std::string descStr(transformCDL->getDescription());
+        OIIO_CHECK_EQUAL("These: < & \" ' > are escape chars", descStr);
     }
 }
 

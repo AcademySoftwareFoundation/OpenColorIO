@@ -54,11 +54,12 @@ OCIO_NAMESPACE_ENTER
 
         LogOpData & operator = (const LogOpData & rhs);
 
-        virtual Type getType() const { return LogType; }
+        virtual Type getType() const override { return LogType; }
 
-        virtual bool isIdentity() const { return false; }
+        virtual bool isNoOp() const override { return false; }
+        virtual bool isIdentity() const override { return false; }
 
-        virtual bool hasChannelCrosstalk() const { return false; }
+        virtual bool hasChannelCrosstalk() const override { return false; }
 
         float m_k[3];
         float m_m[3];
@@ -66,8 +67,7 @@ OCIO_NAMESPACE_ENTER
         float m_base[3];
         float m_kb[3];
 
-    protected:
-        virtual std::string finalize() const;
+        virtual void finalize() override;
     };
 
     // output = k * log(mx+b, base) + kb

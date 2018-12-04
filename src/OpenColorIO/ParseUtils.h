@@ -40,7 +40,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    
+    // Prepares a string to be inserted in an XML document by escaping
+    // characters that may not appear directly in XML.
+    // (Note: eXpat does the inverse conversion automatically.)
+    std::string ConvertSpecialCharToXmlToken(const std::string& str);
+
     std::string FloatToString(float fval);
     std::string FloatVecToString(const float * fval, unsigned int size);
     

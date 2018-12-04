@@ -21,7 +21,29 @@ class RangeTransform:
         """
         validate()
         
-        Throw if :py:class:`PyOpenColorIO.RangeTransform` is not valid.
+        Throw if :py:class:`PyOpenColorIO.RangeTransform` contains illegal parameters.
+        """
+        pass
+
+    def getStyle(self):
+        """
+        getStyle()
+        
+        Returns whether the range is Clamp or noClamp style.
+
+        :return: the style name
+        :rtype: string
+        """
+        pass
+
+    def setStyle(self, value):
+        """
+        setStyle(value)
+        
+        Sets the range to Clamp or noClamp style.
+        
+        :param value: the style name
+        :type value: string
         """
         pass
 

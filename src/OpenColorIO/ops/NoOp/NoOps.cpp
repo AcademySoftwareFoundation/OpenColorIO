@@ -44,12 +44,11 @@ OCIO_NAMESPACE_ENTER
         public:
             NoOp() : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32) { }
 
-            virtual Type getType() const { return NoOpType; }
-            virtual bool isIdentity() const { return true; }
-            virtual bool hasChannelCrosstalk() const { return false; }
-
-        protected:
-            virtual std::string finalize() const { return ""; }
+            virtual Type getType() const override { return NoOpType; }
+            virtual bool isNoOp() const override { return true; }
+            virtual bool isIdentity() const override { return true; }
+            virtual bool hasChannelCrosstalk() const override { return false; }
+            virtual void finalize() override { m_cacheID = ""; }
         };
 
         class AllocationNoOp : public Op

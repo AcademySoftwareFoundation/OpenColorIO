@@ -14,12 +14,12 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 		PUBLIC
 			public_api
 		PRIVATE
-			tinyxml
 			yamlcpp
 			pystring
 			sampleicc
 			oiio_unittest
 			unittest_data
+			libexpat
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
@@ -27,9 +27,26 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 				"${CMAKE_SOURCE_DIR}/src/OpenColorIO"
 		)
 	endif(PRIVATE_INCLUDES)
+	if(OCIO_USE_SSE)
+		target_compile_definitions(${TEST_BINARY}
+			PRIVATE
+				USE_SSE
+		)
+	endif(OCIO_USE_SSE)
+	if(WIN32)
+		# A windows application linking to eXpat static libraries must
+		# have the global macro XML_STATIC defined
+		target_compile_definitions(${TEST_BINARY}
+			PRIVATE
+				XML_STATIC
+		)
+	endif(WIN32)
+	if(MSVC)
+		# Because our Exceptions derive from std::runtime_error we can safely disable this warning
+		set_target_properties(${TEST_BINARY} PROPERTIES COMPILE_FLAGS "/wd4275")
+	endif(MSVC)
 	add_test(${TEST_NAME} ${TEST_BINARY})
 endfunction(add_ocio_test)
-
 
 
 # Eventually we will factor out each test into it's own executable
@@ -44,6 +61,8 @@ set(SOURCES
 	Context.cpp
 	Display.cpp
 	Exception.cpp
+	fileformats/cdl/CDLParser.cpp
+	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/FileFormat3DL.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
@@ -77,6 +96,9 @@ set(SOURCES
 	Op.cpp
 	OpOptimizers.cpp
 	ops/Allocation/AllocationOp.cpp
+	ops/CDL/CDLOpCPU.cpp
+	ops/CDL/CDLOpData.cpp
+	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
@@ -93,6 +115,7 @@ set(SOURCES
 	Platform.cpp
 	Processor.cpp
 	ScanlineHelper.cpp
+	SSE.cpp
 	Transform.cpp
 	transforms/AllocationTransform.cpp
 	transforms/CDLTransform.cpp

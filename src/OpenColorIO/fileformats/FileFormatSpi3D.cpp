@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "transforms/FileTransform.h"
+#include "Platform.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "pystring/pystring.h"
 

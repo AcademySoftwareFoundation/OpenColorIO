@@ -52,16 +52,17 @@ OCIO_NAMESPACE_ENTER
 
         MatrixOpData & operator = (const MatrixOpData & rhs);
 
-        virtual Type getType() const { return MatrixType; }
+        virtual Type getType() const override { return MatrixType; }
 
         // Determine whether the output of the op mixes R, G, B channels.
         // For example, Rout = 5*Rin is channel independent, but Rout = Rin + Gin
         // is not.  Note that the property may depend on the op parameters,
         // so, e.g. MatrixOps may sometimes return true and other times false.
         // returns true if the op's output does not combine input channels
-        virtual bool hasChannelCrosstalk() const;
+        virtual bool hasChannelCrosstalk() const override;
 
-        virtual bool isIdentity() const;
+        virtual bool isNoOp() const override;
+        virtual bool isIdentity() const override;
         virtual bool hasOffsets() const;
         virtual bool isMatrixIdentity() const;
         virtual bool isMatrixDiagonal() const;
@@ -69,8 +70,7 @@ OCIO_NAMESPACE_ENTER
         float m_m44[16];
         float m_offset4[4];
 
-    private:
-        virtual std::string finalize() const;
+        virtual void finalize() override;
     };
 
     // Use whichever is most convenient; they are equally efficient

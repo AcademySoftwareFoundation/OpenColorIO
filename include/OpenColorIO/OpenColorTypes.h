@@ -285,6 +285,13 @@ OCIO_NAMESPACE_ENTER
         ENV_ENVIRONMENT_LOAD_PREDEFINED,
         ENV_ENVIRONMENT_LOAD_ALL
     };
+
+    //!cpp:type::
+    enum RangeStyle
+    {
+        RANGE_NO_CLAMP = 0,
+        RANGE_CLAMP
+    };
     
     //!rst::
     // Conversion
@@ -344,6 +351,11 @@ OCIO_NAMESPACE_ENTER
     extern OCIOEXPORT const char * EnvironmentModeToString(EnvironmentMode mode);
     //!cpp:function::
     extern OCIOEXPORT EnvironmentMode EnvironmentModeFromString(const char * s);
+
+    //!cpp:function::
+    extern OCIOEXPORT const char * RangeStyleToString(RangeStyle style);
+    //!cpp:function::
+    extern OCIOEXPORT RangeStyle RangeStyleFromString(const char * style);
     
     
     /*!rst::

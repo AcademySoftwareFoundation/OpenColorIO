@@ -130,18 +130,18 @@ public:
     inline double getAlphaScale() const { return m_alphaScale; }
 
     // Validate the state of the instance and initialize private members.
-    void validate() const;
+    void validate() const override;
 
-    virtual Type getType() const { return RangeType; }
+    Type getType() const override { return RangeType; }
 
-    // True if the op does nothing except bit-depth conversion
-    virtual bool isIdentity() const;
+    bool isNoOp() const override;
+    bool isIdentity() const override;
 
     // Make an op to replace an identity (or pair identity) of this op type.
     // (Note: For a pair identity, call this on the first half and then set
     // the result's output bit-depth to match the second half.)
     // returns the opData (to be managed by caller)
-    virtual OpDataRcPtr getIdentityReplacement() const;
+    OpDataRcPtr getIdentityReplacement() const;
 
     // True if the op does not scale and does not clamp the normal domain.
     bool isClampIdentity() const;
@@ -154,17 +154,17 @@ public:
     // True if the op only a clamp on values below 0.
     bool isClampNegs() const;
 
-    bool hasChannelCrosstalk() const { return false; }
+    bool hasChannelCrosstalk() const override { return false; }
 
     // Set the output bit depth
     // - out the output bit depth
     // Note: Multiple set operations are lossless.
-    void setOutputBitDepth(BitDepth out);
+    void setOutputBitDepth(BitDepth out) override;
 
     // Set the input bit depth
     // - in the input bit depth
     // Note: Multiple set operations are lossless.
-    void setInputBitDepth(BitDepth in);
+    void setInputBitDepth(BitDepth in) override;
 
     // True if minIn & minOut do not request clipping
     bool minIsEmpty() const;
@@ -188,7 +188,7 @@ public:
     // Create a MatrixOp that is equivalent to the Range except does not clamp.
     MatrixOpDataRcPtr convertToMatrix() const;
 
-    bool operator==(const OpData& other) const;
+    bool operator==(const OpData& other) const override;
 
     // True if the op is the inverse
     bool isInverse(const RangeOpDataRcPtr & r) const;
@@ -198,12 +198,12 @@ public:
     // True if the double (i.e. bound values) differs
     static bool FloatsDiffer(double x1, double x2);
 
+    virtual void finalize() override;
+
 private:
     void fillScaleOffset() const;
     double clipOverride(bool isLower) const;
     void fillBounds() const;
-
-    virtual std::string finalize() const;
 
 private:
     double m_minInValue;            // Minimum for the input value

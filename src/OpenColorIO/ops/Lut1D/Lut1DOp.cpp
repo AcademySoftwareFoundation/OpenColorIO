@@ -47,6 +47,7 @@ OCIO_NAMESPACE_ENTER
         :   OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
         ,   maxerror(std::numeric_limits<float>::min())
         ,   errortype(ERROR_RELATIVE)
+        ,   m_isIdentity(false)
     {
         for(int i=0; i<3; ++i)
         {
@@ -115,7 +116,13 @@ OCIO_NAMESPACE_ENTER
         return *this;
     }
 
-    
+    std::string Lut1DOpData::getCacheID() const
+    {
+        const_cast<Lut1DOpData*>(this)->finalize();
+
+        return m_cacheID;
+    }
+
     namespace
     {
         bool IsLut1DIdentity(const Lut1DOpData & lut,
@@ -142,14 +149,14 @@ OCIO_NAMESPACE_ENTER
                     
                     if(errortype == Lut1DOpData::ERROR_ABSOLUTE)
                     {
-                        if(!equalWithAbsError(identval, lutval, maxerror))
+                        if(!EqualWithAbsError(identval, lutval, maxerror))
                         {
                             return false;
                         }
                     }
                     else if(errortype == Lut1DOpData::ERROR_RELATIVE)
                     {
-                        if(!equalWithRelError(identval, lutval, maxerror))
+                        if(!EqualWithRelError(identval, lutval, maxerror))
                         {
                             return false;
                         }
@@ -165,61 +172,71 @@ OCIO_NAMESPACE_ENTER
         }
     }
     
+    bool Lut1DOpData::isNoOp() const
+    {
+        // TODO: Definitively wrong implementation as a LUT could clamp, 
+        //       here to be backward compatible with OCIO v1.
+        //
+        //       Later, a dedicated pull request focused on the optimizations 
+        //       will revisit the implementation for clamping Ops.
+        return isIdentity();
+    }
+
     bool Lut1DOpData::isIdentity() const
     {
-        AutoMutex lock(m_mutex);
-        
-        if(luts[0].empty() || luts[1].empty() || luts[2].empty())
-            throw Exception("Cannot compute isIdentity of invalid Lut1DOpData");
-        
-        if(!m_cacheID.empty())
-            return m_isIdentity;
-        
-        finalize();
-        
+        const_cast<Lut1DOpData*>(this)->finalize();
+
         return m_isIdentity;
     }
     
+    void Lut1DOpData::finalize()
+    {
+        if(luts[0].empty() || luts[1].empty() || luts[2].empty())
+            throw Exception("Cannot finalize an invalid Lut1DOpData");
+        
+        if(m_cacheID.empty())
+        {
+            AutoMutex lock(m_mutex);
+
+            std::ostringstream cacheIDStream;
+            cacheIDStream << getId();
+
+            m_isIdentity = IsLut1DIdentity(*this, maxerror, errortype);
+            
+            if(m_isIdentity)
+            {
+                cacheIDStream << "<NULL 1D>";
+            }
+            else
+            {
+                md5_state_t state;
+                md5_byte_t digest[16];
+                
+                md5_init(&state);
+                md5_append(&state, (const md5_byte_t *)from_min, (int)(3*sizeof(float)));
+                md5_append(&state, (const md5_byte_t *)from_max, (int)(3*sizeof(float)));
+                
+                for(int i=0; i<3; ++i)
+                {
+                    md5_append( &state, (const md5_byte_t *)&(luts[i][0]),
+                        (int) (luts[i].size()*sizeof(float)) );
+                }
+                
+                md5_finish(&state, digest);
+                
+                cacheIDStream << GetPrintableHash(digest);
+            }
+            m_cacheID = cacheIDStream.str();
+        }
+    }
+
     void Lut1DOpData::unfinalize()
     {
         AutoMutex lock(m_mutex);
         m_cacheID = "";
         m_isIdentity = false;
     }
-    
-    std::string Lut1DOpData::finalize() const
-    {
-        if(luts[0].empty() || luts[1].empty() || luts[2].empty())
-            throw Exception("Cannot finalize an invalid Lut1DOpData");
-        
-        m_isIdentity = IsLut1DIdentity(*this, maxerror, errortype);
-        
-        if(m_isIdentity)
-        {
-            return "<NULL 1D>";
-        }
-        else
-        {
-            md5_state_t state;
-            md5_byte_t digest[16];
-            
-            md5_init(&state);
-            md5_append(&state, (const md5_byte_t *)from_min, (int)(3*sizeof(float)));
-            md5_append(&state, (const md5_byte_t *)from_max, (int)(3*sizeof(float)));
-            
-            for(int i=0; i<3; ++i)
-            {
-                md5_append( &state, (const md5_byte_t *)&(luts[i][0]),
-                    (int) (luts[i].size()*sizeof(float)) );
-            }
-            
-            md5_finish(&state, digest);
-            
-            return GetPrintableHash(digest);
-        }
-    }
-    
-    
+
     namespace
     {
         // Note: This function assumes that minVal is less than maxVal
@@ -605,7 +622,6 @@ OCIO_NAMESPACE_ENTER
             virtual OpRcPtr clone() const;
             
             virtual std::string getInfo() const;
-            virtual std::string getCacheID() const;
             
             virtual bool isSameType(const OpRcPtr & op) const;
             virtual bool isInverse(const OpRcPtr & op) const;
@@ -621,15 +637,13 @@ OCIO_NAMESPACE_ENTER
             Lut1DOpDataRcPtr makeFastLut1D(bool forGPU);
 
         protected:
-            Lut1DOpDataRcPtr lut() { return DynamicPtrCast<Lut1DOpData>(data()); }
-            const Lut1DOpDataRcPtr lut() const { return DynamicPtrCast<Lut1DOpData>(data()); }
+            const Lut1DOpDataRcPtr lutData() const { return DynamicPtrCast<Lut1DOpData>(const_data()); }
 
         private:
             Interpolation m_interpolation;
             TransformDirection m_direction;
 
             Lut1DOpDataRcPtr m_lut_gpu_apply;
-            std::string m_cacheID;
         };
         
         
@@ -646,8 +660,7 @@ OCIO_NAMESPACE_ENTER
         
         OpRcPtr Lut1DOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new Lut1DOp(lut(), m_interpolation, m_direction));
-            return op;
+            return OpRcPtr(new Lut1DOp(lutData(), m_interpolation, m_direction));
         }
         
         Lut1DOp::~Lut1DOp()
@@ -656,11 +669,6 @@ OCIO_NAMESPACE_ENTER
         std::string Lut1DOp::getInfo() const
         {
             return "<Lut1DOp>";
-        }
-        
-        std::string Lut1DOp::getCacheID() const
-        {
-            return m_cacheID;
         }
         
         bool Lut1DOp::isSameType(const OpRcPtr & op) const
@@ -678,7 +686,7 @@ OCIO_NAMESPACE_ENTER
             if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
                 return false;
             
-            return (lut()->getCacheID() == typedRcPtr->lut()->getCacheID());
+            return (lutData()->getCacheID() == typedRcPtr->lutData()->getCacheID());
         }
     
         bool Lut1DOp::canCombineWith(const OpRcPtr & /*op*/) const
@@ -732,7 +740,7 @@ OCIO_NAMESPACE_ENTER
             }
 
             // But if the LUT has values outside [0,1], use a half-domain fastLUT.
-            if(HasExtendedDomain(lut()))
+            if(HasExtendedDomain(lutData()))
             {
                 depth = BIT_DEPTH_F16;
             }
@@ -778,26 +786,28 @@ OCIO_NAMESPACE_ENTER
                     throw Exception("Cannot apply Lut1DOp, invalid interpolation specified.");
             }
             
-            if(lut()->luts[0].empty() || lut()->luts[1].empty() || lut()->luts[2].empty())
+            if(lutData()->luts[0].empty() 
+                || lutData()->luts[1].empty()
+                || lutData()->luts[2].empty())
             {
                 throw Exception("Cannot apply Lut1DOp, no LUT data provided.");
             }
 
-            if(lut()->luts[0].size()!=lut()->luts[1].size()
-                || lut()->luts[0].size()!=lut()->luts[2].size())
+            if(lutData()->luts[0].size()!=lutData()->luts[1].size()
+                || lutData()->luts[0].size()!=lutData()->luts[2].size())
             {
                 throw Exception(
                     "Cannot apply Lut1DOp, the LUT for each channel must have the same dimensions.");
             }
 
+            lutData()->finalize();
+
             // Create the cacheID
             std::ostringstream cacheIDStream;
             cacheIDStream << "<Lut1DOp ";
-            cacheIDStream << lut()->getCacheID() << " ";
+            cacheIDStream << lutData()->getCacheID() << " ";
             cacheIDStream << InterpolationToString(m_interpolation) << " ";
             cacheIDStream << TransformDirectionToString(m_direction) << " ";
-            cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
-            cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
             cacheIDStream << ">";
             m_cacheID = cacheIDStream.str();
 
@@ -815,25 +825,25 @@ OCIO_NAMESPACE_ENTER
                 if(m_interpolation == INTERP_NEAREST)
                 {
 #ifdef USE_SSE
-                    Lut1D_Nearest_SSE(rgbaBuffer, numPixels, *lut());
+                    Lut1D_Nearest_SSE(rgbaBuffer, numPixels, *lutData());
 #else
-                    Lut1D_Nearest(rgbaBuffer, numPixels, *lut());
+                    Lut1D_Nearest(rgbaBuffer, numPixels, *lutData());
 #endif
                 }
                 else if(m_interpolation == INTERP_LINEAR)
                 {
-                    Lut1D_Linear(rgbaBuffer, numPixels, *lut());
+                    Lut1D_Linear(rgbaBuffer, numPixels, *lutData());
                 }
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
                 if(m_interpolation == INTERP_NEAREST)
                 {
-                    Lut1D_NearestInverse(rgbaBuffer, numPixels, *lut());
+                    Lut1D_NearestInverse(rgbaBuffer, numPixels, *lutData());
                 }
                 else if(m_interpolation == INTERP_LINEAR)
                 {
-                    Lut1D_LinearInverse(rgbaBuffer, numPixels, *lut());
+                    Lut1D_LinearInverse(rgbaBuffer, numPixels, *lutData());
                 }
             }
         }
@@ -1105,35 +1115,34 @@ OIIO_ADD_TEST(Lut1DOp, NoOp)
     
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1DOpData::ERROR_RELATIVE;
-    bool isNoOp = false;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_EQUAL(isNoOp, true);
+    OIIO_CHECK_NO_THROW(lut->unfinalize());
+    OIIO_CHECK_NO_THROW(lut->finalize());
+    OIIO_CHECK_EQUAL(lut->isIdentity(), true);
+    OIIO_CHECK_EQUAL(lut->isNoOp(), true);
     
-    lut->unfinalize();
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1DOpData::ERROR_ABSOLUTE;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_EQUAL(isNoOp, true);
+    OIIO_CHECK_NO_THROW(lut->unfinalize());
+    OIIO_CHECK_NO_THROW(lut->finalize());
+    OIIO_CHECK_EQUAL(lut->isIdentity(), true);
+    OIIO_CHECK_EQUAL(lut->isNoOp(), true);
 
-    OCIO::OpRcPtrVec ops;
-    OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut,
-        OCIO::INTERP_NEAREST, OCIO::TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 0);
-    
     // Edit the LUT
     // These should NOT be identity
-    lut->unfinalize();
     lut->luts[0][125] += 1e-3f;
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1DOpData::ERROR_RELATIVE;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_EQUAL(isNoOp, false);
+    OIIO_CHECK_NO_THROW(lut->unfinalize());
+    OIIO_CHECK_NO_THROW(lut->finalize());
+    OIIO_CHECK_EQUAL(lut->isIdentity(), false);
+    OIIO_CHECK_EQUAL(lut->isNoOp(), false);
     
-    lut->unfinalize();
     lut->maxerror = 1e-5f;
     lut->errortype = OCIO::Lut1DOpData::ERROR_ABSOLUTE;
-    OIIO_CHECK_NO_THROW(isNoOp = lut->isNoOp());
-    OIIO_CHECK_EQUAL(isNoOp, false);
+    OIIO_CHECK_NO_THROW(lut->unfinalize());
+    OIIO_CHECK_NO_THROW(lut->finalize());
+    OIIO_CHECK_EQUAL(lut->isIdentity(), false);
+    OIIO_CHECK_EQUAL(lut->isNoOp(), false);
 }
 
 
@@ -1358,6 +1367,8 @@ OIIO_ADD_TEST(Lut1DOp, Inverse)
         OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_b,
         OCIO::INTERP_LINEAR, OCIO::TRANSFORM_DIR_INVERSE));
+
+    OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
     
     OIIO_CHECK_EQUAL(ops.size(), 4);
     
@@ -1609,29 +1620,28 @@ OIIO_ADD_TEST(Lut1DOp, ThrowNoOp)
 
     lut->maxerror = 1e-5f;
     lut->errortype = (OCIO::Lut1DOpData::ErrorType)0;
-    OIIO_CHECK_THROW_WHAT(lut->isNoOp(),
+    OIIO_CHECK_THROW_WHAT(lut->finalize(),
         OCIO::Exception, "Unknown error type");
 
     lut->errortype = OCIO::Lut1DOpData::ERROR_RELATIVE;
-    OIIO_CHECK_NO_THROW(lut->isNoOp());
-    lut->unfinalize();
+    OIIO_CHECK_NO_THROW(lut->finalize());
 
     lut->luts[0].clear();
-    OIIO_CHECK_THROW_WHAT(lut->isNoOp(),
+    OIIO_CHECK_THROW_WHAT(lut->finalize(),
         OCIO::Exception, "invalid Lut1D");
 
     lut->luts[0] = lut->luts[1];
     lut->luts[1].clear();
-    OIIO_CHECK_THROW_WHAT(lut->isNoOp(),
+    OIIO_CHECK_THROW_WHAT(lut->finalize(),
         OCIO::Exception, "invalid Lut1D");
 
     lut->luts[1] = lut->luts[2];
     lut->luts[2].clear();
-    OIIO_CHECK_THROW_WHAT(lut->isNoOp(),
+    OIIO_CHECK_THROW_WHAT(lut->finalize(),
         OCIO::Exception, "invalid Lut1D");
 
     lut->luts[2] = lut->luts[0];
-    OIIO_CHECK_NO_THROW(lut->isNoOp());
+    OIIO_CHECK_NO_THROW(lut->finalize());
 }
 
 OIIO_ADD_TEST(Lut1DOp, ThrowOp)

@@ -766,7 +766,7 @@ OCIO_NAMESPACE_ENTER
     // 
     // .. note::
     //    The "noClamp" style described in the specification (S-2014-006.pdf)
-    //    is implemented in OCIO as a Matrix rather than a Range.
+    //    becomes a MatrixOp at the processor level.
     //
     class OCIOEXPORT RangeTransform : public Transform
     {
@@ -781,7 +781,12 @@ OCIO_NAMESPACE_ENTER
         virtual TransformDirection getDirection() const;
         //!cpp:function:: Set Transform direction.
         virtual void setDirection(TransformDirection dir);
-        
+
+        //!cpp:function:: Get the style (i.e. clamping or not).
+        virtual RangeStyle getStyle() const;
+        //!cpp:function:: Set the Range style to clamp or not input values.
+        virtual void setStyle(RangeStyle style);
+
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
 

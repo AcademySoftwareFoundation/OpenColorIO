@@ -44,72 +44,103 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
+    // From Imath
+    //--------------------------------------------------------------------------
+    // Compare two numbers and test if they are "approximately equal":
+    //
+    // equalWithAbsError (x1, x2, e)
+    //
+    //  Returns true if x1 is the same as x2 with an absolute error of
+    //  no more than e,
+    //  
+    //  abs (x1 - x2) <= e
+    //
+    // equalWithRelError (x1, x2, e)
+    //
+    //  Returns true if x1 is the same as x2 with an relative error of
+    //  no more than e,
+    //  
+    //  abs (x1 - x2) <= e * x1
+    //
+    //--------------------------------------------------------------------------
     
-// From Imath
-//--------------------------------------------------------------------------
-// Compare two numbers and test if they are "approximately equal":
-//
-// equalWithAbsError (x1, x2, e)
-//
-//  Returns true if x1 is the same as x2 with an absolute error of
-//  no more than e,
-//  
-//  abs (x1 - x2) <= e
-//
-// equalWithRelError (x1, x2, e)
-//
-//  Returns true if x1 is the same as x2 with an relative error of
-//  no more than e,
-//  
-//  abs (x1 - x2) <= e * x1
-//
-//--------------------------------------------------------------------------
+    template<typename T>
+    inline bool EqualWithAbsError (T x1, T x2, T e)
+    {
+        return ((x1 > x2)? x1 - x2: x2 - x1) <= e;
+    }
+    
+    template<typename T>
+    inline bool EqualWithRelError (T x1, T x2, T e)
+    {
+        return ((x1 > x2)? x1 - x2: x2 - x1) <= e * ((x1 > 0)? x1: -x1);
+    }
+    
+    // Relative comparison: check if the difference between value and expected
+    // relative to (divided by) expected does not exceed the eps.  A minimum
+    // expected value is used to limit the scaling of the difference and
+    // avoid large relative differences for small numbers.
+    template<typename T>
+    inline bool EqualWithSafeRelError(T value,
+                                      T expected,
+                                      T eps,
+                                      T minExpected)
+    {
+        const float div = (expected > 0) ?
+            ((expected < minExpected) ? minExpected : expected) :
+            ((-expected < minExpected) ? minExpected : -expected);
 
-inline bool equalWithAbsError (float x1, float x2, float e)
-{
-    return ((x1 > x2)? x1 - x2: x2 - x1) <= e;
-}
+        return (
+            ((value > expected) ? value - expected : expected - value)
+            / div) <= eps;
+    }
 
-inline bool equalWithRelError (float x1, float x2, float e)
-{
-    return ((x1 > x2)? x1 - x2: x2 - x1) <= e * ((x1 > 0)? x1: -x1);
-}
 
-inline float lerpf(float a, float b, float z)
-{
-    return (b - a) * z + a;
-}
+    inline float lerpf(float a, float b, float z)
+    {
+        return (b - a) * z + a;
+    }
     
 #ifdef WINDOWS
-
-inline double round (float val) 
-{
-    return floor (val + 0.5);
-}
-
-inline float roundf (float val) 
-{
-    return static_cast<float>(round (val));
-}
-
-inline int isnan (float val) 
-{
-    // Windows uses a non-standard version of 'isnan'
-    return _isnan (val);
-}
-
-#else // WINDOWS
+    inline int isnan (float val)
+    {
+        // Windows uses a non-standard version of 'isnan'
+        return _isnan (val);
+    }
+    inline int isnan(double val)
+    {
+        // Windows uses a non-standard version of 'isnan'
+        return _isnan(val);
+    }
+#else
 
 #ifdef ANDROID
 // support std::isnan - needs to be tested as it might not be part of the NDK
 #define _GLIBCXX_USE_C99_MATH 1
 #endif
 
-// This lets all platforms just use isnan, within the OCIO namespace,
-// across all platforms. (Windows defines the function above).
-using std::isnan;
+    // This lets all platforms just use isnan, within the OCIO namespace,
+    // across all platforms. (Windows defines the function above).
+    using std::isnan;
+#endif
+    
+// Clamp value a to[min, max]
+// First compare with max, then with min.
+// Does not validate max >= min
+template<typename T>
+inline T clamp(T a, T min, T max)
+{
+    return ((a) > (max) ? (max) : ((min) > (a) ? (min) : (a)));
+}
 
-#endif // WINDOWS
+// Remove/map special float values to values inside the floating-point domain.
+//        Especifically, maps:
+//          -Inf to -MAX_FLOAT
+//           Inf to  MAX_FLOAT
+//           NaN to  0
+// - f is the float to sanitize
+// Return the sanitized float
+float SanitizeFloat(float f);
 
 // Checks within fltmin tolerance
 bool IsScalarEqualToZero(float v);
@@ -187,13 +218,50 @@ void GetMxbCombine(float* mout, float* vout,
 bool GetMxbInverse(float* mout, float* vout,
                    const float* m, const float* v);
 
-// Clamp value a to[min, max]
-// First compare with max, then with min.
-// Does not validate max >= min
-template<typename T>
-inline T clamp(T a, T min, T max)
+// Reinterpret the binary representation of a single-precision floating-point number
+//   as a 32-bit integer.
+//
+// x : floating-point number
+//
+// Return reinterpreted float bit representation as an integer 
+inline unsigned FloatAsInt(const float x)
 {
-    return ((a) > (max) ? (max) : ((min) > (a) ? (min) : (a)));
+    union {
+        float f;
+        unsigned i;
+    } v;
+
+    v.f = x;
+    return v.i;
+}
+
+// Reinterpret the binary representation of a 32-bit integer as a
+//   single-precision floating-point number.
+//
+// x : integer number
+//
+// Return reinterpreted integer bit representation as a float
+inline float IntAsFloat(const unsigned x)
+{
+    union {
+        float f;
+        unsigned i;
+    } v;
+
+    v.i = x;
+    return v.f;
+}
+
+// Add a number of ULPs (Unit of Least Precision) to a given
+//   floating-point number.
+//
+// f : original floating-point number
+// ulp : the number of ULPs to be added to the floating-point number
+//
+// Return the original floating-point number added by the number of ULPs.
+inline float AddULP(const float f, const int ulp)
+{
+    return IntAsFloat( FloatAsInt(f) + ulp );
 }
 
 // Verify if two floating-point numbers are within a tolerance given in ULPs.
@@ -214,7 +282,7 @@ inline T clamp(T a, T min, T max)
 // Return true if the floating-point number are different, that is, their difference is not
 //              within the acceptable tolerance, under the conditions imposed by the
 //              compressDenorms flag.
-bool floatsDiffer(const float expected, const float actual, 
+bool FloatsDiffer(const float expected, const float actual, 
                   const int tolerance, const bool compressDenorms);
 
 }

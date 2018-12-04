@@ -7,6 +7,8 @@ set(SOURCES
 	Context.cpp
 	Display.cpp
 	Exception.cpp
+	fileformats/cdl/CDLParser.cpp
+	fileformats/cdl/CDLReaderHelper.cpp
 	fileformats/FileFormat3DL.cpp
 	fileformats/FileFormatCCC.cpp
 	fileformats/FileFormatCC.cpp
@@ -40,6 +42,9 @@ set(SOURCES
 	Op.cpp
 	OpOptimizers.cpp
 	ops/Allocation/AllocationOp.cpp
+	ops/CDL/CDLOpCPU.cpp
+	ops/CDL/CDLOpData.cpp
+	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
@@ -81,10 +86,10 @@ target_link_libraries(OpenColorIO
 	PUBLIC 
 		public_api
 	PRIVATE
-		tinyxml
 		yamlcpp
 		pystring
 		sampleicc
+		libexpat
 		ilmbase
 )
 if(NOT BUILD_SHARED_LIBS)
@@ -105,13 +110,25 @@ if(OCIO_USE_SSE)
 			USE_SSE
 	)
 endif()
+if(WIN32)
+	# A windows application linking to eXpat static libraries must
+    # have the global macro XML_STATIC defined
+	target_compile_definitions(OpenColorIO
+		PRIVATE
+			XML_STATIC
+	)
+endif()
 if(MSVC)
 	# Because our Exceptions derive from std::runtime_error we can safely disable this warning
 	set_target_properties(OpenColorIO PROPERTIES COMPILE_FLAGS "/wd4275")
 endif()
 
+set_target_properties(OpenColorIO PROPERTIES
+    VERSION ${OpenColorIO_VERSION}
+    SOVERSION ${SOVERSION})
+
 install(TARGETS OpenColorIO
 	LIBRARY DESTINATION lib
-	RUNTIME DESTINATION lib
+	RUNTIME DESTINATION bin
 	ARCHIVE DESTINATION lib
 )

@@ -50,16 +50,16 @@ OCIO_NAMESPACE_ENTER
 
         ExponentOpData & operator = (const ExponentOpData & rhs);
 
-        virtual Type getType() const { return ExponentType; }
+        virtual Type getType() const override { return ExponentType; }
 
-        virtual bool isIdentity() const;
+        virtual bool isNoOp() const override;
+        virtual bool isIdentity() const override;
 
-        virtual bool hasChannelCrosstalk() const { return false; }
+        virtual bool hasChannelCrosstalk() const override { return false; }
 
         double m_exp4[4];
 
-    protected:
-        virtual std::string finalize() const;
+        virtual void finalize() override;
     };
 
     // If the exponent is 1.0, this will return without clamping

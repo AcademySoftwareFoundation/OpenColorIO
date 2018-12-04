@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "transforms/FileTransform.h"
 #include "ops/Lut1D/Lut1DOp.h"
+#include "Platform.h"
 #include "pystring/pystring.h"
 
 #include <cstdio>
