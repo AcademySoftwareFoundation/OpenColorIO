@@ -30,10 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_MATHUTILS_H
 #define INCLUDED_OCIO_MATHUTILS_H
 
-#include <OpenColorIO/OpenColorIO.h>
-
 #include <cmath>
 #include <vector>
+
+#include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
 #include "Platform.h"
@@ -48,7 +48,7 @@ OCIO_NAMESPACE_ENTER
     //--------------------------------------------------------------------------
     // Compare two numbers and test if they are "approximately equal":
     //
-    // equalWithAbsError (x1, x2, e)
+    // EqualWithAbsError (x1, x2, e)
     //
     //  Returns true if x1 is the same as x2 with an absolute error of
     //  no more than e,

@@ -30,12 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OP_H
 #define INCLUDED_OCIO_OP_H
 
+#include <sstream>
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Mutex.h"
-
-#include <sstream>
-#include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -162,6 +162,17 @@ OCIO_NAMESPACE_ENTER
             Descriptions & operator+=(const_reference str)
             {
                 m_descriptions.push_back(str);
+                return *this;
+            }
+
+            Descriptions& operator +=(const Descriptions& rhs)
+            {
+                if (this != &rhs)
+                {
+                    m_descriptions.insert(m_descriptions.end(),
+                                          rhs.m_descriptions.begin(),
+                                          rhs.m_descriptions.end());
+                }
                 return *this;
             }
 

@@ -41,6 +41,7 @@ OIIO_TEST_APP(OpenColorIO_Core_Unit_Tests)
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "OpBuilders.h"
 #include "UnitTestFiles.h"
 
 OCIO_NAMESPACE_ENTER
@@ -58,6 +59,30 @@ static const std::string ocioTestFilesDir(STR(OCIO_UNIT_TEST_FILES_DIR));
 const char * getTestFilesDir()
 {
     return ocioTestFilesDir.c_str();
+}
+
+void BuildOps(const std::string & fileName,
+              OpRcPtrVec & fileOps,
+              TransformDirection dir)
+{
+    const std::string filePath(std::string(getTestFilesDir()) + "/"
+                               + fileName);
+
+    // Create a FileTransform
+    FileTransformRcPtr pFileTransform = FileTransform::Create();
+    // A transform file does not define any interpolation (contrary to config
+    // file), this is to avoid exception when creating the operation.
+    pFileTransform->setInterpolation(INTERP_LINEAR);
+    pFileTransform->setDirection(TRANSFORM_DIR_FORWARD);
+    pFileTransform->setSrc(filePath.c_str());
+
+    // Create empty Config to use
+    ConfigRcPtr pConfig = Config::Create();
+
+    ContextRcPtr pContext = Context::Create();
+
+    BuildFileOps(fileOps, *(pConfig.get()), pContext,
+                 *(pFileTransform.get()), dir);
 }
 
 }

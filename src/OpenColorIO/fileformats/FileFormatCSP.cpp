@@ -38,12 +38,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "transforms/FileTransform.h"
+#include "MathUtils.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
-#include "MathUtils.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
+#include "transforms/FileTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -318,7 +318,7 @@ OCIO_NAMESPACE_ENTER
             {
                 prelut = Lut1DOpData::Create();
                 lut1D = Lut1DOpData::Create();
-                lut3D = Lut3DOpData::Create();
+                lut3D = Lut3D::Create();
             };
             ~CachedFileCSP() {};
             
@@ -327,7 +327,8 @@ OCIO_NAMESPACE_ENTER
             std::string metadata;
             Lut1DOpDataRcPtr prelut;
             Lut1DOpDataRcPtr lut1D;
-            Lut3DOpDataRcPtr lut3D;
+            // TODO: switch to opdata
+            Lut3DRcPtr lut3D;
         };
         typedef OCIO_SHARED_PTR<CachedFileCSP> CachedFileCSPRcPtr;
         
@@ -395,7 +396,8 @@ OCIO_NAMESPACE_ENTER
             
             Lut1DOpDataRcPtr prelut_ptr = Lut1DOpData::Create();
             Lut1DOpDataRcPtr lut1d_ptr = Lut1DOpData::Create();
-            Lut3DOpDataRcPtr lut3d_ptr = Lut3DOpData::Create();
+            // TODO: switch to opdata
+            Lut3DRcPtr lut3d_ptr = Lut3D::Create();
 
             // try and read the LUT header
             std::string line;
