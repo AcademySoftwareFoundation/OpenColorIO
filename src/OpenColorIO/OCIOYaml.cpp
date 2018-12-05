@@ -57,6 +57,7 @@ namespace YAML {
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::DisplayTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::ExponentTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::FileTransform>;
+    template <> class TypedKeyNotFound<OCIO_NAMESPACE::GammaTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::GroupTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LogTransform>;
     template <> class TypedKeyNotFound<OCIO_NAMESPACE::LookTransform>;
@@ -191,6 +192,15 @@ OCIO_NAMESPACE_ENTER
             node >> x;
 #else
             x = node.as<std::vector<float> >();
+#endif
+        }
+        
+        inline void load(const YAML::Node& node, std::vector<double>& x)
+        {
+#ifdef OLDYAML
+            node >> x;
+#else
+            x = node.as<std::vector<double> >();
 #endif
         }
         
@@ -704,6 +714,95 @@ OCIO_NAMESPACE_ENTER
             out << YAML::EndMap;
         }
         
+        // GammaTransform
+        
+        inline void load(const YAML::Node& node, GammaTransformRcPtr& t)
+        {
+            t = GammaTransform::Create();
+            
+            std::string key;
+            
+            for (Iterator iter = node.begin();
+                 iter != node.end();
+                 ++iter)
+            {
+                const YAML::Node& first = get_first(iter);
+                const YAML::Node& second = get_second(iter);
+                
+                load(first, key);
+                
+                if (second.Type() == YAML::NodeType::Null) continue;
+                
+                if(key == "gamma")
+                {
+                    std::vector<double> val;
+                    load(second, val);
+                    if(val.size() != 4)
+                    {
+                        std::ostringstream os;
+                        os << "GammaTransform parse error, gamma field must be 4 ";
+                        os << "floats. Found '" << val.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setGammaValues(&val[0]);
+                }
+                else if(key == "offset")
+                {
+                    std::vector<double> val;
+                    load(second, val);
+                    if(val.size() != 4)
+                    {
+                        std::ostringstream os;
+                        os << "GammaTransform parse error, offset field must be 4 ";
+                        os << "floats. Found '" << val.size() << "'.";
+                        throw Exception(os.str().c_str());
+                    }
+                    t->setOffsetValues(&val[0]);
+                }
+                else if(key == "style")
+                {
+                    std::string style;
+                    load(second, style);
+                    t->setStyle(GammaStyleFromString(style.c_str()));
+                }
+                else if(key == "direction")
+                {
+                    TransformDirection val;
+                    load(second, val);
+                    t->setDirection(val);
+                }
+                else
+                {
+                    LogUnknownKeyWarning(node.Tag(), first);
+                }
+            }
+        }
+
+        inline void save(YAML::Emitter& out, ConstGammaTransformRcPtr t)
+        {
+            out << YAML::VerbatimTag("GammaTransform");
+            out << YAML::Flow << YAML::BeginMap;
+            
+            out << YAML::Key << "style";
+            out << YAML::Value << YAML::Flow << GammaStyleToString(t->getStyle());
+
+            std::vector<double> gamma(4, 1.);
+            t->getGammaValues(&gamma[0]);
+            out << YAML::Key << "gamma";
+            out << YAML::Value << YAML::Flow << gamma;
+
+            if(t->getStyle()==GAMMA_MONCURVE)
+            {
+                std::vector<double> offset(4, 0.);
+                t->getOffsetValues(&offset[0]);
+                out << YAML::Key << "offset";
+                out << YAML::Value << YAML::Flow << offset;
+            }
+
+            EmitBaseTransformKeyValues(out, t);
+            out << YAML::EndMap;
+        }
+
         // GroupTransform
         
         void load(const YAML::Node& node, TransformRcPtr& t);
@@ -1248,7 +1347,12 @@ OCIO_NAMESPACE_ENTER
                 load(node, temp);
                 t = temp;
             }
-            else if(type == "GroupTransform") {
+			else if (type == "GammaTransform") {
+				GammaTransformRcPtr temp;
+				load(node, temp);
+				t = temp;
+			}
+			else if(type == "GroupTransform") {
                 GroupTransformRcPtr temp;
                 load(node, temp);
                 t = temp;
@@ -1313,7 +1417,10 @@ OCIO_NAMESPACE_ENTER
             else if(ConstFileTransformRcPtr File_tran = \
                 DynamicPtrCast<const FileTransform>(t))
                 save(out, File_tran);
-            else if(ConstGroupTransformRcPtr Group_tran = \
+			else if (ConstGammaTransformRcPtr Gamma_tran = \
+				DynamicPtrCast<const GammaTransform>(t))
+				save(out, Gamma_tran);
+			else if(ConstGroupTransformRcPtr Group_tran = \
                 DynamicPtrCast<const GroupTransform>(t))
                 save(out, Group_tran);
             else if(ConstLogTransformRcPtr Log_tran = \

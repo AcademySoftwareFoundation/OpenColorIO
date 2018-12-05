@@ -40,11 +40,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-namespace DefaultValues
+namespace
 {
-    const int FLOAT_DECIMALS = 7;
+const int FLOAT_DECIMALS = 7;
+
+std::string GetString(double value)
+{
+    std::ostringstream oss;
+    oss.precision(FLOAT_DECIMALS);
+    oss << value;
+    return oss.str();
 }
 
+std::string GetString(CDLOpData::ChannelParams params)
+{
+    std::ostringstream oss;
+    oss.precision(FLOAT_DECIMALS);
+    oss << params[0] << ", " << params[1] << ", " << params[2];
+    return oss.str();
+}
 
 static const CDLOpData::ChannelParams kOneParams(1.0);
 static const CDLOpData::ChannelParams kZeroParams(0.0);
@@ -53,6 +67,9 @@ static const char V1_2_FWD_NAME[] = "v1.2_Fwd";
 static const char V1_2_REV_NAME[] = "v1.2_Rev";
 static const char NO_CLAMP_FWD_NAME[] = "noClampFwd";
 static const char NO_CLAMP_REV_NAME[] = "noClampRev";
+
+}; // anon
+
 
 CDLOpData::Style CDLOpData::GetStyle(const char* name)
 {
@@ -307,29 +324,6 @@ void CDLOpData::validate() const
     validateParams(m_slopeParams, m_powerParams, m_saturation);
 }
 
-std::string CDLOpData::getSlopeString() const
-{
-    return GetChannelParametersString(m_slopeParams);
-}
-
-std::string CDLOpData::getOffsetString() const
-{
-    return GetChannelParametersString(m_offsetParams);
-}
-
-std::string CDLOpData::getPowerString() const
-{
-    return GetChannelParametersString(m_powerParams);
-}
-
-std::string CDLOpData::getSaturationString() const
-{
-    std::ostringstream oss;
-    oss.precision(DefaultValues::FLOAT_DECIMALS);
-    oss << m_saturation;
-    return oss.str();
-}
-
 bool CDLOpData::isReverse() const
 {
     const CDLOpData::Style style = getStyle();
@@ -354,14 +348,6 @@ bool CDLOpData::isClamping() const
         case CDLOpData::CDL_NO_CLAMP_REV: return false;
     }
     return false;
-}
-
-std::string CDLOpData::GetChannelParametersString(ChannelParams params)
-{
-    std::ostringstream oss;
-    oss.precision(DefaultValues::FLOAT_DECIMALS);
-    oss << params[0] << ", " << params[1] << ", " << params[2];
-    return oss.str();
 }
 
 bool CDLOpData::isInverse(const CDLOpDataRcPtr & r) const
@@ -396,13 +382,11 @@ void CDLOpData::finalize()
     std::ostringstream cacheIDStream;
     cacheIDStream << getId() << " ";
 
-    cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
-
     cacheIDStream << GetStyleName(getStyle()) << " ";
-    cacheIDStream << getSlopeString() << " ";
-    cacheIDStream << getOffsetString() << " ";
-    cacheIDStream << getPowerString() << " ";
-    cacheIDStream << getSaturationString() << " ";
+    cacheIDStream << GetString(m_slopeParams) << " ";
+    cacheIDStream << GetString(m_offsetParams) << " ";
+    cacheIDStream << GetString(m_powerParams) << " ";
+    cacheIDStream << GetString(m_saturation) << " ";
 
     m_cacheID = cacheIDStream.str();
 }

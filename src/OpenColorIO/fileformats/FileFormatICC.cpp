@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pystring/pystring.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Matrix/MatrixOps.h"
-#include "ops/Exponent/ExponentOps.h"
+#include "ops/Gamma/GammaOps.h"
 #include <sstream>
 
 #include "iccProfileReader.h"
@@ -422,8 +422,12 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                CreateExponentOp(ops, cachedFile->mGammaRGB,
-                    TRANSFORM_DIR_FORWARD);
+                const double val[4] = { cachedFile->mGammaRGB[0],
+                                        cachedFile->mGammaRGB[1],
+                                        cachedFile->mGammaRGB[2],
+                                        cachedFile->mGammaRGB[3] };
+                CreateGammaOp(ops, std::string(), OpData::Descriptions(),
+                              GammaOpData::BASIC_FWD, &val[0], nullptr);
             }
 
             CreateMatrixOp(ops, cachedFile->mMatrix44, TRANSFORM_DIR_FORWARD);
@@ -447,8 +451,13 @@ OCIO_NAMESPACE_ENTER
             }
             else
             {
-                CreateExponentOp(ops, cachedFile->mGammaRGB,
-                    TRANSFORM_DIR_INVERSE);
+                const double val[4] = { cachedFile->mGammaRGB[0],
+                                        cachedFile->mGammaRGB[1],
+                                        cachedFile->mGammaRGB[2],
+                                        cachedFile->mGammaRGB[3] };
+
+                CreateGammaOp(ops, std::string(), OpData::Descriptions(),
+                              GammaOpData::BASIC_REV, &val[0], nullptr);
             }
         }
 
@@ -740,15 +749,13 @@ OIIO_ADD_TEST(FileFormatICC, TestApply)
         // apply ops
         float srcImage[] = {
             -0.1f, 0.0f, 0.3f, 0.0f,
-            0.4f, 0.5f, 0.6f, 0.5f,
-            0.7f, 1.0f, 1.9f, 1.0f };
+             0.4f, 0.5f, 0.6f, 0.5f,
+             0.7f, 1.0f, 1.9f, 1.0f };
 
         const float dstImage[] = {
             0.012437f, 0.004702f, 0.070333f, 0.0f,
             0.188392f, 0.206965f, 0.343595f, 0.5f,
-            1.210458f, 1.058761f, 4.003706f, 1.0f };
-        const float error = 1e-5f;
-        const float error2 = 1e-4f;
+            1.210458f, 1.058771f, 4.003655f, 1.0f };
 
         OCIO::OpRcPtrVec::size_type numOps = ops.size();
         for (OCIO::OpRcPtrVec::size_type i = 0; i < numOps; ++i)
@@ -756,7 +763,9 @@ OIIO_ADD_TEST(FileFormatICC, TestApply)
             ops[i]->apply(srcImage, 3);
         }
 
-        // compare results
+        // Compare results
+        const float error = 2e-5f;
+
         for (unsigned int i = 0; i<12; ++i)
         {
             OIIO_CHECK_CLOSE(srcImage[i], dstImage[i], error);
@@ -774,13 +783,15 @@ OIIO_ADD_TEST(FileFormatICC, TestApply)
             opsInv[i]->apply(srcImage, 3);
         }
 
+        // Negative values are clamped by the LUT and won't round-trip.
         const float bckImage[] = {
-            // neg values are clamped by the LUT and won't round-trip
-            0.0f, 0.000078f, 0.3f, 0.0f,
+            0.0f, 0.0f, 0.3f, 0.0f,
             0.4f, 0.5f, 0.6f, 0.5f,
             0.7f, 1.0f, 1.9f, 1.0f };
 
-        // compare results
+        // Compare results
+        const float error2 = 2e-4f;
+
         for (unsigned int i = 0; i<12; ++i)
         {
             OIIO_CHECK_CLOSE(srcImage[i], bckImage[i], error2);

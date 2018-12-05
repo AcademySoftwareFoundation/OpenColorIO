@@ -86,6 +86,11 @@ OCIO_NAMESPACE_ENTER
                       const FileTransform & transform,
                       TransformDirection dir);
     
+    void BuildGammaOps(OpRcPtrVec & ops,
+                       const Config& config,
+                       const GammaTransform & transform,
+                       TransformDirection dir);
+    
     void BuildGroupOps(OpRcPtrVec & ops,
                        const Config& config,
                        const ConstContextRcPtr & context,

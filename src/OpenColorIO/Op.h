@@ -131,6 +131,7 @@ OCIO_NAMESPACE_ENTER
             ExponentType,     // An exponent
             RangeType,        // A range
             CDLType,          // A Color Decision List (aka CDL)
+            GammaType,        // A gamma (i.e. enhancement of the Exponent)
 
             NoOpType
         };

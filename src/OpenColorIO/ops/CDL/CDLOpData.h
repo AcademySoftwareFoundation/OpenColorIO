@@ -213,21 +213,13 @@ public:
 
     bool hasChannelCrosstalk() const override;
 
-    void validate() const override;
-
-    std::string getSlopeString() const;
-    std::string getOffsetString() const;
-    std::string getPowerString() const;
-    std::string getSaturationString() const;
+    virtual void validate() const override;
 
     bool isInverse(const CDLOpDataRcPtr & r) const;
 
     CDLOpDataRcPtr inverse() const;
 
     virtual void finalize() override;
-
-protected:
-    static std::string GetChannelParametersString(ChannelParams params);
 
 private:
     Style         m_style;         // CDL style

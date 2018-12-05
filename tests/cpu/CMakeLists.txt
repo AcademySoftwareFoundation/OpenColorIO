@@ -100,6 +100,10 @@ set(SOURCES
 	ops/CDL/CDLOpData.cpp
 	ops/CDL/CDLOps.cpp
 	ops/Exponent/ExponentOps.cpp
+	ops/Gamma/GammaOpCPU.cpp
+	ops/Gamma/GammaOpData.cpp
+	ops/Gamma/GammaOpUtils.cpp
+	ops/Gamma/GammaOps.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
 	ops/Lut3D/Lut3DOp.cpp
@@ -125,6 +129,7 @@ set(SOURCES
 	transforms/DisplayTransform.cpp
 	transforms/ExponentTransform.cpp
 	transforms/FileTransform.cpp
+	transforms/GammaTransform.cpp
 	transforms/GroupTransform.cpp
 	transforms/LogTransform.cpp
 	transforms/LookTransform.cpp

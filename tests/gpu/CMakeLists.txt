@@ -6,6 +6,7 @@ set(SOURCES
 	CDLOps_test.cpp
 	Config_test.cpp
 	ExpOps_Test.cpp
+	GammaOps_test.cpp
 	GPUHelpers.cpp
 	GPUUnitTest.cpp
 	LogOps_Test.cpp
@@ -29,6 +30,13 @@ if(NOT BUILD_SHARED_LIBS)
 		OpenColorIO_SKIP_IMPORTS
 	)
 endif()
+
+if(OCIO_USE_SSE)
+	target_compile_definitions(test_gpu_exec
+		PRIVATE
+			USE_SSE
+	)
+endif(OCIO_USE_SSE)
 
 target_link_libraries(test_gpu_exec
 	PRIVATE

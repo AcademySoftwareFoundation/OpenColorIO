@@ -289,9 +289,17 @@ OCIO_NAMESPACE_ENTER
     
     RangeStyle RangeStyleFromString(const char * style)
     {
-        std::string str = pystring::lower(style);
-        if(str == "noclamp") return RANGE_NO_CLAMP;
-        else if(str == "clamp") return RANGE_CLAMP;
+        if(style && *style)
+        {
+            const std::string str = pystring::lower(style);
+            if(str == "noclamp") return RANGE_NO_CLAMP;
+            else if(str == "clamp") return RANGE_CLAMP;
+        }
+
+        std::string msg("Wrong Range style: ");
+        msg += (style && *style) ? style : "<null>";
+
+        throw Exception(msg.c_str());
         return RANGE_CLAMP;
     }
     
@@ -310,7 +318,30 @@ OCIO_NAMESPACE_ENTER
         const int FLOAT_DECIMALS = 7;
         const int DOUBLE_DECIMALS = 16;
     }
+
+    const char * GammaStyleToString(GammaStyle style)
+    {
+        if(style == GAMMA_BASIC) return "basic";
+        else if(style == GAMMA_MONCURVE) return "moncurve";
+        return "basic";
+    }
     
+    GammaStyle GammaStyleFromString(const char * style)
+    {
+        if(style && *style)
+        {
+            const std::string str = pystring::lower(style);
+            if(str == "basic") return GAMMA_BASIC;
+            else if(str == "moncurve") return GAMMA_MONCURVE;
+        }
+
+        std::string msg("Wrong Gamma style: ");
+        msg += (style && *style) ? style : "<null>";
+
+        throw Exception(msg.c_str());
+        return GAMMA_BASIC;
+    }
+
     std::string FloatToString(float value)
     {
         std::ostringstream pretty;

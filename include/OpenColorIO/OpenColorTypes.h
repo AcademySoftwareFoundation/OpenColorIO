@@ -149,6 +149,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:type::
     typedef OCIO_SHARED_PTR<FileTransform> FileTransformRcPtr;
     
+    class OCIOEXPORT GammaTransform;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<const GammaTransform> ConstGammaTransformRcPtr;
+    //!cpp:type::
+    typedef OCIO_SHARED_PTR<GammaTransform> GammaTransformRcPtr;
+    
     class OCIOEXPORT GroupTransform;
     //!cpp:type::
     typedef OCIO_SHARED_PTR<const GroupTransform> ConstGroupTransformRcPtr;
@@ -296,11 +302,19 @@ OCIO_NAMESPACE_ENTER
         ENV_ENVIRONMENT_LOAD_ALL
     };
 
-    //!cpp:type::
+    //!cpp:type:: A RangeTransform may be set to clamp the values, or not.
     enum RangeStyle
     {
         RANGE_NO_CLAMP = 0,
         RANGE_CLAMP
+    };
+
+    //!cpp:type:: Selects either a basic power function or a piecewise function 
+    //            that uses a linear segment in the shadows.
+    enum GammaStyle
+    {
+        GAMMA_BASIC = 0,
+        GAMMA_MONCURVE
     };
     
     //!rst::
@@ -367,7 +381,12 @@ OCIO_NAMESPACE_ENTER
     //!cpp:function::
     extern OCIOEXPORT RangeStyle RangeStyleFromString(const char * style);
     
-    
+    //!cpp:function::
+    extern OCIOEXPORT const char * GammaStyleToString(GammaStyle style);
+    //!cpp:function::
+    extern OCIOEXPORT GammaStyle GammaStyleFromString(const char * style);
+
+
     /*!rst::
     Roles
     *****
