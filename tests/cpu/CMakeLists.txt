@@ -20,6 +20,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			oiio_unittest
 			unittest_data
 			libexpat
+			ilmbase
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
