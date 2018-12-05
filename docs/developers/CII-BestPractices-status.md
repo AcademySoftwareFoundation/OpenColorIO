@@ -325,7 +325,7 @@ There is an implied criterion that we should mention here:
 
 <li><a name="release_notes_vulns"></a>The release notes MUST identify every publicly known vulnerability with a CVE assignment or similar that is fixed in each new release, unless users typically cannot practically update the software themselves. If there are no release notes or there have been no publicly known vulnerabilities, choose "not applicable" (N/A). (N/A allowed.) (Justification required for "N/A".) <sup>[<a href="#release_notes_vulns">release_notes_vulns</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>If users typically cannot practically update the software themselves on their computers, but must instead depend on a middleman to perform the upgrade (as is often the case for a kernel and low-level software that is intertwined with a kernel), the project may choose "not applicable" (N/A).</dd></dl></li>
 
-* 🏳️ **N/A** No publicly known vulnerabilities
+🏳️ **N/A** No publicly known vulnerabilities
 
 </ul>
 
@@ -372,7 +372,7 @@ There is an implied criterion that we should mention here:
 
 <li><a name="vulnerability_report_response"></a>The project's initial response time for any vulnerability report received in the last 6 months MUST be less than or equal to 14 days. (N/A allowed.) <sup>[<a href="#vulnerability_report_response">vulnerability_report_response</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>If there have been no vulnerabilities reported in the last 6 months, choose "not applicable" (N/A).</dd></dl></li>
 
-* 🏳️ **N/A** No reported vulnerabilities
+🏳️ **N/A** No reported vulnerabilities
 
 </ul>
 
