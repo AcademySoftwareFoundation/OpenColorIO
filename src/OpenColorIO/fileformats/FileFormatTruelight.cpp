@@ -26,19 +26,19 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <cstdio>
-#include <iostream>
-#include <iomanip>
-#include <iterator>
 #include <algorithm>
+#include <cstdio>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "transforms/FileTransform.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
+#include "transforms/FileTransform.h"
 
 // This implements the spec for:
 // Per http://www.filmlight.ltd.uk/resources/documents/truelight/white-papers_tl.php
@@ -68,14 +68,15 @@ OCIO_NAMESPACE_ENTER
                 has3D(false)
             {
                 lut1D = Lut1DOpData::Create();
-                lut3D = Lut3DOpData::Create();
+                lut3D = Lut3D::Create();
             };
             ~LocalCachedFile() {};
             
             bool has1D;
             bool has3D;
             Lut1DOpDataRcPtr lut1D;
-            Lut3DOpDataRcPtr lut3D;
+            // TODO: switch opdata
+            Lut3DRcPtr lut3D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
