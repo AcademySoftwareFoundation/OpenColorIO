@@ -739,6 +739,29 @@ OCIO_NAMESPACE_ENTER
             offset, direction)));
     }
 
+    void CreateMinMaxOp(OpRcPtrVec & ops,
+                        const float * from_min3,
+                        const float * from_max3,
+                        TransformDirection direction)
+    {
+        float scale4[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        float offset4[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+        bool somethingToDo = false;
+        for (int i = 0; i < 3; ++i)
+        {
+            scale4[i] = 1.f / (from_max3[i] - from_min3[i]);
+            offset4[i] = -from_min3[i] * scale4[i];
+            somethingToDo |= (scale4[i] != 1.f || offset4[i] != 0.f);
+        }
+
+        if (somethingToDo)
+        {
+            CreateScaleOffsetOp(ops, scale4, offset4, direction);
+        }
+    }
+
+
 }
 OCIO_NAMESPACE_EXIT
 
@@ -751,8 +774,8 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
-#include "ops/NoOp/NoOps.h"
 #include "ops/Log/LogOps.h"
+#include "ops/NoOp/NoOps.h"
 
 OCIO_NAMESPACE_USING
 
@@ -783,8 +806,8 @@ OIIO_ADD_TEST(MatrixOps, Scale)
                                       1.0090f,  1.0f,  1.0f,    1.0f };
 
     const float dst[NB_PIXELS*4] = {  0.11044f,  0.26f,  0.090f,   0.4f,
-                                      -0.11088f, -0.26f, 15.003f, 123.4f,
-                                       1.10990f,  1.30f,  0.300f,   1.0f };
+                                     -0.11088f, -0.26f, 15.003f, 123.4f,
+                                      1.10990f,  1.30f,  0.300f,   1.0f };
 
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
@@ -1118,6 +1141,50 @@ OIIO_ADD_TEST(MatrixOps, CreateSaturationOp)
     {
         OIIO_CHECK_CLOSE(src[idx], tmp[idx], error);
     }
+}
+
+OIIO_ADD_TEST(MatrixOps, CreateMinMaxOp)
+{
+    const float error = 1e-6f;
+
+    const float min3[4] = { 1.0f, 2.0f, 3.0f };
+    const float max3[4] = { 2.0f, 4.0f, 6.0f };
+
+    OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(CreateMinMaxOp(ops, min3, max3, TRANSFORM_DIR_FORWARD));
+    OIIO_REQUIRE_EQUAL(ops.size(), 1);
+
+    std::string cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), true);
+
+    OIIO_CHECK_NO_THROW(ops[0]->finalize());
+
+    cacheID = ops[0]->getCacheID();
+    OIIO_CHECK_EQUAL(cacheID.empty(), false);
+
+    const unsigned NB_PIXELS = 5;
+    const float src[NB_PIXELS * 4] = { 1.0f, 2.0f, 3.0f,  1.0f,
+                                       1.5f, 2.5f, 3.15f, 1.0f,
+                                       0.0f, 0.0f, 0.0f,  1.0f,
+                                       3.0f, 5.0f, 6.3f,  1.0f,
+                                       2.0f, 4.0f, 6.0f,  1.0f };
+
+    const double dst[NB_PIXELS * 4] = { 0.0f,  0.0f,  0.0f,  1.0f,
+                                        0.5f,  0.25f, 0.05f, 1.0f,
+                                       -1.0f, -1.0f, -1.0f,  1.0f,
+                                        2.0f,  1.5f,  1.1f,  1.0f,
+                                        1.0f,  1.0f,  1.0f,  1.0f };
+
+    float tmp[NB_PIXELS * 4];
+    memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
+
+    ops[0]->apply(tmp, NB_PIXELS);
+
+    for (unsigned idx = 0; idx<(NB_PIXELS * 4); ++idx)
+    {
+        OIIO_CHECK_CLOSE(dst[idx], tmp[idx], error);
+    }
+
 }
 
 OIIO_ADD_TEST(MatrixOps, Combining)

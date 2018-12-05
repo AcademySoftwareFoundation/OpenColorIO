@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-
-#include "OpTools.h"
 #include "BitDepthUtils.h"
+#include "OpTools.h"
+#include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Matrix/MatrixOps.h"
 
 
 OCIO_NAMESPACE_ENTER
 {
 
-    unsigned GetLutIdealSize(BitDepth incomingBitDepth)
+    unsigned long GetLutIdealSize(BitDepth incomingBitDepth)
     {
         // Return the number of entries needed in order to do a lookup 
         // for the specified bit-depth.
@@ -50,7 +50,7 @@ OCIO_NAMESPACE_ENTER
             case BIT_DEPTH_UINT10:
             case BIT_DEPTH_UINT12:
             case BIT_DEPTH_UINT16:
-                return (unsigned)(GetBitDepthMaxValue(incomingBitDepth) + 1);
+                return (unsigned long)(GetBitDepthMaxValue(incomingBitDepth) + 1);
 
             case BIT_DEPTH_UNKNOWN:
             case BIT_DEPTH_UINT14:
@@ -95,6 +95,8 @@ OCIO_NAMESPACE_ENTER
     //
     Lut1DOpDataRcPtr Compose(const Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
     {
+        // TODO: review this code when working on 1D LUT update
+
         if (A->getOutputBitDepth() != B[0]->getInputBitDepth())
         {
             throw Exception("A bit depth mismatch forbids the composition of LUTs");
@@ -149,7 +151,7 @@ OCIO_NAMESPACE_ENTER
 
         for(OpRcPtrVec::size_type i=0, size = ops.size(); i<size; ++i)
         {
-            ops[i]->apply(&in[0], (unsigned)newLength);
+            ops[i]->apply(&in[0], (long)newLength);
         }
 
         Lut1DOpDataRcPtr lut(Lut1DOpData::Create());
@@ -178,7 +180,7 @@ OCIO_NAMESPACE_ENTER
 
         OpRcPtrVec ops;
 
-        unsigned min_size = 0;
+        unsigned long min_size = 0;
         BitDepth resampleDepth = BIT_DEPTH_UINT16;
         switch (compFlag)
         {
@@ -206,7 +208,7 @@ OCIO_NAMESPACE_ENTER
             case COMPOSE_RESAMPLE_BIG:
             {
                 resampleDepth = BIT_DEPTH_UINT16;
-                min_size = (unsigned)GetBitDepthMaxValue(resampleDepth) + 1;
+                min_size = (unsigned long)GetBitDepthMaxValue(resampleDepth) + 1;
                 break;
             }
 
@@ -214,7 +216,7 @@ OCIO_NAMESPACE_ENTER
             //       B size (careful of half domain), and in-depth ideal size.
         }
 
-        const unsigned Asz = (unsigned)A->luts[0].size();
+        const unsigned long Asz = (unsigned long)A->luts[0].size();
         const bool goodDomain = Asz >= min_size;
         const bool useOrigDomain = compFlag == COMPOSE_RESAMPLE_NO;
 

@@ -32,11 +32,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "transforms/FileTransform.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ParseUtils.h"
 #include "pystring/pystring.h"
+#include "transforms/FileTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -47,11 +47,12 @@ OCIO_NAMESPACE_ENTER
         public:
             LocalCachedFile ()
             {
-                lut3D = Lut3DOpData::Create();
+                lut3D = Lut3D::Create();
             };
             ~LocalCachedFile() {};
             
-            Lut3DOpDataRcPtr lut3D;
+            // TODO: switch opdata
+            Lut3DRcPtr lut3D;
         };
         
         typedef OCIO_SHARED_PTR<LocalCachedFile> LocalCachedFileRcPtr;
