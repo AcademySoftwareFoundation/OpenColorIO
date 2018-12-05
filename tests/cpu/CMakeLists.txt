@@ -103,6 +103,8 @@ set(SOURCES
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
 	ops/Lut3D/Lut3DOp.cpp
+	ops/Lut3D/Lut3DOpCPU.cpp
+	ops/Lut3D/Lut3DOpData.cpp
 	ops/Matrix/MatrixOps.cpp
 	ops/NoOp/NoOps.cpp
 	ops/Range/RangeOpCPU.cpp

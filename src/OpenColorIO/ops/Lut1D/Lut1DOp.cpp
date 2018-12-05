@@ -26,20 +26,20 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <OpenColorIO/OpenColorIO.h>
-
-#include "HashUtils.h"
-#include "ops/Lut1D/Lut1DOp.h"
-#include "MathUtils.h"
-#include "SSE.h"
-#include "GpuShaderUtils.h"
-#include "BitDepthUtils.h"
-#include "OpTools.h"
-
 #include <algorithm>
 #include <cmath>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+
+#include <OpenColorIO/OpenColorIO.h>
+
+#include "BitDepthUtils.h"
+#include "HashUtils.h"
+#include "GpuShaderUtils.h"
+#include "MathUtils.h"
+#include "ops/Lut1D/Lut1DOp.h"
+#include "OpTools.h"
+#include "SSE.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -68,7 +68,7 @@ OCIO_NAMESPACE_ENTER
         lut->setInputBitDepth(inputBitDepth);
         lut->setOutputBitDepth(outputBitDepth);
 
-        const unsigned idealSize = GetLutIdealSize(inputBitDepth);
+        const unsigned long idealSize = GetLutIdealSize(inputBitDepth);
 
         lut->luts[0].resize(idealSize);
         lut->luts[1].resize(idealSize);
@@ -581,7 +581,7 @@ OCIO_NAMESPACE_ENTER
         //
         Lut1DOpDataRcPtr MakeLookupDomain(BitDepth incomingBitDepth)
         {
-            const unsigned idealSize = GetLutIdealSize(incomingBitDepth);
+            const unsigned long idealSize = GetLutIdealSize(incomingBitDepth);
 
             Lut1DOpDataRcPtr lut(Lut1DOpData::CreateIdentity(BIT_DEPTH_F32, BIT_DEPTH_F32));
             lut->luts[0].resize(idealSize);
@@ -591,7 +591,7 @@ OCIO_NAMESPACE_ENTER
             const float stepValue 
                 = GetBitDepthMaxValue(BIT_DEPTH_F32) / (float(idealSize) - 1.0f);
 
-            for(unsigned idx=0; idx<idealSize; ++idx)
+            for(unsigned long idx=0; idx<idealSize; ++idx)
             {
                 const float ftemp = float(idx) * stepValue;
 
@@ -1095,13 +1095,6 @@ OIIO_ADD_TEST(Lut1DOp, NoOp)
 {
     // Make an identity LUT
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
-    lut->from_min[0] = 0.0f;
-    lut->from_min[1] = 0.0f;
-    lut->from_min[2] = 0.0f;
-    
-    lut->from_max[0] = 1.0f;
-    lut->from_max[1] = 1.0f;
-    lut->from_max[2] = 1.0f;
     
     const int size = 256;
     for(int i=0; i<size; ++i)
@@ -1150,13 +1143,6 @@ OIIO_ADD_TEST(Lut1DOp, FiniteValue)
 {
     // Make a LUT that squares the input
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
-    lut->from_min[0] = 0.0f;
-    lut->from_min[1] = 0.0f;
-    lut->from_min[2] = 0.0f;
-    
-    lut->from_max[0] = 1.0f;
-    lut->from_max[1] = 1.0f;
-    lut->from_max[2] = 1.0f;
     
     const int size = 256;
     for(int i=0; i<size; ++i)
@@ -1265,13 +1251,6 @@ OIIO_ADD_TEST(Lut1DOp, ArbitraryValue)
 OIIO_ADD_TEST(Lut1DOp, ExtrapolationErrors)
 {
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
-    lut->from_min[0] = 0.0f;
-    lut->from_min[2] = 0.0f;
-    lut->from_min[2] = 0.0f;
-
-    lut->from_max[0] = 1.0f;
-    lut->from_max[1] = 1.0f;
-    lut->from_max[2] = 1.0f;
 
     // Simple y=x+0.1 LUT
     for(int c=0; c<3; ++c)
@@ -1313,12 +1292,6 @@ OIIO_ADD_TEST(Lut1DOp, Inverse)
     // Make a LUT that squares the input
     OCIO::Lut1DOpDataRcPtr lut_a = OCIO::Lut1DOpData::Create();
     {
-    lut_a->from_min[0] = 0.0f;
-    lut_a->from_min[1] = 0.0f;
-    lut_a->from_min[2] = 0.0f;
-    lut_a->from_max[0] = 1.0f;
-    lut_a->from_max[1] = 1.0f;
-    lut_a->from_max[2] = 1.0f;
     const int size = 256;
     for(int i=0; i<size; ++i)
     {
@@ -1406,13 +1379,6 @@ OIIO_ADD_TEST(Lut1DOp, SSE)
 {
     // Make a LUT that squares the input
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
-    lut->from_min[0] = 0.0f;
-    lut->from_min[1] = 0.0f;
-    lut->from_min[2] = 0.0f;
-    
-    lut->from_max[0] = 1.0f;
-    lut->from_max[1] = 1.0f;
-    lut->from_max[2] = 1.0f;
     
     const int size = 256;
     for(int i=0; i<size; ++i)
@@ -1497,13 +1463,6 @@ OIIO_ADD_TEST(Lut1DOp, NanInf)
 {
     // Make a LUT that squares the input
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
-    lut->from_min[0] = 0.0f;
-    lut->from_min[1] = 0.0f;
-    lut->from_min[2] = 0.0f;
-    
-    lut->from_max[0] = 1.0f;
-    lut->from_max[1] = 1.0f;
-    lut->from_max[2] = 1.0f;
     
     int size = 256;
     for(int i=0; i<size; ++i)
@@ -1600,13 +1559,6 @@ OIIO_ADD_TEST(Lut1DOp, ThrowNoOp)
 {
     // Make an identity LUT
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
-    lut->from_min[0] = 0.0f;
-    lut->from_min[1] = 0.0f;
-    lut->from_min[2] = 0.0f;
-
-    lut->from_max[0] = 1.0f;
-    lut->from_max[1] = 1.0f;
-    lut->from_max[2] = 1.0f;
 
     const int size = 2;
     for (int i = 0; i < size; ++i)
@@ -1647,12 +1599,6 @@ OIIO_ADD_TEST(Lut1DOp, ThrowNoOp)
 OIIO_ADD_TEST(Lut1DOp, ThrowOp)
 {
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
-    lut->from_min[0] = 0.0f;
-    lut->from_min[1] = 0.0f;
-    lut->from_min[2] = 0.0f;
-    lut->from_max[0] = 1.0f;
-    lut->from_max[1] = 1.0f;
-    lut->from_max[2] = 1.0f;
     for (int c = 0; c<3; ++c)
     {
         lut->luts[c].push_back(0.1f);
@@ -1694,12 +1640,6 @@ OIIO_ADD_TEST(Lut1DOp, ThrowOp)
 OIIO_ADD_TEST(Lut1DOp, GPU)
 {
     OCIO::Lut1DOpDataRcPtr lut = OCIO::Lut1DOpData::Create();
-    lut->from_min[0] = 0.0f;
-    lut->from_min[1] = 0.0f;
-    lut->from_min[2] = 0.0f;
-    lut->from_max[0] = 1.0f;
-    lut->from_max[1] = 1.0f;
-    lut->from_max[2] = 1.0f;
     for (int c = 0; c < 3; ++c)
     {
         lut->luts[c].push_back(0.1f);

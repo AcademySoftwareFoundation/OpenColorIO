@@ -87,6 +87,27 @@ int Strncasecmp(const char * str1, const char * str2, size_t n)
 #endif
 }
 
+void* AlignedMalloc(size_t size, size_t alignment)
+{
+#ifdef WINDOWS
+    void* memBlock = _aligned_malloc(size, alignment);
+    return memBlock;
+#else
+    void* memBlock = 0x0;
+    if (!posix_memalign(&memBlock, alignment, size)) return memBlock;
+    return 0x0;
+#endif
+}
+
+void AlignedFree(void* memBlock)
+{
+#ifdef WINDOWS
+    _aligned_free(memBlock);
+#else
+    free(memBlock);
+#endif
+}
+
 }//namespace platform
 
 }
@@ -139,4 +160,14 @@ OIIO_ADD_TEST(Platform, string_compare)
     OIIO_CHECK_NE(0, OCIO::Platform::Strcasecmp("TtOoPp", "TOoPp"));
 }
 
+OIIO_ADD_TEST(Platform, aligned_memory_test)
+{
+    size_t alignement = 16u;
+    void* memBlock = OCIO::Platform::AlignedMalloc(1001, alignement);
+
+    OIIO_CHECK_ASSERT(memBlock);
+    OIIO_CHECK_EQUAL(((uintptr_t)memBlock) % alignement, 0);
+
+    OCIO::Platform::AlignedFree(memBlock);
+}
 #endif // OCIO_UNIT_TEST
