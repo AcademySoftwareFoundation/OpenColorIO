@@ -454,8 +454,7 @@ There is an implied criterion that we should mention here:
 <li><a name="warnings_strict"></a>It is SUGGESTED that projects be maximally strict with warnings in the software produced by the project, where practical. (N/A allowed.) <sup>[<a href="#warnings_strict">warnings_strict</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Some warnings cannot be effectively enabled on some projects. What is needed is evidence that the project is striving to enable warning flags where it can, so that errors are detected early.</dd></dl></li>
 </ul>
 
-❓ **OCIO needs somebody to assess** Usually to address use of 3rd party library
-   headers that trigger warnings.
+🔶 **OCIO TODO** Need to re-enable strict warning detection in CI builds
 
 
 ### Security
