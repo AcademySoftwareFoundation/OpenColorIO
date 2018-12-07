@@ -42,6 +42,7 @@ OCIO_NAMESPACE_ENTER
       
 class RangeOpData;
 typedef OCIO_SHARED_PTR<RangeOpData> RangeOpDataRcPtr;
+typedef OCIO_SHARED_PTR<const RangeOpData> ConstRangeOpDataRcPtr;
 
 
 // The class represents the Range op data.
@@ -191,7 +192,7 @@ public:
     bool operator==(const OpData& other) const override;
 
     // True if the op is the inverse
-    bool isInverse(const RangeOpDataRcPtr & r) const;
+    bool isInverse(ConstRangeOpDataRcPtr & r) const;
 
     RangeOpDataRcPtr inverse() const;
 

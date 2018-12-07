@@ -40,6 +40,7 @@ OCIO_NAMESPACE_ENTER
 {
     class LogOpData;
     typedef OCIO_SHARED_PTR<LogOpData> LogOpDataRcPtr;
+    typedef OCIO_SHARED_PTR<const LogOpData> ConstLogOpDataRcPtr;
 
     class LogOpData : public OpData
     {

@@ -43,7 +43,7 @@ namespace
     class PrivateImpl
     {
         static void  CreateArray(
-            float * buf, unsigned w, unsigned h, unsigned d, 
+            const float * buf, unsigned w, unsigned h, unsigned d, 
             OCIO_NAMESPACE::GpuShaderDesc::TextureType type, std::vector<float>& res)
         {
             if(buf)
@@ -62,7 +62,7 @@ namespace
                 unsigned w, unsigned h, unsigned d,
                 OCIO_NAMESPACE::GpuShaderDesc::TextureType channel, 
                 OCIO_NAMESPACE::Interpolation interpolation, 
-                float * v)
+                const float * v)
                 :   name(n)
                 ,   id(identifier)
                 ,   width(w)
@@ -108,7 +108,7 @@ namespace
         void addTexture(
             const char * name, const char * id, unsigned width, unsigned height, 
             OCIO_NAMESPACE::GpuShaderDesc::TextureType channel,
-            OCIO_NAMESPACE::Interpolation interpolation, float * values)
+            OCIO_NAMESPACE::Interpolation interpolation, const float * values)
         {
             if(width > get1dLutMaxWidth())
             {
@@ -160,7 +160,7 @@ namespace
         }
 
         void add3DTexture(const char * name, const char * id, unsigned dimension, 
-                          OCIO_NAMESPACE::Interpolation interpolation, float * values)
+                          OCIO_NAMESPACE::Interpolation interpolation, const float * values)
         {
             if(dimension > get3dLutMaxDimension())
             {
@@ -349,7 +349,7 @@ OCIO_NAMESPACE_ENTER
 
     void LegacyGpuShaderDesc::addTexture(
         const char *, const char *, unsigned, unsigned,
-        TextureType, Interpolation, float *)
+        TextureType, Interpolation, const float *)
     {
         throw Exception("1D LUTs are not supported");
     }
@@ -373,7 +373,7 @@ OCIO_NAMESPACE_ENTER
 
     void LegacyGpuShaderDesc::add3DTexture(
         const char * name, const char * id, unsigned dimension, 
-        Interpolation interpolation, float * values)
+        Interpolation interpolation, const float * values)
     {
         if(dimension!=getImpl()->getEdgelen())
         {
@@ -527,7 +527,7 @@ OCIO_NAMESPACE_ENTER
 
     void GenericGpuShaderDesc::addTexture(
         const char * name, const char * id, unsigned width, unsigned height,
-        TextureType channel, Interpolation interpolation, float * values)
+        TextureType channel, Interpolation interpolation, const float * values)
     {
         getImpl()->addTexture(name, id, width, height, channel, interpolation, values);
     }
@@ -551,7 +551,7 @@ OCIO_NAMESPACE_ENTER
 
     void GenericGpuShaderDesc::add3DTexture(
         const char * name, const char * id, unsigned edgelen, 
-        Interpolation interpolation, float * values)
+        Interpolation interpolation, const float * values)
     {
         getImpl()->add3DTexture(name, id, edgelen, interpolation, values);
     }

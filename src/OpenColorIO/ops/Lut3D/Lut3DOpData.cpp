@@ -47,10 +47,10 @@ OCIO_NAMESPACE_ENTER
 class Lut3DStyleGuard
 {
 public:
-    Lut3DStyleGuard(const Lut3DOpDataRcPtr & lut)
-        : m_lut(lut)
-        , m_wasFast(lut->getInvStyle() == Lut3DOpData::INV_FAST)
+    Lut3DStyleGuard(ConstLut3DOpDataRcPtr & lut)
+        : m_wasFast(lut->getInvStyle() == Lut3DOpData::INV_FAST)
     {
+        m_lut = std::const_pointer_cast<Lut3DOpData>(lut);
         m_lut->setInvStyle(Lut3DOpData::INV_EXACT);
     }
 
@@ -67,7 +67,7 @@ private:
     bool             m_wasFast;
 };
 
-Lut3DOpDataRcPtr MakeFastLut3DFromInverse(const Lut3DOpDataRcPtr & lut)
+Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
 {
     if (lut->getDirection() != TRANSFORM_DIR_INVERSE)
     {
@@ -90,8 +90,9 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(const Lut3DOpDataRcPtr & lut)
     newDomain->setInputBitDepth(lut->getInputBitDepth());
     newDomain->setOutputBitDepth(lut->getInputBitDepth());
 
+    ConstLut3DOpDataRcPtr constNewDomain = newDomain;
     // Compose the LUT newDomain with our inverse LUT (using INV_EXACT style).
-    Lut3DOpDataRcPtr newLut(Lut3DOpData::Compose(newDomain, lut));
+    Lut3DOpDataRcPtr newLut(Lut3DOpData::Compose(constNewDomain, lut));
 
     // The EXACT inversion style computes an inverse to the tetrahedral
     // style of forward evalutation.
@@ -162,8 +163,8 @@ void EvalTransform(const float * in,
 // needs to render values through the ops.  In some cases the domain of
 // the first op is sufficient, in other cases we need to create a new more
 // finely sampled domain to try and make the result less lossy.
-Lut3DOpDataRcPtr Lut3DOpData::Compose(const Lut3DOpDataRcPtr & A,
-                                      const Lut3DOpDataRcPtr & B)
+Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & A,
+                                      ConstLut3DOpDataRcPtr & B)
 {
     // TODO: Composition of LUTs is a potentially lossy operation.
     // We try to be safe by making the result at least as big as either A or B
@@ -181,7 +182,7 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(const Lut3DOpDataRcPtr & A,
     const long n = A->getArray().getLength();
     OpRcPtrVec ops;
 
-    Lut3DOpDataRcPtr domain;
+    ConstLut3DOpDataRcPtr domain;
 
     if (n >= min_sz)
     {
@@ -611,7 +612,7 @@ bool Lut3DOpData::isInverse(const Lut3DOpData * lutfwd, const Lut3DOpData * luti
 
 }
 
-bool Lut3DOpData::isInverse(const Lut3DOpDataRcPtr B) const
+bool Lut3DOpData::isInverse(ConstLut3DOpDataRcPtr & B) const
 {
     if (m_direction == TRANSFORM_DIR_FORWARD
         && B->m_direction == TRANSFORM_DIR_INVERSE)
@@ -950,18 +951,19 @@ OIIO_ADD_TEST(OpDataInvLut3D, inverse_bitDepth_domain)
 OIIO_ADD_TEST(OpDataInvLut3D, isInverse_test)
 {
     // Create forward LUT.
-    OCIO::Lut3DOpDataRcPtr L1 =
+    OCIO::Lut3DOpDataRcPtr L1NC =
         std::make_shared<OCIO::Lut3DOpData>(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_UINT10,
                                             uid, desc, OCIO::INTERP_LINEAR, 5);
     // Make it not an identity.
-    OCIO::Array& array = L1->getArray();
+    OCIO::Array& array = L1NC->getArray();
     OCIO::Array::Values& values = array.getValues();
     values[0] = 20.f;
-    OIIO_CHECK_ASSERT(!L1->isIdentity());
+    OIIO_CHECK_ASSERT(!L1NC->isIdentity());
 
     // Create an inverse LUT with same basics.
-    OCIO::Lut3DOpDataRcPtr L2 = L1->inverse();
-    OCIO::Lut3DOpDataRcPtr L3 = L2->inverse();
+    OCIO::ConstLut3DOpDataRcPtr L1 = L1NC;
+    OCIO::ConstLut3DOpDataRcPtr L2 = L1->inverse();
+    OCIO::ConstLut3DOpDataRcPtr L3 = L2->inverse();
     OIIO_CHECK_ASSERT(*L3 == *L1);
     OIIO_CHECK_ASSERT(!(*L1 == *L2));
 
@@ -971,15 +973,15 @@ OIIO_ADD_TEST(OpDataInvLut3D, isInverse_test)
 
     // This should pass, since the arrays are actually the same if you
     // normalize for the scaling difference.
-    L1->setOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
+    L1NC->setOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
     OIIO_CHECK_ASSERT(L1->isInverse(L2));
     OIIO_CHECK_ASSERT(L2->isInverse(L1));
 
     // Catch the situation where the arrays are the same even though the
     // bit-depths don't match and hence the arrays effectively aren't the same.
-    L1->setOutputBitDepth(OCIO::BIT_DEPTH_UINT10);  // restore original
+    L1NC->setOutputBitDepth(OCIO::BIT_DEPTH_UINT10);  // restore original
     OIIO_CHECK_ASSERT(L1->isInverse(L2));
-    L1->OpData::setOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
+    L1NC->OpData::setOutputBitDepth(OCIO::BIT_DEPTH_UINT12);
     OIIO_CHECK_ASSERT(!L1->isInverse(L2));
     OIIO_CHECK_ASSERT(!L2->isInverse(L1));
 }
@@ -1004,13 +1006,13 @@ OIIO_ADD_TEST(OpDataLut3D, ComposeTest)
     OCIO_SHARED_PTR<const OCIO::Op> op0 = ops[1];
     OCIO_SHARED_PTR<const OCIO::Op> op1 = ops1[1];
 
-    const OCIO::OpDataRcPtr & opData0 = op0->const_data();
-    const OCIO::OpDataRcPtr & opData1 = op1->const_data();
+    OCIO::ConstOpDataRcPtr opData0 = op0->data();
+    OCIO::ConstOpDataRcPtr opData1 = op1->data();
 
-    OCIO::Lut3DOpDataRcPtr lutData0 =
-        OCIO::DynamicPtrCast<OCIO::Lut3DOpData>(opData0);
-    OCIO::Lut3DOpDataRcPtr lutData1 =
-        OCIO::DynamicPtrCast<OCIO::Lut3DOpData>(opData1);
+    OCIO::ConstLut3DOpDataRcPtr lutData0 =
+        OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opData0);
+    OCIO::ConstLut3DOpDataRcPtr lutData1 =
+        OCIO::DynamicPtrCast<const OCIO::Lut3DOpData>(opData1);
 
     OIIO_REQUIRE_ASSERT(lutData0);
     OIIO_REQUIRE_ASSERT(lutData1);

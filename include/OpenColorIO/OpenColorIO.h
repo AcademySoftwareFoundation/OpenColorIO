@@ -1355,7 +1355,7 @@ OCIO_NAMESPACE_ENTER
         virtual void addTexture(
             const char * name, const char * id, unsigned width, unsigned height,
             TextureType channel, Interpolation interpolation,
-            float * values) = 0;
+            const float * values) = 0;
         virtual void getTexture(unsigned index, const char *& name, const char *& id, 
                                 unsigned & width, unsigned & height,
                                 TextureType & channel, Interpolation & interpolation) const = 0;
@@ -1364,7 +1364,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: 3D lut related methods
         virtual unsigned getNum3DTextures() const = 0;
         virtual void add3DTexture(const char * name, const char * id, unsigned edgelen, 
-                                  Interpolation interpolation, float * values) = 0;
+                                  Interpolation interpolation, const float * values) = 0;
         virtual void get3DTexture(unsigned index, const char *& name, const char *& id, 
                                   unsigned & edgelen, Interpolation & interpolation) const = 0;
         virtual void get3DTextureValues(unsigned index, const float *& values) const = 0;
