@@ -41,7 +41,7 @@ namespace
 {
 
 // Create shader for basic gamma style
-void AddBasicFwdShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
+void AddBasicFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 {
     const double redGamma   = gamma->getRedParams()[0];
     const double grnGamma   = gamma->getGreenParams()[0];
@@ -55,7 +55,7 @@ void AddBasicFwdShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
                  << ", outColor ), gamma );";
 }
 
-void AddBasicRevShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
+void AddBasicRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 {
     const double redGamma   = 1. / gamma->getRedParams()[0];
     const double grnGamma   = 1. / gamma->getGreenParams()[0];
@@ -70,7 +70,7 @@ void AddBasicRevShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
 }
 
 // Create shader for moncurveFwd style
-void AddMoncurveFwdShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
+void AddMoncurveFwdShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
     
@@ -105,7 +105,7 @@ void AddMoncurveFwdShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
 }
 
 // Create shader for moncurveRev style
-void AddMoncurveRevShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
+void AddMoncurveRevShader(ConstGammaOpDataRcPtr gamma, GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
 
