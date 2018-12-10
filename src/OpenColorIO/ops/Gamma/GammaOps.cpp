@@ -41,7 +41,7 @@ namespace
 {
 
 // Create shader for basic gamma style
-void AddBasicFwdShader(const GammaOpDataRcPtr & gamma, GpuShaderText & ss)
+void AddBasicFwdShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
 {
     const double redGamma   = gamma->getRedParams()[0];
     const double grnGamma   = gamma->getGreenParams()[0];
@@ -55,7 +55,7 @@ void AddBasicFwdShader(const GammaOpDataRcPtr & gamma, GpuShaderText & ss)
                  << ", outColor ), gamma );";
 }
 
-void AddBasicRevShader(const GammaOpDataRcPtr & gamma, GpuShaderText & ss)
+void AddBasicRevShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
 {
     const double redGamma   = 1. / gamma->getRedParams()[0];
     const double grnGamma   = 1. / gamma->getGreenParams()[0];
@@ -70,7 +70,7 @@ void AddBasicRevShader(const GammaOpDataRcPtr & gamma, GpuShaderText & ss)
 }
 
 // Create shader for moncurveFwd style
-void AddMoncurveFwdShader(const GammaOpDataRcPtr & gamma, GpuShaderText & ss)
+void AddMoncurveFwdShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
     
@@ -105,7 +105,7 @@ void AddMoncurveFwdShader(const GammaOpDataRcPtr & gamma, GpuShaderText & ss)
 }
 
 // Create shader for moncurveRev style
-void AddMoncurveRevShader(const GammaOpDataRcPtr & gamma, GpuShaderText & ss)
+void AddMoncurveRevShader(ConstGammaOpDataRcPtr & gamma, GpuShaderText & ss)
 {
     RendererParams red, green, blue, alpha;
 
@@ -141,6 +141,7 @@ void AddMoncurveRevShader(const GammaOpDataRcPtr & gamma, GpuShaderText & ss)
 
 class GammaOp;
 typedef OCIO_SHARED_PTR<GammaOp> GammaOpRcPtr;
+typedef OCIO_SHARED_PTR<const GammaOp> ConstGammaOpRcPtr;
 
 class GammaOp : public Op
 {
@@ -163,10 +164,10 @@ public:
     
     virtual OpRcPtr clone() const;
     
-    virtual bool isSameType(const OpRcPtr & op) const;
-    virtual bool isInverse(const OpRcPtr & op) const;
-    virtual bool canCombineWith(const OpRcPtr & op) const;
-    virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+    virtual bool isSameType(ConstOpRcPtr & op) const;
+    virtual bool isInverse(ConstOpRcPtr & op) const;
+    virtual bool canCombineWith(ConstOpRcPtr & op) const;
+    virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
     
     virtual void finalize();
     virtual void apply(float * rgbaBuffer, long numPixels) const;
@@ -174,7 +175,8 @@ public:
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
 protected:
-    const GammaOpDataRcPtr gammaData() const { return DynamicPtrCast<GammaOpData>(const_data()); }
+    ConstGammaOpDataRcPtr gammaData() const { return DynamicPtrCast<const GammaOpData>(data()); }
+    GammaOpDataRcPtr gammaData() { return DynamicPtrCast<GammaOpData>(data()); }
 
 private:
     OpCPURcPtr m_cpu;
@@ -238,27 +240,27 @@ OpRcPtr GammaOp::clone() const
                                gammaData()->getAlphaParams()));
 }
 
-bool GammaOp::isSameType(const OpRcPtr & op) const
+bool GammaOp::isSameType(ConstOpRcPtr & op) const
 {
-    GammaOpRcPtr typedRcPtr = DynamicPtrCast<GammaOp>(op);
+    ConstGammaOpRcPtr typedRcPtr = DynamicPtrCast<const GammaOp>(op);
     return (bool)typedRcPtr;
 }
 
-bool GammaOp::isInverse(const OpRcPtr & op) const
+bool GammaOp::isInverse(ConstOpRcPtr & op) const
 {
-    GammaOpRcPtr typedRcPtr = DynamicPtrCast<GammaOp>(op);
+    ConstGammaOpRcPtr typedRcPtr = DynamicPtrCast<const GammaOp>(op);
     if(!typedRcPtr) return false;
 
     return gammaData()->isInverse(*typedRcPtr->gammaData());
 }
 
-bool GammaOp::canCombineWith(const OpRcPtr & op) const
+bool GammaOp::canCombineWith(ConstOpRcPtr & op) const
 {
-    const GammaOpRcPtr typedRcPtr = DynamicPtrCast<GammaOp>(op);
+    ConstGammaOpRcPtr typedRcPtr = DynamicPtrCast<const GammaOp>(op);
     return typedRcPtr ? gammaData()->mayCompose(*typedRcPtr->gammaData()) : false;
 }
 
-void GammaOp::combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const
+void GammaOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
 {
     if(!canCombineWith(secondOp))
     {
@@ -268,7 +270,7 @@ void GammaOp::combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const
         throw Exception(os.str().c_str());
     }
 
-    const GammaOpRcPtr typedRcPtr = DynamicPtrCast<GammaOp>(secondOp);
+    ConstGammaOpRcPtr typedRcPtr = DynamicPtrCast<const GammaOp>(secondOp);
 
     GammaOpDataRcPtr res = gammaData()->compose(*typedRcPtr->gammaData());
     CreateGammaOp(ops, res);
@@ -656,14 +658,17 @@ OIIO_ADD_TEST(GammaOps, combining)
                             &gamma4_2[0], nullptr));
 
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO::ConstOpRcPtr op1 = ops[1];
 
-    OIIO_CHECK_ASSERT(ops[0]->canCombineWith(ops[1]));
-    OIIO_CHECK_NO_THROW(ops[0]->combineWith(ops, ops[1]));
+    OIIO_CHECK_ASSERT(ops[0]->canCombineWith(op1));
+    OIIO_CHECK_NO_THROW(ops[0]->combineWith(ops, op1));
 
     OIIO_REQUIRE_EQUAL(ops.size(), 3);
-    OIIO_REQUIRE_EQUAL(ops[2]->const_data()->getType(), OCIO::OpData::GammaType);
+    OCIO::ConstOpRcPtr op2 = ops[2];
 
-    OCIO::GammaOpDataRcPtr g = OCIO::DynamicPtrCast<OCIO::GammaOpData>(ops[2]->const_data());
+    OIIO_REQUIRE_EQUAL(op2->data()->getType(), OCIO::OpData::GammaType);
+
+    OCIO::ConstGammaOpDataRcPtr g = OCIO::DynamicPtrCast<const OCIO::GammaOpData>(op2->data());
 
     OIIO_CHECK_EQUAL(g->getRedParams()[0],   gamma4_1[0]*gamma4_2[0]);
     OIIO_CHECK_EQUAL(g->getGreenParams()[0], gamma4_1[1]*gamma4_2[1]);
@@ -685,9 +690,9 @@ OIIO_ADD_TEST(GammaOps, is_inverse)
         OCIO::CreateGammaOp(ops, id, desc, OCIO::GammaOpData::BASIC_REV,
                             &gamma4[0], nullptr));
 
-    OIIO_CHECK_EQUAL(ops.size(), 2);
-
-    OIIO_CHECK_ASSERT(ops[0]->isInverse(ops[1]));
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO::ConstOpRcPtr op1 = ops[1];
+    OIIO_CHECK_ASSERT(ops[0]->isInverse(op1));
 }
 
 OIIO_ADD_TEST(GammaOps, computed_identifier)

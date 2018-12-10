@@ -41,6 +41,7 @@ OCIO_NAMESPACE_ENTER
       
 class GammaOpData;
 typedef OCIO_SHARED_PTR<GammaOpData> GammaOpDataRcPtr;
+typedef OCIO_SHARED_PTR<const GammaOpData> ConstGammaOpDataRcPtr;
 
 
 // This class represents the Gamma op.

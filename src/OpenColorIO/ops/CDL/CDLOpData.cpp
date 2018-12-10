@@ -350,14 +350,6 @@ bool CDLOpData::isClamping() const
     return false;
 }
 
-std::string CDLOpData::GetChannelParametersString(ChannelParams params)
-{
-    std::ostringstream oss;
-    oss.precision(DefaultValues::FLOAT_DECIMALS);
-    oss << params[0] << ", " << params[1] << ", " << params[2];
-    return oss.str();
-}
-
 bool CDLOpData::isInverse(ConstCDLOpDataRcPtr & r) const
 {
     return *r == *inverse();
