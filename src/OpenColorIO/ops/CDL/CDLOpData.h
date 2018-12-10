@@ -41,7 +41,7 @@ OCIO_NAMESPACE_ENTER
       
 class CDLOpData;
 typedef OCIO_SHARED_PTR<CDLOpData> CDLOpDataRcPtr;
-
+typedef OCIO_SHARED_PTR<const CDLOpData> ConstCDLOpDataRcPtr;
 
 class CDLOpData : public OpData
 {
@@ -215,7 +215,7 @@ public:
 
     virtual void validate() const override;
 
-    bool isInverse(const CDLOpDataRcPtr & r) const;
+    bool isInverse(ConstCDLOpDataRcPtr & r) const;
 
     CDLOpDataRcPtr inverse() const;
 

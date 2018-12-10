@@ -85,7 +85,7 @@ void RenderParams::setSaturation(float sat)
     m_saturation = sat;
 }
 
-void RenderParams::update(const CDLOpDataRcPtr & cdl)
+void RenderParams::update(ConstCDLOpDataRcPtr & cdl)
 {
     double slope[4], offset[4], power[4];
     cdl->getSlopeParams().getRGBA(slope);
@@ -316,7 +316,7 @@ inline void ApplyPower<false>(float * pix, const float * power)
 #endif // USE_SSE
 
 
-CDLOpCPU::CDLOpCPU(const CDLOpDataRcPtr & cdl)
+CDLOpCPU::CDLOpCPU(ConstCDLOpDataRcPtr & cdl)
     :   OpCPU()
     ,   m_inScale(1.0f)
     ,   m_outScale(1.0f)
@@ -349,7 +349,7 @@ void LoadRenderParams(float inScaleVal,
 }
 #endif
 
-CDLRendererV1_2Fwd::CDLRendererV1_2Fwd(const CDLOpDataRcPtr & cdl)
+CDLRendererV1_2Fwd::CDLRendererV1_2Fwd(ConstCDLOpDataRcPtr & cdl)
     :   CDLOpCPU(cdl)
 {
 }
@@ -432,7 +432,7 @@ void CDLRendererV1_2Fwd::_apply(float * rgbaBuffer, long numPixels) const
 #endif
 }
 
-CDLRendererNoClampFwd::CDLRendererNoClampFwd(const CDLOpDataRcPtr & cdl)
+CDLRendererNoClampFwd::CDLRendererNoClampFwd(ConstCDLOpDataRcPtr & cdl)
     :   CDLRendererV1_2Fwd(cdl)
 {
 }
@@ -442,7 +442,7 @@ void CDLRendererNoClampFwd::apply(float * rgbaBuffer, long numPixels) const
     _apply<false>(rgbaBuffer, numPixels);
 }
 
-CDLRendererV1_2Rev::CDLRendererV1_2Rev(const CDLOpDataRcPtr & cdl)
+CDLRendererV1_2Rev::CDLRendererV1_2Rev(ConstCDLOpDataRcPtr & cdl)
     :   CDLOpCPU(cdl)
 {
 }
@@ -518,7 +518,7 @@ void CDLRendererV1_2Rev::_apply(float * rgbaBuffer, long numPixels) const
 #endif
 }
 
-CDLRendererNoClampRev::CDLRendererNoClampRev(const CDLOpDataRcPtr & cdl)
+CDLRendererNoClampRev::CDLRendererNoClampRev(ConstCDLOpDataRcPtr & cdl)
     :   CDLRendererV1_2Rev(cdl)
 {
 }
@@ -529,7 +529,7 @@ void CDLRendererNoClampRev::apply(float * rgbaBuffer, long numPixels) const
 }
 
 // TODO:  Add a faster renderer for the case where power and saturation are 1.
-OpCPURcPtr CDLOpCPU::GetRenderer(const CDLOpDataRcPtr & cdl)
+OpCPURcPtr CDLOpCPU::GetRenderer(ConstCDLOpDataRcPtr & cdl)
 {
     OpCPURcPtr op(new NoOpCPU);
 

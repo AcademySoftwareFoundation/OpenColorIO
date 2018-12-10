@@ -67,8 +67,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const { return "<AllocationNoOp>"; }
             virtual std::string getCacheID() const { return ""; }
             
-            virtual bool isSameType(const OpRcPtr & op) const;
-            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool isSameType(ConstOpRcPtr & op) const;
+            virtual bool isInverse(ConstOpRcPtr & op) const;
             virtual void finalize() { }
             virtual void apply(float* /*rgbaBuffer*/, long /*numPixels*/) const { }
             
@@ -81,21 +81,21 @@ OCIO_NAMESPACE_ENTER
         };
         
         typedef OCIO_SHARED_PTR<AllocationNoOp> AllocationNoOpRcPtr;
-        
+        typedef OCIO_SHARED_PTR<const AllocationNoOp> ConstAllocationNoOpRcPtr;
+
         OpRcPtr AllocationNoOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new AllocationNoOp(m_allocationData));
-            return op;
+            return std::make_shared<AllocationNoOp>(m_allocationData);
         }
         
-        bool AllocationNoOp::isSameType(const OpRcPtr & op) const
+        bool AllocationNoOp::isSameType(ConstOpRcPtr & op) const
         {
-            AllocationNoOpRcPtr typedRcPtr = DynamicPtrCast<AllocationNoOp>(op);
+            ConstAllocationNoOpRcPtr typedRcPtr = DynamicPtrCast<const AllocationNoOp>(op);
             if(!typedRcPtr) return false;
             return true;
         }
         
-        bool AllocationNoOp::isInverse(const OpRcPtr & op) const
+        bool AllocationNoOp::isInverse(ConstOpRcPtr & op) const
         {
             if(!isSameType(op)) return false;
             return true;
@@ -109,8 +109,8 @@ OCIO_NAMESPACE_ENTER
         // Return whether the op defines an Allocation
         bool DefinesGpuAllocation(const OpRcPtr & op)
         {
-            AllocationNoOpRcPtr allocationNoOpRcPtr = 
-                DynamicPtrCast<AllocationNoOp>(op);
+            ConstAllocationNoOpRcPtr allocationNoOpRcPtr = 
+                DynamicPtrCast<const AllocationNoOp>(op);
             
             if(allocationNoOpRcPtr) return true;
             return false;
@@ -120,7 +120,7 @@ OCIO_NAMESPACE_ENTER
     void CreateGpuAllocationNoOp(OpRcPtrVec & ops,
                                  const AllocationData & allocationData)
     {
-        ops.push_back( AllocationNoOpRcPtr(new AllocationNoOp(allocationData)) );
+        ops.push_back( std::make_shared<AllocationNoOp>(allocationData) );
     }
     
     
@@ -335,8 +335,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const { return "<FileNoOp>"; }
             virtual std::string getCacheID() const { return ""; }
             
-            virtual bool isSameType(const OpRcPtr & op) const;
-            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool isSameType(ConstOpRcPtr & op) const;
+            virtual bool isInverse(ConstOpRcPtr & op) const;
             virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
             
             virtual void finalize() {}
@@ -349,21 +349,21 @@ OCIO_NAMESPACE_ENTER
         };
         
         typedef OCIO_SHARED_PTR<FileNoOp> FileNoOpRcPtr;
-        
+        typedef OCIO_SHARED_PTR<const FileNoOp> ConstFileNoOpRcPtr;
+
         OpRcPtr FileNoOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new FileNoOp(m_fileReference));
-            return op;
+            return std::make_shared<FileNoOp>(m_fileReference);
         }
         
-        bool FileNoOp::isSameType(const OpRcPtr & op) const
+        bool FileNoOp::isSameType(ConstOpRcPtr & op) const
         {
-            FileNoOpRcPtr typedRcPtr = DynamicPtrCast<FileNoOp>(op);
+            ConstFileNoOpRcPtr typedRcPtr = DynamicPtrCast<const FileNoOp>(op);
             if(!typedRcPtr) return false;
             return true;
         }
         
-        bool FileNoOp::isInverse(const OpRcPtr & op) const
+        bool FileNoOp::isInverse(ConstOpRcPtr & op) const
         {
             return isSameType(op);
         }
@@ -377,7 +377,7 @@ OCIO_NAMESPACE_ENTER
     void CreateFileNoOp(OpRcPtrVec & ops,
                         const std::string & fileReference)
     {
-        ops.push_back( FileNoOpRcPtr(new FileNoOp(fileReference)) );
+        ops.push_back( std::make_shared<FileNoOp>(fileReference) );
     }
     
     
@@ -403,8 +403,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getInfo() const { return "<LookNoOp>"; }
             virtual std::string getCacheID() const { return ""; }
             
-            virtual bool isSameType(const OpRcPtr & op) const;
-            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool isSameType(ConstOpRcPtr & op) const;
+            virtual bool isInverse(ConstOpRcPtr & op) const;
             virtual void dumpMetadata(ProcessorMetadataRcPtr & metadata) const;
             
             virtual void finalize() {}
@@ -417,21 +417,21 @@ OCIO_NAMESPACE_ENTER
         };
         
         typedef OCIO_SHARED_PTR<LookNoOp> LookNoOpRcPtr;
-        
+        typedef OCIO_SHARED_PTR<const LookNoOp> ConstLookNoOpRcPtr;
+
         OpRcPtr LookNoOp::clone() const
         {
-            OpRcPtr op = OpRcPtr(new LookNoOp(m_look));
-            return op;
+            return std::make_shared<LookNoOp>(m_look);
         }
         
-        bool LookNoOp::isSameType(const OpRcPtr & op) const
+        bool LookNoOp::isSameType(ConstOpRcPtr & op) const
         {
-            LookNoOpRcPtr typedRcPtr = DynamicPtrCast<LookNoOp>(op);
+            ConstLookNoOpRcPtr typedRcPtr = DynamicPtrCast<const LookNoOp>(op);
             if(!typedRcPtr) return false;
             return true;
         }
         
-        bool LookNoOp::isInverse(const OpRcPtr & op) const
+        bool LookNoOp::isInverse(ConstOpRcPtr & op) const
         {
             return isSameType(op);
         }
@@ -445,7 +445,7 @@ OCIO_NAMESPACE_ENTER
     void CreateLookNoOp(OpRcPtrVec & ops,
                         const std::string & look)
     {
-        ops.push_back( LookNoOpRcPtr(new LookNoOp(look)) );
+        ops.push_back( std::make_shared<LookNoOp>(look) );
     }
     
 }
@@ -533,11 +533,13 @@ OIIO_ADD_TEST(NoOps, PartitionGPUOps)
     OIIO_CHECK_NO_THROW(
         PartitionGPUOps(gpuPreOps, gpuLatticeOps, gpuPostOps, ops));
     
-    OIIO_CHECK_EQUAL(gpuPreOps.size(), 1);
+    OIIO_REQUIRE_EQUAL(gpuPreOps.size(), 1);
     OIIO_CHECK_EQUAL(gpuLatticeOps.size(), 0);
     OIIO_CHECK_EQUAL(gpuPostOps.size(), 0);
 
-    OIIO_CHECK_EQUAL(ops[0]->isSameType(gpuPreOps[0]), true);
+    OCIO::ConstOpRcPtr op0 = gpuPreOps[0];
+
+    OIIO_CHECK_EQUAL(ops[0]->isSameType(op0), true);
 
     OIIO_CHECK_NO_THROW( AssertPartitionIntegrity(gpuPreOps,
                                                   gpuLatticeOps,
@@ -697,13 +699,15 @@ OIIO_ADD_TEST(NoOps, AllocationOp)
     CreateGenericAllocationOp(ops);
     CreateGenericScaleOp(ops);
 
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
     OpRcPtr clonedOp = ops[0]->clone();
 
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[0]), true);
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[1]), false);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[0]), true);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[1]), false);
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(op0), true);
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(op1), false);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(op0), true);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(op1), false);
 
     OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
     OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
@@ -716,13 +720,15 @@ OIIO_ADD_TEST(NoOps, FileOp)
     CreateFileNoOp(ops,"");
     CreateGenericAllocationOp(ops);
 
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
     OpRcPtr clonedOp = ops[0]->clone();
 
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[0]), true);
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[1]), false);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[0]), true);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[1]), false);
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(op0), true);
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(op1), false);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(op0), true);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(op1), false);
 
     OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
     OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);
@@ -735,13 +741,15 @@ OIIO_ADD_TEST(NoOps, LookOp)
     CreateLookNoOp(ops, "");
     CreateGenericAllocationOp(ops);
 
-    OIIO_CHECK_EQUAL(ops.size(), 2);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
     OpRcPtr clonedOp = ops[0]->clone();
 
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[0]), true);
-    OIIO_CHECK_EQUAL(clonedOp->isSameType(ops[1]), false);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[0]), true);
-    OIIO_CHECK_EQUAL(clonedOp->isInverse(ops[1]), false);
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(op0), true);
+    OIIO_CHECK_EQUAL(clonedOp->isSameType(op1), false);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(op0), true);
+    OIIO_CHECK_EQUAL(clonedOp->isInverse(op1), false);
 
     OIIO_CHECK_EQUAL(clonedOp->isNoOp(), true);
     OIIO_CHECK_EQUAL(clonedOp->hasChannelCrosstalk(), false);

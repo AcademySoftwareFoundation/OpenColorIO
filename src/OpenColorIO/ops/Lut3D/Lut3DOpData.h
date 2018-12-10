@@ -40,6 +40,7 @@ OCIO_NAMESPACE_ENTER
 {
 class Lut3DOpData;
 typedef OCIO_SHARED_PTR<Lut3DOpData> Lut3DOpDataRcPtr;
+typedef OCIO_SHARED_PTR<const Lut3DOpData> ConstLut3DOpDataRcPtr;
 
 class Lut3DOpData : public OpData
 {
@@ -65,8 +66,8 @@ public:
 
     // Use functional composition to generate a single op that 
     // approximates the effect of the pair of ops.
-    static Lut3DOpDataRcPtr Compose(const Lut3DOpDataRcPtr & A,
-                                    const Lut3DOpDataRcPtr & B);
+    static Lut3DOpDataRcPtr Compose(ConstLut3DOpDataRcPtr & A,
+                                    ConstLut3DOpDataRcPtr & B);
 
 public:
     // The gridSize parameter is the length of the cube axis.
@@ -123,7 +124,7 @@ public:
 
     Lut3DOpDataRcPtr clone() const;
 
-    bool isInverse(const Lut3DOpDataRcPtr lut) const;
+    bool isInverse(ConstLut3DOpDataRcPtr & lut) const;
 
     Lut3DOpDataRcPtr inverse() const;
 
@@ -180,7 +181,7 @@ private:
 // Make a forward Lut3DOpData that approximates the exact inverse Lut3DOpData
 // to be used for the fast rendering style.
 // LUT has to be inverse or the function will throw.
-Lut3DOpDataRcPtr MakeFastLut3DFromInverse(const Lut3DOpDataRcPtr & lut);
+Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut);
 
 }
 OCIO_NAMESPACE_EXIT

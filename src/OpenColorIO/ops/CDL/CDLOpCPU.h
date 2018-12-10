@@ -65,7 +65,7 @@ struct RenderParams
     void setSaturation(float sat);
 
     // Update the render parameters from the operation data
-    void update(const CDLOpDataRcPtr & cdl);
+    void update(ConstCDLOpDataRcPtr & cdl);
 
 private:
     float m_slope[4];
@@ -85,9 +85,9 @@ class CDLOpCPU : public OpCPU
 public:
 
     // Get the dedicated renderer
-    static OpCPURcPtr GetRenderer(const CDLOpDataRcPtr & cdl);
+    static OpCPURcPtr GetRenderer(ConstCDLOpDataRcPtr & cdl);
 
-    CDLOpCPU(const CDLOpDataRcPtr & cdl);
+    CDLOpCPU(ConstCDLOpDataRcPtr & cdl);
 
 protected:
     const RenderParams & getRenderParams() const { return m_renderParams; }
@@ -105,7 +105,7 @@ private:
 class CDLRendererV1_2Fwd : public CDLOpCPU
 {
 public:
-    CDLRendererV1_2Fwd(const CDLOpDataRcPtr & cdl);
+    CDLRendererV1_2Fwd(ConstCDLOpDataRcPtr & cdl);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 
@@ -117,7 +117,7 @@ protected:
 class CDLRendererNoClampFwd : public CDLRendererV1_2Fwd
 {
 public:
-    CDLRendererNoClampFwd(const CDLOpDataRcPtr & cdl);
+    CDLRendererNoClampFwd(ConstCDLOpDataRcPtr & cdl);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 };
@@ -125,7 +125,7 @@ public:
 class CDLRendererV1_2Rev : public CDLOpCPU
 {
 public:
-    CDLRendererV1_2Rev(const CDLOpDataRcPtr & cdl);
+    CDLRendererV1_2Rev(ConstCDLOpDataRcPtr & cdl);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 
@@ -137,7 +137,7 @@ protected:
 class CDLRendererNoClampRev : public CDLRendererV1_2Rev
 {
 public:
-    CDLRendererNoClampRev(const CDLOpDataRcPtr & cdl);
+    CDLRendererNoClampRev(ConstCDLOpDataRcPtr & cdl);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 };

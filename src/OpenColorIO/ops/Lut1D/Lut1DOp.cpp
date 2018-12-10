@@ -546,7 +546,7 @@ OCIO_NAMESPACE_ENTER
             chn.insert(chn.end(), width*height-chn.size(), channel[currWidth-1]);
         }
 
-        bool HasExtendedDomain(const Lut1DOpDataRcPtr & lut)
+        bool HasExtendedDomain(ConstLut1DOpDataRcPtr & lut)
         {
             // The forward LUT is allowed to have entries outside the outDepth 
             // (e.g. a 10i LUT is allowed to have values on [-20,1050] if it wants).
@@ -609,7 +609,7 @@ OCIO_NAMESPACE_ENTER
     {
         class Lut1DOp;
         typedef OCIO_SHARED_PTR<Lut1DOp> Lut1DOpRcPtr;
-        
+        typedef OCIO_SHARED_PTR<const Lut1DOp> ConstLut1DOpRcPtr;
 
         class Lut1DOp : public Op
         {
@@ -623,27 +623,28 @@ OCIO_NAMESPACE_ENTER
             
             virtual std::string getInfo() const;
             
-            virtual bool isSameType(const OpRcPtr & op) const;
-            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool isSameType(ConstOpRcPtr & op) const;
+            virtual bool isInverse(ConstOpRcPtr & op) const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual bool supportedByLegacyShader() const { return false; }
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
-            virtual bool canCombineWith(const OpRcPtr & op) const;
-            virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+            virtual bool canCombineWith(ConstOpRcPtr & op) const;
+            virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
 
-            Lut1DOpDataRcPtr makeFastLut1D(bool forGPU);
+            Lut1DOpDataRcPtr makeFastLut1D(bool forGPU) const;
 
         protected:
-            const Lut1DOpDataRcPtr lutData() const { return DynamicPtrCast<Lut1DOpData>(const_data()); }
+            ConstLut1DOpDataRcPtr lutData() const { return DynamicPtrCast<const Lut1DOpData>(data()); }
+            Lut1DOpDataRcPtr lutData() { return DynamicPtrCast<Lut1DOpData>(data()); }
 
         private:
             Interpolation m_interpolation;
             TransformDirection m_direction;
 
-            Lut1DOpDataRcPtr m_lut_gpu_apply;
+            ConstLut1DOpDataRcPtr m_lut_gpu_apply;
         };
         
         
@@ -660,7 +661,10 @@ OCIO_NAMESPACE_ENTER
         
         OpRcPtr Lut1DOp::clone() const
         {
-            return OpRcPtr(new Lut1DOp(lutData(), m_interpolation, m_direction));
+            Lut1DOpDataRcPtr clonedData = Lut1DOpData::Create();
+            *clonedData = *lutData();
+
+            return std::make_shared<Lut1DOp>(clonedData, m_interpolation, m_direction);
         }
         
         Lut1DOp::~Lut1DOp()
@@ -671,16 +675,16 @@ OCIO_NAMESPACE_ENTER
             return "<Lut1DOp>";
         }
         
-        bool Lut1DOp::isSameType(const OpRcPtr & op) const
+        bool Lut1DOp::isSameType(ConstOpRcPtr & op) const
         {
-            Lut1DOpRcPtr typedRcPtr = DynamicPtrCast<Lut1DOp>(op);
+            ConstLut1DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut1DOp>(op);
             if(!typedRcPtr) return false;
             return true;
         }
         
-        bool Lut1DOp::isInverse(const OpRcPtr & op) const
+        bool Lut1DOp::isInverse(ConstOpRcPtr & op) const
         {
-            Lut1DOpRcPtr typedRcPtr = DynamicPtrCast<Lut1DOp>(op);
+            ConstLut1DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut1DOp>(op);
             if(!typedRcPtr) return false;
             
             if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
@@ -689,7 +693,7 @@ OCIO_NAMESPACE_ENTER
             return (lutData()->getCacheID() == typedRcPtr->lutData()->getCacheID());
         }
     
-        bool Lut1DOp::canCombineWith(const OpRcPtr & /*op*/) const
+        bool Lut1DOp::canCombineWith(ConstOpRcPtr & /*op*/) const
         {
             // TODO: To implement
 
@@ -697,7 +701,7 @@ OCIO_NAMESPACE_ENTER
         }
         
         void Lut1DOp::combineWith(OpRcPtrVec & /*ops*/,
-                                  const OpRcPtr & /*secondOp*/) const
+                                  ConstOpRcPtr & /*secondOp*/) const
         {
             // TODO: To implement
 
@@ -721,7 +725,7 @@ OCIO_NAMESPACE_ENTER
         // Ultimately, the goal is to replace this with an automated algorithm that
         // computes the best domain based on analysis of the curvature of the LUT.
         //
-        Lut1DOpDataRcPtr Lut1DOp::makeFastLut1D(bool forGPU)
+        Lut1DOpDataRcPtr Lut1DOp::makeFastLut1D(bool forGPU) const
         {
             BitDepth depth(getInputBitDepth());
 
@@ -740,7 +744,8 @@ OCIO_NAMESPACE_ENTER
             }
 
             // But if the LUT has values outside [0,1], use a half-domain fastLUT.
-            if(HasExtendedDomain(lutData()))
+            ConstLut1DOpDataRcPtr lutOpData = lutData();
+            if(HasExtendedDomain(lutOpData))
             {
                 depth = BIT_DEPTH_F16;
             }
@@ -1343,19 +1348,23 @@ OIIO_ADD_TEST(Lut1DOp, Inverse)
 
     OIIO_CHECK_NO_THROW(FinalizeOpVec(ops, false));
     
-    OIIO_CHECK_EQUAL(ops.size(), 4);
-    
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[2]));
-    OCIO::OpRcPtr clonedOp;
+    OIIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+    OCIO::ConstOpRcPtr op2 = ops[2];
+    OCIO::ConstOpRcPtr op3 = ops[3];
+
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op1));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op2));
+    OCIO::ConstOpRcPtr clonedOp;
     OIIO_CHECK_NO_THROW(clonedOp = ops[3]->clone());
     OIIO_CHECK_ASSERT(ops[0]->isSameType(clonedOp));
 
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[1]), true);
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[2]), false);
-    OIIO_CHECK_EQUAL( ops[0]->isInverse(ops[3]), false);
-    OIIO_CHECK_EQUAL( ops[2]->isInverse(ops[3]), true);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(op1), true);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(op2), false);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(op2), false);
+    OIIO_CHECK_EQUAL( ops[0]->isInverse(op3), false);
+    OIIO_CHECK_EQUAL( ops[2]->isInverse(op3), true);
 
     // add same as first
     OIIO_CHECK_NO_THROW(CreateLut1DOp(ops, lut_a,
@@ -1363,7 +1372,7 @@ OIIO_ADD_TEST(Lut1DOp, Inverse)
     OIIO_CHECK_EQUAL(ops.size(), 5);
 
     OCIO::FinalizeOpVec(ops, false);
-    OIIO_CHECK_EQUAL(ops.size(), 5);
+    OIIO_REQUIRE_EQUAL(ops.size(), 5);
 
     OIIO_CHECK_EQUAL(ops[0]->getCacheID(), ops[4]->getCacheID());
     OIIO_CHECK_NE(ops[2]->getCacheID(), ops[3]->getCacheID());

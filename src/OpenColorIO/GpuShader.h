@@ -55,7 +55,7 @@ OCIO_NAMESPACE_ENTER
         //
         unsigned getNum3DTextures() const;
         void add3DTexture(const char * name, const char * id, unsigned edgelen, 
-                          Interpolation interpolation, float * values);
+                          Interpolation interpolation, const float * values);
         void get3DTexture(unsigned index, const char *& name, 
                           const char *& id, unsigned & edgelen, 
                           Interpolation & interpolation) const;
@@ -99,7 +99,7 @@ OCIO_NAMESPACE_ENTER
         //
         unsigned getNumTextures() const;
         void addTexture(const char * name, const char * id, unsigned width, unsigned height,
-                        TextureType channel, Interpolation interpolation, float * values);
+                        TextureType channel, Interpolation interpolation, const float * values);
         // Get the texture 1D or 2D information
         void getTexture(unsigned index, const char *& name, const char *& id, 
                         unsigned & width, unsigned & height,
@@ -155,7 +155,7 @@ OCIO_NAMESPACE_ENTER
         //
         unsigned getNumTextures() const;
         void addTexture(const char * name, const char * id, unsigned width, unsigned height,
-                        TextureType channel, Interpolation interpolation, float * values);
+                        TextureType channel, Interpolation interpolation, const float * values);
         void getTexture(unsigned index, const char *& name, const char *& id, 
                         unsigned & width, unsigned & height,
                         TextureType & channel, Interpolation & interpolation) const;
@@ -165,7 +165,7 @@ OCIO_NAMESPACE_ENTER
         //
         unsigned getNum3DTextures() const;
         void add3DTexture(const char * name, const char * id, unsigned edgelen, 
-                          Interpolation interpolation, float * values);
+                          Interpolation interpolation, const float * values);
         void get3DTexture(unsigned index, const char *& name, 
                           const char *& id, unsigned & edgelen, 
                           Interpolation & interpolation) const;

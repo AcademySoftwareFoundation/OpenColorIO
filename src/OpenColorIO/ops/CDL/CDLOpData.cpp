@@ -350,20 +350,28 @@ bool CDLOpData::isClamping() const
     return false;
 }
 
-bool CDLOpData::isInverse(const CDLOpDataRcPtr & r) const
+std::string CDLOpData::GetChannelParametersString(ChannelParams params)
+{
+    std::ostringstream oss;
+    oss.precision(DefaultValues::FLOAT_DECIMALS);
+    oss << params[0] << ", " << params[1] << ", " << params[2];
+    return oss.str();
+}
+
+bool CDLOpData::isInverse(ConstCDLOpDataRcPtr & r) const
 {
     return *r == *inverse();
 }
 
 CDLOpDataRcPtr CDLOpData::inverse() const
 {
-    CDLOpDataRcPtr cdl( new CDLOpData(getOutputBitDepth(),
-                                      getInputBitDepth(),
-                                      getStyle(),
-                                      getSlopeParams(),
-                                      getOffsetParams(),
-                                      getPowerParams(),
-                                      getSaturation()) );
+    CDLOpDataRcPtr cdl = std::make_shared<CDLOpData>(getOutputBitDepth(),
+                                                     getInputBitDepth(),
+                                                     getStyle(),
+                                                     getSlopeParams(),
+                                                     getOffsetParams(),
+                                                     getPowerParams(),
+                                                     getSaturation());
     switch(cdl->getStyle())
     {
         case CDL_V1_2_FWD: cdl->setStyle(CDL_V1_2_REV); break;

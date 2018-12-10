@@ -48,11 +48,11 @@ namespace
 class BaseLut3DRenderer : public OpCPU
 {
 public:
-    explicit BaseLut3DRenderer(const Lut3DOpDataRcPtr & lut);
+    explicit BaseLut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~BaseLut3DRenderer();
 
 protected:
-    void updateData(const Lut3DOpDataRcPtr & lut);
+    void updateData(ConstLut3DOpDataRcPtr & lut);
 
     // Creates a LUT aligned to a 16 byte boundary with RGB and 0 for alpha
     // in order to be able to load the LUT using _mm_load_ps.
@@ -77,7 +77,7 @@ private:
 class Lut3DTetrahedralRenderer : public BaseLut3DRenderer
 {
 public:
-    Lut3DTetrahedralRenderer(const Lut3DOpDataRcPtr & lut);
+    Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~Lut3DTetrahedralRenderer();
 
     void apply(float *rgbaBuffer, long nPixels) const;
@@ -86,7 +86,7 @@ public:
 class Lut3DRenderer : public BaseLut3DRenderer
 {
 public:
-    Lut3DRenderer(const Lut3DOpDataRcPtr & lut);
+    Lut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~Lut3DRenderer();
 
     void apply(float *rgbaBuffer, long nPixels) const;
@@ -186,15 +186,15 @@ class InvLut3DRenderer : public OpCPU
 
 public:
 
-    InvLut3DRenderer(const Lut3DOpDataRcPtr & lut);
+    InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut);
     virtual ~InvLut3DRenderer();
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 
-    virtual void updateData(const Lut3DOpDataRcPtr & lut);
+    virtual void updateData(ConstLut3DOpDataRcPtr & lut);
 
     // Extrapolate the 3d-LUT to handle values outside the LUT gamut
-    void extrapolate3DArray(const Lut3DOpDataRcPtr & lut);
+    void extrapolate3DArray(ConstLut3DOpDataRcPtr & lut);
 
 protected:
     float              m_scale;        // output scaling for r, g and b
@@ -322,7 +322,7 @@ inline void lerp_rgb(float* out, float* a, float* b, float* c, float* d,
 }
 #endif
 
-BaseLut3DRenderer::BaseLut3DRenderer(const Lut3DOpDataRcPtr & lut)
+BaseLut3DRenderer::BaseLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     : OpCPU()
     , m_optLut(0x0)
     , m_dim(0)
@@ -342,7 +342,7 @@ BaseLut3DRenderer::~BaseLut3DRenderer()
 #endif
 }
 
-void BaseLut3DRenderer::updateData(const Lut3DOpDataRcPtr & lut)
+void BaseLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 {
     m_alphaScale = GetBitDepthMaxValue(lut->getOutputBitDepth())
                    / GetBitDepthMaxValue(lut->getInputBitDepth());
@@ -405,7 +405,7 @@ float* BaseLut3DRenderer::createOptLut(const Array::Values& lut) const
 }
 #endif
 
-Lut3DTetrahedralRenderer::Lut3DTetrahedralRenderer(const Lut3DOpDataRcPtr & lut)
+Lut3DTetrahedralRenderer::Lut3DTetrahedralRenderer(ConstLut3DOpDataRcPtr & lut)
     : BaseLut3DRenderer(lut)
 {
 }
@@ -820,7 +820,7 @@ void Lut3DTetrahedralRenderer::apply(float *rgbaBuffer, long nPixels) const
 #endif
 }
 
-Lut3DRenderer::Lut3DRenderer(const Lut3DOpDataRcPtr & lut)
+Lut3DRenderer::Lut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     : BaseLut3DRenderer(lut)
 {
 }
@@ -1621,7 +1621,7 @@ float* extrapolate(float RGB[3], float center, float scale)
     return RGB;
 }
 
-InvLut3DRenderer::InvLut3DRenderer(const Lut3DOpDataRcPtr & lut)
+InvLut3DRenderer::InvLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
     : OpCPU()
     , m_scale(0.0f)
     , m_dim(0)
@@ -1636,7 +1636,7 @@ InvLut3DRenderer:: ~InvLut3DRenderer()
 {
 }
 
-void InvLut3DRenderer::updateData(const Lut3DOpDataRcPtr & lut)
+void InvLut3DRenderer::updateData(ConstLut3DOpDataRcPtr & lut)
 {
     extrapolate3DArray(lut);
 
@@ -1660,7 +1660,7 @@ void InvLut3DRenderer::updateData(const Lut3DOpDataRcPtr & lut)
     m_inMax = GetBitDepthMaxValue(lut->getInputBitDepth());
 }
 
-void InvLut3DRenderer::extrapolate3DArray(const Lut3DOpDataRcPtr & lut)
+void InvLut3DRenderer::extrapolate3DArray(ConstLut3DOpDataRcPtr & lut)
 {
     const unsigned long dim = lut->getArray().getLength();
     const unsigned long newDim = dim + 2;
@@ -1932,7 +1932,7 @@ void InvLut3DRenderer::apply(float * rgbaBuffer, long numPixels) const
     }
 }
 
-OpCPURcPtr GetForwardLut3DRenderer(const Lut3DOpDataRcPtr & lut)
+OpCPURcPtr GetForwardLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 {
     const Interpolation interp = lut->getConcreteInterpolation();
     if (interp == INTERP_TETRAHEDRAL)
@@ -1947,7 +1947,7 @@ OpCPURcPtr GetForwardLut3DRenderer(const Lut3DOpDataRcPtr & lut)
 
 } // anonymous namspace
 
-OpCPURcPtr GetLut3DRenderer(const Lut3DOpDataRcPtr & lut)
+OpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
 {
     if (lut->getDirection() == TRANSFORM_DIR_FORWARD)
     {
@@ -1957,7 +1957,7 @@ OpCPURcPtr GetLut3DRenderer(const Lut3DOpDataRcPtr & lut)
     {
         if (lut->getInvStyle() == Lut3DOpData::INV_FAST)
         {
-            Lut3DOpDataRcPtr newLut = MakeFastLut3DFromInverse(lut);
+            ConstLut3DOpDataRcPtr newLut = MakeFastLut3DFromInverse(lut);
 
             // Render with a Lut3D renderer.
             return GetForwardLut3DRenderer(newLut);
