@@ -40,6 +40,7 @@ OCIO_NAMESPACE_ENTER
 {
     class ExponentOpData;
     typedef OCIO_SHARED_PTR<ExponentOpData> ExponentOpDataRcPtr;
+    typedef OCIO_SHARED_PTR<const ExponentOpData> ConstExponentOpDataRcPtr;
 
     class ExponentOpData : public OpData
     {

@@ -121,7 +121,7 @@ OCIO_NAMESPACE_ENTER
         // the caller is responsible for base != 1.0
         // TODO: pull the precomputation into the caller?
         
-        void ApplyLinToLog(float* rgbaBuffer, long numPixels, const LogOpDataRcPtr & log)
+        void ApplyLinToLog(float* rgbaBuffer, long numPixels, ConstLogOpDataRcPtr & log)
         {
             // We account for the change of base by rolling the multiplier
             // in with 'k'
@@ -144,7 +144,7 @@ OCIO_NAMESPACE_ENTER
         // the caller is responsible for k != 0
         // TODO: pull the precomputation into the caller?
         
-        void ApplyLogToLin(float* rgbaBuffer, long numPixels, const LogOpDataRcPtr & log)
+        void ApplyLogToLin(float* rgbaBuffer, long numPixels, ConstLogOpDataRcPtr & log)
         {
             const float kinv[3] = { 1.0f / log->m_k[0],
                                     1.0f / log->m_k[1],
@@ -196,22 +196,24 @@ OCIO_NAMESPACE_ENTER
             
             virtual std::string getInfo() const;
             
-            virtual bool isSameType(const OpRcPtr & op) const;
-            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool isSameType(ConstOpRcPtr & op) const;
+            virtual bool isInverse(ConstOpRcPtr & op) const;
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
             
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
             
         protected:
-            const LogOpDataRcPtr logData() const { return DynamicPtrCast<LogOpData>(const_data()); }
+            ConstLogOpDataRcPtr logData() const { return DynamicPtrCast<const LogOpData>(data()); }
+            LogOpDataRcPtr logData() { return DynamicPtrCast<LogOpData>(data()); }
 
         private:
             TransformDirection m_direction;
         };
         
         typedef OCIO_SHARED_PTR<LogOp> LogOpRcPtr;
-        
+        typedef OCIO_SHARED_PTR<const LogOp> ConstLogOpRcPtr;
+
         LogOp::LogOp(float base, TransformDirection direction):
                                        Op(),
                                        m_direction(direction)
@@ -243,9 +245,10 @@ OCIO_NAMESPACE_ENTER
         
         OpRcPtr LogOp::clone() const
         {
-            return OpRcPtr(
-                new LogOp(logData()->m_k, logData()->m_m, logData()->m_b, 
-                          logData()->m_base, logData()->m_kb, m_direction));
+            return std::make_shared<LogOp>(
+                logData()->m_k, logData()->m_m, logData()->m_b,
+                logData()->m_base, logData()->m_kb,
+                m_direction);
         }
         
         LogOp::~LogOp()
@@ -256,16 +259,16 @@ OCIO_NAMESPACE_ENTER
             return "<LogOp>";
         }
         
-        bool LogOp::isSameType(const OpRcPtr & op) const
+        bool LogOp::isSameType(ConstOpRcPtr & op) const
         {
-            LogOpRcPtr typedRcPtr = DynamicPtrCast<LogOp>(op);
+            ConstLogOpRcPtr typedRcPtr = DynamicPtrCast<const LogOp>(op);
             if(!typedRcPtr) return false;
             return true;
         }
         
-        bool LogOp::isInverse(const OpRcPtr & op) const
+        bool LogOp::isInverse(ConstOpRcPtr & op) const
         {
-            LogOpRcPtr typedRcPtr = DynamicPtrCast<LogOp>(op);
+            ConstLogOpRcPtr typedRcPtr = DynamicPtrCast<const LogOp>(op);
             if(!typedRcPtr) return false;
             
             if(GetInverseTransformDirection(m_direction) != typedRcPtr->m_direction)
@@ -314,13 +317,14 @@ OCIO_NAMESPACE_ENTER
         
         void LogOp::apply(float* rgbaBuffer, long numPixels) const
         {
+            ConstLogOpDataRcPtr logOpData = logData();
             if(m_direction == TRANSFORM_DIR_FORWARD)
             {
-                ApplyLinToLog(rgbaBuffer, numPixels, logData());
+                ApplyLinToLog(rgbaBuffer, numPixels, logOpData);
             }
             else if(m_direction == TRANSFORM_DIR_INVERSE)
             {
-                ApplyLogToLin(rgbaBuffer, numPixels, logData());
+                ApplyLogToLin(rgbaBuffer, numPixels, logOpData);
             }
         } // Op::process
         
@@ -564,25 +568,30 @@ OIIO_ADD_TEST(LogOps, Inverse)
     OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_INVERSE));
     OIIO_CHECK_NO_THROW(CreateLogOp(ops, k, m, b, base, kb, OCIO::TRANSFORM_DIR_FORWARD));
     
-    OIIO_CHECK_EQUAL(ops.size(), 4);
+    OIIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+    OCIO::ConstOpRcPtr op2 = ops[2];
+    OCIO::ConstOpRcPtr op3 = ops[3];
+
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op1));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op2));
+    OCIO::ConstOpRcPtr op3Cloned = ops[3]->clone();
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op3Cloned));
     
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[2]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]->clone()));
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(op0), false);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(op1), true);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(op2), false);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(op3), false);
     
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[0]), false);
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[1]), true);
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[2]), false);
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[3]), false);
+    OIIO_CHECK_EQUAL(ops[1]->isInverse(op0), true);
+    OIIO_CHECK_EQUAL(ops[1]->isInverse(op2), false);
+    OIIO_CHECK_EQUAL(ops[1]->isInverse(op3), false);
     
-    OIIO_CHECK_EQUAL(ops[1]->isInverse(ops[0]), true);
-    OIIO_CHECK_EQUAL(ops[1]->isInverse(ops[2]), false);
-    OIIO_CHECK_EQUAL(ops[1]->isInverse(ops[3]), false);
+    OIIO_CHECK_EQUAL(ops[2]->isInverse(op2), false);
+    OIIO_CHECK_EQUAL(ops[2]->isInverse(op3), true);
     
-    OIIO_CHECK_EQUAL(ops[2]->isInverse(ops[2]), false);
-    OIIO_CHECK_EQUAL(ops[2]->isInverse(ops[3]), true);
-    
-    OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[3]), false);
+    OIIO_CHECK_EQUAL(ops[3]->isInverse(op3), false);
 
     const float result[12] = { 0.01f, 0.1f, 1.0f, 1.0f,
                         1.0f, 10.0f, 100.0f, 1.0f,

@@ -86,6 +86,7 @@ OCIO_NAMESPACE_ENTER
     
     class OpData;
     typedef OCIO_SHARED_PTR<OpData> OpDataRcPtr;
+    typedef OCIO_SHARED_PTR<const OpData> ConstOpDataRcPtr;
 
 
     // The OpData class is a helper class to hold the data part of an Op 
@@ -261,6 +262,7 @@ OCIO_NAMESPACE_ENTER
     
     class Op;
     typedef OCIO_SHARED_PTR<Op> OpRcPtr;
+    typedef OCIO_SHARED_PTR<const Op> ConstOpRcPtr;
     typedef std::vector<OpRcPtr> OpRcPtrVec;
     
     std::string SerializeOpVec(const OpRcPtrVec & ops, int indent=0);
@@ -292,11 +294,11 @@ OCIO_NAMESPACE_ENTER
 
             virtual bool isIdentity() const { return m_data->isIdentity(); }
             
-            virtual bool isSameType(const OpRcPtr & op) const = 0;
+            virtual bool isSameType(ConstOpRcPtr & op) const = 0;
             
-            virtual bool isInverse(const OpRcPtr & op) const = 0;
+            virtual bool isInverse(ConstOpRcPtr & op) const = 0;
             
-            virtual bool canCombineWith(const OpRcPtr & op) const;
+            virtual bool canCombineWith(ConstOpRcPtr & op) const;
             
             // Return a vector of result ops, which correspond to
             // THIS combinedWith secondOp.
@@ -304,7 +306,7 @@ OCIO_NAMESPACE_ENTER
             // If the result is a noOp, it is valid for the resulting opsVec
             // to be empty.
             
-            virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+            virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
             
             virtual bool hasChannelCrosstalk() const { return m_data->hasChannelCrosstalk(); }
             
@@ -338,7 +340,7 @@ OCIO_NAMESPACE_ENTER
             virtual void setInputBitDepth(BitDepth bitdepth) { m_data->setInputBitDepth(bitdepth); }
             virtual void setOutputBitDepth(BitDepth bitdepth) { m_data->setOutputBitDepth(bitdepth); }
 
-            const OpDataRcPtr & const_data() const { return m_data; }
+            ConstOpDataRcPtr data() const { return std::const_pointer_cast<const OpData>(m_data); }
 
         protected:
             Op();
