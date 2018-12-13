@@ -41,7 +41,7 @@ OCIO_NAMESPACE_ENTER
       
 class CDLOpData;
 typedef OCIO_SHARED_PTR<CDLOpData> CDLOpDataRcPtr;
-
+typedef OCIO_SHARED_PTR<const CDLOpData> ConstCDLOpDataRcPtr;
 
 class CDLOpData : public OpData
 {
@@ -220,7 +220,7 @@ public:
     std::string getPowerString() const;
     std::string getSaturationString() const;
 
-    bool isInverse(const CDLOpDataRcPtr & r) const;
+    bool isInverse(ConstCDLOpDataRcPtr & r) const;
 
     CDLOpDataRcPtr inverse() const;
 

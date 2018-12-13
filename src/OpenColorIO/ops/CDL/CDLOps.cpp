@@ -49,6 +49,7 @@ namespace
 
 class CDLOp;
 typedef OCIO_SHARED_PTR<CDLOp> CDLOpRcPtr;
+typedef OCIO_SHARED_PTR<const CDLOp> ConstCDLOpRcPtr;
 
 class CDLOp : public Op
 {
@@ -75,10 +76,10 @@ public:
     virtual std::string getInfo() const;
     
     virtual bool isIdentity() const;
-    virtual bool isSameType(const OpRcPtr & op) const;
-    virtual bool isInverse(const OpRcPtr & op) const;
-    virtual bool canCombineWith(const OpRcPtr & op) const;
-    virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+    virtual bool isSameType(ConstOpRcPtr & op) const;
+    virtual bool isInverse(ConstOpRcPtr & op) const;
+    virtual bool canCombineWith(ConstOpRcPtr & op) const;
+    virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
     
     virtual void finalize();
     virtual void apply(float * rgbaBuffer, long numPixels) const;
@@ -86,7 +87,8 @@ public:
     virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
 protected:
-    const CDLOpDataRcPtr cdlData() const { return DynamicPtrCast<CDLOpData>(const_data()); }
+    ConstCDLOpDataRcPtr cdlData() const { return DynamicPtrCast<const CDLOpData>(data()); }
+    CDLOpDataRcPtr cdlData() { return DynamicPtrCast<CDLOpData>(data()); }
 
 private:
     TransformDirection m_direction;
@@ -153,16 +155,16 @@ CDLOp::CDLOp(BitDepth inBitDepth,
 
 OpRcPtr CDLOp::clone() const
 {
-    return OpRcPtr(new CDLOp(cdlData()->getInputBitDepth(),
-                             cdlData()->getOutputBitDepth(),
-                             cdlData()->getId(),
-                             cdlData()->getDescriptions(),
-                             cdlData()->getStyle(),
-                             cdlData()->getSlopeParams().data(), 
-                             cdlData()->getOffsetParams().data(),
-                             cdlData()->getPowerParams().data(), 
-                             cdlData()->getSaturation(),
-                             m_direction));
+    return std::make_shared<CDLOp>(cdlData()->getInputBitDepth(),
+                                   cdlData()->getOutputBitDepth(),
+                                   cdlData()->getId(),
+                                   cdlData()->getDescriptions(),
+                                   cdlData()->getStyle(),
+                                   cdlData()->getSlopeParams().data(), 
+                                   cdlData()->getOffsetParams().data(),
+                                   cdlData()->getPowerParams().data(), 
+                                   cdlData()->getSaturation(),
+                                   m_direction);
 }
 
 CDLOp::~CDLOp()
@@ -179,15 +181,15 @@ bool CDLOp::isIdentity() const
     return cdlData()->isIdentity();
 }
 
-bool CDLOp::isSameType(const OpRcPtr & op) const
+bool CDLOp::isSameType(ConstOpRcPtr & op) const
 {
-    CDLOpRcPtr typedRcPtr = DynamicPtrCast<CDLOp>(op);
+    ConstCDLOpRcPtr typedRcPtr = DynamicPtrCast<const CDLOp>(op);
     return (bool)typedRcPtr;
 }
 
-bool CDLOp::isInverse(const OpRcPtr & op) const
+bool CDLOp::isInverse(ConstOpRcPtr & op) const
 {
-    CDLOpRcPtr typedRcPtr = DynamicPtrCast<CDLOp>(op);
+    ConstCDLOpRcPtr typedRcPtr = DynamicPtrCast<const CDLOp>(op);
     if(!typedRcPtr) return false;
 
     if(GetInverseTransformDirection(m_direction)==typedRcPtr->m_direction)
@@ -195,17 +197,18 @@ bool CDLOp::isInverse(const OpRcPtr & op) const
         return *cdlData()==*typedRcPtr->cdlData();
     }
 
-    return cdlData()->isInverse(typedRcPtr->cdlData());
+    ConstCDLOpDataRcPtr cdlOpData = typedRcPtr->cdlData();
+    return cdlData()->isInverse(cdlOpData);
 }
 
-bool CDLOp::canCombineWith(const OpRcPtr & /*op*/) const
+bool CDLOp::canCombineWith(ConstOpRcPtr & /*op*/) const
 {
     // TODO: Allow combining with LUTs.
     // TODO: Allow combining with matrices.
     return false;
 }
 
-void CDLOp::combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const
+void CDLOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
 {
     if(!canCombineWith(secondOp))
     {
@@ -220,6 +223,8 @@ void CDLOp::combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const
 
 void CDLOp::finalize()
 {
+    const CDLOp & constThis = *this;
+
     if(m_direction == TRANSFORM_DIR_INVERSE)
     {
         data() = cdlData()->inverse();
@@ -233,7 +238,8 @@ void CDLOp::finalize()
     cdlData()->validate();
     cdlData()->finalize();
 
-    m_cpu = CDLOpCPU::GetRenderer(cdlData());
+    ConstCDLOpDataRcPtr cdlOpData = constThis.cdlData();
+    m_cpu = CDLOpCPU::GetRenderer(cdlOpData);
 
     // Create the cacheID
     std::ostringstream cacheIDStream;
@@ -265,7 +271,8 @@ void CDLOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
     }
 
     RenderParams params;
-    params.update(cdlData());
+    ConstCDLOpDataRcPtr cdlOpData = cdlData();
+    params.update(cdlOpData);
 
     const float * slope    = params.getSlope();
     const float * offset   = params.getOffset();
@@ -582,8 +589,11 @@ OIIO_ADD_TEST(CDLOps, is_inverse)
                 OCIO::TRANSFORM_DIR_INVERSE);
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
 
-    OIIO_CHECK_ASSERT(ops[0]->isInverse(ops[1]));
-    OIIO_CHECK_ASSERT(ops[1]->isInverse(ops[0]));
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OCIO::ConstOpRcPtr op1 = ops[1];
+
+    OIIO_CHECK_ASSERT(ops[0]->isInverse(op1));
+    OIIO_CHECK_ASSERT(ops[1]->isInverse(op0));
 
     CreateCDLOp(ops, 
                 "", OCIO::OpData::Descriptions(),
@@ -592,11 +602,12 @@ OIIO_ADD_TEST(CDLOps, is_inverse)
                 CDL_DATA_1::power, 1.30, 
                 OCIO::TRANSFORM_DIR_INVERSE);
     OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    OCIO::ConstOpRcPtr op2 = ops[2];
 
-    OIIO_CHECK_ASSERT(!ops[0]->isInverse(ops[2]));
-    OIIO_CHECK_ASSERT(!ops[1]->isInverse(ops[2]));
-    OIIO_CHECK_ASSERT(!ops[2]->isInverse(ops[0]));
-    OIIO_CHECK_ASSERT(!ops[2]->isInverse(ops[1]));
+    OIIO_CHECK_ASSERT(!ops[0]->isInverse(op2));
+    OIIO_CHECK_ASSERT(!ops[1]->isInverse(op2));
+    OIIO_CHECK_ASSERT(!ops[2]->isInverse(op0));
+    OIIO_CHECK_ASSERT(!ops[2]->isInverse(op1));
 
     CreateCDLOp(ops, 
                 "", OCIO::OpData::Descriptions(),
@@ -605,8 +616,9 @@ OIIO_ADD_TEST(CDLOps, is_inverse)
                 CDL_DATA_1::power, 1.30, 
                 OCIO::TRANSFORM_DIR_INVERSE);
     OIIO_REQUIRE_EQUAL(ops.size(), 4);
+    OCIO::ConstOpRcPtr op3 = ops[3];
 
-    OIIO_CHECK_ASSERT(ops[2]->isInverse(ops[3]));
+    OIIO_CHECK_ASSERT(ops[2]->isInverse(op3));
 
     CreateCDLOp(ops, 
                 "", OCIO::OpData::Descriptions(),
@@ -615,9 +627,10 @@ OIIO_ADD_TEST(CDLOps, is_inverse)
                 CDL_DATA_1::power, 1.30, 
                 OCIO::TRANSFORM_DIR_FORWARD);
     OIIO_REQUIRE_EQUAL(ops.size(), 5);
+    OCIO::ConstOpRcPtr op4 = ops[4];
 
-    OIIO_CHECK_ASSERT(!ops[2]->isInverse(ops[4]));
-    OIIO_CHECK_ASSERT(ops[3]->isInverse(ops[4]));
+    OIIO_CHECK_ASSERT(!ops[2]->isInverse(op4));
+    OIIO_CHECK_ASSERT(ops[3]->isInverse(op4));
 
     CreateCDLOp(ops, 
                 "", OCIO::OpData::Descriptions(),
@@ -626,10 +639,11 @@ OIIO_ADD_TEST(CDLOps, is_inverse)
                 CDL_DATA_1::power, 1.30, 
                 OCIO::TRANSFORM_DIR_FORWARD);
     OIIO_REQUIRE_EQUAL(ops.size(), 6);
+    OCIO::ConstOpRcPtr op5 = ops[5];
 
-    OIIO_CHECK_ASSERT(!ops[2]->isInverse(ops[5]));
-    OIIO_CHECK_ASSERT(!ops[3]->isInverse(ops[5]));
-    OIIO_CHECK_ASSERT(!ops[4]->isInverse(ops[5]));
+    OIIO_CHECK_ASSERT(!ops[2]->isInverse(op5));
+    OIIO_CHECK_ASSERT(!ops[3]->isInverse(op5));
+    OIIO_CHECK_ASSERT(!ops[4]->isInverse(op5));
 
     CreateCDLOp(ops, 
                 "", OCIO::OpData::Descriptions(),
@@ -638,11 +652,12 @@ OIIO_ADD_TEST(CDLOps, is_inverse)
                 CDL_DATA_1::power, 1.30, 
                 OCIO::TRANSFORM_DIR_INVERSE);
     OIIO_REQUIRE_EQUAL(ops.size(), 7);
+    OCIO::ConstOpRcPtr op6 = ops[6];
 
-    OIIO_CHECK_ASSERT(!ops[2]->isInverse(ops[6]));
-    OIIO_CHECK_ASSERT(!ops[3]->isInverse(ops[6]));
-    OIIO_CHECK_ASSERT(!ops[4]->isInverse(ops[6]));
-    OIIO_CHECK_ASSERT(ops[5]->isInverse(ops[6]));
+    OIIO_CHECK_ASSERT(!ops[2]->isInverse(op6));
+    OIIO_CHECK_ASSERT(!ops[3]->isInverse(op6));
+    OIIO_CHECK_ASSERT(!ops[4]->isInverse(op6));
+    OIIO_CHECK_ASSERT(ops[5]->isInverse(op6));
 }
 
 // The expected values below were calculated via an independent ASC CDL

@@ -101,13 +101,13 @@ OCIO_NAMESPACE_ENTER
     Op::~Op()
     { }
     
-    bool Op::canCombineWith(const OpRcPtr & /*op*/) const
+    bool Op::canCombineWith(ConstOpRcPtr & /*op*/) const
     {
         return false;
     }
     
     void Op::combineWith(OpRcPtrVec & /*ops*/,
-                         const OpRcPtr & /*secondOp*/) const
+                         ConstOpRcPtr & /*secondOp*/) const
     {
         std::ostringstream os;
         os << "Op: " << getInfo() << " cannot be combined. ";

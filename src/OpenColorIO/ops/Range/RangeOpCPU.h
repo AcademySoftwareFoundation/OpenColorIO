@@ -48,9 +48,9 @@ class RangeOpCPU : public OpCPU
 public:
 
     // Get the dedicated renderer
-    static OpCPURcPtr GetRenderer(const RangeOpDataRcPtr & range);
+    static OpCPURcPtr GetRenderer(ConstRangeOpDataRcPtr & range);
 
-    RangeOpCPU(const RangeOpDataRcPtr & range);
+    RangeOpCPU(ConstRangeOpDataRcPtr & range);
 
 protected:
     float m_scale;
@@ -66,7 +66,7 @@ private:
 class RangeScaleMinMaxRenderer : public RangeOpCPU
 {
 public:
-    RangeScaleMinMaxRenderer(const RangeOpDataRcPtr & range);
+    RangeScaleMinMaxRenderer(ConstRangeOpDataRcPtr & range);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 };
@@ -74,7 +74,7 @@ public:
 class RangeScaleMinRenderer : public RangeOpCPU
 {
 public:
-    RangeScaleMinRenderer(const RangeOpDataRcPtr & range);
+    RangeScaleMinRenderer(ConstRangeOpDataRcPtr & range);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 };
@@ -82,7 +82,7 @@ public:
 class RangeScaleMaxRenderer : public RangeOpCPU
 {
 public:
-    RangeScaleMaxRenderer(const RangeOpDataRcPtr & range);
+    RangeScaleMaxRenderer(ConstRangeOpDataRcPtr & range);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 };
@@ -90,7 +90,7 @@ public:
 class RangeScaleRenderer : public RangeOpCPU
 {
 public:
-    RangeScaleRenderer(const RangeOpDataRcPtr & range);
+    RangeScaleRenderer(ConstRangeOpDataRcPtr & range);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 };
@@ -98,7 +98,7 @@ public:
 class RangeMinMaxRenderer : public RangeOpCPU
 {
 public:
-    RangeMinMaxRenderer(const RangeOpDataRcPtr & range);
+    RangeMinMaxRenderer(ConstRangeOpDataRcPtr & range);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 };
@@ -106,7 +106,7 @@ public:
 class RangeMinRenderer : public RangeOpCPU
 {
 public:
-    RangeMinRenderer(const RangeOpDataRcPtr & range);
+    RangeMinRenderer(ConstRangeOpDataRcPtr & range);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 };
@@ -114,7 +114,7 @@ public:
 class RangeMaxRenderer : public RangeOpCPU
 {
 public:
-    RangeMaxRenderer(const RangeOpDataRcPtr & range);
+    RangeMaxRenderer(ConstRangeOpDataRcPtr & range);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const;
 };

@@ -394,10 +394,11 @@ OIIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
         BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
 
     OIIO_REQUIRE_EQUAL(ops.size(), 1);
-    OIIO_CHECK_EQUAL(ops[0]->const_data()->getType(), OCIO::OpData::RangeType);
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OIIO_REQUIRE_EQUAL(op0->data()->getType(), OCIO::OpData::RangeType);
 
-    OCIO::RangeOpDataRcPtr rangeData
-        = DynamicPtrCast<OCIO::RangeOpData>(ops[0]->const_data());
+    OCIO::ConstRangeOpDataRcPtr rangeData
+        = DynamicPtrCast<const OCIO::RangeOpData>(op0->data());
 
     OIIO_CHECK_EQUAL(rangeData->getMinInValue(), range->getMinInValue());
     OIIO_CHECK_EQUAL(rangeData->getMaxInValue(), range->getMaxInValue());
@@ -412,10 +413,11 @@ OIIO_ADD_TEST(RangeTransform, no_clamp_converts_to_matrix)
         BuildRangeOps(ops, *config, *range, OCIO::TRANSFORM_DIR_FORWARD) );
 
     OIIO_REQUIRE_EQUAL(ops.size(), 2);
-    OIIO_REQUIRE_EQUAL(ops[1]->const_data()->getType(), OCIO::OpData::MatrixType);
+    OCIO::ConstOpRcPtr op1 = ops[1];
+    OIIO_REQUIRE_EQUAL(op1->data()->getType(), OCIO::OpData::MatrixType);
 
-    OCIO::MatrixOpDataRcPtr matrixData
-        = DynamicPtrCast<OCIO::MatrixOpData>(ops[1]->const_data());
+    OCIO::ConstMatrixOpDataRcPtr matrixData
+        = DynamicPtrCast<const OCIO::MatrixOpData>(op1->data());
 
     OIIO_CHECK_EQUAL(matrixData->m_offset4[0], rangeData->getOffset());
 

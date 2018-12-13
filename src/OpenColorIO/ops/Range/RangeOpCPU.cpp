@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 OCIO_NAMESPACE_ENTER
 {
 
-RangeOpCPU::RangeOpCPU(const RangeOpDataRcPtr & range)
+RangeOpCPU::RangeOpCPU(ConstRangeOpDataRcPtr & range)
     :   OpCPU()
     ,   m_scale(0.0f)
     ,   m_offset(0.0f)
@@ -53,7 +53,7 @@ RangeOpCPU::RangeOpCPU(const RangeOpDataRcPtr & range)
     m_alphaScale = (float)range->getAlphaScale();
 }
 
-RangeScaleMinMaxRenderer::RangeScaleMinMaxRenderer(const RangeOpDataRcPtr & range)
+RangeScaleMinMaxRenderer::RangeScaleMinMaxRenderer(ConstRangeOpDataRcPtr & range)
     :  RangeOpCPU(range)
 {
 }
@@ -77,7 +77,7 @@ void RangeScaleMinMaxRenderer::apply(float * rgbaBuffer, long numPixels) const
     }
 }
 
-RangeScaleMinRenderer::RangeScaleMinRenderer(const RangeOpDataRcPtr & range)
+RangeScaleMinRenderer::RangeScaleMinRenderer(ConstRangeOpDataRcPtr & range)
     :  RangeOpCPU(range)
 {
 }
@@ -97,7 +97,7 @@ void RangeScaleMinRenderer::apply(float * rgbaBuffer, long numPixels) const
     }
 }
 
-RangeScaleMaxRenderer::RangeScaleMaxRenderer(const RangeOpDataRcPtr & range)
+RangeScaleMaxRenderer::RangeScaleMaxRenderer(ConstRangeOpDataRcPtr & range)
     :  RangeOpCPU(range)
 {
 }
@@ -125,7 +125,7 @@ void RangeScaleMaxRenderer::apply(float * rgbaBuffer, long numPixels) const
 // TODO: Now that CLF allows non-clamping Ranges, could avoid turning
 // these ranges into matrices in the XML reader?
 //
-RangeScaleRenderer::RangeScaleRenderer(const RangeOpDataRcPtr & range)
+RangeScaleRenderer::RangeScaleRenderer(ConstRangeOpDataRcPtr & range)
     :  RangeOpCPU(range)
 {
 }
@@ -145,7 +145,7 @@ void RangeScaleRenderer::apply(float * rgbaBuffer, long numPixels) const
     }
 }
 
-RangeMinMaxRenderer::RangeMinMaxRenderer(const RangeOpDataRcPtr & range)
+RangeMinMaxRenderer::RangeMinMaxRenderer(ConstRangeOpDataRcPtr & range)
     :  RangeOpCPU(range)
 {
 }
@@ -164,7 +164,7 @@ void RangeMinMaxRenderer::apply(float * rgbaBuffer, long numPixels) const
     }
 }
 
-RangeMinRenderer::RangeMinRenderer(const RangeOpDataRcPtr & range)
+RangeMinRenderer::RangeMinRenderer(ConstRangeOpDataRcPtr & range)
     :  RangeOpCPU(range)
 {
 }
@@ -188,7 +188,7 @@ void RangeMinRenderer::apply(float * rgbaBuffer, long numPixels) const
     }
 }
 
-RangeMaxRenderer::RangeMaxRenderer(const RangeOpDataRcPtr & range)
+RangeMaxRenderer::RangeMaxRenderer(ConstRangeOpDataRcPtr & range)
     :  RangeOpCPU(range)
 {
 }
@@ -208,7 +208,7 @@ void RangeMaxRenderer::apply(float * rgbaBuffer, long numPixels) const
 }
 
 
-OpCPURcPtr RangeOpCPU::GetRenderer(const RangeOpDataRcPtr & range)
+OpCPURcPtr RangeOpCPU::GetRenderer(ConstRangeOpDataRcPtr & range)
 {
     OpCPURcPtr op(new NoOpCPU);
 
