@@ -69,8 +69,8 @@ OCIO_NAMESPACE_ENTER
             
             while(firstindex < static_cast<int>(opVec.size()-1))
             {
-                const OpRcPtr & first = opVec[firstindex];
-                const OpRcPtr & second = opVec[firstindex+1];
+                ConstOpRcPtr first = opVec[firstindex];
+                ConstOpRcPtr second = opVec[firstindex+1];
                 
                 // The common case of inverse ops is to have a deep nesting:
                 // ..., A, B, B', A', ...
@@ -119,8 +119,8 @@ OCIO_NAMESPACE_ENTER
             
             while(firstindex < static_cast<int>(opVec.size()-1))
             {
-                const OpRcPtr & first = opVec[firstindex];
-                const OpRcPtr & second = opVec[firstindex+1];
+                ConstOpRcPtr first = opVec[firstindex];
+                ConstOpRcPtr second = opVec[firstindex+1];
                 
                 if(first->canCombineWith(second))
                 {

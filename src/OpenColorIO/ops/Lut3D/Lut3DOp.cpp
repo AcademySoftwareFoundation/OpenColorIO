@@ -593,8 +593,8 @@ namespace
 
         bool isNoOp() const override;
         bool isIdentity() const override;
-        bool isSameType(const OpRcPtr & op) const override;
-        bool isInverse(const OpRcPtr & op) const override;
+        bool isSameType(ConstOpRcPtr & op) const override;
+        bool isInverse(ConstOpRcPtr & op) const override;
         bool hasChannelCrosstalk() const override;
         void finalize() override;
         void apply(float* rgbaBuffer, long numPixels) const override;
@@ -610,9 +610,14 @@ namespace
 #endif
 
     protected:
-        const Lut3DOpDataRcPtr lut3DData() const
+        ConstLut3DOpDataRcPtr lut3DData() const
+        {
+            return DynamicPtrCast<const Lut3DOpData>(data());
+        }
+
+        Lut3DOpDataRcPtr lut3DData()
         { 
-            return DynamicPtrCast<Lut3DOpData>(const_data());
+            return DynamicPtrCast<Lut3DOpData>(data());
         }
 
     private:
@@ -625,7 +630,7 @@ namespace
     };
 
     typedef OCIO_SHARED_PTR<Lut3DOp> Lut3DOpRcPtr;
-
+    typedef OCIO_SHARED_PTR<const Lut3DOp> ConstLut3DOpRcPtr;
 
     Lut3DOp::Lut3DOp(Lut3DOpDataRcPtr & lut3D)
         : m_cpu(new NoOpCPU)
@@ -664,18 +669,20 @@ namespace
         return lut3DData()->isIdentity();
     }
 
-    bool Lut3DOp::isSameType(const OpRcPtr & op) const
+    bool Lut3DOp::isSameType(ConstOpRcPtr & op) const
     {
-        const Lut3DOpRcPtr lutRcPtr = DynamicPtrCast<Lut3DOp>(op);
+        ConstLut3DOpRcPtr lutRcPtr = DynamicPtrCast<const Lut3DOp>(op);
         return (bool)lutRcPtr;
     }
 
-    bool Lut3DOp::isInverse(const OpRcPtr & op) const
+    bool Lut3DOp::isInverse(ConstOpRcPtr & op) const
     {
-        Lut3DOpRcPtr typedRcPtr = DynamicPtrCast<Lut3DOp>(op);
+        ConstLut3DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut3DOp>(op);
         if (typedRcPtr)
         {
-            return lut3DData()->isInverse(typedRcPtr->lut3DData());
+
+            ConstLut3DOpDataRcPtr lutData = typedRcPtr->lut3DData();
+            return lut3DData()->isInverse(lutData);
         }
 
         return false;
@@ -688,6 +695,8 @@ namespace
 
     void Lut3DOp::finalize()
     {
+        const Lut3DOp & constThis = *this;
+
         // TODO: Only the 32f processing is natively supported
         lut3DData()->setInputBitDepth(BIT_DEPTH_F32);
         lut3DData()->setOutputBitDepth(BIT_DEPTH_F32);
@@ -695,7 +704,8 @@ namespace
         lut3DData()->validate();
         lut3DData()->finalize();
 
-        m_cpu = GetLut3DRenderer(lut3DData());
+        ConstLut3DOpDataRcPtr lutData = constThis.lut3DData();
+        m_cpu = GetLut3DRenderer(lutData);
 
         // Rebuild the cache identifier
         std::ostringstream cacheIDStream;
@@ -715,7 +725,8 @@ namespace
     {
         if (lut3DData()->getDirection() == TRANSFORM_DIR_INVERSE)
         {
-            Lut3DOpDataRcPtr newLut = MakeFastLut3DFromInverse(lut3DData());
+            ConstLut3DOpDataRcPtr lutOpData = lut3DData();
+            Lut3DOpDataRcPtr newLut = MakeFastLut3DFromInverse(lutOpData);
 
             if (!newLut)
             {
@@ -1306,15 +1317,20 @@ OIIO_ADD_TEST(Lut3DOpStruct, InverseComparisonCheck)
     
     OIIO_REQUIRE_EQUAL(ops.size(), 6);
 
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[4]->clone()));
+    OCIO::ConstOpRcPtr op1 = ops[1];
+    OCIO::ConstOpRcPtr op2 = ops[2];
+    OCIO::ConstOpRcPtr op3 = ops[3];
+    OCIO::ConstOpRcPtr op4 = ops[4];
+    OCIO::ConstOpRcPtr op4Cloned = op4->clone();
 
-    OIIO_CHECK_ASSERT(ops[0]->isInverse(ops[1]));
-    OIIO_CHECK_ASSERT(!ops[0]->isInverse(ops[3]));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op1));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op3));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op4Cloned));
 
-    OIIO_CHECK_ASSERT(!ops[0]->isInverse(ops[4]));
-    OIIO_CHECK_ASSERT(ops[3]->isInverse(ops[4]));
+    OIIO_CHECK_ASSERT(ops[0]->isInverse(op1));
+    OIIO_CHECK_ASSERT(!ops[0]->isInverse(op3));
+    OIIO_CHECK_ASSERT(!ops[0]->isInverse(op4));
+    OIIO_CHECK_ASSERT(ops[3]->isInverse(op4));
 }
 
 /*

@@ -40,6 +40,7 @@ OCIO_NAMESPACE_ENTER
 {
     class MatrixOpData;
     typedef OCIO_SHARED_PTR<MatrixOpData> MatrixOpDataRcPtr;
+    typedef OCIO_SHARED_PTR<const MatrixOpData> ConstMatrixOpDataRcPtr;
 
     class MatrixOpData : public OpData
     {

@@ -67,8 +67,8 @@ OCIO_NAMESPACE_ENTER
             virtual std::string getCacheID() const;
             
             virtual bool isNoOp() const;
-            virtual bool isSameType(const OpRcPtr & op) const;
-            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool isSameType(ConstOpRcPtr & op) const;
+            virtual bool isInverse(ConstOpRcPtr & op) const;
             virtual bool hasChannelCrosstalk() const;
             
             virtual void finalize();
@@ -89,7 +89,6 @@ OCIO_NAMESPACE_ENTER
             std::string m_outputcamera;
             std::string m_display;
             int m_cubeinput;
-            std::string m_cacheID;
         };
         
         TruelightOp::TruelightOp(const char * configroot,
@@ -122,7 +121,7 @@ OCIO_NAMESPACE_ENTER
             }
             
             std::string _tmp = pystring::lower(cubeinput);
-                 if(_tmp == "log")    m_cubeinput = TL_INPUT_LOG;
+            if(_tmp == "log")    m_cubeinput = TL_INPUT_LOG;
             else if(_tmp == "linear") m_cubeinput = TL_INPUT_LIN;
             else if(_tmp == "video")  m_cubeinput = TL_INPUT_VID;
             else
@@ -173,10 +172,10 @@ OCIO_NAMESPACE_ENTER
         OpRcPtr TruelightOp::clone() const
         {
             std::string _cubeinput = "unknown";
-                 if(m_cubeinput == TL_INPUT_LOG) _cubeinput = "log";
+            if(m_cubeinput == TL_INPUT_LOG) _cubeinput = "log";
             else if(m_cubeinput == TL_INPUT_LIN) _cubeinput = "linear";
             else if(m_cubeinput == TL_INPUT_VID) _cubeinput = "video";
-            OpRcPtr op = OpRcPtr(new TruelightOp(m_configroot.c_str(),
+            return std::make_shared<TruelightOp>(m_configroot.c_str(),
                                                  m_profile.c_str(),
                                                  m_camera.c_str(),
                                                  m_inputdisplay.c_str(),
@@ -186,8 +185,7 @@ OCIO_NAMESPACE_ENTER
                                                  m_outputcamera.c_str(),
                                                  m_display.c_str(),
                                                  _cubeinput.c_str(),
-                                                 m_direction));
-            return op;
+                                                 m_direction);
         }
         
         TruelightOp::~TruelightOp()
@@ -211,13 +209,13 @@ OCIO_NAMESPACE_ENTER
         {
             return false;
         }
-        bool TruelightOp::isSameType(const OpRcPtr & /*op*/) const
+        bool TruelightOp::isSameType(ConstOpRcPtr & /*op*/) const
         {
             // TODO: TruelightOp::isSameType
             return false;
         }
         
-        bool TruelightOp::isInverse(const OpRcPtr & /*op*/) const
+        bool TruelightOp::isInverse(ConstOpRcPtr & /*op*/) const
         {
             // TODO: TruelightOp::isInverse
             return false;
@@ -369,17 +367,17 @@ OCIO_NAMESPACE_ENTER
                             const TruelightTransform & data,
                             TransformDirection direction)
     {
-        ops.push_back(OpRcPtr(new TruelightOp(data.getConfigRoot(),
-                                              data.getProfile(),
-                                              data.getCamera(),
-                                              data.getInputDisplay(),
-                                              data.getRecorder(),
-                                              data.getPrint(),
-                                              data.getLamp(),
-                                              data.getOutputCamera(),
-                                              data.getDisplay(),
-                                              data.getCubeInput(),
-                                              direction)));
+        ops.push_back(std::make_shared<TruelightOp>(data.getConfigRoot(),
+                                                    data.getProfile(),
+                                                    data.getCamera(),
+                                                    data.getInputDisplay(),
+                                                    data.getRecorder(),
+                                                    data.getPrint(),
+                                                    data.getLamp(),
+                                                    data.getOutputCamera(),
+                                                    data.getDisplay(),
+                                                    data.getCubeInput(),
+                                                    direction));
     }
 }
 OCIO_NAMESPACE_EXIT

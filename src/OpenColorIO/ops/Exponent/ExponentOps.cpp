@@ -100,7 +100,7 @@ OCIO_NAMESPACE_ENTER
     namespace
     {
         void ApplyClampExponent(float* rgbaBuffer, long numPixels,
-                                const ExponentOpDataRcPtr & exp)
+                                ConstExponentOpDataRcPtr & exp)
         {
             for(long pixelIndex=0; pixelIndex<numPixels; ++pixelIndex)
             {
@@ -127,11 +127,11 @@ OCIO_NAMESPACE_ENTER
             
             virtual std::string getInfo() const;
             
-            virtual bool isSameType(const OpRcPtr & op) const;
-            virtual bool isInverse(const OpRcPtr & op) const;
+            virtual bool isSameType(ConstOpRcPtr & op) const;
+            virtual bool isInverse(ConstOpRcPtr & op) const;
             
-            virtual bool canCombineWith(const OpRcPtr & op) const;
-            virtual void combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const;
+            virtual bool canCombineWith(ConstOpRcPtr & op) const;
+            virtual void combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const;
             
             virtual void finalize();
             virtual void apply(float* rgbaBuffer, long numPixels) const;
@@ -139,11 +139,13 @@ OCIO_NAMESPACE_ENTER
             virtual void extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const;
 
         protected:
-            const ExponentOpDataRcPtr expData() const { return DynamicPtrCast<ExponentOpData>(const_data()); }
+            ConstExponentOpDataRcPtr expData() const { return DynamicPtrCast<const ExponentOpData>(data()); }
+            ExponentOpDataRcPtr expData() { return DynamicPtrCast<ExponentOpData>(data()); }
+
         };
         
         typedef OCIO_SHARED_PTR<ExponentOp> ExponentOpRcPtr;
-        
+        typedef OCIO_SHARED_PTR<const ExponentOp> ConstExponentOpRcPtr;
         
         ExponentOp::ExponentOp(const double * exp4,
                                TransformDirection direction):
@@ -180,7 +182,7 @@ OCIO_NAMESPACE_ENTER
         
         OpRcPtr ExponentOp::clone() const
         {
-            return OpRcPtr(new ExponentOp(expData()->m_exp4, TRANSFORM_DIR_FORWARD));
+            return std::make_shared<ExponentOp>(expData()->m_exp4, TRANSFORM_DIR_FORWARD);
         }
         
         ExponentOp::~ExponentOp()
@@ -191,16 +193,16 @@ OCIO_NAMESPACE_ENTER
             return "<ExponentOp>";
         }
         
-        bool ExponentOp::isSameType(const OpRcPtr & op) const
+        bool ExponentOp::isSameType(ConstOpRcPtr & op) const
         {
-            ExponentOpRcPtr typedRcPtr = DynamicPtrCast<ExponentOp>(op);
+            ConstExponentOpRcPtr typedRcPtr = DynamicPtrCast<const ExponentOp>(op);
             if(!typedRcPtr) return false;
             return true;
         }
         
-        bool ExponentOp::isInverse(const OpRcPtr & op) const
+        bool ExponentOp::isInverse(ConstOpRcPtr & op) const
         {
-            ExponentOpRcPtr typedRcPtr = DynamicPtrCast<ExponentOp>(op);
+            ConstExponentOpRcPtr typedRcPtr = DynamicPtrCast<const ExponentOp>(op);
             if(!typedRcPtr) return false;
             
             double combined[4] 
@@ -212,14 +214,14 @@ OCIO_NAMESPACE_ENTER
             return IsVecEqualToOneFlt(combined, 4);
         }
 
-        bool ExponentOp::canCombineWith(const OpRcPtr & op) const
+        bool ExponentOp::canCombineWith(ConstOpRcPtr & op) const
         {
             return isSameType(op);
         }
 
-        void ExponentOp::combineWith(OpRcPtrVec & ops, const OpRcPtr & secondOp) const
+        void ExponentOp::combineWith(OpRcPtrVec & ops, ConstOpRcPtr & secondOp) const
         {
-            ExponentOpRcPtr typedRcPtr = DynamicPtrCast<ExponentOp>(secondOp);
+            ConstExponentOpRcPtr typedRcPtr = DynamicPtrCast<const ExponentOp>(secondOp);
             if(!typedRcPtr)
             {
                 std::ostringstream os;
@@ -257,7 +259,8 @@ OCIO_NAMESPACE_ENTER
         void ExponentOp::apply(float* rgbaBuffer, long numPixels) const
         {
             if(!rgbaBuffer) return;
-            ApplyClampExponent(rgbaBuffer, numPixels, expData());
+            ConstExponentOpDataRcPtr expOpData = expData();
+            ApplyClampExponent(rgbaBuffer, numPixels, expOpData);
         }
         
         void ExponentOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const 
@@ -400,21 +403,26 @@ OIIO_ADD_TEST(ExponentOps, Inverse)
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp2, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp2, TRANSFORM_DIR_INVERSE));
     
-    OIIO_CHECK_EQUAL(ops.size(), 4);
+    OIIO_REQUIRE_EQUAL(ops.size(), 4);
+    ConstOpRcPtr op0 = ops[0];
+    ConstOpRcPtr op1 = ops[1];
+    ConstOpRcPtr op2 = ops[2];
+    ConstOpRcPtr op3 = ops[3];
+
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op1));
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op2));
+    ConstOpRcPtr op3Cloned = ops[3]->clone();
+    OIIO_CHECK_ASSERT(ops[0]->isSameType(op3Cloned));
     
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[1]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[2]));
-    OIIO_CHECK_ASSERT(ops[0]->isSameType(ops[3]->clone()));
-    
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[0]), false);
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[1]), true);
-    OIIO_CHECK_EQUAL(ops[1]->isInverse(ops[0]), true);
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[2]), false);
-    OIIO_CHECK_EQUAL(ops[0]->isInverse(ops[3]), false);
-    OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[0]), false);
-    OIIO_CHECK_EQUAL(ops[2]->isInverse(ops[3]), true);
-    OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[2]), true);
-    OIIO_CHECK_EQUAL(ops[3]->isInverse(ops[3]), false);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(op0), false);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(op1), true);
+    OIIO_CHECK_EQUAL(ops[1]->isInverse(op0), true);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(op2), false);
+    OIIO_CHECK_EQUAL(ops[0]->isInverse(op3), false);
+    OIIO_CHECK_EQUAL(ops[3]->isInverse(op0), false);
+    OIIO_CHECK_EQUAL(ops[2]->isInverse(op3), true);
+    OIIO_CHECK_EQUAL(ops[3]->isInverse(op2), true);
+    OIIO_CHECK_EQUAL(ops[3]->isInverse(op3), false);
 }
 
 OIIO_ADD_TEST(ExponentOps, Combining)
@@ -427,8 +435,9 @@ OIIO_ADD_TEST(ExponentOps, Combining)
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp2, TRANSFORM_DIR_FORWARD));
-    OIIO_CHECK_EQUAL(ops.size(), 2);
-    
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    ConstOpRcPtr op1 = ops[1];
+
     const float source[] = {  0.9f, 0.4f, 0.1f, 0.5f, };
     const float result[] = { 0.776572466f, 0.110903174f,
         0.00398107106f, 0.5f };
@@ -444,7 +453,7 @@ OIIO_ADD_TEST(ExponentOps, Combining)
     }
     
     OpRcPtrVec combined;
-    OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, ops[1]));
+    OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, op1));
     OIIO_CHECK_EQUAL(combined.size(), 1);
     
     float tmp2[4];
@@ -464,13 +473,14 @@ OIIO_ADD_TEST(ExponentOps, Combining)
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_INVERSE));
-    OIIO_CHECK_EQUAL(ops.size(), 2);
-    
-    const bool isInverse = ops[0]->isInverse(ops[1]);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    ConstOpRcPtr op1 = ops[1];
+
+    const bool isInverse = ops[0]->isInverse(op1);
     OIIO_CHECK_EQUAL(isInverse, true);
 
     OpRcPtrVec combined;
-    OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, ops[1]));
+    OIIO_CHECK_NO_THROW(ops[0]->combineWith(combined, op1));
     OIIO_CHECK_EQUAL(combined.empty(), true);
 
     }
@@ -536,10 +546,12 @@ OIIO_ADD_TEST(ExponentOps, ThrowCombine)
     OpRcPtrVec ops;
     OIIO_CHECK_NO_THROW(CreateExponentOp(ops, exp1, TRANSFORM_DIR_FORWARD));
     OIIO_CHECK_NO_THROW(CreateFileNoOp(ops, "NoOp"));
-    
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    ConstOpRcPtr op1 = ops[1];
+
     OpRcPtrVec combinedOps;
     OIIO_CHECK_THROW_WHAT(
-        ops[0]->combineWith(combinedOps, ops[1]),
+        ops[0]->combineWith(combinedOps, op1),
         OpenColorIO::Exception, "can only be combined with other ExponentOps");
 }
 
