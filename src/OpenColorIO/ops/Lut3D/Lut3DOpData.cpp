@@ -71,13 +71,8 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
 {
     if (lut->getDirection() != TRANSFORM_DIR_INVERSE)
     {
-        throw Exception("MakeFastLut3DFromInverse expect an inverse LUT");
+        throw Exception("MakeFastLut3DFromInverse expectS an inverse LUT");
     }
-
-    // The composition needs to use the EXACT renderer.
-    // (Also avoids infinite loop.)
-    // So temporarily set the style to EXACT.
-    Lut3DStyleGuard guard(lut);
 
     // Make a domain for the composed Lut3D.
     // TODO: Using a large number like 48 here is better for accuracy, 
@@ -90,68 +85,24 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
     newDomain->setInputBitDepth(lut->getInputBitDepth());
     newDomain->setOutputBitDepth(lut->getInputBitDepth());
 
-    ConstLut3DOpDataRcPtr constNewDomain = newDomain;
-    // Compose the LUT newDomain with our inverse LUT (using INV_EXACT style).
-    Lut3DOpDataRcPtr newLut(Lut3DOpData::Compose(constNewDomain, lut));
+    // The composition needs to use the INV_EXACT renderer.
+    // (Also avoids infinite loop.)
+    // So temporarily set the style to INV_EXACT.
+    Lut3DStyleGuard guard(lut);
 
-    // The EXACT inversion style computes an inverse to the tetrahedral
+    // Compose the LUT newDomain with our inverse LUT (using INV_EXACT style).
+    Lut3DOpData::Compose(newDomain, lut);
+
+    // The INV_EXACT inversion style computes an inverse to the tetrahedral
     // style of forward evalutation.
     // TODO: Although this seems like the "correct" thing to do, it does
     // not seem to help accuracy (and is slower).  To investigate ...
     //newLut->setInterpolation(INTERP_TETRAHEDRAL);
 
-    return newLut;
+    return newDomain;
 }
 
 const unsigned long Lut3DOpData::maxSupportedLength = 129;
-
-namespace
-{
-void EvalTransform(const float * in,
-                   float * out,
-                   long numPixels,
-                   OpRcPtrVec & ops)
-{
-    std::vector<float> tmp(numPixels * 4);
-
-    // Render the LUT entries (domain) through the ops.
-
-    const float * values = in;
-    for (long idx = 0; idx<numPixels; ++idx)
-    {
-        tmp[4 * idx + 0] = values[0];
-        tmp[4 * idx + 1] = values[1];
-        tmp[4 * idx + 2] = values[2];
-        tmp[4 * idx + 3] = 1.0f;
-
-        values += 3;
-    }
-
-    // NB: We assume finalize will set the bit-depth at each op interface
-    // to 32f so there is never any quantization to integer.
-    // Furthermore, to avoid improper recursion we must never call
-    // the renderer with an integer input depth.
-    // TODO: Currently the OCIO finalize is hard-coded to 32f.
-    //       When that changes we need to update this to request 32f input
-    //       and output bit depths.
-    FinalizeOpVec(ops);
-
-    for (OpRcPtrVec::size_type i = 0, size = ops.size(); i<size; ++i)
-    {
-        ops[i]->apply(&tmp[0], numPixels);
-    }
-
-    float * result = out;
-    for (long idx = 0; idx<numPixels; ++idx)
-    {
-        result[0] = tmp[4 * idx + 0];
-        result[1] = tmp[4 * idx + 1];
-        result[2] = tmp[4 * idx + 2];
-
-        result += 3;
-    }
-}
-}
 
 // Functional composition is a concept from mathematics where two functions
 // are combined into a single function.  This idea may be applied to ops
@@ -163,8 +114,8 @@ void EvalTransform(const float * in,
 // needs to render values through the ops.  In some cases the domain of
 // the first op is sufficient, in other cases we need to create a new more
 // finely sampled domain to try and make the result less lossy.
-Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & A,
-                                      ConstLut3DOpDataRcPtr & B)
+void Lut3DOpData::Compose(Lut3DOpDataRcPtr & A,
+                          ConstLut3DOpDataRcPtr & B)
 {
     // TODO: Composition of LUTs is a potentially lossy operation.
     // We try to be safe by making the result at least as big as either A or B
@@ -211,8 +162,7 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & A,
                                                min_sz);
 
         // Interpolate through both LUTs in this case (resample).
-        Lut3DOpDataRcPtr clonedA = A->clone();
-        CreateLut3DOp(ops, clonedA, TRANSFORM_DIR_FORWARD);
+        CreateLut3DOp(ops, A, TRANSFORM_DIR_FORWARD);
     }
 
     // TODO: Would like to not require a clone simply to prevent the delete
@@ -228,19 +178,19 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & A,
     OpData::Descriptions newDesc = A->getDescriptions();
     newDesc += B->getDescriptions();
     // TODO: May want to revisit metadata propagation.
-    Lut3DOpDataRcPtr result = std::make_shared<Lut3DOpData>(A->getInputBitDepth(),
-                                                            B->getOutputBitDepth(),
-                                                            A->getId() + B->getId(),
-                                                            newDesc,
-                                                            A->getInterpolation(),
-                                                            2);  // we replace it anyway
+    A = std::make_shared<Lut3DOpData>(A->getInputBitDepth(),
+                                      B->getOutputBitDepth(),
+                                      A->getId() + B->getId(),
+                                      newDesc,
+                                      A->getInterpolation(),
+                                      2);  // we replace it anyway
 
     const Array::Values& inValues = domain->getArray().getValues();
     const long gridSize = domain->getArray().getLength();
     const long numPixels = gridSize * gridSize * gridSize;
 
-    result->getArray().resize(gridSize, 3);
-    Array::Values& outValues = result->getArray().getValues();
+    A->getArray().resize(gridSize, 3);
+    Array::Values& outValues = A->getArray().getValues();
 
     EvalTransform((const float*)(&inValues[0]),
                   (float*)(&outValues[0]),
@@ -248,8 +198,6 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & A,
                   ops);
 
     // TODO: Code to handle dynamic properties should go here.
-
-    return result;
 }
 
 Lut3DOpData::Lut3DArray::Lut3DArray(long length,
@@ -644,6 +592,28 @@ Lut3DOpDataRcPtr Lut3DOpData::inverse() const
     return invLut;
 }
 
+namespace
+{
+const char* GetInvStyleName(Lut3DOpData::InvStyle invStyle)
+{
+    switch (invStyle)
+    {
+    case Lut3DOpData::INV_EXACT:
+    {
+        return "exact";
+        break;
+    }
+    case Lut3DOpData::INV_FAST:
+    {
+        return "fast";
+        break;
+    }
+    }
+
+    throw Exception("3D LUT has an invalid inverse style.");
+}
+}
+
 void Lut3DOpData::finalize()
 {
     AutoMutex lock(m_mutex);
@@ -662,7 +632,8 @@ void Lut3DOpData::finalize()
     cacheIDStream << InterpolationToString(m_interpolation) << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
     cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
-    cacheIDStream << BitDepthToString(getOutputBitDepth());
+    cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
+    cacheIDStream << GetInvStyleName(m_invStyle);
 
     m_cacheID = cacheIDStream.str();
 }
@@ -1017,8 +988,8 @@ OIIO_ADD_TEST(OpDataLut3D, ComposeTest)
     OIIO_REQUIRE_ASSERT(lutData0);
     OIIO_REQUIRE_ASSERT(lutData1);
 
-    OCIO::Lut3DOpDataRcPtr composed =
-        OCIO::Lut3DOpData::Compose(lutData0, lutData1);
+    OCIO::Lut3DOpDataRcPtr composed = lutData0->clone();
+    OCIO::Lut3DOpData::Compose(composed, lutData1);
 
     OIIO_CHECK_EQUAL(composed->getArray().getLength(), (unsigned long)32);
     OIIO_CHECK_EQUAL(composed->getArray().getNumColorComponents(),

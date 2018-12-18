@@ -28,11 +28,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdio>
 #include <cstring>
-#include <expat/expat.h>
 #include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "expat/expat.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ParseUtils.h"
@@ -507,7 +507,7 @@ OCIO_NAMESPACE_ENTER
             };
             ~LocalCachedFile() {};
 
-            // TODO: switch opdata
+            // TODO: Switch to the OpData class.
             Lut3DRcPtr lut3D;
         };
 

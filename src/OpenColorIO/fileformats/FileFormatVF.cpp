@@ -54,7 +54,7 @@ OCIO_NAMESPACE_ENTER
             };
             ~LocalCachedFile() {};
             
-            // TODO: switch opdata
+            // TODO: Switch to the OpData classes.
             Lut3DRcPtr lut3D;
             float m44[16];
             bool useMatrix;

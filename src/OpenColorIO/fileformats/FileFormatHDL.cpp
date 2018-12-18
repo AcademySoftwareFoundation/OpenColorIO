@@ -252,7 +252,7 @@ OCIO_NAMESPACE_ENTER
                 hdltype = "unknown";
                 hdlblack = 0.0;
                 hdlwhite = 1.0;
-                lut1D = Lut1DOpData::Create();
+                lut1D = Lut1D::Create();
                 lut3D = Lut3D::Create();
             };
             ~CachedFileHDL() {};
@@ -263,8 +263,8 @@ OCIO_NAMESPACE_ENTER
             float to_max; // TODO: maybe add this to Lut1DOp?
             float hdlblack;
             float hdlwhite;
-            Lut1DOpDataRcPtr lut1D;
-            // TODO: opdata
+            // TODO: Switch to the OpData classes.
+            Lut1DRcPtr lut1D;
             Lut3DRcPtr lut3D;
         };
         typedef OCIO_SHARED_PTR<CachedFileHDL> CachedFileHDLRcPtr;
@@ -314,8 +314,8 @@ OCIO_NAMESPACE_ENTER
 
             //
             CachedFileHDLRcPtr cachedFile = CachedFileHDLRcPtr (new CachedFileHDL ());
-            Lut1DOpDataRcPtr lut1d_ptr = Lut1DOpData::Create();
-            // TODO: opdata
+            // TODO: Switch to the OpData classes.
+            Lut1DRcPtr lut1d_ptr = Lut1D::Create();
             Lut3DRcPtr lut3d_ptr = Lut3D::Create();
 
             // Parse headers into key-value pairs
@@ -508,7 +508,7 @@ OCIO_NAMESPACE_ENTER
                 lut1d_ptr->luts[1] = lut_iter->second;
                 lut1d_ptr->luts[2] = lut_iter->second;
                 lut1d_ptr->maxerror = 0.0f;
-                lut1d_ptr->errortype = Lut1DOpData::ERROR_RELATIVE;
+                lut1d_ptr->errortype = Lut1D::ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
 
@@ -571,7 +571,7 @@ OCIO_NAMESPACE_ENTER
                 lut1d_ptr->luts[1] = lut_iter->second;
                 lut1d_ptr->luts[2] = lut_iter->second;
                 lut1d_ptr->maxerror = 0.0f;
-                lut1d_ptr->errortype = Lut1DOpData::ERROR_RELATIVE;
+                lut1d_ptr->errortype = Lut1D::ERROR_RELATIVE;
                 cachedFile->lut1D = lut1d_ptr;
             }
 
