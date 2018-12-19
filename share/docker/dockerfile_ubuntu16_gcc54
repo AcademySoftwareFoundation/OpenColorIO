@@ -25,6 +25,18 @@ RUN mkdir -p /home/devel && \
     mkdir -p /home/devel/git
 
 
+# Install cmake
+RUN apt remove -y cmake
+RUN cd /home/devel/download && \
+    wget https://cmake.org/files/v3.12/cmake-3.12.3.tar.gz && \
+    tar -xzvf cmake-3.12.3.tar.gz
+RUN cd /home/devel/download/cmake-3.12.3 && \
+    ./bootstrap && \
+    make -j4 && \
+    make install
+RUN hash -r
+
+
 # Install Truelight library
 RUN cd /home/devel/download && \
     wget -q -O truelight-4.0.7863_64.run --post-data 'access=public&download=truelight/4_0/truelight-4.0.7863_64.run&last_page=/support/customer-login/truelight_sp/truelight_40.php' https://www.filmlight.ltd.uk/resources/download.php && \
@@ -37,7 +49,7 @@ RUN cd /home/devel/download && \
     tar -xzf boost_1_61_0.tar.gz && \
     cd boost_1_61_0 && \
     sh bootstrap.sh && \
-    ./b2 install -j2 variant=release --with-system --with-regex --with-filesystem --with-thread --with-python --prefix=/usr/local
+    ./b2 install -j4 variant=release --with-system --with-regex --with-filesystem --with-thread --with-python --prefix=/usr/local
 
 
 # Install OpenERX & Ilmbase
@@ -52,7 +64,7 @@ RUN cd /home/devel/git && \
     mkdir /home/devel/git/openexr/OpenEXR/build && \
     cd /home/devel/git/openexr/OpenEXR/build && \
     cmake -DILMBASE_PACKAGE_PREFIX=/usr/local .. && \
-    make install -j2
+    make install -j4
 
 
 # Install OpenImageIO 
@@ -61,7 +73,10 @@ RUN cd /home/devel/git && \
     cd /home/devel/git/oiio && \
     mkdir build && \
     cd /home/devel/git/oiio/build && \
-    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local && \
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
+          -DOIIO_BUILD_TOOLS=OFF \
+          -DOIIO_BUILD_TESTS=OFF \
+          .. && \
     make install -j2
 
 
@@ -75,11 +90,10 @@ RUN cd /home/devel/git && \
           -DCMAKE_INSTALL_PREFIX=/usr/local \
           -DOCIO_BUILD_TESTS=ON \
           -DOCIO_BUILD_GPU_TESTS=OFF \
-          -DOCIO_BUILD_SHARED=ON \
-          -DOCIO_BUILD_STATIC=ON \
+          -DBUILD_SHARED_LIBS=ON \
           -DOCIO_BUILD_DOCS=ON \
           -DOCIO_BUILD_APPS=ON \
-          -DOCIO_BUILD_PYGLUE=ON \
+          -DOCIO_BUILD_PYTHON=ON \
           -DCMAKE_PREFIX_PATH=/usr/local \
           -DTRUELIGHT_INSTALL_PATH=/usr/fl/truelight \
           ..
