@@ -40,7 +40,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace
 {
 
+// 129 allows for a MESH dimension of 7 in the 3dl file format.
 const unsigned max3DLUTDimension = 129;
+
 
 static void  CreateArray(float * buf, 
                          unsigned w, unsigned h, unsigned d, 
