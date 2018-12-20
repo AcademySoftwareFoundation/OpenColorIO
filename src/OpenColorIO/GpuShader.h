@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,181 +35,180 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 OCIO_NAMESPACE_ENTER
 {
-    ///////////////////////////////////////////////////////////////////////////
 
-    // LegacyGpuShaderDesc
-    // *************
-    // 
-    // The class holds all the information to build a 'baked' shader program
-    // (i.e. which contains at most one 3D Texture).
-    // 
+///////////////////////////////////////////////////////////////////////////
 
-    class LegacyGpuShaderDesc : public GpuShaderDesc
-    {
-    public:
-        static GpuShaderDescRcPtr Create(unsigned edgelen);
+// LegacyGpuShaderDesc
+// *************
+// 
+// The class holds all the information to build a 'baked' shader program
+// (i.e. which contains at most one 3D Texture).
+// 
 
-        unsigned getEdgelen() const;
+class LegacyGpuShaderDesc : public GpuShaderDesc
+{
+public:
+    static GpuShaderDescRcPtr Create(unsigned edgelen);
 
-        // Accessors to the 3D textures built from 3D LUT
-        //
-        unsigned getNum3DTextures() const;
-        void add3DTexture(const char * name, const char * id, unsigned edgelen, 
-                          Interpolation interpolation, float * values);
-        void get3DTexture(unsigned index, const char *& name, 
-                          const char *& id, unsigned & edgelen, 
-                          Interpolation & interpolation) const;
-        void get3DTextureValues(unsigned index, const float *& value) const;
+    unsigned getEdgelen() const;
 
-        // Get the complete shader text
-        const char * getShaderText() const;
+    // Accessors to the 3D textures built from 3D LUT
+    //
+    unsigned getNum3DTextures() const override;
+    void add3DTexture(const char * name, const char * id, unsigned edgelen, 
+                      Interpolation interpolation, float * values);
+    void get3DTexture(unsigned index, const char *& name, 
+                      const char *& id, unsigned & edgelen, 
+                      Interpolation & interpolation) const override;
+    void get3DTextureValues(unsigned index, const float *& value) const override;
 
-        // Get the corresponding cache identifier
-        virtual const char * getCacheID() const;
+    // Get the complete shader text
+    const char * getShaderText() const;
 
-        virtual void finalize();
+    // Get the corresponding cache identifier
+    virtual const char * getCacheID() const override;
 
-        // Methods to specialize each part of a complete shader program
-        //
-        void addToDeclareShaderCode(const char * shaderCode);
-        void addToHelperShaderCode(const char * shaderCode);
-        void addToFunctionHeaderShaderCode(const char * shaderCode);
-        void addToFunctionShaderCode(const char * shaderCode);
-        void addToFunctionFooterShaderCode(const char * shaderCode);
+    virtual void finalize() override;
 
-        // Method called to build the complete shader program
-        void createShaderText(const char * shaderDeclarations,
-                              const char * shaderHelperMethods,
-                              const char * shaderFunctionHeader,
-                              const char * shaderFunctionBody,
-                              const char * shaderFunctionFooter);
+    // Methods to specialize each part of a complete shader program
+    //
+    void addToDeclareShaderCode(const char * shaderCode) override;
+    void addToHelperShaderCode(const char * shaderCode) override;
+    void addToFunctionHeaderShaderCode(const char * shaderCode) override;
+    void addToFunctionShaderCode(const char * shaderCode) override;
+    void addToFunctionFooterShaderCode(const char * shaderCode) override;
 
-    protected:
+    // Method called to build the complete shader program
+    void createShaderText(const char * shaderDeclarations,
+                          const char * shaderHelperMethods,
+                          const char * shaderFunctionHeader,
+                          const char * shaderFunctionBody,
+                          const char * shaderFunctionFooter) override;
 
-        unsigned getTextureMaxWidth() const;
-        void setTextureMaxWidth(unsigned maxWidth);
+protected:
 
-        // Uniforms are not used by the legacy shader builder
-        //
-        unsigned getNumUniforms() const;
-        void getUniform(unsigned index, const char *& name, UniformType & type, void *& value) const;
-        void addUniform(unsigned index, const char * name, UniformType type, void * value);
+    unsigned getTextureMaxWidth() const;
+    void setTextureMaxWidth(unsigned maxWidth);
 
-        // 1D & 2D textures are not used by the legacy shader builder
-        //
-        unsigned getNumTextures() const;
-        void addTexture(const char * name, const char * id, unsigned width, unsigned height,
-                        TextureType channel, Interpolation interpolation, float * values);
-        // Get the texture 1D or 2D information
-        void getTexture(unsigned index, const char *& name, const char *& id, 
-                        unsigned & width, unsigned & height,
-                        TextureType & channel, Interpolation & interpolation) const;
-        // Get the texture 1D or 2D values only
-        void getTextureValues(unsigned index, const float *& values) const;
+    // Uniforms are not used by the legacy shader builder
+    //
+    unsigned getNumUniforms() const override;
+    void getUniform(unsigned index, const char *& name, UniformType & type, void *& value) const override;
+    void addUniform(unsigned index, const char * name, UniformType type, void * value) override;
 
-    private:
-        LegacyGpuShaderDesc();
-        LegacyGpuShaderDesc(unsigned edgelen);
-        virtual ~LegacyGpuShaderDesc();
-        
-        LegacyGpuShaderDesc(const LegacyGpuShaderDesc &);
-        LegacyGpuShaderDesc& operator= (const LegacyGpuShaderDesc &);
-        
-        static void Deleter(LegacyGpuShaderDesc* c);
-        
-        class Impl;
-        friend class Impl;
-        Impl * m_impl;
-        Impl * getImpl() { return m_impl; }
-        const Impl * getImpl() const { return m_impl; }
-    };
+    // 1D & 2D textures are not used by the legacy shader builder
+    //
+    unsigned getNumTextures() const override;
+    void addTexture(const char * name, const char * id, unsigned width, unsigned height,
+                    TextureType channel, Interpolation interpolation, float * values) override;
+    // Get the texture 1D or 2D information
+    void getTexture(unsigned index, const char *& name, const char *& id, 
+                    unsigned & width, unsigned & height,
+                    TextureType & channel, Interpolation & interpolation) const override;
+    // Get the texture 1D or 2D values only
+    void getTextureValues(unsigned index, const float *& values) const override;
+
+private:
+    LegacyGpuShaderDesc();
+    explicit LegacyGpuShaderDesc(unsigned edgelen);
+    virtual ~LegacyGpuShaderDesc();
+    
+    LegacyGpuShaderDesc(const LegacyGpuShaderDesc &) = delete;
+    LegacyGpuShaderDesc& operator= (const LegacyGpuShaderDesc &) = delete;
+    
+    static void Deleter(LegacyGpuShaderDesc* c);
+    
+    class Impl;
+    friend class Impl;
+    Impl * m_impl;
+    Impl * getImpl() { return m_impl; }
+    const Impl * getImpl() const { return m_impl; }
+};
 
 
-    ///////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
-    // GenericGpuShaderDesc
-    // *************
-    // 
-    // The class holds all the information to build a shader program without baking
-    // the color transform. It mainly means that the processor could contain 
-    // several 1D or 3D LUTs.
-    // 
+// GenericGpuShaderDesc
+// *************
+// 
+// The class holds all the information to build a shader program without baking
+// the color transform. It mainly means that the processor could contain 
+// several 1D or 3D LUTs.
+// 
 
-    class GenericGpuShaderDesc : public GpuShaderDesc
-    {
-    public:
-        static GpuShaderDescRcPtr Create();
+class GenericGpuShaderDesc : public GpuShaderDesc
+{
+public:
+    static GpuShaderDescRcPtr Create();
 
-        unsigned getTextureMaxWidth() const;
-        void setTextureMaxWidth(unsigned maxWidth);
+    unsigned getTextureMaxWidth() const;
+    void setTextureMaxWidth(unsigned maxWidth);
 
-        // Accessors to the uniforms
-        //
-        unsigned getNumUniforms() const;
-        void getUniform(
-            unsigned index, const char *& name, UniformType & type, void *& value) const;
-        void addUniform(
-            unsigned index, const char * name, UniformType type, void * value);
+    // Accessors to the uniforms
+    //
+    unsigned getNumUniforms() const override;
+    void getUniform(unsigned index, const char *& name, UniformType & type, void *& value) const override;
+    void addUniform(unsigned index, const char * name, UniformType type, void * value) override;
 
-        // Accessors to the 1D & 2D textures built from 1D LUT
-        //
-        unsigned getNumTextures() const;
-        void addTexture(const char * name, const char * id, unsigned width, unsigned height,
-                        TextureType channel, Interpolation interpolation, float * values);
-        void getTexture(unsigned index, const char *& name, const char *& id, 
-                        unsigned & width, unsigned & height,
-                        TextureType & channel, Interpolation & interpolation) const;
-        void getTextureValues(unsigned index, const float *& values) const;
+    // Accessors to the 1D & 2D textures built from 1D LUT
+    //
+    unsigned getNumTextures() const;
+    void addTexture(const char * name, const char * id, unsigned width, unsigned height,
+                    TextureType channel, Interpolation interpolation, float * values) override;
+    void getTexture(unsigned index, const char *& name, const char *& id, 
+                    unsigned & width, unsigned & height,
+                    TextureType & channel, Interpolation & interpolation) const override;
+    void getTextureValues(unsigned index, const float *& values) const override;
 
-        // Accessors to the 3D textures built from 3D LUT
-        //
-        unsigned getNum3DTextures() const;
-        void add3DTexture(const char * name, const char * id, unsigned edgelen, 
-                          Interpolation interpolation, float * values);
-        void get3DTexture(unsigned index, const char *& name, 
-                          const char *& id, unsigned & edgelen, 
-                          Interpolation & interpolation) const;
-        void get3DTextureValues(unsigned index, const float *& value) const;
+    // Accessors to the 3D textures built from 3D LUT
+    //
+    unsigned getNum3DTextures() const  override;
+    void add3DTexture(const char * name, const char * id, unsigned edgelen, 
+                      Interpolation interpolation, float * values) override;
+    void get3DTexture(unsigned index, const char *& name, 
+                      const char *& id, unsigned & edgelen, 
+                      Interpolation & interpolation) const override;
+    void get3DTextureValues(unsigned index, const float *& value) const override;
 
-        // Get the complete shader text
-        const char * getShaderText() const;
+    // Get the complete shader text
+    const char * getShaderText() const;
 
-        // Get the corresponding cache identifier
-        virtual const char * getCacheID() const;
+    // Get the corresponding cache identifier
+    virtual const char * getCacheID() const override;
 
-        virtual void finalize();
+    virtual void finalize() override;
 
-        // Methods to specialize each part of a complete shader program
-        //
-        void addToDeclareShaderCode(const char * shaderCode);
-        void addToHelperShaderCode(const char * shaderCode);
-        void addToFunctionHeaderShaderCode(const char * shaderCode);
-        void addToFunctionShaderCode(const char * shaderCode);
-        void addToFunctionFooterShaderCode(const char * shaderCode);
+    // Methods to specialize each part of a complete shader program
+    //
+    void addToDeclareShaderCode(const char * shaderCode) override;
+    void addToHelperShaderCode(const char * shaderCode) override;
+    void addToFunctionHeaderShaderCode(const char * shaderCode) override;
+    void addToFunctionShaderCode(const char * shaderCode) override;
+    void addToFunctionFooterShaderCode(const char * shaderCode) override;
 
-        // Method called to build the complete shader program
-        void createShaderText(const char * shaderDeclarations, 
-                              const char * shaderHelperMethods,
-                              const char * shaderMainHeader,
-                              const char * shaderMainBody,
-                              const char * shaderMainFooter);
+    // Method called to build the complete shader program
+    void createShaderText(const char * shaderDeclarations, 
+                          const char * shaderHelperMethods,
+                          const char * shaderMainHeader,
+                          const char * shaderMainBody,
+                          const char * shaderMainFooter) override;
 
-    private:
+private:
 
-        GenericGpuShaderDesc();
-        virtual ~GenericGpuShaderDesc();
-        
-        GenericGpuShaderDesc(const GenericGpuShaderDesc &);
-        GenericGpuShaderDesc& operator= (const GenericGpuShaderDesc &);
-        
-        static void Deleter(GenericGpuShaderDesc* c);
-        
-        class Impl;
-        friend class Impl;
-        Impl * m_impl;
-        Impl * getImpl() { return m_impl; }
-        const Impl * getImpl() const { return m_impl; }
-    };
+    GenericGpuShaderDesc();
+    virtual ~GenericGpuShaderDesc();
+    
+    GenericGpuShaderDesc(const GenericGpuShaderDesc &) = delete;
+    GenericGpuShaderDesc& operator= (const GenericGpuShaderDesc &) = delete;
+    
+    static void Deleter(GenericGpuShaderDesc* c);
+    
+    class Impl;
+    friend class Impl;
+    Impl * m_impl;
+    Impl * getImpl() { return m_impl; }
+    const Impl * getImpl() const { return m_impl; }
+};
 
 }
 OCIO_NAMESPACE_EXIT
