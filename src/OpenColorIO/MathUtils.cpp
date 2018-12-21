@@ -112,19 +112,6 @@ bool VecContainsOne(const float* v, int size)
     return false;
 }
 
-bool VecsEqualWithRelError(const float* v1, int size1,
-                           const float* v2, int size2,
-                           float e)
-{
-    if(size1 != size2) return false;
-    for(int i=0; i<size1; ++i)
-    {
-        if(!EqualWithRelError(v1[i], v2[i], e)) return false;
-    }
-    
-    return true;
-}
-
 double ClampToNormHalf(double val)
 {
     if(val < -GetHalfMax())

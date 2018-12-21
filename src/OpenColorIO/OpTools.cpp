@@ -117,7 +117,13 @@ OCIO_NAMESPACE_ENTER
 
         const float iScale = 1.f / GetBitDepthMaxValue(A->getOutputBitDepth());
         const float iScale4[4] = { iScale, iScale, iScale, iScale };
+        // TODO: Temporary hack, not needed once the Lut1D PR will be merged.
+        size_t before = ops.size();
         CreateScaleOp(ops, iScale4, TRANSFORM_DIR_FORWARD);
+        if (before != ops.size())
+        {
+            ops[before]->finalize();
+        }
 
         // Copy and append B.
         for(OpRcPtrVec::size_type i=0, size = B.size(); i<size; ++i)
@@ -133,7 +139,12 @@ OCIO_NAMESPACE_ENTER
 
         const float oScale = GetBitDepthMaxValue(B[B.size()-1]->getOutputBitDepth());
         const float oScale4[4] = { oScale, oScale, oScale, oScale };
+        before = ops.size();
         CreateScaleOp(ops, oScale4, TRANSFORM_DIR_FORWARD);
+        if (before != ops.size())
+        {
+            ops[before]->finalize();
+        }
 
         // Evaluate
 
