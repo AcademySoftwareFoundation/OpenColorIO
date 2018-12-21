@@ -12,11 +12,12 @@ Note: we have annotated with
 
 * ❌ required but not yet compliant -- needs significant work
 
-* 🔶 partially compliant -- we're mostly there, need some work; or unknown;
-   or not yet compliant for a suggested item.
+* 🔶 partially compliant -- we're mostly there, need some work; or not yet
+   compliant for a suggested item.
 
-* ❓unknown -- awaiting somebody to assess
+* 🏳️ N/A -- doesn't apply to project (include explanation)
 
+* ❓ unknown -- awaiting somebody to assess
 
 ## Introduction
 
@@ -188,6 +189,7 @@ There is an implied criterion that we should mention here:
   create a badge entry.)
   <sup>[<a href="#homepage_url">homepage_url</a>]</sup>
 
+
 ### Basics
 
 <b><i>Basic project website content</i></b>
@@ -202,16 +204,15 @@ There is an implied criterion that we should mention here:
 
 ✅ **OCIO done**
 
-
 <li><a name="contribution"></a>The information on how to contribute MUST explain the contribution process (e.g., are pull requests used?) (URL required for "met".) <sup>[<a href="#contribution">contribution</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>We presume that <a href="https://guides.github.com/activities/contributing-to-open-source/">projects on GitHub use issues and pull requests</a> unless otherwise noted. This information can be short, e.g., stating that the project uses pull requests, an issue tracker, or posts to a mailing list (which one?)</dd><dt><i>Rationale</i>:<dt> <dd>Contributors need to understand not only how to contribute, but also the overall contribution process, so that they'll understand how their work could be incorporated and what the expectations are after the initial submission. This means that wherever the project describes how to contribute, the project must include (directly or by reference) information on the contribution process.  Note that criterion "interact" (listed earlier) requires that the contribution information be on the project website.
 </dd></dl></li>
 
 ✅ **OCIO done** https://github.com/imageworks/OpenColorIO/blob/master/CONTRIBUTING.md
 
-
 <li><a name="contribution_requirements"></a>The information on how to contribute SHOULD include the requirements for acceptable contributions (e.g., a reference to any required coding standard). (URL required for "met".) <sup>[<a href="#contribution_requirements">contribution_requirements</a>]</sup></li>
 
 ✅ **OCIO done** https://github.com/imageworks/OpenColorIO/blob/master/CONTRIBUTING.md
+
 </ul>
 
 <b><i>OSS License</i></b>
@@ -236,8 +237,6 @@ There is an implied criterion that we should mention here:
 
 </ul>
 
-
-
 <b><i>Documentation</i></b>
 
 <ul>
@@ -259,7 +258,7 @@ There is an implied criterion that we should mention here:
 
 <li><a name="sites_https"></a>The project sites (website, repository, and download URLs) MUST support HTTPS using TLS. <sup>[<a href="#sites_https">sites_https</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>This requires that the project home page URL and the version control repository URL begin with "https:", not "http:". You can get free certificates from <a href="https://letsencrypt.org/">Let's Encrypt</a>. Projects MAY implement this criterion using (for example) <a href="https://help.github.com/articles/securing-your-github-pages-site-with-https/">GitHub pages</a>, <a href="https://about.gitlab.com/2016/12/24/were-bringing-gitlab-pages-to-community-edition/">GitLab pages</a>, or <a href="https://sourceforge.net/blog/introducing-https-for-project-websites/">SourceForge project pages</a>.  If you are using GitHub pages with custom domains, you MAY use a content delivery network (CDN) as a proxy to support HTTPS, such as described in the <a href="https://blog.cloudflare.com/secure-and-fast-github-pages-with-cloudflare/">blog post "Secure and fast GitHub Pages with CloudFlare"</a>, to satisfy this criterion. If you support HTTP, we urge you to redirect the HTTP traffic to HTTPS.</dd></dl></li>
 
-🔶  **OCIO partial** The GitHub page is https, but http://opencolorio.org/ is not.
+🔶 **OCIO partial** The GitHub page is https, but http://opencolorio.org/ is not.
 
 <li><a name="discussion"></a>The project MUST have one or more mechanisms for discussion (including proposed changes and issues) that are searchable, allow messages and topics to be addressed by URL, enable new people to participate in some of the discussions, and do not require client-side installation of proprietary software. <sup>[<a href="#discussion">discussion</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Examples of acceptable mechanisms include archived mailing list(s), GitHub issue and pull request discussions, Bugzilla, Mantis, and Trac. Asynchronous discussion mechanisms (like IRC) are acceptable if they meet these criteria; make sure there is a URL-addressable archiving mechanism. Proprietary JavaScript, while discouraged, is permitted.</dd></dl></li>
 
@@ -279,16 +278,21 @@ There is an implied criterion that we should mention here:
 <ul>
 
 <li><a name="repo_public"></a>The project MUST have a version-controlled source repository that is publicly readable and has a URL. <sup>[<a href="#repo_public">repo_public</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>The URL MAY be the same as the project URL. The project MAY use private (non-public) branches in specific cases while the change is not publicly released (e.g., for fixing a vulnerability before it is revealed to the public).</dd></dl></li>
+
 ✅ **OCIO done**
 
 <li><a name="repo_track"></a>The project's source repository MUST track what changes were made, who made the changes, and when the changes were made. <sup>[<a href="#repo_track">repo_track</a>]</sup></li>
+
 ✅ **OCIO done**
 
 <li><a name="repo_interim"></a>To enable collaborative review, the project's source repository MUST include interim versions for review between releases; it MUST NOT include only final releases. <sup>[<a href="#repo_interim">repo_interim</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Projects MAY choose to omit specific interim versions from their public source repositories (e.g., ones that fix specific non-public security vulnerabilities, may never be publicly released, or include material that cannot be legally posted and are not in the final release).</dd></dl></li>
+
 ✅ **OCIO done**
 
 <li><a name="repo_distributed"></a>It is SUGGESTED that common distributed version control software be used (e.g., git) for the project's source repository. <sup>[<a href="#repo_distributed">repo_distributed</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Git is not specifically required and projects can use centralized version control software (such as subversion) with justification.</dd></dl></li>
+
 ✅ **OCIO done**
+
 </ul>
 
 <b><i>Unique version numbering</i></b>
@@ -302,7 +306,7 @@ There is an implied criterion that we should mention here:
 <li><a name="version_semver"></a>It is SUGGESTED that the <a href="http://semver.org">Semantic Versioning (SemVer) format</a> be used for releases. <sup>[<a href="#version_semver">version_semver</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Other version numbering schemes, such as commit IDs (such as git commit id or mercurial changeset id) or date-based schemes like YYYYMMDD, MAY be used as version numbers, since they are unique. Some alternatives can cause problems, because users may not be able to easily determine if they are up-to-date. SemVer may be less helpful for identifying software releases if all recipients only run the latest version (e.g., it is the code for a single website or internet service that is constantly updated via continuous delivery).</dd><dt><i>Rationale</i>:<dt> <dd>SemVer is widely used to communicate what an update is (e.g., if it involves incompatible API changes), whether something is newer or older.  The scheme is simple, supports multiple simultaneous branches, and because it uses at least three numbers it can be distinguished from floating point. However, many find SemVer less useful for identifying software versions if only one version of the component is run (e.g., it is the code for a single website or internet service that is constantly updated via continuous delivery). For more discussion of the pros and cons of SemVer, see <a href="https://news.ycombinator.com/item?id=13378637">Hacker News' Is Semantic Versioning an Anti-Pattern?</a> and <a href="https://surfingthe.cloud/semantic-versioning-anti-pattern/">The Semantic Versioning Anti-Pattern</a>.
 </dd></dl></li>
 
-❓ **OCIO needs to assess**
+✅ **OCIO done**
 
 <li><a name="version_tags"></a>It is SUGGESTED that projects identify each release within their version control system. For example, it is SUGGESTED that those using git identify each release using git tags. <sup>[<a href="#version_tags">version_tags</a>]</sup></li>
 
@@ -321,9 +325,9 @@ There is an implied criterion that we should mention here:
 
 <li><a name="release_notes_vulns"></a>The release notes MUST identify every publicly known vulnerability with a CVE assignment or similar that is fixed in each new release, unless users typically cannot practically update the software themselves. If there are no release notes or there have been no publicly known vulnerabilities, choose "not applicable" (N/A). (N/A allowed.) (Justification required for "N/A".) <sup>[<a href="#release_notes_vulns">release_notes_vulns</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>If users typically cannot practically update the software themselves on their computers, but must instead depend on a middleman to perform the upgrade (as is often the case for a kernel and low-level software that is intertwined with a kernel), the project may choose "not applicable" (N/A).</dd></dl></li>
 
-❓ **OCIO needs to assess**
-</ul>
+🏳️ **N/A** No publicly known vulnerabilities
 
+</ul>
 
 
 ### Reporting
@@ -342,15 +346,16 @@ There is an implied criterion that we should mention here:
 
 <li><a name="report_responses"></a>The project MUST acknowledge a majority of bug reports submitted in the last 2-12 months (inclusive); the response need not include a fix. <sup>[<a href="#report_responses">report_responses</a>]</sup></li>
 
-❓ **OCIO needs to assess**
+🔶 **OCIO partial** *Most* GH issues have been acknowledged with a response or tag
 
 <li><a name="enhancement_responses"></a>The project SHOULD respond to a majority (&gt;50%) of enhancement requests in the last 2-12 months (inclusive). <sup>[<a href="#enhancement_responses">enhancement_responses</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>The response MAY be 'no' or a discussion about its merits. The goal is simply that there be some response to some requests, which indicates that the project is still alive. For purposes of this criterion, projects need not count fake requests (e.g., from spammers or automated systems). If a project is no longer making enhancements, please select "unmet" and include the URL that makes this situation clear to users. If a project tends to be overwhelmed by the number of enhancement requests, please select "unmet" and explain.</dd></dl></li>
 
-❓ **OCIO needs to assess**
+🔶 **OCIO partial** *Most* GH issues have been acknowledged with a response or tag
 
 <li><a name="report_archive"></a>The project MUST have a publicly available archive for reports and responses for later searching. (URL required for "met".) <sup>[<a href="#report_archive">report_archive</a>]</sup></li>
 
 ✅ **OCIO done**
+
 </ul>
 
 <b><i>Vulnerability report process</i></b>
@@ -359,17 +364,18 @@ There is an implied criterion that we should mention here:
 
 <li><a name="vulnerability_report_process"></a>The project MUST publish the process for reporting vulnerabilities on the project site. (URL required for "met".) <sup>[<a href="#vulnerability_report_process">vulnerability_report_process</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>E.g., a clearly designated mailing address on https://PROJECTSITE/security, often in the form security@example.org. This MAY be the same as its bug reporting process. Vulnerability reports MAY always be public, but many projects have a private vulnerability reporting mechanism.</dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+❌ **OCIO FIXME** Specify reporting procedures and URL in README.md or CONTRIBUTING.md
 
 <li><a name="vulnerability_report_private"></a>If private vulnerability reports are supported, the project MUST include how to send the information in a way that is kept private. (N/A allowed.) (URL required for "met".) <sup>[<a href="#vulnerability_report_private">vulnerability_report_private</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Examples include a private defect report submitted on the web using HTTPS (TLS) or an email encrypted using OpenPGP. If vulnerability reports are always public (so there are never private vulnerability reports), choose "not applicable" (N/A).</dd></dl></li>
 
-❌ **OCIO FIXME** set up PGP key for reporting securely?
+❌ **OCIO FIXME** Set up PGP key for reporting securely?
 
 <li><a name="vulnerability_report_response"></a>The project's initial response time for any vulnerability report received in the last 6 months MUST be less than or equal to 14 days. (N/A allowed.) <sup>[<a href="#vulnerability_report_response">vulnerability_report_response</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>If there have been no vulnerabilities reported in the last 6 months, choose "not applicable" (N/A).</dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+🏳️ **N/A** No reported vulnerabilities
 
 </ul>
+
 
 ### Quality
 
@@ -411,7 +417,7 @@ There is an implied criterion that we should mention here:
 <li><a name="test_continuous_integration"></a>It is SUGGESTED that the project implement continuous integration (where new or changed code is frequently integrated into a central code repository and automated tests are run on the result). <sup>[<a href="#test_continuous_integration">test_continuous_integration</a>]</sup><dl><dt><i>Rationale</i>:<dt> <dd>See <a href="http://martinfowler.com/articles/continuousIntegration.html">Martin Fowler</a> There has been some shift in the meaning of the term continuous integration. Historically the term continuous integration focused on the first part - the frequent integration - and not on its testing.  However, over time the emphasis has shifted to include the notion of running automated tests as soon as the code is integrated.  We realize that this can be difficult for some projects to apply, which is why it is only SUGGESTED at the passing level.
 </dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+✅ **OCIO done**
 
 </ul>
 
@@ -421,16 +427,16 @@ There is an implied criterion that we should mention here:
 
 <li><a name="test_policy"></a>The project MUST have a general policy (formal or not) that as major new functionality is added to the software produced by the project, tests of that functionality should be added to an automated test suite. <sup>[<a href="#test_policy">test_policy</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>As long as a policy is in place, even by word of mouth, that says developers should add tests to the automated test suite for major new functionality, select "Met."</dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+✅ **OCIO done** Word of mouth only, but policy followed
 
 <li><a name="tests_are_added"></a>The project MUST have evidence that the <a href="#test_policy">test_policy</a> for adding tests has been adhered to in the most recent major changes to the software produced by the project. <sup>[<a href="#tests_are_added">tests_are_added</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Major functionality would typically be mentioned in the release notes. Perfection is not required, merely evidence that tests are typically being added in practice to the automated test suite when new major functionality is added to the software produced by the project.</dd></dl></li>
 
-❓ **OCIO needs to assess**
+✅ **OCIO done**
 
 <li><a name="tests_documented_added"></a>It is SUGGESTED that this policy on adding tests (see <a href="#test_policy">test_policy</a>) be <em>documented</em> in the instructions for change proposals. <sup>[<a href="#tests_documented_added">tests_documented_added</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>However, even an informal rule is acceptable as long as the tests are being added in practice.</dd></dl></li>
 </ul>
 
-❓ **OCIO needs to assess**
+🔶 **OCIO TODO** Document unit test policy in coding guidelines
 
 <b><i>Warning flags</i></b>
 
@@ -448,8 +454,8 @@ There is an implied criterion that we should mention here:
 <li><a name="warnings_strict"></a>It is SUGGESTED that projects be maximally strict with warnings in the software produced by the project, where practical. (N/A allowed.) <sup>[<a href="#warnings_strict">warnings_strict</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Some warnings cannot be effectively enabled on some projects. What is needed is evidence that the project is striving to enable warning flags where it can, so that errors are detected early.</dd></dl></li>
 </ul>
 
-❓**OCIO needs somebody to assess**
-usually to address use of 3rd party library headers that trigger warnings.
+🔶 **OCIO TODO** Need to re-enable strict warning detection in CI builds
+
 
 ### Security
 
@@ -467,50 +473,49 @@ usually to address use of 3rd party library headers that trigger warnings.
 
 </ul>
 
-
 <b><i>Use basic good cryptographic practices</i></b>
 
 <ul>
 
 <li><a name="crypto_published"></a>The software produced by the project MUST use, by default, only cryptographic protocols and algorithms that are publicly published and reviewed by experts (if cryptographic protocols and algorithms are used). (N/A allowed.) <sup>[<a href="#crypto_published">crypto_published</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>These cryptographic criteria do not always apply because some software has no need to directly use cryptographic capabilities.</dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
 
 <li><a name="crypto_call"></a>If the software produced by the project is an application or library, and its primary purpose is not to implement cryptography, then it SHOULD only call on software specifically designed to implement cryptographic functions; it SHOULD NOT re-implement its own. (N/A allowed.) <sup>[<a href="#crypto_call">crypto_call</a>]</sup></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
 
 <li><a name="crypto_floss"></a>All functionality in the software produced by the project that depends on cryptography MUST be implementable using FLOSS. (N/A allowed.) <sup>[<a href="#crypto_floss">crypto_floss</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>See the <a href="https://opensource.org/osr">Open Standards Requirement for Software by the Open Source Initiative</a>.</dd><dt><i>Rationale</i>:<dt> <dd>Software must interoperate with other software. If the functionality cannot be implemented with FLOSS, e.g., because of patents, then this can set a trap for others who depend on the software.
 </dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
 
 <li><a name="crypto_keylength"></a>The security mechanisms within the software produced by the project MUST use default keylengths that at least meet the NIST minimum requirements through the year 2030 (as stated in 2012). It MUST be possible to configure the software so that smaller keylengths are completely disabled. (N/A allowed.) <sup>[<a href="#crypto_keylength">crypto_keylength</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>These minimum bitlengths are: symmetric key 112, factoring modulus 2048, discrete logarithm key 224, discrete logarithmic group 2048, elliptic curve 224, and hash 224 (password hashing is not covered by this bitlength, more information on password hashing can be found in the <a href="#crypto_password_storage">crypto_password_storage</a> criterion). See <a href="http://www.keylength.com">http://www.keylength.com</a> for a comparison of keylength recommendations from various organizations. The software MAY allow smaller keylengths in some configurations (ideally it would not, since this allows downgrade attacks, but shorter keylengths are sometimes necessary for interoperability).</dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
 
 <li><a name="crypto_working"></a>The default security mechanisms within the software produced by the project MUST NOT depend on broken cryptographic algorithms (e.g., MD4, MD5, single DES, RC4, Dual_EC_DRBG), or use cipher modes that are inappropriate to the context, unless they are necessary to implement an interoperable protocol (where the protocol implemented is the most recent version of that standard broadly supported by the network ecosystem, that ecosystem requires the use of such an algorithm or mode, and that ecosystem does not offer any more secure alternative). The documentation MUST describe any relevant security risks and any known mitigations if these broken algorithms or modes are necessary for an interoperable protocol. (N/A allowed.) <sup>[<a href="#crypto_working">crypto_working</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>ECB mode is almost never appropriate because it reveals identical blocks within the ciphertext as demonstrated by the <a href="https://blog.filippo.io/the-ecb-penguin/">ECB penguin</a>, and CTR mode is often inappropriate because it does not perform authentication and causes duplicates if the input state is repeated.  In many cases it's best to choose a block cipher algorithm mode designed to combine secrecy and authentication, e.g., Galois/Counter Mode (GCM) and EAX. Projects MAY allow users to enable broken mechanisms (e.g., during configuration) where necessary for compatibility, but then users know they're doing it.</dd><dt><i>Rationale</i>:<dt> <dd>If a cryptographic algorithm or mode is completely broken, then it cannot provide a useful cryptographic service. This is different from having a weakness; many cryptographic algorithms have some weaknesses, yet for backwards-compatibility it may sometimes be appropriate to use the algorithm anyway. "EAX" appears to be a name, not an abbrevation. The paper describing EAX, <a href="http://csrc.nist.gov/groups/ST/toolkit/BCM/documents/proposedmodes/eax/eax-spec.pdf">"A Conventional Authenticated-Encryption Mode" by M. Bellare, P.  Rogaway D.  Wagner (April 13, 2003)</a>, does not give an expansion.
 </dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
 
 <li><a name="crypto_weaknesses"></a>The default security mechanisms within the software produced by the project SHOULD NOT depend on cryptographic algorithms or modes with known serious weaknesses (e.g., the SHA-1 cryptographic hash algorithm or the CBC mode in SSH). (N/A allowed.) <sup>[<a href="#crypto_weaknesses">crypto_weaknesses</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Concerns about CBC mode in SSH are discussed in <a href="https://www.kb.cert.org/vuls/id/958563">CERT: SSH CBC vulnerability</a>.</dd><dt><i>Rationale</i>:<dt> <dd>SHA-1 has been known to be weak for many years; <a href="https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html">In February 2017 Google demonstrated a SHA-1 collision</a>. There are a number of alternatives to SHA-1 that are not patent-encumbered, such as the SHA-2 suite (including SHA-256 and SHA-512) and SHA-3. There is some disagreement on how important it is to avoid CBC mode in SSH.  The <a href="http://www.openssh.com/txt/cbc.adv">OpenSSH cbc.adv</a> page argues that the attack on SSH CBC is not a practical attack. However, others clearly think it's more important; CERT notes it, as does <a href="https://developer.ibm.com/answers/questions/187318/faq-how-do-i-disable-cipher-block-chaining-cbc-mod.html">FAQ: Disable CBC in SSH</a>. It is also easy to use a different mode than CBC; generally when there are safer widely-available options, you should use the safe ones instead. This is a SHOULD, not a MUST; sometimes these weaker mechanisms need to be used for backwards compatibility.
 </dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
 
 <li><a name="crypto_pfs"></a>The security mechanisms within the software produced by the project SHOULD implement perfect forward secrecy for key agreement protocols so a session key derived from a set of long-term keys cannot be compromised if one of the long-term keys is compromised in the future. (N/A allowed.) <sup>[<a href="#crypto_pfs">crypto_pfs</a>]</sup></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
 
 <li><a name="crypto_password_storage"></a>If the software produced by the project causes the storing of passwords for authentication of external users, the passwords MUST be stored as iterated hashes with a per-user salt by using a key stretching (iterated) algorithm (e.g., PBKDF2, Bcrypt or Scrypt). (N/A allowed.) <sup>[<a href="#crypto_password_storage">crypto_password_storage</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>This criterion applies only when the software is enforcing authentication of users using passwords, such as server-side web applications. It does not apply in cases where the software stores passwords for authenticating into other systems (e.g., the software implements a client for some other system), since at least parts of that software must have often access to the unhashed password.</dd><dt><i>Rationale</i>:<dt> <dd>This is a bare minimum today when storing passwords. Sometimes software needs to have a credential, such as a password, to authenticate it to other systems; those are intentionally out of scope for this criterion, because in many cases it's not possible to store them as iterated hashes using per-user salt.
 </dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+🏳️ **N/A** No passwords are stored by software
 
 <li><a name="crypto_random"></a>The security mechanisms within the software produced by the project MUST generate all cryptographic keys and nonces using a cryptographically secure random number generator, and MUST NOT do so using generators that are cryptographically insecure. (N/A allowed.) <sup>[<a href="#crypto_random">crypto_random</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>A cryptographically secure random number generator may be a hardware random number generator, or it may be a cryptographically secure pseudo-random number generator (CSPRNG) using an algorithm such as Hash_DRBG, HMAC_DRBG, CTR_DRBG, Yarrow, or Fortuna. Examples of calls to <em>secure</em> random number generators include Java's java.security.SecureRandom and JavaScript's window.crypto.getRandomValues. Examples of calls to <em>insecure</em> random number generators include Java's java.util.Random and JavaScript's Math.random.</dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
 
 </ul>
 
@@ -520,11 +525,12 @@ usually to address use of 3rd party library headers that trigger warnings.
 
 <li><a name="delivery_mitm"></a>The project MUST use a delivery mechanism that counters MITM attacks. Using https or ssh+scp is acceptable. <sup>[<a href="#delivery_mitm">delivery_mitm</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>An even stronger mechanism is releasing the software with digitally signed packages, since that mitigates attacks on the distribution system, but this only works if the users can be confident that the public keys for signatures are correct <em>and</em> if the users will actually check the signature.</dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
 
 <li><a name="delivery_unsigned"></a>A cryptographic hash (e.g., a sha1sum) MUST NOT be retrieved over http and used without checking for a cryptographic signature. <sup>[<a href="#delivery_unsigned">delivery_unsigned</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>These hashes can be modified in transit.</dd></dl></li>
 
-❓**OCIO needs somebody to assess**
+❓ **OCIO needs somebody to assess**
+
 </ul>
 
 <b><i>Publicly known vulnerabilities fixed</i></b>
@@ -536,10 +542,11 @@ usually to address use of 3rd party library headers that trigger warnings.
 
 ❓ **OCIO needs to assess**
 
-
 <li><a name="vulnerabilities_critical_fixed"></a>Projects SHOULD fix all critical vulnerabilities rapidly after they are reported. <sup>[<a href="#vulnerabilities_critical_fixed">vulnerabilities_critical_fixed</a>]</sup></li>
 
-❓**OCIO needs somebody to assess**
+🔶 **OCIO TODO** No vulnerabilities have been reported, but they should be fixed
+   rapidly if and when they are
+
 </ul>
 
 <b><i>Other security issues</i></b>
@@ -552,6 +559,7 @@ usually to address use of 3rd party library headers that trigger warnings.
 
 </ul>
 
+
 ### Analysis
 
 <b><i>Static code analysis</i></b>
@@ -560,7 +568,7 @@ usually to address use of 3rd party library headers that trigger warnings.
 
 <li><a name="static_analysis"></a>At least one static code analysis tool (beyond compiler warnings and "safe" language modes) MUST be applied to any proposed major production release of the software before its release, if there is at least one FLOSS tool that implements this criterion in the selected language. (N/A allowed.) (Justification required for "N/A".) <sup>[<a href="#static_analysis">static_analysis</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>A static code analysis tool examines the software code (as source code, intermediate code, or executable) without executing it with specific inputs. For purposes of this criterion, compiler warnings and "safe" language modes do not count as static code analysis tools (these typically avoid deep analysis because speed is vital). Some static analysis tools focus on detecting generic defects, others focus on finding specific kinds of defects (such as vulnerabilities), and some do a combination. Examples of such static code analysis tools include <a href="http://cppcheck.sourceforge.net/">cppcheck</a> (C, C++), <a href="http://clang-analyzer.llvm.org/">clang static analyzer</a> (C, C++), <a href="https://spotbugs.github.io/">SpotBugs</a> (Java), <a href="http://findbugs.sourceforge.net/">FindBugs</a> (Java) (including <a href="https://h3xstream.github.io/find-sec-bugs/">FindSecurityBugs</a>), <a href="https://pmd.github.io/">PMD</a> (Java), <a href="http://brakemanscanner.org/">Brakeman</a> (Ruby on Rails), <a href="https://cran.r-project.org/web/packages/lintr/index.html">lintr</a> (R), <a href="https://cran.r-project.org/web/packages/goodpractice/index.html">goodpractice</a> (R), <a href="https://scan.coverity.com/">Coverity Quality Analyzer</a>, <a href="https://www.sonarqube.org/">SonarQube</a>, <a href="https://www.codacy.com/">Codacy</a>, and <a href="https://saas.hpe.com/en-us/software/sca">HP Enterprise Fortify Static Code Analyzer</a>. Larger lists of tools can be found in places such as the <a href="https://en.wikipedia.org/wiki/List_of_tools_for_static_code_analysis">Wikipedia list of tools for static code analysis</a>, <a href="https://www.owasp.org/index.php/Static_Code_Analysis">OWASP information on static code analysis</a>, <a href="http://samate.nist.gov/index.php/Source_Code_Security_Analyzers.html">NIST list of source code security analyzers</a>, and <a href="http://www.dwheeler.com/essays/static-analysis-tools.html">Wheeler's list of static analysis tools</a>. The <a href="https://continuousassurance.org/">SWAMP</a> is a no-cost platform for assessing vulnerabilities in software using a variety of tools. If there are no FLOSS static analysis tools available for the implementation language(s) used, select 'N/A'.</dd></dl></li>
 
-❓ **OCIO needs to assess**
+❌ **OCIO FIXME** Need to implement static analysis
 
 <li><a name="static_analysis_common_vulnerabilities"></a>It is SUGGESTED that at least one of the static analysis tools used for the static_analysis criterion include rules or approaches to look for common vulnerabilities in the analyzed language or environment. (N/A allowed.) <sup>[<a href="#static_analysis_common_vulnerabilities">static_analysis_common_vulnerabilities</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Static analysis tools that are specifically designed to look for common vulnerabilities are more likely to find them. That said, using any static tools will typically help find some problems, so we are suggesting but not requiring this for the 'passing' level badge.</dd><dt><i>Rationale</i>:<dt> <dd>We'd like all projects to use this kind of static analysis tool, but there may not be one in the chosen language, or it may only be proprietary (and some developers will therefore not use it).
 </dd></dl></li>
@@ -577,7 +585,6 @@ usually to address use of 3rd party library headers that trigger warnings.
 
 </ul>
 
-
 <b><i>Dynamic code analysis</i></b>
 
 <ul>
@@ -585,7 +592,8 @@ usually to address use of 3rd party library headers that trigger warnings.
 <li><a name="dynamic_analysis"></a>It is SUGGESTED that at least one dynamic analysis tool be applied to any proposed major production release of the software before its release. <sup>[<a href="#dynamic_analysis">dynamic_analysis</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>A dynamic analysis tool examines the software by executing it with specific inputs. For example, the project MAY use a fuzzing tool (e.g., <a href="http://lcamtuf.coredump.cx/afl/">American Fuzzy Lop</a>) or a web application scanner (e.g., <a href="https://www.owasp.org/index.php/OWASP_Zed_Attack_Proxy_Project">OWASP ZAP</a> or <a href="http://w3af.org/">w3af</a>). In some cases the <a href="https://github.com/google/oss-fuzz#introduction">OSS-Fuzz</a> project may be willing to apply fuzz testing to your project. For purposes of this criterion the dynamic analysis tool needs to vary the inputs in some way to look for various kinds of problems <em>or</em> be an automated test suite with at least 80% branch coverage. The <a href="https://en.wikipedia.org/wiki/Dynamic_program_analysis">Wikipedia page on dynamic analysis</a> and the <a href="https://www.owasp.org/index.php/Fuzzing">OWASP page on fuzzing</a> identify some dynamic analysis tools. The analysis tool(s) MAY be focused on looking for security vulnerabilities, but this is not required.</dd><dt><i>Rationale</i>:<dt> <dd>Static source code analysis and dynamic analysis tend to find different kinds of defects (including defects that lead to vulnerabilities), so combining them is more likely to be effective. For example, <a href="https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1513352.html">Linus Torvalds' "Linux 4.14-rc5" announcement (October 15, 2017)</a> notes that "(people are doing) random fuzzing... and it's finding things...  Very nice to see."
 </dd></dl></li>
 
-❓ **OCIO needs to assess**
+🔶 **OCIO TODO** Beneficial to implement dynamic analysis once static analysis is
+   implemented
 
 <li><a name="dynamic_analysis_unsafe"></a>It is SUGGESTED that if the software produced by the project includes software written using a memory-unsafe language (e.g., C or C++), then at least one dynamic tool (e.g., a fuzzer or web application scanner) be routinely used in combination with a mechanism to detect memory safety problems such as buffer overwrites. If the project does not produce software written in a memory-unsafe language, choose "not applicable" (N/A). (N/A allowed.) <sup>[<a href="#dynamic_analysis_unsafe">dynamic_analysis_unsafe</a>]</sup><dl><dt><i>Details</i>:<dt> <dd>Examples of mechanisms to detect memory safety problems include <a href="https://github.com/google/sanitizers/wiki/AddressSanitizer">Address Sanitizer (ASAN)</a> (available in GCC and LLVM), <a href="http://clang.llvm.org/docs/MemorySanitizer.html">Memory Sanitizer</a>, and <a href="http://valgrind.org/">valgrind</a>. Other potentially-used tools include <a href="http://clang.llvm.org/docs/ThreadSanitizer.html">thread sanitizer</a> and <a href="http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html">undefined behavior sanitizer</a>. Widespread assertions would also work.</dd></dl></li>
 
@@ -601,6 +609,8 @@ usually to address use of 3rd party library headers that trigger warnings.
 ❓ **OCIO needs to assess**
 
 </ul>
+
+
 ## A note on good cryptographic practices
 
 *Note*: These criteria do not always apply because some software has no
