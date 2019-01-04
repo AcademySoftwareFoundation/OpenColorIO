@@ -110,7 +110,9 @@ project at all ASWF TAC meetings.
 * Michael Dolan - SPI
 * Larry Gritz - SPI
 * Patrick Hodoul - Autodesk
+* Carl Rand - Foundry
 * Doug Walker - Autodesk
+* Kevin Wheatley - Framestore
 
 ### TSC Meetings
 
