@@ -26,22 +26,22 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <algorithm>
+#include <cstring>
+#include <sstream>
+
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/Allocation/AllocationOp.h"
 #include "GpuShader.h"
 #include "GpuShaderUtils.h"
 #include "HashUtils.h"
 #include "Logging.h"
+#include "OpBuilders.h"
+#include "ops/Allocation/AllocationOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ops/NoOp/NoOps.h"
-#include "OpBuilders.h"
 #include "Processor.h"
 #include "ScanlineHelper.h"
-
-#include <algorithm>
-#include <cstring>
-#include <sstream>
 
 OCIO_NAMESPACE_ENTER
 {
@@ -253,7 +253,7 @@ OCIO_NAMESPACE_ENTER
             const unsigned lut3DEdgeLen   = edgelen;
             const unsigned lut3DNumPixels = lut3DEdgeLen*lut3DEdgeLen*lut3DEdgeLen;
 
-            Lut3DOpDataRcPtr lut = Lut3DOpData::Create();
+            Lut3DRcPtr lut = Lut3D::Create();
             lut->size[0] = lut3DEdgeLen;
             lut->size[1] = lut3DEdgeLen;
             lut->size[2] = lut3DEdgeLen;

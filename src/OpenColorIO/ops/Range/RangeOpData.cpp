@@ -668,7 +668,7 @@ bool RangeOpData::operator==(const OpData & other) const
     return true;
 }
 
-bool RangeOpData::isInverse(const RangeOpDataRcPtr & r) const
+bool RangeOpData::isInverse(ConstRangeOpDataRcPtr & r) const
 {
     return *r == *inverse();
 }
@@ -679,12 +679,12 @@ RangeOpDataRcPtr RangeOpData::inverse() const
     // The min/max "include" the scale factor, but since in/out scale are also
     // swapped, no need to rescale the min/max.
 
-    RangeOpDataRcPtr invOp( new RangeOpData(getOutputBitDepth(),
-                                            getInputBitDepth(),
-                                            getMinOutValue(),
-                                            getMaxOutValue(),
-                                            getMinInValue(),
-                                            getMaxInValue()) );
+    RangeOpDataRcPtr invOp = std::make_shared<RangeOpData>(getOutputBitDepth(),
+                                                           getInputBitDepth(),
+                                                           getMinOutValue(),
+                                                           getMaxOutValue(),
+                                                           getMinInValue(),
+                                                           getMaxInValue());
     invOp->validate();
 
     return invOp;

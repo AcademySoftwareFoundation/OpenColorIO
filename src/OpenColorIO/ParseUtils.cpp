@@ -229,6 +229,7 @@ OCIO_NAMESPACE_ENTER
         else if(interp == INTERP_LINEAR) return "linear";
         else if(interp == INTERP_TETRAHEDRAL) return "tetrahedral";
         else if(interp == INTERP_BEST) return "best";
+        else if (interp == INTERP_DEFAULT) return "default";
         return "unknown";
     }
     

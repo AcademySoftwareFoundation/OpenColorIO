@@ -30,16 +30,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_MATRIXOFFSETOP_H
 #define INCLUDED_OCIO_MATRIXOFFSETOP_H
 
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-
-#include <vector>
 
 OCIO_NAMESPACE_ENTER
 {
     class MatrixOpData;
     typedef OCIO_SHARED_PTR<MatrixOpData> MatrixOpDataRcPtr;
+    typedef OCIO_SHARED_PTR<const MatrixOpData> ConstMatrixOpDataRcPtr;
 
     class MatrixOpData : public OpData
     {
@@ -104,6 +105,11 @@ OCIO_NAMESPACE_ENTER
                             float sat,
                             const float * lumaCoef3,
                             TransformDirection direction);
+
+    void CreateMinMaxOp(OpRcPtrVec & ops,
+                        const float * from_min3,
+                        const float * from_max3,
+                        TransformDirection direction);
 }
 OCIO_NAMESPACE_EXIT
 

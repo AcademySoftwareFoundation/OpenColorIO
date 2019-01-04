@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 
 #include <OpenColorIO/OpenColorIO.h>
-
+#include "Op.h"
 #include "pystring/pystring.h"
 
 OCIO_NAMESPACE_ENTER
@@ -42,6 +42,10 @@ OCIO_NAMESPACE_ENTER
 
 const char * getTestFilesDir();
 
+void BuildOps(const std::string & fileName,
+              OpRcPtrVec & fileOps,
+              TransformDirection dir);
+    
 class CachedFile;
 
 template <class LocalFileFormat, class LocalCachedFile>

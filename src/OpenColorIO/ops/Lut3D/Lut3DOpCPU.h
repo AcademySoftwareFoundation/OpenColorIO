@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -27,49 +27,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
-#ifndef INCLUDED_OCIO_EXPONENTOP_H
-#define INCLUDED_OCIO_EXPONENTOP_H
+#ifndef INCLUDED_OCIO_LUT3DOPCPU
+#define INCLUDED_OCIO_LUT3DOPCPU
 
 #include <OpenColorIO/OpenColorIO.h>
 
 #include "Op.h"
-
-#include <vector>
+#include "ops/Lut3D/Lut3DOpData.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    class ExponentOpData;
-    typedef OCIO_SHARED_PTR<ExponentOpData> ExponentOpDataRcPtr;
-    typedef OCIO_SHARED_PTR<const ExponentOpData> ConstExponentOpDataRcPtr;
-
-    class ExponentOpData : public OpData
-    {
-    public:
-        ExponentOpData();
-        ExponentOpData(const double * exp4);
-        virtual ~ExponentOpData() {}
-
-        ExponentOpData & operator = (const ExponentOpData & rhs);
-
-        virtual Type getType() const override { return ExponentType; }
-
-        virtual bool isNoOp() const override;
-        virtual bool isIdentity() const override;
-
-        virtual bool hasChannelCrosstalk() const override { return false; }
-
-        double m_exp4[4];
-
-        virtual void finalize() override;
-    };
-
-    // If the exponent is 1.0, this will return without clamping
-    // Otherwise, will be clamped between [0.0, inf]
-    
-    void CreateExponentOp(OpRcPtrVec & ops,
-                          const float * exponent4,
-                          TransformDirection direction);
+OpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut);
 }
 OCIO_NAMESPACE_EXIT
+
 
 #endif

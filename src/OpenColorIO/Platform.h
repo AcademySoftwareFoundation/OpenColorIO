@@ -30,41 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_PLATFORM_H
 #define INCLUDED_OCIO_PLATFORM_H
 
-/* 
-PTEX SOFTWARE
-Copyright 2009 Disney Enterprises, Inc.  All rights reserved
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-  * Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-
-  * Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in
-    the documentation and/or other materials provided with the
-    distribution.
-
-  * The names "Disney", "Walt Disney Pictures", "Walt Disney Animation
-    Studios" or the names of its contributors may NOT be used to
-    endorse or promote products derived from this software without
-    specific prior written permission from Walt Disney Pictures.
-
-Disclaimer: THIS SOFTWARE IS PROVIDED BY WALT DISNEY PICTURES AND
-CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
-BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE, NONINFRINGEMENT AND TITLE ARE DISCLAIMED.
-IN NO EVENT SHALL WALT DISNEY PICTURES, THE COPYRIGHT HOLDER OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND BASED ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-*/
-
 // platform-specific includes
 #if defined(_WIN32) || defined(_WIN64) || defined(_WINDOWS) || defined(_MSC_VER)
 #ifndef WINDOWS
@@ -125,39 +90,6 @@ OCIO_NAMESPACE_ENTER
 //       In the meantime, hardcode to x86
 #define OCIO_LITTLE_ENDIAN 1  // This is correct on x86
 
-/*
- * Mutex classes
- */
-
-#ifdef WINDOWS
-
-class _Mutex {
-public:
-    _Mutex()      { _mutex = CreateMutex(NULL, FALSE, NULL); }
-    ~_Mutex()     { CloseHandle(_mutex); }
-    void lock()   { WaitForSingleObject(_mutex, INFINITE); }
-    void unlock() { ReleaseMutex(_mutex); }
-private:
-    HANDLE _mutex;
-};
-
-#else
-// assume linux/unix/posix
-
-// Note: Not recursive mutex implementation
-
-class _Mutex {
-public:
-    _Mutex()      { pthread_mutex_init(&_mutex, 0); }
-    ~_Mutex()     { pthread_mutex_destroy(&_mutex); }
-    void lock()   { pthread_mutex_lock(&_mutex); }
-    void unlock() { pthread_mutex_unlock(&_mutex); }
-private:
-    pthread_mutex_t _mutex;
-};
-
-#endif // WINDOWS
-
 namespace Platform
 {
 
@@ -168,6 +100,14 @@ int Strcasecmp(const char* str1, const char* str2);
 
 // Case insensitive string comparison for the nth first characters only
 int Strncasecmp(const char* str1, const char* str2, size_t n);
+
+// Allocates memory on a specified alignment boundary. Must use
+// AlignedFree to free the memory block.
+// An exception is thrown if an allocation error occurs.
+void* AlignedMalloc(size_t size, size_t alignment);
+
+// Frees a block of memory that was allocated with AlignedMalloc.
+void AlignedFree(void* memBlock);
 
 }
 

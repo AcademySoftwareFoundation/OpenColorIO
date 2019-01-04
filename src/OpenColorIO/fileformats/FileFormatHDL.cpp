@@ -43,23 +43,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     
 */
 
+#include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <iterator>
-#include <cmath>
-#include <vector>
-#include <string>
-#include <algorithm>
 #include <map>
+#include <string>
+#include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "transforms/FileTransform.h"
+#include "MathUtils.h"
 #include "ops/Lut1D/Lut1DOp.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ParseUtils.h"
-#include "MathUtils.h"
 #include "pystring/pystring.h"
+#include "transforms/FileTransform.h"
 
 OCIO_NAMESPACE_ENTER
 {
@@ -253,7 +253,7 @@ OCIO_NAMESPACE_ENTER
                 hdlblack = 0.0;
                 hdlwhite = 1.0;
                 lut1D = Lut1DOpData::Create();
-                lut3D = Lut3DOpData::Create();
+                lut3D = Lut3D::Create();
             };
             ~CachedFileHDL() {};
             std::string hdlversion;
@@ -264,7 +264,8 @@ OCIO_NAMESPACE_ENTER
             float hdlblack;
             float hdlwhite;
             Lut1DOpDataRcPtr lut1D;
-            Lut3DOpDataRcPtr lut3D;
+            // TODO: opdata
+            Lut3DRcPtr lut3D;
         };
         typedef OCIO_SHARED_PTR<CachedFileHDL> CachedFileHDLRcPtr;
         
@@ -314,7 +315,8 @@ OCIO_NAMESPACE_ENTER
             //
             CachedFileHDLRcPtr cachedFile = CachedFileHDLRcPtr (new CachedFileHDL ());
             Lut1DOpDataRcPtr lut1d_ptr = Lut1DOpData::Create();
-            Lut3DOpDataRcPtr lut3d_ptr = Lut3DOpData::Create();
+            // TODO: opdata
+            Lut3DRcPtr lut3d_ptr = Lut3D::Create();
 
             // Parse headers into key-value pairs
             StringToStringVecMap header_chunks;

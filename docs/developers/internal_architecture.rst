@@ -205,7 +205,7 @@ Let us consider the internal steps when getProcessor() is called to convert from
 'adx10' to ColorSpace 'aces':
 
 * The first step is to turn this ColorSpace conversion into an ordered list of transforms.
-We do this by creating a single of the conversions from 'adx10' to reference, and then
+We do this by creating a single list of the conversions from 'adx10' to reference, and then
 adding the transforms required to go from reference to 'aces'.
 * The Transform list is then converted into a list of ops.  It is during this stage luts,
 are loaded, etc.

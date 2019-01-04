@@ -32,55 +32,46 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Op.h"
-
-#include <vector>
+#include "ops/Lut3D/Lut3DOpData.h"
 
 OCIO_NAMESPACE_ENTER
 {
-    class Lut3DOpData;
-    typedef OCIO_SHARED_PTR<Lut3DOpData> Lut3DOpDataRcPtr;
-    
-    class Lut3DOpData : public OpData
+    // Temporaly restore old structure that is still used to store data
+    // when loading files. After loading the structure is converted to 
+    // Lut3DOpData by CreateLut3DOp.
+    struct Lut3D;
+    typedef OCIO_SHARED_PTR<Lut3D> Lut3DRcPtr;
+
+    struct Lut3D
     {
-    public:
-        static Lut3DOpDataRcPtr Create();
-        
+        static Lut3DRcPtr Create();
+
         float from_min[3];
         float from_max[3];
         int size[3];
-        
+
         typedef std::vector<float> fv_t;
         fv_t lut;
-        
-        virtual Type getType() const override { return Lut3DType; }
 
-        virtual bool isNoOp() const override;
-        virtual bool isIdentity() const override;
-        virtual bool hasChannelCrosstalk() const override;
-        
-        virtual void finalize() override;
-        void unfinalize();
-
-        virtual std::string getCacheID() const override;
+        std::string getCacheID() const;
 
     private:
-        Lut3DOpData();
-
-        mutable bool m_isIdentity;
+        Lut3D();
+        mutable std::string m_cacheID;
+        mutable Mutex m_cacheidMutex;
     };
-    
+
     // RGB channel ordering.
     // LUT entries ordered in such a way that the red coordinate changes fastest,
     // then the green coordinate, and finally, the blue coordinate changes slowest
 
     inline int GetLut3DIndex_RedFast(int indexR, int indexG, int indexB,
-                                     int sizeR,  int sizeG,  int /*sizeB*/)
+        int sizeR,  int sizeG,  int /*sizeB*/)
     {
         return 3 * (indexR + sizeR * (indexG + sizeG * indexB));
     }
-    
-    
+
+
     // RGB channel ordering.
     // LUT entries ordered in such a way that the blue coordinate changes fastest,
     // then the green coordinate, and finally, the red coordinate changes slowest
@@ -90,31 +81,34 @@ OCIO_NAMESPACE_ENTER
     {
         return 3 * (indexB + sizeB * (indexG + sizeG * indexR));
     }
-    
+
     // What is the preferred order for the 3D LUT?
     // I.e., are the first two entries change along
     // the blue direction, or the red direction?
     // OpenGL expects 'red'
-    
+
     enum Lut3DOrder
     {
         LUT3DORDER_FAST_RED = 0,
         LUT3DORDER_FAST_BLUE
     };
-    
+
     void GenerateIdentityLut3D(float* img, int edgeLen, int numChannels,
                                Lut3DOrder lut3DOrder);
-    
+
     // Essentially the cube root, but will throw an exception if the
-    // cuberoot is not exact.
+    // cube root is not exact.
     int Get3DLutEdgeLenFromNumPixels(int numPixels);
-    
-    
-    
+
     void CreateLut3DOp(OpRcPtrVec & ops,
-                       Lut3DOpDataRcPtr lut,
+                       Lut3DRcPtr lut,
                        Interpolation interpolation,
                        TransformDirection direction);
+
+    void CreateLut3DOp(OpRcPtrVec & ops,
+                       Lut3DOpDataRcPtr & lut,
+                       TransformDirection direction);
+
 }
 OCIO_NAMESPACE_EXIT
 

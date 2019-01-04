@@ -84,8 +84,8 @@ Please see the :ref:`developer-guide` for more info, and contact `ocio-dev
     FAQ
     downloads
     
-    ChangeLog
-    License
+    CHANGELOG
+    LICENSE
 
 --------------------------------------------------------------------------------
 
