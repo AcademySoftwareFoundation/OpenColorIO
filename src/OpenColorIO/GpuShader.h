@@ -56,7 +56,7 @@ public:
     //
     unsigned getNum3DTextures() const override;
     void add3DTexture(const char * name, const char * id, unsigned edgelen, 
-                      Interpolation interpolation, float * values);
+                      Interpolation interpolation, const float * values);
     void get3DTexture(unsigned index, const char *& name, 
                       const char *& id, unsigned & edgelen, 
                       Interpolation & interpolation) const override;
@@ -100,7 +100,7 @@ protected:
     //
     unsigned getNumTextures() const override;
     void addTexture(const char * name, const char * id, unsigned width, unsigned height,
-                    TextureType channel, Interpolation interpolation, float * values) override;
+                    TextureType channel, Interpolation interpolation, const float * values) override;
     // Get the texture 1D or 2D information
     void getTexture(unsigned index, const char *& name, const char *& id, 
                     unsigned & width, unsigned & height,
@@ -154,7 +154,7 @@ public:
     //
     unsigned getNumTextures() const;
     void addTexture(const char * name, const char * id, unsigned width, unsigned height,
-                    TextureType channel, Interpolation interpolation, float * values) override;
+                    TextureType channel, Interpolation interpolation, const float * values) override;
     void getTexture(unsigned index, const char *& name, const char *& id, 
                     unsigned & width, unsigned & height,
                     TextureType & channel, Interpolation & interpolation) const override;
@@ -164,7 +164,7 @@ public:
     //
     unsigned getNum3DTextures() const  override;
     void add3DTexture(const char * name, const char * id, unsigned edgelen, 
-                      Interpolation interpolation, float * values) override;
+                      Interpolation interpolation, const float * values) override;
     void get3DTexture(unsigned index, const char *& name, 
                       const char *& id, unsigned & edgelen, 
                       Interpolation & interpolation) const override;

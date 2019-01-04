@@ -44,7 +44,7 @@ namespace
 const unsigned max3DLUTDimension = 129;
 
 
-static void  CreateArray(float * buf, 
+static void  CreateArray(const float * buf, 
                          unsigned w, unsigned h, unsigned d, 
                          OCIO_NAMESPACE::GpuShaderDesc::TextureType type, 
                          std::vector<float> & res)
@@ -71,7 +71,7 @@ public:
                 unsigned w, unsigned h, unsigned d,
                 OCIO_NAMESPACE::GpuShaderDesc::TextureType channel, 
                 OCIO_NAMESPACE::Interpolation interpolation, 
-                float * v)
+                const float * v)
             :   name(n)
             ,   id(identifier)
             ,   width(w)
@@ -116,7 +116,7 @@ public:
 
     void addTexture(const char * name, const char * id, unsigned width, unsigned height, 
                     OCIO_NAMESPACE::GpuShaderDesc::TextureType channel,
-                    OCIO_NAMESPACE::Interpolation interpolation, float * values)
+                    OCIO_NAMESPACE::Interpolation interpolation, const float * values)
     {
         if(width > get1dLutMaxWidth())
         {
@@ -167,7 +167,7 @@ public:
     }
 
     void add3DTexture(const char * name, const char * id, unsigned dimension, 
-                      OCIO_NAMESPACE::Interpolation interpolation, float * values)
+                      OCIO_NAMESPACE::Interpolation interpolation, const float * values)
     {
         if(dimension > get3dLutMaxDimension())
         {
@@ -357,7 +357,7 @@ unsigned LegacyGpuShaderDesc::getNumTextures() const
 
 void LegacyGpuShaderDesc::addTexture(
     const char *, const char *, unsigned, unsigned,
-    TextureType, Interpolation, float *)
+    TextureType, Interpolation, const float *)
 {
     throw Exception("1D LUTs are not supported");
 }
@@ -379,9 +379,8 @@ unsigned LegacyGpuShaderDesc::getNum3DTextures() const
     return unsigned(getImpl()->textures3D.size());
 }
 
-void LegacyGpuShaderDesc::add3DTexture(
-    const char * name, const char * id, unsigned dimension, 
-    Interpolation interpolation, float * values)
+void LegacyGpuShaderDesc::add3DTexture(const char * name, const char * id, unsigned dimension, 
+                                       Interpolation interpolation, const float * values)
 {
     if(dimension!=getImpl()->getEdgelen())
     {
@@ -538,7 +537,7 @@ void GenericGpuShaderDesc::addTexture(const char * name, const char * id,
                                       unsigned width, unsigned height,
                                       TextureType channel, 
                                       Interpolation interpolation,
-                                      float * values)
+                                      const float * values)
 {
     getImpl()->addTexture(name, id, width, height, channel, interpolation, values);
 }
@@ -563,7 +562,7 @@ unsigned GenericGpuShaderDesc::getNum3DTextures() const
 
 void GenericGpuShaderDesc::add3DTexture(
     const char * name, const char * id, unsigned edgelen, 
-    Interpolation interpolation, float * values)
+    Interpolation interpolation, const float * values)
 {
     getImpl()->add3DTexture(name, id, edgelen, interpolation, values);
 }
