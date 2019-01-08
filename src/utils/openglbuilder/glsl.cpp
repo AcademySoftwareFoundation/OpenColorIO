@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
+Copyright (c) 2018 Autodesk Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -44,7 +44,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <iostream>
 
-// TODO: Lot of other GLSL helper methods from synColor will be added here.
 
 namespace
 {
@@ -331,7 +330,7 @@ void OpenGLBuilder::useAllTextures()
     for(size_t idx=0; idx<max; ++idx)
     {
         const TextureId& data = m_textureIds[idx];
-        glActiveTexture(GL_TEXTURE0 + m_startIndex + idx);
+        glActiveTexture((GLenum)(GL_TEXTURE0 + m_startIndex + idx));
         glBindTexture(data.type, data.id);
         glUniform1i(
             glGetUniformLocation(m_program, 
