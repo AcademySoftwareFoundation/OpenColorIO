@@ -886,11 +886,12 @@ OCIO_NAMESPACE_EXIT
 #endif
 
 namespace OCIO = OCIO_NAMESPACE;
-#include "unittest.h"
 
 #include "BitDepthUtils.h"
+#include "unittest.h"
+#include "UnitTestFiles.h"
 
-OIIO_ADD_TEST(Lut3DOpStruct, NanInfValueCheck)
+OIIO_ADD_TEST(Lut3DOpStruct, nan_inf_value_check)
 {
     OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
     
@@ -921,7 +922,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, NanInfValueCheck)
 }
 
 
-OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
+OIIO_ADD_TEST(Lut3DOpStruct, value_check)
 {
     const float error = 1e-5f;
 
@@ -1012,7 +1013,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ValueCheck)
     }
 }
 
-OIIO_ADD_TEST(Lut3DOp, Lut3DTetrahedral)
+OIIO_ADD_TEST(Lut3DOp, lut3d_tetrahedral)
 {
     OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
     lut->size[0] = 3;
@@ -1095,7 +1096,7 @@ OIIO_ADD_TEST(Lut3DOp, Lut3DTetrahedral)
 }
 
 
-OIIO_ADD_TEST(Lut3DOpStruct, InverseComparisonCheck)
+OIIO_ADD_TEST(Lut3DOpStruct, inverse_comparison_check)
 {
     OCIO::Lut3DRcPtr lut_a = OCIO::Lut3D::Create();
     lut_a->size[0] = 32;
@@ -1216,7 +1217,7 @@ OIIO_ADD_TEST(Lut3DOp, PerformanceCheck)
 }
 */
 
-OIIO_ADD_TEST(Lut3DOpStruct, ThrowLut)
+OIIO_ADD_TEST(Lut3DOpStruct, throw_lut)
 {
     // std::string Lut3D::getCacheID() const when LUT is empty
     OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
@@ -1243,7 +1244,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ThrowLut)
         OCIO::Exception, "Cannot infer 3D LUT size");
 }
 
-OIIO_ADD_TEST(Lut3DOpStruct, ThrowLutOp)
+OIIO_ADD_TEST(Lut3DOpStruct, throw_lut_op)
 {
     OCIO::Lut3DRcPtr lut = OCIO::Lut3D::Create();
     lut->size[0] = 3;
@@ -1283,7 +1284,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, ThrowLutOp)
 
 }
 
-OIIO_ADD_TEST(Lut3DOpStruct, cacheID)
+OIIO_ADD_TEST(Lut3DOpStruct, cache_id)
 {
     OCIO::OpRcPtrVec ops;
     for (int i = 0; i < 2; ++i)
@@ -1311,7 +1312,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, cacheID)
     OIIO_CHECK_EQUAL(cacheID, ops[1]->getCacheID());
 }
 
-OIIO_ADD_TEST(Lut3DOp, EdgeLenFromNumPixels)
+OIIO_ADD_TEST(Lut3DOp, edge_len_from_num_pixels)
 {
     OIIO_CHECK_THROW_WHAT(OCIO::Get3DLutEdgeLenFromNumPixels(10),
                           OCIO::Exception, "Cannot infer 3D LUT size");
@@ -1327,7 +1328,7 @@ OIIO_ADD_TEST(Lut3DOp, EdgeLenFromNumPixels)
     OIIO_CHECK_EQUAL(res, expectedRes);
 }
 
-OIIO_ADD_TEST(Lut3DOpStruct, Lut3DOrder)
+OIIO_ADD_TEST(Lut3DOpStruct, lut3d_order)
 {
     OCIO::Lut3DRcPtr lut_r = OCIO::Lut3D::Create();
 
@@ -1387,7 +1388,7 @@ OIIO_ADD_TEST(Lut3DOpStruct, Lut3DOrder)
 
 }
 
-OIIO_ADD_TEST(Lut3DOp, ConvertLut)
+OIIO_ADD_TEST(Lut3DOp, convert_lut)
 {
     OCIO::Lut3DRcPtr lut_r = OCIO::Lut3D::Create();
 
@@ -1426,7 +1427,7 @@ OIIO_ADD_TEST(Lut3DOp, ConvertLut)
     OIIO_CHECK_EQUAL(pLB->getArray().getValues()[78], 1.0f);
 }
 
-OIIO_ADD_TEST(Lut3DOp, CPURendererLut3D)
+OIIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d)
 {
     const OCIO::BitDepth bitDepth = OCIO::BIT_DEPTH_F32;
 
@@ -1509,14 +1510,174 @@ OIIO_ADD_TEST(Lut3DOp, CPURendererLut3D)
     }
 }
 
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D
+OIIO_ADD_TEST(Lut3DOp, cpu_renderer_inv_lut3d)
+{
+    const std::string fileName("lut3d_17x17x17_10i_12i.clf");
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(BuildOps(fileName, ops, OCIO::TRANSFORM_DIR_FORWARD));
+
+    // TODO: BitDepth support: this is currently switching ops to 32F
+    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops));
+    OIIO_REQUIRE_EQUAL(1, ops.size());
+
+    auto op0 = std::dynamic_pointer_cast<const OCIO::Lut3DOp>(ops[0]);
+    OIIO_REQUIRE_ASSERT(op0);
+    auto fwdLutData = std::dynamic_pointer_cast<const OCIO::Lut3DOpData>(op0->data());
+    auto fwdLutDataCloned = fwdLutData->clone();
+    // Inversion is based on tetrahedral interpolation, so need to make sure 
+    // the forward evals are also tetrahedral.
+    fwdLutDataCloned->setInterpolation(OCIO::INTERP_TETRAHEDRAL);
+
+    OCIO::Lut3DOp fwdLut(fwdLutDataCloned);
+
+    OCIO::Lut3DOpDataRcPtr invLutData = fwdLutDataCloned->inverse();
+    OCIO::Lut3DOp invLut(invLutData);
+
+    // inverse the inverse
+    OCIO::Lut3DOpDataRcPtr invinvLutData = invLutData->inverse();
+    OCIO::Lut3DOp invinvLut(invinvLutData);
+
+    // Default Inversion quality should be 'FAST' but we test the 'EXACT' first
+    OIIO_CHECK_EQUAL(invLutData->getInversionQuality(), OCIO::LUT_INVERSION_FAST);
+    invLutData->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+
+    const float inImage[] = {
+        0.1f, 0.25f, 0.7f, 0.f,
+        0.66f, 0.25f, 0.81f, 0.5f,
+        //0.18f, 0.80f, 0.45f, 1.f }; // this one is easier to get correct
+        0.18f, 0.99f, 0.45f, 1.f };   // setting G way up on the s-curve is harder
+
+    float bufferImage[12];
+    memcpy(bufferImage, inImage, 12 * sizeof(float));
+
+    float bufferImageClone[12];
+    memcpy(bufferImageClone, inImage, 12 * sizeof(float));
+
+    float bufferImageClone2[12];
+    memcpy(bufferImageClone2, inImage, 12 * sizeof(float));
+
+    // Apply forward LUT.
+    OIIO_CHECK_NO_THROW(fwdLut.finalize());
+    OIIO_CHECK_NO_THROW(fwdLut.apply(bufferImage, 3));
+
+    // clone and verify clone is giving same results
+    OCIO::OpRcPtr fwdLutCloned = fwdLut.clone();
+    OIIO_CHECK_NO_THROW(fwdLutCloned->finalize());
+    OIIO_CHECK_NO_THROW(fwdLutCloned->apply(bufferImageClone, 3));
+    const float error = 1e-6f;
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(bufferImageClone[i], bufferImage[i], error);
+    }
+
+    // Inverse of inverse is the same as forward
+    OIIO_CHECK_NO_THROW(invinvLut.finalize());
+    OIIO_CHECK_NO_THROW(invinvLut.apply(bufferImageClone2, 3));
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(bufferImageClone2[i], bufferImage[i], error);
+    }
+
+    float outImage1[12];
+    memcpy(outImage1, bufferImage, 12 * sizeof(float));
+    memcpy(bufferImageClone, bufferImage, 12 * sizeof(float));
+
+    // Apply inverse LUT.
+    OIIO_CHECK_NO_THROW(invLut.finalize());
+    OIIO_CHECK_NO_THROW(invLut.apply(bufferImage, 3));
+
+    // clone the inverse and do same transform
+    OCIO::OpRcPtr invLutCloned = invLut.clone();
+    OIIO_CHECK_NO_THROW(invLutCloned->finalize());
+    OIIO_CHECK_NO_THROW(invLutCloned->apply(bufferImageClone, 3));
+
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(bufferImageClone[i], bufferImage[i], error);
+    }
+
+    // Need to do another foward/inverse cycle.  This is due to precision issues.
+    // Also, some LUTs have flat or virtually flat areas so the inverse is not unique.
+    // The first inverse does not match the source, but the fact that it winds up
+    // in the same place after another cycle verifies that it is as good an inverse
+    // for this particular LUT as the original input.  In other words, when the
+    // forward LUT has a small derivative, precision issues imply that there will
+    // be a range of inverses which should be considered valid.
+    OIIO_CHECK_NO_THROW(fwdLut.apply(bufferImage, 3));
+
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(outImage1[i], bufferImage[i], error);
+    }
+
+    // Repeat with inversion quality FAST.
+    invLutData->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+
+    memcpy(bufferImage, outImage1, 12 * sizeof(float));
+
+    // Apply inverse LUT.
+    OIIO_CHECK_NO_THROW(invLut.finalize());
+    OIIO_CHECK_NO_THROW(invLut.apply(bufferImage, 3));
+
+    OIIO_CHECK_NO_THROW(fwdLut.apply(bufferImage, 3));
+
+    // Note that, even more than with Lut1D, the FAST inv Lut3D renderer is not exact.
+    // It is expected that a fairly loose tolerance must be used here.
+    const float errorLoose = 0.015f;
+    for (unsigned i = 0; i < 12; ++i)
+    {
+        OIIO_CHECK_CLOSE(outImage1[i], bufferImage[i], errorLoose);
+    }
+
+    // Test clamping of large values in EXACT mode.
+    // (No need to test FAST mode since the forward LUT eval clamps inputs to the input domain.)
+    invLutData->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+
+    bufferImage[0] = 100.f;
+
+    OIIO_CHECK_NO_THROW(invLut.finalize());
+    OIIO_CHECK_NO_THROW(invLut.apply(bufferImage, 1));
+
+    // This tests that extreme large values get inverted.
+    // (If no inverse is found, apply() currently returns zeros.)
+    OIIO_CHECK_ASSERT(bufferImage[0] > 0.5f);
+}
+
+OIIO_ADD_TEST(Lut3DOp, cpu_renderer_lut3d_with_nan)
+{
+    const std::string fileName("lut3d_2x2x2_32f_32f.clf");
+    OCIO::OpRcPtrVec ops;
+
+    OIIO_CHECK_NO_THROW(BuildOps(fileName, ops, OCIO::TRANSFORM_DIR_FORWARD));
+
+    OIIO_CHECK_NO_THROW(OCIO::FinalizeOpVec(ops));
+    OIIO_REQUIRE_EQUAL(1, ops.size());
+    OCIO::ConstOpRcPtr op0 = ops[0];
+    OIIO_CHECK_EQUAL(op0->data()->getType(), OCIO::OpData::Lut3DType);
+
+    float myImage[]
+        = { std::numeric_limits<float>::quiet_NaN(), 0.25f, 0.25f, 0.0f,
+            0.5f,                                    0.5f,  0.5f,  0.0f };
+
+    OIIO_CHECK_NO_THROW(op0->apply(myImage, 2));
+
+    OIIO_CHECK_EQUAL(myImage[0], 0.0f);
+    OIIO_CHECK_EQUAL(myImage[1], 0.25f);
+    OIIO_CHECK_EQUAL(myImage[2], 0.25f);
+    OIIO_CHECK_EQUAL(myImage[3], 0.0f);
+
+    OIIO_CHECK_EQUAL(myImage[4], 0.5f);
+    OIIO_CHECK_EQUAL(myImage[5], 0.5f);
+    OIIO_CHECK_EQUAL(myImage[6], 0.5f);
+    OIIO_CHECK_EQUAL(myImage[7], 0.0f);
+}
+
+
+
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Blue
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Green
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Red
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererInvLUT3D
 // TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_Example
-// TODO: Port syncolor test: renderer\test\CPURenderer_cases.cpp_inc - CPURendererLUT3D_ExampleWithNaN
-// TODO: Port syncolor test: renderer\test\invLutUtil_test.cpp       - GPURendererInvLut3D_LutSize
 // TODO: Port syncolor test: renderer\test\transformTools_test.cpp   - lut3d_composition
 
 #endif // OCIO_UNIT_TEST

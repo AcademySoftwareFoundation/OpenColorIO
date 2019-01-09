@@ -794,6 +794,7 @@ OCIO_NAMESPACE_EXIT
 
 namespace OCIO = OCIO_NAMESPACE;
 #include "unittest.h"
+#include "UnitTestFiles.h"
 
 OIIO_ADD_TEST(Lut1DOpStruct, no_op)
 {
@@ -1662,50 +1663,43 @@ OIIO_ADD_TEST(Lut1D, finite_value_hue_adjust)
 // Unit tests using clf files.
 //
 
-#ifndef OCIO_UNIT_TEST_FILES_DIR
-#error Expecting OCIO_UNIT_TEST_FILES_DIR to be defined for tests. Check relevant CMakeLists.txt
-#endif
-/*
-void Apply(const OCIO::OpData::OpDataVec & opDataVec, float * img, unsigned numPixels)
+void Apply(const OCIO::OpRcPtrVec & ops, float * img, long numPixels)
 {
-    // NB: Converting the OpData to Op is done using a clone(DO_DEEP_COPY)
-    //     which means that the FinalizeOpVec does not affect OpData instances.
-    //     This is mandatory when loading ctf files with bit depths other than 32f,
-    //     to avoid changing the test conditions.
-
-    OCIO::OpRcPtrVec ops;
-    OCIO::CreateOpVecFromOpDataVec(ops, opDataVec, OCIO::TRANSFORM_DIR_FORWARD);
-    OCIO::FinalizeOpVec(ops);
-
-    for (unsigned idx = 0; idx<ops.size(); ++idx)
+    for (int idx = 0; idx<ops.size(); ++idx)
     {
         ops[idx]->apply(img, numPixels);
     }
 }
-*/
 
-/*OIIO_ADD_TEST(Lut1D, apply_special_values)
+OIIO_ADD_TEST(Lut1D, apply_special_values)
 {
     const std::string ctfFile("ACES_to_ACESproxy_sim_nd.ctf");
 
-    OCIO::CTF::Reader::TransformPtr transform;
-    OIIO_CHECK_NO_THROW(transform = OCIO::LoadCTFTestFile(ctfFile));
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(BuildOps(ctfFile, ops, OCIO::TRANSFORM_DIR_FORWARD));
 
-    const OCIO::OpData::OpDataVec & opList = transform->getOps();
-    OIIO_CHECK_EQUAL(opList.size(), 1);
-    OIIO_CHECK_EQUAL(opList[0]->getOpType(), OCIO::OpData::OpData::Lut1DType);
+    // First op is the FileOp.
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto opData = op->data();
+    OIIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
 
-    const OCIO::OpData::Lut1D * lut = static_cast<const OCIO::OpData::Lut1D*>(opList[0]);
-    OIIO_CHECK_ASSERT(lut);
+    auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
+    OIIO_REQUIRE_ASSERT(lut);
 
-    const OCIO::OpData::Array & lutArray = lut->getArray();
+    const OCIO::Array & lutArray = lut->getArray();
     const float step = OCIO::GetBitDepthMaxValue(lut->getInputBitDepth()) / ((float)lutArray.getLength() - 1.0f);
 
     float inputFrame[] = {
         0.0f,         0.5f*step,     step,          1.0f,
         3000.0f*step, 32000.0f*step, 65535.0f*step, 1.0f };
 
-    OIIO_CHECK_NO_THROW(Apply(opList, inputFrame, 2));
+    // Account for rescaling artifacts that can occur when the output depth
+    // of the 1d LUT operation in 'ACES_to_ACESproxy_sim_nd.ctf' is not 32f
+    const float outRange = OCIO::GetBitDepthMaxValue(lut->getOutputBitDepth());
+
+    OCIO::FinalizeOpVec(ops);
+    OIIO_CHECK_NO_THROW(Apply(ops, inputFrame, 2));
 
     // -Inf is mapped to -MAX_FLOAT
     const float negmax = -std::numeric_limits<float>::max();
@@ -1715,18 +1709,14 @@ void Apply(const OCIO::OpData::OpDataVec & opDataVec, float * img, unsigned numP
 
     const float rtol = powf(2.f, -14.f);
 
-    // Account for rescaling artifacts that can occur when the output depth
-    // of the 1d LUT operation in 'ACES_to_ACESproxy_sim_nd.ctf' is not 32f
-    const float outRange = OCIO::GetBitDepthMaxValue(lut->getOutputBitDepth());
-
-    OIIO_CHECK_ASSERT(OCIO::equalWithSafeRelError(inputFrame[0], negmax, rtol, 1.0f));
-    OIIO_CHECK_ASSERT(OCIO::equalWithSafeRelError(inputFrame[1], (lutElem_1 + negmax) * 0.5f, rtol, 1.0f));
-    OIIO_CHECK_ASSERT(OCIO::equalWithSafeRelError(inputFrame[2], lutElem_1 / outRange, rtol, 1.0f));
+    OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(inputFrame[0], negmax, rtol, 1.0f));
+    OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(inputFrame[1], (lutElem_1 + negmax) * 0.5f, rtol, 1.0f));
+    OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(inputFrame[2], lutElem_1 / outRange, rtol, 1.0f));
     OIIO_CHECK_EQUAL(inputFrame[3], 1.0f);
 
-    OIIO_CHECK_ASSERT(OCIO::equalWithSafeRelError(inputFrame[4], lutElem_3000 / outRange, rtol, 1.0f));
-    OIIO_CHECK_ASSERT(OCIO::equalWithSafeRelError(inputFrame[5], negmax, rtol, 1.0f));
-    OIIO_CHECK_ASSERT(OCIO::equalWithSafeRelError(inputFrame[6], negmax, rtol, 1.0f));
+    OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(inputFrame[4], lutElem_3000 / outRange, rtol, 1.0f));
+    OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(inputFrame[5], negmax, rtol, 1.0f));
+    OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError(inputFrame[6], negmax, rtol, 1.0f));
     OIIO_CHECK_EQUAL(inputFrame[7], 1.0f);
 }
 
@@ -1734,44 +1724,48 @@ OIIO_ADD_TEST(Lut1D, apply_half_domain_hue_adjust)
 {
     const std::string ctfFile("ACESv0.2_RRT_LUT.ctf");
 
-    OCIO::CTF::Reader::TransformPtr transform;
-    OIIO_CHECK_NO_THROW(transform = OCIO::LoadCTFTestFile(ctfFile));
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(BuildOps(ctfFile, ops, OCIO::TRANSFORM_DIR_FORWARD));
 
-    const OCIO::OpData::OpDataVec & opList = transform->getOps();
-    OIIO_CHECK_EQUAL(opList.size(), 1);
-    OIIO_CHECK_EQUAL(opList[0]->getOpType(), OCIO::OpData::OpData::Lut1DType);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto opData = op->data();
+    OIIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
 
+    auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
+    OIIO_REQUIRE_ASSERT(lut);
 
     float inputFrame[] = {
         0.05f, 0.18f, 1.1f, 0.5f,
         2.3f, 0.01f, 0.3f, 1.0f };
 
-    OIIO_CHECK_NO_THROW(Apply(opList, inputFrame, 2));
+    OCIO::FinalizeOpVec(ops);
+    OIIO_CHECK_NO_THROW(Apply(ops, inputFrame, 2));
 
     const float rtol = 1e-6f;
     const float minExpected = 1e-3f;
 
     OIIO_CHECK_ASSERT(
-        OCIO::equalWithSafeRelError(inputFrame[0], 0.54780269f, rtol, minExpected));
+        OCIO::EqualWithSafeRelError(inputFrame[0], 0.54780269f, rtol, minExpected));
 
     OIIO_CHECK_ASSERT(
-        OCIO::equalWithSafeRelError(inputFrame[1],
-            9.57448578f,
-            rtol, minExpected));  // would be 5.0 w/out hue adjust
+        OCIO::EqualWithSafeRelError(inputFrame[1],
+                                    9.57448578f,
+                                    rtol, minExpected));  // would be 5.0 w/out hue adjust
 
     OIIO_CHECK_ASSERT(
-        OCIO::equalWithSafeRelError(inputFrame[2], 73.45562744f, rtol, minExpected));
+        OCIO::EqualWithSafeRelError(inputFrame[2], 73.45562744f, rtol, minExpected));
 
     OIIO_CHECK_EQUAL(inputFrame[3], 0.5f);
 
     OIIO_CHECK_ASSERT(
-        OCIO::equalWithSafeRelError(inputFrame[4], 188.087067f, rtol, minExpected));
+        OCIO::EqualWithSafeRelError(inputFrame[4], 188.087067f, rtol, minExpected));
     OIIO_CHECK_ASSERT(
-        OCIO::equalWithSafeRelError(inputFrame[5], 0.0324990489f, rtol, minExpected));
+        OCIO::EqualWithSafeRelError(inputFrame[5], 0.0324990489f, rtol, minExpected));
     OIIO_CHECK_ASSERT(
-        OCIO::equalWithSafeRelError(inputFrame[6],
-            23.8472710f,
-            rtol, minExpected));  // would be 11.3372078 w/out hue adjust
+        OCIO::EqualWithSafeRelError(inputFrame[6],
+                                    23.8472710f,
+                                    rtol, minExpected));  // would be 11.3372078 w/out hue adjust
 
     OIIO_CHECK_EQUAL(inputFrame[7], 1.0f);
 }
@@ -1783,40 +1777,46 @@ OIIO_ADD_TEST(InvLut1D, apply_half)
 
     static const std::string ctfFile("lut1d_halfdom.ctf");
 
-    OCIO::CTF::Reader::TransformPtr transform;
-    OIIO_CHECK_NO_THROW(transform = OCIO::LoadCTFTestFile(ctfFile));
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(BuildOps(ctfFile, ops, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO::OpData::OpDataVec & opList = transform->getOps();
-    OIIO_CHECK_EQUAL(opList.size(), 1);
-    OIIO_CHECK_EQUAL(opList[0]->getOpType(), OCIO::OpData::OpData::Lut1DType);
+    OIIO_REQUIRE_EQUAL(ops.size(), 2);
+    auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto opData = op->data();
+    OIIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
 
-    opList[0]->setInputBitDepth(outBD);
-    opList[0]->setOutputBitDepth(inBD);
+    auto lut = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
+    OIIO_REQUIRE_ASSERT(lut);
 
-    const OCIO::OpData::Lut1D * fwdLut
-        = dynamic_cast<const OCIO::OpData::Lut1D*>(opList[0]);
+    auto fwdLut = lut->clone();
+    fwdLut->setInputBitDepth(outBD);
+    fwdLut->setOutputBitDepth(inBD);
 
-    OCIO::OpData::InvLut1D invLut(*fwdLut);
+    OCIO::OpRcPtrVec ops1;
+    auto fwdOp = std::make_shared<OCIO::Lut1DOp>(fwdLut);
+    ops1.push_back(fwdOp);
 
     const float inImage[12] = {
         1.f,    1.f,   0.5f, 0.f,
-        0.001f, 0.1f,  4.f,  0.5f,  // test positive half domain of R, G, B channels
+        0.001f, 0.1f,  4.f,  0.5f,   // test positive half domain of R, G, B channels
         -0.08f, -1.f, -10.f,  1.f }; // test negative half domain of R, G, B channels
 
     float inImage1[12]; for (unsigned i = 0; i<12; ++i) { inImage1[i] = inImage[i]; }
 
     // Apply forward LUT.
-    OCIO::OpData::OpDataVec ops1;
-    ops1.append(fwdLut->clone(OCIO::OpData::Lut1D::DO_SHALLOW_COPY));
-
+    OCIO::FinalizeOpVec(ops1);
     OIIO_CHECK_NO_THROW(Apply(ops1, inImage1, 3));
 
     // Apply inverse LUT.
-    OCIO::OpData::OpDataVec ops2;
-    ops2.append(invLut.clone(OCIO::OpData::Lut1D::DO_SHALLOW_COPY));
+    OCIO::OpRcPtrVec ops2;
+    auto invLut = lut->inverse();
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_EXACT);
+    auto invOp = std::make_shared<OCIO::Lut1DOp>(invLut);
+    ops2.push_back(invOp);
 
     float inImage2[12]; for (unsigned i = 0; i<12; ++i) { inImage2[i] = inImage1[i]; }
 
+    OCIO::FinalizeOpVec(ops2);
     OIIO_CHECK_NO_THROW(Apply(ops2, inImage2, 3));
 
     // Compare the two applys
@@ -1826,12 +1826,17 @@ OIIO_ADD_TEST(InvLut1D, apply_half)
     }
 
     // Repeat with style = LUT_INVERSION_FAST.
-    invLut.setInversionQuality(OCIO::LUT_INVERSION_FAST);
-    ops1.replace(invLut.clone(OCIO::OpData::Lut1D::DO_SHALLOW_COPY), 0);
+    OCIO::OpRcPtrVec ops3;
+    invLut = lut->inverse();
+    invLut->setInversionQuality(OCIO::LUT_INVERSION_FAST);
+    invLut->setFileBitDepth(inBD);
+    invOp = std::make_shared<OCIO::Lut1DOp>(invLut);
+    ops3.push_back(invOp);
 
     for (unsigned i = 0; i<12; ++i) { inImage2[i] = inImage1[i]; }
 
-    OIIO_CHECK_NO_THROW(Apply(ops1, inImage2, 3));
+    OCIO::FinalizeOpVec(ops3);
+    OIIO_CHECK_NO_THROW(Apply(ops3, inImage2, 3));
 
     // Compare the two applys
     for (unsigned i = 0; i < 12; ++i)
@@ -1842,26 +1847,25 @@ OIIO_ADD_TEST(InvLut1D, apply_half)
 
 OIIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
 {
-    const std::string fileNameLut("lut1d_comp.clf");
+    const std::string ctfFile("lut1d_comp.clf");
 
-    OCIO::CTF::Reader::TransformPtr transform;
-    OIIO_CHECK_NO_THROW(transform = OCIO::LoadCTFTestFile(fileNameLut));
+    OCIO::OpRcPtrVec ops;
+    OIIO_CHECK_NO_THROW(BuildOps(ctfFile, ops, OCIO::TRANSFORM_DIR_FORWARD));
 
-    OCIO::OpData::OpDataVec & opList = transform->getOps();
-    OIIO_CHECK_EQUAL(opList.size(), 2);
-    OIIO_CHECK_EQUAL(opList[0]->getOpType(), OCIO::OpData::OpData::Lut1DType);
-    OIIO_CHECK_EQUAL(opList[1]->getOpType(), OCIO::OpData::OpData::Lut1DType);
-
-    // Transform keeps raw pointers and will delete them. Need to copy them
-    // to use shared pointers.
-    OCIO::Lut1DOpDataRcPtr pL1(new OCIO::OpData::Lut1D(
-        *dynamic_cast<OCIO::OpData::Lut1D*>(opList[0])));
-    OCIO::Lut1DOpDataRcPtr pL2(new OCIO::OpData::Lut1D(
-        *dynamic_cast<OCIO::OpData::Lut1D*>(opList[1])));
+    OIIO_REQUIRE_EQUAL(ops.size(), 3);
+    auto op = std::const_pointer_cast<const OCIO::Op>(ops[1]);
+    auto opData = op->data();
+    OIIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
+    auto lut1 = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
+    OIIO_REQUIRE_ASSERT(lut1);
+    op = std::const_pointer_cast<const OCIO::Op>(ops[2]);
+    opData = op->data();
+    OIIO_CHECK_EQUAL(opData->getType(), OCIO::OpData::Lut1DType);
+    auto lut2 = std::dynamic_pointer_cast<const OCIO::Lut1DOpData>(opData);
 
     {
-        const OCIO::Lut1DOpDataRcPtr lutComposed
-            = OCIO::OpData::Compose(pL1, pL2, OCIO::OpData::COMPOSE_RESAMPLE_NO);
+        auto lutComposed = lut1->clone();
+        OCIO::Lut1DOpData::Compose(lutComposed, lut2, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_NO);
 
         const float error = 1e-5f;
         OIIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 2);
@@ -1873,8 +1877,8 @@ OIIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
         OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[5], 0.67463773f, error);
     }
     {
-        const OCIO::Lut1DOpDataRcPtr lutComposed
-            = OCIO::OpData::Compose(pL1, pL2, OCIO::OpData::COMPOSE_RESAMPLE_INDEPTH);
+        auto lutComposed = lut1->clone();
+        OCIO::Lut1DOpData::Compose(lutComposed, lut2, OCIO::Lut1DOpData::COMPOSE_RESAMPLE_INDEPTH);
 
         const float error = 1e-5f;
         OIIO_CHECK_EQUAL(lutComposed->getArray().getLength(), 256);
@@ -1888,7 +1892,7 @@ OIIO_ADD_TEST(Lut1D, lut_1d_compose_with_bit_depth)
         OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[766], 0.51819527f, error);
         OIIO_CHECK_CLOSE(lutComposed->getArray().getValues()[767], 0.67463773f, error);
     }
-}*/
+}
 
 OIIO_ADD_TEST(Lut1D, inverse_twice)
 {
