@@ -125,7 +125,8 @@ void GammaTransform::setDirection(TransformDirection dir)
 
 //
 // At the config level, OCIO provides a direction attribute for transforms 
-// and we add a public two-element style attribute to control the type of function applied. 
+// and we add a public two-element style attribute to control the type 
+// of function applied. 
 // 
 // However, at the Gamma Op & OpData level, it is more convenient to have 
 // the two direction+style attributes combined into a single four-element enum 
@@ -165,7 +166,7 @@ void GammaTransform::validate() const
     getImpl()->validate();
 }
 
-void GammaTransform::setGammaValues(const double * vec4)
+void GammaTransform::setGamma(const double * vec4)
 {
     if(vec4)
     {
@@ -176,7 +177,7 @@ void GammaTransform::setGammaValues(const double * vec4)
     }
 }
 
-void GammaTransform::getGammaValues(double * vec4) const
+void GammaTransform::getGamma(double * vec4) const
 {
     if(vec4)
     {
@@ -187,7 +188,7 @@ void GammaTransform::getGammaValues(double * vec4) const
     }
 }
 
-void GammaTransform::setOffsetValues(const double * vec4)
+void GammaTransform::setOffset(const double * vec4)
 {
     if(vec4)
     {
@@ -203,7 +204,7 @@ void GammaTransform::setOffsetValues(const double * vec4)
     }
 }
 
-void GammaTransform::getOffsetValues(double * vec4) const
+void GammaTransform::getOffset(double * vec4) const
 {
     vec4[0] = getImpl()->getRedParams().size()==2   ? getImpl()->getRedParams()[1]   : 0.;
     vec4[1] = getImpl()->getGreenParams().size()==2 ? getImpl()->getGreenParams()[1] : 0.;
@@ -218,7 +219,7 @@ std::ostream& operator<< (std::ostream& os, const GammaTransform & t)
     os << "style=" << GammaStyleToString(t.getStyle()) << ", ";
     
     double gamma[4];
-    t.getGammaValues(gamma);
+    t.getGamma(gamma);
 
     os << "gamma=" << gamma[0];
     for (int i = 1; i < 4; ++i)
@@ -229,7 +230,7 @@ std::ostream& operator<< (std::ostream& os, const GammaTransform & t)
     if(t.getStyle()==GAMMA_MONCURVE)
     {
         double offset[4];
-        t.getOffsetValues(offset);
+        t.getOffset(offset);
 
         os << ", offset=" << offset[0];
         for (int i = 1; i < 4; ++i)
@@ -254,12 +255,12 @@ void BuildGammaOps(OpRcPtrVec & ops,
         = CombineTransformDirections(dir, transform.getDirection());
     
     double gamma4[4] = { 1., 1., 1., 1. };
-    transform.getGammaValues(gamma4);
+    transform.getGamma(gamma4);
 
     if(transform.getStyle()==GAMMA_MONCURVE)
     {
         double offset4[4] = { 0., 0., 0., 0. };
-        transform.getOffsetValues(offset4);
+        transform.getOffset(offset4);
 
         CreateGammaOp(ops, "", OpData::Descriptions(),
                       combinedDir==TRANSFORM_DIR_FORWARD ? GammaOpData::MONCURVE_FWD
@@ -302,12 +303,12 @@ OIIO_ADD_TEST(GammaTransform, basic)
     OIIO_CHECK_EQUAL(gamma->getDirection(), OCIO::TRANSFORM_DIR_INVERSE);
 
     std::vector<double> val4(4, 1.), identity_val4(4, 1.);
-    OIIO_CHECK_NO_THROW(gamma->getGammaValues(&val4[0]));
+    OIIO_CHECK_NO_THROW(gamma->getGamma(&val4[0]));
     OIIO_CHECK_ASSERT(val4 == identity_val4);
 
     val4[1] = 2.;
-    OIIO_CHECK_NO_THROW(gamma->setGammaValues(&val4[0]));
-    OIIO_CHECK_NO_THROW(gamma->getGammaValues(&val4[0]));
+    OIIO_CHECK_NO_THROW(gamma->setGamma(&val4[0]));
+    OIIO_CHECK_NO_THROW(gamma->getGamma(&val4[0]));
     OIIO_CHECK_ASSERT(val4 != identity_val4);
 
     OIIO_CHECK_NO_THROW(gamma->setStyle(OCIO::GAMMA_MONCURVE));
@@ -315,12 +316,12 @@ OIIO_ADD_TEST(GammaTransform, basic)
 
     val4[1] = 1.;
     identity_val4 = { 0., 0., 0., 0. };
-    OIIO_CHECK_NO_THROW(gamma->getOffsetValues(&val4[0]));
+    OIIO_CHECK_NO_THROW(gamma->getOffset(&val4[0]));
     OIIO_CHECK_ASSERT(val4 == identity_val4);
 
     val4[1] = 2.;
-    OIIO_CHECK_NO_THROW(gamma->setOffsetValues(&val4[0]));
-    OIIO_CHECK_NO_THROW(gamma->getGammaValues(&val4[0]));
+    OIIO_CHECK_NO_THROW(gamma->setOffset(&val4[0]));
+    OIIO_CHECK_NO_THROW(gamma->getGamma(&val4[0]));
     OIIO_CHECK_ASSERT(val4 != identity_val4);
 }
 

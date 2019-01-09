@@ -744,7 +744,7 @@ OCIO_NAMESPACE_ENTER
                         os << "floats. Found '" << val.size() << "'.";
                         throw Exception(os.str().c_str());
                     }
-                    t->setGammaValues(&val[0]);
+                    t->setGamma(&val[0]);
                 }
                 else if(key == "offset")
                 {
@@ -757,7 +757,7 @@ OCIO_NAMESPACE_ENTER
                         os << "floats. Found '" << val.size() << "'.";
                         throw Exception(os.str().c_str());
                     }
-                    t->setOffsetValues(&val[0]);
+                    t->setOffset(&val[0]);
                 }
                 else if(key == "style")
                 {
@@ -787,14 +787,14 @@ OCIO_NAMESPACE_ENTER
             out << YAML::Value << YAML::Flow << GammaStyleToString(t->getStyle());
 
             std::vector<double> gamma(4, 1.);
-            t->getGammaValues(&gamma[0]);
+            t->getGamma(&gamma[0]);
             out << YAML::Key << "gamma";
             out << YAML::Value << YAML::Flow << gamma;
 
             if(t->getStyle()==GAMMA_MONCURVE)
             {
                 std::vector<double> offset(4, 0.);
-                t->getOffsetValues(&offset[0]);
+                t->getOffset(&offset[0]);
                 out << YAML::Key << "offset";
                 out << YAML::Value << YAML::Flow << offset;
             }

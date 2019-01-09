@@ -43,7 +43,7 @@ const double gamma[4]  = { 2.1,  2.2,  2.3,  1.5  };
 const double offset[4] = {  .01,  .02,  .03,  .05 };
 
 
-// Helper method to build unit tests
+// Helper method to build unit tests.
 void AddGammaTest(OCIOGPUTest & test, 
                   OCIO::GpuShaderDescRcPtr & shaderDesc,
                   TransformDirection direction,
@@ -54,12 +54,12 @@ void AddGammaTest(OCIOGPUTest & test,
     OCIO::GammaTransformRcPtr g = OCIO::GammaTransform::Create();
     g->setDirection(direction);
     g->setStyle(GAMMA_BASIC);
-    g->setGammaValues(gamma);
+    g->setGamma(gamma);
 
     if(offset)
     {
         g->setStyle(GAMMA_MONCURVE);
-        g->setOffsetValues(offset);
+        g->setOffset(offset);
     }
 
     test.setErrorThreshold(epsilon);

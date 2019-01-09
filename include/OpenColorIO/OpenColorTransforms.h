@@ -536,14 +536,14 @@ OCIO_NAMESPACE_ENTER
         // .. note::
         //    By convention, the gamma values should be >= 1. (Where possible, set 
         //    the transform direction to inverse rather than using gamma values less than 1.)
-        void setGammaValues(const double * vec4);
+        void setGamma(const double * vec4);
         //!cpp:function::
-        void getGammaValues(double * vec4) const;
+        void getGamma(double * vec4) const;
 
         //!cpp:function:: Set the offset used with two segment curves such as sRGB and L*.
-        void setOffsetValues(const double * vec4);
+        void setOffset(const double * vec4);
         //!cpp:function::
-        void getOffsetValues(double * vec4) const;
+        void getOffset(double * vec4) const;
 
     private:
         GammaTransform();

@@ -43,8 +43,6 @@ OCIO_NAMESPACE_ENTER
 // Note: The parameters are validated when the op is created so that the
 // math below does not require checks for divide by 0, etc.
 
-class CDLOpCPU;
-typedef OCIO_SHARED_PTR<CDLOpCPU> CDLOpCPURcPtr;
 
 // Base class for the Gamma (i.e. basic style) operation renderers.
 class GammBasicOpCPU : public OpCPU
