@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2018 Autodesk Inc., et al.
+Copyright (c) 2003-2010 Sony Pictures Imageworks Inc., et al.
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
