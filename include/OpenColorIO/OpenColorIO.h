@@ -784,7 +784,7 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // CPU Renderer
-        // ^^^^^^^^
+        // ^^^^^^^^^^^^
         
         //!cpp:function:: Apply to an image.
         void apply(ImageDesc& img) const;
@@ -808,7 +808,7 @@ OCIO_NAMESPACE_ENTER
         ///////////////////////////////////////////////////////////////////////////
         //!rst::
         // GPU Renderer
-        // ^^^^^^^^
+        // ^^^^^^^^^^^^
         // Get the GPU shader program and its description
         
         //!cpp:function:: Extract the shader information to implement the color processing
