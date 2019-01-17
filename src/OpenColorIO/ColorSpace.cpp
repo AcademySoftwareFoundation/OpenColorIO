@@ -220,7 +220,7 @@ OCIO_NAMESPACE_ENTER
 
     void ColorSpace::removeCategory(const char * category)
     {
-        auto itr = getImpl()->findCategory(category);
+        Impl::Categories::const_iterator itr = getImpl()->findCategory(category);
 
         if(itr!=getImpl()->categories_.end())
         {
