@@ -68,11 +68,11 @@ bool MatrixOpData::Offsets::operator==(const Offsets & o) const
 }
 
 template<typename T>
-void MatrixOpData::Offsets::setRGBValues(const T * v3)
+void MatrixOpData::Offsets::setRGB(const T * v3)
 {
     if (!v3)
     {
-        throw Exception("Matrix: setRGBValues NULL pointer.");
+        throw Exception("Matrix: setRGB NULL pointer.");
     }
 
     m_values[0] = v3[0];
@@ -81,15 +81,15 @@ void MatrixOpData::Offsets::setRGBValues(const T * v3)
     m_values[3] = (T)0.;
 }
 
-template void MatrixOpData::Offsets::setRGBValues(const float * v3);
-template void MatrixOpData::Offsets::setRGBValues(const double * v3);
+template void MatrixOpData::Offsets::setRGB(const float * v3);
+template void MatrixOpData::Offsets::setRGB(const double * v3);
 
 template<typename T>
-void MatrixOpData::Offsets::setRGBAValues(const T * v4)
+void MatrixOpData::Offsets::setRGBA(const T * v4)
 {
     if (!v4)
     {
-        throw Exception("Matrix: setRGBAValues NULL pointer.");
+        throw Exception("Matrix: setRGBA NULL pointer.");
     }
 
     m_values[0] = v4[0];
@@ -98,8 +98,8 @@ void MatrixOpData::Offsets::setRGBAValues(const T * v4)
     m_values[3] = v4[3];
 }
 
-template void MatrixOpData::Offsets::setRGBAValues(const float * v4);
-template void MatrixOpData::Offsets::setRGBAValues(const double * v4);
+template void MatrixOpData::Offsets::setRGBA(const float * v4);
+template void MatrixOpData::Offsets::setRGBA(const double * v4);
 
 bool MatrixOpData::Offsets::isNotNull() const
 {
@@ -317,7 +317,7 @@ MatrixOpData::MatrixArrayPtr
 }
 
 template<typename T>
-void MatrixOpData::MatrixArray::setRGBValues(const T * values)
+void MatrixOpData::MatrixArray::setRGB(const T * values)
 {
     Values & v = getValues();
 
@@ -346,8 +346,8 @@ void MatrixOpData::MatrixArray::setRGBValues(const T * values)
     v[15] = (T)scaleFactor;
 }
 
-template void MatrixOpData::MatrixArray::setRGBValues(const float * values);
-template void MatrixOpData::MatrixArray::setRGBValues(const double * values);
+template void MatrixOpData::MatrixArray::setRGB(const float * values);
+template void MatrixOpData::MatrixArray::setRGB(const double * values);
 
 unsigned long MatrixOpData::MatrixArray::getNumValues() const
 {
@@ -412,10 +412,10 @@ void MatrixOpData::MatrixArray::expandFrom3x3To4x4()
 
     resize(4, 4);
 
-    setRGBValues(oldValues.data());
+    setRGB(oldValues.data());
 }
 
-void MatrixOpData::MatrixArray::setRGBAValues(const float * values)
+void MatrixOpData::MatrixArray::setRGBA(const float * values)
 {
     Values & v = getValues();
 
@@ -440,7 +440,7 @@ void MatrixOpData::MatrixArray::setRGBAValues(const float * values)
     v[15] = values[15];
 }
 
-void MatrixOpData::MatrixArray::setRGBAValues(const double * values)
+void MatrixOpData::MatrixArray::setRGBA(const double * values)
 {
     Values & v = getValues();
     memcpy(&v[0], values, 16 * sizeof(double));
@@ -539,19 +539,19 @@ void MatrixOpData::setArrayValue(unsigned long index, double value)
     m_array.getValues()[index] = value;
 }
 
-void  MatrixOpData::setRGBValues(const float* values)
+void  MatrixOpData::setRGB(const float* values)
 {
-    m_array.setRGBValues(values);
+    m_array.setRGB(values);
 }
 
 template<typename T>
-void MatrixOpData::setRGBAValues(const T * values)
+void MatrixOpData::setRGBA(const T * values)
 {
-    m_array.setRGBAValues(values);
+    m_array.setRGBA(values);
 }
 
-template void MatrixOpData::setRGBAValues(const float * values);
-template void MatrixOpData::setRGBAValues(const double * values);
+template void MatrixOpData::setRGBA(const float * values);
+template void MatrixOpData::setRGBA(const double * values);
 
 void MatrixOpData::validate() const
 {
@@ -923,7 +923,7 @@ MatrixOpDataRcPtr MatrixOpData::inverse() const
     }
 
     MatrixOpDataRcPtr invOp = std::make_shared<MatrixOpData>(getOutputBitDepth(), getInputBitDepth());
-    invOp->setRGBAValues(&(invMatrixArray->getValues()[0]));
+    invOp->setRGBA(&(invMatrixArray->getValues()[0]));
     invOp->setOffsets(invOffsets);
 
     // No need to call validate(), the invOp will have proper dimension,
@@ -1377,7 +1377,7 @@ OIIO_ADD_TEST(MatrixOpData, composition)
     const float offsA[] = { 10, 11, 12, 13 };
 
     OCIO::MatrixOpData mA(OCIO::BIT_DEPTH_UINT8, OCIO::BIT_DEPTH_F16);
-    mA.setRGBAValues(mtxA);
+    mA.setRGBA(mtxA);
     mA.setRGBAOffsets(offsA);
 
     const float mtxB[] = { 21, 22, 23, 24,
@@ -1388,7 +1388,7 @@ OIIO_ADD_TEST(MatrixOpData, composition)
 
     OCIO::MatrixOpDataRcPtr mB = std::make_shared<OCIO::MatrixOpData>(
         OCIO::BIT_DEPTH_F16, OCIO::BIT_DEPTH_UINT10);
-    mB->setRGBAValues(mtxB);
+    mB->setRGBA(mtxB);
     mB->setRGBAOffsets(offsB);
 
     // Correct results.
@@ -1456,7 +1456,7 @@ OIIO_ADD_TEST(MatrixOpData, rgb)
     OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16);
 
     const float rgb[9] = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
-    m.setRGBValues(rgb);
+    m.setRGB(rgb);
 
     const OCIO::ArrayDouble::Values & v = m.getArray().getValues();
     OIIO_CHECK_EQUAL(v[0], rgb[0]);
@@ -1485,7 +1485,7 @@ OIIO_ADD_TEST(MatrixOpData, rgba)
     OCIO::MatrixOpData m(OCIO::BIT_DEPTH_UINT16, OCIO::BIT_DEPTH_UINT16);
 
     const float rgba[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15 };
-    m.setRGBAValues(rgba);
+    m.setRGBA(rgba);
 
     const OCIO::ArrayDouble::Values & v = m.getArray().getValues();
     for (unsigned long i = 0; i<16; ++i)
@@ -1590,7 +1590,7 @@ OIIO_ADD_TEST(MatrixOpData, matrixInverse_singular)
             0.0f, 0.f, 0.f, 0.0f,
             0.2f, 0.f, 0.f, 1.0f };
 
-    singularMatrixOp.setRGBAValues(mat);
+    singularMatrixOp.setRGBA(mat);
 
     OIIO_CHECK_ASSERT(!singularMatrixOp.isNoOp());
     OIIO_CHECK_ASSERT(!singularMatrixOp.isUnityDiagonal());
@@ -1616,7 +1616,7 @@ OIIO_ADD_TEST(MatrixOpData, inverse)
                               -0.5f,  0.6f,  0.7f, 0.8f };
     const float offsets[4] = { -0.1f, 0.2f, -0.3f, 0.4f };
 
-    refMatrixOp.setRGBAValues(matrix);
+    refMatrixOp.setRGBA(matrix);
     refMatrixOp.setRGBAOffsets(offsets);
 
     // Get inverse of reference matrix operation.
@@ -1672,7 +1672,7 @@ OIIO_ADD_TEST(MatrixOpData, channel)
                                0.0f, 0.5f,  0.0f, 0.0f,
                                0.0f, 0.0f, -0.4f, 0.0f,
                                0.0f, 0.0f,  0.0f, 0.8f };
-    refMatrixOp.setRGBAValues(matrix);
+    refMatrixOp.setRGBA(matrix);
     // False: with diagonal.
     OIIO_CHECK_ASSERT(!refMatrixOp.hasChannelCrosstalk());
 
@@ -1680,7 +1680,7 @@ OIIO_ADD_TEST(MatrixOpData, channel)
                                 0.0f, 1.0f, 0.0f, 0.0f,
                                 0.0f, 0.0f, 1.0f, 0.000000001f,
                                 0.0f, 0.0f, 0.0f, 1.0f };
-    refMatrixOp.setRGBAValues(matrix2);
+    refMatrixOp.setRGBA(matrix2);
     // True: with off-diagonal.
     OIIO_CHECK_ASSERT(refMatrixOp.hasChannelCrosstalk());
 }

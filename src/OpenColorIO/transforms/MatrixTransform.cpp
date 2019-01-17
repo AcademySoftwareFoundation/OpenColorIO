@@ -148,7 +148,7 @@ OCIO_NAMESPACE_ENTER
     
     void MatrixTransform::setMatrix(const float * m44)
     {
-        if (m44) getImpl()->setRGBAValues(m44);
+        if (m44) getImpl()->setRGBA(m44);
     }
     
     void MatrixTransform::getMatrix(float * m44) const

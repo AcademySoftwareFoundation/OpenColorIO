@@ -112,7 +112,7 @@ OCIO_NAMESPACE_ENTER
             }
 
             MatrixOpDataRcPtr mat = std::make_shared<MatrixOpData>();
-            mat->setRGBAValues(m44);
+            mat->setRGBA(m44);
             mat->setRGBAOffsets(offset4);
             data() = mat;
         }

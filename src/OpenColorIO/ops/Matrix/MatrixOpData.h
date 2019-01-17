@@ -80,10 +80,10 @@ public:
         bool operator==(const Offsets & o) const;
 
         template<typename T>
-        void setRGBValues(const T * v3);
+        void setRGB(const T * v3);
 
         template<typename T>
-        void setRGBAValues(const T * v4);
+        void setRGBA(const T * v4);
 
         inline const double & operator[](unsigned long index) const
         {
@@ -135,10 +135,10 @@ public:
     void setArrayValue(unsigned long index, double value);
 
     // Set the RGB values (alpha reset to 0).
-    void setRGBValues(const float * values);
+    void setRGB(const float * values);
 
     template<typename T>
-    void setRGBAValues(const T * values);
+    void setRGBA(const T * values);
 
     inline const Offsets & getOffsets() const
     {
@@ -154,12 +154,12 @@ public:
 
     inline void setRGBOffsets(const float * offsets)
     {
-        m_offsets.setRGBValues(offsets);
+        m_offsets.setRGB(offsets);
     }
 
     inline void setRGBAOffsets(const float * offsets)
     {
-        m_offsets.setRGBAValues(offsets);
+        m_offsets.setRGBA(offsets);
     }
 
     inline void setOffsets(const Offsets & offsets)
@@ -246,10 +246,10 @@ private:
         MatrixArrayPtr inverse() const;
 
         template<typename T>
-        void setRGBValues(const T * values);
+        void setRGB(const T * values);
 
-        void setRGBAValues(const float * values);
-        void setRGBAValues(const double * values);
+        void setRGBA(const float * values);
+        void setRGBA(const double * values);
 
         void setOutputBitDepth(BitDepth out);
         void setInputBitDepth(BitDepth in);
