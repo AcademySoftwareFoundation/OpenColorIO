@@ -129,6 +129,24 @@ OCIO_NAMESPACE_ENTER
             return categories_.end();
         }
 
+        void removeCategory(const char * category)
+        {
+            if(!category || !*category) return;
+
+            // NB: Categories are not case-sensitive and whitespace is stripped.
+            const std::string ref(pystring::strip(pystring::lower(category)));
+
+            for(auto itr = categories_.begin(); itr!=categories_.end(); ++itr)
+            {
+                if(pystring::strip(pystring::lower(*itr))==ref)
+                {
+                    categories_.erase(itr);
+                    return;
+                }
+            }
+
+            return;
+        }
     };
     
     
@@ -220,12 +238,7 @@ OCIO_NAMESPACE_ENTER
 
     void ColorSpace::removeCategory(const char * category)
     {
-        Impl::Categories::const_iterator itr = getImpl()->findCategory(category);
-
-        if(itr!=getImpl()->categories_.end())
-        {
-            getImpl()->categories_.erase(itr);
-        }
+        getImpl()->removeCategory(category);
     }
 
     int ColorSpace::getNumCategories() const

@@ -170,7 +170,7 @@ public:
         const std::string name = pystring::lower(csName);
         if(name.empty()) return;
 
-        for(auto itr = m_colorSpaces.cbegin(); itr != m_colorSpaces.cend(); ++itr)
+        for(auto itr = m_colorSpaces.begin(); itr != m_colorSpaces.end(); ++itr)
         {
             if(pystring::lower((*itr)->getName())==name)
             {
