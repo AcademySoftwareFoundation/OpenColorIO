@@ -45,11 +45,11 @@ OCIO_NAMESPACE_ENTER
 
 
 // Base class for the Gamma (i.e. basic style) operation renderers.
-class GammBasicOpCPU : public OpCPU
+class GammaBasicOpCPU : public OpCPU
 {
 public:
 
-    GammBasicOpCPU(const GammaOpDataRcPtr & gamma);
+    GammaBasicOpCPU(const GammaOpDataRcPtr & gamma);
 
     virtual void apply(float * rgbaBuffer, long numPixels) const override;
 
@@ -125,7 +125,7 @@ OpCPURcPtr GetGammaRenderer(const GammaOpDataRcPtr & gamma)
         case GammaOpData::BASIC_FWD:
         case GammaOpData::BASIC_REV:
         {
-            return std::make_shared<GammBasicOpCPU>(gamma);
+            return std::make_shared<GammaBasicOpCPU>(gamma);
             break;
         }
     }
@@ -136,7 +136,7 @@ OpCPURcPtr GetGammaRenderer(const GammaOpDataRcPtr & gamma)
 
 
 
-GammBasicOpCPU::GammBasicOpCPU(const GammaOpDataRcPtr & gamma)
+GammaBasicOpCPU::GammaBasicOpCPU(const GammaOpDataRcPtr & gamma)
     :   OpCPU()
     ,   m_inScale(0.0f)
     ,   m_outScale(0.0f)
@@ -148,7 +148,7 @@ GammBasicOpCPU::GammBasicOpCPU(const GammaOpDataRcPtr & gamma)
     update(gamma);
 }
 
-void GammBasicOpCPU::update(const GammaOpDataRcPtr & gamma)
+void GammaBasicOpCPU::update(const GammaOpDataRcPtr & gamma)
 {
     // The gamma calculations are done in normalized space.
     // Compute the scale factors for integer in/out depths.
@@ -180,7 +180,7 @@ void GammBasicOpCPU::update(const GammaOpDataRcPtr & gamma)
         : 1. / gamma->getAlphaParams()[0]);
 }
 
-void GammBasicOpCPU::apply(float * rgbaBuffer, long numPixels) const
+void GammaBasicOpCPU::apply(float * rgbaBuffer, long numPixels) const
 {
 #ifdef USE_SSE
     const __m128 gamma = _mm_set_ps(m_alpGamma, m_bluGamma, m_grnGamma, m_redGamma);

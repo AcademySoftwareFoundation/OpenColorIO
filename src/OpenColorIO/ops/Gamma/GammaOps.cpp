@@ -435,8 +435,11 @@ void ApplyGamma(const OCIO::OpRcPtr & op,
                                           errorThreshold, 1.0f);
         if (!equalRel)
         {
+            // As most of the error thresholds are 1e-7f, the output 
+            // value precision should then be bigger than 7 digits 
+            // to highlight small differences. 
             std::ostringstream message;
-            message.precision(7);
+            message.precision(9);
             message << "Index: " << idx
                     << " - Values: " << image[idx]
                     << " and: " << result[idx]
@@ -565,26 +568,26 @@ OIIO_ADD_TEST(GammaOps, apply_moncurve_style_fwd)
 
 #ifdef USE_SSE
     const float expected_32f[numPixels*4] = {
-        -0.16165356f, -0.33144456f, -0.20408163f,  0.0f,
-        -0.00040413f,  0.0f,         0.00004081f,  0.49101364f, 
-         0.00008082f,  0.00220963f,  0.04081632f,  0.73652046f,
-         0.06403654f,  0.30550804f,  0.67475068f,  1.00001871f,
-         0.61779481f,  0.91060405f,  1.00002050f,  1.63147723f,
-         1.01095867f,  1.09394502f,  1.84183871f, -0.24550682f };
+        -0.07738016f, -0.33144456f, -0.20408163f,  0.0f,
+        -0.00019345f,  0.0f,         0.00004081f,  0.49101364f, 
+         0.00003869f,  0.00220963f,  0.04081632f,  0.73652046f,
+         0.05087645f,  0.30550804f,  0.67475068f,  1.00001871f,
+         0.60383129f,  0.91060405f,  1.00002050f,  1.63147723f,
+         1.01142656f,  1.09394502f,  1.84183871f, -0.24550682f };
 #else
     const float expected_32f[numPixels*4] = {
-        -0.16165356f, -0.33144456f, -0.20408163f,  0.0f,
-        -0.00040413f,  0.0f,         0.00004081f,  0.49101364f, 
-         0.00008082f,  0.00220963f,  0.04081632f,  0.73652046f,
-         0.06403549f,  0.30550399f,  0.67474484f,  1.0f,
-         0.61778825f,  0.91061854f,  1.0f,         1.63146877f,
-         1.01094377f,  1.09396457f,  1.84183657f, -0.24550682f };
+        -0.07738015f, -0.33144456f, -0.20408163f,  0.0f,
+        -0.00019345f,  0.0f,         0.00004081f,  0.49101364f, 
+         0.00003869f,  0.00220963f,  0.04081632f,  0.73652046f,
+         0.05087607f,  0.30550399f,  0.67474484f,  1.0f,
+         0.60382729f,  0.91061854f,  1.0f,         1.63146877f,
+         1.01141202f,  1.09396457f,  1.84183657f, -0.24550682f };
 #endif
 
     OCIO::OpRcPtrVec ops;
 
-    const std::vector<double> gamma4 = { 2.4, 2.2, 2.0, 1.8 };
-    const std::vector<double> offset4= { 0.1, 0.2, 0.4, 0.6 };
+    const std::vector<double> gamma4 = { 2.4,   2.2, 2.0, 1.8 };
+    const std::vector<double> offset4= { 0.055, 0.2, 0.4, 0.6 };
 
     OIIO_CHECK_NO_THROW(
         OCIO::CreateGammaOp(ops, id, desc, OCIO::GammaOpData::MONCURVE_FWD,
