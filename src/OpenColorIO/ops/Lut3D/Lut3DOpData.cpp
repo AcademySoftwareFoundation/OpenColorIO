@@ -71,7 +71,7 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
 {
     if (lut->getDirection() != TRANSFORM_DIR_INVERSE)
     {
-        throw Exception("MakeFastLut3DFromInverse expectS an inverse LUT");
+        throw Exception("MakeFastLut3DFromInverse expects an inverse LUT");
     }
 
     // Make a domain for the composed Lut3D.
