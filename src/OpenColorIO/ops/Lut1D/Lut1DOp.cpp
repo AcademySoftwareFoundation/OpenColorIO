@@ -595,7 +595,7 @@ OCIO_NAMESPACE_ENTER
             ConstLut1DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut1DOp>(op);
             if (typedRcPtr)
             {
-				ConstLut1DOpDataRcPtr lutData = typedRcPtr->lut1DData();
+                ConstLut1DOpDataRcPtr lutData = typedRcPtr->lut1DData();
                 return lut1DData()->isInverse(lutData);
             }
 
