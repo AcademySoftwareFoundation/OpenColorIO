@@ -271,7 +271,7 @@ Lut1DOpData::~Lut1DOpData()
 
 Interpolation Lut1DOpData::getConcreteInterpolation() const
 {
-    // TODO: currently INTERP_NEAREST is not implemented Lut1DOpCPU.
+    // TODO: currently INTERP_NEAREST is not implemented in Lut1DOpCPU.
     // This is a regression from OCIO v1.
     // NB: To have the same interpolation support (i.e. same color processing)
     // between the CPU & GPU paths, the 'Nearest' interpolation is implemented
