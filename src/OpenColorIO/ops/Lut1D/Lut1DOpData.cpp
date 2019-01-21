@@ -833,7 +833,7 @@ void ComposeVec(Lut1DOpDataRcPtr & A, const OpRcPtrVec & B)
 //
 // Note1: If either LUT uses hue adjust, composition will not give the same
 // result as if they were applied sequentially.  However, we need to allow
-// composition because the Lut1D CPU renderer needs it to built the lookup
+// composition because the Lut1D CPU renderer needs it to build the lookup
 // table for the hue adjust renderer.  We could potentially do a lock object in
 // that renderer to over-ride the hue adjust temporarily like in invLut1d.
 // But for now, put the burdon on the caller to use Lut1DOpData::mayCompose first.
