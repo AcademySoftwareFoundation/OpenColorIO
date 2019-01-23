@@ -1,7 +1,7 @@
 diff -Naur ilmbasehalf-2.2.1.orig/CMakeLists.txt ilmbasehalf-2.2.1/CMakeLists.txt
 --- ilmbasehalf-2.2.1.orig/CMakeLists.txt   1970-01-01 01:00:00.000000000 +0100
 +++ ilmbasehalf-2.2.1/CMakeLists.txt    2015-03-12 00:52:50.095773400 +0100
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,38 @@
 +project(ilmbase)
 +
 +cmake_minimum_required(VERSION 2.8)
@@ -23,6 +23,11 @@ diff -Naur ilmbasehalf-2.2.1.orig/CMakeLists.txt ilmbasehalf-2.2.1/CMakeLists.tx
 +set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 +
 +add_library(${PROJECT_NAME} STATIC ${HEADERS} ${SOURCES})
++
++if(UNIX)
++    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
++endif()
 +
 +set_target_properties(${PROJECT_NAME} PROPERTIES
 +   LIBRARY_OUTPUT_NAME "${PROJECT_NAME}"
