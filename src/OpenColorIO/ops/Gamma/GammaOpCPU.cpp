@@ -174,7 +174,7 @@ void GammaBasicOpCPU::update(const GammaOpDataRcPtr & gamma)
         ? gamma->getBlueParams()[0] 
         : 1. / gamma->getBlueParams()[0]);
 
-    m_alpGamma = (float)(  
+    m_alpGamma = (float)(
         gamma->getStyle() == GammaOpData::BASIC_FWD 
         ? gamma->getAlphaParams()[0]
         : 1. / gamma->getAlphaParams()[0]);
@@ -252,24 +252,24 @@ void GammaMoncurveOpCPUFwd::apply(float * rgbaBuffer, long numPixels) const
 {
 #ifdef USE_SSE
     const __m128 scale
-      = _mm_set_ps((float)m_alpha.scale, (float)m_blue.scale,
-                   (float)m_green.scale, (float)m_red.scale);
+      = _mm_set_ps(m_alpha.scale, m_blue.scale,
+                   m_green.scale, m_red.scale);
 
     const __m128 offset
-      = _mm_set_ps((float)m_alpha.offset, (float)m_blue.offset,
-                   (float)m_green.offset, (float)m_red.offset);
+      = _mm_set_ps(m_alpha.offset, m_blue.offset,
+                   m_green.offset, m_red.offset);
 
     const __m128 gamma
-      = _mm_set_ps((float)m_alpha.gamma, (float)m_blue.gamma,
-                   (float)m_green.gamma, (float)m_red.gamma);
+      = _mm_set_ps(m_alpha.gamma, m_blue.gamma,
+                   m_green.gamma, m_red.gamma);
 
     const __m128 breakPnt
-      = _mm_set_ps((float)m_alpha.breakPnt, (float)m_blue.breakPnt,
-                   (float)m_green.breakPnt, (float)m_red.breakPnt);
+      = _mm_set_ps(m_alpha.breakPnt, m_blue.breakPnt,
+                   m_green.breakPnt, m_red.breakPnt);
 
     const __m128 slope
-      = _mm_set_ps((float)m_alpha.slope, (float)m_blue.slope,
-                   (float)m_green.slope, (float)m_red.slope);
+      = _mm_set_ps(m_alpha.slope, m_blue.slope,
+                   m_green.slope, m_red.slope);
 
     const __m128 outScale = _mm_set1_ps(m_outScale);
 
@@ -298,17 +298,17 @@ void GammaMoncurveOpCPUFwd::apply(float * rgbaBuffer, long numPixels) const
     float * rgba = rgbaBuffer;
 
     const float red[5] 
-        = { float(m_red.scale),  float(m_red.offset),
-            float(m_red.gamma),  float(m_red.breakPnt), float(m_red.slope) };
+        = { m_red.scale,  m_red.offset,
+            m_red.gamma,  m_red.breakPnt, m_red.slope };
     const float grn[5]
-        = { float(m_green.scale), float(m_green.offset), 
-            float(m_green.gamma), float(m_green.breakPnt), float(m_green.slope) };
+        = { m_green.scale, m_green.offset, 
+            m_green.gamma, m_green.breakPnt, m_green.slope };
     const float blu[5]
-        = { float(m_blue.scale),  float(m_blue.offset),
-            float(m_blue.gamma),  float(m_blue.breakPnt), float(m_blue.slope)  };
+        = { m_blue.scale,  m_blue.offset,
+            m_blue.gamma,  m_blue.breakPnt, m_blue.slope };
     const float alp[5]
-        = { float(m_alpha.scale), float(m_alpha.offset), 
-            float(m_alpha.gamma), float(m_alpha.breakPnt), float(m_alpha.slope) };
+        = { m_alpha.scale, m_alpha.offset, 
+            m_alpha.gamma, m_alpha.breakPnt, m_alpha.slope };
 
     for(long idx=0; idx<numPixels; ++idx)
     {
@@ -357,24 +357,24 @@ void GammaMoncurveOpCPURev::apply(float * rgbaBuffer, long numPixels) const
 {
 #ifdef USE_SSE
     const __m128 scale
-      = _mm_set_ps((float)m_alpha.scale, (float)m_blue.scale,
-                   (float)m_green.scale, (float)m_red.scale);
+      = _mm_set_ps(m_alpha.scale, m_blue.scale,
+                   m_green.scale, m_red.scale);
 
     const __m128 offset
-      = _mm_set_ps((float)m_alpha.offset, (float)m_blue.offset,
-                   (float)m_green.offset, (float)m_red.offset);
+      = _mm_set_ps(m_alpha.offset, m_blue.offset,
+                   m_green.offset, m_red.offset);
 
     const __m128 gamma
-      = _mm_set_ps((float)m_alpha.gamma, (float)m_blue.gamma,
-                   (float)m_green.gamma, (float)m_red.gamma);
+      = _mm_set_ps(m_alpha.gamma, m_blue.gamma,
+                   m_green.gamma, m_red.gamma);
 
     const __m128 breakPnt
-      = _mm_set_ps((float)m_alpha.breakPnt, (float)m_blue.breakPnt,
-                   (float)m_green.breakPnt, (float)m_red.breakPnt);
+      = _mm_set_ps(m_alpha.breakPnt, m_blue.breakPnt,
+                   m_green.breakPnt, m_red.breakPnt);
 
     const __m128 slope
-      = _mm_set_ps((float)m_alpha.slope, (float)m_blue.slope,
-                   (float)m_green.slope, (float)m_red.slope);
+      = _mm_set_ps(m_alpha.slope, m_blue.slope,
+                   m_green.slope, m_red.slope);
 
     const __m128 inScale = _mm_set1_ps(m_inScale);
 
@@ -403,17 +403,17 @@ void GammaMoncurveOpCPURev::apply(float * rgbaBuffer, long numPixels) const
     float * rgba = rgbaBuffer;
 
     const float red[5] 
-        = { float(m_red.gamma),  float(m_red.scale),
-            float(m_red.offset),  float(m_red.breakPnt), float(m_red.slope) };
+        = { m_red.gamma,  m_red.scale,
+            m_red.offset, m_red.breakPnt, m_red.slope };
     const float grn[5]
-        = { float(m_green.gamma), float(m_green.scale), 
-            float(m_green.offset), float(m_green.breakPnt), float(m_green.slope) };
+        = { m_green.gamma, m_green.scale, 
+            m_green.offset,m_green.breakPnt, m_green.slope };
     const float blu[5]
-        = { float(m_blue.gamma),  float(m_blue.scale),
-            float(m_blue.offset),  float(m_blue.breakPnt), float(m_blue.slope)  };
+        = { m_blue.gamma,  m_blue.scale,
+            m_blue.offset, m_blue.breakPnt, m_blue.slope  };
     const float alp[5]
-        = { float(m_alpha.gamma), float(m_alpha.scale), 
-            float(m_alpha.offset), float(m_alpha.breakPnt), float(m_alpha.slope) };
+        = { m_alpha.gamma,  m_alpha.scale, 
+            m_alpha.offset, m_alpha.breakPnt, m_alpha.slope };
 
     for(long idx=0; idx<numPixels; ++idx)
     {

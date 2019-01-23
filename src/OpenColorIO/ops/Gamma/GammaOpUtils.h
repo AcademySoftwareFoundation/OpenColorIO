@@ -42,18 +42,18 @@ OCIO_NAMESPACE_ENTER
 struct RendererParams
 {
     RendererParams()
-        :   gamma(1.)
-        ,   offset(0.)
-        ,   breakPnt(0.)
-        ,   slope(1.)
-        ,   scale(1.)
+        :   gamma(1.0f)
+        ,   offset(0.0f)
+        ,   breakPnt(0.0f)
+        ,   slope(1.0f)
+        ,   scale(1.0f)
     { }
 
-    double gamma;
-    double offset;
-    double breakPnt;
-    double slope;
-    double scale;
+    float gamma;
+    float offset;
+    float breakPnt;
+    float slope;
+    float scale;
 };
 
 
