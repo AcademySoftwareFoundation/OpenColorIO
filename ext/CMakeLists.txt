@@ -163,7 +163,7 @@ if(NOT BUILD_SHARED_LIBS)
 	message(WARNING " Building STATIC libOpenColorIO using the in-built ILMBASE. ILMBASE's symbols are NOT included in the output binary!")
 endif()
 
-set(ILMBASE_INCLUDE_DIRS "${ILMBASE_INSTALL_DIR}/include/ilmbase")
+set(ILMBASE_INCLUDE_DIRS "${ILMBASE_INSTALL_DIR}/include")
 set(ILMBASE_LIBRARY ${ILMBASE_INSTALL_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}ilmbase${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 ExternalProject_Add(ILMBASE

@@ -107,6 +107,9 @@ set(SOURCES
 	ops/Gamma/GammaOps.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
+	ops/Lut1D/Lut1DOpCPU.cpp
+	ops/Lut1D/Lut1DOpData.cpp
+	ops/Lut1D/Lut1DOpGPU.cpp
 	ops/Lut3D/Lut3DOp.cpp
 	ops/Lut3D/Lut3DOpCPU.cpp
 	ops/Lut3D/Lut3DOpData.cpp
