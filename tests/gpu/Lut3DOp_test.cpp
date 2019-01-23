@@ -333,6 +333,8 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_tetra)
     test.setErrorThreshold(1e-6f);
 }
 
+#if defined(NDEBUG) || !defined(WIN32)
+// TODO: 3D LUT inversion might be very slow in debug on windows.
 OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_linear)
 {
     // The test uses the FAST style of inverse on both CPU and GPU.
@@ -360,6 +362,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_tetra)
     test.setContext(file->createEditableCopy(), shaderDesc);
     test.setErrorThreshold(1.2e-3f);
 }
+#endif
 
 OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_linear)
 {
@@ -385,6 +388,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, 3dlut_file_spi3d_bizarre_tetra)
     test.setErrorThreshold(1e-6f);
 }
 
+#if defined(NDEBUG) || !defined(WIN32)
 OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_bizarre_linear)
 {
     OCIO::FileTransformRcPtr file = GetFileTransform("lut3d_bizarre.spi3d");
@@ -407,7 +411,7 @@ OCIO_ADD_GPU_TEST(Lut3DOp, inv3dlut_file_spi3d_bizarre_tetra)
     test.setContext(file->createEditableCopy(), shaderDesc);
     test.setErrorThreshold(3e-4f);
 }
-
+#endif
 
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererLut3D_File2_test
 // TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc GPURendererLut3D_File3_test
