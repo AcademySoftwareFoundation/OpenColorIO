@@ -1,14 +1,17 @@
 import unittest, os, sys
 
 build_location = sys.argv[1]
-build_type = sys.argv[2]
 
 opencolorio_dir = os.path.join(build_location, "src", "OpenColorIO")
 pyopencolorio_dir = os.path.join(build_location, "src", "bindings", "python")
+
 if os.name == 'nt':
     # On Windows we must append the build type to the build dirs and add the main library to PATH
-    opencolorio_dir = os.path.join(opencolorio_dir, build_type)
-    pyopencolorio_dir = os.path.join(pyopencolorio_dir, build_type)
+    # Note: Only when compiling within Microsoft Visual Studio editor i.e. not on command line.
+    if len(sys.argv)==3:
+        opencolorio_dir = os.path.join(opencolorio_dir, sys.argv[2])
+        pyopencolorio_dir = os.path.join(pyopencolorio_dir, sys.argv[2])
+
     os.environ['PATH'] = "{0};{1}".format(opencolorio_dir, os.environ.get('PATH',""))
 elif sys.platform == 'darwin':
     # On OSX we must add the main library location to DYLD_LIBRARY_PATH

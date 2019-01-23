@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 #include <GL/glew.h>
 #include <GL/gl.h>
-#include <GL/glext.h>
 #endif
 
 
@@ -44,7 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 #include <iostream>
 
-// TODO: Lot of other GLSL helper methods from synColor will be added here.
 
 namespace
 {
@@ -331,7 +329,7 @@ void OpenGLBuilder::useAllTextures()
     for(size_t idx=0; idx<max; ++idx)
     {
         const TextureId& data = m_textureIds[idx];
-        glActiveTexture(GL_TEXTURE0 + m_startIndex + idx);
+        glActiveTexture((GLenum)(GL_TEXTURE0 + m_startIndex + idx));
         glBindTexture(data.type, data.id);
         glUniform1i(
             glGetUniformLocation(m_program, 
