@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <cstring>
 #include <sstream>
+#include <iterator>
 
 #include <OpenColorIO/OpenColorIO.h>
 
@@ -238,11 +239,16 @@ OCIO_NAMESPACE_ENTER
 
         void deepCopy(OpRcPtrVec & dst, const OpRcPtrVec & src)
         {
-            const OpRcPtrVec::size_type max = src.size();
-            for(OpRcPtrVec::size_type idx=0; idx<max; ++idx)
+            for(auto & op : src)
             {
-                dst.push_back(src[idx]->clone());
+                dst.push_back(op->clone());
             }
+        }
+
+
+        void shallowCopy(OpRcPtrVec & dst, const OpRcPtrVec & src)
+        {
+            std::copy(src.begin(), src.end(), back_inserter(dst));   
         }
 
 
@@ -299,14 +305,14 @@ OCIO_NAMESPACE_ENTER
     
     bool Processor::Impl::isNoOp() const
     {
-        return IsOpVecNoOp(m_cpuOps);
+        return IsOpVecNoOp(m_ops);
     }
     
     bool Processor::Impl::hasChannelCrosstalk() const
     {
-        for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+        for(auto & op : m_ops)
         {
-            if(m_cpuOps[i]->hasChannelCrosstalk()) return true;
+            if(op->hasChannelCrosstalk()) return true;
         }
         
         return false;
@@ -319,7 +325,7 @@ OCIO_NAMESPACE_ENTER
     
     void Processor::Impl::apply(ImageDesc& img) const
     {
-        if(m_cpuOps.empty()) return;
+        if(m_ops.empty()) return;
         
         ScanlineHelper scanlineHelper(img);
         float * rgbaBuffer = 0;
@@ -332,9 +338,9 @@ OCIO_NAMESPACE_ENTER
             if(!rgbaBuffer)
                 throw Exception("Cannot apply transform; null image.");
             
-            for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+            for(auto & op : m_ops)
             {
-                m_cpuOps[i]->apply(rgbaBuffer, numPixels);
+                op->apply(rgbaBuffer, numPixels);
             }
             
             scanlineHelper.finishRGBAScanline();
@@ -343,16 +349,16 @@ OCIO_NAMESPACE_ENTER
     
     void Processor::Impl::applyRGB(float * pixel) const
     {
-        if(m_cpuOps.empty()) return;
+        if(m_ops.empty()) return;
         
         // We need to allocate a temp array as the pixel must be 4 floats in size
         // (otherwise, sse loads will potentially fail)
         
         float rgbaBuffer[4] = { pixel[0], pixel[1], pixel[2], 0.0f };
         
-        for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+        for(auto & op : m_ops)
         {
-            m_cpuOps[i]->apply(rgbaBuffer, 1);
+            op->apply(rgbaBuffer, 1);
         }
         
         pixel[0] = rgbaBuffer[0];
@@ -362,9 +368,9 @@ OCIO_NAMESPACE_ENTER
     
     void Processor::Impl::applyRGBA(float * pixel) const
     {
-        for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+        for(auto & op : m_ops)
         {
-            m_cpuOps[i]->apply(pixel, 1);
+            op->apply(pixel, 1);
         }
     }
     
@@ -374,16 +380,16 @@ OCIO_NAMESPACE_ENTER
         
         if(!m_cpuCacheID.empty()) return m_cpuCacheID.c_str();
         
-        if(m_cpuOps.empty())
+        if(m_ops.empty())
         {
             m_cpuCacheID = "<NOOP>";
         }
         else
         {
             std::ostringstream cacheid;
-            for(OpRcPtrVec::size_type i=0, size = m_cpuOps.size(); i<size; ++i)
+            for(auto & op : m_ops)
             {
-                cacheid << m_cpuOps[i]->getCacheID() << " ";
+                cacheid << op->getCacheID() << " ";
             }
             std::string fullstr = cacheid.str();
             
@@ -403,33 +409,59 @@ OCIO_NAMESPACE_ENTER
 
         LegacyGpuShaderDesc * legacy = dynamic_cast<LegacyGpuShaderDesc*>(shaderDesc.get());
 
-
-        // Build the final gpu list of ops
-        const_cast<Processor::Impl*>(this)->m_gpuOps.resize(0);
-        deepCopy(const_cast<Processor::Impl*>(this)->m_gpuOps, m_gpuOpsHwPreProcess);
+        OpRcPtrVec gpuOps;
 
         if(legacy)
         {
-            deepCopy(const_cast<Processor::Impl*>(this)->m_gpuOps,
-                create3DLut(m_gpuOpsCpuLatticeProcess, legacy->getEdgelen()));
+            // GPU Process setup
+            //
+            // Partition the original, raw opvec into 3 segments for GPU Processing
+            //
+            // Interior index range does not support the gpu shader.
+            // This is used to bound our analytical shader text generation
+            // start index and end index are inclusive.
+            
+            // These 3 op vecs represent the 3 stages in our gpu pipe.
+            // 1) preprocess shader text
+            // 2) 3D LUT process lookup
+            // 3) postprocess shader text
+            
+            OpRcPtrVec gpuOpsHwPreProcess;
+            OpRcPtrVec gpuOpsCpuLatticeProcess;
+            OpRcPtrVec gpuOpsHwPostProcess;
+
+            PartitionGPUOps(gpuOpsHwPreProcess,
+                            gpuOpsCpuLatticeProcess,
+                            gpuOpsHwPostProcess,
+                            m_ops);
+
+            LogDebug("GPU Ops: Pre-3DLUT");
+            FinalizeOpVec(gpuOpsHwPreProcess);
+
+            LogDebug("GPU Ops: 3DLUT");
+            FinalizeOpVec(gpuOpsCpuLatticeProcess);
+            OpRcPtrVec gpuLut = create3DLut(gpuOpsCpuLatticeProcess, legacy->getEdgelen());
+            FinalizeOpVec(gpuLut);
+
+            LogDebug("GPU Ops: Post-3DLUT");
+            FinalizeOpVec(gpuOpsHwPostProcess);
+
+            shallowCopy(gpuOps, gpuOpsHwPreProcess);
+            shallowCopy(gpuOps, gpuLut);
+            shallowCopy(gpuOps, gpuOpsHwPostProcess);
         }
         else
         {
-            deepCopy(const_cast<Processor::Impl*>(this)->m_gpuOps, 
-                m_gpuOpsCpuLatticeProcess);
+            // Note: finalize() already finalized & optimized the Op list.
+
+            LogDebug("GPU Ops");
+            shallowCopy(gpuOps, m_ops);
         }
 
-        deepCopy(const_cast<Processor::Impl*>(this)->m_gpuOps, m_gpuOpsHwPostProcess);
- 
-
-        LogDebug("GPU Ops");
-        FinalizeOpVec(const_cast<Processor::Impl*>(this)->m_gpuOps);
-
-
         // Create the shader program information
-        for(OpRcPtrVec::size_type i=0, size = m_gpuOps.size(); i<size; ++i)
+        for(auto & op : gpuOps)
         {
-            m_gpuOps[i]->extractGpuShaderInfo(shaderDesc);
+            op->extractGpuShaderInfo(shaderDesc);
         }
 
         WriteShaderHeader(shaderDesc);
@@ -454,57 +486,30 @@ OCIO_NAMESPACE_ENTER
                                  const ConstColorSpaceRcPtr & srcColorSpace,
                                  const ConstColorSpaceRcPtr & dstColorSpace)
     {
-        BuildColorSpaceOps(m_cpuOps, config, context, srcColorSpace, dstColorSpace);
+        BuildColorSpaceOps(m_ops, config, context, srcColorSpace, dstColorSpace);
     }
-    
     
     void Processor::Impl::addTransform(const Config & config,
                       const ConstContextRcPtr & context,
                       const ConstTransformRcPtr& transform,
                       TransformDirection direction)
     {
-        BuildOps(m_cpuOps, config, context, transform, direction);
+        BuildOps(m_ops, config, context, transform, direction);
     }
-    
+
     void Processor::Impl::finalize()
     {
         AutoMutex lock(m_resultsCacheMutex);
 
         // Pull out metadata, before the no-ops are removed.
-        for(unsigned int i=0; i<m_cpuOps.size(); ++i)
+        for(auto & op : m_ops)
         {
-            m_cpuOps[i]->dumpMetadata(m_metadata);
+            op->dumpMetadata(m_metadata);
         }
         
-        // GPU Process setup
-        //
-        // Partition the original, raw opvec into 3 segments for GPU Processing
-        //
-        // Interior index range does not support the gpu shader.
-        // This is used to bound our analytical shader text generation
-        // start index and end index are inclusive.
-        
-        m_gpuOpsHwPreProcess.resize(0);
-        m_gpuOpsCpuLatticeProcess.resize(0);
-        m_gpuOpsHwPostProcess.resize(0);
-
-        PartitionGPUOps(m_gpuOpsHwPreProcess,
-                        m_gpuOpsCpuLatticeProcess,
-                        m_gpuOpsHwPostProcess,
-                        m_cpuOps);
-        
-        LogDebug("GPU Ops: Pre-3DLUT");
-        FinalizeOpVec(m_gpuOpsHwPreProcess);
-        
-        LogDebug("GPU Ops: 3DLUT");
-        FinalizeOpVec(m_gpuOpsCpuLatticeProcess);
-        
-        LogDebug("GPU Ops: Post-3DLUT");
-        FinalizeOpVec(m_gpuOpsHwPostProcess);
-        
         LogDebug("CPU Ops");
-        FinalizeOpVec(m_cpuOps);
+        FinalizeOpVec(m_ops);
     }
-    
+
 }
 OCIO_NAMESPACE_EXIT
