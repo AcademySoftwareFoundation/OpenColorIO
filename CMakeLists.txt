@@ -40,6 +40,16 @@ option(OCIO_USE_SSE "Specify whether to enable SSE CPU performance optimizations
 option(OCIO_INLINES_HIDDEN "Specify whether to build with -fvisibility-inlines-hidden" ${UNIX})
 
 ###############################################################################
+# Platform dependent compilation flags
+
+set(PLATFORM_COMPILE_FLAGS "")
+if(MSVC)
+	# Because our Exceptions derive from std::runtime_error we can safely disable this warning
+	set(PLATFORM_COMPILE_FLAGS "/wd4275")
+endif()
+
+
+###############################################################################
 # External linking
 
 option(USE_EXTERNAL_YAML "Use system installed yaml-cpp library." OFF)
