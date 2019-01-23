@@ -1962,7 +1962,7 @@ OpCPURcPtr GetLut3DRenderer(ConstLut3DOpDataRcPtr & lut)
             // Render with a Lut3D renderer.
             return GetForwardLut3DRenderer(newLut);
         }
-        else  // INV_EXACT
+        else  // EXACT
         {
             return std::make_shared<InvLut3DRenderer>(lut);
         }
