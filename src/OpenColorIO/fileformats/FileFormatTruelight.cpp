@@ -67,15 +67,15 @@ OCIO_NAMESPACE_ENTER
                 has1D(false),
                 has3D(false)
             {
-                lut1D = Lut1DOpData::Create();
+                lut1D = Lut1D::Create();
                 lut3D = Lut3D::Create();
             };
             ~LocalCachedFile() {};
             
             bool has1D;
             bool has3D;
-            Lut1DOpDataRcPtr lut1D;
-            // TODO: switch opdata
+            // TODO: Switch to the OpData class.
+            Lut1DRcPtr lut1D;
             Lut3DRcPtr lut3D;
         };
         
@@ -284,7 +284,7 @@ OCIO_NAMESPACE_ENTER
                 // 0.000001 not equal
                 
                 cachedFile->lut1D->maxerror = 1e-5f;
-                cachedFile->lut1D->errortype = Lut1DOpData::ERROR_RELATIVE;
+                cachedFile->lut1D->errortype = Lut1D::ERROR_RELATIVE;
             }
             
             // Reformat 3D data
