@@ -155,9 +155,19 @@ bool VecContainsZero(const float* v, int size);
 bool VecContainsOne(const float* v, int size);
 
 // Are two vectors equal? (Same size, same values?)
-bool VecsEqualWithRelError(const float* v1, int size1,
-                           const float* v2, int size2,
-                           float e);
+template<typename T>
+bool VecsEqualWithRelError(const T * v1, int size1,
+                           const T * v2, int size2,
+                           T e)
+{
+    if (size1 != size2) return false;
+    for (int i = 0; i<size1; ++i)
+    {
+        if (!EqualWithRelError(v1[i], v2[i], e)) return false;
+    }
+
+    return true;
+}
 
 inline double GetHalfMax()
 {

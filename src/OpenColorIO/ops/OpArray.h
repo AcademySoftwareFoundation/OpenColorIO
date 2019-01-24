@@ -38,27 +38,28 @@ OCIO_NAMESPACE_ENTER
 {
 
 // The CLF spec defines several ops that all contain an array (LUT1D, LUT3D,
-// and Matrix).  The Array class is used as a building block to implement those
-// other classes.  Since the dimensionality of the underlying array of those 
-// classes varies, the interpretation of "length" is defined by the child classes. 
-class Array
+// and Matrix). The Array class is used as a building block to implement those
+// other classes. Since the dimensionality of the underlying array of those 
+// classes varies, the interpretation of "length" is defined by child classes.
+// The class represents the array for a 3by1D LUT and a 3D LUT or a matrix.
+template<typename T> class ArrayT
 {
 public:
-    typedef std::vector<float> Values;
+    typedef std::vector<T> Values;
 
 public:
-    Array()
+    ArrayT()
         : m_length(0)
         , m_numColorComponents(0)
     {
     }
 
-    Array(const Array&) = default;
-    Array& operator= (const Array&) = default;
-
-    virtual ~Array()
+    virtual ~ArrayT()
     {
     }
+
+    ArrayT(const ArrayT&) = default;
+    ArrayT& operator= (const ArrayT&) = default;
 
     void resize(unsigned long length, unsigned long numColorComponents)
     {
@@ -67,10 +68,14 @@ public:
         m_data.resize(getNumValues());
     }
 
-    // Specialized in the child classes to calculate the expected number of 
-    // array values based on the specified length, the interpretation of
-    // length and number of components.
-    virtual unsigned long getNumValues() const = 0;
+    void setLength(unsigned long length)
+    {
+        if (m_length != length)
+        {
+            m_length = length;
+            m_data.resize(getNumValues());
+        }
+    }
 
     void setLength(unsigned length)
     {
@@ -100,6 +105,37 @@ public:
         return m_numColorComponents;
     }
 
+    void setNumColorComponents(unsigned long numColorComponents)
+    {
+        if (m_numColorComponents != numColorComponents)
+        {
+            m_numColorComponents = numColorComponents;
+            m_data.resize(getNumValues());
+        }
+    }
+
+    void adjustColorComponentNumber()
+    {
+        if (m_numColorComponents == 3)
+        {
+            bool sameCoeff = true;
+            for (unsigned long idx = 0; idx < m_length && sameCoeff; ++idx)
+            {
+                if (m_data[idx * 3] != m_data[idx * 3 + 1]
+                    || m_data[idx * 3] != m_data[idx * 3 + 2])
+                {
+                    sameCoeff = false;
+                    break;
+                }
+            }
+
+            if (sameCoeff)
+            {
+                m_numColorComponents = 1;  // But keep the three values...
+            }
+        }
+    }
+
     unsigned long getMaxColorComponents() const
     {
         return 3;
@@ -115,19 +151,14 @@ public:
         return m_data;
     }
 
-    inline const float& operator[](unsigned long index) const
+    inline const T& operator[](unsigned long index) const
     {
         return m_data[index];
     }
 
-    inline float& operator[](unsigned long index)
+    inline T& operator[](unsigned long index)
     {
         return m_data[index];
-    }
-
-    void setDoubleValue(unsigned long index, double value)
-    {
-        m_data[index] = (float)value;
     }
 
     virtual void validate() const
@@ -137,7 +168,7 @@ public:
             throw Exception("Array content is empty.");
         }
 
-        // GetNumValues is based on the dimensions claimed in the file.  Check
+        // getNumValues is based on the dimensions claimed in the file.  Check
         // that this matches the number of values that were actually set.
         if (m_data.size() != getNumValues())
         {
@@ -148,7 +179,7 @@ public:
         }
     }
 
-    bool operator==(const Array& a) const
+    bool operator==(const ArrayT & a) const
     {
         if (this == &a) return true;
         return (m_length == a.m_length)
@@ -156,12 +187,19 @@ public:
             && (m_data == a.m_data);
     }
 
+    // Specialized in the child classes to calculate the expected number of 
+    // array values based on the specified length, the interpretation of
+    // length and number of components.
+    virtual unsigned long getNumValues() const = 0;
+
 protected:
-    unsigned long  m_length;
-    unsigned long  m_numColorComponents;
-    Values         m_data;
+    unsigned long m_length;
+    unsigned long m_numColorComponents;
+    Values        m_data;
 };
 
+typedef ArrayT<double> ArrayDouble;
+typedef ArrayT<float> Array;
 
 }
 OCIO_NAMESPACE_EXIT
