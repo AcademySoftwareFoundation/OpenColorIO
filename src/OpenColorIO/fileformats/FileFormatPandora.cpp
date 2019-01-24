@@ -51,7 +51,7 @@ OCIO_NAMESPACE_ENTER
             };
             ~LocalCachedFile() {};
             
-            // TODO: switch opdata
+            // TODO: Switch to the OpData class.
             Lut3DRcPtr lut3D;
         };
         

@@ -65,7 +65,7 @@ OCIO_NAMESPACE_ENTER
             };
             ~LocalCachedFile() {};
             
-            // TODO: switch opdata
+            // TODO: Switch to the OpData class.
             Lut3DRcPtr lut;
         };
         
@@ -111,7 +111,7 @@ OCIO_NAMESPACE_ENTER
             const int MAX_LINE_SIZE = 4096;
             char lineBuffer[MAX_LINE_SIZE];
 
-            // TODO: switch opdata
+            // TODO: Switch to the OpData class.
             Lut3DRcPtr lut3d = Lut3D::Create();
 
             // Read header information

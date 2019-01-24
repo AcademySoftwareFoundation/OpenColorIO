@@ -38,10 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "RangeOpCPU.h"
 #include "RangeOps.h"
 
-
-// TODO: To be removed when ilmbase library will be in
-#define HALF_MAX    65504.0
-
 OCIO_NAMESPACE_ENTER
 {
 
