@@ -32,25 +32,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "ops/Lut1D/Lut1DOp.h"
+#include "Op.h"
 
 
 OCIO_NAMESPACE_ENTER
 {
-    // Returns the ideal LUT size based on a specific bit depth
-    unsigned long GetLutIdealSize(BitDepth incomingBitDepth);
 
-    // Control behavior of 1D LUT composition.
-    enum ComposeMethod
-    {
-        COMPOSE_RESAMPLE_NO      = 0, // Preserve original domain
-        COMPOSE_RESAMPLE_INDEPTH = 1, // InDepth controls min size
-        COMPOSE_RESAMPLE_BIG     = 2  // Min size is 65536
-    };
+    void EvalTransform(const float * in, float * out,
+                       long numPixels,
+                       OpRcPtrVec & ops);
 
-    // Use functional composition to generate a single op that 
-    // approximates the effect of the pair of ops.
-    Lut1DOpDataRcPtr Compose(const Lut1DOpDataRcPtr & A, const OpRcPtr & B, ComposeMethod compFlag);
 }
 OCIO_NAMESPACE_EXIT
 

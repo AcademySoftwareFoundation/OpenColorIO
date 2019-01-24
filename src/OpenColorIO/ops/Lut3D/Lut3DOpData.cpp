@@ -105,54 +105,6 @@ Lut3DOpDataRcPtr MakeFastLut3DFromInverse(ConstLut3DOpDataRcPtr & lut)
 
 const unsigned long Lut3DOpData::maxSupportedLength = 129;
 
-namespace
-{
-void EvalTransform(const float * in,
-                   float * out,
-                   long numPixels,
-                   OpRcPtrVec & ops)
-{
-    std::vector<float> tmp(numPixels * 4);
-
-    // Render the LUT entries (domain) through the ops.
-
-    const float * values = in;
-    for (long idx = 0; idx<numPixels; ++idx)
-    {
-        tmp[4 * idx + 0] = values[0];
-        tmp[4 * idx + 1] = values[1];
-        tmp[4 * idx + 2] = values[2];
-        tmp[4 * idx + 3] = 1.0f;
-
-        values += 3;
-    }
-
-    // NB: We assume finalize will set the bit-depth at each op interface
-    // to 32f so there is never any quantization to integer.
-    // Furthermore, to avoid improper recursion we must never call
-    // the renderer with an integer input depth.
-    // TODO: Currently the OCIO finalize is hard-coded to 32f.
-    //       When that changes we need to update this to request 32f input
-    //       and output bit depths.
-    FinalizeOpVec(ops);
-
-    for (OpRcPtrVec::size_type i = 0, size = ops.size(); i<size; ++i)
-    {
-        ops[i]->apply(&tmp[0], numPixels);
-    }
-
-    float * result = out;
-    for (long idx = 0; idx<numPixels; ++idx)
-    {
-        result[0] = tmp[4 * idx + 0];
-        result[1] = tmp[4 * idx + 1];
-        result[2] = tmp[4 * idx + 2];
-
-        result += 3;
-    }
-}
-}
-
 // Functional composition is a concept from mathematics where two functions
 // are combined into a single function.  This idea may be applied to ops
 // where we generate a single op that has the same (or similar) effect as

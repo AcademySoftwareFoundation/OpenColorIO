@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_OPARRAY_H
 #define INCLUDED_OCIO_OPARRAY_H
 
+#include <sstream>
 #include <vector>
 
 #include <OpenColorIO/OpenColorIO.h>
@@ -71,9 +72,27 @@ public:
     // length and number of components.
     virtual unsigned long getNumValues() const = 0;
 
+    void setLength(unsigned length)
+    {
+        if (m_length != length)
+        {
+            m_length = length;
+            m_data.resize(getNumValues());
+        }
+    }
+
     unsigned long getLength() const
     {
         return m_length;
+    }
+
+    void setMaxColorComponents()
+    {
+        if (m_numColorComponents != getMaxColorComponents())
+        {
+            m_numColorComponents = getMaxColorComponents();
+            m_data.resize(getNumValues());
+        }
     }
 
     unsigned long getNumColorComponents() const
@@ -86,12 +105,12 @@ public:
         return 3;
     }
 
-    const Values& getValues() const
+    inline const Values& getValues() const
     {
         return m_data;
     }
 
-    Values& getValues()
+    inline Values& getValues()
     {
         return m_data;
     }
@@ -122,8 +141,10 @@ public:
         // that this matches the number of values that were actually set.
         if (m_data.size() != getNumValues())
         {
-            throw Exception("Array content does not have the expected number "
-                "of values.");
+            std::ostringstream os;
+            os << "Array contains: " << m_data.size() << " values, ";
+            os << "but " << getNumValues() << " are expected.";
+            throw Exception(os.str().c_str());
         }
     }
 
