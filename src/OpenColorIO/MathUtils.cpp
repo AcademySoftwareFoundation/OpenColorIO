@@ -145,6 +145,13 @@ double ClampToNormHalf(double val)
     return val;
 }
 
+float ConvertHalfBitsToFloat(unsigned short val)
+{
+    half hVal;
+    hVal.setBits(val);
+    return (float)hVal;
+}
+
 float SanitizeFloat(float f)
 {
     if (f == -std::numeric_limits<float>::infinity())
@@ -575,6 +582,48 @@ bool FloatsDiffer(const float expected, const float actual,
     }
 
     return abs(expectedBitsComp - actualBitsComp) > tolerance;
+}
+
+inline int HalfForCompare(const half h)
+{
+    // Map neg 0 and pos 0 to 32768, allowing tolerance-based comparison
+    // of small numbers of mixed sign.
+    int rawHalf = h.bits();
+    return rawHalf < 32767 ? rawHalf + 32768 : 2 * 32768 - rawHalf;
+}
+
+bool HalfsDiffer(const half expected, const half actual, const int tolerance)
+{
+    // TODO: Make this faster
+
+    // (These are ints rather than shorts to allow subtraction below.)
+    const int aimBits = HalfForCompare(expected);
+    const int valBits = HalfForCompare(actual);
+
+    if (expected.isNan())
+    {
+        return !actual.isNan();
+    }
+    else if (actual.isNan())
+    {
+        return !expected.isNan();
+    }
+    else if (expected.isInfinity())
+    {
+        return aimBits != valBits;
+    }
+    else if (actual.isInfinity())
+    {
+        return aimBits != valBits;
+    }
+    else
+    {
+        if (abs(valBits - aimBits) > tolerance)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 }
@@ -1430,5 +1479,50 @@ OIIO_ADD_TEST(MathUtils, float_diff_compress_denorms_test )
                         posminfloat_m8, posminfloat_m9, posminfloat_m16);
 }
 
+OIIO_ADD_TEST(MathUtils, half_bits_test)
+{
+    // Sanity check.
+    OIIO_CHECK_EQUAL(0.5f, ConvertHalfBitsToFloat(0x3800));
+
+    // Preserve negatives.
+    OIIO_CHECK_EQUAL(-1.f, ConvertHalfBitsToFloat(0xbc00));
+
+    // Preserve values > 1.
+    OIIO_CHECK_EQUAL(1024.f, ConvertHalfBitsToFloat(0x6400));
+}
+
+OIIO_ADD_TEST(MathUtils, halfs_differ_test)
+{
+    half pos_inf;   pos_inf.setBits(31744);   // +inf
+    half neg_inf;   neg_inf.setBits(64512);   // -inf
+    half pos_nan;   pos_nan.setBits(31745);   // +nan
+    half neg_nan;   neg_nan.setBits(64513);   // -nan
+    half pos_max;   pos_max.setBits(31743);   // +HALF_MAX
+    half neg_max;   neg_max.setBits(64511);   // -HALF_MAX
+    half pos_zero;  pos_zero.setBits(0);      // +0
+    half neg_zero;  neg_zero.setBits(32768);  // -0
+    half pos_small; pos_small.setBits(4);     // +small
+    half neg_small; neg_small.setBits(32772); // -small
+    half pos_1;     pos_1.setBits(15360);     // 
+    half pos_2;     pos_2.setBits(15365);     // 
+    half neg_1;     neg_1.setBits(50000);     // 
+    half neg_2;     neg_2.setBits(50005);     // 
+
+    int tol = 10;
+
+    OIIO_CHECK_ASSERT(HalfsDiffer(pos_inf, neg_inf, tol));
+    OIIO_CHECK_ASSERT(HalfsDiffer(pos_inf, pos_nan, tol));
+    OIIO_CHECK_ASSERT(HalfsDiffer(neg_inf, neg_nan, tol));
+    OIIO_CHECK_ASSERT(HalfsDiffer(pos_max, pos_inf, tol));
+    OIIO_CHECK_ASSERT(HalfsDiffer(neg_max, neg_inf, tol));
+    OIIO_CHECK_ASSERT(HalfsDiffer(pos_1, neg_1, tol));
+    OIIO_CHECK_ASSERT(HalfsDiffer(pos_2, pos_1, 0));
+    OIIO_CHECK_ASSERT(HalfsDiffer(neg_2, neg_1, 0));
+
+    OIIO_CHECK_ASSERT(!HalfsDiffer(pos_zero, neg_zero, 0));
+    OIIO_CHECK_ASSERT(!HalfsDiffer(pos_small, neg_small, tol));
+    OIIO_CHECK_ASSERT(!HalfsDiffer(pos_2, pos_1, tol));
+    OIIO_CHECK_ASSERT(!HalfsDiffer(neg_2, neg_1, tol));
+}
 #endif
 

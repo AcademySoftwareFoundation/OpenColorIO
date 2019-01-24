@@ -26,10 +26,9 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <expat/expat.h>
-
 #include <sstream>
 
+#include "expat/expat.h"
 #include "fileformats/cdl/CDLParser.h"
 #include "fileformats/cdl/CDLReaderHelper.h"
 #include "transforms/CDLTransform.h"

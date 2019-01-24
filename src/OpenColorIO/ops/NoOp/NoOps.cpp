@@ -482,7 +482,7 @@ void CreateGenericScaleOp(OpRcPtrVec & ops)
 void CreateGenericLutOp(OpRcPtrVec & ops)
 {
     // Make a LUT that squares the input
-    Lut1DOpDataRcPtr lut = Lut1DOpData::Create();
+    Lut1DRcPtr lut = Lut1D::Create();
     {
         lut->from_min[0] = 0.0f;
         lut->from_min[1] = 0.0f;
