@@ -650,7 +650,8 @@ namespace
 
     OpRcPtr Lut3DOp::clone() const
     {
-        return std::make_shared<Lut3DOp>(lut3DData()->clone());
+        Lut3DOpDataRcPtr lut = lut3DData()->clone();
+        return std::make_shared<Lut3DOp>(lut);
     }
 
     std::string Lut3DOp::getInfo() const
@@ -716,7 +717,8 @@ namespace
             && ldata->getInvStyle() == Lut3DOpData::INV_FAST)
         {
             // NB: The result of MakeFastLut is set to TRANSFORM_DIR_FORWARD.
-            ldata = MakeFastLut3DFromInverse(constThis.lut3DData());
+            ConstLut3DOpDataRcPtr p = constThis.lut3DData();
+            ldata = MakeFastLut3DFromInverse(p);
         }
 
         ldata->finalize();
