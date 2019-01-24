@@ -30,30 +30,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDED_OCIO_LUT1DOP_H
 #define INCLUDED_OCIO_LUT1DOP_H
 
+#include <vector>
+
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "Op.h"
-
-#include <vector>
+#include "ops/Lut1D/Lut1DOpData.h"
 
 OCIO_NAMESPACE_ENTER
 {
-  
-    class Lut1DOpData;
-    typedef OCIO_SHARED_PTR<Lut1DOpData> Lut1DOpDataRcPtr;
-    typedef OCIO_SHARED_PTR<const Lut1DOpData> ConstLut1DOpDataRcPtr;
+    // Legacy struct, still used by file formats, will eventually go away.
+    struct Lut1D;
+    typedef OCIO_SHARED_PTR<Lut1D> Lut1DRcPtr;
 
-    class Lut1DOpData : public OpData
+    struct Lut1D
     {
-    public:
         enum ErrorType
         {
             ERROR_ABSOLUTE = 1,
             ERROR_RELATIVE
         };   
     
-        static Lut1DOpDataRcPtr Create();
-        static Lut1DOpDataRcPtr CreateIdentity(BitDepth inputBitDepth, BitDepth outBitDepth);
+        static Lut1DRcPtr Create();
+        static Lut1DRcPtr CreateIdentity(BitDepth inputBitDepth, BitDepth outBitDepth);
         
         // This will compute the cacheid, and also
         // determine if the LUT is a no-op.
@@ -78,32 +76,37 @@ OCIO_NAMESPACE_ENTER
         typedef std::vector<float> fv_t;
         fv_t luts[3];
 
-        virtual Type getType() const override { return Lut1DType; }
+        BitDepth inputBitDepth;
+        BitDepth outputBitDepth;
 
-        virtual bool isNoOp() const override;
-        virtual bool isIdentity() const override;
-        virtual bool hasChannelCrosstalk() const override { return false; }
-        
-        Lut1DOpData & operator=(const Lut1DOpData & l);
+        std::string getCacheID() const;
+        bool isNoOp() const;
 
-        virtual void finalize() override;
         void unfinalize();
 
-        virtual std::string getCacheID() const override;
+        Lut1D & operator=(const Lut1D & l);
 
-    private:
-        Lut1DOpData();
+        Lut1D();
 
-        mutable bool m_isIdentity;
+        mutable std::string m_cacheID;
+        mutable bool m_isNoOp;
+        mutable Mutex m_mutex;
+
+        void finalize() const;
     };
     
     // This generates an identity 1D LUT, from 0.0 to 1.0
     void GenerateIdentityLut1D(float* img, int numElements, int numChannels);
     
     void CreateLut1DOp(OpRcPtrVec & ops,
-                       const Lut1DOpDataRcPtr & lut,
+                       Lut1DRcPtr & lut,
                        Interpolation interpolation,
                        TransformDirection direction);
+
+    void CreateLut1DOp(OpRcPtrVec & ops,
+                       Lut1DOpDataRcPtr & lut,
+                       TransformDirection direction);
+
 }
 OCIO_NAMESPACE_EXIT
 

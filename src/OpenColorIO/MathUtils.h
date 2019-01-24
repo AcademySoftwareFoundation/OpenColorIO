@@ -35,12 +35,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <OpenColorIO/OpenColorIO.h>
 
+#include "ilmbase/half.h"
 #include "Op.h"
 #include "Platform.h"
-
-#ifdef WINDOWS
-#include <float.h>
-#endif
 
 OCIO_NAMESPACE_ENTER
 {
@@ -55,7 +52,7 @@ OCIO_NAMESPACE_ENTER
     //  
     //  abs (x1 - x2) <= e
     //
-    // equalWithRelError (x1, x2, e)
+    // EqualWithRelError (x1, x2, e)
     //
     //  Returns true if x1 is the same as x2 with an relative error of
     //  no more than e,
@@ -179,7 +176,7 @@ inline double GetHalfMax()
 
 inline double GetHalfMin()
 {
-    return 5.96046448e-08;  // Smallest positive half;
+    return 5.96046448e-08;  // Smallest positive half
 }
 
 inline double GetHalfNormMin()
@@ -187,10 +184,12 @@ inline double GetHalfNormMin()
     return 6.10351562e-05;  // Smallest positive normalized half
 }
 
-//! Clamp the specified value to the valid range of normalized half.
-// (can be either positive or negative though
-
+// Clamp the specified value to the valid range of normalized half.
+// (can be either positive or negative though).
 double ClampToNormHalf(double val);
+
+// Convert an half representation to the corresponding float.
+float ConvertHalfBitsToFloat(unsigned short val);
 
 float GetSafeScalarInverse(float v, float defaultValue = 1.0);
 
@@ -201,7 +200,7 @@ float GetSafeScalarInverse(float v, float defaultValue = 1.0);
 // v : 4 column vector
 
 // Return the 4x4 inverse, and whether the inverse has succeeded.
-// Supports in-place operations
+// Supports in-place operations.
 bool GetM44Inverse(float* mout, const float* m);
 
 // Is an identity matrix? (with fltmin tolerance)
@@ -213,13 +212,9 @@ bool IsM44Diagonal(const float* m);
 // Extract the diagonal
 void GetM44Diagonal(float* vout, const float* m);
 
-// Get the product, out = m1*m2
-// Supports in-place operations
-void GetM44Product(float* mout, const float* m1, const float* m2);
-
-// Combine two transforms in the mx+b form, into a single transform
+// Combine two transforms in the mx+b form, into a single transform.
 // mout*x+vout == m2*(m1*x+v1)+v2
-// Supports in-place operations
+// Supports in-place operations.
 void GetMxbCombine(float* mout, float* vout,
                    const float* m1, const float* v1,
                    const float* m2, const float* v2);
@@ -233,7 +228,7 @@ bool GetMxbInverse(float* mout, float* vout,
 //
 // x : floating-point number
 //
-// Return reinterpreted float bit representation as an integer 
+// Return reinterpreted float bit representation as an integer.
 inline unsigned FloatAsInt(const float x)
 {
     union {
@@ -250,7 +245,7 @@ inline unsigned FloatAsInt(const float x)
 //
 // x : integer number
 //
-// Return reinterpreted integer bit representation as a float
+// Return reinterpreted integer bit representation as a float.
 inline float IntAsFloat(const unsigned x)
 {
     union {
@@ -294,6 +289,12 @@ inline float AddULP(const float f, const int ulp)
 //              compressDenorms flag.
 bool FloatsDiffer(const float expected, const float actual, 
                   const int tolerance, const bool compressDenorms);
+
+// Compares half-floats as raw integers with a tolerance (essentially in ULPs).
+// Returns true if the integer difference is strictly greater than the tolerance.
+// If aimHalf is a NaN, valHalf must also be one of the NaNs.
+// Inf is treated like any other value (diff from HALFMAX is 1).
+bool HalfsDiffer(const half expected, const half actual, const int tolerance);
 
 }
 OCIO_NAMESPACE_EXIT
