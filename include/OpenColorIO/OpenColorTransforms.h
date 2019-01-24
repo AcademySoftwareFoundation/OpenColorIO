@@ -684,7 +684,7 @@ OCIO_NAMESPACE_ENTER
         //!cpp:function:: Will throw if data is not valid.
         virtual void validate() const;
 
-        //!cpp:function::
+        //!cpp:function:: Checks if this exactly equals other.
         bool equals(const MatrixTransform & other) const;
         
         //!cpp:function::

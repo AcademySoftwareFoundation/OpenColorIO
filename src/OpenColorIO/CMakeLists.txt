@@ -55,6 +55,8 @@ set(SOURCES
 	ops/Lut3D/Lut3DOp.cpp
 	ops/Lut3D/Lut3DOpCPU.cpp
 	ops/Lut3D/Lut3DOpData.cpp
+	ops/Matrix/MatrixOpCPU.cpp
+	ops/Matrix/MatrixOpData.cpp
 	ops/Matrix/MatrixOps.cpp
 	ops/NoOp/NoOps.cpp
 	ops/Range/RangeOpCPU.cpp
