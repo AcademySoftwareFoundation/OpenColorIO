@@ -86,8 +86,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_legacy_shader)
 
     test.setContext(file->createEditableCopy(), shaderDesc);
 
-    // TODO: Investigate why the test needs such a threshold
-    test.setErrorThreshold(3e-3f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -101,8 +100,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_legacy_shader)
 
     test.setContext(file->createEditableCopy(), shaderDesc);
 
-    // TODO: Investigate why the test needs such a threshold
-    test.setErrorThreshold(1e-2f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -113,7 +111,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -125,7 +123,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_1_small_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -137,7 +135,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(5e-4f);
+    test.setErrorThreshold(2e-4f);
 }
 
 
@@ -150,7 +148,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(5e-4f);
+    test.setErrorThreshold(2e-4f);
 }
 
 
@@ -162,7 +160,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_generic_shader)
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -175,7 +173,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_2_inverse_generic_shader)
         = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(5e-4f);
+    test.setErrorThreshold(1e-4f);
 }
 
 
@@ -187,7 +185,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -200,7 +198,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -211,7 +209,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -223,7 +221,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -235,7 +233,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, lut1d_3_big_nearest_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
 
 
@@ -247,8 +245,10 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_legacy_shader)
         = OCIO::GpuShaderDesc::CreateLegacyShaderDesc(2*LUT3D_EDGE_SIZE);
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    // lut1d_4.spi1d has values outside [0, 1]. Legacy shader is baking ops
+    // into a 3D LUT and would clamp outside of [0, 1].
     test.setWideRange(false);
-    test.setErrorThreshold(1e-3f);
+    test.setErrorThreshold(2e-4f);
 }
 
 
@@ -262,7 +262,7 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_legacy_shader)
 
     test.setContext(file->createEditableCopy(), shaderDesc);
     test.setWideRange(false);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(5e-5f);
 }
 
 
@@ -273,11 +273,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    // TODO: Should be smaller.
     test.setErrorThreshold(1e-4f);
 }
-
-/*
-    TODO: Uncomment when the 1D LUT inverse is fully working.
 
 OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_generic_shader)
 {
@@ -287,9 +285,9 @@ OCIO_ADD_GPU_TEST(Lut1DOp, scale_lut1d_4_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
-*/
+
 
 OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
 {
@@ -298,12 +296,10 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
+    // TODO: Should be smaller.
     test.setErrorThreshold(1e-3f);
-    test.setRelativeComparison(true);
+    test.setRelativeComparison(true); // LUT contains values up to 64
 }
-
-/*
-    TODO: Uncomment when the 1D LUT inverse is fully working.
 
 OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
 {
@@ -313,6 +309,25 @@ OCIO_ADD_GPU_TEST(Lut1DOp, not_linear_lut1d_5_inverse_generic_shader)
     OCIO::GpuShaderDescRcPtr shaderDesc = OCIO::GpuShaderDesc::CreateShaderDesc();
 
     test.setContext(file->createEditableCopy(), shaderDesc);
-    test.setErrorThreshold(1e-4f);
+    test.setErrorThreshold(1e-6f);
 }
-*/
+
+
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_8i_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_16i_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_16f_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_16f_half_domain_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_32f_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1DTooManyTextures_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_File1_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_too_small
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_half_domain_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_File2_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_hue_adjust_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererLut1D_half_domain_hue_adjust_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererInvLut1D_File1_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererInvLut1D_File2_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererInvLut1DHalf_File1_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - GPURendererInvLut1DHalf_HueAdjust_File1_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - lut1d_half_domain_special_values_test
+// TODO: Port syncolor test: renderer\test\GPURenderer_cases.cpp_inc - lut1d_normal_domain_special_values_test

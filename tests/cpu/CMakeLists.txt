@@ -20,6 +20,7 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 			oiio_unittest
 			unittest_data
 			libexpat
+			ilmbase
 	)
 	if(PRIVATE_INCLUDES)
 		target_include_directories(${TEST_BINARY}
@@ -102,9 +103,14 @@ set(SOURCES
 	ops/Exponent/ExponentOps.cpp
 	ops/Log/LogOps.cpp
 	ops/Lut1D/Lut1DOp.cpp
+	ops/Lut1D/Lut1DOpCPU.cpp
+	ops/Lut1D/Lut1DOpData.cpp
+	ops/Lut1D/Lut1DOpGPU.cpp
 	ops/Lut3D/Lut3DOp.cpp
 	ops/Lut3D/Lut3DOpCPU.cpp
 	ops/Lut3D/Lut3DOpData.cpp
+	ops/Matrix/MatrixOpCPU.cpp
+	ops/Matrix/MatrixOpData.cpp
 	ops/Matrix/MatrixOps.cpp
 	ops/NoOp/NoOps.cpp
 	ops/Range/RangeOpCPU.cpp

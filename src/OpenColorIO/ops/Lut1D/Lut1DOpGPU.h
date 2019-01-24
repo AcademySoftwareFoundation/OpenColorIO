@@ -26,56 +26,27 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+
+#ifndef INCLUDED_OCIO_LUT1D_GPU
+#define INCLUDED_OCIO_LUT1D_GPU
+
+
 #include <OpenColorIO/OpenColorIO.h>
 
-#include "BitDepthUtils.h"
-#include "OpTools.h"
+#include "GpuShaderUtils.h"
+#include "ops/Lut1D/Lut1DOpData.h"
+
 
 OCIO_NAMESPACE_ENTER
 {
-    void EvalTransform(const float * in,
-                       float * out,
-                       long numPixels,
-                       OpRcPtrVec & ops)
-    {
-        std::vector<float> tmp(numPixels * 4);
 
-        // Render the LUT entries (domain) through the ops.
-        const float * values = in;
-        for (long idx = 0; idx<numPixels; ++idx)
-        {
-            tmp[4 * idx + 0] = values[0];
-            tmp[4 * idx + 1] = values[1];
-            tmp[4 * idx + 2] = values[2];
-            tmp[4 * idx + 3] = 1.0f;
-
-            values += 3;
-        }
-
-        // NB: We assume finalize will set the bit-depth at each op interface
-        // to 32f so there is never any quantization to integer.
-        // Furthermore, to avoid improper recursion we must never call
-        // the renderer with an integer input depth.
-        // TODO: Currently the OCIO finalize is hard-coded to 32f.
-        //       When that changes we need to update this to request 32f input
-        //       and output bit depths.
-        FinalizeOpVec(ops);
-
-        for (OpRcPtrVec::size_type i = 0, size = ops.size(); i<size; ++i)
-        {
-            ops[i]->apply(&tmp[0], numPixels);
-        }
-
-        float * result = out;
-        for (long idx = 0; idx<numPixels; ++idx)
-        {
-            result[0] = tmp[4 * idx + 0];
-            result[1] = tmp[4 * idx + 1];
-            result[2] = tmp[4 * idx + 2];
-
-            result += 3;
-        }
-    }
+void GetLut1DGPUShaderProgram(GpuShaderDescRcPtr & shaderDesc,
+                              ConstLut1DOpDataRcPtr & lutData);
 
 }
 OCIO_NAMESPACE_EXIT
+
+
+#endif
+
+
