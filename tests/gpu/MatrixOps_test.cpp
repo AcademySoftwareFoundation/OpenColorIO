@@ -175,3 +175,14 @@ OCIO_ADD_GPU_TEST(MatrixOps, matrix_offset_inverse_generic_shader)
     
     AddMatrixTest(test, TRANSFORM_DIR_INVERSE, m, o, true);
 }
+
+
+// TODO: syncolor also tests various bit-depths and pixel formats.
+// GPURenderer_cases.cpp_inc - IdentityMatrix_test
+// GPURenderer_cases.cpp_inc - MatrixWithDiffBitDepth1_test
+// GPURenderer_cases.cpp_inc - MatrixWithDiffBitDepth2_test
+// GPURenderer_cases.cpp_inc - MatrixWithDiffBitDepth3_test
+// GPURenderer_cases.cpp_inc - MatrixRedOnly_test
+// GPURenderer_cases.cpp_inc - MatrixGreenOnly_test
+// GPURenderer_cases.cpp_inc - MatrixWithOffsets4_test
+// GPURenderer_cases.cpp_inc - MatrixOffsetsNotScaledBug_test
