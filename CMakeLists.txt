@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 project(OpenColorIO 
 	VERSION 2.0.0
-	HOMEPAGE_URL http://opencolorio.org/
 	LANGUAGES CXX C)
 
 # "dev" for master or "" for any official release
