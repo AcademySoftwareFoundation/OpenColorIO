@@ -661,7 +661,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, arbitrary)
     {
         OIIO_CHECK_ASSERT(OCIO::EqualWithSafeRelError((float)dst[idx],
                                                       (float)tmp[idx],
-                                                      errorInverse, 1.0f));
+                                                      error, 1.0f));
     }
 
     ops[1]->apply(tmp, NB_PIXELS);
