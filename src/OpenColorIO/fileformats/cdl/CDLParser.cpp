@@ -30,9 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "expat/expat.h"
 #include "fileformats/cdl/CDLParser.h"
-#include "fileformats/xmlutils/XMLReaderHelper.h"
 #include "fileformats/cdl/CDLReaderHelper.h"
-#include "fileformats/xmlutils/XmlReaderUtils.h"
+#include "fileformats/xmlutils/XMLReaderHelper.h"
+#include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "transforms/CDLTransform.h"
 #include "Platform.h"
 
