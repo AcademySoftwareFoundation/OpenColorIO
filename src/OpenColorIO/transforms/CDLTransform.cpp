@@ -540,12 +540,12 @@ OCIO_NAMESPACE_ENTER
     
     void CDLTransform::setID(const char * id)
     {
-        getImpl()->setId(id ? id : "");
+        getImpl()->setID(id ? id : "");
     }
     
     const char * CDLTransform::getID() const
     {
-        return getImpl()->getId().c_str();
+        return getImpl()->getID().c_str();
     }
     
     void CDLTransform::setDescription(const char * desc)

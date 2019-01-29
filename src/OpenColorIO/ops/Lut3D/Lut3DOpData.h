@@ -73,6 +73,8 @@ public:
     // The gridSize parameter is the length of the cube axis.
     explicit Lut3DOpData(long gridSize);
 
+    Lut3DOpData(long gridSize, TransformDirection dir);
+
     Lut3DOpData(
         BitDepth             inBitDepth,
         BitDepth             outBitDepth,

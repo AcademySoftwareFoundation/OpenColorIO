@@ -85,7 +85,7 @@ OCIO_NAMESPACE_ENTER
         AutoMutex lock(m_mutex);
 
         std::ostringstream cacheIDStream;
-        cacheIDStream << getId();
+        cacheIDStream << getID();
 
         cacheIDStream.precision(DefaultValues::FLOAT_DECIMALS);
         for(int i=0; i<4; ++i)

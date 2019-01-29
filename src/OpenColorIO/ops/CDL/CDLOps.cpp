@@ -157,7 +157,7 @@ OpRcPtr CDLOp::clone() const
 {
     return std::make_shared<CDLOp>(cdlData()->getInputBitDepth(),
                                    cdlData()->getOutputBitDepth(),
-                                   cdlData()->getId(),
+                                   cdlData()->getID(),
                                    cdlData()->getDescriptions(),
                                    cdlData()->getStyle(),
                                    cdlData()->getSlopeParams().data(), 

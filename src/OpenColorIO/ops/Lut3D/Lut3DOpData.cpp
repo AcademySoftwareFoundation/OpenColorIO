@@ -157,7 +157,7 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & A,
         //       Perhaps add a utility function to be shared with the constructor.
         domain = std::make_shared<Lut3DOpData>(A->getInputBitDepth(),
                                                BIT_DEPTH_F32,
-                                               A->getId(),
+                                               A->getID(),
                                                A->getDescriptions(),
                                                A->getInterpolation(),
                                                min_sz);
@@ -182,7 +182,7 @@ Lut3DOpDataRcPtr Lut3DOpData::Compose(ConstLut3DOpDataRcPtr & A,
     // TODO: May want to revisit metadata propagation.
     Lut3DOpDataRcPtr result = std::make_shared<Lut3DOpData>(A->getInputBitDepth(),
                                                             B->getOutputBitDepth(),
-                                                            A->getId() + B->getId(),
+                                                            A->getID() + B->getID(),
                                                             newDesc,
                                                             A->getInterpolation(),
                                                             2);  // we replace it anyway
@@ -339,6 +339,15 @@ Lut3DOpData::Lut3DOpData(long gridSize)
 {
 }
 
+Lut3DOpData::Lut3DOpData(long gridSize, TransformDirection dir)
+    : OpData(BIT_DEPTH_F32, BIT_DEPTH_F32)
+    , m_interpolation(INTERP_DEFAULT)
+    , m_array(gridSize, getOutputBitDepth())
+    , m_direction(dir)
+    , m_invStyle(INV_FAST)
+{
+}
+
 Lut3DOpData::Lut3DOpData(BitDepth inBitDepth,
                          BitDepth outBitDepth,
                          const std::string& id,
@@ -372,6 +381,7 @@ Interpolation Lut3DOpData::getConcreteInterpolation() const
 
     case INTERP_DEFAULT:
     case INTERP_LINEAR:
+    case INTERP_CUBIC:
     case INTERP_NEAREST:
         // NB: In OCIO v2, INTERP_NEAREST is implemented as trilinear,
         // this is a change from OCIO v1.
@@ -399,6 +409,7 @@ bool IsValid(const Interpolation & interpolation)
     case INTERP_LINEAR:
     case INTERP_NEAREST:
         return true;
+    case INTERP_CUBIC:
     case INTERP_UNKNOWN:
     default:
         return false;
@@ -596,6 +607,28 @@ Lut3DOpDataRcPtr Lut3DOpData::inverse() const
     return invLut;
 }
 
+namespace
+{
+const char* GetInvStyleName(Lut3DOpData::InvStyle invStyle)
+{
+    switch (invStyle)
+    {
+    case Lut3DOpData::INV_EXACT:
+    {
+        return "exact";
+        break;
+    }
+    case Lut3DOpData::INV_FAST:
+    {
+        return "fast";
+        break;
+    }
+    }
+
+    throw Exception("3D LUT has an invalid inverse style.");
+}
+}
+
 void Lut3DOpData::finalize()
 {
     AutoMutex lock(m_mutex);
@@ -614,7 +647,8 @@ void Lut3DOpData::finalize()
     cacheIDStream << InterpolationToString(m_interpolation) << " ";
     cacheIDStream << TransformDirectionToString(m_direction) << " ";
     cacheIDStream << BitDepthToString(getInputBitDepth()) << " ";
-    cacheIDStream << BitDepthToString(getOutputBitDepth());
+    cacheIDStream << BitDepthToString(getOutputBitDepth()) << " ";
+    cacheIDStream << GetInvStyleName(m_invStyle);
 
     m_cacheID = cacheIDStream.str();
 }
@@ -817,6 +851,11 @@ OIIO_ADD_TEST(OpDataLut3D, Interpolation)
     OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_LINEAR);
     OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
     OIIO_CHECK_NO_THROW(l.validate());
+
+    l.setInterpolation(OCIO::INTERP_CUBIC);
+    OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_CUBIC);
+    OIIO_CHECK_EQUAL(l.getConcreteInterpolation(), OCIO::INTERP_LINEAR);
+    OIIO_CHECK_THROW_WHAT(l.validate(), OCIO::Exception, "invalid interpolation");
 
     l.setInterpolation(OCIO::INTERP_TETRAHEDRAL);
     OIIO_CHECK_EQUAL(l.getInterpolation(), OCIO::INTERP_TETRAHEDRAL);
