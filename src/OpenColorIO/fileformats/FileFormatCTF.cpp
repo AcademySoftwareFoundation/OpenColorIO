@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fileformats/ctf/CTFReaderHelper.h"
 #include "fileformats/ctf/CTFReaderUtils.h"
 #include "fileformats/xmlutils/XMLReaderHelper.h"
-#include "fileformats/xmlutils/XmlReaderUtils.h"
+#include "fileformats/xmlutils/XMLReaderUtils.h"
 #include "Platform.h"
 #include "pystring/pystring.h"
 #include "transforms/FileTransform.h"
