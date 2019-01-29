@@ -274,11 +274,17 @@ OCIO_NAMESPACE_ENTER
         {
             std::string activeDisplays;
             Platform::Getenv(OCIO_ACTIVE_DISPLAYS_ENVVAR, activeDisplays);
-            SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays.c_str());
+            activeDisplays = pystring::strip(activeDisplays);
+            if (!activeDisplays.empty()) {
+                SplitStringEnvStyle(activeDisplaysEnvOverride_, activeDisplays.c_str());
+            }
             
             std::string activeViews;
             Platform::Getenv(OCIO_ACTIVE_VIEWS_ENVVAR, activeViews);
-            SplitStringEnvStyle(activeViewsEnvOverride_, activeViews.c_str());
+            activeViews = pystring::strip(activeViews);
+            if (!activeViews.empty()) {
+                SplitStringEnvStyle(activeViewsEnvOverride_, activeViews.c_str());
+            }
             
             defaultLumaCoefs_.resize(3);
             defaultLumaCoefs_[0] = DEFAULT_LUMA_COEFF_R;
@@ -2583,6 +2589,372 @@ OIIO_ADD_TEST(Config, range_serialization)
                               "Loading the OCIO profile failed");
     }
 
+}
+
+OIIO_ADD_TEST(Config, display)
+{
+    static const std::string SIMPLE_PROFILE_HEADER =
+        "ocio_profile_version: 1\n"
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: lnh\n"
+        "\n"
+        "displays:\n"
+        "  sRGB_1:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "  sRGB_2:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "  sRGB_3:\n"
+        "    - !<View> {name: Raw, colorspace: raw}\n"
+        "\n";
+
+    static const std::string SIMPLE_PROFILE_FOOTER =
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: lnh\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: []\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(config->getNumDisplays(), 3);
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_1"));
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_2"));
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(2)), std::string("sRGB_3"));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_1");
+    }
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: [sRGB_1]\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(config->getNumDisplays(), 1);
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_1"));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_1");
+    }
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: [sRGB_2, sRGB_1]\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_1"));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
+    }
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: []\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        const std::string active_displays(
+            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "= sRGB_3, sRGB_2");
+        putenv(const_cast<char *>(active_displays.c_str()));
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_3"));
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_2"));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_3");
+    }
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: [sRGB_2, sRGB_1]\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        const std::string active_displays(
+            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "= sRGB_3, sRGB_2");
+        putenv(const_cast<char *>(active_displays.c_str()));
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_3"));
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_2"));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_3");
+    }
+
+    {
+        const std::string active_displays(
+            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "="); // No value
+        putenv(const_cast<char *>(active_displays.c_str()));
+
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: [sRGB_2, sRGB_1]\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_1"));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
+    }
+
+    {
+        const std::string active_displays(
+            std::string(OCIO::OCIO_ACTIVE_DISPLAYS_ENVVAR) + "= "); // No value, but misleading space
+        putenv(const_cast<char *>(active_displays.c_str()));
+
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: [sRGB_2, sRGB_1]\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(config->getNumDisplays(), 2);
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(0)), std::string("sRGB_2"));
+        OIIO_CHECK_EQUAL(std::string(config->getDisplay(1)), std::string("sRGB_1"));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultDisplay()), "sRGB_2");
+    }
+}
+
+OIIO_ADD_TEST(Config, view)
+{
+    static const std::string SIMPLE_PROFILE_HEADER =
+        "ocio_profile_version: 1\n"
+        "\n"
+        "search_path: luts\n"
+        "strictparsing: true\n"
+        "luma: [0.2126, 0.7152, 0.0722]\n"
+        "\n"
+        "roles:\n"
+        "  default: raw\n"
+        "  scene_linear: lnh\n"
+        "\n"
+        "displays:\n"
+        "  sRGB_1:\n"
+        "    - !<View> {name: View_1, colorspace: raw}\n"
+        "    - !<View> {name: View_2, colorspace: raw}\n"
+        "  sRGB_2:\n"
+        "    - !<View> {name: View_2, colorspace: raw}\n"
+        "    - !<View> {name: View_3, colorspace: raw}\n"
+        "  sRGB_3:\n"
+        "    - !<View> {name: View_3, colorspace: raw}\n"
+        "    - !<View> {name: View_1, colorspace: raw}\n"
+        "\n";
+
+    static const std::string SIMPLE_PROFILE_FOOTER =
+        "\n"
+        "colorspaces:\n"
+        "  - !<ColorSpace>\n"
+        "    name: raw\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n"
+        "\n"
+        "  - !<ColorSpace>\n"
+        "    name: lnh\n"
+        "    family: \"\"\n"
+        "    equalitygroup: \"\"\n"
+        "    bitdepth: unknown\n"
+        "    isdata: false\n"
+        "    allocation: uniform\n";
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: []\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+    }
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: []\n"
+            "active_views: [View_3]\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+    }
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: []\n"
+            "active_views: [View_3, View_2, View_1]\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+    }
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: []\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        const std::string active_displays(
+            std::string(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR) + "= View_3, View_2");
+        putenv(const_cast<char *>(active_displays.c_str()));
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+    }
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: []\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        const std::string active_displays(
+            std::string(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR) + "="); // No value.
+        putenv(const_cast<char *>(active_displays.c_str()));
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+    }
+
+    {
+        std::string myProfile = 
+            SIMPLE_PROFILE_HEADER
+            +
+            "active_displays: []\n"
+            "active_views: []\n"
+            + SIMPLE_PROFILE_FOOTER;
+
+        const std::string active_displays(
+            std::string(OCIO::OCIO_ACTIVE_VIEWS_ENVVAR) + "= "); // No value, but misleading space
+        putenv(const_cast<char *>(active_displays.c_str()));
+
+        std::istringstream is(myProfile);
+        OCIO::ConstConfigRcPtr config;
+        OIIO_CHECK_NO_THROW(config = OCIO::Config::CreateFromStream(is));
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_1")), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 0)), "View_1");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_1", 1)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_2")), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 0)), "View_2");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_2", 1)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getDefaultView("sRGB_3")), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 0)), "View_3");
+        OIIO_CHECK_EQUAL(std::string(config->getView("sRGB_3", 1)), "View_1");
+    }
 }
 
 #endif // OCIO_UNIT_TEST
