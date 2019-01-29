@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 
-#include "fileformats/xmlutils/XmlReaderUtils.h"
+#include "fileformats/xmlutils/XMLReaderUtils.h"
 
 OCIO_NAMESPACE_ENTER
 {
