@@ -126,10 +126,9 @@ if(WIN32)
 			XML_STATIC
 	)
 endif()
-if(MSVC)
-	# Because our Exceptions derive from std::runtime_error we can safely disable this warning
-	set_target_properties(OpenColorIO PROPERTIES COMPILE_FLAGS "/wd4275")
-endif()
+
+set_target_properties(OpenColorIO PROPERTIES 
+	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 set_target_properties(OpenColorIO PROPERTIES
     VERSION ${OpenColorIO_VERSION}

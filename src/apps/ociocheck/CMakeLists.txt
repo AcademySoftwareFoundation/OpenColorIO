@@ -11,6 +11,9 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
+set_target_properties(ociocheck PROPERTIES 
+    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+
 target_link_libraries(ociocheck PRIVATE OpenColorIO apputils)
 
 install(TARGETS ociocheck
