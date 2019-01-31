@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MathUtils.h"
 #include "ops/Lut3D/Lut3DOp.h"
 #include "ops/Lut3D/Lut3DOpCPU.h"
+#include "ops/Lut3D/Lut3DOpGPU.h"
 #include "ops/Matrix/MatrixOps.h"
 #include "OpTools.h"
 
@@ -621,19 +622,24 @@ namespace
         }
 
     private:
-        // The computed cache identifier
+        // The computed cache identifier.
         std::string m_cacheID;
-        // The CPU processor
+
+        // The CPU renderer, with a scaled, sanitized, and memory aligned copy of the LUT.
         OpCPURcPtr m_cpu;
 
-        Lut3DOp();
+        // When using the INV_FAST flag, a forward Lut3DOpData that is 
+        // a fast approximation of the inverse of the original Lut3DOpData;
+        // otherwise, it's a shared pointer to the original opData instance.
+        ConstLut3DOpDataRcPtr m_computedLutData;
+
+        Lut3DOp() = delete;
     };
 
     typedef OCIO_SHARED_PTR<Lut3DOp> Lut3DOpRcPtr;
     typedef OCIO_SHARED_PTR<const Lut3DOp> ConstLut3DOpRcPtr;
 
     Lut3DOp::Lut3DOp(Lut3DOpDataRcPtr & lut3D)
-        : m_cpu(new NoOpCPU)
     {
         data() = lut3D;
     }
@@ -645,7 +651,6 @@ namespace
     OpRcPtr Lut3DOp::clone() const
     {
         Lut3DOpDataRcPtr lut = lut3DData()->clone();
-
         return std::make_shared<Lut3DOp>(lut);
     }
 
@@ -680,7 +685,6 @@ namespace
         ConstLut3DOpRcPtr typedRcPtr = DynamicPtrCast<const Lut3DOp>(op);
         if (typedRcPtr)
         {
-
             ConstLut3DOpDataRcPtr lutData = typedRcPtr->lut3DData();
             return lut3DData()->isInverse(lutData);
         }
@@ -702,18 +706,34 @@ namespace
         lut3DData()->setOutputBitDepth(BIT_DEPTH_F32);
 
         lut3DData()->validate();
-        lut3DData()->finalize();
 
-        ConstLut3DOpDataRcPtr lutData = constThis.lut3DData();
-        m_cpu = GetLut3DRenderer(lutData);
+        // If needed, compute a forward 3D LUT to approximate the inverse LUT
+        // when requesting the 'inverse fast' approximation as it's used 
+        // by both CPU & GPU paths.
+
+        Lut3DOpDataRcPtr ldata = lut3DData();
+
+        if (ldata->getDirection() == TRANSFORM_DIR_INVERSE
+            && ldata->getInvStyle() == Lut3DOpData::INV_FAST)
+        {
+            // NB: The result of MakeFastLut is set to TRANSFORM_DIR_FORWARD.
+            ConstLut3DOpDataRcPtr p = constThis.lut3DData();
+            ldata = MakeFastLut3DFromInverse(p);
+        }
+
+        ldata->finalize();
+        m_computedLutData = ldata;
 
         // Rebuild the cache identifier
         std::ostringstream cacheIDStream;
         cacheIDStream << "<Lut3D ";
-        cacheIDStream << lut3DData()->getCacheID() << " ";
+        cacheIDStream << m_computedLutData->getCacheID() << " ";
         cacheIDStream << ">";
 
         m_cacheID = cacheIDStream.str();
+
+        // Compute the CPU engine using the newly computed opData.
+        m_cpu = GetLut3DRenderer(m_computedLutData);
     }
 
     void Lut3DOp::apply(float* rgbaBuffer, long numPixels) const
@@ -723,235 +743,34 @@ namespace
 
     void Lut3DOp::extractGpuShaderInfo(GpuShaderDescRcPtr & shaderDesc) const
     {
-        if (lut3DData()->getDirection() == TRANSFORM_DIR_INVERSE)
+        ConstLut3DOpDataRcPtr ldata = m_computedLutData;
+        if (ldata->getDirection() == TRANSFORM_DIR_INVERSE)
         {
-            ConstLut3DOpDataRcPtr lutOpData = lut3DData();
-            Lut3DOpDataRcPtr newLut = MakeFastLut3DFromInverse(lutOpData);
+            // Note: The GPU Path only needs to create a forward 3D LUT for 
+            // the 'exact inverse' case as finalize() handled the 'fast inverse'. 
 
-            if (!newLut)
+            if(ldata->getInvStyle() == Lut3DOpData::INV_FAST)
             {
-                throw Exception("Cannot apply Lut3DOp, inversion failed.");
+                throw Exception("3D LUT Op instance was not finalized.");
             }
 
-            Lut3DOp invLut(newLut);
-            invLut.finalize();
-            invLut.extractGpuShaderInfo(shaderDesc);
+            Lut3DOpDataRcPtr tmp = MakeFastLut3DFromInverse(ldata);
+
+            tmp->setInputBitDepth(BIT_DEPTH_F32);
+            tmp->setOutputBitDepth(BIT_DEPTH_F32);
+
+            tmp->finalize();
+
+            ldata = tmp;
         }
-        else
+
+        if (ldata->getInputBitDepth() != BIT_DEPTH_F32 
+            || ldata->getOutputBitDepth() != BIT_DEPTH_F32)
         {
-            if (getInputBitDepth() != BIT_DEPTH_F32 || getOutputBitDepth() != BIT_DEPTH_F32)
-            {
-                throw Exception("Only 32F bit depth is supported for the GPU shader");
-            }
-
-            std::ostringstream resName;
-            resName << shaderDesc->getResourcePrefix()
-                << std::string("lut3d_")
-                << shaderDesc->getNum3DTextures();
-
-            const std::string name(resName.str());
-
-            shaderDesc->add3DTexture(GpuShaderText::getSamplerName(name).c_str(),
-                m_cacheID.c_str(), lut3DData()->getGridSize(),
-                lut3DData()->getConcreteInterpolation(), &lut3DData()->getArray()[0]);
-
-            {
-                GpuShaderText ss(shaderDesc->getLanguage());
-                ss.declareTex3D(name);
-                shaderDesc->addToDeclareShaderCode(ss.string().c_str());
-            }
-
-
-            const float dim = (float)lut3DData()->getGridSize();
-
-            // incr = 1/dim (amount needed to increment one index in the grid)
-            const float incr = 1.0f / dim;
-
-            {
-                GpuShaderText ss(shaderDesc->getLanguage());
-                ss.indent();
-
-                ss.newLine() << "";
-                ss.newLine() << "// Add a LUT 3D processing for " << name;
-                ss.newLine() << "";
-
-
-                // Tetrahedral interpolation
-                // The strategy is to use texture3d lookups with GL_NEAREST to fetch the
-                // 4 corners of the cube (v1,v2,v3,v4), compute the 4 barycentric weights
-                // (f1,f2,f3,f4), and then perform the interpolation manually.
-                // One side benefit of this is that we are not subject to the 8-bit
-                // quantization of the fractional weights that happens using GL_LINEAR.
-                if (lut3DData()->getConcreteInterpolation() == INTERP_TETRAHEDRAL)
-                {
-                    ss.newLine() << "{";
-                    ss.indent();
-
-                    ss.newLine() << ss.vec3fDecl("coords") << " = "
-                        << shaderDesc->getPixelName() << ".rgb * "
-                        << ss.vec3fConst(dim - 1) << "; ";
-
-                    // baseInd is on [0,dim-1]
-                    ss.newLine() << ss.vec3fDecl("baseInd") << " = floor(coords);";
-
-                    // frac is on [0,1]
-                    ss.newLine() << ss.vec3fDecl("frac") << " = coords - baseInd;";
-
-                    // scale/offset baseInd onto [0,1] as usual for doing texture lookups
-                    // we use zyx to flip the order since blue varies most rapidly
-                    // in the grid array ordering
-                    ss.newLine() << ss.vec3fDecl("f1, f4") << ";";
-
-                    ss.newLine() << "baseInd = ( baseInd.zyx + " << ss.vec3fConst(0.5f) << " ) / " << ss.vec3fConst(dim) << ";";
-                    ss.newLine() << ss.vec3fDecl("v1") << " = " << ss.sampleTex3D(name, "baseInd") << ".rgb;";
-
-                    ss.newLine() << ss.vec3fDecl("nextInd") << " = baseInd + " << ss.vec3fConst(incr) << ";";
-                    ss.newLine() << ss.vec3fDecl("v4") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "if (frac.r >= frac.g)";
-                    ss.newLine() << "{";
-                    ss.indent();
-                    ss.newLine() << "if (frac.g >= frac.b)";  // R > G > B
-                    ss.newLine() << "{";
-                    ss.indent();
-                    // Note that compared to the CPU version of the algorithm,
-                    // we increment in inverted order since baseInd & nextInd
-                    // are essentially BGR rather than RGB.
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, 0.0f, incr) << ";";
-                    ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, incr) << ";";
-                    ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.r") << ";";
-                    ss.newLine() << "f4 = " << ss.vec3fConst("frac.b") << ";";
-                    ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.r - frac.g") << ";";
-                    ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.g - frac.b") << ";";
-
-                    ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
-                    ss.dedent();
-                    ss.newLine() << "}";
-                    ss.newLine() << "else if (frac.r >= frac.b)";  // R > B > G
-                    ss.newLine() << "{";
-                    ss.indent();
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, 0.0f, incr) << ";";
-                    ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, incr) << ";";
-                    ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.r") << ";";
-                    ss.newLine() << "f4 = " << ss.vec3fConst("frac.g") << ";";
-                    ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.r - frac.b") << ";";
-                    ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.b - frac.g") << ";";
-
-                    ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
-                    ss.dedent();
-                    ss.newLine() << "}";
-                    ss.newLine() << "else";  // B > R > G
-                    ss.newLine() << "{";
-                    ss.indent();
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, 0.0f) << ";";
-                    ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, incr) << ";";
-                    ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.b") << ";";
-                    ss.newLine() << "f4 = " << ss.vec3fConst("frac.g") << ";";
-                    ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.b - frac.r") << ";";
-                    ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.r - frac.g") << ";";
-
-                    ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
-                    ss.dedent();
-                    ss.newLine() << "}";
-                    ss.dedent();
-                    ss.newLine() << "}";
-                    ss.newLine() << "else";
-                    ss.newLine() << "{";
-                    ss.indent();
-                    ss.newLine() << "if (frac.g <= frac.b)";  // B > G > R
-                    ss.newLine() << "{";
-                    ss.indent();
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, 0.0f, 0.0f) << ";";
-                    ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, incr, 0.0f) << ";";
-                    ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.b") << ";";
-                    ss.newLine() << "f4 = " << ss.vec3fConst("frac.r") << ";";
-                    ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.b - frac.g") << ";";
-                    ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.g - frac.r") << ";";
-
-                    ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
-                    ss.dedent();
-                    ss.newLine() << "}";
-                    ss.newLine() << "else if (frac.r >= frac.b)";  // G > R > B
-                    ss.newLine() << "{";
-                    ss.indent();
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, 0.0f) << ";";
-                    ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, incr) << ";";
-                    ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.g") << ";";
-                    ss.newLine() << "f4 = " << ss.vec3fConst("frac.b") << ";";
-                    ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.g - frac.r") << ";";
-                    ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.r - frac.b") << ";";
-
-                    ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
-                    ss.dedent();
-                    ss.newLine() << "}";
-                    ss.newLine() << "else";  // G > B > R
-                    ss.newLine() << "{";
-                    ss.indent();
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(0.0f, incr, 0.0f) << ";";
-                    ss.newLine() << ss.vec3fDecl("v2") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "nextInd = baseInd + " << ss.vec3fConst(incr, incr, 0.0f) << ";";
-                    ss.newLine() << ss.vec3fDecl("v3") << " = " << ss.sampleTex3D(name, "nextInd") << ".rgb;";
-
-                    ss.newLine() << "f1 = " << ss.vec3fConst("1. - frac.g") << ";";
-                    ss.newLine() << "f4 = " << ss.vec3fConst("frac.r") << ";";
-                    ss.newLine() << ss.vec3fDecl("f2") << " = " << ss.vec3fConst("frac.g - frac.b") << ";";
-                    ss.newLine() << ss.vec3fDecl("f3") << " = " << ss.vec3fConst("frac.b - frac.r") << ";";
-
-                    ss.newLine() << shaderDesc->getPixelName() << ".rgb = (f2 * v2) + (f3 * v3);";
-                    ss.dedent();
-                    ss.newLine() << "}";
-                    ss.dedent();
-                    ss.newLine() << "}";
-
-                    ss.newLine() << shaderDesc->getPixelName()
-                        << ".rgb = "
-                        << shaderDesc->getPixelName()
-                        << ".rgb + (f1 * v1) + (f4 * v4);";
-
-                    ss.dedent();
-                    ss.newLine() << "}";
-                }
-                else
-                {
-                    // Trilinear interpolation
-                    // Use texture3d and GL_LINEAR and the GPU's built-in trilinear algorithm.
-                    // Note that the fractional components are quantized to 8-bits on some
-                    // hardware, which introduces significant error with small grid sizes.
-
-                    ss.newLine() << ss.vec3fDecl(name + "_coords")
-                        << " = (" << shaderDesc->getPixelName() << ".zyx * "
-                        << ss.vec3fConst(dim - 1) << " + "
-                        << ss.vec3fConst(0.5f) + ") / "
-                        << ss.vec3fConst(dim) << ";";
-
-                    ss.newLine() << shaderDesc->getPixelName() << ".rgb = "
-                        << ss.sampleTex3D(name, name + "_coords") << ".rgb;";
-                }
-
-                shaderDesc->addToFunctionShaderCode(ss.string().c_str());
-            }
+            throw Exception("Only 32F bit depth is supported for the GPU shader");
         }
+
+        GetLut3DGPUShaderProgram(shaderDesc, ldata);
     }
 }
 
@@ -983,7 +802,7 @@ void CreateLut3DOp(OpRcPtrVec & ops,
                         "invalid lut specified.");
     }
 
-    long lutSize = (long)lut->size[0];
+    const long lutSize = (long)lut->size[0];
     if (lut->lut.size() != lutSize*lutSize*lutSize * 3)
     {
         throw Exception("Cannot apply Lut3DOp op, "
@@ -1038,21 +857,18 @@ void CreateLut3DOp(OpRcPtrVec & ops,
 {
     if (lut->isNoOp()) return;
 
-    if (direction != TRANSFORM_DIR_FORWARD
-        && direction != TRANSFORM_DIR_INVERSE)
-    {
-        throw Exception("Cannot apply Lut3DOp op, "
-                        "unspecified transform direction.");
-    }
-
     if (direction == TRANSFORM_DIR_FORWARD)
     {
         ops.push_back(std::make_shared<Lut3DOp>(lut));
     }
-    else
+    else if (direction == TRANSFORM_DIR_INVERSE)
     {
         Lut3DOpDataRcPtr data = lut->inverse();
         ops.push_back(std::make_shared<Lut3DOp>(data));
+    }
+    else
+    {
+        throw Exception("Cannot apply Lut3DOp op, unspecified transform direction.");
     }
 }
 

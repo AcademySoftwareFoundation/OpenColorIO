@@ -14,6 +14,9 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
+set_target_properties(ociodisplay PROPERTIES 
+	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+
 target_include_directories(ociodisplay 
 	SYSTEM
 	PRIVATE
