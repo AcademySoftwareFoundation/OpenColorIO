@@ -496,13 +496,13 @@ OIIO_ADD_TEST(MatrixOffsetOp, scale)
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
     const unsigned long NB_PIXELS = 3;
-    const float src[NB_PIXELS*4] = {  0.1004f,  0.2f,  0.3f,    0.4f,
-                                     -0.1008f, -0.2f, 50.01f, 123.4f,
-                                      1.0090f,  1.0f,  1.0f,    1.0f };
+    const float src[NB_PIXELS*4] = {  0.1004f,  0.2f, 0.3f,   0.4f,
+                                     -0.1008f, -0.2f, 5.001f, 0.1234f,
+                                      1.0090f,  1.0f, 1.0f,   1.0f };
 
-    const float dst[NB_PIXELS*4] = {  0.11044f,  0.26f,  0.090f,   -0.4f,
-                                     -0.11088f, -0.26f, 15.003f, -123.4f,
-                                      1.10990f,  1.30f,  0.300f,   -1.0f };
+    const float dst[NB_PIXELS*4] = {  0.11044f,  0.26f, 0.090f,  -0.4f,
+                                     -0.11088f, -0.26f, 1.5003f, -0.1234f,
+                                      1.10990f,  1.30f, 0.300f,  -1.0f };
 
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
@@ -538,13 +538,13 @@ OIIO_ADD_TEST(MatrixOffsetOp, offset)
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
     const unsigned long NB_PIXELS = 3;
-    const float src[NB_PIXELS*4] = {  0.1004f,  0.2f, 0.3f,    0.4f,
-                                     -0.1008f, -0.2f, 5.01f, 123.4f,
-                                      1.0090f,  1.0f, 1.0f,    1.0f };
+    const float src[NB_PIXELS*4] = {  0.1004f,  0.2f, 0.3f,  0.4f,
+                                     -0.1008f, -0.2f, 5.01f, 0.1234f,
+                                      1.0090f,  1.0f, 1.0f,  1.0f };
 
-    const float dst[NB_PIXELS*4] = {  1.2004f, -1.1f, 0.60f,  -0.6f,
-                                      0.9992f, -1.5f, 5.31f, 122.4f,
-                                      2.1090f, -0.3f, 1.30f,   0.0f };
+    const float dst[NB_PIXELS*4] = {  1.2004f, -1.1f, 0.60f, -0.6f,
+                                      0.9992f, -1.5f, 5.31f, -0.8766f,
+                                      2.1090f, -0.3f, 1.30f,  0.0f };
 
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
@@ -566,7 +566,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, offset)
 
 OIIO_ADD_TEST(MatrixOffsetOp, matrix)
 {
-    const float error = 1e-5f;
+    const float error = 1e-6f;
 
     const float matrix[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
                                0.5f, 1.6f, 0.7f, 0.8f,
@@ -584,14 +584,14 @@ OIIO_ADD_TEST(MatrixOffsetOp, matrix)
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
     const unsigned long NB_PIXELS = 3;
-    const float src[NB_PIXELS*4] = {  0.1004f,  0.201f,  0.303f,    0.408f,
-                                     -0.1008f, -0.207f, 50.019f,  123.422f,
-                                      1.0090f,  1.009f,  1.044f,    1.001f };
+    const float src[NB_PIXELS*4] = {  0.1004f,  0.201f, 0.303f, 0.408f,
+                                     -0.1008f, -0.207f, 5.002f, 0.123422f,
+                                      1.0090f,  1.009f, 1.044f, 1.001f };
 
     const double dst[NB_PIXELS*4] = {
-         0.40474f,    0.91030f,  0.45508f,   0.914820f,
-        64.22222f, 133.369308f, 79.66444f, 222.371658f,
-         2.02530f,    3.65050f,  1.65130f,   2.829900f };
+        0.40474f,   0.91030f,   0.45508f,   0.914820f,
+        1.3976888f, 3.2185376f, 5.4860244f, 2.5854352f,
+        2.02530f,   3.65050f,   1.65130f,   2.829900f };
 
     float tmp[NB_PIXELS*4];
     memcpy(tmp, &src[0], 4*NB_PIXELS*sizeof(float));
@@ -617,7 +617,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, matrix)
 
 OIIO_ADD_TEST(MatrixOffsetOp, arbitrary)
 {
-    const float error = 1e-5f;
+    const float error = 1e-6f;
 
     const float matrix[16] = { 1.1f, 0.2f, 0.3f, 0.4f,
                                0.5f, 1.6f, 0.7f, 0.8f,
@@ -640,13 +640,13 @@ OIIO_ADD_TEST(MatrixOffsetOp, arbitrary)
 
     const unsigned long NB_PIXELS = 3;
     const float src[NB_PIXELS*4] = {
-         0.1004f,  0.201f,  0.303f,    0.408f,
-        -0.1008f, -0.207f, 50.019f,  123.422f,
-         1.0090f,  1.009f,  1.044f,    1.001f };
+         0.1004f,  0.201f, 0.303f, 0.408f,
+        -0.1008f, -0.207f, 5.02f,  0.123422f,
+         1.0090f,  1.009f, 1.044f, 1.001f };
 
     const float dst[NB_PIXELS*4] = {
         -0.09526f,   0.660300f,  0.70508f,   1.014820f,
-        63.72222f, 133.119308f, 79.91444f, 222.471658f,
+        0.9030888f, 2.9811376f, 5.7558244f,  2.6944352f,
          1.52530f,   3.400500f,  1.90130f,   2.929900f };
 
     float tmp[NB_PIXELS*4];
@@ -713,13 +713,13 @@ OIIO_ADD_TEST(MatrixOffsetOp, create_fit_op)
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
     const unsigned long NB_PIXELS = 3;
-    const float src[NB_PIXELS * 4] = { 0.1004f, 0.201f, 0.303f,  0.408f,
-                                        -0.10f, -21.0f,  50.0f,    1.0f,
-                                         42.0f,   1.0f, -1.11f, -0.001f };
+    const float src[NB_PIXELS * 4] = {  0.1004f, 0.201f, 0.303f, 0.408f,
+                                       -0.10f,  -2.10f,  0.5f,   1.0f,
+                                       42.0f,    1.0f,  -1.11f, -0.001f };
 
-    const double dst[NB_PIXELS * 4] = { 0.1004f, 0.402f,  -2.091f, -10.368f,
-                                         -0.10f, -42.0f, 147.0f,    -8.0f,
-                                          42.0f,   2.0f,  -6.33f,  -12.004f };
+    const double dst[NB_PIXELS * 4] = {  0.1004f, 0.402f, -2.091f, -10.368f,
+                                        -0.10f,  -4.20f,  -1.50f,   -8.0f,
+                                        42.0f,    2.0f,   -6.33f,  -12.004f };
 
     float tmp[NB_PIXELS * 4];
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));
@@ -742,7 +742,7 @@ OIIO_ADD_TEST(MatrixOffsetOp, create_fit_op)
 
 OIIO_ADD_TEST(MatrixOffsetOp, create_saturation_op)
 {
-    const float error = 1e-5f;
+    const float error = 1e-6f;
     const float sat = 0.9f;
     const float lumaCoef3[3] = { 1.0f, 0.5f, 0.1f };
 
@@ -760,13 +760,13 @@ OIIO_ADD_TEST(MatrixOffsetOp, create_saturation_op)
     OIIO_CHECK_NO_THROW(ops[1]->finalize());
 
     const unsigned long NB_PIXELS = 3;
-    const float src[NB_PIXELS * 4] = { 0.1004f, 0.201f, 0.303f,  0.408f,
-                                        -0.10f, -21.0f,  50.0f,    1.0f,
-                                         42.0f,   1.0f, -1.11f, -0.001f };
+    const float src[NB_PIXELS * 4] = { 0.1004f, 0.201f, 0.303f, 0.408f,
+                                      -0.10f,  -2.1f,   0.5f,   1.0f,
+                                      42.0f,    1.0f,  -1.11f, -0.001f };
 
     const double dst[NB_PIXELS * 4] = {
-        0.11348f, 0.20402f, 0.29582f,  0.408f,
-          -0.65f,  -19.46f,   44.44f,    1.0f,
+         0.11348f, 0.20402f, 0.29582f, 0.408f,
+        -0.2f,    -2.0f,     0.34f,    1.0f,
         42.0389f,  5.1389f,  3.2399f, -0.001f };
 
     float tmp[NB_PIXELS * 4];
@@ -1304,12 +1304,12 @@ OIIO_ADD_TEST(MatrixOffsetOp, removing_red_green)
 
     const unsigned long NB_PIXELS = 6;
     const float src[NB_PIXELS * 4] = {
-        0.1004f,  0.201f,  0.303f,    0.408f,
-        -0.1008f, -0.207f, 50.019f, 123.422f,
-        1.0090f,  1.009f,  1.044f,    1.001f,
-        1.1f,     1.2f,    1.3f,      1.0f,
-        1.4f,     1.5f,    1.6f,      0.0f,
-        1.7f,     1.8f,    1.9f,      1.0f };
+        0.1004f,  0.201f,  0.303f, 0.408f,
+        -0.1008f, -0.207f, 0.502f, 0.123422f,
+        1.0090f,  1.009f,  1.044f, 1.001f,
+        1.1f,     1.2f,    1.3f,   1.0f,
+        1.4f,     1.5f,    1.6f,   0.0f,
+        1.7f,     1.8f,    1.9f,   1.0f };
 
     float tmp[NB_PIXELS * 4];
     memcpy(tmp, &src[0], 4 * NB_PIXELS * sizeof(float));

@@ -30,6 +30,9 @@ if(NOT BUILD_SHARED_LIBS)
 	)
 endif()
 
+set_target_properties(test_gpu_exec PROPERTIES 
+	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+
 target_link_libraries(test_gpu_exec
 	PRIVATE
 		OpenColorIO
