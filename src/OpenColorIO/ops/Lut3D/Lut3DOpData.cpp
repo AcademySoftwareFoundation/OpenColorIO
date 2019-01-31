@@ -534,7 +534,7 @@ bool Lut3DOpData::operator==(const OpData & other) const
         return false;
     }
 
-    if (!OpData::operator==(*lop))
+    if (!OpData::operator==(other))
     {
         return false;
     }

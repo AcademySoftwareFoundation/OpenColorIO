@@ -42,10 +42,9 @@ function(add_ocio_test NAME SOURCES PRIVATE_INCLUDES)
 				XML_STATIC
 		)
 	endif(WIN32)
-	if(MSVC)
-		# Because our Exceptions derive from std::runtime_error we can safely disable this warning
-		set_target_properties(${TEST_BINARY} PROPERTIES COMPILE_FLAGS "/wd4275")
-	endif(MSVC)
+	set_target_properties(${TEST_BINARY} PROPERTIES 
+		COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+
 	add_test(${TEST_NAME} ${TEST_BINARY})
 endfunction(add_ocio_test)
 
