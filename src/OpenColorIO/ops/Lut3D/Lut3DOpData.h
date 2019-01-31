@@ -128,7 +128,7 @@ public:
 
     Lut3DOpDataRcPtr inverse() const;
 
-    bool operator==(const OpData& other) const;
+    bool operator==(const OpData& other) const override;
 
     void finalize() override;
 

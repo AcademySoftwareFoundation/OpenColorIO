@@ -11,6 +11,9 @@ if(NOT BUILD_SHARED_LIBS)
     )
 endif()
 
+set_target_properties(ociolutimage PROPERTIES 
+    COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
+
 target_link_libraries(ociolutimage
 	PRIVATE
 		apputils

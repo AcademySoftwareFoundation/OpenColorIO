@@ -50,11 +50,10 @@ if(WIN32)
 	set_target_properties(PyOpenColorIO PROPERTIES
 		SUFFIX ".pyd"
 	)
-	# Because our Exceptions derive from std::runtime_error we can safely disable this warning
-	set_target_properties(PyOpenColorIO PROPERTIES
-		COMPILE_FLAGS "/wd4275"
-	)
 endif()
+
+set_target_properties(PyOpenColorIO PROPERTIES 
+	COMPILE_FLAGS "${PLATFORM_COMPILE_FLAGS}")
 
 if(NOT BUILD_SHARED_LIBS)
     target_compile_definitions(PyOpenColorIO
